@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -8,7 +6,6 @@
 #
 #############################################################################
 
-import json
 import os.path
 import shutil
 import shlex
@@ -43,7 +40,7 @@ class Component(ComponentBase):
         # Run bash command and print output to stdout
         try:
             process = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE)
+                shlex.split(command), universal_newlines=True, stdout=subprocess.PIPE)
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:
@@ -51,7 +48,7 @@ class Component(ComponentBase):
             rc = process.poll()
             if rc != 0:
                 return False
-        except:
+        except Exception:
             return False
         return True
 
@@ -68,7 +65,7 @@ class Component(ComponentBase):
         # Retrieves the cpld register value
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
         p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data, err = p.communicate()
         if err is not '':
             return None

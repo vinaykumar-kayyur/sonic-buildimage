@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: ibde.h,v 1.27 Broadcom SDK $
@@ -34,6 +45,12 @@ typedef struct ibde_dev_s {
     sal_vaddr_t base_address;
     sal_vaddr_t base_address1;
     sal_vaddr_t base_address2;
+    /* a unique number representing the specific device.
+     * Must be different for different devices.
+     * May be used to identify specific devices in the system.
+     * May be implemented as a full PCIe address, a persistent configurable user value, ...
+     * Possible implementation value stores in QSPI flash memory of the device. */
+    uint32 dev_unique_id;
 } ibde_dev_t;
 
 

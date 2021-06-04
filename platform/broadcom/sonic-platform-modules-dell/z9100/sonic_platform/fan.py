@@ -27,6 +27,7 @@ class Fan(FanBase):
     MAILBOX_DIR = HWMON_DIR + HWMON_NODE
 
     def __init__(self, fantray_index=1, fan_index=1, psu_fan=False):
+        FanBase.__init__(self)
         self.is_psu_fan = psu_fan
         if not self.is_psu_fan:
             # API index is starting from 0, DellEMC platform index is starting
@@ -185,7 +186,7 @@ class Fan(FanBase):
         fan_speed = self._get_pmc_register(self.get_fan_speed_reg)
         if (fan_speed != 'ERR') and self.get_presence():
             speed_in_rpm = int(fan_speed, 10)
-            speed = (100 * speed_in_rpm)/self.max_fan_speed
+            speed = (100 * speed_in_rpm)//self.max_fan_speed
         else:
             speed = 0
 

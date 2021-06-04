@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica Haliburton
 #
@@ -10,16 +8,18 @@
 #############################################################################
 
 try:
-    import glob
     import os
     import sys
-    import imp
     import re
-    from array import array
-    from cStringIO import StringIO
+
+    if sys.version_info.major == 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
@@ -50,7 +50,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
                     value = match.group(3).rstrip('\0')
 
                 _eeprom_info_dict[idx] = value
-            except:
+            except Exception:
                 pass
         return _eeprom_info_dict
 
@@ -59,7 +59,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         sys.stdout = StringIO()
         try:
             self.read_eeprom_db()
-        except:
+        except Exception:
             decode_output = sys.stdout.getvalue()
             sys.stdout = original_stdout
             return self.__parse_output(decode_output)
@@ -71,7 +71,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         if not os.path.exists(CACHE_ROOT):
             try:
                 os.makedirs(CACHE_ROOT)
-            except:
+            except Exception:
                 pass
 
         #
@@ -80,7 +80,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         #
         try:
             self.set_cache_name(os.path.join(CACHE_ROOT, CACHE_FILE))
-        except:
+        except Exception:
             pass
 
         e = self.read_eeprom()
@@ -89,7 +89,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
         try:
             self.update_cache(e)
-        except:
+        except Exception:
             pass
 
         self.decode_eeprom(e)
@@ -110,3 +110,6 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_mac(self):
         return self._eeprom.get('0x24', "Undefined.")
+
+    def get_pn(self):
+        return self._eeprom.get('0x21', "Undefined.")

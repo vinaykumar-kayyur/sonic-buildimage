@@ -1,5 +1,6 @@
 import glob
 import os
+import subprocess
 
 from natsort import natsorted
 from swsssdk import ConfigDBConnector
@@ -20,6 +21,7 @@ INTERNAL_PORT = 'Int'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
+BGP_INTERNAL_NEIGH_CFG_DB_TABLE = 'BGP_INTERNAL_NEIGHBOR'
 NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
@@ -135,11 +137,65 @@ def get_asic_id_from_name(asic_name):
     else:
         raise ValueError('Unknown asic namespace name {}'.format(asic_name))
 
+def get_asic_device_id(asic_id):
+    # Get asic.conf file
+    asic_conf_file_path = get_asic_conf_file_path()
+
+    if asic_conf_file_path is None:
+        return None
+
+    # In a multi-asic device we need to have the file "asic.conf" updated with the asic instance
+    # and the corresponding device id which could be pci_id. Below is an eg: for a 2 ASIC platform/sku.
+    # DEV_ID_ASIC_0=03:00.0
+    # DEV_ID_ASIC_1=04:00.0
+    device_str = "DEV_ID_ASIC_{}".format(asic_id)
+
+    with open(asic_conf_file_path) as asic_conf_file:
+        for line in asic_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0] == device_str:
+                device_id = tokens[1].strip()
+                return device_id
+
+    return None
+
+def get_current_namespace(pid=None):
+    """
+    This API returns the network namespace in which it is
+    invoked. In case of global namepace the API returns None
+    """
+
+    net_namespace = None
+    command = ["sudo /bin/ip netns identify {}".format(os.getpid() if not pid else pid)]
+    proc = subprocess.Popen(command,
+                            stdout=subprocess.PIPE,
+                            shell=True,
+                            universal_newlines=True,
+                            stderr=subprocess.STDOUT)
+    try:
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            raise RuntimeError(
+                "Command {} failed with stderr {}".format(command, stderr)
+            )
+        if stdout.rstrip('\n') != "":
+            net_namespace = stdout.rstrip('\n')
+        else:
+            net_namespace = DEFAULT_NAMESPACE
+    except OSError as e:
+        raise OSError("Error running command {}".format(command))
+
+    return net_namespace
+
 
 def get_namespaces_from_linux():
     """
     In a multi asic platform, each ASIC is in a Linux Namespace.
-    This method returns list of all the Namespace present on the device
+    This method returns the asic namespace under which this is invoked,
+    if namespace is None (global namespace) it returns list of all
+    the Namespace present on the device
 
     Note: It is preferable to use this function only when config_db is not
     available. When configdb is available use get_all_namespaces()
@@ -147,6 +203,10 @@ def get_namespaces_from_linux():
     Returns:
         List of the namespaces present in the system
     """
+    current_ns = get_current_namespace()
+    if current_ns:
+        return [current_ns]
+
     ns_list = []
     for path in glob.glob(NAMESPACE_PATH_GLOB):
         ns = os.path.basename(path)
@@ -193,6 +253,23 @@ def get_namespace_list(namespace=None):
 
     return ns_list
 
+def get_port_entry(port, namespace):
+    """
+    Retrieves the given port information
+
+    Returns:
+        a dict of given port entry
+    """
+    all_ports = {}
+    ns_list = get_namespace_list(namespace)
+
+    for ns in ns_list:
+        ports = get_port_entry_for_asic(port, ns)
+        if ports:
+            return ports
+
+    return all_ports
+
 
 def get_port_table(namespace=None):
     """
@@ -209,6 +286,12 @@ def get_port_table(namespace=None):
         all_ports.update(ports)
 
     return all_ports
+
+def get_port_entry_for_asic(port, namespace):
+
+    config_db = connect_config_db_for_ns(namespace)
+    ports = config_db.get_entry(PORT_CFG_DB_TABLE, port)
+    return ports
 
 
 def get_port_table_for_asic(namespace):
@@ -237,14 +320,14 @@ def get_namespace_for_port(port_name):
 
 def get_port_role(port_name, namespace=None):
 
-    ports_config = get_port_table(namespace)
-    if port_name not in ports_config:
+    ports_config = get_port_entry(port_name, namespace)
+    if not ports_config:
         raise ValueError('Unknown port name {}'.format(port_name))
 
-    if PORT_ROLE not in ports_config[port_name]:
+    if PORT_ROLE not in ports_config:
         return EXTERNAL_PORT
 
-    role = ports_config[port_name][PORT_ROLE]
+    role = ports_config[PORT_ROLE]
     return role
 
 
@@ -278,16 +361,43 @@ def is_port_channel_internal(port_channel, namespace=None):
 
     for ns in ns_list:
         config_db = connect_config_db_for_ns(ns)
-        port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
+        port_channels = config_db.get_entry(PORT_CHANNEL_CFG_DB_TABLE, port_channel)
 
-        if port_channel in port_channels:
-            if 'members' in port_channels[port_channel]:
-                members = port_channels[port_channel]['members']
+        if port_channels:
+            if 'members' in port_channels:
+                members = port_channels['members']
                 if is_port_internal(members[0], namespace):
                     return True
 
     return False
 
+# Allow user to get a set() of back-end interface and back-end LAG per namespace
+# default is getting it for all name spaces if no namespace is specified
+def get_back_end_interface_set(namespace=None):
+    bk_end_intf_list =[]
+    if not is_multi_asic():
+        return None
+
+    port_table = get_port_table(namespace)
+    for port, info in port_table.items():
+        if PORT_ROLE in info and info[PORT_ROLE] == INTERNAL_PORT:
+            bk_end_intf_list.append(port)
+
+    if len(bk_end_intf_list):
+        ns_list = get_namespace_list(namespace)
+        for ns in ns_list:
+            config_db = connect_config_db_for_ns(ns)
+            port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
+            # a back-end LAG must be configured with all of its member from back-end interfaces.
+            # mixing back-end and front-end interfaces is miss configuration and not allowed.
+            # To determine if a LAG is back-end LAG, just need to check its first member is back-end or not
+            # is sufficient. Note that a user defined LAG may have empty members so the list expansion logic
+            # need to ensure there are members before inspecting member[0].
+            bk_end_intf_list.extend([port_channel for port_channel, lag_info in port_channels.items()\
+                                if 'members' in lag_info and lag_info['members'][0] in bk_end_intf_list])
+    a = set()
+    a.update(bk_end_intf_list)
+    return a
 
 def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
 
@@ -299,20 +409,10 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
     for ns in ns_list:
 
         config_db = connect_config_db_for_ns(ns)
-        bgp_sessions = config_db.get_table(BGP_NEIGH_CFG_DB_TABLE)
-        if bgp_neigh_ip not in bgp_sessions:
-            continue
-
-        bgp_neigh_name = bgp_sessions[bgp_neigh_ip]['name']
-        neighbor_metadata = config_db.get_table(
-            NEIGH_DEVICE_METADATA_CFG_DB_TABLE)
-
-        if ((neighbor_metadata) and
-            (neighbor_metadata[bgp_neigh_name]['type'].lower() ==
-             ASIC_NAME_PREFIX)):
+        bgp_sessions = config_db.get_entry(BGP_INTERNAL_NEIGH_CFG_DB_TABLE, bgp_neigh_ip)
+        if bgp_sessions:
             return True
-        else:
-            return False
+
     return False
 
 def get_front_end_namespaces():

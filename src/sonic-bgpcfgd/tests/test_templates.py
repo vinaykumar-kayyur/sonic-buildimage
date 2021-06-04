@@ -2,15 +2,16 @@ import os
 import json
 
 
-from app.template import TemplateFabric
-from app.config import ConfigMgr
-from .util import load_constants
+from bgpcfgd.template import TemplateFabric
+from bgpcfgd.config import ConfigMgr
+from .util import load_constants_dir_mappings
+
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
 
 def load_tests(peer_type, template_name):
-    constants = load_constants()
+    constants = load_constants_dir_mappings()
     path = "tests/data/%s/%s" % (constants[peer_type], template_name)
     param_files = [name for name in os.listdir(path)
                    if os.path.isfile(os.path.join(path, name)) and name.startswith("param_")]
@@ -104,6 +105,18 @@ def test_general_instance():
     test_data = load_tests("general", "instance.conf")
     run_tests("general_instance", *test_data)
 
+def test_internal_policies():
+    test_data = load_tests("internal", "policies.conf")
+    run_tests("internal_policies", *test_data)
+
+def test_internal_pg():
+    test_data = load_tests("internal", "peer-group.conf")
+    run_tests("internal_pg", *test_data)
+
+def test_internal_instance():
+    test_data = load_tests("internal", "instance.conf")
+    run_tests("internal_instance", *test_data)
+
 def test_dynamic_policies():
     test_data = load_tests("dynamic", "policies.conf")
     run_tests("dynamic_policies", *test_data)
@@ -127,3 +140,15 @@ def test_monitors_pg():
 def test_monitors_instance():
     test_data = load_tests("monitors", "instance.conf")
     run_tests("monitors_instance", *test_data)
+
+def test_voq_chassis_policies():
+    test_data = load_tests("voq_chassis", "policies.conf")
+    run_tests("voq_chassis_policies", *test_data)
+
+def test_voq_chassis_pg():
+    test_data = load_tests("voq_chassis", "peer-group.conf")
+    run_tests("voq_chassis_pg", *test_data)
+
+def test_voq_chassis_instance():
+    test_data = load_tests("voq_chassis", "instance.conf")
+    run_tests("voq_chassis_instance", *test_data)

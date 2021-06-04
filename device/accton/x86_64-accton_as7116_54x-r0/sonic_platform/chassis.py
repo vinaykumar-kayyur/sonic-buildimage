@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 #
 # Module contains an implementation of SONiC Platform Base API and
@@ -32,7 +30,7 @@ NUM_SFP = 54
 SFP_PORT_START = 0
 QSFP_PORT_START = 48
 SFP_PORT_END = 47
-QSFP_PORT_END=53
+QSFP_PORT_END = 53
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
@@ -93,7 +91,7 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_mac()
 
-    def get_serial_number(self):
+    def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
         Returns:
