@@ -21,6 +21,7 @@ try:
         import ConfigParser as configparser
 
     from sonic_platform_base.component_base import ComponentBase,           \
+                                                    FW_AUTO_INSTALLED,      \
                                                     FW_AUTO_UPDATED,        \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
@@ -355,7 +356,7 @@ class Component(ComponentBase):
         if boot_action in default_supported_boot:
             if self.install_firmware(image_path):
                 # Successful update
-                return FW_AUTO_UPDATED
+                return FW_AUTO_INSTALLED
             # Failed update (unknown reason)
             return FW_AUTO_ERR_UKNOWN
 
@@ -524,7 +525,7 @@ class ComponentSSD(Component):
         if boot_action in supported_boot:
             if self.install_firmware(image_path):
                 # Successful update
-                return FW_AUTO_UPDATED
+                return FW_AUTO_INSTALLED
             # Failed update (unknown reason)
             return FW_AUTO_ERR_UKNOWN
 
