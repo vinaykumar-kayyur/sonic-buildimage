@@ -583,7 +583,7 @@ void EventConsume::read_config_and_purge() {
     count = 0;
     // read from the manifest file
     parse_config(EVENTD_CONF_FILE, days, count);
-    SWSS_LOG_NOTICE("no-of-days %d no-of-records %d", days, count);
+    SWSS_LOG_NOTICE("max-days %d max-records %d", days, count);
 
     // update the nanosecond limit
     PURGE_SECONDS *= days; 

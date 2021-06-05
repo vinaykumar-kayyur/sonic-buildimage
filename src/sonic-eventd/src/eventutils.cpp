@@ -42,10 +42,10 @@ bool parse_config(const char *filename, unsigned int& days, unsigned int& count)
     std::ifstream ifs(filename);
     json j = json::parse(ifs);
     for (json::iterator it = j.begin(); it != j.end(); ++it) {
-        if(it.key() == "no-of-days") {
+        if(it.key() == "max-days") {
             days = it.value();
         }
-        if(it.key() == "no-of-records") {
+        if(it.key() == "max-records") {
             count = it.value();
         }
     }
