@@ -557,7 +557,7 @@ void EventConsume::purge_events() {
         event_history_list.pop();
         --size;
     }
-
+#if 0
     const auto p1 = system_clock::now();
     uint64_t tnow = duration_cast<nanoseconds>(p1.time_since_epoch()).count();
 
@@ -571,6 +571,7 @@ void EventConsume::purge_events() {
             return;
         }
     }
+#endif
     return;
 }
 
