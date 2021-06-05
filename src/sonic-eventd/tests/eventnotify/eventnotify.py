@@ -22,7 +22,7 @@ class EventNotify:
         self.sequence_id = 0
 
     def getTicks(self):
-        return int(time.time() * (10**7)) + 621355968000000000
+        return (time.time_ns())
 
     def getActionStr(self, action):
         if action ==  EvAction.CLEAR_ALARM:

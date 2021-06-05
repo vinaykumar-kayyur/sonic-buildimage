@@ -42,7 +42,7 @@ EventMap static_event_table;
 
 volatile bool g_run = true;
 uint64_t seq_id = 0;
-uint64_t PURGE_DAYS = pow(2.592, 15);
+uint64_t PURGE_SECONDS = 86400;
 
 //typedef pair<uint64_t, uint64_t> pi;
 typedef pair<uint64_t, uint64_t> pi;
@@ -550,20 +550,24 @@ void EventConsume::purge_events() {
     SWSS_LOG_ENTER();
     uint32_t size = event_history_list.size();
 
-    while (size > count) {
+    while (size >= count) {
         pair <uint64_t,uint64_t> oldest_entry = event_history_list.top();
+        SWSS_LOG_NOTICE("Rollover based on count(%d/%d). Deleting %lu", size, count, oldest_entry.first);
         m_eventTable.del(to_string(oldest_entry.first));
         modifyEventStats(to_string(oldest_entry.first));
         event_history_list.pop();
         --size;
     }
-#if 0
+
     const auto p1 = system_clock::now();
-    uint64_t tnow = duration_cast<nanoseconds>(p1.time_since_epoch()).count();
+    unsigned tnow_seconds = duration_cast<seconds>(p1.time_since_epoch()).count();
 
     while (!event_history_list.empty()) {
         pair <uint64_t,uint64_t> oldest_entry = event_history_list.top();
-        if ((tnow - oldest_entry.second) > PURGE_DAYS) {
+	unsigned old_seconds = oldest_entry.second / 1000000000ULL;
+
+        if ((tnow_seconds - old_seconds) > PURGE_SECONDS) {
+            SWSS_LOG_NOTICE("Rollover based on time (%lu days). Deleting %lu.. now %u old %u", (PURGE_SECONDS/days), oldest_entry.first, tnow_seconds, old_seconds);
             m_eventTable.del(to_string(oldest_entry.first));
             modifyEventStats(to_string(oldest_entry.first));
             event_history_list.pop();
@@ -571,7 +575,6 @@ void EventConsume::purge_events() {
             return;
         }
     }
-#endif
     return;
 }
 
@@ -583,7 +586,7 @@ void EventConsume::read_config_and_purge() {
     SWSS_LOG_NOTICE("no-of-days %d no-of-records %d", days, count);
 
     // update the nanosecond limit
-    PURGE_DAYS = days * pow(8.64, 13); 
+    PURGE_SECONDS *= days; 
 
     // purge events based on # of days
     purge_events();
