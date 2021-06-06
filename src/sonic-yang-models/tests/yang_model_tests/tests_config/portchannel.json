@@ -28,7 +28,7 @@
                         "mtu": "9100",
                         "tpid": "0x8100",
                         "lacp_key": "auto",
-			"name": "PortChannel0001"
+                        "name": "PortChannel0001"
                     }
                 ]
             }
