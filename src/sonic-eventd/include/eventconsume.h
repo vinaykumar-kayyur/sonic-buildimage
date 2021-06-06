@@ -46,6 +46,7 @@ private:
     void modifyEventStats(string seq_id);
     void initEventStats(int, int, int, int);
     void initAlarmStats();
+    void clearAckAlarmStatistic();
 };
 }
 

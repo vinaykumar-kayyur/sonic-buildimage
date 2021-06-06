@@ -307,10 +307,13 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                     SWSS_LOG_INFO("Received alarm-clear for non-existing alarm %s", almkey.c_str());
                     continue;
                 }
-                // update alarm counters ONLY if it has not been ack'd before
+                // update alarm counters ONLY if it has not been ack'd before. This is because when alarm is ack'd, alarms/severity counter is reduced already.
                 if (!ack_flag) {
                     updateAlarmStatistics(ev_sev, ev_act);
-                }
+                } else {
+		    // if it has been ack'd before, ack counter would have been incremented for this alrm. Now is the time reduce it.
+	            clearAckAlarmStatistic();
+		}
             } else {
                 // ack/unack events comes with seq-id of raised alarm as resource field.
                 // fetch details of "raised" alarm record
@@ -464,7 +467,7 @@ void EventConsume::updateAlarmStatistics(string ev_sev, string ev_act) {
             } else if (!fv.first.compare("acknowledged")) {
                 if (ev_act.compare(EVENT_ACTION_ACK_STR) == 0)  {
                     fv.second = to_string(stoi(fv.second.c_str())+1);
-                } else if ((ev_act.compare(EVENT_ACTION_UNACK_STR) == 0) || (ev_act.compare(EVENT_ACTION_CLEAR_STR) == 0)){
+                } else if (ev_act.compare(EVENT_ACTION_UNACK_STR) == 0) { 
                     fv.second = to_string(stoi(fv.second.c_str())-1);
                 }
                 temp.push_back(fv);
@@ -700,6 +703,23 @@ void EventConsume::initAlarmStats() {
     fv = FieldValueTuple("acknowledged", "0");
     temp.push_back(fv);
     m_alarmStatsTable.set("state", temp);
+}
+
+
+void EventConsume::clearAckAlarmStatistic() {
+    vector<FieldValueTuple> vec;
+    vector<FieldValueTuple> temp;
+
+    if (m_alarmStatsTable.get("state", vec)) {
+        for (auto fv: vec) {
+            if (!fv.first.compare("acknowledged")) {
+                fv.second = to_string(stoi(fv.second.c_str())-1);
+                temp.push_back(fv);
+                m_alarmStatsTable.set("state", temp);
+		return;
+            }
+        }
+    } 
 }
 
 };
