@@ -102,6 +102,19 @@
         }
     },
 
+    "SFLOW_SESSION_TEST_WITH_INCORRECT_PORT_NAME_PATTERN": {
+        "sonic-sflow:sonic-sflow": {
+            "sonic-sflow:SFLOW_SESSION": {
+                "SFLOW_SESSION_LIST": [
+                    {
+                        "port": "allllll",
+                        "admin_state": "down"
+                    }
+                ]
+            }
+        }
+    },
+
     "SFLOW_SESSION_TEST_WITH_INCORRECT_SAMPLE_RATE": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {

@@ -64,8 +64,13 @@ module sonic-sflow{
                 key "port";
 
                 leaf port {
-                    type leafref {
-                        path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                    type union {
+                        type leafref {
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type string {
+                            pattern "all";
+                        }
                     }
                 }
 
