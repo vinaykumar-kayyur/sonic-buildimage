@@ -39,7 +39,7 @@ private:
     void handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple>);
     void read_events();
     void updateAlarmStatistics(string ev_sev, string ev_act);
-    void updateEventStatistics(bool is_add, bool is_alarm, bool is_ack, bool is_clear);
+    void updateEventStatistics(bool is_add, bool is_alarm, bool is_ack, bool is_clear, bool is_unack);
     void read_config_and_purge();
     void update_events(string seq_id, string ts, vector<FieldValueTuple> vec);
     void purge_events();
