@@ -22,6 +22,7 @@ module sonic-system-aaa {
                 leaf login {
                     type string;
                     description "AAA authentication methods - local/tacacs+";
+                    default "local";
                 }
 
                 leaf failthrough {
