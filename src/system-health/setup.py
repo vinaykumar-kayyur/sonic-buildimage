@@ -27,6 +27,7 @@ setup(
         'pytest-runner'
     ],
     tests_require=[
+        'swsssdk>=2.0.1',
         'pytest',
         'mock>=2.0.0'
     ],
