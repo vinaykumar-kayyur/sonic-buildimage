@@ -180,14 +180,6 @@ class Sfp(SfpBase):
         else:
             return 'N/A'
 
-    def __write_txt_file(self, file_path, value):
-        try:
-            with open(file_path, 'w') as fd:
-                fd.write(str(value))
-        except Exception:
-            return False
-        return True
-
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -647,11 +639,16 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if reset enabled, False if disabled
         """
-        if self.port_num < 49: #Copper port, no sysfs
+        if self.port_num < 53: #Copper port and sfp ports are suported.
             return False
+
+        reset_path="{}{}{}".format(CPLD_I2C_PATH , "module_reset_" , str(self.port_num))
+        val = self._api_helper.read_txt_file(reset_path)
         
-        return False # CPLD port doesn't support this feature
-        
+        if val is not None:
+            return int(val, 10) == 1
+        else:        
+            return False
 
     def get_rx_los(self):
         """
@@ -938,23 +935,19 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
         # Check for invalid port_num
-        if self.port_num < 49: #Copper port, no sysfs
+        if self.port_num < 53: #Copper port and  sfp ports are not supported.
             return False
-        
-        '''  
+
         reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
-        ret = self.__write_txt_file(reset_path, 1)
+        ret = self._api_helper.write_txt_file(reset_path, 1)
         if ret is not True:
             return ret
         
         time.sleep(0.01)
-        ret = self.__write_txt_file(reset_path, 0)
+        ret = self._api_helper.write_txt_file(reset_path, 0)
         time.sleep(0.2)
         
         return ret
-        '''
-                
-        return False #CPLD doens't support this feature
         
     def tx_disable(self, tx_disable):
         """
@@ -991,7 +984,8 @@ class Sfp(SfpBase):
                 # Write to eeprom
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
-                sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)               
+                sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
+
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
                 print ('Error: unable to open file: ',str(e))
@@ -1108,7 +1102,7 @@ class Sfp(SfpBase):
                     fd.seek(QSFP_POWEROVERRIDE_OFFSET)
                     fd.write(buffer[0])
                     time.sleep(0.01)
-            except Exception:
+            except IOError as e:
                 print ('Error: unable to open file: ', str(e))
                 return False
             return True
@@ -1134,7 +1128,7 @@ class Sfp(SfpBase):
         if self.port_num < 49: #Copper port, no sysfs
             return False
             
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)        
+        present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)
         val=self._api_helper.read_txt_file(present_path)
         if val is not None:
             return int(val, 10)==1

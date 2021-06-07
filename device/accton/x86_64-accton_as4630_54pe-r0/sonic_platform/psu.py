@@ -235,8 +235,9 @@ class Psu(PsuBase):
         """
         model_path="{}{}".format(self.cpld_path, 'psu_model_name')
         model=self._api_helper.read_txt_file(model_path)
-        if not model:
+        if model is None:
             return "N/A"
+
         return model
 
     def get_serial(self):
@@ -247,6 +248,6 @@ class Psu(PsuBase):
         """
         serial_path="{}{}".format(self.cpld_path, 'psu_serial_number')
         serial=self._api_helper.read_txt_file(serial_path)
-        if not serial:
+        if serial is None:
             return "N/A"
         return serial
