@@ -1,3 +1,9 @@
+"""sonic_yang_cfg_generator
+version_added: "1.0"
+author: Arvindsrinivasan Lakshmi naraismhan (arlakshm@microsoft.com)
+short_description: Parse sonic_yang data and generate the config_db entries
+"""
+
 from __future__ import print_function
 
 import json
@@ -10,14 +16,9 @@ if sys.version_info.major == 3:
     UNICODE_TYPE = str
 else:
     UNICODE_TYPE = unicode
-"""sonic_yang_cfg_generator
-version_added: "1.0"
-author: Arvindsrinivasan Lakshmi naraismhan (arlakshm@microsoft.com)
-short_description: Parse sonic_yang data and generate the config_db entries
-"""
 
 YANG_MODELS_DIR = "/usr/local/yang-models"
-DEFAULT_YANG_DATA_FILE = "/etc/sonic/sonic_yang_data.json"
+DEFAULT_YANG_DATA_FILE = "/etc/sonic/config_yang.json"
 
 
 class SonicYangCfgDbGenerator:

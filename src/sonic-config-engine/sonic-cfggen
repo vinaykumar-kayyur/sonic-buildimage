@@ -48,8 +48,8 @@ from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBCo
 
 PY3x = sys.version_info >= (3, 0)
 
-#TODO: Remove STR_TYPE, FILE_TYPE once SONiC moves to Python 3.x
-#TODO: Remove the import SonicYangCfgDbGenerator once SONiC moves to python3.x
+# TODO: Remove STR_TYPE, FILE_TYPE once SONiC moves to Python 3.x
+# TODO: Remove the import SonicYangCfgDbGenerator once SONiC moves to python3.x
 if PY3x:
     from io import IOBase
     from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
@@ -260,7 +260,7 @@ def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
-    group.add_argument("-Y", "--yang", help="yang data json file", nargs='?', const='/etc/sonic/sonic_yang_data.json')
+    group.add_argument("-Y", "--yang", help="yang data json file", nargs='?', const='/etc/sonic/config_yang.json')
     group.add_argument("-M", "--device-description", help="device description xml file")
     group.add_argument("-k", "--hwsku", help="HwSKU")
     parser.add_argument("-n", "--namespace", help="namespace name", nargs='?', const=None, default=None)
@@ -336,7 +336,7 @@ def main():
                 yang_data_file=yang_file)
             deep_update(data, config_db_json)
         else:
-            print("this option is not available in Python2")
+            print('-Y/--yang option is not available in Python2', file=sys.stderr)
             sys.exit(1)
 
     if args.minigraph is not None:

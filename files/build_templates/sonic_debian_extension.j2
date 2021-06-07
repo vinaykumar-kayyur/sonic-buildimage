@@ -164,7 +164,7 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libxslt-dev libz-dev
 fi
 
-# Install sonic-yang-models py3 package, install dependencies
+# Install sonic-yang-models Python 3 package, install dependencies
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
