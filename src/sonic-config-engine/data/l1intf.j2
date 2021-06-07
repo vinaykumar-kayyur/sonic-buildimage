@@ -1,11 +1,4 @@
 {
-    "DEVICE_METADATA": {
-        "localhost" : {
-            "hostname" : "sonic",
-            "hwsku" : "{{ DEVICE_METADATA.localhost.hwsku }}",
-            "type": "LeafRouter"
-        }
-    },
     {% set ns = {'firstPrinted': False} -%}
     "PORT": {
         {%- for key, value in PORT.items() -%}

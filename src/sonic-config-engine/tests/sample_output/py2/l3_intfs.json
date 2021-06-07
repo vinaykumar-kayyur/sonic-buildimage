@@ -1,12 +1,4 @@
 {
-    "DEVICE_METADATA": {
-        "localhost": {
-            "hwsku": "32x1000Gb",
-            "hostname": "sonic",
-            "type": "LeafRouter",
-            "bgp_asn": "65100"
-        }
-    },
     "PORT": {
         "Ethernet0": {
             "admin_status": "up",
