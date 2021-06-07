@@ -265,7 +265,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
 
             if (ev_act.compare(EVENT_ACTION_RAISE_STR) == 0) {
                 is_raise = true;
-                // TODO: update system LED
+		// add entry to the lookup map
                 cal_lookup_map.insert(make_pair(almkey, seq_id));
 
                 FieldValueTuple seqfv1("acknowledged", "false");
@@ -655,7 +655,7 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
                     uint64_t lookup_seq_id = (long unsigned int) (it.second);
                     cal_lookup_map.erase(it.first);
                     m_alarmTable.del(to_string(lookup_seq_id));                    
-                    // TODO: need to update alarm stats
+                    // update alarm stats
                     updateAlarmStatistics(tmp.severity, EVENT_ACTION_CLEAR_STR);
                 }
             }
