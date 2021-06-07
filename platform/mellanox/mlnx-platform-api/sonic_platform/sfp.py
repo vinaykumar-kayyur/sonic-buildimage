@@ -347,11 +347,13 @@ class SFP(SfpBase):
     SFP_MLNX_ERROR_DESCRIPTION_ENFORCE_PART_NUMBER_LIST = 'Enforce part number list'
     SFP_MLNX_ERROR_DESCRIPTION_PMD_TYPE_NOT_ENABLED = 'PMD type not enabled'
     SFP_MLNX_ERROR_DESCRIPTION_PCIE_POWER_SLOT_EXCEEDED = 'PCIE system power slot exceeded'
+    SFP_MLNX_ERROR_DESCRIPTION_RESERVED = 'Reserved'
 
     SFP_MLNX_ERROR_BIT_LONGRANGE_NON_MLNX_CABLE = 0x00010000
     SFP_MLNX_ERROR_BIT_ENFORCE_PART_NUMBER_LIST = 0x00020000
     SFP_MLNX_ERROR_BIT_PMD_TYPE_NOT_ENABLED = 0x00040000
     SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
+    SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
 
     def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform):
         SfpBase.__init__(self)
@@ -2215,7 +2217,7 @@ class SFP(SfpBase):
                 7: cls.SFP_ERROR_DESCRIPTION_BAD_CABLE,
                 8: cls.SFP_MLNX_ERROR_DESCRIPTION_PMD_TYPE_NOT_ENABLED,
                 12: cls.SFP_MLNX_ERROR_DESCRIPTION_PCIE_POWER_SLOT_EXCEEDED,
-                255: cls.SFP_STATUS_OK
+                255: cls.SFP_MLNX_ERROR_DESCRIPTION_RESERVED
         }
 
     def get_error_description(self):
