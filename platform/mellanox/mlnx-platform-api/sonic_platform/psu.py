@@ -31,6 +31,7 @@ PSU_VPD = "vpd"
 
 SN_VPD_FIELD = "SN_VPD_FIELD"
 PN_VPD_FIELD = "PN_VPD_FIELD"
+REV_VPD_FIELD = "REV_VPD_FIELD"
 
 # in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
@@ -79,7 +80,7 @@ class Psu(PsuBase):
         psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
         #psu_oper_status should always be present for all platforms
         self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
-        self._name = "PSU{}".format(psu_index + 1)
+        self._name = "PSU {}".format(psu_index + 1)
 
         if platform in platform_dict_psu:
             filemap = psu_profile_list[platform_dict_psu[platform]]
@@ -104,6 +105,12 @@ class Psu(PsuBase):
             else:
                 self.serial = ""
                 logger.log_error("Fail to read PSU{} serial number: No key {} in VPD {}".format(self.index, SN_VPD_FIELD, self.psu_vpd))
+
+            if REV_VPD_FIELD in self.vpd_data:
+                self.rev = self.vpd_data[REV_VPD_FIELD]
+            else:
+                self.rev = ""
+                logger.log_error("Fail to read PSU{} serial number: No key {} in VPD {}".format(self.index, REV_VPD_FIELD, self.psu_vpd))
 
         else: 
             logger.log_info("Not reading PSU{} VPD data: Platform is fixed".format(self.index))
@@ -208,6 +215,16 @@ class Psu(PsuBase):
             string: Serial number of device
         """
         return self.serial
+
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self.rev
 
 
     def get_powergood_status(self):
