@@ -313,6 +313,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                 } else {
 		    // if it has been ack'd before, ack counter would have been incremented for this alrm. Now is the time reduce it.
 	            clearAckAlarmStatistic();
+		    is_unack = true;
 		}
             } else {
                 // ack/unack events comes with seq-id of raised alarm as resource field.
