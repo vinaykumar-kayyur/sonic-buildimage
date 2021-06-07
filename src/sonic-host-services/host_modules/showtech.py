@@ -20,8 +20,7 @@ class Showtech(host_service.HostModule):
                     ERROR_TAR_FAILED: 'Failure saving information into compressed output file',
                     ERROR_PROCFS_SAVE_FAILED: 'Saving of process information failed'}
 
-        print("Host side: Running show techsupport")
-        cmd = ['/usr/bin/generate_dump']
+        cmd = ['/usr/local/bin/generate_dump']
         if date:
             cmd.append("-s")
             cmd.append(date)
