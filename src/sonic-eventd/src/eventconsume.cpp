@@ -177,7 +177,6 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
         bool is_raise = false;
         bool is_clear = false;
         bool is_ack = false;
-        bool is_unack = false;
         vector<FieldValueTuple> vec;
 
 	ev_reckey = kfvKey(entry);
@@ -313,7 +312,6 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                 } else {
 		    // if it has been ack'd before, ack counter would have been incremented for this alrm. Now is the time reduce it.
 	            clearAckAlarmStatistic();
-		    is_unack = true;
 		}
             } else {
                 // ack/unack events comes with seq-id of raised alarm as resource field.
@@ -373,7 +371,6 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                     }
                 } else if (ev_act.compare(EVENT_ACTION_UNACK_STR) == 0) {
                     if (raise_ack_flag.compare("true") == 0) {
-                        is_unack = true;
                         SWSS_LOG_NOTICE(" received un-ACKnowledge event - %s/%s", ev_id.c_str(), ev_src.c_str());
 
                         FieldValueTuple seqfv1("acknowledged", "false");
@@ -397,7 +394,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
         // verify the size of history table; delete older entry; add new entry
         update_events(to_string(seq_id), ev_timestamp, vec);
 
-        updateEventStatistics(true, is_raise, is_ack, is_clear, is_unack);
+        updateEventStatistics(true, is_raise, is_ack, is_clear);
 
         // raise a syslog message
         writeToSyslog(ev_id, (int) (SYSLOG_SEVERITY.find(ev_sev)->second), ev_type, ev_act, ev_msg, ev_static_msg);
@@ -480,7 +477,7 @@ void EventConsume::updateAlarmStatistics(string ev_sev, string ev_act) {
     }
 }
 
-void EventConsume::updateEventStatistics(bool is_add, bool is_raise, bool is_ack, bool is_clear, bool is_unack) {
+void EventConsume::updateEventStatistics(bool is_add, bool is_raise, bool is_ack, bool is_clear) {
     vector<FieldValueTuple> vec;
     vector<FieldValueTuple> temp;
 
@@ -518,10 +515,8 @@ void EventConsume::updateEventStatistics(bool is_add, bool is_raise, bool is_ack
                     } else {
                         fv.second = to_string(stoi(fv.second.c_str())-1);
                     }
-                } else if (is_unack) {
-                    fv.second = to_string(stoi(fv.second.c_str())-1);
-                }
-                temp.push_back(fv);
+                    temp.push_back(fv);
+                } 
             }
         }
         m_eventStatsTable.set("state", temp);
@@ -536,7 +531,6 @@ void EventConsume::modifyEventStats(string seq_id) {
     bool is_raise = false;
     bool is_clear = false;
     bool is_ack = false;
-    bool is_unack = false;
     for (auto fvr: rec) {
         if (!fvr.first.compare("action")) {
             if (!fvr.second.compare(EVENT_ACTION_RAISE_STR)) {
@@ -551,7 +545,7 @@ void EventConsume::modifyEventStats(string seq_id) {
             }
         }
     }
-    updateEventStatistics(false, is_raise, is_ack, is_clear, is_unack);
+    updateEventStatistics(false, is_raise, is_ack, is_clear);
 }
 
 void EventConsume::purge_events() {
