@@ -214,8 +214,6 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
         
 	m_eventPubSubTable.del(ev_reckey);
 
-//TODO: uncomment this out  once unt test is done
-#if 0
         // flood protection. If a rogue application sends same event repeatedly, sqaush that repeated instances of that event
         if (!flood_ev_resource.compare(ev_src) && 
             !flood_ev_action.compare(ev_act) &&
@@ -223,7 +221,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                 SWSS_LOG_INFO("Ignoring the event %s from %s action %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str());
                 continue;
         }
-#endif
+
         flood_ev_resource = ev_src;
         flood_ev_action = ev_act;
         flood_ev_id = ev_id;
