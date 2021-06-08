@@ -1,4 +1,9 @@
 {
+    "DEVICE_METADATA": {
+        "localhost" : {
+        "hwsku" : "{{ DEVICE_METADATA.localhost.hwsku }}"
+    }
+    },
     {% set ns = {'firstPrinted': False} -%}
     "PORT": {
         {%- for key, value in PORT.items() -%}
@@ -18,3 +23,4 @@
 
     }
 }
+
