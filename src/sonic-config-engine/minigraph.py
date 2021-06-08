@@ -12,7 +12,6 @@ from lxml.etree import QName
 
 
 from portconfig import get_port_config
-from sonic_py_common.multi_asic import get_asic_id_from_name
 from sonic_py_common.interface import backplane_prefix
 
 # TODO: Remove this once we no longer support Python 2
@@ -218,7 +217,7 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                     startdevice = link.find(str(QName(ns, "StartDevice"))).text
                     port_device_map[endport] = startdevice
 
-                if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink":
+                if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink" and linktype != "DeviceMgmtLink":
                     continue
 
                 enddevice = link.find(str(QName(ns, "EndDevice"))).text
@@ -230,13 +229,15 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                 if enddevice.lower() == hname.lower():
                     if endport in port_alias_map:
                         endport = port_alias_map[endport]
-                    neighbors[endport] = {'name': startdevice, 'port': startport}
+                    if linktype != "DeviceMgmtLink":
+                        neighbors[endport] = {'name': startdevice, 'port': startport}
                     if bandwidth:
                         port_speeds[endport] = bandwidth
                 elif startdevice.lower() == hname.lower():
                     if startport in port_alias_map:
                         startport = port_alias_map[startport]
-                    neighbors[startport] = {'name': enddevice, 'port': endport}
+                    if linktype != "DeviceMgmtLink":
+                        neighbors[startport] = {'name': enddevice, 'port': endport}
                     if bandwidth:
                         port_speeds[startport] = bandwidth
 
@@ -1181,12 +1182,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     local_devices = []
     kube_data = {}
 
-    # hostname is the asic_name, get the asic_id from the asic_name
-    if asic_name is not None:
-        asic_id = get_asic_id_from_name(asic_name)
-    else:
-        asic_id = None
-
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
     docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
@@ -1198,7 +1193,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -1405,14 +1400,20 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 print("Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name, file=sys.stderr)
                 continue
 
+        # skip management ports
+        if port_name in mgmt_alias_reverse_mapping.keys():
+            continue
+
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
         alias = port.get('alias', port_name)
-        # generate default 100G FEC
+        # generate default 100G FEC only if FECDisabled is not true and 'fec' is not defined in port_config.ini
         # Note: FECDisabled only be effective on 100G port right now
-        if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
+        if linkmetas.get(alias, {}).get('FECDisabled', '').lower() == 'true':
+            port['fec'] = 'none'
+        elif not port.get('fec') and port.get('speed') == '100000':
             port['fec'] = 'rs'
 
         # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
@@ -1442,9 +1443,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 # for the ports w/o neighbor info, set it to port alias
                 port['description'] = port.get('alias', port_name)
 
-    # set default port MTU as 9100
+    # set default port MTU as 9100 and default TPID 0x8100
     for port in ports.values():
         port['mtu'] = '9100'
+        port['tpid'] = '0x8100'
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1477,9 +1479,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 print("Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name, file=sys.stderr)
                 del pcs[pc_name]
 
-    # set default port channel MTU as 9100 and admin status up
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
     for pc in pcs.values():
         pc['mtu'] = '9100'
+        pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
