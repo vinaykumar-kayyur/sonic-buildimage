@@ -132,6 +132,12 @@ def get_asic_id_from_name(asic_name):
     Returns:
         asic id.
     """
+    #Exception addition
+    if asic_name is None:
+        raise AttributeError('Single ASIC platform cannot have this attribute.')
+    elif not hasattr(asic_name, 'startswith'):
+        raise AttributeError('Single ASIC platform does not have this attribute.')
+
     if asic_name.startswith(ASIC_NAME_PREFIX):
         return asic_name[len(ASIC_NAME_PREFIX):]
     else:
