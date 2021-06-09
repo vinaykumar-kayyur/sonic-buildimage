@@ -6,38 +6,6 @@ RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%s
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update apt cache and
-# pre-install fundamental packages
-RUN apt-get update &&        \
-    apt-get -y install       \
-        curl                 \
-        less                 \
-        perl                 \
-        procps               \
-        python3              \
-        python3-distutils    \
-        python3-pip          \
-        rsyslog              \
-        vim-tiny 
-
-# Upgrade pip via PyPI and uninstall the Debian version
-#RUN pip3 install --upgrade pip
-RUN apt-get purge -y python3-pip
-
-# setuptools and wheel are necessary for installing some Python wheel packages
-#RUN pip3 install --no-cache-dir setuptools==49.6.00
-#RUN pip3 install --no-cache-dir wheel==0.35.1
-
-# For templating
-#RUN pip3 install j2cli
-
-# Install supervisor
-#RUN pip3 install supervisor==4.2.1
-
-## Install redis-tools dependencies
-## TODO: implicitly install dependencies
-RUN pip3 install supervisord-dependent-startup==1.4.0
-
 COPY \
 {% for deb in docker_eventd_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
