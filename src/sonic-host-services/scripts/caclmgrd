@@ -208,7 +208,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         for dport in dports:
             for src_ip in src_ip_range:
-                ip_ntwrk = ipaddress.ip_network(unicode(src_ip,'utf-8'), strict=False)
+                ip_ntwrk = ipaddress.ip_network(src_ip, strict=False)
                 if isinstance(ip_ntwrk, ipaddress.IPv4Network):
                     allow_restapi_commands.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -s {} -p tcp --dport {} -j ACCEPT".format(src_ip, dport))
                 else:
@@ -291,7 +291,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def generate_fwd_traffic_from_namespace_to_host_commands(self, namespace, acl_source_ip_map):
         """
         The below SNAT and DNAT rules are added in asic namespace in multi-ASIC platforms. It helps to forward request coming
-        in through the front panel interfaces created/present in the asic namespace for the servie running in linux host network namespace. 
+        in through the front panel interfaces created/present in the asic namespace for the servie running in linux host network namespace.
         The external IP addresses are NATed to the internal docker IP addresses for the Host service to respond.
         """
 
@@ -311,7 +311,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 nat_source_ipv6_set = acl_source_ip_map[acl_service]["ipv6"] if acl_source_ip_map and acl_source_ip_map[acl_service]["ipv6"] else { "::/0" }
 
                 for ip_protocol in self.ACL_SERVICES[acl_service]["ip_protocols"]:
-                    for dst_port in  self.ACL_SERVICES[acl_service]["dst_ports"]: 
+                    for dst_port in  self.ACL_SERVICES[acl_service]["dst_ports"]:
                         for ipv4_src_ip in nat_source_ipv4_set:
                             # IPv4 rules
                             fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
@@ -519,7 +519,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                             rule_cmd += " -A INPUT"
                             if ip_protocol != "any":
                                 rule_cmd += " -p {}".format(ip_protocol)
- 
+
                             if "SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IPV6"])
                                 if rule_props["PACKET_ACTION"] == "ACCEPT":
@@ -585,9 +585,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     def update_control_plane_nat_acls(self, namespace, service_to_source_ip_map):
         """
-        Convenience wrapper for multi-asic platforms 
+        Convenience wrapper for multi-asic platforms
         which programs the NAT rules for redirecting the
-        traffic coming on the front panel interface map to namespace 
+        traffic coming on the front panel interface map to namespace
         to the host.
         """
         # Add iptables commands to allow front panel traffic
@@ -648,12 +648,12 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Initlaize Global config that loads all database*.json
         if device_info.is_multi_npu():
             swsscommon.SonicDBConfig.initializeGlobalConfig()
-        
+
         # Create the Select object
         sel = swsscommon.Select()
         # Map of Namespace <--> susbcriber table's object
         config_db_subscriber_table_map = {}
-        
+
         # Loop through all asic namespaces (if present) and host namespace (DEFAULT_NAMESPACE)
         for namespace in list(self.config_db_map.keys()):
             # Unconditionally update control plane ACLs once at start on given namespace
