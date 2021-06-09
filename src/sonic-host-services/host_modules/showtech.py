@@ -27,7 +27,8 @@ class Showtech(host_service.HostModule):
 
         try:
             rc = 0
-            output = subprocess.check_output(cmd)
+            result = subprocess.run(cmd, capture_output=True, text=True,
+                                    check=True)
 
         except subprocess.CalledProcessError as err:
             rc = err.returncode
@@ -41,13 +42,7 @@ class Showtech(host_service.HostModule):
             print("%Error: Host side: Failed: " + str(rc))
             return rc, output
 
-        output_string = output.decode("utf-8")
-        output_file_match = re.search('\/var\/.*dump.*\.gz', output_string)
-        if output_file_match is not None:
-            output_filename = output_file_match.group()
-        else:
-            output_filename = ""
-        return rc, output_filename
+        return rc, result.stdout
 
 def register():
     """Return the class name"""
