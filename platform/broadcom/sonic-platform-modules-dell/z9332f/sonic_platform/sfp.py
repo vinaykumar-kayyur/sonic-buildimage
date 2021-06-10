@@ -227,38 +227,38 @@ class Sfp(SfpBase):
     """
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:09:00.0/resource0"
     _port_to_i2c_mapping = {
-            1:  10,
-            2:  11,
-            3:  12,
-            4:  13,
-            5:  14,
-            6:  15,
-            7:  16,
-            8:  17,
-            9:  18,
-            10: 19,
-            11: 20,
-            12: 21,
-            13: 22,
-            14: 23,
-            15: 24,
-            16: 25,
-            17: 26,
-            18: 27,
-            19: 28,
-            20: 29,
-            21: 30,
-            22: 31,
-            23: 32,
-            24: 33,
-            25: 34,
-            26: 35,
-            27: 36,
-            28: 37,
-            29: 38,
-            30: 39,
-            31: 40,
-            32: 41,
+            1:  4,
+            2:  5,
+            3:  6,
+            4:  7,
+            5:  8,
+            6:  9,
+            7:  10,
+            8:  11,
+            9:  12,
+            10: 13,
+            11: 14,
+            12: 15,
+            13: 16,
+            14: 17,
+            15: 18,
+            16: 19,
+            17: 20,
+            18: 21,
+            19: 22,
+            20: 23,
+            21: 24,
+            22: 25,
+            23: 26,
+            24: 27,
+            25: 28,
+            26: 29,
+            27: 30,
+            28: 31,
+            29: 32,
+            30: 33,
+            31: 34,
+            32: 35,
             33: 1,
             34: 2
             }
@@ -277,6 +277,7 @@ class Sfp(SfpBase):
         self.sfpDomInfo = sff8472Dom(None,1)
         self.qsfp_dd_Info = qsfp_dd_InterfaceId()
         self.qsfp_dd_DomInfo = qsfp_dd_Dom()
+        self.qsfp_dd_app2_list = False
 
     def get_eeprom_sysfs_path(self):
         return self.eeprom_path
@@ -292,18 +293,6 @@ class Sfp(SfpBase):
                 dom_capability = self.qsfp_dd_Info.parse_dom_capability(qsfp_dom_capability_raw, 0)
                 if dom_capability['data']['Flat_MEM']['value'] == 'Off':
                     self.qsfp_dd_app2_list = True
-                    self.dom_rx_power_supported = True
-                    self.dom_tx_power_supported = True
-                    self.dom_tx_bias_supported = True
-                else:
-                    self.qsfp_dd_app2_list = False
-                    self.dom_rx_power_supported = False
-                    self.dom_tx_power_supported = False
-                    self.dom_tx_bias_supported = False
-            else:
-                self.dom_rx_power_supported = False
-                self.dom_tx_power_supported = False
-                self.dom_tx_bias_supported = False
 
     def _strip_unit_from_str(self, value_str):
         match = re.match(r'(.*)C$|(.*)Volts$|(.*)mA$|(.*)dBm$', value_str)
@@ -629,7 +618,7 @@ class Sfp(SfpBase):
                     break
                 host_electrical, media_interface = self.qsfp_dd_Info.parse_application(sfp_media_type_dict,
                                             sfp_application_type_list[i * 4], sfp_application_type_list[i * 4 + 1])
-                host_media_list = host_media_list + host_electrical + ' - ' + media_interface
+                host_media_list = host_media_list + host_electrical + ' - ' + media_interface + '    '
             transceiver_info_dict['application_advertisement'] = host_media_list
 
         return transceiver_info_dict
@@ -1079,8 +1068,6 @@ class Sfp(SfpBase):
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
                     return None
-                if not self.dom_tx_bias_supported:
-                    return None
                 tx_bias_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXBIAS_OFFSET, QSFP_DD_TXBIAS_WIDTH)
                 tx_bias_data = self.qsfp_dd_DomInfo.parse_dom_tx_bias(tx_bias_data_raw, 0)
 
@@ -1114,8 +1101,6 @@ class Sfp(SfpBase):
         try:
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
-                    return None
-                if not self.dom_rx_power_supported:
                     return None
 
                 offset = 128
@@ -1152,9 +1137,6 @@ class Sfp(SfpBase):
         try:
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
-                    return None
-
-                if not self.dom_tx_power_supported:
                     return None
 
                 tx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXPOWER_OFFSET,

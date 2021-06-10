@@ -24,6 +24,7 @@ logger = Logger()
 
 SN_VPD_FIELD = "SN_VPD_FIELD"
 PN_VPD_FIELD = "PN_VPD_FIELD"
+REV_VPD_FIELD = "REV_VPD_FIELD"
 
 PSU_PATH = '/var/run/hw-management/'
 
@@ -44,6 +45,10 @@ class FixedPsu(PsuBase):
 
     def get_serial(self):
         return ''
+
+    def get_revision(self):
+        return ''
+
 
     def get_powergood_status(self):
         """
@@ -279,6 +284,16 @@ class Psu(FixedPsu):
         """
         self._get_vpd_data()
         return self.vpd_data.get(SN_VPD_FIELD, '')
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        self._get_vpd_data()
+        return self.vpd_data.get(REV_VPD_FIELD, '')
 
     def get_presence(self):
         """

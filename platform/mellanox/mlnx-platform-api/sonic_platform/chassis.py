@@ -23,6 +23,23 @@ except ImportError as e:
 
 MAX_SELECT_DELAY = 3600
 
+DMI_FILE = '/sys/firmware/dmi/entries/2-0/raw'
+DMI_HEADER_LEN = 15
+DMI_PRODUCT_NAME = "Product Name"
+DMI_MANUFACTURER = "Manufacturer"
+DMI_VERSION = "Version"
+DMI_SERIAL = "Serial Number"
+DMI_ASSET_TAG = "Asset Tag"
+DMI_LOC = "Location In Chassis"
+DMI_TABLE_MAP = {
+                    DMI_PRODUCT_NAME: 0,
+                    DMI_MANUFACTURER: 1,
+                    DMI_VERSION: 2,
+                    DMI_SERIAL: 3,
+                    DMI_ASSET_TAG: 4,
+                    DMI_LOC: 5
+                }
+
 HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
 #reboot cause related definitions
@@ -43,6 +60,9 @@ class Chassis(ChassisBase):
     def __init__(self):
         super(Chassis, self).__init__()
 
+        # Initialize DMI data
+        self.dmi_data = None
+        
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         #
@@ -611,6 +631,42 @@ class Chassis(ChassisBase):
             logger.log_info("Fail to load watchdog due to {}".format(repr(e)))
 
         return self._watchdog
+
+    
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+        
+        Returns:
+            string: Revision value of device
+        """
+        if self.dmi_data is None:
+            self.dmi_data = self._parse_dmi(DMI_FILE)
+
+        return self.dmi_data.get(DMI_VERSION, "N/A")
+
+    def _parse_dmi(self, filename):
+        """
+        Read DMI data chassis data and returns a dictionary of values
+
+        Returns:
+            A dictionary containing the dmi table of the switch chassis info
+        """
+        result = {}
+        try:
+            with open(filename, "rb") as fileobj:
+                data = fileobj.read()
+
+            body = data[DMI_HEADER_LEN:]
+            records = body.split(b'\x00')
+
+            for k, v in DMI_TABLE_MAP.items():
+                result[k] = records[v].decode("utf-8")
+
+        except Exception as e:
+            logger.log_error("Fail to decode DMI {} due to {}".format(filename, repr(e)))
+
+        return result
 
     def _verify_reboot_cause(self, filename):
         '''
