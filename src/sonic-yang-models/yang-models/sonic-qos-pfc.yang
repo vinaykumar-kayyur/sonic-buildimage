@@ -82,7 +82,7 @@ module sonic-qos-pfc {
     }
 
     container PFC_WD {
-      sonic-ext:db-name "CONFIG_DB";
+      //sonic-ext:db-name "CONFIG_DB";
       list PFC_WD_LIST {
         key "ifname";
 
