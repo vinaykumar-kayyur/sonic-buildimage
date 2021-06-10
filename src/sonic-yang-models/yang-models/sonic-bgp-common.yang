@@ -243,7 +243,7 @@ module sonic-bgp-common {
         leaf disable_ebgp_connected_route_check {
             type boolean;
             description "Connected checked disabled";
-            ext:custom-validation ValidateDisableConnectedCheck;
+            //ext:custom-validation ValidateDisableConnectedCheck;
         }
 
         leaf enforce_first_as {
@@ -307,7 +307,7 @@ module sonic-bgp-common {
 
         leaf strict_capability_match {
             type boolean;
-            ext:custom-validation ValidateStrictAndOverRideCapability;
+            //ext:custom-validation ValidateStrictAndOverRideCapability;
             description "Strict capability negotiation match";
         }
 

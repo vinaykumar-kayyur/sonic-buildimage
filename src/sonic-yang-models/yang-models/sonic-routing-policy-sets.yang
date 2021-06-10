@@ -64,7 +64,7 @@ module sonic-routing-policy-sets {
 
             list PREFIX_LIST { 
                 key "name sequence_number ip_prefix masklength_range";
-                ext:custom-validation ValidateIpPrefixListCfg;
+                //ext:custom-validation ValidateIpPrefixListCfg;
 
                 leaf name {
                     type leafref {

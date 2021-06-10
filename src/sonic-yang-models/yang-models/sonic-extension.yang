@@ -10,9 +10,4 @@ module sonic-extension {
     revision 2019-07-01 {
         description "First Revision";
     }
-
-    extension custom-validation {
-        description "Extension for registering custom validation handler.";
-        argument "handler";
-    }
 }

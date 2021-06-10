@@ -287,7 +287,7 @@ module sonic-bgp-global {
                     type uint16 {
                         range 0..3600;
                     }
-                    ext:custom-validation ValidateMaxDelayAndEstWait;
+                    //ext:custom-validation ValidateMaxDelayAndEstWait;
                     description
                         "Maximum delay for updates.";
                 }
@@ -518,7 +518,7 @@ module sonic-bgp-global {
 
                 leaf backdoor {
                     type boolean;
-                    ext:custom-validation ValidateAfisafiForBackdoor;
+                    //ext:custom-validation ValidateAfisafiForBackdoor;
                     description "Indicates the backdoor route";
                 }
             }
