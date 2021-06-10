@@ -174,75 +174,60 @@
     "NAT_GLOBAL_WITH_VALID_VALUES": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
-                "NAT_GLOBAL_LIST": [
-                    {
-                        "name": "Values",
+                "Values": {
                         "admin_mode": "enabled",
                         "nat_timeout": "500",
                         "nat_tcp_timeout": "500",
                         "nat_udp_timeout": "500"
-                    }
-                ]
+                }
             }
         }
     },
     "NAT_GLOBAL_WITH_WRONG_NAME": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
-                "NAT_GLOBAL_LIST": [
-                    {
-                        "name": "Value",
+                "Value": {
                         "admin_mode": "enabled",
                         "nat_timeout": "500",
                         "nat_tcp_timeout": "500",
                         "nat_udp_timeout": "500"
-                    }
-                ]
+                }
             }
         }
     },
     "NAT_GLOBAL_WITH_INVALID_UDP_TIMEOUT": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
-                "NAT_GLOBAL_LIST": [
-                    {
-                        "name": "Values",
+                "Values": {
                         "admin_mode": "enabled",
                         "nat_timeout": "500",
                         "nat_tcp_timeout": "500",
                         "nat_udp_timeout": "50"
-                    }
-                ]
+                }
             }
         }
     },
     "NAT_GLOBAL_WITH_INVALID_TIMEOUT": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
-                "NAT_GLOBAL_LIST": [
-                    {
-                        "name": "Values",
+                "Values": {
                         "admin_mode": "enabled",
                         "nat_timeout": "50",
                         "nat_tcp_timeout": "500",
                         "nat_udp_timeout": "500"
-                    }
-                ]
+                }
             }
         }
     },
     "NAT_GLOBAL_WITH_INVALID_TCP_TIMEOUT": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
-                "NAT_GLOBAL_LIST": [
-                    {
-                        "name": "Values",
+                "Values": {
                         "admin_mode": "enabled",
                         "nat_timeout": "500",
                         "nat_tcp_timeout": "50",
                         "nat_udp_timeout": "500"
-                    }
-                ]
+                }
             }
         }
     },

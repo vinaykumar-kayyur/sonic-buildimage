@@ -157,17 +157,7 @@ module sonic-nat {
 
             description "NAT_GLOBAL table part of config_db.json";
 
-            list NAT_GLOBAL_LIST {
-                key "name";
-                max-elements 1;
-
-                leaf name {
-                    description "Key - Name of the NAT Global table - Values.";
-
-                    type enumeration {
-                        enum Values;
-                    }
-                }
+            container Values {
 
                 leaf admin_mode {
                     description "Admin mode of the NAT feature.";
