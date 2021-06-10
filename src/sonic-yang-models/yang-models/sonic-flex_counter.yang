@@ -48,6 +48,13 @@ module sonic-flex_counter {
                 }
             }
 
+            container PG_DROP {
+                /* PG_DROP_STAT_COUNTER_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+            }
+
             container PG_WATERMARK {
                 /* PG_WATERMARK_STAT_COUNTER_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
@@ -99,13 +106,6 @@ module sonic-flex_counter {
 
             container RIF_RATES {
                 /* RIF_RATE_COUNTER_FLEX_COUNTER_GROUP */
-                leaf FLEX_COUNTER_STATUS {
-                    type flex_status;
-                }
-            }
-
-            container PG_DROP {
-                /* PG_DROP_STAT_COUNTER_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
                     type flex_status;
                 }

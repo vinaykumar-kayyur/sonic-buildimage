@@ -11,6 +11,9 @@
                 "PFCWD": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
+                "PG_DROP": {
+                    "FLEX_COUNTER_STATUS": "enable"
+                },
                 "PG_WATERMARK": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
@@ -27,9 +30,6 @@
                     "FLEX_COUNTER_STATUS": "enable"
                 },
                 "QUEUE_WATERMARK": {
-                    "FLEX_COUNTER_STATUS": "enable"
-                },
-                "PG_DROP": {
                     "FLEX_COUNTER_STATUS": "enable"
                 }
             }
