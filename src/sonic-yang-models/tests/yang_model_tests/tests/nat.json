@@ -46,10 +46,6 @@
     "NAT_GLOBAL_WITH_VALID_VALUES": {
         "desc": "Configuring a NAT Global table with valid values."
     },
-    "NAT_GLOBAL_WITH_WRONG_NAME": {
-        "desc": "Configuring a NAT Global table with wrong name.",
-        "eStrKey": "InvalidValue"
-    },
     "NAT_GLOBAL_WITH_INVALID_UDP_TIMEOUT": {
         "desc": "Configuring a NAT Global table with a invalid udp timeout.",
         "eStr": "Invalid NAT UDP Timeout, valid range 120 sec to 600 sec."

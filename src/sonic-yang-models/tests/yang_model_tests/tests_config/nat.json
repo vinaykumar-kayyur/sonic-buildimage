@@ -183,18 +183,6 @@
             }
         }
     },
-    "NAT_GLOBAL_WITH_WRONG_NAME": {
-        "sonic-nat:sonic-nat": {
-            "sonic-nat:NAT_GLOBAL": {
-                "Value": {
-                        "admin_mode": "enabled",
-                        "nat_timeout": "500",
-                        "nat_tcp_timeout": "500",
-                        "nat_udp_timeout": "500"
-                }
-            }
-        }
-    },
     "NAT_GLOBAL_WITH_INVALID_UDP_TIMEOUT": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_GLOBAL": {
