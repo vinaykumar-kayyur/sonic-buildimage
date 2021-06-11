@@ -197,6 +197,8 @@ class Fan(FanBase):
             if not self.is_psu_fan \
             else "PSU-{} FAN-{}".format(self.psu_index+1, self.fan_index+1)
 
+        return fan_name
+
     def get_presence(self):
         """
         Retrieves the presence of the PSU
