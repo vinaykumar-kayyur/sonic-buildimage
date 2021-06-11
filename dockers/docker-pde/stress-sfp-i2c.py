@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 try:
-    import os
     import sys
-    import subprocess
     import time
     import imp
     from natsort import natsorted

@@ -2,8 +2,6 @@
 
 import sys
 import imp
-import subprocess
-import time
 
 PLATFORM_SPECIFIC_MODULE_NAME = "eeprom"
 PLATFORM_SPECIFIC_CLASS_NAME = "board"
