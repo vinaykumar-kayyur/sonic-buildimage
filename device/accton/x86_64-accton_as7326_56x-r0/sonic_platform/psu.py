@@ -73,7 +73,7 @@ class Psu(PsuBase):
                 return fd.read().strip()
         except IOError:
             pass
-        return ""
+        return None
 
     def get_voltage(self):
         """
@@ -232,7 +232,7 @@ class Psu(PsuBase):
             string: Model/part number of device
         """
         model = self.__read_txt_file(self.cpld_path + "psu_model_name")
-        if not model:
+        if model is None:
             return "N/A"
         return model
 
@@ -243,6 +243,6 @@ class Psu(PsuBase):
             string: Serial number of device
         """
         serial = self.__read_txt_file(self.cpld_path + "psu_serial_number")
-        if not serial:
+        if serial is None:
             return "N/A"
         return serial
