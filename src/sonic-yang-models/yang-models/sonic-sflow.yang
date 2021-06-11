@@ -14,9 +14,11 @@ module sonic-sflow{
     import sonic-port {
         prefix port;
     }
+    /*
     import sonic-vlan {
         prefix vlan;
     }
+    */
     import sonic-portchannel {
         prefix lag;
     }
@@ -121,8 +123,13 @@ module sonic-sflow{
                         type leafref {
                             path "/mgmt-port:sonic-mgmt-port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
                         }*/
+                        /*
                         type leafref {
                             path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
+                        }
+                        */
+                        type string {
+                            pattern 'Vlan([0-9]{1,3}|[1-3][0-9]{3}|[4][0][0-8][0-9]|[4][0][9][0-4])';
                         }
                     }
                     description "Interface name";
