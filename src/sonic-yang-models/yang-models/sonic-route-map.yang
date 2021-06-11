@@ -18,10 +18,10 @@ module sonic-route-map {
     import sonic-routing-policy-sets {
         prefix rpolsets;
     }
-
-    import sonic-vlan {
-        prefix vlan;
-    }
+// Comment sonic-vlan import here until libyang back-links issue is resolved for VLAN leaf reference.
+//    import sonic-vlan {
+//        prefix vlan;
+//    }
 
     import sonic-vrf {
         prefix vrf;
@@ -49,6 +49,7 @@ module sonic-route-map {
             type leafref {
                 path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
             }
+            // Comment VLAN leaf reference here until libyang back-links issue is resolved and use VLAN string pattern
             //type leafref {
             //    path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
             //}
@@ -201,6 +202,7 @@ module sonic-route-map {
                         type leafref {
                             path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
+                        // Comment VLAN leaf reference here until libyang back-links issue is resolved and use VLAN string pattern
                         //type leafref {
                         //    path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                         //}

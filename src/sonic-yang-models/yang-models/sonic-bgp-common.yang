@@ -15,9 +15,10 @@ module sonic-bgp-common {
         prefix lag;
     }
 
-    import sonic-vlan {
-        prefix vlan;
-    }
+  // Comment sonic-vlan import here until libyang back-links issue is resolved for VLAN leaf reference.
+  //  import sonic-vlan {
+  //      prefix vlan;
+  //  }
 
     import sonic-loopback-interface {
         prefix lointf;
@@ -217,6 +218,7 @@ module sonic-bgp-common {
                 type leafref {
                     path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                 }
+                // Comment VLAN leaf reference here until libyang back-links issue is resolved and use VLAN string pattern
                 //type leafref {
                 //    path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                 //}
