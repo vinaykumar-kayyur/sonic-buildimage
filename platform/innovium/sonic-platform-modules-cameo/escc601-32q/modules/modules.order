@@ -1,0 +1,4 @@
+kernel//sonic/platform/innovium/sonic-platform-modules-cameo/escc601-32q/modules/nct7511.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-cameo/escc601-32q/modules/at24_smbus.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-cameo/escc601-32q/modules/zrh2800k2.ko
+kernel//sonic/platform/innovium/sonic-platform-modules-cameo/escc601-32q/modules/x86-64-cameo-escc601-32q.ko

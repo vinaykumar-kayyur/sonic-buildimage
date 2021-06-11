@@ -32,12 +32,16 @@ ssize_t cpld_hw_ver_get(struct device *dev, struct device_attribute *da, char *b
             {
                 status = i2c_smbus_read_byte_data(Cameo_CPLD_23_client, CPLD_VER_REG);
             }
+            break;
         case 30:
             status = i2c_smbus_read_byte_data(Cameo_CPLD_30_client, CPLD_VER_REG);
+            break;
         case 31:
             status = i2c_smbus_read_byte_data(Cameo_CPLD_31_client, CPLD_VER_REG);
+            break;
         case 32:
             status = i2c_smbus_read_byte_data(Cameo_CPLD_32_client, CPLD_VER_REG);
+            break;
     }
     if(status < 0)
     {
