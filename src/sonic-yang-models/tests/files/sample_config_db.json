@@ -11,6 +11,7 @@
                 "members": [
                     "Ethernet1"
                 ],
+                "tpid": "0x8100",
                 "mtu": "9100",
                 "lacp_key": "auto"
             },
@@ -20,12 +21,15 @@
                 "members": [
                     "Ethernet2"
                 ],
+                "tpid": "0x9200",
                 "mtu": "9100",
                 "lacp_key": "auto"
             }
         },
         "PORTCHANNEL_INTERFACE": {
-                "PortChannel0003": {},
+                "PortChannel0003": {
+                    "nat_zone": "1"
+                },
                 "PortChannel0004": {"vrf_name": "Vrf_blue"}
         },
         "PORTCHANNEL_MEMBER": {
@@ -33,7 +37,9 @@
             "PortChannel0004|Ethernet2": {}
         },
         "VLAN_INTERFACE": {
-            "Vlan111": {},
+            "Vlan111": {
+                "nat_zone": "0"
+            },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
                 "scope": "global",
@@ -295,6 +301,7 @@
                 "lanes": "65",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet1": {
@@ -302,6 +309,7 @@
                 "lanes": "66",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet2": {
@@ -309,6 +317,7 @@
                 "lanes": "67",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet3": {
@@ -316,6 +325,7 @@
                 "lanes": "68",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x88A8",
                 "admin_status": "up"
             },
             "Ethernet4": {
@@ -323,6 +333,7 @@
                 "lanes": "69",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x9100",
                 "admin_status": "up"
             },
             "Ethernet5": {
@@ -330,6 +341,7 @@
                 "lanes": "70",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x9200",
                 "admin_status": "up"
             },
             "Ethernet6": {
@@ -337,6 +349,7 @@
                 "lanes": "71",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet7": {
@@ -344,6 +357,7 @@
                 "lanes": "72",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet8": {
@@ -351,6 +365,7 @@
                 "lanes": "73",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet9": {
@@ -358,6 +373,7 @@
                 "lanes": "74",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet10": {
@@ -365,6 +381,7 @@
                 "lanes": "75",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet11": {
@@ -372,6 +389,7 @@
                 "lanes": "76",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet12": {
@@ -379,6 +397,7 @@
                 "lanes": "77",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet13": {
@@ -386,6 +405,7 @@
                 "lanes": "78",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet14": {
@@ -393,6 +413,7 @@
                 "lanes": "79",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet15": {
@@ -400,6 +421,7 @@
                 "lanes": "80",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet16": {
@@ -407,6 +429,7 @@
                 "lanes": "33",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet17": {
@@ -414,6 +437,7 @@
                 "lanes": "34",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet18": {
@@ -421,6 +445,7 @@
                 "lanes": "35",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet19": {
@@ -428,6 +453,7 @@
                 "lanes": "36",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet20": {
@@ -435,6 +461,7 @@
                 "lanes": "37",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet21": {
@@ -442,6 +469,7 @@
                 "lanes": "38",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet22": {
@@ -449,6 +477,7 @@
                 "lanes": "39",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet23": {
@@ -456,6 +485,7 @@
                 "lanes": "40",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet24": {
@@ -463,6 +493,7 @@
                 "lanes": "41",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet25": {
@@ -470,6 +501,7 @@
                 "lanes": "42",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet26": {
@@ -477,6 +509,7 @@
                 "lanes": "43",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet27": {
@@ -484,6 +517,7 @@
                 "lanes": "44",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet28": {
@@ -491,6 +525,7 @@
                 "lanes": "45",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet29": {
@@ -498,6 +533,7 @@
                 "lanes": "46",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet30": {
@@ -505,6 +541,7 @@
                 "lanes": "47",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet31": {
@@ -512,6 +549,7 @@
                 "lanes": "48",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet32": {
@@ -519,6 +557,7 @@
                 "lanes": "49",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet33": {
@@ -526,6 +565,7 @@
                 "lanes": "50",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet34": {
@@ -533,6 +573,7 @@
                 "lanes": "51",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet35": {
@@ -540,6 +581,7 @@
                 "lanes": "52",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet36": {
@@ -547,6 +589,7 @@
                 "lanes": "53",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet112": {
@@ -555,6 +598,7 @@
                 "description": "50G|dccsw01.nw|Eth18",
                 "fec": "fc",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             }
         },
@@ -590,7 +634,9 @@
             "Ethernet112": {},
             "Ethernet14": {},
             "Ethernet16": {},
-            "Ethernet18": {},
+            "Ethernet18": {
+                "nat_zone": "1"
+            },
             "Ethernet112|2a04:5555:40:a709::2/126": {
                 "scope": "global",
                 "family": "IPv6"
@@ -675,7 +721,9 @@
             }
         },
         "LOOPBACK_INTERFACE": {
-            "Loopback0": {},
+            "Loopback0": {
+               "nat_zone": "2"
+            },
             "Loopback0|2a04:5555:40:4::4e9/128": {
                 "scope": "global",
                 "family": "IPv6"
@@ -742,6 +790,38 @@
                 "nexthop_group_low_threshold": "56",
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
+            }
+        },
+        "NAT_BINDINGS": {
+            "bind1": {
+                "nat_pool": "pool1",
+                "nat_type": "snat",
+                "twice_nat_id": "1"
+            }
+        },
+        "NAT_GLOBAL": {
+            "Values": {
+                "admin_mode": "enabled",
+                "nat_tcp_timeout": "86400",
+                "nat_timeout": "600",
+                "nat_udp_timeout": "300"
+            }
+        },
+        "NAT_POOL": {
+            "pool1": {
+                "nat_ip": "125.56.90.50-125.56.90.100",
+                "nat_port": "50-100"
+            }
+        },
+        "STATIC_NAPT": {
+            "125.56.90.10|UDP|100": {
+                "local_ip": "12.12.0.2",
+                "local_port": "251"
+            }
+        },
+        "STATIC_NAT": {
+            "125.56.90.8": {
+                "local_ip": "12.12.0.2"
             }
         }
     },

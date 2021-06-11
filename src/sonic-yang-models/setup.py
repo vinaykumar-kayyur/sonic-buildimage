@@ -54,6 +54,7 @@ setup(
                          './yang-models/sonic-mgmt_port.yang',
                          './yang-models/sonic-mgmt_vrf.yang',
                          './yang-models/sonic-ntp.yang',
+                         './yang-models/sonic-nat.yang',
                          './yang-models/sonic-port.yang',
                          './yang-models/sonic-portchannel.yang',
                          './yang-models/sonic-types.yang',
