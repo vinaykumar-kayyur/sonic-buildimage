@@ -6,9 +6,11 @@ DOCKER_PDE_DBG = $(DOCKER_PDE_STEM)-$(DBG_IMAGE_MARK).gz
 $(DOCKER_PDE)_PATH = $(DOCKERS_PATH)/$(DOCKER_PDE_STEM)
 $(DOCKER_PDE)_DEPENDS += $(PYTHON_NETIFACES)
 $(DOCKER_PDE)_DEPENDS += $(SONIC_PLATFORM_PDE) $(BRCM_SAI)
+
 $(DOCKER_PDE_RDEPENDS += $(PYTHON_NETIFACES)
 $(DOCKER_PDE)_PYTHON_DEBS += $(SONIC_UTILS)
 $(DOCKER_PDE)_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY3)
+
 ifeq ($(PDDF_SUPPORT), y)
 $(DOCKER_PDE)_PYTHON_WHEELS += $(PDDF_PLATFORM_API_BASE_PY3)
 endif
@@ -20,6 +22,7 @@ SONIC_DOCKER_IMAGES += $(DOCKER_PDE)
 SONIC_BUSTER_DOCKERS += $(DOCKER_PDE)
 SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_PDE)
 SONIC_BUSTER_DBG_DOCKERS += $(DOCKER_PDE_DBG)
+
 SONIC_DOCKER_DBG_IMAGES += $(DOCKER_PDE_DBG)
 SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_PDE_DBG)
 
@@ -35,6 +38,7 @@ $(DOCKER_PDE)_RUN_OPT += -v /boot:/boot:ro
 $(DOCKER_PDE)_RUN_OPT += -v /var/log/ramfs:/var/log/ramfs:ro
 $(DOCKER_PDE)_RUN_OPT += -v /usr/share/sonic/device/x86_64-broadcom_common:/usr/share/sonic/device/x86_64-broadcom_common:ro
 $(DOCKER_PDE)_RUN_OPT += -v /usr/share/sonic/device/pddf:/usr/share/sonic/device/pddf:ro
+
 $(DOCKER_PDE)_BASE_IMAGE_FILES += pde-test:/usr/local/bin/pde-test
 $(DOCKER_PDE)_BASE_IMAGE_FILES += pde-bench:/usr/local/bin/pde-bench
 $(DOCKER_PDE)_BASE_IMAGE_FILES += pde-stress:/usr/local/bin/pde-stress
