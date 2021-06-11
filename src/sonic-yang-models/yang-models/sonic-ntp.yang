@@ -20,11 +20,11 @@ module sonic-ntp {
     import sonic-portchannel {
         prefix lag;
     }
-
+    /* comment out sonic-vlan until related build issue is fixed
     import sonic-vlan {
         prefix vlan;
     }
-
+    */
     import sonic-loopback-interface {
         prefix lo;
     }
@@ -57,9 +57,11 @@ module sonic-ntp {
                         type leafref {
                             path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name;
                         }
+                        /*
                         type leafref {
                             path /vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name;
                         }
+                        */
                         type leafref {
                             path /lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name;
                         }

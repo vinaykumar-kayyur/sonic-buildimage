@@ -44,11 +44,6 @@
         "eStrKey": "InvalidValue",
         "eStr": ["src"]
     },
-    "NTP_SRC_INTF_WITH_NONEXIST_VLAN_INTF": {
-        "desc": "CONFIGURE NON-EXISTING VLAN INTERFACE AS NTP SOURCE INTERFACE.",
-        "eStrKey": "InvalidValue",
-        "eStr": ["src"]
-    },
     "NTP_SRC_INTF_WITH_NONEXIST_LOOPBACK_INTF": {
         "desc": "CONFIGURE NON-EXISTING LOOPBACK INTERFACE AS NTP SOURCE INTERFACE.",
         "eStrKey": "InvalidValue",

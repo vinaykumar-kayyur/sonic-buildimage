@@ -124,7 +124,6 @@
                 "sonic-ntp:global": { 
                     "src_intf": [
                         "Ethernet0",
-                        "Vlan100",
                         "Loopback100",
                         "PortChannel10",
                         "eth0"
@@ -143,18 +142,6 @@
                         "name": "Ethernet0",
                         "speed": 25000,
                         "lanes": "65"
-                    }
-                ]
-            }
-        },
-        "sonic-vlan:sonic-vlan": {
-            "sonic-vlan:VLAN": {
-                "VLAN_LIST": [
-                    {
-                        "admin_status": "up",
-                        "description": "vlan 100",
-                        "mtu": "9100",
-                        "name": "Vlan100"
                     }
                 ]
             }
@@ -194,17 +181,6 @@
                 "sonic-ntp:global": { 
                     "src_intf": [
 		        "Ethernet0"
-		    ]
-                }
-            }
-        }
-    },
-    "NTP_SRC_INTF_WITH_NONEXIST_VLAN_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": [
-                        "Vlan100"
 		    ]
                 }
             }
