@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 try:
-    import os
     import sys
-    import subprocess
     import time
     import imp
     from natsort import natsorted
@@ -154,7 +152,11 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         sec = int(sys.argv[1])
 <<<<<<< HEAD
+<<<<<<< HEAD
     stress_sfp_i2c(sec)
 =======
     stress_sfp_i2c(sec)
 >>>>>>> d0f6bb2d... Fix review comment
+=======
+    stress_sfp_i2c(sec)
+>>>>>>> 7cd31a4b... Fix LGTM
