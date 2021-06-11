@@ -722,6 +722,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*.gz_PYTHON_DEBS)) \
 		$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*.gz_PYTHON_WHEELS)) \
 		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS))) \
+		$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*.gz_INSTALL_PYTHON_WHEELS))) \
+		$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*.gz_INSTALL_DEBS))) \
 		$$($$*.gz_PATH)/Dockerfile.j2 \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES_PY3)-install) \
 		$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES_PY3)-install) \
