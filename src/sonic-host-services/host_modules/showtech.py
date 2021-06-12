@@ -26,23 +26,23 @@ class Showtech(host_service.HostModule):
             cmd.append(date)
 
         try:
-            rc = 0
             result = subprocess.run(cmd, capture_output=True, text=True,
                                     check=True)
 
         except subprocess.CalledProcessError as err:
-            rc = err.returncode
-            errmsg = err_dict.get(rc)
+            errmsg = err_dict.get(err.returncode)
 
             if errmsg is None:
-                output = 'Error: Failure code {:-5}'.format(rc)
+                output = 'Error: Failure code {:-5}'.format(err.returncode)
             else:
                 output = errmsg
 
-            print("%Error: Host side: Failed: " + str(rc))
-            return rc, output
+            print("%Error: Host side: Failed: " + str(err.returncode))
+            return err.returncode, output
 
-        return rc, result.stdout
+        output_file_match = re.search('\/var\/.*dump.*\.gz', result.stdout)
+        output_filename = output_file_match.group()
+        return result.returncode, output_filename
 
 def register():
     """Return the class name"""
