@@ -2,13 +2,17 @@ import ast
 import json
 import os
 import subprocess
+import sys
 
 import tests.common_utils as utils
 
 from unittest import TestCase
-from unittest import mock
 from portconfig import get_port_config, INTF_KEY
 
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    import mock
 
 # Global Variable
 PLATFORM_OUTPUT_FILE = "platform_output.json"
