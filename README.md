@@ -1,9 +1,10 @@
+*static analysis*:
+
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/context:python)
 
 
 *master builds*:
-
 
 [![Barefoot](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-all/badge/icon?subject=Barefoot)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-all)
 [![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
@@ -14,7 +15,19 @@
 [![Marvell(armhf)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-all/badge/icon?subject=Marvell(armhf))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-all)
 [![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all)
 [![P4](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon?subject=P4)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
-[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-all/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-all)
+[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image)
+
+*202012 builds*:
+
+[![Barefoot](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-202012/badge/icon?subject=Barefoot)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-202012/)
+[![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-202012/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-202012)
+[![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-202012/badge/icon?subject=Centec)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-202012)
+[![Centec(arm64)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-202012/badge/icon?subject=Centec(arm64))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-202012)
+[![Innovium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-202012/badge/icon?subject=Innovium)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-202012/)
+[![Marvell(armhf)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-202012/badge/icon?subject=Marvell(armhf))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-202012)
+[![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-202012/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-202012)
+[![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-202012/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-202012)
+[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image-202012/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image-202012)
 
 *201911 builds*:
 
@@ -26,7 +39,6 @@
 [![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201911/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201911)
 
 *201811 builds*:
-
 
 [![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201811/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201811/)
 [![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201811/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201811/)
@@ -102,7 +114,7 @@ To build SONiC installer image and docker images, run the following commands:
     make all
 
 ## Usage for ARM Architecture
-To build Arm32 bit for (ARMHF) plaform
+To build Arm32 bit for (ARMHF) platform
     ARM build has dependency in docker version 18,
     if docker version is 19, downgrade to 18 as below
     sudo apt-get install --allow-downgrades  -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
@@ -122,7 +134,7 @@ To build Arm32 bit for (ARMHF) plaform
 
 
 
-To build Arm64 bit for plaform
+To build Arm64 bit for platform
 
     # Execute make configure once to configure ASIC and ARCH
 
@@ -141,7 +153,7 @@ To build Arm64 bit for plaform
     `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
 
     The solution is to [move the directory](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) to a partition with more free space.
-- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
+- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] no_proxy=[your_no_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
 The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor. The supported ASIC vendors are:
@@ -184,7 +196,7 @@ Every target has a clean target, so in order to clean swss, execute:
 It is recommended to use clean targets to clean all packages that are built together, like dev packages for instance. In order to be more familiar with build process and make some changes to it, it is recommended to read this short [Documentation](README.buildsystem.md).
 
 ## Build debug dockers and debug SONiC installer image:
-SONiC build system supports building dockers and ONE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
+SONiC build system supports building dockers and ONIE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
 
 ## Notes:
 - If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.

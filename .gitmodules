@@ -59,7 +59,7 @@
 	url = https://github.com/aristanetworks/sonic
 [submodule "platform/mellanox/hw-management/hw-mgmt"]
 	path = platform/mellanox/hw-management/hw-mgmt
-	url = https://github.com/Mellanox/hw-mgmt/
+	url = https://github.com/Mellanox/hw-mgmt
 [submodule "src/redis-dump-load"]
 	path = src/redis-dump-load
 	url = https://github.com/p/redis-dump-load.git
@@ -85,3 +85,6 @@
 [submodule "src/sonic-mgmt-common"]
 	path = src/sonic-mgmt-common
 	url = https://github.com/Azure/sonic-mgmt-common.git
+[submodule "src/wpasupplicant/sonic-wpa-supplicant"]
+	path = src/wpasupplicant/sonic-wpa-supplicant
+	url = https://github.com/Azure/sonic-wpa-supplicant.git

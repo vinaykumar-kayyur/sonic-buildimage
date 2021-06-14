@@ -4,11 +4,8 @@
 # Watchdog contains an implementation of SONiC Platform Base API
 #
 #############################################################################
-import ctypes
 import fcntl
 import os
-import subprocess
-import time
 import array
 
 try:
@@ -53,6 +50,7 @@ WDT_SYSFS_PATH = "/sys/class/watchdog/"
 class Watchdog(WatchdogBase):
 
     def __init__(self):
+        WatchdogBase.__init__(self)
 
         self.watchdog, self.wdt_main_dev_name = self._get_wdt()
         self.status_path = "/sys/class/watchdog/%s/status" % self.wdt_main_dev_name

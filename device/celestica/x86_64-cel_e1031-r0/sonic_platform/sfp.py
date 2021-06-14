@@ -8,7 +8,6 @@
 
 import os
 import time
-import subprocess
 from ctypes import create_string_buffer
 
 try:
@@ -16,7 +15,6 @@ try:
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sffbase
-    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -88,10 +86,10 @@ class Sfp(SfpBase):
     PLATFORM = "x86_64-cel_e1031-r0"
     HWSKU = "Celestica-E1031-T48S4"
 
-    def __init__(self, sfp_index):
+    def __init__(self, sfp_index, sfp_name):
         # Init index
         self.index = sfp_index
-        self.port_num = self.index
+        self.port_num = self.index + 1
 
         # Init eeprom path
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
@@ -111,6 +109,7 @@ class Sfp(SfpBase):
         self.threshold_dict_keys = ['temphighalarm', 'temphighwarning', 'templowalarm', 'templowwarning', 'vcchighalarm', 'vcchighwarning', 'vcclowalarm', 'vcclowwarning', 'rxpowerhighalarm', 'rxpowerhighwarning',
                                     'rxpowerlowalarm', 'rxpowerlowwarning', 'txpowerhighalarm', 'txpowerhighwarning', 'txpowerlowalarm', 'txpowerlowwarning', 'txbiashighalarm', 'txbiashighwarning', 'txbiaslowalarm', 'txbiaslowwarning']
 
+        self.name = sfp_name
         SfpBase.__init__(self)
 
     def _convert_string_to_num(self, value_str):
@@ -145,12 +144,6 @@ class Sfp(SfpBase):
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
-    def __get_path_to_port_config_file(self):
-        platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
-        hwsku_path = "/".join([platform_path, self.HWSKU]
-                              ) if self.__is_host() else self.PMON_HWSKU_PATH
-        return "/".join([hwsku_path, "port_config.ini"])
-
     def __read_eeprom_specific_bytes(self, offset, num_bytes):
         sysfsfile_eeprom = None
         eeprom_raw = []
@@ -165,7 +158,7 @@ class Sfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except Exception:
             pass
         finally:
             if sysfsfile_eeprom:
@@ -475,7 +468,6 @@ class Sfp(SfpBase):
             A Boolean, True if tx_disable is enabled, False if disabled
         """
         tx_disable = False
-        tx_fault = False
         status_control_raw = self.__read_eeprom_specific_bytes(
             SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
         if status_control_raw:
@@ -608,7 +600,7 @@ class Sfp(SfpBase):
                 # Write to eeprom
                 sysfsfile_eeprom.seek(SFP_STATUS_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
-            except:
+            except Exception:
                 #print("Error: unable to open file: %s" % str(e))
                 return False
             finally:
@@ -670,11 +662,7 @@ class Sfp(SfpBase):
             Returns:
             string: The name of the device
         """
-        sfputil_helper = SfpUtilHelper()
-        sfputil_helper.read_porttab_mappings(
-            self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
-        return name
+        return self.name
 
     def get_presence(self):
         """

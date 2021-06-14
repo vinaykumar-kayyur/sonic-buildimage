@@ -4,7 +4,6 @@
 #
 
 try:
-    import time
     import subprocess
     from sonic_sfp.sfputilbase import *
     import syslog
@@ -41,8 +40,11 @@ SFP_PORT_NAME_CONVENTION = "sfp{}"
 
 # magic code defnition for port number, qsfp port position of each platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-platform_dict = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 3,
-                 'x86_64-mlnx_msn3420-r0': 5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c': 4, 'x86_64-mlnx_msn4700-r0': 0}
+platform_dict = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn2100-r0': 1,
+                 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn3420-r0': 5,
+                 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4,
+                 'x86_64-mlnx_msn4410-r0': 0, 'x86_64-mlnx_msn4600-r0': 4, 'x86_64-mlnx_msn4600c-r0': 4, 
+                 'x86_64-mlnx_msn4700-r0': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),
                             (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
 
@@ -185,8 +187,7 @@ class SfpUtil(SfpUtilBase):
             print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
 
-        return False
-
+ 
     def get_transceiver_change_event(self, timeout=0):
         phy_port_dict = {}
         status = True
@@ -350,7 +351,6 @@ class SfpUtil(SfpUtilBase):
             if port_num in self.qsfp_ports:
                 offset = 128
                 vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
                 sfp_type = 'QSFP'
 
@@ -362,7 +362,6 @@ class SfpUtil(SfpUtilBase):
             else:
                 offset = 0
                 vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
                 sfp_type = 'SFP'
 
@@ -513,7 +512,7 @@ class SfpUtil(SfpUtilBase):
             qsfp_dom_capability_raw = self._read_eeprom_specific_bytes_via_ethtool(
                 port_num, (offset_xcvr + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
             if qsfp_dom_capability_raw is not None:
-                qspf_dom_capability_data = sfpi_obj.parse_qsfp_dom_capability(qsfp_dom_capability_raw, 0)
+                qspf_dom_capability_data = sfpi_obj.parse_dom_capability(qsfp_dom_capability_raw, 0)
             else:
                 return transceiver_dom_info_dict
 

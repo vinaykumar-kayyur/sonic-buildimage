@@ -28,7 +28,10 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd libyang-$(LIBYANG1_VERSION)
 	sed -i 's/set(LIBYANG_MAJOR_SOVERSION 1)/set(LIBYANG_MAJOR_SOVERSION 2)/' CMakeLists.txt
 	sed -i 's/libyang1/libyang2/' debian/libyang1.install
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
+	# Enable large file support for 32-bit arch
+	echo 'add_definitions(-D_FILE_OFFSET_BITS=64)' >> CMakeLists.txt
+
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	# Move the newly-built .deb packages to the destination directory

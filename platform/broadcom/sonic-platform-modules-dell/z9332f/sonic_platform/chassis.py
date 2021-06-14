@@ -19,6 +19,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.watchdog import Watchdog
+    import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -53,42 +54,58 @@ class Chassis(ChassisBase):
     REBOOT_CAUSE_PATH = "/host/reboot-cause/platform/reboot_reason"
     oir_fd = -1
     epoll = -1
+    io_res = "/dev/port"
+    sysled_offset = 0xA162
+    SYSLED_COLOR_TO_REG = {
+       "green": 0xd0,
+       "yellow": 0xe0,
+       "flash_green": 0xd2,
+       "flash_yellow": 0xe2
+       }
+
+    REG_TO_SYSLED_COLOR = {
+        0xd0 : "green",
+        0xe0 : "yellow",
+        0xd2 : "flash_green",
+        0xd1 : "flash_green",
+        0xe2 : "flash_yellow",
+        0xe1 : "flash_yellow"
+        }
 
     _global_port_pres_dict = {}
-
     _port_to_i2c_mapping = {
-            1:  10,
-            2:  11,
-            3:  12,
-            4:  13,
-            5:  14,
-            6:  15,
-            7:  16,
-            8:  17,
-            9:  18,
-            10: 19,
-            11: 20,
-            12: 21,
-            13: 22,
-            14: 23,
-            15: 24,
-            16: 25,
-            17: 26,
-            18: 27,
-            19: 28,
-            20: 29,
-            21: 30,
-            22: 31,
-            23: 32,
-            24: 33,
-            25: 34,
-            26: 35,
-            27: 36,
-            28: 37,
-            29: 38,
-            30: 39,
-            31: 40,
-            32: 41,
+            1:  4,
+            2:  5,
+            3:  6,
+            4:  7,
+            5:  8,
+            6:  9,
+            7:  10,
+            8:  11,
+            9:  12,
+            10: 13,
+            11: 14,
+            12: 15,
+            13: 16,
+            14: 17,
+            15: 18,
+            16: 19,
+            17: 20,
+            18: 21,
+            19: 22,
+            20: 23,
+            21: 24,
+            22: 25,
+            23: 26,
+            24: 27,
+            25: 28,
+            26: 29,
+            27: 30,
+            28: 31,
+            29: 32,
+            30: 33,
+            31: 34,
+            32: 35,
             33: 1,
             34: 2,
             }
@@ -104,7 +121,7 @@ class Chassis(ChassisBase):
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
         for index in range(self.PORT_START, self.PORTS_IN_BLOCK):
             eeprom_path = eeprom_base.format(self._port_to_i2c_mapping[index])
-            port_type = 'SFP' if index in _sfp_port else 'QSFP'
+            port_type = 'SFP' if index in _sfp_port else 'QSFP_DD'
             sfp_node = Sfp(index, port_type, eeprom_path)
             self._sfp_list.append(sfp_node)
 
@@ -183,7 +200,7 @@ class Chassis(ChassisBase):
             # The index will start from 0
             sfp = self._sfp_list[index-1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
 
@@ -317,3 +334,51 @@ class Chassis(ChassisBase):
 
     def get_qualified_media_list(self):
         return media_part_num_list
+
+    def initizalize_system_led(self):
+        self.sys_ledcolor = "green"
+
+    def get_status_led(self):
+        """
+        Gets the current system LED color
+
+        Returns:
+            A string that represents the supported color
+        """
+        val = hwaccess.io_reg_read(self.io_res, self.sysled_offset)
+        if val != -1:
+            return self.REG_TO_SYSLED_COLOR.get(val)
+        return self.sys_ledcolor
+
+    def set_status_led(self, color):
+        """ 
+        Set system LED status based on the color type passed in the argument.
+        Argument: Color to be set
+        Returns:
+          bool: True is specified color is set, Otherwise return False
+        """
+
+        if color not in list(self.SYSLED_COLOR_TO_REG.keys()):
+            return False
+
+        if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSLED_COLOR_TO_REG[color])):
+            return False
+        self.sys_ledcolor = color
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

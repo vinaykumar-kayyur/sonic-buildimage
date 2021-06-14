@@ -29,11 +29,13 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(ACCTON_AS6712_32X_PLATFORM_MODULE) \
                                $(ACCTON_AS7726_32X_PLATFORM_MODULE) \
                                $(ACCTON_AS4630_54PE_PLATFORM_MODULE) \
+                               $(ACCTON_AS4630_54TE_PLATFORM_MODULE) \
                                $(ACCTON_MINIPACK_PLATFORM_MODULE) \
                                $(ACCTON_AS5812_54X_PLATFORM_MODULE) \
                                $(ACCTON_AS5812_54T_PLATFORM_MODULE) \
                                $(ACCTON_AS5835_54X_PLATFORM_MODULE) \
                                $(ACCTON_AS9716_32D_PLATFORM_MODULE) \
+                               $(ACCTON_AS9726_32D_PLATFORM_MODULE) \
                                $(ACCTON_AS5835_54T_PLATFORM_MODULE) \
                                $(ACCTON_AS7312_54XS_PLATFORM_MODULE) \
                                $(ACCTON_AS7315_27XB_PLATFORM_MODULE) \
@@ -62,7 +64,9 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(JUNIPER_QFX5210_PLATFORM_MODULE) \
                                $(CEL_SILVERSTONE_PLATFORM_MODULE) \
                                $(JUNIPER_QFX5200_PLATFORM_MODULE) \
-                               $(DELTA_AGC032_PLATFORM_MODULE)
+                               $(DELTA_AGC032_PLATFORM_MODULE) \
+                               $(RUIJIE_B6510_48VS8CQ_PLATFORM_MODULE) \
+                               $(RAGILE_RA_B6510_48V8C_PLATFORM_MODULE)
 ifeq ($(INSTALL_DEBUG_TOOLS),y)
 $(SONIC_ONE_IMAGE)_DOCKERS += $(SONIC_INSTALL_DOCKER_DBG_IMAGES)
 $(SONIC_ONE_IMAGE)_DOCKERS += $(filter-out $(patsubst %-$(DBG_IMAGE_MARK).gz,%.gz, $(SONIC_INSTALL_DOCKER_DBG_IMAGES)), $(SONIC_INSTALL_DOCKER_IMAGES))

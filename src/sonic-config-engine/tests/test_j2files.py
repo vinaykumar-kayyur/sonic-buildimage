@@ -17,6 +17,7 @@ class TestJ2Files(TestCase):
         self.t0_mvrf_minigraph = os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml')
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
         self.mlnx_port_config = os.path.join(self.test_dir, 'sample-port-config-mlnx.ini')
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
@@ -24,6 +25,7 @@ class TestJ2Files(TestCase):
         self.multi_asic_minigraph = os.path.join(self.test_dir, 'multi_npu_data', 'sample-minigraph.xml')
         self.multi_asic_port_config = os.path.join(self.test_dir, 'multi_npu_data', 'sample_port_config-0.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
+        os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def run_script(self, argument):
         print('CMD: sonic-cfggen ' + argument)
@@ -131,6 +133,34 @@ class TestJ2Files(TestCase):
         output_json = json.loads(output)
 
         self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
+    def test_l2switch_template_dualtor(self):
+        extra_args = {
+            "is_dualtor": True,
+            "uplinks": [
+                "Ethernet24", "Ethernet28", "Ethernet32", "Ethernet36",
+                "Ethernet88", "Ethernet92", "Ethernet96", "Ethernet100"
+            ],
+            "downlinks": [
+                "Ethernet0", "Ethernet4", "Ethernet8", "Ethernet12",
+                "Ethernet16", "Ethernet20", "Ethernet40", "Ethernet44",
+                "Ethernet48", "Ethernet52", "Ethernet56", "Ethernet60",
+                "Ethernet64", "Ethernet68", "Ethernet72", "Ethernet76",
+                "Ethernet80", "Ethernet84", "Ethernet104", "Ethernet108",
+                "Ethernet112", "Ethernet116", "Ethernet120", "Ethernet124"
+            ]
+        }
+        argument = '-a \'{}\' -k Arista-7050CX3-32S-D48C8 --preset l2 -p {}'.format(
+            json.dumps(extra_args), self.t0_7050cx3_port_config
+        )
+        output = self.run_script(argument)
+        output_json = json.loads(output)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'l2switch_dualtor.json')
+        with open(sample_output_file) as sample_output_fd:
+            sample_output_json = json.load(sample_output_fd)
+        self.maxDiff = None
+        self.assertEqual(sample_output_json, output_json)
 
     def test_qos_arista7050_render_template(self):
         arista_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S')
@@ -268,7 +298,17 @@ class TestJ2Files(TestCase):
         self.run_script(argument)
         assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
 
+    def test_ntp_conf(self):
+        conf_template = os.path.join(self.test_dir, "ntp.conf.j2")
+        ntp_interfaces_json = os.path.join(self.test_dir, "data", "ntp", "ntp_interfaces.json")
+        expected = os.path.join(self.test_dir, "sample_output", utils.PYvX_DIR, "ntp.conf")
+
+        argument = '-j {} -t {} > {}'.format(ntp_interfaces_json, conf_template, self.output_file)
+        self.run_script(argument)
+        assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
+
     def tearDown(self):
+        os.environ["CFGGEN_UNIT_TESTING"] = ""
         try:
             os.remove(self.output_file)
         except OSError:

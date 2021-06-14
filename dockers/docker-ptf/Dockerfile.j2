@@ -1,6 +1,6 @@
-{% if CONFIGURED_ARCH == "armhf" %}
+{% if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM multiarch/debian-debootstrap:armhf-stretch
-{% elif CONFIGURED_ARCH == "arm64" %}
+{% elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM multiarch/debian-debootstrap:arm64-stretch
 {% else %}
 FROM debian:stretch
@@ -65,7 +65,9 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         ntpstat             \
         ntpdate             \
         arping              \
-        bridge-utils
+        bridge-utils        \
+        libteam-utils
+
 
 RUN dpkg -i \
 {% for deb in docker_ptf_debs.split(' ') -%}
@@ -78,7 +80,7 @@ RUN rm -rf /debs \
     && apt-get -y autoclean \
     && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/* \
-    && wget --https-only https://bootstrap.pypa.io/get-pip.py \
+    && wget --https-only https://bootstrap.pypa.io/pip/2.7/get-pip.py \
     && python get-pip.py \
     && rm -f get-pip.py \
     && pip install setuptools \
@@ -146,6 +148,18 @@ RUN git clone https://github.com/lguohan/gnxi.git \
     && cd gnmi_cli_py \
     && pip install -r requirements.txt
 
+COPY \
+{% for deb in docker_ptf_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
+RUN dpkg -i \
+{% for deb in docker_ptf_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+COPY ["*.ini", "/etc/ptf/"]
 EXPOSE 22 8009
 
 ENTRYPOINT ["/usr/local/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

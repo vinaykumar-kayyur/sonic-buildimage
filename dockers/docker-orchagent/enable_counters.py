@@ -11,10 +11,12 @@ DEFAULT_ALPHA = '0.18'
 
 
 def enable_counter_group(db, name):
-    info = {}
-    info['FLEX_COUNTER_STATUS'] = 'enable'
-    db.mod_entry("FLEX_COUNTER_TABLE", name, info)
+    entry_info = db.get_entry("FLEX_COUNTER_TABLE", name)
 
+    if not entry_info:
+        info = {}
+        info['FLEX_COUNTER_STATUS'] = 'enable'
+        db.mod_entry("FLEX_COUNTER_TABLE", name, info)
 
 def enable_rates():
     # set the default interval for rates
@@ -34,6 +36,7 @@ def enable_counters():
     enable_counter_group(db, 'QUEUE')
     enable_counter_group(db, 'PFCWD')
     enable_counter_group(db, 'PG_WATERMARK')
+    enable_counter_group(db, 'PG_DROP')
     enable_counter_group(db, 'QUEUE_WATERMARK')
     enable_counter_group(db, 'BUFFER_POOL_WATERMARK')
     enable_counter_group(db, 'PORT_BUFFER_DROP')

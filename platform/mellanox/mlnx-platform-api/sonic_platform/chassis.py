@@ -26,6 +26,23 @@ MAX_SELECT_DELAY = 3600
 
 MLNX_NUM_PSU = 2
 
+DMI_FILE = '/sys/firmware/dmi/entries/2-0/raw'
+DMI_HEADER_LEN = 15
+DMI_PRODUCT_NAME = "Product Name"
+DMI_MANUFACTURER = "Manufacturer"
+DMI_VERSION = "Version"
+DMI_SERIAL = "Serial Number"
+DMI_ASSET_TAG = "Asset Tag"
+DMI_LOC = "Location In Chassis"
+DMI_TABLE_MAP = {
+                    DMI_PRODUCT_NAME: 0,
+                    DMI_MANUFACTURER: 1,
+                    DMI_VERSION: 2,
+                    DMI_SERIAL: 3,
+                    DMI_ASSET_TAG: 4,
+                    DMI_LOC: 5
+                }
+
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
 
@@ -45,7 +62,11 @@ logger = Logger()
 
 # magic code defnition for port number, qsfp port position of each Platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700':0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn3420-r0':5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c-r0':4, 'x86_64-mlnx_msn4700-r0': 0, 'x86_64-mlnx_msn4410-r0': 0}
+platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2,
+                      'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700': 0, 'x86_64-mlnx_msn2740-r0': 0,
+                      'x86_64-mlnx_msn3420-r0': 5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0,
+                      'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600-r0': 4, 'x86_64-mlnx_msn4600c-r0': 4,
+                      'x86_64-mlnx_msn4700-r0': 0, 'x86_64-mlnx_msn4410-r0': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
 
 class Chassis(ChassisBase):
@@ -62,13 +83,45 @@ class Chassis(ChassisBase):
 
         # Initialize Platform name
         self.platform_name = device_info.get_platform()
+
+        # Initialize DMI data
+        self.dmi_data = None
         
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
-        self.sfp_module_initialized = False
+        #
+        # Multiple scenarios need to be taken into consideration regarding the SFP modules initialization.
+        # - Platform daemons
+        #   - Can access multiple or all SFP modules
+        # - sfputil
+        #   - Sometimes can access only one SFP module
+        #   - Call get_sfp to get one SFP module object
+        #
+        # We should initialize all SFP modules only if it is necessary because initializing SFP module is time-consuming.
+        # This means,
+        # - If get_sfp is called,
+        #    - If the _sfp_list isn't initialized, initialize it first.
+        #    - Only the SFP module being required should be initialized.
+        # - If get_all_sfps is called,
+        #    - If the _sfp_list isn't initialized, initialize it first.
+        #    - All SFP modules need to be initialized.
+        #      But the SFP modules that have already been initialized should not be initialized for the second time.
+        #      This can caused by get_sfp being called before.
+        #
+        # Due to the complexity of SFP modules initialization, we have to introduce two initialized flags for SFP modules
+        # - sfp_module_partial_initialized:
+        #    - False: The _sfp_list is [] (SFP stuff has never been accessed)
+        #    - True: The _sfp_list is a list whose length is number of SFP modules supported by the platform
+        # - sfp_module_full_initialized:
+        #    - False: All SFP modules have not been created
+        #    - True: All SFP modules have been created
+        #
+        self.sfp_module_partial_initialized = False
+        self.sfp_module_full_initialized = False
         self.sfp_event_initialized = False
         self.reboot_cause_initialized = False
         self.sdk_handle = None
+        self.deinitialize_sdk_handle = None
         logger.log_info("Chassis loaded successfully")
 
 
@@ -76,9 +129,8 @@ class Chassis(ChassisBase):
         if self.sfp_event_initialized:
             self.sfp_event.deinitialize()
 
-        if self.sdk_handle:
-            from sonic_platform.sfp import deinitialize_sdk_handle
-            deinitialize_sdk_handle(self.sdk_handle)
+        if self.deinitialize_sdk_handle:
+            self.deinitialize_sdk_handle(self.sdk_handle)
 
 
     def initialize_psu(self):
@@ -108,12 +160,20 @@ class Chassis(ChassisBase):
                 fan = Fan(fan_index, drawer, index + 1)
                 fan_index += 1
                 drawer._fan_list.append(fan)
-                self._fan_list.append(fan)
 
 
-    def initialize_sfp(self):
+    def initialize_single_sfp(self, index):
+        if not self._sfp_list[index]:
+            if index >= self.QSFP_PORT_START and index < self.PORTS_IN_BLOCK:
+                sfp_module = self.sfp_module(index, 'QSFP', self.get_sdk_handle, self.platform_name)
+            else:
+                sfp_module = self.sfp_module(index, 'SFP', self.get_sdk_handle, self.platform_name)
+
+            self._sfp_list[index] = sfp_module
+
+
+    def initialize_sfp(self, index=None):
         from sonic_platform.sfp import SFP
-        from sonic_platform.sfp import initialize_sdk_handle
 
         self.sfp_module = SFP
 
@@ -124,22 +184,32 @@ class Chassis(ChassisBase):
         self.PORT_END = port_position_tuple[2]
         self.PORTS_IN_BLOCK = port_position_tuple[3]
 
-        for index in range(self.PORT_START, self.PORT_END + 1):
-            if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
-                sfp_module = SFP(index, 'QSFP', self.get_sdk_handle, self.platform_name)
-            else:
-                sfp_module = SFP(index, 'SFP', self.get_sdk_handle, self.platform_name)
+        if index is not None:
+            if not self.sfp_module_partial_initialized:
+                if index >= self.PORT_START and index < self.PORT_END:
+                    self._sfp_list = list([None]*(self.PORT_END + 1))
+                else:
+                    raise IndexError("{} is not a valid index of SPF modules. Valid index range:[{}, {}]".format(
+                        index, self.PORT_START + 1, self.PORT_END + 1))
+                self.sfp_module_partial_initialized = True
+        else:
+            if not self.sfp_module_partial_initialized:
+                self._sfp_list = list([None]*(self.PORT_END + 1))
+                self.sfp_module_partial_initialized = True
+            for index in range(self.PORT_START, self.PORT_END + 1):
+                self.initialize_single_sfp(index)
 
-            self._sfp_list.append(sfp_module)
-
-        self.sfp_module_initialized = True
+            self.sfp_module_full_initialized = True
 
 
     def get_sdk_handle(self):
         if not self.sdk_handle:
+            from sonic_platform.sfp import initialize_sdk_handle, deinitialize_sdk_handle
             self.sdk_handle = initialize_sdk_handle()
             if self.sdk_handle is None:
                 logger.log_error('Failed to open SDK handle')
+            else:
+                self.deinitialize_sdk_handle = deinitialize_sdk_handle
         return self.sdk_handle
 
 
@@ -189,6 +259,18 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self.model
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+        
+        Returns:
+            string: Revision value of device
+        """
+        if self.dmi_data is None:
+            self.dmi_data = self._parse_dmi(DMI_FILE)
+
+        return self.dmi_data.get(DMI_VERSION, "N/A")
         
     ##############################################
     # SFP methods
@@ -200,7 +282,7 @@ class Chassis(ChassisBase):
         Returns:
             An integer, the number of sfps available on this chassis
         """
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             self.initialize_sfp()
         return len(self._sfp_list)
 
@@ -213,7 +295,7 @@ class Chassis(ChassisBase):
             A list of objects derived from SfpBase representing all sfps 
             available on this chassis
         """
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             self.initialize_sfp()
         return self._sfp_list
 
@@ -231,13 +313,17 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        if not self.sfp_module_initialized:
-            self.initialize_sfp()
-
         sfp = None
         index -= 1
+
         try:
+            if not self.sfp_module_partial_initialized:
+                self.initialize_sfp(index)
+
             sfp = self._sfp_list[index]
+            if not sfp:
+                self.initialize_single_sfp(index)
+                sfp = self._sfp_list[index]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
                              index, len(self._sfp_list)-1))
@@ -337,6 +423,31 @@ class Chassis(ChassisBase):
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
             return '0'
+
+
+    def _parse_dmi(self, filename):
+        """
+        Read DMI data chassis data and returns a dictionary of values
+
+        Returns:
+            A dictionary containing the dmi table of the switch chassis info
+        """
+        result = {}
+        try:
+            fileobj = open(filename, "rb")
+            data = fileobj.read()
+            fileobj.close()
+
+            body = data[DMI_HEADER_LEN:]
+            records = body.split(b'\x00')
+
+            for k, v in DMI_TABLE_MAP.items():
+                result[k] = records[v].decode("utf-8")
+
+        except Exception as e:
+            logger.log_error("Fail to decode DMI {} due to {}".format(filename, repr(e)))
+
+        return result
 
 
     def _verify_reboot_cause(self, filename):
@@ -482,7 +593,7 @@ class Chassis(ChassisBase):
         :return:
         """
         # SFP not initialize yet, do nothing
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             return
 
         from . import sfp

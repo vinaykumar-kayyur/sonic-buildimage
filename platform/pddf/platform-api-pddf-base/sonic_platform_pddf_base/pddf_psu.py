@@ -1,24 +1,27 @@
-#!/usr/bin/env python
+#############################################################################
+# PDDF
 #
-# All the supported PSU SysFS aattributes are 
-#- psu_present
-#- psu_model_name
-#- psu_power_good
-#- psu_mfr_id
-#- psu_serial_num
-#- psu_fan_dir
-#- psu_v_out
-#- psu_i_out
-#- psu_p_out
-#- psu_fan1_speed_rpm
+# PDDF psu base class inherited from the base class
 #
+# All the supported PSU SysFS aattributes are
+# - psu_present
+# - psu_model_name
+# - psu_power_good
+# - psu_mfr_id
+# - psu_serial_num
+# - psu_fan_dir
+# - psu_v_out
+# - psu_i_out
+# - psu_p_out
+# - psu_fan1_speed_rpm
+#############################################################################
 
 
 try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class PddfPsu(PsuBase):
@@ -26,7 +29,6 @@ class PddfPsu(PsuBase):
 
     pddf_obj = {}
     plugin_data = {}
-
 
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
         PsuBase.__init__(self)
@@ -37,8 +39,7 @@ class PddfPsu(PsuBase):
         self.plugin_data = pddf_plugin_data
         self.platform = self.pddf_obj.get_platform()
         self.psu_index = index + 1
-        
-        self._fan_list = []     # _fan_list under PsuBase class is a global variable, hence we need to use _fan_list per class instatiation
+
         self.num_psu_fans = int(self.pddf_obj.get_num_psu_fans('PSU{}'.format(index+1)))
         for psu_fan_idx in range(self.num_psu_fans):
             psu_fan = Fan(0, psu_fan_idx, pddf_data, pddf_plugin_data, True, self.psu_index)
@@ -75,11 +76,11 @@ class PddfPsu(PsuBase):
         status = 0
         device = "PSU{}".format(self.psu_index)
         output = self.pddf_obj.get_attr_name_output(device, "psu_present")
-	if not output:
-	    return False
+        if not output:
+            return False
 
         mode = output['mode']
-	status = output['status']
+        status = output['status']
 
         vmap = self.plugin_data['PSU']['psu_present'][mode]['valmap']
 
@@ -98,7 +99,7 @@ class PddfPsu(PsuBase):
         device = "PSU{}".format(self.psu_index)
         output = self.pddf_obj.get_attr_name_output(device, "psu_model_name")
         if not output:
-            return None 
+            return None
 
         model = output['status']
 
@@ -118,7 +119,7 @@ class PddfPsu(PsuBase):
         device = "PSU{}".format(self.psu_index)
         output = self.pddf_obj.get_attr_name_output(device, "psu_serial_num")
         if not output:
-            return None 
+            return None
 
         serial = output['status']
 
@@ -138,7 +139,7 @@ class PddfPsu(PsuBase):
             return False
 
         mode = output['mode']
-        status = output ['status']
+        status = output['status']
 
         vmap = self.plugin_data['PSU']['psu_power_good'][mode]['valmap']
 
@@ -157,9 +158,9 @@ class PddfPsu(PsuBase):
         device = "PSU{}".format(self.psu_index)
         output = self.pddf_obj.get_attr_name_output(device, "psu_mfr_id")
         if not output:
-            return None 
+            return None
 
-	mfr = output['status']
+        mfr = output['status']
 
         return mfr.rstrip('\n')
 
@@ -171,11 +172,11 @@ class PddfPsu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        device = "PSU{}".format(self.psu_index)        
+        device = "PSU{}".format(self.psu_index)
         output = self.pddf_obj.get_attr_name_output(device, "psu_v_out")
         if not output:
             return 0.0
-		
+
         v_out = output['status']
 
         return float(v_out)/1000
@@ -230,12 +231,12 @@ class PddfPsu(PsuBase):
         index = str(self.psu_index-1)
         led_device_name = "PSU{}".format(self.psu_index) + "_LED"
 
-        result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
+        result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color)
         if result == False:
-                print msg
-                return (False)
+            print(msg)
+            return (False)
 
-        device_name=self.pddf_obj.data[led_device_name]['dev_info']['device_name']
+        device_name = self.pddf_obj.data[led_device_name]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('index', index, self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('color', color, self.pddf_obj.get_led_cur_state_path())
@@ -245,19 +246,37 @@ class PddfPsu(PsuBase):
     def get_status_led(self):
         index = str(self.psu_index-1)
         psu_led_device = "PSU{}_LED".format(self.psu_index)
-        if (not psu_led_device in self.pddf_obj.data.keys()):
+        if psu_led_device not in self.pddf_obj.data.keys():
             # Implement a generic status_led color scheme
             if self.get_powergood_status():
                 return self.STATUS_LED_COLOR_GREEN
             else:
                 return self.STATUS_LED_COLOR_OFF
 
-        device_name=self.pddf_obj.data[psu_led_device]['dev_info']['device_name']
+        device_name = self.pddf_obj.data[psu_led_device]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('index', index, self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('dev_ops', 'get_status',  self.pddf_obj.get_led_path())
-        color=self.pddf_obj.get_led_color()
+        color = self.pddf_obj.get_led_color()
         return (color)
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125
+        """
+        device = "PSU{}".format(self.psu_index)
+        output = self.pddf_obj.get_attr_name_output(device, "psu_temp1_input")
+        if not output:
+            return 0.0
+
+        temp1 = output['status']
+
+        # temperature returned is in milli celcius
+        return float(temp1)/1000
 
     def get_input_voltage(self):
         """

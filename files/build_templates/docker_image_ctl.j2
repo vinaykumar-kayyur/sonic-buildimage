@@ -31,7 +31,7 @@ function updateSyslogConf()
 {
     # On multiNPU platforms, change the syslog target ip to docker0 ip to allow logs from containers
     # running on the namespace to reach the rsyslog service running on the host
-    # Also update the container name  
+    # Also update the container name
     if [[ ($NUM_ASIC -gt 1) ]]; then
         TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
         CONTAINER_NAME="$DOCKERNAME"
@@ -40,6 +40,18 @@ function updateSyslogConf()
         sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
         docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
         rm -rf $TMP_FILE
+    fi
+}
+function ebtables_config()
+{
+    if [ "$DEV" ]; then
+        # Install ebtables filter in namespaces on multi-asic.
+        ip netns exec $NET_NS ebtables-restore < /etc/ebtables.filter.cfg
+    else
+        if [[ ! ($NUM_ASIC -gt 1) ]]; then
+            # Install ebtables filter in host for single asic.
+            ebtables-restore < /etc/ebtables.filter.cfg
+        fi
     fi
 }
 
@@ -89,6 +101,19 @@ function preStartAction()
     updateSyslogConf
 }
 
+{%- if docker_container_name == "database" %}
+
+function setPlatformLagIdBoundaries()
+{
+    CHASSIS_CONF=/usr/share/sonic/device/$PLATFORM/chassisdb.conf
+    if [ -f "$CHASSIS_CONF" ]; then
+        source $CHASSIS_CONF
+        $SONIC_DB_CLI CHASSIS_APP_DB SET "SYSTEM_LAG_ID_START" "$lag_id_start"
+        $SONIC_DB_CLI CHASSIS_APP_DB SET "SYSTEM_LAG_ID_END" "$lag_id_end"
+    fi
+}
+{%- endif %}
+
 function postStartAction()
 {
 {%- if docker_container_name == "database" %}
@@ -100,6 +125,8 @@ function postStartAction()
         docker exec -i database$DEV sysctl --system -e
         link_namespace $DEV
     fi
+    # Setup ebtables configuration
+    ebtables_config
 
     # chassisdb starts before database starts, bypass the PING check since other
     # databases are not availbale until database container is ready.
@@ -148,6 +175,7 @@ function postStartAction()
                  ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
            sleep 1
         done
+        setPlatformLagIdBoundaries
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
@@ -366,7 +394,9 @@ start() {
         -e SX_API_SOCKET_FILE=/var/run/sx_sdk/sx_api.sock \
         -v /dev/shm:/dev/shm:rw \
 {%- else %}
+{%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /tmp \
+{%- endif %}
 {%- endif %}
 {%- endif %}
 {%- if sonic_asic_platform == "broadcom" %}
@@ -390,13 +420,23 @@ start() {
         $REDIS_MNT \
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
 {%- if sonic_asic_platform != "mellanox" %}
+{%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /tmp \
 {%- endif %}
+{%- endif %}
+{%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /var/tmp \
+{%- endif %}
         --env "NAMESPACE_ID"="$DEV" \
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
         --env "NAMESPACE_COUNT"=$NUM_ASIC \
-        --name=$DOCKERNAME {{docker_image_name}}:latest || {
+        --name=$DOCKERNAME \
+{%- if docker_image_name is defined %}
+        {{docker_image_name}}:latest \
+{%- else %}
+        {{docker_image_id}} \
+{%- endif %}
+        || {
             echo "Failed to docker run" >&1
             exit 4
     }
@@ -424,6 +464,9 @@ stop() {
     if [ "$DEV" ]; then
         ip netns delete "$NET_NS"
     fi
+    {%- elif docker_container_name == "teamd" %}
+    # Longer timeout of 60 sec to wait for Portchannels to be cleaned.
+    /usr/local/bin/container stop -t 60 $DOCKERNAME
     {%- else %}
     /usr/local/bin/container stop $DOCKERNAME
     {%- endif %}
