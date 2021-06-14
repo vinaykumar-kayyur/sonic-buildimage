@@ -34,6 +34,7 @@ jobs:
       raw_image: no
       sync_rpc_image: no
       platform_rpc: no
+      num_asic: 4
     ${{ if ne(parameters.jobGroups, '') }}:
       jobGroups: ${{ parameters.jobGroups }}
     ${{ if eq(parameters.jobGroups, '') }}:
@@ -98,6 +99,10 @@ jobs:
       - bash: |
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
+            if [ $(dbg_image) == yes ]; then
+              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y NUM_ASIC=$(num_asic) target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-masic-vs-dbg.img.gz
+            fi
+            make $BUILD_OPTIONS  NUM_ASIC=$(num_asic) target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-masic-vs.img.gz
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
             fi
