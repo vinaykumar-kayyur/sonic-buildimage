@@ -85,7 +85,7 @@ int set_peer_link(int mid, const char* ifname)
 
     if (len > MAX_L_PORT_NAME)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "Peer-link %s, Strlen %d greater than MAX:%d ", ifname, strlen, MAX_L_PORT_NAME);
+        ICCPD_LOG_ERR(__FUNCTION__, "Peer-link %s, Strlen %d greater than MAX:%d ", ifname, len, MAX_L_PORT_NAME);
         return MCLAG_ERROR;
     }
 

@@ -111,8 +111,7 @@ int mlacp_fsm_update_Agg_conf(struct CSM* csm, mLACPAggConfigTLV* portconf)
             mlacp_peer_mlag_intf_delete_handler(csm, pif->name);
 
             /* Delete remote interface info from STATE_DB */
-            if (csm)
-                mlacp_link_del_remote_if_info(csm->mlag_id, pif->name);
+            mlacp_link_del_remote_if_info(csm->mlag_id, pif->name);
             peer_if_destroy(pif);
         }
         else
@@ -800,7 +799,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
             if (err < 0)
             {
                 if (err != ICCP_NLE_SEQ_MISMATCH) {
-                    ICCPD_LOG_NOTICE(__FUNCTION__, "ARP add failure for %s %s %s, status %d",
+                    ICCPD_LOG_ERR(__FUNCTION__, "ARP add failure for %s %s %s, status %d",
                                 arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str, err);
                     return MCLAG_ERROR;
                 }
@@ -818,7 +817,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
             if (err < 0)
             {
                 if (err != ICCP_NLE_SEQ_MISMATCH) {
-                    ICCPD_LOG_NOTICE(__FUNCTION__, "ARP delete failure for %s %s %s, status %d",
+                    ICCPD_LOG_ERR(__FUNCTION__, "ARP delete failure for %s %s %s, status %d",
                                 arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str, err);
                     return MCLAG_ERROR;
                 }

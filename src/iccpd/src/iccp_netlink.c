@@ -1222,63 +1222,6 @@ int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInter
     return 0;
 }
 
-#if 0
-int iccp_local_if_addr_update(struct nl_msg *msg, void *arg)
-{
-    int len;
-    struct ifaddrmsg *ifa;
-    struct LocalInterface *lif;
-
-    struct nlmsghdr *n = nlmsg_hdr(msg);
-
-    if (n->nlmsg_type != RTM_NEWADDR && n->nlmsg_type != RTM_DELADDR)
-        return 0;
-
-    ifa = NLMSG_DATA(n);
-
-    if (ifa->ifa_family != AF_INET )
-        return 0;
-
-    lif = local_if_find_by_ifindex(ifa->ifa_index);
-    if (!lif)
-    {
-        return 0;
-    }
-
-    if (n->nlmsg_type == RTM_DELADDR)
-    {
-        lif->ipv4_addr = 0;
-        lif->prefixlen = 0;
-        lif->l3_mode = 0;
-        memset(lif->l3_mac_addr, 0, ETHER_ADDR_LEN);
-    }
-
-    len = n->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-    if (len < 0)
-        return 0;
-
-    struct rtattr *rth = IFA_RTA(ifa);
-    int rtl = IFA_PAYLOAD(n);
-
-    while (rtl && RTA_OK(rth, rtl))
-    {
-        if (rth->rta_type == IFA_ADDRESS)
-        {
-            uint32_t ipaddr = ntohl(*((uint32_t *)RTA_DATA(rth)));
-            lif->ipv4_addr = ipaddr;
-            lif->prefixlen = ifa->ifa_prefixlen;
-            lif->l3_mode = 1;
-            lif->port_config_sync = 1;
-            update_if_ipmac_on_standby(lif);
-            ICCPD_LOG_DEBUG(__FUNCTION__, "If name %s index %d ip %s", lif->name, lif->ifindex, show_ip_str(htonl(lif->ipv4_addr)));
-        }
-        rth = RTA_NEXT(rth, rtl);
-    }
-
-    return 0;
-}
-#endif
-
 int iccp_del_self_ip_from_neigh_table (struct LocalInterface *lif, int addr_family)
 {
     struct System *sys = NULL;
@@ -1788,44 +1731,7 @@ int iccp_system_init_netlink_socket()
         ICCPD_LOG_ERR(__FUNCTION__, "Failed to set buffer size of netlink event sock.");
         goto err_return;
     }
-#if 0
-    sys->family = genl_ctrl_resolve(sys->genric_sock, TEAM_GENL_NAME);
-    while (sys->family < 0)
-    {
-        sleep(1);
-        log_err_period++;
-        /*If no portchannel configuration, teamd will not started, genl_ctrl_resolve() will return <0 forever */
-        /*Only log error message 5 times*/
-        if (log_err_period == 1 && log_err_time < 5)
-        {
-            ICCPD_LOG_ERR(__FUNCTION__, "Failed to resolve netlink family. %d of TEAM_GENL_NAME %s ", sys->family, TEAM_GENL_NAME);
-            log_err_time++;
-        }
-        else
-        {
-            /*Log error message every 30s per time*/
-            if (log_err_period == 30)
-                log_err_period = 0;
-        }
 
-        sys->family = genl_ctrl_resolve(sys->genric_sock, TEAM_GENL_NAME);
-    }
-
-    grp_id = genl_ctrl_resolve_grp(sys->genric_sock, TEAM_GENL_NAME,
-                                   TEAM_GENL_CHANGE_EVENT_MC_GRP_NAME);
-    if (grp_id < 0)
-    {
-        ICCPD_LOG_ERR(__FUNCTION__, "Failed to resolve netlink multicast groups. %d", grp_id);
-        goto err_return;
-    }
-
-    err = nl_socket_add_membership(sys->genric_event_sock, grp_id);
-    if (err < 0)
-    {
-        ICCPD_LOG_ERR(__FUNCTION__, "Failed to add netlink membership.");
-        goto err_return;
-    }
-#endif
     nl_socket_disable_seq_check(sys->genric_event_sock);
     nl_socket_modify_cb(sys->genric_event_sock, NL_CB_VALID, NL_CB_CUSTOM,
                         iccp_genric_event_handler, sys);

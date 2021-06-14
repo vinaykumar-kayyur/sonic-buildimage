@@ -1273,7 +1273,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
-mclagdctl_disconnect:
+ mclagdctl_disconnect:
     mclagdctl_sock_close();
 
     if (rcv_buf)

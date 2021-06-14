@@ -436,6 +436,7 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
     {
         ICCPD_LOG_DEBUG(__FUNCTION__, "Ignoring neighbor entry due to bcast lladdr");
         msgtype = RTM_DELNEIGH;
+        return;
     }
 
     if ((strncmp(ndisc_msg->ifname, VLAN_PREFIX, strlen(VLAN_PREFIX)) == 0)) {

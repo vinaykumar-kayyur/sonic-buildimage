@@ -992,12 +992,6 @@ void mlacp_enqueue_msg(struct CSM* csm, struct Msg* msg)
     if (msg == NULL )
         return;
 
-#if 0
-    icc_hdr = (ICCHdr*)msg->buf;
-    icc_param = (ICCParameter*)&msg->buf[sizeof(ICCHdr)];
-    ICCPD_LOG_DEBUG("mlacp_fsm", "  mLACP enqueue: tlv = 0x%04x", icc_param->type);
-#endif
-
     TAILQ_INSERT_TAIL(&(MLACP(csm).mlacp_msg_list), msg, tail);
 
     return;

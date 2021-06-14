@@ -499,9 +499,9 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
             mclagd_lif.ifindex = lif_peer->ifindex;
 
             if (lif_peer->type == IF_T_UNKNOW)
-                memcpy(mclagd_lif.type, "Unknown", 6);
+                memcpy(mclagd_lif.type, "Unknown", strlen("unknown"));
             else if (lif_peer->type == IF_T_PORT)
-                memcpy(mclagd_lif.type, "Ethernet", 8);
+                memcpy(mclagd_lif.type, "Ethernet", strlen("Ethernet"));
             else if (lif_peer->type == IF_T_PORT_CHANNEL)
                 memcpy(mclagd_lif.type, "PortChannel", 11);
 
@@ -509,13 +509,13 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
             memcpy(mclagd_lif.mac_addr, lif_peer->mac_addr, ETHER_ADDR_LEN);
 
             if (lif_peer->state == PORT_STATE_UP)
-                memcpy(mclagd_lif.state, "Up", 2);
+                memcpy(mclagd_lif.state, "Up", strlen("Up"));
             else if (lif_peer->state == PORT_STATE_DOWN)
-                memcpy(mclagd_lif.state, "Down", 4);
+                memcpy(mclagd_lif.state, "Down", strlen("Down"));
             else if (lif_peer->state == PORT_STATE_ADMIN_DOWN)
-                memcpy(mclagd_lif.state, "Admin-down", 10);
+                memcpy(mclagd_lif.state, "Admin-down", strlen("Admin-down"));
             else if (lif_peer->state == PORT_STATE_TEST)
-                memcpy(mclagd_lif.state, "Test", 4);
+                memcpy(mclagd_lif.state, "Test", strlen("Test"));
 
             memcpy(mclagd_lif.ipv4_addr, show_ip_str(lif_peer->ipv4_addr), 16);
             mclagd_lif.prefixlen = lif_peer->prefixlen;
@@ -530,15 +530,15 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
             mclagd_lif.po_active = lif_peer->po_active;
             /*mlacp_state*/
             if (lif_peer->mlacp_state == MLACP_STATE_INIT)
-                memcpy(mclagd_lif.mlacp_state, "INIT", 4);
+                memcpy(mclagd_lif.mlacp_state, "INIT", strlen("INIT"));
             else if (lif_peer->mlacp_state == MLACP_STATE_STAGE1)
-                memcpy(mclagd_lif.mlacp_state, "STAGE1", 6);
+                memcpy(mclagd_lif.mlacp_state, "STAGE1", strlen("STAGE1"));
             else if (lif_peer->mlacp_state == MLACP_STATE_STAGE2)
-                memcpy(mclagd_lif.mlacp_state, "STAGE2", 6);
+                memcpy(mclagd_lif.mlacp_state, "STAGE2", strlen("STAGE2"));
             else if (lif_peer->mlacp_state == MLACP_STATE_EXCHANGE)
-                memcpy(mclagd_lif.mlacp_state, "EXCHANGE", 8);
+                memcpy(mclagd_lif.mlacp_state, "EXCHANGE", strlen("EXCHANGE"));
             else if (lif_peer->mlacp_state == MLACP_STATE_ERROR)
-                memcpy(mclagd_lif.mlacp_state, "ERROR", 5);
+                memcpy(mclagd_lif.mlacp_state, "ERROR", strlen("ERROR"));
 
             mclagd_lif.isolate_to_peer_link = lif_peer->isolate_to_peer_link;
             mclagd_lif.is_traffic_disable = lif_peer->is_traffic_disable;

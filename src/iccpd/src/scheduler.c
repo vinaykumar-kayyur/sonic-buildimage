@@ -252,7 +252,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
 
     return 1;
 
-recv_err:
+ recv_err:
     scheduler_session_disconnect_handler(csm);
     return MCLAG_ERROR;
 }
@@ -310,12 +310,12 @@ int scheduler_server_accept()
     /* Accept*/
     goto accept_client;
 
-reject_client:
+ reject_client:
     if (new_fd >= 0)
         close(new_fd);
     return MCLAG_ERROR;
 
-accept_client:
+ accept_client:
     session_conn_thread_lock(&csm->conn_mutex);
     ICCPD_LOG_INFO(__FUNCTION__, "Server Accept, SocketFD [%d], %p", new_fd, csm);
 
@@ -522,7 +522,7 @@ int mlacp_sync_with_kernel_callback()
         }
     }
 
-out:
+ out:
     return 0;
 }
 
@@ -642,13 +642,13 @@ void session_client_conn_handler(struct CSM *csm)
         goto conn_ok;
     }
 
-conn_fail:
+ conn_fail:
     if (connFd >= 0)
     {
         csm->sock_fd = -1;
         close(connFd);
     }
-conn_ok:
+ conn_ok:
     time(&csm->connTimePrev);
     session_conn_thread_unlock(&csm->conn_mutex);
     return;
@@ -701,11 +701,11 @@ int scheduler_prepare_session(struct CSM* csm)
         session_conn_thread_unlock(&csm->conn_mutex);
     }
 
-time_update:
+ time_update:
     time(&csm->connTimePrev);
     return 0;
 
-no_time_update:
+ no_time_update:
     return 0;
 }
 
