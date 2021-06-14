@@ -250,6 +250,12 @@ sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/s
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable caclmgrd.service
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 
+# Copy tacacs service & script
+sudo cp files/build_templates/tacacs-config.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo cp files/build_templates/tacacs-config.service $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable tacacs-config.timer
+sudo cp $IMAGE_CONFIGS/updategraph/apply_tacacs.sh $FILESYSTEM_ROOT/usr/bin/
+
 # Copy systemd timer configuration
 # It implements delayed start of services
 sudo cp $BUILD_TEMPLATES/process-reboot-cause.timer $FILESYSTEM_ROOT/etc/systemd/system/
