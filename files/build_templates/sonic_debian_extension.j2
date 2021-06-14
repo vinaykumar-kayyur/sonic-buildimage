@@ -292,7 +292,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \
 {% if sonic_asic_platform == "vs" %}
 for PLATFORM in `ls ./device/virtual`; do
     if [ -f ./device/virtual/$PLATFORM/asic.conf ]; then
-        j2 BUILD_TEMPLATES/asic.conf.j2 | sudo tee ./fsroot/usr/share/sonic/device/$PLATFORM/asic.conf
+        j2 $BUILD_TEMPLATES/asic.conf.j2 | sudo tee ./fsroot/usr/share/sonic/device/$PLATFORM/asic.conf
     fi
 done
 {% endif %}
