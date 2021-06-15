@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 try:
-    import sys
     import os
     import copy
     import json

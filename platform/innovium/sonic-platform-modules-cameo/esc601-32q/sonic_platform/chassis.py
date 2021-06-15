@@ -8,7 +8,6 @@
 
 
 try:
-    import sys
     import os
     import time
     import subprocess
@@ -103,7 +102,6 @@ class Chassis(ChassisBase):
                 sfp_type = SFP_TYPE
             
             for x in range(0,self.platdev.get_sfp_group_number_by_name(sfpg_name)):
-                ext_sysfile_list = list()
                 eeprom_path_list = ['n/a','n/a']
                 if self.platdev.get_sfp_group_path_by_name(sfpg_name)[x] != 'n/a':
                     eeprom_path_list[0] = self.platdev.get_sfp_group_path_by_name(sfpg_name)[x] + '/eeprom'

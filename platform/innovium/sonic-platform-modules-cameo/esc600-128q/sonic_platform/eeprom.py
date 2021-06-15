@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
 try:
-    import glob
     import os
     import sys
-    import imp
     import re
-    from array import array
     if sys.version_info.major == 3:
         from io import StringIO
     else:
@@ -44,7 +41,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                     idx = match.group(1)
                     value = match.group(3).rstrip('\0')
                     _eeprom_info_dict[idx] = value
-            except:
+            except Exception:
                 pass
         return _eeprom_info_dict
 
@@ -68,7 +65,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             # noinspection PyBroadException
             try:
                 os.makedirs(CACHE_ROOT)
-            except:
+            except Exception:
                 pass
 
         #
@@ -78,7 +75,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         # noinspection PyBroadException
         try:
             self.set_cache_name(os.path.join(CACHE_ROOT, CACHE_FILE))
-        except:
+        except Exception:
             pass
 
         data = self.read_eeprom()
@@ -87,7 +84,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         # noinspection PyBroadException
         try:
             self.update_cache(data)
-        except:
+        except Exception:
             pass
 
         self.decode_eeprom(data)
