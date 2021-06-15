@@ -688,16 +688,16 @@
             "pbh_table|nvgre": {
                 "priority": "1",
                 "gre_key": "0x2500/0xffffff00",
-                "inner_ether_type": "0x86dd/0xffff",
+                "inner_ether_type": "0x86dd",
                 "hash": "inner_v6_hash",
                 "packet_action": "SET_ECMP_HASH",
                 "flow_counter": "DISABLED"
             },
             "pbh_table|vxlan": {
                 "priority": "2",
-                "ip_protocol": "0x11/0xff",
-                "l4_dst_port": "0x12b5/0xffff",
-                "inner_ether_type": "0x0800/0xffff",
+                "ip_protocol": "0x11",
+                "l4_dst_port": "0x12b5",
+                "inner_ether_type": "0x0800",
                 "hash": "inner_v4_hash",
                 "packet_action": "SET_LAG_HASH",
                 "flow_counter": "ENABLED"
