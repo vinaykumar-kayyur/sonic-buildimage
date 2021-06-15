@@ -9,14 +9,14 @@ module sonic-mirror-session {
         prefix inet;
     }
 
-	  import sonic-port {
-		    prefix port;
-		    revision-date 2019-07-01;
-	  }
+    import sonic-port {
+        prefix port;
+        revision-date 2019-07-01;
+    }
 
-	  import sonic-portchannel {
-		    prefix lag;
-	  }
+    import sonic-portchannel {
+        prefix lag;
+    }
 
     description
         "SONiC Mirror session yang model";
@@ -46,10 +46,10 @@ module sonic-mirror-session {
                 }
 
                 leaf type {
-					          type string {
-						            pattern "ERSPAN|SPAN";
-					          }
-					          default "ERSPAN";
+                    type string {
+                        pattern "ERSPAN|SPAN";
+                    }
+                    default "ERSPAN";
                     description
                         "Mirror session type.";
                 }
@@ -110,7 +110,7 @@ module sonic-mirror-session {
 
                 leaf dst_port {
                     type leafref {
-							          path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                     }
                     description
                         "Destination port configuration for port mirroring(SPAN).";
@@ -119,10 +119,10 @@ module sonic-mirror-session {
                 leaf src_port {
                     type union {
                         type leafref {
-							              path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                         }
                         type leafref {
-							              path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
                     }
                     description
@@ -131,10 +131,10 @@ module sonic-mirror-session {
                 }
 
                 leaf direction {
-					          type string {
-						            pattern "RX|TX|BOTH";
-					          }
-					          default "BOTH";
+                    type string {
+                        pattern "RX|TX|BOTH";
+                    }
+                    default "BOTH";
                     description
                         "Direction configuration for mirroring. Can be configured for both SPAN/ERSPAN.
                         Supports rx/tx/both as direction config.
