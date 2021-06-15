@@ -17,7 +17,7 @@ module sonic-pbh {
 		prefix lag;
 	}
 
-	description "PBH YANG Module for SONiC OS";
+	description "PBH YANG Module for SONiC OS: hashing for NVGRE & VxLAN with IPv4/IPv6 inner 5-tuple";
 
 	revision 2021-04-23 {
 		description "First Revision";
@@ -64,7 +64,9 @@ module sonic-pbh {
 
 				leaf hash_field_name {
 					description "The name of this hash field";
-					type string;
+					type string {
+						length 1..255;
+					}
 				}
 
 				leaf hash_field {
@@ -76,10 +78,9 @@ module sonic-pbh {
 				leaf ip_mask {
 					description "Configures IPv4/IPv6 address mask for this hash field";
 					mandatory true;
-					type union {
-						type inet:ipv4-address;
-						type inet:ipv6-address;
-					}
+					type inet:ip-address-no-zone;
+					must "(boolean(../hash_field[.='INNER_DST_IPV4' or .='INNER_SRC_IPV4']) and contains(current(), '.'))
+					or (boolean(../hash_field[.='INNER_DST_IPV6' or .='INNER_SRC_IPV6']) and contains(current(), ':'))";
 					when "boolean(../hash_field[.='INNER_DST_IPV4' or .='INNER_SRC_IPV4' or .='INNER_DST_IPV6' or .='INNER_SRC_IPV6'])";
 				}
 
@@ -104,7 +105,9 @@ module sonic-pbh {
 
 				leaf hash_name {
 					description "The name of this hash";
-					type string;
+					type string {
+						length 1..255;
+					}
 				}
 
 				leaf-list hash_field_list {
@@ -137,7 +140,9 @@ module sonic-pbh {
 
 				leaf rule_name {
 					description "The name of this rule";
-					type string;
+					type string {
+						length 1..255;
+					}
 				}
 
 				leaf priority {
@@ -149,35 +154,35 @@ module sonic-pbh {
 				leaf gre_key {
 					description "Configures packet match for this rule: GRE key (value/mask)";
 					type string {
-						pattern "(0x){1}[a-fA-F0-9]+/(0x){1}[a-fA-F0-9]+";
+						pattern "(0x){1}[a-fA-F0-9]{1,8}/(0x){1}[a-fA-F0-9]{1,8}";
 					}
 				}
 
 				leaf ip_protocol {
-					description "Configures packet match for this rule: IP protocol (value/mask)";
+					description "Configures packet match for this rule: IP protocol (IANA Protocol Numbers)";
 					type string {
-						pattern "(0x){1}[a-fA-F0-9]+/(0x){1}[a-fA-F0-9]+";
+						pattern "(0x){1}[a-fA-F0-9]{1,2}";
 					}
 				}
 
 				leaf ipv6_next_header {
-					description "Configures packet match for this rule: IPv6 Next header (value/mask)";
+					description "Configures packet match for this rule: IPv6 Next header (IANA Protocol Numbers)";
 					type string {
-						pattern "(0x){1}[a-fA-F0-9]+/(0x){1}[a-fA-F0-9]+";
+						pattern "(0x){1}[a-fA-F0-9]{1,2}";
 					}
 				}
 
 				leaf l4_dst_port {
-					description "Configures packet match for this rule: L4 destination port (value/mask)";
+					description "Configures packet match for this rule: L4 destination port";
 					type string {
-						pattern "(0x){1}[a-fA-F0-9]+/(0x){1}[a-fA-F0-9]+";
+						pattern "(0x){1}[a-fA-F0-9]{1,4}";
 					}
 				}
 
 				leaf inner_ether_type {
-					description "Configures packet match for this rule: inner EtherType (value/mask)";
+					description "Configures packet match for this rule: inner EtherType (IANA Ethertypes)";
 					type string {
-						pattern "(0x){1}[a-fA-F0-9]+/(0x){1}[a-fA-F0-9]+";
+						pattern "(0x){1}[a-fA-F0-9]{1,4}";
 					}
 				}
 
@@ -216,7 +221,9 @@ module sonic-pbh {
 
 				leaf table_name {
 					description "The name of this table";
-					type string;
+					type string {
+						length 1..255;
+					}
 				}
 
 				leaf-list interface_list {
