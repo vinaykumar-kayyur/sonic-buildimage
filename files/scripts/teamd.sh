@@ -50,13 +50,27 @@ start() {
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
 
-    # For fixed platforms start teamd service here
-    start_service start
+    # Check asic status before starting docker
+    check_asic_status start
+    ASIC_STATUS=$?
+
+    # start service docker
+    if [[ $ASIC_STATUS == 0 ]]; then
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 }
 
 wait() {
-    # For chassis platforms start teamd service here
-    start_service wait
+    # Check asic status before starting docker
+    check_asic_status wait
+    ASIC_STATUS=$?
+
+    # start service docker
+    if [[ $ASIC_STATUS == 0 ]]; then
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 
     /usr/bin/${SERVICE}.sh wait $DEV
 }

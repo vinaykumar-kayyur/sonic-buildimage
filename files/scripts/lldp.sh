@@ -11,13 +11,27 @@ function debug()
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
-    # For fixed platforms start lldp service here
-    start_service start
+    # Check asic status before starting docker
+    check_asic_status start
+    ASIC_STATUS=$?
+
+    # start service docker
+    if [[ $ASIC_STATUS == 0 ]]; then
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 }
 
 wait() {
-    # For chassis platforms start lldp service here
-    start_service wait
+    # Check asic status before starting docker
+    check_asic_status wait
+    ASIC_STATUS=$?
+
+    # start service docker
+    if [[ $ASIC_STATUS == 0 ]]; then
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 
     /usr/bin/${SERVICE}.sh wait $DEV
 }

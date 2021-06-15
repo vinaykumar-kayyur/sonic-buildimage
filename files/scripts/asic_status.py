@@ -7,7 +7,6 @@ try:
     import re
     import syslog
     import sys
-    import threading
     from sonic_py_common import daemon_base
     from swsscommon import swsscommon
 except ImportError as e:
@@ -20,7 +19,6 @@ CHASSIS_ASIC_INFO_TABLE = 'CHASSIS_ASIC_TABLE'
 SELECT_TIMEOUT_MSECS = 5000
 
 def main():
-    stop_event = threading.Event()
     if len(sys.argv) != 2:
         raise Exception('Pass valid asic-id as argument')
 
@@ -60,7 +58,7 @@ def main():
     sst = swsscommon.SubscriberStateTable(state_db, CHASSIS_ASIC_INFO_TABLE)
     sel.addSelectable(sst)
 
-    while not stop_event.is_set():
+    while True:
         (state, c) = sel.select(SELECT_TIMEOUT_MSECS)
         if state == swsscommon.Select.TIMEOUT:
             continue
