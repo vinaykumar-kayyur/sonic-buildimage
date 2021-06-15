@@ -9,7 +9,6 @@
 
 try:
     import os
-    import subprocess
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")

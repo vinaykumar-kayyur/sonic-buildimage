@@ -58,7 +58,6 @@ class Fan(FanBase):
             return False
         else:
             return False
-        return False
 
     def get_name(self):
         """
@@ -145,7 +144,7 @@ class Fan(FanBase):
         Returns:
             A boolean, True if speed is set successfully, False if not
         """
-        raise False
+        raise NotImplementedError
 
     def set_status_led(self, color):
         """
@@ -156,4 +155,4 @@ class Fan(FanBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        raise False
+        raise NotImplementedError

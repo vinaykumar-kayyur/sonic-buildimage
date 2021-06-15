@@ -9,7 +9,6 @@
 
 try:
     import time
-    import os.path
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_py_common.logger import Logger
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId

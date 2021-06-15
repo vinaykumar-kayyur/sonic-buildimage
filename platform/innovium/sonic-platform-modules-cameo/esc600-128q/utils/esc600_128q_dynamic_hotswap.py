@@ -1,20 +1,17 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
-import commands
-import sys, getopt
+import sys
 import logging
-import re
 from multiprocessing import Process, Lock
 import time
 import subprocess
-import logging
 # import BaldEagleSdk_v2_18 as BE218
 
 from importlib import import_module
 BE218 = import_module('esc600-128q.BaldEagleSdk_v2_18')
 
-global gMaxThreadNum;             gMaxThreadNum=4
+gMaxThreadNum=4
 lock1 = Lock()
 lock2 = Lock()
 

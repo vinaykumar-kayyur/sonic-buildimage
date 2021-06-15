@@ -153,7 +153,7 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        raise False
+        raise NotImplementedError
 
     def set_low_threshold(self, temperature):
         """
@@ -166,7 +166,7 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        raise False
+        raise NotImplementedError
 
     def get_high_critical_threshold(self):
         """
