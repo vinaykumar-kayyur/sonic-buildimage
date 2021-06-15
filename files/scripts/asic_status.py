@@ -9,6 +9,7 @@ try:
     import sys
     from sonic_py_common import daemon_base
     from swsscommon import swsscommon
+    from sonic_py_common import device_info
 except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
@@ -24,28 +25,9 @@ def main():
 
     args_asic_id = sys.argv[1]
 
-    # Get platform from machine.conf
-    platform='unknown'
-    with open('/host/machine.conf') as f:
-        for line in f.readlines():
-            k, v = line.rstrip("\n").split("=")
-            if (k == 'onie_platform') or (k == 'aboot_platform'):
-                platform=v
-                break
-
-    if platform == 'unknown':
-        raise Exception('Unable to detect valid platform')
-
     # Get num asics
-    num_asics=0
-    asic_file = '/usr/share/sonic/device/'+platform+'/asic.conf'
-    with open(asic_file) as f:
-        for line in f.readlines():
-            k, v = line.rstrip("\n").split("=")
-            if (k == 'NUM_ASIC'):
-                num_asics=v
-                break
-
+    num_asics = 0
+    num_asics = device_info.get_num_npus()
     if num_asics == 0:
         syslog.syslog(syslog.LOG_ERR,
                 'Detected no asics on this platform')
