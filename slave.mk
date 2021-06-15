@@ -202,6 +202,10 @@ ifeq ($(NUM_ASIC),)
 override NUM_ASIC := $(DEFAULT_NUM_ASIC)
 endif
 
+ifeq ($(CONFIGURED_PLATFORM),vs)
+export NUM_ASIC=$(NUM_ASIC)
+endif
+
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
