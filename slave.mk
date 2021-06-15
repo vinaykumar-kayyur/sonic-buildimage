@@ -265,7 +265,7 @@ $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
-ifeq ($(NUM_ASIC),1)
+ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "NUM_ASIC"                        : "$(NUM_ASIC)")
 endif
 $(info )
