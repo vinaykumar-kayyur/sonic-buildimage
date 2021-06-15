@@ -98,7 +98,7 @@ class TestHostcfgd(TestCase):
         MockConfigDb.set_config_db(test_data["config_db"])
         with mock.patch("hostcfgd.subprocess") as mocked_subprocess:
             host_config_daemon = hostcfgd.HostConfigDaemon()
-            host_config_daemon.feature.update_all_features_config()
+            host_config_daemon.feature_handler.update_all_features_config()
             assert self.__verify_table(
                 MockConfigDb.get_config_db()["FEATURE"],
                 test_data["expected_config_db"]["FEATURE"]

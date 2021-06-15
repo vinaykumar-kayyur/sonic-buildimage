@@ -852,7 +852,7 @@ class HostConfigDaemon:
         self.hostname_cache=""
         self.aaacfg = AaaCfg()
         self.iptables = Iptables()
-        self.feature = FeatureHandler(self.config_db, self.device_config)
+        self.feature_handler = FeatureHandler(self.config_db, self.device_config)
         self.ntpcfg = NtpCfg(self.config_db)
 
         self.is_multi_npu = device_info.is_multi_npu()
@@ -981,7 +981,7 @@ class HostConfigDaemon:
         self.config_db.subscribe('RADIUS', lambda table, key, data: self.radius_global_handler(key, data))
         self.config_db.subscribe('MGMT_INTERFACE', lambda table, key, data: self.mgmt_intf_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
-        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature.handle(key, data))
+        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_handler.handle(key, data))
         self.config_db.subscribe('VLAN_INTERFACE', lambda table, key, data: self.vlan_intf_handler(key, data))
         self.config_db.subscribe('VLAN_SUB_INTERFACE', lambda table, key, data: self.vlan_sub_intf_handler(key, data))
         self.config_db.subscribe('PORTCHANNEL_INTERFACE', lambda table, key, data: self.portchannel_intf_handler(key, data))
@@ -997,7 +997,7 @@ class HostConfigDaemon:
                       "systemctl has finished initialization -- proceeding ...")
 
         # Update all feature states once upon starting
-        self.feature.update_all_features_config()
+        self.feature_handler.update_all_features_config()
 
         # Defer load until subscribe
         self.load()
