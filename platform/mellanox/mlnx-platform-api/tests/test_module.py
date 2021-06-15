@@ -31,6 +31,7 @@ class TestModule:
         assert len(chassis.get_all_sfps()) == 4
 
     def test_chassis_get_sfp(self):
+        utils.read_int_from_file = mock.MagicMock(return_value=1)
         index = (1 << 16) | 1
         chassis = ModularChassis()
         sfp = chassis.get_sfp(index)
@@ -145,3 +146,22 @@ class TestModule:
         m._check_state()
         assert len(m._sfp_list) == 0
         assert len(m._thermal_list) == 0
+
+    def test_module_vpd(self):
+        m = Module(1)
+        m.vpd_parser.vpd_file = os.path.join(test_path, 'mock_psu_vpd')
+
+        assert m.get_model() == 'MTEF-PSF-AC-C'
+        assert m.get_serial() == 'MT1946X07684'
+        assert m.get_revision() == 'A3'
+
+        m.vpd_parser.vpd_file = 'not exists'
+        assert m.get_model() == ''
+        assert m.get_serial() == ''
+        assert m.get_revision() == ''
+
+        m.vpd_parser.vpd_file_last_mtime = None
+        m.vpd_parser.vpd_file = os.path.join(test_path, 'mock_psu_vpd')
+        assert m.get_model() == 'MTEF-PSF-AC-C'
+        assert m.get_serial() == 'MT1946X07684'
+        assert m.get_revision() == 'A3'

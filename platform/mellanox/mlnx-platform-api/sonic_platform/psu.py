@@ -9,22 +9,18 @@
 #############################################################################
 
 try:
-    import glob
-    import os.path
+    import os
     from sonic_platform_base.psu_base import PsuBase
     from sonic_py_common.logger import Logger
     from .led import PsuLed, SharedLed, ComponentFaultyIndicator
     from . import utils
+    from .vpd_parser import VpdParser
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
 # Global logger class instance
 logger = Logger()
-
-SN_VPD_FIELD = "SN_VPD_FIELD"
-PN_VPD_FIELD = "PN_VPD_FIELD"
-REV_VPD_FIELD = "REV_VPD_FIELD"
 
 PSU_PATH = '/var/run/hw-management/'
 
@@ -33,7 +29,7 @@ class FixedPsu(PsuBase):
     def __init__(self, psu_index):
         super(FixedPsu, self).__init__()
         self.index = psu_index + 1
-        self._name = "PSU{}".format(self.index)
+        self._name = "PSU {}".format(self.index)
         self.psu_oper_status = os.path.join(PSU_PATH, "thermal/psu{}_pwr_status".format(self.index))
         self._led = None
 
@@ -48,7 +44,6 @@ class FixedPsu(PsuBase):
 
     def get_revision(self):
         return ''
-
 
     def get_powergood_status(self):
         """
@@ -98,7 +93,7 @@ class FixedPsu(PsuBase):
 
     @property
     def led(self):
-        if self._led:
+        if not self._led:
             self._led = PsuLed(self.index)
         return self._led
 
@@ -230,40 +225,11 @@ class Psu(FixedPsu):
         from .fan import PsuFan
         self._fan_list.append(PsuFan(psu_index, 1, self))
 
-        self.vpd_data = None
+        self.vpd_parser = VpdParser(os.path.join(PSU_PATH, self.PSU_VPD.format(self.index)))
 
         # initialize thermal for PSU
         from .thermal import initialize_psu_thermal
         initialize_psu_thermal(self.index)
-
-    def _read_vpd_file(self, filename):
-        """
-        Read a vpd file parsed from eeprom with keys and values.
-        Returns a dictionary.
-        """
-        result = {}
-
-        try:
-            if not os.path.exists(filename):
-                return result
-            with open(filename, 'r') as fileobj:
-                for line in fileobj.readlines():
-                    key, val = line.split(":")
-                    result[key.strip()] = val.strip()
-        except Exception as e:
-            logger.log_error("Fail to read VPD file {} due to {}".format(filename, repr(e)))
-        return result
-
-    def _get_vpd_data(self):
-        if self.vpd_data is None:
-            psu_vpd_file = os.path.join(PSU_PATH, self.PSU_VPD.format(self.index))
-            self.vpd_data = self._read_vpd_file(psu_vpd_file)
-
-            if PN_VPD_FIELD not in self.vpd_data:
-                logger.log_error("Fail to read PSU{} model number: No key {} in VPD {}".format(self.index, PN_VPD_FIELD, self.psu_vpd))
-
-            if SN_VPD_FIELD not in self.vpd_data:
-                logger.log_error("Fail to read PSU{} serial number: No key {} in VPD {}".format(self.index, SN_VPD_FIELD, self.psu_vpd))
 
     def get_model(self):
         """
@@ -272,8 +238,7 @@ class Psu(FixedPsu):
         Returns:
             string: Model/part number of device
         """
-        self._get_vpd_data()
-        return self.vpd_data.get(PN_VPD_FIELD, '')
+        return self.vpd_parser.get_model()
 
     def get_serial(self):
         """
@@ -282,8 +247,7 @@ class Psu(FixedPsu):
         Returns:
             string: Serial number of device
         """
-        self._get_vpd_data()
-        return self.vpd_data.get(SN_VPD_FIELD, '')
+        return self.vpd_parser.get_serial()
 
     def get_revision(self):
         """
@@ -292,8 +256,7 @@ class Psu(FixedPsu):
         Returns:
             string: Revision value of device
         """
-        self._get_vpd_data()
-        return self.vpd_data.get(REV_VPD_FIELD, '')
+        return self.vpd_parser.get_revision()
 
     def get_presence(self):
         """
@@ -337,7 +300,7 @@ class Psu(FixedPsu):
             A float number, the power in watts, e.g. 302.6
         """
         if self.get_powergood_status():
-            power = utils.read_int_from_file(self.psu_power, 0)
+            power = utils.read_int_from_file(self.psu_power)
             return float(power) / 1000000
         return None
 
@@ -349,7 +312,7 @@ class Psu(FixedPsu):
 
     @property
     def led(self):
-        if self._led:
+        if not self._led:
             self._led = ComponentFaultyIndicator(Psu.get_shared_led())
         return self._led
 

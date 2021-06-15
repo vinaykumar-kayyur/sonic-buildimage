@@ -1,4 +1,5 @@
 import os
+from . import utils
 
 
 class Led(object):
@@ -26,12 +27,11 @@ class Led(object):
             self._stop_blink(led_cap_list)
             blink_pos = color.find('blink')
             if blink_pos != -1:
-                return self._set_status_blink(color, blink_pos, led_cap_list)
+                return self._set_status_blink(color, led_cap_list)
 
             if color == Led.STATUS_LED_COLOR_GREEN:
-                with open(self.get_green_led_path(), 'w') as led:
-                    led.write(Led.LED_ON)
-                    status = True
+                utils.write_file(self.get_green_led_path(), Led.LED_ON)
+                status = True
             elif color == Led.STATUS_LED_COLOR_RED:
                 # Some led don't support red led but support orange led, in this case we set led to orange
                 if Led.STATUS_LED_COLOR_RED in led_cap_list:
@@ -41,19 +41,15 @@ class Led(object):
                 else:
                     return False
 
-                with open(led_path, 'w') as led:
-                    led.write(Led.LED_ON)
-                    status = True
+                utils.write_file(led_path, Led.LED_ON)
+                status = True
             elif color == Led.STATUS_LED_COLOR_OFF:
                 if Led.STATUS_LED_COLOR_GREEN in led_cap_list:
-                    with open(self.get_green_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
+                    utils.write_file(self.get_green_led_path(), Led.LED_OFF)
                 if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                    with open(self.get_red_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
+                    utils.write_file(self.get_red_led_path(), Led.LED_OFF)
                 if Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                    with open(self.get_orange_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
+                    utils.write_file(self.get_orange_led_path(), Led.LED_OFF)
 
                 status = True
             else:
@@ -63,7 +59,7 @@ class Led(object):
 
         return status
 
-    def _set_status_blink(self, color, blink_pos, led_cap_list):
+    def _set_status_blink(self, color, led_cap_list):
         if color not in led_cap_list:
             if color == Led.STATUS_LED_COLOR_RED_BLINK and Led.STATUS_LED_COLOR_ORANGE_BLINK in led_cap_list:
                 color = Led.STATUS_LED_COLOR_ORANGE_BLINK
@@ -95,10 +91,8 @@ class Led(object):
             return
 
     def _set_led_blink_status(self, delay_on_file, delay_off_file, value):
-        with open(delay_on_file, 'w') as led:
-            led.write(value)
-        with open(delay_off_file, 'w') as led:
-            led.write(value)
+        utils.write_file(delay_on_file, value)
+        utils.write_file(delay_off_file, value)
 
     def get_status(self):
         led_cap_list = self.get_capability()
@@ -110,18 +104,15 @@ class Led(object):
             if blink_status is not None:
                 return blink_status
 
-            with open(self.get_green_led_path(), 'r') as led:
-                if Led.LED_OFF != led.read().rstrip('\n'):
-                    return Led.STATUS_LED_COLOR_GREEN
+            if utils.read_str_from_file(self.get_green_led_path()) != Led.LED_OFF:
+                return Led.STATUS_LED_COLOR_GREEN
 
             if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                with open(self.get_red_led_path(), 'r') as led:
-                    if Led.LED_OFF != led.read().rstrip('\n'):
-                        return Led.STATUS_LED_COLOR_RED
+                if utils.read_str_from_file(self.get_red_led_path()) != Led.LED_OFF:
+                    return Led.STATUS_LED_COLOR_RED
             if Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                with open(self.get_orange_led_path(), 'r') as led:
-                    if Led.LED_OFF != led.read().rstrip('\n'):
-                        return Led.STATUS_LED_COLOR_RED
+                if utils.read_str_from_file(self.get_orange_led_path()) != Led.LED_OFF:
+                    return Led.STATUS_LED_COLOR_RED
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to read led status due to {}".format(repr(e)))
 
@@ -144,22 +135,13 @@ class Led(object):
         return None
 
     def _is_led_blinking(self, delay_on_file, delay_off_file):
-        with open(delay_on_file, 'r') as led:
-            delay_on = led.read().rstrip('\n')
-        with open(delay_off_file, 'r') as led:
-            delay_off = led.read().rstrip('\n')
+        delay_on = utils.read_str_from_file(delay_on_file)
+        delay_off = utils.read_str_from_file(delay_off_file)
         return delay_on != Led.LED_OFF and delay_off != Led.LED_OFF
 
     def get_capability(self):
-        cap_list = None
-        try:
-            with open(self.get_led_cap_path(), 'r') as led_cap:
-                caps = led_cap.read()
-                cap_list = set(caps.split())
-        except (ValueError, IOError):
-            pass
-        
-        return cap_list
+        caps = utils.read_str_from_file(self.get_led_cap_path())
+        return set(caps.split())
 
     def get_green_led_path(self):
         pass

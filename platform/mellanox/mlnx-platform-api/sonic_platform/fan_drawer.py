@@ -14,7 +14,7 @@ try:
     from sonic_platform_base.fan_drawer_base import FanDrawerBase
     from sonic_platform_base.fan_base import FanBase
     from .led import FanLed, SharedLed
-    from .utils import read_int_from_file
+    from . import utils
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -34,14 +34,7 @@ class MellanoxFanDrawer(FanDrawerBase):
         return self._led
 
     def get_presence(self):
-        status = 0
-        try:
-            with open(self._presence_path, 'r') as presence_status:
-                status = int(presence_status.read())
-        except (ValueError, IOError) as e:
-            status = 0
-
-        return status == 1
+        return utils.read_int_from_file(self._presence_path) == 1
 
     def get_direction(self):
         if not self.get_presence():
@@ -49,7 +42,7 @@ class MellanoxFanDrawer(FanDrawerBase):
         
         try:
             from .fan import FAN_DIR, FAN_DIR_VALUE_INTAKE, FAN_DIR_VALUE_EXHAUST
-            fan_dir = read_int_from_file(FAN_DIR.format(self._index), raise_exception=True)
+            fan_dir = utils.read_int_from_file(FAN_DIR.format(self._index), raise_exception=True)
             if fan_dir == FAN_DIR_VALUE_INTAKE:
                 return FanBase.FAN_DIRECTION_INTAKE
             elif fan_dir == FAN_DIR_VALUE_EXHAUST:

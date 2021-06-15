@@ -1,10 +1,16 @@
+import os
 import redis
 import sys
 import threading
 from sonic_platform_base.module_base import ModuleBase
+from sonic_py_common.logger import Logger
 
 from . import utils
 from .device_data import DeviceDataManager
+from .vpd_parser import VpdParser
+
+# Global logger class instance
+logger = Logger()
 
 
 class Module(ModuleBase):
@@ -24,9 +30,38 @@ class Module(ModuleBase):
         self.lock = threading.Lock()
 
         self.sfp_initialized_count = 0
+        self.vpd_parser = VpdParser('/run/hw-management/lc{}/eeprom/vpd_parsed')
+
 
     def get_name(self):
         return 'LINE-CARD{}'.format(self.slot_id)
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of device
+        """
+        return self.vpd_parser.get_model()
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+
+        Returns:
+            string: Serial number of device
+        """
+        return self.vpd_parser.get_serial()
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self.vpd_parser.get_revision()
 
     def get_type(self):
         return ModuleBase.MODULE_TYPE_LINE

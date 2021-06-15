@@ -1,6 +1,5 @@
 import os
 import sys
-from .mock_platform import MockFan
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)

@@ -16,42 +16,10 @@ from sonic_platform.chassis import Chassis
 from sonic_platform.device_data import DeviceDataManager
 
 
-@pytest.fixture(scope="class")
-def mock_thermal_zones():
-    thermal_zone_root_folder = '/run/hw-management/thermal'
-    print(os.path.exists)
-    if not os.path.exists(thermal_zone_root_folder):
-        os.makedirs(thermal_zone_root_folder)
-
-    assert os.path.exists(thermal_zone_root_folder)
-
-    thermal_zones = ['mlxsw', 'mlxsw-gearbox1', 'mlxsw-module1']
-    thermal_zone_files = ['thermal_zone_policy', 'thermal_zone_mode']
-    for thermal_zone in thermal_zones:
-        thermal_zone = os.path.join(thermal_zone_root_folder, thermal_zone)
-
-        if not os.path.exists(thermal_zone):
-            os.makedirs(thermal_zone)
-
-        for thermal_zone_file in thermal_zone_files:
-            with open(os.path.join(thermal_zone, thermal_zone_file), 'w+') as f:
-                f.write('0')
-
-    yield
-    shutil.rmtree('/run/hw-management/thermal')
-
-
-@pytest.fixture(scope="function")
-def mock_file_exists():
-    origin = os.path.exists
-    os.path.exists = mock.MagicMock(return_value=True)
-    yield
-    os.path.exists = origin
-
-
 class TestThermal:
-    def test_chassis_thermal(self, mock_file_exists):
+    def test_chassis_thermal(self):
         from sonic_platform.thermal import THERMAL_NAMING_RULE
+        os.path.exists = mock.MagicMock(return_value=True)
         DeviceDataManager.get_gearbox_count = mock.MagicMock(return_value=2)
         DeviceDataManager.get_cpu_thermal_count = mock.MagicMock(return_value=2)
         DeviceDataManager.get_platform_name = mock.MagicMock(return_value='x86_64-mlnx_msn2700-r0')
@@ -99,8 +67,9 @@ class TestThermal:
         assert gearbox_thermal_count == 2
         assert cpu_thermal_count == 2
 
-    def test_psu_thermal(self, mock_file_exists):
+    def test_psu_thermal(self):
         from sonic_platform.thermal import initialize_psu_thermal, THERMAL_NAMING_RULE
+        os.path.exists = mock.MagicMock(return_value=True)
         thermal_list = initialize_psu_thermal(0)
         assert len(thermal_list) == 1
         thermal = thermal_list[0]
@@ -113,8 +82,9 @@ class TestThermal:
         assert thermal.get_position_in_parent() == 1
         assert thermal.is_replaceable() == False
 
-    def test_sfp_thermal(self, mock_file_exists):
+    def test_sfp_thermal(self):
         from sonic_platform.thermal import initialize_sfp_thermal, THERMAL_NAMING_RULE
+        os.path.exists = mock.MagicMock(return_value=True)
         thermal_list = initialize_sfp_thermal(0)
         assert len(thermal_list) == 1
         thermal = thermal_list[0]

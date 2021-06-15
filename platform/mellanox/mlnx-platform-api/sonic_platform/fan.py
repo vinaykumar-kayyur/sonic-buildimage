@@ -15,7 +15,7 @@ try:
     from sonic_platform_base.fan_base import FanBase
     from sonic_py_common.logger import Logger
     from .led import FanLed, ComponentFaultyIndicator
-    from .utils import read_int_from_file, read_str_from_file, write_file
+    from . import utils
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -53,9 +53,9 @@ class MlnxFan(FanBase):
             int: percentage of the max fan speed
         """
         speed = 0
-        speed_in_rpm = read_int_from_file(os.path.join(FAN_PATH, self.fan_speed_get_path))
+        speed_in_rpm = utils.read_int_from_file(self.fan_speed_get_path)
 
-        max_speed_in_rpm = read_int_from_file(self.fan_max_speed_path)
+        max_speed_in_rpm = utils.read_int_from_file(self.fan_max_speed_path)
         if max_speed_in_rpm == 0:
             return speed_in_rpm
 
@@ -120,9 +120,6 @@ class MlnxFan(FanBase):
         Change cooling level. The input level should be an integer value [1, 10].
         1 means 10%, 2 means 20%, 10 means 100%.
         """
-        if not isinstance(level, int):
-            raise RuntimeError("Failed to set cooling level, input parameter must be integer")
-
         if level < cls.MIN_VALID_COOLING_LEVEL or level > cls.MAX_VALID_COOLING_LEVEL:
             raise RuntimeError("Failed to set cooling level, level value must be in range [{}, {}], got {}".format(
                 cls.MIN_VALID_COOLING_LEVEL,
@@ -134,17 +131,17 @@ class MlnxFan(FanBase):
             # Reset FAN cooling level vector. According to low level team,
             # if we need set cooling level to X, we need first write a (10+X) 
             # to cooling_cur_state file to reset the cooling level vector.
-            write_file(COOLING_STATE_PATH, level + 10, raise_exception=True)
+            utils.write_file(COOLING_STATE_PATH, level + 10, raise_exception=True)
 
             # We need set cooling level after resetting the cooling level vector 
-            write_file(COOLING_STATE_PATH, cur_state, raise_exception=True)
+            utils.write_file(COOLING_STATE_PATH, cur_state, raise_exception=True)
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to set cooling level - {}".format(e))
 
     @classmethod
     def get_cooling_level(cls):
         try:
-            return read_int_from_file(COOLING_STATE_PATH, raise_exception=True)
+            return utils.read_int_from_file(COOLING_STATE_PATH, raise_exception=True)
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to get cooling level - {}".format(e))
 
@@ -161,8 +158,8 @@ class PsuFan(MlnxFan):
 
         from .psu import Psu
         self.led = ComponentFaultyIndicator(Psu.get_shared_led())
-        self.fan_speed_get_path = "psu{}_fan1_speed_get".format(self.index)
-        self.fan_presence_path = "psu{}_fan1_speed_get".format(self.index)
+        self.fan_speed_get_path = os.path.join(FAN_PATH, "psu{}_fan1_speed_get".format(self.index))
+        self.fan_presence_path = os.path.join(FAN_PATH, "psu{}_fan1_speed_get".format(self.index))
         self.fan_max_speed_path = os.path.join(CONFIG_PATH, "psu_fan_max")
         self.fan_min_speed_path = os.path.join(CONFIG_PATH, "psu_fan_min")
         self.psu_i2c_bus_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_bus'.format(self.index))
@@ -197,7 +194,7 @@ class PsuFan(MlnxFan):
         Returns:
             bool: True if fan is operating properly, False if not
         """
-        return 0
+        return True
 
     def get_presence(self):
         """
@@ -206,7 +203,7 @@ class PsuFan(MlnxFan):
         Returns:
             bool: True if fan is present, False if not
         """
-        return self.psu.get_presence() and self.psu.get_powergood_status() and os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path))
+        return self.psu.get_presence() and self.psu.get_powergood_status() and os.path.exists(self.fan_presence_path)
 
     def get_target_speed(self):
         """
@@ -222,7 +219,6 @@ class PsuFan(MlnxFan):
         except Exception:
             return self.get_speed()
 
-    
     def set_speed(self, speed):
         """
         Set fan speed to expected value
@@ -238,9 +234,9 @@ class PsuFan(MlnxFan):
             return False
 
         try:
-            bus = read_str_from_file(self.psu_i2c_bus_path, raise_exception=True)
-            addr = read_str_from_file(self.psu_i2c_addr_path, raise_exception=True)
-            command = read_str_from_file(self.psu_i2c_command_path, raise_exception=True)
+            bus = utils.read_str_from_file(self.psu_i2c_bus_path, raise_exception=True)
+            addr = utils.read_str_from_file(self.psu_i2c_addr_path, raise_exception=True)
+            command = utils.read_str_from_file(self.psu_i2c_command_path, raise_exception=True)
             speed = self.PSU_FAN_SPEED[int(speed // 10)]
             command = "i2cset -f -y {0} {1} {2} {3} wp".format(bus, addr, command, speed)
             subprocess.check_call(command, shell = True, universal_newlines=True)
@@ -267,12 +263,12 @@ class Fan(MlnxFan):
             self.led = FanLed(self.index)
 
         self._name = "fan{}".format(self.index)
-        self.fan_speed_get_path = "fan{}_speed_get".format(self.index)
-        self.fan_speed_set_path = "fan{}_speed_set".format(self.index)
+        self.fan_speed_get_path = os.path.join(FAN_PATH, "fan{}_speed_get".format(self.index))
+        self.fan_speed_set_path = os.path.join(FAN_PATH, "fan{}_speed_set".format(self.index))
         self.fan_max_speed_path = os.path.join(FAN_PATH, "fan{}_max".format(self.index))
         self.fan_min_speed_path = os.path.join(FAN_PATH, "fan{}_min".format(self.index))
         
-        self.fan_status_path = "fan{}_fault".format(self.index)
+        self.fan_status_path = os.path.join(FAN_PATH, "fan{}_fault".format(self.index))
 
     def get_direction(self):
         """
@@ -303,7 +299,7 @@ class Fan(MlnxFan):
             bool: True if fan is operating properly, False if not
         """
 
-        return read_int_from_file(os.path.join(FAN_PATH, self.fan_status_path), 1) == 0
+        return utils.read_int_from_file(self.fan_status_path, 1) == 0
 
     def get_presence(self):
         """
@@ -321,7 +317,7 @@ class Fan(MlnxFan):
         Returns:
             int: percentage of the max fan speed
         """
-        pwm = read_int_from_file(os.path.join(FAN_PATH, self.fan_speed_set_path))
+        pwm = utils.read_int_from_file(self.fan_speed_set_path)
         return int(round(pwm*100.0/PWM_MAX))
 
     def set_speed(self, speed):
@@ -344,7 +340,7 @@ class Fan(MlnxFan):
                 speed = self.min_cooling_level * 10
             self.set_cooling_level(cooling_level, cooling_level)
             pwm = int(round(PWM_MAX*speed/100.0))
-            write_file(os.path.join(FAN_PATH, self.fan_speed_set_path), pwm, raise_exception=True)
+            utils.write_file(self.fan_speed_set_path, pwm, raise_exception=True)
         except (ValueError, IOError):
             status = False
 
