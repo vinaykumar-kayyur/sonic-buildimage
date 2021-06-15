@@ -49,6 +49,7 @@ FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM="$FILESYSTEM_ROOT_USR_LIB/systemd/system"
 FILESYSTEM_ROOT_USR_SHARE="$FILESYSTEM_ROOT_USR/share"
 FILESYSTEM_ROOT_USR_SHARE_SONIC="$FILESYSTEM_ROOT_USR_SHARE/sonic"
 FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS="$FILESYSTEM_ROOT_USR_SHARE_SONIC/scripts"
+FILESYSTEM_ROOT_USR_SHARE_SONIC_DEVICE="$FILESYSTEM_ROOT_USR_SHARE_SONIC/device"
 FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES="$FILESYSTEM_ROOT_USR_SHARE_SONIC/templates"
 FILESYSTEM_ROOT_ETC="$FILESYSTEM_ROOT/etc"
 FILESYSTEM_ROOT_ETC_SONIC="$FILESYSTEM_ROOT_ETC/sonic"
@@ -292,7 +293,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \
 {% if sonic_asic_platform == "vs" %}
 for PLATFORM in `ls ./device/virtual`; do
     if [ -f ./device/virtual/$PLATFORM/asic.conf ]; then
-        j2 $BUILD_TEMPLATES/asic.conf.j2 | sudo tee ./fsroot/usr/share/sonic/device/$PLATFORM/asic.conf
+        j2 $BUILD_TEMPLATES/asic.conf.j2 | sudo tee $FILESYSTEM_ROOT_USR_SHARE_SONIC_DEVICE/$PLATFORM/asic.conf
     fi
 done
 {% endif %}
