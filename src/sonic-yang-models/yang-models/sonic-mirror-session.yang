@@ -1,0 +1,148 @@
+module sonic-mirror-session {
+
+    yang-version 1.1;
+
+    namespace "http://github.com/Azure/sonic-mirror-session";
+    prefix sms;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
+	  import sonic-port {
+		    prefix port;
+		    revision-date 2019-07-01;
+	  }
+
+	  import sonic-portchannel {
+		    prefix lag;
+	  }
+
+    description
+        "SONiC Mirror session yang model";
+
+    revision 2021-06-15 {
+        description
+            "Initial revision.";
+    }
+
+    container sonic-mirror-session {
+
+        container MIRROR_SESSION {
+
+            list MIRROR_SESSION_LIST {
+                key "name";
+
+                leaf name {
+                    type string {
+                        pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
+                        length 1..32 {
+                            error-message "Invalid mirror session name";
+                            error-app-tag session-name-invalid;
+                        }
+                    }
+                    description
+                        "Mirror session name.";
+                }
+
+                leaf type {
+					          type string {
+						            pattern "ERSPAN|SPAN";
+					          }
+					          default "ERSPAN";
+                    description
+                        "Mirror session type.";
+                }
+
+                leaf src_ip {
+                    type inet:ipv4-address;
+                    description
+                        "ERSPAN source ip. This IP will be set as source ip in
+                        outer header of mirrored frame ";
+                }
+
+                leaf dst_ip {
+                    type inet:ipv4-address;
+                    description
+                        "ERSPAN destination ip. Mirrored frames will be routed to this destination.
+                        This IP will be set as destination ip in outer header of mirrored frame ";
+                }
+
+                leaf gre_type {
+                    type string {
+                        pattern "0[xX][0-9a-fA-F]*";
+                        length 1..6 {
+                            error-message "Invalid GRE type";
+                            error-app-tag gre-type-invalid;
+                        }
+                    }
+                    description
+                        "ERSPAN outer header GRE type.";
+                }
+
+                leaf dscp {
+                    type uint8 {
+                        range "0..63" {
+                            error-message "Invalid dscp value";
+                            error-app-tag dscp-invalid;
+                        }
+                    }
+                    description
+                        "ERSPAN outer header DSCP value. Mirrored frames will be sent with configured DSCP value";
+                }
+
+                leaf ttl {
+                    type uint8 {
+                        range "0..63" {
+                            error-message "Invalid TTL value";
+                            error-app-tag ttl-invalid;
+                        }
+                    }
+                    description
+                        "ERSPAN outer header TTL value. Mirrored frames will be sent with configured TTL value";
+                }
+
+                leaf queue {
+                    type uint8;
+                    description
+                        "ERSPAN Queue. Mirrored frames will be sent to this queue";
+                }
+
+                leaf dst_port {
+                    type leafref {
+							          path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                    }
+                    description
+                        "Destination port configuration for port mirroring(SPAN).";
+                }
+
+                leaf src_port {
+                    type union {
+                        type leafref {
+							              path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type leafref {
+							              path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                        }
+                    }
+                    description
+                        "Source port configuration for mirroring. Can be configured for both SPAN/ERSPAN.
+                        Supports both port and port-channel as arguments";
+                }
+
+                leaf direction {
+					          type string {
+						            pattern "RX|TX|BOTH";
+					          }
+					          default "BOTH";
+                    description
+                        "Direction configuration for mirroring. Can be configured for both SPAN/ERSPAN.
+                        Supports rx/tx/both as direction config.
+                           RX: Captures frames ingressing on source port.
+                           TX: Captures frames egressing on source port.
+                           BOTH: Captures frames ingressing or egressing on source port.";
+                }
+            }
+        }
+    }
+}
