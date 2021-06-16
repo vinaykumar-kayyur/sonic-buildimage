@@ -10,6 +10,12 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform.component import Component, ComponentSSD
 
+from sonic_platform_base.component_base import ComponentBase,           \
+                                                FW_AUTO_INSTALLED,      \
+                                                FW_AUTO_ERR_BOOT_TYPE,  \
+                                                FW_AUTO_ERR_IMAGE,      \
+                                                FW_AUTO_ERR_UKNOWN
+
 def mock_install_firmware_success(image_path):
     return True
 
@@ -26,20 +32,20 @@ def mock_update_notification_error(image_path):
     raise RuntimeError("Failed to parse NAME firmware upgrade status")
 
 test_data_default = [
-        (None, False, None, -2),
-        (None, True, 'warm', -1),
-        (mock_install_firmware_fail, True, 'cold', -3),
-        (mock_install_firmware_success, True, 'cold', 2)
+        (None, False, None, FW_AUTO_ERR_IMAGE),
+        (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
+        (mock_install_firmware_fail, True, 'cold', FW_AUTO_ERR_UKNOWN),
+        (mock_install_firmware_success, True, 'cold', FW_AUTO_INSTALLED)
         ]
 
 test_data_ssd = [
-        (None, None, False, None, -2),
-        (None, mock_update_notification_error, True, None, -3),
-        (mock_install_firmware_fail,    mock_update_notification_cold_boot, True, 'cold', -3),
-        (mock_install_firmware_success, mock_update_notification_cold_boot, True, 'warm', -1),
-        (mock_install_firmware_success, mock_update_notification_cold_boot, True, 'cold', 2),
-        (mock_install_firmware_success, mock_update_notification_warm_boot, True, 'warm', 2),
-        (mock_install_firmware_success, mock_update_notification_warm_boot, True, 'cold', 2)
+        (None, None, False, None, FW_AUTO_ERR_IMAGE),
+        (None, mock_update_notification_error, True, None, FW_AUTO_ERR_UKNOWN),
+        (mock_install_firmware_fail,    mock_update_notification_cold_boot, True, 'cold', FW_AUTO_ERR_UKNOWN),
+        (mock_install_firmware_success, mock_update_notification_cold_boot, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
+        (mock_install_firmware_success, mock_update_notification_cold_boot, True, 'cold', FW_AUTO_INSTALLED),
+        (mock_install_firmware_success, mock_update_notification_warm_boot, True, 'warm', FW_AUTO_INSTALLED),
+        (mock_install_firmware_success, mock_update_notification_warm_boot, True, 'cold', FW_AUTO_INSTALLED)
         ]
 
 @pytest.mark.parametrize('install_func, image_found, boot_type, expect', test_data_default)

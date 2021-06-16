@@ -22,7 +22,6 @@ try:
 
     from sonic_platform_base.component_base import ComponentBase,           \
                                                     FW_AUTO_INSTALLED,      \
-                                                    FW_AUTO_UPDATED,        \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
                                                     FW_AUTO_ERR_UKNOWN
