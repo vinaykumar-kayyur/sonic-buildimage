@@ -789,14 +789,14 @@
                 "gre_type": "0x1234",
                 "queue": "0",
                 "src_ip": "10.1.1.1",
-                "src_port": "Ethernet120",
+                "src_port": "Ethernet1",
                 "ttl": "10",
                 "type": "ERSPAN"
             },
             "span": {
                 "direction": "RX",
-                "dst_port": "Ethernet80",
-                "src_port": "Ethernet84",
+                "dst_port": "Ethernet2",
+                "src_port": "Ethernet3",
                 "type": "SPAN"
             }
         }
