@@ -25,7 +25,7 @@ fi
 
 echo " OK."
 
-image_size=$(( $(sed -e '1,/^exit_marker$/d' "$0"  | tar --to-stdout -xf - | wc -c) / 1024))
+image_size_in_kb=$((($(sed -e '1,/^exit_marker$/d' "$0"  | tar --to-stdout -xf - | wc -c) + 1023 ) / 1024))
 # Untar and launch install script in a tmpfs
 cur_wd=$(pwd)
 export cur_wd
@@ -33,12 +33,14 @@ archive_path=$(realpath "$0")
 tmp_dir=$(mktemp -d)
 if [ "$(id -u)" = "0" ] ; then
     mount -t tmpfs tmpfs-installer $tmp_dir || exit 1
-    mount_size=$(df $tmp_dir | tail -1 | tr -s ' ' | cut -d' ' -f4)
+    mount_size_in_kb=$(df $tmp_dir | tail -1 | tr -s ' ' | cut -d' ' -f4)
     #checking extra 100KB space in tmp_dir, after image extraction
     padding=102400
-    if [ "$mount_size" -le "$((image_size + padding))" ]; then
-        mount_size=$(((image_size/1024/1024)+1))
-        mount -o remount,size="${mount_size}G" -t tmpfs tmpfs-installer $tmp_dir || exit 1
+    if [ "$mount_size_in_kb" -le "$((image_size_in_kb + padding))" ]; then
+        image_size_in_mb=$(((image_size_in_kb + 1023) / 1024))
+        #Adding extra 32MB free space for image extraction.
+        mount_size_in_mb=$((((image_size_in_mb + 31) / 32) * 32))
+        mount -o remount,size="${mount_size_in_mb}M" -t tmpfs tmpfs-installer $tmp_dir || exit 1
     fi
 fi
 cd $tmp_dir
