@@ -736,7 +736,7 @@ dram_phy_tune_mode_on_init.BCM8869X=RUN_TUNE
 dport_map_direct.BCM8869X=1
 
 pmf_sexem3_stage.BCM8869X=IPMF3
-rif_id_max=0x4000
+rif_id_max=0x6000
 
 dma_desc_aggregator_chain_length_max.BCM8869X=1000
 dma_desc_aggregator_buff_size_kb.BCM8869X=100
