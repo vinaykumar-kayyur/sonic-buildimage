@@ -22,7 +22,7 @@ class FakeMuxPort: public ::mux::MuxPort
 {
 public:
     FakeMuxPort(
-        FakeDbInterface *dbInterface,
+        std::shared_ptr<FakeDbInterface> dbInterface,
         common::MuxConfig &muxConfig,
         std::string &portName,
         uint16_t serverId,

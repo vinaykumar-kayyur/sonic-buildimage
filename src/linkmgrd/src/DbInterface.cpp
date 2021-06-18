@@ -312,8 +312,8 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 {
     MUXLOGINFO("Reading ToR MAC Address");
     swss::Table configDbMetadataTable(configDbConnector.get(), CFG_DEVICE_METADATA_TABLE_NAME);
-    std::string localhost = "localhost";
-    std::string key = "mac";
+    const std::string localhost = "localhost";
+    const std::string key = "mac";
     std::string mac;
 
     if (configDbMetadataTable.hget(localhost, key, mac)) {
@@ -333,19 +333,15 @@ void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbCo
 }
 
 //
-// ---> getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
+// ---> processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
 //
-// retrieve Loopback2 interface information and block until it shows as OK in the state db
+// process Loopback2 interface information
 //
-void DbInterface::getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector)
+void DbInterface::processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs)
 {
-    MUXLOGINFO("Reading Loopback2 interface information");
-    std::string loopback2 = "Loopback2|";
-    swss::Table configDbLoopbackTable(configDbConnector.get(), CFG_LOOPBACK_INTERFACE_TABLE_NAME);
-    std::vector<std::string> loopbackIntfs;
+    const std::string loopback2 = "Loopback2|";
     bool loopback2IPv4Found = false;
 
-    configDbLoopbackTable.getKeys(loopbackIntfs);
     for (auto &loopbackIntf: loopbackIntfs) {
         size_t pos = loopbackIntf.find(loopback2);
         if (pos != std::string::npos) {
@@ -377,17 +373,27 @@ void DbInterface::getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> c
 }
 
 //
-// ---> getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+// ---> getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
 //
-// retrieve server/blades IP address and builds a map of IP to port name
+// retrieve Loopback2 interface information and block until it shows as OK in the state db
 //
-void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+void DbInterface::getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
-    MUXLOGINFO("Reading MUX Server IPs");
-    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
-    std::vector<swss::KeyOpFieldsValuesTuple> entries;
+    MUXLOGINFO("Reading Loopback2 interface information");
+    swss::Table configDbLoopbackTable(configDbConnector.get(), CFG_LOOPBACK_INTERFACE_TABLE_NAME);
+    std::vector<std::string> loopbackIntfs;
 
-    configDbMuxCableTable.getContent(entries);
+    configDbLoopbackTable.getKeys(loopbackIntfs);
+    processLoopback2InterfaceInfo(loopbackIntfs);
+}
+
+//
+// ---> processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process server/blades IP address and builds a map of IP to port name
+//
+void DbInterface::processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string portName = kfvKey(entry);
         std::string operation = kfvOp(entry);
@@ -426,15 +432,27 @@ void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDb
 }
 
 //
-// ---> handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable);
+// ---> getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 //
-// handles MUX port configuration change notification
+// retrieve server/blades IP address and builds a map of IP to port name
 //
-void DbInterface::handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable)
+void DbInterface::getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
-    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+    MUXLOGINFO("Reading MUX Server IPs");
+    swss::Table configDbMuxCableTable(configDbConnector.get(), CFG_MUX_CABLE_TABLE_NAME);
+    std::vector<swss::KeyOpFieldsValuesTuple> entries;
 
-    configMuxTable.pops(entries);
+    configDbMuxCableTable.getContent(entries);
+    processServerIpAddress(entries);
+}
+
+//
+// ---> processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process MUX port configuration change notification
+//
+void DbInterface::processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
         std::string operation = kfvOp(entry);
@@ -461,15 +479,25 @@ void DbInterface::handleMuxPortConfigNotifiction(swss::SubscriberStateTable &con
 }
 
 //
-// ---> handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
+// ---> handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable);
 //
-// handles MUX linkmgr configuration change notification
+// handles MUX port configuration change notification
 //
-void DbInterface::handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configMuxLinkmgrTable)
+void DbInterface::handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
-    configMuxLinkmgrTable.pops(entries);
+    configMuxTable.pops(entries);
+    processMuxPortConfigNotifiction(entries);
+}
+
+//
+// ---> processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process MUX Linkmgr configuration change notification
+//
+void DbInterface::processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string key = kfvKey(entry);
         if (key == "LINK_PROBER") {
@@ -508,15 +536,25 @@ void DbInterface::handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &
 }
 
 //
-// ---> handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable);
+// ---> handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
 //
-// handles link state change notification
+// handles MUX linkmgr configuration change notification
 //
-void DbInterface::handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable)
+void DbInterface::handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configMuxLinkmgrTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
-    appdbPortTable.pops(entries);
+    configMuxLinkmgrTable.pops(entries);
+    processMuxLinkmgrConfigNotifiction(entries);
+}
+
+//
+// ---> processLinkStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process link state change notification
+//
+void DbInterface::processLinkStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
         std::string operation = kfvOp(entry);
@@ -543,15 +581,25 @@ void DbInterface::handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPo
 }
 
 //
-// ---> handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
+// ---> handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable);
 //
-// handles MUX response (from xcvrd) notification
+// handles link state change notification
 //
-void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable)
+void DbInterface::handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
     appdbPortTable.pops(entries);
+    processLinkStateNotifiction(entries);
+}
+
+//
+// ---> processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// process MUX response (from xcvrd) notification
+//
+void DbInterface::processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
         std::string oprtation = kfvOp(entry);
@@ -580,15 +628,25 @@ void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdb
 }
 
 //
-// ---> handleMuxStateNotifiction(swss::SubscriberStateTable &statedbPortTable);
+// ---> handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
 //
-// statedbPortTable (in) reference to state db port table
+// handles MUX response (from xcvrd) notification
 //
-void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbPortTable)
+void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
-    statedbPortTable.pops(entries);
+    appdbPortTable.pops(entries);
+    processMuxResponseNotifiction(entries);
+}
+
+//
+// ---> processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+//
+// processes MUX state (from orchagent) notification
+//
+void DbInterface::processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries)
+{
     for (auto &entry: entries) {
         std::string port = kfvKey(entry);
         std::string oprtation = kfvOp(entry);
@@ -612,6 +670,19 @@ void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbP
             mMuxManagerPtr->addOrUpdateMuxPortMuxState(port, v);
         }
     }
+}
+
+//
+// ---> handleMuxStateNotifiction(swss::SubscriberStateTable &statedbPortTable);
+//
+// handles MUX state (from orchagent) notification
+//
+void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbPortTable)
+{
+    std::deque<swss::KeyOpFieldsValuesTuple> entries;
+
+    statedbPortTable.pops(entries);
+    processMuxStateNotifiction(entries);
 }
 
 //

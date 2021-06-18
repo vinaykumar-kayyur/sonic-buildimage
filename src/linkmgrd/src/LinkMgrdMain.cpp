@@ -88,7 +88,7 @@ int main(int argc, const char* argv[])
     if (retValue == EXIT_SUCCESS) {
         InitializeLogger(argv[0], level);
         std::stringstream ss;
-        ss << ", level: " << level;
+        ss << "level: " << level;
         MUXLOGINFO(ss.str());
 
         // initialize static data

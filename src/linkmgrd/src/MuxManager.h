@@ -18,6 +18,10 @@
 #include "common/MuxConfig.h"
 #include "DbInterface.h"
 
+namespace test {
+class MuxManagerTest;
+}
+
 namespace mux
 {
 using PortMap = std::map<std::string, std::shared_ptr<MuxPort>>;
@@ -54,6 +58,19 @@ public:
     */
     virtual ~MuxManager() = default;
 
+private:
+    /**
+    *@method MuxManager
+    *
+    *@brief class constructor that uses external instance of DbInterface class.
+    *       This is used for unit test
+    *
+    *@param dbInterfacePtr (in):    Pointer to dbInterface instance
+    *
+    */
+    MuxManager(std::shared_ptr<mux::DbInterface> dbInterfacePtr);
+
+public:
     /**
     *@method getIoService
     *
@@ -70,7 +87,7 @@ public:
     *
     *@return reference to DbInterface object
     */
-    inline mux::DbInterface& getDbInterface() {return mDbInterface;};
+    inline std::shared_ptr<mux::DbInterface> getDbInterfacePtr() {return mDbInterfacePtr;};
 
     /**
     *@method setTimeoutIpv4_msec
@@ -194,12 +211,12 @@ public:
     *
     *@brief update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
     *
-    *@param portName (in)           Mux port name
-    *@param smartNicIpAddress (in)  server/blade IP address
+    *@param portName (in)   Mux port name
+    *@param address (in)    server/blade IP address
     *
     *@return none
     */
-    void addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address smartNicIpAddress);
+    void addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address);
 
     /**
     *@method updateMuxPortConfig
@@ -307,6 +324,17 @@ private:
     void handleProcessTerminate();
 
 private:
+    friend class test::MuxManagerTest;
+    /**
+    *@method setDbInterfacePtr
+    *
+    *@brief set DbInterface to an external instance and is solely used for unit tests
+    *
+    *@return none
+    */
+    void setDbInterfacePtr(std::shared_ptr<mux::DbInterface> dbInterfacePtr) {mDbInterfacePtr = dbInterfacePtr;};
+
+private:
     common::MuxConfig mMuxConfig;
 
     boost::asio::io_service mIoService;
@@ -314,7 +342,7 @@ private:
     boost::thread_group mThreadGroup;
     boost::asio::signal_set mSignalSet;
 
-    mux::DbInterface mDbInterface;
+    std::shared_ptr<mux::DbInterface> mDbInterfacePtr;
 
     PortMap mPortMap;
 };

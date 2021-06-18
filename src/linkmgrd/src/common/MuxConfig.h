@@ -180,6 +180,15 @@ public:
     inline uint32_t getTimeoutIpv4_msec() const {return mTimeoutIpv4_msec;};
 
     /**
+    *@method getTimeoutIpv6_msec
+    *
+    *@brief getter for IPv6 LinkProber timeout in msec
+    *
+    *@return timeout in msec
+    */
+    inline uint32_t getTimeoutIpv6_msec() const {return mTimeoutIpv6_msec;};
+
+    /**
     *@method getPositiveStateChangeRetryCount
     *
     *@brief getter for LinkProber positive state change retry count

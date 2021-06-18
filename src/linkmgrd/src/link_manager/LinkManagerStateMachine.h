@@ -22,6 +22,10 @@
 #include "mux_state/MuxState.h"
 #include "mux_state/MuxStateMachine.h"
 
+namespace test {
+class MuxManagerTest;
+}
+
 namespace mux {
 #define ps(compositeState)      std::get<0>(compositeState)
 #define ms(compositeState)      std::get<1>(compositeState)
@@ -310,14 +314,14 @@ private:
 
 public:
     /**
-    *@method initializeLinkProber
+    *@method handleSwssBladeIpv4AddressUpdate
     *
     *@brief initialize LinkProber component. Note if this is the last component to be initialized,
     *       state machine will be activated
     *
     *@return none
     */
-    void initializeLinkProber();
+    void handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
 
     /**
     *@method activateStateMachine
@@ -723,6 +727,7 @@ private:
 private:
     // This is used for testing...
     friend class mux::MuxPort;
+    friend class test::MuxManagerTest;
     /**
     *@method setSuspendTxFnPtr
     *

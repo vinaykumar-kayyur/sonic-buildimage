@@ -23,6 +23,10 @@
 #include "common/MuxPortConfig.h"
 #include "DbInterface.h"
 
+namespace test {
+class MuxManagerTest;
+}
+
 namespace mux
 {
 
@@ -55,14 +59,14 @@ public:
     *
     *@brief class constructor
     *
-    *@param dbInterface (in)    pointer to DbInterface object
+    *@param dbInterfacePtr (in) pointer to DbInterface object
     *@param muxConfig (in)      reference to MuxConfig object
     *@param portName (in)       reference to port name
     *@param serverId (in)       server/blade id
     *@param ioService (in)      reference to Boost IO Service object
     */
     MuxPort(
-        mux::DbInterface *dbInterface,
+        std::shared_ptr<mux::DbInterface> dbInterfacePtr,
         common::MuxConfig &muxConfig,
         const std::string &portName,
         uint16_t serverId,
@@ -94,7 +98,7 @@ public:
     *
     *@return none
     */
-    inline void setMuxState(mux_state::MuxState::Label label) {mDbInterface->setMuxState(mMuxPortConfig.getPortName(), label);};
+    inline void setMuxState(mux_state::MuxState::Label label) {mDbInterfacePtr->setMuxState(mMuxPortConfig.getPortName(), label);};
 
     /**
     *@method getMuxState
@@ -105,7 +109,7 @@ public:
     *
     *@return none
     */
-    inline void getMuxState() {mDbInterface->getMuxState(mMuxPortConfig.getPortName());};
+    inline void getMuxState() {mDbInterfacePtr->getMuxState(mMuxPortConfig.getPortName());};
 
     /**
     *@method probeMuxState
@@ -116,7 +120,7 @@ public:
     *
     *@return label of MUX state
     */
-    inline void probeMuxState() {mDbInterface->probeMuxState(mMuxPortConfig.getPortName());};
+    inline void probeMuxState() {mDbInterfacePtr->probeMuxState(mMuxPortConfig.getPortName());};
 
     /**
     *@method setMuxLinkmgrState
@@ -128,7 +132,7 @@ public:
     *@return none
     */
     inline void setMuxLinkmgrState(link_manager::LinkManagerStateMachine::Label label) {
-        mDbInterface->setMuxLinkmgrState(mMuxPortConfig.getPortName(), label);
+        mDbInterfacePtr->setMuxLinkmgrState(mMuxPortConfig.getPortName(), label);
     };
 
     /**
@@ -145,7 +149,7 @@ public:
         link_manager::LinkManagerStateMachine::Metrics metrics,
         mux_state::MuxState::Label label
     ) {
-        mDbInterface->postMetricsEvent(mMuxPortConfig.getPortName(), metrics, label);
+        mDbInterfacePtr->postMetricsEvent(mMuxPortConfig.getPortName(), metrics, label);
     };
 
     /**
@@ -160,13 +164,15 @@ public:
     inline void setServerIpv4Address(const boost::asio::ip::address &address) {mMuxPortConfig.setBladeIpv4Address(address);};
 
     /**
-    *@method initializeLinkProber
+    *@method handleBladeIpv4AddressUpdate
     *
-    *@brief initialize link prober after reading the server/blade IP address
+    *@brief update server/blade IPv4 Address
+    *
+    *@param addres (in)  server/blade IP address
     *
     *@return none
     */
-    inline void initializeLinkProber() {mLinkManagerStateMachine.initializeLinkProber();};
+     void handleBladeIpv4AddressUpdate(boost::asio::ip::address addres);
 
     /**
     *@method handleLinkState
@@ -235,6 +241,7 @@ public:
     void handleMuxConfig(const std::string &config);
 
 protected:
+    friend class test::MuxManagerTest;
     /**
     *@method getLinkManagerStateMachine
     *
@@ -263,7 +270,7 @@ protected:
     void setComponentInitState(uint8_t component) {mLinkManagerStateMachine.setComponentInitState(component);};
 
 private:
-    mux::DbInterface *mDbInterface = nullptr;
+    std::shared_ptr<mux::DbInterface> mDbInterfacePtr = nullptr;
     common::MuxPortConfig mMuxPortConfig;
     boost::asio::io_service::strand mStrand;
 

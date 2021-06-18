@@ -16,6 +16,12 @@ FakeDbInterface::FakeDbInterface(boost::asio::io_service *ioService) :
 {
 }
 
+FakeDbInterface::FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_service *ioService) :
+    mux::DbInterface(muxManager, ioService),
+    mNextMuxState(mux_state::MuxState::Label::Unknown)
+{
+}
+
 void FakeDbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
 {
     mSetMuxStateInvokeCount++;

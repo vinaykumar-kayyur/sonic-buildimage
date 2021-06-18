@@ -22,12 +22,13 @@
 #include "link_manager/LinkManagerStateMachine.h"
 #include "mux_state/MuxState.h"
 
-namespace mux {
-class MuxManager;
+namespace test {
+class MuxManagerTest;
 }
 
 namespace mux
 {
+class MuxManager;
 using ServerIpPortMap = std::map<boost::asio::ip::address, std::string>;
 
 /**
@@ -193,6 +194,8 @@ public:
     void stopSwssNotificationPoll() {mPollSwssNotifcation = false;};
 
 private:
+    friend class test::MuxManagerTest;
+
     /**
     *@method handleGetMuxState
     *
@@ -270,6 +273,17 @@ private:
     void getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+    *@method processLoopback2InterfaceInfo
+    *
+    *@brief process Loopback2 interface information
+    *
+    *@param loopbackIntfs   config_db Loopback2 entries
+    *
+    *@return none
+    */
+    void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
+
+    /**
     *@method getLoopback2InterfaceInfo
     *
     *@brief retrieve Loopback2 interface information
@@ -279,6 +293,17 @@ private:
     *@return none
     */
     void getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
+    *@method processServerIpAddress
+    *
+    *@brief process server/blades IP address and builds a map of IP to port name
+    *
+    *@param entries   config_db MUX_CABLE entries
+    *
+    *@return none
+    */
+    void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method getServerIpAddress
@@ -292,6 +317,17 @@ private:
     void getServerIpAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
+    *@method processMuxPortConfigNotifiction
+    *
+    *@brief process MUX port configuration change notification
+    *
+    *@param entries (in) reference to changed entries of MUX config table
+    *
+    *@return none
+    */
+    void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
     *@method handleMuxPortConfigNotifiction
     *
     *@brief handles MUX port configuration change notification
@@ -301,6 +337,17 @@ private:
     *@return none
     */
     void handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable);
+
+    /**
+    *@method processMuxLinkmgrConfigNotifiction
+    *
+    *@brief process MUX Linkmgr configuration change notification
+    *
+    *@param entries (in) reference to MUX linkmgr config entries
+    *
+    *@return none
+    */
+    void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxLinkmgrConfigNotifiction
@@ -314,6 +361,17 @@ private:
     void handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
 
     /**
+    *@method processLinkStateNotifiction
+    *
+    *@brief process link state change notification
+    *
+    *@param entries (in) reference to app db port table
+    *
+    *@return none
+    */
+    void processLinkStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
     *@method handleLinkStateNotifiction
     *
     *@brief handles link state change notification
@@ -325,6 +383,17 @@ private:
     void handleLinkStateNotifiction(swss::SubscriberStateTable &appdbPortTable);
 
     /**
+    *@method processMuxResponseNotifiction
+    *
+    *@brief process MUX response (from xcvrd) notification
+    *
+    *@param entries (in) reference to app db port entries
+    *
+    *@return none
+    */
+    void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+
+    /**
     *@method handleMuxResponseNotifiction
     *
     *@brief handles MUX response (from xcvrd) notification
@@ -334,6 +403,17 @@ private:
     *@return none
     */
     void handleMuxResponseNotifiction(swss::SubscriberStateTable &appdbPortTable);
+
+    /**
+    *@method processMuxStateNotifiction
+    *
+    *@brief processes MUX state (from orchagent) notification
+    *
+    *@param entries (in) reference to state db port entries
+    *
+    *@return none
+    */
+    void processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxStateNotifiction

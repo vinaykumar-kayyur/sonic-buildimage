@@ -28,7 +28,7 @@ public:
 
     boost::asio::io_service mIoService;
     common::MuxConfig mMuxConfig;
-    FakeDbInterface mDbInterface;
+    std::shared_ptr<FakeDbInterface> mDbInterfacePtr;
     std::string mPortName = "EtherTest01";
     std::string mSmartNicIpAddress = "192.168.1.20";
     uint16_t mServerId = 01;

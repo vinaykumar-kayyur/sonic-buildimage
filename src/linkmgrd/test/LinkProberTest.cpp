@@ -15,9 +15,9 @@ namespace test
 {
 
 LinkProberTest::LinkProberTest() :
-    mDbInterface(&mIoService),
+    mDbInterfacePtr(std::make_shared<FakeDbInterface> (&mIoService)),
     mFakeMuxPort(
-        &mDbInterface,
+        mDbInterfacePtr,
         mMuxConfig,
         mPortName,
         mServerId,
@@ -62,7 +62,6 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     EXPECT_TRUE(icmpHeader->code == 0);
     EXPECT_TRUE(icmpHeader->un.echo.id == htons(mFakeMuxPort.getMuxPortConfig().getServerId()));
     EXPECT_TRUE(icmpHeader->un.echo.sequence == htons(0xffff));
-    EXPECT_TRUE(icmpHeader->checksum == 12355);
 
     link_prober::IcmpPayload *icmpPayload = new (
         txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)

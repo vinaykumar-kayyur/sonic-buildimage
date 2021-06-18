@@ -37,13 +37,13 @@ namespace mux
 // class constructor
 //
 MuxPort::MuxPort(
-    mux::DbInterface *dbInterface,
+    std::shared_ptr<mux::DbInterface> dbInterfacePtr,
     common::MuxConfig &muxConfig,
     const std::string &portName,
     uint16_t serverId,
     boost::asio::io_service &ioService
 ) :
-    mDbInterface(dbInterface),
+    mDbInterfacePtr(dbInterfacePtr),
     mMuxPortConfig(
         muxConfig,
         portName,
@@ -56,7 +56,19 @@ MuxPort::MuxPort(
         mMuxPortConfig
     )
 {
-    assert(dbInterface != nullptr);
+    assert(dbInterfacePtr != nullptr);
+}
+
+void MuxPort::handleBladeIpv4AddressUpdate(boost::asio::ip::address address)
+{
+    MUXLOGDEBUG(boost::format("port: %s") % mMuxPortConfig.getPortName());
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate,
+        &mLinkManagerStateMachine,
+        address
+    )));
 }
 
 //

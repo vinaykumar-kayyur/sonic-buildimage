@@ -330,13 +330,15 @@ void LinkManagerStateMachine::switchMuxState(
 }
 
 //
-// ---> initializeLinkProber();
+// ---> handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address);
 //
 // initialize LinkProber component. Note if this is the last component to be initialized,
 // state machine will be activated
 //
-void LinkManagerStateMachine::initializeLinkProber()
+void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address)
 {
+    mMuxPortConfig.setBladeIpv4Address(address);
+
     if (!mComponentInitState.test(LinkProberComponent)) {
         try {
             mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
@@ -357,6 +359,8 @@ void LinkManagerStateMachine::initializeLinkProber()
 
             throw MUX_ERROR(BadAlloc, errMsg.str());
         }
+    } else {
+        mLinkProberPtr->updateEthernetFrame();
     }
 }
 

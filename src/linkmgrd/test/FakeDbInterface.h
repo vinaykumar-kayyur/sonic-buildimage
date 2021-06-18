@@ -17,6 +17,7 @@ class FakeDbInterface: public mux::DbInterface
 {
 public:
     FakeDbInterface(boost::asio::io_service *ioService);
+    FakeDbInterface(mux::MuxManager *muxManager, boost::asio::io_service *ioService);
     virtual ~FakeDbInterface() = default;
 
     virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label) override;

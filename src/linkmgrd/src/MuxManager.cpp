@@ -26,7 +26,28 @@ MuxManager::MuxManager() :
     mMuxConfig(),
     mWork(mIoService),
     mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),
-    mDbInterface(this, &mIoService)
+    mDbInterfacePtr(std::make_shared<mux::DbInterface> (this, &mIoService))
+{
+    mSignalSet.add(SIGUSR1);
+    mSignalSet.add(SIGUSR2);
+    mSignalSet.async_wait(boost::bind(&MuxManager::handleSignal,
+        this,
+        boost::asio::placeholders::error,
+        boost::asio::placeholders::signal_number
+    ));
+}
+
+//
+// ---> MuxManager();
+//
+// class constructor that uses external instance of DbInterface class.
+// This is used for unit test
+//
+MuxManager::MuxManager(std::shared_ptr<mux::DbInterface> dbInterfacePtr) :
+    mMuxConfig(),
+    mWork(mIoService),
+    mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),
+    mDbInterfacePtr(dbInterfacePtr)
 {
     mSignalSet.add(SIGUSR1);
     mSignalSet.add(SIGUSR2);
@@ -51,7 +72,7 @@ void MuxManager::initialize()
         );
     }
 
-    mDbInterface.initialize();
+    mDbInterfacePtr->initialize();
 }
 
 //
@@ -61,7 +82,7 @@ void MuxManager::initialize()
 //
 void MuxManager::deinitialize()
 {
-    mDbInterface.deinitialize();
+    mDbInterfacePtr->deinitialize();
 }
 
 //
@@ -86,21 +107,19 @@ void MuxManager::terminate()
 }
 
 //
-// ---> addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address);
+// ---> addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address);
 //
 // update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
 //
-void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address smartNicIpAddress)
+void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address)
 {
-    MUXLOGINFO(boost::format("%s: server IP: %s") % portName % smartNicIpAddress);
-    boost::system::error_code errorCode;
+    MUXLOGINFO(boost::format("%s: server IP: %s") % portName % address);
+
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
 
-    if (smartNicIpAddress.is_v4()) {
-        muxPortPtr->setServerIpv4Address(smartNicIpAddress);
-        muxPortPtr->initializeLinkProber();
-    }
-    else if (smartNicIpAddress.is_v6()) {
+    if (address.is_v4()) {
+        muxPortPtr->handleBladeIpv4AddressUpdate(address);
+    } else if (address.is_v6()) {
         // handle IPv6 probing
     }
 }
@@ -208,7 +227,7 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
         if (portMapIterator == mPortMap.end()) {
             uint16_t serverId = atoi(portName.substr(portName.find_last_not_of("0123456789") + 1).c_str());
             muxPortPtr = std::make_shared<MuxPort> (
-                &mDbInterface,
+                mDbInterfacePtr,
                 mMuxConfig,
                 portName,
                 serverId,
@@ -279,10 +298,10 @@ void MuxManager::handleSignal(const boost::system::error_code errorCode, int sig
 //
 void MuxManager::handleProcessTerminate()
 {
-    mDbInterface.stopSwssNotificationPoll();
-    mDbInterface.getBarrier().wait();
+    mDbInterfacePtr->stopSwssNotificationPoll();
+    mDbInterfacePtr->getBarrier().wait();
     mIoService.stop();
-    mDbInterface.getBarrier().wait();
+    mDbInterfacePtr->getBarrier().wait();
 }
 
 } /* namespace mux */
