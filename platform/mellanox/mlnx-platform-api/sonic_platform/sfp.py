@@ -1550,13 +1550,13 @@ class SFP(SfpBase):
 
 
     @classmethod
-    def mgmt_phy_mod_pwr_attr_get(cls, power_attr_type, sdk_handle, sdk_index):
+    def mgmt_phy_mod_pwr_attr_get(cls, power_attr_type, sdk_handle, sdk_index, slot_id):
         sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
         sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t()
         sx_mgmt_phy_mod_pwr_attr.power_attr_type = power_attr_type
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
         module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
+        module_id_info.slot_id = slot_id
         module_id_info.module_id = sdk_index
         try:
             rc = sx_mgmt_phy_module_pwr_attr_get(sdk_handle, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
@@ -1581,7 +1581,7 @@ class SFP(SfpBase):
             # call class level method to avoid initialize the whole sonic platform API
             get_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
-                              'print(sfp.SFP._get_lpmode(sdk_handle, {}))'.format(self.sdk_index)
+                              'print(sfp.SFP._get_lpmode(sdk_handle, {}, {}))'.format(self.sdk_index, self.slot_id)
             lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(get_lpmode_code)
             try:
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
@@ -1590,21 +1590,22 @@ class SFP(SfpBase):
                 print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
                 return False
         else:
-            return self._get_lpmode(self.sdk_handle, self.sdk_index)
+            return self._get_lpmode(self.sdk_handle, self.sdk_index, self.slot_id)
 
     
     @classmethod
-    def _get_lpmode(cls, sdk_handle, sdk_index):
+    def _get_lpmode(cls, sdk_handle, sdk_index, slot_id):
         """Class level method to get low power mode. 
 
         Args:
             sdk_handle: SDK handle
             sdk_index (integer): SDK port index
+            slot_id (integer): Slot ID
 
         Returns:
             [boolean]: True if low power mode is on else off
         """
-        _, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, sdk_handle, sdk_index)
+        _, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, sdk_handle, sdk_index, slot_id)
         return oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E
 
 
@@ -1782,7 +1783,7 @@ class SFP(SfpBase):
                 if sfpd_obj is None:
                     return None
 
-                if dom_tx_bias_power_supported:
+                if self.dom_tx_bias_power_supported:
                     dom_tx_bias_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_BIAS_OFFSET), QSFP_DD_TX_BIAS_WIDTH)
                     if dom_tx_bias_raw is not None:
                         dom_tx_bias_data = sfpd_obj.parse_dom_tx_bias(dom_tx_bias_raw, 0)
@@ -1984,8 +1985,8 @@ class SFP(SfpBase):
             # call class level method to avoid initialize the whole sonic platform API
             reset_code = 'from sonic_platform import sfp;\n' \
                          'with sfp.SdkHandleContext() as sdk_handle:' \
-                         'print(sfp.SFP._reset(sdk_handle, {}))' \
-                         .format(self.sdk_index)
+                         'print(sfp.SFP._reset(sdk_handle, {}, {}))' \
+                         .format(self.sdk_index, self.slot_id)
             reset_cmd = "docker exec pmon python3 -c \"{}\"".format(reset_code)
 
             try:
@@ -1995,17 +1996,17 @@ class SFP(SfpBase):
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
                 return False
         else:
-            return self._reset(self.sdk_handle, self.sdk_index)
+            return self._reset(self.sdk_handle, self.sdk_index, self.slot_id)
 
 
     @classmethod
-    def _reset(cls, sdk_handle, sdk_index):
+    def _reset(cls, sdk_handle, sdk_index, slot_id):
         module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
+        module_id_info.slot_id = slot_id
         module_id_info.module_id = sdk_index
         rc = sx_mgmt_phy_module_reset(sdk_handle, module_id_info)
         if rc != SX_STATUS_SUCCESS:
-            logger.log_error("Error occurred when resetting SFP module {}, error code {}".format(sdk_index, rc))
+            logger.log_error("Error occurred when resetting SFP module {}, slot {}, error code {}".format(sdk_index, slot_id, rc))
 
         return rc == SX_STATUS_SUCCESS
 
@@ -2069,10 +2070,7 @@ class SFP(SfpBase):
         delete_sx_port_admin_state_t_p(admin_state_p)
         delete_sx_port_module_state_t_p(module_state_p)
 
-        if admin_state == SX_PORT_ADMIN_STATUS_UP:
-            return True
-        else:
-            return False
+        return admin_state == SX_PORT_ADMIN_STATUS_UP
 
 
     @classmethod
@@ -2085,7 +2083,7 @@ class SFP(SfpBase):
 
 
     @classmethod
-    def get_logical_ports(cls, sdk_handle, sdk_index):
+    def get_logical_ports(cls, sdk_handle, sdk_index, slot_id):
         # Get all the ports related to the sfp, if port admin status is up, put it to list
         port_attributes_list = new_sx_port_attributes_t_arr(SX_PORT_ATTR_ARR_SIZE)
         port_cnt_p = new_uint32_t_p()
@@ -2101,6 +2099,7 @@ class SFP(SfpBase):
             if not cls.is_nve(int(port_attributes.log_port)) \
                and not cls.is_cpu(int(port_attributes.log_port)) \
                and port_attributes.port_mapping.module_port == sdk_index \
+               and port_attributes.port_mapping.slot == slot_id \
                and cls.is_port_admin_status_up(sdk_handle, port_attributes.log_port):
                 log_port_list.append(port_attributes.log_port)
 
@@ -2110,7 +2109,7 @@ class SFP(SfpBase):
 
 
     @classmethod
-    def mgmt_phy_mod_pwr_attr_set(cls, sdk_handle, sdk_index, power_attr_type, admin_pwr_mode):
+    def mgmt_phy_mod_pwr_attr_set(cls, sdk_handle, sdk_index, slot_id, power_attr_type, admin_pwr_mode):
         result = False
         sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t()
         sx_mgmt_phy_mod_pwr_mode_attr = sx_mgmt_phy_mod_pwr_mode_attr_t()
@@ -2120,12 +2119,12 @@ class SFP(SfpBase):
         sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
         module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
+        module_id_info.slot_id = slot_id
         module_id_info.module_id = sdk_index
         try:
             rc = sx_mgmt_phy_module_pwr_attr_set(sdk_handle, SX_ACCESS_CMD_SET, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
             if SX_STATUS_SUCCESS != rc:
-                logger.log_error("Error occurred when setting power mode for SFP module {}, error code {}".format(sdk_index, rc))
+                logger.log_error("Error occurred when setting power mode for SFP module {}, slot {}, error code {}".format(sdk_index, slot_id, rc))
                 result = False
             else:
                 result = True
@@ -2136,10 +2135,10 @@ class SFP(SfpBase):
 
 
     @classmethod
-    def _set_lpmode_raw(cls, sdk_handle, sdk_index, ports, attr_type, power_mode):
+    def _set_lpmode_raw(cls, sdk_handle, sdk_index, slot_id, ports, attr_type, power_mode):
         result = False
         # Check if the module already works in the same mode
-        admin_pwr_mode, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(attr_type, sdk_handle, sdk_index)
+        admin_pwr_mode, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(attr_type, sdk_handle, sdk_index, slot_id)
         if (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E and oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E) \
            or (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E and admin_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E):
             return True
@@ -2148,7 +2147,7 @@ class SFP(SfpBase):
             for port in ports:
                 cls.set_port_admin_status_by_log_port(sdk_handle, port, SX_PORT_ADMIN_STATUS_DOWN)
             # Set the desired power mode
-            result = cls.mgmt_phy_mod_pwr_attr_set(sdk_handle, sdk_index, attr_type, power_mode)
+            result = cls.mgmt_phy_mod_pwr_attr_set(sdk_handle, sdk_index, slot_id, attr_type, power_mode)
         finally:
             # Bring the port up
             for port in ports:
@@ -2173,8 +2172,8 @@ class SFP(SfpBase):
             # call class level method to avoid initialize the whole sonic platform API
             set_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
-                              'print(sfp.SFP._set_lpmode({}, sdk_handle, {}))' \
-                              .format('True' if lpmode else 'False', self.sdk_index)
+                              'print(sfp.SFP._set_lpmode({}, sdk_handle, {}, {}))' \
+                              .format('True' if lpmode else 'False', self.sdk_index, self.slot_id)
             lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(set_lpmode_code)
 
             # Set LPM
@@ -2185,19 +2184,20 @@ class SFP(SfpBase):
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
                 return False
         else:
-            return self._set_lpmode(lpmode, self.sdk_handle, self.sdk_index)
+            return self._set_lpmode(lpmode, self.sdk_handle, self.sdk_index, self.slot_id)
 
     
     @classmethod
-    def _set_lpmode(cls, lpmode, sdk_handle, sdk_index):
-        log_port_list = cls.get_logical_ports(sdk_handle, sdk_index)
+    def _set_lpmode(cls, lpmode, sdk_handle, sdk_index, slot_id):
+        log_port_list = cls.get_logical_ports(sdk_handle, sdk_index, slot_id)
         sdk_lpmode = SX_MGMT_PHY_MOD_PWR_MODE_LOW_E if lpmode else SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E
         cls._set_lpmode_raw(sdk_handle, 
                             sdk_index, 
+                            slot_id,
                             log_port_list, 
                             SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, 
                             sdk_lpmode)
-        logger.log_info("{} low power mode for module {}".format("Enabled" if lpmode else "Disabled", sdk_index))
+        logger.log_info("{} low power mode for module {}, slot {}".format("Enabled" if lpmode else "Disabled", sdk_index, slot_id))
         return True
 
 
