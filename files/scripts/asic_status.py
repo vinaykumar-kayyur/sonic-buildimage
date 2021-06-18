@@ -54,7 +54,7 @@ def main():
         if asic_op == 'SET':
             asic_fvs = dict(asic_fvp)
             asic_name = asic_fvs.get('name')
-            if asic_name == None:
+            if asic_name is None:
                 syslog.syslog(syslog.LOG_INFO,
                         'Unable to get asic_name for asic{}'.format(global_asic_id))
                 continue
