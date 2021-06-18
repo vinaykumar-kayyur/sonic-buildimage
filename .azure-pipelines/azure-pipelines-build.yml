@@ -44,6 +44,8 @@ jobs:
 
         - name: barefoot
           variables:
+            sync_rpc_image: yes
+            platform_rpc: bfn
             swi_image: yes
 
         - name: broadcom
@@ -72,7 +74,7 @@ jobs:
 
         - name: innovium
           variables:
-            swi_image: yes
+            dbg_image: yes
 
         - name: marvell-armhf
           pool: sonicbld_8c

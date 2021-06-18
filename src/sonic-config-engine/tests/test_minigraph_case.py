@@ -92,15 +92,38 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_minigraph_vlans(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v VLAN'
         output = self.run_script(argument)
+
+        expected = {
+                   'Vlan1000': {
+                       'alias': 'ab1',
+                       'dhcp_servers': ['192.0.0.1', '192.0.0.2'],
+                       'vlanid': '1000',
+                       'mac': '00:aa:bb:cc:dd:ee',
+                       'members': ['Ethernet8']
+                       },
+                   'Vlan2000': {
+                       'alias': 'ab2',
+                       'dhcp_servers': ['192.0.0.1'],
+                       'members': ['Ethernet4'],
+                       'vlanid': '2000'
+                       }
+                   }
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'mac': '00:aa:bb:cc:dd:ee', 'members': ['Ethernet8'] }}")
+            expected
         )
 
     def test_minigraph_vlan_members(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v VLAN_MEMBER'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{('Vlan1000', 'Ethernet8'): {'tagging_mode': 'untagged'}}")
+        expected = {
+                       'Vlan1000|Ethernet8': {'tagging_mode': 'untagged'},
+                       'Vlan2000|Ethernet4': {'tagging_mode': 'untagged'}
+                   }
+        self.assertEqual(
+                utils.to_dict(output.strip()),
+                expected
+        )
 
     def test_minigraph_vlan_interfaces_keys(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VLAN_INTERFACE.keys()|list"'
@@ -124,7 +147,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100'}}")
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100', 'tpid': '0x8100'}}")
         )
 
     def test_minigraph_console_mgmt_feature(self):
