@@ -34,7 +34,7 @@ def main():
         sys.exit(1)
 
     # Connect to STATE_DB and subscribe to chassis-module table notifications
-    state_db = daemon_base.db_connect("STATE_DB")
+    state_db = daemon_base.db_connect("CHASSIS_STATE_DB")
 
     sel = swsscommon.Select()
     sst = swsscommon.SubscriberStateTable(state_db, CHASSIS_ASIC_INFO_TABLE)
@@ -53,7 +53,15 @@ def main():
 
         if asic_op == 'SET':
             asic_fvs = dict(asic_fvp)
-            if asic_fvs['module_name'].startswith('FABRIC-CARD') is False:
+            asic_name = asic_fvs.get('name')
+            if asic_name == None:
+                syslog.syslog(syslog.LOG_INFO,
+                        'Unable to get asic_name for asic{}'.format(global_asic_id))
+                continue
+
+            if asic_name.startswith('FABRIC-CARD') is False:
+                syslog.syslog(syslog.LOG_INFO,
+                        'Skipping module with asic_name {} for asic{}'.format(asic_name, global_asic_id))
                 continue
 
             if (global_asic_id == args_asic_id):
