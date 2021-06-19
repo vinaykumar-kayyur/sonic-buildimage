@@ -59,6 +59,8 @@ def tcpserver(serverport):
 
 def main():
     vnetlogger.set_min_log_priority_info()
+    bind_layers(UDP, VXLAN, sport=configutil.DEFAULT_VXLAN_PORT)
+    bind_layers(UDP, VXLAN, dport=configutil.DEFAULT_VXLAN_PORT)
     tcpserver(configutil.DEFAULT_VXLAN_PORT)
 
 
