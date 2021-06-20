@@ -164,6 +164,22 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libxslt-dev libz-dev
 fi
 
+# Install sonic-yang-models Python 3 package, install dependencies
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python3-yang_*.deb
+SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
+sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MODEL_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
+
+# Install sonic-yang-mgmt Python3 package
+SONIC_YANG_MGMT_PY3_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py3_wheel_path}})
+sudo cp {{sonic_yang_mgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
+
 # Install SONiC config engine Python 2 package
 CONFIG_ENGINE_PY2_WHEEL_NAME=$(basename {{config_engine_py2_wheel_path}})
 sudo cp {{config_engine_py2_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
@@ -184,21 +200,6 @@ sudo cp {{config_engine_py3_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY3_WHE
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $CONFIG_ENGINE_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY3_WHEEL_NAME
 
-# Install sonic-yang-models py3 package, install dependencies
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python3-yang_*.deb
-SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
-sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MODEL_PY3_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
-
-# Install sonic-yang-mgmt Python3 package
-SONIC_YANG_MGMT_PY3_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py3_wheel_path}})
-sudo cp {{sonic_yang_mgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MGMT_PY3_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
 
 # Install sonic-platform-common Python 2 package
 PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
@@ -330,8 +331,6 @@ sudo cp $IMAGE_CONFIGS/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
 sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
 sudo cp $IMAGE_CONFIGS/monit/conf.d/* $FILESYSTEM_ROOT/etc/monit/conf.d/
 sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/conf.d/*
-sudo cp $IMAGE_CONFIGS/monit/process_checker $FILESYSTEM_ROOT/usr/bin/
-sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/process_checker
 sudo cp $IMAGE_CONFIGS/monit/container_checker $FILESYSTEM_ROOT/usr/bin/
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/container_checker
 sudo cp $IMAGE_CONFIGS/monit/memory_checker $FILESYSTEM_ROOT/usr/bin/
@@ -436,6 +435,10 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install watchdog==0.10.3
 
 {% if include_kubernetes == "y" %}
+# Point to kubelet to /etc/resolv.conf
+#
+echo 'KUBELET_EXTRA_ARGS="--resolv-conf=/etc/resolv.conf"' | sudo tee -a  $FILESYSTEM_ROOT/etc/default/kubelet
+
 # Copy Flannel conf file into sonic-templates
 #
 sudo cp $BUILD_TEMPLATES/kube_cni.10-flannel.conflist $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
@@ -456,6 +459,25 @@ sudo cp ${files_path}/container_startup.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCR
 sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_startup.py
 
 # Config file used by container mgmt scripts/service
+fl="${files_path}/remote_ctr.config.json"
+use_k8s_as_http_proxy=$(python3 -c 'import json
+with open("'${fl}'", "r") as s:
+    d=json.load(s);print(d.get("use_k8s_as_http_proxy", ""))
+')
+if [ "${use_k8s_as_http_proxy}" == "y" ]; then
+    # create proxy files for docker using private IP which will
+    # be later directed to k8s master upon config
+    PROXY_INFO="http://172.16.1.1:3128/"
+    cat <<EOT | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/http_proxy.conf > /dev/null
+[Service]
+Environment="HTTP_PROXY=${PROXY_INFO}"
+EOT
+    cat <<EOT | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/https_proxy.conf > /dev/null
+[Service]
+Environment="HTTPS_PROXY=${PROXY_INFO}"
+EOT
+fi
+
 sudo cp ${files_path}/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
 
 # Remote container management service files
@@ -526,6 +548,13 @@ j2 files/build_templates/config-setup.service.j2 | sudo tee $FILESYSTEM_ROOT_USR
 sudo cp $IMAGE_CONFIGS/config-setup/config-setup $FILESYSTEM_ROOT/usr/bin/config-setup
 echo "config-setup.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-setup.service
+
+# Add delayed tacacs application service
+sudo cp files/build_templates/tacacs-config.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
+echo "tacacs-config.timer" | sudo tee -a $GENERATED_SERVICE_FILE
+
+sudo cp files/build_templates/tacacs-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
+echo "tacacs-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
 # Copy config-chassisdb script and service file
 j2 files/build_templates/config-chassisdb.service.j2 | sudo tee $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/config-chassisdb.service
