@@ -4,6 +4,25 @@
                 "Vrf_blue": {
                 }
         },
+        "BUFFER_POOL|egress_lossless_pool": {
+               "mode": "static",
+               "size": "33004032",
+               "type": "egress"
+        },
+        "BUFFER_PFOFILE|pg_lossless_100000_300m_profile": {
+                "dynamic_th": "1",
+                "pool": "[BUFFER_POOL|egress_lossless_pool]",
+                "size": "9427",
+                "xoff": "50176",
+                "xon": "0",
+                "xon_offset": "3584"
+        },
+        "BUFFER_PG|Ethernet9|3-4": {
+                "profile": "[BUFFER_PROFILE|pg_lossless_25000_300m_profile]"
+        },
+        "BUFFER_QUEUE|Ethernet46|4": {
+                "profile": "[BUFFER_PROFILE|egress_lossy_profile]"
+        },
         "PORTCHANNEL": {
             "PortChannel0003": {
                 "admin_status": "up",

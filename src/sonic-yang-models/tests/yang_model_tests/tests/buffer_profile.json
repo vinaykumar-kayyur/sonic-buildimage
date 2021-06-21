@@ -1,0 +1,39 @@
+{
+    "BUFFER_PROFILE_CORRECT_STATIC_THRESHOLD_VALUE": {
+	"desc": "BUFFER_PROFILE_CORRECT_STATIC_THRESHOLD_VALUE no failure."
+    },
+    "BUFFER_PROFILE_WRONG_STATIC_THRESHOLD_VALUE": {
+        "desc": "BUFFER_PROFILE_WRONG_STATIC_THRESHOLD_VALUE pattern failure.",
+	"eStr": ["-1" ]
+    },
+    "BUFFER_PROFILE_CORRECT_DYNAMIC_THRESHOLD_VALUE": {
+        "desc": "BUFFER_PROFILE_CORRECT_DYNAMIC_THRESHOLD_VALUE no failure."
+    },
+    "BUFFER_PROFILE_CORRECT_SIZE_VALUE": {
+	"desc": "BUFFER_PROFILE_CORRECT_SIZE_VALUE no failure."
+    },
+    "BUFFER_PROFILE_WRONG_SIZE_VALUE": {
+	"desc": "BUFFER_PROFILE_WRONG_SIZE_VALUE pattern failure.",
+	"eStr": ["-1" ]
+    },
+    "BUFFER_PROFILE_CORRECT_POOL_VALUE": {
+        "desc": "BUFFER_PROFILE_CORRECT_POOL_VALUE no failure."
+    },
+    "BUFFER_PROFILE_WRONG_POOL_VALUE": {
+        "desc": "BUFFER_PROFILE_WRONG_POOL_VALUE pattern failure.",
+	"eStr": ["wrong" ]
+    },
+    "BUFFER_PROFILE_CORRECT_XON_OFFSET_VALUE": {
+        "desc": "BUFFER_PROFILE_CORRECT_XON_OFFSET_VALUE no failure."
+    },
+    "BUFFER_PROFILE_CORRECT_XON_VALUE": {
+        "desc": "BUFFER_PROFILE_CORRECT_XON_VALUE no failure."
+    },
+    "BUFFER_PROFILE_CORRECT_XOFF_VALUE": {
+        "desc": "BUFFER_PROFILE_CORRECT_XOFF_VALUE no failure."
+    },
+    "BUFFER_PROFILE_WRONG_XOFF_VALUE": {
+        "desc": "BUFFER_PROFILE_WRONG_XOFF_VALUE no failure.",
+	"eStr": ["-1" ]
+    }
+}

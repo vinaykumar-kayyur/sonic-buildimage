@@ -43,6 +43,10 @@ setup(
     data_files=[
         ('yang-models', ['./yang-models/sonic-acl.yang',
                          './yang-models/sonic-breakout_cfg.yang',
+                         './yang-models/sonic-buffer-pool.yang',
+                         './yang-models/sonic-buffer-profile.yang',
+                         './yang-models/sonic-buffer-pg.yang',
+                         './yang-models/sonic-buffer-queue.yang',
                          './yang-models/sonic-crm.yang',
                          './yang-models/sonic-device_metadata.yang',
                          './yang-models/sonic-device_neighbor.yang',
