@@ -793,8 +793,7 @@
             }
         },
         "MAP_PFC_PRIORITY_TO_QUEUE": {
-            "name": "AZURE",
-            "MAP_PFC_PRIORITY_TO_QUEUE": [
+            "name": [
             {
                 "pfc_priority" : "2",
                 "qindex" : "2"
