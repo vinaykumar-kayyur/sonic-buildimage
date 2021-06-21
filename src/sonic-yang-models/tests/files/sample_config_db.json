@@ -9,9 +9,14 @@
                "mode": "static",
                "size": "33004032",
                "type": "egress"
+            },
+            "egress_lossy_pool": {
+                "size": "12766208",
+                "type": "egress",
+                "mode": "dynamic"
             }
         },
-        "BUFFER_PFOFILE": {
+        "BUFFER_PROFILE": {
             "pg_lossless_100000_300m_profile": {
                 "dynamic_th": "1",
                 "pool": "[BUFFER_POOL|egress_lossless_pool]",
@@ -19,11 +24,16 @@
                 "xoff": "50176",
                 "xon": "0",
                 "xon_offset": "3584"
+            },
+            "egress_lossy_profile": {
+                "pool":"[BUFFER_POOL|egress_lossy_pool]",
+                "size":"1518",
+                "dynamic_th":"3"
             }
         },
         "BUFFER_PG": {
             "Ethernet9|3-4": {
-                "profile": "[BUFFER_PROFILE|pg_lossless_25000_300m_profile]"
+                "profile": "[BUFFER_PROFILE|pg_lossless_100000_300m_profile]"
             }
         },
         "BUFFER_QUEUE": {
