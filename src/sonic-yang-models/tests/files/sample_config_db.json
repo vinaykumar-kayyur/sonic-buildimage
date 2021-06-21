@@ -37,7 +37,7 @@
             }
         },
         "BUFFER_QUEUE": {
-            "Ethernet46|4": {
+            "Ethernet10|4": {
                 "profile": "egress_lossy_profile"
             }
         },
