@@ -740,6 +740,30 @@
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
             }
+        },
+        "MAP_PFC_PRIORITY_TO_QUEUE": {
+             "AZURE": {
+                 "0": "0",
+                 "1": "1",
+                 "2": "2",
+                 "3": "3",
+                 "4": "4",
+                 "5": "5",
+                 "6": "6",
+                 "7": "7"
+             }
+         },
+        "PFC_WD": {
+            "Ethernet9": {
+               "action": "drop",
+               "detection_time": "100",
+               "restoration_time": "200"
+            }
+        },
+        "PFC_WD" {
+            "GLOBAL": {
+                "POLL_INTERVAL": "100"
+            }
         }
     },
 

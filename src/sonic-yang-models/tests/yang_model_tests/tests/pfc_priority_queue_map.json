@@ -1,0 +1,13 @@
+{
+    "PFC_PRIORITY_QUEUE_MAP_CORRECT_VALUE": {
+        "desc": "PFC_PRIORITY_QUEUE_MAP_CORRECT_VALUE no failure."
+    },
+    "PFC_PRIORITY_QUEUE_MAP_WRONG_PRIORITY_VALUE": {
+        "desc": "PFC_PRIORITY_QUEUE_MAP_WRONG_PRIORITY_VALUE pattern failure.",
+	"eStr": ["range" ]
+    },
+    "PFC_PRIORITY_QUEUE_MAP_WRONG_QINDEX_VALUE": {
+        "desc": "PFC_PRIORITY_QUEUE_MAP_WRONG_QINDEX_VALUE pattern failure.",
+	"eStr": ["range" ]
+    }
+}
