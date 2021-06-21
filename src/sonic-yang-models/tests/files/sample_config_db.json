@@ -760,7 +760,7 @@
                "restoration_time": "200"
             }
         },
-        "PFC_WD" {
+        "PFC_WD": {
             "GLOBAL": {
                 "POLL_INTERVAL": "100"
             }
