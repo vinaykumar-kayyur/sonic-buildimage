@@ -1297,7 +1297,7 @@ class Sfp(SfpBase):
         if self.port_num <= 48  or self.port_num >=57:
             return False  # SFP doesn't support this feature
 
-        if lpmode is True:
+        if lpmode:
             return self.set_power_override(True, True)
         else:
             return self.set_power_override(True, False)
