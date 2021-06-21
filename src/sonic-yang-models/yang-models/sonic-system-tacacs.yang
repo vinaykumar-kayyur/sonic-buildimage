@@ -29,9 +29,9 @@ module sonic-system-tacacs {
         prefix interface;
     }
 
-//    import sonic-mgmt-port {
-//        prefix mgmt-port;
-//    }
+    import sonic-mgmt_port {
+        prefix mgmt-port;
+    }
 
     revision 2021-04-15 {
         description "Initial revision.";
@@ -160,9 +160,9 @@ module sonic-system-tacacs {
                         type leafref {
                             path "/loopback:sonic-loopback-interface/loopback:LOOPBACK_INTERFACE/loopback:LOOPBACK_INTERFACE_LIST/loopback:name";
                         }
-                        //type leafref {
-                        // path "/mgmt-port:sonic-mgmt-port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
-                        //}
+                        type leafref {
+                            path "/mgmt-port:sonic-mgmt_port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
+                        }
                     }
                     description "Source IP to use from source interface for TACACS+ server communication.";
                 }

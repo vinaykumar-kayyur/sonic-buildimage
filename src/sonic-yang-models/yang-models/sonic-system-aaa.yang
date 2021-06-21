@@ -28,11 +28,13 @@ module sonic-system-aaa {
                 leaf failthrough {
                     type boolean;
                     description "When set to true, authentication is attempted on next configured server/local in the list upon failure.";
+                    default false;
                 }
                 
                 leaf debug {
                     type boolean;
                     description "Enable/disable AAA debugging";
+                    default false;
                 }
 
             }
