@@ -144,6 +144,20 @@
         }
     },
 
+    "SFLOW_SESSION_TEST_WITH_INCORRECT_PORT_TYPE_IN_SAMPLE_RATE": {
+        "sonic-sflow:sonic-sflow": {
+            "sonic-sflow:SFLOW_SESSION": {
+                "SFLOW_SESSION_LIST": [
+                    {
+                        "port": "all",
+                        "admin_state": "up",
+                        "sample_rate": "40000"
+                    }
+                ]
+            }
+        }
+    },
+
     "SFLOW_TEST": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {

@@ -22,11 +22,9 @@ module sonic-sflow{
     import sonic-portchannel {
         prefix lag;
     }
-    /*
-    import sonic-mgmt-port {
+    import sonic-mgmt_port {
         prefix mgmt-port;
     }
-    */
 
     description "SFLOW yang Module for SONiC OS";
 
@@ -82,6 +80,7 @@ module sonic-sflow{
                 }
 
                 leaf sample_rate {
+                    must "../port != 'all'";
                     type uint32 {
                         range "256..8388608" {
                             error-message "sFlow sample rate must be [256-8388608]";
@@ -119,10 +118,9 @@ module sonic-sflow{
                         type leafref {
                             path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
-                        /*
                         type leafref {
-                            path "/mgmt-port:sonic-mgmt-port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
-                        }*/
+                            path "/mgmt-port:sonic-mgmt_port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
+                        }
                         /*
                         type leafref {
                             path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
