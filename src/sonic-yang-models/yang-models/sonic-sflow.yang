@@ -70,6 +70,7 @@ module sonic-sflow{
                         }
                         type string {
                             pattern "all";
+                            description "Sets sflow session table attributes for all interfaces";
                         }
                     }
                 }
