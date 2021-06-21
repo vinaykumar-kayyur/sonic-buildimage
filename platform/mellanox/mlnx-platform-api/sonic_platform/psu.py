@@ -112,7 +112,9 @@ class Psu(PsuBase):
 
         else: 
             logger.log_info("Not reading PSU{} VPD data: Platform is fixed".format(self.index))
-
+            self.model = "N/A"
+            self.rev = "N/A"
+            self.serial = "N/A"
 
         if not self.psu_data['hot_swappable']:
             self.always_present = True
