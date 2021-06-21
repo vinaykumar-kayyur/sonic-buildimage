@@ -793,33 +793,18 @@
             }
         },
         "MAP_PFC_PRIORITY_TO_QUEUE": {
-             "AZURE": {
-                 "0": {
-                     "qindex":  "0"
-                  },
-                 "1": {
-                     "qindex":  "1"
-                  },
-                 "2": {
-                     "qindex":  "2"
-                  },
-                 "3": {
-                     "qindex":  "3"
-                  },
-                 "4": {
-                     "qindex":  "4"
-                  },
-                 "5": {
-                     "qindex":  "5"
-                  },
-                 "6": {
-                     "qindex":  "6"
-                  },
-                 "7": {
-                     "qindex":  "7"
-                  }
-             }
-         },
+            "name": "AZURE",
+            "MAP_PFC_PRIORITY_TO_QUEUE": [
+            {
+                "pfc_priority" : "2",
+                "qindex" : "2"
+            },
+            {
+                "pfc_priority" : "3",
+                "qindex" : "4"
+            }
+            ]
+        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
