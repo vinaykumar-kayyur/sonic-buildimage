@@ -1,13 +1,65 @@
 {
     "PFC_PRIORITY_QUEUE_MAP_CORRECT_VALUE": {
-        "desc": "PFC_PRIORITY_QUEUE_MAP_CORRECT_VALUE no failure."
+        "sonic-pfc-priority-queue-map:sonic-pfc-priority-queue-map": {
+            "sonic-pfc-priority-queue-map:MAP_PFC_PRIORITY_TO_QUEUE": {
+                "MAP_PFC_PRIORITY_TO_QUEUE_LIST": [
+                    {
+                        "name": "AZURE",
+                        "MAP_PFC_PRIORITY_TO_QUEUE": [
+                            {
+                                "pfc_priority" : "2",
+                                "qindex" : "2"
+                            },
+                            {
+                                "pfc_priority" : "3",
+                                "qindex" : "4"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
     },
     "PFC_PRIORITY_QUEUE_MAP_WRONG_PRIORITY_VALUE": {
-        "desc": "PFC_PRIORITY_QUEUE_MAP_WRONG_PRIORITY_VALUE pattern failure.",
-	"eStr": ["range" ]
+        "sonic-pfc-priority-queue-map:sonic-pfc-priority-queue-map": {
+            "sonic-pfc-priority-queue-map:MAP_PFC_PRIORITY_TO_QUEUE": {
+                "MAP_PFC_PRIORITY_TO_QUEUE_LIST": [
+                    {
+                        "name": "AZURE",
+                        "MAP_PFC_PRIORITY_TO_QUEUE": [
+                            {
+                                "pfc_priority" : "10",
+                                "qindex" : "2"
+                            },
+                            {
+                                "pfc_priority" : "3",
+                                "qindex" : "4"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
     },
     "PFC_PRIORITY_QUEUE_MAP_WRONG_QINDEX_VALUE": {
-        "desc": "PFC_PRIORITY_QUEUE_MAP_WRONG_QINDEX_VALUE pattern failure.",
-	"eStr": ["range" ]
+        "sonic-pfc-priority-queue-map:sonic-pfc-priority-queue-map": {
+            "sonic-pfc-priority-queue-map:MAP_PFC_PRIORITY_TO_QUEUE": {
+                "MAP_PFC_PRIORITY_TO_QUEUE_LIST": [
+                    {
+                        "name": "AZURE",
+                        "MAP_PFC_PRIORITY_TO_QUEUE": [
+                            {
+                                "pfc_priority" : "4",
+                                "qindex" : "2"
+                            },
+                            {
+                                "pfc_priority" : "3",
+                                "qindex" : "10"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
     }
 }

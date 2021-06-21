@@ -1,62 +1,228 @@
 {
     "PFC_WDOG_WITH_CORRECT_COUNTERID_PFCWD_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_COUNTERID_PFCWD_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "PFCWD",
+                        "FLEX_COUNTER_STATUS": "enable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_COUNTERID_PORT_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_COUNTERID_PORT_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "PORT",
+                        "FLEX_COUNTER_STATUS": "enable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_COUNTERID_QUEUE_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_COUNTERID_QUEUE_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "QUEUE",
+                        "FLEX_COUNTER_STATUS": "enable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_COUNTERID_VALUE": {
-	"desc": "PFC_WDOG_WITH_WRONG_COUNTERID_VALUE pattern failure.",
-	"eStr": "wrong"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "wrong",
+                        "FLEX_COUNTER_STATUS": "enable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_FLEX_COUNTER_STATUS_ENABLE_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_FLEX_COUNTER_STATUS_ENABLE_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "QUEUE",
+                        "FLEX_COUNTER_STATUS": "enable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_FLEX_COUNTER_STATUS_DISABLE_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_FLEX_COUNTER_STATUS_DISABLE_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "QUEUE",
+                        "FLEX_COUNTER_STATUS": "disable"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_FLEX_COUNTER_STATUS_VALUE": {
-	"desc": "PFC_WDOG_WITH_WRONG_FLEX_COUNTER_STATUS_VALUE pattern failure.",
-	"eStr": "wrong"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:FLEX_COUNTER_TABLE": {
+                "FLEX_COUNTER_TABLE_LIST": [
+                    {
+                        "id": "QUEUE",
+                        "FLEX_COUNTER_STATUS": "wrong"
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_ACTION_DROP_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_ACTION_DROP_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "drop",
+                        "detection_time": 300,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_ACTION_FORWARD_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_ACTION_FORWARD_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "forward",
+                        "detection_time": 300,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_CORRECT_ACTION_ALERT_VALUE": {
-	"desc": "PFC_WDOG_WITH_CORRECT_ACTION_ALERT_VALUE no failure."
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "alert",
+                        "detection_time": 300,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_ACTION_VALUE": {
-	"desc": "PFC_WDOG_WITH_WRONG_ACTION_VALUE must contain a valid action",
-	"eStr": [ "wrong" ]
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "wrong",
+                        "detection_time": 300,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_LOW_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_LOW_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "drop",
+                        "detection_time": 100,
+                        "restoration_time": 3000,
+                        "POLL_INTERVAL":99
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_HIGH_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_HIGH_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "wrong",
+                        "detection_time": 5000,
+                        "restoration_time": 3000,
+                        "POLL_INTERVAL": 3001
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_DETECTION_TIME_LOW_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_DETECTION_TIME_LOW_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "drop",
+                        "detection_time": 99,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_DETECTION_TIME_HIGH_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_DETECTION_TIME_HIGH_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "wrong",
+                        "detection_time": 5001,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_LOW_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_LOW_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "drop",
+                        "detection_time": 99,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     },
     "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_HIGH_VALUE": {
-        "desc": "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_HIGH_VALUE",
-	"eStr": "range"
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "Ethernet4",
+                        "action": "wrong",
+                        "detection_time": 60001,
+                        "restoration_time": 3000
+                    }
+                ]
+            }
+        }
     }
 }
