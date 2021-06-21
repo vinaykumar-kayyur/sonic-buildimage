@@ -70,9 +70,9 @@ module sonic-sflow{
                         }
                         type string {
                             pattern "all";
-                            description "Sets sflow session table attributes for all interfaces";
                         }
                     }
+                    description "Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.";
                 }
 
                 leaf admin_state {
