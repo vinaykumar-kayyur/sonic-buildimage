@@ -793,15 +793,10 @@
             }
         },
         "MAP_PFC_PRIORITY_TO_QUEUE": {
-            "name": {
+            "name": 
             {
                 "pfc_priority" : "2",
                 "qindex" : "2"
-            },
-            {
-                "pfc_priority" : "3",
-                "qindex" : "4"
-            }
             }
         },
         "PFC_WD": {
