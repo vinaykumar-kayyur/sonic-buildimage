@@ -33,6 +33,9 @@ class TestThermal:
             thermal_type = rule.get('type', 'single')
             if thermal_type == 'single':
                 thermal_name = rule['name']
+                if rule['temperature'] == 'comex_amb':
+                    assert thermal_name not in thermal_dict
+                    continue
                 assert thermal_name in thermal_dict
                 thermal = thermal_dict[thermal_name]
                 assert rule['temperature'] in thermal.temperature
@@ -70,7 +73,8 @@ class TestThermal:
     def test_psu_thermal(self):
         from sonic_platform.thermal import initialize_psu_thermal, THERMAL_NAMING_RULE
         os.path.exists = mock.MagicMock(return_value=True)
-        thermal_list = initialize_psu_thermal(0)
+        presence_cb = mock.MagicMock(return_value=(True, ''))
+        thermal_list = initialize_psu_thermal(0, presence_cb)
         assert len(thermal_list) == 1
         thermal = thermal_list[0]
         rule = THERMAL_NAMING_RULE['psu thermals']
@@ -81,6 +85,14 @@ class TestThermal:
         assert thermal.high_critical_threshold is None
         assert thermal.get_position_in_parent() == 1
         assert thermal.is_replaceable() == False
+
+        presence_cb = mock.MagicMock(return_value=(False, 'Not present'))
+        thermal_list = initialize_psu_thermal(0, presence_cb)
+        assert len(thermal_list) == 1
+        thermal = thermal_list[0]
+        assert thermal.get_temperature() is None
+        assert thermal.get_high_threshold() is None
+        assert thermal.get_high_critical_threshold() is None
 
     def test_sfp_thermal(self):
         from sonic_platform.thermal import initialize_sfp_thermal, THERMAL_NAMING_RULE

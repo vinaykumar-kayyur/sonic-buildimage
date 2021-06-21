@@ -101,7 +101,7 @@ class TestFan:
         fan.min_cooling_level = 7
         fan.set_speed(60)
         fan.set_cooling_level.assert_called_with(7, 7)
-        utils.write_file.assert_called_with(fan.fan_speed_set_path, 179, raise_exception=True)
+        utils.write_file.assert_called_with(fan.fan_speed_set_path, 178, raise_exception=True)
 
     def test_set_cooling_level(self):
         with pytest.raises(RuntimeError):

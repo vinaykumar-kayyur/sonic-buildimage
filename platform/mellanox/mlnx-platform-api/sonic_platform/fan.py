@@ -337,7 +337,7 @@ class Fan(MlnxFan):
                 cooling_level = self.min_cooling_level
                 speed = self.min_cooling_level * 10
             self.set_cooling_level(cooling_level, cooling_level)
-            pwm = int(round(PWM_MAX*speed/100.0))
+            pwm = int(PWM_MAX*speed/100.0)
             utils.write_file(self.fan_speed_set_path, pwm, raise_exception=True)
         except (ValueError, IOError):
             status = False

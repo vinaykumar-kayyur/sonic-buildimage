@@ -156,9 +156,9 @@ class TestModule:
         assert m.get_revision() == 'A3'
 
         m.vpd_parser.vpd_file = 'not exists'
-        assert m.get_model() == ''
-        assert m.get_serial() == ''
-        assert m.get_revision() == ''
+        assert m.get_model() == 'N/A'
+        assert m.get_serial() == 'N/A'
+        assert m.get_revision() == 'N/A'
 
         m.vpd_parser.vpd_file_last_mtime = None
         m.vpd_parser.vpd_file = os.path.join(test_path, 'mock_psu_vpd')

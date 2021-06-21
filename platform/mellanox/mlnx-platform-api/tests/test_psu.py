@@ -48,7 +48,7 @@ class TestPsu:
             psu.psu_temp_threshold: 50678
         }
 
-        def mock_read_int_from_file(file_path, default=0, raise_exception=False):
+        def mock_read_int_from_file(file_path, **kwargs):
             return mock_sysfs_content[file_path]
 
         utils.read_int_from_file = mock_read_int_from_file
@@ -85,9 +85,9 @@ class TestPsu:
         assert psu.get_revision() == 'A3'
 
         psu.vpd_parser.vpd_file = 'not exists'
-        assert psu.get_model() == ''
-        assert psu.get_serial() == ''
-        assert psu.get_revision() == ''
+        assert psu.get_model() == 'N/A'
+        assert psu.get_serial() == 'N/A'
+        assert psu.get_revision() == 'N/A'
 
         psu.vpd_parser.vpd_file_last_mtime = None
         psu.vpd_parser.vpd_file = os.path.join(test_path, 'mock_psu_vpd')

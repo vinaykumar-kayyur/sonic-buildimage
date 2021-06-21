@@ -125,25 +125,38 @@ def initialize_chassis_thermals():
             elif 'CPU Core' in rule['name']:
                 count = DeviceDataManager.get_cpu_thermal_count()
             if count == 0:
-                logger.log_error('Failed to get thermal object count for {}'.format(rule['name']))
+                logger.log_debug('Failed to get thermal object count for {}'.format(rule['name']))
                 continue
 
             for index in range(count):
                 thermal_list.append(create_indexable_thermal(rule, index, CHASSIS_THERMAL_SYSFS_FOLDER, position))
+                position += 1
         else:
             thermal_object = create_single_thermal(rule, CHASSIS_THERMAL_SYSFS_FOLDER, position)
             if thermal_object:
                 thermal_list.append(thermal_object)
-        position += 1
+                position += 1
     return thermal_list
 
 
-def initialize_psu_thermal(psu_index):
-    return [create_indexable_thermal(THERMAL_NAMING_RULE['psu thermals'], psu_index, CHASSIS_THERMAL_SYSFS_FOLDER, 1)]
+def initialize_psu_thermal(psu_index, presence_cb):
+    """Initialize PSU thermal object
+
+    Args:
+        psu_index (int): PSU index, 0-based
+        presence_cb (function): A callback function to indicate if the thermal is present. When removing a PSU, the related
+            thermal sysfs files will be removed from system, presence_cb is used to check such situation and avoid printing 
+            error logs.
+
+    Returns:
+        [list]: A list of thermal objects
+    """
+    return [create_indexable_thermal(THERMAL_NAMING_RULE['psu thermals'], psu_index, CHASSIS_THERMAL_SYSFS_FOLDER, 1, presence_cb)]
 
 
 def initialize_sfp_thermal(sfp_index):
     return [create_indexable_thermal(THERMAL_NAMING_RULE['sfp thermals'], sfp_index, CHASSIS_THERMAL_SYSFS_FOLDER, 1)]
+
 
 def initialize_linecard_thermals(lc_name, lc_index):
     thermal_list = []
@@ -155,7 +168,8 @@ def initialize_linecard_thermals(lc_name, lc_index):
         thermal_list.append(create_indexable_thermal(rule, index, sysfs_folder, index + 1))
     return thermal_list
 
-def create_indexable_thermal(rule, index, sysfs_folder, position):
+
+def create_indexable_thermal(rule, index, sysfs_folder, position, presence_cb=None):
     index += rule.get('start_index', 1)
     name = rule['name'].format(index)
     temp_file = os.path.join(sysfs_folder, rule['temperature'].format(index))
@@ -170,17 +184,20 @@ def create_indexable_thermal(rule, index, sysfs_folder, position):
         _check_thermal_sysfs_existence(high_crit_th_file)
     else:
         high_crit_th_file = None
-    return Thermal(name, temp_file, high_th_file, high_crit_th_file, position)
+    if not presence_cb:
+        return Thermal(name, temp_file, high_th_file, high_crit_th_file, position)
+    else:
+        return RemovableThermal(name, temp_file, high_th_file, high_crit_th_file, position, presence_cb)
 
 
-def create_single_thermal(rule, sysfs_folder, position):
-    name = rule['name']
+def create_single_thermal(rule, sysfs_folder, position, presence_cb=None):
+    temp_file = rule['temperature']
     thermal_capability = DeviceDataManager.get_thermal_capability()
     if thermal_capability:
-        if not thermal_capability.get(name, True):
+        if not thermal_capability.get(temp_file, True):
             return None
 
-    temp_file = os.path.join(sysfs_folder, rule['temperature'])
+    temp_file = os.path.join(sysfs_folder, temp_file)
     _check_thermal_sysfs_existence(temp_file)
     if 'high_threshold' in rule:
         high_th_file = os.path.join(sysfs_folder, rule['high_threshold'])
@@ -192,7 +209,11 @@ def create_single_thermal(rule, sysfs_folder, position):
         _check_thermal_sysfs_existence(high_crit_th_file)
     else:
         high_crit_th_file = None
-    return Thermal(name, temp_file, high_th_file, high_crit_th_file, position)
+    name = rule['name']
+    if not presence_cb:
+        return Thermal(name, temp_file, high_th_file, high_crit_th_file, position)
+    else:
+        return RemovableThermal(name, temp_file, high_th_file, high_crit_th_file, position, presence_cb)
 
 
 def _check_thermal_sysfs_existence(file_path):
@@ -231,7 +252,7 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125 
         """
-        value = utils.read_float_from_file(self.temperature, None)
+        value = utils.read_float_from_file(self.temperature, None, log_func=logger.log_info)
         return value / 1000.0 if (value is not None and value != 0) else None
 
     def get_high_threshold(self):
@@ -244,7 +265,7 @@ class Thermal(ThermalBase):
         """
         if self.high_threshold is None:
             return None
-        value = utils.read_float_from_file(self.high_threshold, None)
+        value = utils.read_float_from_file(self.high_threshold, None, log_func=logger.log_info)
         return value / 1000.0 if (value is not None and value != 0) else None
 
     def get_high_critical_threshold(self):
@@ -257,7 +278,7 @@ class Thermal(ThermalBase):
         """
         if self.high_critical_threshold is None:
             return None
-        value = utils.read_float_from_file(self.high_critical_threshold, None)
+        value = utils.read_float_from_file(self.high_critical_threshold, None, log_func=logger.log_info)
         return value / 1000.0 if (value is not None and value != 0) else None
 
     def get_position_in_parent(self):
@@ -354,3 +375,51 @@ class Thermal(ThermalBase):
             # Can't get ambient temperature, return maximum
             logger.log_error('Failed to get minimum ambient temperature, use pessimistic instead')
             return MAX_AMBIENT_TEMP
+
+
+class RemovableThermal(Thermal):
+    def __init__(self, name, temp_file, high_th_file, high_crit_th_file, position, presence_cb):
+        super(RemovableThermal, self).__init__(name, temp_file, high_th_file, high_crit_th_file, position)
+        self.presence_cb = presence_cb
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from thermal
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125 
+        """
+        status, hint = self.presence_cb()
+        if not status:
+            logger.log_debug("get_temperature for {} failed due to {}".format(self.name, hint))
+            return None
+        return super(RemovableThermal, self).get_temperature()
+
+    def get_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of thermal
+
+        Returns:
+            A float number, the high threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        status, hint = self.presence_cb()
+        if not status:
+            logger.log_debug("get_high_threshold for {} failed due to {}".format(self.name, hint))
+            return None
+        return super(RemovableThermal, self).get_high_threshold()
+
+    def get_high_critical_threshold(self):
+        """
+        Retrieves the high critical threshold temperature of thermal
+
+        Returns:
+            A float number, the high critical threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        status, hint = self.presence_cb()
+        if not status:
+            logger.log_debug("get_high_critical_threshold for {} failed due to {}".format(self.name, hint))
+            return None
+        return super(RemovableThermal, self).get_high_critical_threshold()

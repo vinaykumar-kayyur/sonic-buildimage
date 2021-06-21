@@ -32,7 +32,6 @@ class Module(ModuleBase):
         self.sfp_initialized_count = 0
         self.vpd_parser = VpdParser('/run/hw-management/lc{}/eeprom/vpd_parsed')
 
-
     def get_name(self):
         return 'LINE-CARD{}'.format(self.slot_id)
 
@@ -78,7 +77,7 @@ class Module(ModuleBase):
     def is_replaceable(self):
         return True
 
-    def get_oper_status(self):
+    def get_oper_status(self): # TODO: read from DB?
         if utils.read_int_from_file('/run/hw-management/system/lc{}_active'.format(self.slot_id)) == 1:
             return ModuleBase.MODULE_STATUS_ONLINE
         elif utils.read_int_from_file('/run/hw-management/system/lc{}_prsnt'.format(self.slot_id)) == 1:
@@ -89,6 +88,10 @@ class Module(ModuleBase):
             return ModuleBase.MODULE_STATUS_FAULT
 
     def _check_state(self):
+        """Check Module status change:
+            1. If status sysfs file value has been changed TODO: read from DB?
+            2. If sequence NO has been changed which means line card has been removed and inserted again.
+        """
         seq_no = self._get_seq_no()
         state = utils.read_int_from_file('/run/hw-management/system/lc{}_active'.format(self.slot_id))
         if state != self.current_state:
@@ -120,7 +123,7 @@ class Module(ModuleBase):
         self._check_state()
         if self.current_state == Module.STATE_ACTIVATED and not self._thermal_list:
             from .thermal import initialize_linecard_thermals
-            self._thermal_list = initialize_linecard_thermals(self.get_name(), self.slot_id)
+            self._thermal_list = initialize_linecard_thermals(self.get_name(), self.slot_id) # TODO: add presence_cb?
 
     def get_num_thermals(self):
         """

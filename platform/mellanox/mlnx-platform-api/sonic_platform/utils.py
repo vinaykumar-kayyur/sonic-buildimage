@@ -1,4 +1,5 @@
 import functools
+import subprocess
 from sonic_py_common.logger import Logger
 
 logger = Logger()
@@ -143,3 +144,23 @@ def read_only_cache():
             return method.return_value
         return _impl
     return decorator
+
+
+@read_only_cache()
+def is_host():
+    """
+    Test whether current process is running on the host or an docker
+    return True for host and False for docker
+    """ 
+    try:
+        proc = subprocess.Popen("docker --version 2>/dev/null", 
+                                stdout=subprocess.PIPE, 
+                                shell=True, 
+                                stderr=subprocess.STDOUT, 
+                                universal_newlines=True)
+        stdout = proc.communicate()[0]
+        proc.wait()
+        result = stdout.rstrip('\n')
+        return result != ''
+    except OSError as e:
+        return False

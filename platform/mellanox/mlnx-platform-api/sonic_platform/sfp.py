@@ -355,7 +355,7 @@ class SFP(SfpBase):
 
         # initialize SFP thermal list
         from .thermal import initialize_sfp_thermal
-        self._thermal_list = initialize_sfp_thermal(self.index)
+        self._thermal_list = initialize_sfp_thermal(sfp_index)
 
     @property
     def sdk_handle(self):

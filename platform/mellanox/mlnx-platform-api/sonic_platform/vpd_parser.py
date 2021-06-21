@@ -15,22 +15,20 @@ class VpdParser:
         self.vpd_file = file_path
         self.vpd_file_last_mtime = None
 
-    def _read_data(self):
+    def _get_data(self):
         if not os.path.exists(self.vpd_file):
             self.vpd_data = {}
-            return
+            return False
 
         try:
             mtime = os.stat(self.vpd_file).st_mtime
             if mtime != self.vpd_file_last_mtime:
                 self.vpd_file_last_mtime = mtime
                 self.vpd_data = utils.read_key_value_file(self.vpd_file)
+            return True
         except Exception as e:
             self.vpd_data = {}
-        
-    def _get_data(self):
-        self._read_data()
-        return self.vpd_data
+            return False
 
     def get_model(self):
         """
@@ -39,11 +37,10 @@ class VpdParser:
         Returns:
             string: Model/part number of device
         """
-        vpd_data = self._get_data()
-        if PN_VPD_FIELD not in vpd_data:
+        if self._get_data() and PN_VPD_FIELD not in self.vpd_data:
             logger.log_error("Fail to read model number: No key {} in VPD {}".format(PN_VPD_FIELD, self.vpd_file))
-            return ''
-        return vpd_data[PN_VPD_FIELD]
+            return 'N/A'
+        return self.vpd_data.get(PN_VPD_FIELD, 'N/A')
 
     def get_serial(self):
         """
@@ -52,11 +49,10 @@ class VpdParser:
         Returns:
             string: Serial number of device
         """
-        vpd_data = self._get_data()
-        if SN_VPD_FIELD not in vpd_data:
+        if self._get_data() and SN_VPD_FIELD not in self.vpd_data:
             logger.log_error("Fail to read serial number: No key {} in VPD {}".format(SN_VPD_FIELD, self.vpd_file))
-            return ''
-        return vpd_data[SN_VPD_FIELD]
+            return 'N/A'
+        return self.vpd_data.get(SN_VPD_FIELD, 'N/A')
 
     def get_revision(self):
         """
@@ -65,8 +61,7 @@ class VpdParser:
         Returns:
             string: Revision value of device
         """
-        vpd_data = self._get_data()
-        if REV_VPD_FIELD not in vpd_data:
+        if self._get_data() and REV_VPD_FIELD not in self.vpd_data:
             logger.log_error("Fail to read revision: No key {} in VPD {}".format(REV_VPD_FIELD, self.vpd_file))
-            return ''
-        return vpd_data[REV_VPD_FIELD]
+            return 'N/A'
+        return self.vpd_data.get(REV_VPD_FIELD, 'N/A')

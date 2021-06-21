@@ -14,8 +14,9 @@ try:
     import sys
     from functools import reduce
 
-    from .device_data import DeviceDataManager
     from . import utils
+    from .device_data import DeviceDataManager
+    from .sfp import SFP, deinitialize_sdk_handle
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -99,7 +100,6 @@ class Chassis(ChassisBase):
         if self.sfp_event:
             self.sfp_event.deinitialize()
 
-        from .sfp import SFP, deinitialize_sdk_handle
         if SFP.shared_sdk_handle:
             deinitialize_sdk_handle(SFP.shared_sdk_handle)
         
@@ -121,7 +121,6 @@ class Chassis(ChassisBase):
                     psu = FixedPsu(index)
                 self._psu_list.append(psu)
 
-    @utils.pre_initialize(initialize_psu)
     def get_num_psus(self):
         """
         Retrieves the number of power supply units available on this chassis
@@ -130,9 +129,9 @@ class Chassis(ChassisBase):
             An integer, the number of power supply units available on this
             chassis
         """
+        self.initialize_psu()
         return len(self._psu_list)
 
-    @utils.pre_initialize(initialize_psu)
     def get_all_psus(self):
         """
         Retrieves all power supply units available on this chassis
@@ -141,9 +140,9 @@ class Chassis(ChassisBase):
             A list of objects derived from PsuBase representing all power
             supply units available on this chassis
         """
+        self.initialize_psu()
         return self._psu_list
 
-    @utils.pre_initialize(initialize_psu)
     def get_psu(self, index):
         """
         Retrieves power supply unit represented by (0-based) index <index>
@@ -156,6 +155,7 @@ class Chassis(ChassisBase):
             An object dervied from PsuBase representing the specified power
             supply unit
         """
+        self.initialize_psu()
         psu = None
 
         try:
@@ -178,7 +178,7 @@ class Chassis(ChassisBase):
             hot_swapable = DeviceDataManager.is_fan_hotswapable()
             drawer_num = DeviceDataManager.get_fan_drawer_count()
             fan_num = DeviceDataManager.get_fan_count()
-            fan_num_per_drawer = fan_num / drawer_num
+            fan_num_per_drawer = fan_num // drawer_num
             drawer_ctor = RealDrawer if hot_swapable else VirtualDrawer
             fan_index = 0
             for drawer_index in range(drawer_num):
@@ -198,7 +198,6 @@ class Chassis(ChassisBase):
         """
         return DeviceDataManager.get_fan_drawer_count()
 
-    @utils.pre_initialize(initialize_fan)
     def get_all_fan_drawers(self):
         """
         Retrieves all fan drawers available on this chassis
@@ -207,9 +206,9 @@ class Chassis(ChassisBase):
             A list of objects derived from FanDrawerBase representing all fan
             drawers available on this chassis
         """
+        self.initialize_fan()
         return self._fan_drawer_list
 
-    @utils.pre_initialize(initialize_fan)
     def get_fan_drawer(self, index):
         """
         Retrieves fan drawers represented by (0-based) index <index>
@@ -222,22 +221,14 @@ class Chassis(ChassisBase):
             An object dervied from FanDrawerBase representing the specified fan
             drawer
         """
-        fan_drawer = None
-
-        try:
-            fan_drawer = self._fan_drawer_list[index]
-        except IndexError:
-            sys.stderr.write("Fan drawer index {} out of range (0-{})\n".format(
-                             index, len(self._fan_drawer_list)-1))
-
-        return fan_drawer
+        self.initialize_fan()
+        return super(Chassis, self).get_fan_drawer(index)
 
     ##############################################
     # SFP methods
     ##############################################
 
     def initialize_single_sfp(self, index):
-        index = index - 1
         sfp_count = self.get_num_sfps()
         if index < sfp_count:
             if not self._sfp_list:
@@ -272,7 +263,6 @@ class Chassis(ChassisBase):
         """
         return DeviceDataManager.get_sfp_count()
 
-    @utils.pre_initialize(initialize_sfp)
     def get_all_sfps(self):
         """
         Retrieves all sfps available on this chassis
@@ -281,9 +271,9 @@ class Chassis(ChassisBase):
             A list of objects derived from SfpBase representing all sfps
             available on this chassis
         """
+        self.initialize_sfp()
         return self._sfp_list
 
-    @utils.pre_initialize_one(initialize_single_sfp)
     def get_sfp(self, index):
         """
         Retrieves sfp represented by (1-based) index <index>
@@ -297,17 +287,10 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        sfp = None
-        index -= 1
-        try:
-            sfp = self._sfp_list[index]
-        except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
-                             index, len(self._sfp_list)-1))
-
-        return sfp
+        index = index - 1
+        self.initialize_single_sfp(index)
+        return super(Chassis, self).get_sfp(index)
         
-    @utils.pre_initialize(initialize_sfp)
     def get_change_event(self, timeout=0):
         """
         Returns a nested dictionary containing all devices which have
@@ -331,6 +314,7 @@ class Chassis(ChassisBase):
                       indicates that fan 0 has been removed, fan 2
                       has been inserted and sfp 11 has been removed.
         """
+        self.initialize_sfp()
         # Initialize SFP event first
         if not self.sfp_event:
             from .sfp_event import sfp_event
@@ -368,7 +352,6 @@ class Chassis(ChassisBase):
                 except Exception as e:
                     logger.log_error("Fail to re-initialize SFP {} - {}".format(index, repr(e)))
 
-    @utils.pre_initialize(initialize_sfp)
     def _show_capabilities(self):
         """
         This function is for debug purpose
@@ -376,6 +359,7 @@ class Chassis(ChassisBase):
         check those modules one by one.
         So this function is introduce to show some capabilities of all xSFP modules mounted on the device.
         """
+        self.initialize_sfp()
         for s in self._sfp_list:
             try:
                 print("index {} tx disable {} dom {} calibration {} temp {} volt {} power (tx {} rx {})".format(s.index,
@@ -400,7 +384,6 @@ class Chassis(ChassisBase):
             # Initialize thermals
             self._thermal_list = initialize_chassis_thermals()
 
-    @utils.pre_initialize(initialize_thermals)
     def get_num_thermals(self):
         """
         Retrieves the number of thermals available on this chassis
@@ -408,9 +391,9 @@ class Chassis(ChassisBase):
         Returns:
             An integer, the number of thermals available on this chassis
         """
+        self.initialize_thermals()
         return len(self._thermal_list)
 
-    @utils.pre_initialize(initialize_thermals)
     def get_all_thermals(self):
         """
         Retrieves all thermals available on this chassis
@@ -419,9 +402,9 @@ class Chassis(ChassisBase):
             A list of objects derived from ThermalBase representing all thermals
             available on this chassis
         """
+        self.initialize_thermals()
         return self._thermal_list
 
-    @utils.pre_initialize(initialize_thermals)
     def get_thermal(self, index):
         """
         Retrieves thermal unit represented by (0-based) index <index>
@@ -433,15 +416,8 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from ThermalBase representing the specified thermal
         """
-        thermal = None
-
-        try:
-            thermal = self._thermal_list[index]
-        except IndexError:
-            sys.stderr.write("THERMAL index {} out of range (0-{})\n".format(
-                             index, len(self._thermal_list)-1))
-
-        return thermal
+        self.initialize_thermals()
+        return super(Chassis, self).get_thermal(index)
 
     ##############################################
     # EEPROM methods
@@ -453,7 +429,6 @@ class Chassis(ChassisBase):
             # Initialize EEPROM
             self._eeprom = Eeprom()
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_eeprom(self):
         """
         Retreives eeprom device on this chassis
@@ -462,9 +437,9 @@ class Chassis(ChassisBase):
             An object derived from WatchdogBase representing the hardware
             eeprom device
         """
+        self.initialize_eeprom()
         return self._eeprom
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_name(self):
         """
         Retrieves the name of the device
@@ -472,9 +447,9 @@ class Chassis(ChassisBase):
         Returns:
             string: The name of the device
         """
+        self.initialize_eeprom()
         return self._eeprom.get_product_name()
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_model(self):
         """
         Retrieves the model number (or part number) of the device
@@ -482,9 +457,9 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of device
         """
+        self.initialize_eeprom()
         return self._eeprom.get_part_number()
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -493,9 +468,9 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
+        self.initialize_eeprom()
         return self._eeprom.get_base_mac()
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
@@ -503,9 +478,9 @@ class Chassis(ChassisBase):
         Returns:
             A string containing the hardware serial number for this chassis.
         """
+        self.initialize_eeprom()
         return self._eeprom.get_serial_number()
 
-    @utils.pre_initialize(initialize_eeprom)
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -515,6 +490,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
+        self.initialize_eeprom()
         return self._eeprom.get_system_eeprom_info()
 
     ##############################################
@@ -522,6 +498,8 @@ class Chassis(ChassisBase):
     ##############################################
 
     def initialize_components(self):
+        if not utils.is_host():
+            return
         if not self._component_list:
             # Initialize component list
             from .component import ComponentONIE, ComponentSSD, ComponentBIOS, ComponentCPLD
@@ -530,7 +508,6 @@ class Chassis(ChassisBase):
             self._component_list.append(ComponentBIOS())
             self._component_list.extend(ComponentCPLD.get_component_list())
 
-    @utils.pre_initialize(initialize_components)
     def get_num_components(self):
         """
         Retrieves the number of components available on this chassis
@@ -538,9 +515,9 @@ class Chassis(ChassisBase):
         Returns:
             An integer, the number of components available on this chassis
         """
+        self.initialize_components()
         return len(self._component_list)
 
-    @utils.pre_initialize(initialize_components)
     def get_all_components(self):
         """
         Retrieves all components available on this chassis
@@ -549,9 +526,9 @@ class Chassis(ChassisBase):
             A list of objects derived from ComponentBase representing all components
             available on this chassis
         """
+        self.initialize_components()
         return self._component_list
 
-    @utils.pre_initialize(initialize_components)
     def get_component(self, index):
         """
         Retrieves component represented by (0-based) index <index>
@@ -562,15 +539,8 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from ComponentBase representing the specified component
         """
-        component = None
-
-        try:
-            component = self._component_list[index]
-        except IndexError:
-            sys.stderr.write("Component index {} out of range (0-{})\n".format(
-                             index, len(self._component_list)-1))
-
-        return component
+        self.initialize_components()
+        return super(Chassis, self).get_component(index)
 
     ##############################################
     # System LED methods
@@ -581,7 +551,6 @@ class Chassis(ChassisBase):
             from .led import SystemLed
             Chassis._led = SystemLed()
 
-    @utils.pre_initialize(initizalize_system_led)
     def set_status_led(self, color):
         """
         Sets the state of the system LED
@@ -593,9 +562,9 @@ class Chassis(ChassisBase):
         Returns:
             bool: True if system LED state is set successfully, False if not
         """
+        self.initizalize_system_led()
         return False if not Chassis._led else Chassis._led.set_status(color)
 
-    @utils.pre_initialize(initizalize_system_led)
     def get_status_led(self):
         """
         Gets the state of the system LED
@@ -604,6 +573,7 @@ class Chassis(ChassisBase):
             A string, one of the valid LED color strings which could be vendor
             specified.
         """
+        self.initizalize_system_led()
         return None if not Chassis._led else Chassis._led.get_status()
 
     def get_watchdog(self):
@@ -672,7 +642,7 @@ class Chassis(ChassisBase):
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
-        return bool(utils.read_int_from_file(os.path.join(REBOOT_CAUSE_ROOT, filename)))
+        return bool(utils.read_int_from_file(os.path.join(REBOOT_CAUSE_ROOT, filename), log_func=None))
 
     def initialize_reboot_cause(self):
         self.reboot_major_cause_dict = {
@@ -793,7 +763,6 @@ class ModularChassis(Chassis):
         """
         return DeviceDataManager.get_linecard_count()
 
-    @utils.pre_initialize(initialize_modules)
     def get_all_modules(self):
         """
         Retrieves all modules available on this chassis
@@ -802,6 +771,7 @@ class ModularChassis(Chassis):
             A list of objects derived from ModuleBase representing all
             modules available on this chassis
         """
+        self.initialize_modules()
         return self._module_list
 
     @utils.pre_initialize_one(initialize_single_module)
@@ -817,15 +787,8 @@ class ModularChassis(Chassis):
             An object dervied from ModuleBase representing the specified
             module
         """
-        module = None
-
-        try:
-            module = self._module_list[index]
-        except IndexError:
-            sys.stderr.write("Module index {} out of range (0-{})\n".format(
-                             index, len(self._module_list)-1))
-
-        return module
+        self.initialize_single_module(index)
+        return super(Chassis, self).get_module(index)
 
     ##############################################
     # SFP methods

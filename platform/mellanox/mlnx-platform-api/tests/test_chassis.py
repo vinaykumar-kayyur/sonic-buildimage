@@ -34,7 +34,7 @@ class TestChassis:
         chassis = Chassis()
         chassis.initialize_psu()
         assert len(chassis._psu_list) == 2
-        assert len(filter(lambda x: isinstance(x, Psu) ,chassis._psu_list)) == 2
+        assert len(list(filter(lambda x: isinstance(x, Psu) ,chassis._psu_list))) == 2
 
         # Test creating fixed PSU
         DeviceDataManager.get_psu_count = mock.MagicMock(return_value=3)
@@ -42,7 +42,7 @@ class TestChassis:
         chassis._psu_list = []
         chassis.initialize_psu()
         assert len(chassis._psu_list) == 3
-        assert len(filter(lambda x: isinstance(x, FixedPsu) ,chassis._psu_list)) == 3
+        assert len(list(filter(lambda x: isinstance(x, FixedPsu) ,chassis._psu_list))) == 3
 
         # Test chassis.get_all_psus
         chassis._psu_list = []
@@ -70,7 +70,7 @@ class TestChassis:
         chassis = Chassis()
         chassis.initialize_fan()
         assert len(chassis._fan_drawer_list) == 1
-        assert len(filter(lambda x: isinstance(x, VirtualDrawer) ,chassis._fan_drawer_list)) == 1
+        assert len(list(filter(lambda x: isinstance(x, VirtualDrawer) ,chassis._fan_drawer_list))) == 1
         assert chassis.get_fan_drawer(0).get_num_fans() == 4
 
         # Test creating hot swapable fan
@@ -80,7 +80,7 @@ class TestChassis:
         chassis._fan_drawer_list = []
         chassis.initialize_fan()
         assert len(chassis._fan_drawer_list) == 2
-        assert len(filter(lambda x: isinstance(x, RealDrawer) ,chassis._fan_drawer_list)) == 2
+        assert len(list(filter(lambda x: isinstance(x, RealDrawer) ,chassis._fan_drawer_list))) == 2
         assert chassis.get_fan_drawer(0).get_num_fans() == 2
         assert chassis.get_fan_drawer(1).get_num_fans() == 2
 
@@ -133,7 +133,7 @@ class TestChassis:
         sfp_list = chassis.get_all_sfps()
         assert len(sfp_list) == 3
         assert chassis.sfp_initialized_count == 3
-        assert filter(lambda x: x is not None, sfp_list)
+        assert list(filter(lambda x: x is not None, sfp_list))
         assert id(sfp1) == id(sfp_list[0])
         assert id(sfp2) == id(sfp_list[1])
 
@@ -238,7 +238,7 @@ class TestChassis:
         module_list = chassis.get_all_modules()
         assert len(module_list) == 3
         assert chassis.module_initialized_count == 3
-        assert filter(lambda x: x is not None, module_list)
+        assert list(filter(lambda x: x is not None, module_list))
         assert id(m1) == id(module_list[0])
         assert id(m2) == id(module_list[1])
 

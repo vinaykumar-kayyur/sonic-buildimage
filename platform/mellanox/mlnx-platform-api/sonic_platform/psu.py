@@ -227,7 +227,7 @@ class Psu(FixedPsu):
 
         # initialize thermal for PSU
         from .thermal import initialize_psu_thermal
-        initialize_psu_thermal(self.index)
+        self._thermal_list = initialize_psu_thermal(psu_index, self.get_power_available_status)
 
     def get_model(self):
         """
@@ -274,7 +274,9 @@ class Psu(FixedPsu):
             e.g. 12.1 
         """
         if self.get_powergood_status():
-            voltage = utils.read_int_from_file(self.psu_voltage)
+            # TODO: should we put log_func=None here? If not do this, when a PSU is back to power, some PSU related
+            # sysfs may not ready, read_int_from_file would encounter exception and log an error.
+            voltage = utils.read_int_from_file(self.psu_voltage, log_func=logger.log_info)
             return float(voltage) / 1000
         return None
 
@@ -286,7 +288,7 @@ class Psu(FixedPsu):
             A float number, the electric current in amperes, e.g 15.4
         """
         if self.get_powergood_status():
-            amperes = utils.read_int_from_file(self.psu_current)
+            amperes = utils.read_int_from_file(self.psu_current, log_func=logger.log_info)
             return float(amperes) / 1000
         return None
 
@@ -298,7 +300,7 @@ class Psu(FixedPsu):
             A float number, the power in watts, e.g. 302.6
         """
         if self.get_powergood_status():
-            power = utils.read_int_from_file(self.psu_power)
+            power = utils.read_int_from_file(self.psu_power, log_func=logger.log_info)
             return float(power) / 1000000
         return None
 
@@ -340,7 +342,7 @@ class Psu(FixedPsu):
             of one degree Celsius, e.g. 30.125 
         """
         if self.get_powergood_status():
-            temp = utils.read_int_from_file(self.psu_temp)
+            temp = utils.read_int_from_file(self.psu_temp, log_func=logger.log_info)
             return float(temp) / 1000
 
         return None
@@ -354,7 +356,7 @@ class Psu(FixedPsu):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         if self.get_powergood_status():
-            temp_threshold = utils.read_int_from_file(self.psu_temp_threshold)
+            temp_threshold = utils.read_int_from_file(self.psu_temp_threshold, log_func=logger.log_info)
             return float(temp_threshold) / 1000
 
         return None

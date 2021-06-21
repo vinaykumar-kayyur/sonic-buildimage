@@ -10,6 +10,9 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:30":13, "31:40":14 , "41:120":15},
                 "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
+            },
+            "capability": {
+                "comex_amb": False
             }
         }
     },
@@ -18,6 +21,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:120":13},
                 "unk_untrust": {"-127:15":13, "16:25":14 , "26:30":15, "31:120":17},
+            },
+            "capability": {
+                "cpu_pack": False,
+                "comex_amb": False
             }
         }
     },
@@ -38,6 +45,9 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:30":13, "31:40":14 , "41:120":15},
                 "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
+            },
+            "capability": {
+                "comex_amb": False
             }
         }
     },
