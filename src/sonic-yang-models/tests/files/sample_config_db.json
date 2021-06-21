@@ -19,26 +19,26 @@
         "BUFFER_PROFILE": {
             "pg_lossless_100000_300m_profile": {
                 "dynamic_th": "1",
-                "pool": "[BUFFER_POOL|egress_lossless_pool]",
+                "pool": "egress_lossless_pool",
                 "size": "9427",
                 "xoff": "50176",
                 "xon": "0",
                 "xon_offset": "3584"
             },
             "egress_lossy_profile": {
-                "pool":"[BUFFER_POOL|egress_lossy_pool]",
+                "pool":"egress_lossy_pool",
                 "size":"1518",
                 "dynamic_th":"3"
             }
         },
         "BUFFER_PG": {
             "Ethernet9|3-4": {
-                "profile": "[BUFFER_PROFILE|pg_lossless_100000_300m_profile]"
+                "profile": "pg_lossless_100000_300m_profile"
             }
         },
         "BUFFER_QUEUE": {
             "Ethernet46|4": {
-                "profile": "[BUFFER_PROFILE|egress_lossy_profile]"
+                "profile": "egress_lossy_profile"
             }
         },
         "PORTCHANNEL": {
