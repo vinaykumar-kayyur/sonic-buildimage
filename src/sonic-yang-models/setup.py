@@ -65,6 +65,8 @@ setup(
                          './yang-models/sonic-route-map.yang',
                          './yang-models/sonic-routing-policy-sets.yang',
                          './yang-models/sonic-sflow.yang',
+                         './yang-models/sonic-system-aaa.yang',
+                         './yang-models/sonic-system-tacacs.yang',
                          './yang-models/sonic-types.yang',
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',

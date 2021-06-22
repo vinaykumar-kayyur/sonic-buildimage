@@ -792,6 +792,7 @@
                 "polling_interval": "0"
             }
         },
+
         "SFLOW_COLLECTOR": {
             "collector1": {
                 "collector_ip": "10.100.12.13",
@@ -818,6 +819,23 @@
                 "admin_state": "up",
                 "polling_interval": "20",
                 "agent_id": "Ethernet0"
+            }
+        },
+
+        "AAA": {
+            "authentication": {
+                "login": "local" 
+            }
+        },
+        "TACPLUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "TACPLUS_SERVER": {
+            "192.168.1.1": {
+                "timeout": "10"
             }
         },
 
