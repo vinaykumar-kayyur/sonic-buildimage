@@ -215,7 +215,6 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_interfaces(self):
-        self.maxDiff = None
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "INTERFACE.keys()|list"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "[('Ethernet0', '10.0.0.58/31'), 'Ethernet0', ('Ethernet0', 'FC00::75/126')]")
@@ -569,7 +568,6 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_extra_ethernet_interfaces(self, **kwargs):
-        self.maxDiff = None
         graph_file = kwargs.get('graph_file', self.sample_graph_simple) 
         argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "PORT"'
         output = self.run_script(argument)
@@ -665,15 +663,12 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "")
 
     def test_minigraph_sub_port_interfaces(self, check_stderr=True):
-        self.maxDiff = None
         self.verify_sub_intf(check_stderr=check_stderr)
 
     def test_minigraph_sub_port_intf_resource_type(self, check_stderr=True):
-        self.maxDiff = None
         self.verify_sub_intf(graph_file=self.sample_resource_graph, check_stderr=check_stderr)
 
     def test_minigraph_sub_port_intf_sub(self, check_stderr=True):
-        self.maxDiff = None
         self.verify_sub_intf(graph_file=self.sample_subintf_graph, check_stderr=check_stderr)
 
     def verify_sub_intf(self, **kwargs):
