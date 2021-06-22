@@ -225,3 +225,49 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
+
+    @property
+    def get_transceiver_status(self):
+        bitmap = 0
+
+        for port in range(self.port_start, self.port_end+1):
+            if not self.get_presence(port):
+                continue
+            bitmap |= (1 << (port - self.port_start))
+
+        return bitmap
+
+    data = {'valid': 0, 'last': 0, 'present': 0}
+
+    def get_transceiver_change_event(self, timeout=2000):
+        now = time.time()
+        port_dict = {}
+        port = 0
+
+        if timeout < 1000:
+            timeout = 1000
+        timeout = (timeout) / float(1000)  # Convert to secs
+
+        if now < (self.data['last'] + timeout) and self.data['valid']:
+            return True, {}
+
+        reg_value = self.get_transceiver_status
+        changed_ports = self.data['present'] ^ reg_value
+        if changed_ports:
+            for port in range(self.port_start, self.port_end+1):
+                # Mask off the bit corresponding to our port
+                fp_port = port
+                mask = (1 << (fp_port - 1))
+                if changed_ports & mask:
+                    if (reg_value & mask) == 0:
+                        port_dict[port] = SFP_STATUS_REMOVED
+                    else:
+                        port_dict[port] = SFP_STATUS_INSERTED
+
+            # Update cache
+            self.data['present'] = reg_value
+            self.data['last'] = now
+            self.data['valid'] = 1
+            return True, port_dict
+        else:
+            return True, {}

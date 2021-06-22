@@ -11,6 +11,7 @@ import os
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from .helper import APIHelper
+    from .event import SfpEvent
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -199,3 +200,12 @@ class Chassis(ChassisBase):
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
+
+    def get_change_event(self, timeout=0):
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+
+        return status, sfp_event
