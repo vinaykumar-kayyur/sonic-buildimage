@@ -51,35 +51,6 @@ module sonic-qos-pfc {
 
   container sonic-qos-pfc {
 
-    container FLEX_COUNTER_TABLE {
-      description
-        "Flex Counter Table";
-      list FLEX_COUNTER_TABLE_LIST {
-        description
-          "Flex Counter Table List";
-        key "id";
-
-        leaf id {
-          description
-            "Key for Flex Counter Table";
-          type enumeration {
-            enum PFCWD;
-            enum PORT;
-            enum QUEUE;
-          }
-        }
-
-        leaf FLEX_COUNTER_STATUS {
-          type enumeration {
-            enum enable;
-            enum disable;
-          }
-          description
-            "Indication as to whether PFC Flex Counter is enabled or
-             disabled.";
-        }
-      }
-    }
 
     container PFC_WD {
       //sonic-ext:db-name "CONFIG_DB";
