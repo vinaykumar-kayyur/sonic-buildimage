@@ -792,19 +792,19 @@
                 "polling_interval": "0"
             }
         },
-	"MAP_PFC_PRIORITY_TO_QUEUE": {
-		"name": "AZURE",
-		"MAP_PFC_PRIORITY_TO_QUEUE": [
-		{
-			"pfc_priority" : "4",
-			"qindex" : "2"
-		},
-		{
-			"pfc_priority" : "3",
-			"qindex" : "3"
-		}
-		]
-	},
+        "MAP_PFC_PRIORITY_TO_QUEUE": {
+            "name": "AZURE",
+            {
+                {
+                    "pfc_priority" : "4",
+                    "qindex" : "2"
+                },
+                {
+                    "pfc_priority" : "3",
+                    "qindex" : "3"
+                }
+            }
+        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
