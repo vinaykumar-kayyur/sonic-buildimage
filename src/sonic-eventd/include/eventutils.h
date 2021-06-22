@@ -49,7 +49,7 @@ typedef unordered_map<string, EventInfo> EventMap;
 
 bool isValidSeverity(string severityStr);
 bool isValidEnable(string enableStr);
-bool parse_config(const char *filename, unsigned int& days, unsigned int& count);
+bool parse_config(const char *filename, unsigned int& days, unsigned int& count, unsigned int &throttle_timeout);
 bool parse(const char *filename, EventMap& tmp_event_table);
 void merge(EventMap& static_event_table, EventMap &profile_map);
 void create_symlink();

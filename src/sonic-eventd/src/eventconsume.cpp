@@ -67,6 +67,7 @@ map <int, string> SYSLOG_SEVERITY_STR = {
 static string flood_ev_id;
 static string flood_ev_action;
 static string flood_ev_resource;
+static system_clock::time_point f_old_ts;
 
 EventConsume::EventConsume(DBConnector* dbConn) :
     m_eventTable(dbConn, EVENT_HISTORY_TABLE_NAME),
@@ -77,6 +78,7 @@ EventConsume::EventConsume(DBConnector* dbConn) :
     m_evprofileTable(dbConn, EVENT_EVPROFILE_TABLE_NAME),
     m_eventPubSubTable(dbConn, EVENT_PUBSUB_TABLE_NAME) {
     SWSS_LOG_ENTER();
+    f_old_ts = system_clock::now();
 
     // open syslog connection
     openSyslog();
@@ -212,10 +214,13 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
             }
         }
         
-	m_eventPubSubTable.del(ev_reckey);
+	    m_eventPubSubTable.del(ev_reckey);
 
-        // flood protection. If a rogue application sends same event repeatedly, sqaush that repeated instances of that event
-        if (!flood_ev_resource.compare(ev_src) && 
+        // flood protection. If a rogue application sends same event repeatedly, throttle repeated instances of that event
+        system_clock::time_point f_current_ts = system_clock::now();
+        auto int_s = std::chrono::duration_cast<std::chrono::seconds>(f_current_ts - f_old_ts);
+        if ((int_s.count() < ttimeout) &&
+            !flood_ev_resource.compare(ev_src) && 
             !flood_ev_action.compare(ev_act) &&
             !flood_ev_id.compare(ev_id)) {
                 SWSS_LOG_INFO("Ignoring the event %s from %s action %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str());
@@ -225,6 +230,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
         flood_ev_resource = ev_src;
         flood_ev_action = ev_act;
         flood_ev_id = ev_id;
+        f_old_ts = system_clock::now();
 
         // get static info
         auto it = static_event_table.find(ev_id);
@@ -581,9 +587,10 @@ void EventConsume::purge_events() {
 void EventConsume::read_config_and_purge() {
     days = 0;
     count = 0;
+    ttimeout = 0;
     // read from the manifest file
-    parse_config(EVENTD_CONF_FILE, days, count);
-    SWSS_LOG_NOTICE("max-days %d max-records %d", days, count);
+    parse_config(EVENTD_CONF_FILE, days, count, ttimeout);
+    SWSS_LOG_NOTICE("max-days %d max-records %d throttle-timeout %d", days, count, ttimeout);
 
     // update the nanosecond limit
     PURGE_SECONDS *= days; 
@@ -628,6 +635,18 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
 
     SWSS_LOG_NOTICE("Received profile is %s", custom_profile.c_str());
     
+    // make sure that event profile is not already configured
+    char buf[1024];
+    std::size_t len;
+    if ((len = readlink(EVENTD_PROFILE_SYMLINK, buf, sizeof(buf)-1)) > 0) {
+        buf[len] = '\0';
+
+        if (string(buf).compare(custom_profile) == 0) {
+            SWSS_LOG_DEBUG("Event Profile name is already configured.");
+            return;
+        }
+    }
+
     // the profile is already validated by rest-server. create symlink
     if (unlink(EVENTD_PROFILE_SYMLINK) != 0) {
         // it is possible.. if there is no symlink exists and user trying for the first time

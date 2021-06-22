@@ -33,7 +33,7 @@ private:
     SubscriberStateTable m_consumerTable;
     SubscriberStateTable m_evprofileTable;
     Table m_eventPubSubTable;
-    u_int32_t days, count;
+    u_int32_t days, count, ttimeout;
 
     void handle_notification(std::deque<KeyOpFieldsValuesTuple> kco);
     void handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple>);
