@@ -792,19 +792,6 @@
                 "polling_interval": "0"
             }
         },
-        "MAP_PFC_PRIORITY_TO_QUEUE": {
-            "name": "AZURE",
-            {
-                {
-                    "pfc_priority" : "4",
-                    "qindex" : "2"
-                },
-                {
-                    "pfc_priority" : "3",
-                    "qindex" : "3"
-                }
-            }
-        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
@@ -815,6 +802,22 @@
         "PFC_WD": {
             "GLOBAL": {
                 "POLL_INTERVAL": "100"
+            }
+        },
+        "AAA": {
+            "authentication": {
+                "login": "local" 
+            }
+        },
+        "TACPLUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "TACPLUS_SERVER": {
+            "192.168.1.1": {
+                "timeout": "10"
             }
         },
         "NAT_BINDINGS": {
@@ -923,4 +926,5 @@
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
     }
+    
 }
