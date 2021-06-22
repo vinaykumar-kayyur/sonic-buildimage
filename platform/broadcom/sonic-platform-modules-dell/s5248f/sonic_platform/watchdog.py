@@ -10,12 +10,10 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     import syslog
-    import sonic_platform.component as Component 
+    import sonic_platform.component as Component
     from sonic_platform_base.watchdog_base import WatchdogBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -50,7 +48,7 @@ class Watchdog(WatchdogBase):
                     stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
-            result = stdout.rstrip('\n')
+            result = stdout.rstrip('\n'.encode())
         except OSError:
             result = None
 
@@ -140,8 +138,6 @@ class Watchdog(WatchdogBase):
             self.armed_time = self._get_time()
             self.timeout = seconds
             return seconds
-
-        return -1
 
     def disarm(self):
         """

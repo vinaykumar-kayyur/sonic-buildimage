@@ -11,7 +11,6 @@
 try:
     import os
     import time
-    import select
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
@@ -164,42 +163,6 @@ class Chassis(ChassisBase):
             self.epoll.unregister(self.oir_fd.fileno())
             self.epoll.close()
             self.oir_fd.close()
-
-# not needed /delete after validation
-
-    def _get_register(self, reg_file):
-        retval = 'ERR'
-        if (not os.path.isfile(reg_file)):
-            #print reg_file,  'not found !'
-            return retval
-
-        try:
-            with os.fdopen(os.open(reg_file, os.O_RDONLY)) as fd:
-                retval = fd.read()
-        except:
-            pass
-        retval = retval.rstrip('\r\n')
-        retval = retval.lstrip(" ")
-        return retval
-
-# not needed /delete after validation
-
-    def _check_interrupts(self, port_dict):
-        retval = 0
-        is_port_dict_updated = False
-        for port_num in range(self.PORT_START, (self.PORT_END + 1)):
-            # sfp get uses zero-indexing, but port numbers start from 1
-            sfp = self.get_sfp(port_num-1)
-            presence = sfp.get_presence()
-            if(presence and (self._global_port_pres_dict[port_num] == '0')):
-                is_port_dict_updated = True
-                self._global_port_pres_dict[port_num] = '1'
-                port_dict[port_num] = '1'
-            elif(not presence and (self._global_port_pres_dict[port_num] == '1')):
-                is_port_dict_updated = True
-                self._global_port_pres_dict[port_num] = '0'
-                port_dict[port_num] = '0'
-        return retval, is_port_dict_updated
 
 # check for this event change for sfp / do we need to handle timeout/sleep
 
@@ -360,7 +323,7 @@ class Chassis(ChassisBase):
         try:
             with open(self.REBOOT_CAUSE_PATH) as fd:
                 reboot_cause = int(fd.read(), 16)
-        except:
+        except EnvironmentError:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
         if reboot_cause & 0x1:
