@@ -159,4 +159,10 @@ module sonic-types {
             pattern "0x8100|0x9100|0x9200|0x88a8|0x88A8";
         }
     }
+
+    typedef feature_state {
+        type string {
+            pattern "enabled|disabled|always_enabled";
+        }
+    }
 }
