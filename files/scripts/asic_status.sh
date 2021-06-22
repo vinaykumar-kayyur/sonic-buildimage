@@ -6,7 +6,12 @@ function check_asic_status() {
         chassis_sup=1
     fi
 
-    #Ignore
+    # For fixed-platform and Chassis line-cards return here
+    if [[ $1 == "start" && $chassis_sup -eq 0 ]]; then
+        return 0
+    fi
+
+    # Ignore services that are not started in namespace.
     if [[ -z $DEV ]]; then
         if [[ $1 == "start" ]]; then
             return 0
@@ -15,9 +20,8 @@ function check_asic_status() {
         fi
     fi
 
-    if [[ $1 == "start" && $chassis_sup -eq 0 ]]; then
-        return 0
-    elif [[ $1 == "wait" && $chassis_sup -eq 1 ]]; then
+    # For chassis supervisor, wait for asic to be online
+    if [[ $1 == "wait" && $chassis_sup -eq 1 ]]; then
 
         /usr/local/bin/asic_status.py $DEV
         if [[ $? = 0 ]]; then

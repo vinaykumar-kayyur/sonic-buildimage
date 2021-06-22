@@ -9,7 +9,7 @@ try:
     import sys
     from sonic_py_common import daemon_base
     from swsscommon import swsscommon
-    from sonic_py_common import device_info
+    from sonic_py_common import multi_asic
 except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
@@ -26,8 +26,7 @@ def main():
     args_asic_id = sys.argv[1]
 
     # Get num asics
-    num_asics = 0
-    num_asics = device_info.get_num_npus()
+    num_asics = multi_asic.get_num_asics()
     if num_asics == 0:
         syslog.syslog(syslog.LOG_ERR,
                 'Detected no asics on this platform')
