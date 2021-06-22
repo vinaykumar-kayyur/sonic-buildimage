@@ -9,7 +9,6 @@
 #############################################################################
 
 try:
-    import os
     import time
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
