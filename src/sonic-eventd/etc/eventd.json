@@ -1,7 +1,6 @@
 {
-    "__README__": "Specify size of event history table. Whichever limit is hit first, eventd wraps event history table around and deletes older records. 'throttle_timeout' is used to specify how long eventd shoud sqaush same event from an application that gone bad.",
+    "__README__": "Specify size of event history table. Whichever limit is hit first, eventd wraps event history table around and deletes older records.",
     "max-records": 40000,
-    "max-days": 30,
-    "throttle-timeout": 3600
+    "max-days": 30
 }
 

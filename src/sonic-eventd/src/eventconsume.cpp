@@ -67,7 +67,7 @@ map <int, string> SYSLOG_SEVERITY_STR = {
 static string flood_ev_id;
 static string flood_ev_action;
 static string flood_ev_resource;
-static system_clock::time_point f_old_ts;
+static string flood_ev_msg;
 
 EventConsume::EventConsume(DBConnector* dbConn) :
     m_eventTable(dbConn, EVENT_HISTORY_TABLE_NAME),
@@ -78,7 +78,6 @@ EventConsume::EventConsume(DBConnector* dbConn) :
     m_evprofileTable(dbConn, EVENT_EVPROFILE_TABLE_NAME),
     m_eventPubSubTable(dbConn, EVENT_PUBSUB_TABLE_NAME) {
     SWSS_LOG_ENTER();
-    f_old_ts = system_clock::now();
 
     // open syslog connection
     openSyslog();
@@ -217,20 +216,18 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
 	    m_eventPubSubTable.del(ev_reckey);
 
         // flood protection. If a rogue application sends same event repeatedly, throttle repeated instances of that event
-        system_clock::time_point f_current_ts = system_clock::now();
-        auto int_s = std::chrono::duration_cast<std::chrono::seconds>(f_current_ts - f_old_ts);
-        if ((int_s.count() < ttimeout) &&
-            !flood_ev_resource.compare(ev_src) && 
+        if (!flood_ev_resource.compare(ev_src) && 
             !flood_ev_action.compare(ev_act) &&
-            !flood_ev_id.compare(ev_id)) {
-                SWSS_LOG_INFO("Ignoring the event %s from %s action %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str());
+            !flood_ev_id.compare(ev_id) &&
+            !(flood_ev_msg.compare(ev_msg))) {
+                SWSS_LOG_INFO("Ignoring the event %s from %s action %s msg %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str(), ev_msg.c_str());
                 continue;
         }
 
         flood_ev_resource = ev_src;
         flood_ev_action = ev_act;
         flood_ev_id = ev_id;
-        f_old_ts = system_clock::now();
+        flood_ev_msg = ev_msg;
 
         // get static info
         auto it = static_event_table.find(ev_id);
@@ -587,10 +584,9 @@ void EventConsume::purge_events() {
 void EventConsume::read_config_and_purge() {
     days = 0;
     count = 0;
-    ttimeout = 0;
     // read from the manifest file
-    parse_config(EVENTD_CONF_FILE, days, count, ttimeout);
-    SWSS_LOG_NOTICE("max-days %d max-records %d throttle-timeout %d", days, count, ttimeout);
+    parse_config(EVENTD_CONF_FILE, days, count);
+    SWSS_LOG_NOTICE("max-days %d max-records %d", days, count);
 
     // update the nanosecond limit
     PURGE_SECONDS *= days; 
