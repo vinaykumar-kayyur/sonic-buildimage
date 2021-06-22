@@ -57,7 +57,7 @@ public:
 /**
 * Exception for missing configuration.
 *
-* This is thrown when requied configuration is missing.
+* This is thrown when required configuration is missing.
 */
 class ConfigNotFoundException : public RunTimeErrorException {
 public:
@@ -100,18 +100,6 @@ public:
     using RunTimeErrorException::RunTimeErrorException;
 
     virtual ~SocketErrorException () noexcept {};
-};
-
-/**
-* Exception for Internal Error
-*
-* This is thrown when unexpected behavior is detected. This should never happen.
-*/
-class InternalErrorException : public MuxException {
-public:
-    using MuxException::MuxException;
-
-    virtual ~InternalErrorException () noexcept {};
 };
 
 } /* namespace common */

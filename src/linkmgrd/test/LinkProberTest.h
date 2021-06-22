@@ -22,8 +22,10 @@ public:
     LinkProberTest();
     virtual ~LinkProberTest() = default;
 
+    void initialize() {mLinkProber.initialize();};
     void initializeSendBuffer() {mLinkProber.initializeSendBuffer();};
     void handleUpdateEthernetFrame() {mLinkProber.handleUpdateEthernetFrame();};
+    void handleUpdateSequenceNumber() {mLinkProber.updateIcmpSequenceNo();};
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mLinkProber.getTxBuffer();};
 
     boost::asio::io_service mIoService;

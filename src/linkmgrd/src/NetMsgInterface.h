@@ -11,6 +11,12 @@
 #include "swss/netmsg.h"
 #include "DbInterface.h"
 
+#define MAX_ADDR_SIZE   64
+
+namespace test {
+class MuxManagerTest;
+}
+
 namespace mux
 {
 using NetlinkObject = struct nl_object;
@@ -57,12 +63,32 @@ public:
     *
     *@brief handle received net link messages
     *
-    *@param msgType (in)        netlink message tyoe
+    *@param msgType (in)        netlink message type
     *@param netlinkObject (in)  pointer to netlink message object
     *
     *@return none
     */
     virtual void onMsg(int msgType, NetlinkObject *netlinkObject) override;
+
+private:
+    friend class test::MuxManagerTest;
+
+    /**
+    *@method updateMacAddress
+    *
+    *@brief update server MAC address
+    *
+    *@param port (in)   port name server is connected to
+    *@param ip (in)     server IP address
+    *@param mac (in)    server MAC address
+    *
+    *@return none
+    */
+    void updateMacAddress(
+        std::string &port,
+        std::array<char, MAX_ADDR_SIZE + 1> &ip,
+        std::array<char, MAX_ADDR_SIZE + 1> &mac
+    );
 
 private:
     DbInterface &mDbInterface;

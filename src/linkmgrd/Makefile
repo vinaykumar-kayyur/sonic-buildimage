@@ -18,7 +18,7 @@ JOB_FLAG := $(filter -j%, $(subst -j ,-j,$(shell ps T | grep "^\s*$(MAKE_PID).*$
 JOBS := $(subst -j,,$(JOB_FLAG))
 
 release-targets: CPP_FLAGS := -O3 -Wall -c -fmessage-length=0 -fPIC -flto
-test-targets: CPP_FLAGS = -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS) -flto
+test-targets: CPP_FLAGS = -O0 -Wall -c -fmessage-length=0 -fPIC $(GCOV_FLAGS)
 
 INCLUDES := \
     -I"$(TOPDIR)/src" \

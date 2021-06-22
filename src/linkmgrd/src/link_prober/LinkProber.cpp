@@ -114,16 +114,6 @@ void LinkProber::initialize()
         throw MUX_ERROR(SocketError, errMsg.str());
     }
 
-    int fileDescriptor;
-    if ((fileDescriptor = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        std::ostringstream errMsg;
-        errMsg << "Failed to open socket with '" << strerror(errno) << "'"
-               << std::endl;
-        throw MUX_ERROR(SocketError, errMsg.str());
-    }
-
-    close(fileDescriptor);
-
     mStream.assign(mSocket);
     initializeSendBuffer();
 
@@ -497,21 +487,6 @@ void LinkProber::initializeSendBuffer()
 
     IcmpPayload *icmpPayload = new (mTxBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)) IcmpPayload();
     computeChecksum(icmpHeader, sizeof(icmphdr) + sizeof(*icmpPayload));
-}
-
-//
-// ---> updateIpSequenceNo();
-//
-// update IP header checksum, used before sending new heartbeat
-//
-void LinkProber::updateIpSequenceNo()
-{
-    iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
-    uint16_t id = ipHeader->id;
-    ipHeader->id = static_cast<uint16_t> (rand());
-
-    mIpChecksum += (id == ipHeader->id) ? 0 : (ipHeader->id - id);
-    addChecksumCarryover(&ipHeader->check, mIpChecksum);
 }
 
 //

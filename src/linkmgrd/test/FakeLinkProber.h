@@ -23,9 +23,15 @@ public:
 
     void postSuspendTimerExpiredEvent();
 
+    void initialize();
+    void startProbing();
+    void updateEthernetFrame();
     void suspendTxProbes(uint32_t suspendTime_msec);
 
 public:
+    uint32_t mInitializeCallCount = 0;
+    uint32_t mStartProbingCallCount = 0;
+    uint32_t mUpdateEthernetFrameCallCount = 0;
     uint32_t mSuspendTxProbeCallCount = 0;
 
 private:

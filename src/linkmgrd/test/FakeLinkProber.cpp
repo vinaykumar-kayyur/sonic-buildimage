@@ -32,7 +32,6 @@ void FakeLinkProber::postLinkProberEvent(E &e)
         mLinkProberStateMachine,
         e
     )));
-
 }
 
 template
@@ -55,6 +54,27 @@ void FakeLinkProber::postSuspendTimerExpiredEvent()
         mLinkProberStateMachine,
         link_prober::LinkProberStateMachine::getSuspendTimerExpiredEvent()
     )));
+}
+
+void FakeLinkProber::initialize()
+{
+    MUXLOGINFO("");
+
+    mInitializeCallCount++;
+}
+
+void FakeLinkProber::startProbing()
+{
+    MUXLOGINFO("");
+
+    mStartProbingCallCount++;
+}
+
+void FakeLinkProber::updateEthernetFrame()
+{
+    MUXLOGINFO("");
+
+    mUpdateEthernetFrameCallCount++;
 }
 
 void FakeLinkProber::suspendTxProbes(uint32_t suspendTime_msec)

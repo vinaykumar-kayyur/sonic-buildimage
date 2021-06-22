@@ -271,15 +271,6 @@ private:
     void initializeSendBuffer();
 
     /**
-    *@method updateIpSequenceNo
-    *
-    *@brief update IP header checksum, used before sending new heartbeat
-    *
-    *@return CRC checksum
-    */
-    void updateIpSequenceNo();
-
-    /**
     *@method updateIcmpSequenceNo
     *
     *@brief update ICMP packet checksum, used before sending new heartbeat

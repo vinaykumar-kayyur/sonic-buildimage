@@ -38,27 +38,6 @@ MuxManager::MuxManager() :
 }
 
 //
-// ---> MuxManager();
-//
-// class constructor that uses external instance of DbInterface class.
-// This is used for unit test
-//
-MuxManager::MuxManager(std::shared_ptr<mux::DbInterface> dbInterfacePtr) :
-    mMuxConfig(),
-    mWork(mIoService),
-    mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),
-    mDbInterfacePtr(dbInterfacePtr)
-{
-    mSignalSet.add(SIGUSR1);
-    mSignalSet.add(SIGUSR2);
-    mSignalSet.async_wait(boost::bind(&MuxManager::handleSignal,
-        this,
-        boost::asio::placeholders::error,
-        boost::asio::placeholders::signal_number
-    ));
-}
-
-//
 // ---> initialize();
 //
 // initialize MuxManager class and creates DbInterface instance that reads/listen from/to Redis db

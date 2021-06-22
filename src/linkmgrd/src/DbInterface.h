@@ -262,6 +262,17 @@ private:
     );
 
     /**
+    *@method processTorMacAddress
+    *
+    *@brief retrieve ToR MAC address information
+    *
+    *@param mac (in)   ToR mac address
+    *
+    *@return none
+    */
+    void processTorMacAddress(std::string& mac);
+
+    /**
     *@method getTorMacAddress
     *
     *@brief retrieve ToR MAC address information

@@ -23,6 +23,7 @@
 #include "mux_state/MuxStateMachine.h"
 
 namespace test {
+class FakeMuxPort;
 class MuxManagerTest;
 }
 
@@ -727,13 +728,48 @@ private:
 private:
     // This is used for testing...
     friend class mux::MuxPort;
+    friend class test::FakeMuxPort;
     friend class test::MuxManagerTest;
+
+    /**
+    *@method setInitializeProberFnPtr
+    *
+    *@brief set new InitializeProberFnPtr for the state machine. This method is used for testing
+    *
+    *@param initializeProberFnPtr (in)  pointer to new InitializeProberFnPtr
+    *
+    *@return none
+    */
+    void setInitializeProberFnPtr(boost::function<void ()> initializeProberFnPtr) {mInitializeProberFnPtr = initializeProberFnPtr;};
+
+    /**
+    *@method setStartProbingFnPtr
+    *
+    *@brief set new StartProbingFnPtr for the state machine. This method is used for testing
+    *
+    *@param startProbingFnPtr (in)  pointer to new StartProbingFnPtr
+    *
+    *@return none
+    */
+    void setStartProbingFnPtr(boost::function<void ()> startProbingFnPtr) {mStartProbingFnPtr = startProbingFnPtr;};
+
+    /**
+    *@method setUpdateEthernetFrameFnPtr
+    *
+    *@brief set new UpdateEthernetFrameFnPtr for the state machine. This method is used for testing
+    *
+    *@param updateEthernetFrameFnPtr (in)  pointer to new UpdateEthernetFrameFnPtr
+    *
+    *@return none
+    */
+    void setUpdateEthernetFrameFnPtr(boost::function<void ()> updateEthernetFrameFnPtr) {mUpdateEthernetFrameFnPtr = updateEthernetFrameFnPtr;};
+
     /**
     *@method setSuspendTxFnPtr
     *
     *@brief set new SuspendTXFnPtr for the state machine. This method is used for testing
     *
-    *@param linkProberPtr (in)  pointer to LinkProber
+    *@param suspendTxFnPtr (in)  pointer to new  SuspendTXFnPtr
     *
     *@return none
     */
@@ -779,6 +815,9 @@ private:
 
     boost::asio::deadline_timer mDeadlineTimer;
 
+    boost::function<void ()> mInitializeProberFnPtr;
+    boost::function<void ()> mStartProbingFnPtr;
+    boost::function<void ()> mUpdateEthernetFrameFnPtr;
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;

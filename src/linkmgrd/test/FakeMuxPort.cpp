@@ -32,12 +32,23 @@ FakeMuxPort::FakeMuxPort(
         std::make_shared<FakeLinkProber> (&getLinkManagerStateMachine()->getLinkProberStateMachine())
     )
 {
-//    std::string prog_name = "linkmgrd-test";
-//    std::string log_filename = "/tmp/" + prog_name + ".log";
-//    common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug);
-//    common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
-    setSuspendTxFnPtr(boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1));
+    std::string prog_name = "linkmgrd-test";
+    std::string log_filename = "/tmp/" + prog_name + ".log";
+    common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug);
+    common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
     link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
+    getLinkManagerStateMachine()->setInitializeProberFnPtr(
+        boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
+    );
+    getLinkManagerStateMachine()->setStartProbingFnPtr(
+        boost::bind(&FakeLinkProber::startProbing, mFakeLinkProber.get())
+    );
+    getLinkManagerStateMachine()->setUpdateEthernetFrameFnPtr(
+        boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
+    );
+    getLinkManagerStateMachine()->setSuspendTxFnPtr(
+        boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
 }
 
 void FakeMuxPort::activateStateMachine()

@@ -304,6 +304,25 @@ void DbInterface::handlePostMuxMetrics(
 }
 
 //
+// ---> processTorMacAddress(std::string& mac);
+//
+// retrieve ToR MAC address information
+//
+void DbInterface::processTorMacAddress(std::string& mac)
+{
+    try {
+        swss::MacAddress swssMacAddress(mac);
+        std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+
+        memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
+        mMuxManagerPtr->setTorMacAddress(macAddress);
+    }
+    catch (const std::invalid_argument &invalidArgument) {
+        throw MUX_ERROR(ConfigNotFound, "Invalid ToR MAC address " + mac);
+    }
+}
+
+//
 // ---> getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
 //
 // retrieve ToR MAC address information
@@ -311,22 +330,14 @@ void DbInterface::handlePostMuxMetrics(
 void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
     MUXLOGINFO("Reading ToR MAC Address");
+
     swss::Table configDbMetadataTable(configDbConnector.get(), CFG_DEVICE_METADATA_TABLE_NAME);
     const std::string localhost = "localhost";
     const std::string key = "mac";
     std::string mac;
 
     if (configDbMetadataTable.hget(localhost, key, mac)) {
-        try {
-            swss::MacAddress swssMacAddress(mac);
-            std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
-
-            memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
-            mMuxManagerPtr->setTorMacAddress(macAddress);
-        }
-        catch (const std::invalid_argument &invalidArgument) {
-            throw MUX_ERROR(ConfigNotFound, "Invalid ToR MAC address " + mac);
-        }
+        processTorMacAddress(mac);
     } else {
         throw MUX_ERROR(ConfigNotFound, "ToR MAC address is not found");
     }

@@ -58,18 +58,6 @@ public:
     */
     virtual ~MuxManager() = default;
 
-private:
-    /**
-    *@method MuxManager
-    *
-    *@brief class constructor that uses external instance of DbInterface class.
-    *       This is used for unit test
-    *
-    *@param dbInterfacePtr (in):    Pointer to dbInterface instance
-    *
-    */
-    MuxManager(std::shared_ptr<mux::DbInterface> dbInterfacePtr);
-
 public:
     /**
     *@method getIoService

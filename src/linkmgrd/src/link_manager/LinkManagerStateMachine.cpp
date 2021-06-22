@@ -337,14 +337,23 @@ void LinkManagerStateMachine::switchMuxState(
 //
 void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::address address)
 {
-    mMuxPortConfig.setBladeIpv4Address(address);
-
     if (!mComponentInitState.test(LinkProberComponent)) {
+        mMuxPortConfig.setBladeIpv4Address(address);
+
         try {
             mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
                 mMuxPortConfig,
                 getStrand().context(),
                 mLinkProberStateMachine
+            );
+            mInitializeProberFnPtr = boost::bind(
+                &link_prober::LinkProber::initialize, mLinkProberPtr.get()
+            );
+            mStartProbingFnPtr = boost::bind(
+                &link_prober::LinkProber::startProbing, mLinkProberPtr.get()
+            );
+            mUpdateEthernetFrameFnPtr = boost::bind(
+                &link_prober::LinkProber::updateEthernetFrame, mLinkProberPtr.get()
             );
             mSuspendTxFnPtr = boost::bind(
                 &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
@@ -359,8 +368,10 @@ void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::
 
             throw MUX_ERROR(BadAlloc, errMsg.str());
         }
-    } else {
-        mLinkProberPtr->updateEthernetFrame();
+    } else if (address != mMuxPortConfig.getBladeIpv4Address()){
+        mMuxPortConfig.setBladeIpv4Address(address);
+
+        mUpdateEthernetFrameFnPtr();
     }
 }
 
@@ -392,8 +403,8 @@ void LinkManagerStateMachine::activateStateMachine()
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
 
-        mLinkProberPtr->initialize();
-        mLinkProberPtr->startProbing();
+        mInitializeProberFnPtr();
+        mStartProbingFnPtr();
 
         updateMuxLinkmgrState();
     }
@@ -502,7 +513,7 @@ void LinkManagerStateMachine::handleGetServerMacAddressNotification(std::array<u
 
     if (address != mMuxPortConfig.getBladeMacAddress()) {
         mMuxPortConfig.setBladeMacAddress(address);
-        mLinkProberPtr->updateEthernetFrame();
+        mUpdateEthernetFrameFnPtr();
     }
 }
 

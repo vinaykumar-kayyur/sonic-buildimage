@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include "common/MuxException.h"
 #include "link_prober/IcmpPayload.h"
 #include "LinkProberTest.h"
 
@@ -78,31 +79,46 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
 
 TEST_F(LinkProberTest, CalculateChecksum)
 {
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
     link_prober::IcmpPayload *icmpPayload = new (
-        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+        getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
     initializeSendBuffer();
 
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 48830);
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->checksum == 12355);
 }
 
 TEST_F(LinkProberTest, UpdateEthernetFrame)
 {
-    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
     link_prober::IcmpPayload *icmpPayload = new (
-        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+        getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
     ) link_prober::IcmpPayload();
     boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
     memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
     handleUpdateEthernetFrame();
-    mIoService.run();
 
-    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
-    EXPECT_TRUE(icmpHeader->checksum == 48830);
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->checksum == 12355);
+}
+
+TEST_F(LinkProberTest, UpdateSequenceNo)
+{
+    link_prober::IcmpPayload *icmpPayload = new (
+        getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+
+    handleUpdateEthernetFrame();
+
+    // update sequence number twice as we start is 0xffff
+    handleUpdateSequenceNumber();
+    handleUpdateSequenceNumber();
+
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->checksum == 12099);
 }
 
 TEST_F(LinkProberTest, GenerateGuid)
@@ -146,6 +162,11 @@ TEST_F(LinkProberTest, UpdateToRMac)
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
 
     EXPECT_TRUE(ipHeader->daddr == htonl(ipAddress.to_v4().to_uint()));
+}
+
+TEST_F(LinkProberTest, InitializeException)
+{
+    EXPECT_THROW(initialize(), common::SocketErrorException);
 }
 
 } /* namespace test */

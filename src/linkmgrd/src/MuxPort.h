@@ -8,13 +8,8 @@
 #ifndef MUXPORT_H_
 #define MUXPORT_H_
 
-#include <linux/filter.h>
-
-#include <bitset>
 #include <string>
 #include <memory>
-
-#include <boost/asio.hpp>
 
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberStateMachine.h"
@@ -250,15 +245,6 @@ protected:
     *@return pointer to LinkManagerStateMachine object
     */
     link_manager::LinkManagerStateMachine* getLinkManagerStateMachine() {return &mLinkManagerStateMachine;};
-
-    /**
-    *@method setSuspendTxFnPtr
-    *
-    *@brief setter for SuspendTxFnPtr object (used during unit test)
-    *
-    *@param suspendTxFnPtr (in)  new SuspendTxFnPtr
-    */
-    void setSuspendTxFnPtr(boost::function<void (uint32_t suspendTime_msec)> suspendTxFnPtr) {mLinkManagerStateMachine.setSuspendTxFnPtr(suspendTxFnPtr);};
 
     /**
     *@method setComponentInitState

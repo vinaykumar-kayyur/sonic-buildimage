@@ -46,6 +46,8 @@ public:
 
     FakeMuxPort mFakeMuxPort;
     link_manager::LinkManagerStateMachine::CompositeState mTestCompositeState;
+
+    uint8_t mPositiveUpdateCount = 2;
 };
 
 } /* namespace test */

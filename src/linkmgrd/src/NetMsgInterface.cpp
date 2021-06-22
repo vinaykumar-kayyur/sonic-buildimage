@@ -19,8 +19,6 @@
 #include "common/MuxLogger.h"
 #include "common/MuxException.h"
 
-#define MAX_ADDR_SIZE   64
-
 namespace mux
 {
 
@@ -58,25 +56,42 @@ void NetMsgInterface::onMsg(int msgType, NetlinkObject *netlinkObject)
                 std::array<char, MAX_ADDR_SIZE + 1> ipStr;
                 nl_addr2str(rtnl_neigh_get_dst(routeNetlinkNeighbor), ipStr.data(), ipStr.size() - 1);
 
-                MUXLOGDEBUG(boost::format("%s: interface IP '%s', MAC '%s', msgType %d") %
-                    portName % ipStr.data() % macStr.data() % msgType
-                );
-
-                boost::system::error_code errorCode;
-
-                boost::asio::ip::address ipAddress = boost::asio::ip::make_address(ipStr.data(), errorCode);
-                if (!errorCode) {
-                    try {
-                        swss::MacAddress macAddress(macStr.data());
-                        mDbInterface.updateServerMacAddress(ipAddress, macAddress.getMac());
-                    }
-                    catch (const std::invalid_argument &invalidArgument) {
-                        MUXLOGWARNING(boost::format("%s: invalid argument for interface IP '%s', MAC '%s', msgType %d") %
-                            portName % ipStr.data() % macStr.data() % msgType
-                        );
-                    }
-                }
+                updateMacAddress(portName, ipStr, macStr);
             }
+        }
+    }
+}
+
+//
+// ---> updateMacAddress(
+//          std::string &port,
+//          std::array<char, MAX_ADDR_SIZE + 1> &ip,
+//          std::array<char, MAX_ADDR_SIZE + 1> &mac
+//      );
+//
+// update server MAC address
+//
+void NetMsgInterface::updateMacAddress(
+    std::string &port,
+    std::array<char, MAX_ADDR_SIZE + 1> &ip,
+    std::array<char, MAX_ADDR_SIZE + 1> &mac
+)
+{
+    MUXLOGDEBUG(boost::format("%s: interface IP '%s', MAC '%s'") %
+        port % ip.data() % mac.data()
+    );
+
+    boost::system::error_code errorCode;
+    boost::asio::ip::address ipAddress = boost::asio::ip::make_address(ip.data(), errorCode);
+    if (!errorCode) {
+        try {
+            swss::MacAddress macAddress(mac.data());
+            mDbInterface.updateServerMacAddress(ipAddress, macAddress.getMac());
+        }
+        catch (const std::invalid_argument &invalidArgument) {
+            MUXLOGWARNING(boost::format("%s: invalid argument for interface IP '%s', MAC '%s'") %
+                port % ip.data() % mac.data()
+            );
         }
     }
 }
