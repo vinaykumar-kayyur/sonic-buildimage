@@ -9,6 +9,7 @@ schedules:
   branches:
     include:
     - master
+    - 202012
 
 trigger: none
 pr: none
