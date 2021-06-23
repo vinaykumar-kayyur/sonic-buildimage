@@ -792,9 +792,28 @@
                 "polling_interval": "0"
             }
         },
+
         "WARM_RESTART": {
             "bgp": {
                 "bgp_timer": "500"
+            }
+        },
+
+        "AAA": {
+            "authentication": {
+                "login": "local" 
+            }
+        },
+        "TACPLUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "TACPLUS_SERVER": {
+            "192.168.1.1": {
+                "timeout": "10"
+>>>>>>> master
             }
         },
 
@@ -904,4 +923,5 @@
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
     }
+    
 }
