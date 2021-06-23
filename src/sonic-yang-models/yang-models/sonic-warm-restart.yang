@@ -32,7 +32,7 @@ module sonic-warm-restart  {
 
             enum system {
                description
-                 "system level enable/disable warm-restart";
+                 "Warm Restart on a System level.";
             }
 
         }
@@ -58,7 +58,7 @@ module sonic-warm-restart  {
                     type boolean;
                     must "current()/../module = 'bgp'" { error-message "bgp_eoiu is only supported for module bgp."; }
                     description
-                       "BGP EOIU enable/disable";
+                       "BGP End-of-Initial Update (EOIU) signal enable/disable";
                 }
 
                 leaf bgp_timer {
