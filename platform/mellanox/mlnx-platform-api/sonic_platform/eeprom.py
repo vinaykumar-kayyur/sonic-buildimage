@@ -7,9 +7,10 @@
 #############################################################################
 import os
 import time
+import subprocess
 
 from sonic_py_common.logger import Logger
-
+from sonic_py_common.device_info import get_platform
 try:
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
@@ -24,6 +25,13 @@ logger = Logger()
 # should this be moved to chass.py or here, which better?
 #
 EEPROM_SYMLINK = "/var/run/hw-management/eeprom/vpd_info"
+
+if 'simx' in get_platform():
+    platform_path = '/usr/share/sonic/platform'
+    if not os.path.exists(os.path.dirname(EEPROM_SYMLINK)):
+        os.makedirs(os.path.dirname(EEPROM_SYMLINK))
+    if not os.path.exists(EEPROM_SYMLINK):
+        subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', EEPROM_SYMLINK], cwd=platform_path)
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     RETRIES = 3
