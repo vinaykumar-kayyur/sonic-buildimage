@@ -25,6 +25,7 @@ class TestJ2Files(TestCase):
         self.multi_asic_minigraph = os.path.join(self.test_dir, 'multi_npu_data', 'sample-minigraph.xml')
         self.multi_asic_port_config = os.path.join(self.test_dir, 'multi_npu_data', 'sample_port_config-0.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
+        os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def run_script(self, argument):
         print('CMD: sonic-cfggen ' + argument)
@@ -91,21 +92,6 @@ class TestJ2Files(TestCase):
         argument = '-j {} -t {} > {}'.format(mgmt_iface_ipv6_json, lldpd_conf_template, self.output_file)
         self.run_script(argument)
         self.assertTrue(filecmp.cmp(expected_mgmt_ipv6, self.output_file))
-
-    def test_bgpd_quagga(self):
-        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'bgpd.conf.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
-        self.run_script(argument)
-        original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'bgpd_quagga.conf')
-        r = filecmp.cmp(original_filename, self.output_file)
-        diff_output = self.run_diff(original_filename, self.output_file) if not r else ""
-        self.assertTrue(r, "Diff:\n" + diff_output)
-
-    def test_zebra_quagga(self):
-        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'zebra.conf.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
-        self.run_script(argument)
-        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'zebra_quagga.conf'), self.output_file))
 
     def test_ipinip(self):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
@@ -307,6 +293,7 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
 
     def tearDown(self):
+        os.environ["CFGGEN_UNIT_TESTING"] = ""
         try:
             os.remove(self.output_file)
         except OSError:
