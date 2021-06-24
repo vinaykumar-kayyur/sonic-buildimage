@@ -12,7 +12,6 @@ from lxml.etree import QName
 
 
 from portconfig import get_port_config
-from sonic_py_common.multi_asic import get_asic_id_from_name
 from sonic_py_common.interface import backplane_prefix
 
 # TODO: Remove this once we no longer support Python 2
@@ -199,18 +198,18 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                     startport = link.find(str(QName(ns, "StartPort"))).text
                     baudrate = link.find(str(QName(ns, "Bandwidth"))).text
                     flowcontrol = 1 if link.find(str(QName(ns, "FlowControl"))) is not None and link.find(str(QName(ns, "FlowControl"))).text == 'true' else 0
-                    if enddevice.lower() == hname.lower():
+                    if enddevice.lower() == hname.lower() and endport.isdigit():
                         console_ports[endport] = {
                             'remote_device': startdevice,
                             'baud_rate': baudrate,
                             'flow_control': flowcontrol
-                            }
-                    else:
+                        }
+                    elif startport.isdigit():
                         console_ports[startport] = {
                             'remote_device': enddevice,
                             'baud_rate': baudrate,
                             'flow_control': flowcontrol
-                            }
+                        }
                     continue
 
                 if linktype == "DeviceInterfaceLink":
@@ -558,7 +557,7 @@ def parse_dpg(dpg, hname):
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
 
             vlanmac = vintf.find(str(QName(ns, "MacAddress")))
-            if vlanmac != None:
+            if vlanmac is not None and vlanmac.text is not None:
                 vlan_attributes['mac'] = vlanmac.text
 
             sonic_vlan_name = "Vlan%s" % vlanid
@@ -1183,12 +1182,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     local_devices = []
     kube_data = {}
 
-    # hostname is the asic_name, get the asic_id from the asic_name
-    if asic_name is not None:
-        asic_id = get_asic_id_from_name(asic_name)
-    else:
-        asic_id = None
-
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
     docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
@@ -1200,7 +1193,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -1450,9 +1443,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 # for the ports w/o neighbor info, set it to port alias
                 port['description'] = port.get('alias', port_name)
 
-    # set default port MTU as 9100
+    # set default port MTU as 9100 and default TPID 0x8100
     for port in ports.values():
         port['mtu'] = '9100'
+        port['tpid'] = '0x8100'
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1485,9 +1479,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 print("Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name, file=sys.stderr)
                 del pcs[pc_name]
 
-    # set default port channel MTU as 9100 and admin status up
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
     for pc in pcs.values():
         pc['mtu'] = '9100'
+        pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
