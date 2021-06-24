@@ -3,10 +3,6 @@
 import sys
 import imp
 
-
-
-
-
 PLATFORM_SPECIFIC_MODULE_NAME = "eeprom"
 PLATFORM_SPECIFIC_CLASS_NAME = "board"
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -x
 
 start_bcm()
@@ -40,14 +39,4 @@ fi
 
 start_bcm
 
-
-
-
-
-
 exec /usr/bin/supervisord
-
-
-
-
-
