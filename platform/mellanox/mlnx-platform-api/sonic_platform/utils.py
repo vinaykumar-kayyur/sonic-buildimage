@@ -164,3 +164,17 @@ def is_host():
         return result != ''
     except OSError as e:
         return False
+
+
+def default_return(return_value, log_func=logger.log_debug):
+    def wrapper(method):
+        @functools.wraps(method)
+        def _impl(*args, **kwargs):
+            try:
+                return method(*args, **kwargs)
+            except Exception as e:
+                if log_func:
+                    log_func('Faield to execute method {} - {}'.format(method.__name__, repr(e)))
+                return return_value
+        return _impl
+    return wrapper
