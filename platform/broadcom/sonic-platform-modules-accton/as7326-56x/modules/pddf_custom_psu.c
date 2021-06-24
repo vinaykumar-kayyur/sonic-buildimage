@@ -111,7 +111,7 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
             return status;
         }
         else {
-            data.serial_number[serials[i].length] = '\0';
+            data.model_name[models[i].length] = '\0';
         }
 
         /* Determine if the model name is known, if not, read next index
@@ -180,11 +180,11 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
 
 static int __init pddf_custom_psu_init(void)
 {
-	access_psu_serial_num.show = pddf_get_custom_psu_serial_num;
-	access_psu_serial_num.do_get = NULL;
+    access_psu_serial_num.show = pddf_get_custom_psu_serial_num;
+    access_psu_serial_num.do_get = NULL;
 	
-	access_psu_model_name.show = pddf_get_custom_psu_model_name;
-	access_psu_model_name.do_get = NULL;
+    access_psu_model_name.show = pddf_get_custom_psu_model_name;
+    access_psu_model_name.do_get = NULL;
 	
 	return 0;
 }
