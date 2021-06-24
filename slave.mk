@@ -174,12 +174,8 @@ else
 $(warning PASSWORD given on command line: could be visible to other users)
 endif
 
-ifeq ($(SONIC_DEBUGGING_ON),y)
-DEB_BUILD_OPTIONS_GENERIC := nostrip
-endif
-
-ifeq ($(SONIC_PROFILING_ON),y)
-DEB_BUILD_OPTIONS_GENERIC := nostrip noopt
+ifeq ($(SONIC_DEB_BUILD_NOOPT),y)
+DEB_BUILD_OPTIONS_GENERIC := noopt
 endif
 
 ifeq ($(SONIC_BUILD_JOBS),)
@@ -241,8 +237,7 @@ $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "NO_PROXY"                        : "$(NO_PROXY)")
 $(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
-$(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
-$(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
+$(info "SONIC_DEB_BUILD_NOOPT"           : "$(SONIC_DEB_BUILD_NOOPT)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BUILD_LOG_TIMESTAMP"             : "$(BUILD_LOG_TIMESTAMP)")
