@@ -105,9 +105,9 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
         status = pddf_psu_read_block(client, models[i].offset,
                                            data.model_name, models[i].length);
         if (status < 0) {
-            data.serial_number[0] = '\0';
+            data.model_name[0] = '\0';
             dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
-                                  client->addr, serials[i].offset);
+                                  client->addr, models[i].offset);
             return status;
         }
         else {
