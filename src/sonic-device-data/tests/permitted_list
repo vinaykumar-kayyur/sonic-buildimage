@@ -271,3 +271,10 @@ robust_hash_seed_exact_match
 my_udp_port_int
 server_udp_port_int
 probe_marker1_int
+probe_marker2_int
+hoplimit_int
+lb_port_pipe0_int
+lb_port_pipe1_int
+ing_origin_id_device_id_mask
+egr_origin_id_device_id_mask
+port_count_in_pb_stream
