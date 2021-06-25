@@ -30,6 +30,7 @@ class Module(ModuleBase):
         self.lock = threading.Lock()
 
         self.sfp_initialized_count = 0
+        self.sfp_count = 0
         self.vpd_parser = VpdParser('/run/hw-management/lc{}/eeprom/vpd_parsed')
 
     def get_name(self):
@@ -113,6 +114,7 @@ class Module(ModuleBase):
     def _re_init(self):
         self._thermal_list = []
         self._sfp_list = []
+        self._sfp_count = 0
 
 
     ##############################################
@@ -181,7 +183,7 @@ class Module(ModuleBase):
                 
                 if not self._sfp_list[index]:
                     from .sfp import SFP
-                    self._sfp_list[index] = SFP(index)
+                    self._sfp_list[index] = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
                     self.sfp_initialized_count += 1
 
     def initialize_sfps(self):
@@ -191,14 +193,14 @@ class Module(ModuleBase):
                 from .sfp import SFP
                 sfp_count = self.get_num_sfps()
                 for index in range(sfp_count):
-                    sfp_module = SFP(index)
+                    sfp_module = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
                     self._sfp_list.append(sfp_module)
                 self.sfp_initialized_count = sfp_count
             elif self.sfp_initialized_count != len(self._sfp_list):
                 from .sfp import SFP
                 for index in range(len(self._sfp_list)):
                     if self._sfp_list[index] is None:
-                        self._sfp_list[index] = SFP(index)
+                        self._sfp_list[index] = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
                 self.sfp_initialized_count = len(self._sfp_list)
 
     def get_num_sfps(self):
@@ -208,7 +210,9 @@ class Module(ModuleBase):
         Returns:
             An integer, the number of sfps available on this module
         """
-        return DeviceDataManager.get_linecard_sfp_count(self.slot_id)
+        if self.sfp_count == 0:
+            self.sfp_count = DeviceDataManager.get_linecard_sfp_count(self.slot_id)
+        return self.sfp_count 
 
     def get_all_sfps(self):
         """

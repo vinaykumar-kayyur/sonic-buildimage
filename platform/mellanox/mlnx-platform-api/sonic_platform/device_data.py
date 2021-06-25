@@ -126,6 +126,11 @@ DEVICE_DATA = {
                 "unk_untrust": {"-127:5": 12, "6:20": 13, "21:30": 14, "31:35": 15, "36:40": 16, "41:120": 17},
             }
         }
+    },
+    'x86_64-mlnx_msn4800-r0': {
+        'sfp': {
+            'max_port_per_line_card': 16
+        }
     }
 }
 
@@ -213,3 +218,15 @@ class DeviceDataManager:
     @utils.read_only_cache()
     def get_linecard_count(cls):
         return utils.read_int_from_file('/run/hw-management/config/hotplug_linecards')
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_linecard_max_port_count(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
+        if not platform_data:
+            return 0
+        
+        sfp_data = platform_data.get('sfp', None)
+        if not sfp_data:
+            return 0
+        return sfp_data.get('max_port_per_line_card', 0)

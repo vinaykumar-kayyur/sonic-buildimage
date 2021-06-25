@@ -19,6 +19,7 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_py_common.logger import Logger
     from . import utils
+    from .device_data import DeviceDataManager
 
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -345,14 +346,22 @@ class SFP(SfpBase):
     """Platform-specific SFP class"""
     shared_sdk_handle = None
 
-    def __init__(self, sfp_index, slot_id=0):
+    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0):
         super(SFP, self).__init__()
-        self.index = sfp_index + 1
+        if slot_id == 0: # For non-modular chassis
+            self.index = sfp_index + 1
+            self.sdk_index = sfp_index
+        else: # For modular chassis
+            # (slot_id % MAX_LC_CONUNT - 1) * MAX_PORT_COUNT + sfp_index * (MAX_PORT_COUNT / LC_PORT_COUNT)
+            max_linecard_count = DeviceDataManager.get_linecard_count()
+            max_linecard_port_count = DeviceDataManager.get_linecard_max_port_count()
+            self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count)
+            self.sdk_index = sfp_index + slot_id << 16
+
         self.slot_id = slot_id
         self._sfp_type = None
         self._sfp_capability = None
-        self.sdk_index = sfp_index
-
+        
         # initialize SFP thermal list
         from .thermal import initialize_sfp_thermal
         self._thermal_list = initialize_sfp_thermal(sfp_index)
@@ -1587,7 +1596,7 @@ class SFP(SfpBase):
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
-                print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
                 return False
         else:
             return self._get_lpmode(self.sdk_handle, self.sdk_index, self.slot_id)
@@ -1993,7 +2002,7 @@ class SFP(SfpBase):
                 output = subprocess.check_output(reset_cmd, shell=True, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
-                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
                 return False
         else:
             return self._reset(self.sdk_handle, self.sdk_index, self.slot_id)
@@ -2181,7 +2190,7 @@ class SFP(SfpBase):
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
-                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
                 return False
         else:
             return self._set_lpmode(lpmode, self.sdk_handle, self.sdk_index, self.slot_id)

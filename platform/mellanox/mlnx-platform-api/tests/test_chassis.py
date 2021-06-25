@@ -182,7 +182,7 @@ class TestChassis:
         assert minor == ''
 
         mock_file_content = {}
-        def read_int_from_file(file_path, default=0, raise_exception=False):
+        def read_int_from_file(file_path, *args, **kwargs):
             return mock_file_content[file_path]
 
         utils.read_int_from_file = read_int_from_file

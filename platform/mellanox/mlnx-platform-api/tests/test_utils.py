@@ -90,3 +90,12 @@ class TestUtils:
         assert func() == 1000
         value = 10000
         assert func() == 1000
+
+    @mock.patch('sonic_py_common.logger.Logger.log_debug')
+    def test_default_return(self, mock_log):
+        @utils.default_return(100, log_func=mock_log)
+        def func():
+            raise RuntimeError('')
+        
+        assert func() == 100
+        assert mock_log.call_count == 1

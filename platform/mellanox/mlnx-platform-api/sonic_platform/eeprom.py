@@ -36,8 +36,8 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                 break  
 
         if not os.path.exists(EEPROM_SYMLINK):
-            logger.log_error("Nowhere to read syseeprom from! No symlink or cache file found")
-            raise RuntimeError("No syseeprom symlink or cache file found")
+            logger.log_error("Nowhere to read syseeprom from! No symlink found")
+            raise RuntimeError("No syseeprom symlink found")
 
         self.eeprom_path = EEPROM_SYMLINK
         super(Eeprom, self).__init__(self.eeprom_path, 0, '', True)
@@ -96,7 +96,6 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         """
         if self._eeprom_info_dict is None:
             self._eeprom_info_dict = {}
-
             # Try get from DB first
             db_initialized = self._redis_hget('EEPROM_INFO|State', 'Initialized')
             if db_initialized == '1':
