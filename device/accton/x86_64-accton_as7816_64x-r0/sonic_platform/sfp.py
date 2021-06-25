@@ -206,7 +206,7 @@ class Sfp(SfpBase):
         
         self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui',
-                               'application_advertisement', 'type_abbrv_name']
+                               'application_advertisement', 'type_abbrv_name', 'dom_capability']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
                               'rx1power', 'rx2power', 'rx3power', 'rx4power', 'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx1power', 'tx2power', 'tx3power', 'tx4power']
@@ -236,14 +236,6 @@ class Sfp(SfpBase):
         else:
             return 'N/A'
 
-    def __write_txt_file(self, file_path, value):
-        try:
-            with open(file_path, 'w') as fd:
-                fd.write(str(value))
-        except Exception:
-            return False
-        return True
-    
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -347,8 +339,16 @@ class Sfp(SfpBase):
         sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
             sfp_vendor_date_raw, 0)
 
+        sfp_dom_capability_raw = self.__read_eeprom_specific_bytes(
+            (offset + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
+        if sfp_dom_capability_raw is not None:
+            sfp_dom_capability_data = sfpi_obj.parse_dom_capability(
+                sfp_dom_capability_raw, 0)
+
+
         transceiver_info_dict = dict.fromkeys(self.info_dict_keys, 'N/A')
         compliance_code_dict = dict()
+        dom_capability_dict = dict()
 
         if sfp_interface_bulk_data:
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
@@ -384,6 +384,11 @@ class Sfp(SfpBase):
         transceiver_info_dict['nominal_bit_rate'] = str(
             sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
        
+        for key in sfp_dom_capability_tup:
+                if key in sfp_dom_capability_data['data']:
+                    dom_capability_dict[key] = "yes" if sfp_dom_capability_data['data'][key]['value'] == 'on' else "no"
+        
+        transceiver_info_dict['dom_capability'] = str(dom_capability_dict)
 
         return transceiver_info_dict
 
@@ -589,7 +594,7 @@ class Sfp(SfpBase):
         
         if val is not None:
             return int(val, 10) == 1
-        else:        
+        else:
             return False
 
     def get_rx_los(self):
@@ -599,8 +604,7 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has RX LOS, False if not.
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
-        rx_los = False
-        
+
         rx_los_list = []
         dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CHANNL_RX_LOS_STATUS_OFFSET, QSFP_CHANNL_RX_LOS_STATUS_WIDTH) if self.get_presence() else None
@@ -610,9 +614,10 @@ class Sfp(SfpBase):
                 rx_los_list.append(rx_los_data & 0x02 != 0)
                 rx_los_list.append(rx_los_data & 0x04 != 0)
                 rx_los_list.append(rx_los_data & 0x08 != 0)
-                rx_los = rx_los_list[0] and rx_los_list[1] and rx_los_list[2] and rx_los_list[3]
-        
-        return rx_los
+                return rx_los_list
+        else:
+            return [False]*4
+
 
     def get_tx_fault(self):
         """
@@ -621,8 +626,6 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
-        tx_fault = False
-
         tx_fault_list = []
         dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CHANNL_TX_FAULT_STATUS_OFFSET, QSFP_CHANNL_TX_FAULT_STATUS_WIDTH) if self.get_presence() else None
@@ -632,9 +635,9 @@ class Sfp(SfpBase):
             tx_fault_list.append(tx_fault_data & 0x02 != 0)
             tx_fault_list.append(tx_fault_data & 0x04 != 0)
             tx_fault_list.append(tx_fault_data & 0x08 != 0)
-            tx_fault = tx_fault_list[0] and tx_fault_list[1] and tx_fault_list[2] and tx_fault_list[3]
-
-        return tx_fault
+            return tx_fault_list
+        else:
+            return [False]*4
 
     def get_tx_disable(self):
         """
@@ -661,8 +664,9 @@ class Sfp(SfpBase):
                 'On' == dom_control_data['data']['TX3Disable']['value'])
             tx_disable_list.append(
                 'On' == dom_control_data['data']['TX4Disable']['value'])
-    
-        return tx_disable_list
+            return tx_disable_list
+        else:
+            return [False]*4
 
     def get_tx_disable_channel(self):
         """
@@ -688,7 +692,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        
+
         power_set=self.get_power_set()
         power_override = self.get_power_override()
         return power_set and power_override
@@ -698,7 +702,6 @@ class Sfp(SfpBase):
         sfpd_obj = sff8436Dom()
         if sfpd_obj is None:
             return False
-    
         dom_control_raw = self.__read_eeprom_specific_bytes(
             QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
         if dom_control_raw is not None:
@@ -718,7 +721,7 @@ class Sfp(SfpBase):
         sfpd_obj = sff8436Dom()
         if sfpd_obj is None:
             return False
-    
+
         dom_control_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
         if dom_control_raw is not None:
@@ -801,12 +804,12 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
         reset_path = "{}{}{}".format(CPLD_I2C_PATH , 'module_reset_' , self.port_num)
-        ret = self.__write_txt_file(reset_path, 1)
+        ret = self._api_helper.write_txt_file(reset_path, 1)
         if ret is not True:
             return ret
 
         time.sleep(0.01)
-        ret = self.__write_txt_file(reset_path, 0)
+        ret = self._api_helper.write_txt_file(reset_path, 0)
         time.sleep(0.2)
 
         return ret

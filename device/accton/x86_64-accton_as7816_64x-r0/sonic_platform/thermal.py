@@ -74,6 +74,7 @@ class Thermal(ThermalBase):
                 return True
             except IOError as e:
                 print("IOError")
+                return False
 
 
     def get_temperature(self):

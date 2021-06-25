@@ -65,7 +65,7 @@ class Fan(FanBase):
                 val == "0") else self.FAN_DIRECTION_INTAKE
             else:
                 direction=self.FAN_DIRECTION_EXHAUST
-                
+
         else: #For PSU
             dir_str = "{}{}".format(self.psu_hwmon_path,'psu_fan_dir')
             val=self._api_helper.read_txt_file(dir_str)
@@ -85,7 +85,7 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-                         
+
         """
         speed = 0
         if self.is_psu_fan:
@@ -189,7 +189,7 @@ class Fan(FanBase):
         Returns:
             bool: True if FAN is present, False if not
         """
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_index+1, '_present')
+        present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_present')
         val=self._api_helper.read_txt_file(present_path)
         if not self.is_psu_fan:
             if val is not None:
@@ -198,6 +198,28 @@ class Fan(FanBase):
                 return False
         else:
             return True
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        if self.is_psu_fan:
+            psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_fault')
+            val=self._api_helper.read_txt_file(psu_fan_path)
+            if val is not None:
+                return int(val, 10)==0
+            else:
+                return False
+        else:    
+            path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_fault')
+            val=self._api_helper.read_txt_file(path)
+            if val is not None:
+                return int(val, 10)==0
+            else:
+                return False
+
     
     def get_model(self):
         """

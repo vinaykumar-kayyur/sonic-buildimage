@@ -245,9 +245,10 @@ class Psu(PsuBase):
         """
         model_path="{}{}".format(self.hwmon_path, 'psu_mfr_model')
         val=self._api_helper.read_txt_file(model_path)
-        model=val[1:]
-        if not model:
+        if val is None:
             return "N/A"
+        model=val[1:]
+        
         return model
 
     def get_serial(self):
@@ -258,7 +259,8 @@ class Psu(PsuBase):
         """
         serial_path="{}{}".format(self.hwmon_path, 'psu_serial_num')
         val=self._api_helper.read_txt_file(serial_path)
-        serial=val[1:]
-        if not serial:
+        if val is None:
             return "N/A"
+        serial=val[1:]
+        
         return serial
