@@ -9,9 +9,9 @@ parse_config(){
 
     MODE_CLONE=0
     # parse input parameters
-    for i in "$@"
+    for para in "$@"
     do
-        if [[ $i == "clone" ]];then
+        if [[ $para == "clone" ]];then
             MODE_CLONE=1
         fi
     done
@@ -39,7 +39,7 @@ get_clone_path(){
     done
 
     # if not specific clone path, get default clone path
-    [ -z $clone_PATH ] && clone_PATH=`echo $URL | rev | awk -F/ '{print$1}' | rev | awk -F. '{print$1}'`
+    [ -z $clone_PATH ] && clone_PATH=`echo $URL | awk -F/ '{print$NF}' | awk -F. '{print$1}'`
 }
 
 main(){
@@ -56,17 +56,21 @@ main(){
 
     get_clone_path "$@"
     pushd $clone_PATH &> /dev/null
-    commit_latest=`$REAL_COMMAND log -n 1 | head -n 1| awk '{print$2}'`
+    commit_latest=`$REAL_COMMAND rev-parse HEAD`
     [ -f $version_file ] && commit=`grep $URL $version_file | awk -F, '{print$2}'`
+
+    # record version file
+    echo "$URL==$commit_latest" >> $new_version_file
+    sort $new_version_file -o $new_version_file -u &> /dev/null
 
     # control version or record version file
     if [[ $ENABLE_VERSION_CONTROL_GIT == "y" ]];then
         # control version
-        [ ! -z $commit ] && $REAL_COMMAND reset --hard $commit &> /dev/null
-    else
-        # record version file
-        echo "$URL==$commit_latest" >> $new_version_file
-        sort $new_version_file -o $new_version_file -u &> /dev/null
+	if [ -z $commit ]; then
+	    echo "Failed to verify the package: $URL, the version is not specified."
+	    exit 1
+	fi
+        $REAL_COMMAND reset --hard $commit &> /dev/null
     fi
     popd &> /dev/null
 
