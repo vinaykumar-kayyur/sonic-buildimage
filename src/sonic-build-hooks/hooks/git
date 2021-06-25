@@ -66,10 +66,10 @@ main(){
     # control version or record version file
     if [[ $ENABLE_VERSION_CONTROL_GIT == "y" ]];then
         # control version
-	if [ -z $commit ]; then
-	    echo "Failed to verify the package: $URL, the version is not specified."
-	    exit 1
-	fi
+        if [ -z $commit ]; then
+            echo "Failed to verify the package: $URL, the version is not specified."
+            exit 1
+        fi
         $REAL_COMMAND reset --hard $commit &> /dev/null
     fi
     popd &> /dev/null
