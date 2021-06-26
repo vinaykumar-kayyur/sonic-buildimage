@@ -28,6 +28,9 @@ public:
     void handleUpdateSequenceNumber() {mLinkProber.updateIcmpSequenceNo();};
     std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mLinkProber.getTxBuffer();};
 
+    uint16_t getRxSelfSeqNo() {return mLinkProber.mRxSelfSeqNo;};
+    uint16_t getRxPeerSeqNo() {return mLinkProber.mRxPeerSeqNo;};
+
     boost::asio::io_service mIoService;
     common::MuxConfig mMuxConfig;
     std::shared_ptr<FakeDbInterface> mDbInterfacePtr;

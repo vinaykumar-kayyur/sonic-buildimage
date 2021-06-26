@@ -72,7 +72,7 @@ void LinkStateMachine::enterState(LinkState::Label label)
 inline
 void LinkStateMachine::postLinkManagerEvent(LinkState* linkState)
 {
-    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         static_cast<void (link_manager::LinkManagerStateMachine::*) (link_manager::LinkStateEvent&, LinkState::Label)>
@@ -91,9 +91,9 @@ void LinkStateMachine::postLinkManagerEvent(LinkState* linkState)
 template <class E>
 void LinkStateMachine::postLinkStateEvent(E &e)
 {
-    boost::asio::io_service::strand& strand = getStrand();
+    boost::asio::io_service::strand &strand = getStrand();
     boost::asio::io_service &ioService = strand.context();
-   ioService.post(strand.wrap(boost::bind(
+    ioService.post(strand.wrap(boost::bind(
         static_cast<void (LinkStateMachine::*) (decltype(e))>
             (&LinkStateMachine::processEvent),
         this,
@@ -125,10 +125,8 @@ void LinkStateMachine::postLinkStateEvent<DownEvent>(DownEvent &e);
 template <typename T>
 void LinkStateMachine::processEvent(T &t)
 {
-    LinkState *currentLinkState =
-        dynamic_cast<LinkState *> (getCurrentState());
-    LinkState* nextLinkState =
-        currentLinkState->handleEvent(t);
+    LinkState *currentLinkState = dynamic_cast<LinkState *> (getCurrentState());
+    LinkState *nextLinkState = currentLinkState->handleEvent(t);
     if (nextLinkState != currentLinkState) {
         postLinkManagerEvent(nextLinkState);
     }

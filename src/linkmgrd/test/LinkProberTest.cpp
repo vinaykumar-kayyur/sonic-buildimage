@@ -113,12 +113,15 @@ TEST_F(LinkProberTest, UpdateSequenceNo)
 
     handleUpdateEthernetFrame();
 
-    // update sequence number twice as we start is 0xffff
+    // update sequence number twice as we start with 0xffff
     handleUpdateSequenceNumber();
     handleUpdateSequenceNumber();
 
     icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (getTxBuffer().data() + sizeof(ether_header) + sizeof(iphdr));
     EXPECT_TRUE(icmpHeader->checksum == 12099);
+
+    EXPECT_TRUE(getRxSelfSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
+    EXPECT_TRUE(getRxPeerSeqNo() + 1 == ntohs(icmpHeader->un.echo.sequence));
 }
 
 TEST_F(LinkProberTest, GenerateGuid)

@@ -83,7 +83,7 @@ void LinkProberStateMachine::enterState(LinkProberState::Label label)
 inline
 void LinkProberStateMachine::postLinkManagerEvent(LinkProberState* linkProberState)
 {
-    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         static_cast<void (link_manager::LinkManagerStateMachine::*) (link_manager::LinkProberEvent&, LinkProberState::Label)>
@@ -102,7 +102,7 @@ void LinkProberStateMachine::postLinkManagerEvent(LinkProberState* linkProberSta
 template<class E>
 void LinkProberStateMachine::postLinkProberStateEvent(E &e)
 {
-    boost::asio::io_service::strand& strand = getStrand();
+    boost::asio::io_service::strand &strand = getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         static_cast<void (LinkProberStateMachine::*) (decltype(e))>
@@ -144,10 +144,8 @@ void LinkProberStateMachine::postLinkProberStateEvent<IcmpUnknownEvent>(IcmpUnkn
 template <typename T>
 void LinkProberStateMachine::processEvent(T &t)
 {
-    LinkProberState *currentLinkProberState =
-        dynamic_cast<LinkProberState *> (getCurrentState());
-    LinkProberState* nextLinkProberState =
-        currentLinkProberState->handleEvent(t);
+    LinkProberState *currentLinkProberState = dynamic_cast<LinkProberState *> (getCurrentState());
+    LinkProberState *nextLinkProberState = currentLinkProberState->handleEvent(t);
     if (nextLinkProberState != currentLinkProberState) {
         postLinkManagerEvent(nextLinkProberState);
     }
@@ -185,7 +183,7 @@ void LinkProberStateMachine::processEvent<IcmpUnknownEvent&>(IcmpUnknownEvent &e
 //
 void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent)
 {
-    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleSuspendTimerExpiry,
@@ -200,7 +198,7 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
 //
 void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
-    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleGetServerMacAddressNotification,

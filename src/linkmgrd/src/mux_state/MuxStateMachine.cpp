@@ -86,7 +86,7 @@ void MuxStateMachine::enterState(MuxState::Label label)
 inline
 void MuxStateMachine::postLinkManagerEvent(MuxState* muxState)
 {
-    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         static_cast<void (link_manager::LinkManagerStateMachine::*) (link_manager::MuxStateEvent&, MuxState::Label)>
@@ -105,7 +105,7 @@ void MuxStateMachine::postLinkManagerEvent(MuxState* muxState)
 template <class E>
 void MuxStateMachine::postMuxStateEvent(E &e)
 {
-    boost::asio::io_service::strand& strand = getStrand();
+    boost::asio::io_service::strand &strand = getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         static_cast<void (MuxStateMachine::*) (decltype(e))>
@@ -156,7 +156,7 @@ template <typename T>
 void MuxStateMachine::processEvent(T &t)
 {
     MuxState *currentMuxState = dynamic_cast<MuxState *> (getCurrentState());
-    MuxState* nextMuxState = currentMuxState->handleEvent(t);
+    MuxState *nextMuxState = currentMuxState->handleEvent(t);
     if (nextMuxState != currentMuxState) {
         postLinkManagerEvent(nextMuxState);
     }
