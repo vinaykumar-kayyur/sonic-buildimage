@@ -369,6 +369,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
         {"LINK_PROBER", "SET", {{"negative_signal_count", boost::lexical_cast<std::string> (negativeSignalCount)}}},
         {"LINK_PROBER", "SET", {{"suspend_timer", boost::lexical_cast<std::string> (suspendTimer)}}},
         {"LINK_PROBER", "SET", {{"interval_v4", "abc"}}},
+        {"MUXLOGGER", "SET", {{"log_verbosity", "warning"}}},
     };
     processMuxLinkmgrConfigNotifiction(entries);
 
@@ -377,6 +378,7 @@ TEST_F(MuxManagerTest, LinkmgrdConfig)
     EXPECT_TRUE(getPositiveStateChangeRetryCount(port) == positiveSignalCount);
     EXPECT_TRUE(getNegativeStateChangeRetryCount(port) == negativeSignalCount);
     EXPECT_TRUE(getLinkWaitTimeout_msec(port) == (negativeSignalCount + 1) * v4PorbeInterval);
+    EXPECT_TRUE(common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::warning);
 }
 
 TEST_P(MuxResponseTest, MuxResponse)

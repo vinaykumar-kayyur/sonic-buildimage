@@ -86,6 +86,31 @@ void MuxManager::terminate()
 }
 
 //
+// ---> updateLogVerbosity(std::string &verbosity);
+//
+// update current log verbosity
+//
+void MuxManager::updateLogVerbosity(std::string &verbosity)
+{
+    boost::log::trivial::severity_level level = boost::log::trivial::info;
+
+    if (verbosity == "trace") {
+        level = boost::log::trivial::trace;
+    } else if (verbosity == "debug") {
+        level = boost::log::trivial::debug;
+    } else if (verbosity == "warning") {
+        level = boost::log::trivial::warning;
+    } else if (verbosity == "error") {
+        level = boost::log::trivial::error;
+    } else if (verbosity == "fatal") {
+        level = boost::log::trivial::fatal;
+    }
+
+    common::MuxLogger::getInstance()->setLevel(level);
+    MUXLOGFATAL(boost::format("Updated log level to: %s") % level);
+}
+
+//
 // ---> addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address);
 //
 // update MUX port server/blade IPv4 Address. If port is not found, create new MuxPort object
@@ -235,28 +260,7 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
 //
 void MuxManager::handleSignal(const boost::system::error_code errorCode, int signalNumber)
 {
-    if (!errorCode) {
-        MUXLOGFATAL(boost::format("Got signal: %d") % signalNumber);
-
-        boost::log::trivial::severity_level level;
-        switch (signalNumber) {
-        case SIGINT:
-        case SIGTERM:
-            break;
-        case SIGUSR1:
-             level = common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::severity_level::trace ?
-                    boost::log::trivial::severity_level::fatal :
-                    static_cast<boost::log::trivial::severity_level> (common::MuxLogger::getInstance()->getLevel() - 1);
-            common::MuxLogger::getInstance()->setLevel(level);
-            MUXLOGFATAL(boost::format("Updated log level to: %s") % level);
-            break;
-        case SIGUSR2:
-            //@TODO: try to dumb state transition of all MUXes here
-            break;
-        default:
-            break;
-        }
-    }
+    MUXLOGFATAL(boost::format("Got signal: %d") % signalNumber);
 
     if (signalNumber == SIGINT || signalNumber == SIGTERM) {
         mSignalSet.clear();
