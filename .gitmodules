@@ -10,12 +10,6 @@
 [submodule "sonic-swss"]
 	path = src/sonic-swss
 	url = https://github.com/JafarSeyedi/sonic-swss
-[submodule "src/p4c-bm/p4c-bm"]
-	path = platform/p4/p4c-bm/p4c-bm
-	url = https://github.com/krambn/p4c-bm
-[submodule "src/p4-hlir/p4-hlir"]
-	path = platform/p4/p4-hlir/p4-hlir
-	url = https://github.com/p4lang/p4-hlir
 [submodule "sonic-dbsyncd"]
 	path = src/sonic-dbsyncd
 	url = https://github.com/Azure/sonic-dbsyncd
@@ -44,12 +38,6 @@
 	path = src/sonic-frr/frr
 	url = https://github.com/Azure/sonic-frr.git
 	branch = frr/7.5
-[submodule "platform/p4/p4-hlir/p4-hlir-v1.1"]
-	path = platform/p4/p4-hlir/p4-hlir-v1.1
-	url = https://github.com/p4lang/p4-hlir.git
-[submodule "platform/p4/SAI-P4-BM"]
-	path = platform/p4/SAI-P4-BM
-	url = https://github.com/Mellanox/SAI-P4-BM.git
 [submodule "platform/barefoot/sonic-platform-modules-arista"]
 	path = platform/barefoot/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
