@@ -38,9 +38,6 @@
 	path = src/sonic-frr/frr
 	url = https://github.com/Azure/sonic-frr.git
 	branch = frr/7.5
-[submodule "platform/barefoot/sonic-platform-modules-arista"]
-	path = platform/barefoot/sonic-platform-modules-arista
-	url = https://github.com/aristanetworks/sonic
 [submodule "src/redis-dump-load"]
 	path = src/redis-dump-load
 	url = https://github.com/p/redis-dump-load.git
