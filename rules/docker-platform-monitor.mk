@@ -67,6 +67,10 @@ $(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python3/dist-packages/ar
 $(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python2.7/dist-packages/sonic_platform:/usr/lib/python2.7/dist-packages/sonic_platform:ro
 $(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python3/dist-packages/sonic_platform:/usr/lib/python3/dist-packages/sonic_platform:ro
 
+
+# Mount syncd socket to be able to use drivshell
+$(DOCKER_PLATFORM_MONITOR)_RUN_OPT += -v /var/run/docker-syncd:/var/run/sswsyncd:ro
+
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += cmd_wrapper:/usr/bin/sensors
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += cmd_wrapper:/usr/sbin/smartctl
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += cmd_wrapper:/usr/sbin/iSmart

@@ -1,0 +1,1027 @@
+{
+    "chassis": {
+        "name": "TETA-72-10",
+        "components": [],
+        "fans": [
+            {
+                "name": "fan1"
+            },
+            {
+                "name": "fan2"
+            },
+            {
+                "name": "fan3"
+            },
+            {
+                "name": "fan4"
+            }
+        ],
+        "fan_drawers": [
+            {
+                "name": "fan1",
+                "fans": [
+                    {
+                        "name": "fan1"
+                    }
+                ]
+            },
+            {
+                "name": "fan2",
+                "fans": [
+                    {
+                        "name": "fan2"
+                    }
+                ]
+            },
+            {
+                "name": "fan3",
+                "fans": [
+                    {
+                        "name": "fan3"
+                    }
+                ]
+            },
+            {
+                "name": "fan4",
+                "fans": [
+                    {
+                        "name": "fan4"
+                    }
+                ]
+            }
+        ],
+        "psus": [
+            {
+                "name": "psu1",
+                "fans": []
+            },
+            {
+                "name": "psu2",
+                "fans": []
+            }
+        ],
+        "thermals": [
+            {
+                "name": "Cpu temp sensor"
+            }
+        ],
+        "sfps": [
+            {
+                "name": "sfp1",
+                "thermals": [
+                    {
+                        "name": "SFP module 1 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp2",
+                "thermals": [
+                    {
+                        "name": "SFP module 2 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp3",
+                "thermals": [
+                    {
+                        "name": "SFP module 3 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp4",
+                "thermals": [
+                    {
+                        "name": "SFP module 4 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp5",
+                "thermals": [
+                    {
+                        "name": "SFP module 5 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp6",
+                "thermals": [
+                    {
+                        "name": "SFP module 6 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp7",
+                "thermals": [
+                    {
+                        "name": "SFP module 7 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp8",
+                "thermals": [
+                    {
+                        "name": "SFP module 8 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp9",
+                "thermals": [
+                    {
+                        "name": "SFP module 9 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp10",
+                "thermals": [
+                    {
+                        "name": "SFP module 10 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp11",
+                "thermals": [
+                    {
+                        "name": "SFP module 11 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp12",
+                "thermals": [
+                    {
+                        "name": "SFP module 12 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp13",
+                "thermals": [
+                    {
+                        "name": "SFP module 13 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp14",
+                "thermals": [
+                    {
+                        "name": "SFP module 14 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp15",
+                "thermals": [
+                    {
+                        "name": "SFP module 15 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp16",
+                "thermals": [
+                    {
+                        "name": "SFP module 16 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp17",
+                "thermals": [
+                    {
+                        "name": "SFP module 17 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp18",
+                "thermals": [
+                    {
+                        "name": "SFP module 18 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp19",
+                "thermals": [
+                    {
+                        "name": "SFP module 19 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp20",
+                "thermals": [
+                    {
+                        "name": "SFP module 20 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp21",
+                "thermals": [
+                    {
+                        "name": "SFP module 21 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp22",
+                "thermals": [
+                    {
+                        "name": "SFP module 22 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp23",
+                "thermals": [
+                    {
+                        "name": "SFP module 23 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp24",
+                "thermals": [
+                    {
+                        "name": "SFP module 24 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp25",
+                "thermals": [
+                    {
+                        "name": "SFP module 25 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp26",
+                "thermals": [
+                    {
+                        "name": "SFP module 26 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp27",
+                "thermals": [
+                    {
+                        "name": "SFP module 27 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp28",
+                "thermals": [
+                    {
+                        "name": "SFP module 28 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp29",
+                "thermals": [
+                    {
+                        "name": "SFP module 29 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp30",
+                "thermals": [
+                    {
+                        "name": "SFP module 30 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp31",
+                "thermals": [
+                    {
+                        "name": "SFP module 31 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp32",
+                "thermals": [
+                    {
+                        "name": "SFP module 32 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp33",
+                "thermals": [
+                    {
+                        "name": "SFP module 33 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp34",
+                "thermals": [
+                    {
+                        "name": "SFP module 34 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp35",
+                "thermals": [
+                    {
+                        "name": "SFP module 35 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp36",
+                "thermals": [
+                    {
+                        "name": "SFP module 36 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp37",
+                "thermals": [
+                    {
+                        "name": "SFP module 37 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp38",
+                "thermals": [
+                    {
+                        "name": "SFP module 38 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp39",
+                "thermals": [
+                    {
+                        "name": "SFP module 39 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp40",
+                "thermals": [
+                    {
+                        "name": "SFP module 40 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp41",
+                "thermals": [
+                    {
+                        "name": "SFP module 41 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp42",
+                "thermals": [
+                    {
+                        "name": "SFP module 42 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp43",
+                "thermals": [
+                    {
+                        "name": "SFP module 43 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp44",
+                "thermals": [
+                    {
+                        "name": "SFP module 44 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp45",
+                "thermals": [
+                    {
+                        "name": "SFP module 45 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp46",
+                "thermals": [
+                    {
+                        "name": "SFP module 46 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp47",
+                "thermals": [
+                    {
+                        "name": "SFP module 47 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "sfp48",
+                "thermals": [
+                    {
+                        "name": "SFP module 48 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp49",
+                "thermals": [
+                    {
+                        "name": "QSFP module 49 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp50",
+                "thermals": [
+                    {
+                        "name": "QSFP module 50 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp51",
+                "thermals": [
+                    {
+                        "name": "QSFP module 51 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp52",
+                "thermals": [
+                    {
+                        "name": "QSFP module 52 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp53",
+                "thermals": [
+                    {
+                        "name": "QSFP module 53 Temperature"
+                    }
+                ]
+            },
+            {
+                "name": "qsfp54",
+                "thermals": [
+                    {
+                        "name": "QSFP module 54 Temperature"
+                    }
+                ]
+            }
+        ]
+    },
+    "interfaces": {
+        "Ethernet01": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet01"
+                ]
+            },
+            "index": "1",
+            "lanes": "13"
+        },
+        "Ethernet02": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet02"
+                ]
+            },
+            "index": "2",
+            "lanes": "14"
+        },
+        "Ethernet03": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet03"
+                ]
+            },
+            "index": "3",
+            "lanes": "15"
+        },
+        "Ethernet04": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet04"
+                ]
+            },
+            "index": "4",
+            "lanes": "16"
+        },
+        "Ethernet05": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet05"
+                ]
+            },
+            "index": "5",
+            "lanes": "21"
+        },
+        "Ethernet06": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet06"
+                ]
+            },
+            "index": "6",
+            "lanes": "22"
+        },
+        "Ethernet07": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet07"
+                ]
+            },
+            "index": "7",
+            "lanes": "23"
+        },
+        "Ethernet08": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet08"
+                ]
+            },
+            "index": "8",
+            "lanes": "24"
+        },
+        "Ethernet09": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet09"
+                ]
+            },
+            "index": "9",
+            "lanes": "25"
+        },
+        "Ethernet10": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet10"
+                ]
+            },
+            "index": "10",
+            "lanes": "26"
+        },
+        "Ethernet11": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet11"
+                ]
+            },
+            "index": "11",
+            "lanes": "27"
+        },
+        "Ethernet12": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet12"
+                ]
+            },
+            "index": "12",
+            "lanes": "28"
+        },
+        "Ethernet13": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet13"
+                ]
+            },
+            "index": "13",
+            "lanes": "29"
+        },
+        "Ethernet14": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet14"
+                ]
+            },
+            "index": "14",
+            "lanes": "30"
+        },
+        "Ethernet15": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet15"
+                ]
+            },
+            "index": "15",
+            "lanes": "31"
+        },
+        "Ethernet16": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet16"
+                ]
+            },
+            "index": "16",
+            "lanes": "32"
+        },
+        "Ethernet17": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet17"
+                ]
+            },
+            "index": "17",
+            "lanes": "45"
+        },
+        "Ethernet18": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet18"
+                ]
+            },
+            "index": "18",
+            "lanes": "46"
+        },
+        "Ethernet19": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet19"
+                ]
+            },
+            "index": "19",
+            "lanes": "47"
+        },
+        "Ethernet20": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet20"
+                ]
+            },
+            "index": "20",
+            "lanes": "48"
+        },
+        "Ethernet21": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet21"
+                ]
+            },
+            "index": "21",
+            "lanes": "49"
+        },
+        "Ethernet22": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet22"
+                ]
+            },
+            "index": "22",
+            "lanes": "50"
+        },
+        "Ethernet23": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet23"
+                ]
+            },
+            "index": "23",
+            "lanes": "51"
+        },
+        "Ethernet24": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet24"
+                ]
+            },
+            "index": "24",
+            "lanes": "52"
+        },
+        "Ethernet25": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet25"
+                ]
+            },
+            "index": "25",
+            "lanes": "53"
+        },
+        "Ethernet26": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet26"
+                ]
+            },
+            "index": "26",
+            "lanes": "54"
+        },
+        "Ethernet27": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet27"
+                ]
+            },
+            "index": "27",
+            "lanes": "55"
+        },
+        "Ethernet28": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet28"
+                ]
+            },
+            "index": "28",
+            "lanes": "56"
+        },
+        "Ethernet29": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet29"
+                ]
+            },
+            "index": "29",
+            "lanes": "57"
+        },
+        "Ethernet30": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet30"
+                ]
+            },
+            "index": "30",
+            "lanes": "58"
+        },
+        "Ethernet31": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet31"
+                ]
+            },
+            "index": "31",
+            "lanes": "59"
+        },
+        "Ethernet32": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet32"
+                ]
+            },
+            "index": "32",
+            "lanes": "60"
+        },
+        "Ethernet33": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet33"
+                ]
+            },
+            "index": "33",
+            "lanes": "61"
+        },
+        "Ethernet34": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet34"
+                ]
+            },
+            "index": "34",
+            "lanes": "62"
+        },
+        "Ethernet35": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet35"
+                ]
+            },
+            "index": "35",
+            "lanes": "63"
+        },
+        "Ethernet36": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet36"
+                ]
+            },
+            "index": "36",
+            "lanes": "64"
+        },
+        "Ethernet37": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet37"
+                ]
+            },
+            "index": "37",
+            "lanes": "65"
+        },
+        "Ethernet38": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet38"
+                ]
+            },
+            "index": "38",
+            "lanes": "66"
+        },
+        "Ethernet39": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet39"
+                ]
+            },
+            "index": "39",
+            "lanes": "67"
+        },
+        "Ethernet40": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet40"
+                ]
+            },
+            "index": "40",
+            "lanes": "68"
+        },
+        "Ethernet41": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet41"
+                ]
+            },
+            "index": "41",
+            "lanes": "69"
+        },
+        "Ethernet42": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet42"
+                ]
+            },
+            "index": "42",
+            "lanes": "70"
+        },
+        "Ethernet43": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet43"
+                ]
+            },
+            "index": "43",
+            "lanes": "71"
+        },
+        "Ethernet44": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet44"
+                ]
+            },
+            "index": "44",
+            "lanes": "72"
+        },
+        "Ethernet45": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet45"
+                ]
+            },
+            "index": "45",
+            "lanes": "73"
+        },
+        "Ethernet46": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet46"
+                ]
+            },
+            "index": "46",
+            "lanes": "74"
+        },
+        "Ethernet47": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet47"
+                ]
+            },
+            "index": "47",
+            "lanes": "75"
+        },
+        "Ethernet48": {
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet48"
+                ]
+            },
+            "index": "48",
+            "lanes": "76"
+        },
+        "Ethernet49": {
+            "index": "49,49,49,49",
+            "lanes": "77,78,79,80",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet49/1"
+                ],
+                "4x10G": [
+                    "Ethernet49/1",
+                    "Ethernet49/2",
+                    "Ethernet49/3",
+                    "Ethernet49/4"
+                ]
+            }
+        },
+        "Ethernet50": {
+            "index": "50,50,50,50",
+            "lanes": "81,82,83,84",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet50/1"
+                ],
+                "4x10G": [
+                    "Ethernet50/1",
+                    "Ethernet50/2",
+                    "Ethernet50/3",
+                    "Ethernet50/4"
+                ]
+            }
+        },
+        "Ethernet51": {
+            "index": "51,51,51,51",
+            "lanes": "97,98,99,100",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet51/1"
+                ],
+                "4x10G": [
+                    "Ethernet51/1",
+                    "Ethernet51/2",
+                    "Ethernet51/3",
+                    "Ethernet51/4"
+                ]
+            }
+        },
+        "Ethernet52": {
+            "index": "52,52,52,52",
+            "lanes": "101,102,103,104",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet52/1"
+                ],
+                "4x10G": [
+                    "Ethernet52/1",
+                    "Ethernet52/2",
+                    "Ethernet52/3",
+                    "Ethernet52/4"
+                ]
+            }
+        },
+        "Ethernet53": {
+            "index": "53,53,53,53",
+            "lanes": "105,106,107,108",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet53/1"
+                ],
+                "4x10G": [
+                    "Ethernet53/1",
+                    "Ethernet53/2",
+                    "Ethernet53/3",
+                    "Ethernet53/4"
+                ]
+            }
+        },
+        "Ethernet54": {
+            "index": "54,54,54,54",
+            "lanes": "109,110,111,112",
+            "breakout_modes": {
+                "1x40G": [
+                    "Ethernet54/1"
+                ],
+                "4x10G": [
+                    "Ethernet54/1",
+                    "Ethernet54/2",
+                    "Ethernet54/3",
+                    "Ethernet54/4"
+                ]
+            }
+        }
+    }
+}
