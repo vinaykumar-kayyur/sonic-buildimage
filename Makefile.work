@@ -260,6 +260,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
                            VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
+			    KERNEL_FORCE_DOWNLOAD=$(KERNEL_FORCE_DOWNLOAD) \
                            SONIC_DPKG_CACHE_METHOD=$(SONIC_DPKG_CACHE_METHOD) \
                            SONIC_DPKG_CACHE_SOURCE=$(SONIC_DPKG_CACHE_SOURCE) \
                            HTTP_PROXY=$(http_proxy) \

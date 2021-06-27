@@ -280,6 +280,7 @@ endif
 ###############################################################################
 
 export kernel_procure_method=$(KERNEL_PROCURE_METHOD)
+export kernel_force_download=$(KERNEL_FORCE_DOWNLOAD)
 export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 
 ###############################################################################
