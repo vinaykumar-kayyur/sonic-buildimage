@@ -11,6 +11,7 @@ rules/config.user
 fsroot/
 fs.*
 target/
+*.symvers
 *.deb
 *.changes
 *.buildinfo
@@ -81,3 +82,5 @@ files/build/tmp
 dockers/**/buildinfo
 platform/**/buildinfo
 sonic-slave*/**/buildinfo
+
+.tmp_versions
