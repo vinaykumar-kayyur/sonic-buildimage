@@ -44,8 +44,6 @@ stages:
       jobGroups:
       - name: vs
       - name: broadcom
-        variables:
-          swi_image: yes
       - name: mellanox
 
 - stage: Test
