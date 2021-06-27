@@ -44,7 +44,6 @@ stages:
       jobGroups:
       - name: vs
       - name: broadcom
-      - name: mellanox
 
 - stage: Test
   variables:
