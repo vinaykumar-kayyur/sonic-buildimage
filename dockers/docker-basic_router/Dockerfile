@@ -1,4 +1,4 @@
-FROM docker-base
+FROM docker-base-buster
 
 MAINTAINER Xudong Wu
 

@@ -19,8 +19,6 @@ pr:
     - master
   paths:
     include:
-    - sonic-slave-jessie
-    - sonic-slave-stretch
     - sonic-slave-buster
 
 parameters:
@@ -34,8 +32,6 @@ parameters:
   type: object
   default:
   - buster
-  - stretch
-  - jessie
 - name: registry_url
   type: string
   default: sonicdev-microsoft.azurecr.io
