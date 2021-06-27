@@ -81,6 +81,8 @@ endif
 $(shell rm -f .screen)
 
 MAKEFLAGS += -B
+BLDENV = buster
+export BLDENV
 
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(PLATFORM_ARCH))
 ifeq ($(CONFIGURED_ARCH),)
