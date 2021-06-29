@@ -356,7 +356,7 @@ class SFP(SfpBase):
             max_linecard_count = DeviceDataManager.get_linecard_count()
             max_linecard_port_count = DeviceDataManager.get_linecard_max_port_count()
             self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count)
-            self.sdk_index = sfp_index + slot_id << 16
+            self.sdk_index = slot_id * max_linecard_port_count + sfp_index + 1
 
         self.slot_id = slot_id
         self._sfp_type = None

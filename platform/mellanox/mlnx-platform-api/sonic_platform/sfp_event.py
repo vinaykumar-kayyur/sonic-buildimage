@@ -7,6 +7,8 @@ import sys, errno
 import os
 import time
 import select
+
+from .device_data import DeviceDataManager
 try:
     if 'MLNX_PLATFORM_API_UNIT_TESTING' not in os.environ:
         from python_sdk_api.sx_api import *
@@ -310,12 +312,15 @@ class sfp_event:
                 logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
                 rc = sx_api_port_device_get(self.handle, 1 , 0, port_attributes_list,  port_cnt_p)
                 port_cnt = uint32_t_p_value(port_cnt_p)
-
+                x = 0 # x is the port index within a LC
                 for i in range(port_cnt):
                     port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,i)
                     if port_attributes.log_port == logical_port:
-                        label_port = port_attributes.port_mapping.module_port + (slot_id << 16) # TODO: align with final design
+                        label_port = slot_id * DeviceDataManager.get_linecard_max_port_count() + x + 1
                         break
+
+                    if port_attributes.port_mapping.slot_id == slot_id:
+                        x += 1
 
                 if label_port is not None:
                     label_port_list.append(label_port)

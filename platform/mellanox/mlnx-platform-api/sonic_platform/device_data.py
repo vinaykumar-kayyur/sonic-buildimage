@@ -177,11 +177,11 @@ class DeviceDataManager:
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
-        return utils.read_int_from_file('/run/hw-management/lc{}/sfp_counter'.format(lc_index))
+        return utils.read_int_from_file('/run/hw-management/lc{}/sfp_counter'.format(lc_index), log_func=None)
 
     @classmethod
     def get_gearbox_count(cls, sysfs_folder):
-        return utils.read_int_from_file(os.path.join(sysfs_folder, 'gearbox_counter'))
+        return utils.read_int_from_file(os.path.join(sysfs_folder, 'gearbox_counter'), log_func=None)
 
     @classmethod
     @utils.read_only_cache()
@@ -217,7 +217,7 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_linecard_count(cls):
-        return utils.read_int_from_file('/run/hw-management/config/hotplug_linecards')
+        return utils.read_int_from_file('/run/hw-management/config/hotplug_linecards', log_func=None)
 
     @classmethod
     @utils.read_only_cache()
