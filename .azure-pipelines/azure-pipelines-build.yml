@@ -48,6 +48,7 @@ jobs:
             docker_syncd_rpc_image: yes
             platform_rpc: bfn
             swi_image: yes
+            BUILD_OPTIONS: $(BUILD_OPTIONS) TELEMETRY_WRITABLE=y
 
         - name: broadcom
           variables:
@@ -110,11 +111,7 @@ jobs:
                 mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
             fi
             if [ $(swi_image) == yes ]; then
-              if [ $(GROUP_NAME) == barefoot ]; then
-                make $BUILD_OPTIONS TELEMETRY_WRITABLE=y ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
-              else
-                make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
-              fi
+              make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
             fi
             if [ $(raw_image) == yes ]; then
               make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).raw
@@ -126,11 +123,6 @@ jobs:
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
             fi
-
-            if [ $(GROUP_NAME) == barefoot ]; then
-              make $BUILD_OPTIONS TELEMETRY_WRITABLE=y target/sonic-$(GROUP_NAME).bin
-            else
-              make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
-            fi
+            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
