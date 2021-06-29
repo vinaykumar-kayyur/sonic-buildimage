@@ -18,7 +18,7 @@ parse_config(){
 }
 
 get_clone_path(){
-    # get paremater of clone path
+    # get parameter of clone path
     while (( "$#" )); do
         case $1 in
             -b|--branch|--reference|--reference-if-able|-c|--config|--origin|-u|--upload-pack|-j|--jobs|--depth|--dissociate)
