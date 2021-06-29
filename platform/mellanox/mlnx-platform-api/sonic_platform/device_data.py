@@ -177,7 +177,7 @@ class DeviceDataManager:
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
-        return utils.read_int_from_file('/run/hw-management/lc{}/sfp_counter'.format(lc_index), log_func=None)
+        return utils.read_int_from_file('/run/hw-management/lc{}/config/module_counter'.format(lc_index), log_func=None)
 
     @classmethod
     def get_gearbox_count(cls, sysfs_folder):

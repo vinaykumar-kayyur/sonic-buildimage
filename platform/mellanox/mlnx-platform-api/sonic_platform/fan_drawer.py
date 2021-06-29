@@ -11,10 +11,14 @@ import os
 try:
     from sonic_platform_base.fan_drawer_base import FanDrawerBase
     from sonic_platform_base.fan_base import FanBase
+    from sonic_py_common.logger import Logger
     from .led import FanLed, SharedLed
     from . import utils
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
+
+# Global logger class instance
+logger = Logger()
 
 
 class MellanoxFanDrawer(FanDrawerBase):
@@ -46,9 +50,11 @@ class MellanoxFanDrawer(FanDrawerBase):
             elif fan_dir == FAN_DIR_VALUE_EXHAUST:
                 return FanBase.FAN_DIRECTION_EXHAUST
             else:
-                raise RuntimeError("Got wrong value {} for fan direction {}".format(fan_dir, self._index))
+                logger.log_error("Got wrong value {} for fan direction {}".format(fan_dir, self._index))
+                return FanBase.FAN_DIRECTION_NOT_APPLICABLE
         except (ValueError, IOError) as e:
-            raise RuntimeError("Failed to read fan direction status to {}".format(repr(e)))
+            logger.log_error("Failed to read fan direction status to {}".format(repr(e)))
+            return FanBase.FAN_DIRECTION_NOT_APPLICABLE
 
     def set_status_led(self, color):
         """

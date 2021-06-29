@@ -162,7 +162,7 @@ def initialize_linecard_thermals(lc_name, lc_index):
     thermal_list = []
     rule = THERMAL_NAMING_RULE['linecard thermals']
     rule['name'] = '{} {}'.format(lc_name, rule['name'])
-    sysfs_folder = '/run/hw-management/lc{}'.format(lc_index)
+    sysfs_folder = '/run/hw-management/lc{}/thermal'.format(lc_index)
     count = DeviceDataManager.get_gearbox_count(sysfs_folder)
     for index in range(count):
         thermal_list.append(create_indexable_thermal(rule, index, sysfs_folder, index + 1))

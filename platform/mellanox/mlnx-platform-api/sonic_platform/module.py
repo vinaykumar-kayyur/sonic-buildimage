@@ -94,7 +94,7 @@ class Module(ModuleBase):
             2. If sequence NO has been changed which means line card has been removed and inserted again.
         """
         seq_no = self._get_seq_no()
-        state = utils.read_int_from_file('/run/hw-management/system/lc{}_active'.format(self.slot_id))
+        state = utils.read_int_from_file('/run/hw-management/system/lc{}_powered'.format(self.slot_id))
         if state != self.current_state:
             self._re_init()
         elif seq_no != self.seq_no:
@@ -134,7 +134,7 @@ class Module(ModuleBase):
         Returns:
             An integer, the number of thermals available on this module
         """
-        return DeviceDataManager.get_gearbox_count('/run/hw-management/lc{}'.format(self.slot_id))
+        return DeviceDataManager.get_gearbox_count('/run/hw-management/lc{}/config'.format(self.slot_id))
 
     def get_all_thermals(self):
         """
