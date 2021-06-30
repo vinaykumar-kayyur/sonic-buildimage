@@ -211,8 +211,8 @@ class device_monitor(object):
             logging.critical("Alarm for all fan faulty/absent is detected, reset DUT")
             cmd_str = "i2cset -y -f 3 0x60 0x4 0xE4"
             time.sleep(2)
-            status, output = subprocess.getstatusoutput('sync; sync; sync')
-            status, output = subprocess.getstatusoutput(cmd_str)
+            subprocess.getstatusoutput('sync; sync; sync')
+            subprocess.getstatusoutput(cmd_str)
         elif sum(fan_fail_list) != 0:
             # Set the 100% speed only for first fan failure detection
             logging.warning('Fan_{} failed, set remaining fan speed to 100%'.format(
