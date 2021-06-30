@@ -10,7 +10,6 @@ try:
     import sys
     import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
-    from sonic_platform.component import Component
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
