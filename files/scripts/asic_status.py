@@ -20,16 +20,17 @@ CHASSIS_ASIC_INFO_TABLE = 'CHASSIS_ASIC_TABLE'
 SELECT_TIMEOUT_MSECS = 5000
 
 def main():
-    if len(sys.argv) != 2:
-        raise Exception('Pass valid asic-id as argument')
+    if len(sys.argv) != 3:
+        raise Exception('Pass service and valid asic-id as arguments')
 
-    args_asic_id = sys.argv[1]
+    service = sys.argv[1]
+    args_asic_id = sys.argv[2]
 
     # Get num asics
     num_asics = multi_asic.get_num_asics()
     if num_asics == 0:
         syslog.syslog(syslog.LOG_ERR,
-                'Detected no asics on this platform')
+                'Detected no asics on this platform for service {}'.format(service))
         sys.exit(1)
 
     # Connect to STATE_DB and subscribe to chassis-module table notifications
