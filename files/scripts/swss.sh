@@ -160,12 +160,8 @@ start() {
         clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*', 'MUX_CABLE_TABLE*'"
     fi
 
-    # Check asic status before starting docker
-    check_asic_status start
-    ASIC_STATUS=$?
-
     # start service docker
-    if [[ $ASIC_STATUS == 0 ]]; then
+    if ! is_chassis_supervisor; then
         /usr/bin/${SERVICE}.sh start $DEV
         debug "Started ${SERVICE}$DEV service..."
     fi
@@ -175,14 +171,16 @@ start() {
 }
 
 wait() {
-    # Check asic status before starting docker
-    check_asic_status wait
-    ASIC_STATUS=$?
+    if is_chassis_supervisor; then
+        # Check asic status before starting docker
+        check_asic_status
+        ASIC_STATUS=$?
 
-    # start service docker
-    if [[ $ASIC_STATUS == 0 ]]; then
-        /usr/bin/${SERVICE}.sh start $DEV
-        debug "Started ${SERVICE}$DEV service..."
+        # start service docker
+        if [[ $ASIC_STATUS == 0 ]]; then
+            /usr/bin/${SERVICE}.sh start $DEV
+            debug "Started ${SERVICE}$DEV service..."
+        fi
     fi
 
     start_peer_and_dependent_services
