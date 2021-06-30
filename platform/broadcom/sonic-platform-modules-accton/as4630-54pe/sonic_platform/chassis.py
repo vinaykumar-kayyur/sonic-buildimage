@@ -24,12 +24,7 @@ class Chassis(PddfChassis):
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
         self.__initialize_components()
-        
-        for index in range(NUM_COMPONENT):
-            component = Component(index)
-            self._component_list.append(component)
-        
-        
+       
     def __initialize_components(self):
         from sonic_platform.component import Component
         for index in range(NUM_COMPONENT):
@@ -41,8 +36,7 @@ class Chassis(PddfChassis):
     sfp_change_event_data = {'valid': 0, 'last': 0, 'present': 0}
     def get_change_event(self, timeout=2000):
         now = time.time()
-        port_dict = {}
-        port = 0
+        port_dict = {}        
         change_dict = {}
         change_dict['sfp'] = port_dict
 
@@ -76,9 +70,6 @@ class Chassis(PddfChassis):
             return True, change_dict
         else:
             return True, change_dict
-
-        print("get_change_event: Control should not reach here")
-        return False, change_dict
     
     def get_sfp(self, index):
         """

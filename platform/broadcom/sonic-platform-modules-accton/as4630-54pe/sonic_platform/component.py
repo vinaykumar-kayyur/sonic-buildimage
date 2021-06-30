@@ -63,16 +63,16 @@ class Component(ComponentBase):
         Returns:
             string: The firmware versions of the module
         """
-        cpld_version = None
+        fw_version = None
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
             cmd = "i2cget -f -y {0} {1} 0x1".format(self.cpld_mapping[self.index][0], self.cpld_mapping[self.index][1])
             status, value = subprocess.getstatusoutput(cmd)
             if not status:
-                cpld_version = value.rstrip()
+                fw_version = value.rstrip()
 
-        return cpld_version
+        return fw_version
 
     def install_firmware(self, image_path):
         """

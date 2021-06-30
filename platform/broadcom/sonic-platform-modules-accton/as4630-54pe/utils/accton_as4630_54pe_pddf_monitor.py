@@ -35,8 +35,8 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as4630_54pe_pddf_monitor'
 
-global log_file
-global log_level
+
+
 
 
 # Temperature Policy
@@ -159,7 +159,7 @@ class device_monitor(object):
             LEVEL_TEMP_CRITICAL: [100, 16, 240000, 300000],
         }
         temp = [0, 0, 0]
-        temp_fail = 0
+        
         #thermal = ThermalUtil()
         #fan = FanUtil()
         # Supposedly all the fans are set with same duty cycle
@@ -169,8 +169,8 @@ class device_monitor(object):
         if test_temp == 0:
             for i in range(0, 3):
                 temp[i] = platform_chassis.get_thermal(i).get_temperature()
-                if temp[i] == 0.0 or temp[i] == None:
-                    temp_fail = 1
+                if temp[i] == 0.0 or temp[i] is None:
+                    
                     logging.warning("Get temp-%d fail", i)
                     return False
                 temp[i] = int(temp[i]*1000)
@@ -190,7 +190,7 @@ class device_monitor(object):
 
         temp_val = 0
         for i in range(0, 3):
-            if temp[i] == None:
+            if temp[i] is None:
                 break
             temp_val += temp[i]
 
