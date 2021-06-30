@@ -18,7 +18,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	patch -p1 < ../patches/freeradius_libeap_deprecated_openssl_1_0.patch
 	cp ../patches/config.sub .
 	cp ../patches/config.guess .
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	./configure --disable-static --enable-libtool-lock --libdir=$(CROSS_PKGS_LIB_PATH) --libexecdir=$(CROSS_PKGS_LIB_PATH) --host=$(CROSS_HOST_TYPE) 
+else
 	./configure --disable-static --enable-libtool-lock
+endif
 	make
 	popd
 
@@ -31,7 +35,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	cp -r ../debian .
 
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	CONFIG_SITE=/etc/dpkg-cross/cross-config.$(CONFIGURED_ARCH) LD_LIBRARY_PATH=$(CROSS_LIB_PATH) dpkg-buildpackage -rfakeroot -b -a$(CONFIGURED_ARCH) -Pcross,nocheck -us -uc -nc
+else
 	dpkg-buildpackage -rfakeroot -b -us -uc -nc
+endif
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/
