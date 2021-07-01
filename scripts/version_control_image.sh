@@ -32,20 +32,20 @@ main(){
         if [ ! -f $version_file ];then
             echo "Failed to access $version_file"
             exit 1
-	fi
-	hash_value=`grep $image_tag $version_file  | awk -F== '{print$2}'`
+        fi
+        hash_value=`grep $image_tag $version_file | awk -F== '{print$2}'`
         if [ -z $hash_value ];then
-            echo "Failed to verify the docker image: $image, the hash value is not specified"
-	    exit 1
-	fi
-	oldstr=${image_tag//\//\\/}
-	newstr=`echo $oldstr | awk -F: '{print$1}'`@$hash_value
-	sed -i "s/$oldstr/$newstr/" $docker_file
+            echo "Failed to verify the docker image: $image_tag, the hash value is not specified"
+            exit 1
+        fi
+        oldstr=${image//\//\\/}
+        newstr="${oldstr}@$hash_value"
+        sed -i "s/$oldstr/$newstr/" $docker_file
     fi
     hash_value_latest=`docker pull $image_tag | grep Digest | awk '{print$2}'`
 
-    echo -e "$image_tag==$hash_value_latest\n" >> $new_version_file
-    echo "" >> $new_version_file
+    echo -e "\n$image_tag==$hash_value_latest" >> $new_version_file
+    sort -u $new_version_file -o $new_version_file
 }
 
 main "$@"
