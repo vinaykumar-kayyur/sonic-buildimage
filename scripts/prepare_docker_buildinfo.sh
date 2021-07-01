@@ -22,6 +22,8 @@ if [ -z "$DISTRO" ]; then
     [ -z "$DISTRO" ] && DISTRO=jessie
 fi
 
+DISTRO=$DISTRO scripts/version_control_image.sh $DOCKERFILE
+
 DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo 
 COPY ["buildinfo", "/usr/local/share/buildinfo"]
 RUN dpkg -i /usr/local/share/buildinfo/sonic-build-hooks_1.0_all.deb
