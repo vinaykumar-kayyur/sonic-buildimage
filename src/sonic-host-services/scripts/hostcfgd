@@ -9,7 +9,7 @@ import syslog
 
 import jinja2
 from sonic_py_common import device_info
-from swsssdk import ConfigDBConnector
+from swsscommon import swsscommon
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -841,7 +841,7 @@ class NtpCfg(object):
 
 class HostConfigDaemon:
     def __init__(self):
-        self.config_db = ConfigDBConnector()
+        self.config_db = swsscommon.ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
 
@@ -924,7 +924,7 @@ class HostConfigDaemon:
         self.aaacfg.handle_radius_nas_ip_chg(key)
 
     def lpbk_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = swsscommon.ConfigDBConnector.deserialize_key(key)
         # Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('LOOPBACK_INTERFACE')
         if key in keys:
@@ -937,19 +937,19 @@ class HostConfigDaemon:
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def vlan_intf_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = swsscommon.ConfigDBConnector.deserialize_key(key)
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def vlan_sub_intf_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = swsscommon.ConfigDBConnector.deserialize_key(key)
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def portchannel_intf_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = swsscommon.ConfigDBConnector.deserialize_key(key)
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def phy_intf_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = swsscommon.ConfigDBConnector.deserialize_key(key)
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def ntp_server_handler (self, key, data):
