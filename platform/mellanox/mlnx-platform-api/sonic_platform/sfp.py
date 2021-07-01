@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -10,6 +8,7 @@
 
 try:
     import subprocess
+    import os
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
@@ -33,6 +32,18 @@ try:
     from python_sdk_api.sxd_api import *
     from python_sdk_api.sx_api import *
 except ImportError as e:
+    pass
+
+try:
+    if os.environ["PLATFORM_API_UNIT_TESTING"] == "1":
+        # Unable to import SDK constants under unit test
+        # Define them here
+        SX_PORT_MODULE_STATUS_INITIALIZING = 0
+        SX_PORT_MODULE_STATUS_PLUGGED = 1
+        SX_PORT_MODULE_STATUS_UNPLUGGED = 2
+        SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
+        SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
+except KeyError:
     pass
 
 # definitions of the offset and width for values in XCVR info eeprom
@@ -330,6 +341,18 @@ class SdkHandleContext(object):
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
+    SFP_MLNX_ERROR_DESCRIPTION_LONGRANGE_NON_MLNX_CABLE = 'Long range for non-Mellanox cable or module'
+    SFP_MLNX_ERROR_DESCRIPTION_ENFORCE_PART_NUMBER_LIST = 'Enforce part number list'
+    SFP_MLNX_ERROR_DESCRIPTION_PMD_TYPE_NOT_ENABLED = 'PMD type not enabled'
+    SFP_MLNX_ERROR_DESCRIPTION_PCIE_POWER_SLOT_EXCEEDED = 'PCIE system power slot exceeded'
+    SFP_MLNX_ERROR_DESCRIPTION_RESERVED = 'Reserved'
+
+    SFP_MLNX_ERROR_BIT_LONGRANGE_NON_MLNX_CABLE = 0x00010000
+    SFP_MLNX_ERROR_BIT_ENFORCE_PART_NUMBER_LIST = 0x00020000
+    SFP_MLNX_ERROR_BIT_PMD_TYPE_NOT_ENABLED = 0x00040000
+    SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
+    SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
+
     def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform):
         SfpBase.__init__(self)
         self.index = sfp_index + 1
@@ -388,7 +411,7 @@ class SFP(SfpBase):
     # Read out any bytes from any offset
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
         eeprom_raw = []
-        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
+        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {} 2>/dev/null".format(self.index, offset, num_bytes)
         try:
             output = subprocess.check_output(ethtool_cmd, 
                                              shell=True, 
@@ -1493,9 +1516,12 @@ class SFP(SfpBase):
         sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t()
         sx_mgmt_phy_mod_pwr_attr.power_attr_type = power_attr_type
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
         try:
-            rc = sx_mgmt_phy_mod_pwr_attr_get(sdk_handle, sdk_index, sx_mgmt_phy_mod_pwr_attr_p)
-            assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_mod_pwr_attr_get failed"
+            rc = sx_mgmt_phy_module_pwr_attr_get(sdk_handle, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
+            assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_pwr_attr_get failed {}".format(rc)
             sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t_p_value(sx_mgmt_phy_mod_pwr_attr_p)
             pwr_mode_attr = sx_mgmt_phy_mod_pwr_attr.pwr_mode_attr
             return pwr_mode_attr.admin_pwr_mode_e, pwr_mode_attr.oper_pwr_mode_e
@@ -1517,7 +1543,7 @@ class SFP(SfpBase):
             get_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._get_lpmode(sdk_handle, {}))'.format(self.sdk_index)
-            lpm_cmd = "docker exec pmon python -c \"{}\"".format(get_lpmode_code)
+            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(get_lpmode_code)
             try:
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
                 return 'True' in output
@@ -1921,7 +1947,7 @@ class SFP(SfpBase):
                          'with sfp.SdkHandleContext() as sdk_handle:' \
                          'print(sfp.SFP._reset(sdk_handle, {}))' \
                          .format(self.sdk_index)
-            reset_cmd = "docker exec pmon python -c \"{}\"".format(reset_code)
+            reset_cmd = "docker exec pmon python3 -c \"{}\"".format(reset_code)
 
             try:
                 output = subprocess.check_output(reset_cmd, shell=True, universal_newlines=True)
@@ -1935,9 +1961,12 @@ class SFP(SfpBase):
 
     @classmethod
     def _reset(cls, sdk_handle, sdk_index):
-        rc = sx_mgmt_phy_mod_reset(sdk_handle, sdk_index)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
+        rc = sx_mgmt_phy_module_reset(sdk_handle, module_id_info)
         if rc != SX_STATUS_SUCCESS:
-            logger.log_warning("sx_mgmt_phy_mod_reset failed, rc = %d" % rc)
+            logger.log_error("Error occurred when resetting SFP module {}, error code {}".format(sdk_index, rc))
 
         return rc == SX_STATUS_SUCCESS
 
@@ -2051,10 +2080,13 @@ class SFP(SfpBase):
         sx_mgmt_phy_mod_pwr_attr.pwr_mode_attr = sx_mgmt_phy_mod_pwr_mode_attr
         sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
         try:
-            rc = sx_mgmt_phy_mod_pwr_attr_set(sdk_handle, SX_ACCESS_CMD_SET, sdk_index, sx_mgmt_phy_mod_pwr_attr_p)
+            rc = sx_mgmt_phy_module_pwr_attr_set(sdk_handle, SX_ACCESS_CMD_SET, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
             if SX_STATUS_SUCCESS != rc:
-                logger.log_error("sx_mgmt_phy_mod_pwr_attr_set failed, rc = %d" % rc)
+                logger.log_error("Error occurred when setting power mode for SFP module {}, error code {}".format(sdk_index, rc))
                 result = False
             else:
                 result = True
@@ -2104,7 +2136,7 @@ class SFP(SfpBase):
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._set_lpmode({}, sdk_handle, {}))' \
                               .format('True' if lpmode else 'False', self.sdk_index)
-            lpm_cmd = "docker exec pmon python -c \"{}\"".format(set_lpmode_code)
+            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(set_lpmode_code)
 
             # Set LPM
             try:
@@ -2158,3 +2190,68 @@ class SFP(SfpBase):
             bool: True if it is replaceable.
         """
         return True
+
+    def _get_error_code(self):
+        """
+        Get error code of the SFP module
+
+        Returns:
+            The error code fetch from SDK API
+        """
+        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
+        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
+
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = self.sdk_index
+        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
+
+        rc = sx_mgmt_phy_module_info_get(self.sdk_handle, module_id_info_list, 1, module_info_list)
+        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
+
+        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
+        return mod_info.module_state.oper_state, mod_info.module_state.error_type
+
+    @classmethod
+    def _get_error_description_dict(cls):
+        return {0: cls.SFP_ERROR_DESCRIPTION_POWER_BUDGET_EXCEEDED,
+                1: cls.SFP_MLNX_ERROR_DESCRIPTION_LONGRANGE_NON_MLNX_CABLE,
+                2: cls.SFP_ERROR_DESCRIPTION_I2C_STUCK,
+                3: cls.SFP_ERROR_DESCRIPTION_BAD_EEPROM,
+                4: cls.SFP_MLNX_ERROR_DESCRIPTION_ENFORCE_PART_NUMBER_LIST,
+                5: cls.SFP_ERROR_DESCRIPTION_UNSUPPORTED_CABLE,
+                6: cls.SFP_ERROR_DESCRIPTION_HIGH_TEMP,
+                7: cls.SFP_ERROR_DESCRIPTION_BAD_CABLE,
+                8: cls.SFP_MLNX_ERROR_DESCRIPTION_PMD_TYPE_NOT_ENABLED,
+                12: cls.SFP_MLNX_ERROR_DESCRIPTION_PCIE_POWER_SLOT_EXCEEDED,
+                255: cls.SFP_MLNX_ERROR_DESCRIPTION_RESERVED
+        }
+
+    def get_error_description(self):
+        """
+        Get error description
+
+        Args:
+            error_code: The error code returned by _get_error_code
+
+        Returns:
+            The error description
+        """
+        oper_status, error_code = self._get_error_code()
+        if oper_status == SX_PORT_MODULE_STATUS_INITIALIZING:
+            error_description = self.SFP_STATUS_INITIALIZING
+        elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED:
+            error_description = self.SFP_STATUS_OK
+        elif oper_status == SX_PORT_MODULE_STATUS_UNPLUGGED:
+            error_description = self.SFP_STATUS_UNPLUGGED
+        elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED_DISABLED:
+            error_description = self.SFP_STATUS_DISABLED
+        elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR:
+            error_description_dict = self._get_error_description_dict()
+            if error_code in error_description_dict:
+                error_description = error_description_dict[error_code]
+            else:
+                error_description = "Unknown error ({})".format(error_code)
+        else:
+            error_description = "Unknow SFP module status ({})".format(oper_status)
+        return error_description
