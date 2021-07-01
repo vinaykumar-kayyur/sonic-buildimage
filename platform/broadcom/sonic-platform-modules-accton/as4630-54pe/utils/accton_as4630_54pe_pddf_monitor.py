@@ -253,9 +253,9 @@ class device_monitor(object):
                 logging.warning('Reboot cause file not updated. {}'.format(output))
 
             cmd_str = "i2cset -y -f 3 0x60 0x4 0xE4"
-            status, output = subprocess.getstatusoutput('sync; sync; sync')
+            subprocess.getstatusoutput('sync; sync; sync')
             time.sleep(3)
-            status, output = subprocess.getstatusoutput(cmd_str)
+            subprocess.getstatusoutput(cmd_str)
 
         logging.debug('ori_state=%d, current_state=%d, temp_val=%d\n\n', ori_state, fan_policy_state, temp_val)
 
