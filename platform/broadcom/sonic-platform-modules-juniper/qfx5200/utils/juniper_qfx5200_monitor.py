@@ -41,7 +41,6 @@ try:
     import logging.handlers
     import time
     import glob
-    import re
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -133,6 +132,29 @@ temp_policy_AFO = {
     11: [[35, 0, 76000], [35, 76000, 79000], [55, 79000, 0], [55, 79000, 83000], [75, 83000, 0], [75, 83000, 86000], [90, 86000, 0], [90, 86000, 90000],[100, 90000, 0],
          ['Yellow Alarm', 99000, 102000], ['Red Alarm', 102000, 105000], ['Fire Shut Alarm', 105000, 0]], 
     }
+
+def fantype_detect():
+
+    refpgaTMC_path = "/sys/devices/pci0000:00/0000:00:1c.0/0000:0f:00.0/refpga-tmc.15"
+
+    AFO = "1"
+    AFI = "0"
+
+    # default fan type is AFO
+    default_fantype = "0"
+
+    for filename in os.listdir(refpgaTMC_path):
+        if filename.endswith('_type'):
+            fantype_path = os.path.join(refpgaTMC_path, filename)
+            cat_string = "cat "
+            fantype_string = cat_string + fantype_path
+            status, fan_type = commands.getstatusoutput(fantype_string)
+            if ((fan_type == AFO) or (fan_type == AFI)):
+                return fan_type
+            else:
+                pass
+
+    return default_fantype
 
 class QFX5200_FanUtil(object):
     """QFX5200 Platform FanUtil class"""
@@ -834,19 +856,9 @@ class device_monitor(object):
                 console.setFormatter(formatter)
                 logging.getLogger('').addHandler(console)
 
-        filename = "/var/run/eeprom"
-        AFO_str = "AFO"
-        pattern = re.compile(r"Fan Type", re.IGNORECASE)
-        with open(filename, "rt") as myfile:
-             for line in myfile:
-                 if pattern.search(line) != None:
-                     fan_type = str(line)
-                     if "=" in fan_type:
-		         user=fan_type[fan_type.find("=")+1:].split()[0]
-			 if user == AFO_str:
-			    isPlatformAFI = False
-			 else:
-			    isPlatformAFI = True
+        AFI = "0"
+        if (fantype_detect() == AFI):
+            isPlatformAFI = True
 
         master_led_value = 1
 
