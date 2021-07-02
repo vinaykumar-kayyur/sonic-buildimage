@@ -46,7 +46,7 @@
 	url = https://github.com/Azure/sonic-platform-daemons
 [submodule "src/sonic-platform-pde"]
 	path = src/sonic-platform-pde
-	url = https://github.com/Azure/sonic-platform-pdk-pde.git
+	url = https://github.com/Azure/sonic-platform-pdk-pde
 [submodule "src/sonic-frr/frr"]
 	path = src/sonic-frr/frr
 	url = https://github.com/Azure/sonic-frr.git
