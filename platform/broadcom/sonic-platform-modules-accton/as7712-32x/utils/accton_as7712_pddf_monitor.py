@@ -22,7 +22,6 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import sys
     import getopt
     import logging
@@ -39,9 +38,6 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = 'accton_as7712_monitor'
 DUTY_MAX = 100
-
-global log_file
-global log_console
 
 fan_state = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]  # init state=2, insert=1, remove=0
 # For AC power Front to Back :
@@ -223,7 +219,7 @@ def sig_handler(signum, frame):
 
 
 def main(argv):
-    log_file = '%s.log' % FUNCTION_NAME
+
     log_console = 0
     log_file = ""
 
