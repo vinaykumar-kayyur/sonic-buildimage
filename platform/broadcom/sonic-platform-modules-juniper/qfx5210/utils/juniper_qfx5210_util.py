@@ -58,6 +58,11 @@ if DEBUG == True:
     print sys.argv[0]
     print 'ARGV      :', sys.argv[1:]   
 
+def platform_install():
+    global FORCE
+    status, platform = log_os_system('/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform', 1)
+    if status==0:
+        log_os_system("pip3 install /usr/share/sonic/device/"+platform+"/sonic_platform-1.0-py3-none-any.whl",1)
 
 def main():
     global DEBUG
@@ -126,7 +131,9 @@ def main():
             return                
         else:
             show_help()
-           
+  
+    platform_install()
+
     DisableWatchDogCmd = '/usr/sbin/i2cset -f -y 0 0x65 0x3 0x04' 
     # Disable watchdog
     try:
@@ -135,14 +142,6 @@ def main():
         print 'Error: Execution of "%s" failed', DisableWatchDogCmd
         return False
 
-    time.sleep(1)
-    # Invoking the script which retrieves the data from Board EEPROM and storing in file
-    EEPROMDataCmd = 'python /usr/share/sonic/device/x86_64-juniper_qfx5210-r0/plugins/qfx5210_eeprom_data.py'
-    try:
-        os.system(EEPROMDataCmd)
-    except OSError:
-        print 'Error: Execution of "%s" failed', EEPROMDataCmd
-        return False
 
     return True              
         
@@ -197,6 +196,8 @@ kos = [
 'modprobe x86-64-juniper-qfx5210-64x-fan'     ,
 'modprobe x86-64-juniper-qfx5210-64x-leds'      ,
 'modprobe x86-64-juniper-qfx5210-64x-psu' ]
+
+
 
 def driver_install():
     global FORCE
