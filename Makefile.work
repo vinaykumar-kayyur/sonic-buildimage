@@ -134,10 +134,8 @@ $(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
 # Generate the slave Dockerfile, and prepare build info for it
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
-VERSION_CONTROL_RESULT := $(shell BUILD_SLAVE=y SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
-ifneq ($(VERSION_CONTROL_RESULT),)
-$(error $(VERSION_CONTROL_RESULT))
-endif
+$(shell BUILD_SLAVE=y scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
+
 # Add the versions in the tag, if the version change, need to rebuild the slave
 SLAVE_BASE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
