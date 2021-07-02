@@ -58,6 +58,7 @@ version_control(){
         echo -e "\n${ARCH}:${image_tag}==$hash_value_latest" >> $new_version_file
     fi
 }
+version_control
 
 DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
 COPY ["buildinfo", "/usr/local/share/buildinfo"]
