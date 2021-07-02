@@ -60,7 +60,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 !
 {# set router-id #}
-{% if DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd' %}
+{% if DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd' or  (multi_asic is defined and DEVICE_METADATA['localhost']['switch_type'] == 'voq') %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 {% else %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}
