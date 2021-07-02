@@ -94,7 +94,7 @@ class Module(ModuleBase):
             2. If sequence NO has been changed which means line card has been removed and inserted again.
         """
         seq_no = self._get_seq_no()
-        state = utils.read_int_from_file('/run/hw-management/system/lc{}_powered'.format(self.slot_id))
+        state = utils.read_int_from_file('/run/hw-management/system/lc{}_powered'.format(self.slot_id), log_func=None)
         if state != self.current_state:
             self._re_init()
         elif seq_no != self.seq_no:
@@ -173,6 +173,10 @@ class Module(ModuleBase):
     ##############################################
     # SFP methods
     ##############################################
+    def _create_sfp_object(self, index):
+        from .sfp import SFP
+        return SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count, lc_name=self.get_name())
+
     def initialize_single_sfp(self, index):
         self._check_state()
         if self.current_state == Module.STATE_ACTIVATED:
@@ -182,25 +186,21 @@ class Module(ModuleBase):
                     self._sfp_list = [None] * sfp_count
                 
                 if not self._sfp_list[index]:
-                    from .sfp import SFP
-                    self._sfp_list[index] = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
+                    self._sfp_list[index] = self._create_sfp_object(index)
                     self.sfp_initialized_count += 1
 
     def initialize_sfps(self):
         self._check_state()
         if self.current_state == Module.STATE_ACTIVATED:
             if not self._sfp_list:
-                from .sfp import SFP
                 sfp_count = self.get_num_sfps()
                 for index in range(sfp_count):
-                    sfp_module = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
-                    self._sfp_list.append(sfp_module)
+                    self._sfp_list.append(self._create_sfp_object(index))
                 self.sfp_initialized_count = sfp_count
             elif self.sfp_initialized_count != len(self._sfp_list):
-                from .sfp import SFP
                 for index in range(len(self._sfp_list)):
                     if self._sfp_list[index] is None:
-                        self._sfp_list[index] = SFP(index, slot_id=self.slot_id, linecard_port_count=self.sfp_count)
+                        self._sfp_list[index] = self._create_sfp_object(index)
                 self.sfp_initialized_count = len(self._sfp_list)
 
     def get_num_sfps(self):

@@ -208,6 +208,7 @@ class TestChassis:
         # Test get_num_modules, it should not create any SFP objects
         DeviceDataManager.get_linecard_count = mock.MagicMock(return_value=3)
         chassis = ModularChassis()
+        assert chassis.is_modular_chassis()
         assert chassis.get_num_modules() == 3
         assert len(chassis._module_list) == 0
 

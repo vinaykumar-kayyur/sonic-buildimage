@@ -35,16 +35,13 @@ class TestFan:
         assert fan_drawer.get_direction() == Fan.FAN_DIRECTION_INTAKE
         # Invalid fan dir value
         utils.read_int_from_file = MagicMock(return_value=2)
-        with pytest.raises(RuntimeError):
-            fan_drawer.get_direction()
+        assert fan_drawer.get_direction() == Fan.FAN_DIRECTION_NOT_APPLICABLE
 
         utils.read_int_from_file = MagicMock(side_effect=ValueError(''))
-        with pytest.raises(RuntimeError):
-            fan_drawer.get_direction()
+        assert fan_drawer.get_direction() == Fan.FAN_DIRECTION_NOT_APPLICABLE
 
         utils.read_int_from_file = MagicMock(side_effect=IOError(''))
-        with pytest.raises(RuntimeError):
-            fan_drawer.get_direction()
+        assert fan_drawer.get_direction() == Fan.FAN_DIRECTION_NOT_APPLICABLE
 
         # Virtual drawer
         fan_drawer = VirtualDrawer(0)

@@ -726,6 +726,17 @@ class ModularChassis(Chassis):
         super(ModularChassis, self).__init__()
         self.module_initialized_count = 0
 
+    def is_modular_chassis(self):
+        """
+        Retrieves whether the sonic instance is part of modular chassis
+
+        Returns:
+            A bool value, should return False by default or for fixed-platforms.
+            Should return True for supervisor-cards, line-cards etc running as part
+            of modular-chassis.
+        """
+        return True
+
     ##############################################
     # Module methods
     ##############################################

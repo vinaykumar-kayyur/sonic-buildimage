@@ -346,11 +346,15 @@ class SFP(SfpBase):
     """Platform-specific SFP class"""
     shared_sdk_handle = None
 
-    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0):
+    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0, lc_name=None):
         super(SFP, self).__init__()
+        
         if slot_id == 0: # For non-modular chassis
             self.index = sfp_index + 1
             self.sdk_index = sfp_index
+
+            from .thermal import initialize_sfp_thermal
+            self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
             # (slot_id % MAX_LC_CONUNT - 1) * MAX_PORT_COUNT + sfp_index * (MAX_PORT_COUNT / LC_PORT_COUNT)
             max_linecard_count = DeviceDataManager.get_linecard_count()
@@ -358,14 +362,13 @@ class SFP(SfpBase):
             self.index = (slot_id % max_linecard_count - 1) * max_linecard_port_count + sfp_index * (max_linecard_port_count / linecard_port_count)
             self.sdk_index = slot_id * max_linecard_port_count + sfp_index + 1
 
+            from .thermal import initialize_linecard_sfp_thermal
+            self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
+
         self.slot_id = slot_id
         self._sfp_type = None
         self._sfp_capability = None
         
-        # initialize SFP thermal list
-        from .thermal import initialize_sfp_thermal
-        self._thermal_list = initialize_sfp_thermal(sfp_index)
-
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:

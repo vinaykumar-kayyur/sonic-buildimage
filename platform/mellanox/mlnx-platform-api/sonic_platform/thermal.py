@@ -9,6 +9,7 @@
 try:
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_py_common.logger import Logger
+    import copy
     import os
     import glob
 
@@ -161,12 +162,21 @@ def initialize_sfp_thermal(sfp_index):
 def initialize_linecard_thermals(lc_name, lc_index):
     thermal_list = []
     rule = THERMAL_NAMING_RULE['linecard thermals']
+    rule = copy.deepcopy(rule)
     rule['name'] = '{} {}'.format(lc_name, rule['name'])
     sysfs_folder = '/run/hw-management/lc{}/thermal'.format(lc_index)
-    count = DeviceDataManager.get_gearbox_count(sysfs_folder)
+    count = DeviceDataManager.get_gearbox_count('/run/hw-management/lc{}/config'.format(lc_index))
     for index in range(count):
         thermal_list.append(create_indexable_thermal(rule, index, sysfs_folder, index + 1))
     return thermal_list
+
+
+def initialize_linecard_sfp_thermal(lc_name, lc_index, sfp_index):
+    rule = THERMAL_NAMING_RULE['sfp thermals']
+    rule = copy.deepcopy(rule)
+    rule['name'] = '{} {}'.format(lc_name, rule['name'])
+    sysfs_folder = '/run/hw-management/lc{}/thermal'.format(lc_index)
+    return [create_indexable_thermal(rule, sfp_index, sysfs_folder, 1)]
 
 
 def create_indexable_thermal(rule, index, sysfs_folder, position, presence_cb=None):
