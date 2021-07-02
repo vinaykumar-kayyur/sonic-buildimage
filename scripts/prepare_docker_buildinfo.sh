@@ -33,11 +33,12 @@ version_control(){
     image_tag=`grep "^FROM " $DOCKERFILE | awk '{print$2}'`
     image=`echo $image_tag | cut -f1 -d:`
     tag=`echo $image_tag | cut -f2 -d:`
-    # if docker image load from local build, exit.
+    # if docker image load from local build, return.
     if [ -f target/${image_tag}.gz ]; then
         return 0
     fi
-
+    # if docker image load from local cache, return.
+    docker inspect --type image image_tag &> /dev/null && return 0
     if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,docker,* ]]; then
         if [ ! -f $version_file ];then
             echo "Failed to access $version_file"
