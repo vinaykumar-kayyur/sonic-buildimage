@@ -49,7 +49,7 @@ version_control(){
             echo "Failed to verify the docker image: ${ARCH}:${image_tag}, the hash value is not specified"
             exit 1
         fi
-        oldstr=${image//\//\\/}
+        oldstr=${image_tag//\//\\/}
         newstr="${oldstr}@$hash_value"
         sed -i "s/$oldstr/$newstr/" $DOCKERFILE
         echo -e "\n${ARCH}:${image_tag}==$hash_value" >> $new_version_file
