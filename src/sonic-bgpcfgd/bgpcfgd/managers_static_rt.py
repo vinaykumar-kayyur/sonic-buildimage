@@ -51,7 +51,6 @@ class StaticRouteMgr(Manager):
         if not self.static_routes.get(vrf, {}):
             if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
                 cmd_list.extend(self.enable_redistribution_command(vrf))
-                self.vrf_pending_redistribution.discard(vrf)
             else:
                 self.vrf_pending_redistribution.add(vrf)
 
