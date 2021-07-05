@@ -11,13 +11,14 @@ Signed-off-by: Ann Pokora <apokora@juniper.net>
  3 files changed, 32 insertions(+)
 
 diff --git a/include/netlink/route/nexthop.h b/include/netlink/route/nexthop.h
-index 5b422dd..a502005 100644
+index 5b422dd..eee84e8 100644
 --- a/include/netlink/route/nexthop.h
 +++ b/include/netlink/route/nexthop.h
-@@ -70,6 +70,8 @@ extern int		rtnl_route_nh_str2flags(const char *);
+@@ -70,6 +70,9 @@ extern int		rtnl_route_nh_str2flags(const char *);
  extern int		rtnl_route_nh_encap_mpls(struct rtnl_nexthop *nh,
  						 struct nl_addr *addr,
  						 uint8_t ttl);
++#define LIBNL3_ENCAP_MPLS
 +extern struct nl_addr *	rtnl_route_nh_get_encap_mpls_dst(struct rtnl_nexthop *);
 +extern uint8_t		rtnl_route_nh_get_encap_mpls_ttl(struct rtnl_nexthop *);
  #ifdef __cplusplus
