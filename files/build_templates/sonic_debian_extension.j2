@@ -725,9 +725,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install --from-tarball
 {% endfor -%}
 
 {% if install_third_party_debs -%}
-TEMP_DIR="$(sudo LANG=C chroot $FILESYSTEM_ROOT mktemp -d)";
-sudo wget {{ install_third_party_debs.strip().replace(",", " ") }} --directory-prefix="$FILESYSTEM_ROOT/$TEMP_DIR";
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y "$TEMP_DIR/*";
+TEMP_DIR="$(sudo LANG=C chroot $FILESYSTEM_ROOT mktemp -d)"
+sudo wget {{ install_third_party_debs.strip().replace(",", " ") }} --directory-prefix="$FILESYSTEM_ROOT/$TEMP_DIR"
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y "$TEMP_DIR/*"
 sudo rm -rf "$FILESYSTEM_ROOT/$TEMP_DIR"
 {% endif -%}
 
