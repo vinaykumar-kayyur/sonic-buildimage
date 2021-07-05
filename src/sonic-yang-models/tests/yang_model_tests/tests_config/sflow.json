@@ -6,7 +6,7 @@
                     {
                         "name": "collector1",
                         "collector_ip": "10.100.12.13",
-			"collector_port": "6343" 
+                        "collector_port": "6343"
                     }
                 ]
             }
@@ -216,7 +216,6 @@
         "sonic-sflow:sonic-sflow": {
             "sonic-sflow:SFLOW": {
                 "global": {
-                    "agent_id": "Ethernet0",
                     "admin_state": "up",
                     "polling_interval": "305"
                 }
