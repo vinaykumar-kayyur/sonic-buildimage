@@ -7,7 +7,7 @@ DOCKERFILE_TARGE=$4
 DISTRO=$5
 
 version_file=files/build/versions/default/versions-docker
-new_version_file=target/versions/build/versions-docker
+new_version_file=target/versions/default/versions-docker
 mkdir -p $new_version_file
 
 . src/sonic-build-hooks/buildinfo/config/buildinfo.config
@@ -28,9 +28,9 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
     if [ -z $hash_value ];then
         hash_value=unknown
     fi
-    oldstr=${image_tag//\//\\/}
-    newstr="${oldstr}@$hash_value"
-    sed -i "s/$oldstr/$newstr/" $DOCKERFILE
+    oldimage=${image_tag//\//\\/}
+    newimage="${oldstr}@$hash_value"
+    sed -i "s/$oldimage/$newimage/" $DOCKERFILE
 else
     hash_value=`docker pull $image_tag | grep Digest | awk '{print$2}'`
 fi
