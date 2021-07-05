@@ -22,7 +22,9 @@ if [ -z "$DISTRO" ]; then
     [ -z "$DISTRO" ] && DISTRO=jessie
 fi
 
-DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo 
+scripts/docker_version_control.sh $@
+
+DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
 COPY ["buildinfo", "/usr/local/share/buildinfo"]
 RUN dpkg -i /usr/local/share/buildinfo/sonic-build-hooks_1.0_all.deb
 RUN pre_run_buildinfo'
