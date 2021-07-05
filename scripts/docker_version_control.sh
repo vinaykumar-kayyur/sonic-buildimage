@@ -8,7 +8,7 @@ DISTRO=$5
 
 version_file=files/build/versions/default/versions-docker
 new_version_file=target/versions/default/versions-docker
-mkdir -p $new_version_file
+mkdir -p target/versions/default
 
 . src/sonic-build-hooks/buildinfo/config/buildinfo.config
 
@@ -29,7 +29,7 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
         hash_value=unknown
     fi
     oldimage=${image_tag//\//\\/}
-    newimage="${oldstr}@$hash_value"
+    newimage="${oldimage}@$hash_value"
     sed -i "s/$oldimage/$newimage/" $DOCKERFILE
 else
     hash_value=`docker pull $image_tag | grep Digest | awk '{print$2}'`
