@@ -725,17 +725,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install --from-tarball
 {% endfor -%}
 
 {% if install_third_party_debs -%}
-{% for url in install_third_party_debs.strip().split(',') -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c '
-TEMP_DEB="$(mktemp)"
-curl "{{ url }}" -o "${TEMP_DEB}" || {
-    exit 1;
-}
-dpkg -i "${TEMP_DEB}" || {
-    exit 1;
-}
-rm -f "${TEMP_DEB}"'
-{% endfor -%}
+TEMP_DIR="$(mktemp -d);
+wget {{ install_third_party_debs.strip().replace(",", " ") }} --directory-prefix="$TEMP_DIR" || exit 1;
+dpkg --install --recursive "$TEMP_DIR" || exit 1
+'
 {% endif -%}
 
 sudo umount $FILESYSTEM_ROOT/target
