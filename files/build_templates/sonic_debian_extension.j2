@@ -724,6 +724,20 @@ sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install {{ name }}=={{
 sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install --from-tarball {{ path }} {{ get_install_options(set_owner, enabled) }}
 {% endfor -%}
 
+{% if install_third_party_debs -%}
+{% for url in install_third_party_debs.strip().split(',') -%}
+sudo LANG=C chroot $FILESYSTEM_ROOT bash -c '
+TEMP_DEB="$(mktemp)"
+curl "{{ url }}" -o "${TEMP_DEB}" || {
+    exit 1;
+}
+dpkg -i "${TEMP_DEB}" || {
+    exit 1;
+}
+rm -f "${TEMP_DEB}"'
+{% endfor -%}
+{% endif -%}
+
 sudo umount $FILESYSTEM_ROOT/target
 sudo rm -r $FILESYSTEM_ROOT/target
 if [ $MULTIARCH_QEMU_ENVIRON == y ]; then
