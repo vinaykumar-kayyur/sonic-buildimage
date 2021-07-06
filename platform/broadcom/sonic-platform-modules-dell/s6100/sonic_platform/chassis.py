@@ -259,7 +259,7 @@ class Chassis(ChassisBase):
         elif ((smf_mb_reg_reason == 0xaa) or (smf_mb_reg_reason == 0xcc)):
             return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
         elif (smf_mb_reg_reason == 0x88):
-            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "CPU_RESET")
+            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "CPU Reset")
         elif (smf_mb_reg_reason == 0xdd):
             return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
         elif (smf_mb_reg_reason == 0xee):
