@@ -28,7 +28,6 @@ try:
     import logging.config
     import time
     import signal
-    from tabulate import tabulate
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
