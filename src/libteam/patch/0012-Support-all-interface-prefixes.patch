@@ -1,0 +1,31 @@
+From dac7c4132ee0f86949ddb736a1b28e42e938b14b Mon Sep 17 00:00:00 2001
+From: Judy Joseph <jujoseph@microsoft.com>
+Date: Sun, 2 May 2021 11:47:41 -0700
+Subject: [PATCH 12/12] Support interface prefixes other than "Ethernet"
+
+---
+ teamd/teamd_runner_lacp.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 9354ebb..11868e0 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1209,9 +1209,11 @@ static void lacp_port_actor_system_update(struct lacp_port *lacp_port)
+ 
+ static int lacp_portname_to_port_id(const char* name)
+ {
+-#define PORT_PREFIX "Ethernet"
+-	const char* strport_id = name + sizeof(PORT_PREFIX) - 1;
+-	const int port_id = atoi(strport_id);
++	const char* strport_id = name + strlen(name) - 1;
++	while (strport_id != NULL && *strport_id >= '0' && *strport_id <= '9') {
++		strport_id--;
++	}
++	const int port_id = atoi(++strport_id);
+ 	if ((port_id == 0) && strcmp(strport_id, "0")) {
+ 		teamd_log_err("%s: Can't convert from port name to port id. Port id is equal to 0, but this is not expected", name);
+ 	}
+-- 
+2.17.1
+
