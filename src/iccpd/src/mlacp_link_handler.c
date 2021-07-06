@@ -1892,48 +1892,88 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
     return;
 }
 
+#define MAX_MSG_NUM 20
 int iccp_receive_fdb_handler_from_syncd(struct System *sys)
 {
     char *msg_buf = g_csm_buf;
-    struct IccpSyncdHDr *msg_hdr;
+    struct IccpSyncdHDr *msg_hdr = (struct IccpSyncdHDr *)msg_buf;
+    char* data = &msg_buf[sizeof(struct IccpSyncdHDr)];
     struct mclag_fdb_info * mac_info;
+    size_t data_len = 0;
     size_t pos = 0;
+    int recv_len = 0, len = 0;
     int count = 0;
     int i = 0;
-    int n = 0;
+    int message_num = 0;
 
     if (sys == NULL)
-        return MCLAG_ERROR;
-
-    memset(msg_buf, 0, CSM_BUFFER_SIZE);
-
-    n = read(sys->sync_fd, msg_buf, CSM_BUFFER_SIZE);
-    if (n <= 0)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "read msg error!!!" );
         return MCLAG_ERROR;
     }
 
-    while (pos < n)
+    /*At most 20 messages can be read at a time*/
+    for (message_num = 0; message_num < MAX_MSG_NUM; message_num++)
     {
-        msg_hdr = (struct IccpSyncdHDr *)&msg_buf[pos];
-        if (msg_hdr->ver != 1 || msg_hdr->type != MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION )
+        memset(msg_buf, 0, CSM_BUFFER_SIZE);
+
+        recv_len = 0;
+
+        while (recv_len != sizeof(struct IccpSyncdHDr))
         {
-            ICCPD_LOG_ERR(__FUNCTION__, "msg version or type wrong!!!!! ");
+            len = recv(sys->sync_fd, msg_buf + recv_len, sizeof(struct IccpSyncdHDr) - recv_len, MSG_DONTWAIT);
+            if (len < 0)
+            {
+                /*Recv error*/
+                if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+                {
+                    ICCPD_LOG_ERR(__FUNCTION__, "Read msg header error! errno = %s", strerror(errno));
+                }
+                return MCLAG_ERROR;
+            }
+            else if (len == 0)
+            {
+                /*No more data to read, return*/
+                return 0;
+            }
+            recv_len += len;
+        }
+
+        if (msg_hdr->ver != 1 || msg_hdr->type != MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION)
+        {
+            ICCPD_LOG_ERR(__FUNCTION__, "Msg version or type wrong!!!!! ");
             return MCLAG_ERROR;
         }
 
-        count = ( msg_hdr->len - sizeof(struct IccpSyncdHDr )) / sizeof(struct mclag_fdb_info);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d ", count);
+        data_len = msg_hdr->len - sizeof(struct IccpSyncdHDr);
+        pos = 0;
+
+        while (data_len > 0)
+        {
+            recv_len = recv(sys->sync_fd, &data[pos], data_len, MSG_DONTWAIT);
+            if (recv_len < 0)
+            {
+                /*Recv error*/
+                ICCPD_LOG_ERR(__FUNCTION__, "Read msg body error!");
+                return MCLAG_ERROR;
+            }
+            else if (recv_len == 0)
+            {
+                /*No more data to read, return*/
+                return 0;
+            }
+            data_len -= recv_len;
+            pos += recv_len;
+        }
+
+        count = (msg_hdr->len - sizeof(struct IccpSyncdHDr)) / sizeof(struct mclag_fdb_info);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Recv msg fdb count %d ", count);
 
         for (i = 0; i < count; i++)
         {
-            mac_info = (struct mclag_fdb_info *)&msg_buf[pos + sizeof(struct IccpSyncdHDr ) + i * sizeof(struct mclag_fdb_info)];
+            mac_info = (struct mclag_fdb_info *)&msg_buf[sizeof(struct IccpSyncdHDr ) + i * sizeof(struct mclag_fdb_info)];
             /*ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %s ", i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type == MAC_SYNC_ADD ? "add" : "del");*/
             do_mac_update_from_syncd(mac_info->mac, mac_info->vid, mac_info->port_name, mac_info->type, mac_info->op_type);
         }
-
-        pos += msg_hdr->len;
     }
 
     return 0;
