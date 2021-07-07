@@ -73,6 +73,22 @@ char *show_ip_str(uint32_t ipv4_addr)
     return g_ipv4_str;
 }
 
+char *show_ip_in_str(struct in_addr ipv4_addr)
+{
+    memset(g_ipv4_str, 0, sizeof(g_ipv4_str));
+    inet_ntop(AF_INET, &ipv4_addr, g_ipv4_str, INET_ADDRSTRLEN);
+
+    return g_ipv4_str;
+}
+
+char *show_ipv6_in_str(struct in6_addr ipv6_addr)
+{
+    memset(g_ipv6_str, 0, sizeof(g_ipv6_str));
+    inet_ntop(AF_INET6, &ipv6_addr, g_ipv6_str, INET6_ADDRSTRLEN);
+
+    return g_ipv6_str;
+}
+
 char *show_ipv6_str(char *ipv6_addr)
 {
     memset(g_ipv6_str, 0, sizeof(g_ipv6_str));
@@ -238,6 +254,7 @@ done:
  * Port-Channel Status Handler
  *
  ****************************************/
+ #if 0
 static void set_route_by_linux_route(struct CSM* csm,
                                      struct LocalInterface *local_if,
                                      int is_add)
@@ -270,6 +287,7 @@ static void set_route_by_linux_route(struct CSM* csm,
 
     return;
 }
+#endif
 
 static void update_vlan_if_info(struct CSM *csm,
                                 struct LocalInterface *local_if,

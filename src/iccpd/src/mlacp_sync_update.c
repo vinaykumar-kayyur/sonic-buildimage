@@ -874,7 +874,7 @@ int mlacp_fsm_update_port_channel_info(struct CSM* csm,
         }
 
         /* Record peer info*/
-        peer_if->ipv4_addr = ntohl(tlv->ipv4_addr);
+        /*peer_if->ipv4_addr = ntohl(tlv->ipv4_addr);*/
         peer_if->l3_mode = tlv->l3_mode;
 
         for (i = 0; i < ntohs(tlv->num_of_vlan_id); i++)
@@ -886,7 +886,7 @@ int mlacp_fsm_update_port_channel_info(struct CSM* csm,
 
         iccp_consistency_check(peer_if->name);
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Peer intf %s info: ipv4 addr %s l3 mode %d", peer_if->name, show_ip_str( tlv->ipv4_addr), peer_if->l3_mode);
+        /*ICCPD_LOG_DEBUG(__FUNCTION__, "Peer intf %s info: ipv4 addr %s l3 mode %d", peer_if->name, show_ip_str(tlv->ipv4_addr), peer_if->l3_mode);*/
         break;
     }
 

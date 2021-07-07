@@ -51,6 +51,7 @@ void local_if_init(struct LocalInterface* local_if)
     local_if->csm = NULL;
     local_if->isolate_to_peer_link = 0;
     LIST_INIT(&local_if->vlan_list);
+    LIST_INIT(&local_if->ipaddr_list);
 
     return;
 }
@@ -336,7 +337,8 @@ int local_if_is_l3_mode(struct LocalInterface* local_if)
     if (local_if == NULL)
         return 0;
 
-    if (local_if->ipv4_addr != 0 || memcmp(local_if->ipv6_addr, addr_null, 16) != 0)
+    /*if (!LIST_EMPTY(&(local_if->ipaddr_list)))*/
+    if (local_if->l3_mode == 1)
         ret = 1;
 
     return ret;
@@ -377,6 +379,7 @@ void local_if_purge_clear(void)
         LIST_REMOVE(lif, system_purge_next);
         if (lif->mlacp_purge_next.le_next != 0 && lif->mlacp_purge_next.le_prev != 0)
             LIST_REMOVE(lif, mlacp_purge_next);
+        local_if_del_all_ip_address(lif);
         local_if_del_all_vlan(lif);
         free(lif);
     }
@@ -391,6 +394,7 @@ void local_if_finalize(struct LocalInterface* lif)
     if (lif == NULL)
         return;
 
+    local_if_del_all_ip_address(lif);
     local_if_del_all_vlan(lif);
 
     free(lif);
@@ -552,6 +556,22 @@ void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid)
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", local_if->name, vid);
 
+    return;
+}
+
+void local_if_del_all_ip_address(struct LocalInterface* lif)
+{
+    struct ipaddr *ip = NULL;
+
+    ICCPD_LOG_NOTICE(__FUNCTION__, "Remove all ip address from %s", lif->name);
+    while (!LIST_EMPTY(&(lif->ipaddr_list)))
+    {
+        ip = LIST_FIRST(&(lif->ipaddr_list));
+        LIST_REMOVE(ip, ipaddr_next);
+        free(ip);
+    }
+
+    LIST_INIT(&(lif->ipaddr_list));
     return;
 }
 

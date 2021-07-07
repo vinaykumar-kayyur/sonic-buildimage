@@ -398,7 +398,7 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
             else if (lif_po->state == PORT_STATE_TEST)
                 memcpy(mclagd_lif.state, "Test", 4);
 
-            memcpy(mclagd_lif.ipv4_addr, show_ip_str(htonl(lif_po->ipv4_addr)), 16);
+            /*memcpy(mclagd_lif.ipv4_addr, show_ip_str(htonl(lif_po->ipv4_addr)), 16);*/
             mclagd_lif.prefixlen = lif_po->prefixlen;
 
             mclagd_lif.l3_mode = local_if_is_l3_mode(lif_po);

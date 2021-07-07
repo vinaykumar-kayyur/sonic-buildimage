@@ -54,6 +54,8 @@ extern int mclagd_ctl_interactive_process(int client_fd);
 extern int parseMacString(const char *str_mac, uint8_t *bin_mac);
 char *show_ip_str(uint32_t ipv4_addr);
 char *show_ipv6_str(char *ipv6_addr);
+char *show_ip_in_str(struct in_addr ipv4_addr);
+char *show_ipv6_in_str(struct in6_addr ipv6_addr);
 
 void syncd_info_close();
 int iccp_connect_syncd();

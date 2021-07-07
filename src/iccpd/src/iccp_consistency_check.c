@@ -86,8 +86,8 @@ static int iccp_check_interface_layer3_addr(char* ifname)
     if (peer_if == NULL)
         return -4;
 
-    if (peer_if->ipv4_addr != local_if->ipv4_addr)
-        return -5;
+    /*if (peer_if->ipv4_addr != local_if->ipv4_addr)
+        return -5;*/
 
     return 1;
 }
