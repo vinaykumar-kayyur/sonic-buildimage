@@ -799,15 +799,17 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
     struct LocalInterface *lif = NULL;
     struct nl_addr *nl_addr;
     int addr_type = 0;
-    int op_state = 0;
     int link_flag = 0;
+    bool admin = false;
+    bool oper = false;
 
     link = (struct rtnl_link *)obj;
     ifindex = rtnl_link_get_ifindex(link);
-    op_state = rtnl_link_get_operstate(link);
     ifname = rtnl_link_get_name(link);
     nl_addr = rtnl_link_get_addr(link);
     link_flag = rtnl_link_get_flags(link);
+    admin = link_flag & IFF_UP;
+    oper = link_flag & IFF_LOWER_UP;
 
     if (nl_addr)
         addr_type = nl_addr_guess_family(nl_addr);
@@ -853,10 +855,12 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
 
                 lif->state = PORT_STATE_DOWN;
 
-                if (IF_OPER_UP == op_state )
+                if (admin && oper)
                 {
                     lif->state = PORT_STATE_UP;
                 }
+
+                lif->po_active = (lif->state == PORT_STATE_UP);
 
                 switch (addr_type)
                 {
@@ -873,7 +877,7 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
     else /*update*/
     {
         /*update*/
-        if (lif->state == PORT_STATE_DOWN && op_state == IF_OPER_UP)
+        if (lif->state == PORT_STATE_DOWN && admin && oper)
         {
             lif->state = PORT_STATE_UP;
             /*if(lif->type ==IF_T_PORT_CHANNEL)*/
@@ -881,7 +885,7 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
 
             iccp_from_netlink_port_state_handler(lif->name, lif->state);
         }
-        else if (lif->state == PORT_STATE_UP && ( IF_OPER_UP != op_state || !(link_flag & IFF_LOWER_UP)))
+        else if (lif->state == PORT_STATE_UP && (!admin || !oper))
         {
             lif->state = PORT_STATE_DOWN;
             /*if(lif->type ==IF_T_PORT_CHANNEL)*/
