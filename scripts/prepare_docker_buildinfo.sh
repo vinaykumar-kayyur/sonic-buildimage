@@ -22,6 +22,7 @@ if [ -z "$DISTRO" ]; then
     [ -z "$DISTRO" ] && DISTRO=jessie
 fi
 
+# add script for reproducible build. using sha256 instead of tag for docker base image.
 scripts/docker_version_control.sh $@
 
 DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
