@@ -139,7 +139,9 @@
                         "gre_type": "0x1234",
                         "dscp": "10",
                         "ttl": "63",
-                        "src_port": "Ethernet0"
+                        "src_port": [
+                            "Ethernet0"
+                        ]
                     }
                 ]
             }
@@ -167,7 +169,9 @@
                         "gre_type": "0x1234",
                         "dscp": "10",
                         "ttl": "63",
-                        "src_port": "PortChannel5"
+                        "src_port": [
+                            "PortChannel5"
+                        ]
                     }
                 ]
             }
@@ -185,7 +189,9 @@
                         "gre_type": "0x1234",
                         "dscp": "10",
                         "ttl": "63",
-                        "src_port": "Ethernet0"
+                        "src_port": [
+                            "Ethernet0"
+                        ]
                     }
                 ]
             }
@@ -212,6 +218,15 @@
                         "mtu": 9000,
                         "name": "Ethernet4",
                         "speed": 25000
+                    },
+                    {
+                        "admin_status": "up",
+                        "alias": "eth1",
+                        "description": "Ethernet8",
+                        "lanes": "1",
+                        "mtu": 9000,
+                        "name": "Ethernet8",
+                        "speed": 25000
                     }
                 ]
             }
@@ -223,7 +238,10 @@
                         "name": "span",
                         "type": "SPAN",
                         "dst_port": "Ethernet0",
-                        "src_port": "Ethernet4",
+                        "src_port": [
+                            "Ethernet4",
+                            "Ethernet8"
+                        ],
                         "direction": "RX"
                     }
                 ]
@@ -266,7 +284,9 @@
                         "name": "span",
                         "type": "SPAN",
                         "dst_port": "Ethernet0",
-                        "src_port": "Ethernet4"
+                        "src_port": [
+                            "Ethernet4"
+                        ]
                     }
                 ]
             }

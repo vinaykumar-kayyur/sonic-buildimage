@@ -4,7 +4,7 @@
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_TYPE": {
         "desc": "Configurinng ERSPAN entry with invalid type",
-        "eStrKey" : "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_DST_IP": {
         "desc": "Configurinng ERSPAN entry with invalid dst_ip",
@@ -49,6 +49,6 @@
     },
     "MIRROR_SPAN_ENTRY_INVALID_DIRECTION": {
         "desc": "Configurinng SPAN entry with invalid direction",
-        "eStrKey" : "Pattern"
+        "eStrKey": "InvalidValue"
     }
 }
