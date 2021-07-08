@@ -60,7 +60,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 !
 {# set router-id #}
-{% if DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd' or  (multi_asic is defined and DEVICE_METADATA['localhost']['switch_type'] == 'voq') %}
+{% if DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd' or DEVICE_METADATA['localhost']['switch_type'] == 'voq' %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 {% else %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}
@@ -68,7 +68,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 !
 {# advertise loopback #}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
-{% if multi_asic is defined  %}
+{% if multi_asic is defined or DEVICE_METADATA['localhost']['switch_type'] == 'voq' %}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32 route-map HIDE_INTERNAL
 {% endif %}
 !
@@ -77,7 +77,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/64
   exit-address-family
 {% endif %}
-{% if multi_asic is defined %}
+{% if multi_asic is defined or DEVICE_METADATA['localhost']['switch_type'] == 'voq'%}
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") != 'None' %}
   address-family ipv6
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/128 route-map HIDE_INTERNAL
