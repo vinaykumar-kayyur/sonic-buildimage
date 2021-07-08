@@ -55,8 +55,16 @@ static bool dhcpv6_enabled;
 #define UDPv6_START_OFFSET (IP_START_OFFSET + sizeof(struct ip6_hdr))
 /** Start of DHCPv6 header of a captured frame */
 #define DHCPv6_START_OFFSET (UDPv6_START_OFFSET + sizeof(struct udphdr))
+/** Size of 'type' field on DHCPv6 header */
+#define DHCPv6_TYPE_LENGTH 1
+/** Size of DHCPv6 relay message header to first option */
+#define DHCPv6_RELAY_MSG_OPTIONS_OFFSET 34
 /** Size of 'option' field on DHCPv6 header */
-#define DHCPv6_OPTION_LENGTH 1
+#define DHCPv6_OPTION_LENGTH 2
+/** Size of 'option length' field on DHCPv6 header */
+#define DHCPv6_OPTION_LEN_LENGTH 2
+/** DHCPv6 OPTION_RELAY_MSG */
+#define DHCPv6_OPTION_RELAY_MSG 9
 
 #define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
 #define OP_LDHI     (BPF_LD  | BPF_H   | BPF_IND)   /** bpf ldh Ind */
@@ -121,28 +129,19 @@ static dhcpv4_message_type_t v4_monitored_msgs[] = {
     DHCPv4_MESSAGE_TYPE_ACK
 };
 
-/** Monitored Rx DHCPv6 message type */
-static dhcpv6_message_type_t v6_rx_monitored_msgs[] = {
+/** Monitored DHCPv6 message type */
+static dhcpv6_message_type_t v6_monitored_msgs[] = {
     DHCPv6_MESSAGE_TYPE_SOLICIT,
-    DHCPv6_MESSAGE_TYPE_REQUEST,
-    DHCPv6_MESSAGE_TYPE_RELAY_REPLY
-};
-
-/** Monitored Tx DHCPv6 message type */
-static dhcpv6_message_type_t v6_tx_monitored_msgs[] = {
     DHCPv6_MESSAGE_TYPE_ADVERTISE,
-    DHCPv6_MESSAGE_TYPE_REPLY,
-    DHCPv6_MESSAGE_TYPE_RELAY_FORWARD
+    DHCPv6_MESSAGE_TYPE_REQUEST,
+    DHCPv6_MESSAGE_TYPE_REPLY
 };
 
 /** Number of monitored DHCPv4 message type */
 static uint8_t v4_monitored_msg_sz = sizeof(v4_monitored_msgs) / sizeof(*v4_monitored_msgs);
 
-/** Number of monitored Rx DHCPv6 message type */
-static uint8_t v6_rx_monitored_msg_sz = sizeof(v6_rx_monitored_msgs) / sizeof(*v6_rx_monitored_msgs);
-
-/** Number of monitored Tx DHCPv6 message type */
-static uint8_t v6_tx_monitored_msg_sz = sizeof(v6_tx_monitored_msgs) / sizeof(*v6_tx_monitored_msgs);
+/** Number of monitored DHCPv6 message type */
+static uint8_t v6_monitored_msg_sz = sizeof(v6_monitored_msgs) / sizeof(*v6_monitored_msgs);
 
 /**
  * @code handle_dhcp_option_53(context, dhcp_option, dir, iphdr, dhcphdr);
@@ -311,8 +310,8 @@ static void read_callback(int fd, short event, void *arg)
                 }
             }
         }
-        else if (!is_ipv4 && dhcpv6_enabled && (buffer_sz > UDPv6_START_OFFSET + sizeof(struct udphdr) + DHCPv6_OPTION_LENGTH)) {
-            const u_char dhcp_option = context->buffer[DHCPv6_START_OFFSET];
+        else if (!is_ipv4 && dhcpv6_enabled && (buffer_sz > UDPv6_START_OFFSET + sizeof(struct udphdr) + DHCPv6_TYPE_LENGTH)) {
+            const u_char* dhcp_option = context->buffer + dhcp_option_offset;
             dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
                                            ethhdr->ether_shost[1] == context->mac[1] &&
                                            ethhdr->ether_shost[2] == context->mac[2] &&
@@ -320,7 +319,25 @@ static void read_callback(int fd, short event, void *arg)
                                            ethhdr->ether_shost[4] == context->mac[4] &&
                                            ethhdr->ether_shost[5] == context->mac[5]) ?
                                            DHCP_TX : DHCP_RX;
-            handle_dhcpv6_option(context, dhcp_option, dir);
+            int offset = 0;
+            uint16_t option = 0;
+            // Get to inner DHCP header from encapsulated RELAY_FORWARD or RELAY_REPLY header
+            while (dhcp_option[offset] == DHCPv6_MESSAGE_TYPE_RELAY_FORWARD || dhcp_option[offset] == DHCPv6_MESSAGE_TYPE_RELAY_REPLY)
+            {
+                // Get to DHCPv6_OPTION_RELAY_MSG from all options
+                offset += DHCPv6_RELAY_MSG_OPTIONS_OFFSET;
+                option = htons(*((uint16_t*)(&(dhcp_option[offset]))));
+
+                while (option != DHCPv6_OPTION_RELAY_MSG)
+                {
+                    offset += DHCPv6_OPTION_LENGTH;
+                    // Add to offset the option length and get the next option ID
+                    offset += htons(*((uint16_t*)(&(dhcp_option[offset]))));
+                    option = htons(*((uint16_t*)(&(dhcp_option[offset]))));
+                }
+                offset += DHCPv6_OPTION_LENGTH + DHCPv6_OPTION_LEN_LENGTH;
+            }
+            handle_dhcpv6_option(context, dhcp_option[offset], dir);
         } else {
             syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
                    context->intf, buffer_sz);
@@ -362,8 +379,8 @@ static bool dhcp_device_is_dhcp_inactive(uint64_t v4counters[][DHCP_DIR_COUNT][D
     case DHCPv6_TYPE:
         rx_counters = v6counters[DHCP_COUNTERS_CURRENT][DHCP_RX];
         rx_counter_snapshot = v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX];
-        for (uint8_t i = 0; (i < v6_rx_monitored_msg_sz) && rv; i++) {
-            rv = rx_counters[v6_rx_monitored_msgs[i]] == rx_counter_snapshot[v6_rx_monitored_msgs[i]];
+        for (uint8_t i = 0; (i < v6_monitored_msg_sz) && rv; i++) {
+            rv = rx_counters[v6_monitored_msgs[i]] == rx_counter_snapshot[v6_monitored_msgs[i]];
         }
         break;
 
@@ -409,22 +426,8 @@ static bool dhcp_device_is_dhcpv6_msg_unhealthy(dhcpv6_message_type_t type,
                                                 uint64_t v6counters[][DHCP_DIR_COUNT][DHCPv6_MESSAGE_TYPE_COUNT])
 {
     // check if DHCP message 'type' is being relayed
-    switch (type) {
-        case DHCPv6_MESSAGE_TYPE_SOLICIT:
-        case DHCPv6_MESSAGE_TYPE_REQUEST:
-            return ((v6counters[DHCP_COUNTERS_CURRENT][DHCP_RX][type] > v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][type]) &&
-                    (v6counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCPv6_MESSAGE_TYPE_RELAY_FORWARD] <= v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCPv6_MESSAGE_TYPE_RELAY_FORWARD]));
-
-        case DHCPv6_MESSAGE_TYPE_RELAY_REPLY:
-            if ((v6counters[DHCP_COUNTERS_CURRENT][DHCP_RX][type] > v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][type]) &&
-                    ((v6counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCPv6_MESSAGE_TYPE_ADVERTISE] > v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCPv6_MESSAGE_TYPE_ADVERTISE]) ||
-                    (v6counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCPv6_MESSAGE_TYPE_REPLY] > v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCPv6_MESSAGE_TYPE_REPLY]))) {
-                        return false;
-                    }
-            else {
-                return true;
-            }
-    }
+    return ((v6counters[DHCP_COUNTERS_CURRENT][DHCP_RX][type] >  v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][type]) &&
+            (v6counters[DHCP_COUNTERS_CURRENT][DHCP_TX][type] <= v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][type])    );
 }
 
 /**
@@ -459,8 +462,8 @@ static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t v4counters[]
         break;
 
     case DHCPv6_TYPE:
-        for (uint8_t i = 0; (i < v6_rx_monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
-            is_dhcp_unhealthy = dhcp_device_is_dhcpv6_msg_unhealthy(v6_rx_monitored_msgs[i], v6counters);
+        for (uint8_t i = 0; (i < v6_monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
+            is_dhcp_unhealthy = dhcp_device_is_dhcpv6_msg_unhealthy(v6_monitored_msgs[i], v6counters);
         }
         break;
 
@@ -512,8 +515,8 @@ static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t v4counters[]
     case DHCPv6_TYPE:
         tx_counters = v6counters[DHCP_COUNTERS_CURRENT][DHCP_TX];
         tx_counter_snapshot = v6counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX];
-        for (uint8_t i = 0; (i < v6_tx_monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
-            is_dhcp_unhealthy = tx_counters[v6_tx_monitored_msgs[i]] > tx_counter_snapshot[v6_tx_monitored_msgs[i]];
+        for (uint8_t i = 0; (i < v6_monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
+            is_dhcp_unhealthy = tx_counters[v6_monitored_msgs[i]] > tx_counter_snapshot[v6_monitored_msgs[i]];
         }
         break;
     default:
@@ -593,8 +596,7 @@ static void dhcp_print_counters(const char *vlan_intf,
     syslog(
         LOG_NOTICE,
         "DHCPv4 [%*s-%*s rx/tx] Discover: %*lu/%*lu, Offer: %*lu/%*lu, Request: %*lu/%*lu, ACK: %*lu/%*lu\n\
-         DHCPv6 [%*s-%*s rx/tx] Solicit: %*lu/%*lu, Advertise: %*lu/%*lu, Request: %*lu/%*lu, Reply: %*lu/%*lu\n\
-         Relay-Reply: %*lu/%*lu, Relay-Forward: %*lu/%*lu\n",
+         DHCPv6 [%*s-%*s rx/tx] Solicit: %*lu/%*lu, Advertise: %*lu/%*lu, Request: %*lu/%*lu, Reply: %*lu/%*lu\n",
         IF_NAMESIZE, vlan_intf,
         (int) strlen(v4_counter_desc[type]), v4_counter_desc[type],
         DHCP_COUNTER_WIDTH, v4counters[DHCP_RX][DHCPv4_MESSAGE_TYPE_DISCOVER],
@@ -614,11 +616,7 @@ static void dhcp_print_counters(const char *vlan_intf,
         DHCP_COUNTER_WIDTH, v6counters[DHCP_RX][DHCPv6_MESSAGE_TYPE_REQUEST],
         DHCP_COUNTER_WIDTH, v6counters[DHCP_TX][DHCPv6_MESSAGE_TYPE_REQUEST],
         DHCP_COUNTER_WIDTH, v6counters[DHCP_RX][DHCPv6_MESSAGE_TYPE_REPLY],
-        DHCP_COUNTER_WIDTH, v6counters[DHCP_TX][DHCPv6_MESSAGE_TYPE_REPLY],
-        DHCP_COUNTER_WIDTH, v6counters[DHCP_RX][DHCPv6_MESSAGE_TYPE_RELAY_REPLY],
-        DHCP_COUNTER_WIDTH, v6counters[DHCP_TX][DHCPv6_MESSAGE_TYPE_RELAY_REPLY],
-        DHCP_COUNTER_WIDTH, v6counters[DHCP_RX][DHCPv6_MESSAGE_TYPE_RELAY_FORWARD],
-        DHCP_COUNTER_WIDTH, v6counters[DHCP_TX][DHCPv6_MESSAGE_TYPE_RELAY_FORWARD]
+        DHCP_COUNTER_WIDTH, v6counters[DHCP_TX][DHCPv6_MESSAGE_TYPE_REPLY]
     );
 }
 
