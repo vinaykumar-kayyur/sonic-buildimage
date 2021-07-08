@@ -27,8 +27,10 @@ GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
 
 
 # XCVR type definition
-SFP_TYPE = 0
-QSFP_TYPE = 1
+SFP_TYPE = "SFP"
+QSFP_TYPE = "QSFP"
+OSFP_TYPE = "OSFP"
+QSFP_DD_TYPE = "QSFP_DD"
 
 
 class Chassis(ChassisBase):
@@ -96,8 +98,11 @@ class Chassis(ChassisBase):
         # init sfp list
         port_num = 1
         for sfpg_name in self.platdev.get_sfp_group_list():
-            if self.platdev.get_sfp_group_type_by_name(sfpg_name) == 'QSFP28':
+            temp_type = self.platdev.get_sfp_group_type_by_name(sfpg_name)
+            if temp_type == 'QSFP28':
                 sfp_type = QSFP_TYPE
+            elif temp_type == 'QSFP-DD':
+                sfp_type = QSFP_DD_TYPE
             else:
                 sfp_type = SFP_TYPE
             

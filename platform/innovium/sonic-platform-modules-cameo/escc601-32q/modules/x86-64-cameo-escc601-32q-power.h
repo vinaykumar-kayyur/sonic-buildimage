@@ -11,7 +11,7 @@
 #define PSU_1_PIN_REG           0x57
 #define PSU_1_MFR_MODEL_REG     0x58
 #define PSU_1_MFR_IOUT_MAX_REG  0x59
-#define PSU_1_VOMDE_REG         0x5a
+#define PSU_1_VMODE_REG         0x5a
 #define PSU_2_VIN_REG           0x60
 #define PSU_2_IIN_REG           0x61
 #define PSU_2_VOUT_REG          0x62
@@ -22,7 +22,7 @@
 #define PSU_2_PIN_REG           0x67
 #define PSU_2_MFR_MODEL_REG     0x68
 #define PSU_2_MFR_IOUT_MAX_REG  0x69
-#define PSU_2_VOMDE_REG         0x6a
+#define PSU_2_VMODE_REG         0x6a
 #define DC_CHIP_6E_P0_VOUT_REG  0x90
 #define DC_CHIP_6E_P0_IOUT_REG  0x91
 #define DC_CHIP_6E_P0_POUT_REG  0x92

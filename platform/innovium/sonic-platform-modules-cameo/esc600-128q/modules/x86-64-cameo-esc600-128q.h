@@ -12,7 +12,7 @@
 #include <linux/uaccess.h>
 #include <linux/string.h>
 
-#define DRIVER_VERSION  "1.0.2"
+#define DRIVER_VERSION  "1.0.5"
 
 struct i2c_adap {
 	int nr;
@@ -325,6 +325,10 @@ enum Cameo_i2c_sysfs_attributes
     PSU2_PIN,
     PSU3_PIN,
     PSU4_PIN,
+    PSU1_MFR_MODEL,
+    PSU2_MFR_MODEL,
+    PSU3_MFR_MODEL,
+    PSU4_MFR_MODEL,
     PSU1_MFR_IOUT_MAX,
     PSU2_MFR_IOUT_MAX,
     PSU3_MFR_IOUT_MAX,
@@ -594,10 +598,10 @@ enum Cameo_i2c_sysfs_attributes
  static SENSOR_DEVICE_ATTR(fan3_rpm                , S_IRUGO           , fan_rpm_get               , NULL                      , FAN_3_RPM);
  static SENSOR_DEVICE_ATTR(fan4_rpm                , S_IRUGO           , fan_rpm_get               , NULL                      , FAN_4_RPM);
  /* x86-64-cameo-esc600-128q-power.c */
- static SENSOR_DEVICE_ATTR(psu1_good               , S_IRUGO           , psu_status_get            , NULL                      , 1);
- static SENSOR_DEVICE_ATTR(psu2_good               , S_IRUGO           , psu_status_get            , NULL                      , 2);
- static SENSOR_DEVICE_ATTR(psu3_good               , S_IRUGO           , psu_status_get            , NULL                      , 3);
- static SENSOR_DEVICE_ATTR(psu4_good               , S_IRUGO           , psu_status_get            , NULL                      , 4);
+ static SENSOR_DEVICE_ATTR(psu1_good                , S_IRUGO           , psu_status_get            , NULL                      , 1);
+ static SENSOR_DEVICE_ATTR(psu2_good                , S_IRUGO           , psu_status_get            , NULL                      , 2);
+ static SENSOR_DEVICE_ATTR(psu3_good                , S_IRUGO           , psu_status_get            , NULL                      , 3);
+ static SENSOR_DEVICE_ATTR(psu4_good                , S_IRUGO           , psu_status_get            , NULL                      , 4);
  static SENSOR_DEVICE_ATTR(psu1_prnt                , S_IRUGO           , psu_present_get           , NULL                      , 1);
  static SENSOR_DEVICE_ATTR(psu2_prnt                , S_IRUGO           , psu_present_get           , NULL                      , 2);
  static SENSOR_DEVICE_ATTR(psu3_prnt                , S_IRUGO           , psu_present_get           , NULL                      , 3);
@@ -634,6 +638,10 @@ enum Cameo_i2c_sysfs_attributes
  static SENSOR_DEVICE_ATTR(psu2_pin                 , S_IRUGO           , psu_pin_get               , NULL                      , PSU2_PIN);
  static SENSOR_DEVICE_ATTR(psu3_pin                 , S_IRUGO           , psu_pin_get               , NULL                      , PSU3_PIN);
  static SENSOR_DEVICE_ATTR(psu4_pin                 , S_IRUGO           , psu_pin_get               , NULL                      , PSU4_PIN);
+ static SENSOR_DEVICE_ATTR(psu1_mfr_model           , S_IRUGO           , psu_mfr_model_get         , NULL                      , PSU1_MFR_MODEL);
+ static SENSOR_DEVICE_ATTR(psu2_mfr_model           , S_IRUGO           , psu_mfr_model_get         , NULL                      , PSU2_MFR_MODEL);
+ static SENSOR_DEVICE_ATTR(psu3_mfr_model           , S_IRUGO           , psu_mfr_model_get         , NULL                      , PSU3_MFR_MODEL);
+ static SENSOR_DEVICE_ATTR(psu4_mfr_model           , S_IRUGO           , psu_mfr_model_get         , NULL                      , PSU4_MFR_MODEL);
  static SENSOR_DEVICE_ATTR(psu1_mfr_iout_max        , S_IRUGO           , psu_iout_max_get          , NULL                      , PSU1_MFR_IOUT_MAX);
  static SENSOR_DEVICE_ATTR(psu2_mfr_iout_max        , S_IRUGO           , psu_iout_max_get          , NULL                      , PSU2_MFR_IOUT_MAX);
  static SENSOR_DEVICE_ATTR(psu3_mfr_iout_max        , S_IRUGO           , psu_iout_max_get          , NULL                      , PSU3_MFR_IOUT_MAX);
@@ -956,10 +964,14 @@ static struct attribute *ESC600_POWER_attributes[] =
     &sensor_dev_attr_psu2_pin.dev_attr.attr,           
     &sensor_dev_attr_psu3_pin.dev_attr.attr,           
     &sensor_dev_attr_psu4_pin.dev_attr.attr,           
-    &sensor_dev_attr_psu1_mfr_iout_max.dev_attr.attr,      
-    &sensor_dev_attr_psu2_mfr_iout_max.dev_attr.attr,      
-    &sensor_dev_attr_psu3_mfr_iout_max.dev_attr.attr,      
-    &sensor_dev_attr_psu4_mfr_iout_max.dev_attr.attr,      
+    &sensor_dev_attr_psu1_mfr_model.dev_attr.attr,
+    &sensor_dev_attr_psu2_mfr_model.dev_attr.attr,
+    &sensor_dev_attr_psu3_mfr_model.dev_attr.attr,
+    &sensor_dev_attr_psu4_mfr_model.dev_attr.attr,
+    &sensor_dev_attr_psu1_mfr_iout_max.dev_attr.attr,
+    &sensor_dev_attr_psu2_mfr_iout_max.dev_attr.attr,
+    &sensor_dev_attr_psu3_mfr_iout_max.dev_attr.attr,
+    &sensor_dev_attr_psu4_mfr_iout_max.dev_attr.attr,
     &sensor_dev_attr_psu1_vmode.dev_attr.attr,       
     &sensor_dev_attr_psu2_vmode.dev_attr.attr,       
     &sensor_dev_attr_psu3_vmode.dev_attr.attr,       

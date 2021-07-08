@@ -19,6 +19,7 @@ class Component(ComponentBase):
     """DellEMC Platform-specific Component class"""
 
     def __init__(self, idx,name,descript):
+        ComponentBase.__init__(self)
         self.index = idx
         self.name = name
         self.description = descript

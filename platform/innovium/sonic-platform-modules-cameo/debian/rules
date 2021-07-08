@@ -18,10 +18,11 @@ override_dh_auto_build:
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
 		if [ -f "$${mod}/setup.py" ]; then \
-                        rm -rdf build;  \
+			rm -rdf build;  \
 			$(PYTHON) $${mod}/setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/modules; \
 		fi;\
 		if [ $${mod} = "esc600-128q" ]; then \
+			make -C $(MOD_SRC_DIR)/$${mod}/credo_baldeagle/lib; \
 			if [ -f "$${mod}/platform_setup.py" ]; then \
 				rm -rdf build; \
 				$(PYTHON) $${mod}/platform_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/modules; \

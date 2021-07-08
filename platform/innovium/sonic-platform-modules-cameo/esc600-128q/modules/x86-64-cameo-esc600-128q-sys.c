@@ -1256,6 +1256,7 @@ ssize_t switch_int_mask_set(struct device *dev, struct device_attribute *da, con
     input = simple_strtol(buf, NULL, 10);
     if((input != 0) && (input != 1) )
     {
+        mutex_unlock(&data->update_lock);
         printk(KERN_ALERT "switch_int_mask_set wrong Value\n");
         return count;
     }
@@ -1737,6 +1738,7 @@ ssize_t sys_int_mask_set(struct device *dev, struct device_attribute *da, const 
     input = simple_strtol(buf, NULL, 10);
     if((input != 0) && (input != 1) )
     {
+        mutex_unlock(&data->update_lock);
         printk(KERN_ALERT "sys_int_mask_set wrong Value\n");
         return count;
     }
@@ -1935,6 +1937,7 @@ ssize_t thermal_int_mask_set(struct device *dev, struct device_attribute *da, co
     input = simple_strtol(buf, NULL, 10);
     if((input != 0) && (input != 1) )
     {
+        mutex_unlock(&data->update_lock);
         printk(KERN_ALERT "switch_int_mask_set wrong Value\n");
         return count;
     }

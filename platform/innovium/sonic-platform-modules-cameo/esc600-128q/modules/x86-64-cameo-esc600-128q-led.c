@@ -143,6 +143,7 @@ ssize_t led_ctrl_set(struct device *dev, struct device_attribute *da, const char
                 blk_value   |= (1 << ((attr->index)-1));
                 break;
             default:
+                mutex_unlock(&data->update_lock);
                 printk(KERN_ALERT "led_ctrl_set wrong Value\n");
                 return count;
         }
@@ -290,6 +291,7 @@ ssize_t switch_led_4_set(struct device *dev, struct device_attribute *da, const 
                 blk_value   |= (1 << ((attr->index)-1));
                 break;
             default:
+                mutex_unlock(&data->update_lock);
                 printk(KERN_ALERT "led_ctrl_set wrong Value\n");
                 return count;
         }
@@ -437,6 +439,7 @@ ssize_t switch_led_5_set(struct device *dev, struct device_attribute *da, const 
                 blk_value   |= (1 << ((attr->index)-1));
                 break;
             default:
+                mutex_unlock(&data->update_lock);
                 printk(KERN_ALERT "led_ctrl_set wrong Value\n");
                 return count;
         }
