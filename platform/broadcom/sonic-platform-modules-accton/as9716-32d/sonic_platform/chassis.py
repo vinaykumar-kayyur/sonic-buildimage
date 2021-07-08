@@ -18,6 +18,8 @@ class Chassis(PddfChassis):
     PDDF Platform-specific Chassis class
     """
 
+    SYSLED_DEV_NAME = "DIAG_LED"
+
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
 
@@ -59,3 +61,12 @@ class Chassis(PddfChassis):
             return True, change_dict
         else:
             return True, change_dict
+
+    def initizalize_system_led(self):
+        return
+
+    def get_status_led(self):
+        return self.get_system_led(self.SYSLED_DEV_NAME)
+
+    def set_status_led(self, color):
+        return self.set_system_led(self.SYSLED_DEV_NAME, color)
