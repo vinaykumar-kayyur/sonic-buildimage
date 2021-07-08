@@ -20,7 +20,7 @@ module sonic-lldp {
     description
         "SONiC LLDP yang model";
 
-    revision 2020-04-16 {
+    revision 2021-07-08 {
         description
             "Initial revision.";
     }
@@ -87,6 +87,7 @@ module sonic-lldp {
 
                 leaf supp_mgmt_address_tlv {
                     type boolean;
+                    default false;
                     description
                         "Suppress sending of Management Address TLV in LLDP frames";
                 }
