@@ -10,13 +10,13 @@ import time
 import subprocess
 
 from sonic_py_common.logger import Logger
-from sonic_py_common.device_info import get_platform
+from sonic_py_common.device_info import get_platform, get_path_to_platform_dir
 try:
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
-from .utils import default_return, is_host
+from .utils import default_return
 
 logger = Logger()
 
@@ -28,10 +28,7 @@ EEPROM_SYMLINK = "/var/run/hw-management/eeprom/vpd_info"
 
 platform_name = get_platform()
 if 'simx' in platform_name:
-    if is_host():
-        platform_path = os.path.join('/usr/share/sonic/device', platform_name)
-    else:
-        platform_path = '/usr/share/sonic/platform'
+    platform_path = get_path_to_platform_dir()
 
     if not os.path.exists(os.path.dirname(EEPROM_SYMLINK)):
         os.makedirs(os.path.dirname(EEPROM_SYMLINK))

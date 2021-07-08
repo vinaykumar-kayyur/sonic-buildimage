@@ -18,8 +18,7 @@ class Platform(PlatformBase):
         self._chassis = Chassis()
         self._chassis.initialize_eeprom()
         platform_name = get_platform()
-        simx_platform = bool(platform_name and "simx" in platform_name)
-        if not simx_platform:
+        if "simx" not in platform_name:
             self._chassis.initialize_psu()
             if utils.is_host():
                 self._chassis.initialize_components()
