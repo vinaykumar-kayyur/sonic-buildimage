@@ -175,18 +175,20 @@ class Chassis(ChassisBase):
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
+                    # Reset the sfp to re-initailze the management interface
+                    self.get_sfp(port_num).reset()
                 elif(not presence and
                         self._global_port_pres_dict[port_num] == '1'):
                     self._global_port_pres_dict[port_num] = '0'
                     port_dict[port_num] = '0'
 
             if(len(port_dict) > 0):
-                return True, change_dict 
+                return True, change_dict
 
             if timeout:
                 now_ms = time.time() * 1000
                 if (now_ms - start_ms >= timeout):
-                    return True, change_dict 
+                    return True, change_dict
 
 
     def get_sfp(self, index):
@@ -294,7 +296,7 @@ class Chassis(ChassisBase):
         Returns :
             An integer represents the number of Fans on the chassis.
         """
-        return self._num_fans 
+        return self._num_fans
 
     def get_num_sfps(self):
         """
@@ -345,7 +347,7 @@ class Chassis(ChassisBase):
         return self.sys_ledcolor
 
     def set_status_led(self, color):
-        """ 
+        """
         Set system LED status based on the color type passed in the argument.
         Argument: Color to be set
         Returns:

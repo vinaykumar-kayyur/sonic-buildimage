@@ -97,7 +97,7 @@ sff8436_parser = {
       'Temperature': [QSFP_DOM_OFFSET,  22,  2, 'parse_temperature'],
           'Voltage': [QSFP_DOM_OFFSET,  26,  2, 'parse_voltage'],
    'ChannelMonitor': [QSFP_DOM_OFFSET,  34, 16, 'parse_channel_monitor_params'],
-   'ChannelMonitor_TxPower': 
+   'ChannelMonitor_TxPower':
                      [QSFP_DOM_OFFSET,  34, 24, 'parse_channel_monitor_params_with_tx_power'],
 
        'cable_type': [QSFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
@@ -936,7 +936,7 @@ class Sfp(SfpBase):
         else:
             channel_monitor_data = self._get_eeprom_data('ChannelMonitor')
             if (channel_monitor_data is not None):
-                tx1_pw = channel_monitor_data['data']['TXPower']['value'] 
+                tx1_pw = channel_monitor_data['data']['TXPower']['value']
                 tx2_pw = 'N/A'
                 tx3_pw = 'N/A'
                 tx4_pw = 'N/A'
@@ -981,7 +981,8 @@ class Sfp(SfpBase):
 
             # Convert our register value back to a hex string and write back
             self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
-
+            # 2 seconds duration for MgmtInit
+            time.sleep(2)
             return True
 
         else:
