@@ -32,7 +32,7 @@ parameters:
 
 jobs:
   - job:
-    displayName: 'Merge for $(base_url_tail)'
+    displayName: 'Merge for ${{parameters.ms_repo_url_tail}}'
     # two variables are needed: ms_token and git_token. they need endup with '@'
     variables:
       - ${{ if eq(parameters.base_repo, 'github') }}:
