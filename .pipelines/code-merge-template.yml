@@ -1,0 +1,133 @@
+parameters:
+  # input github branch first, ms branch second.
+  - name: 'branch_list'
+    type: string
+    default: 'master internal 202012 internal-202012 201811 internal-201811 202106 internal-202106'
+  - name: 'ms_repo_url_tail'
+    type: string
+    default: 'msazure.visualstudio.com/One/_git/Networking-acs-buildimage'
+    values:
+      - 'msazure.visualstudio.com/One/_git/Networking-acs-buildimage'
+      - 'msazure.visualstudio.com/One/_git/Networking-acs-sonic-mgmt'
+  - name: 'git_repo_url_tail'
+    type: string
+    default: 'github.com/Azure/sonic-buildimage'
+    values:
+      - 'github.com/Azure/sonic-buildimage'
+      - 'github.com/Azure/sonic-mgmt'
+  # select base repo
+  - name: 'base_repo'
+    type: string
+    default: ms
+    values:
+      - github
+      - ms
+  # whether push after merge
+  - name: exec_push
+    type: string
+    values:
+      - yes
+      - no
+    default: no
+
+# two variables are needed: ms_token and git_token. they need endup with '@'
+variables:
+  - ${{ if eq(parameters.base_repo, 'github') }}:
+    - name: base_url_tail
+      value: ${{parameters.git_repo_url_tail}}
+    - name: base_url
+      value: https://$(git_token)$(base_url_tail)
+    - name: target_url_tail
+      value: ${{parameters.ms_repo_url_tail}}
+    - name: target_url
+      value: https://$(ms_token)$(target_url_tail)
+  - ${{ if eq(parameters.base_repo, 'ms') }}:
+    - name: base_url_tail
+      value: ${{parameters.ms_repo_url_tail}}
+    - name: base_url
+      value: https://$(ms_token)$(base_url_tail)
+    - name: target_url_tail
+      value: ${{parameters.git_repo_url_tail}}
+    - name: target_url
+      value: https://$(git_token)$(target_url_tail)
+
+jobs:
+  - job: code_merge
+    pool:
+      vmimage: ubuntu-20.04
+    timeoutInMinutes: 10
+    steps:
+      - checkout: none
+      - bash: |
+          FAILED=""
+          merge(){
+            base_branch=$1
+            target_branch=$2
+            # cd /home/vsts/work/1/s
+            cd ${BUILD_REPOSITORY_LOCALPATH}
+            if [ -d repo ];then
+              rm -rf repo || (echo "====== FATAL: rm -rf repo failed ======"; exit 1)
+            fi
+            mkdir repo
+            cd repo
+            git init
+            git config --global user.email "svc-acs@microsoft.com"
+            git config --global user.name "Sonic Automation"
+            echo "=======base:$(base_url_tail), target:$(target_url_tail)======="
+            git remote add base $(base_url)
+            git remote add target $(target_url)
+            git remote update || exit 1
+            git checkout -b ${base_branch} --track base/${base_branch}
+
+            curr_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.pre-merge"
+            post_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.post-merge"
+            git tag ${curr_tag}
+
+            RC=0
+            git pull target ${target_branch} --no-edit || RC=$?
+            if [[ ${RC} != 0 ]];then
+              return 11
+            fi
+
+            head_tag=`git tag --contains HEAD`
+            tem=`echo ${head_tag} | grep ${curr_tag}`
+            if [[ ${tem} != "" ]];then
+              echo "======No change after rebasing ...======"
+              return 0
+            else
+              git tag ${post_tag}
+            fi
+
+            if [[ ${{parameters.exec_push}} == yes ]];then
+              git push base ${curr_tag} || RC=$?
+              if [[ ${RC} != 0 ]];then
+                return 12
+              fi
+              git push base ${post_tag} || RC=$?
+              if [[ ${RC} != 0 ]];then
+                return 13
+              fi
+              git push base ${base_branch} || RC=$?
+              if [[ ${RC} != 0 ]];then
+                return 14
+              fi
+            fi
+          }
+          main(){
+            while [[ $# > 1 ]];do
+              if [[ ${{parameters.base_repo}} == github ]];then
+                base_branch=$1
+                target_branch=$2
+              else
+                base_branch=$2
+                target_branch=$1
+              fi
+              merge ${base_branch} ${target_branch} || FAILED="${FAILED} ${base_branch}"
+              shift 2
+            done
+            if [[ -n ${FAILED} ]];then
+              echo "======Failed to merge following ${{parameters.base_repo}} branches: ${FAILED} ...======"
+              exit 10
+            fi
+          }
+          main ${{ parameters.branch_list }}

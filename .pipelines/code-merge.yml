@@ -1,0 +1,28 @@
+pr: none
+trigger: none
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily
+  branches:
+    include:
+    - internal
+  always: true
+
+jobs:
+  - template: code-merge-template.yml
+    displayName: 'Merge buildimage'
+    parameters:
+      branch_list: 'master internal 202012 internal-202012 201811 internal-201811 202106 internal-202106'
+      ms_repo_url_tail: 'msazure.visualstudio.com/One/_git/Networking-acs-buildimage'
+      git_repo_url_tail: 'github.com/Azure/sonic-buildimage'
+      base_repo: ms
+      exec_push: yes
+  - template: code-merge-template.yml
+    displayName: 'Merge mgmt'
+    parameters:
+      branch_list: 'master internal'
+      ms_repo_url_tail: 'msazure.visualstudio.com/One/_git/Networking-acs-sonic-mgmt'
+      git_repo_url_tail: 'github.com/Azure/sonic-mgmt'
+      base_repo: ms
+      exec_push: yes
