@@ -9,8 +9,7 @@
 #import sonic_platform
 
 try:
-    from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.thermal import Thermal
+    from sonic_platform_base.psu_base import PsuBase   
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
