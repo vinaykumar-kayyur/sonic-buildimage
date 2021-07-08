@@ -30,29 +30,28 @@ parameters:
       - no
     default: no
 
-# two variables are needed: ms_token and git_token. they need endup with '@'
-variables:
-  - ${{ if eq(parameters.base_repo, 'github') }}:
-    - name: base_url_tail
-      value: ${{parameters.git_repo_url_tail}}
-    - name: base_url
-      value: https://$(git_token)$(base_url_tail)
-    - name: target_url_tail
-      value: ${{parameters.ms_repo_url_tail}}
-    - name: target_url
-      value: https://$(ms_token)$(target_url_tail)
-  - ${{ if eq(parameters.base_repo, 'ms') }}:
-    - name: base_url_tail
-      value: ${{parameters.ms_repo_url_tail}}
-    - name: base_url
-      value: https://$(ms_token)$(base_url_tail)
-    - name: target_url_tail
-      value: ${{parameters.git_repo_url_tail}}
-    - name: target_url
-      value: https://$(git_token)$(target_url_tail)
-
 jobs:
   - job: code_merge
+    # two variables are needed: ms_token and git_token. they need endup with '@'
+    variables:
+      - ${{ if eq(parameters.base_repo, 'github') }}:
+        - name: base_url_tail
+          value: ${{parameters.git_repo_url_tail}}
+        - name: base_url
+          value: https://$(git_token)$(base_url_tail)
+        - name: target_url_tail
+          value: ${{parameters.ms_repo_url_tail}}
+        - name: target_url
+          value: https://$(ms_token)$(target_url_tail)
+      - ${{ if eq(parameters.base_repo, 'ms') }}:
+        - name: base_url_tail
+          value: ${{parameters.ms_repo_url_tail}}
+        - name: base_url
+          value: https://$(ms_token)$(base_url_tail)
+        - name: target_url_tail
+          value: ${{parameters.git_repo_url_tail}}
+        - name: target_url
+          value: https://$(git_token)$(target_url_tail)
     pool:
       vmimage: ubuntu-20.04
     timeoutInMinutes: 10
