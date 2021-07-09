@@ -769,7 +769,6 @@ class Sfp(SfpBase):
                 rx_los_list.append(rx_los_data & 0x02 != 0)
                 rx_los_list.append(rx_los_data & 0x04 != 0)
                 rx_los_list.append(rx_los_data & 0x08 != 0)
-                rx_los = rx_los_list[0] and rx_los_list[1] and rx_los_list[2] and rx_los_list[3]
                 return rx_los_list
             else:
                 return [False]*4
