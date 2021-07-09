@@ -39,7 +39,7 @@ class Chassis(PddfChassis):
 
         bitmap = 0
         for i in range(58):
-            modpres = self.get_sfp(i).get_presence()
+            modpres = self.get_sfp(i+1).get_presence()
             if modpres:
                 bitmap = bitmap | (1 << i)
 
