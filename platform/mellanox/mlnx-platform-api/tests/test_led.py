@@ -25,30 +25,32 @@ class TestLed:
         assert physical_led is not None
         self._verify_non_shared_led(physical_led, chassis)
         
+    @mock.patch('sonic_platform.led.Led._wait_files_ready', mock.MagicMock(return_value=True))
     def _verify_non_shared_led(self, physical_led, obj):
         mock_file_content = self._mock_led_file_content(physical_led)
 
-        def mock_read_str_from_file(file_path, default='', raise_exception=False):
+        def mock_read_str_from_file(file_path, **kwargs):
             return mock_file_content[file_path]
 
-        def mock_write_file(file_path, content, raise_exception=False):
+        def mock_write_file(file_path, content, **kwargs):
             mock_file_content[file_path] = content
 
         utils.read_str_from_file = mock_read_str_from_file
         utils.write_file = mock_write_file
 
         assert obj.get_status_led() == Led.STATUS_LED_COLOR_GREEN
-        mock_file_content[physical_led._green_led_path] = Led.LED_OFF
+        mock_file_content[physical_led.get_green_led_path()] = Led.LED_OFF
         assert obj.set_status_led(Led.STATUS_LED_COLOR_RED) is True
         assert obj.get_status_led() == Led.STATUS_LED_COLOR_RED
-        mock_file_content[physical_led._red_led_path] = Led.LED_OFF
+        mock_file_content[physical_led.get_red_led_path()] = Led.LED_OFF
         assert obj.set_status_led(Led.STATUS_LED_COLOR_GREEN) is True
         assert obj.get_status_led() == Led.STATUS_LED_COLOR_GREEN
-        mock_file_content[physical_led._green_led_path] = Led.LED_OFF
+        mock_file_content[physical_led.get_green_led_path()] = Led.LED_OFF
         assert obj.set_status_led(Led.STATUS_LED_COLOR_ORANGE) is False
 
         assert obj.set_status_led(Led.STATUS_LED_COLOR_RED_BLINK)
         assert obj.get_status_led() == Led.STATUS_LED_COLOR_RED_BLINK
+        
         mock_file_content[physical_led.get_red_led_delay_off_path()] = Led.LED_OFF
         mock_file_content[physical_led.get_red_led_delay_on_path()] = Led.LED_OFF
 
@@ -64,10 +66,10 @@ class TestLed:
 
     def _mock_led_file_content(self, led):
         return {
-            led._green_led_path: Led.LED_ON,
-            led._red_led_path: Led.LED_OFF,
-            led._orange_led_path: Led.LED_OFF,
-            led._led_cap_path: 'none green green_blink red red_blink',
+            led.get_green_led_path(): Led.LED_ON,
+            led.get_red_led_path(): Led.LED_OFF,
+            led.get_orange_led_path(): Led.LED_OFF,
+            led.get_led_cap_path(): 'none green green_blink red red_blink',
             led.get_green_led_delay_off_path(): Led.LED_OFF,
             led.get_green_led_delay_on_path(): Led.LED_OFF,
             led.get_red_led_delay_off_path(): Led.LED_OFF,
@@ -91,30 +93,29 @@ class TestLed:
     def _verify_shared_led(self, physical_led, obj1, obj2):
         mock_file_content = self._mock_led_file_content(physical_led)
 
-        def mock_read_str_from_file(file_path, default='', raise_exception=False):
+        def mock_read_str_from_file(file_path, **kwargs):
             return mock_file_content[file_path]
 
-        def mock_write_file(file_path, content, raise_exception=False):
+        def mock_write_file(file_path, content, **kwargs):
             mock_file_content[file_path] = content
 
         utils.read_str_from_file = mock_read_str_from_file
         utils.write_file = mock_write_file
         assert obj1.set_status_led(Led.STATUS_LED_COLOR_GREEN)
         assert obj2.get_status_led() == Led.STATUS_LED_COLOR_GREEN
-        mock_file_content[physical_led._green_led_path] = Led.LED_OFF
+        mock_file_content[physical_led.get_green_led_path()] = Led.LED_OFF
         assert obj2.set_status_led(Led.STATUS_LED_COLOR_RED)
         assert obj2.get_status_led() == Led.STATUS_LED_COLOR_RED
         assert obj1.set_status_led(Led.STATUS_LED_COLOR_RED)
         assert obj2.get_status_led() == Led.STATUS_LED_COLOR_RED
 
-        mock_file_content[physical_led._red_led_path] = Led.LED_OFF
+        mock_file_content[physical_led.get_red_led_path()] = Led.LED_OFF
         assert obj1.set_status_led(Led.STATUS_LED_COLOR_GREEN)
         assert obj1.get_status_led() == Led.STATUS_LED_COLOR_RED
         assert obj2.get_status_led() == Led.STATUS_LED_COLOR_RED
         assert obj2.set_status_led(Led.STATUS_LED_COLOR_GREEN)
         assert obj1.get_status_led() == Led.STATUS_LED_COLOR_GREEN
         assert obj1.get_status_led() == Led.STATUS_LED_COLOR_GREEN
-
 
     def test_psu_led(self):
         psu1 = Psu(0)
@@ -126,3 +127,9 @@ class TestLed:
         psu = FixedPsu(0)
         physical_led = psu.led
         self._verify_non_shared_led(physical_led, psu)
+
+    @mock.patch('os.path.exists', mock.MagicMock(side_effect=[False, False, False, True, True, True]))
+    @mock.patch('time.sleep', mock.MagicMock())
+    def test_wait_file_ready(self):
+        led = Led()
+        assert led._wait_files_ready(['f1', 'f2'])

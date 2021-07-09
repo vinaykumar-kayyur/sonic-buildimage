@@ -1,4 +1,5 @@
 import os
+import time
 from . import utils
 
 
@@ -69,30 +70,60 @@ class Led(object):
                 return False
 
         if Led.STATUS_LED_COLOR_GREEN_BLINK == color:
-            self._set_led_blink_status(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path(), Led.LED_BLINK)
+            self._trigger_blink(self.get_green_led_trigger())
+            return self._set_led_blink_status(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path(), Led.LED_BLINK)
         elif Led.STATUS_LED_COLOR_RED_BLINK == color:
-            self._set_led_blink_status(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path(), Led.LED_BLINK)
+            self._trigger_blink(self.get_red_led_trigger())
+            return self._set_led_blink_status(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path(), Led.LED_BLINK)
         elif Led.STATUS_LED_COLOR_ORANGE_BLINK == color:
-            self._set_led_blink_status(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path(), Led.LED_BLINK)
+            self._trigger_blink(self.get_orange_led_trigger())
+            return self._set_led_blink_status(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path(), Led.LED_BLINK)
         else:
             return False
-
-        return True
 
     def _stop_blink(self, led_cap_list):
         try:
             if Led.STATUS_LED_COLOR_GREEN_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path(), Led.LED_OFF)
+                self._untrigger_blink(self.get_green_led_trigger())
             if Led.STATUS_LED_COLOR_RED_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path(), Led.LED_OFF)
+                self._untrigger_blink(self.get_red_led_trigger())
             if Led.STATUS_LED_COLOR_ORANGE_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path(), Led.LED_OFF)
+                self._untrigger_blink(self.get_orange_led_trigger())
         except Exception as e:
             return
 
+    def _trigger_blink(self, blink_trigger_file):
+        utils.write_file(blink_trigger_file, 'timer')
+
+    def _untrigger_blink(self, blink_trigger_file):
+        utils.write_file(blink_trigger_file, 'none')
+
     def _set_led_blink_status(self, delay_on_file, delay_off_file, value):
+        if not self._wait_files_ready((delay_on_file, delay_off_file)):
+            return False
+
         utils.write_file(delay_on_file, value)
         utils.write_file(delay_off_file, value)
+        return True
+
+    def _wait_files_ready(self, file_list):
+        """delay_off and delay_on sysfs will be available only if _trigger_blink is called. And once 
+           _trigger_blink is called, driver might need time to prepare delay_off and delay_on. So,
+           need wait a few seconds here to make sure the sysfs is ready
+
+        Args:
+            file_list (list of str): files to be checked
+        """
+        wait_time = 5.0
+        initial_sleep = 0.01
+        while wait_time > 0:
+            if all([os.path.exists(x) for x in file_list]):
+                return True
+            time.sleep(initial_sleep)
+            wait_time -= initial_sleep
+            initial_sleep = initial_sleep * 2
+        
+        return False
 
     def get_status(self):
         led_cap_list = self.get_capability()
@@ -123,6 +154,7 @@ class Led(object):
             if Led.STATUS_LED_COLOR_GREEN_BLINK in led_cap_list:
                 if self._is_led_blinking(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path()):
                     return Led.STATUS_LED_COLOR_GREEN_BLINK
+
             if Led.STATUS_LED_COLOR_RED_BLINK in led_cap_list:
                 if self._is_led_blinking(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path()):
                     return Led.STATUS_LED_COLOR_RED_BLINK
@@ -135,8 +167,8 @@ class Led(object):
         return None
 
     def _is_led_blinking(self, delay_on_file, delay_off_file):
-        delay_on = utils.read_str_from_file(delay_on_file)
-        delay_off = utils.read_str_from_file(delay_off_file)
+        delay_on = utils.read_str_from_file(delay_on_file, default=Led.LED_OFF, log_func=None)
+        delay_off = utils.read_str_from_file(delay_off_file, default=Led.LED_OFF, log_func=None)
         return delay_on != Led.LED_OFF and delay_off != Led.LED_OFF
 
     def get_capability(self):
@@ -144,108 +176,64 @@ class Led(object):
         return set(caps.split())
 
     def get_green_led_path(self):
-        pass
+        return 'led_{}_green'.format(self._led_id)
 
     def get_green_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_green_led_path())
+        return 'led_{}_green_delay_off'.format(self._led_id)
 
     def get_green_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_green_led_path())
+        return 'led_{}_green_delay_on'.format(self._led_id)
+
+    def get_green_led_trigger(self):
+        return 'led_{}_green_trigger'.format(self._led_id)
 
     def get_red_led_path(self):
-        pass
+        return 'led_{}_red'.format(self._led_id)
 
     def get_red_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_red_led_path())
+        return 'led_{}_red_delay_off'.format(self._led_id)
 
     def get_red_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_red_led_path())
+        return 'led_{}_red_delay_on'.format(self._led_id)
+
+    def get_red_led_trigger(self):
+        return 'led_{}_red_trigger'.format(self._led_id)
 
     def get_orange_led_path(self):
-        pass
+        return 'led_{}_orange'.format(self._led_id)
 
     def get_orange_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_orange_led_path())
+        return 'led_{}_orange_delay_off'.format(self._led_id)
 
     def get_orange_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_orange_led_path())
+        return 'led_{}_orange_delay_on'.format(self._led_id)
+
+    def get_orange_led_trigger(self):
+        return 'led_{}_orange_trigger'.format(self._led_id)
 
     def get_led_cap_path(self):
-        pass
+        return 'led_{}_capability'.format(self._led_id)
 
- 
+
 class FanLed(Led):
-    LED_PATH = "/var/run/hw-management/led/"
-
     def __init__(self, index):
         if index is not None:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_fan{}_green".format(index))
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_fan{}_red".format(index))
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_fan{}_orange".format(index))
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_fan{}_capability".format(index))
+            self._led_id = 'fan{}'.format(index)
         else:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_fan_green")
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_fan_red")
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_fan_orange")
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_fan_capability")
-
-    def get_green_led_path(self):
-        return self._green_led_path
-
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+            self._led_id = 'fan'
 
 
 class PsuLed(Led):
     def __init__(self, index):
         if index is not None:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_psu{}_green".format(index))
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_psu{}_red".format(index))
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_psu{}_orange".format(index))
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_psu{}_capability".format(index))
+            self._led_id = 'psu{}'.format(index)
         else:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_psu_green")
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_psu_red")
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_psu_orange")
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_psu_capability")
-
-    def get_green_led_path(self):
-        return self._green_led_path
-
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+            self._led_id = 'psu'
 
 
 class SystemLed(Led):
     def __init__(self):
-        self._green_led_path = os.path.join(Led.LED_PATH, "led_status_green")
-        self._red_led_path = os.path.join(Led.LED_PATH, "led_status_red")
-        self._orange_led_path = os.path.join(Led.LED_PATH, "led_status_orange")
-        self._led_cap_path = os.path.join(Led.LED_PATH, "led_status_capability")
-
-    def get_green_led_path(self):
-        return self._green_led_path
-
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+        self._led_id = 'status'
 
 
 class SharedLed(object):
