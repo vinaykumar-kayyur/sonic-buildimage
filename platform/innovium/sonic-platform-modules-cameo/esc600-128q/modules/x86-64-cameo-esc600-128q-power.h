@@ -10,9 +10,9 @@
 #define PSU_1_FAN_SPEED_REG     0xb5
 #define PSU_1_POUT_REG          0xb6
 #define PSU_1_PIN_REG           0xb7
-#define PSU_1_MFR_MODEL_REG     0xb8
+#define PSU_1_MFR_MODEL_REG     0xfa
 #define PSU_1_MFR_IOUT_MAX_REG  0xb9
-#define PSU_1_VOMDE_REG         0xd8
+#define PSU_1_VMODE_REG         0xd8
 
 #define PSU_2_VIN_REG           0xba
 #define PSU_2_IIN_REG           0xbb
@@ -22,9 +22,9 @@
 #define PSU_2_FAN_SPEED_REG     0xbf
 #define PSU_2_POUT_REG          0xc0
 #define PSU_2_PIN_REG           0xc1
-#define PSU_2_MFR_MODEL_REG     0xc2
+#define PSU_2_MFR_MODEL_REG     0x9a
 #define PSU_2_MFR_IOUT_MAX_REG  0xc3
-#define PSU_2_VOMDE_REG         0xd9
+#define PSU_2_VMODE_REG         0xd9
 
 #define PSU_3_VIN_REG           0xc4
 #define PSU_3_IIN_REG           0xc5
@@ -34,9 +34,9 @@
 #define PSU_3_FAN_SPEED_REG     0xc9
 #define PSU_3_POUT_REG          0xca
 #define PSU_3_PIN_REG           0xcb
-#define PSU_3_MFR_MODEL_REG     0xcc
+#define PSU_3_MFR_MODEL_REG     0x9d
 #define PSU_3_MFR_IOUT_MAX_REG  0xcd
-#define PSU_3_VOMDE_REG         0xda
+#define PSU_3_VMODE_REG         0xda
 
 #define PSU_4_VIN_REG           0xce
 #define PSU_4_IIN_REG           0xcf
@@ -48,7 +48,7 @@
 #define PSU_4_PIN_REG           0xd5
 #define PSU_4_MFR_MODEL_REG     0xd6
 #define PSU_4_MFR_IOUT_MAX_REG  0xd7
-#define PSU_4_VOMDE_REG         0xdb
+#define PSU_4_VMODE_REG         0xdb
 
 #define DC_6E_P0_VOUT_REG       0x18
 #define DC_70_P0_VOUT_REG       0x1b

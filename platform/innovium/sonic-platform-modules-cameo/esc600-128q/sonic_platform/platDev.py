@@ -217,6 +217,9 @@ class PlatDev():
             if install_info:
                 self.sfp_info[sfp_group_name]['paths'] = install_info.get('paths')
                 self.sfp_info[sfp_group_name]['number'] = install_info.get('number')
+                # 400G line card
+                if self.sfp_info[sfp_group_name]['number'] == 4:
+                    self.sfp_info[sfp_group_name]['type'] = 'QSFP-DD'
         
     def get_dev_install_info(self):
         global SFP_EXT_SYSFILE_LIST

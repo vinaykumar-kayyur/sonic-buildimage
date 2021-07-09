@@ -191,7 +191,7 @@ ssize_t usb_enable_get(struct device *dev, struct device_attribute *da, char *bu
     sprintf(buf, "");
     if (attr->index == USB_EN)
     {
-        if (i2c_smbus_read_byte_data(Cameo_CPLD_30_client, USB_EN_REG) & BIT_2_MASK)
+        if (i2c_smbus_read_byte_data(Cameo_CPLD_30_client, USB_EN_REG) & BIT_1_MASK)
         {
             sprintf(buf, "%s%d\n", buf, ENABLE);
         }

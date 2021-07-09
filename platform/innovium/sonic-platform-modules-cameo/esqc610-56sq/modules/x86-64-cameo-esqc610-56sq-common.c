@@ -231,7 +231,7 @@ static struct i2c_driver Cameo_i2c_driver =
     .class        = I2C_CLASS_HWMON,
     .driver =
     {
-        .name     = "ESC_602_i2c",
+        .name     = "ESQC_610_i2c",
     },
     .probe        = Cameo_i2c_probe,
     .remove       = Cameo_i2c_remove,

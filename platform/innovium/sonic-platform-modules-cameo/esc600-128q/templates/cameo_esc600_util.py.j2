@@ -930,39 +930,39 @@ def install_phy_module_i2c_device():
                 'path': ' ',
                 'status':'NOTINST'
             },
-	    'CARD{}_LM63'.format(slot): {
+            'CARD{}_LM63'.format(slot): {
                 'parent':'PCA9548_0x77',
                 'parent_ch': slot-1,
                 'driver':'lm63',
                 'i2caddr': '0x4c',
                 'path': ' ',
                 'status':'NOTINST'
+            },
+            'CARD{}_D2D(0x11)'.format(slot): {
+                'parent':'PCA9548_0x77',
+                'parent_ch': slot-1,
+                'driver':'tps40425',
+                'i2caddr': '0x11',
+                'path': ' ',
+                'status':'NOTINST'
+            },
+            'CARD{}_D2D(0x12)'.format(slot): {
+                'parent':'PCA9548_0x77',
+                'parent_ch': slot-1,
+                'driver':'tps40425',
+                'i2caddr': '0x12',
+                'path': ' ',
+                'status':'NOTINST'
+            },
+            'CARD{}_D2D(0x13)'.format(slot): {
+                'parent':'PCA9548_0x77',
+                'parent_ch': slot-1,
+                'driver':'tps40425',
+                'i2caddr': '0x13',
+                'path': ' ',
+                'status':'NOTINST'
             }
-	    }
-#	    'CARD{}_D2D(0x11)'.format(slot): {
-#                'parent':'PCA9548_0x77',
-#                'parent_ch': slot-1,
-#                'driver':'tps40425',
-#                'i2caddr': '0x11',
-#                'path': ' ',
-#                'status':'NOTINST'
-#            },
-#            'CARD{}_D2D(0x12)'.format(slot): {
-#                'parent':'PCA9548_0x77',
-#                'parent_ch': slot-1,
-#                'driver':'tps40425',
-#                'i2caddr': '0x12',
-#                'path': ' ',
-#                'status':'NOTINST'
-#            },
-#            'CARD{}_D2D(0x13)'.format(slot): {
-#                'parent':'PCA9548_0x77',
-#                'parent_ch': slot-1,
-#                'driver':'tps40425',
-#                'i2caddr': '0x13',
-#                'path': ' ',
-#                'status':'NOTINST'
-#            }
+        }
 
         if model_type == INPHI_100G:
             phy_module_devices["CARD{}_G781".format(slot)]['i2caddr'] = '0x4d'
@@ -1100,7 +1100,7 @@ def hw_adjustment():
     hw_ver = get_hw_version()
     if hw_ver is not None:
         print("HW version: {}".format(hw_ver))
-        hw_ver = int(hw_ver)
+        hw_ver = int(hw_ver, 16)
     else:
         print("Failed to get HW version")
         hw_ver = 0x0

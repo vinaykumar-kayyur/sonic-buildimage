@@ -48,6 +48,7 @@ def main(card,power):
     
     filePath = '/sys/class/hwmon/hwmon2/device/ESC600_SYS/module_%d_enable'%card
     
+
     if os.path.exists(filePath):
         retval = get_attr_value(filePath)
         if retval == 'ERR':
