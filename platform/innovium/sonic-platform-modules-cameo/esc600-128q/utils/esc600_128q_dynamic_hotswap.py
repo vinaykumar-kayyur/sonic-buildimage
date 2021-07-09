@@ -11,7 +11,7 @@ import subprocess
 from importlib import import_module
 BE218 = import_module('esc600-128q.BaldEagleSdk_v2_18')
 
-global gMaxThreadNum=4
+gMaxThreadNum=4
 lock1 = Lock()
 lock2 = Lock()
 
