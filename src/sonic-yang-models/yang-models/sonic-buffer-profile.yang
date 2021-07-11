@@ -1,67 +1,92 @@
 module sonic-buffer-profile {
-	namespace "http://github.com/Azure/sonic-buffer-profile";
-	prefix bpf;
+    namespace "http://github.com/Azure/sonic-buffer-profile";
+    prefix bpf;
 
-	import sonic-buffer-pool {
-		prefix bpl;
-	}
+    import sonic-buffer-pool {
+        prefix bpl;
+    }
 
-	organization
-		"SONiC";
+    organization
+        "SONiC";
 
-	contact
-		"SONiC";
+    contact
+        "SONiC";
 
-	description
-		"SONIC BUFFER PROFILE";
+    description
+        "SONIC BUFFER PROFILE";
 
-	revision 2019-05-15 {
-		description
-			"Initial revision.";
-	}
+    revision 2021-07-01 {
+        description
+            "Initial revision.";
+    }
 
 
-	container sonic-buffer-profile {
+    container sonic-buffer-profile {
 
-		container BUFFER_PROFILE {
+        container BUFFER_PROFILE {
 
-			list BUFFER_PROFILE_LIST {
-				key "name";
+            list BUFFER_PROFILE_LIST {
+                key "name";
 
-				leaf name {
-					type string;
-				}
+                leaf name {
+                    type string;
+                    description "Buffer Profile name";
+                }
 
-				leaf static_th {
-					type uint64;
-				}
+                choice threshold {
+                    mandatory true;
+                    case static {
+                        leaf static_th {
+                            type uint64;
+                            description "The maximum size of the buffer pool the port can occupy";
+                        }
+                    }
 
-				leaf dynamic_th {
-					type int64;
-				}
+                    case dynamic {
+                        leaf dynamic_th {
+                            type string {
+                                pattern "(-[1-7]|([0-3]))" {
+                                    error-message "Invalid Dynamic Threshold";
+                                    error-app-tag dynamic_threshold-invalid;
+                                }
+                            }
+                            description "The maximum proportion of the free size of the buffer pool the port can occupy (Alpha value)";
+                        }
+                    }
+                }
 
-				leaf size {
-					type uint64;
-				}
+                leaf size {
+                    mandatory true;
+                    type uint64;
+                    description "Headroom Size";
+                }
 
-				leaf pool {
-					type leafref {
-						path "/bpl:sonic-buffer-pool/bpl:BUFFER_POOL/bpl:BUFFER_POOL_LIST/bpl:name";
-					}
-				}
+                leaf pool {
+                    mandatory true;
+                    type leafref {
+                        path "/bpl:sonic-buffer-pool/bpl:BUFFER_POOL/bpl:BUFFER_POOL_LIST/bpl:name";
+                    }
+                    description "Buffer Pool name defined in BUFFER_POOL";
+                }
 
-				leaf xon_offset {
-					type uint64;
-				}
+                leaf xon_offset {
+                    type uint64;
+                    default 0;
+                    description "Xon Offset Threshold for ingress PG. Triggered if total buffer usage <= max(xon, total buffer limit - xon_offset)";
+                }
 
-				leaf xon {
-					type uint64;
-				}
+                leaf xon {
+                    type uint64;
+                    default 0;
+                    description "Xon Threshold for ingress PG";
+                }
 
-				leaf xoff {
-					type uint64;
-				}
-			}
-		}
-	}
+                leaf xoff {
+                    type uint64;
+                    default 0;
+                    description "Xoff Threshold for ingress PG";
+                }
+            }
+        }
+    }
 }

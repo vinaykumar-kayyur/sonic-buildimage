@@ -1,51 +1,63 @@
 module sonic-buffer-pool {
-	namespace "http://github.com/Azure/sonic-buffer-pool";
-	prefix bpl;
+    namespace "http://github.com/Azure/sonic-buffer-pool";
+    prefix bpl;
 
-	organization
-		"SONiC";
+    organization
+        "SONiC";
 
-	contact
-		"SONiC";
+    contact
+        "SONiC";
 
-	description
-		"SONIC BUFFER POOL";
+    description
+        "SONIC BUFFER POOL";
 
-	revision 2019-05-15 {
-		description
-			"Initial revision.";
-	}
+    revision 2021-07-01 {
+        description
+            "Initial revision.";
+    }
 
-	container sonic-buffer-pool {
+    container sonic-buffer-pool {
 
-		container BUFFER_POOL {
+        container BUFFER_POOL {
 
-			list BUFFER_POOL_LIST {
-				key "name";
+            list BUFFER_POOL_LIST {
+                key "name";
 
-				leaf name {
-					type string;
-				}
+                leaf name {
+                    type string;
+                    description "Buffer Pool name";
+                }
 
-				leaf type {
-					type enumeration {
-						enum ingress;
-						enum egress;
-					}
-				}
+                leaf type {
+                    mandatory true;
+                    type enumeration {
+                        enum ingress;
+                        enum egress;
+                    }
+                    description "Buffer Pool Type";
+                }
 
-				leaf mode {
-					type enumeration {
-						enum static;
-						enum dynamic;
-					}
-				}
+                leaf mode {
+                    default dynamic;
+                    type enumeration {
+                        enum static;
+                        enum dynamic;
+                    }
+                    description "Buffer Pool Mode";
+                }
 
-				leaf size {
-					type uint64;
-				}
+                leaf size {
+                    mandatory true;
+                    type uint64;
+                    description "Buffer Pool Size (in Bytes)";
+                }
 
-			}
-		}
-	}
+                leaf xoff {
+                    default 0;
+                    type uint64;
+                    description "Buffer Pool Xoff Threshold (in Bytes)";
+                }
+            }
+        }
+    }
 }
