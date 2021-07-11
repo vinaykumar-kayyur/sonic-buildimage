@@ -223,8 +223,6 @@ static void handle_dhcpv6_option(dhcp_device_context_t *context,
     case DHCPv6_MESSAGE_TYPE_REPLY:
     case DHCPv6_MESSAGE_TYPE_RECONFIGURE:
     case DHCPv6_MESSAGE_TYPE_INFORMATION_REQUEST:
-    case DHCPv6_MESSAGE_TYPE_RELAY_FORWARD:
-    case DHCPv6_MESSAGE_TYPE_RELAY_REPLY:
         context->counters.v6counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option]++;
         aggregate_dev.counters.v6counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option]++;
         break;
