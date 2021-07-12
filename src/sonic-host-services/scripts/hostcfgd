@@ -247,7 +247,7 @@ class FeatureHandler(object):
             return 'invalid'  # same as systemd's "invalid indicates that it could not be determined whether the unit file is enabled".
 
         props = dict([line.split("=") for line in stdout.decode().strip().splitlines()])
-        return props['UnitFileState']
+        return props["UnitFileState"]
 
 
     def enable_feature(self, feature):
