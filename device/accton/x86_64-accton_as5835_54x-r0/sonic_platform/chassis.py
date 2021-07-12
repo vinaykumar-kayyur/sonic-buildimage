@@ -29,7 +29,8 @@ PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
-SYSLED_FNODE = "/sys/class/leds/diag/brightness"
+SYSLED_FNODE= "/sys/class/leds/as5835_54x_led::diag/brightness"
+
 SYSLED_MODES = {
     "0" : "STATUS_LED_COLOR_OFF",
     "1" : "STATUS_LED_COLOR_GREEN",
