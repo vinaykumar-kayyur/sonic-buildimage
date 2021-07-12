@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install esqc610-32q python package
+# Install esqc610-56sq python package
 DEVICE="/usr/share/sonic/device"
 PLATFORM=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 
