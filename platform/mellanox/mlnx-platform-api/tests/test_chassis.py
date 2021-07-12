@@ -1,5 +1,7 @@
 import os
 import sys
+
+from mock import MagicMock
 if sys.version_info.major == 3:
     from unittest import mock
 else:
@@ -144,16 +146,17 @@ class TestChassis:
         assert len(sfp_list) == 3
         assert chassis.sfp_initialized_count == 3
 
+    @mock.patch('sonic_platform.sfp_event.sfp_event.check_sfp_status', MagicMock())
+    @mock.patch('sonic_platform.sfp_event.sfp_event.__init__', MagicMock(return_value=None))
+    @mock.patch('sonic_platform.sfp_event.sfp_event.initialize', MagicMock())
+    @mock.patch('sonic_platform.sfp.SFP.reinit', MagicMock())
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
     def test_change_event(self):
         from sonic_platform.sfp_event import sfp_event
         from sonic_platform.sfp import SFP
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=3)
-        sfp_event.__init__ = mock.MagicMock(return_value=None)
-        sfp_event.initialize = mock.MagicMock()
-        SFP.reinit = mock.MagicMock()
 
         return_port_dict = {1: '1'}
-        def mock_check_sfp_status(self, port_dict, timeout):
+        def mock_check_sfp_status(self, port_dict, error_dict, timeout):
             port_dict.update(return_port_dict)
             return True if port_dict else False
 

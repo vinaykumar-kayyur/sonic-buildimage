@@ -1,31 +1,46 @@
 import os
 import sys
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    import mock
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
-from sonic_py_common import device_info
-from sonic_platform.sfp import SFP
+from sonic_platform.sfp import SFP, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
 from sonic_platform.chassis import Chassis
 
 
-def mock_get_platform():
-    return 'x86_64-mlnx_msn2410-r0'
+@mock.patch('sonic_platform.sfp.SFP._read_eeprom_specific_bytes', mock.MagicMock(return_value=None))
+@mock.patch('sonic_platform.sfp.SFP._get_error_code')
+@mock.patch('sonic_platform.chassis.Chassis.get_num_sfps', mock.MagicMock(return_value=2))
+def test_sfp_get_error_status(mock_get_error_code):
+    chassis = Chassis()
 
+    # Fetch an SFP module to test
+    sfp = chassis.get_sfp(1)
 
-def mock_read_eeprom_specific_bytes(self, offset, num_bytes):
-    return None
+    description_dict = sfp._get_error_description_dict()
+    for error in description_dict.keys():
+        mock_get_error_code.return_value = (SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, error)
+        description = sfp.get_error_description()
 
+        assert description == description_dict[error]
 
-def mock_get_sdk_handle(self):
-    if not self.sdk_handle:
-        self.sdk_handle = 1
-    return self.sdk_handle
+    mock_get_error_code.return_value = (SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, -1)
+    description = sfp.get_error_description()
+    assert description == "Unknown error (-1)"
 
-device_info.get_platform = mock_get_platform
-SFP._read_eeprom_specific_bytes = mock_read_eeprom_specific_bytes
-Chassis.get_sdk_handle = mock_get_sdk_handle
+    expected_description_list = [
+        (SX_PORT_MODULE_STATUS_INITIALIZING, "Initializing"),
+        (SX_PORT_MODULE_STATUS_PLUGGED, "OK"),
+        (SX_PORT_MODULE_STATUS_UNPLUGGED, "Unplugged"),
+        (SX_PORT_MODULE_STATUS_PLUGGED_DISABLED, "Disabled")
+    ]
+    for oper_code, expected_description in expected_description_list:
+        mock_get_error_code.return_value = (oper_code, -1)
+        description = sfp.get_error_description()
 
-
-
+        assert description == expected_description
