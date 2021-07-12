@@ -44,11 +44,8 @@ module sonic-buffer-profile {
 
                     case dynamic {
                         leaf dynamic_th {
-                            type string {
-                                pattern "(-[1-7]|([0-3]))" {
-                                    error-message "Invalid Dynamic Threshold";
-                                    error-app-tag dynamic_threshold-invalid;
-                                }
+                            type int32 {
+                                range "-7..3";
                             }
                             description "The maximum proportion of the free size of the buffer pool the port can occupy (Alpha value)";
                         }

@@ -14,11 +14,11 @@
     },
     "BUFFER_PROFILE_WRONG_DYNAMIC_THRESHOLD_VALUE1": {
         "desc": "BUFFER_PROFILE_WRONG_DYNAMIC_THRESHOLD_VALUE1 no failure.",
-        "eStr": "Invalid"
+        "eStrKey": "Range"
     },
     "BUFFER_PROFILE_WRONG_DYNAMIC_THRESHOLD_VALUE2": {
         "desc": "BUFFER_PROFILE_WRONG_DYNAMIC_THRESHOLD_VALUE2 no failure.",
-        "eStr": "Invalid"
+        "eStrKey": "Range"
     },
     "BUFFER_PROFILE_MANDATORY_THRESHOLD_VALUE": {
         "desc": "BUFFER_PROFILE_MANDATORY_THRESHOLD_VALUE pattern failure.",
