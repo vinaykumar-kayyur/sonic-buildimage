@@ -53,11 +53,15 @@
                 "profile": "egress_lossy_profile"
             }
         },
-        "PORT_INGRESS_PROFILE_LIST:Ethernet4": {
-            "profile_list": ["ingress_lossy_profile"]
+        "PORT_INGRESS_PROFILE_LIST": {
+            "Ethernet9": {
+                "profile_list": ["ingress_lossy_profile"]
+            }
         },
-        "PORT_EGRESS_PROFILE_LIST:Ethernet4": {
-            "profile_list": ["egress_lossless_profile", "pg_lossless_100000_300m_profile"]
+        "PORT_EGRESS_PROFILE_LIST": {
+            "Ethernet9": {
+                "profile_list": ["egress_lossless_profile", "pg_lossless_100000_300m_profile"]
+            }
         },
         "PORTCHANNEL": {
             "PortChannel0003": {
