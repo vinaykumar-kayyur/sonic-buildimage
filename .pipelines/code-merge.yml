@@ -9,18 +9,36 @@ schedules:
     - internal
   always: true
 
+resources:
+  repositories:
+  - repository: buildimage
+    type: git
+    name: Networking-acs-buildimage
+    ref: 'refs/heads/shilongliu/internal'
+
+  - repository: mgmt
+    type: git
+    name: Networking-acs-sonic-mgmt
+    ref: 'refs/heads/shilongliu/internal'
+
 jobs:
-  - template: code-merge-template.yml
-    parameters:
-      branch_list: 'master internal 202012 internal-202012 201811 internal-201811 202106 internal-202106'
-      ms_repo_url_tail: 'msazure.visualstudio.com/One/_git/Networking-acs-buildimage'
-      git_repo_url_tail: 'github.com/Azure/sonic-buildimage'
-      base_repo: ms
-      exec_push: yes
-  - template: code-merge-template.yml
-    parameters:
-      branch_list: 'master internal'
-      ms_repo_url_tail: 'msazure.visualstudio.com/One/_git/Networking-acs-sonic-mgmt'
-      git_repo_url_tail: 'github.com/Azure/sonic-mgmt'
-      base_repo: ms
-      exec_push: yes
+  - job: code_merge_buildimage
+    pool:
+      vmImage: ubuntu-20.04
+    timeoutInMinutes: 10
+    displayName: 'Networking-acs-buildimage  Code Merge'
+    steps:
+    - template: code-merge-template.yml
+      parameters:
+        repo: buildimage
+        remote_url: https://github.com/Azure/sonic-buildimage
+  - job: code_merge_sonic_mgmt
+    pool:
+      vmImage: ubuntu-20.04
+    timeoutInMinutes: 10
+    displayName: 'Networking-acs-sonic-mgmt Code Merge'
+    steps:
+      - template: code-merge-template.yml
+        parameters:
+          repo: mgmt
+          remote_url: https://github.com/Azure/sonic-mgmt
