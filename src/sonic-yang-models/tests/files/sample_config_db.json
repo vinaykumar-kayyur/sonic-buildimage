@@ -53,10 +53,10 @@
                 "profile": "egress_lossy_profile"
             }
         },
-        "BUFFER_PORT_INGRESS_PROFILE_LIST_TABLE:Ethernet4": {
+        "PORT_INGRESS_PROFILE_LIST_TABLE:Ethernet4": {
             "profile_list": ["ingress_lossy_profile"]
         },
-        "BUFFER_PORT_EGRESS_PROFILE_LIST_TABLE:Ethernet4": {
+        "PORT_EGRESS_PROFILE_LIST_TABLE:Ethernet4": {
             "profile_list": ["egress_lossless_profile", "pg_lossless_100000_300m_profile"]
         },
         "PORTCHANNEL": {
