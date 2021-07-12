@@ -14,13 +14,14 @@ steps:
       git config --global user.email "svc-acs@microsoft.com"
       git config --global user.name "Sonic Automation"
 
-      branches="master 201811 201911 `git ls-remote azure refs/heads/shilongliu/202??? 2>/dev/null | cut -d/ -f3`"
-      for branch in $branches; do
-        base_branch=shilongliu/$branch
-        target_branch=internal-$branch
-        if [[ $base_branch == "shilongliu/master" ]];then
-          target_branch=internal
+      target_branches="master 201811 201911 `git ls-remote target refs/heads/202??? 2>/dev/null | cut -d/ -f3`"
+      for branch in $target_branches; do
+        base_branch=shilongliu/${branch}
+        target_branch=${branch}
+        if [[ ${base_branch} == "shilongliu/master" ]];then
+          base_branch=shilongliu/internal
         fi
+        git ls-remote origin refs/heads/${base_branch} || continue
 
         echo "=======Start merging. branch: ${base_branch}======="
         git checkout -b ${base_branch} --track origin/${base_branch}
