@@ -21,10 +21,10 @@ steps:
         if [[ ${base_branch} == "shilongliu/internal-master" ]];then
           base_branch=shilongliu/internal
         fi
-        git ls-remote origin refs/heads/${base_branch} || continue
+        git ls-remote origin refs/heads/${base_branch} &> /dev/null || continue
 
-        echo "=======Start merging. branch: ${base_branch}======="
-        git checkout -b ${base_branch} --track origin/${base_branch} || continue
+        echo "-------Start merging. branch: ${base_branch}-------"
+        git checkout -b ${base_branch} --track origin/${base_branch}
         curr_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.pre-merge"
         post_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.post-merge"
         git tag ${curr_tag}
@@ -45,6 +45,6 @@ steps:
       done
 
       if [[ ${FAILED} != "" ]];then
-        echo "======Failed to merge following branches: ${FAILED} ...======"
+        echo "============Failed to merge following branches: ${FAILED} ...============"
         exit 1
       fi
