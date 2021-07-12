@@ -24,12 +24,12 @@ steps:
         git ls-remote origin refs/heads/${base_branch} || continue
 
         echo "=======Start merging. branch: ${base_branch}======="
-        git checkout -b ${base_branch} --track origin/${base_branch}
+        git checkout -b ${base_branch} --track origin/${base_branch} || continue
         curr_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.pre-merge"
         post_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.post-merge"
         git tag ${curr_tag}
 
-        git pull target ${target_branch} --no-edit || (FAILED="${FAILED} ${base_branch}"; continue)
+        git pull target ${target_branch} --no-edit || (git merge --abort;FAILED="${FAILED} ${base_branch}"; continue)
 
         head_tag=`git tag --contains HEAD`
         tem=`echo ${head_tag} | grep ${curr_tag}`
