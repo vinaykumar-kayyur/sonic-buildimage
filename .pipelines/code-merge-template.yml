@@ -29,7 +29,7 @@ steps:
         post_tag="${base_branch}-`date '+%Y%m%d-%H%M'`.post-merge"
         git tag ${curr_tag}
 
-        git pull target ${target_branch} --no-edit || (git merge --abort;FAILED="${FAILED} ${base_branch}"; continue)
+        git pull target ${target_branch} --no-edit || { git merge --abort;FAILED="${FAILED} ${base_branch}"; continue }
 
         head_tag=`git tag --contains HEAD`
         tem=`echo ${head_tag} | grep ${curr_tag}`
@@ -37,11 +37,11 @@ steps:
           echo "======No change after rebasing ...======"
           continue
         else
-          git tag ${post_tag} || (FAILED="${FAILED} ${base_branch}"; continue)
+          git tag ${post_tag} || { FAILED="${FAILED} ${base_branch}"; continue }
         fi
-        git push origin ${curr_tag} || (FAILED="${FAILED} ${base_branch}"; continue)
-        git push origin ${post_tag} || (FAILED="${FAILED} ${base_branch}"; continue)
-        git push origin ${base_branch} || (FAILED="${FAILED} ${base_branch}"; continue)
+        git push origin ${curr_tag} || { FAILED="${FAILED} ${base_branch}"; continue }
+        git push origin ${post_tag} || { FAILED="${FAILED} ${base_branch}"; continue }
+        git push origin ${base_branch} || { FAILED="${FAILED} ${base_branch}"; continue }
       done
 
       if [[ ${FAILED} != "" ]];then
