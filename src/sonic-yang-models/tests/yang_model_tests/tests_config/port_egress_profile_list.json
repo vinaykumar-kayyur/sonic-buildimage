@@ -51,7 +51,7 @@
                 "PORT_EGRESS_PROFILE_LIST_LIST": [
                     {
                         "port": "Ethernet4",
-                        "profile": ["lossless_buffer_profile", "lossless_buffer_profile2"]
+                        "profile_list": ["lossless_buffer_profile", "lossless_buffer_profile2"]
                     }
                 ]    
             }
@@ -101,7 +101,7 @@
                 "PORT_EGRESS_PROFILE_LIST_LIST": [
                 {
                     "port": "Ethernet4",
-                    "profile": ["wrong"]
+                    "profile_list": ["wrong"]
                 }
                 ]
             }
@@ -151,7 +151,7 @@
                 "PORT_EGRESS_PROFILE_LIST_LIST": [
                 {
                     "port": "wrong",
-                    "profile": ["lossless_buffer_profile"]
+                    "profile_list": ["lossless_buffer_profile"]
                 }
                 ]
             }
