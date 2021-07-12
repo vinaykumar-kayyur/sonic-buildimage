@@ -128,6 +128,11 @@ DEVICE_DATA = {
         }
     },
     'x86_64-mlnx_msn4800-r0': {
+        'thermal': {
+            "capability": {
+                "comex_amb": False
+            }
+        },
         'sfp': {
             'max_port_per_line_card': 16
         }
