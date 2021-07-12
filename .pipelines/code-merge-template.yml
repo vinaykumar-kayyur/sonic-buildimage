@@ -15,12 +15,11 @@ steps:
       git config --global user.name "Sonic Automation"
 
       branches="master 201811 201911 `git ls-remote azure refs/heads/shilongliu/202??? 2>/dev/null | cut -d/ -f3`"
-      for branch in $branches
-      do
+      for branch in $branches; do
         base_branch=shilongliu/$branch
-        target_branch=shilongliu/internal-$branch
+        target_branch=internal-$branch
         if [[ $base_branch == "shilongliu/master" ]];then
-          target_branch=shilongliu/internal
+          target_branch=internal
         fi
 
         echo "=======Start merging. branch: ${base_branch}======="
