@@ -687,6 +687,8 @@
         "PBH_RULE": {
             "pbh_table|nvgre": {
                 "priority": "1",
+                "ether_type": "0x0800",
+                "ip_protocol": "0x2f",
                 "gre_key": "0x2500/0xffffff00",
                 "inner_ether_type": "0x86dd",
                 "hash": "inner_v6_hash",
@@ -695,6 +697,7 @@
             },
             "pbh_table|vxlan": {
                 "priority": "2",
+                "ether_type": "0x0800",
                 "ip_protocol": "0x11",
                 "l4_dst_port": "0x12b5",
                 "inner_ether_type": "0x0800",

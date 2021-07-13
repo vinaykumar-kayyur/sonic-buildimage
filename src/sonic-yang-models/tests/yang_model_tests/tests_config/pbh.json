@@ -74,6 +74,8 @@
                         "table_name": "pbh_table",
                         "rule_name": "nvgre",
                         "priority": 1,
+                        "ether_type": "0x0800",
+                        "ip_protocol": "0x2f",
                         "gre_key": "0x2500/0xffffff00",
                         "inner_ether_type": "0x86dd",
                         "hash": "inner_v6_hash",
@@ -84,6 +86,7 @@
                         "table_name": "pbh_table",
                         "rule_name": "vxlan",
                         "priority": 2,
+                        "ether_type": "0x0800",
                         "ip_protocol": "0x11",
                         "l4_dst_port": "0x12b5",
                         "inner_ether_type": "0x0800",
@@ -309,6 +312,62 @@
                         "rule_name": "nvgre",
                         "priority": 1,
                         "gre_key": "2500/0xffffff00",
+                        "hash": "inner_v6_hash"
+                    }
+                ]
+            },
+            "sonic-pbh:PBH_TABLE": {
+                "PBH_TABLE_LIST": [
+                    {
+                        "table_name": "pbh_table",
+                        "interface_list": [
+                            "Ethernet0"
+                        ],
+                        "description": "NVGRE"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet0",
+                        "lanes": "0,1,2,3",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
+    "PBH_RULE_INVALID_ETHER_TYPE": {
+        "sonic-pbh:sonic-pbh": {
+            "sonic-pbh:PBH_HASH_FIELD": {
+                "PBH_HASH_FIELD_LIST": [
+                    {
+                        "hash_field_name": "inner_ip_proto",
+                        "hash_field": "INNER_IP_PROTOCOL",
+                        "sequence_id": 1
+                    }
+                ]
+            },
+            "sonic-pbh:PBH_HASH": {
+                "PBH_HASH_LIST": [
+                    {
+                        "hash_name": "inner_v6_hash",
+                        "hash_field_list": [
+                            "inner_ip_proto"
+                        ]
+                    }
+                ]
+            },
+            "sonic-pbh:PBH_RULE": {
+                "PBH_RULE_LIST": [
+                    {
+                        "table_name": "pbh_table",
+                        "rule_name": "nvgre",
+                        "priority": 1,
+                        "ether_type": "0800",
                         "hash": "inner_v6_hash"
                     }
                 ]

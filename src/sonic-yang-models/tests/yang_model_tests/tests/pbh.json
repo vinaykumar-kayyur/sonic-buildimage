@@ -26,6 +26,10 @@
         "desc": "Configure invalid GRE_KEY in PBH_RULE.",
         "eStrKey": "Pattern"
     },
+    "PBH_RULE_INVALID_ETHER_TYPE": {
+        "desc": "Configure invalid ETHER_TYPE in PBH_RULE.",
+        "eStrKey": "Pattern"
+    },
     "PBH_RULE_INVALID_IP_PROTOCOL": {
         "desc": "Configure invalid IP_PROTOCOL in PBH_RULE.",
         "eStrKey": "Pattern"
