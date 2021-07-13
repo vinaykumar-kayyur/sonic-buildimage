@@ -17,3 +17,8 @@ class Fan(PddfFan):
     # Provide the functions/variables below for which implementation is to be overwritten
     # Since AS4630 psu_fan airflow direction cant be read from sysfs, it is fixed as 'F2B' or 'intake'
 
+    def get_target_speed(self):
+        if self.is_psu_fan:
+            raise NotImplementedError # Target speed not supported for PSU fans
+        else:
+            return super().get_target_speed()
