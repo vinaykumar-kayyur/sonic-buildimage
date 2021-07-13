@@ -158,6 +158,13 @@ module sonic-pbh {
 					}
 				}
 
+				leaf ether_type {
+					description "Configures packet match for this rule: EtherType (IANA Ethertypes)";
+					type string {
+						pattern "(0x){1}[a-fA-F0-9]{1,4}";
+					}
+				}
+
 				leaf ip_protocol {
 					description "Configures packet match for this rule: IP protocol (IANA Protocol Numbers)";
 					type string {
