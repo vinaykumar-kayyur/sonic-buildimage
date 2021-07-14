@@ -11,7 +11,11 @@
 {% set path_template = "bgpd/templates/msft.general/%s/" + template_name + ".conf.j2" %}
 {% if neighbor_addr | ipv4 %}
 {%     if device_type == 'MgmtToRRouter' or device_type == 'EPMS' %}
-{%         include path_template % "v4.mgmttor" %}
+{%         if device_type == 'MgmtToRRouter' and neighbor_type == 'CoreTs' %}
+{%             include path_template % "v4.mgmttor.oob" %}
+{%         else %}
+{%             include path_template % "v4.mgmttor" %}
+{%         endif %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
 {%         if deployment_id is defined and deployment_id == '26' %}
 {%             include path_template % "v4.tor.rotterdam" %}
@@ -38,7 +42,11 @@
 {% endif %}
 {% if neighbor_addr | ipv6 %}
 {%     if device_type == 'MgmtToRRouter' or device_type == 'EPMS' %}
-{%         include path_template % "v6.mgmttor" %}
+{%         if device_type == 'MgmtToRRouter' and neighbor_type == 'CoreTs' %}
+{%             include path_template % "v6.mgmttor.oob" %}
+{%         else %}
+{%             include path_template % "v6.mgmttor" %}
+{%         endif %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
 {%         if deployment_id is defined and deployment_id == '26' %}
 {%             include path_template % "v6.tor.rotterdam" %}
