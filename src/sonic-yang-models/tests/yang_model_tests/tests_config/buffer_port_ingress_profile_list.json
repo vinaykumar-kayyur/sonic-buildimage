@@ -1,5 +1,5 @@
 {
-    "PORT_INGRESS_PROFILE_LIST_CORRECT_PROFILE_VALUE": {
+    "BUFFER_PORT_INGRESS_PROFILE_LIST_CORRECT_PROFILE_VALUE": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -46,9 +46,9 @@
                 ]
             }
         },
-        "sonic-port-ingress-profile-list:sonic-port-ingress-profile-list": {
-            "sonic-port-ingress-profile-list:PORT_INGRESS_PROFILE_LIST": {
-                "PORT_INGRESS_PROFILE_LIST_LIST": [
+        "sonic-buffer-port-ingress-profile-list:sonic-buffer-port-ingress-profile-list": {
+            "sonic-buffer-port-ingress-profile-list:BUFFER_PORT_INGRESS_PROFILE_LIST": {
+                "BUFFER_PORT_INGRESS_PROFILE_LIST_LIST": [
                     {
                         "port": "Ethernet4",
                         "profile_list": ["lossless_buffer_profile", "lossless_buffer_profile2"]
@@ -57,7 +57,7 @@
             }
         }
     },
-    "PORT_INGRESS_PROFILE_LIST_WRONG_PROFILE_VALUE": {
+    "BUFFER_PORT_INGRESS_PROFILE_LIST_WRONG_PROFILE_VALUE": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -96,9 +96,9 @@
                 ]
             }
         },
-        "sonic-port-ingress-profile-list:sonic-port-ingress-profile-list": {
-            "sonic-port-ingress-profile-list:PORT_INGRESS_PROFILE_LIST": {
-                "PORT_INGRESS_PROFILE_LIST_LIST": [
+        "sonic-buffer-port-ingress-profile-list:sonic-buffer-port-ingress-profile-list": {
+            "sonic-buffer-port-ingress-profile-list:BUFFER_PORT_INGRESS_PROFILE_LIST": {
+                "BUFFER_PORT_INGRESS_PROFILE_LIST_LIST": [
                 {
                     "port": "Ethernet4",
                     "profile_list": ["wrong"]
@@ -107,7 +107,7 @@
             }
         }
     },
-    "PORT_INGRESS_PROFILE_LIST_WRONG_PORT_VALUE": {
+    "BUFFER_PORT_INGRESS_PROFILE_LIST_WRONG_PORT_VALUE": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -146,9 +146,9 @@
                 ]
             }
         },
-        "sonic-port-ingress-profile-list:sonic-port-ingress-profile-list": {
-            "sonic-port-ingress-profile-list:PORT_INGRESS_PROFILE_LIST": {
-                "PORT_INGRESS_PROFILE_LIST_LIST": [
+        "sonic-buffer-port-ingress-profile-list:sonic-buffer-port-ingress-profile-list": {
+            "sonic-buffer-port-ingress-profile-list:BUFFER_PORT_INGRESS_PROFILE_LIST": {
+                "BUFFER_PORT_INGRESS_PROFILE_LIST_LIST": [
                 {
                     "port": "wrong",
                     "profile_list": ["lossless_buffer_profile"]

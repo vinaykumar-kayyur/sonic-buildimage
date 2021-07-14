@@ -1,5 +1,5 @@
-module sonic-port-ingress-profile-list {
-    namespace "http://github.com/Azure/sonic-port-ingress-profile-list";
+module sonic-buffer-port-ingress-profile-list {
+    namespace "http://github.com/Azure/sonic-buffer-port-ingress-profile-list";
     prefix bpg;
 
     import sonic-extension {
@@ -21,7 +21,7 @@ module sonic-port-ingress-profile-list {
         "SONiC";
 
     description
-        "SONIC PORT INGRESS PROFILE LIST";
+        "SONIC BUFFER PORT INGRESS PROFILE LIST";
 
     revision 2021-07-01 {
         description
@@ -29,10 +29,10 @@ module sonic-port-ingress-profile-list {
     }
 
 
-    container sonic-port-ingress-profile-list {
+    container sonic-buffer-port-ingress-profile-list {
 
-        container PORT_INGRESS_PROFILE_LIST {
-            list PORT_INGRESS_PROFILE_LIST_LIST {
+        container BUFFER_PORT_INGRESS_PROFILE_LIST {
+            list BUFFER_PORT_INGRESS_PROFILE_LIST_LIST {
 
                 key "port";
 
