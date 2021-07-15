@@ -13,6 +13,7 @@ except ImportError as e:
 
 FAN_MAX_RPM = 25500
 PSU_FAN_MAX_RPM = 25500
+SPEED_TOLERANCE = 15
 CPLD_I2C_PATH = "/sys/bus/i2c/devices/11-0066/fan"
 PSU_I2C_PATH = "/sys/bus/i2c/devices/{}-00{}/"
 PSU_HWMON_I2C_MAPPING = {
@@ -133,7 +134,7 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        return False  #Not supported
+        return self.get_speed()
 
     def get_speed_tolerance(self):
         """
@@ -142,7 +143,7 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        return False  #Not supported
+        return SPEED_TOLERANCE
 
     def set_speed(self, speed):
         """
@@ -211,7 +212,7 @@ class Fan(FanBase):
 
         val = self.__read_txt_file(
             CPLD_I2C_PATH + str(self.fan_tray_index + 1) + "_present")
-        return int(val, 10)
+        return int(val, 10)==1
 
     def get_status(self):
         """
@@ -250,3 +251,25 @@ class Fan(FanBase):
             string: Serial number of device
         """
         return "N/A"
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return (self.fan_tray_index+1) \
+            if not self.is_psu_fan else (self.psu_index+1)
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True if not self.is_psu_fan else False
+
