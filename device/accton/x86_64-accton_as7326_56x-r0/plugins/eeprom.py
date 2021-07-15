@@ -5,7 +5,6 @@ try:
     import time
     import optparse
     import warnings
-    import os
     import sys
     from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
