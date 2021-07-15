@@ -176,43 +176,43 @@ class Led(object):
         return set(caps.split())
 
     def get_green_led_path(self):
-        return 'led_{}_green'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_green'.format(self._led_id))
 
     def get_green_led_delay_off_path(self):
-        return 'led_{}_green_delay_off'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_green_delay_off'.format(self._led_id))
 
     def get_green_led_delay_on_path(self):
-        return 'led_{}_green_delay_on'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_green_delay_on'.format(self._led_id))
 
     def get_green_led_trigger(self):
-        return 'led_{}_green_trigger'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_green_trigger'.format(self._led_id))
 
     def get_red_led_path(self):
-        return 'led_{}_red'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_red'.format(self._led_id))
 
     def get_red_led_delay_off_path(self):
-        return 'led_{}_red_delay_off'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_red_delay_off'.format(self._led_id))
 
     def get_red_led_delay_on_path(self):
-        return 'led_{}_red_delay_on'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_red_delay_on'.format(self._led_id))
 
     def get_red_led_trigger(self):
-        return 'led_{}_red_trigger'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_red_trigger'.format(self._led_id))
 
     def get_orange_led_path(self):
-        return 'led_{}_orange'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_orange'.format(self._led_id))
 
     def get_orange_led_delay_off_path(self):
-        return 'led_{}_orange_delay_off'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_orange_delay_off'.format(self._led_id))
 
     def get_orange_led_delay_on_path(self):
-        return 'led_{}_orange_delay_on'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_orange_delay_on'.format(self._led_id))
 
     def get_orange_led_trigger(self):
-        return 'led_{}_orange_trigger'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_orange_trigger'.format(self._led_id))
 
     def get_led_cap_path(self):
-        return 'led_{}_capability'.format(self._led_id)
+        return os.path.join(Led.LED_PATH, 'led_{}_capability'.format(self._led_id))
 
 
 class FanLed(Led):
