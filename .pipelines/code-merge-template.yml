@@ -16,10 +16,10 @@ steps:
 
       target_branches="master 201811 201911 `git ls-remote target refs/heads/202??? 2>/dev/null | cut -d/ -f3`"
       for branch in $target_branches; do
-        base_branch=shilongliu/internal-${branch}
+        base_branch=internal-${branch}
         target_branch=${branch}
-        if [[ ${base_branch} == "shilongliu/internal-master" ]];then
-          base_branch=shilongliu/internal
+        if [[ ${base_branch} == "internal-master" ]];then
+          base_branch=internal
         fi
         git ls-remote origin refs/heads/${base_branch} &> /dev/null || continue
 

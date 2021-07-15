@@ -14,12 +14,12 @@ resources:
   - repository: buildimage
     type: git
     name: Networking-acs-buildimage
-    ref: 'refs/heads/shilongliu/internal'
+    ref: 'refs/heads/internal'
 
   - repository: mgmt
     type: git
     name: Networking-acs-sonic-mgmt
-    ref: 'refs/heads/shilongliu/internal'
+    ref: 'refs/heads/internal'
 
 jobs:
   - job: code_merge_buildimage
