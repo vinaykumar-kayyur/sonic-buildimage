@@ -70,7 +70,7 @@ class Module(ModuleBase):
         return self.slot_id
 
     def get_presence(self):
-        return utils.read_int_from_file('/run/hw-management/system/lc{}_prsnt'.format(self.slot_id)) == 1
+        return utils.read_int_from_file('/run/hw-management/system/lc{}_present'.format(self.slot_id)) == 1
 
     def get_position_in_parent(self):
         return self.slot_id
@@ -81,9 +81,9 @@ class Module(ModuleBase):
     def get_oper_status(self): # TODO: read from DB?
         if utils.read_int_from_file('/run/hw-management/system/lc{}_active'.format(self.slot_id)) == 1:
             return ModuleBase.MODULE_STATUS_ONLINE
-        elif utils.read_int_from_file('/run/hw-management/system/lc{}_prsnt'.format(self.slot_id)) == 1:
+        elif utils.read_int_from_file('/run/hw-management/system/lc{}_present'.format(self.slot_id)) == 1:
             return ModuleBase.MODULE_STATUS_PRESENT
-        elif utils.read_int_from_file('/run/hw-management/system/lc{}_prsnt'.format(self.slot_id)) == 0:
+        elif utils.read_int_from_file('/run/hw-management/system/lc{}_present'.format(self.slot_id)) == 0:
             return ModuleBase.MODULE_STATUS_EMPTY
         else:
             return ModuleBase.MODULE_STATUS_FAULT
