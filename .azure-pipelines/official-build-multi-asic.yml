@@ -3,16 +3,12 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-schedules:
-- cron: "0 18 * * Sun,Wed,Fri"
-  displayName: "Alternate day build"
-  branches:
-    include:
-    - master
-  always: true
-
-trigger: none
-pr: none
+resources:
+  repositories:
+  - repository: sonic-mgmt
+    type: github
+    name: Azure/sonic-mgmt
+    endpoint: build
 
 stages:
 - stage: Build
