@@ -3,14 +3,6 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-resources:
-  repositories:
-  - repository: sonic-mgmt
-    type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
-
-
 stages:
 - stage: Build
   pool: sonicbld
