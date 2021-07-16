@@ -1,16 +1,16 @@
-From a4ab4de68134f6425f704a2ddcda33a4930645de Mon Sep 17 00:00:00 2001
+From cd151c1af217aeb302241e7843751b257e7d0f0c Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
 Date: Tue, 3 Mar 2020 13:04:57 -0800
 Subject: [PATCH] [libteam]: Reimplement Warm-Reboot procedure'
 
 ---
  libteam/ifinfo.c          |   6 +-
- teamd/teamd.c             |  51 +++-
+ teamd/teamd.c             |  51 ++++-
  teamd/teamd.h             |   6 +
  teamd/teamd_events.c      |  13 ++
  teamd/teamd_per_port.c    |   6 +
- teamd/teamd_runner_lacp.c | 474 +++++++++++++++++++++++++++++++++++---
- 6 files changed, 512 insertions(+), 44 deletions(-)
+ teamd/teamd_runner_lacp.c | 487 ++++++++++++++++++++++++++++++++++++++++++----
+ 6 files changed, 525 insertions(+), 44 deletions(-)
 
 diff --git a/libteam/ifinfo.c b/libteam/ifinfo.c
 index 46d56a2..b86d34c 100644
@@ -35,7 +35,7 @@ index 46d56a2..b86d34c 100644
  	}
  }
 diff --git a/teamd/teamd.c b/teamd/teamd.c
-index bf42347..221d71d 100644
+index 421e34d..33512a6 100644
 --- a/teamd/teamd.c
 +++ b/teamd/teamd.c
 @@ -117,7 +117,9 @@ static void print_help(const struct teamd_context *ctx) {
@@ -203,7 +203,7 @@ index 221803e..bd4dcc1 100644
  			   struct teamd_port *tdport)
  {
 diff --git a/teamd/teamd_per_port.c b/teamd/teamd_per_port.c
-index 166da57..03f8d63 100644
+index 166da57..cefd6c2 100644
 --- a/teamd/teamd_per_port.c
 +++ b/teamd/teamd_per_port.c
 @@ -350,6 +350,12 @@ static int teamd_port_remove(struct teamd_context *ctx,
@@ -220,7 +220,7 @@ index 166da57..03f8d63 100644
  		      tdport->ifname, tdport->ifindex);
  	err = team_port_remove(ctx->th, tdport->ifindex);
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 55abe88..f225fb2 100644
+index 955ef0c..87ff896 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -31,6 +31,7 @@
@@ -523,7 +523,7 @@ index 55abe88..f225fb2 100644
 +						/* the port was up before the WR. Trying to restore it */
 +						struct lacpdu lacpdu;
 +						err = lacpdu_read(lacp_port, &lacpdu);
-+						if (err) /* Can't read, so the port will start from scratch */ 
++						if (err) /* Can't read, so the port will start from scratch */
 +							continue;
 +						teamd_log_info("WR-mode. State of the LAG member port '%s' was restored.",
 +							tdport->ifname);
@@ -755,7 +755,7 @@ index 55abe88..f225fb2 100644
  	teamd_loop_callback_del(ctx, LACP_TIMEOUT_CB_NAME, lacp_port);
  	teamd_loop_callback_del(ctx, LACP_PERIODIC_CB_NAME, lacp_port);
  	teamd_loop_callback_del(ctx, LACP_SOCKET_CB_NAME, lacp_port);
-@@ -1451,16 +1795,51 @@ static int lacp_event_watch_port_changed(struct teamd_context *ctx,
+@@ -1451,16 +1795,64 @@ static int lacp_event_watch_port_changed(struct teamd_context *ctx,
  	return lacp_port_link_update(lacp_port);
  }
  
@@ -774,19 +774,32 @@ index 55abe88..f225fb2 100644
 +static void lacp_event_watch_port_flush_data(struct teamd_context *ctx, struct teamd_port *tdport, void *priv)
 +{
 +	struct lacp *lacp = priv;
++	struct wr_tdport_state *tdport_state = NULL;
 +
 +	/* save dump information for each tdport */
-+	lacp->wr.nr_of_tdports++;
-+	lacp->wr.state = realloc(lacp->wr.state, sizeof(struct wr_tdport_state) * lacp->wr.nr_of_tdports);
-+	if (lacp->wr.state) {
++
++	for (int i = 0; i < lacp->wr.nr_of_tdports; i++) {
++		if (strncmp(lacp->wr.state[i].name, tdport->ifname, IFNAMSIZ) == 0) {
++			tdport_state = lacp->wr.state + i;
++		}
++	}
++	if (!tdport_state) {
++		lacp->wr.nr_of_tdports++;
++		lacp->wr.state = realloc(lacp->wr.state, sizeof(struct wr_tdport_state) * lacp->wr.nr_of_tdports);
++		if (!lacp->wr.state) {
++			teamd_log_err("WR-mode. Can't reallocate memory for LACP member %s dump", tdport->ifname);
++			lacp->wr.nr_of_tdports = 0;
++		} else {
++			tdport_state = lacp->wr.state + (lacp->wr.nr_of_tdports - 1);
++			strncpy(tdport_state->name, tdport->ifname, IFNAMSIZ);
++		}
++	}
++
++	if (tdport_state) {
 +		int err;
-+		strcpy(lacp->wr.state[lacp->wr.nr_of_tdports-1].name, tdport->ifname);
-+		err = teamd_port_enabled(ctx, tdport, &lacp->wr.state[lacp->wr.nr_of_tdports-1].enabled);
++		err = teamd_port_enabled(ctx, tdport, &tdport_state->enabled);
 +		if (err)
-+			lacp->wr.state[lacp->wr.nr_of_tdports-1].enabled = false;
-+	} else {
-+		teamd_log_err("WR-mode. Can't reallocate memory for LACP member %s dump", tdport->ifname);
-+		lacp->wr.nr_of_tdports = 0;
++			tdport_state->enabled = false;
 +	}
 +
 +	struct lacp_port *lacp_port = lacp_port_get(lacp, tdport);
@@ -810,7 +823,7 @@ index 55abe88..f225fb2 100644
  static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.hwaddr_changed = lacp_event_watch_hwaddr_changed,
  	.port_hwaddr_changed = lacp_event_watch_port_hwaddr_changed,
-@@ -1469,21 +1848,35 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
+@@ -1469,21 +1861,35 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.port_changed = lacp_event_watch_port_changed,
  	.admin_state_changed = lacp_event_watch_admin_state_changed,
  	.refresh = lacp_event_watch_refresh,
@@ -851,7 +864,7 @@ index 55abe88..f225fb2 100644
  	return 0;
  }
  
-@@ -1951,6 +2344,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
+@@ -1951,6 +2357,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
  	}
  
  	lacp->ctx = ctx;
@@ -864,7 +877,7 @@ index 55abe88..f225fb2 100644
  	err = teamd_hash_func_set(ctx);
  	if (err)
  		return err;
-@@ -1992,10 +2391,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
+@@ -1992,10 +2404,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
  {
  	struct lacp *lacp = priv;
  
@@ -880,5 +893,5 @@ index 55abe88..f225fb2 100644
  
  const struct teamd_runner teamd_runner_lacp = {
 -- 
-2.17.1.windows.2
+2.8.4
 
