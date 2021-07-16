@@ -10,19 +10,19 @@ resources:
     name: Azure/sonic-mgmt
     endpoint: build
 
+
 stages:
 - stage: Build
   pool: sonicbld
   variables:
-    CACHE_MODE: rcache
+    CACHE_MODE: wcache
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
       VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web'
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
-      jobGroups:
-      - name: vs
+      jobGroups: vs
 
 - stage: Test
   variables:
