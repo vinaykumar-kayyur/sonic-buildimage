@@ -38,7 +38,7 @@ class TestBgpTemplate(TestCase):
         return self.run_bgpd_test(self.m0_minigraph, self.hlx_port_config, 'MWH01-0100-0202-01M0.bgpd.conf')
 
     def test_bgpd_mc0(self):
-        return self.run_bgpd_test(self.m0_minigraph, self.hlx_port_config, 'MWH01-0100-0202-01MC0.bgpd.conf')
+        return self.run_bgpd_test(self.mc0_minigraph, self.hlx_port_config, 'MWH01-0100-0202-01MC0.bgpd.conf')
 
     def tearDown(self):
         try:
