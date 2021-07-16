@@ -140,10 +140,14 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
     csm->heartbeat_send_time = 0;
     csm->heartbeat_update_time = 0;
     csm->peer_warm_reboot_time = 0;
-    csm->warm_reboot_disconn_time = 0;
+    /*csm->warm_reboot_disconn_time = 0;*/
     csm->role_type = STP_ROLE_NONE;
     csm->sock_read_event_ptr = NULL;
-    csm->peer_link_if = NULL;
+    if (csm->peer_link_if)
+    {
+        csm->peer_link_if->is_peer_link = 0;
+        csm->peer_link_if = NULL;
+    }
     csm->u_msg_in_count = 0x0;
     csm->i_msg_in_count = 0x0;
     csm->icc_msg_in_count = 0x0;
