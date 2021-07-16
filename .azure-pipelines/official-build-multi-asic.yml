@@ -14,11 +14,13 @@ stages:
 - stage: Build
   pool: sonicbld
   variables:
-    NUM_ASIC: 4
+    CACHE_MODE: rcache
+    ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
+      VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web'
   jobs:
-  - template: azure-pipelines-build.yml
+  - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) NUM_ASIC=${{ variables.NUM_ASIC }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
