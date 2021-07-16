@@ -12,7 +12,7 @@ class Led(object):
     STATUS_LED_COLOR_ORANGE_BLINK = 'orange_blink'
     STATUS_LED_COLOR_OFF = 'off'
 
-    LED_ON = '1'
+    LED_ON = '255'
     LED_OFF = '0'
     LED_BLINK = '50'
 
