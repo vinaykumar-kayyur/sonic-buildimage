@@ -5,7 +5,7 @@
       <BGPSession>
         <ElementType>BGPSession</ElementType>
         <MacSec>false</MacSec>
-        <StartRouter>MWH01-0100-0202-01M0</StartRouter>
+        <StartRouter>MWH01-0100-0202-01MC0</StartRouter>
         <StartPeer>10.10.33.3</StartPeer>
         <EndRouter>MWH01-0100-0203-01M1</EndRouter>
         <EndPeer>10.10.33.2</EndPeer>
@@ -16,7 +16,7 @@
       <BGPSession>
         <ElementType>BGPSession</ElementType>
         <MacSec>false</MacSec>
-        <StartRouter>MWH01-0100-0202-01M0</StartRouter>
+        <StartRouter>MWH01-0100-0202-01MC0</StartRouter>
         <StartPeer>10.10.33.131</StartPeer>
         <EndRouter>MWH01-0100-0206-01M1</EndRouter>
         <EndPeer>10.10.33.130</EndPeer>
@@ -27,7 +27,7 @@
       <BGPSession>
         <ElementType>BGPSession</ElementType>
         <MacSec>false</MacSec>
-        <StartRouter>MWH01-0100-0202-01M0</StartRouter>
+        <StartRouter>MWH01-0100-0202-01MC0</StartRouter>
         <StartPeer>25.75.131.23</StartPeer>
         <EndRouter>BGPMonitor</EndRouter>
         <EndPeer>10.12.103.119</EndPeer>
@@ -40,7 +40,7 @@
         <MacSec>false</MacSec>
         <StartRouter>MWH01-0100-0202-01C0</StartRouter>
         <StartPeer>10.10.127.1</StartPeer>
-        <EndRouter>MWH01-0100-0202-01M0</EndRouter>
+        <EndRouter>MWH01-0100-0202-01MC0</EndRouter>
         <EndPeer>10.10.127.0</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>10</HoldTime>
@@ -51,7 +51,7 @@
       <a:BGPRouterDeclaration>
         <a:ASN>65534</a:ASN>
         <a:BgpGroups/>
-        <a:Hostname>MWH01-0100-0202-01M0</a:Hostname>
+        <a:Hostname>MWH01-0100-0202-01MC0</a:Hostname>
         <a:Peers>
           <BGPPeer>
             <ElementType>BGPPeer</ElementType>
@@ -925,7 +925,7 @@
       </EthernetInterfaces>
       <FlowControl>false</FlowControl>
       <Height>0</Height>
-      <HwSku>Celestica-E1031-T48S4</HwSku>
+      <HwSku>Celestica-E48C48-MC0</HwSku>
       <ManagementInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
         <a:ManagementInterface>
           <ElementType>DeviceInterface</ElementType>
@@ -18869,7 +18869,7 @@
       <MplsInterfaces/>
       <MplsTeInterfaces/>
       <RsvpInterfaces/>
-      <Hostname>MWH01-0100-0202-01M0</Hostname>
+      <Hostname>MWH01-0100-0202-01MC0</Hostname>
       <PortChannelInterfaces/>
       <VlanInterfaces>
         <VlanInterface>
@@ -18983,7 +18983,7 @@
             <a:Value>False</a:Value>
           </a:DeviceProperty>
         </a:Properties>
-        <a:Key>MWH01-0100-0202-01M0:console;MWH01-0100-0202-01C0:0/0/0</a:Key>
+        <a:Key>MWH01-0100-0202-01MC0:console;MWH01-0100-0202-01C0:0/0/0</a:Key>
       </a:LinkMetadata>
     </Link>
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
@@ -18991,7 +18991,7 @@
   <MetadataDeclaration>
     <Devices xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
       <a:DeviceMetadata>
-        <a:Name>MWH01-0100-0202-01M0</a:Name>
+        <a:Name>MWH01-0100-0202-01MC0</a:Name>
         <a:Properties>
           <a:DeviceProperty>
             <a:Name>CloudType</a:Name>
@@ -19097,7 +19097,7 @@
         <EndDevice>MWH01-0100-0203-01M1</EndDevice>
         <EndPort>Ethernet1/2</EndPort>
         <FlowControl>false</FlowControl>
-        <StartDevice>MWH01-0100-0202-01M0</StartDevice>
+        <StartDevice>MWH01-0100-0202-01MC0</StartDevice>
         <StartPort>etp49</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
@@ -19108,7 +19108,7 @@
         <EndDevice>MWH01-0100-0206-01M1</EndDevice>
         <EndPort>Ethernet1/2</EndPort>
         <FlowControl>false</FlowControl>
-        <StartDevice>MWH01-0100-0202-01M0</StartDevice>
+        <StartDevice>MWH01-0100-0202-01MC0</StartDevice>
         <StartPort>etp50</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
@@ -19119,7 +19119,7 @@
         <EndDevice>MWH01-0100-0202-01C0</EndDevice>
         <EndPort>0/0/0</EndPort>
         <FlowControl>false</FlowControl>
-        <StartDevice>MWH01-0100-0202-01M0</StartDevice>
+        <StartDevice>MWH01-0100-0202-01MC0</StartDevice>
         <StartPort>console</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
@@ -19127,7 +19127,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp2</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0200-01RHW</StartDevice>
@@ -19138,7 +19138,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp6</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-01P1</StartDevice>
@@ -19149,7 +19149,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp7</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-01P2</StartDevice>
@@ -19160,7 +19160,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp3</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0200-02RHW</StartDevice>
@@ -19171,7 +19171,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp8</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-02P1</StartDevice>
@@ -19182,7 +19182,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp9</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-02P2</StartDevice>
@@ -19193,7 +19193,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp4</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0200-03RHW</StartDevice>
@@ -19204,7 +19204,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp10</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-03P1</StartDevice>
@@ -19215,7 +19215,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp11</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-03P2</StartDevice>
@@ -19226,7 +19226,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp5</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0200-04RHW</StartDevice>
@@ -19237,7 +19237,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp12</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-04P1</StartDevice>
@@ -19248,7 +19248,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp13</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-04P2</StartDevice>
@@ -19259,7 +19259,7 @@
         <ElementType>DeviceInterfaceLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp1</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-01C0</StartDevice>
@@ -19270,7 +19270,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp14</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-05P1</StartDevice>
@@ -19281,7 +19281,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp15</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-05P2</StartDevice>
@@ -19292,7 +19292,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp16</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-06P1</StartDevice>
@@ -19303,7 +19303,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp17</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-06P2</StartDevice>
@@ -19314,7 +19314,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp18</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-07P1</StartDevice>
@@ -19325,7 +19325,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp19</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-07P2</StartDevice>
@@ -19336,7 +19336,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp20</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-08P1</StartDevice>
@@ -19347,7 +19347,7 @@
         <ElementType>DeviceMgmtLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>100</Bandwidth>
-        <EndDevice>MWH01-0100-0202-01M0</EndDevice>
+        <EndDevice>MWH01-0100-0202-01MC0</EndDevice>
         <EndPort>etp21</EndPort>
         <FlowControl>false</FlowControl>
         <StartDevice>MWH01-0100-0202-08P2</StartDevice>
@@ -19377,8 +19377,8 @@
           <a:IPPrefix>::/0</a:IPPrefix>
         </ManagementAddressV6>
         <SerialNumber>FOC2033R15V</SerialNumber>
-        <Hostname>MWH01-0100-0202-01M0</Hostname>
-        <HwSku>Celestica-E1031-T48S4</HwSku>
+        <Hostname>MWH01-0100-0202-01MC0</Hostname>
+        <HwSku>Celestica-E48C48-MC0</HwSku>
       </Device>
       <Device i:type="a:MgmtLeafRouter" xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
         <ElementType>MgmtLeafRouter</ElementType>
@@ -19934,6 +19934,6 @@
       </Device>
     </Devices>
   </PngDec>
-  <Hostname>MWH01-0100-0202-01M0</Hostname>
-  <HwSku>Celestica-E1031-T48S4</HwSku>
+  <Hostname>MWH01-0100-0202-01MC0</Hostname>
+  <HwSku>Celestica-E48C48-MC0</HwSku>
 </DeviceMiniGraph>
