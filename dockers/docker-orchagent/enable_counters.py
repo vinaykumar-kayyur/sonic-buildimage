@@ -26,6 +26,8 @@ def enable_rates():
     counters_db.set('COUNTERS_DB', 'RATES:PORT', 'PORT_ALPHA', DEFAULT_ALPHA)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_ALPHA', DEFAULT_ALPHA)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_ALPHA', DEFAULT_ALPHA)
 
 
 def enable_counters():
@@ -40,6 +42,7 @@ def enable_counters():
     enable_counter_group(db, 'QUEUE_WATERMARK')
     enable_counter_group(db, 'BUFFER_POOL_WATERMARK')
     enable_counter_group(db, 'PORT_BUFFER_DROP')
+    enable_counter_group(db, 'TUNNEL')
     enable_rates()
 
 
