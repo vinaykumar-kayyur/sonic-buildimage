@@ -37,7 +37,7 @@ def add_vlan_dhcp_relay_destination(db, vid, dhcp_relay_destination_ips):
             else:
                 dhcpv6_servers.append(ip_addr)
             added_servers.append(ip_addr)
-        except:
+        except Exception:
             ctx.fail('{} is invalid IP address'.format(ip_addr))
 
     # Append new dhcp servers to config DB
