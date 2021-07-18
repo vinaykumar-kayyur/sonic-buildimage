@@ -1,6 +1,11 @@
 {% set path = env('PLATFORM_PATH') %}
+if [ ! -d {{ path }} ]; then git clone {{ module.repo }} {{ path }}; fi;
+if [ -d {{ path }}/.git ]; then cd {{ path }} &&
+
 {% if module.ref is defined %}
-git clone {{ module.repo }} {{ path }} && cd {{ path }} && git checkout {{ module.ref }} && git submodule update --init --recursive
+git checkout {{ module.ref }} && git submodule update --init --recursive;
 {% else %}
-git clone {{ module.repo }} {{ path }} && cd {{ path }} && git submodule update --init --recursive
+git submodule update --init --recursive;
 {% endif %}
+
+else echo "{{ path }}/.git not found"; exit 1; fi
