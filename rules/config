@@ -193,4 +193,4 @@ REGISTRY_PORT ?= 443
 REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
 
 # Default number of asics in VS platform
-DEFAULT_NUM_ASIC=1
+DEFAULT_NUM_ASIC_VS=1
