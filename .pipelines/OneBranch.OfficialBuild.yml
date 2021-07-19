@@ -77,6 +77,7 @@ stages:
           artifact: 'sonic-buildimage.$(GROUP_NAME)'
           displayName: "Archive sonic image"
         - script: |
+            touch target/sonic-installers
             for image in `ls target | grep -E "\.(swi|bin|raw|deb)$"`; do
               version_image=$(echo $image | sed -E "s/(-dbg\.\w+|\.\w+)$/-$(SONIC_VERSION)\1/")
               echo "$image,$version_image" >> target/sonic-installers
