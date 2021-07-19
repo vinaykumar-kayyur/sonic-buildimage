@@ -179,7 +179,7 @@ ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *
 		exponent = two_complement_to_int(vout_mode & 0x1f, 5, 0x1f);
 	else
 	{
-		//printk(KERN_ERR "%s: Only support linear mode for vout mode\n", __func__);
+		/*printk(KERN_ERR "%s: Only support linear mode for vout mode\n", __func__);*/
 		exponent = 0;
 	}
 	mantissa = value;
@@ -298,9 +298,8 @@ static int __init pddf_custom_psu_init(void)
 	access_psu_serial_num.do_get = NULL;
 	
 	access_psu_model_name.show = pddf_get_custom_psu_model_name;
-	access_psu_model_name.do_get = NULL;
+	access_psu_model_name.do_get = NULL;	
 	
-	printk(KERN_ERR "pddf_custom_psu_init\n");
 	return 0;
 }
 
