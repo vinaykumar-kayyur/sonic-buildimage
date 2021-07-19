@@ -206,14 +206,6 @@ ifeq ($(BUILD_LOG_TIMESTAMP),)
 override BUILD_LOG_TIMESTAMP := $(DEFAULT_BUILD_LOG_TIMESTAMP)
 endif
 
-ifeq ($(NUM_ASIC),)
-override NUM_ASIC := $(DEFAULT_NUM_ASIC)
-endif
-
-ifeq ($(CONFIGURED_PLATFORM),vs)
-export NUM_ASIC=$(NUM_ASIC)
-endif
-
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
@@ -278,9 +270,6 @@ $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
-ifeq ($(CONFIGURED_PLATFORM),vs)
-$(info "NUM_ASIC"                        : "$(NUM_ASIC)")
-endif
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
 $(info )
 else
