@@ -780,6 +780,7 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		dev_err(&dev->dev,  "failed to allocate MSI entry\n");
 		goto err_unmap;
 	}
+
 	printk("msi irq is %d\n", dev->irq);
 
 #if 0

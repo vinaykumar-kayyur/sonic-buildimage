@@ -73,5 +73,13 @@ force-reload|restart)
         exit 1
         ;;
 esac
+	
+	rmmod optoe
+	modprobe optoe
+	for i in {16..79}; do
+        	cd /sys/bus/i2c/devices/i2c-$i/
+        	echo 0x50 > delete_device
+        	echo optoe1 0x50 > new_device
+	done
 
 exit 0

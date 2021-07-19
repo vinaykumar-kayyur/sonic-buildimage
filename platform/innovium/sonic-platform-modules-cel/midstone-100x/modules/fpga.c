@@ -96,7 +96,7 @@ static ssize_t getreg_show(struct device *dev, struct device_attribute *devattr,
     // read data from the address
     uint32_t data;
     struct fpga_priv *fpga = dev_get_drvdata(dev);
-    data = ioread8(fpga->fpga_re_addr);
+    data = ioread32(fpga->fpga_re_addr);
     return sprintf(buf, "0x%8.8x\n", data);
 }
 

@@ -422,8 +422,6 @@ static int xiic_reinit(struct xiic_i2c *i2c)
 #if 1
 	gl_irq_dis(i2c, 0xffffffff);
 	gl_irq_clr(i2c, 0xffffffff);
-	//xiic_setreg16(i2c, XIIC_RESETR_OFFSET, 0x0a);
-	//xiic_setreg16(i2c, XIIC_DGIER_OFFSET, 1<<31);
 	
 #endif
 	return 0;
@@ -1163,37 +1161,26 @@ static void ocores_process(struct xiic_i2c *i2c)
 	dev_dbg(&i2c->adap.dev, "STATE: %d\n", i2c->state);
 
 	/* error? */
-#if 0
-	if (stat & XIIC_SR_BUS_BUSY_MASK) {
-		i2c->state = STATE_BB;
-		dev_dbg(&i2c->adap.dev, "ERR: AL\n");
-		goto out;
-	}
-#endif
 	if (i2c->state == STATE_START) {
 		if (0 == msg->len){
 			i2c->state = STATE_DONE;
  		}
 		i2c->state =(msg->flags & I2C_M_RD) ? STATE_READ : STATE_WRITE;
-		//printk(KERN_WARNING "==========TRANSFER STATE FROM START TO %s\n", (i2c->state == STATE_READ) ? "READ" : "WRITE");
 		if (i2c->state == STATE_READ){
 			/* last message, include dynamic stop bit with length */
 			val = msg->len | XIIC_TX_DYN_STOP_MASK;
-			printk(KERN_WARNING "=========SEND READ COUNT AND STOP BIT==val: %x=======\n", val);
 			xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, val);
 			goto out;
 		}
 	}
 	if (i2c->state == STATE_READ){
 		msg->buf[i2c->pos++] = xiic_getreg32(i2c, XIIC_DRR_REG_OFFSET);
-		printk(KERN_WARNING "=========READ======msg->buf[i2c->pos]: %x===\n", msg->buf[i2c->pos - 1]);
 		u8 status = xiic_getreg32(i2c, XIIC_RFO_REG_OFFSET);
 		printk(KERN_WARNING "%s, %d, status: %x\n", __FUNCTION__, __LINE__, status);
 	}else if (i2c->state == STATE_WRITE){
 		/* no data and last message -> add STOP */
 		if ((i2c->pos == msg->len - 1) && (i2c->nmsgs == 1)){
 			val = msg->buf[i2c->pos++] | XIIC_TX_DYN_STOP_MASK;
-			//printk(KERN_ERR "============SEND LAST WRITE DATA AND STOP BIT =========\n");
 			xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, val);
 			i2c->state = STATE_DONE;
 			goto out;
@@ -1207,7 +1194,6 @@ static void ocores_process(struct xiic_i2c *i2c)
 	if (i2c->pos == msg->len) {
 		i2c->nmsgs--;
 		i2c->pos = 0;
-		//printk(KERN_WARNING "===========END MESG=========\n");
 		if (i2c->nmsgs) {
 		
 			i2c->msg++;
@@ -1215,7 +1201,6 @@ static void ocores_process(struct xiic_i2c *i2c)
 			if (!(msg->flags & I2C_M_NOSTART)) /* send start? */{
 				i2c->state = STATE_START;			
 				xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, i2c_8bit_addr_from_msg(msg) | XIIC_TX_DYN_START_MASK);
-				//printk(KERN_WARNING "=============SEND START SIGNAL AGAIN===========\n");
 				goto out;
 			}
 		} else {	/* end? */
@@ -1251,7 +1236,6 @@ static int ocores_wait(struct xiic_i2c *i2c,
 	j = jiffies + timeout;
 	while (1) {
 		u8 status = xiic_getreg32(i2c, reg);
-		//printk(KERN_WARNING "polling wait status: %x, mask: %x, val: %x\n", status, mask, val);
 		if ((status & mask) == val)
 			break;
 
@@ -1275,27 +1259,22 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 {
 	u8 mask = 0;
 	int err = 0;
-	//printk(KERN_WARNING "%s, %d\n", __FUNCTION__, __LINE__);
 
 	if (i2c->state == STATE_DONE) {
 		/* transfer is over */
 		mask = XIIC_SR_BUS_BUSY_MASK;
-		//printk(KERN_WARNING "%s, %d\n", __FUNCTION__, __LINE__);
 	} else if (i2c->state == STATE_WRITE || i2c->state == STATE_START){
 		/* on going transfer */
 		//mask = XIIC_SR_TX_FIFO_EMPTY_MASK;
 		if (0 == i2c->msg->len){
 			mask = XIIC_INTR_TX_ERROR_MASK;
 			//mask = XIIC_SR_TX_FIFO_EMPTY_MASK;
-			//printk(KERN_WARNING "%s, %d\n", __FUNCTION__, __LINE__);
-			//mask = XIIC_SR_TX_FIFO_EMPTY_MASK | XIIC_SR_RX_FIFO_EMPTY_MASK;
 		} else {
 			mask = XIIC_SR_TX_FIFO_FULL_MASK;
 		}
 		/*
 		 * We wait for the data to be transferred (8bit)
 		 */
-		//udelay((4 * 1000) / 100); //i2c->bus_clock_khz is 100KHz
 	}
 	else if (i2c->state == STATE_READ){
 		/* on going receive */
@@ -1304,7 +1283,6 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 		/*
 		 * We wait for the data to be transferred (8bit)
 		 */
-		//udelay((4 * 1000) / 100); //i2c->bus_clock_khz is 100KHz
 	}
 
 	dev_dbg(&i2c->adap.dev, "Wait for: 0x%x\n", mask);
@@ -1313,8 +1291,6 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 	 * once we are here we expect to get the expected result immediately
 	 * so if after 1ms we timeout then something is broken.
 	 */
-	//if (i2c->state == STATE_READ)
-	 	//err = ocores_wait(i2c, XIIC_SR_REG_OFFSET, XIIC_SR_TX_FIFO_EMPTY_MASK, XIIC_SR_TX_FIFO_EMPTY_MASK, msecs_to_jiffies(2));
 	if (0 == i2c->msg->len && i2c->state == STATE_START) {
 		err = ocores_wait(i2c, XIIC_IISR_OFFSET, mask, mask, msecs_to_jiffies(5)); 
 		if ( 0 != err) { // if ever an XIIC_INTR_TX_ERROR_MASK interrupt happens, means no such i2c device
@@ -1323,15 +1299,11 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 			err = -ETIMEDOUT;
 		}
 		u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-		printk(KERN_WARNING "%s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
-		//status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-		//printk(KERN_WARNING "%s, %d, status: %x, err: %d\n", __FUNCTION__, __LINE__, status, err);
 	} else {
 		if (mask & XIIC_SR_TX_FIFO_EMPTY_MASK){
 			err = ocores_wait(i2c, XIIC_SR_REG_OFFSET, mask, XIIC_SR_TX_FIFO_EMPTY_MASK, msecs_to_jiffies(5));
 			mask &= ~XIIC_SR_TX_FIFO_EMPTY_MASK;
 			u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-			//printk(KERN_WARNING "ISR, %s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
 			status = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
 			printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
 		}
@@ -1339,22 +1311,10 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 			err = ocores_wait(i2c, XIIC_SR_REG_OFFSET, mask, 0, msecs_to_jiffies(5));
 			u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
 			printk(KERN_WARNING "ISR, %s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
-			//while (status & XIIC_INTR_RX_FULL_MASK) {
-				//printk(KERN_WARNING "%s, %d\n", __FUNCTION__, __LINE__);
-				//xiic_getreg32(i2c, XIIC_DRR_REG_OFFSET);
-				//u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-				//printk(KERN_WARNING "ISR AGAIN, %s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
-			//}
 			status = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
 			printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
 		}
 	}
-
-	//err = ocores_wait(i2c, XIIC_IISR_OFFSET, mask, 0, msecs_to_jiffies(1));
-	//u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-	//printk(KERN_WARNING "%s, %d, status: %x, err: %d\n", __FUNCTION__, __LINE__, status, err);
-	//if (err == 0)
-	//printk(KERN_WARNING "%s, %d, err: %d\n", __FUNCTION__, __LINE__, err);
 
 	if (err)
 		dev_warn(i2c->adap.dev.parent,
@@ -1367,7 +1327,6 @@ static void ocores_process_polling(struct xiic_i2c *i2c)
 {
 	while (1) {
 		int err;
-		//printk(KERN_WARNING "%s, %d\n", __FUNCTION__, __LINE__);
 
 		err = ocores_poll_wait(i2c);
 		if (err) {
@@ -1402,16 +1361,6 @@ static int ocores_xfer_core(struct xiic_i2c *i2c,
 	ret = xiic_clear_rx_fifo(i2c);
 	if (ret)
 		return ret;
-#if 0
-	ctrl = xiic_getreg32(i2c, XIIC_CR_REG_OFFSET);
-	/* Soft reset IIC controller. */
-	xiic_setreg32(i2c, XIIC_RESETR_OFFSET, XIIC_RESET_MASK);
-	xiic_setreg32(i2c, XIIC_IIER_OFFSET, 0xf);
-	
-	xiic_setreg16(i2c, XIIC_CR_REG_OFFSET, XIIC_CR_TX_FIFO_RESET_MASK);
-	xiic_setreg16(i2c, XIIC_CR_REG_OFFSET, XIIC_CR_ENABLE_DEVICE_MASK);
-	printk("%s, %d\n, ctrl: %x", __FUNCTION__, __LINE__, ctrl);
-#endif 
 	i2c->msg = msgs;
 	i2c->pos = 0;
 	i2c->nmsgs = num;
@@ -1423,13 +1372,10 @@ static int ocores_xfer_core(struct xiic_i2c *i2c,
 		xiic_irq_clr(i2c, status);
 		xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, i2c_8bit_addr_from_msg(msgs) | XIIC_TX_DYN_START_MASK | XIIC_TX_DYN_STOP_MASK);
 	} else {
-		//u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-		//xiic_irq_clr(i2c, status);
 		xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, i2c_8bit_addr_from_msg(msgs) | XIIC_TX_DYN_START_MASK);
 	}
 			
 	ocores_process_polling(i2c);
-	//printk("%s, %d\n", __FUNCTION__, __LINE__);
 
 	return (i2c->state == STATE_DONE) ? num : -EIO;
 }
@@ -1450,10 +1396,6 @@ static int xiic_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
 	struct xiic_i2c *i2c = i2c_get_adapdata(adap); 
 	int err, count;
 		unsigned long flags;
-#if 0
-	int retry=0;
-	int max_retry = 0;
-#endif
 	int j=0, i=0;
 	struct i2c_msg *msgs1;
 	msgs1 = msgs;
@@ -1478,39 +1420,12 @@ static int xiic_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
 	if (i2c->flag == 1)
 	{
 	
-	//printk("%s, %d\n", __FUNCTION__, __LINE__);
-	//spin_lock_irqsave(&i2c->process_lock, flags);
 	
 	spin_lock(&i2c->process_lock);
-	//mutex_lock(&i2c->lock);
-#if 0
+	err = ocores_xfer_core(i2c, msgs, num);
 
-		gl_irq_dis(i2c, 0xffffffff);
-		xiic_setreg16(i2c, XIIC_RESETR_OFFSET, 0x0a);
-		xiic_setreg16(i2c, XIIC_DGIER_OFFSET, 1<<31);
-#endif
-		err = ocores_xfer_core(i2c, msgs, num);
-//spin_unlock_irqrestore(&i2c->process_lock, flags);
+	spin_unlock(&i2c->process_lock); // cause pcie b9 error
 
-spin_unlock(&i2c->process_lock); // cause pcie b9 error
-//mutex_unlock(&i2c->lock);
-
-#if 0
-		// Fix i2cdetect issue
-		if(num == 1)
-			max_retry = 5;
-		else
-			max_retry = 5;
-
-		while((i2c->nack_retry == 1)&&(retry < max_retry))
-		{
-			retry++;
-			i2c->nack_retry = 0;
-			err  = ocores_xfer_core(i2c, msgs, num);
-			// printk("nack retry polling = %d\n",retry);
-		}
-		i2c->nack_retry = 0;
-#endif
 		return err;
 	}
 	/****end polling mode****/
@@ -1626,14 +1541,7 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	}
 	
 
-#if 0
-	irq = platform_get_irq(pdev, 0);
-	if (irq < 0)
-		return irq;
-#endif
-	irq = pdata->irq;
 
-	printk("************************** irq = %d\n",irq);
 	
 	/* hook up driver to tree */
 	platform_set_drvdata(pdev, i2c);
@@ -1644,23 +1552,11 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	i2c_set_adapdata(&i2c->adap, i2c);
 	i2c->adap.dev.parent = &pdev->dev;
 	i2c->adap.dev.of_node = pdev->dev.of_node;
+	i2c->adap.nr = i2c->id + 2;
 
 	mutex_init(&i2c->lock);
 	init_waitqueue_head(&i2c->wait);
 
-#if 0
-	i2c->clk = devm_clk_get(&pdev->dev, NULL);
-	if (IS_ERR(i2c->clk)) {
-		if (PTR_ERR(i2c->clk) != -EPROBE_DEFER)
-			dev_err(&pdev->dev, "input clock not found.\n");
-		return PTR_ERR(i2c->clk);
-	}
-	ret = clk_prepare_enable(i2c->clk);
-	if (ret) {
-		dev_err(&pdev->dev, "Unable to enable clock.\n");
-		return ret;
-	}
-#endif
 	
 	i2c->dev = &pdev->dev;
 	pm_runtime_set_autosuspend_delay(i2c->dev, XIIC_PM_TIMEOUT);
@@ -1671,16 +1567,6 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	ret = xiic_reinit(i2c);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "Cannot xiic_reinit\n");
-		goto err_clk_dis;
-	}
-
-	printk("share msi irq num is %d\n", irq);
-	ret = devm_request_threaded_irq(&pdev->dev, irq, xiic_isr,
-					xiic_process, IRQF_SHARED,
-					pdev->name, i2c);
-
-	if (ret < 0) {
-		dev_err(&pdev->dev, "Cannot claim IRQ\n");
 		goto err_clk_dis;
 	}
 
@@ -1695,15 +1581,9 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	sr = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
 	if (!(sr & XIIC_SR_TX_FIFO_EMPTY_MASK))
 		i2c->endianness = BIG;
-#if 0
-	ret = xiic_reinit(i2c);
-	if (ret < 0) {
-		dev_err(&pdev->dev, "Cannot xiic_reinit\n");
-		goto err_clk_dis;
-	}
-#endif
 	/* add i2c adapter to i2c tree */
-	ret = i2c_add_adapter(&i2c->adap);
+//	ret = i2c_add_adapter(&i2c->adap);
+	ret = i2c_add_numbered_adapter(&i2c->adap);
 	if (ret) {
 		xiic_deinit(i2c);
 		goto err_clk_dis;
@@ -1711,7 +1591,6 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 
 	if (pdata) {
 		/* add in known devices to the bus */
-		printk("@@@@@@@@@@@@@ pdata->num_devices = %d  i2c->id = %d\n", pdata->num_devices,i2c->id);
 		for (i = 0; i < pdata->num_devices; i++)
 			i2c_new_device(&i2c->adap, pdata->devices + i);
 	}

@@ -14,14 +14,16 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 34
+    PORT_END = 66
     OSFP_PORT_START = 1
-    OSFP_PORT_END = 32
-    SFP_PORT_START = 33
-    SFP_PORT_END = 34
+    OSFP_PORT_END = 64
+    SFP_PORT_START = 65
+    SFP_PORT_END = 66
 
-    EEPROM_OFFSET = 9
-    PORT_INFO_PATH = '/sys/class/midstone-100x_fpga'
+    EEPROM_OFFSET = 15
+    QSFP_PORT_INFO_PATH = '/sys/class/SFF'
+    SFP_PORT_INFO_PATH = '/sys/bus/platform/devices/cls-xcvr'
+    PORT_INFO_PATH = QSFP_PORT_INFO_PATH
 
     _port_name = ""
     _port_to_eeprom_mapping = {}
@@ -70,10 +72,15 @@ class SfpUtil(SfpUtilBase):
         # Override port_to_eeprom_mapping for class initialization
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
 
-        for x in range(self.PORT_START, self.PORT_END+1):
+        for x in range(self.OSFP_PORT_START, self.OSFP_PORT_END+1):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
+
+        for x in range(self.SFP_PORT_START, self.SFP_PORT_END+1):
+            self.port_to_i2cbus_mapping[x] = (x - 52)
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(
+                x - 52)
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
@@ -83,7 +90,8 @@ class SfpUtil(SfpUtilBase):
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
-        sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_modabs"
+        sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_absmod"
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
 
         # Read status
