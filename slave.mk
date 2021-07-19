@@ -206,6 +206,14 @@ ifeq ($(BUILD_LOG_TIMESTAMP),)
 override BUILD_LOG_TIMESTAMP := $(DEFAULT_BUILD_LOG_TIMESTAMP)
 endif
 
+ifeq ($(NUM_ASIC_VS),)
+override NUM_ASIC_VS := $(DEFAULT_NUM_ASIC_VS)
+endif
+
+ifeq ($(CONFIGURED_PLATFORM),vs)
+export NUM_ASIC_VS=$(NUM_ASIC_VS)
+endif
+
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
@@ -271,6 +279,9 @@ $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
+ifeq ($(CONFIGURED_PLATFORM),vs)
+$(info "NUM_ASIC_VS"                     : "$(NUM_ASIC_VS)")
+endif
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
