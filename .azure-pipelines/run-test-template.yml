@@ -37,7 +37,22 @@ steps:
 
 - script: |
     rm -rf $(Build.ArtifactStagingDirectory)/*
-    docker exec sonic-mgmt bash -c "/data/sonic-mgmt/tests/kvmtest.sh -en -T ${{ parameters.tbtype }} ${{ parameters.tbname }} ${{ parameters.dut }}"
+    tests="test_interfaces.py \
+        bgp/test_bgp_fact.py \
+        lldp/test_lldp.py \
+        route/test_default_route.py \
+        snmp/test_snmp_pfc_counters.py \
+        snmp/test_snmp_queue.py \
+        snmp/test_snmp_loopback.py \
+        snmp/test_snmp_default_route.py \
+        tacacs/test_rw_user.py \
+        tacacs/test_ro_user.py \
+        tacacs/test_jit_user.py"
+        CMD="cd $parent_dir/tests; \
+        export ANSIBLE_CONFIG=$parent_dir/ansible ANSIBLE_LIBRARY=$parent_dir/ansible; \
+        ./run_tests.sh -c \"$tests\" -d ${{ parameters.dut }} -f $(testbed_file) -i $(inventory) -n ${{ parameters.tbname }} -e --disable_loganalyzer -u"
+        echo $CMD
+        docker exec sonic-mgmt-masic bash -c "$CMD"
   displayName: "Run tests"
 
 - script: |
