@@ -29,14 +29,12 @@ command:
     set         : change board setting with fan|led|sfp
 """
 
-import os
 import commands
 import sys
 import getopt
 import logging
 import re
 import time
-from collections import namedtuple
 
 PROJECT_NAME = 'as4630_54npe'
 version = '0.0.1'
@@ -64,8 +62,7 @@ hwmon_types = {'led': ['diag', 'fan', 'loc', 'psu1', 'psu2'],
                'fan2': ['fan'],
                'fan3': ['fan'],
                'fan4': ['fan'],
-               'fan5': ['fan'],
-               'fan5': ['fan'],
+               'fan5': ['fan']
                }
 hwmon_nodes = {
     'led': ['brightness'],
@@ -161,11 +158,6 @@ FORCE = 0
 # logging.basicConfig(level=logging.INFO)
 
 
-if DEBUG:
-    print sys.argv[0]
-    print 'ARGV      :', sys.argv[1:]
-
-
 def main():
     global DEBUG
     global args
@@ -249,7 +241,6 @@ def my_log(txt):
 
 def log_os_system(cmd, show):
     logging.info('Run :' + cmd)
-    status = 1
     output = ""
     status, output = commands.getstatusoutput(cmd)
     my_log(cmd + "with result:" + str(status))
@@ -285,7 +276,7 @@ kos = [
 def driver_install():
     global FORCE
 
-    ret = log_os_system("lsmod|grep i2c_ismt", 1)
+    log_os_system("lsmod|grep i2c_ismt", 1)
     my_log("rmmond i2cismt")
     log_os_system("rmmod i2c_ismt", 1)
     log_os_system("rmmod i2c_i801", 1)
@@ -363,12 +354,6 @@ def device_install():
 
 def device_uninstall():
     global FORCE
-
-    status, output = log_os_system("ls /sys/bus/i2c/devices/0-0070", 0)
-    if status == 0:
-        I2C_ORDER = 1
-    else:
-        I2C_ORDER = 0
 
     for i in range(0, len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-" + \

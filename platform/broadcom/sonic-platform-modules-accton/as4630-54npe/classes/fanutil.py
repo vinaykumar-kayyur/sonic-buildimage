@@ -20,9 +20,7 @@
 # ------------------------------------------------------------------
 
 try:
-    import time
     import logging
-    from collections import namedtuple
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -95,7 +93,7 @@ class FanUtil(object):
 
         try:
             val_file.close()
-        except BaseException:
+        except Exception:
             logging.debug(
                 'GET. unable to close file. device_path:%s',
                 device_path)
@@ -128,7 +126,7 @@ class FanUtil(object):
 
         try:
             val_file.close()
-        except BaseException:
+        except Exception:
             logging.debug(
                 'GET. unable to close file. device_path:%s',
                 device_path)
