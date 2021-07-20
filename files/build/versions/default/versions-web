@@ -14,6 +14,7 @@ http://http.debian.net/debian/pool/main/h/hiredis/hiredis_0.14.0.orig.tar.gz==6d
 http://www.mellanox.com/downloads/MFT/mft-4.16.0-105-x86_64-deb.tgz==2c4a40535af10a278ba7e33022e407dc
 https://bootstrap.pypa.io/pip/2.7/get-pip.py==60e8267eb1b7bc71dc4843eb7bd294d3
 https://chrome-infra-packages.appspot.com/client?platform=linux-amd64&version=git_revision:9464003f070813371070f9b8f7c350d87619d145==354f6511de4cd572aed26b4facd9b8a2
+https://deb.nodesource.com/setup_10.x==6742c0148159980e8f6e886df1f8bbe1
 https://download.docker.com/linux/debian/gpg==1afae06b34a13c1b3d9cb61a26285a15
 https://github.com/barefootnetworks/sonic-release-pkgs/raw/dev/bfnplatform_20210324_deb10.deb==b1f3087f05b82504130c5a7d428b9ef5
 https://github.com/barefootnetworks/sonic-release-pkgs/raw/dev/bfnsdk_20210324_deb10.deb==40a5468c7b7a003df6f4e6c2f9f98817
