@@ -303,7 +303,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     makedumpfile            \
     conntrack               \
     python-pip              \
-    jq
+    jq                      \
+    haveged
 
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
@@ -381,6 +382,7 @@ sudo augtool --autosave "
 set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
+set /files/etc/sysctl.conf/kernel.panic_on_unrecovered_nmi 1
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
 " -r $FILESYSTEM_ROOT
