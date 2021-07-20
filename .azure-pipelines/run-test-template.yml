@@ -25,8 +25,9 @@ steps:
     sudo gzip -fd /data/sonic-vm/images/sonic-vs.img.gz
     username=$(id -un)
     sudo chown -R $username.$username /data/sonic-vm
-
     pushd /data/sonic-mgmt
+    git remote add sumeenak git@github.com:SuvarnaMeenakshi/sonic-buildimage.git
+    git fetch sumeenak
     git remote update
     git reset --hard origin/master
     sed -i s/use_own_value/${username}/ ansible/veos_vtb
