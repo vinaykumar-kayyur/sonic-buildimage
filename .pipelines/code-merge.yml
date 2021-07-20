@@ -1,0 +1,44 @@
+pr: none
+trigger: none
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily
+  branches:
+    include:
+    - internal
+  always: true
+
+resources:
+  repositories:
+  - repository: buildimage
+    type: git
+    name: Networking-acs-buildimage
+    ref: 'refs/heads/internal'
+
+  - repository: mgmt
+    type: git
+    name: Networking-acs-sonic-mgmt
+    ref: 'refs/heads/internal'
+
+jobs:
+  - job: code_merge_buildimage
+    pool:
+      vmImage: ubuntu-20.04
+    timeoutInMinutes: 10
+    displayName: 'Networking-acs-buildimage  Code Merge'
+    steps:
+    - template: code-merge-template.yml
+      parameters:
+        repo: buildimage
+        remote_url: https://github.com/Azure/sonic-buildimage
+  - job: code_merge_sonic_mgmt
+    pool:
+      vmImage: ubuntu-20.04
+    timeoutInMinutes: 10
+    displayName: 'Networking-acs-sonic-mgmt Code Merge'
+    steps:
+      - template: code-merge-template.yml
+        parameters:
+          repo: mgmt
+          remote_url: https://github.com/Azure/sonic-mgmt
