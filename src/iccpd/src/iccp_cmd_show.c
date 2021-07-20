@@ -75,7 +75,7 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
                 continue;
         }
 
-        peer_link_if = local_if_find_by_name(csm->peer_itf_name);
+        peer_link_if = csm->peer_link_if;
 
         if (csm->mlag_id <= 0)
             state_info.mclag_id = -1;
@@ -98,7 +98,7 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 
         state_info.role = csm->role_type;
 
-        str_size = MCLAGDCTL_PORT_MEMBER_BUF_LEN;
+        str_size = CONFIG_MCLAG_ENABLE_INTF_LEN;
         len = 0;
 
         LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
@@ -339,20 +339,18 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
     return EXEC_TYPE_SUCCESS;
 }
 
-int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
+int iccp_local_if_dump(char * *buf,  int *data_len, int mclag_id)
 {
     struct System *sys = NULL;
     struct CSM *csm = NULL;
     struct LocalInterface *lif_po = NULL;
     struct mclagd_local_if mclagd_lif;
     struct VLAN_ID* vlan_id = NULL;
-    char * str_buf = NULL;
-    int str_size = MCLAGDCTL_PARA3_LEN - 1;
-    int len = 0;
-    int lif_num = 0;
     int id_exist = 0;
     int lif_buf_size = MCLAGDCTL_CMD_SIZE;
+    int lif_buf_base = MCLAGD_REPLY_INFO_HDR;
     char * lif_buf = NULL;
+    struct PortChannel_member *member = NULL;
 
     if (!(sys = system_get_instance()))
     {
@@ -405,7 +403,7 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
 
             mclagd_lif.is_peer_link = lif_po->is_peer_link;
 
-            memcpy(mclagd_lif.portchannel_member_buf, lif_po->portchannel_member_buf, 512);
+            mclagd_lif.portchannel_member_count = lif_po->portchannel_member_count;
 
             mclagd_lif.po_id = lif_po->po_id;
             mclagd_lif.po_active = lif_po->po_active;
@@ -423,36 +421,36 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
 
             mclagd_lif.isolate_to_peer_link = lif_po->isolate_to_peer_link;
 
-            str_buf = mclagd_lif.vlanlist;
-
-            len = 0;
-            LIST_FOREACH(vlan_id, &(lif_po->vlan_list), port_next)
+            RB_FOREACH (vlan_id, vlan_rb_tree, &(lif_po->vlan_tree))
             {
-                if (vlan_id != NULL )
+                if (vlan_id == NULL )
                 {
-                    if (str_size - len < 4)
-                        break;
-                    len += snprintf(str_buf + len, str_size - len, "%d ", vlan_id->vid);
+                    continue;
                 }
+                BMAP_ADD(mclagd_lif.vlan_map, vlan_id->vid);
             }
 
-            memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num * sizeof(struct mclagd_local_if),
-                   &mclagd_lif, sizeof(struct mclagd_local_if));
-
-            lif_num++;
-
-            if ((lif_num + 1) * sizeof(struct mclagd_local_if) > (lif_buf_size - MCLAGD_REPLY_INFO_HDR))
+            if ((lif_buf_base + sizeof(struct mclagd_local_if) + lif_po->portchannel_member_count*MAX_L_PORT_NAME) > lif_buf_size)
             {
                 lif_buf_size += MCLAGDCTL_CMD_SIZE;
                 lif_buf = (char*)realloc(lif_buf, lif_buf_size);
                 if (!lif_buf)
                     return EXEC_TYPE_FAILED;
             }
+
+            memcpy(lif_buf + lif_buf_base, &mclagd_lif, sizeof(struct mclagd_local_if));
+            lif_buf_base += sizeof(struct mclagd_local_if);
+
+            LIST_FOREACH(member, &(lif_po->member_list), member_next)
+            {
+                memcpy(lif_buf + lif_buf_base, &member->name, MAX_L_PORT_NAME);
+                lif_buf_base += MAX_L_PORT_NAME;
+            }
         }
     }
 
     *buf = lif_buf;
-    *num = lif_num;
+    *data_len = lif_buf_base;
 
     if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;

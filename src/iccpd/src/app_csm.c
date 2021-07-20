@@ -238,13 +238,13 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     {
         if (lif_po->type == IF_T_PORT_CHANNEL && lif_po->po_id == lif->po_id)
         {
-            /*if join a po member, may swss restart, reset portchannel ip mac  to mclagsyncd*/
+            /*if join a po member, may swss restart, reset portchannel ip mac to mclagsyncd*/
             update_if_ipmac_on_standby(lif_po);
             return 0;
         }
     }
 
-    if (lif_po == NULL)
+    /*if (lif_po == NULL)
     {
         lif_po = local_if_find_by_po_id(lif->po_id);
         if (lif_po == NULL)
@@ -257,7 +257,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
         LIST_INSERT_HEAD(&(MLACP(csm).lif_list), lif_po, mlacp_next);
         lif_po->port_config_sync = 1;
         ICCPD_LOG_INFO(__FUNCTION__, "Add port_channel %d into local_if_list in CSM %p.", lif->po_id, csm);
-    }
+    }*/
 
     return 0;
 }

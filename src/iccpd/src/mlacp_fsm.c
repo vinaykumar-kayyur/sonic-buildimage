@@ -76,7 +76,7 @@
             lif = LIST_FIRST(&(list)); \
             if (lif->type == IF_T_PORT_CHANNEL && lif->is_arp_accept) { \
                 if ((set_sys_arp_accept_flag(lif->name, 0)) == 0) \
-                lif->is_arp_accept = 0; \
+                    lif->is_arp_accept = 0; \
             } \
             LIST_REMOVE (lif, mlacp_next); \
         } \
@@ -301,6 +301,7 @@ static void mlacp_sync_send_syncNdiscInfo(struct CSM *csm)
 
     return;
 }
+
 static void mlacp_sync_send_syncPortChannelInfo(struct CSM* csm)
 {
     struct System* sys = NULL;
@@ -518,6 +519,7 @@ static void mlacp_sync_recv_ndiscInfo(struct CSM *csm, struct Msg *msg)
 
     return;
 }
+
 static void mlacp_sync_recv_stpInfo(struct CSM* csm, struct Msg* msg)
 {
     /*Don't support currently*/
@@ -1264,8 +1266,12 @@ static void mlacp_exchange_handler(struct CSM* csm, struct Msg* msg)
             /* Send port channel state information*/
             memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
             len = mlacp_prepare_for_Aggport_state(csm, g_csm_buf, CSM_BUFFER_SIZE, lif);
-            iccp_csm_send(csm, g_csm_buf, len);
-            lif->changed = 0;
+            /*If po state send to peer is not successful, next time will try to
+             send again, until then dont unmark lif->changed flag*/
+            if (iccp_csm_send(csm, g_csm_buf, len) > 0)
+            {
+                lif->changed = 0;
+            }
         }
     }
 

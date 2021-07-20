@@ -32,6 +32,7 @@
 #include "../include/iccp_cmd_show.h"
 #include "../include/iccp_cli.h"
 #include "../include/logger.h"
+#include "mclagdctl/mclagdctl.h"
 
 int set_mc_lag_by_id(uint16_t mid)
 {
@@ -54,8 +55,6 @@ int set_mc_lag_by_id(uint16_t mid)
 
     return ret;
 }
-
-#define CONFIG_LINE_LEN  512
 
 int iccp_config_from_command(char * line)
 {
@@ -150,13 +149,13 @@ int
 iccp_config_from_file(char *config_default_dir)
 {
     FILE *confp = NULL;
-    char command_buf[CONFIG_LINE_LEN];
+    char command_buf[CONFIG_MCLAG_ENABLE_INTF_LEN];
 
     confp = fopen(config_default_dir, "r");
     if (confp == NULL)
         return (1);
 
-    while (fgets(command_buf, CONFIG_LINE_LEN, confp))
+    while (fgets(command_buf, CONFIG_MCLAG_ENABLE_INTF_LEN, confp))
     {
         iccp_config_from_command(command_buf);
     }

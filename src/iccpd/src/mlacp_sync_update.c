@@ -34,6 +34,7 @@
 #include "../include/iccp_consistency_check.h"
 #include "../include/port.h"
 #include "../include/iccp_netlink.h"
+#include "../include/openbsd_tree.h"
 /*****************************************
 * Port-Conf Update
 *
@@ -166,10 +167,17 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
     struct MACMsg *mac_msg = NULL, mac_data;
     struct LocalInterface* local_if = NULL;
     uint8_t from_mclag_intf = 0;/*0: orphan port, 1: MCLAG port*/
+    char null_mac[ETHER_ADDR_STR_LEN] = "00:00:00:00:00:00";
 
     ICCPD_LOG_NOTICE(__FUNCTION__,
                    "Received MAC Info, port[%s] vid[%d] MAC[%s] type[%s]",
                    MacData->ifname, ntohs(MacData->vid), MacData->mac_str, MacData->type == MAC_SYNC_ADD ? "add" : "del");
+
+    if (strcmp(MacData->mac_str, null_mac) == 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Invalid MAC address from peer, do not add.");
+        return 0;
+    }
 
     /*Find the interface in MCLAG interface list*/
     LIST_FOREACH(local_if, &(MLACP(csm).lif_list), mlacp_next)
@@ -225,7 +233,7 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                                 memcpy(&mac_msg->ifname, csm->peer_itf_name, IFNAMSIZ);
 
                                 /*Send mac add message to mclagsyncd*/
-                                add_mac_to_chip(mac_msg, MAC_TYPE_DYNAMIC);
+                                add_mac_to_chip(csm, mac_msg, MAC_TYPE_DYNAMIC);
                             }
                             else
                             {
@@ -255,16 +263,19 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                             }
                         }
                     }
-                    else
+                    else /*From mclag enable intf*/
                     {
-                        /*Remove MAC_AGE_LOCAL flag*/
-                        mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 0);
+                        if (local_if->state == PORT_STATE_UP)
+                        {
+                            /*Remove MAC_AGE_LOCAL flag*/
+                            mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 0);
 
-                        /*Update local item*/
-                        memcpy(&mac_msg->ifname, MacData->ifname, MAX_L_PORT_NAME);
+                            /*Update local item*/
+                            memcpy(&mac_msg->ifname, MacData->ifname, MAX_L_PORT_NAME);
 
-                        /*from MCLAG port and the local port is up, add mac to ASIC to update port*/
-                        add_mac_to_chip(mac_msg, MAC_TYPE_DYNAMIC);
+                            /*from MCLAG port and the local port is up, add mac to ASIC to update port*/
+                            add_mac_to_chip(csm, mac_msg, MAC_TYPE_DYNAMIC);
+                        }
                     }
                 }
             }
@@ -345,12 +356,12 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
             {
                 /*Send mac add message to mclagsyncd*/
                 if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
-                    add_mac_to_chip(mac_msg, mac_msg->fdb_type);
+                    add_mac_to_chip(csm, mac_msg, mac_msg->fdb_type);
             }
             else
             {
                 /*from MCLAG port and the local port is up*/
-                add_mac_to_chip(mac_msg, mac_msg->fdb_type);
+                add_mac_to_chip(csm, mac_msg, mac_msg->fdb_type);
             }
         }
     }
@@ -453,12 +464,12 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
 
     if (strncmp(arp_entry->ifname, "Vlan", 4) == 0)
     {
-        peer_link_if = local_if_find_by_name(csm->peer_itf_name);
+        peer_link_if = csm->peer_link_if;
 
         if (peer_link_if && !local_if_is_l3_mode(peer_link_if))
         {
             /* Is peer-linlk itf belong to a vlan the same as peer?*/
-            LIST_FOREACH(vlan_id_list, &(peer_link_if->vlan_list), port_next)
+            RB_FOREACH(vlan_id_list, vlan_rb_tree, &(peer_link_if->vlan_tree))
             {
                 if (!vlan_id_list->vlan_itf)
                     continue;
@@ -487,7 +498,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                 if (!local_if_is_l3_mode(local_if))
                 {
                     /* Is the L2 MLAG itf belong to a vlan the same as peer?*/
-                    LIST_FOREACH(vlan_id_list, &(local_if->vlan_list), port_next)
+                    RB_FOREACH(vlan_id_list, vlan_rb_tree, &(local_if->vlan_tree))
                     {
                         if (!vlan_id_list->vlan_itf)
                             continue;
@@ -542,7 +553,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                 return MCLAG_ERROR;
             }
         }
-        else
+        else if (arp_entry->op_type == NEIGH_SYNC_DEL)
         {
             if (iccp_netlink_neighbor_request(AF_INET, (uint8_t *)&arp_entry->ipv4_addr, 0, arp_entry->mac_addr, arp_entry->ifname) < 0)
             {
@@ -550,6 +561,11 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                                 arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
                 return MCLAG_ERROR;
             }
+        }
+        else
+        {
+            ICCPD_LOG_ERR(__FUNCTION__, "ARP op type %d is invalid", arp_entry->op_type);
+            return MCLAG_ERROR;
         }
 
         /*ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP update for %s %s %s",
@@ -589,6 +605,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
         arp_msg->ipv4_addr = arp_entry->ipv4_addr;
         arp_msg->op_type = arp_entry->op_type;
         memcpy(arp_msg->mac_addr, arp_entry->mac_addr, ETHER_ADDR_LEN);
+        time(&arp_msg->sync_time);
         if (iccp_csm_init_msg(&msg, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
         {
             mlacp_enqueue_arp(csm, msg);
@@ -661,12 +678,12 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
 
     if (strncmp(ndisc_entry->ifname, "Vlan", 4) == 0)
     {
-        peer_link_if = local_if_find_by_name(csm->peer_itf_name);
+        peer_link_if = csm->peer_link_if;
 
         if (peer_link_if && !local_if_is_l3_mode(peer_link_if))
         {
             /* Is peer-linlk itf belong to a vlan the same as peer? */
-            LIST_FOREACH(vlan_id_list, &(peer_link_if->vlan_list), port_next)
+            RB_FOREACH(vlan_id_list, vlan_rb_tree, &(peer_link_if->vlan_tree))
             {
                 if (!vlan_id_list->vlan_itf)
                     continue;
@@ -696,7 +713,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
                 if (!local_if_is_l3_mode(local_if))
                 {
                     /* Is the L2 MLAG itf belong to a vlan the same as peer? */
-                    LIST_FOREACH(vlan_id_list, &(local_if->vlan_list), port_next)
+                    RB_FOREACH(vlan_id_list, vlan_rb_tree, &(local_if->vlan_tree))
                     {
                         if (!vlan_id_list->vlan_itf)
                             continue;
@@ -752,7 +769,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
             }
 
         }
-        else
+        else if (ndisc_entry->op_type == NEIGH_SYNC_DEL)
         {
             if (iccp_netlink_neighbor_request(AF_INET6, (uint8_t *)ndisc_entry->ipv6_addr, 0, ndisc_entry->mac_addr, ndisc_entry->ifname) < 0)
             {
@@ -761,6 +778,11 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
                 return MCLAG_ERROR;
             }
 
+        }
+        else
+        {
+            ICCPD_LOG_ERR(__FUNCTION__, "ND op type %d is invalid", ndisc_entry->op_type);
+            return MCLAG_ERROR;
         }
 
         /* ICCPD_LOG_DEBUG(__FUNCTION__, "NDISC update for %s %s %s", ndisc_entry->ifname, show_ipv6_str((char *)ndisc_entry->ipv6_addr), mac_str); */
@@ -799,6 +821,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
         memcpy((char *)ndisc_msg->ipv6_addr, (char *)ndisc_entry->ipv6_addr, 16);
         ndisc_msg->op_type = ndisc_entry->op_type;
         memcpy(ndisc_msg->mac_addr, ndisc_entry->mac_addr, ETHER_ADDR_LEN);
+        time(&ndisc_msg->sync_time);
         if (iccp_csm_init_msg(&msg, (char *)ndisc_msg, sizeof(struct NDISCMsg)) == 0)
         {
             mlacp_enqueue_ndisc(csm, msg);
@@ -868,7 +891,7 @@ int mlacp_fsm_update_port_channel_info(struct CSM* csm,
         if (peer_if->po_id != ntohs(tlv->agg_id))
             continue;
 
-        LIST_FOREACH(peer_vlan_id, &(peer_if->vlan_list), port_next)
+        RB_FOREACH(peer_vlan_id, vlan_rb_tree, &(peer_if->vlan_tree))
         {
             peer_vlan_id->vlan_removed = 1;
         }

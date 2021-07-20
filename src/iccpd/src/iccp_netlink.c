@@ -57,6 +57,7 @@
 #include "../include/mlacp_link_handler.h"
 #include "../include/msg_format.h"
 #include "../include/iccp_netlink.h"
+#include "mclagdctl/mclagdctl.h"
 
 /**
  * SECTION: Netlink helpers
@@ -159,8 +160,9 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
     uint32_t ifindex = 0;
     struct System* sys = NULL;
     struct LocalInterface* local_if = NULL;
-    char temp_buf[512];
     int len = 0;
+    struct PortChannel_member *member = NULL;
+    bool update_member = false;
 
     sys = system_get_instance();
     if (sys == NULL)
@@ -215,38 +217,54 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
 
             if (port_attrs[TEAM_ATTR_PORT_REMOVED] && local_if_member->po_id != -1)
             {
+                if (local_if_member->type == IF_T_PORT && local_if_member->po_id == local_if->po_id)
+                {
+                    LIST_FOREACH(member, &(local_if->member_list), member_next)
+                    {
+                        if (strcmp(member->name, local_if_member->name) == 0)
+                        {
+                            LIST_REMOVE(member, member_next);
+                            --local_if->portchannel_member_count;
+                            update_member = true;
+                            free(member);
+                            break;
+                        }
+                    }
+                }
                 local_if_member->po_id = -1;
                 mlacp_unbind_local_if(local_if_member);
             }
             else if ( local_if_member->po_id == -1)
             {
                 local_if_member->po_id = local_if->po_id;
+
+                if (local_if_member->type == IF_T_PORT)
+                {
+                    LIST_FOREACH(member, &(local_if->member_list), member_next)
+                    {
+                        if (strcmp(member->name, local_if_member->name) == 0)
+                        {
+                            break;
+                        }
+                    }
+                    if(NULL == member)
+                    {
+                        struct PortChannel_member *new = (struct PortChannel_member*)malloc(sizeof(struct PortChannel_member));
+                        memcpy(new->name, local_if_member->name, MAX_L_PORT_NAME);
+                        LIST_INSERT_HEAD(&(local_if->member_list), new, member_next);
+                        ++local_if->portchannel_member_count;
+                        update_member = true;
+                    }
+                }
                 mlacp_bind_local_if(local_if->csm, local_if_member);
             }
         }
 
-        memset(temp_buf, 0, 512);
-        LIST_FOREACH(lif, &(MLACP(csm).lif_list), mlacp_next)
+        if ((MLACP(csm).current_state == MLACP_STATE_EXCHANGE) && update_member)
         {
-            if (lif->type == IF_T_PORT && lif->po_id == local_if->po_id)
-            {
-                if (strlen(temp_buf) != 0)
-                    len += snprintf(temp_buf + len, 512 - len, "%s", ",");
-
-                len += snprintf(temp_buf + len, 512 - len, "%s", lif->name);
-            }
-        }
-
-        if (strcmp(temp_buf, local_if->portchannel_member_buf))
-        {
-            memset(local_if->portchannel_member_buf, 0, 512);
-            memcpy(local_if->portchannel_member_buf, temp_buf, sizeof(local_if->portchannel_member_buf) - 1);
-
-            if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
-            {
-                /* portchannel member changed, update port isolate attribute*/
-                update_peerlink_isolate_from_all_csm_lif(csm);
-            }
+            /* portchannel member changed, update port isolate attribute*/
+            update_peerlink_isolate_from_all_csm_lif(csm);
+            update_member = false;
         }
     }
     else /*peerlink portchannel */
@@ -292,6 +310,19 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
 
                 if (port_attrs[TEAM_ATTR_PORT_REMOVED] && local_if_member->po_id != -1)
                 {
+                    if (local_if_member->type == IF_T_PORT && local_if_member->po_id == local_if->po_id)
+                    {
+                        LIST_FOREACH(member, &(local_if->member_list), member_next)
+                        {
+                            if (strcmp(member->name, local_if_member->name) == 0)
+                            {
+                                LIST_REMOVE(member, member_next);
+                                --local_if->portchannel_member_count;
+                                free(member);
+                                break;
+                            }
+                        }
+                    }
                     local_if_member->po_id = -1;
                     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
                     {
@@ -304,6 +335,23 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
                 else if ( local_if_member->po_id == -1)
                 {
                     local_if_member->po_id = local_if->po_id;
+                    if (local_if_member->type == IF_T_PORT)
+                    {
+                        LIST_FOREACH(member, &(local_if->member_list), member_next)
+                        {
+                            if (strcmp(member->name, local_if_member->name) == 0)
+                            {
+                                break;
+                            }
+                        }
+                        if(NULL == member)
+                        {
+                            struct PortChannel_member *new = (struct PortChannel_member*)malloc(sizeof(struct PortChannel_member));
+                            memcpy(new->name, local_if_member->name, MAX_L_PORT_NAME);
+                            LIST_INSERT_HEAD(&(local_if->member_list), new, member_next);
+                            ++local_if->portchannel_member_count;
+                        }
+                    }
 
                     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
                     {
@@ -311,24 +359,6 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
                         set_peerlink_mlag_port_learn(local_if, 0);
                     }
                 }
-            }
-
-            memset(temp_buf, 0, 512);
-            LIST_FOREACH(lif, &(sys->lif_list), system_next)
-            {
-                if (lif->type == IF_T_PORT && lif->po_id == local_if->po_id)
-                {
-                    if (strlen(temp_buf) != 0)
-                        len += snprintf(temp_buf + len, 512 - len, "%s", ",");
-
-                    len += snprintf(temp_buf + len, 512 - len, "%s", lif->name);
-                }
-            }
-
-            if (strcmp(temp_buf, local_if->portchannel_member_buf))
-            {
-                memset(local_if->portchannel_member_buf, 0, 512);
-                memcpy(local_if->portchannel_member_buf, temp_buf, sizeof(local_if->portchannel_member_buf) - 1);
             }
         }
     }
@@ -608,7 +638,7 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
     }
     else
     {
-        LIST_FOREACH(vlan, &(lif_po->vlan_list), port_next)
+        RB_FOREACH(vlan, vlan_rb_tree, &(lif_po->vlan_tree))
         {
             if (!vlan->vlan_itf)
                 continue;
@@ -689,7 +719,7 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
     }
     else
     {
-        LIST_FOREACH(vlan, &(lif_po->vlan_list), port_next)
+        RB_FOREACH(vlan, vlan_rb_tree, &(lif_po->vlan_tree))
         {
             if (!vlan->vlan_itf)
                 continue;
@@ -917,7 +947,39 @@ void iccp_event_handler_obj_input_dellink(struct nl_object *obj, void *arg)
 
     ifindex = rtnl_link_get_ifindex(link);
     if ((lif = local_if_find_by_ifindex(ifindex)) != NULL)
-        local_if_destroy(lif->name);
+        local_if_destroy(lif);
+
+    return;
+}
+
+void iccp_set_vlan_ipadd_mac_by_portchannel(char *vlan_name)
+{
+    struct CSM* csm;
+    struct System *sys = NULL;
+    struct LocalInterface* lifp = NULL;
+    struct VLAN_ID *vlan = NULL;
+
+    if (!(sys = system_get_instance()))
+        return;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        LIST_FOREACH(lifp, &(MLACP(csm).lif_list), mlacp_next)
+        {
+            if (lifp->type == IF_T_PORT_CHANNEL)
+            {
+                RB_FOREACH(vlan, vlan_rb_tree, &(lifp->vlan_tree))
+                {
+                    if (vlan->vlan_itf && strcmp(vlan_name, vlan->vlan_itf->name) == 0)
+                    {
+                        ICCPD_LOG_DEBUG(__FUNCTION__, "Mclag interface %s is member of %s", lifp->name, vlan_name);
+                        update_if_ipmac_on_standby(lifp);
+                        return;
+                    }
+                }
+            }
+        }
+    }
 
     return;
 }
@@ -1310,6 +1372,7 @@ int iccp_system_init_netlink_socket()
     sys->route_sock = nl_socket_alloc();
     if (!sys->route_sock)
         goto err_route_sock_alloc;
+    nl_socket_disable_seq_check(sys->route_sock);
     err = nl_connect(sys->route_sock, NETLINK_ROUTE);
     if (err)
         goto err_route_sock_connect;
@@ -1651,7 +1714,7 @@ void iccp_netlink_sync_again()
     {
         sys->need_sync_team_again = 0;
 
-        LIST_FOREACH(lif, &(sys->lif_list), system_next)
+        RB_FOREACH (lif, lif_rb_tree, &(sys->lif_tree))
         {
             if (lif->type == IF_T_PORT_CHANNEL)
             {

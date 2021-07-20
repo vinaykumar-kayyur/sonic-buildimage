@@ -308,6 +308,7 @@ void scheduler_init()
     /*Get kernel interface and port */
     iccp_sys_local_if_list_get_init();
     iccp_sys_local_if_list_get_addr();
+    iccp_get_if_vlan_info_from_netlink();
     /*Interfaces must be created before this func called*/
     iccp_config_from_file(sys->config_file_path);
 
