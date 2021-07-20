@@ -6,7 +6,6 @@
 try:
     import sys
     import time
-    import string
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
@@ -71,7 +70,6 @@ class SfpUtil(SfpUtilBase):
         present_path = self.BASE_CPLD_PATH + "module_present_" + str(port_num)
         self.__port_to_is_present = present_path
 
-        content = "0"
         try:
             val_file = open(self.__port_to_is_present)
             content = val_file.readline().rstrip()
@@ -193,4 +191,3 @@ class SfpUtil(SfpUtilBase):
             return True, port_dict
         else:
             return True, {}
-        return False, {}
