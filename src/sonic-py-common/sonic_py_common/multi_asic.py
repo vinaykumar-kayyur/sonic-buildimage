@@ -452,14 +452,3 @@ def validate_namespace(namespace):
         return True
     else:
         return False
-
-
-
-def load_db_config():
-    '''
-    Load the database_global.json for multi asic
-    '''
-    if is_multi_asic():
-        swsscommon.SonicDBConfig.load_sonic_global_db_config()
-    else:
-        swsscommon.SonicDBConfig.initialize()
