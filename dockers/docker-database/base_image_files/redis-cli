@@ -2,9 +2,14 @@
 
 DOCKER_EXEC_FLAGS="i"
 
+namespace="$(ip netns identify)"
+if [ "$namespace" != "" ]; then
+    namespace="${namespace/asic/}"
+fi
+
 # Determine whether stdout is on a terminal
 if [ -t 1 ] ; then
     DOCKER_EXEC_FLAGS+="t"
 fi
 
-docker exec -$DOCKER_EXEC_FLAGS database redis-cli "$@"
+docker exec -$DOCKER_EXEC_FLAGS database$namespace redis-cli "$@"
