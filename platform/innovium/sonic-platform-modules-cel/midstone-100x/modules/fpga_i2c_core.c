@@ -1176,7 +1176,7 @@ static void ocores_process(struct xiic_i2c *i2c)
 	if (i2c->state == STATE_READ){
 		msg->buf[i2c->pos++] = xiic_getreg32(i2c, XIIC_DRR_REG_OFFSET);
 		u8 status = xiic_getreg32(i2c, XIIC_RFO_REG_OFFSET);
-		printk(KERN_WARNING "%s, %d, status: %x\n", __FUNCTION__, __LINE__, status);
+		//printk(KERN_WARNING "%s, %d, status: %x\n", __FUNCTION__, __LINE__, status);
 	}else if (i2c->state == STATE_WRITE){
 		/* no data and last message -> add STOP */
 		if ((i2c->pos == msg->len - 1) && (i2c->nmsgs == 1)){
@@ -1305,14 +1305,14 @@ static int ocores_poll_wait(struct xiic_i2c *i2c)
 			mask &= ~XIIC_SR_TX_FIFO_EMPTY_MASK;
 			u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
 			status = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
-			printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
+			//printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
 		}
 		if (0 == err){
 			err = ocores_wait(i2c, XIIC_SR_REG_OFFSET, mask, 0, msecs_to_jiffies(5));
 			u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
-			printk(KERN_WARNING "ISR, %s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
+			//printk(KERN_WARNING "ISR, %s, %d, err: %d, status: %x\n", __FUNCTION__, __LINE__, err, status);
 			status = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
-			printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
+			//printk(KERN_WARNING "SR, %s, %d, err: %d, status: %x, mask: %x, state: %d\n", __FUNCTION__, __LINE__, err, status, mask, i2c->state);
 		}
 	}
 
@@ -1409,10 +1409,10 @@ static int xiic_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
 	spin_lock_init(&i2c->process_lock);
 
 	for (i = 0; i < num; i++){
-		printk(KERN_WARNING "the %d msg, msgs->addr: %x, msgs->len: %d, msgs->flags:%x", i+1, msgs->addr, msgs->len, msgs->flags);
+		//printk(KERN_WARNING "the %d msg, msgs->addr: %x, msgs->len: %d, msgs->flags:%x", i+1, msgs->addr, msgs->len, msgs->flags);
 		if (! (msgs->flags & I2C_M_RD))
 		for (j = 0; j < msgs->len; j++){
-			printk(KERN_WARNING "msgs->buf[%d]: %x\n", j, msgs->buf[j]);
+			//printk(KERN_WARNING "msgs->buf[%d]: %x\n", j, msgs->buf[j]);
 		}
 		msgs++;
 	}

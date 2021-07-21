@@ -15,7 +15,7 @@
 case "$1" in
 start)
         echo -n "Setting up board... "
-
+	depmod
         modprobe i2c-dev
         modprobe ipmi_devintf
 	modprobe fpga_device
