@@ -52,7 +52,7 @@ steps:
         export ANSIBLE_CONFIG=$parent_dir/ansible ANSIBLE_LIBRARY=$parent_dir/ansible; \
         ./run_tests.sh -c \"$tests\" -d ${{ parameters.dut }} -f $(testbed_file) -i $(inventory) -n ${{ parameters.tbname }} -e --disable_loganalyzer -u"
         echo $CMD
-        docker exec sonic-mgmt-masic bash -c "$CMD"
+        docker exec sonic-mgmt bash -c "$CMD"
   displayName: "Run tests"
 
 - script: |
