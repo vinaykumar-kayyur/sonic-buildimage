@@ -48,7 +48,7 @@ steps:
         tacacs/test_rw_user.py \
         tacacs/test_ro_user.py \
         tacacs/test_jit_user.py"
-        CMD="cd $parent_dir/tests; \
+        CMD="cd /data/sonic-mgmt/tests; \
         export ANSIBLE_CONFIG=$parent_dir/ansible ANSIBLE_LIBRARY=$parent_dir/ansible; \
         ./run_tests.sh -c \"$tests\" -d ${{ parameters.dut }} -f $(testbed_file) -i $(inventory) -n ${{ parameters.tbname }} -e --disable_loganalyzer -u"
         echo $CMD
