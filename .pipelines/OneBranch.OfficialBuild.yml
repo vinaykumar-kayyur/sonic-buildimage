@@ -47,7 +47,7 @@ stages:
       preSteps:
         - script: |
             sudo rm -rf target
-            sudo rm -rf fsroot
+            sudo rm -rf fsroot*
             if [ ! -z $HOME ]; then
               sudo mkdir -p $HOME
               sudo chown $USER:$(id -gn) $HOME
