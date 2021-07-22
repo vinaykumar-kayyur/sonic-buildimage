@@ -38,6 +38,7 @@ stages:
     PASSWORD: $(SONIC_PASSWORD)
     BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y'
     VERSION_PATH: target/sonic.version
+    PLATFORM_ARCH: amd64
   jobs:
   - template: ../.azure-pipelines/azure-pipelines-job-groups.yml
     parameters:
@@ -70,7 +71,7 @@ stages:
             echo "SONIC_VERSION=$SONIC_VERSION, LATEST_TAG=$LATEST_TAG"
             echo "##vso[task.setvariable variable=SONIC_VERSION]$SONIC_VERSION"
             echo "##vso[task.setvariable variable=LATEST_TAG]$LATEST_TAG"
-            make configure PLATFORM=$GROUP_NAME
+            make configure PLATFORM=$GROUP_NAME PLATFORM_ARCH=$(PLATFORM_ARCH)
           displayName: 'Make configure'
       postSteps:
         - publish: $(System.DefaultWorkingDirectory)/target
@@ -217,6 +218,8 @@ stages:
             make $OPTIONS target/sonic-barefoot.bin target/docker-syncd-bfn-rpc.gz  target/sonic-aboot-barefoot.swi
         - name: marvell-armhf
           timeoutInMinutes: 2160
+          variables:
+            PLATFORM_ARCH: armhf
           script: |
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-marvell-armhf.bin
