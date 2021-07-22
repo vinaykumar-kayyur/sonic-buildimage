@@ -314,9 +314,9 @@ def do_uninstall():
                 return status
 
     if driver_inserted() == False :
-        print PROJECT_NAME.upper() + " has no driver installed...."
+        print(PROJECT_NAME.upper() + " has no driver installed....")
     else:
-        print "Removing installed driver...."
+        print("Removing installed driver....")
         status = driver_uninstall()
         if status:
             if FORCE == 0:
