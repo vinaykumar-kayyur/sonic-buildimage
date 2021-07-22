@@ -30,7 +30,6 @@ import getopt
 import sys
 import logging
 import time
-import os
 
 PROJECT_NAME = 'as4630_54npe'
 version = '0.0.1'
