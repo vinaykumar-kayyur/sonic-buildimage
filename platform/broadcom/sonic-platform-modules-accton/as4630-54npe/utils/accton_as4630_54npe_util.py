@@ -30,6 +30,7 @@ import getopt
 import sys
 import logging
 import time
+import os
 
 PROJECT_NAME = 'as4630_54npe'
 version = '0.0.1'
@@ -125,6 +126,10 @@ def main():
             do_install()
         elif arg == 'clean':
             do_uninstall()
+        elif arg == 'api':
+            do_sonic_platform_install()
+        elif arg == 'api_clean':
+            do_sonic_platform_clean()
         else:
             show_help()
 
@@ -280,6 +285,45 @@ def system_ready():
         return False
     return True
 
+PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
+PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
+def do_sonic_platform_install():
+    device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
+    SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
+
+    #Check API2.0 on py whl file
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
+            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
+            if status:
+                print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
+                return status
+            else:
+                print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
+        else:
+            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
+    else:
+        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    return
+
+def do_sonic_platform_clean():
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    else:
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
+        if status:
+            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+            return status
+        else:
+            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+
+    return
+
 def do_install():
     if driver_inserted() == False:
         status = driver_install()
@@ -301,6 +345,8 @@ def do_install():
         if status:
             if FORCE == 0:
                 return status
+
+    do_sonic_platform_install()
     return
 
 def do_uninstall():
@@ -322,6 +368,7 @@ def do_uninstall():
             if FORCE == 0:
                 return status
 
+    do_sonic_platform_clean()
     return
 
 def device_exist():
