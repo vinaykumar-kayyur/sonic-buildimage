@@ -289,7 +289,7 @@ PDESUBMODULES = src/sonic-linux-kernel \
                 src/sonic-ztp \
                 src/sonic-platform-daemons \
                 src/sonic-platform-pde
-.PHONY: sonic-slave-build sonic-slave-bash init initpde reset
+.PHONY: sonic-slave-build sonic-slave-bash init reset
 
 .DEFAULT_GOAL :=  all
 
@@ -357,14 +357,6 @@ sonic-slave-run : sonic-slave-build
 showtag:
 	@echo $(SLAVE_IMAGE):$(SLAVE_TAG)
 	@echo $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
-
-initpde:
- 
-	@for submodule in $(PDESUBMODULES) ; do \
-	git submodule update --init --recursive $$submodule ; \
-	done
-	@git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
-
 
 init :
 	@git submodule update --init --recursive

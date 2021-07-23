@@ -1,6 +1,6 @@
 # Docker image for SONiC Platform Development Environment (PDE)
 
-ifeq ($(ENABLE_PDE), y)
+ifeq ($(INCLUDE_PDE), y)
 DOCKER_PDE_STEM = docker-pde
 DOCKER_PDE = $(DOCKER_PDE_STEM).gz
 DOCKER_PDE_DBG = $(DOCKER_PDE_STEM)-$(DBG_IMAGE_MARK).gz
