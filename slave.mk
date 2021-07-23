@@ -1044,7 +1044,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
-		BUILD_TARGET="$@" \
 		USERNAME="$(USERNAME)" \
 		PASSWORD="$(PASSWORD)" \
 		TARGET_MACHINE=$(dep_machine) \
@@ -1067,7 +1066,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		TARGET_PATH="$(TARGET_PATH)" \
 			./build_image.sh $(LOG)
 	)
-
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f *$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
