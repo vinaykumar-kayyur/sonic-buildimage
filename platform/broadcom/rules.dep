@@ -22,7 +22,6 @@ include $(PLATFORM_PATH)/docker-pde.dep
 include $(PLATFORM_PATH)/sonic-pde-tests.dep
 endif
 include $(PLATFORM_PATH)/one-image.dep
-include $(PLATFORM_PATH)/one-pde-image.dep
 include $(PLATFORM_PATH)/raw-image.dep
 include $(PLATFORM_PATH)/one-aboot.dep
 include $(PLATFORM_PATH)/libsaithrift-dev.dep
