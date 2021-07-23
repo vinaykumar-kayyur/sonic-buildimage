@@ -278,17 +278,6 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SLAVE_DIR=$(SLAVE_DIR) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
-PDESUBMODULES = src/sonic-linux-kernel \
-                src/sonic-utilities \
-                src/sonic-platform-common \
-                src/sonic-swss-common \
-                src/sonic-swss \
-                src/sonic-py-swsssdk \
-                src/redis-dump-load \
-                src/sonic-sairedis \
-                src/sonic-ztp \
-                src/sonic-platform-daemons \
-                src/sonic-platform-pde
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
 .DEFAULT_GOAL :=  all
