@@ -161,14 +161,7 @@ class Module(ModuleBase):
         """
         with self.lock:
             self.initialize_thermals()
-            thermal = None
-            try:
-                thermal = self._thermal_list[index]
-            except IndexError:
-                sys.stderr.write("THERMAL index {} out of range (0-{})\n".format(
-                                index, len(self._thermal_list)-1))
-
-            return thermal
+            return super(Module, self).get_thermal(index)
 
     ##############################################
     # SFP methods
@@ -238,12 +231,4 @@ class Module(ModuleBase):
         """
         with self.lock:
             self.initialize_single_sfp(index)
-            sfp = None
-
-            try:
-                sfp = self._sfp_list[index]
-            except IndexError:
-                sys.stderr.write("SFP index {} out of range (0-{})\n".format(
-                                index, len(self._sfp_list)-1))
-
-            return sfp
+            return super(Module, self).get_sfp(index)

@@ -156,15 +156,7 @@ class Chassis(ChassisBase):
             supply unit
         """
         self.initialize_psu()
-        psu = None
-
-        try:
-            psu = self._psu_list[index]
-        except IndexError:
-            sys.stderr.write("PSU index {} out of range (0-{})\n".format(
-                             index, len(self._psu_list)-1))
-
-        return psu
+        return super(Chassis, self).get_psu(index)
 
     ##############################################
     # Fan methods
@@ -789,7 +781,6 @@ class ModularChassis(Chassis):
         self.initialize_modules()
         return self._module_list
 
-    @utils.pre_initialize_one(initialize_single_module)
     def get_module(self, index):
         """
         Retrieves module represented by (0-based) index <index>
@@ -804,6 +795,20 @@ class ModularChassis(Chassis):
         """
         self.initialize_single_module(index)
         return super(Chassis, self).get_module(index)
+
+    @utils.default_return(-1)
+    def get_module_index(self, module_name):
+        """
+        Retrieves module index from the module name
+
+        Args:
+            module_name: A string, prefixed by SUPERVISOR, LINE-CARD or FABRIC-CARD
+            Ex. SUPERVISOR0, LINE-CARD1, FABRIC-CARD5
+
+        Returns:
+            An integer, the index of the ModuleBase object in the module_list
+        """
+        return int(module_name[len('LINE-CARD')-1:])
 
     ##############################################
     # SFP methods
@@ -841,10 +846,10 @@ class ModularChassis(Chassis):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        slot_id = (index & 0xFFFF0000) >> 16 # TODO: align with final design
+        sfp_index = index % DeviceDataManager.get_linecard_max_port_count() - 1
+        slot_id = int((index - sfp_index - 1) / 16) + 1
         module = self.get_module(slot_id - 1)
         if not module:
             return None
 
-        sfp_index = (index & 0x0000FFFF)
         return module.get_sfp(sfp_index - 1)

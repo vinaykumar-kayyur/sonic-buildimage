@@ -30,9 +30,10 @@ class TestModule:
         chassis = ModularChassis()
         assert len(chassis.get_all_sfps()) == 4
 
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.get_linecard_max_port_count', mock.MagicMock(return_value=16))
     def test_chassis_get_sfp(self):
         utils.read_int_from_file = mock.MagicMock(return_value=1)
-        index = (1 << 16) | 1
+        index = 1
         chassis = ModularChassis()
         sfp = chassis.get_sfp(index)
         assert sfp

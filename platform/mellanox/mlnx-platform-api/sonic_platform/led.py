@@ -1,7 +1,10 @@
 import os
 import time
+from sonic_py_common.logger import Logger
+
 from . import utils
 
+logger = Logger()
 
 class Led(object):
     STATUS_LED_COLOR_GREEN = 'green'
@@ -123,6 +126,7 @@ class Led(object):
             wait_time -= initial_sleep
             initial_sleep = initial_sleep * 2
         
+        logger.log_error('Failed to set led link because symbol link is not ready in {} seconds: {}'.format(wait_time, file_list))
         return False
 
     def get_status(self):

@@ -5,11 +5,11 @@ from sonic_py_common.logger import Logger
 logger = Logger()
 
 
-def read_from_file(file_path, convert_to, default='', raise_exception=False, log_func=logger.log_error):
+def read_from_file(file_path, target_type, default='', raise_exception=False, log_func=logger.log_error):
     """
     Read content from file and convert to target type
     :param file_path: File path
-    :param convert_to: target type
+    :param target_type: target type
     :param default: Default return value if any exception occur
     :param raise_exception: Raise exception to caller if True else just return default value
     :param log_func: function to log the error
@@ -17,7 +17,7 @@ def read_from_file(file_path, convert_to, default='', raise_exception=False, log
     """
     try:
         with open(file_path, 'r') as f:
-            value = convert_to(f.read().strip())
+            value = target_type(f.read().strip())
     except (ValueError, IOError) as e:
         if log_func:
             log_func('Failed to read from file {} - {}'.format(file_path, repr(e)))
@@ -38,7 +38,7 @@ def read_str_from_file(file_path, default='', raise_exception=False, log_func=lo
     :param log_func: function to log the error
     :return: String content of the file
     """
-    return read_from_file(file_path=file_path, convert_to=str, default=default, raise_exception=raise_exception, log_func=log_func)
+    return read_from_file(file_path=file_path, target_type=str, default=default, raise_exception=raise_exception, log_func=log_func)
 
 
 def read_int_from_file(file_path, default=0, raise_exception=False, log_func=logger.log_error):
@@ -50,7 +50,7 @@ def read_int_from_file(file_path, default=0, raise_exception=False, log_func=log
     :param log_func: function to log the error
     :return: Integer value of the file content
     """
-    return read_from_file(file_path=file_path, convert_to=int, default=default, raise_exception=raise_exception, log_func=log_func)
+    return read_from_file(file_path=file_path, target_type=int, default=default, raise_exception=raise_exception, log_func=log_func)
 
 
 def read_float_from_file(file_path, default=0.0, raise_exception=False, log_func=logger.log_error):
@@ -62,7 +62,7 @@ def read_float_from_file(file_path, default=0.0, raise_exception=False, log_func
     :param log_func: function to log the error
     :return: Integer value of the file content
     """
-    return read_from_file(file_path=file_path, convert_to=float, default=default, raise_exception=raise_exception, log_func=log_func)
+    return read_from_file(file_path=file_path, target_type=float, default=default, raise_exception=raise_exception, log_func=log_func)
 
 
 def _key_value_converter(content):
@@ -84,7 +84,7 @@ def read_key_value_file(file_path, default={}, raise_exception=False, log_func=l
         raise_exception (bool, optional): If exception should be raised or hiden. Defaults to False.
         log_func (optional): logger function.. Defaults to logger.log_error.
     """
-    return read_from_file(file_path=file_path, convert_to=_key_value_converter, default=default, raise_exception=raise_exception, log_func=log_func)
+    return read_from_file(file_path=file_path, target_type=_key_value_converter, default=default, raise_exception=raise_exception, log_func=log_func)
 
 
 def write_file(file_path, content, raise_exception=False, log_func=logger.log_error):

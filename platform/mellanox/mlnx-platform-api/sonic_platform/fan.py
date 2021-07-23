@@ -151,7 +151,7 @@ class PsuFan(MlnxFan):
 
     def __init__(self, fan_index, position, psu):
         super(PsuFan, self).__init__(fan_index, position)
-        self._name = 'psu{}_fan{}'.format(self.index, 1)
+        self._name = 'psu{}_fan{}'.format(self.index, position)
         self.psu = psu
 
         from .psu import Psu
@@ -255,10 +255,7 @@ class Fan(MlnxFan):
         super(Fan, self).__init__(fan_index, position)
     
         self.fan_drawer = fan_drawer
-        if self.fan_drawer:
-            self.led = ComponentFaultyIndicator(self.fan_drawer.get_led())
-        else:
-            self.led = FanLed(self.index)
+        self.led = ComponentFaultyIndicator(self.fan_drawer.get_led())
 
         self._name = "fan{}".format(self.index)
         self.fan_speed_get_path = os.path.join(FAN_PATH, "fan{}_speed_get".format(self.index))

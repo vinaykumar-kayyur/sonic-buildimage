@@ -353,13 +353,13 @@ class Thermal(ThermalBase):
 
     @classmethod
     def _check_thermal_zone_temperature(cls, thermal_zone_path):
-        normal_temp_path = os.path.join(thermal_zone_path, THERMAL_ZONE_THRESHOLD_FILE)
+        threshold_path = os.path.join(thermal_zone_path, THERMAL_ZONE_THRESHOLD_FILE)
         current_temp_path = os.path.join(thermal_zone_path, THERMAL_ZONE_TEMP_FILE)
 
         try:
-            normal = utils.read_int_from_file(normal_temp_path, raise_exception=True)
+            threshold = utils.read_int_from_file(threshold_path, raise_exception=True)
             current = utils.read_int_from_file(current_temp_path, raise_exception=True)    
-            return current <= normal
+            return current <= threshold
         except Exception as e:
             logger.log_info("Fail to check thermal zone temperature for file {} due to {}".format(thermal_zone_path, repr(e)))
             return False

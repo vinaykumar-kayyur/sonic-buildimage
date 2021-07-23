@@ -18,9 +18,9 @@ class TestPsu:
     def test_fixed_psu(self):
         psu = FixedPsu(0)
         assert psu.get_name() == 'PSU 1'
-        assert psu.get_model() == ''
-        assert psu.get_serial() == ''
-        assert psu.get_revision() == ''
+        assert psu.get_model() == 'N/A'
+        assert psu.get_serial() == 'N/A'
+        assert psu.get_revision() == 'N/A'
         utils.read_int_from_file = mock.MagicMock(return_value=1)
         assert psu.get_powergood_status()
         utils.read_int_from_file = mock.MagicMock(return_value=0)

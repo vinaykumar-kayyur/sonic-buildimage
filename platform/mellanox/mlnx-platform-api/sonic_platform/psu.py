@@ -35,13 +35,13 @@ class FixedPsu(PsuBase):
         return self._name
 
     def get_model(self):
-        return ''
+        return 'N/A'
 
     def get_serial(self):
-        return ''
+        return 'N/A'
 
     def get_revision(self):
-        return ''
+        return 'N/A'
 
     def get_powergood_status(self):
         """
@@ -172,27 +172,6 @@ class FixedPsu(PsuBase):
         """
         return None
 
-    def get_voltage_high_threshold(self):
-        """
-        Retrieves the high threshold PSU voltage output
-
-        Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
-        """
-        # hw-management doesn't expose those sysfs for now
-        raise NotImplementedError
-
-    def get_voltage_low_threshold(self):
-        """
-        Retrieves the low threshold PSU voltage output
-
-        Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
-        """
-        # hw-management doesn't expose those sysfs for now
-        raise NotImplementedError
      
 class Psu(FixedPsu):
     """Platform-specific Psu class"""
