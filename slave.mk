@@ -39,6 +39,8 @@ STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
 BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
 BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
+BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
+BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 DPKG_ADMINDIR_PATH = /sonic/dpkg
@@ -49,7 +51,11 @@ CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo amd64)
 ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
+ifeq ($(BLDENV),bullseye)
+IMAGE_DISTRO := bullseye
+else
 IMAGE_DISTRO := buster
+endif
 IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
 IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
 
@@ -79,10 +85,12 @@ configure :
 	@mkdir -p $(JESSIE_DEBS_PATH)
 	@mkdir -p $(STRETCH_DEBS_PATH)
 	@mkdir -p $(BUSTER_DEBS_PATH)
+	@mkdir -p $(BULLSEYE_DEBS_PATH)
 	@mkdir -p $(FILES_PATH)
 	@mkdir -p $(JESSIE_FILES_PATH)
 	@mkdir -p $(STRETCH_FILES_PATH)
 	@mkdir -p $(BUSTER_FILES_PATH)
+	@mkdir -p $(BULLSEYE_FILES_PATH)
 	@mkdir -p $(PYTHON_DEBS_PATH)
 	@mkdir -p $(PYTHON_WHEELS_PATH)
 	@mkdir -p $(DPKG_ADMINDIR_PATH)
@@ -256,11 +264,13 @@ $(info "ENABLE_HOST_SERVICE_ON_START"    : "$(ENABLE_HOST_SERVICE_ON_START)")
 $(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
 $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
+$(info "INCLUDE_DHCP_RELAY"              : "$(INCLUDE_DHCP_RELAY)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
+$(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
