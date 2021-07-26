@@ -242,6 +242,7 @@ def _get_jinja2_env(paths):
     env.filters['unique_name'] = unique_name
     env.filters['pfx_filter'] = pfx_filter
     env.filters['ip_network'] = ip_network
+    env.filters['json'] = json.dumps
     for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
         env.filters[attr] = partial(prefix_attr, attr)
 
