@@ -90,7 +90,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct as4630_54pe_psu_data *data = as4630_54pe_psu_update_device(dev);
     u8 status = 0;
-
+   
     if (attr->index == PSU_PRESENT) {
         if(data->index==0)
             status = !( (data->status >> 5) & 0x1);
@@ -286,15 +286,15 @@ static struct as4630_54pe_psu_data *as4630_54pe_psu_update_device(struct device 
                 dev_dbg(&client->dev, "unable to read model name from (0x%x)\n", client->addr);
             }
             else if(!strncmp(data->model_name, "YPEB1200", strlen("YPEB1200")))
-            {
-                if (data->model_name[9]=='A' && data->model_name[10]=='M')
-                {
-                    data->model_name[8]='A';
-                    data->model_name[9]='M';
-                    data->model_name[strlen("YPEB1200AM")]='\0';
-                }
-                else
-                    data->model_name[strlen("YPEB1200")]='\0';
+            {                
+                    if (data->model_name[9]=='A' && data->model_name[10]=='M')
+                    {
+                       data->model_name[8]='A';
+                       data->model_name[9]='M';
+                       data->model_name[strlen("YPEB1200AM")]='\0';
+                    }
+                    else  
+                        data->model_name[strlen("YPEB1200")]='\0';
             }
             else
             {
@@ -308,9 +308,12 @@ static struct as4630_54pe_psu_data *as4630_54pe_psu_update_device(struct device 
                 dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x35)\n", client->addr);
             }
             if (!strncmp(data->model_name, "YPEB1200AM", strlen("YPEB1200AM"))) /*for YPEB1200AM, SN length=18*/
+            {
                 data->serial_number[MAX_SERIAL_NUMBER-1]='\0';
+            }
             else
                 data->serial_number[MAX_SERIAL_NUMBER-2]='\0';
+            
         }
 
         data->last_updated = jiffies;
