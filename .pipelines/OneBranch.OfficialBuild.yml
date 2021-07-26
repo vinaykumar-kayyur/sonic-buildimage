@@ -47,7 +47,7 @@ stages:
         PASSWORD: '$(PASSWORD)'
       jobFilters: ${{ parameters.jobFilters }}
       preSteps:
-        - ../.azure-pipelines/cleanup.yml
+        - template: ../.azure-pipelines/cleanup.yml
         - checkout: self
           clean: true
           submodules: recursive
