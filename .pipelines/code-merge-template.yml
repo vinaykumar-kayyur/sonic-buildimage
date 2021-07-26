@@ -14,7 +14,7 @@ steps:
       git config --global user.email "svc-acs@microsoft.com"
       git config --global user.name "Sonic Automation"
 
-      target_branches="master 201811 201911 `git ls-remote target refs/heads/202??? 2>/dev/null | cut -d/ -f3`"
+      target_branches="master 201811 201911 202012 202106"
       for branch in $target_branches; do
         base_branch=internal-${branch}
         target_branch=${branch}
