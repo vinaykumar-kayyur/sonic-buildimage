@@ -35,10 +35,11 @@ stages:
     BUILD_TIMESTAMP: $[format('{0:yyyyMMdd}.{0:HHmmss}', pipeline.startTime)]
     BRANCH_NAME: $(Build.SourceBranchName)
     BUILD_NUMBER: $(Build.BuildId)
+    PLATFORM_ARCH: amd64
     PASSWORD: $(SONIC_PASSWORD)
     BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y'
     VERSION_PATH: target/sonic.version
-    PLATFORM_ARCH: amd64
+    DOCKER_DATA_ROOT_FOR_MULTIARCCH: /data/march/docker
   jobs:
   - template: ../.azure-pipelines/azure-pipelines-job-groups.yml
     parameters:
@@ -46,14 +47,7 @@ stages:
         PASSWORD: '$(PASSWORD)'
       jobFilters: ${{ parameters.jobFilters }}
       preSteps:
-        - script: |
-            sudo rm -rf target
-            sudo rm -rf fsroot*
-            if [ ! -z $HOME ]; then
-              sudo mkdir -p $HOME
-              sudo chown $USER:$(id -gn) $HOME
-            fi
-          displayName: 'Init'
+        - ../.azure-pipelines/cleanup.yml
         - checkout: self
           clean: true
           submodules: recursive
@@ -71,7 +65,7 @@ stages:
             echo "SONIC_VERSION=$SONIC_VERSION, LATEST_TAG=$LATEST_TAG"
             echo "##vso[task.setvariable variable=SONIC_VERSION]$SONIC_VERSION"
             echo "##vso[task.setvariable variable=LATEST_TAG]$LATEST_TAG"
-            make configure PLATFORM=$GROUP_NAME PLATFORM_ARCH=$(PLATFORM_ARCH)
+            ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(GROUP_NAME) PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
           displayName: 'Make configure'
       postSteps:
         - publish: $(System.DefaultWorkingDirectory)/target
@@ -91,7 +85,7 @@ stages:
             wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
             popd
             export AZCOPY_LOG_LOCATION=$(pwd)/azcopy
-            PUBLISH_PLATFORM_URL="https://$(SONIC_STORAGE_ACCOUNT).blob.core.windows.net/images/$(PUBLISH_BLOB_PREFIX)/$GROUP_NAME"
+            PUBLISH_PLATFORM_URL="https://$(SONIC_STORAGE_ACCOUNT).blob.core.windows.net/images/$(PUBLISH_BLOB_PREFIX)/$(GROUP_NAME)"
             PUBLISH_URL="$PUBLISH_PLATFORM_URL/$(Build.BuildId)$StorageSASKey"
             azcopy/azcopy copy target "$PUBLISH_PLATFORM_URL/$(Build.BuildId)$StorageSASKey" --recursive=true --put-md5
             touch prev_build
