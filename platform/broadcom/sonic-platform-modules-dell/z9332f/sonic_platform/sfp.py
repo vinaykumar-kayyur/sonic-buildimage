@@ -1098,8 +1098,6 @@ class Sfp(SfpBase):
                 if tx_bias_data is not None:
                     tx1_bias = self._strip_unit_from_str(tx_bias_data['data']['TXBias']['value'])
                     tx_bias_list.append(tx1_bias)
-                else:
-                    tx_bias_list.append("N/A")
 
         except (TypeError, ValueError):
             return None
@@ -1137,9 +1135,7 @@ class Sfp(SfpBase):
                 rx_power_data = self._get_eeprom_data('ChannelMonitor')
                 if rx_power_data is not None:
                      rx1_pw = self._strip_unit_from_str(rx_power_data['data']['RXPower']['value'])
-                else:
-                     rx1_pw = "N/A"
-                rx_power_list.append(rx1_pw)
+                     rx_power_list.append(rx1_pw)
         except (TypeError, ValueError):
             return None
         return rx_power_list
@@ -1190,9 +1186,7 @@ class Sfp(SfpBase):
                 channel_monitor_data = self._get_eeprom_data('ChannelMonitor')
                 if channel_monitor_data is not None:
                     tx1_pw = self._strip_unit_from_str(channel_monitor_data['data']['TXPower']['value'])
-                else:
-                    tx1_pw = "N/A"
-                tx_power_list.append(tx1_pw)
+                    tx_power_list.append(tx1_pw)
         except (TypeError, ValueError):
             return None
         return tx_power_list
