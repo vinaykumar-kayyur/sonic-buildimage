@@ -13,14 +13,14 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 66
-    OSFP_PORT_START = 1
-    OSFP_PORT_END = 64
-    SFP_PORT_START = 65
-    SFP_PORT_END = 66
+    PORT_START = 0
+    PORT_END = 65
+    OSFP_PORT_START = 0
+    OSFP_PORT_END = 63
+    SFP_PORT_START = 64
+    SFP_PORT_END = 65
 
-    EEPROM_OFFSET = 15
+    EEPROM_OFFSET = 16
     QSFP_PORT_INFO_PATH = '/sys/class/SFF'
     SFP_PORT_INFO_PATH = '/sys/bus/platform/devices/cls-xcvr'
     PORT_INFO_PATH = QSFP_PORT_INFO_PATH
@@ -90,7 +90,7 @@ class SfpUtil(SfpUtilBase):
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
-        sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_absmod"
+        sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_modabs"
         self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
 

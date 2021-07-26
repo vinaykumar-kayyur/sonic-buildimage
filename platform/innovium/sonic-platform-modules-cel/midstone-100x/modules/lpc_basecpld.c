@@ -93,9 +93,11 @@ static DEVICE_ATTR_RW(scratch);
 static ssize_t version_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
     int len = 0;
+    unsigned char value = 0;
     // CPLD register is one byte
     mutex_lock(&cpld_data->cpld_lock);
-    len = sprintf(buf, "0x%2.2x\n",inb(VERSION_ADDR));
+    value = inb(VERSION_ADDR);
+    len = sprintf(buf, "%d.%d\n", value >> 4, value & 0x0F);
     mutex_unlock(&cpld_data->cpld_lock);
     return len;
 }
