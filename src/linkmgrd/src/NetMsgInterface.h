@@ -84,7 +84,7 @@ private:
     *
     *@return none
     */
-    void updateMacAddress(
+    inline void updateMacAddress(
         std::string &port,
         std::array<char, MAX_ADDR_SIZE + 1> &ip,
         std::array<char, MAX_ADDR_SIZE + 1> &mac

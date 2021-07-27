@@ -29,7 +29,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
         mIoService
     )
 {
-    mMuxConfig.setTimeoutIpv4_msec(1);
+    mMuxConfig.setTimeoutIpv4_msec(2);
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
@@ -80,7 +80,7 @@ void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberSta
     }
 }
 
-void LinkManagerStateMachineTest::postMuxEvent(mux_state::MuxState::Label label)
+void LinkManagerStateMachineTest::postMuxEvent(mux_state::MuxState::Label label, uint32_t count)
 {
     mux_state::MuxStateMachine& muxStateMachine = mFakeMuxPort.getMuxStateMachine();
     for (uint8_t i = 0; i < mMuxConfig.getMuxStateChangeRetryCount(); i++) {
@@ -100,11 +100,11 @@ void LinkManagerStateMachineTest::postMuxEvent(mux_state::MuxState::Label label)
         default:
             break;
         }
-        runIoService();
+        runIoService(count);
     }
 }
 
-void LinkManagerStateMachineTest::postLinkEvent(link_state::LinkState::Label label)
+void LinkManagerStateMachineTest::postLinkEvent(link_state::LinkState::Label label, uint32_t count)
 {
     link_state::LinkStateMachine& linkStateMachine = mFakeMuxPort.getLinkStateMachine();
     for (uint8_t i = 0; i < mMuxConfig.getLinkStateChangeRetryCount(); i++) {
@@ -118,7 +118,7 @@ void LinkManagerStateMachineTest::postLinkEvent(link_state::LinkState::Label lab
         default:
             break;
         }
-        runIoService();
+        runIoService(count);
     }
 }
 
@@ -136,10 +136,10 @@ void LinkManagerStateMachineTest::handleMuxState(std::string state, uint32_t cou
     }
 }
 
-void LinkManagerStateMachineTest::handleGetMuxState(std::string state)
+void LinkManagerStateMachineTest::handleGetMuxState(std::string state, uint32_t count)
 {
     mFakeMuxPort.handleGetMuxState(state);
-    runIoService();
+    runIoService(count);
 }
 
 void LinkManagerStateMachineTest::handleProbeMuxState(std::string state, uint32_t count)
@@ -150,11 +150,11 @@ void LinkManagerStateMachineTest::handleProbeMuxState(std::string state, uint32_
     }
 }
 
-void LinkManagerStateMachineTest::handleLinkState(std::string linkState)
+void LinkManagerStateMachineTest::handleLinkState(std::string linkState, uint32_t count)
 {
     for (uint8_t i = 0; i < mMuxConfig.getLinkStateChangeRetryCount(); i++) {
         mFakeMuxPort.handleLinkState(linkState);
-        runIoService();
+        runIoService(count);
     }
 }
 
@@ -217,7 +217,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Standby);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
@@ -225,18 +225,18 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Active);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     // driver notification
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 
     // get state db mux state
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleGetMuxState("active");
+    handleGetMuxState("active", 2);
     VALIDATE_STATE(Standby, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("standby");
+    handleMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
@@ -245,13 +245,13 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveRemoteSwitchOver)
     setMuxActive();
 
     // swss notification
-    handleMuxState("active");
+    handleMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
 
@@ -259,22 +259,22 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveRemoteSwitchOver)
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Active);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     // driver notification
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
 
     // get state db mux state
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
-    handleGetMuxState("active");
+    handleGetMuxState("active", 2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
-    postLinkProberEvent(link_prober::LinkProberState::Standby);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
 
     // swss notification
-    handleMuxState("standby");
+    handleMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
@@ -283,22 +283,22 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyRemoteSwitchOver)
     setMuxStandby();
 
     // swss notification
-    handleMuxState("standby");
+    handleMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
 
     handleLinkState("down");
     VALIDATE_STATE(Standby, Standby, Down);
 
-    handleMuxState("active");
+    handleMuxState("active", 3);
     VALIDATE_STATE(Standby, Active, Down);
 
-    handleMuxState("standby");
+    handleMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Down);
 
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 3);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
     VALIDATE_STATE(Unknown, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
@@ -306,11 +306,11 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyRemoteSwitchOver)
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Standby);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 3);
     // driver notification
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 4);
     VALIDATE_STATE(Unknown, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 4);
 
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 2);
 }
@@ -320,13 +320,13 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbySwitchOver)
     setMuxStandby();
 
     // Verify posting extra standby won't change link prober state
-    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Standby, Up);
 
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
@@ -334,18 +334,18 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbySwitchOver)
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Standby);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     // driver notification
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 
     // get state db mux state
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleGetMuxState("standby");
+    handleGetMuxState("standby", 2);
     VALIDATE_STATE(Active, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("active");
+    handleMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 
     postLinkEvent(link_state::LinkState::Up);
@@ -407,11 +407,11 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
     VALIDATE_STATE(Wait, Active, Up);
 
     // change state to active
-    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("active", 3);
+    handleProbeMuxState("active", 4);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -420,17 +420,17 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverLinkProberFirst)
     setMuxStandby();
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleMuxConfig("active");
+    handleMuxConfig("active", 4);
 
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // change state to active
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     VALIDATE_STATE(Active, Wait, Up);
 
     // swss notification
-    handleMuxState("active");
+    handleMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -439,13 +439,13 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkDown)
     setMuxActive();
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleLinkState("down");
+    handleLinkState("down", 3);
 
     VALIDATE_STATE(Active, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("standby");
+    handleMuxState("standby", 4);
     VALIDATE_STATE(Active, Standby, Down);
 
     handleLinkState("up");
@@ -456,7 +456,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDown)
 {
     setMuxStandby();
 
-    handleLinkState("down");
+    handleLinkState("down", 3);
     VALIDATE_STATE(Standby, Standby, Down);
 
     handleLinkState("up");
@@ -470,11 +470,11 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownPeerOvertakeLink)
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 
-    postSuspendTimerExpiredEvent();
+    postSuspendTimerExpiredEvent(2);
     VALIDATE_STATE(Unknown, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
@@ -482,10 +482,10 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownPeerOvertakeLink)
     postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
     VALIDATE_STATE(Unknown, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Standby);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Wait, Up);
 
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 }
@@ -497,20 +497,20 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownReturnActive)
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 
-    postSuspendTimerExpiredEvent();
+    postSuspendTimerExpiredEvent(2);
     VALIDATE_STATE(Unknown, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Wait, Wait, Up);
 
     // ensure link prober stays in wait state if unknown event was posted
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
@@ -519,11 +519,11 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownReturnActive)
     VALIDATE_STATE(Wait, Active, Up);
 
     // change state to active
-    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("active", 3);
+    handleProbeMuxState("active", 4);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -535,7 +535,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
@@ -544,11 +544,11 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
     VALIDATE_STATE(Wait, Active, Up);
 
     // change state to active
-    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("active", 3);
+    handleProbeMuxState("active", 4);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -560,7 +560,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownReturnStandby)
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
@@ -569,11 +569,11 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknownReturnStandby)
     VALIDATE_STATE(Wait, Standby, Up);
 
     // change state to standby
-    postLinkProberEvent(link_prober::LinkProberState::Standby, 3);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("standby", 3);
+    handleProbeMuxState("standby", 4);
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
@@ -588,7 +588,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveAsymetricLinkDrop)
     VALIDATE_STATE(Unknown, Active, Up);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 
-    postSuspendTimerExpiredEvent();
+    postSuspendTimerExpiredEvent(2);
     VALIDATE_STATE(Unknown, Wait, Up);
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 1);
 
@@ -603,7 +603,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveAsymetricLinkDrop)
     VALIDATE_STATE(Wait, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("active", 3);
@@ -611,7 +611,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveAsymetricLinkDrop)
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 3);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("standby", 3);
@@ -627,7 +627,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyAsymetricLinkDrop)
     // verify MUX enters wait state and that the diver is being probed
     EXPECT_EQ(mDbInterfacePtr->mProbeMuxStateInvokeCount, 0);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
@@ -636,7 +636,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyAsymetricLinkDrop)
     VALIDATE_STATE(Wait, Active, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("active", 3);
@@ -644,7 +644,7 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyAsymetricLinkDrop)
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 3);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Up);
 
     handleProbeMuxState("standby", 3);
@@ -657,25 +657,25 @@ TEST_F(LinkManagerStateMachineTest, ActiveStateToProberUnknownMuxUnknownLinkUp)
 {
     setMuxActive();
 
-    postMuxEvent(mux_state::MuxState::Unknown);
+    postMuxEvent(mux_state::MuxState::Unknown, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Active, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     handleProbeMuxState("active", 3);
@@ -683,7 +683,7 @@ TEST_F(LinkManagerStateMachineTest, ActiveStateToProberUnknownMuxUnknownLinkUp)
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 4);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -691,25 +691,25 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
 {
     setMuxStandby();
 
-    postMuxEvent(mux_state::MuxState::Unknown);
+    postMuxEvent(mux_state::MuxState::Unknown, 2);
     VALIDATE_STATE(Standby, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Standby, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
@@ -718,14 +718,14 @@ TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("unknown");
+    handleMuxState("unknown", 4);
     VALIDATE_STATE(Wait, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
     // xcvrd notification
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -734,19 +734,19 @@ TEST_F(LinkManagerStateMachineTest, ProberUnknownMuxUnknownLinkDown)
     setMuxActive();
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
-    handleLinkState("down");
+    handleLinkState("down", 3);
 
     VALIDATE_STATE(Active, Wait, Down);
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("unknown");
+    handleMuxState("unknown", 4);
     VALIDATE_STATE(Active, Unknown, Down);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 3);
     VALIDATE_STATE(Unknown, Wait, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Unknown, Wait, Down);
 }
 
@@ -754,25 +754,25 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
 {
     setMuxStandby();
 
-    postMuxEvent(mux_state::MuxState::Unknown);
+    postMuxEvent(mux_state::MuxState::Unknown, 2);
     VALIDATE_STATE(Standby, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Standby, Wait, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown, 2);
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Unknown, Unknown, Up);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Unknown, Wait, Up);
 
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 0);
@@ -781,17 +781,17 @@ TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
     EXPECT_EQ(mDbInterfacePtr->mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("unknown");
+    handleMuxState("unknown", 4);
     VALIDATE_STATE(Wait, Wait, Up);
 
-    handleLinkState("down");
+    handleLinkState("down", 3);
     VALIDATE_STATE(Wait, Wait, Down);
 
     // xcvrd notification
     handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Wait, Unknown, Down);
 
-    runIoService();
+    runIoService(2);
     VALIDATE_STATE(Wait, Wait, Down);
 
 }
@@ -803,13 +803,13 @@ TEST_F(LinkManagerStateMachineTest, MuxActive2Error2Active)
     // fake mux statedb state to be active
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Error);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Up);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Up);
 
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -817,16 +817,16 @@ TEST_F(LinkManagerStateMachineTest, MuxActive2ErrorStandby)
 {
     setMuxActive();
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Up);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Standby);
+    postLinkProberEvent(link_prober::LinkProberState::Standby, 2);
     VALIDATE_STATE(Standby, Wait, Up);
 
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
@@ -837,13 +837,13 @@ TEST_F(LinkManagerStateMachineTest, MuxStandby2Error2Standby)
     // fake mux statedb state to be active
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Error);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Up);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Up);
 
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Up);
 }
 
@@ -851,16 +851,16 @@ TEST_F(LinkManagerStateMachineTest, MuxStandby2ErrorActive)
 {
     setMuxStandby();
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Up);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Up);
 
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 2);
     VALIDATE_STATE(Active, Wait, Up);
 
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 
@@ -868,25 +868,25 @@ TEST_F(LinkManagerStateMachineTest, MuxActive2Error2Unknown)
 {
     setMuxActive();
 
-    postLinkEvent(link_state::LinkState::Down);
+    postLinkEvent(link_state::LinkState::Down, 2);
     VALIDATE_STATE(Active, Wait, Down);
 
     // fake mux statedb state to be active
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Error);
 
-    handleMuxState("error");
+    handleMuxState("error", 4);
     VALIDATE_STATE(Active, Error, Down);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Active, Unknown, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Active, Unknown, Down);
 
-    handleProbeMuxState("active");
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Active, Active, Down);
 }
 
@@ -894,25 +894,25 @@ TEST_F(LinkManagerStateMachineTest, MuxStandby2Error2Unknown)
 {
     setMuxStandby();
 
-    postLinkEvent(link_state::LinkState::Down);
+    postLinkEvent(link_state::LinkState::Down, 2);
     VALIDATE_STATE(Standby, Standby, Down);
 
     // fake mux statedb state to be active
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Error);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Down);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Standby, Unknown, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Standby, Unknown, Down);
 
-    handleProbeMuxState("standby");
+    handleProbeMuxState("standby", 3);
     VALIDATE_STATE(Standby, Standby, Down);
 }
 
@@ -920,13 +920,13 @@ TEST_F(LinkManagerStateMachineTest, MuxActive2Unknown2Error)
 {
     setMuxActive();
 
-    postLinkEvent(link_state::LinkState::Down);
+    postLinkEvent(link_state::LinkState::Down, 2);
     VALIDATE_STATE(Active, Wait, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Active, Unknown, Down);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Active, Error, Down);
 }
 
@@ -934,13 +934,13 @@ TEST_F(LinkManagerStateMachineTest, MuxStandby2Unknown2Error)
 {
     setMuxStandby();
 
-    postLinkEvent(link_state::LinkState::Down);
+    postLinkEvent(link_state::LinkState::Down, 2);
     VALIDATE_STATE(Standby, Standby, Down);
 
-    handleProbeMuxState("unknown");
+    handleProbeMuxState("unknown", 3);
     VALIDATE_STATE(Standby, Unknown, Down);
 
-    handleMuxState("error");
+    handleMuxState("error", 3);
     VALIDATE_STATE(Standby, Error, Down);
 }
 

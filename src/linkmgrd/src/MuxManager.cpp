@@ -92,14 +92,14 @@ void MuxManager::terminate()
 //
 void MuxManager::updateLogVerbosity(std::string &verbosity)
 {
-    boost::log::trivial::severity_level level = boost::log::trivial::info;
+    boost::log::trivial::severity_level level = boost::log::trivial::warning;
 
     if (verbosity == "trace") {
         level = boost::log::trivial::trace;
     } else if (verbosity == "debug") {
         level = boost::log::trivial::debug;
-    } else if (verbosity == "warning") {
-        level = boost::log::trivial::warning;
+    } else if (verbosity == "info") {
+        level = boost::log::trivial::info;
     } else if (verbosity == "error") {
         level = boost::log::trivial::error;
     } else if (verbosity == "fatal") {
@@ -117,7 +117,7 @@ void MuxManager::updateLogVerbosity(std::string &verbosity)
 //
 void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip::address address)
 {
-    MUXLOGINFO(boost::format("%s: server IP: %s") % portName % address);
+    MUXLOGWARNING(boost::format("%s: server IP: %s") % portName % address);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
 
@@ -135,7 +135,7 @@ void MuxManager::addOrUpdateMuxPort(const std::string &portName, boost::asio::ip
 //
 void MuxManager::updateMuxPortConfig(const std::string &portName, const std::string &config)
 {
-    MUXLOGINFO(boost::format("%s: Mux port config: %s") % portName % config);
+    MUXLOGWARNING(boost::format("%s: Mux port config: %s") % portName % config);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {
@@ -150,7 +150,7 @@ void MuxManager::updateMuxPortConfig(const std::string &portName, const std::str
 //
 void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const std::string &linkState)
 {
-    MUXLOGINFO(boost::format("%s: link state: %s") % portName % linkState);
+    MUXLOGWARNING(boost::format("%s: link state: %s") % portName % linkState);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     muxPortPtr->handleLinkState(linkState);
@@ -163,7 +163,7 @@ void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const 
 //
 void MuxManager::addOrUpdateMuxPortMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % portName % muxState);
+    MUXLOGWARNING(boost::format("%s: state db mux state: %s") % portName % muxState);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     muxPortPtr->handleMuxState(muxState);
@@ -209,7 +209,7 @@ void MuxManager::processGetMuxState(const std::string &portName, const std::stri
 //
 void MuxManager::processProbeMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGDEBUG(boost::format("%s: app db mux state: %s") % portName % muxState);
+    MUXLOGINFO(boost::format("%s: app db mux state: %s") % portName % muxState);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {

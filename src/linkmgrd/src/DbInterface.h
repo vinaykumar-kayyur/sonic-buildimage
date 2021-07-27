@@ -270,7 +270,7 @@ private:
     *
     *@return none
     */
-    void processTorMacAddress(std::string& mac);
+    inline void processTorMacAddress(std::string& mac);
 
     /**
     *@method getTorMacAddress
@@ -292,7 +292,7 @@ private:
     *
     *@return none
     */
-    void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
+    inline void processLoopback2InterfaceInfo(std::vector<std::string> &loopbackIntfs);
 
     /**
     *@method getLoopback2InterfaceInfo
@@ -314,7 +314,7 @@ private:
     *
     *@return none
     */
-    void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processServerIpAddress(std::vector<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method getServerIpAddress
@@ -336,7 +336,7 @@ private:
     *
     *@return none
     */
-    void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processMuxPortConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxPortConfigNotifiction
@@ -358,7 +358,7 @@ private:
     *
     *@return none
     */
-    void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processMuxLinkmgrConfigNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxLinkmgrConfigNotifiction
@@ -380,7 +380,7 @@ private:
     *
     *@return none
     */
-    void processLinkStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processLinkStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleLinkStateNotifiction
@@ -402,7 +402,7 @@ private:
     *
     *@return none
     */
-    void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processMuxResponseNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxResponseNotifiction
@@ -424,7 +424,7 @@ private:
     *
     *@return none
     */
-    void processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
+    inline void processMuxStateNotifiction(std::deque<swss::KeyOpFieldsValuesTuple> &entries);
 
     /**
     *@method handleMuxStateNotifiction

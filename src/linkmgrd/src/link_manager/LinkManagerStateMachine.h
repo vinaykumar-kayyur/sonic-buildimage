@@ -475,6 +475,28 @@ private:
     void handleMuxProbeTimeout(boost::system::error_code errorCode);
 
     /**
+    *@method startMuxWaitTimer
+    *
+    *@brief start a timer to timeout xcvrd/orchagent
+    *
+    *@param factor      factor used to scale the timeout
+    *
+    *@return none
+    */
+    inline void startMuxWaitTimer(uint32_t factor = 1);
+
+    /**
+    *@method handleMuxWaitTimeout
+    *
+    *@brief handle when xcrvrd/orchagent has timed out responding to linkmgrd.
+    *
+    *@param errorCode (in)          timer error code
+    *
+    *@return none
+    */
+    void handleMuxWaitTimeout(boost::system::error_code errorCode);
+
+    /**
     *@method initLinkProberState
     *
     *@brief initialize LinkProberState when configuring the composite state machine
@@ -799,6 +821,7 @@ private:
     static std::vector<std::string> mLinkProberStateName;
     static std::vector<std::string> mMuxStateName;
     static std::vector<std::string> mLinkStateName;
+    static std::vector<std::string> mLinkHealthName;
 
 private:
     CompositeState mCompositeState = {
@@ -814,6 +837,7 @@ private:
     link_state::LinkStateMachine mLinkStateMachine;
 
     boost::asio::deadline_timer mDeadlineTimer;
+    boost::asio::deadline_timer mWaitTimer;
 
     boost::function<void ()> mInitializeProberFnPtr;
     boost::function<void ()> mStartProbingFnPtr;
