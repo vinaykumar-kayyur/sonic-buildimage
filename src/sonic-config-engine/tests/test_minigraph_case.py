@@ -357,3 +357,26 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_table
         )
+    
+    def test_dhcp_table(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP"'
+        expected = {
+                   'Vlan1000': {
+                       'dhcpv6_servers': [
+                           "fc02:2000::1",
+                           "fc02:2000::2"
+                       ],
+                       'dhcpv6_option|link_layer_addr': "true"
+                    },
+                   'Vlan2000': {
+                       'dhcpv6_servers': [
+                           "fc02:2000::3",
+                           "fc02:2000::4"
+                       ],
+                       'dhcpv6_option|link_layer_addr': "false"
+                    }
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected
+        )
+    

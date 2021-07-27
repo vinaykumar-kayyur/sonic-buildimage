@@ -786,3 +786,14 @@ class TestCfgGen(TestCase):
               'Vlan3094|1.1.1.1/24': {}
             }
         )
+
+    def test_minigraph_dhcp(self):
+        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v DHCP'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict(
+                "{'Vlan1000': {'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'], 'dhcpv6_option|link_layer_addr': 'true'}, "
+                "'Vlan2000': {'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4'], 'dhcpv6_option|link_layer_addr': 'false'}}"
+            )
+        )
