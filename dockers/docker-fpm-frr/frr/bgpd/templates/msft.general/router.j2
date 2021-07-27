@@ -10,8 +10,8 @@
 {% endif %}
 {% set path_template = "bgpd/templates/msft.general/%s/" + template_name + ".conf.j2" %}
 {% if neighbor_addr | ipv4 %}
-{%     if device_type in ['MgmtToRRouter', 'MgmtTsTor', 'EPMS'] %}
-{%         if device_type in ['MgmtToRRouter', 'MgmtTsTor'] and neighbor_type == 'CoreTs' %}
+{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS'] %}
+{%         if device_type in ['MgmtToRRouter', 'MgmtTsToR'] and neighbor_type == 'CoreTs' %}
 {%             include path_template % "v4.mgmttor.oob" %}
 {%         else %}
 {%             include path_template % "v4.mgmttor" %}
@@ -41,8 +41,8 @@
 {%     endif %}
 {% endif %}
 {% if neighbor_addr | ipv6 %}
-{%     if device_type in ['MgmtToRRouter', 'MgmtTsTor', 'EPMS'] %}
-{%         if device_type in ['MgmtToRRouter', 'MgmtTsTor'] and neighbor_type == 'CoreTs' %}
+{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS'] %}
+{%         if device_type in ['MgmtToRRouter', 'MgmtTsToR'] and neighbor_type == 'CoreTs' %}
 {%             include path_template % "v6.mgmttor.oob" %}
 {%         else %}
 {%             include path_template % "v6.mgmttor" %}

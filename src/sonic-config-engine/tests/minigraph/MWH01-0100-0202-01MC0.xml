@@ -19356,8 +19356,8 @@
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
-      <Device i:type="MgmtTsTor">
-        <ElementType>MgmtTsTor</ElementType>
+      <Device i:type="MgmtTsToR">
+        <ElementType>MgmtTsToR</ElementType>
         <Address xmlns:a="Microsoft.Search.Autopilot.NetMux">
           <a:IPPrefix>25.75.131.23/32</a:IPPrefix>
         </Address>
