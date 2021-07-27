@@ -30,7 +30,7 @@
 #include <linux/of.h>
 #include <linux/clk.h>
 #include <linux/pm_runtime.h>
-#include "fpga_i2c_ocores.h"
+#include "i2c-ocores.h"
 
 #define DRIVER_NAME "ocores-i2c-cls"
 

@@ -144,7 +144,7 @@ static ssize_t sfp_txdisable_store(struct device *dev,
 
 
 
-DEVICE_ATTR_RO(sfp_absmod);
+DEVICE_ATTR_RO(sfp_modabs);
 DEVICE_ATTR_RO(sfp_txfault);
 DEVICE_ATTR_RO(sfp_rxlos);
 DEVICE_ATTR_RW(sfp_txdisable);
