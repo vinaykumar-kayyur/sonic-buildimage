@@ -209,6 +209,14 @@ endif
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
+ifeq ($(BUILD_MKVM),)
+       override BUILD_MKVM := $(DEFAULT_BUILD_MKVM)
+endif
+
+ifeq ($(CONFIGURED_PLATFORM),vs)
+       export BUILD_MKVM=$(BUILD_MKVM)
+endif
+
 ###############################################################################
 ## Routing stack related exports
 ###############################################################################
@@ -272,6 +280,9 @@ $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
+ifeq ($(CONFIGURED_PLATFORM),vs)
+$(info "BUILD_MKVM"                      : "$(BUILD_MKVM)")
+endif
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
@@ -924,6 +935,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
 	export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
 	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
+	export onie_recovery_mkvm_4asic_image="$(FILES_PATH)/$(ONIE_RECOVERY_MKVM_4ASIC_IMAGE)"
+	export onie_recovery_mkvm_6asic_image="$(FILES_PATH)/$(ONIE_RECOVERY_MKVM_4ASIC_IMAGE)"
 	export kversion="$(KVERSION)"
 	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
