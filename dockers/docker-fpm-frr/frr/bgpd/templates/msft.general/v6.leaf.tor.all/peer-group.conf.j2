@@ -9,6 +9,9 @@
     neighbor TIER0_V6_DEPLOYMENT_ID_{{ neighbor_deployment_id }} route-map TO_TIER0_V6 out
     neighbor TIER0_V6_DEPLOYMENT_ID_{{ neighbor_deployment_id }} send-community
     neighbor TIER0_V6_DEPLOYMENT_ID_{{ neighbor_deployment_id }} maximum-prefix 8000 90 warning-only
+{% if CONFIG_DB__BGP_BBR['status'] == 'enabled' %}
+    neighbor TIER0_V6_DEPLOYMENT_ID_{{ neighbor_deployment_id }} allowas-in 1
+{% endif %}
   exit-address-family
 !
 ! end of template: bgpd/templates/msft.general/v6.leaf.tor.all/peer-group.conf.j2
