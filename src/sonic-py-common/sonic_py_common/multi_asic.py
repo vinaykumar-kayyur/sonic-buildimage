@@ -8,7 +8,7 @@ from swsscommon import swsscommon
 from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
 from .device_info import get_platform
-from .device_info import is_voq_supervisor
+from .device_info import is_supervisor
 
 ASIC_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
@@ -62,7 +62,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     """
     db = swsscommon.SonicV2Connector(namespace=namespace)
     db_list = list(db.get_db_list())
-    if not is_voq_supervisor():
+    if not is_supervisor():
         try:
             db_list.remove('CHASSIS_APP_DB')
             db_list.remove('CHASSIS_STATE_DB')
