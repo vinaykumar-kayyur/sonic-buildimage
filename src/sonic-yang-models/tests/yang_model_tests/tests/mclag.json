@@ -1,0 +1,10 @@
+{
+    "MCLAG_VALID_DOMAIN_ID_CFG_TEST": {
+	"desc": "valid mclag configuration test",
+    },
+    "MCLAG_INVALID_DOMAIN_IDS_TEST": {
+	"desc": "Invalid mclag domain ids",
+	"eStrKey" : "domain id not in range",
+	"eStr": ["domain_id"]
+    }
+}

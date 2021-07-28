@@ -19,8 +19,6 @@ module sonic-mclag {
     import sonic-extension {
         prefix sonic-ext;
     }
-
-    import sonic-port {
         prefix prt;
     }
 
@@ -41,6 +39,10 @@ module sonic-mclag {
 	description
 		"SONIC MCLAG";
 
+	revision 2021-07-28 {
+		description
+			"Addressed review comments";
+	}
 	revision 2019-10-01 {
 		description
 			"Initial revision.";
@@ -55,6 +57,7 @@ module sonic-mclag {
                 max-elements 1;
 
                 leaf domain_id {
+                    description  "MCLAG Domain ID";
                      type uint16 {
                         range "1..4095" {
                             error-message "MCLAG Domain ID out of range";
@@ -64,12 +67,15 @@ module sonic-mclag {
 
                 leaf source_ip {
                     type inet:ipv4-address;
+                    description  "MCLAG Domain source ip address for session between MCLAG Peers";
                 }
                 leaf peer_ip {
                     type inet:ipv4-address;
+                    description  "MCLAG Domain peer ip address for session between MCLAG Peers";
                 }
                 leaf peer_link {
                     type union {
+                        description  "MCLAG Domain peer link, data backup path link between MCLAG peers";
                         type leafref {
                             path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:ifname";
                         }
@@ -79,6 +85,7 @@ module sonic-mclag {
                     }
                 }
                 leaf keepalive_interval {
+                    description  "keepalive interval in seconds for MCLAG session between peers";
                     type uint16 {
                         range "1..60" {
                             error-message "MCLAG Domain keepalive interval out of range";
@@ -88,6 +95,7 @@ module sonic-mclag {
                     default 1;
                 }
                 leaf session_timeout {
+                    description  "Session timeout in seconds for MCLAG session between peers";
                     type uint16 {
                         range "1..3600" {
                             error-message "MCLAG Domain session timeout out of range";
@@ -106,20 +114,24 @@ module sonic-mclag {
         container MCLAG_INTERFACE { 
 
             list MCLAG_INTERFACE_LIST { 
+                description  "List of MCLAG interfaces";
                 key "domain_id if_name";
 
                 leaf domain_id {
+                    description  "List of MCLAG interfaces";
                     type leafref {
                         path "../../../MCLAG_DOMAIN/MCLAG_DOMAIN_LIST/domain_id";
                     }
                 }
 
                 leaf if_name {
+                    description  "MCLAG interface name";
                     type leafref {
                         path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
                     }
                 }
                 leaf if_type {
+                    description  "MCLAG interface type, placeholder field to create instance";
                     type string;
                 }
             }
@@ -128,6 +140,7 @@ module sonic-mclag {
         container MCLAG_UNIQUE_IP {
 
             list MCLAG_UNIQUE_IP_LIST {
+                description  "List of VLANs allowed to have unique ip addresses on MCLAG Peer nodes";
                 key "if_name";
 
                 must "count(../../MCLAG_DOMAIN/MCLAG_DOMAIN_LIST/domain_id) != 0" {
@@ -142,14 +155,18 @@ module sonic-mclag {
                 }
 
                 leaf if_name {
+                    description  "Vlan interface name on which MCLAG unique ip config is done";
                     type leafref {
                         path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                     }
                 }
                 leaf unique_ip {
+                    description  "unique ip enable, by default disable";
                     type enumeration {
                         enum enable;
+                        enum disable;
                     }
+                    default enable;
                 }
             }
         }
@@ -166,14 +183,17 @@ module sonic-mclag {
                 key "domain_id";
 
                 leaf domain_id {
+                     description "MCLAG Domain ID";
                      type uint16;
                 }
 
                 leaf oper_status {
+                    description "MCLAG Domain operational status";
                     type stypes:oper-status;
                 }
 
                 leaf role {
+                    description "MCLAG Peer role, active or standby based on config ip";
                     type enumeration {
 						enum active;
 						enum standby;
@@ -181,6 +201,7 @@ module sonic-mclag {
                 }
 
                 leaf system_mac {
+                    description "MCLAG common system mac address used by mclag peers";
                     type yang:mac-address;
                     description
                      "System MAC Address used for ICCPD";
@@ -201,10 +222,12 @@ module sonic-mclag {
                 key "if_name";
 
                 leaf if_name {
+                    description "MCLAG interface name";
                     type string;
                 }
 
                 leaf port_isolate_peer_link {
+                    description "MCLAG local interface port isolation state to indicate whether BUM traffic incoming on ISL is blocked on MCLAG Interface";
                     type boolean; 
                 }
             }
@@ -228,10 +251,12 @@ module sonic-mclag {
                 }
 
                 leaf if_name {
+                    description "MCLAG remote interface name";
                     type string;
                 }
 
                 leaf oper_status {
+                    description "MCLAG remote interface operational status";
                     type stypes:oper-status;
                 }
             }

@@ -700,6 +700,28 @@
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
             }
+        },
+        "MCLAG_DOMAIN": {
+            "123": {
+                "keepalive_interval": "1",
+                "peer_ip": "12.1.1.2",
+                "peer_link": "PortChannel2",
+                "session_timeout": "30",
+                "source_ip": "12.1.1.1"
+            }
+        },
+        "MCLAG_INTERFACE: {
+            "123|PortChannel10": {
+                "if_type": "PortChannel"
+            },
+            "123|PortChannel20": {
+                "if_type": "PortChannel"
+            }
+        },
+        "MCLAG_UNIQUE_IP": {
+            "Vlan12": {
+                "unique_ip": "enable"
+            }
         }
     },
 
