@@ -1046,7 +1046,7 @@
                 "session_timeout": "30"
             }
         },
-        "MCLAG_INTERFACE: {
+        "MCLAG_INTERFACE": {
             "123|PortChannel0004": {
                 "if_type": "PortChannel"
             }
@@ -1056,7 +1056,7 @@
                 "unique_ip": "enable"
             }
         }
-    }
+    },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."
