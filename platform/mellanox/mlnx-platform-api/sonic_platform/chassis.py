@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -25,6 +23,23 @@ except ImportError as e:
 MAX_SELECT_DELAY = 3600
 
 MLNX_NUM_PSU = 2
+
+DMI_FILE = '/sys/firmware/dmi/entries/2-0/raw'
+DMI_HEADER_LEN = 15
+DMI_PRODUCT_NAME = "Product Name"
+DMI_MANUFACTURER = "Manufacturer"
+DMI_VERSION = "Version"
+DMI_SERIAL = "Serial Number"
+DMI_ASSET_TAG = "Asset Tag"
+DMI_LOC = "Location In Chassis"
+DMI_TABLE_MAP = {
+                    DMI_PRODUCT_NAME: 0,
+                    DMI_MANUFACTURER: 1,
+                    DMI_VERSION: 2,
+                    DMI_SERIAL: 3,
+                    DMI_ASSET_TAG: 4,
+                    DMI_LOC: 5
+                }
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
@@ -67,6 +82,9 @@ class Chassis(ChassisBase):
         # Initialize Platform name
         self.platform_name = device_info.get_platform()
 
+        # Initialize DMI data
+        self.dmi_data = None
+        
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         #
@@ -140,7 +158,6 @@ class Chassis(ChassisBase):
                 fan = Fan(fan_index, drawer, index + 1)
                 fan_index += 1
                 drawer._fan_list.append(fan)
-                self._fan_list.append(fan)
 
 
     def initialize_single_sfp(self, index):
@@ -240,6 +257,18 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self.model
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+        
+        Returns:
+            string: Revision value of device
+        """
+        if self.dmi_data is None:
+            self.dmi_data = self._parse_dmi(DMI_FILE)
+
+        return self.dmi_data.get(DMI_VERSION, "N/A")
         
     ##############################################
     # SFP methods
@@ -394,6 +423,31 @@ class Chassis(ChassisBase):
             return '0'
 
 
+    def _parse_dmi(self, filename):
+        """
+        Read DMI data chassis data and returns a dictionary of values
+
+        Returns:
+            A dictionary containing the dmi table of the switch chassis info
+        """
+        result = {}
+        try:
+            fileobj = open(filename, "rb")
+            data = fileobj.read()
+            fileobj.close()
+
+            body = data[DMI_HEADER_LEN:]
+            records = body.split(b'\x00')
+
+            for k, v in DMI_TABLE_MAP.items():
+                result[k] = records[v].decode("utf-8")
+
+        except Exception as e:
+            logger.log_error("Fail to decode DMI {} due to {}".format(filename, repr(e)))
+
+        return result
+
+
     def _verify_reboot_cause(self, filename):
         '''
         Open and read the reboot cause file in 
@@ -515,18 +569,22 @@ class Chassis(ChassisBase):
 
         wait_for_ever = (timeout == 0)
         port_dict = {}
+        error_dict = {}
         if wait_for_ever:
             timeout = MAX_SELECT_DELAY
             while True:
-                status = self.sfp_event.check_sfp_status(port_dict, timeout)
+                status = self.sfp_event.check_sfp_status(port_dict, error_dict, timeout)
                 if bool(port_dict):
                     break
         else:
-            status = self.sfp_event.check_sfp_status(port_dict, timeout)
+            status = self.sfp_event.check_sfp_status(port_dict, error_dict, timeout)
 
         if status:
             self.reinit_sfps(port_dict)
-            return True, {'sfp':port_dict}
+            result_dict = {'sfp':port_dict}
+            if error_dict:
+                result_dict['sfp_error'] = error_dict
+            return True, result_dict
         else:
             return True, {'sfp':{}}
 

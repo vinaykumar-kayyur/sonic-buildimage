@@ -302,11 +302,11 @@ RUN apt-get update && apt-get install -y \
         xsltproc \
         python-lxml \
         libexpat1-dev \
+        libcurl3-gnutls \
+        libcjson-dev \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libhiredis-dev       \
-        libnl-3-dev          \
         swig3.0              \
         libpython2.7-dev     \
         libssl-dev           \
@@ -502,7 +502,7 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-buster docker-ce-cli=5:18.09.5~3-0~debian-buster
-RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Install m2crypto package, needed by SWI tools
