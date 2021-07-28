@@ -340,8 +340,8 @@ void LinkManagerStateMachine::switchMuxState(
         );
         enterMuxState(nextState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
-        mMuxPortPtr->setMuxState(label);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
+        mMuxPortPtr->setMuxState(label);
         mDeadlineTimer.cancel();
         startMuxWaitTimer();
     } else {
@@ -375,8 +375,14 @@ void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::
             mUpdateEthernetFrameFnPtr = boost::bind(
                 &link_prober::LinkProber::updateEthernetFrame, mLinkProberPtr.get()
             );
+            mProbePeerTorFnPtr = boost::bind(
+                &link_prober::LinkProber::probePeerTor, mLinkProberPtr.get()
+            );
             mSuspendTxFnPtr = boost::bind(
                 &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
+            );
+            mResumeTxFnPtr = boost::bind(
+                &link_prober::LinkProber::resumeTxProbes, mLinkProberPtr.get()
             );
             mComponentInitState.set(LinkProberComponent);
 
@@ -448,6 +454,10 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
         LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
+    }
+
+    if (ms(mCompositeState) != link_prober::LinkProberState::Unknown) {
+        mResumeTxFnPtr();
     }
 
     updateMuxLinkmgrState();
@@ -618,7 +628,7 @@ void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::La
                 mMuxPortConfig.getPortName()
             );
         }
-
+        mProbePeerTorFnPtr();
         postMuxStateEvent(label);
         mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
     } else if (label == mux_state::MuxState::Unknown) {

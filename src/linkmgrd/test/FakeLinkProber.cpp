@@ -77,11 +77,25 @@ void FakeLinkProber::updateEthernetFrame()
     mUpdateEthernetFrameCallCount++;
 }
 
+void FakeLinkProber::probePeerTor()
+{
+    MUXLOGINFO("");
+
+    mProbePeerTorCallCount++;
+}
+
 void FakeLinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
     MUXLOGINFO("");
 
     mSuspendTxProbeCallCount++;
+}
+
+void FakeLinkProber::resumeTxProbes()
+{
+    MUXLOGINFO("");
+
+    mResumeTxProbeCallCount++;
 }
 
 } /* namespace test */

@@ -102,9 +102,20 @@ public:
     *
     *@brief suspend sending ICMP ECHOREQUEST packets
     *
+    *@param suspendTime_msec suspension time in msec
+    *
     *@return none
     */
     void suspendTxProbes(uint32_t suspendTime_msec);
+
+    /**
+    *@method resumeTxProbes
+    *
+    *@brief resume sending ICMP ECHOREQUEST packets
+    *
+    *@return none
+    */
+    void resumeTxProbes();
 
     /**
     *@method updateEthernetFrame
@@ -114,6 +125,15 @@ public:
     *@return none
     */
     void updateEthernetFrame();
+
+    /**
+    *@method probePeerTor
+    *
+    *@brief send an early HB to peer ToR
+    *
+    *@return none
+    */
+    void probePeerTor();
 
 private:
     /**

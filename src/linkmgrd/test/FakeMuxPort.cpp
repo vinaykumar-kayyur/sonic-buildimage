@@ -46,8 +46,14 @@ FakeMuxPort::FakeMuxPort(
     getLinkManagerStateMachine()->setUpdateEthernetFrameFnPtr(
         boost::bind(&FakeLinkProber::updateEthernetFrame, mFakeLinkProber.get())
     );
+    getLinkManagerStateMachine()->setProbePeerTorFnPtr(
+        boost::bind(&FakeLinkProber::probePeerTor, mFakeLinkProber.get())
+    );
     getLinkManagerStateMachine()->setSuspendTxFnPtr(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
+    );
+    getLinkManagerStateMachine()->setResumeTxFnPtr(
+        boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
     );
 }
 

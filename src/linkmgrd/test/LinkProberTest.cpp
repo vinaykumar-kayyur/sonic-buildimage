@@ -49,12 +49,12 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
     EXPECT_TRUE(ipHeader->ihl == sizeof(iphdr) >> 2);
     EXPECT_TRUE(ipHeader->version == IPVERSION);
-    EXPECT_TRUE(ipHeader->tos == 0);
+    EXPECT_TRUE(ipHeader->tos == 0xb8);
     EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload)));
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
-    EXPECT_TRUE(ipHeader->check == 45256);
+    EXPECT_TRUE(ipHeader->check == 63687);
     EXPECT_TRUE(ipHeader->saddr == htonl(mFakeMuxPort.getMuxPortConfig().getLoopbackIpv4Address().to_v4().to_uint()));
     EXPECT_TRUE(ipHeader->daddr == htonl(mFakeMuxPort.getMuxPortConfig().getBladeIpv4Address().to_v4().to_uint()));
 

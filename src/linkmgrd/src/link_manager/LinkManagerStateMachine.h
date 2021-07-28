@@ -787,15 +787,37 @@ private:
     void setUpdateEthernetFrameFnPtr(boost::function<void ()> updateEthernetFrameFnPtr) {mUpdateEthernetFrameFnPtr = updateEthernetFrameFnPtr;};
 
     /**
+    *@method setProbePeerTorFnPtr
+    *
+    *@brief set new ProbePeerTorFnPtr for the state machine. This method is used for testing
+    *
+    *@param probePeerTorFnPtr (in)  pointer to new ProbePeerTorFnPtr
+    *
+    *@return none
+    */
+    void setProbePeerTorFnPtr(boost::function<void ()> probePeerTorFnPtr) {mProbePeerTorFnPtr = probePeerTorFnPtr;};
+
+    /**
     *@method setSuspendTxFnPtr
     *
     *@brief set new SuspendTXFnPtr for the state machine. This method is used for testing
     *
-    *@param suspendTxFnPtr (in)  pointer to new  SuspendTXFnPtr
+    *@param suspendTxFnPtr (in)  pointer to new  SuspendTxFnPtr
     *
     *@return none
     */
     void setSuspendTxFnPtr(boost::function<void (uint32_t suspendTime_msec)> suspendTxFnPtr) {mSuspendTxFnPtr = suspendTxFnPtr;};
+
+    /**
+    *@method setResumeTxFnPtr
+    *
+    *@brief set new ResumeTXFnPtr for the state machine. This method is used for testing
+    *
+    *@param resumeTxFnPtr (in)  pointer to new  ResumeTxFnPtr
+    *
+    *@return none
+    */
+    void setResumeTxFnPtr(boost::function<void ()> resumeTxFnPtr) {mResumeTxFnPtr = resumeTxFnPtr;};
 
     /**
     *@method setComponentInitState
@@ -842,7 +864,9 @@ private:
     boost::function<void ()> mInitializeProberFnPtr;
     boost::function<void ()> mStartProbingFnPtr;
     boost::function<void ()> mUpdateEthernetFrameFnPtr;
+    boost::function<void ()> mProbePeerTorFnPtr;
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
+    boost::function<void ()> mResumeTxFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;
