@@ -24,6 +24,16 @@
                 "tpid": "0x9200",
                 "mtu": "9100",
                 "lacp_key": "auto"
+            },
+            "PortChannel2": {
+                "admin_status": "up",
+                "min_links": "1",
+                "members": [
+                    "Ethernet12"
+                ],
+                "tpid": "0x9200",
+                "mtu": "9100",
+                "lacp_key": "auto"
             }
         },
         "PORTCHANNEL_INTERFACE": {
@@ -34,7 +44,8 @@
         },
         "PORTCHANNEL_MEMBER": {
             "PortChannel0003|Ethernet1": {},
-            "PortChannel0004|Ethernet2": {}
+            "PortChannel0004|Ethernet2": {},
+            "PortChannel2|Ethernet12": {}
         },
         "VLAN_INTERFACE": {
             "Vlan111": {
@@ -232,7 +243,17 @@
                 "vlanid": "777",
                 "mtu": "9216",
                 "admin_status": "up"
-            }
+            },
+            "Vlan12": {
+                "description": "mclag session ve",
+                "dhcp_servers": [
+                    "12.1.1.1"
+                ],
+                "vlanid": "12",
+                "mtu": "9216",
+                "admin_status": "up"
+            },
+
         },
         "DEVICE_NEIGHBOR": {
             "Ethernet112": {
@@ -805,6 +826,9 @@
             },
             "Vlan111|PortChannel0003": {
                 "tagging_mode": "untagged"
+            },
+            "Vlan12|PortChannel2": {
+                "tagging_mode": "tagged"
             }
         },
         "LOOPBACK_INTERFACE": {
@@ -1017,7 +1041,7 @@
             "123": {
                 "source_ip": "10.222.10.65",
                 "peer_ip": "10.222.10.66",
-                "peer_link": "PortChannel0003",
+                "peer_link": "PortChannel2",
                 "keepalive_interval": "1",
                 "session_timeout": "30"
             }
@@ -1028,9 +1052,10 @@
             }
         },
         "MCLAG_UNIQUE_IP": {
-            "Vlan111": {
+            "Vlan12": {
                 "unique_ip": "enable"
             }
+        }
     }
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
