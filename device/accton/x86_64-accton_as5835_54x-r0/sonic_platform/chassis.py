@@ -34,8 +34,7 @@ SYSLED_FNODE= "/sys/class/leds/as5835_54x_led::diag/brightness"
 SYSLED_MODES = {
     "0" : "STATUS_LED_COLOR_OFF",
     "1" : "STATUS_LED_COLOR_GREEN",
-    "2" : "STATUS_LED_COLOR_AMBER",
-    "5" : "STATUS_LED_COLOR_GREEN_BLINK"
+    "3" : "STATUS_LED_COLOR_AMBER"
 }
 
 
