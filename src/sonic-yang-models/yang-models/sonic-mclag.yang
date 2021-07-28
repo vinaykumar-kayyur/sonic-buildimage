@@ -19,6 +19,7 @@ module sonic-mclag {
     import sonic-extension {
         prefix sonic-ext;
     }
+    import sonic-port {
         prefix prt;
     }
 
