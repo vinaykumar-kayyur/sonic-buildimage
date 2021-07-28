@@ -1,5 +1,21 @@
 {
     "PFC_WDOG_WITH_CORRECT_ACTION_DROP_VALUE": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                {
+                    "admin_status": "up",
+                    "alias": "eth0",
+                    "description": "Ethernet0",
+                    "lanes": "65",
+                    "mtu": "9000",
+                    "name": "Ethernet4",
+                    "tpid": "0x8100",
+                    "speed": "25000"
+                }
+                ]
+            }
+        },
         "sonic-qos-pfc:sonic-qos-pfc": {
             "sonic-qos-pfc:PFC_WD": {
                 "PFC_WD_LIST": [
@@ -14,6 +30,22 @@
         }
     },
     "PFC_WDOG_WITH_CORRECT_ACTION_FORWARD_VALUE": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                {
+                    "admin_status": "up",
+                    "alias": "eth0",
+                    "description": "Ethernet0",
+                    "lanes": "65",
+                    "mtu": "9000",
+                    "name": "Ethernet4",
+                    "tpid": "0x8100",
+                    "speed": "25000"
+                }
+                ]
+            }
+        },
         "sonic-qos-pfc:sonic-qos-pfc": {
             "sonic-qos-pfc:PFC_WD": {
                 "PFC_WD_LIST": [
@@ -28,6 +60,23 @@
         }
     },
     "PFC_WDOG_WITH_CORRECT_ACTION_ALERT_VALUE": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                {
+                    "admin_status": "up",
+                    "alias": "eth0",
+                    "description": "Ethernet0",
+                    "lanes": "65",
+                    "mtu": "9000",
+                    "name": "Ethernet4",
+                    "tpid": "0x8100",
+                    "speed": "25000"
+                }
+                ]
+            }
+        },
+
         "sonic-qos-pfc:sonic-qos-pfc": {
             "sonic-qos-pfc:PFC_WD": {
                 "PFC_WD_LIST": [
@@ -55,15 +104,24 @@
             }
         }
     },
+    "PFC_WDOG_WITH_CORRECT_POLL_INTERVAL_VALUE": {
+        "sonic-qos-pfc:sonic-qos-pfc": {
+            "sonic-qos-pfc:PFC_WD": {
+                "PFC_WD_LIST": [
+                    {
+                        "ifname": "GLOBAL",
+                        "POLL_INTERVAL": 101
+                    }
+                ]
+            }
+        }
+    },
     "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_LOW_VALUE": {
         "sonic-qos-pfc:sonic-qos-pfc": {
             "sonic-qos-pfc:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
-                        "ifname": "Ethernet4",
-                        "action": "drop",
-                        "detection_time": 100,
-                        "restoration_time": 3000,
+                        "ifname": "GLOBAL",
                         "POLL_INTERVAL":99
                     }
                 ]
@@ -75,10 +133,7 @@
             "sonic-qos-pfc:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
-                        "ifname": "Ethernet4",
-                        "action": "wrong",
-                        "detection_time": 5000,
-                        "restoration_time": 3000,
+                        "ifname": "GLOBAL",
                         "POLL_INTERVAL": 3001
                     }
                 ]
