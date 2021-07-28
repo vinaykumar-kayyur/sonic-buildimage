@@ -1015,23 +1015,20 @@
        
         "MCLAG_DOMAIN": {
             "123": {
+                "source_ip": "10.222.10.65",
+                "peer_ip": "10.222.10.66",
+                "peer_link": "PortChannel0003",
                 "keepalive_interval": "1",
-                "peer_ip": "12.1.1.2",
-                "peer_link": "PortChannel2",
-                "session_timeout": "30",
-                "source_ip": "12.1.1.1"
+                "session_timeout": "30"
             }
         },
         "MCLAG_INTERFACE: {
-            "123|PortChannel10": {
-                "if_type": "PortChannel"
-            },
-            "123|PortChannel20": {
+            "123|PortChannel0004": {
                 "if_type": "PortChannel"
             }
         },
         "MCLAG_UNIQUE_IP": {
-            "Vlan12": {
+            "Vlan111": {
                 "unique_ip": "enable"
             }
     }

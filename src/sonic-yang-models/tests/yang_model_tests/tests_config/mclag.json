@@ -111,7 +111,7 @@
                         "name": "Vlan12"
                     }
                 ]
-        }
+        },
         "sonic-mclag:sonic-mclag": {
             "sonic-mclag:MCLAG_DOMAIN": {
                 "MCLAG_DOMAIN_LIST": [
@@ -121,7 +121,7 @@
                         "peer_ip"  : "12.1.1.2",
                         "peer_link": "PortChannel2",
                         "keepalive_interval: "1",
-                        "session_timeout: "30",
+                        "session_timeout: "30"
                     }
                 ]
             },
@@ -150,7 +150,7 @@
                 ]
             }
         }
-    }.
+    },
 
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
         "sonic-mclag:sonic-mclag": {
