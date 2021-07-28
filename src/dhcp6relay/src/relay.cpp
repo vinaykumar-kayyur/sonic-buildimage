@@ -22,52 +22,6 @@ struct event *ev_sigterm;
 bool serverListener = true;
 std::shared_ptr<boost::thread> serverPtr;
 
-/**
- * @code        parse_args(int argc, char *argv[]);
- *
- * @brief       parse through argument and define the interface to bind to and to turn off option 79. 
- *              read from config database and set the ipv6 helper addresses.
- *
- * @return      none
- */
-void ArgumentParser::parse_args(int argc, char *argv[]) {
-    int opt;
-    std::string option;
-    bool is_interface_set = false;
-    m_config.is_option_79 = false; 
-    
-    while ((opt = getopt(argc, argv, "i:o:")) != -1) {
-        switch (opt) {
-            case 'i':
-                if (is_interface_set) {
-                        throw ArgumentException("Interface is already set to : " + this->m_config.interface);
-                }
-                else {
-                    is_interface_set = true;
-                    this->m_config.interface = std::string(optarg);
-                    config_interface = this->m_config.interface;
-                }
-                break;
-            case 'o':
-                if(std::string(optarg) == "79")
-                    m_config.is_option_79 = true;
-            case '?':
-                option = std::string(argv[optind - 1]);
-                throw ArgumentException("Option " + option + " not recognized");
-            default:
-                abort();
-        }
-    }
-
-    if (!is_interface_set) {
-        throw ArgumentException("Must specify an interface");
-    }
-}
-
-arg_config ArgumentParser::get_arg() {
-    return this->m_config;
-}
-
 bool is_addr_gua(in6_addr addr) {
 
     auto masked = addr.__in6_u.__u6_addr8[0] & 0xe0;
@@ -216,7 +170,7 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
         }
         tmp.sin6_family = AF_INET6;
         tmp.sin6_flowinfo = 0;
-        tmp.sin6_port = htons(547);
+        tmp.sin6_port = htons(RELAY_PORT);
         tmp.sin6_scope_id = 0; 
         interface_config->servers.push_back(tmp);
     }
@@ -229,8 +183,8 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
     addr[0] = 0;
 
     if (getifaddrs(&ifa) == -1) {
-		    syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
-            exit(1);
+		syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
+        exit(1);
 	}
 
     ifa_tmp = ifa;
@@ -240,6 +194,7 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
             inet_ntop(AF_INET6, &in6->sin6_addr, addr, sizeof(addr));
             if((strcmp(ifa_tmp->ifa_name, interface_config->interface.c_str()) == 0) && is_addr_gua(in6->sin6_addr)) {    
                 non_link_local = in6;
+                break;
             }
             if((strcmp(ifa_tmp->ifa_name, interface_config->interface.c_str()) == 0) && is_addr_link_local(in6->sin6_addr)) {    
                 link_local = in6;
@@ -304,7 +259,7 @@ void prepare_socket(int *local_sock, arg_config *context) {
         syslog(LOG_ERR, "scoket: Failed to create socket\n");
     }
 
-    addr.sin6_port = htons(547);
+    addr.sin6_port = htons(RELAY_PORT);
     
     if (bind(*local_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
         syslog(LOG_ERR, "bind: Failed to bind to socket\n");
@@ -400,7 +355,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     memcpy(&target_addr.sin6_addr, &dhcp_relay_header->peer_address, sizeof(struct in6_addr));
     target_addr.sin6_family = AF_INET6;
     target_addr.sin6_flowinfo = 0;
-    target_addr.sin6_port = htons(546);
+    target_addr.sin6_port = htons(CLIENT_PORT);
     target_addr.sin6_scope_id = if_nametoindex(ifname);
 
     send_udp(sock, buffer, target_addr, current_buffer_position - buffer);
@@ -420,7 +375,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
  */
 void callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
-    uint8_t message_buffer[4096];
+    static uint8_t message_buffer[4096];
     uint32_t len = recv(config->filter, message_buffer, 4096, 0);
     if (len <= 0) {
         syslog(LOG_WARNING, "recv: Failed to receive data at filter socket\n");
@@ -450,10 +405,8 @@ void callback(evutil_socket_t fd, short event, void *arg) {
 
     auto dhcp_header = parse_dhcpv6_hdr(current_position);
 
-    if ((ntohs(udp_header->dest)) == 547 ) {
-        if(dhcp_header->msg_type == SOLICIT || REQUEST || CONFIRM || RENEW || REBIND || RELEASE || DECLINE) {
-            relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
-        }    
+    if (((ntohs(udp_header->dest)) == RELAY_PORT) && (dhcp_header->msg_type == SOLICIT || REQUEST || CONFIRM || RENEW || REBIND || RELEASE || DECLINE)) {
+        relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
     }
 }
 

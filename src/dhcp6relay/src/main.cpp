@@ -3,9 +3,7 @@
 
 int main(int argc, char *argv[]) {
     try {
-        auto parser = ArgumentParser();
-        parser.parse_args(argc, argv);
-        auto context = parser.get_arg();
+        arg_config context;
         initialize_swss(&context);
         loop_relay(&context);
     }

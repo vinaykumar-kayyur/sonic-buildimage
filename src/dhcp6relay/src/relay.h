@@ -14,6 +14,8 @@
 
 #define PACKED __attribute__ ((packed))
 
+#define RELAY_PORT 547
+#define CLIENT_PORT 546
 #define HOP_LIMIT 32
 
 #define lengthof(A) (sizeof (A) / sizeof (A)[0])
@@ -73,18 +75,6 @@ struct linklayer_addr_option  {
     uint16_t option_code;
     uint16_t option_length;
     uint16_t link_layer_type;
-};
-
-class ArgumentParser {
-    public:
-    void parse_args(int argc, char *argv[]);
-    
-    arg_config get_arg();
-
-
-    private:
-    arg_config m_config;
-
 };
 
 
