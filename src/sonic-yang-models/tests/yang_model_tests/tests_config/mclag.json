@@ -65,9 +65,7 @@
                         "mtu": "9100",
                         "lacp_key": "auto",
                         "name": "PortChannel20"
-                    },
-
-                    
+                    }
                 ]
             }
         },
