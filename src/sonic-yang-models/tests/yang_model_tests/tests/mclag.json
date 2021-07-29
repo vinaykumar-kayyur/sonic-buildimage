@@ -6,13 +6,13 @@
 	"desc": "valid mclag configuration test with peer link ethernet"
     },
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
-	"desc": "configure mclag domain id in range",
+	"desc": "configure mclag domain id in range"
     },
     "MCLAG_INVALID_KEEPALIVE_TEST": {
-	"desc": "configure mclag keepalive values in range",
+	"desc": "configure mclag keepalive values in range"
     },
     "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
-	"desc": "configure mclag session timeout in range",
+	"desc": "configure mclag session timeout in range"
     },
     "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
 	"desc": "Invalid session and keepalive multiplier",
