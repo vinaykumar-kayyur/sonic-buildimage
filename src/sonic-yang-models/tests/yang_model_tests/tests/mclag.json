@@ -1,6 +1,9 @@
 {
-    "MCLAG_VALID_DOMAIN_ID_CFG_TEST": {
+    "MCLAG_VALID_DOMAIN_CFG_TEST": {
 	"desc": "valid mclag configuration test"
+    },
+    "MCLAG_VALID_DOMAIN_PEERLINK_ETH_TEST": {
+	"desc": "valid mclag configuration test with peer link ethernet"
     },
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
 	"desc": "Invalid mclag domain ids",
