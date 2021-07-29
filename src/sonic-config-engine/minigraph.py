@@ -580,24 +580,25 @@ def parse_dpg(dpg, hname):
         dhcp = child.find(str(QName(ns, "Dhcp")))
         dhcp_table = {}
 
-        for vintf in dhcp.findall(str(QName(ns, "VlanInterface"))):
-            vintfname = vintf.find(str(QName(ns, "Name"))).text
+        if dhcp is not None:
+            for vintf in dhcp.findall(str(QName(ns, "VlanInterface"))):
+                vintfname = vintf.find(str(QName(ns, "Name"))).text
 
-            dhcp_attributes = {}
+                dhcp_attributes = {}
 
-            dhcp_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
-            if dhcp_node is not None and dhcp_node.text is not None:
-                dhcpservers = dhcp_node.text
-                vdhcpserver_list = dhcpservers.split(';')
-                dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
+                dhcp_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
+                if dhcp_node is not None and dhcp_node.text is not None:
+                    dhcpservers = dhcp_node.text
+                    vdhcpserver_list = dhcpservers.split(';')
+                    dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
 
-            option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionLinkLayerAddr")))
-            if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
-                dhcp_attributes['dhcpv6_option|link_layer_addr'] = "true"
-            elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
-                dhcp_attributes['dhcpv6_option|link_layer_addr'] = "false"
+                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionLinkLayerAddr")))
+                if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
+                    dhcp_attributes['dhcpv6_option|link_layer_addr'] = "true"
+                elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
+                    dhcp_attributes['dhcpv6_option|link_layer_addr'] = "false"
 
-            dhcp_table[vintfname] = dhcp_attributes
+                dhcp_table[vintfname] = dhcp_attributes
 
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):

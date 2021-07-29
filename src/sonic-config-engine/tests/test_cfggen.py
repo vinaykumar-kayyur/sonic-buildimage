@@ -788,7 +788,7 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_dhcp(self):
-        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v DHCP'
+        argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v DHCP'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
