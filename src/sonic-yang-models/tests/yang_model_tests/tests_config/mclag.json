@@ -161,7 +161,6 @@
                 "MCLAG_DOMAIN_LIST": [
                     {
                         "domain_id": "0",
-                        "source_ip": "1.1.1.1"
                     },
                     {
                         "domain_id": "4096",
@@ -171,5 +170,82 @@
                 ]
             }
         }
+    },
+    "MCLAG_INVALID_KEEPALIVE_TEST": {
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_DOMAIN": {
+                "MCLAG_DOMAIN_LIST": [
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "0",
+                        "session_timeout": "30"
+                    },
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "61"
+                        "session_timeout": "30"
+                    }
+                ]
+            }
+        }
+    },
+    "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_DOMAIN": {
+                "MCLAG_DOMAIN_LIST": [
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "1",
+                        "session_timeout": "0"
+                    },
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "1",
+                        "session_timeout": "3601"
+                    }
+                ]
+            }
+        }
+    },
+    "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_DOMAIN": {
+                "MCLAG_DOMAIN_LIST": [
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "40",
+                        "session_timeout": "30"
+                    },
+                    {
+                        "domain_id": "123",
+                        "source_ip": "1.1.1.1"
+                        "keepalive_interval" : "60",
+                        "session_timeout": "100"
+                    }
+                ]
+            }
+        }
+    },
+    "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
+        "sonic-mclag:MCLAG_INTERFACE": {
+            "MCLAG_INTERFACE_LIST": [
+            {
+                "domain_id": "1001",
+                "if_name"  : "PortChannel10",
+                "if_type"  : "Portchannel"
+            },
+            {
+                "domain_id": "2001",
+                "if_name"  : "PortChannel20",
+                "if_type"  : "Portchannel"
+            }
+
+            ]
+        },
     }
 }

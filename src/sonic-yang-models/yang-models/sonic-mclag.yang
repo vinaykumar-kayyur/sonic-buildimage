@@ -16,9 +16,6 @@ module sonic-mclag {
         prefix stypes;
     }
 
-    import sonic-extension {
-        prefix sonic-ext;
-    }
     import sonic-port {
         prefix prt;
     }
@@ -75,8 +72,8 @@ module sonic-mclag {
                     description  "MCLAG Domain peer ip address for session between MCLAG Peers";
                 }
                 leaf peer_link {
+                    description  "MCLAG Domain peer link, data backup path link between MCLAG peers";
                     type union {
-                        description  "MCLAG Domain peer link, data backup path link between MCLAG peers";
                         type leafref {
                             path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:ifname";
                         }
@@ -172,95 +169,5 @@ module sonic-mclag {
             }
         }
 
-        //stateDB MCLAG Table
-        container MCLAG_TABLE { 
-            sonic-ext:db-name "STATE_DB"; 
-            sonic-ext:key-delim "|"; 
-
-            config false;
-            description "state db mclag domain table";
-
-            list MCLAG_TABLE_LIST { 
-                key "domain_id";
-
-                leaf domain_id {
-                     description "MCLAG Domain ID";
-                     type uint16;
-                }
-
-                leaf oper_status {
-                    description "MCLAG Domain operational status";
-                    type stypes:oper-status;
-                }
-
-                leaf role {
-                    description "MCLAG Peer role, active or standby based on config ip";
-                    type enumeration {
-						enum active;
-						enum standby;
-					}
-                }
-
-                leaf system_mac {
-                    description "MCLAG common system mac address used by mclag peers";
-                    type yang:mac-address;
-                    description
-                     "System MAC Address used for ICCPD";
-                }
-            }
-        }
-
-        //state MCLAG Local interface Table
-        container MCLAG_LOCAL_INTF_TABLE { 
-
-            sonic-ext:db-name "STATE_DB"; 
-            sonic-ext:key-delim "|"; 
-
-            config false;
-            description "state db LOCAL interface table";
-
-            list MCLAG_LOCAL_INTF_TABLE_LIST { 
-                key "if_name";
-
-                leaf if_name {
-                    description "MCLAG interface name";
-                    type string;
-                }
-
-                leaf port_isolate_peer_link {
-                    description "MCLAG local interface port isolation state to indicate whether BUM traffic incoming on ISL is blocked on MCLAG Interface";
-                    type boolean; 
-                }
-            }
-        }
-
-
-        //state MCLAG Remote interface Table
-        container MCLAG_REMOTE_INTF_TABLE { 
-
-            sonic-ext:db-name "STATE_DB"; 
-            sonic-ext:key-delim "|"; 
-
-            config false;
-            description "state db remote interface table";
-
-            list MCLAG_REMOTE_INTF_TABLE_LIST { 
-                key "domain_id if_name";
-
-                leaf domain_id {
-                     type uint16;
-                }
-
-                leaf if_name {
-                    description "MCLAG remote interface name";
-                    type string;
-                }
-
-                leaf oper_status {
-                    description "MCLAG remote interface operational status";
-                    type stypes:oper-status;
-                }
-            }
-        }
     }
 }

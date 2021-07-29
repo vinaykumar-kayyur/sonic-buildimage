@@ -6,5 +6,25 @@
 	"desc": "Invalid mclag domain ids",
 	"eStrKey" : "domain id not in range",
 	"eStr": ["domain_id"]
+    },
+    "MCLAG_INVALID_KEEPALIVE_TEST": {
+	"desc": "Invalid mclag keepalive values",
+	"eStrKey" : "keepalive not in range",
+	"eStr": ["keepalive_interval"]
+    },
+    "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
+	"desc": "Invalid mclag  session timeout values",
+	"eStrKey" : "session timeout not in range",
+	"eStr": ["session_timeout"]
+    },
+    "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
+	"desc": "Invalid session and keepalive multiplier",
+	"eStrKey" : "session timeout and keepalive must condition not satisfied",
+	"eStr": ["session_timeout"]
+    },
+    "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
+	"desc": "mclag interface configured without domain",
+	"eStrKey" : "no domain configured",
+	"eStr": ["domain_id"]
     }
 }
