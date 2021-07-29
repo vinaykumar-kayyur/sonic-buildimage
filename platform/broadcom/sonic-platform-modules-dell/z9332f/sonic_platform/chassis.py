@@ -74,41 +74,49 @@ class Chassis(ChassisBase):
 
     _global_port_pres_dict = {}
     _port_to_i2c_mapping = {
-            1:  10,
-            2:  11,
-            3:  12,
-            4:  13,
-            5:  14,
-            6:  15,
-            7:  16,
-            8:  17,
-            9:  18,
-            10: 19,
-            11: 20,
-            12: 21,
-            13: 22,
-            14: 23,
-            15: 24,
-            16: 25,
-            17: 26,
-            18: 27,
-            19: 28,
-            20: 29,
-            21: 30,
-            22: 31,
-            23: 32,
-            24: 33,
-            25: 34,
-            26: 35,
-            27: 36,
-            28: 37,
-            29: 38,
-            30: 39,
-            31: 40,
-            32: 41,
+            1:  4,
+            2:  5,
+            3:  6,
+            4:  7,
+            5:  8,
+            6:  9,
+            7:  10,
+            8:  11,
+            9:  12,
+            10: 13,
+            11: 14,
+            12: 15,
+            13: 16,
+            14: 17,
+            15: 18,
+            16: 19,
+            17: 20,
+            18: 21,
+            19: 22,
+            20: 23,
+            21: 24,
+            22: 25,
+            23: 26,
+            24: 27,
+            25: 28,
+            26: 29,
+            27: 30,
+            28: 31,
+            29: 32,
+            30: 33,
+            31: 34,
+            32: 35,
             33: 1,
             34: 2,
             }
+
+    reboot_reason_dict = { 0x11: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Power on reset"),
+                           0x22: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU warm reset"),
+                           0x33: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU cold reset"),
+                           0x66: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "GPIO watchdog reset"),
+                           0x77: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Power cycle reset"),
+                           0x88: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "CPLD watchdog reset")
+                        }
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -312,22 +320,8 @@ class Chassis(ChassisBase):
         except EnvironmentError:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
-        if reboot_cause & 0x1:
-            return (self.REBOOT_CAUSE_POWER_LOSS, None)
-        elif reboot_cause & 0x2:
-            return (self.REBOOT_CAUSE_NON_HARDWARE, None)
-        elif reboot_cause & 0x44:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "CPU warm reset")
-        elif reboot_cause & 0x8:
-            return (self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU, None)
-        elif reboot_cause & 0x66:
-            return (self.REBOOT_CAUSE_WATCHDOG, None)
-        elif reboot_cause & 0x55:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "CPU cold reset")
-        elif reboot_cause & 0x11:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Power on reset")
-        elif reboot_cause & 0x77:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Power Cycle reset")
+        if reboot_cause in self.reboot_reason_dict.keys():
+            return self.reboot_reason_dict.get(reboot_cause)
         else:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
