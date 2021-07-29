@@ -146,8 +146,7 @@
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
                    {
-                       "domain_id": "123",
-                       "if_name"  : "PortChannel2",
+                       "if_name"  : "Vlan12",
                        "unique_ip": "enable"
                    }
                 ]
@@ -339,7 +338,6 @@
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
                 {
-                    "domain_id": "1001",
                     "if_name"  : "Vlan12",
                     "unique_ip": "enable"
                 }
@@ -405,12 +403,10 @@
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
                 {
-                    "domain_id": "123",
                     "if_name"  : "Vlan112",
                     "unique_ip": "enable"
                 },
                 {
-                    "domain_id": "123",
                     "if_name"  : "Vlan113",
                     "unique_ip": "enable"
                 }
