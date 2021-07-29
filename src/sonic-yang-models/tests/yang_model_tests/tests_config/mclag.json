@@ -69,7 +69,6 @@
                 ]
             }
         },
-
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
                 "VLAN_LIST": [
@@ -105,13 +104,16 @@
                     }
                 ]
             },
+            "sonic-vlan:VLAN_INTERFACE": {
             "VLAN_INTERFACE_IPPREFIX_LIST": [
                     {
                         "family": "IPv4",
                         "ip-prefix": "12.1.1.1/24",
+                        "scope": "global",
                         "name": "Vlan12"
                     }
                 ]
+            }
         },
         "sonic-mclag:sonic-mclag": {
             "sonic-mclag:MCLAG_DOMAIN": {
@@ -230,45 +232,51 @@
         }
     },
     "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
-        "sonic-mclag:MCLAG_INTERFACE": {
-            "MCLAG_INTERFACE_LIST": [
-            {
-                "domain_id": "1001",
-                "if_name"  : "PortChannel10",
-                "if_type"  : "Portchannel"
-            },
-            {
-                "domain_id": "2001",
-                "if_name"  : "PortChannel20",
-                "if_type"  : "Portchannel"
-            }
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_INTERFACE": {
+                "MCLAG_INTERFACE_LIST": [
+                {
+                    "domain_id": "1001",
+                    "if_name"  : "PortChannel10",
+                    "if_type"  : "Portchannel"
+                },
+                {
+                    "domain_id": "2001",
+                    "if_name"  : "PortChannel20",
+                    "if_type"  : "Portchannel"
+                }
 
-            ]
-        },
+                ]
+            }
+        }
     },
     "MCLAG_UNIQUE_IP_DOMAIN_ABSENT_TEST": {
-        "sonic-mclag:MCLAG_UNIQUE_IP": {
-            "MCLAG_UNIQUE_IP_LIST": [
-            {
-                "domain_id": "1001",
-                "if_name"  : "Vlan12",
-                "unique_ip": "enable"
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_UNIQUE_IP": {
+                "MCLAG_UNIQUE_IP_LIST": [
+                {
+                    "domain_id": "1001",
+                    "if_name"  : "Vlan12",
+                    "unique_ip": "enable"
+                }
+                ]
             }
-            ]
         }
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_TEST": {
-        "sonic-mclag:MCLAG_DOMAIN": {
-            "MCLAG_DOMAIN_LIST": [
-            {
-                "domain_id": "123",
-                "source_ip": "12.1.1.1",
-                "peer_ip"  : "12.1.1.2",
-                "peer_link": "PortChannel2",
-                "keepalive_interval" : "1",
-                "session_timeout": "30"
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_DOMAIN": {
+                "MCLAG_DOMAIN_LIST": [
+                {
+                    "domain_id": "123",
+                    "source_ip": "12.1.1.1",
+                    "peer_ip"  : "12.1.1.2",
+                    "peer_link": "PortChannel2",
+                    "keepalive_interval" : "1",
+                    "session_timeout": "30"
+                }
+                ]
             }
-            ]
         },
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
@@ -309,19 +317,21 @@
                     }
                 ]
         },
-        "sonic-mclag:MCLAG_UNIQUE_IP": {
-            "MCLAG_UNIQUE_IP_LIST": [
-            {
-                "domain_id": "123",
-                "if_name"  : "Vlan112",
-                "unique_ip": "enable"
-            },
-            {
-                "domain_id": "123",
-                "if_name"  : "Vlan113",
-                "unique_ip": "enable"
+        "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_UNIQUE_IP": {
+                "MCLAG_UNIQUE_IP_LIST": [
+                {
+                    "domain_id": "123",
+                    "if_name"  : "Vlan112",
+                    "unique_ip": "enable"
+                },
+                {
+                    "domain_id": "123",
+                    "if_name"  : "Vlan113",
+                    "unique_ip": "enable"
+                }
+                ]
             }
-            ]
         }
     }
 }
