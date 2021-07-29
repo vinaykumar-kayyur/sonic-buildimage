@@ -26,6 +26,7 @@ module sonic-breakout_cfg {
 
                 key "port";
 
+
                 /*
                  * This is leaf instead of a leafref towards port, because this
                  * table will contains Parent ports and their current breakout-mode,
@@ -40,7 +41,7 @@ module sonic-breakout_cfg {
                 }
 
                 leaf brkout_mode {
-                    descrption "break_mode for port, it is verifed using platform.json";
+                    description "break_mode for port, it is verifed using platform.json";
                     type string {
                         length 1..64;
                     }
