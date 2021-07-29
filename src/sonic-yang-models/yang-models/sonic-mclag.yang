@@ -164,7 +164,7 @@ module sonic-mclag {
                         enum enable;
                         enum disable;
                     }
-                    default enable;
+                    default disable;
                 }
             }
         }
