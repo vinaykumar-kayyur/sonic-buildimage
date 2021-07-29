@@ -5,6 +5,7 @@ $(LIBSAI_CREDO)_URL =
 
 ifneq ($($(LIBSAI_CREDO)_URL),)
 include $(PLATFORM_PATH)/../template/docker-gbsyncd-base.mk
+$(DOCKER_GBSYNCD_BASE)_PATH = $(PLATFORM_PATH)/../components/docker-gbsyncd-$(DOCKER_GBSYNCD_PLATFORM_CODE)
 SONIC_ONLINE_DEBS += $(LIBSAI_CREDO)
 $(DOCKER_GBSYNCD_BASE)_DEPENDS += $(SYNCD) $(LIBSAI_CREDO)
 endif
