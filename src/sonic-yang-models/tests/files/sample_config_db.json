@@ -1040,7 +1040,7 @@
         "MCLAG_DOMAIN": {
             "123": {
                 "source_ip": "12.1.1.1",
-                "peer_ip": "122.1.1.2.1.1.2.1.1.222.1.1.2",
+                "peer_ip": "12.1.1.2",
                 "peer_link": "PortChannel2",
                 "keepalive_interval": "1",
                 "session_timeout": "30"
