@@ -328,6 +328,18 @@
         </PortChannel>
       </PortChannelInterfaces>
       <VlanInterfaces></VlanInterfaces>
+      <Dhcp>
+        <VlanInterface>
+          <Name>Vlan1000</Name>
+          <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>true</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>false</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+      </Dhcp>
       <IPInterfaces>
         <IPInterface>
           <Name i:nil="true"/>
@@ -430,6 +442,18 @@
       </PortChannelInterfaces>
       <SubInterfaces/>
       <VlanInterfaces/>
+      <Dhcp>
+        <VlanInterface>
+          <Name>Vlan1000</Name>
+          <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>true</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>false</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+      </Dhcp>
       <IPInterfaces>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
@@ -507,6 +531,18 @@
       </PortChannelInterfaces>
       <SubInterfaces/>
       <VlanInterfaces/>
+      <Dhcp>
+        <VlanInterface>
+          <Name>Vlan1000</Name>
+          <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>true</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>false</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+      </Dhcp>
       <IPInterfaces>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
@@ -579,6 +615,18 @@
       </PortChannelInterfaces>
       <SubInterfaces/>
       <VlanInterfaces/>
+      <Dhcp>
+        <VlanInterface>
+          <Name>Vlan1000</Name>
+          <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>true</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>false</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+      </Dhcp>
       <IPInterfaces>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
@@ -641,6 +689,18 @@
       </PortChannelInterfaces>
       <SubInterfaces/>
       <VlanInterfaces/>
+      <Dhcp>
+        <VlanInterface>
+          <Name>Vlan1000</Name>
+          <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>true</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
+          <Dhcpv6OptionLinkLayerAddr>false</Dhcpv6OptionLinkLayerAddr>
+        </VlanInterface>
+      </Dhcp>
       <IPInterfaces>
         <IPInterface>
           <ElementType>IPInterface</ElementType>

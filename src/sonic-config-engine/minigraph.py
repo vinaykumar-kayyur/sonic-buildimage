@@ -1255,7 +1255,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, asic_name)
+                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_table, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, asic_name)
                 host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name, local_devices)
