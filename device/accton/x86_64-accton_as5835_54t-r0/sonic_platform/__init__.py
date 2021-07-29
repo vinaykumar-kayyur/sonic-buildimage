@@ -1,2 +1,2 @@
-__all__ = ['chassis', 'eeprom', 'platform', 'psu', 'sfp', 'thermal', 'fan']
+__all__ = ['chassis', 'eeprom', 'platform', 'psu', 'sfp', 'thermal', 'fan', 'fan_drawer', 'component']
 from . import platform
