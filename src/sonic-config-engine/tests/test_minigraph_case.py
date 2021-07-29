@@ -375,6 +375,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                        ],
                        'dhcpv6_option|link_layer_addr': 'false'
                     }
+        }
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
