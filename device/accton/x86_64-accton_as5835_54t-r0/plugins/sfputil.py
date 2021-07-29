@@ -88,7 +88,7 @@ class SfpUtil(SfpUtilBase):
         cage_num = port_num
         if (port_num >= self.PORT_START):
             cage_num = (port_num - self.PORT_START)/4
-            cage_num = cage_num + self.PORT_START
+            cage_num = int(cage_num + self.PORT_START)
 
         return cage_num
 
