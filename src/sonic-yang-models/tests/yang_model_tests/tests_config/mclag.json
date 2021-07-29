@@ -80,6 +80,14 @@
                     }
                 ]
             },
+            "sonic-vlan:VLAN_INTERFACE": {
+                "VLAN_INTERFACE_LIST": [
+                    {
+                        "name": "Vlan12"
+                    }
+                ]
+            },
+
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
@@ -101,16 +109,6 @@
                         "port": "PortChannel2",
                         "tagging_mode": "tagged",
                         "name": "Vlan100"
-                    }
-                ]
-            },
-            "sonic-vlan:VLAN_INTERFACE": {
-            "VLAN_INTERFACE_IPPREFIX_LIST": [
-                    {
-                        "family": "IPv4",
-                        "ip-prefix": "12.1.1.1/24",
-                        "scope": "global",
-                        "name": "Vlan12"
                     }
                 ]
             }
@@ -146,9 +144,20 @@
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
                    {
-                       "if_name"  : "Vlan12",
-                       "unique_ip": "enable"
-                   }
+                           "if_name"  : "Vlan12",
+                           "unique_ip": "enable"
+                       }
+                    ]
+                }
+            },
+            "sonic-vlan:sonic-vlan": {
+                "VLAN_INTERFACE_IPPREFIX_LIST": [
+                        {
+                            "family": "IPv4",
+                            "ip-prefix": "12.1.1.1/24",
+                            "scope": "global",
+                            "name": "Vlan12"
+                    }
                 ]
             }
         }
@@ -212,13 +221,17 @@
                 ]
             },
             "sonic-vlan:VLAN_INTERFACE": {
-            "VLAN_INTERFACE_IPPREFIX_LIST": [
-                    {
-                        "family": "IPv4",
-                        "ip-prefix": "12.1.1.1/24",
-                        "scope": "global",
-                        "name": "Vlan12"
-                    }
+                "VLAN_INTERFACE_LIST": [
+                {
+                    "name": "Vlan12"
+                },
+                "VLAN_INTERFACE_IPPREFIX_LIST": [
+                {
+                    "family": "IPv4",
+                    "ip-prefix": "12.1.1.1/24",
+                    "scope": "global",
+                    "name": "Vlan12"
+                }
                 ]
             }
         },
@@ -385,6 +398,7 @@
                     }
                 ]
             },
+
             "VLAN_INTERFACE_IPPREFIX_LIST": [
                     {
                         "family": "IPv4",
