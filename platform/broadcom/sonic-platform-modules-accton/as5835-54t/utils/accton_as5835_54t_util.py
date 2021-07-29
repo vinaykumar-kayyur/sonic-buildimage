@@ -25,7 +25,7 @@ options:
 command:
     install     : install drivers and generate related sysfs nodes
     clean       : uninstall drivers and remove related sysfs nodes
-    show        : show all systen status
+    show        : show all system status
     sff         : dump SFP eeprom
     set         : change board setting with fan|led|sfp    
 """
@@ -36,7 +36,7 @@ import sys
 import logging
 import re
 import time
-
+import os
 
 
 
@@ -89,6 +89,10 @@ def main():
            do_install()
         elif arg == 'clean':
            do_uninstall()
+        elif arg == 'api':
+           do_sonic_platform_install()
+        elif arg == 'api_clean':
+           do_sonic_platform_clean()
         elif arg == 'show':
            device_traversal()
         elif arg == 'sff':
@@ -264,42 +268,57 @@ def i2c_order_check():
                      
 def device_install():
     global FORCE
-    
+
     order = i2c_order_check()
-                
-    # if 0x77 is not exist @i2c-1, use reversed bus order    
-    if order:       
+
+    # if 0x77 is not exist @i2c-1, use reversed bus order
+    if order:
         for i in range(0,len(mknod2)):
-            #for pca954x need times to built new i2c buses            
+            #for pca954x need times to built new i2c buses
             if mknod2[i].find('pca954') != -1:
-               time.sleep(1)         
-               
-            status, output = log_os_system(mknod2[i], 1)
-            time.sleep(0.01)
+                time.sleep(1)
+
+            for _ in range(3):
+                status, output = log_os_system(mknod2[i], 1)
+                time.sleep(0.01)
+                if status:
+                    print output
+                    time.sleep(2)
+                else:
+                    break
+
             if status:
-                print output
                 if FORCE == 0:
-                    return status  
+                    return status
     else:
         for i in range(0,len(mknod)):
-            #for pca954x need times to built new i2c buses            
+            #for pca954x need times to built new i2c buses
             if mknod[i].find('pca954') != -1:
-               time.sleep(1)         
-               
-            status, output = log_os_system(mknod[i], 1)
+                time.sleep(1)
+
+            for _ in range(3):
+                status, output = log_os_system(mknod[i], 1)
+                if status:
+                    print output
+                    time.sleep(2)
+                else:
+                    break
+
             if status:
-                print output
-                if FORCE == 0:                
-                    return status  
+                if FORCE == 0:
+                    return status
+
     for i in range(49, 55): #Set qsfp port to normal state
-        log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)   
-    
+        log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)
+
     for i in range(0,len(sfp_map)):
         status, output =log_os_system("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status
+
+    for i in range(0,len(sfp_map)):
         path = "/sys/bus/i2c/devices/{0}-0050/port_name"
         status, output =log_os_system("echo port{0} > ".format(i+49)+path.format(sfp_map[i]), 1)
         if status:
@@ -349,7 +368,45 @@ def system_ready():
     if not device_exist(): 
         return False
     return True
-               
+
+PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
+PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
+def do_sonic_platform_install():
+    device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
+    SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
+
+    #Check API2.0 on py whl file
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
+            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
+            if status:
+                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
+                return status
+            else:
+                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3)
+        else:
+            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
+    else:
+        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    return
+
+def do_sonic_platform_clean():
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    else:
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
+        if status:
+            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+            return status
+        else:
+            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    return
+
 def do_install():
     print "Checking system...."
     if driver_check() == False:
@@ -367,7 +424,10 @@ def do_install():
             if FORCE == 0:        
                 return  status        
     else:
-        print PROJECT_NAME.upper()+" devices detected...."           
+        print PROJECT_NAME.upper()+" devices detected...."
+
+    do_sonic_platform_install()
+
     return
     
 def do_uninstall():
@@ -389,7 +449,9 @@ def do_uninstall():
         if status:
             if FORCE == 0:        
                 return  status                          
-                    
+
+    do_sonic_platform_clean()
+
     return       
 
 def devices_info():
