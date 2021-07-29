@@ -183,7 +183,7 @@
                     },
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "61",
                         "session_timeout": "30"
                     }
