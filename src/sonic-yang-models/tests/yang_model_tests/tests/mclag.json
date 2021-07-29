@@ -7,17 +7,17 @@
     },
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
 	"desc": "Invalid mclag domain ids",
-    "eStrKey": "Range"
+    "eStrKey": "Range",
 	"eStr": ["domain_id"]
     },
     "MCLAG_INVALID_KEEPALIVE_TEST": {
 	"desc": "Invalid mclag keepalive values",
-    "eStrKey": "Range"
+    "eStrKey": "Range",
 	"eStr": ["keepalive_interval"]
     },
     "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
 	"desc": "Invalid mclag  session timeout values",
-    "eStrKey": "Range"
+    "eStrKey": "Range",
 	"eStr": ["session_timeout"]
     },
     "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
