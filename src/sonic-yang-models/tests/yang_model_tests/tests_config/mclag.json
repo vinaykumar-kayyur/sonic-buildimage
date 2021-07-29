@@ -177,14 +177,14 @@
                 "MCLAG_DOMAIN_LIST": [
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "0",
                         "session_timeout": "30"
                     },
                     {
                         "domain_id": "123",
                         "source_ip": "1.1.1.1"
-                        "keepalive_interval" : "61"
+                        "keepalive_interval" : "61",
                         "session_timeout": "30"
                     }
                 ]
@@ -197,13 +197,13 @@
                 "MCLAG_DOMAIN_LIST": [
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "1",
                         "session_timeout": "0"
                     },
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "1",
                         "session_timeout": "3601"
                     }
@@ -217,13 +217,13 @@
                 "MCLAG_DOMAIN_LIST": [
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "40",
                         "session_timeout": "30"
                     },
                     {
                         "domain_id": "123",
-                        "source_ip": "1.1.1.1"
+                        "source_ip": "1.1.1.1",
                         "keepalive_interval" : "60",
                         "session_timeout": "100"
                     }
