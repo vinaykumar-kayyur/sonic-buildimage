@@ -162,9 +162,7 @@ module sonic-mclag {
                     description  "unique ip enable, by default disable";
                     type enumeration {
                         enum enable;
-                        enum disable;
                     }
-                    default disable;
                 }
             }
         }
