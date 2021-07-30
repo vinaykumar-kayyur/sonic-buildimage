@@ -257,5 +257,6 @@
                 "name": "Ethernet53"
             }
         ]
-    }
+    },
+    "interfaces": {}
 }
