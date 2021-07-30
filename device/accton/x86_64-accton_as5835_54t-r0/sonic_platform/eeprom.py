@@ -6,7 +6,7 @@ try:
         from io import StringIO
     else:
         from cStringIO import StringIO
-    
+
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -123,7 +123,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_pn(self):
         return self._eeprom.get('0x22', NULL)
-        
+
     def get_serial(self):
         return self._eeprom.get('0x23', NULL)
 

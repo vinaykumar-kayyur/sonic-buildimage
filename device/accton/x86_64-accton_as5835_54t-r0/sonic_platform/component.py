@@ -28,7 +28,7 @@ COMPONENT_LIST= [
    ("CPLD2", "CPLD 2"),
    ("CPLD3", "CPLD 3"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 COMPONENT_DES_LIST = ["CPLD","Basic Input/Output System"]
 
@@ -67,14 +67,14 @@ class Component(ComponentBase):
             with open(BIOS_VERSION_PATH, 'r') as fd:
                 bios_version = fd.read()
                 return bios_version.strip()
-        except Exception as e:    
+        except Exception as e:
             print('Get exception when read bios')
         return None
 
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
-        for cpld_name in CPLD_ADDR_MAPPING:            
+        for cpld_name in CPLD_ADDR_MAPPING:
             try:
                 cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
                 cpld_version_raw= self._api_helper.read_txt_file(cpld_path)
@@ -82,7 +82,7 @@ class Component(ComponentBase):
             except Exception as e:
                 print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
-        
+
         return cpld_version
 
     def get_name(self):

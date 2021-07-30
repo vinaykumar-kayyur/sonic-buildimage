@@ -8,7 +8,7 @@ except ImportError as e:
 
 class SfpEvent:
     ''' Listen to insert/remove sfp events '''
-   
+
     def __init__(self, sfp_list):
         self._api_helper = APIHelper()
         self._sfp_list = sfp_list
@@ -27,7 +27,7 @@ class SfpEvent:
 
         if now < (self.sfp_change_event_data['last'] + timeout) and self.sfp_change_event_data['valid']:
             return True, change_dict
-        
+
         bitmap = 0
         for sfp in self._sfp_list:
             modpres = sfp.get_presence()

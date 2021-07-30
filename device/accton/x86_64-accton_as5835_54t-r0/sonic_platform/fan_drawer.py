@@ -22,7 +22,7 @@ class FanDrawer(FanDrawerBase):
         # FanTray is 0-based in platforms
         self.fantrayindex = fantray_index
         self.__initialize_fan_drawer()
-        
+
 
     def __initialize_fan_drawer(self):
         from sonic_platform.fan import Fan

@@ -46,23 +46,23 @@ class Chassis(ChassisBase):
         self._api_helper = APIHelper()
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         for index in range(0, PORT_END):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
-        
+
     def __initialize_fan(self):
         from sonic_platform.fan_drawer import FanDrawer
         for fant_index in range(NUM_FAN_TRAY):
@@ -75,13 +75,13 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-    
+
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
@@ -91,12 +91,12 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
-    
+
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
-    
-    
+
+
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
 
@@ -108,7 +108,7 @@ class Chassis(ChassisBase):
         except IOError:
             pass
         return None
-        
+
     def get_model(self):
         """
         Retrieves the model number (or part number) of the device
@@ -116,14 +116,14 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self._eeprom.get_pn()
-    
+
     def get_name(self):
         """
         Retrieves the name of the device
             Returns:
             string: The name of the device
         """
-        
+
         return self._api_helper.hwsku
 
     def get_presence(self):
@@ -133,7 +133,7 @@ class Chassis(ChassisBase):
             bool: True if Chassis is present, False if not
         """
         return True
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -141,7 +141,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
-    
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -206,7 +206,7 @@ class Chassis(ChassisBase):
             self.__initialize_sfp()
 
         status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
-        
+
         return status, sfp_event
 
     def get_sfp(self, index):
