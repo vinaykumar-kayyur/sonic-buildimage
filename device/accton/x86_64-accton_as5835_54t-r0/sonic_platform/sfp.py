@@ -16,9 +16,6 @@ try:
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
-    from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
-    from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
-    #from sonic_platform_base.sonic_sfp.sff8472 import sffbase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from .helper import APIHelper
 except ImportError as e:
@@ -45,8 +42,6 @@ XCVR_VENDOR_OUI_WIDTH = 3
 XCVR_VENDOR_PN_OFFSET = 40
 XCVR_VENDOR_PN_WIDTH = 16
 XCVR_HW_REV_OFFSET = 56
-XCVR_HW_REV_WIDTH_OSFP = 2
-XCVR_HW_REV_WIDTH_SFP = 4
 XCVR_VENDOR_SN_OFFSET = 68
 XCVR_VENDOR_SN_WIDTH = 16
 XCVR_VENDOR_DATE_OFFSET = 84
