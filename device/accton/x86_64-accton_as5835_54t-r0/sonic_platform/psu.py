@@ -10,7 +10,7 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    #from sonic_platform.fan import Fan
+    from sonic_platform.thermal import Thermal
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -49,11 +49,11 @@ class Psu(PsuBase):
         PsuBase.__init__(self)
         self.index = psu_index
         self._api_helper = APIHelper()
-       
+
         self.i2c_num = PSU_HWMON_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_HWMON_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
-        
+
         self.i2c_num = PSU_CPLD_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
@@ -65,6 +65,8 @@ class Psu(PsuBase):
             fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
             self._fan_list.append(fan)
 
+        self._thermal_list.append(Thermal(is_psu=True, psu_index=self.index))
+
     def get_voltage(self):
         """
         Retrieves current PSU voltage output
@@ -72,7 +74,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_v_out')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_v_out')
         vout_val=self._api_helper.read_txt_file(vout_path)
         if vout_val is not None:
             return float(vout_val)/ 1000
@@ -85,7 +87,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        iout_path = "{}{}".format(self.hwmon_path, 'psu_i_out')        
+        iout_path = "{}{}".format(self.hwmon_path, 'psu_i_out')
         val=self._api_helper.read_txt_file(iout_path)
         if val is not None:
             return float(val)/1000
@@ -98,13 +100,13 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        pout_path = "{}{}".format(self.hwmon_path, 'psu_p_out')        
+        pout_path = "{}{}".format(self.hwmon_path, 'psu_p_out')
         val=self._api_helper.read_txt_file(pout_path)
         if val is not None:
             return float(val)/1000
         else:
             return 0
-        
+
     def get_powergood_status(self):
         """
         Retrieves the powergood status of PSU
@@ -123,7 +125,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        
+
         return False  #Controlled by HW
 
     def get_status_led(self):
@@ -135,27 +137,27 @@ class Psu(PsuBase):
         status=self.get_status()
         if not status:
             return  self.STATUS_LED_COLOR_RED
-        
+
         if status==1:
             return self.STATUS_LED_COLOR_GREEN
         else:
             return self.STATUS_LED_COLOR_RED
-        
+
 
     def get_temperature(self):
         """
         Retrieves current temperature reading from PSU
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
-        temp_path = "{}{}".format(self.hwmon_path, 'psu_temp1_input')        
+        temp_path = "{}{}".format(self.hwmon_path, 'psu_temp1_input')
         val=self._api_helper.read_txt_file(temp_path)
         if val is not None:
             return float(val)/1000
         else:
             return 0
-    
+
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
@@ -169,10 +171,10 @@ class Psu(PsuBase):
         """
         Retrieves the high threshold PSU voltage output
         Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')
         vout_val=self._api_helper.read_txt_file(vout_path)
         if vout_val is not None:
             return float(vout_val)/ 1000
@@ -183,10 +185,10 @@ class Psu(PsuBase):
         """
         Retrieves the low threshold PSU voltage output
         Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')
         vout_val=self._api_helper.read_txt_file(vout_path)
         if vout_val is not None:
             return float(vout_val)/ 1000
@@ -206,7 +208,7 @@ class Psu(PsuBase):
         Retrieves the presence of the PSU
         Returns:
             bool: True if PSU is present, False if not
-        """        
+        """
         presence_path="{}{}".format(self.cpld_path, 'psu_present')
         val=self._api_helper.read_txt_file(presence_path)
         if val is not None:

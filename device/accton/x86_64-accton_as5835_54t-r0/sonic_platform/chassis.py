@@ -28,7 +28,14 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
+HOST_CHK_CMD = "docker > /dev/null 2>&1"
+SYSLED_FNODE= "/sys/class/leds/as5835_54t_led::diag/brightness"
+
+SYSLED_MODES = {
+    "0" : "STATUS_LED_COLOR_OFF",
+    "1" : "STATUS_LED_COLOR_GREEN",
+    "3" : "STATUS_LED_COLOR_AMBER"
+}
 
 
 class Chassis(ChassisBase):
@@ -242,3 +249,20 @@ class Chassis(ChassisBase):
         """
         return False
 
+    def initizalize_system_led(self):
+        return True
+
+    def get_status_led(self):
+        val = self._api_helper.read_txt_file(SYSLED_FNODE)
+        return SYSLED_MODES[val] if val in SYSLED_MODES else "UNKNOWN"
+
+    def set_status_led(self, color):
+        mode = None
+        for key, val in SYSLED_MODES.items():
+            if val == color:
+                mode = key
+                break
+        if mode is None:
+            return False
+        else:
+            return self._api_helper.write_txt_file(SYSLED_FNODE, mode)

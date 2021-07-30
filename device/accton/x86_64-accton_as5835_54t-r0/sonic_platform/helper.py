@@ -4,7 +4,7 @@ import subprocess
 from mmap import *
 from sonic_py_common import device_info
 
-HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
+HOST_CHK_CMD = "docker > /dev/null 2>&1"
 EMPTY_STRING = ""
 
 
@@ -51,7 +51,7 @@ class APIHelper():
 
     def read_txt_file(self, file_path):
         try:
-            with open(file_path, 'r') as fd:
+            with open(file_path, 'r', errors='replace') as fd:
                 data = fd.read()
                 return data.strip()
         except IOError:
