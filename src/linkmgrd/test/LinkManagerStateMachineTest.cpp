@@ -29,7 +29,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
         mIoService
     )
 {
-    mMuxConfig.setTimeoutIpv4_msec(2);
+    mMuxConfig.setTimeoutIpv4_msec(10);
     mMuxConfig.setPositiveStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setMuxStateChangeRetryCount(mPositiveUpdateCount);
     mMuxConfig.setLinkStateChangeRetryCount(mPositiveUpdateCount);
@@ -225,7 +225,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveSwitchOver)
     mDbInterfacePtr->setNextMuxState(mux_state::MuxState::Active);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 1);
     // driver notification
-    handleProbeMuxState("standby", 3);
+    handleProbeMuxState("standby", 4);
     VALIDATE_STATE(Standby, Standby, Up);
     EXPECT_EQ(mDbInterfacePtr->mGetMuxStateInvokeCount, 2);
 
