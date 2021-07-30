@@ -405,7 +405,7 @@ start() {
 {%- endif %}
 {%- endif %}
 {%- if docker_container_name == "pmon" %}
-    -v /usr/share/sonic/fwfiles:/usr/share/sonic/fwfiles:rw \
+    -v /usr/share/sonic/firmware:/usr/share/sonic/firmware:rw \
 {%- endif %}
 {%- if docker_container_name == "swss" %}
         -e ASIC_VENDOR=$ASIC_VENDOR \
