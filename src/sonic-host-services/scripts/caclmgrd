@@ -86,7 +86,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     UPDATE_DELAY_SECS = 0.5
 
-    DualToR = 0
+    DualToR = False
 
     def __init__(self, log_identifier):
         super(ControlPlaneAclManager, self).__init__(log_identifier)
@@ -114,7 +114,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         metadata = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.DEVICE_METADATA_TABLE)
         if 'subtype' in metadata['localhost'] and metadata['localhost']['subtype'] == 'DualToR':
-            self.DualToR = 1
+            self.DualToR = True
 
         namespaces = device_info.get_all_namespaces()
         for front_asic_namespace in namespaces['front_ns']:
@@ -329,7 +329,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     def setup_dhcp_chain(self, namespace):
         all_chains = self.get_chain_list(self.iptables_cmd_ns_prefix[namespace], [""])
-        dhcp_chain_exist = 1 if "DHCP" in all_chains else 0
+        dhcp_chain_exist = "DHCP" in all_chains
 
         iptables_cmds = []
         if dhcp_chain_exist:
