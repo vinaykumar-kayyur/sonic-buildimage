@@ -41,7 +41,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
                 _eeprom_info_dict[idx] = value
             except Exception:
                 pass
-               
+
         return _eeprom_info_dict
 
     def _load_eeprom(self):
