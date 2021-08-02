@@ -232,6 +232,11 @@ class AaaCfg(object):
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
 
+        if 'passkey' in tacplus_global:
+            tacplus_global['passkey'] = obfuscate(tacplus_global['passkey'])
+        syslog.syslog(syslog.LOG_INFO, 'pam.d files updated auth={} global={}'.
+                format(auth, tacplus_global))
+
 class MultiAsicBgpMonCfg(object):
     def __init__(self):
         self.ns_for_bgp_mon = 'asic4'
@@ -485,6 +490,7 @@ class HostConfigDaemon:
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key)
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, data))
 
     def tacacs_server_handler(self, key, data):
         self.aaacfg.tacacs_server_update(key)
