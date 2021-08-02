@@ -75,7 +75,7 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
 
         if content == "1":
@@ -107,7 +107,7 @@ class SfpUtil(SfpUtilBase):
                 return False
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -129,7 +129,7 @@ class SfpUtil(SfpUtilBase):
             regval = 0x3 if lpmode else 0x1
 
             buffer = create_string_buffer(1)
-            buffer[0] = chr(regval)
+            buffer[0] = regval
 
             # Write to eeprom
             eeprom = open(self.port_to_eeprom_mapping[port_num], "r+b")
@@ -137,7 +137,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -151,9 +151,9 @@ class SfpUtil(SfpUtilBase):
         path = self.BASE_CPLD_PATH + "module_reset_" + str(port_num)
         self.__port_to_mod_rst = path
         try:
-            reg_file = open(self.__port_to_mod_rst, 'r+', buffering=0)
+            reg_file = open(self.__port_to_mod_rst, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
