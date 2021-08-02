@@ -1,0 +1,16 @@
+link_with_zlib.patch
+no_pom.patch
+node_is_nodejs.patch
+no_bundler_use.patch
+golang_dependency_installed.patch
+broken_boost_1.62.patch
+disable_TLSv1_0_and_TLSv1_1.patch
+no_shmem.patch
+PHPUnit6_fix.patch
+golang_1.10_fix.patch
+disable_failing_tests.patch
+disable_noexist_namespace.patch
+fix_boost_atomic_link.patch
+go_test_fail_on_busy_machine.patch
+CVE-2018-11798_Node.js_Filesever_webroot_fixed_path.patch
+cve-2017-1000487.patch

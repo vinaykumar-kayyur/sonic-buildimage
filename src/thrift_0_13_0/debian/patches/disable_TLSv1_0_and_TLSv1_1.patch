@@ -1,0 +1,26 @@
+Description: Disable TLS v1.0 and TLS v1.1 connection tests
+ TLS v1.0 and TLS v1.1 protocols are disabled as of OpenSSL 1.1.0f-4, see:
+ https://packages.qa.debian.org/o/openssl/news/20170806T233554Z.html
+Author: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Bug-Debian: https://bugs.debian.org/859128
+Last-Update: 2017-09-10
+
+---
+
+--- thrift-0.10.0.orig/lib/cpp/test/SecurityTest.cpp
++++ thrift-0.10.0/lib/cpp/test/SecurityTest.cpp
+@@ -222,11 +222,11 @@ BOOST_AUTO_TEST_CASE(ssl_security_matrix
+         {
+     //   server    = SSLTLS   SSLv2    SSLv3    TLSv1_0  TLSv1_1  TLSv1_2
+     // client
+-    /* SSLTLS  */  { true,    false,   false,   true,    true,    true    },
++    /* SSLTLS  */  { true,    false,   false,   false,   false,   true    },
+     /* SSLv2   */  { false,   false,   false,   false,   false,   false   },
+     /* SSLv3   */  { false,   false,   true,    false,   false,   false   },
+-    /* TLSv1_0 */  { true,    false,   false,   true,    false,   false   },
+-    /* TLSv1_1 */  { true,    false,   false,   false,   true,    false   },
++    /* TLSv1_0 */  { false,   false,   false,   true,    false,   false   },
++    /* TLSv1_1 */  { false,   false,   false,   false,   true,    false   },
+     /* TLSv1_2 */  { true,    false,   false,   false,   false,   true    }
+         };
+ 

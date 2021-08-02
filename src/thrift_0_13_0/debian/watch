@@ -1,0 +1,2 @@
+version=3
+https://thrift.apache.org/download .*/thrift-(\d[\d\.]+)\.(?:tgz|tar\.(?:gz|bz2|xz))

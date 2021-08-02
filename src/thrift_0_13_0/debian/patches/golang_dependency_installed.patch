@@ -1,0 +1,109 @@
+Description: golang dependencies already installed as build dependency
+Forwarded: no
+Author: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Last-Update: 2018-09-20
+
+---
+
+--- thrift-0.11.0.orig/lib/go/Makefile.am
++++ thrift-0.11.0/lib/go/Makefile.am
+@@ -31,14 +31,14 @@ install:
+ 	@echo '##############################################################'
+ 
+ check-local:
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+ 	GOPATH=`pwd` $(GO) test -race ./thrift
+ 
+ clean-local:
+ 	$(RM) -rf pkg
+ 
+ all-local:
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+ 	GOPATH=`pwd` $(GO) build ./thrift
+ 
+ EXTRA_DIST = \
+--- thrift-0.11.0.orig/lib/go/Makefile.in
++++ thrift-0.11.0/lib/go/Makefile.in
+@@ -813,14 +813,14 @@ install:
+ 	@echo '##############################################################'
+ 
+ check-local:
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+ 	GOPATH=`pwd` $(GO) test -race ./thrift
+ 
+ clean-local:
+ 	$(RM) -rf pkg
+ 
+ all-local:
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+ 	GOPATH=`pwd` $(GO) build ./thrift
+ 
+ # Tell versions [3.59,3.63) of GNU make to not export all variables.
+--- thrift-0.11.0.orig/lib/go/test/Makefile.am
++++ thrift-0.11.0/lib/go/test/Makefile.am
+@@ -59,10 +59,10 @@ gopath: $(THRIFT) $(THRIFTTEST) \
+ 	$(THRIFT) $(THRIFTARGS) InitialismsTest.thrift
+ 	$(THRIFT) $(THRIFTARGS),read_write_private DontExportRWTest.thrift
+ 	$(THRIFT) $(THRIFTARGS),ignore_initialisms IgnoreInitialismsTest.thrift
+-	GOPATH=`pwd`/gopath $(GO) get golang.org/x/net/context
+-	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock || true
++#	GOPATH=`pwd`/gopath $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock || true
+ 	sed -i 's/\"context\"/\"golang.org\/x\/net\/context\"/g' gopath/src/github.com/golang/mock/gomock/controller.go || true
+-	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock
++#	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock
+ 	ln -nfs ../../../thrift gopath/src/thrift
+ 	ln -nfs ../../tests gopath/src/tests
+ 	cp -r ./dontexportrwtest gopath/src
+--- thrift-0.11.0.orig/lib/go/test/Makefile.in
++++ thrift-0.11.0/lib/go/test/Makefile.in
+@@ -675,10 +675,10 @@ gopath: $(THRIFT) $(THRIFTTEST) \
+ 	$(THRIFT) $(THRIFTARGS) InitialismsTest.thrift
+ 	$(THRIFT) $(THRIFTARGS),read_write_private DontExportRWTest.thrift
+ 	$(THRIFT) $(THRIFTARGS),ignore_initialisms IgnoreInitialismsTest.thrift
+-	GOPATH=`pwd`/gopath $(GO) get golang.org/x/net/context
+-	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock || true
++#	GOPATH=`pwd`/gopath $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock || true
+ 	sed -i 's/\"context\"/\"golang.org\/x\/net\/context\"/g' gopath/src/github.com/golang/mock/gomock/controller.go || true
+-	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock
++#	GOPATH=`pwd`/gopath $(GO) get github.com/golang/mock/gomock
+ 	ln -nfs ../../../thrift gopath/src/thrift
+ 	ln -nfs ../../tests gopath/src/tests
+ 	cp -r ./dontexportrwtest gopath/src
+--- thrift-0.11.0.orig/test/go/Makefile.am
++++ thrift-0.11.0/test/go/Makefile.am
+@@ -37,10 +37,10 @@ gopath: $(THRIFT) ThriftTest.thrift
+ 	mkdir -p src/gen
+ 	$(THRIFTCMD) ThriftTest.thrift
+ 	$(THRIFTCMD) ../StressTest.thrift
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+-	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock || true
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock || true
+ 	sed -i 's/\"context\"/\"golang.org\/x\/net\/context\"/g' src/github.com/golang/mock/gomock/controller.go || true
+-	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock
++#	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock
+ 	ln -nfs ../../../lib/go/thrift src/thrift
+ 	touch gopath
+ 
+--- thrift-0.11.0.orig/test/go/Makefile.in
++++ thrift-0.11.0/test/go/Makefile.in
+@@ -641,10 +641,10 @@ gopath: $(THRIFT) ThriftTest.thrift
+ 	mkdir -p src/gen
+ 	$(THRIFTCMD) ThriftTest.thrift
+ 	$(THRIFTCMD) ../StressTest.thrift
+-	GOPATH=`pwd` $(GO) get golang.org/x/net/context
+-	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock || true
++#	GOPATH=`pwd` $(GO) get golang.org/x/net/context
++#	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock || true
+ 	sed -i 's/\"context\"/\"golang.org\/x\/net\/context\"/g' src/github.com/golang/mock/gomock/controller.go || true
+-	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock
++#	GOPATH=`pwd` $(GO) get github.com/golang/mock/gomock
+ 	ln -nfs ../../../lib/go/thrift src/thrift
+ 	touch gopath
+ 

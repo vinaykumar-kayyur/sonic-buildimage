@@ -1,0 +1,4 @@
+usr/lib/*/libthrift-*.so
+usr/lib/*/libthriftnb-*.so
+usr/lib/*/libthriftqt5-*.so
+usr/lib/*/libthriftz-*.so

@@ -1,0 +1,99 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# for Java install
+export CLASSPATH=/usr/share/java/commons-codec.jar:/usr/share/java/commons-logging.jar:/usr/share/java/slf4j-simple.jar:/usr/share/java/slf4j-api.jar:/usr/share/java/servlet-api-3.1.jar:/usr/share/java/httpcore.jar:/usr/share/java/httpclient.jar:/usr/share/java/junit4.jar:/usr/share/java/ant-junit.jar:.
+
+# for Go install
+export DH_GOPKG=thrift
+
+# for Ruby install
+export DESTDIR=$(CURDIR)/debian/tmp/
+
+export JAVA_PREFIX=/usr/share/java/
+export PERL_PREFIX=/usr/
+export INSTALLDIRS=vendor
+
+export QT_SELECT=qt5
+
+# Set install Perl locations
+ARCHLIB := $(shell perl -MConfig -e 'print $$Config{vendorarch}')
+
+RUBY_LIBDIR := $(shell ruby -rrbconfig -e'print RbConfig::CONFIG["vendordir"]')
+
+override_dh_auto_clean:
+	# delete symlinks
+	rm -f $(CURDIR)/lib/go/test/gopath/src/github.com
+	rm -f $(CURDIR)/test/go/src/github.com
+	rm -f $(CURDIR)/compiler/cpp/test/plugin/t_cpp_generator.cc
+	rm -f $(CURDIR)/lib/c_glib/src/thrift/stamp-h3 \
+		$(CURDIR)/lib/cpp/src/thrift/stamp-h2 \
+		$(CURDIR)/stamp-h1
+
+	# let make clean
+	dh_auto_clean
+#	jh_clean
+	# leftovers
+	rm -f $(CURDIR)/thrift.jar
+	rm -f $(CURDIR)/lib/cpp/test/tests.xml \
+		$(CURDIR)/test/gen-html/ThriftTest.html \
+		$(CURDIR)/test/gen-html/index.html \
+		$(CURDIR)/test/gen-html/style.css
+	rm -rf $(CURDIR)/lib/py/thrift.egg-info
+	rm -f $(CURDIR)/lib/haxe/test/Makefile \
+		$(CURDIR)/test/py.twisted/_trial_temp/test.log \
+		$(CURDIR)/hs_err_pid*.log
+	rm -f $(CURDIR)/config.log
+	find $(CURDIR) -name .dirstamp -exec rm {} \;
+
+override_dh_auto_configure:
+	if [ -f bootstrap.sh ]; then $(CURDIR)/bootstrap.sh; fi
+	dh_auto_configure -- --enable-plugin \
+		--with-cpp --with-c_glib --without-php --without-php_extension \
+		--with-perl --with-python --with-py3 --without-java \
+		--without-nodejs --without-erlang --without-lua \
+		--with-go --with-ruby \
+		--with-qt4=no --with-qt5=yes \
+		--disable-tutorial
+
+override_dh_auto_build:
+	# symlinks for Go build
+	mkdir -p $(CURDIR)/lib/java/build/lib/
+	mkdir -p $(CURDIR)/lib/go/test/gopath/src/
+	ln -s /usr/share/gocode/src/github.com \
+		$(CURDIR)/lib/go/test/gopath/src/
+	ln -s /usr/share/gocode/src/github.com \
+		$(CURDIR)/test/go/src/
+	dh_auto_build --parallel
+#	jh_build thrift.jar $(CURDIR)/lib/java/src/
+
+override_dh_auto_install:
+	dh_auto_install -- INSTALLDIRS=vendor
+#	jh_installlibs -plibthrift-java thrift.jar
+#	jh_installjavadoc
+#	jh_depends
+
+	find $(CURDIR)/debian/tmp/ -name \*.la -exec rm {} \;
+
+override_dh_missing:
+	dh_missing --list-missing
+
+override_dh_auto_test:
+	dh_auto_test --max-parallel=1
+
+override_dh_strip:
+	dh_strip -ppython-thrift --dbg-package=python-thrift-dbg
+	dh_strip
+
+%:
+	dh $@ --with python2,ruby,phpcomposer --install-layout=deb --parallel
+#	dh $@ --with python2,javahelper,golang,ruby --install-layout=deb \
+		--buildsystem=golang --parallel
+#	dh $@ --with python2,javahelper --install-layout=deb --parallel
+
+.PHONY: override_dh_auto_clean override_dh_auto_configure \
+	override_dh_auto_install override_dh_missing override_dh_auto_test \
+	override_dh_strip

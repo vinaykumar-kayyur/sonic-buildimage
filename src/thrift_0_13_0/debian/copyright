@@ -1,0 +1,83 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: thrift-compiler
+Source: https://www.apache.org/dist/thrift
+
+Files: *
+Copyright: Copyright 2006- Apache Software Foundation
+License: Apache-2.0
+
+Files: compiler/cpp/src/md5.*
+Copyright: Copyright (C) 1999, 2002 Aladdin Enterprises.
+License: Zlib
+ This software is provided 'as-is', without any express or implied
+ warranty.  In no event will the authors be held liable for any damages
+ arising from the use of this software.
+ .
+ Permission is granted to anyone to use this software for any purpose,
+ including commercial applications, and to alter it and redistribute it
+ freely, subject to the following restrictions:
+ .
+ 1. The origin of this software must not be misrepresented; you must not
+    claim that you wrote the original software. If you use this software
+    in a product, an acknowledgment in the product documentation would be
+    appreciated but is not required.
+ 2. Altered source versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.
+ 3. This notice may not be removed or altered from any source distribution.
+
+Files: compiler/cpp/thrifty.cc
+Copyright: Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+License: GPL-3+ or Apache-2.0
+
+Files: compiler/cpp/thrifty.hh
+Copyright: Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+License: GPL-3+
+
+Files: debian/*
+Copyright: Copyright 2014-     Laszlo Boszormenyi (GCS) <gcs@debian.org>,
+ Copyright 2012-2014 Eric Evans <eevans@debian.org>
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option)
+ any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this package; if not, write to the Free Software Foundation, Inc.,
+ 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ .
+ On Debian systems, the full text of the GNU General Public License version
+ 2 can be found in the file `/usr/share/common-licenses/GPL-2'.
+
+License: GPL-3+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the full text of the GNU General Public License
+ version 3 can be found in the file `/usr/share/common-licenses/GPL-3'.
+
+License: Apache-2.0
+ Licensed to the Apache Software Foundation (ASF) under one or more contributor
+ license agreements. The ASF licenses this work to You under the Apache License,
+ Version 2.0 (the "License"); you may not use this work except in compliance
+ with the License.  You may obtain a copy of the License at
+ .
+ https://www.apache.org/licenses/LICENSE-2.0
+ .
+ On Debian systems, the complete text of the Apache License Version 2.0
+ can be found in the file '/usr/share/common-licenses/Apache-2.0'.
