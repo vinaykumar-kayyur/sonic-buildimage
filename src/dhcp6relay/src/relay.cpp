@@ -15,12 +15,10 @@
 
 
 struct event *listen_event;
+struct event *server_listen_event;
 struct event_base *base;
 struct event *ev_sigint;
 struct event *ev_sigterm;
-
-bool serverListener = true;
-std::shared_ptr<boost::thread> serverPtr;
 
 bool is_addr_gua(in6_addr addr) {
 
@@ -266,6 +264,23 @@ void prepare_socket(int *local_sock, arg_config *context) {
     }    
 }
 
+void prepare_server_socket(int *server_sock, arg_config *context) {
+    sockaddr_in6 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = in6addr_any;
+
+    if ((*server_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
+        syslog(LOG_ERR, "scoket: Failed to create socket\n");
+    }
+
+    addr.sin6_port = htons(RELAY_PORT);
+    
+    if (bind(*server_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
+        syslog(LOG_ERR, "bind: Failed to bind to socket\n");
+    }    
+}
+
 
 /**
  * @code                 relay_client(int sock, const uint8_t *msg, int32_t len, ip6_hdr *ip_hdr, const ether_header *ether_hdr, relay_config *config);
@@ -410,70 +425,20 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     }
 }
 
-/**
- * @code                listen_server(void *arg);
- * 
- * @brief               listen to the DHCPv6 server
- *
- * @param arg           callback argument provided by user
- *
- * @return              none
- */
-void listen_server(relay_config *config) {
-    while (serverListener) {
-        sockaddr_in6 from;
-        int32_t data = 0;
-        uint8_t message_buffer[4096];
+void server_callback(evutil_socket_t fd, short event, void *arg) {
+    struct relay_config *config = (struct relay_config *)arg;
+    sockaddr_in6 from;
+    int32_t data = 0;
+    uint8_t message_buffer[4096];
 
-        if ((data = recvfrom(config->local_sock, message_buffer, 4096, 0, (sockaddr *)&from, (socklen_t *)sizeof(from))) == -1) {
-            syslog(LOG_WARNING, "recv: Failed to receive data from server\n");
-        }
-
-        auto msg = parse_dhcpv6_hdr(message_buffer);
-        if (msg->msg_type == RELAY_REPL) {
-            relay_relay_reply(config->local_sock, message_buffer, data, config);
-        }
+    if ((data = recvfrom(config->local_sock, message_buffer, 4096, 0, (sockaddr *)&from, (socklen_t *)sizeof(from))) == -1) {
+        syslog(LOG_WARNING, "recv: Failed to receive data from server\n");
     }
-}
 
-/**
-*@code      initialize_server(relay_config *config);
-*
-*@brief     initialize server listening thread
-*
-*@return    none
-*/
-void initialize_server(relay_config *config)
-{
-    try {
-        serverPtr = std::make_shared<boost::thread> (&listen_server, config);
+    auto msg = parse_dhcpv6_hdr(message_buffer);
+    if (msg->msg_type == RELAY_REPL) {
+        relay_relay_reply(config->local_sock, message_buffer, data, config);
     }
-    catch (const std::bad_alloc &e) {
-        syslog(LOG_ERR, "Failed to allocate memory. Exception details: %s", e.what());
-    }
-}
-
-/**
-*@code      stopServerListener();
-*
-*@brief     stop server listening thread
-*
-*@return    none
-*/
-void stopServerListener() {
-    serverListener = false;
-};
-
-/**
-*@code      deinitialize_server();
-*
-*@brief     join and stop server listening thread
-*
-*@return    none
-*/
-void deinitialize_server() {
-    stopServerListener();
-    serverPtr->interrupt();
 }
 
 /**
@@ -570,18 +535,18 @@ void loop_relay(arg_config *context) {
     struct relay_config config;
     int filter = 0;
     int local_sock = 0; 
+    int server_sock = 0;
     const char *ifname = context->interface.c_str();
     int index = if_nametoindex(ifname);
 
     filter = sock_open(index, &ether_relay_fprog);
 
     prepare_socket(&local_sock, context);
+    prepare_server_socket(&server_sock, context);
 
     config.interface = context->interface;
 
     prepare_relay_config(&config, local_sock, filter, context);
-
-    initialize_server(&config);
 
     evutil_make_listen_socket_reuseable(filter);
     evutil_make_socket_nonblocking(filter);
@@ -592,10 +557,16 @@ void loop_relay(arg_config *context) {
     }
 
     listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
+    server_listen_event = event_new(base, server_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
     if (listen_event == NULL) {
         syslog(LOG_ERR, "libevent: Failed to create libevent\n");
     }
+    if (server_listen_event == NULL) {
+        syslog(LOG_ERR, "libevent: Failed to create server listening libevent\n");
+    }
     event_add(listen_event, NULL);
+    event_add(server_listen_event, NULL);
+    
 
     if((signal_init() == 0) && signal_start() == 0) {
         shutdown();
@@ -614,5 +585,4 @@ void shutdown() {
     event_free(ev_sigint); 
     event_free(ev_sigterm);
     deinitialize_swss();
-    deinitialize_server();
 }

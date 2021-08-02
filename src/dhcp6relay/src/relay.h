@@ -77,16 +77,11 @@ struct linklayer_addr_option  {
     uint16_t link_layer_type;
 };
 
-
-void initialize_server(relay_config *context);
-
-void deinitialize_server();
-
-void listen_server(relay_config *config);
-
 int sock_open(int ifindex, const struct sock_fprog *fprog);
 
 void prepare_socket(int *local_sock, arg_config *config);
+
+void prepare_server_socket(int *server_sock, arg_config *context);
 
 void prepare_relay_config(relay_config *interface_config, int local_sock, int filter, const arg_config *context);
 
