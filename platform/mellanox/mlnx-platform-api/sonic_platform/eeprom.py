@@ -8,9 +8,10 @@
 import os
 import subprocess
 import time
+import subprocess
 
 from sonic_py_common.logger import Logger
-
+from sonic_py_common.device_info import get_platform, get_path_to_platform_dir
 try:
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
@@ -37,6 +38,16 @@ if platform_name and 'simx' in platform_name:
             os.makedirs(os.path.dirname(EEPROM_SYMLINK))
         subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', EEPROM_SYMLINK], cwd=platform_path)
 
+
+platform_name = get_platform()
+if 'simx' in platform_name:
+    platform_path = get_path_to_platform_dir()
+
+    if not os.path.exists(EEPROM_SYMLINK):
+        if not os.path.exists(os.path.dirname(EEPROM_SYMLINK)):
+            os.makedirs(os.path.dirname(EEPROM_SYMLINK))
+    
+        subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', EEPROM_SYMLINK], cwd=platform_path)
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     RETRIES = 3
