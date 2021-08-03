@@ -99,6 +99,7 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
 
     for (auto &entry: entries) {
         std::string vlan = kfvKey(entry);
+        std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
         for (auto &fieldValue: fieldValues) {
@@ -111,13 +112,14 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                     getline(ss, substr, ',');
                     context->servers.push_back(substr);
                 }
+                syslog(LOG_DEBUG, "key: %s, Operation: %s, f: %s, v: %s", vlan.c_str(), operation.c_str(), f.c_str(), v.c_str());
             }
             if(f == "options") {
                 std::stringstream ss(v);
                 while (ss.good()) {
                     std::string substr;
                     getline(ss, substr, ',');
-                    if(substr == "79")
+                    if(substr == "dhcpv6_option|rfc6939_support")
                         context->is_option_79 = true;
                 }
             }
