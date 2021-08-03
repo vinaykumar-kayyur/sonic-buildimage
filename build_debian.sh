@@ -365,7 +365,7 @@ fi
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
 
-if [ "$IMAGE_TYPE" != "nbi" ]; then
+if [[ $CONFIGURED_ARCH == amd64 && "$IMAGE_TYPE" != "nbi" ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT \
         apt-get -y install amd64-microcode
 
