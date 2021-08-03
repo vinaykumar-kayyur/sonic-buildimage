@@ -8,6 +8,9 @@ DEVPATH="/usr/share/sonic/device"
 CONFIGFILE="${DEVPATH}/${PLATFORM}/gbsyncd.ini"
 
 if [ ! -f "$CONFIGFILE" ]; then
+    if [ gbsyncd = "$SERVICE" ]; then
+       exit 0
+    fi
     exit 1
 fi
 
