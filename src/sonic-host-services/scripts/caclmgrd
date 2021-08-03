@@ -376,7 +376,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 execute = 1
 
             if execute == 1:
-                self.run_commands([update_cmd])
+                subprocess.call(update_cmd, shell=True)
                 self.log_info("Update DHCP chain: {}".format(update_cmd))
 
     def update_dhcp_acl(self, key, op, data):
