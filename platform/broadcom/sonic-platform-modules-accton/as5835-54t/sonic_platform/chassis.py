@@ -13,6 +13,8 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+NUM_COMPONENT = 4
+
 class Chassis(PddfChassis):
     """
     PDDF Platform-specific Chassis class
@@ -20,6 +22,13 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
+        self.__initialize_components()
+
+    def __initialize_components(self):
+        from sonic_platform.component import Component
+        for index in range(NUM_COMPONENT):
+            component = Component(index)
+            self._component_list.append(component) 
 
     # Provide the functions/variables below for which implementation is to be overwritten
     sfp_change_event_data = {'valid': 0, 'last': 0, 'present': 0}
