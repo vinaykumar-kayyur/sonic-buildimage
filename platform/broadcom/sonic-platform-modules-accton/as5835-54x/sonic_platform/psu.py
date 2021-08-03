@@ -34,3 +34,11 @@ class Psu(PddfPsu):
             An integer, the capacity of PSU
         """
         return (self.PLATFORM_PSU_CAPACITY)
+
+    def get_type(self):
+        """
+        Gets the type of the PSU
+        Returns:
+        A string, the type of PSU (AC/DC)
+        """
+        return "AC"
