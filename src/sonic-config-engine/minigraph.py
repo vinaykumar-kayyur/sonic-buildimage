@@ -592,11 +592,11 @@ def parse_dpg(dpg, hname):
                     vdhcpserver_list = dhcpservers.split(';')
                     dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
 
-                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionLinkLayerAddr")))
+                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionRfc6939")))
                 if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
-                    dhcp_attributes['dhcpv6_option|link_layer_addr'] = "true"
+                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "true"
                 elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
-                    dhcp_attributes['dhcpv6_option|link_layer_addr'] = "false"
+                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "false"
 
                 dhcp_table[vintfname] = dhcp_attributes
 

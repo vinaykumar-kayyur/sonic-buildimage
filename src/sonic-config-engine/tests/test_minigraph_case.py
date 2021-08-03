@@ -366,14 +366,14 @@ class TestCfgGenCaseInsensitive(TestCase):
                            "fc02:2000::1",
                            "fc02:2000::2"
                        ],
-                       'dhcpv6_option|link_layer_addr': 'true'
+                       'dhcpv6_option|rfc6939_support': 'true'
                     },
                    'Vlan2000': {
                        'dhcpv6_servers': [
                            "fc02:2000::3",
                            "fc02:2000::4"
                        ],
-                       'dhcpv6_option|link_layer_addr': 'false'
+                       'dhcpv6_option|rfc6939_support': 'false'
                     }
         }
         output = self.run_script(argument)
