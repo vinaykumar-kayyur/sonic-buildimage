@@ -7,9 +7,9 @@
 {% endfor %}
 {% if relay_for_ipv6.flag %}
 {% set _dummy = relay_for_ipv6.update({'flag': False}) %}
-[program:isc-dhcpv6-relay-{{ vlan_name }}]
+[program:dhcp6relay-{{ vlan_name }}]
 {# We treat this VLAN as a downstream interface (-l), as we only want to listen for requests #}
-command=/usr/sbin/dhcrelay -d -6 --name-alias-map-file /tmp/port-name-alias-map.txt -l {{ vlan_name }}
+command=/usr/sbin/dhcp6relay
 {#- We treat all other interfaces as upstream interfaces (-u), as we only want to listen for replies #}
 {%- for dhcpv6_server in VLAN[vlan_name]['dhcpv6_servers'] %}
 {%- if dhcpv6_server | ipv6 %}
