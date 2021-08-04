@@ -20,7 +20,7 @@ image=`echo $image_tag | cut -f1 -d:`
 tag=`echo $image_tag | cut -f2 -d:`
 
 # if docker image not in white list, exit
-if [[ "$IMAGENAME" != sonic-slave-* ]] && [[ "$IMAGENAME" != docker-base* ]];then
+if [[ "$IMAGENAME" != sonic-slave-* ]] && [[ "$IMAGENAME" != docker-base* ]] && [[ "$IMAGENAME" != debian* ]];then
     exit 0
 fi
 
@@ -36,6 +36,9 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
     sed -i "s/$oldimage/$newimage/" $DOCKERFILE
 else
     hash_value=`docker pull $image_tag | grep Digest | awk '{print$2}'`
+    if [ -z hash_value ];then
+        hash_value=unknown
+    fi
 fi
 if [[ "$hash_value" != "unknown" ]];then
     echo -e "${ARCH}:${image_tag}==$hash_value" >> $new_version_file
