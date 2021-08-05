@@ -10,6 +10,12 @@
   id: 8c10
   name: 'PCI bridge: Intel Corporation 8 Series/C220 Series Chipset Family PCI Express
     Root Port #1 (rev d5)'
+- bus: '00'
+  dev: 1f
+  fn: '2'
+  id: 8c02
+  name: 'SATA controller: Intel Corporation 8 Series/C220 Series Chipset Family 6-port
+    SATA Controller 1 [AHCI mode] (rev 05)'
 - bus: '05'
   dev: '00'
   fn: '0'
