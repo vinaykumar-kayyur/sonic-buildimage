@@ -1,41 +1,76 @@
-From 83e8f2b1bf9072a532ec3640431f442c0b4608a8 Mon Sep 17 00:00:00 2001
-From: Pavel Shirshov <pavelsh@microsoft.com>
-Date: Thu, 30 Jul 2020 09:01:36 -0700
-Subject: [PATCH] Stopping all BGP SLB neighbors before FastReboot
+From 7d0a63278aa5eedadd48db3937fa0139f3411669 Mon Sep 17 00:00:00 2001
+From: Vaibhav Hemant Dixit <vadixit@microsoft.com>
+Date: Fri, 23 Jul 2021 16:27:56 -0700
+Subject: [PATCH] [fast-reboot][patch] Restore SLB neighbors state after
+ fast-reboot failure
 
 ---
- scripts/fast-reboot | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ scripts/fast-reboot | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 diff --git a/scripts/fast-reboot b/scripts/fast-reboot
-index e884dee..410828b 100755
+index 97e8dc6..f503d05 100755
 --- a/scripts/fast-reboot
 +++ b/scripts/fast-reboot
-@@ -373,6 +373,24 @@ case "$REBOOT_TYPE" in
+@@ -37,6 +37,7 @@ EXIT_SYNCD_SHUTDOWN=11
+ EXIT_FAST_REBOOT_DUMP_FAILURE=12
+ EXIT_FILTER_FDB_ENTRIES_FAILURE=13
+ EXIT_COUNTERPOLL_DISABLE_FAILURE=14
++EXIT_HANDLE_SLB_NEIGHBORS=15
+ EXIT_NO_CONTROL_PLANE_ASSISTANT=20
+ EXIT_SONIC_INSTALLER_VERIFY_REBOOT=21
+ 
+@@ -123,6 +124,8 @@ function clear_fast_boot()
+     common_clear
+ 
+     sonic-db-cli STATE_DB DEL "FAST_REBOOT|system" &>/dev/null || /bin/true
++
++    handle_slb_neighbors restore
+ }
+ 
+ function clear_warm_boot()
+@@ -421,6 +424,32 @@ function check_warm_restart_in_progress() {
+     done
+ }
+ 
++function handle_slb_neighbors()
++{
++    # Revert all SLB neighbors if they're presented
++    if [[ "$REBOOT_TYPE" = "fast-reboot" ]]; then
++        debug "Stopping all SLB neighbors if they are presented"
++        PASSIVE_BGP_NEIGHBORS=$(sonic-cfggen -d -v "BGP_PEER_RANGE | list")
++        case "$PASSIVE_BGP_NEIGHBORS" in
++            *BGPSLBPassive*)
++            RUNNING_CONFIG=$(vtysh -c "show running")
++            if grep -q "neighbor BGPSLBPassive peer-group" <<< "$RUNNING_CONFIG"; then
++                ASN=$(sonic-cfggen -d -v "DEVICE_METADATA['localhost']['bgp_asn']")
++                case "$1" in
++                        *shutdown) CMD="neighbor BGPSLBPassive shutdown";;
++                        *restore) CMD="no neighbor BGPSLBPassive shutdown";;
++                        *) debug "Wrong/missing argument to handle_slb_neighbors"; exit "${EXIT_HANDLE_SLB_NEIGHBORS}";;
++                esac
++                vtysh -c "configure terminal" -c "router bgp ${ASN}" -c "${CMD}"
++                sleep 30 # wait for 30 seconds - BGP RouteAdv default timer
++            fi
++            ;;
++        *)
++            ;;
++        esac
++    fi
++}
++
+ # main starts here
+ parseOptions $@
+ 
+@@ -461,6 +490,8 @@ case "$REBOOT_TYPE" in
          ;;
  esac
  
-+# Stopping all SLB neighbors if they're presented
-+if [[ "$REBOOT_TYPE" = "fast-reboot" ]]; then
-+    debug "Stopping all SLB neighbors if they are presented"
-+    PASSIVE_BGP_NEIGHBORS=$(sonic-cfggen -d -v "BGP_PEER_RANGE | list")
-+    case "$PASSIVE_BGP_NEIGHBORS" in
-+        *BGPSLBPassive*)
-+        RUNNING_CONFIG=$(vtysh -c "show running")
-+        if grep -q "neighbor BGPSLBPassive peer-group" <<< "$RUNNING_CONFIG"; then
-+            ASN=$(sonic-cfggen -d -v "DEVICE_METADATA['localhost']['bgp_asn']")
-+            vtysh -c "configure terminal" -c "router bgp ${ASN}" -c "neighbor BGPSLBPassive shutdown"
-+            sleep 30 # wait for 30 seconds - BGP RouteAdv default timer
-+        fi
-+        ;;
-+    *)
-+        ;;
-+    esac
-+fi
++handle_slb_neighbors shutdown
 +
- unload_kernel
+ save_counters_folder
  
- setup_reboot_variables
+ unload_kernel
 -- 
-2.17.1.windows.2
+2.11.0
 
