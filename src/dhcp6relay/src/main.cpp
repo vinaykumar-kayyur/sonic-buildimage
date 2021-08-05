@@ -3,9 +3,9 @@
 
 int main(int argc, char *argv[]) {
     try {
-        arg_config context;
-        initialize_swss(&context);
-        loop_relay(&context);
+        std::vector<arg_config> vlans;
+        initialize_swss(&vlans);
+        loop_relay(&vlans);
     }
     catch (std::exception &e)
     {

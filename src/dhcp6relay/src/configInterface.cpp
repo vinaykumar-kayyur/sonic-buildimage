@@ -13,10 +13,10 @@ std::shared_ptr<boost::thread> mSwssThreadPtr;
 //
 // initialize DB tables and start SWSS listening thread
 //
-void initialize_swss(arg_config *context)
+void initialize_swss(std::vector<arg_config> *vlans)
 {
     try {
-        mSwssThreadPtr = std::make_shared<boost::thread> (&handleSwssNotification, context);
+        mSwssThreadPtr = std::make_shared<boost::thread> (&handleSwssNotification, vlans);
     }
     catch (const std::bad_alloc &e) {
         syslog(LOG_ERR, "Failed allocate memory. Exception details: %s", e.what());
@@ -35,15 +35,15 @@ void deinitialize_swss()
 }
 
 /**
- * @code                void handleSwssNotification(arg_config *context)
+ * @code                void handleSwssNotification(std::vector<arg_config> *vlans)
  * 
  * @brief               main thread for handling SWSS notification
  *
- * @param context       argument config that contains strings of server and option
+ * @param context       list of vlans/argument config that contains strings of server and option
  *
  * @return              none
  */
-void handleSwssNotification(arg_config *context)
+void handleSwssNotification(std::vector<arg_config> *vlans)
 {
     std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
     swss::SubscriberStateTable ipHelpersTable(configDbPtr.get(), "DHCP");
@@ -60,40 +60,40 @@ void handleSwssNotification(arg_config *context)
             continue;
         } 
         if (selectable == static_cast<swss::Selectable *> (&ipHelpersTable)) {
-            handleRelayNotification(ipHelpersTable, context);
+            handleRelayNotification(ipHelpersTable, vlans);
         }
     } 
 }
 
 /**
- * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, arg_config context)
+ * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<arg_config> *vlans)
  * 
  * @brief                   handles DHCPv6 relay configuration change notification
  *
  * @param ipHelpersTable    DHCP table
- * @param context           argument config that contains strings of server and option
+ * @param context           list of vlans/argument config that contains strings of server and option
  *
  * @return                  none
  */
-void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, arg_config *context)
+void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<arg_config> *vlans)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
     ipHelpersTable.pops(entries);
-    processRelayNotification(entries, context);
+    processRelayNotification(entries, vlans);
 }
 
 /**
- * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, arg_config context)
+ * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans)
  * 
  * @brief                   process DHCPv6 relay servers and options configuration change notification
  *
  * @param entries           queue of std::tuple<std::string, std::string, std::vector<FieldValueTuple>> entries in DHCP table
- * @param context           argument config that contains strings of server and option
+ * @param context           list of vlans/argument config that contains strings of server and option
  *
  * @return                  none
  */
-void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, arg_config *context)
+void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans)
 {
     std::vector<std::string> servers;
 
@@ -102,6 +102,8 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
+        arg_config intf;
+        intf.interface = vlan;
         for (auto &fieldValue: fieldValues) {
             std::string f = fvField(fieldValue);
             std::string v = fvValue(fieldValue);
@@ -110,7 +112,7 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                 while (ss.good()) {
                     std::string substr;
                     getline(ss, substr, ',');
-                    context->servers.push_back(substr);
+                    intf.servers.push_back(substr);
                 }
                 syslog(LOG_DEBUG, "key: %s, Operation: %s, f: %s, v: %s", vlan.c_str(), operation.c_str(), f.c_str(), v.c_str());
             }
@@ -120,9 +122,10 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                     std::string substr;
                     getline(ss, substr, ',');
                     if(substr == "dhcpv6_option|rfc6939_support")
-                        context->is_option_79 = true;
+                        intf.is_option_79 = true;
                 }
             }
+            vlans->push_back(intf);
         }
     }
 }

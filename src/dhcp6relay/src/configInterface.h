@@ -3,14 +3,14 @@
 #include "select.h"
 #include "relay.h"
 
-void initialize_swss(arg_config *context);
+void initialize_swss(std::vector<arg_config> *vlans);
 
 void deinitialize_swss();
 
-void handleSwssNotification(arg_config *context);
+void handleSwssNotification(std::vector<arg_config> *vlans);
 
-void handleRelayNotification(swss::SubscriberStateTable &configMuxTable, arg_config *context);
+void handleRelayNotification(swss::SubscriberStateTable &configMuxTable, std::vector<arg_config> *vlans);
 
-void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, arg_config *context);
+void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans);
 
 void stopSwssNotificationPoll();

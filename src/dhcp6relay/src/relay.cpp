@@ -418,9 +418,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     auto udp_header = parse_udp(current_position, &tmp);
     current_position = tmp;
 
-    auto dhcp_header = parse_dhcpv6_hdr(current_position);
-
-    if (((ntohs(udp_header->dest)) == RELAY_PORT) && (dhcp_header->msg_type == SOLICIT || REQUEST || CONFIRM || RENEW || REBIND || RELEASE || DECLINE)) {
+    if ((ntohs(udp_header->dest)) == RELAY_PORT) {
         relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
     }
 }
@@ -525,52 +523,61 @@ void dhcp6relay_stop()
 }
 
 /**
- * @code                loop_relay(arg_config context);
+ * @code                loop_relay(std::vector<arg_config> *vlans);
  * 
  * @brief               main loop: configure sockets, create libevent base, start server listener thread
  *
- * @param context       user argument that contains input interface and options
+ * @param vlans         list of vlans retrieved from config_db
  */
-void loop_relay(arg_config *context) {
-    struct relay_config config;
-    int filter = 0;
-    int local_sock = 0; 
-    int server_sock = 0;
-    const char *ifname = context->interface.c_str();
-    int index = if_nametoindex(ifname);
+void loop_relay(std::vector<arg_config> *vlans) {
+    std::vector<int> sockets;
+    for(std::size_t i = 0; i<vlans->size(); i++) {
+        arg_config context = vlans->at(i);
+        struct relay_config config;
+        int filter = 0;
+        int local_sock = 0; 
+        int server_sock = 0;
+        const char *ifname = context.interface.c_str();
+        int index = if_nametoindex(ifname);
 
-    filter = sock_open(index, &ether_relay_fprog);
+        filter = sock_open(index, &ether_relay_fprog);
 
-    prepare_socket(&local_sock, context);
-    prepare_server_socket(&server_sock, context);
+        prepare_socket(&local_sock, &context);
+        prepare_server_socket(&server_sock, &context);
+        sockets.push_back(filter);
+        sockets.push_back(local_sock);
+        sockets.push_back(server_sock);
 
-    config.interface = context->interface;
+        config.interface = context.interface;
 
-    prepare_relay_config(&config, local_sock, filter, context);
+        prepare_relay_config(&config, local_sock, filter, &context);
 
-    evutil_make_listen_socket_reuseable(filter);
-    evutil_make_socket_nonblocking(filter);
+        evutil_make_listen_socket_reuseable(filter);
+        evutil_make_socket_nonblocking(filter);
 
-    base = event_base_new();
-    if(base == NULL) {
-        syslog(LOG_ERR, "libevent: Failed to create base\n");
+        evutil_make_listen_socket_reuseable(server_sock);
+        evutil_make_socket_nonblocking(server_sock);
+
+        base = event_base_new();
+        if(base == NULL) {
+            syslog(LOG_ERR, "libevent: Failed to create base\n");
+        }
+
+        listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
+        server_listen_event = event_new(base, server_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
+        if (listen_event == NULL || server_listen_event == NULL) {
+            syslog(LOG_ERR, "libevent: Failed to create libevent\n");
+        }
+
+        event_add(listen_event, NULL);
+        event_add(server_listen_event, NULL);
     }
-
-    listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
-    server_listen_event = event_new(base, server_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
-    if (listen_event == NULL) {
-        syslog(LOG_ERR, "libevent: Failed to create libevent\n");
-    }
-    if (server_listen_event == NULL) {
-        syslog(LOG_ERR, "libevent: Failed to create server listening libevent\n");
-    }
-    event_add(listen_event, NULL);
-    event_add(server_listen_event, NULL);
     
-
     if((signal_init() == 0) && signal_start() == 0) {
         shutdown();
-        close(local_sock);
+        for(std::size_t i = 0; i<sockets.size(); i++) {
+            close(sockets.at(i));
+        }
     }
 }
 
@@ -584,5 +591,6 @@ void shutdown() {
     event_del(ev_sigterm);
     event_free(ev_sigint); 
     event_free(ev_sigterm);
+    event_base_free(base);
     deinitialize_swss();
 }

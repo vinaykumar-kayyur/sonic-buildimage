@@ -91,7 +91,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
 
 void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs);
 
-void loop_relay(arg_config *config);
+void loop_relay(std::vector<arg_config> *vlans);
 
 int signal_init();
 
