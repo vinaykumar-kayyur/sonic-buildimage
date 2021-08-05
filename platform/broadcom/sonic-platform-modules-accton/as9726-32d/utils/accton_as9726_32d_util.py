@@ -29,7 +29,6 @@ import subprocess
 import getopt
 import sys
 import logging
-import re
 import time
 import os
 
