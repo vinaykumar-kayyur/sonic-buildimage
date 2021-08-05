@@ -95,6 +95,9 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
     def get_eeprom(self):
         return self._eeprom
 
+    def get_pn(self):
+        return self._eeprom.get('0x22', "Undefined.")
+
     def get_serial(self):
         return self._eeprom.get('0x23', "Undefined.")
 

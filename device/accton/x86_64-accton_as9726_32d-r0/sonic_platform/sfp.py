@@ -2207,10 +2207,12 @@ class Sfp(SfpBase):
 
     def get_position_in_parent(self):
         """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
         Returns:
-            Temp return 0
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
-        return 0
+        return self.port_num
 
     def is_replaceable(self):
         """
