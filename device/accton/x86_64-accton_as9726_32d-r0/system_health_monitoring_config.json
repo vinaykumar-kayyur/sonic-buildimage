@@ -1,7 +1,8 @@
 {
     "services_to_ignore": [],
     "devices_to_ignore": [
-        "asic"
+        "asic",
+        "psu.temperature"
     ],
     "user_defined_checkers": [],
     "polling_interval": 60,
