@@ -415,7 +415,8 @@ if [ -z "$onie_secure_boot" ]; then
     rm -f $grub_install_log
 
 else
-	mkdir /boot/efi/EFI/$demo_volume_label/
+	rm -rf /boot/efi/EFI/$demo_volume_label/
+        mkdir /boot/efi/EFI/$demo_volume_label/
         cp /boot/efi/EFI/onie/* /boot/efi/EFI/$demo_volume_label/
         uuid=$(blkid | grep $demo_volume_label | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
         if [ -n "$uuid" ]; then
