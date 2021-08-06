@@ -21,7 +21,7 @@ tag=`echo $image_tag | cut -f2 -d:`
 
 if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,docker,* ]]; then
     # if docker image not in white list, exit
-    if [[ "$IMAGENAME" != sonic-slave-* ]] && [[ "$IMAGENAME" != docker-base* ]] && [[ "$IMAGENAME" != debian* ]] && [[ "$IMAGENAME" != multiarch/debian-debootstrap* ]];then
+    if [[ "$IMAGENAME" != sonic-slave-* ]] && [[ "$IMAGENAME" != docker-base* ]] && [[ "$IMAGENAME" != debian:* ]] && [[ "$IMAGENAME" != multiarch/debian-debootstrap:* ]];then
         exit 0
     fi
     if [ -f $version_file ];then
