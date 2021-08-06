@@ -28,18 +28,19 @@ IMAGE_VERSION="${SONIC_IMAGE_VERSION}"
 generate_kvm_image()
 {
     NUM_ASIC=$1
-    if [ $NUM_ASIC == 1 ]; then
-         KVM_IMAGE=$OUTPUT_KVM_IMAGE
-         RECOVERY_ISO=$onie_recovery_image
-    elif [ $NUM_ASIC == 4 ]; then 
+    if [ $NUM_ASIC == 4 ]; then 
          KVM_IMAGE=$OUTPUT_MKVM_4ASIC_IMAGE
          RECOVERY_ISO=$onie_recovery_mkvm_4asic_image
     elif [ $NUM_ASIC == 6 ]; then
          KVM_IMAGE=$OUTPUT_MKVM_6ASIC_IMAGE
          RECOVERY_ISO=$onie_recovery_mkvm_6asic_image
+    else 
+         KVM_IMAGE=$OUTPUT_KVM_IMAGE
+         RECOVERY_ISO=$onie_recovery_image
+         NUM_ASIC=1
     fi
 
-    echo "Build KVM image"
+    echo "Build $NUM_ASIC-asic KVM image"
     KVM_IMAGE_DISK=${KVM_IMAGE%.gz}
     sudo rm -f $KVM_IMAGE_DISK $KVM_IMAGE_DISK.gz
 
@@ -135,7 +136,7 @@ elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
     generate_onie_installer_image
     # Generate single asic KVM image
-    generate_kvm_image 1
+    generate_kvm_image
     if [ "$BUILD_MKVM" == "y" ]; then
         # Genrate 4-asic KVM image
         generate_kvm_image 4

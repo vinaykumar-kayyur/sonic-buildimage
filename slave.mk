@@ -209,12 +209,8 @@ endif
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
-ifeq ($(BUILD_MKVM),)
-       override BUILD_MKVM := $(DEFAULT_BUILD_MKVM)
-endif
-
 ifeq ($(CONFIGURED_PLATFORM),vs)
-       export BUILD_MKVM=$(BUILD_MKVM)
+export BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM)
 endif
 
 ###############################################################################
@@ -281,7 +277,7 @@ $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
-$(info "BUILD_MKVM"                      : "$(BUILD_MKVM)")
+$(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
 endif
 $(info )
 else

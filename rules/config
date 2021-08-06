@@ -197,5 +197,5 @@ SONIC_VERSION_CONTROL_COMPONENTS ?= none
 REGISTRY_PORT ?= 443
 REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
 
-# Default number of asics in VS platform
-DEFAULT_BUILD_MKVM = n
+# BUILD_MULTIASIC_KVM - if set to y multi-asic KVM images will be generated.
+BUILD_MULTIASIC_KVM = n
