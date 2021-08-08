@@ -549,8 +549,13 @@ $(SONIC_INSTALL_DEBS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install
 		$(foreach deb, $($*_CONFLICT_DEBS), \
 			{ while dpkg -s $(firstword $(subst _, ,$(basename $(deb)))) | grep "^Version: $(word 2, $(subst _, ,$(basename $(deb))))" &> /dev/null; do echo "waiting for $(deb) to be uninstalled" $(LOG); sleep 1; done } )
 		# put a lock here because dpkg does not allow installing packages in parallel
+		# this lock didn't avoid all parallel installing. Add some retry.
 		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
-			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && exit 1 ; }
+			for i in {1..50};do
+				{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* &> $(DEBS_PATH)/dpkg_lock/log && rm -rf $(DEBS_PATH)/dpkg_lock && break 2; } || sleep 1
+			done
+			cat $(DEBS_PATH)/dpkg_lock/log $(LOG)
+			false $(LOG)
 		fi
 	done
 	$(FOOTER)
