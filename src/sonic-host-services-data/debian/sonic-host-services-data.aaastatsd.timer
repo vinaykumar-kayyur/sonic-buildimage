@@ -3,7 +3,7 @@ Description=Delays aaastatsd daemon until SONiC has started
 PartOf=aaastatsd.service
 
 [Timer]
-OnBootSec=1min 30 sec
+OnActiveSec=1min 30 sec
 Unit=aaastatsd.service
 
 [Install]
