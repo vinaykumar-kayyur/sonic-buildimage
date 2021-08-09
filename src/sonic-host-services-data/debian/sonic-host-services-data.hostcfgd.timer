@@ -3,7 +3,7 @@ Description=Delays hostcfgd daemon until SONiC has started
 PartOf=hostcfgd.service
 
 [Timer]
-OnBootSec=1min 30 sec
+OnActiveSec=1min 30 sec
 Unit=hostcfgd.service
 
 [Install]
