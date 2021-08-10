@@ -1,4 +1,0 @@
-# Long lines only
-thrift source: source-is-missing lib/js/test/phantom-client.js line length is 2016 characters (>512)
-thrift source: source-is-missing lib/js/test/test-async.js line length is 2016 characters (>512)
-thrift source: source-is-missing lib/js/test/test.js line length is 2016 characters (>512)
