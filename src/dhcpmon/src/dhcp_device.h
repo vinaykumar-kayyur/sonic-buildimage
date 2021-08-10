@@ -31,6 +31,14 @@ typedef enum
     DHCP_MESSAGE_TYPE_RELEASE  = 7,
     DHCP_MESSAGE_TYPE_INFORM   = 8,
 
+    DHCPv6_MESSAGE_TYPE_SOLICIT = 1,
+    DHCPv6_MESSAGE_TYPE_ADVERTISE = 2,
+    DHCPv6_MESSAGE_TYPE_REQUEST = 3,
+    DHCPv6_MESSAGE_TYPE_CONFIRM = 4,
+    DHCPv6_MESSAGE_TYPE_REPLY = 7,
+    DHCPv6_MESSAGE_TYPE_RELAY_FORW = 12,
+    DHCPv6_MESSAGE_TYPE_RELAY_REPL = 13,
+
     DHCP_MESSAGE_TYPE_COUNT
 } dhcp_message_type_t;
 
@@ -42,6 +50,15 @@ typedef enum
 
     DHCP_DIR_COUNT
 } dhcp_packet_direction_t;
+
+/** DHCP version type */
+typedef enum
+{
+    DHCPv4,    
+    DHCPv6,   
+
+    DHCP_TYPE
+} dhcp_type;
 
 /** counters type */
 typedef enum
@@ -67,6 +84,11 @@ typedef enum
     DHCP_MON_CHECK_POSITIVE,    /** Validate that received DORA packets are relayed */
 } dhcp_mon_check_t;
 
+/** dhcp message */
+struct dhcpv6_msg {
+    uint8_t msg_type;
+};
+
 /** DHCP device (interface) context */
 typedef struct
 {
@@ -78,7 +100,7 @@ typedef struct
     char intf[IF_NAMESIZE];         /** device (interface) name */
     uint8_t *buffer;                /** buffer used to read socket data */
     size_t snaplen;                 /** snap length or buffer size */
-    uint64_t counters[DHCP_COUNTERS_COUNT][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT];
+    uint64_t counters[DHCP_COUNTERS_COUNT][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT];
                                     /** current/snapshot counters of DHCP packets */
 } dhcp_device_context_t;
 

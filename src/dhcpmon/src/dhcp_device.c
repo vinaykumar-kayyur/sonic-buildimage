@@ -21,8 +21,12 @@
 #include <libexplain/ioctl.h>
 #include <linux/filter.h>
 #include <netpacket/packet.h>
+#include <netinet/ip6.h>
 
 #include "dhcp_device.h"
+
+#define CLIENT_PORT 546
+#define RELAY_PORT 547
 
 /** Counter print width */
 #define DHCP_COUNTER_WIDTH  9
@@ -33,6 +37,9 @@
 #define IP_START_OFFSET (ETHER_START_OFFSET + ETHER_HDR_LEN)
 /** Start of UDP header of a captured frame */
 #define UDP_START_OFFSET (IP_START_OFFSET + sizeof(struct ip))
+#define UDP6_START_OFFSET (IP_START_OFFSET + sizeof(struct ip6_hdr))
+/** DHCPv6 Message Header */
+#define DHCP6_MSG_OFFSET (UDP6_START_OFFSET + sizeof(struct udphdr))
 /** Start of DHCP header of a captured frame */
 #define DHCP_START_OFFSET (UDP_START_OFFSET + sizeof(struct udphdr))
 /** Start of DHCP Options segment of a captured frame */
@@ -51,32 +58,38 @@
 
 /** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
  * This program is obtained using the following command tcpdump:
- * `tcpdump -dd "udp and (port 67 or port 68)"`
+ * `tcpdump -dd "udp and (port 67 or port 68 or port 546 or port 547)"`
  */
 static struct sock_filter dhcp_bpf_code[] = {
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c}, // (000) ldh      [12]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd}, // (001) jeq      #0x86dd          jt 2	jf 9
-    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014}, // (002) ldb      [20]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011}, // (003) jeq      #0x11            jt 4	jf 22
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036}, // (004) ldh      [54]
-    {.code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043}, // (005) jeq      #0x43            jt 21	jf 6
-    {.code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044}, // (006) jeq      #0x44            jt 21	jf 7
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038}, // (007) ldh      [56]
-    {.code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043}, // (008) jeq      #0x43            jt 21	jf 20
-    {.code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800}, // (009) jeq      #0x800           jt 10	jf 22
-    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017}, // (010) ldb      [23]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011}, // (011) jeq      #0x11            jt 12	jf 22
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014}, // (012) ldh      [20]
-    {.code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff}, // (013) jset     #0x1fff          jt 22	jf 14
-    {.code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (014) ldxb     4*([14]&0xf)
-    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (015) ldh      [x + 14]
-    {.code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043}, // (016) jeq      #0x43            jt 21	jf 17
-    {.code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044}, // (017) jeq      #0x44            jt 21	jf 18
-    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010}, // (018) ldh      [x + 16]
-    {.code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043}, // (019) jeq      #0x43            jt 21	jf 20
-    {.code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044}, // (020) jeq      #0x44            jt 21	jf 22
-    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000}, // (021) ret      #262144
-    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000}, // (022) ret      #0
+    { 0x28, 0, 0, 0x0000000c },
+    { 0x15, 0, 9, 0x000086dd },
+    { 0x30, 0, 0, 0x00000014 },
+    { 0x15, 0, 24, 0x00000011 },
+    { 0x28, 0, 0, 0x00000036 },
+    { 0x15, 21, 0, 0x00000043 },
+    { 0x15, 20, 0, 0x00000044 },
+    { 0x15, 19, 0, 0x00000222 },
+    { 0x15, 18, 0, 0x00000223 },
+    { 0x28, 0, 0, 0x00000038 },
+    { 0x15, 16, 13, 0x00000043 },
+    { 0x15, 0, 16, 0x00000800 },
+    { 0x30, 0, 0, 0x00000017 },
+    { 0x15, 0, 14, 0x00000011 },
+    { 0x28, 0, 0, 0x00000014 },
+    { 0x45, 12, 0, 0x00001fff },
+    { 0xb1, 0, 0, 0x0000000e },
+    { 0x48, 0, 0, 0x0000000e },
+    { 0x15, 8, 0, 0x00000043 },
+    { 0x15, 7, 0, 0x00000044 },
+    { 0x15, 6, 0, 0x00000222 },
+    { 0x15, 5, 0, 0x00000223 },
+    { 0x48, 0, 0, 0x00000010 },
+    { 0x15, 3, 0, 0x00000043 },
+    { 0x15, 2, 0, 0x00000044 },
+    { 0x15, 1, 0, 0x00000222 },
+    { 0x15, 0, 1, 0x00000223 },
+    { 0x6, 0, 0, 0x00040000 },
+    { 0x6, 0, 0, 0x00000000 },
 };
 
 /** Filter program socket struct */
@@ -94,7 +107,15 @@ static dhcp_message_type_t monitored_msgs[] = {
     DHCP_MESSAGE_TYPE_DISCOVER,
     DHCP_MESSAGE_TYPE_OFFER,
     DHCP_MESSAGE_TYPE_REQUEST,
-    DHCP_MESSAGE_TYPE_ACK
+    DHCP_MESSAGE_TYPE_ACK,
+
+    DHCPv6_MESSAGE_TYPE_SOLICIT,
+    DHCPv6_MESSAGE_TYPE_ADVERTISE,
+    DHCPv6_MESSAGE_TYPE_REQUEST,
+    DHCPv6_MESSAGE_TYPE_CONFIRM,
+    DHCPv6_MESSAGE_TYPE_REPLY,
+    DHCPv6_MESSAGE_TYPE_RELAY_FORW,
+    DHCPv6_MESSAGE_TYPE_RELAY_REPL
 };
 
 /** Number of monitored DHCP message type */
@@ -132,8 +153,8 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
                        dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         if ((context->giaddr_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
             (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
-            context->counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
-            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            context->counters[DHCP_COUNTERS_CURRENT][dir][DHCPv4][dhcp_option[2]]++;
+            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][DHCPv4][dhcp_option[2]]++;
         }
         break;
     // DHCP messages send by server
@@ -142,8 +163,8 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
     case DHCP_MESSAGE_TYPE_NAK:
         if ((context->giaddr_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
-            context->counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
-            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            context->counters[DHCP_COUNTERS_CURRENT][dir][DHCPv4][dhcp_option[2]]++;
+            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][DHCPv4][dhcp_option[2]]++;
         }
         break;
     default:
@@ -172,23 +193,64 @@ static void read_callback(int fd, short event, void *arg)
            ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT)) > 0)) {
         struct ether_header *ethhdr = (struct ether_header*) context->buffer;
         struct ip *iphdr = (struct ip*) (context->buffer + IP_START_OFFSET);
+        struct ip6_hdr *ip6hdr = (struct ip6_hdr *) (context->buffer + IP_START_OFFSET);
         struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
         uint8_t *dhcphdr = context->buffer + DHCP_START_OFFSET;
         int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
-        if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
-            (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
-            int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
-                          ntohs(udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
-            int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
-            const u_char *dhcp_option = context->buffer + dhcp_option_offset;
-            dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
+        dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
                                            ethhdr->ether_shost[1] == context->mac[1] &&
                                            ethhdr->ether_shost[2] == context->mac[2] &&
                                            ethhdr->ether_shost[3] == context->mac[3] &&
                                            ethhdr->ether_shost[4] == context->mac[4] &&
                                            ethhdr->ether_shost[5] == context->mac[5]) ?
                                            DHCP_TX : DHCP_RX;
+
+        if ((ip6hdr->ip6_ctlun.ip6_un1.ip6_un1_nxt != IPPROTO_UDP) && (ethhdr->ether_type == 6)) {
+            const struct ip6_ext *ext_header;
+            do {
+                ext_header = (const struct ip6_ext *)ip6hdr;
+                ip6hdr += ext_header->ip6e_len;
+            }
+            while (ext_header->ip6e_nxt != IPPROTO_UDP);
+        }    
+        struct udphdr *udphdr_v6 = (struct udphdr*) (context->buffer + UDP6_START_OFFSET);
+        struct dhcpv6_msg *dhcpv6_hdr = (struct dhcpv6_msg *) (context->buffer + DHCP6_MSG_OFFSET);
+        if((ntohs(udphdr_v6->dest)) == RELAY_PORT) {
+            switch (dhcpv6_hdr->msg_type)
+            {
+            case DHCPv6_MESSAGE_TYPE_SOLICIT:
+            case DHCPv6_MESSAGE_TYPE_REQUEST:
+            case DHCPv6_MESSAGE_TYPE_CONFIRM:
+            case DHCPv6_MESSAGE_TYPE_RELAY_FORW:
+            case DHCPv6_MESSAGE_TYPE_RELAY_REPL:
+                    context->counters[DHCP_COUNTERS_CURRENT][dir][DHCPv6][dhcpv6_hdr->msg_type]++;
+                    aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][DHCPv6][dhcpv6_hdr->msg_type]++;
+                break;
+            default:
+                syslog(LOG_WARNING, "Unknown DHCPv6 message type %d", dhcpv6_hdr->msg_type);
+                break;
+            }
+        }
+        else if ((ntohs(udphdr_v6->dest)) == CLIENT_PORT) {
+            switch (dhcpv6_hdr->msg_type)
+            {
+            case DHCPv6_MESSAGE_TYPE_ADVERTISE:
+            case DHCPv6_MESSAGE_TYPE_REPLY:
+                    context->counters[DHCP_COUNTERS_CURRENT][dir][DHCPv6][dhcpv6_hdr->msg_type]++;
+                    aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][DHCPv6][dhcpv6_hdr->msg_type]++;
+                break;
+            default:
+                syslog(LOG_WARNING, "Unknown DHCPv6 message type %d", dhcpv6_hdr->msg_type);
+                break;
+            }
+        }   
+        else if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+            (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
+            int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
+                          ntohs(udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
+            int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
+            const u_char *dhcp_option = context->buffer + dhcp_option_offset;
             int offset = 0;
             int stop_dhcp_processing = 0;
             while ((offset < (dhcp_option_sz + 1)) && dhcp_option[offset] != 255) {
@@ -217,7 +279,7 @@ static void read_callback(int fd, short event, void *arg)
         } else {
             syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
                    context->intf, buffer_sz);
-        }
+        } 
     }
 }
 
@@ -230,10 +292,10 @@ static void read_callback(int fd, short event, void *arg)
  *
  * @return true if there were no DHCP activity, false otherwise
  */
-static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
-    uint64_t *rx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_RX];
-    uint64_t *rx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX];
+    uint64_t *rx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_RX][DHCP_TYPE];
+    uint64_t *rx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][DHCP_TYPE];
 
     bool rv = true;
     for (uint8_t i = 0; (i < monitored_msg_sz) && rv; i++) {
@@ -255,11 +317,30 @@ static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHC
  * @return true if DHCP message 'type' is transmitted,false otherwise
  */
 static bool dhcp_device_is_dhcp_msg_unhealthy(dhcp_message_type_t type,
-                                              uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+                                              uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
     // check if DHCP message 'type' is being relayed
-    return ((counters[DHCP_COUNTERS_CURRENT][DHCP_RX][type] >  counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][type]) &&
-            (counters[DHCP_COUNTERS_CURRENT][DHCP_TX][type] <= counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][type])    );
+    return ((counters[DHCP_COUNTERS_CURRENT][DHCP_RX][DHCPv4][type] >  counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][DHCPv4][type]) &&
+            (counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCPv4][type] <= counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCPv4][type])  );
+}
+
+/**
+ * @code dhcp_device_is_dhcpv6_msg_unhealthy(type, counters);
+ *
+ * @brief Check if DHCPv6 relay is functioning properly for message of type 'type'.
+ *        For every rx of message 'type', there should be increment of the same message type.
+ *
+ * @param type      DHCP message type
+ * @param counters  current/snapshot counter
+ *
+ * @return true if DHCPv6 message 'type' is transmitted,false otherwise
+ */
+static bool dhcp_device_is_dhcpv6_msg_unhealthy(dhcp_message_type_t type,
+                                              uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
+{
+    // check if DHCP message 'type' is being relayed
+    return ((counters[DHCP_COUNTERS_CURRENT][DHCP_RX][DHCPv6][type] >  counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][DHCPv6][type]) &&
+            (counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCPv6][type] <= counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCPv6][type])   );
 }
 
 /**
@@ -272,17 +353,27 @@ static bool dhcp_device_is_dhcp_msg_unhealthy(dhcp_message_type_t type,
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
-static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
     bool is_dhcp_unhealthy = false;
+    bool is_dhcpv6_unhealthy = false;
     for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
         is_dhcp_unhealthy = dhcp_device_is_dhcp_msg_unhealthy(monitored_msgs[i], counters);
     }
 
+    for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcpv6_unhealthy; i++) {
+        is_dhcpv6_unhealthy = dhcp_device_is_dhcpv6_msg_unhealthy(monitored_msgs[i], counters);
+    }
+
     // if we have rx DORA then we should have corresponding tx DORA (DORA being relayed)
     if (is_dhcp_unhealthy) {
+        syslog(LOG_WARNING, "DHCPv4 Relay Unhealthy");
+        rv = DHCP_MON_STATUS_UNHEALTHY;
+    }
+    else if (is_dhcpv6_unhealthy) {
+        syslog(LOG_WARNING, "DHCPv6 Relay Unhealthy");
         rv = DHCP_MON_STATUS_UNHEALTHY;
     }
 
@@ -301,12 +392,12 @@ static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t counters[][D
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
-static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
-    uint64_t *tx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_TX];
-    uint64_t *tx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX];
+    uint64_t *tx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_TX][DHCP_TYPE];
+    uint64_t *tx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][DHCP_TYPE];
 
     bool is_dhcp_unhealthy = false;
     for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
@@ -337,7 +428,7 @@ static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][D
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
 static dhcp_mon_status_t dhcp_device_check_health(dhcp_mon_check_t check_type,
-                                                  uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+                                                  uint64_t counters[][DHCP_DIR_COUNT][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
@@ -365,7 +456,7 @@ static dhcp_mon_status_t dhcp_device_check_health(dhcp_mon_check_t check_type,
  */
 static void dhcp_print_counters(const char *vlan_intf,
                                 dhcp_counters_type_t type,
-                                uint64_t counters[][DHCP_MESSAGE_TYPE_COUNT])
+                                uint64_t counters[][DHCP_TYPE][DHCP_MESSAGE_TYPE_COUNT])
 {
     static const char *counter_desc[DHCP_COUNTERS_COUNT] = {
         [DHCP_COUNTERS_CURRENT] = " Current",
@@ -374,17 +465,32 @@ static void dhcp_print_counters(const char *vlan_intf,
 
     syslog(
         LOG_NOTICE,
-        "[%*s-%*s rx/tx] Discover: %*lu/%*lu, Offer: %*lu/%*lu, Request: %*lu/%*lu, ACK: %*lu/%*lu\n",
+        "[%*s-%*s rx/tx] Discover: %*lu/%*lu, Offer: %*lu/%*lu, Request: %*lu/%*lu, ACK: %*lu/%*lu, Solicit: %*lu/%*lu, Advertise: %*lu/%*lu, Request: %*lu/%*lu, Confirm: %*lu/%*lu, Reply: %*lu/%*lu, RELAY_FORW: %*lu/%*lu, RELAY_REPLY: %*lu/%*lu\n",
         IF_NAMESIZE, vlan_intf,
         (int) strlen(counter_desc[type]), counter_desc[type],
-        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCP_MESSAGE_TYPE_DISCOVER],
-        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCP_MESSAGE_TYPE_DISCOVER],
-        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCP_MESSAGE_TYPE_OFFER],
-        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCP_MESSAGE_TYPE_OFFER],
-        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCP_MESSAGE_TYPE_REQUEST],
-        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCP_MESSAGE_TYPE_REQUEST],
-        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCP_MESSAGE_TYPE_ACK],
-        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCP_MESSAGE_TYPE_ACK]
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv4][DHCP_MESSAGE_TYPE_DISCOVER],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv4][DHCP_MESSAGE_TYPE_DISCOVER],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv4][DHCP_MESSAGE_TYPE_OFFER],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv4][DHCP_MESSAGE_TYPE_OFFER],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv4][DHCP_MESSAGE_TYPE_REQUEST],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv4][DHCP_MESSAGE_TYPE_REQUEST],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv4][DHCP_MESSAGE_TYPE_ACK],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv4][DHCP_MESSAGE_TYPE_ACK],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_SOLICIT],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_SOLICIT],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_ADVERTISE],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_ADVERTISE],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_REQUEST],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_REQUEST],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_CONFIRM],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_CONFIRM],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_REPLY],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_REPLY],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_RELAY_FORW],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_RELAY_FORW],
+        DHCP_COUNTER_WIDTH, counters[DHCP_RX][DHCPv6][DHCPv6_MESSAGE_TYPE_RELAY_REPL],
+        DHCP_COUNTER_WIDTH, counters[DHCP_TX][DHCPv6][DHCPv6_MESSAGE_TYPE_RELAY_REPL]
+
     );
 }
 
