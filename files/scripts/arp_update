@@ -25,6 +25,8 @@ while /bin/true; do
       fi
   done
 
+  sleep 1
+
   VLAN=$(echo $ARP_UPDATE_VARS | jq -r '.vlan')
   for vlan in $VLAN; do
       # generate a list of arping commands:
