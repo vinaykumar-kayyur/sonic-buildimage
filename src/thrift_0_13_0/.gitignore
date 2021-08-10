@@ -1,13 +1,3 @@
-!**/debian/*
-# Debian byproduct files
-debian/stamp-*/
-debian/*.log
-debian/*.substvars
-debian/.debhelper/
-debian/tmp/
-debian/autoreconf.*
-debian/build/
-debian/files
-debian/stamp-autotools-files
-
-thrift*
+!0001-Disable-unneeded-packages.patch
+!Makefile
+!series
