@@ -1,17 +1,17 @@
-From f30c1065a5e11ad1e8abc89e8e119d015db45d91 Mon Sep 17 00:00:00 2001
-From: Myron Sosyak <myronx.sosyak@intel.com>
-Date: Tue, 10 Aug 2021 09:35:31 +0000
-Subject: [PATCH] Disable unneeded packages
+From cfefc0c946c999838926298a01d84c2af1905be7 Mon Sep 17 00:00:00 2001
+From: user <user@contoso.com>
+Date: Tue, 10 Aug 2021 15:01:25 +0000
+Subject: [PATCH] Disable-unneeded-packages
 
 ---
- .../thrift-0.13.0/debian/control              | 54 +++++++++----------
- src/thrift_0_13_0/thrift-0.13.0/debian/rules  |  9 ++--
- 2 files changed, 31 insertions(+), 32 deletions(-)
+ debian/control | 54 +++++++++++++++++++++++++-------------------------
+ debian/rules   |  7 +++----
+ 2 files changed, 30 insertions(+), 31 deletions(-)
 
-diff --git a/src/thrift_0_13_0/thrift-0.13.0/debian/control b/src/thrift_0_13_0/thrift-0.13.0/debian/control
-index 5126e472b..b0044dae3 100644
---- a/src/thrift_0_13_0/thrift-0.13.0/debian/control
-+++ b/src/thrift_0_13_0/thrift-0.13.0/debian/control
+diff --git a/debian/control b/debian/control
+index 5126e47..b0044da 100644
+--- a/debian/control
++++ b/debian/control
 @@ -13,8 +13,8 @@ Build-Depends: debhelper-compat (= 11), dh-python,
   python3-all-dev,
   python3-six,
@@ -81,17 +81,15 @@ index 5126e472b..b0044dae3 100644
 
  Package: golang-thrift-dev
  Architecture: amd64 arm64 armel armhf i386 ppc64el
-diff --git a/src/thrift_0_13_0/thrift-0.13.0/debian/rules b/src/thrift_0_13_0/thrift-0.13.0/debian/rules
-index 3056eba9c..8217796d9 100755
---- a/src/thrift_0_13_0/thrift-0.13.0/debian/rules
-+++ b/src/thrift_0_13_0/thrift-0.13.0/debian/rules
-@@ -46,8 +46,7 @@ override_dh_auto_clean:
- 		$(CURDIR)/test/go/src/golang.org/x/net \
+diff --git a/debian/rules b/debian/rules
+index ba63e6f..8217796 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -47,7 +47,6 @@ override_dh_auto_clean:
  		$(CURDIR)/lib/go/test/gopath/src/golang.org/x/net \
  		$(CURDIR)/lib/go/test/gopath/src/github.com/golang/mock
--	[ ! -f Makefile ] || $(MAKE)
+ 	[ ! -f Makefile ] || $(MAKE) clean
 -	cd $(CURDIR)/lib/php/src/ext/thrift_protocol/ && phpize --clean
-+	[ ! -f Makefile ] || $(MAKE) clean
  	find $(CURDIR) \( -name Makefile -o -name Makefile.in \) -exec rm {} \;
  	find $(CURDIR) -name .dirstamp -exec rm {} \;
  	$(RM) aclocal.m4 config.h config.log config.status configure \
@@ -110,5 +108,5 @@ index 3056eba9c..8217796d9 100755
  		--without-rust \
  		--disable-tutorial
 --
-2.17.1
+2.20.1
 

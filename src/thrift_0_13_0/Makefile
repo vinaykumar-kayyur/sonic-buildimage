@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 .ONESHELL:
-.SHELLFLAGS += -e
+.SHELLFLAGS += -e -x
 
 THRIFT_VERSION = 0.13.0
 THRIFT_VERSION_FULL = $(THRIFT_VERSION)-6
@@ -13,7 +13,7 @@ DERIVED_TARGETS = libthrift-dev_$(THRIFT_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 THRIFT_LINK_PRE = http://deb.debian.org/debian/pool/main/t/thrift/
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-	rm -rf thrift-$(THRIFT_VERSION)
+	rm -rf thrift*
 
 	wget "$(THRIFT_LINK_PRE)/thrift_$(THRIFT_VERSION_FULL).debian.tar.xz"
 	wget "$(THRIFT_LINK_PRE)/thrift_$(THRIFT_VERSION).orig.tar.gz"
@@ -22,6 +22,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-source -x thrift_$(THRIFT_VERSION_FULL).dsc
 	pushd thrift-$(THRIFT_VERSION)
 
+	# Disable php perl and few other packages as they need additional packages to be installed
+	patch -p1 < ../patch/0001-Disable-unneeded-packages.patch
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -d -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 

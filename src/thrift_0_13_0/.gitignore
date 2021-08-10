@@ -1,3 +1,4 @@
-!0001-Disable-unneeded-packages.patch
+*
+!.gitignore
 !Makefile
-!series
+!patch/
