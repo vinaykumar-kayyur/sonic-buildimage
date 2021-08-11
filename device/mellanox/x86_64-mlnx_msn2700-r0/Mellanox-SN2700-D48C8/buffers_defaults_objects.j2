@@ -40,11 +40,6 @@
           "size":"0",
           "dynamic_th":"-8"
         },
-        "ingress_lossy_zero_profile" : {
-          "pool":"[BUFFER_POOL|ingress_lossless_pool]",
-          "size":"0",
-          "dynamic_th":"-8"
-        },
         "egress_lossless_zero_profile" : {
           "pool":"[BUFFER_POOL|egress_lossless_pool]",
           "size":"0",
@@ -53,7 +48,7 @@
         "egress_lossy_zero_profile" : {
           "pool":"[BUFFER_POOL|egress_lossy_pool]",
           "size":"0",
-          "dynamic_ty":"-8"
+          "dynamic_th":"-8"
         },
         {% endif -%}
         "ingress_lossless_profile": {
