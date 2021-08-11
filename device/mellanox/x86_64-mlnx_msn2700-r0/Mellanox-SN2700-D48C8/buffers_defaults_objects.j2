@@ -87,6 +87,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% if port_names_inactive|length > 0 %}
 ,
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}": {
@@ -98,6 +99,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% endif %}
     },
     "BUFFER_PORT_EGRESS_PROFILE_LIST": {
 {% for port in port_names_active.split(',') %}
@@ -106,6 +108,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% if port_names_inactive|length > 0 %}
 ,
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}": {
@@ -117,6 +120,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% endif %}
     }
 {%- endmacro %}
 
@@ -138,6 +142,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% if port_names_inactive|length > 0 %}
 ,
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}|3-4": {
@@ -167,6 +172,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% endif %}
     }
 {%- endmacro %}
 
@@ -183,6 +189,7 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% if port_names_inactive|length > 0 %}
 {%- for port in port_names_inactive.split(',') %}
        {%- if loop.first -%},{%- endif -%}
 {% if dynamic_mode is defined %}
@@ -199,5 +206,6 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% endif %}
     }
 {%- endmacro %}
