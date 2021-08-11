@@ -10,7 +10,6 @@ import os
 import sys
 import time
 import struct
-import logging
 
 from ctypes import create_string_buffer
 
