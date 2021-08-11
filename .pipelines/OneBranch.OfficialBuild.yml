@@ -33,7 +33,7 @@ variables:
 - group: SONIC-BUILD-VG-1
 - ${{ if eq(parameters.artifactFolder, 'sourceBranch') }}:
   - name: PUBLISH_BLOB_PREFIX
-      value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranch)
+    value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranch)
 - ${{ if ne(parameters.artifactFolder, 'sourceBranch') }}:
   - name: PUBLISH_BLOB_PREFIX
     value: pipelines/$(Build.DefinitionName)/${{ parameters.artifactFolder }}
