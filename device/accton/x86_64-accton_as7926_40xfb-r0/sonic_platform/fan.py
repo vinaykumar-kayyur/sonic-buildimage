@@ -14,9 +14,13 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 PSU_FAN_MAX_RPM = 25500
+SPEED_TOLERANCE = 15
 
 CPLD_I2C_PATH = "/sys/devices/platform/as7926_40xfb_fan/fan"
 PSU_HWMON_I2C_PATH ="/sys/devices/platform/as7926_40xfb_psu/psu{}"
+FAN_NAME_LIST = ["FAN-1F", "FAN-2F", "FAN-3F", "FAN-4F", "FAN-5F",
+                 "FAN-1R", "FAN-2R", "FAN-3R", "FAN-4R", "FAN-5R"]
+
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
@@ -98,7 +102,7 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        return False #Not supported
+        return self.get_speed()
 
     def get_speed_tolerance(self):
         """
@@ -107,7 +111,7 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        return False #Not supported
+        return SPEED_TOLERANCE
 
     def set_speed(self, speed):
         """
@@ -137,19 +141,91 @@ class Fan(FanBase):
         """
         return False #Not supported
 
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        status=self.get_presence()
+        if status is None:
+            return  self.STATUS_LED_COLOR_OFF
+
+        return {
+            1: self.STATUS_LED_COLOR_GREEN,
+            0: self.STATUS_LED_COLOR_RED
+        }.get(status, self.STATUS_LED_COLOR_OFF)
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+            Returns:
+            string: The name of the device
+        """
+        fan_name = FAN_NAME_LIST[self.fan_tray_index*2 + self.fan_index] \
+            if not self.is_psu_fan \
+            else "PSU-{} FAN-{}".format(self.psu_index+1, self.fan_index+1)
+
+        return fan_name
+
     def get_presence(self):
         """
         Retrieves the presence of the FAN
         Returns:
             bool: True if FAN is present, False if not
         """
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_present')
-        val=self._api_helper.read_txt_file(present_path)
-
         if not self.is_psu_fan:
+            present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_present')
+            val=self._api_helper.read_txt_file(present_path)
             if val is not None:
                 return int(val, 10)==1
             else:
                 return False
         else:
             return True
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return self.get_presence()
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+
+        return "N/A"
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return "N/A"
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return (self.fan_tray_index+1) \
+            if not self.is_psu_fan else (self.psu_index+1)
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True if not self.is_psu_fan else False
