@@ -1,7 +1,11 @@
+sai_tunnel_global_sip_mask_enable=1
 core_clock_frequency=1325
 dpr_clock_frequency=1000
 device_clock_frequency=1325
 port_flex_enable=1
+
+# Disable Counting ACL Drop towards interface RX_DRP counter
+sai_adjust_acl_drop_in_rx_drop=1
 
 #firmware load method, use fast load
 load_firmware=0x2
@@ -31,7 +35,6 @@ max_vp_lags.0=0
 tdma_intr_enable=1
 tdma_timeout_usec.0=5000000
 parity_correction.0=1
-mmu_lossless.0=0
 bcm_num_cos=10
 default_cpu_tx_queue=7
 pktdma_poll_mode_channel_bitmap=1
