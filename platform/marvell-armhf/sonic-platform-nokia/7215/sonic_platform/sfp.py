@@ -800,7 +800,7 @@ class Sfp(SfpBase):
             A boolean, True if tx_disable is set successfully, False if not
         """
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, register = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
+            cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
             register = int(register, 16)
         else:
             bus = smbus.SMBus(0)
@@ -816,12 +816,12 @@ class Sfp(SfpBase):
             setbits = register & ~mask   
      
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, status = cmd.getstatusoutput('sudo i2cset -y -m 0x0f 0 0x41 0x5 %d' % setbits)           
+            cmd.getstatusoutput('sudo i2cset -y -m 0x0f 0 0x41 0x5 %d' % setbits)           
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
             DEVICE_REG = 0x5
-            bus.write_byte_data(DEVICE_ADDRESS, DEVICEREG, setbits)
+            bus.write_byte_data(DEVICE_ADDRESS, DEVICE_REG, setbits)
                         
         return True
 

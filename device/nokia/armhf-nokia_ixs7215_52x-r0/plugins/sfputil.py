@@ -1,6 +1,5 @@
 try:
     import glob
-    import os
     import sonic_platform.platform
     import sonic_platform.chassis
     from sonic_sfp.sfputilbase import SfpUtilBase
@@ -44,7 +43,6 @@ class SfpUtil(SfpUtilBase):
         # Mux Ordering
         mux_dev = sorted(glob.glob("/sys/class/i2c-adapter/i2c-0/i2c-[0-9]"))
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
-        bus_path = "/sys/class/i2c-adapter/i2c-{0}/"
         y = 0
         for x in range(self.port_start, self.port_end + 1):
             mux_dev_num = mux_dev[y]
