@@ -8,19 +8,19 @@ Subject: [PATCH] [fast-reboot][patch] Restore SLB neighbors state after
  scripts/fast-reboot | 31 +++++++++++++++++++++++++++++++
  1 file changed, 31 insertions(+)
 
-diff --git a/scripts/fast-reboot b/scripts/fast-reboot
-index 97e8dc6..f503d05 100755
---- a/scripts/fast-reboot
-+++ b/scripts/fast-reboot
-@@ -37,6 +37,7 @@ EXIT_SYNCD_SHUTDOWN=11
+Index: sonic-utilities/scripts/fast-reboot
+===================================================================
+--- sonic-utilities.orig/scripts/fast-reboot
++++ sonic-utilities/scripts/fast-reboot
+@@ -36,6 +36,7 @@ EXIT_ORCHAGENT_SHUTDOWN=10
+ EXIT_SYNCD_SHUTDOWN=11
  EXIT_FAST_REBOOT_DUMP_FAILURE=12
  EXIT_FILTER_FDB_ENTRIES_FAILURE=13
- EXIT_COUNTERPOLL_DISABLE_FAILURE=14
 +EXIT_HANDLE_SLB_NEIGHBORS=15
  EXIT_NO_CONTROL_PLANE_ASSISTANT=20
  EXIT_SONIC_INSTALLER_VERIFY_REBOOT=21
  
-@@ -123,6 +124,8 @@ function clear_fast_boot()
+@@ -122,6 +123,8 @@ function clear_fast_boot()
      common_clear
  
      sonic-db-cli STATE_DB DEL "FAST_REBOOT|system" &>/dev/null || /bin/true
@@ -29,7 +29,16 @@ index 97e8dc6..f503d05 100755
  }
  
  function clear_warm_boot()
-@@ -421,6 +424,32 @@ function check_warm_restart_in_progress() {
+@@ -349,7 +352,7 @@ function reboot_pre_check()
+         error "Failed to verify next image. Exit code: $INSTALLER_VERIFY_RC"
+         exit ${EXIT_SONIC_INSTALLER_VERIFY_REBOOT}
+     fi
+-    
++
+     # Make sure ASIC configuration has not changed between images
+     ASIC_CONFIG_CHECK_SCRIPT="/usr/local/bin/asic_config_check"
+     ASIC_CONFIG_CHECK_SUCCESS=0
+@@ -420,6 +423,32 @@ function check_warm_restart_in_progress(
      done
  }
  
@@ -62,7 +71,7 @@ index 97e8dc6..f503d05 100755
  # main starts here
  parseOptions $@
  
-@@ -461,6 +490,8 @@ case "$REBOOT_TYPE" in
+@@ -460,6 +489,8 @@ case "$REBOOT_TYPE" in
          ;;
  esac
  
@@ -71,6 +80,3 @@ index 97e8dc6..f503d05 100755
  save_counters_folder
  
  unload_kernel
--- 
-2.11.0
-
