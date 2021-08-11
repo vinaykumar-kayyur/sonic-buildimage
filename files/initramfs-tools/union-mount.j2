@@ -16,6 +16,7 @@ logs_inram=false
 secureboot=false
 bootloader=generic
 in_kdump=false
+varlog_size=0
 
 # Extract kernel parameters
 for x in $(cat /proc/cmdline); do
@@ -28,6 +29,9 @@ for x in $(cat /proc/cmdline); do
             ;;
         logs_inram=on)
             logs_inram=true
+            ;;
+        varlog_size=*)
+            varlog_size="${x#varlog_size=}"
             ;;
         secure_boot_enable=[y1])
             secureboot=true
@@ -44,6 +48,12 @@ done
 
 set_tmpfs_log_partition_size()
 {
+    if [ $varlog_size -gt 0 ]; then
+        # Use the varlog_size passed in from command line
+        varlogsize=$varlog_size
+        return
+    fi
+
     varlogsize=128
 
     # set varlogsize to existing var-log.ext4 size
