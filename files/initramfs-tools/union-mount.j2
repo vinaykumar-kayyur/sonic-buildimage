@@ -51,15 +51,14 @@ set_tmpfs_log_partition_size()
     if [ $varlog_size -gt 0 ]; then
         # Use the varlog_size passed in from command line
         varlogsize=$varlog_size
-        return
-    fi
+    else
+        varlogsize=128
 
-    varlogsize=128
-
-    # set varlogsize to existing var-log.ext4 size
-    if [ -f ${rootmnt}/host/disk-img/var-log.ext4 ]; then
-        varlogsize=$(ls -l ${rootmnt}/host/disk-img/var-log.ext4 | awk '{print $5}')
-        varlogsize=$(($varlogsize/1024/1024))
+        # set varlogsize to existing var-log.ext4 size
+        if [ -f ${rootmnt}/host/disk-img/var-log.ext4 ]; then
+            varlogsize=$(ls -l ${rootmnt}/host/disk-img/var-log.ext4 | awk '{print $5}')
+            varlogsize=$(($varlogsize/1024/1024))
+        fi
     fi
 
     # make sure varlogsize is between 5% to 10% of total memory size
