@@ -137,7 +137,7 @@ elif [ "$IMAGE_TYPE" = "kvm" ]; then
     generate_onie_installer_image
     # Generate single asic KVM image
     generate_kvm_image
-    if [ "$BUILD_MKVM" == "y" ]; then
+    if [ "$BUILD_MULTIASIC_KVM" == "y" ]; then
         # Genrate 4-asic KVM image
         generate_kvm_image 4
         # Generate 6-asic KVM image
