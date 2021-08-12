@@ -809,7 +809,7 @@ class Sfp(SfpBase):
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
             DEVICE_REG = 0x5
-            register = bus.read_byte_data(DEVICE_ADDRESS, DEVICEREG)
+            register = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
 
         pos = [1, 2, 4, 8]
         mask = pos[self.index-SFP_PORT_START]
