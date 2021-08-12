@@ -923,7 +923,7 @@ TEST_F(LinkManagerStateMachineTest, MuxActive2Unknown2Error)
     postLinkEvent(link_state::LinkState::Down, 2);
     VALIDATE_STATE(Active, Wait, Down);
 
-    handleProbeMuxState("unknown", 3);
+    handleProbeMuxState("unknown", 4);
     VALIDATE_STATE(Active, Unknown, Down);
 
     handleMuxState("error", 3);

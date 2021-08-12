@@ -456,7 +456,7 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         mCompositeState = nextState;
     }
 
-    if (ms(mCompositeState) != link_prober::LinkProberState::Unknown) {
+    if (ps(mCompositeState) != link_prober::LinkProberState::Unknown) {
         mResumeTxFnPtr();
     }
 
