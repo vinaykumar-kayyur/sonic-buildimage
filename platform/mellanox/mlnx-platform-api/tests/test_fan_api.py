@@ -10,7 +10,6 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform import utils
 from sonic_platform.fan import Fan, PsuFan, COOLING_STATE_PATH
-from sonic_platform.led import FanLed
 from sonic_platform.fan_drawer import RealDrawer, VirtualDrawer
 from sonic_platform.psu import Psu
 

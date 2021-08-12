@@ -1,5 +1,4 @@
 import os
-import select
 import sys
 
 from mock import MagicMock, patch

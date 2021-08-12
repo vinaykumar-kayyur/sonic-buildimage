@@ -9,9 +9,7 @@
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_py_common.logger import Logger
-    import glob
     import os
-    import sys
     from functools import reduce
 
     from . import utils
@@ -794,7 +792,7 @@ class ModularChassis(Chassis):
             module
         """
         self.initialize_single_module(index)
-        return super(Chassis, self).get_module(index)
+        return super(ModularChassis, self).get_module(index)
 
     @utils.default_return(-1)
     def get_module_index(self, module_name):

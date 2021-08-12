@@ -1,7 +1,5 @@
 import glob
 import os
-import pytest
-import shutil
 import sys
 if sys.version_info.major == 3:
     from unittest import mock

@@ -11,7 +11,6 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform import utils
 from sonic_platform.psu import FixedPsu, Psu
-from sonic_platform.device_data import DeviceDataManager
 
 
 class TestPsu:

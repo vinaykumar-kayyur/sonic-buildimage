@@ -35,7 +35,7 @@ class TestEeprom:
     def test_eeprom_init(self):
         # Test symlink not exist, there is an exception
         with pytest.raises(RuntimeError):
-            eeprom = Eeprom()
+            Eeprom()
 
     @patch('os.path.exists', MagicMock(return_value=True))
     @patch('os.path.islink', MagicMock(return_value=True))

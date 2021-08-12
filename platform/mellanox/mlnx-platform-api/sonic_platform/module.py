@@ -1,6 +1,4 @@
-import os
 import redis
-import sys
 import threading
 from sonic_platform_base.module_base import ModuleBase
 from sonic_py_common.logger import Logger

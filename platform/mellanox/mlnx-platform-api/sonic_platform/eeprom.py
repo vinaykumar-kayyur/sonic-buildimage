@@ -7,8 +7,6 @@
 #############################################################################
 import os
 import subprocess
-import time
-import subprocess
 
 from sonic_py_common.logger import Logger
 try:
