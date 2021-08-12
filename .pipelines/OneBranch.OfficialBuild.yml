@@ -25,11 +25,18 @@ parameters:
   - broadcom
   - mellanox
   - marvell-armhf
+- name: 'artifactFolder'
+  type: string
+  default: 'sourceBranch'
 
 variables:
 - group: SONIC-BUILD-VG-1
-- name: PUBLISH_BLOB_PREFIX
-  value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranchName)
+- ${{ if eq(parameters.artifactFolder, 'sourceBranch') }}:
+  - name: PUBLISH_BLOB_PREFIX
+    value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranch)
+- ${{ if ne(parameters.artifactFolder, 'sourceBranch') }}:
+  - name: PUBLISH_BLOB_PREFIX
+    value: pipelines/$(Build.DefinitionName)/${{ parameters.artifactFolder }}
 
 stages:
 - stage: Build
