@@ -173,7 +173,7 @@ def
 {% if defs.generate_queue_buffers is defined %}
 {{ defs.generate_queue_buffers(port_names_active) }}
 {% elif defs.generate_queue_buffers_with_inactive_ports is defined %}
-{{ defs.generate_queue_buffers_with_inactive_ports(port_names_active, port_names_inactive) }},
+{{ defs.generate_queue_buffers_with_inactive_ports(port_names_active, port_names_inactive) }}
 {% else %}
     "BUFFER_QUEUE": {
 {% for port in PORT_ACTIVE %}
