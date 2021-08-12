@@ -13,6 +13,9 @@ SONIC_STRETCH_DOCKERS += $(DOCKER_ACMS)
 SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_ACMS)
 endif
 
+$(DOCKER_ACMS)_VERSION = 1.0.0
+$(DOCKER_ACMS)_PACKAGE_NAME = acms
+
 $(DOCKER_ACMS)_CONTAINER_NAME = acms
 $(DOCKER_ACMS)_RUN_OPT += --privileged -t
 $(DOCKER_ACMS)_RUN_OPT += -v /etc/sonic/credentials:/etc/sonic/credentials:rw
