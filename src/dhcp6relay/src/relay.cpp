@@ -20,6 +20,66 @@ struct event_base *base;
 struct event *ev_sigint;
 struct event *ev_sigterm;
 
+/* DHCPv6 filter */
+/* sudo tcpdump -dd "ip6 dst ff02::1:2 && udp dst port 547" */
+
+static struct sock_filter ether_relay_filter[] = {
+	
+	{ 0x28, 0, 0, 0x0000000c },
+	{ 0x15, 0, 13, 0x000086dd },
+	{ 0x20, 0, 0, 0x00000026 },
+	{ 0x15, 0, 11, 0xff020000 },
+	{ 0x20, 0, 0, 0x0000002a },
+	{ 0x15, 0, 9, 0x00000000 },
+	{ 0x20, 0, 0, 0x0000002e },
+	{ 0x15, 0, 7, 0x00000000 },
+	{ 0x20, 0, 0, 0x00000032 },
+	{ 0x15, 0, 5, 0x00010002 },
+	{ 0x30, 0, 0, 0x00000014 },
+	{ 0x15, 0, 3, 0x00000011 },
+	{ 0x28, 0, 0, 0x00000038 },
+	{ 0x15, 0, 1, 0x00000223 },
+	{ 0x6, 0, 0, 0x00040000 },
+	{ 0x6, 0, 0, 0x00000000 },
+};
+const struct sock_fprog ether_relay_fprog = {
+	lengthof(ether_relay_filter),
+	ether_relay_filter
+};
+
+/* DHCPv6 Counter */
+uint64_t counters[DHCPv6_MESSAGE_TYPE_COUNT];
+
+/**
+ * @code                void update_counter(swss::DBConnector *db);
+ *
+ * @brief               update the counter in state_db with count of each DHCPv6 message type
+ *
+ * @param swss::DBConnector *db     state_db connector
+ * 
+ * @return              none
+ */
+void update_counter(swss::DBConnector *db) {
+    db->hset("DHCPv6_Counter", "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
+    db->hset("DHCPv6_Counter", "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
+    db->hset("DHCPv6_Counter", "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
+    db->hset("DHCPv6_Counter", "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
+    db->hset("DHCPv6_Counter", "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
+    db->hset("DHCPv6_Counter", "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
+    db->hset("DHCPv6_Counter", "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
+    db->hset("DHCPv6_Counter", "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
+    db->hset("DHCPv6_Counter", "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
+    db->hset("DHCPv6_Counter", "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
+    db->hset("DHCPv6_Counter", "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
+}
+
+std::string toString(uint16_t count) {
+    std::stringstream ss;
+    ss << count;
+    std::string countValue = ss.str();
+    return countValue;
+}
+
 bool is_addr_gua(in6_addr addr) {
 
     auto masked = addr.__in6_u.__u6_addr8[0] & 0xe0;
@@ -181,12 +241,12 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
     addr[0] = 0;
 
     if (getifaddrs(&ifa) == -1) {
-		syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
+        syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
         exit(1);
-	}
+    }
 
     ifa_tmp = ifa;
-	while (ifa_tmp) {
+    while (ifa_tmp) {
 		if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {
             struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
             inet_ntop(AF_INET6, &in6->sin6_addr, addr, sizeof(addr));
@@ -231,25 +291,25 @@ void prepare_socket(int *local_sock, arg_config *context) {
     tmp[0] = 0;
 
     if (getifaddrs(&ifa) == -1) {
-            syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
-            exit(1);
+        syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
+        exit(1);
     } 
 
     ifa_tmp = ifa;
     while (ifa_tmp) {
-            if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {                  
-                struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
-                inet_ntop(AF_INET6, &in6->sin6_addr, tmp, sizeof(tmp));
-                if(strcmp(ifa_tmp->ifa_name, context->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
-                    inet_pton(AF_INET6, tmp, &addr.sin6_addr);
-                }
-                else {
-                    syslog(LOG_ERR, "inet_pton: interface global address not configured\n");
-                    sleep(10);
-                    continue;
-                }
+        if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {                  
+            struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
+            inet_ntop(AF_INET6, &in6->sin6_addr, tmp, sizeof(tmp));
+            if(strcmp(ifa_tmp->ifa_name, context->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
+                inet_pton(AF_INET6, tmp, &addr.sin6_addr);
             }
-            ifa_tmp = ifa_tmp->ifa_next;
+            else {
+                syslog(LOG_ERR, "inet_pton: interface global address not configured\n");
+                sleep(10);
+                continue;
+            }
+        }
+        ifa_tmp = ifa_tmp->ifa_next;
     }
     freeifaddrs(ifa);   */
 
@@ -264,6 +324,16 @@ void prepare_socket(int *local_sock, arg_config *context) {
     }    
 }
 
+/**
+ * @code                prepare_server_socket(int *server_sock, arg_config *context);
+ * 
+ * @brief               prepare L3 socket for sending
+ *
+ * @param server_sock   pointer to socket receiving server packets to be prepared
+ * @param context       argument config that contains strings of server and interface addresses
+ *
+ * @return              none
+ */
 void prepare_server_socket(int *server_sock, arg_config *context) {
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
@@ -300,7 +370,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     uint8_t buffer[4096];
     auto current_buffer_position = buffer;
     dhcpv6_relay_msg new_message;
-    new_message.msg_type = RELAY_FORW;
+    new_message.msg_type = DHCPv6_MESSAGE_TYPE_RELAY_FORW;
     memcpy(&new_message.peer_address, &ip_hdr->ip6_src, sizeof(in6_addr));
     new_message.hop_count = 0;
 
@@ -418,23 +488,27 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     auto udp_header = parse_udp(current_position, &tmp);
     current_position = tmp;
 
-    if ((ntohs(udp_header->dest)) == RELAY_PORT) {
-        relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
-    }
+    auto msg = parse_dhcpv6_hdr(current_position);
+    counters[msg->msg_type]++;
+    update_counter(config->db);
+    relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
 }
 
 void server_callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
     sockaddr_in6 from;
     int32_t data = 0;
-    uint8_t message_buffer[4096];
+    static uint8_t message_buffer[4096];
 
     if ((data = recvfrom(config->local_sock, message_buffer, 4096, 0, (sockaddr *)&from, (socklen_t *)sizeof(from))) == -1) {
         syslog(LOG_WARNING, "recv: Failed to receive data from server\n");
     }
 
     auto msg = parse_dhcpv6_hdr(message_buffer);
-    if (msg->msg_type == RELAY_REPL) {
+
+    counters[msg->msg_type]++;
+    update_counter(config->db);
+    if (msg->msg_type == DHCPv6_MESSAGE_TYPE_RELAY_REPL) {
         relay_relay_reply(config->local_sock, message_buffer, data, config);
     }
 }
@@ -523,16 +597,17 @@ void dhcp6relay_stop()
 }
 
 /**
- * @code                loop_relay(std::vector<arg_config> *vlans);
+ * @code                loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db);
  * 
  * @brief               main loop: configure sockets, create libevent base, start server listener thread
- *
+ *  
  * @param vlans         list of vlans retrieved from config_db
+ * @param db            state_db connector
  */
-void loop_relay(std::vector<arg_config> *vlans) {
+void loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db) {
     std::vector<int> sockets;
     for(std::size_t i = 0; i<vlans->size(); i++) {
-        arg_config context = vlans->at(i);
+        struct arg_config context = vlans->at(i);
         struct relay_config config;
         int filter = 0;
         int local_sock = 0; 
@@ -549,6 +624,7 @@ void loop_relay(std::vector<arg_config> *vlans) {
         sockets.push_back(server_sock);
 
         config.interface = context.interface;
+        config.db = db;
 
         prepare_relay_config(&config, local_sock, filter, &context);
 

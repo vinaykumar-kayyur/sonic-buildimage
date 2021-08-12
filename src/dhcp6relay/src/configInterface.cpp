@@ -5,15 +5,17 @@
 
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 
-bool mPollSwssNotifcation = true;
+bool pollSwssNotifcation = true;
 std::shared_ptr<boost::thread> mSwssThreadPtr;
 
-//
-// ---> initialize();
-//
-// initialize DB tables and start SWSS listening thread
-//
-void initialize_swss(std::vector<arg_config> *vlans)
+/**
+ * @code                void deinitialize_swss()
+ * 
+ * @brief               initialize DB tables and start SWSS listening thread
+ *
+ * @return              none
+ */
+void initialize_swss(std::vector<arg_config> *vlans, swss::DBConnector *db)
 {
     try {
         mSwssThreadPtr = std::make_shared<boost::thread> (&handleSwssNotification, vlans);
@@ -23,11 +25,13 @@ void initialize_swss(std::vector<arg_config> *vlans)
     }
 }
 
-//
-// ---> deinitialize();
-//
-// deinitialize DB interface and join SWSS listening thread
-//
+/**
+ * @code                void deinitialize_swss()
+ * 
+ * @brief               deinitialize DB interface and join SWSS listening thread
+ *
+ * @return              none
+ */
 void deinitialize_swss()
 {
     stopSwssNotificationPoll();
@@ -47,10 +51,9 @@ void handleSwssNotification(std::vector<arg_config> *vlans)
 {
     std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
     swss::SubscriberStateTable ipHelpersTable(configDbPtr.get(), "DHCP");
-
     swss::Select swssSelect;
     swssSelect.addSelectable(&ipHelpersTable);
-    while (mPollSwssNotifcation) {
+    while (pollSwssNotifcation) {
         swss::Selectable *selectable;
         int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
         if (ret == swss::Select::ERROR) {
@@ -125,8 +128,8 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                         intf.is_option_79 = true;
                 }
             }
-            vlans->push_back(intf);
         }
+        vlans->push_back(intf);
     }
 }
 
@@ -138,5 +141,5 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
 *@return    none
 */
 void stopSwssNotificationPoll() {
-    mPollSwssNotifcation = false;
+    pollSwssNotifcation = false;
 };

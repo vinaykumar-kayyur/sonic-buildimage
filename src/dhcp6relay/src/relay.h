@@ -9,8 +9,7 @@
 #include <string>
 #include <vector>
 #include <event2/util.h>
-#include <memory>
-#include <thread>
+
 
 #define PACKED __attribute__ ((packed))
 
@@ -20,21 +19,26 @@
 
 #define lengthof(A) (sizeof (A) / sizeof (A)[0])
 
-#define SOLICIT 1
-#define REQUEST 3
-#define CONFIRM 4
-#define RENEW 5
-#define REBIND 6
-#define RELEASE 8 
-#define DECLINE 9
-#define RELAY_FORW 12
-#define RELAY_REPL 13
 #define OPTION_RELAY_MSG 9
 #define OPTION_CLIENT_LINKLAYER_ADDR 79
 
+/* DHCPv6 message types */
+typedef enum
+{
+    DHCPv6_MESSAGE_TYPE_SOLICIT = 1,
+    DHCPv6_MESSAGE_TYPE_ADVERTISE = 2,
+    DHCPv6_MESSAGE_TYPE_REQUEST = 3,
+    DHCPv6_MESSAGE_TYPE_CONFIRM  = 4,
+    DHCPv6_MESSAGE_TYPE_RENEW  = 5,
+    DHCPv6_MESSAGE_TYPE_REBIND = 6,
+    DHCPv6_MESSAGE_TYPE_REPLY = 7,
+    DHCPv6_MESSAGE_TYPE_RELEASE = 8,
+    DHCPv6_MESSAGE_TYPE_DECLINE = 9,
+    DHCPv6_MESSAGE_TYPE_RELAY_FORW = 12,
+    DHCPv6_MESSAGE_TYPE_RELAY_REPL = 13,
 
-/* Configuration */
-static std::string config_interface;
+    DHCPv6_MESSAGE_TYPE_COUNT
+} dhcp_message_type_t;
 
 struct arg_config {
     std::vector<std::string> servers;
@@ -46,6 +50,7 @@ struct relay_config {
     int local_sock; 
     int filter;
     sockaddr_in6 link_address;
+    swss::DBConnector *db;
     std::string interface;
     std::vector<sockaddr_in6> servers;
     bool is_option_79;
@@ -77,34 +82,164 @@ struct linklayer_addr_option  {
     uint16_t link_layer_type;
 };
 
+/**
+ * @code                sock_open(int ifindex, const struct sock_fprog *fprog);
+ *
+ * @brief               prepare L2 socket to attach to "udp and port 547" filter 
+ *
+ * @param ifindex       interface index
+ * @param fprog         bpf filter "udp and port 547"
+ *
+ * @return              socket descriptor
+ */
 int sock_open(int ifindex, const struct sock_fprog *fprog);
 
+/**
+ * @code                prepare_socket(int *local_sock, arg_config *context);
+ * 
+ * @brief               prepare L3 socket for sending
+ *
+ * @param local_sock    pointer to socket to be prepared
+ * @param context       argument config that contains strings of server and interface addresses
+ *
+ * @return              none
+ */
 void prepare_socket(int *local_sock, arg_config *config);
 
+/**
+ * @code                prepare_server_socket(int *server_sock, arg_config *context);
+ * 
+ * @brief               prepare L3 socket for sending
+ *
+ * @param server_sock   pointer to socket receiving server packets to be prepared
+ * @param context       argument config that contains strings of server and interface addresses
+ *
+ * @return              none
+ */
 void prepare_server_socket(int *server_sock, arg_config *context);
 
+/**
+ * @code                        prepare_relay_config(relay_config *interface_config, int fd, const arg_config *context);
+ * 
+ * @brief                       prepare for specified relay interface config: server and link address
+ *
+ * @param interface_config      pointer to relay config to be prepared
+ * @param local_sock            L3 socket used for relaying messages
+ * @param filter                socket attached with filter
+ * @param config                argument config that contains strings of server and interface addresses
+ *
+ * @return                      none
+ */
 void prepare_relay_config(relay_config *interface_config, int local_sock, int filter, const arg_config *context);
 
+/**
+ * @code                relay_forward(uint8_t *buffer, const struct dhcpv6_msg *msg, uint16_t msg_length);
+ *
+ * @brief               embed the DHCPv6 message received into DHCPv6 relay forward message
+ *
+ * @param buffer        pointer to buffer
+ * @param msg           pointer to parsed DHCPv6 message
+ * @param msg_length    length of DHCPv6 message
+ *
+ * @return              none
+ */
 void relay_forward(uint8_t *buffer, const struct dhcpv6_msg *msg, uint16_t msg_length);
 
+/**
+ * @code                 relay_client(int sock, const uint8_t *msg, int32_t len, ip6_hdr *ip_hdr, const ether_header *ether_hdr, relay_config *config);
+ * 
+ * @brief                construct relay-forward message
+ *
+ * @param sock           L3 socket for sending data to servers
+ * @param msg            pointer to dhcpv6 message header position
+ * @param len            size of data received
+ * @param ip_hdr         pointer to IPv6 header
+ * @param ether_hdr      pointer to Ethernet header
+ * @param config         pointer to the relay interface config
+ *
+ * @return none
+ */
 void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_hdr, const ether_header *ether_hdr, relay_config *config);
 
+/**
+ * @code                relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs);
+ * 
+ * @brief               relay and unwrap a relay-reply message
+ *
+ * @param sock          L3 socket for sending data to servers
+ * @param msg           pointer to dhcpv6 message header position
+ * @param len           size of data received
+ * @param config        relay interface config
+ *
+ * @return              none
+ */
 void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs);
 
-void loop_relay(std::vector<arg_config> *vlans);
+/**
+ * @code                loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db);
+ * 
+ * @brief               main loop: configure sockets, create libevent base, start server listener thread
+ *  
+ * @param vlans         list of vlans retrieved from config_db
+ * @param db            state_db connector
+ */
+void loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db);
 
+/**
+ * @code signal_init();
+ *
+ * @brief initialize DHCPv6 Relay libevent signals
+ */
 int signal_init();
 
+/**
+ * @code signal_start();
+ *
+ * @brief start DHCPv6 Relay libevent base and add signals
+ */
 int signal_start();
 
+/**
+ * @code dhcp6relay_stop();
+ *
+ * @brief stop DHCPv6 Relay libevent loop upon signal
+ */
 void dhcp6relay_stop();
 
+/**
+ * @code signal_callback(fd, event, arg);
+ *
+ * @brief signal handler for dhcp6relay. Initiate shutdown when signal is caught
+ *
+ * @param fd        libevent socket
+ * @param event     event triggered
+ * @param arg       pointer to libevent base
+ *
+ * @return none
+ */
 void signal_callback(evutil_socket_t fd, short event, void *arg);
 
+/**
+ * @code shutdown();
+ *
+ * @brief free signals and terminate threads
+ */
 void shutdown();
 
+/**
+ * @code                void update_counter(swss::DBConnector *db);
+ *
+ * @brief               update the counter in state_db with count of each DHCPv6 message type
+ *
+ * @param swss::DBConnector *db     state_db connector
+ * 
+ * @return              none
+ */
+void update_counter(swss::DBConnector *db);
 
 /* Helper functions */
+
+std::string toString(uint16_t count);
 
 bool is_addr_gua(in6_addr addr);
 
@@ -124,37 +259,3 @@ const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_
 
 void send_udp(int sock, struct sockaddr_in6 target, uint8_t *buffer, uint32_t n);
 
-struct ArgumentException : std::exception {
-    std::string msg;
-    ArgumentException(std::string message) : msg(message) {}
-    ~ArgumentException() throw() {}
-    const char* what() const throw() { return msg.c_str(); }
-};
-
-
-/* DHCPv6 filter */
-/* sudo tcpdump -dd "ip6 dst ff02::1:2 && udp dst port 547" */
-
-static struct sock_filter ether_relay_filter[] = {
-	
-	{ 0x28, 0, 0, 0x0000000c },
-	{ 0x15, 0, 13, 0x000086dd },
-	{ 0x20, 0, 0, 0x00000026 },
-	{ 0x15, 0, 11, 0xff020000 },
-	{ 0x20, 0, 0, 0x0000002a },
-	{ 0x15, 0, 9, 0x00000000 },
-	{ 0x20, 0, 0, 0x0000002e },
-	{ 0x15, 0, 7, 0x00000000 },
-	{ 0x20, 0, 0, 0x00000032 },
-	{ 0x15, 0, 5, 0x00010002 },
-	{ 0x30, 0, 0, 0x00000014 },
-	{ 0x15, 0, 3, 0x00000011 },
-	{ 0x28, 0, 0, 0x00000038 },
-	{ 0x15, 0, 1, 0x00000223 },
-	{ 0x6, 0, 0, 0x00040000 },
-	{ 0x6, 0, 0, 0x00000000 },
-};
-const struct sock_fprog ether_relay_fprog = {
-	lengthof(ether_relay_filter),
-	ether_relay_filter
-};
