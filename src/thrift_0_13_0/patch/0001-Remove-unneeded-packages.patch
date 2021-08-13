@@ -1,29 +1,27 @@
-From cfefc0c946c999838926298a01d84c2af1905be7 Mon Sep 17 00:00:00 2001
-From: user <user@contoso.com>
-Date: Tue, 10 Aug 2021 15:01:25 +0000
-Subject: [PATCH] Disable-unneeded-packages
+From 7a8d588fa0425550cfd42c3300c8c0a643137190 Mon Sep 17 00:00:00 2001
+From: Myron Sosyak <myronx.sosyak@intel.com>
+Date: Fri, 13 Aug 2021 11:26:13 +0000
+Subject: [PATCH] Remove-unneeded-packages
 
 ---
- debian/control | 54 +++++++++++++++++++++++++-------------------------
+ debian/control | 28 ----------------------------
  debian/rules   |  7 +++----
- 2 files changed, 30 insertions(+), 31 deletions(-)
+ 2 files changed, 3 insertions(+), 32 deletions(-)
 
 diff --git a/debian/control b/debian/control
-index 5126e47..b0044da 100644
+index 5126e47..3f3028c 100644
 --- a/debian/control
 +++ b/debian/control
-@@ -13,8 +13,8 @@ Build-Depends: debhelper-compat (= 11), dh-python,
+@@ -13,8 +13,6 @@ Build-Depends: debhelper-compat (= 11), dh-python,
   python3-all-dev,
   python3-six,
   golang-go, golang-github-golang-mock-dev,
 - pkg-php-tools (>= 1.14~), php-dev, phpunit, php-codesniffer,
 - perl (>= 5.22), libbit-vector-perl, libclass-accessor-perl,
-+#  pkg-php-tools (>= 1.14~), php-dev, phpunit, php-codesniffer,
-+#  perl (>= 5.22), libbit-vector-perl, libclass-accessor-perl,
  # openjdk-11-jdk, javahelper, maven-debian-helper (>= 1.5), ant (>= 1.7), ant-optional,
  # libhttpclient-java, libslf4j-java, libservlet3.1-java (>= 8),
  # nodejs, npm,
-@@ -175,32 +175,32 @@ Description: Python library for Thrift (debug symbols)
+@@ -175,32 +173,6 @@ Description: Python library for Thrift (debug symbols)
  # .
  # This package contains Javadoc HTML documentation for libthrift-java .
  #
@@ -41,21 +39,7 @@ index 5126e47..b0044da 100644
 - across a number of different development languages.
 - .
 - This package provides the PHP5 language support for Thrift.
-+# Package: php-thrift
-+# Architecture: any
-+# Section: php
-+# Depends: ${phpcomposer:Debian-require}, ${shlibs:Depends}, ${misc:Depends}
-+# Provides: ${php:Provides}
-+# Conflicts: php7.0-thrift, php7.2-thrift
-+# Replaces: php7.0-thrift, php7.2-thrift
-+# Description: PHP language support for Thrift
-+#  Thrift is a software framework for the development of reliable and
-+#  performant communication and data serialization. It combines a software
-+#  stack with code generation to build services that operate seamlessly
-+#  across a number of different development languages.
-+#  .
-+#  This package provides the PHP5 language support for Thrift.
-
+-
 -Package: libthrift-perl
 -Section: perl
 -Architecture: all
@@ -67,17 +51,6 @@ index 5126e47..b0044da 100644
 - across a number of different development languages.
 - .
 - This package provides the Perl language support for Thrift.
-+# Package: libthrift-perl
-+# Section: perl
-+# Architecture: all
-+# Depends: ${perl:Depends}, ${misc:Depends}
-+# Description: Perl language support for Thrift
-+#  Thrift is a software framework for the development of reliable and
-+#  performant communication and data serialization. It combines a software
-+#  stack with code generation to build services that operate seamlessly
-+#  across a number of different development languages.
-+#  .
-+#  This package provides the Perl language support for Thrift.
 
  Package: golang-thrift-dev
  Architecture: amd64 arm64 armel armhf i386 ppc64el
@@ -108,5 +81,5 @@ index ba63e6f..8217796 100755
  		--without-rust \
  		--disable-tutorial
 --
-2.20.1
+2.17.1
 
