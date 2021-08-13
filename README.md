@@ -72,7 +72,7 @@ Any server can be a build image server as long as it has:
 
   * Multiple cores to increase build speed
   * Plenty of RAM (less than 8 GiB is likely to cause issues)
-  * 100G of free disk space
+  * 300G of free disk space
 
 A good choice of OS for building SONiC is currently Ubuntu 20.04.
 
@@ -162,7 +162,7 @@ To build Arm64 bit for platform
 
  **NOTE**:
 
-- Recommend reserving 50G free space to build one platform.
+- Recommend reserving at least 100G free space to build one platform with a single job. The build process will use more disk if you are setting `SONIC_BUILD_JOBS` to more than 1.
 - If Docker's workspace folder, `/var/lib/docker`, resides on a partition without sufficient free space, you may encounter an error like the following during a Docker container build job:
 
     `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
