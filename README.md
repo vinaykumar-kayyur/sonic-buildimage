@@ -114,7 +114,7 @@ To build SONiC installer image and docker images, run the following commands:
     make configure PLATFORM=[ASIC_VENDOR]
 
     # Build SONiC image
-    make all
+    make SONIC_BUILD_JOBS=$(nproc) all
 
  The supported ASIC vendors are:
 
