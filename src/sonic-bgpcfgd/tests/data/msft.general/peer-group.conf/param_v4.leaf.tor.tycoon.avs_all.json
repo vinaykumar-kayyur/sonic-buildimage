@@ -5,6 +5,9 @@
             "downstream_subrole" : "TycoonAVS"
         }
     },
+    "CONFIG_DB__BGP_BBR": {
+        "status": "enabled"
+    },
     "CONFIG_DB__DEVICE_NEIGHBOR_METADATA": {
         "neig_device": {
             "type": "ToRRouter",

@@ -4,6 +4,9 @@
             "type": "LeafRouter"
         }
     },
+    "CONFIG_DB__BGP_BBR": {
+        "status": "disabled"
+    },
     "CONFIG_DB__DEVICE_NEIGHBOR_METADATA": {
         "neig_device": {
             "type": "ToRRouter",

@@ -5,12 +5,6 @@
   neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
   neighbor {{ neighbor_addr }} peer-group DNS_AGG_V6_{{ neighbor_deployment_id }}
 !
-{% if CONFIG_DB__BGP_BBR['status'] == 'enabled' %}
-address-family ipv6 unicast
-  neighbor {{ neighbor_addr }} allowas-in 1
-exit-address-family
-{% endif %}
-!
 {% if need_to_set_timers %}
 {# neighbor {{ neighbor_addr }} timers {{ bgp_session['keepalive'] }} {{ bgp_session['holdtime'] }} #}
 {% endif %}
