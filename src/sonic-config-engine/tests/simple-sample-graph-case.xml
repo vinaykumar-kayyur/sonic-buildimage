@@ -148,7 +148,7 @@
           <MacAddress i:nil="true"/>
         </VlanInterface>
       </VlanInterfaces>
-      <Dhcp>
+      <DhcpRelay>
         <VlanInterface>
           <Name>Vlan1000</Name>
           <Dhcpv6Relays>fc02:2000::1;fc02:2000::2</Dhcpv6Relays>
@@ -159,7 +159,7 @@
           <Dhcpv6Relays>fc02:2000::3;fc02:2000::4</Dhcpv6Relays>
           <Dhcpv6OptionRfc6939>false</Dhcpv6OptionRfc6939>
         </VlanInterface>
-      </Dhcp>
+      </DhcpRelay>
       <IPInterfaces>
         <IPInterface>
           <Name i:nil="true"/>

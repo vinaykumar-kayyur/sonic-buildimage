@@ -359,7 +359,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         )
     
     def test_dhcp_table(self):
-        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP_RELAY"'
         expected = {
                    'Vlan1000': {
                        'dhcpv6_servers': [
