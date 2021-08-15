@@ -596,7 +596,7 @@ fi
 # ALERT: This bit of logic tears down the qemu based build environment used to
 # perform builds for the ARM architecture. This must be the last step in this
 # script before creating the Sonic installer payload zip file.
-if [ $MULTIARCH_QEMU_ENVIRON == y ]; then
+if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
     # Remove qemu arm bin executable used for cross-building
     sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
     DOCKERFS_PATH=../dockerfs/
