@@ -10,7 +10,7 @@
  *
  * @return              none
  */
-void initialize_swss(std::vector<arg_config> *vlans, swss::DBConnector *db);
+void initialize_swss(std::vector<relay_config> *vlans, swss::DBConnector *db);
 
 /**
  * @code                void deinitialize_swss()
@@ -22,7 +22,16 @@ void initialize_swss(std::vector<arg_config> *vlans, swss::DBConnector *db);
 void deinitialize_swss();
 
 /**
- * @code                void handleSwssNotification(std::vector<arg_config> *vlans)
+ * @code                void get_dhcp(std::vector<relay_config> *vlans)
+ * 
+ * @brief               initialize and get vlan information from DHCP_RELAY
+ *
+ * @return              none
+ */
+void get_dhcp(std::vector<relay_config> *vlans);
+
+/**
+ * @code                void handleSwssNotification(std::vector<relay_config> *vlans)
  * 
  * @brief               main thread for handling SWSS notification
  *
@@ -30,10 +39,10 @@ void deinitialize_swss();
  *
  * @return              none
  */
-void handleSwssNotification(std::vector<arg_config> *vlans);
+void handleSwssNotification(std::vector<relay_config> *vlans);
 
 /**
- * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<arg_config> *vlans)
+ * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<relay_config> *vlans)
  * 
  * @brief                   handles DHCPv6 relay configuration change notification
  *
@@ -42,10 +51,10 @@ void handleSwssNotification(std::vector<arg_config> *vlans);
  *
  * @return                  none
  */
-void handleRelayNotification(swss::SubscriberStateTable &configMuxTable, std::vector<arg_config> *vlans);
+void handleRelayNotification(swss::SubscriberStateTable &configMuxTable, std::vector<relay_config> *vlans);
 
 /**
- * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans)
+ * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<relay_config> *vlans)
  * 
  * @brief                   process DHCPv6 relay servers and options configuration change notification
  *
@@ -54,7 +63,7 @@ void handleRelayNotification(swss::SubscriberStateTable &configMuxTable, std::ve
  *
  * @return                  none
  */
-void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans);
+void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<relay_config> *vlans);
 
 /**
 *@code      stopSwssNotificationPoll

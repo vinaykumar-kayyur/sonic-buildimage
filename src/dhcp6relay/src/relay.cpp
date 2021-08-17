@@ -1,4 +1,3 @@
-#include <getopt.h>
 #include <errno.h>
 #include <unistd.h>
 #include <event.h>
@@ -73,6 +72,15 @@ void update_counter(swss::DBConnector *db) {
     db->hset("DHCPv6_Counter", "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
 }
 
+/**
+ * @code                std::string toString(uint16_t count);
+ *
+ * @brief               convert uint16_t to string
+ *
+ * @param count         count of messages in counter
+ * 
+ * @return              count in string
+ */
 std::string toString(uint16_t count) {
     std::stringstream ss;
     ss << count;
@@ -80,40 +88,117 @@ std::string toString(uint16_t count) {
     return countValue;
 }
 
+/**
+ * @code                bool is_addr_gua(in6_addr addr);
+ *
+ * @brief               check if address is global
+ *
+ * @param addr         ipv6 address
+ * 
+ * @return              bool
+ */
 bool is_addr_gua(in6_addr addr) {
-
     auto masked = addr.__in6_u.__u6_addr8[0] & 0xe0;
     return (masked ^ 0x20) == 0x00;
 }
 
+/**
+ * @code                is_addr_link_local(in6_addr addr);
+ *
+ * @brief               check if address is link_local
+ *
+ * @param addr         ipv6 address
+ * 
+ * @return              bool
+ */
 bool is_addr_link_local(in6_addr addr)  {
     auto masked = ntohs(addr.__in6_u.__u6_addr16[0]) & 0xffc0;
     return (masked ^ 0xfe80) == 0x0000;
 }
 
+/**
+ * @code                const struct ether_header *parse_ether_frame(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through ethernet frame
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return ether_header end of ethernet header position
+ */
 const struct ether_header *parse_ether_frame(const uint8_t *buffer, const uint8_t **out_end) {
     (*out_end) = buffer + sizeof(struct ether_header);
     return (const struct ether_header *)buffer;
 }
 
+/**
+ * @code                const struct ip6_hdr *parse_ip6_hdr(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through ipv6 header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return ip6_hdr      end of ipv6 header position
+ */
 const struct ip6_hdr *parse_ip6_hdr(const uint8_t *buffer, const uint8_t **out_end) {
     (*out_end) = buffer + sizeof(struct ip6_hdr);
     return (struct ip6_hdr *)buffer;
 }
 
+/**
+ * @code                const struct udphdr *parse_udp(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through udp header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return udphdr      end of udp header position
+ */
 const struct udphdr *parse_udp(const uint8_t *buffer, const uint8_t **out_end) {
     (*out_end) = buffer + sizeof(struct udphdr);
     return (const struct udphdr *)buffer;
 }
 
+/**
+ * @code                const struct dhcpv6_msg *parse_dhcpv6_hdr(const uint8_t *buffer);
+ *
+ * @brief               parse through dhcpv6 header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_msg   end of dhcpv6 header position
+ */
 const struct dhcpv6_msg *parse_dhcpv6_hdr(const uint8_t *buffer) {
     return (const struct dhcpv6_msg *)buffer;
 }
 
+/**
+ * @code                const struct dhcpv6_relay_msg *parse_dhcpv6_relay(const uint8_t *buffer);
+ *
+ * @brief               parse through dhcpv6 relay message
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_relay_msg   start of dhcpv6 relay message or end of dhcpv6 message type position
+ */
 const struct dhcpv6_relay_msg *parse_dhcpv6_relay(const uint8_t *buffer) {
     return (const struct dhcpv6_relay_msg *)buffer;
 }
 
+/**
+ * @code                const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through dhcpv6 option
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_option   end of dhcpv6 message option
+ */
 const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_t **out_end) {
     uint32_t size = 4; // option-code + option-len
     size += ntohs(*(uint16_t *)(buffer + 2));
@@ -122,6 +207,17 @@ const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_
     return (const struct dhcpv6_option *)buffer;
 }
 
+/**
+ * @code                            void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n);
+ *
+ * @brief                           send udp packet
+ *
+ * @param *buffer                   message buffer
+ * @param sockaddr_in6 target       target socket
+ * @param n                         length of message
+ * 
+ * @return dhcpv6_option   end of dhcpv6 message option
+ */
 void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n) {    
     if(sendto(sock, buffer, n, 0, (const struct sockaddr *)&target, sizeof(target)) == -1)
         syslog(LOG_ERR, "sendto: Failed to send to target address\n");
@@ -204,23 +300,25 @@ int sock_open(int ifindex, const struct sock_fprog *fprog)
 }
 
 /**
- * @code                        prepare_relay_config(relay_config *interface_config, int fd, const arg_config *context);
+ * @code                        prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
  * 
  * @brief                       prepare for specified relay interface config: server and link address
  *
  * @param interface_config      pointer to relay config to be prepared
  * @param local_sock            L3 socket used for relaying messages
  * @param filter                socket attached with filter
- * @param config                argument config that contains strings of server and interface addresses
  *
  * @return                      none
  */
-void prepare_relay_config(relay_config *interface_config, int local_sock, int filter, const arg_config *context) {
+void prepare_relay_config(relay_config *interface_config, int local_sock, int filter) {
+    struct ifaddrs *ifa, *ifa_tmp;
+    sockaddr_in6 non_link_local;
+    sockaddr_in6 link_local;
+    
     interface_config->local_sock = local_sock; 
     interface_config->filter = filter; 
-    interface_config->is_option_79 = context->is_option_79; 
 
-    for(auto server: context->servers) {
+    for(auto server: interface_config->servers) {
         sockaddr_in6 tmp;
         if(inet_pton(AF_INET6, server.c_str(), &tmp.sin6_addr) != 1)
         {
@@ -230,15 +328,8 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
         tmp.sin6_flowinfo = 0;
         tmp.sin6_port = htons(RELAY_PORT);
         tmp.sin6_scope_id = 0; 
-        interface_config->servers.push_back(tmp);
+        interface_config->servers_sock.push_back(tmp);
     }
-
-    sockaddr_in6 *non_link_local = NULL;    
-    sockaddr_in6 *link_local = NULL;
-    
-    struct ifaddrs *ifa, *ifa_tmp;
-    char addr[INET6_ADDRSTRLEN];
-    addr[0] = 0;
 
     if (getifaddrs(&ifa) == -1) {
         syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
@@ -247,40 +338,39 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
 
     ifa_tmp = ifa;
     while (ifa_tmp) {
-		if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {
+        if (ifa_tmp->ifa_addr->sa_family == AF_INET6) {
             struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
-            inet_ntop(AF_INET6, &in6->sin6_addr, addr, sizeof(addr));
             if((strcmp(ifa_tmp->ifa_name, interface_config->interface.c_str()) == 0) && is_addr_gua(in6->sin6_addr)) {    
-                non_link_local = in6;
+                non_link_local = *in6;
                 break;
             }
             if((strcmp(ifa_tmp->ifa_name, interface_config->interface.c_str()) == 0) && is_addr_link_local(in6->sin6_addr)) {    
-                link_local = in6;
+                link_local = *in6;
             }   
-	    }
-	    ifa_tmp = ifa_tmp->ifa_next;
-	}
-	freeifaddrs(ifa);
-
-    if (non_link_local != NULL) {
-        interface_config->link_address = *non_link_local;
+        }
+    ifa_tmp = ifa_tmp->ifa_next;
+    }
+    freeifaddrs(ifa); 
+    
+    if(is_addr_gua(non_link_local.sin6_addr)) {
+        interface_config->link_address = non_link_local;
     }
     else {
-        interface_config->link_address = *link_local;
+        interface_config->link_address = link_local;
     }
 }
 
 /**
- * @code                prepare_socket(int *local_sock, arg_config *context);
+ * @code                prepare_socket(int *local_sock, relay_config *config);
  * 
  * @brief               prepare L3 socket for sending
  *
  * @param local_sock    pointer to socket to be prepared
- * @param context       argument config that contains strings of server and interface addresses
+ * @param config       relay config that contains strings of server and interface addresses
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, arg_config *context) {
+void prepare_socket(int *local_sock, relay_config *config) {
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
@@ -300,7 +390,7 @@ void prepare_socket(int *local_sock, arg_config *context) {
         if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {                  
             struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
             inet_ntop(AF_INET6, &in6->sin6_addr, tmp, sizeof(tmp));
-            if(strcmp(ifa_tmp->ifa_name, context->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
+            if(strcmp(ifa_tmp->ifa_name, config->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
                 inet_pton(AF_INET6, tmp, &addr.sin6_addr);
             }
             else {
@@ -325,26 +415,24 @@ void prepare_socket(int *local_sock, arg_config *context) {
 }
 
 /**
- * @code                prepare_server_socket(int *server_sock, arg_config *context);
+ * @code                prepare_server_socket(int *server_sock);
  * 
  * @brief               prepare L3 socket for sending
  *
  * @param server_sock   pointer to socket receiving server packets to be prepared
- * @param context       argument config that contains strings of server and interface addresses
  *
  * @return              none
  */
-void prepare_server_socket(int *server_sock, arg_config *context) {
+void prepare_server_socket(int *server_sock) {
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
     addr.sin6_addr = in6addr_any;
+    addr.sin6_port = htons(RELAY_PORT);
 
     if ((*server_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
         syslog(LOG_ERR, "scoket: Failed to create socket\n");
     }
-
-    addr.sin6_port = htons(RELAY_PORT);
     
     if (bind(*server_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
         syslog(LOG_ERR, "bind: Failed to bind to socket\n");
@@ -367,7 +455,7 @@ void prepare_server_socket(int *server_sock, arg_config *context) {
  * @return none
  */
 void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_hdr, const ether_header *ether_hdr, relay_config *config) {    
-    uint8_t buffer[4096];
+    static uint8_t buffer[4096];
     auto current_buffer_position = buffer;
     dhcpv6_relay_msg new_message;
     new_message.msg_type = DHCPv6_MESSAGE_TYPE_RELAY_FORW;
@@ -396,7 +484,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     memcpy(current_buffer_position, &ether_hdr->ether_shost, sizeof(ether_hdr->ether_shost));
     current_buffer_position += sizeof(ether_hdr->ether_shost);
 
-    for(auto server: config->servers) {
+    for(auto server: config->servers_sock) {
         send_udp(sock, buffer, server, current_buffer_position - buffer);
     }
 }
@@ -414,7 +502,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
  * @return              none
  */
  void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs) {
-    uint8_t buffer[4096];
+    static uint8_t buffer[4096];
     char ifname[configs->interface.size()];
     struct sockaddr_in6 target_addr;
     auto current_buffer_position = buffer;
@@ -491,6 +579,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     auto msg = parse_dhcpv6_hdr(current_position);
     counters[msg->msg_type]++;
     update_counter(config->db);
+
     relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
 }
 
@@ -597,36 +686,33 @@ void dhcp6relay_stop()
 }
 
 /**
- * @code                loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db);
+ * @code                loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db);
  * 
  * @brief               main loop: configure sockets, create libevent base, start server listener thread
  *  
  * @param vlans         list of vlans retrieved from config_db
  * @param db            state_db connector
  */
-void loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db) {
+void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
     std::vector<int> sockets;
     for(std::size_t i = 0; i<vlans->size(); i++) {
-        struct arg_config context = vlans->at(i);
-        struct relay_config config;
+        struct relay_config config = vlans->at(i);
         int filter = 0;
         int local_sock = 0; 
         int server_sock = 0;
-        const char *ifname = context.interface.c_str();
+        const char *ifname = config.interface.c_str();
         int index = if_nametoindex(ifname);
+        config.db = db;
 
         filter = sock_open(index, &ether_relay_fprog);
 
-        prepare_socket(&local_sock, &context);
-        prepare_server_socket(&server_sock, &context);
+        prepare_socket(&local_sock, &config);
+        prepare_server_socket(&server_sock);
         sockets.push_back(filter);
         sockets.push_back(local_sock);
         sockets.push_back(server_sock);
 
-        config.interface = context.interface;
-        config.db = db;
-
-        prepare_relay_config(&config, local_sock, filter, &context);
+        prepare_relay_config(&config, local_sock, filter);
 
         evutil_make_listen_socket_reuseable(filter);
         evutil_make_socket_nonblocking(filter);

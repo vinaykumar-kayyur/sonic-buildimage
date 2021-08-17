@@ -40,19 +40,14 @@ typedef enum
     DHCPv6_MESSAGE_TYPE_COUNT
 } dhcp_message_type_t;
 
-struct arg_config {
-    std::vector<std::string> servers;
-    std::string interface;
-    bool is_option_79;
-};
-
 struct relay_config {
     int local_sock; 
     int filter;
     sockaddr_in6 link_address;
     swss::DBConnector *db;
     std::string interface;
-    std::vector<sockaddr_in6> servers;
+    std::vector<std::string> servers;
+    std::vector<sockaddr_in6> servers_sock;
     bool is_option_79;
 };
 
@@ -95,42 +90,41 @@ struct linklayer_addr_option  {
 int sock_open(int ifindex, const struct sock_fprog *fprog);
 
 /**
- * @code                prepare_socket(int *local_sock, arg_config *context);
+ * @code                prepare_socket(int *local_sock, arg_config *config);
  * 
  * @brief               prepare L3 socket for sending
  *
  * @param local_sock    pointer to socket to be prepared
- * @param context       argument config that contains strings of server and interface addresses
+ * @param config       argument config that contains strings of server and interface addresses
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, arg_config *config);
+void prepare_socket(int *local_sock, relay_config *config);
 
 /**
- * @code                prepare_server_socket(int *server_sock, arg_config *context);
+ * @code                prepare_server_socket(int *server_sock, arg_config *config);
  * 
  * @brief               prepare L3 socket for sending
  *
  * @param server_sock   pointer to socket receiving server packets to be prepared
- * @param context       argument config that contains strings of server and interface addresses
+ * @param config        relay config that contains strings of server and interface addresses
  *
  * @return              none
  */
-void prepare_server_socket(int *server_sock, arg_config *context);
+void prepare_server_socket(int *server_sock);
 
 /**
- * @code                        prepare_relay_config(relay_config *interface_config, int fd, const arg_config *context);
+ * @code                        prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
  * 
  * @brief                       prepare for specified relay interface config: server and link address
  *
  * @param interface_config      pointer to relay config to be prepared
  * @param local_sock            L3 socket used for relaying messages
  * @param filter                socket attached with filter
- * @param config                argument config that contains strings of server and interface addresses
  *
  * @return                      none
  */
-void prepare_relay_config(relay_config *interface_config, int local_sock, int filter, const arg_config *context);
+void prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
 
 /**
  * @code                relay_forward(uint8_t *buffer, const struct dhcpv6_msg *msg, uint16_t msg_length);
@@ -183,7 +177,7 @@ void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *
  * @param vlans         list of vlans retrieved from config_db
  * @param db            state_db connector
  */
-void loop_relay(std::vector<arg_config> *vlans, swss::DBConnector *db);
+void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db);
 
 /**
  * @code signal_init();
@@ -239,23 +233,121 @@ void update_counter(swss::DBConnector *db);
 
 /* Helper functions */
 
+/**
+ * @code                std::string toString(uint16_t count);
+ *
+ * @brief               convert uint16_t to string
+ *
+ * @param count         count of messages in counter
+ * 
+ * @return              count in string
+ */
 std::string toString(uint16_t count);
 
+/**
+ * @code                bool is_addr_gua(in6_addr addr);
+ *
+ * @brief               check if address is global
+ *
+ * @param addr         ipv6 address
+ * 
+ * @return              bool
+ */
 bool is_addr_gua(in6_addr addr);
 
+/**
+ * @code                is_addr_link_local(in6_addr addr);
+ *
+ * @brief               check if address is link_local
+ *
+ * @param addr         ipv6 address
+ * 
+ * @return              bool
+ */
 bool is_addr_link_local(in6_addr addr);
 
+/**
+ * @code                const struct ether_header *parse_ether_frame(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through ethernet frame
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return ether_header end of ethernet header position
+ */
 const struct ether_header *parse_ether_frame(const uint8_t *buffer, const uint8_t **out_end);
 
+/**
+ * @code                const struct ip6_hdr *parse_ip6_hdr(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through ipv6 header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return ip6_hdr      end of ipv6 header position
+ */
 const struct ip6_hdr *parse_ip6_hdr(const uint8_t *buffer, const uint8_t **out_end);
 
+/**
+ * @code                const struct udphdr *parse_udp(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through udp header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return udphdr      end of udp header position
+ */
 const struct udphdr *parse_udp(const uint8_t *buffer, const uint8_t **out_end);
 
+/**
+ * @code                const struct dhcpv6_msg *parse_dhcpv6_hdr(const uint8_t *buffer);
+ *
+ * @brief               parse through dhcpv6 header
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_msg   end of dhcpv6 header position
+ */
 const struct dhcpv6_msg *parse_dhcpv6_hdr(const uint8_t *buffer);
 
+/**
+ * @code                const struct dhcpv6_relay_msg *parse_dhcpv6_relay(const uint8_t *buffer);
+ *
+ * @brief               parse through dhcpv6 relay message
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_relay_msg   start of dhcpv6 relay message or end of dhcpv6 message type position
+ */
 const struct dhcpv6_relay_msg *parse_dhcpv6_relay(const uint8_t *buffer);
 
+/**
+ * @code                const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_t **out_end);
+ *
+ * @brief               parse through dhcpv6 option
+ *
+ * @param *buffer       message buffer
+ * @param **out_end     pointer
+ * 
+ * @return dhcpv6_option   end of dhcpv6 message option
+ */
 const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_t **out_end);
 
+/**
+ * @code                            void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n);
+ *
+ * @brief                           send udp packet
+ *
+ * @param *buffer                   message buffer
+ * @param sockaddr_in6 target       target socket
+ * @param n                         length of message
+ * 
+ * @return dhcpv6_option   end of dhcpv6 message option
+ */
 void send_udp(int sock, struct sockaddr_in6 target, uint8_t *buffer, uint32_t n);
 

@@ -8,6 +8,10 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 bool pollSwssNotifcation = true;
 std::shared_ptr<boost::thread> mSwssThreadPtr;
 
+std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
+swss::SubscriberStateTable ipHelpersTable(configDbPtr.get(), "DHCP_RELAY");
+swss::Select swssSelect;
+
 /**
  * @code                void deinitialize_swss()
  * 
@@ -15,9 +19,11 @@ std::shared_ptr<boost::thread> mSwssThreadPtr;
  *
  * @return              none
  */
-void initialize_swss(std::vector<arg_config> *vlans, swss::DBConnector *db)
+void initialize_swss(std::vector<relay_config> *vlans, swss::DBConnector *db)
 {
     try {
+        swssSelect.addSelectable(&ipHelpersTable);
+        get_dhcp(vlans);
         mSwssThreadPtr = std::make_shared<boost::thread> (&handleSwssNotification, vlans);
     }
     catch (const std::bad_alloc &e) {
@@ -38,8 +44,27 @@ void deinitialize_swss()
     mSwssThreadPtr->interrupt();
 }
 
+
 /**
- * @code                void handleSwssNotification(std::vector<arg_config> *vlans)
+ * @code                void get_dhcp(std::vector<relay_config> *vlans)
+ * 
+ * @brief               initialize and get vlan table information from DHCP_RELAY
+ *
+ * @return              none
+ */
+void get_dhcp(std::vector<relay_config> *vlans) {
+    swss::Selectable *selectable;
+    int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
+    if (ret == swss::Select::ERROR) {
+        syslog(LOG_WARNING, "Select: returned ERROR");
+    } else if (ret == swss::Select::TIMEOUT) {
+    } 
+    if (selectable == static_cast<swss::Selectable *> (&ipHelpersTable)) {
+        handleRelayNotification(ipHelpersTable, vlans);
+    }
+}
+/**
+ * @code                void handleSwssNotification(std::vector<relay_config> *vlans)
  * 
  * @brief               main thread for handling SWSS notification
  *
@@ -47,29 +72,15 @@ void deinitialize_swss()
  *
  * @return              none
  */
-void handleSwssNotification(std::vector<arg_config> *vlans)
+void handleSwssNotification(std::vector<relay_config> *vlans)
 {
-    std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
-    swss::SubscriberStateTable ipHelpersTable(configDbPtr.get(), "DHCP");
-    swss::Select swssSelect;
-    swssSelect.addSelectable(&ipHelpersTable);
     while (pollSwssNotifcation) {
-        swss::Selectable *selectable;
-        int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
-        if (ret == swss::Select::ERROR) {
-            syslog(LOG_WARNING, "Select: returned ERROR");
-            continue;
-        } else if (ret == swss::Select::TIMEOUT) {
-            continue;
-        } 
-        if (selectable == static_cast<swss::Selectable *> (&ipHelpersTable)) {
-            handleRelayNotification(ipHelpersTable, vlans);
-        }
+        get_dhcp(vlans);
     } 
 }
 
 /**
- * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<arg_config> *vlans)
+ * @code                    void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<relay_config> *vlans)
  * 
  * @brief                   handles DHCPv6 relay configuration change notification
  *
@@ -78,7 +89,7 @@ void handleSwssNotification(std::vector<arg_config> *vlans)
  *
  * @return                  none
  */
-void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<arg_config> *vlans)
+void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::vector<relay_config> *vlans)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
@@ -87,7 +98,7 @@ void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::ve
 }
 
 /**
- * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans)
+ * @code                    void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<relay_config> *vlans)
  * 
  * @brief                   process DHCPv6 relay servers and options configuration change notification
  *
@@ -96,7 +107,7 @@ void handleRelayNotification(swss::SubscriberStateTable &ipHelpersTable, std::ve
  *
  * @return                  none
  */
-void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<arg_config> *vlans)
+void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries, std::vector<relay_config> *vlans)
 {
     std::vector<std::string> servers;
 
@@ -105,7 +116,7 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
         std::string operation = kfvOp(entry);
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-        arg_config intf;
+        relay_config intf;
         intf.interface = vlan;
         for (auto &fieldValue: fieldValues) {
             std::string f = fvField(fieldValue);
