@@ -144,34 +144,31 @@
 {% endfor %}
 {% if port_names_inactive|length > 0 %}
 ,
+{% if dynamic_mode is defined %}
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}|3-4": {
-{% if dynamic_mode is defined %}
             "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
-{% else %}
-            "profile" : "[BUFFER_PROFILE|egress_lossless_zero_profile]"
-{% endif %}
         },
 {% endfor %}
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}|0-2": {
-{% if dynamic_mode is defined %}
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-{% else %}
-            "profile" : "[BUFFER_PROFILE|egress_lossy_zero_profile]"
-{% endif %}
         },
 {% endfor %}
 {% for port in port_names_inactive.split(',') %}
         "{{ port }}|5-6": {
-{% if dynamic_mode is defined %}
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-{% else %}
-            "profile" : "[BUFFER_PROFILE|egress_lossy_zero_profile]"
-{% endif %}
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
+{% else %}
+{% for port in port_names_inactive.split(',') %}
+        "{{ port }}|0-7": {
+            "profile" : "[BUFFER_PROFILE|egress_lossy_zero_profile]"
+        }{% if not loop.last %},{% endif %}
+
+{% endfor %}
+{% endif %}
 {% endif %}
     }
 {%- endmacro %}
