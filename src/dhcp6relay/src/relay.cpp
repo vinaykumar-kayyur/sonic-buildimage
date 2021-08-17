@@ -732,7 +732,7 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         int index = if_nametoindex(ifname);
         config.db = db;
 
-        config.counterVlan = "DHCPv6_Counter|";
+        config.counterVlan = "DHCPv6_COUNTER|";
         config.counterVlan.append(ifname);
         initialize_counter(config.db, config.counterVlan);
 
