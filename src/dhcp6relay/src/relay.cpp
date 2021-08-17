@@ -48,6 +48,17 @@ const struct sock_fprog ether_relay_fprog = {
 
 /* DHCPv6 Counter */
 uint64_t counters[DHCPv6_MESSAGE_TYPE_COUNT];
+std::map<int, std::string> counterMap = {{1, "Solicit"},
+                                      {2, "Advertise"},
+                                      {3, "Request"},
+                                      {4, "Confirm"},
+                                      {5, "Renew"},
+                                      {6, "Rebind"},
+                                      {7, "Reply"},
+                                      {8, "Release"},
+                                      {9, "Decline"},
+                                      {12, "Relay-Forward"},
+                                      {13, "Relay-Reply"}};
 
 /**
  * @code                void initialize_counter(swss::DBConnector *db, std::string counterVlan);
@@ -85,7 +96,7 @@ void initialize_counter(swss::DBConnector *db, std::string counterVlan) {
  * @return              none
  */
 void update_counter(swss::DBConnector *db, std::string counterVlan, uint8_t msg_type) {
-    db->hset(counterVlan, "Solicit", toString(counters[msg_type]));
+    db->hset(counterVlan, counterMap.find(msg_type)->second, toString(counters[msg_type]));
 }
 
 /**
