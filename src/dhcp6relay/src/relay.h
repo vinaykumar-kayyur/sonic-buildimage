@@ -49,6 +49,7 @@ struct relay_config {
     std::vector<std::string> servers;
     std::vector<sockaddr_in6> servers_sock;
     bool is_option_79;
+    std::string counterVlan;
 };
 
 
@@ -221,15 +222,29 @@ void signal_callback(evutil_socket_t fd, short event, void *arg);
 void shutdown();
 
 /**
- * @code                void update_counter(swss::DBConnector *db);
+ * @code                void initialize_counter(swss::DBConnector *db, std::string counterVlan);
+ *
+ * @brief               initialize the counter by each Vlan
+ *
+ * @param swss::DBConnector *db     state_db connector
+ * @param counterVlan   counter table with interface name
+ * 
+ * @return              none
+ */
+void initialize_counter(swss::DBConnector *db, std::string counterVlan);
+
+/**
+ * @code                void update_counter(swss::DBConnector *db, std::string CounterVlan, uint8_t msg_type);
  *
  * @brief               update the counter in state_db with count of each DHCPv6 message type
  *
  * @param swss::DBConnector *db     state_db connector
+ * @param counterVlan   counter table with interface name
+ * @param msg_type      dhcpv6 message type to be updated in counter
  * 
  * @return              none
  */
-void update_counter(swss::DBConnector *db);
+void update_counter(swss::DBConnector *db, std::string counterVlan, uint8_t msg_type);
 
 /* Helper functions */
 

@@ -50,26 +50,42 @@ const struct sock_fprog ether_relay_fprog = {
 uint64_t counters[DHCPv6_MESSAGE_TYPE_COUNT];
 
 /**
- * @code                void update_counter(swss::DBConnector *db);
+ * @code                void initialize_counter(swss::DBConnector *db, std::string counterVlan);
+ *
+ * @brief               initialize the counter by each Vlan
+ *
+ * @param swss::DBConnector *db     state_db connector
+ * @param counterVlan   counter table with interface name
+ * 
+ * @return              none
+ */
+void initialize_counter(swss::DBConnector *db, std::string counterVlan) {
+    db->hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
+    db->hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
+    db->hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
+    db->hset(counterVlan, "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
+    db->hset(counterVlan, "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
+    db->hset(counterVlan, "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
+    db->hset(counterVlan, "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
+    db->hset(counterVlan, "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
+    db->hset(counterVlan, "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
+    db->hset(counterVlan, "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
+    db->hset(counterVlan, "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
+}
+
+/**
+ * @code                void update_counter(swss::DBConnector *db, std::string CounterVlan, uint8_t msg_type);
  *
  * @brief               update the counter in state_db with count of each DHCPv6 message type
  *
  * @param swss::DBConnector *db     state_db connector
+ * @param counterVlan   counter table with interface name
+ * @param msg_type      dhcpv6 message type to be updated in counter
  * 
  * @return              none
  */
-void update_counter(swss::DBConnector *db) {
-    db->hset("DHCPv6_Counter", "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
-    db->hset("DHCPv6_Counter", "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
-    db->hset("DHCPv6_Counter", "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
-    db->hset("DHCPv6_Counter", "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
-    db->hset("DHCPv6_Counter", "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
-    db->hset("DHCPv6_Counter", "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
-    db->hset("DHCPv6_Counter", "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
-    db->hset("DHCPv6_Counter", "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
-    db->hset("DHCPv6_Counter", "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
-    db->hset("DHCPv6_Counter", "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
-    db->hset("DHCPv6_Counter", "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
+void update_counter(swss::DBConnector *db, std::string counterVlan, uint8_t msg_type) {
+    db->hset(counterVlan, "Solicit", toString(counters[msg_type]));
 }
 
 /**
@@ -578,7 +594,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
 
     auto msg = parse_dhcpv6_hdr(current_position);
     counters[msg->msg_type]++;
-    update_counter(config->db);
+    update_counter(config->db, config->counterVlan, msg->msg_type);
 
     relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
 }
@@ -596,7 +612,7 @@ void server_callback(evutil_socket_t fd, short event, void *arg) {
     auto msg = parse_dhcpv6_hdr(message_buffer);
 
     counters[msg->msg_type]++;
-    update_counter(config->db);
+    update_counter(config->db, config->counterVlan, msg->msg_type);
     if (msg->msg_type == DHCPv6_MESSAGE_TYPE_RELAY_REPL) {
         relay_relay_reply(config->local_sock, message_buffer, data, config);
     }
@@ -695,6 +711,7 @@ void dhcp6relay_stop()
  */
 void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
     std::vector<int> sockets;
+    
     for(std::size_t i = 0; i<vlans->size(); i++) {
         struct relay_config config = vlans->at(i);
         int filter = 0;
@@ -703,6 +720,10 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         const char *ifname = config.interface.c_str();
         int index = if_nametoindex(ifname);
         config.db = db;
+
+        config.counterVlan = "DHCPv6_Counter|";
+        config.counterVlan.append(ifname);
+        initialize_counter(config.db, config.counterVlan);
 
         filter = sock_open(index, &ether_relay_fprog);
 
