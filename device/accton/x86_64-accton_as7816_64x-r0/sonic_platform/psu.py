@@ -257,7 +257,7 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial_path="{}{}".format(self.hwmon_path, 'psu_serial_num')
+        serial_path="{}{}".format(self.hwmon_path, 'psu_mfr_serial')
         val=self._api_helper.read_txt_file(serial_path)
         if val is None:
             return "N/A"

@@ -8,7 +8,6 @@
 
 import shlex
 import subprocess
-import logging
 
 try:
     from sonic_platform_base.component_base import ComponentBase

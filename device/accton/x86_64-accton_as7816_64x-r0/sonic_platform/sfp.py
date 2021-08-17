@@ -341,11 +341,7 @@ class Sfp(SfpBase):
 
         sfp_dom_capability_raw = self.__read_eeprom_specific_bytes(
             (offset + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
-        if sfp_dom_capability_raw is not None:
-            sfp_dom_capability_data = sfpi_obj.parse_dom_capability(
-                sfp_dom_capability_raw, 0)
-
-
+ 
         transceiver_info_dict = dict.fromkeys(self.info_dict_keys, 'N/A')
         compliance_code_dict = dict()
         dom_capability_dict = dict()
