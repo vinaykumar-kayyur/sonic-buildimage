@@ -20,7 +20,7 @@ if sys.version_info.major == 3:
         # Python3 has enum module and so pyangbind should be installed outside
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
-        'Jinja2>=2.10',
+        'Jinja2>=2.10, <=2.11.3',
         'sonic-yang-mgmt>=1.0',
         'sonic-yang-models>=1.0'
     ]
@@ -30,7 +30,7 @@ else:
         # Jinja2 v3.0.0+ dropped support for Python 2.7 and causes setuptools to
         # malfunction on stretch slave docker.
         'future',
-        'Jinja2<3.0.0',
+        'Jinja2>=2.10, <=2.11.3',
         'pyangbind==0.6.0',
         'zipp==1.2.0',  # importlib-resources needs zipp and seems to have a bug where it will try to install too new of a version for Python 2
         'importlib-resources==3.3.1',  # importlib-resources v4.0.0 was released 2020-12-23 and drops support for Python 2
