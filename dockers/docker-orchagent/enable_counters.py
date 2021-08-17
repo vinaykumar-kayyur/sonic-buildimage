@@ -18,6 +18,7 @@ def enable_counter_group(db, name):
         info['FLEX_COUNTER_STATUS'] = 'enable'
         db.mod_entry("FLEX_COUNTER_TABLE", name, info)
     else:
+        entry_info.update({"FLEX_COUNTER_DELAY_STATUS":"false"})
         db.mod_entry("FLEX_COUNTER_TABLE", name, entry_info)
 
 def enable_rates():
@@ -49,12 +50,6 @@ def get_uptime():
     with open('/proc/uptime') as fp:
         return float(fp.read().split(' ')[0])
 
-def reset_flex_counters_delay_indicator():
-    db = swsssdk.ConfigDBConnector()
-    db.connect()
-    info = {}
-    info['FLEX_COUNTER_DELAY_STATUS'] = 'false'
-    db.mod_entry("FLEX_COUNTER_TABLE", "FLEX_COUNTER_DELAY", info)
 
 def main():
     # If the switch was just started (uptime less than 5 minutes),
@@ -65,7 +60,6 @@ def main():
         time.sleep(180)
     else:
         time.sleep(60)
-    reset_flex_counters_delay_indicator()
     enable_counters()
 
 
