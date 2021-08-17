@@ -24,7 +24,23 @@ module sonic-vlan {
 		revision-date 2019-07-01;
 	}
 
+	import sonic-portchannel {
+		prefix lag;
+	}
+
+	import sonic-vrf {
+		prefix vrf;
+	}
+
 	description "VLAN yang Module for SONiC OS";
+
+	revision 2021-04-22 {
+		description "Modify Vlan Member to include PortChannel along with Port";
+	}
+
+	revision 2021-03-30 {
+		description "Modify the type of vrf name";
+	}
 
 	revision 2019-07-01 {
 		description "First Revision";
@@ -49,10 +65,20 @@ module sonic-vlan {
 				}
 
 				leaf vrf_name {
-					type string {
-						pattern "Vrf[a-zA-Z0-9_-]+";
-						length 3..255;
+					type leafref{
+						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
 					}
+				}
+
+				leaf nat_zone {
+					description "NAT Zone for the vlan interface";
+					type uint8 {
+						range "0..3" {
+							error-message "Invalid nat zone for the vlan interface.";
+							error-app-tag nat-zone-invalid;
+						}
+					}
+                                        default "0";
 				}
 			}
 			/* end of VLAN_INTERFACE_LIST */
@@ -164,8 +190,13 @@ module sonic-vlan {
 
 				leaf port {
 					/* key elements are mandatory by default */
-					type leafref {
-						path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
+					type union {
+						type leafref {
+							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+						}
+						type leafref {
+							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+						}
 					}
 				}
 
