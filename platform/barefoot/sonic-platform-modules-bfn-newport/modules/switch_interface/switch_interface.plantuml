@@ -1,0 +1,46 @@
+@startuml
+
+title Modules/Files Relationships
+
+package bf_switch_sysfs{
+  class bf_switch_sysfs {
+    -kobject* switch_kobj;
+    +kobject* bf_get_switch_kobj()
+    +kobject* create_sysfs_dir_and_attr()
+    +void remove_sysfs_dir_and_attr()
+    -int bf_switch_sysfs_init()
+    -void bf_switch_sysfs_exit()
+  }
+}
+
+package bf_fan{
+  class bf_fan_driver {
+    +bf_newport_fan_data data;
+    -int bf_fan_init()
+    -void bf_fan_exit()
+    -int bf_fan_create_all_attr()
+    -void bf_fan_remove_all_attr()
+    -int bf_fan_create_fan_attr()
+    -void bf_fan_remove_fan_attr()
+    -int bf_fan_create_motor_attr()
+    -void bf_fan_remove_motor_attr()
+  }
+
+  class bf_fan_api{
+    +extern bf_newport_fan_data data;
+    +ssize_t fan_show1()
+    +ssize_t fan_store1()
+    +ssize_t fan_show2()
+    +ssize_t fan_store2()
+    +ssize_t fan_show3()
+    +ssize_t fan_store3()
+    +int init_ipmi_data()
+    +void ipmi_msg_handler()
+    +int update_fan_data()
+  }
+}
+
+bf_fan --> bf_switch_sysfs : Use >
+bf_fan_driver --> bf_fan_api : Use >
+
+@enduml
