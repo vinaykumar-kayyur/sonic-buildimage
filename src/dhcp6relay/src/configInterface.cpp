@@ -130,13 +130,15 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                 }
                 syslog(LOG_DEBUG, "key: %s, Operation: %s, f: %s, v: %s", vlan.c_str(), operation.c_str(), f.c_str(), v.c_str());
             }
-            if(f == "options") {
+            if(f == "dhcpv6_option|rfc6939_support") {
                 std::stringstream ss(v);
                 while (ss.good()) {
                     std::string substr;
                     getline(ss, substr, ',');
-                    if(substr == "dhcpv6_option|rfc6939_support")
+                    if(substr == "true")
                         intf.is_option_79 = true;
+                    else if(substr == "false")
+                        intf.is_option_79 = false;
                 }
             }
         }
