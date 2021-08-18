@@ -401,10 +401,10 @@ void prepare_socket(int *local_sock, relay_config *config) {
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    addr.sin6_addr = in6addr_any;
+    //addr.sin6_addr = in6addr_any;
     /*TO FIX AFTER TESTING IPV6 ADDR AUTO SELECTION. PLEASE IGNORE THE COMMENTED AREA*/
-    /*struct ifaddrs *ifa, *ifa_tmp;
-     char tmp[INET6_ADDRSTRLEN];
+    struct ifaddrs *ifa, *ifa_tmp;
+    char tmp[INET6_ADDRSTRLEN];
     tmp[0] = 0;
 
     if (getifaddrs(&ifa) == -1) {
@@ -420,48 +420,18 @@ void prepare_socket(int *local_sock, relay_config *config) {
             if(strcmp(ifa_tmp->ifa_name, config->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
                 inet_pton(AF_INET6, tmp, &addr.sin6_addr);
             }
-            else {
-                syslog(LOG_ERR, "inet_pton: interface global address not configured\n");
-                sleep(10);
-                continue;
-            }
         }
         ifa_tmp = ifa_tmp->ifa_next;
     }
-    freeifaddrs(ifa);   */
+    freeifaddrs(ifa);   
 
     if ((*local_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
-        syslog(LOG_ERR, "scoket: Failed to create socket\n");
+        syslog(LOG_ERR, "socket: Failed to create socket\n");
     }
 
     addr.sin6_port = htons(RELAY_PORT);
     
     if (bind(*local_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
-        syslog(LOG_ERR, "bind: Failed to bind to socket\n");
-    }    
-}
-
-/**
- * @code                prepare_server_socket(int *server_sock);
- * 
- * @brief               prepare L3 socket for sending
- *
- * @param server_sock   pointer to socket receiving server packets to be prepared
- *
- * @return              none
- */
-void prepare_server_socket(int *server_sock) {
-    sockaddr_in6 addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin6_family = AF_INET6;
-    addr.sin6_addr = in6addr_any;
-    addr.sin6_port = htons(RELAY_PORT);
-
-    if ((*server_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
-        syslog(LOG_ERR, "scoket: Failed to create socket\n");
-    }
-    
-    if (bind(*server_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
         syslog(LOG_ERR, "bind: Failed to bind to socket\n");
     }    
 }
@@ -727,7 +697,6 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         struct relay_config config = vlans->at(i);
         int filter = 0;
         int local_sock = 0; 
-        int server_sock = 0;
         const char *ifname = config.interface.c_str();
         int index = if_nametoindex(ifname);
         config.db = db;
@@ -739,18 +708,16 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         filter = sock_open(index, &ether_relay_fprog);
 
         prepare_socket(&local_sock, &config);
-        prepare_server_socket(&server_sock);
         sockets.push_back(filter);
         sockets.push_back(local_sock);
-        sockets.push_back(server_sock);
 
         prepare_relay_config(&config, local_sock, filter);
 
         evutil_make_listen_socket_reuseable(filter);
         evutil_make_socket_nonblocking(filter);
 
-        evutil_make_listen_socket_reuseable(server_sock);
-        evutil_make_socket_nonblocking(server_sock);
+        evutil_make_listen_socket_reuseable(local_sock);
+        evutil_make_socket_nonblocking(local_sock);
 
         base = event_base_new();
         if(base == NULL) {
@@ -758,7 +725,7 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         }
 
         listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
-        server_listen_event = event_new(base, server_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
+        server_listen_event = event_new(base, local_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
         if (listen_event == NULL || server_listen_event == NULL) {
             syslog(LOG_ERR, "libevent: Failed to create libevent\n");
         }

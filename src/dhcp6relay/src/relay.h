@@ -103,18 +103,6 @@ int sock_open(int ifindex, const struct sock_fprog *fprog);
 void prepare_socket(int *local_sock, relay_config *config);
 
 /**
- * @code                prepare_server_socket(int *server_sock, arg_config *config);
- * 
- * @brief               prepare L3 socket for sending
- *
- * @param server_sock   pointer to socket receiving server packets to be prepared
- * @param config        relay config that contains strings of server and interface addresses
- *
- * @return              none
- */
-void prepare_server_socket(int *server_sock);
-
-/**
  * @code                        prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
  * 
  * @brief                       prepare for specified relay interface config: server and link address
