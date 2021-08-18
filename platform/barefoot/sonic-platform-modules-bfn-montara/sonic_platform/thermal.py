@@ -18,12 +18,14 @@ Core 0:
   temp2_input: 37.000
   ...
 '''
-def _sensors_chip_parsed(data: str):
+def _sensors_chip_parsed(data):
     def kv(line):
-        k, v, *_ = [t.strip(': ') for t in line.split(':') if t] + ['']
+        k, v = [t.strip(': ') for t in line.split(':') if t] + ['']
         return k, v
 
-    chip, *data = data.strip().split('\n')
+    data = data.split("\n")
+    chip = data[0]
+    data.remove(chip)
     chip = chip.strip(': ')
 
     sensors = []
@@ -34,7 +36,7 @@ def _sensors_chip_parsed(data: str):
             continue
 
         if len(sensors) == 0:
-            raise RuntimeError(f'invalid data to parse: {data}')
+            raise RuntimeError('invalid data to parse: ' + str(data))
 
         attr, value = kv(line)
         sensor_label, sensor_data = sensors[-1]
@@ -51,7 +53,7 @@ Example of returned dict:
     }
 }
 '''
-def _sensors_get() -> dict:
+def _sensors_get():
     data = platform_sensors_get(['-A', '-u']) or ''
     data += subprocess.check_output("/usr/bin/sensors -A -u",
                 shell=True, text=True)
@@ -60,7 +62,7 @@ def _sensors_get() -> dict:
     data = dict(data)
     return data
 
-def _value_get(d: dict, key_prefix, key_suffix=''):
+def _value_get(d, key_prefix, key_suffix=''):
     for k, v in d.items():
         if k.startswith(key_prefix) and k.endswith(key_suffix):
             return v
@@ -71,7 +73,7 @@ class Thermal(ThermalBase):
     def __init__(self, chip, label):
         self.__chip = chip
         self.__label = label
-        self.__name = f"{chip}:{label}".lower().replace(' ', '-')
+        self.__name = (str(chip) + ":" + str(label)).lower().replace(' ', '-')
 
     def __get(self, attr_prefix, attr_suffix):
         sensor_data = _sensors_get().get(self.__chip, {}).get(self.__label, {})
@@ -80,13 +82,13 @@ class Thermal(ThermalBase):
         raise NotImplementedError
 
     # ThermalBase interface methods:
-    def get_temperature(self) -> float:
+    def get_temperature(self):
         return float(self.__get('temp', 'input'))
 
-    def get_high_threshold(self) -> float:
+    def get_high_threshold(self):
         return float(self.__get('temp', 'max'))
 
-    def get_high_critical_threshold(self) -> float:
+    def get_high_critical_threshold(self):
         return float(self.__get('temp', 'crit'))
 
     # DeviceBase interface methods:
