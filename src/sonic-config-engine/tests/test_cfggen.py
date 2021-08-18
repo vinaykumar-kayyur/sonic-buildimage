@@ -827,8 +827,8 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Vlan1000': {'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'], 'dhcpv6_option|rfc6939_support': 'true'}, "
-                "'Vlan2000': {'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4'], 'dhcpv6_option|rfc6939_support': 'false'}}"
+                "{'Vlan1000': {'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2']}, "
+                "'Vlan2000': {'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4']}}"
             )
         )
         

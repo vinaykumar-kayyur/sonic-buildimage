@@ -526,6 +526,7 @@ def parse_dpg(dpg, hname):
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlans = {}
         vlan_members = {}
+        dhcp_relay_table = {}
         vlantype_name = ""
         intf_vlan_mbr = defaultdict(list)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
@@ -553,6 +554,7 @@ def parse_dpg(dpg, hname):
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid, 'members': vmbr_list }
+            dhcp_attributes = {}
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
@@ -567,6 +569,9 @@ def parse_dpg(dpg, hname):
                 vintfdhcpservers = vintf_node.text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcpv6_servers'] = vdhcpserver_list
+                dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
+            sonic_vlan_member_name = "Vlan%s" % (vlanid)
+            dhcp_relay_table[sonic_vlan_member_name] = dhcp_attributes
 
             vlanmac = vintf.find(str(QName(ns, "MacAddress")))
             if vlanmac is not None and vlanmac.text is not None:
@@ -576,29 +581,6 @@ def parse_dpg(dpg, hname):
             if sonic_vlan_name != vintfname:
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
-
-        dhcp_relay = child.find(str(QName(ns, "DhcpRelay")))
-        dhcp_relay_table = {}
-
-        if dhcp_relay is not None:
-            for vintf in dhcp_relay.findall(str(QName(ns, "VlanInterface"))):
-                vintfname = vintf.find(str(QName(ns, "Name"))).text
-
-                dhcp_attributes = {}
-
-                dhcp_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
-                if dhcp_node is not None and dhcp_node.text is not None:
-                    dhcpservers = dhcp_node.text
-                    vdhcpserver_list = dhcpservers.split(';')
-                    dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
-
-                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionRfc6939")))
-                if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
-                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "true"
-                elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
-                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "false"
-
-                dhcp_relay_table[vintfname] = dhcp_attributes
 
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
