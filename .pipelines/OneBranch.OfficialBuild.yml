@@ -25,18 +25,14 @@ parameters:
   - broadcom
   - mellanox
   - marvell-armhf
-- name: 'artifactFolder'
+- name: 'trusty8LinkPath'
   type: string
-  default: 'sourceBranch'
+  default: ''
 
 variables:
 - group: SONIC-BUILD-VG-1
-- ${{ if eq(parameters.artifactFolder, 'sourceBranch') }}:
-  - name: PUBLISH_BLOB_PREFIX
-    value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranch)
-- ${{ if ne(parameters.artifactFolder, 'sourceBranch') }}:
-  - name: PUBLISH_BLOB_PREFIX
-    value: pipelines/$(Build.DefinitionName)/${{ parameters.artifactFolder }}
+- name: PUBLISH_BLOB_PREFIX
+  value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranchName)
 
 stages:
 - stage: Build
@@ -120,6 +116,7 @@ stages:
                 LATEST_VERSION=
                 PREVIOUS_VERSION=
                 latest_path=/azmirrors/$(PUBLISH_BLOB_PREFIX)/$(GROUP_NAME)/$(BUILD_NUMBER)
+                [ -n "${{ parameters.trusty8LinkPath }}" ] && BRANCH_NAME=${{ parameters.trusty8LinkPath }}
                 link_path=/data/$(dirname $(PUBLISH_BLOB_PREFIX))/$(GROUP_NAME)/$(BRANCH_NAME)/$link_foldername
                 [ -e $link_path/latest ] && LATEST_VERSION=$(cat $link_path/latest/target/sonic.version)
                 mkdir -p $link_path
@@ -212,13 +209,13 @@ stages:
         - name: mellanox
           script: |
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
-            make $OPTIONS target/sonic-mellanox.bin target/docker-syncd-mlnx-rpc.gz
+            make $OPTIONS target/sonic-mellanox.bin && make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-mlnx-rpc.gz
             cp target/debs/buster/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
         - name: barefoot
           script: |
             sudo modprobe overlay
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
-            make $OPTIONS target/sonic-barefoot.bin target/docker-syncd-bfn-rpc.gz  target/sonic-aboot-barefoot.swi
+            make $OPTIONS target/sonic-barefoot.bin target/sonic-aboot-barefoot.swi && make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-bfn-rpc.gz
         - name: marvell-armhf
           timeoutInMinutes: 2160
           variables:
