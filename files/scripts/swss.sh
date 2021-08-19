@@ -1,7 +1,11 @@
 #!/bin/bash
 
 DEPENDENT="radv"
-MULTI_INST_DEPENDENT="teamd"
+ROUTING_STACK="$(/usr/local/bin/sonic-cfggen -y /etc/sonic/sonic_version.yml -v routing_stack)"
+
+if [[ "$ROUTING_STACK" != "framewave" ]]; then
+    MULTI_INST_DEPENDENT="teamd"
+fi
 
 # Update dependent list based on other packages requirements
 if [[ -f /etc/sonic/${SERVICE}_dependent ]]; then

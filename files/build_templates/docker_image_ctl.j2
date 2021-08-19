@@ -105,6 +105,8 @@ function preStartAction()
     fi   
 {%- elif docker_container_name == "snmp" %}
     $SONIC_DB_CLI STATE_DB HSET 'DEVICE_METADATA|localhost' chassis_serial_number $(decode-syseeprom -s)
+{%- elif docker_container_name == "framewave-proxy" %}
+    /sbin/ebtables --flush FORWARD
 {%- else %}
     : # nothing
 {%- endif %}
@@ -367,12 +369,14 @@ start() {
         {%- endif %}
     fi
 {%- if docker_container_name == "bgp" %}
+{%- if sonic_routing_stack == "frr" %}
     if [ "$DEV" ]; then
         if [ ! -d "/etc/sonic/frr/$DEV" ]; then
             mkdir /etc/sonic/frr/$DEV
             cp -r /etc/sonic/frr/*.conf /etc/sonic/frr/$DEV
         fi
     fi
+{%- endif %}
 {%- endif %}
 {%- if sonic_asic_platform == "mellanox" %}
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
@@ -418,7 +422,9 @@ start() {
         -e ASIC_VENDOR={{ sonic_asic_platform }} \
 {%- endif -%}
 {%- if docker_container_name == "bgp" %}
+{%- if sonic_routing_stack == "frr" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
+{%- endif %}
 {%- endif %}
 {%- if docker_container_name == "database" %}
         $DB_OPT \

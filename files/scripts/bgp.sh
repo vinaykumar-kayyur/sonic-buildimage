@@ -17,6 +17,22 @@ function check_warm_boot()
     fi
 }
 
+function routing_stack_start()
+{
+    # Do any work specific to the routing stack.
+
+    ROUTING_STACK="$(/usr/local/bin/sonic-cfggen -y /etc/sonic/sonic_version.yml -v routing_stack)"
+
+    # Don't flush STATE_DB|LAG_TABLE during warm boot for framewave
+    if [[ "$ROUTING_STACK" == "framewave" && x"$WARM_BOOT" != x"true" ]]; then
+        # Delete any STATE_DB|LAG_TABLE entries that framewave might have added
+        LAG_TABLE_ENTRIES=$($SONIC_DB_CLI STATE_DB KEYS "LAG_TABLE|PortChannel[0-9][0-9][0-9][0-9]")
+        if [[ -n $LAG_TABLE_ENTRIES ]]; then
+          $LAG_TABLE_ENTRIES | xargs "$SONIC_DB_CLI" STATE_DB DEL
+        fi
+    fi
+}
+
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
@@ -46,7 +62,10 @@ start() {
     check_fast_boot
 
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
-    debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
+
+    routing_stack_start
+
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # start service docker
     /usr/bin/${SERVICE}.sh start $DEV
