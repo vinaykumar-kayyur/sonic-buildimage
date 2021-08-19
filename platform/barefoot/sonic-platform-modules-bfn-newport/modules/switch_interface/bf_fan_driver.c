@@ -13,42 +13,17 @@
 #include <linux/platform_device.h>
 #include "bf_switch_sysfs.h"
 #include "bf_fan_driver.h"
+#include "bf_fan_api.h"
 
 #define FAN_DRVNAME "bf_fan"
 #define MOTOR_DRVNAME "bf_fan_motor"
 
 static struct bf_fan_drv_data *g_data = NULL;
-/////////////////////////////////////////////////////
-
-// dummy placeholder function for temp +++++++++++++
-static ssize_t placeholder_show(struct device *dev, struct device_attribute *da,
-                            char *buf)
-{
-    struct platform_device *pdev = to_platform_device(dev);
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    printk("show fan, id=%d, name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);
-    // printk("--- IS_ERR dev(%d)\n", IS_ERR(dev));
-    // printk("--- PTR_ERR dev(%ld)\n", PTR_ERR(dev));
-    // printk("--- IS_ERR dev->init_name(%d)\n", IS_ERR(dev->init_name));
-    // printk("--- PTR_ERR dev->init_name(%ld)\n", PTR_ERR(dev->init_name));
-    // printk("--- IS_ERR kobj_name(%d)\n", IS_ERR(dev->kobj.name));
-    // printk("--- PTR_ERR kobj_name(%ld)\n", PTR_ERR(dev->kobj.name));
-    printk("--- dev->kobj.name(%s)\n", dev->kobj.name);
-    return 0;
-}
-static ssize_t placeholder_store(struct device *dev, struct device_attribute *da,
-                            const char *buf, size_t count)
-{
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    printk("set fan attr_idx=%d\n", attr->index);
-    return 0;
-}
-// dummy placeholder function for temp +-------------------
 
 // --- root attrs ---
-BF_DEV_ATTR_RW(debug, placeholder, DEBUG_ATTR_ID);
-BF_DEV_ATTR_RW(loglevel, placeholder, LOGLEVEL_ATTR_ID);
-BF_DEV_ATTR_RO(num, placeholder, NUMFAN_ATTR_ID);
+BF_DEV_ATTR_RW(debug, root, DEBUG_ATTR_ID);
+BF_DEV_ATTR_RW(loglevel, root, LOGLEVEL_ATTR_ID);
+BF_DEV_ATTR_RO(num, root, NUMFAN_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_debug.dev_attr.attr,
@@ -60,15 +35,16 @@ static struct attribute *root_attrs[] = {
 static struct attribute_group root_attr_group = {
     .attrs = root_attrs,
 };
+
 // --- fan attrs ---
-BF_DEV_ATTR_RO(model_name, placeholder, FAN_MODEL_ATTR_ID);
-BF_DEV_ATTR_RO(serial_number, placeholder, FAN_SERIAL_ATTR_ID);
-BF_DEV_ATTR_RO(vendor, placeholder, FAN_VENDOR_ATTR_ID);
-BF_DEV_ATTR_RO(part_number, placeholder, FAN_PARTNUM_ATTR_ID);
-BF_DEV_ATTR_RO(hardware_version, placeholder, FAN_HWVER_ATTR_ID);
-BF_DEV_ATTR_RO(num_motors, placeholder, FAN_NUMMOTOR_ATTR_ID);
-BF_DEV_ATTR_RO(status, placeholder, FAN_STATUS_ATTR_ID);
-BF_DEV_ATTR_RO(led_status, placeholder, FAN_LED_ATTR_ID);
+BF_DEV_ATTR_RO(model_name, fan, FAN_MODEL_ATTR_ID);
+BF_DEV_ATTR_RO(serial_number, fan, FAN_SERIAL_ATTR_ID);
+BF_DEV_ATTR_RO(vendor, fan, FAN_VENDOR_ATTR_ID);
+BF_DEV_ATTR_RO(part_number, fan, FAN_PARTNUM_ATTR_ID);
+BF_DEV_ATTR_RO(hardware_version, fan, FAN_HWVER_ATTR_ID);
+BF_DEV_ATTR_RO(num_motors, fan, FAN_NUMMOTOR_ATTR_ID);
+BF_DEV_ATTR_RO(status, fan, FAN_STATUS_ATTR_ID);
+BF_DEV_ATTR_RO(led_status, fan, FAN_LED_ATTR_ID);
 
 static struct attribute *fan_attrs[] = {
     &sensor_dev_attr_model_name.dev_attr.attr,
@@ -91,11 +67,11 @@ static const struct attribute_group *fan_attr_groups[] = {
 };
 
 // --- motor attrs ---
-BF_DEV_ATTR_RO(speed, placeholder, MOTOR_SPEED_ATTR_ID);
-BF_DEV_ATTR_RO(speed_tolerance, placeholder, MOTOR_SPEED_TOL_ATTR_ID);
-BF_DEV_ATTR_RO(speed_target, placeholder, MOTOR_SPEED_TARGET_ATTR_ID);
-BF_DEV_ATTR_RW(ratio, placeholder, MOTOR_RATIO_ATTR_ID);
-BF_DEV_ATTR_RO(direction, placeholder, MOTOR_DIR_ATTR_ID);
+BF_DEV_ATTR_RO(speed, motor, MOTOR_SPEED_ATTR_ID);
+BF_DEV_ATTR_RO(speed_tolerance, motor, MOTOR_SPEED_TOL_ATTR_ID);
+BF_DEV_ATTR_RO(speed_target, motor, MOTOR_SPEED_TARGET_ATTR_ID);
+BF_DEV_ATTR_RW(ratio, motor, MOTOR_RATIO_ATTR_ID);
+BF_DEV_ATTR_RO(direction, motor, MOTOR_DIR_ATTR_ID);
 
 static struct attribute *motor_attrs[] = {
     &sensor_dev_attr_speed.dev_attr.attr,
