@@ -137,8 +137,8 @@ static void bf_motor_remove_symlink(struct platform_device *pdev)
 
 static int bf_fan_create_root_attr(void)
 {
-    g_data->fan_root_kobj = create_sysfs_dir_and_attr("fan", bf_get_switch_kobj(),
-            &root_attr_group);
+    g_data->fan_root_kobj = create_sysfs_dir_and_attr("fan",
+            bf_get_switch_kobj(), &root_attr_group);
     if(g_data->fan_root_kobj == NULL)
         return -EINVAL;
     return 0;
@@ -163,14 +163,7 @@ static int bf_fan_remove(struct platform_device *pdev)
     return 0;
 }
 
-static struct platform_driver bf_fan_driver = {
-    .probe = bf_fan_probe,
-    .remove = bf_fan_remove,
-    .driver = {
-        .name = FAN_DRVNAME,
-        .owner = THIS_MODULE,
-    },
-};
+DECL_PLATFORM_DRIVER(bf_fan, FAN_DRVNAME);
 
 ///////////////////////////////////////////////////////////
 static int bf_motor_probe(struct platform_device *pdev)
@@ -185,14 +178,7 @@ static int bf_motor_remove(struct platform_device *pdev)
     return 0;
 }
 
-static struct platform_driver bf_motor_driver = {
-    .probe = bf_motor_probe,
-    .remove = bf_motor_remove,
-    .driver = {
-        .name = MOTOR_DRVNAME,
-        .owner = THIS_MODULE,
-    },
-};
+DECL_PLATFORM_DRIVER(bf_motor, MOTOR_DRVNAME);
 
 ////////////////////////////////////////////////////
 

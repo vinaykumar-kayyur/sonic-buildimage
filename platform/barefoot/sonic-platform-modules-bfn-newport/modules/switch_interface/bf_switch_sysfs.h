@@ -27,10 +27,20 @@ enum bf_log_levels{
 };
 #define BF_DEFAULT_LOGLEVEL LOG_WARN
 
-#define BF_DEV_ATTR_RO(_name, _func, _index)		\
-	static SENSOR_DEVICE_ATTR(_name, 0444, _func##_show, NULL, _index)
+#define BF_DEV_ATTR_RO(_name, _func, _index)            \
+    static SENSOR_DEVICE_ATTR(_name, 0444, _func##_show, NULL, _index)
 
-#define BF_DEV_ATTR_RW(_name, _func, _index)		\
-	static SENSOR_DEVICE_ATTR(_name, 0644, _func##_show, _func##_store, _index)
+#define BF_DEV_ATTR_RW(_name, _func, _index)            \
+    static SENSOR_DEVICE_ATTR(_name, 0644, _func##_show, _func##_store, _index)
+
+#define DECL_PLATFORM_DRIVER(_func, _name)              \
+    static struct platform_driver _func##_driver = {    \
+        .probe = _func##_probe,                         \
+        .remove = _func##_remove,                       \
+        .driver = {                                     \
+            .name = _name,                              \
+            .owner = THIS_MODULE,                       \
+        },                                              \
+    }
 
 #endif //__BF_SWITCH_SYSFS_H__
