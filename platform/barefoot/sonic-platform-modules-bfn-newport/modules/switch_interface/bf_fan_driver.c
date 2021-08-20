@@ -17,6 +17,9 @@
 
 #define FAN_DRVNAME "bf_fan"
 #define MOTOR_DRVNAME "bf_fan_motor"
+#define ROOT_DIRNAME "fan"
+#define FAN_DIRNAME "fan%d"
+#define MOTOR_DIRNAME "motor%d"
 
 static struct bf_fan_drv_data *g_data = NULL;
 
@@ -95,21 +98,16 @@ static const struct attribute_group *motor_attr_groups[] = {
 
 static int bf_fan_create_symlink(struct platform_device *pdev)
 {
-    int id = pdev->id;
     char name[6];
-    struct kobject *kobj = g_data->fan_root_kobj;
-    struct kobject *target = &g_data->fan_pdev[id].dev.kobj;
-    sprintf(name, "fan%d", id+1);
-    return sysfs_create_link(kobj, target, name);
+    sprintf(name, FAN_DIRNAME, pdev->id + 1);
+    return sysfs_create_link(g_data->fan_root_kobj, &pdev->dev.kobj, name);
 }
 
 static void bf_fan_remove_symlink(struct platform_device *pdev)
 {
-    int id = pdev->id;
     char name[6];
-    struct kobject *kobj = g_data->fan_root_kobj;
-    sprintf(name, "fan%d", id+1);
-    return sysfs_remove_link(kobj, name);
+    sprintf(name, FAN_DIRNAME, pdev->id + 1);
+    return sysfs_remove_link(g_data->fan_root_kobj, name);
 }
 
 static int bf_motor_create_symlink(struct platform_device *pdev)
@@ -120,7 +118,7 @@ static int bf_motor_create_symlink(struct platform_device *pdev)
     char name[8];
     struct kobject *kobj = &g_data->fan_pdev[f_idx].dev.kobj;
     struct kobject *target = &g_data->motor_pdev[id].dev.kobj;
-    sprintf(name, "motor%d", m_idx);
+    sprintf(name, MOTOR_DIRNAME, m_idx);
     return sysfs_create_link(kobj, target, name);
 }
 
@@ -131,13 +129,13 @@ static void bf_motor_remove_symlink(struct platform_device *pdev)
     int m_idx = id % MOTOR_PER_FAN;
     char name[8];
     struct kobject *kobj = &g_data->fan_pdev[f_idx].dev.kobj;
-    sprintf(name, "motor%d", m_idx);
+    sprintf(name, MOTOR_DIRNAME, m_idx);
     return sysfs_remove_link(kobj, name);
 }
 
 static int bf_fan_create_root_attr(void)
 {
-    g_data->fan_root_kobj = create_sysfs_dir_and_attr("fan",
+    g_data->fan_root_kobj = create_sysfs_dir_and_attr(ROOT_DIRNAME,
             bf_get_switch_kobj(), &root_attr_group);
     if(g_data->fan_root_kobj == NULL)
         return -EINVAL;
