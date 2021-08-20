@@ -31,8 +31,8 @@ SYSLED_FNODE = "/sys/class/leds/as7816_64x_led::diag/brightness"
 SYSLED_MODES = {
     "0" : "STATUS_LED_COLOR_OFF",
     "16" : "STATUS_LED_COLOR_GREEN",
-    "10" : "STATUS_LED_COLOR_AMBER",
-    "17" : "STATUS_LED_COLOR_GREEN_BLINK"
+    "10" : "STATUS_LED_COLOR_RED"
+
 }
 
 
