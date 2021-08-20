@@ -16,31 +16,34 @@ package bf_switch_sysfs{
 package bf_fan{
   class bf_fan_driver {
     +bf_newport_fan_data data;
-    -int bf_fan_init()
-    -void bf_fan_exit()
-    -int bf_fan_create_all_attr()
-    -void bf_fan_remove_all_attr()
-    -int bf_fan_create_fan_attr()
-    -void bf_fan_remove_fan_attr()
-    -int bf_fan_create_motor_attr()
-    -void bf_fan_remove_motor_attr()
+    +int bf_fan_init()
+    +void bf_fan_exit()
+    -int fan_init()
+    -void fan_exit()
+    -int motor_init()
+    -void motr_exit()
+    -int bf_fan_create_root_attr()
+    -void bf_fan_remove_root_attr()
+    -int bf_fan_create_symlink()
+    -void bf_fan_remove_symlink()
+    -int bf_motor_create_symlink()
+    -void bf_motor_remove_symlink()
   }
 
   class bf_fan_api{
-    +extern bf_newport_fan_data data;
-    +ssize_t fan_show1()
-    +ssize_t fan_store1()
-    +ssize_t fan_show2()
-    +ssize_t fan_store2()
-    +ssize_t fan_show3()
-    +ssize_t fan_store3()
+    +ssize_t root_show()
+    +ssize_t root_store()
+    +ssize_t fan_show()
+    +ssize_t fan_store()
+    +ssize_t motor_show()
+    +ssize_t motor_store()
     +int init_ipmi_data()
     +void ipmi_msg_handler()
     +int update_fan_data()
   }
 }
 
-bf_fan --> bf_switch_sysfs : Use >
+bf_fan_driver --> bf_switch_sysfs : Use >
 bf_fan_driver --> bf_fan_api : Use >
 
 @enduml
