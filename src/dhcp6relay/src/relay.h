@@ -96,11 +96,12 @@ int sock_open(int ifindex, const struct sock_fprog *fprog);
  * @brief               prepare L3 socket for sending
  *
  * @param local_sock    pointer to socket to be prepared
- * @param config       argument config that contains strings of server and interface addresses
+ * @param config        argument config that contains strings of server and interface addresses
+ * @param index         interface id
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, relay_config *config);
+void prepare_socket(int *local_sock, relay_config *config, int index);
 
 /**
  * @code                        prepare_relay_config(relay_config *interface_config, int local_sock, int filter);

@@ -286,7 +286,7 @@ int sock_open(int ifindex, const struct sock_fprog *fprog)
 		return -1;
 	}
 
-	int s = socket(AF_PACKET, SOCK_RAW, 0);
+	int s = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if (s == -1) {
 		syslog(LOG_ERR, "socket: Failed to create socket\n");
 		return -1;
@@ -294,24 +294,12 @@ int sock_open(int ifindex, const struct sock_fprog *fprog)
 
 	struct sockaddr_ll sll = {
 	    .sll_family = AF_PACKET,
-	    .sll_protocol = htons(ETH_P_IPV6),
+	    .sll_protocol = htons(ETH_P_ALL),
 	    .sll_ifindex = ifindex
 	};
 
 	if (bind(s, (struct sockaddr *)&sll, sizeof sll) == -1) {
 		syslog(LOG_ERR, "bind: Failed to bind to specified interface\n");
-		(void) close(s);
-	    return -1;
-	}
-
-	struct packet_mreq mreq = {
-	    .mr_ifindex = ifindex,
-	    .mr_type = PACKET_MR_PROMISC
-	};
-
-	if (setsockopt(s, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq, sizeof mreq) == -1)
-	{
-		syslog(LOG_ERR, "setsockopt: Failed to send PACkET_MR_PROMISC\n");
 		(void) close(s);
 	    return -1;
 	}
@@ -397,39 +385,22 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, relay_config *config) {
+void prepare_socket(int *local_sock, relay_config *config, int index) {
+    int flag = 1;
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
-    //addr.sin6_addr = in6addr_any;
-    /*TO FIX AFTER TESTING IPV6 ADDR AUTO SELECTION. PLEASE IGNORE THE COMMENTED AREA*/
-    struct ifaddrs *ifa, *ifa_tmp;
-    char tmp[INET6_ADDRSTRLEN];
-    tmp[0] = 0;
-
-    if (getifaddrs(&ifa) == -1) {
-        syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces\n");
-        exit(1);
-    } 
-
-    ifa_tmp = ifa;
-    while (ifa_tmp) {
-        if ((ifa_tmp->ifa_addr) && (ifa_tmp->ifa_addr->sa_family == AF_INET6)) {                  
-            struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
-            inet_ntop(AF_INET6, &in6->sin6_addr, tmp, sizeof(tmp));
-            if(strcmp(ifa_tmp->ifa_name, config->interface.c_str()) == 0 && (is_addr_gua(in6->sin6_addr))) {
-                inet_pton(AF_INET6, tmp, &addr.sin6_addr);
-            }
-        }
-        ifa_tmp = ifa_tmp->ifa_next;
-    }
-    freeifaddrs(ifa);   
+    addr.sin6_addr = in6addr_any;
+    addr.sin6_scope_id = index;
+    addr.sin6_port = htons(RELAY_PORT);
 
     if ((*local_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
         syslog(LOG_ERR, "socket: Failed to create socket\n");
     }
 
-    addr.sin6_port = htons(RELAY_PORT);
+    if((setsockopt(*local_sock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag))) == -1) {
+		syslog(LOG_ERR, "setsockopt: Unable to set socket option\n");
+	}
     
     if (bind(*local_sock, (sockaddr *)&addr, sizeof(addr)) == -1) {
         syslog(LOG_ERR, "bind: Failed to bind to socket\n");
@@ -583,10 +554,11 @@ void callback(evutil_socket_t fd, short event, void *arg) {
 void server_callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
     sockaddr_in6 from;
+    socklen_t len = sizeof(from);
     int32_t data = 0;
     static uint8_t message_buffer[4096];
 
-    if ((data = recvfrom(config->local_sock, message_buffer, 4096, 0, (sockaddr *)&from, (socklen_t *)sizeof(from))) == -1) {
+    if ((data = recvfrom(config->local_sock, message_buffer, 4096, 0, (sockaddr *)&from, &len)) == -1) {
         syslog(LOG_WARNING, "recv: Failed to receive data from server\n");
     }
 
@@ -707,7 +679,7 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
 
         filter = sock_open(index, &ether_relay_fprog);
 
-        prepare_socket(&local_sock, &config);
+        prepare_socket(&local_sock, &config, index);
         sockets.push_back(filter);
         sockets.push_back(local_sock);
 
