@@ -172,8 +172,8 @@ static ssize_t getreg_show(struct device *dev, struct device_attribute *attr,
 	return len;
 }
 
-static ssize_t get_reset(struct device *dev, struct device_attribute *devattr,
-			 char *buf)
+static ssize_t qsfp_reset_show(struct device *dev,
+			       struct device_attribute *devattr, char *buf)
 {
 	unsigned long reset = 0;
 
@@ -231,8 +231,9 @@ static ssize_t setreg_store(struct device *dev,
 	return count;
 }
 
-static ssize_t set_reset(struct device *dev, struct device_attribute *devattr,
-			 const char *buf, size_t count)
+static ssize_t qsfp_reset_store(struct device *dev,
+				struct device_attribute *devattr,
+				const char *buf, size_t count)
 {
 	unsigned long reset;
 	int err;
@@ -257,8 +258,8 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *devattr,
 	return count;
 }
 
-static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr,
-			  char *buf)
+static ssize_t qsfp_lpmode_show(struct device *dev,
+				struct device_attribute *devattr, char *buf)
 {
 	unsigned long lpmod = 0;
 
@@ -275,8 +276,9 @@ static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr,
 	return sprintf(buf, "0x%8.8lx\n", lpmod & 0xffffffff);
 }
 
-static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr,
-			  const char *buf, size_t count)
+static ssize_t qsfp_lpmode_store(struct device *dev,
+				 struct device_attribute *devattr,
+				 const char *buf, size_t count)
 {
 	unsigned long lpmod;
 	int err;
@@ -301,8 +303,8 @@ static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr,
 	return count;
 }
 
-static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr,
-			  char *buf)
+static ssize_t qsfp_modprs_show(struct device *dev,
+				struct device_attribute *devattr, char *buf)
 {
 	unsigned long present;
 
@@ -317,8 +319,8 @@ static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr,
 	return sprintf(buf, "0x%8.8lx\n", present & 0xffffffff);
 }
 
-static ssize_t get_modirq(struct device *dev, struct device_attribute *devattr,
-			  char *buf)
+static ssize_t qsfp_modirq_show(struct device *dev,
+				struct device_attribute *devattr, char *buf)
 {
 	unsigned long irq;
 
@@ -333,8 +335,8 @@ static ssize_t get_modirq(struct device *dev, struct device_attribute *devattr,
 	return sprintf(buf, "0x%8.8lx\n", irq & 0xffffffff);
 }
 
-static ssize_t get_modprs_irq(struct device *dev,
-			      struct device_attribute *devattr, char *buf)
+static ssize_t qsfp_modprs_irq_show(struct device *dev,
+				    struct device_attribute *devattr, char *buf)
 {
 	unsigned long prs_int = 0;
 
@@ -354,8 +356,8 @@ static ssize_t get_modprs_irq(struct device *dev,
 	return sprintf(buf, "0x%8.8lx\n", prs_int & 0xffffffff);
 }
 
-static ssize_t get_modprs_msk(struct device *dev,
-			      struct device_attribute *devattr, char *buf)
+static ssize_t qsfp_modprs_msk_show(struct device *dev,
+				    struct device_attribute *devattr, char *buf)
 {
 	unsigned long prs_int_msk = 0;
 
@@ -372,9 +374,9 @@ static ssize_t get_modprs_msk(struct device *dev,
 	return sprintf(buf, "0x%8.8lx\n", prs_int_msk & 0xffffffff);
 }
 
-static ssize_t set_modprs_msk(struct device *dev,
-			      struct device_attribute *devattr, const char *buf,
-			      size_t count)
+static ssize_t qsfp_modprs_msk_store(struct device *dev,
+				     struct device_attribute *devattr,
+				     const char *buf, size_t count)
 {
 	unsigned long prs_int_msk;
 	int err;
@@ -399,8 +401,8 @@ static ssize_t set_modprs_msk(struct device *dev,
 	return count;
 }
 
-static ssize_t get_cpld4_int0(struct device *dev,
-			      struct device_attribute *devattr, char *buf)
+static ssize_t cpld4_int0_show(struct device *dev,
+			       struct device_attribute *devattr, char *buf)
 {
 	unsigned char int0 = 0;
 
@@ -413,8 +415,8 @@ static ssize_t get_cpld4_int0(struct device *dev,
 	return sprintf(buf, "0x%2.2x\n", int0 & 0xff);
 }
 
-static ssize_t get_cpld4_int0_msk(struct device *dev,
-				  struct device_attribute *devattr, char *buf)
+static ssize_t cpld4_int0_msk_show(struct device *dev,
+				   struct device_attribute *devattr, char *buf)
 {
 	unsigned char int0_msk = 0;
 
@@ -427,9 +429,9 @@ static ssize_t get_cpld4_int0_msk(struct device *dev,
 	return sprintf(buf, "0x%2.2x\n", int0_msk & 0xff);
 }
 
-static ssize_t set_cpld4_int0_msk(struct device *dev,
-				  struct device_attribute *devattr,
-				  const char *buf, size_t count)
+static ssize_t cpld4_int0_msk_store(struct device *dev,
+				    struct device_attribute *devattr,
+				    const char *buf, size_t count)
 {
 	unsigned long int0_msk;
 	int err;
@@ -451,16 +453,14 @@ static ssize_t set_cpld4_int0_msk(struct device *dev,
 
 static DEVICE_ATTR_RW(getreg);
 static DEVICE_ATTR_WO(setreg);
-static DEVICE_ATTR(qsfp_reset, S_IRUGO | S_IWUSR, get_reset, set_reset);
-static DEVICE_ATTR(qsfp_lpmode, S_IRUGO | S_IWUSR, get_lpmode, set_lpmode);
-static DEVICE_ATTR(qsfp_modprs, S_IRUGO, get_modprs, NULL);
-static DEVICE_ATTR(qsfp_modirq, S_IRUGO, get_modirq, NULL);
-static DEVICE_ATTR(qsfp_modprs_irq, S_IRUGO, get_modprs_irq, NULL);
-static DEVICE_ATTR(qsfp_modprs_msk, S_IRUGO | S_IWUSR, get_modprs_msk,
-		   set_modprs_msk);
-static DEVICE_ATTR(cpld4_int0, S_IRUGO, get_cpld4_int0, NULL);
-static DEVICE_ATTR(cpld4_int0_msk, S_IRUGO | S_IWUSR, get_cpld4_int0_msk,
-		   set_cpld4_int0_msk);
+static DEVICE_ATTR_RW(qsfp_reset);
+static DEVICE_ATTR_RW(qsfp_lpmode);
+static DEVICE_ATTR_RO(qsfp_modprs);
+static DEVICE_ATTR_RO(qsfp_modirq);
+static DEVICE_ATTR_RO(qsfp_modprs_irq);
+static DEVICE_ATTR_RW(qsfp_modprs_msk);
+static DEVICE_ATTR_RO(cpld4_int0);
+static DEVICE_ATTR_RW(cpld4_int0_msk);
 
 static struct attribute *dx010_lpc_attrs[] = {
 	&dev_attr_getreg.attr,
