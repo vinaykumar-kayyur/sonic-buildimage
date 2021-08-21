@@ -117,7 +117,7 @@
 #define I2C_READ_DATA      0x20
 
 /*
- * private data to send to I2C core
+ * private data to I2C core
  */
 struct dx010_smbus_core_data {
     u8 addr;
@@ -127,13 +127,15 @@ struct dx010_smbus_core_data {
     union i2c_smbus_data *data;
 };
 
-/*
- * private data of I2C adapter
- * base_addr: Base address of this I2C adapter core.
- * port_id: The port ID, use to mux an i2c core to a font panel port.
- * dx010_smbus_core_data: The struct carry current data setup of current smbus transfer.
- */
+/**
+  * dx010_adap_data - private data of I2C adapter
+  * dev: A reference to adapter device.
+  * base_addr: Base address of this I2C adapter core.
+  * port_id: The port ID, to mux an i2c core to a channel.
+  * dx010_smbus_core_data: The struct carry current data setup of current smbus transfer.
+  */
 struct dx010_adap_data {
+	struct device *dev;
         int base_addr;
         int portid;
         struct dx010_smbus_core_data current_xfer;
@@ -524,8 +526,10 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
         unsigned long ioBase;
         short portid, opcode, devaddr, cmdbyte0, ssr, writedata, readdata;
         union i2c_smbus_data *data;
+        struct device *dev;
 
         error = -EIO;
+        dev = priv->dev;
         ioBase = priv->base_addr;
         data = priv->current_xfer.data;
 
@@ -540,7 +544,7 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
         mutex_lock(&cpld_data->cpld_lock);
 
         /* Wait for the core to be free */
-        pr_debug("CPLD_I2C Wait busy bit(6) to be cleared\n");
+        dev_dbg(dev, "CPLD_I2C Wait busy bit(6) to be cleared\n");
         do {
                 val = inb(ssr);
                 if ((val & CPLD_I2C_BUSY) == 0)
@@ -552,16 +556,16 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
          * If any error happen here, we do soft-reset
          * and check the BUSY/ERROR again.
          */
-        pr_debug("CPLD_I2C Check error bit(7)\n");
+        dev_dbg(dev, "CPLD_I2C Check error bit(7)\n");
         if (val & CPLD_I2C_ERR) {
-                pr_debug("CPLD_I2C Error, try soft-reset\n");
+                dev_dbg(dev, "CPLD_I2C Error, try soft-reset\n");
                 outb(CPLD_I2C_RESET, ssr);
                 udelay(3000);
                 outb(CPLD_I2C_UNRESET, ssr);
 
                 val = inb(ssr);
                 if (val & (CPLD_I2C_BUSY | CPLD_I2C_ERR)) {
-                    pr_debug("CPLD_I2C Error, core busy after reset\n");
+                    dev_dbg(dev, "CPLD_I2C Error, core busy after reset\n");
                     error = -EIO;
                     goto exit_unlock;
                 }
@@ -570,21 +574,21 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
         /* Configure Port_ID */
         val = priv->portid | CPLD_I2C_CLK_100Khz_BIT;
         outb(val, portid);
-        pr_debug("CPLD_I2C Write PortID 0x%x\n", val);
+        dev_dbg(dev, "CPLD_I2C Write PortID 0x%x\n", val);
 
         /* Configure OP_Code */
         val = (priv->current_xfer.data_len << 4) &  CPLD_I2C_DATA_SZ_MASK;
         val |= (priv->current_xfer.cmd_len & CPLD_I2C_CMD_SZ_MASK);
         outb(val, opcode);
-        pr_debug("CPLD_I2C Write OP_Code 0x%x\n", val);
+        dev_dbg(dev, "CPLD_I2C Write OP_Code 0x%x\n", val);
 
         /* Configure CMD_Byte0 */
         outb(priv->current_xfer.cmd[0], cmdbyte0);
-        pr_debug("CPLD_I2C Write CMD_Byte 0x%x\n", priv->current_xfer.cmd[0]);
+        dev_dbg(dev, "CPLD_I2C Write CMD_Byte 0x%x\n", priv->current_xfer.cmd[0]);
 
         /* Configure write data buffer */
         if ((priv->current_xfer.addr & BIT(0)) == I2C_SMBUS_WRITE){
-                pr_debug("CPLD_I2C Write WR_DATA buffer\n");
+                dev_dbg(dev, "CPLD_I2C Write WR_DATA buffer\n");
                 switch(priv->current_xfer.data_len){
                 case 1:
                         outb(data->byte, writedata);
@@ -597,11 +601,11 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
         }
 
         /* Start transfer, write the device address register */
-        pr_debug("CPLD_I2C Write DEV_ADDR 0x%x\n", priv->current_xfer.addr);
+        dev_dbg(dev, "CPLD_I2C Write DEV_ADDR 0x%x\n", priv->current_xfer.addr);
         outb(priv->current_xfer.addr, devaddr);
 
         /* Wait for transfer finish */
-        pr_debug("CPLD_I2C Wait busy bit(6) to be cleared\n");
+        dev_dbg(dev, "CPLD_I2C Wait busy bit(6) to be cleared\n");
         do {
                 val = inb(ssr);
                 if ((val & CPLD_I2C_BUSY) == 0)
@@ -609,7 +613,7 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
                 udelay(100);
         } while (true); // Risky - add timeout
 
-        pr_debug("CPLD_I2C Check error bit(7)\n");
+        dev_dbg(dev, "CPLD_I2C Check error bit(7)\n");
         if (val & CPLD_I2C_ERR) {
                 error = -EIO;
                 goto exit_unlock;
@@ -617,7 +621,7 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
 
         /* Get the data from buffer */
         if ((priv->current_xfer.addr & BIT(0)) == I2C_SMBUS_READ){
-                pr_debug("CPLD_I2C Read RD_DATA buffer\n");
+                dev_dbg(dev, "CPLD_I2C Read RD_DATA buffer\n");
                 switch (priv->current_xfer.data_len) {
                 case 1:
                         data->byte = inb(readdata);
@@ -632,7 +636,7 @@ static s32 cpld_smbus_transfer(struct dx010_adap_data *priv) {
         error = 0;
 
 exit_unlock:
-        pr_debug("CPLD_I2C Exit with %d\n", error);
+        dev_dbg(dev, "CPLD_I2C Exit with %d\n", error);
         mutex_unlock(&cpld_data->cpld_lock);
         return error;
 
@@ -651,8 +655,8 @@ static s32 dx010_smbus_xfer(struct i2c_adapter *adap, u16 addr,
 
         priv = i2c_get_adapdata(adap);
 
-        pr_debug("smbus_xfer called RW:%x CMD:%x SIZE:0x%x",
-                 read_write, command, size);
+        dev_dbg(&adap->dev, "smbus_xfer called RW:%x CMD:%x SIZE:0x%x",
+                read_write, command, size);
 
         priv->current_xfer.addr = (addr << 1) | read_write;
         priv->current_xfer.data = data;
@@ -735,6 +739,7 @@ static struct i2c_adapter *cel_dx010_i2c_init(struct platform_device *pdev, int 
                 goto free_adap;
         }
 
+        priv->dev = &new_adapter->dev;
         priv->portid = portid;
         priv->base_addr = base_addr;
 
