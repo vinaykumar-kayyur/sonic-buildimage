@@ -8,6 +8,8 @@
  * kernel driver module for bf fan
  */
 
+#define pr_fmt(fmt) "%s:%s: " fmt, KBUILD_MODNAME,  __func__
+
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
@@ -21,11 +23,11 @@
 #define FAN_DIRNAME "fan%d"
 #define MOTOR_DIRNAME "motor%d"
 
-static struct bf_fan_drv_data *g_data = NULL;
+struct bf_fan_drv_data *g_data = NULL;
 
-// --- root attrs ---
-BF_DEV_ATTR_RW(debug, root, DEBUG_ATTR_ID);
-BF_DEV_ATTR_RW(loglevel, root, LOGLEVEL_ATTR_ID);
+/* Root Attributes */
+BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
+BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
 BF_DEV_ATTR_RO(num, root, NUMFAN_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
@@ -39,7 +41,7 @@ static struct attribute_group root_attr_group = {
     .attrs = root_attrs,
 };
 
-// --- fan attrs ---
+/* Fan Attributes */
 BF_DEV_ATTR_RO(model_name, fan, FAN_MODEL_ATTR_ID);
 BF_DEV_ATTR_RO(serial_number, fan, FAN_SERIAL_ATTR_ID);
 BF_DEV_ATTR_RO(vendor, fan, FAN_VENDOR_ATTR_ID);
@@ -69,7 +71,7 @@ static const struct attribute_group *fan_attr_groups[] = {
     NULL
 };
 
-// --- motor attrs ---
+/* Motor Attributes */
 BF_DEV_ATTR_RO(speed, motor, MOTOR_SPEED_ATTR_ID);
 BF_DEV_ATTR_RO(speed_tolerance, motor, MOTOR_SPEED_TOL_ATTR_ID);
 BF_DEV_ATTR_RO(speed_target, motor, MOTOR_SPEED_TARGET_ATTR_ID);
@@ -92,8 +94,6 @@ static const struct attribute_group *motor_attr_groups[] = {
     &motor_attr_group,
     NULL
 };
-
-/////////////////////////////////////////////////////
 
 
 static int bf_fan_create_symlink(struct platform_device *pdev)
@@ -138,7 +138,7 @@ static int bf_fan_create_root_attr(void)
     g_data->fan_root_kobj = create_sysfs_dir_and_attr(ROOT_DIRNAME,
             bf_get_switch_kobj(), &root_attr_group);
     if(g_data->fan_root_kobj == NULL)
-        return -EINVAL;
+        return -EIO;
     return 0;
 }
 
@@ -147,11 +147,9 @@ static void bf_fan_remove_root_attr(void)
     remove_sysfs_dir_and_attr(g_data->fan_root_kobj, &root_attr_group);
 }
 
-///////////////////////////////////////////////////////////////
-
 static int bf_fan_probe(struct platform_device *pdev)
 {
-    dev_info(&pdev->dev, "bf_fan_probe, pdev id=%d\n", pdev->id);
+    bf_print("found dev id=%d\n", pdev->id);
     return bf_fan_create_symlink(pdev);
 }
 
@@ -163,10 +161,10 @@ static int bf_fan_remove(struct platform_device *pdev)
 
 DECL_PLATFORM_DRIVER(bf_fan, FAN_DRVNAME);
 
-///////////////////////////////////////////////////////////
+
 static int bf_motor_probe(struct platform_device *pdev)
 {
-    dev_info(&pdev->dev, "bf_motor_probe, pdev id=%d\n", pdev->id);
+    bf_print("found dev id=%d\n", pdev->id);
     return bf_motor_create_symlink(pdev);
 }
 
@@ -178,7 +176,6 @@ static int bf_motor_remove(struct platform_device *pdev)
 
 DECL_PLATFORM_DRIVER(bf_motor, MOTOR_DRVNAME);
 
-////////////////////////////////////////////////////
 
 static void blanked_device_release(struct device *dev){ }
 
