@@ -8,6 +8,8 @@
  * kernel driver module for bf xcvr
  */
 
+#define pr_fmt(fmt) "%s:%s: " fmt, KBUILD_MODNAME,  __func__
+
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
@@ -19,15 +21,14 @@
 #define DIRNAME "eth%d"
 #define ROOT_DIRNAME "transceiver"
 
-static struct bf_xcvr_drv_data *g_data = NULL;
+struct bf_xcvr_drv_data *g_data = NULL;
 
-//////////////////////////////////////////////
-// --- root attrs ---
+/* Root Attributes */
 BF_DEV_ATTR_RW_2(power_on, _r, root, POWERON_ATTR_ID);
 BF_DEV_ATTR_RW_2(present, _r, root, PRESENT_ATTR_ID);
-BF_DEV_ATTR_RW(debug, root, DEBUG_ATTR_ID);
-BF_DEV_ATTR_RW(loglevel, root, LOGLEVEL_ATTR_ID);
-BF_DEV_ATTR_RO(num, root, NUM_ATTR_ID);
+BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
+BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
+BF_DEV_ATTR_RO(num, num, NUM_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_power_on_r.dev_attr.attr,
@@ -42,7 +43,7 @@ static struct attribute_group root_attr_group = {
     .attrs = root_attrs,
 };
 
-// // --- dev attrs ---
+/* XCVR Attributes */
 BF_DEV_ATTR_RW(power_on, xcvr, ETH_POWERON_ATTR_ID);
 BF_DEV_ATTR_RW(reset, xcvr, ETH_RESET_ATTR_ID);
 BF_DEV_ATTR_RW(lpmode, xcvr, ETH_LPMODE_ATTR_ID);
@@ -68,8 +69,6 @@ static const struct attribute_group *dev_attr_groups[] = {
     NULL
 };
 
-/////////////////////////////////////////////////////
-
 
 static int bf_xcvr_create_symlink(struct platform_device *pdev)
 {
@@ -90,7 +89,7 @@ static int bf_xcvr_create_root_attr(void)
     g_data->root_kobj = create_sysfs_dir_and_attr(ROOT_DIRNAME,
             bf_get_switch_kobj(), &root_attr_group);
     if(g_data->root_kobj == NULL)
-        return -EINVAL;
+        return -EIO;
     return 0;
 }
 
@@ -99,13 +98,11 @@ static void bf_xcvr_remove_root_attr(void)
     remove_sysfs_dir_and_attr(g_data->root_kobj, &root_attr_group);
 }
 
-///////////////////////////////////////////////////////////////
 
 static int bf_xcvr_probe(struct platform_device *pdev)
 {
-    dev_info(&pdev->dev, "bf_xcvr_probe, pdev id=%d\n", pdev->id);
+    bf_print("found dev id=%d\n", pdev->id);
     return bf_xcvr_create_symlink(pdev);
-    return 0;
 }
 
 static int bf_xcvr_remove(struct platform_device *pdev)
@@ -116,7 +113,6 @@ static int bf_xcvr_remove(struct platform_device *pdev)
 
 DECL_PLATFORM_DRIVER(bf_xcvr, DRVNAME);
 
-////////////////////////////////////////////////////
 
 static void blanked_device_release(struct device *dev){ }
 
@@ -130,7 +126,7 @@ static inline void init_pdev(struct platform_device *pdev, char *name, int id,
     dev_set_drvdata(&pdev->dev, g_data);
 }
 
-static int xcvr_init(void)
+static int bf_xcvr_register(void)
 {
     int i, j, ret;
 
@@ -155,7 +151,7 @@ dri_reg_err:
     return ret;
 }
 
-static void xcvr_exit(void)
+static void bf_xcvr_unregister(void)
 {
     int i;
     for (i = 0 ; i < NUM_DEV ; i++)
@@ -178,14 +174,13 @@ static int __init bf_xcvr_init(void)
     if (ret < 0)
         goto create_root_sysfs_err;
 
-    ret = xcvr_init();
+    ret = bf_xcvr_register();
     if (ret < 0)
-        goto dev_init_err;
-
+        goto reg_dev_err;
 
     return 0;
 
-dev_init_err:
+reg_dev_err:
     bf_xcvr_remove_root_attr();
 create_root_sysfs_err:
     kfree(g_data);
@@ -195,7 +190,7 @@ alloc_err:
 
 static void __exit bf_xcvr_exit(void)
 {
-    xcvr_exit();
+    bf_xcvr_unregister();
     bf_xcvr_remove_root_attr();
     kfree(g_data);
 }

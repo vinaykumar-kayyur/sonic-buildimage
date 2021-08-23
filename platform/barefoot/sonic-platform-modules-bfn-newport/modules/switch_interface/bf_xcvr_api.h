@@ -20,4 +20,11 @@ ssize_t root_show(struct device *dev, struct device_attribute *da,
 ssize_t root_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count);
 
+ssize_t debug_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+ssize_t num_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+ssize_t num_store(struct device *dev, struct device_attribute *da,
+                            const char *buf, size_t count);
+
 #endif //__BF_XCVR_API_H__

@@ -18,23 +18,28 @@ extern struct kobject * create_sysfs_dir_and_attr(char *dir_name,
         struct kobject *parent, struct attribute_group *attrs);
 extern void remove_sysfs_dir_and_attr(struct kobject *kobj,
         struct attribute_group *attr);
-
-enum bf_log_levels{
-    LOG_ERR = 0X1,
-    LOG_WARN = 0X2,
-    LOG_INFO = 0X4,
-    LOG_DEBUG = 0X8
-};
-#define BF_DEFAULT_LOGLEVEL LOG_WARN
-
+extern int userlevel_to_kernlevel(int level);
+extern int kernlevel_to_userlevel(int level);
 
 /*
- * Name-Mangled version of SENSOR_ATTR
+ * Macro to print kernel message
+ * Use g_data->loglevel to prefix the loglevel.
  */
+#define bf_print(fmt, ...)                       \
+    if(g_data)                              \
+        switch(g_data->loglevel){           \
+            case 0: printk(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__); break; \
+            case 1: printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__); break;     \
+            case 2: printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__); break;    \
+            case 3: printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__); break;   \
+        }
+
+/* Name-Mangled version of SENSOR_ATTR */
 #define SENSOR_DEVICE_ATTR_M(_name, _mangle, _mode, _show, _store, _index)  \
 struct sensor_device_attribute sensor_dev_attr_##_name##_mangle             \
     = SENSOR_ATTR(_name, _mode, _show, _store, _index)
 
+/* Name-Mangled version of BF_DEV_ATTR */
 #define BF_DEV_ATTR_RO_2(_name, _mangle, _func, _index)             \
     static SENSOR_DEVICE_ATTR_M(_name, _mangle, 0444, _func##_show, \
             NULL, _index)
@@ -43,13 +48,14 @@ struct sensor_device_attribute sensor_dev_attr_##_name##_mangle             \
     static SENSOR_DEVICE_ATTR_M(_name, _mangle, 0644, _func##_show, \
             _func##_store, _index)
 
+/* Ordinary BF_DEV_ATTR */
 #define BF_DEV_ATTR_RO(_name, _func, _index)            \
     BF_DEV_ATTR_RO_2(_name, , _func, _index)
 
 #define BF_DEV_ATTR_RW(_name, _func, _index)            \
     BF_DEV_ATTR_RW_2(_name, , _func, _index)
 
-
+/* Declare platform driver one-liner */
 #define DECL_PLATFORM_DRIVER(_func, _name)              \
     static struct platform_driver _func##_driver = {    \
         .probe = _func##_probe,                         \
@@ -58,6 +64,30 @@ struct sensor_device_attribute sensor_dev_attr_##_name##_mangle             \
             .name = _name,                              \
             .owner = THIS_MODULE,                       \
         },                                              \
+    }
+
+/* loglevel show/store funcs must be implemented for all modules */
+ssize_t loglevel_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+ssize_t loglevel_store(struct device *dev, struct device_attribute *da,
+                            const char *buf, size_t count);
+
+/* loglevel show/store implementation */
+#define LOGLEVEL_SHOW_STORE_FUNC(gdata_loglevel)                               \
+    ssize_t loglevel_show(struct device *dev, struct device_attribute *da,     \
+                                char *buf){                                    \
+        return sprintf(buf, "%d\n", kernlevel_to_userlevel(g_data->loglevel)); \
+    }                                                                          \
+    ssize_t loglevel_store(struct device *dev, struct device_attribute *da,    \
+                                const char *buf, size_t count)                 \
+    {                                                                          \
+        long val = 0;                                                          \
+        int status;                                                            \
+        status = kstrtol(buf, 10, &val);                                       \
+        if (status)                                                            \
+            return status;                                                     \
+        g_data->loglevel = userlevel_to_kernlevel(val);                        \
+        return count;                                                          \
     }
 
 #endif //__BF_SWITCH_SYSFS_H__

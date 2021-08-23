@@ -10,8 +10,35 @@
 
 #include <linux/module.h>
 
-struct kobject *switch_kobj = NULL;
+enum switch_log_levels{
+    LOG_ERR = 0X1,
+    LOG_WARN = 0X2,
+    LOG_INFO = 0X4,
+    LOG_DEBUG = 0X8
+};
+#define DEFAULT_LOGLEVEL_IDX 0  // 0 = LOG_WARN, kzalloc g_data works.
 
+struct kobject *switch_kobj = NULL;
+static int level_map[] = {LOG_WARN, LOG_ERR, LOG_INFO, LOG_DEBUG};
+
+int userlevel_to_kernlevel(int level){
+    int i, ret = DEFAULT_LOGLEVEL_IDX; //default level while not exist
+    for(i=0 ; i<ARRAY_SIZE(level_map) ; i++){
+        if(level_map[i] == level){
+            ret = i;
+            break;
+        }
+    }
+    return ret;
+}
+EXPORT_SYMBOL(userlevel_to_kernlevel);
+
+int kernlevel_to_userlevel(int level){
+    if(level >= ARRAY_SIZE(level_map))
+        return -EINVAL;
+    return level_map[level];
+}
+EXPORT_SYMBOL(kernlevel_to_userlevel);
 
 static int __init bf_switch_sysfs_init(void)
 {
