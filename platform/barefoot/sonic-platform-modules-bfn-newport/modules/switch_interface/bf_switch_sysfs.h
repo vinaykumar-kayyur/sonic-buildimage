@@ -90,4 +90,19 @@ ssize_t loglevel_store(struct device *dev, struct device_attribute *da,
         return count;                                                          \
     }
 
+/* debug show funcs must be implemented for all modules */
+ssize_t debug_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+
+/* debug show implementation */
+#define DEBUG_SHOW_TXT(debug_txt)                                       \
+    ssize_t debug_show(struct device *dev, struct device_attribute *da, \
+                                char *buf)                              \
+    {                                                                   \
+        char *str =                                                     \
+            debug_txt                                                   \
+            ;                                                           \
+        return sprintf(buf, "%s\n", str);                               \
+    }
+
 #endif //__BF_SWITCH_SYSFS_H__

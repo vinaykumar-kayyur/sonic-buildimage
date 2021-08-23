@@ -18,12 +18,38 @@
 
 extern struct bf_xcvr_drv_data *g_data;
 
-ssize_t debug_show(struct device *dev, struct device_attribute *da,
-                            char *buf)
-{
-    char *str = "Here is a good bunch of debug messages...........";
-    return sprintf(buf, "%s\n", str);
-}
+
+DEBUG_SHOW_TXT(
+    "+++DUMMY content+++\n"
+    "xcvr present:\n"
+    "  0-->present\n"
+    "  1-->unpresent\n"
+    "  bit0-->xcvr1, bit4-->xcvr2\n"
+    "  eg:\n"
+    "  1.show present info: i2cget -f -y 2 0x1d 0x34\n"
+    "\n"
+    "xcvr data:\n"
+    "                    path\n"
+    "  xcvr1             81-0058\n"
+    "  xcvr2             82-0058\n"
+    "                    sysfs\n"
+    "  temp     :    temp1_input\n"
+    "  fan_speed:    fan1_input\n"
+    "  i_in     :    curr1_input\n"
+    "  v_in     :    in1_input\n"
+    "  p_in     :    power1_input\n"
+    "  i_out    :    curr2_input\n"
+    "  v_out    :    in2_input\n"
+    "  p_out    :    power2_input\n"
+    "  eg:\n"
+    "  1.show data info: cat /sys/bus/i2c/devices/$path/hwmon/hwmon*/$sysfs\n"
+    "xcvr vendor, model, serial, version:\n"
+    "  xcvr1-->$bus = 81, $addr = 0x50\n"
+    "  xcvr2-->$bus = 82, $addr = 0x50\n"
+    "  eg:\n"
+    "  1.show all info: i2cdump -f -y $bus $addr\n"
+    "---DUMMY content---\n"
+)
 
 LOGLEVEL_SHOW_STORE_FUNC(g_data->loglevel);
 
