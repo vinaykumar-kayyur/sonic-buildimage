@@ -13,8 +13,7 @@ setup(
     packages=[
         'sonic_platform',
         'rgutil',
-        'eepromutil',
-        'sonic_pcie',
+        'eepromutil'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
