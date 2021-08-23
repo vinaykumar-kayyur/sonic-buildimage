@@ -28,7 +28,7 @@ BF_DEV_ATTR_RW_2(power_on, _r, root, POWERON_ATTR_ID);
 BF_DEV_ATTR_RW_2(present, _r, root, PRESENT_ATTR_ID);
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
 BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
-BF_DEV_ATTR_RO(num, num, NUM_ATTR_ID);
+BF_DEV_ATTR_RO(num, devnum, NUM_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_power_on_r.dev_attr.attr,

@@ -72,12 +72,15 @@ ssize_t loglevel_show(struct device *dev, struct device_attribute *da,
 ssize_t loglevel_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count);
 
+#define ATTR_SHOW_NUM_FUNC(_name, _val)                                          \
+    ssize_t _name##_show(struct device *dev, struct device_attribute *da,   \
+                                char *buf){                                 \
+        return sprintf(buf, "%d\n", _val);                                  \
+    }
+
 /* loglevel show/store implementation */
-#define LOGLEVEL_SHOW_STORE_FUNC(gdata_loglevel)                               \
-    ssize_t loglevel_show(struct device *dev, struct device_attribute *da,     \
-                                char *buf){                                    \
-        return sprintf(buf, "%d\n", kernlevel_to_userlevel(g_data->loglevel)); \
-    }                                                                          \
+#define LOGLEVEL_SHOW_STORE_FUNC(_gdata_loglevel)                              \
+    ATTR_SHOW_NUM_FUNC(loglevel, kernlevel_to_userlevel(_gdata_loglevel))      \
     ssize_t loglevel_store(struct device *dev, struct device_attribute *da,    \
                                 const char *buf, size_t count)                 \
     {                                                                          \
@@ -86,7 +89,7 @@ ssize_t loglevel_store(struct device *dev, struct device_attribute *da,
         status = kstrtol(buf, 10, &val);                                       \
         if (status)                                                            \
             return status;                                                     \
-        g_data->loglevel = userlevel_to_kernlevel(val);                        \
+        _gdata_loglevel = userlevel_to_kernlevel(val);                         \
         return count;                                                          \
     }
 
@@ -95,12 +98,12 @@ ssize_t debug_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 
 /* debug show implementation */
-#define DEBUG_SHOW_TXT(debug_txt)                                       \
+#define DEBUG_SHOW_TXT(_debug_txt)                                      \
     ssize_t debug_show(struct device *dev, struct device_attribute *da, \
                                 char *buf)                              \
     {                                                                   \
         char *str =                                                     \
-            debug_txt                                                   \
+            _debug_txt                                                  \
             ;                                                           \
         return sprintf(buf, "%s\n", str);                               \
     }

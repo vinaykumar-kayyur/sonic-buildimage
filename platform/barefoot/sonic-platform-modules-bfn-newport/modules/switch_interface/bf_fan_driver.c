@@ -28,7 +28,7 @@ struct bf_fan_drv_data *g_data = NULL;
 /* Root Attributes */
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
 BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
-BF_DEV_ATTR_RO(num, root, NUMFAN_ATTR_ID);
+BF_DEV_ATTR_RO(num, num_fan, NUMFAN_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_debug.dev_attr.attr,
@@ -47,7 +47,7 @@ BF_DEV_ATTR_RO(serial_number, fan, FAN_SERIAL_ATTR_ID);
 BF_DEV_ATTR_RO(vendor, fan, FAN_VENDOR_ATTR_ID);
 BF_DEV_ATTR_RO(part_number, fan, FAN_PARTNUM_ATTR_ID);
 BF_DEV_ATTR_RO(hardware_version, fan, FAN_HWVER_ATTR_ID);
-BF_DEV_ATTR_RO(num_motors, fan, FAN_NUMMOTOR_ATTR_ID);
+BF_DEV_ATTR_RO(num_motors, num_motor, FAN_NUMMOTOR_ATTR_ID);
 BF_DEV_ATTR_RO(status, fan, FAN_STATUS_ATTR_ID);
 BF_DEV_ATTR_RO(led_status, fan, FAN_LED_ATTR_ID);
 

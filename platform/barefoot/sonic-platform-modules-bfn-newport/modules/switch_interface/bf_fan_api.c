@@ -51,6 +51,8 @@ DEBUG_SHOW_TXT(
 )
 
 LOGLEVEL_SHOW_STORE_FUNC(g_data->loglevel);
+ATTR_SHOW_NUM_FUNC(num_fan, NUM_FAN)
+ATTR_SHOW_NUM_FUNC(num_motor, MOTOR_PER_FAN)
 
 ssize_t fan_show(struct device *dev, struct device_attribute *da,
                             char *buf)

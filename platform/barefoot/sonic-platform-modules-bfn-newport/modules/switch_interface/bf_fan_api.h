@@ -11,6 +11,10 @@
 #ifndef __BF_FAN_API_H__
 #define __BF_FAN_API_H__
 
+ssize_t num_fan_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+ssize_t num_motor_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
 ssize_t fan_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t motor_show(struct device *dev, struct device_attribute *da,
