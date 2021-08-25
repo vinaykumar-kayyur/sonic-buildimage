@@ -177,84 +177,6 @@ static int bf_motor_remove(struct platform_device *pdev)
 DECL_PLATFORM_DRIVER(bf_motor, MOTOR_DRVNAME);
 
 
-static void blanked_device_release(struct device *dev){ }
-
-static inline void init_pdev(struct platform_device *pdev, char *name, int id,
-        const struct attribute_group **groups)
-{
-    pdev->name = name;
-    pdev->id = id;
-    pdev->dev.groups = groups;
-    pdev->dev.release = blanked_device_release;
-    dev_set_drvdata(&pdev->dev, g_data);
-}
-
-static int fan_init(void)
-{
-    int i, j, ret;
-
-    ret = platform_driver_register(&bf_fan_driver);
-    if (ret < 0)
-        goto fan_dri_reg_err;
-
-    for (i = 0 ; i < NUM_FAN ; i++) {
-        struct platform_device *pdev = &g_data->fan_pdev[i];
-        init_pdev(pdev, FAN_DRVNAME, i, fan_attr_groups);
-        ret = platform_device_register(pdev);
-        if (ret != 0)
-            goto fan_dev_reg_err;
-    }
-    return 0;
-
-fan_dev_reg_err:
-    for(j=0 ; j<i ; j++)
-        platform_device_unregister(&g_data->fan_pdev[j]);
-    platform_driver_unregister(&bf_fan_driver);
-fan_dri_reg_err:
-    return ret;
-}
-
-static void fan_exit(void)
-{
-    int i;
-    for (i = 0 ; i < NUM_FAN ; i++)
-        platform_device_unregister(&g_data->fan_pdev[i]);
-    platform_driver_unregister(&bf_fan_driver);
-}
-
-static int motor_init(void)
-{
-    int i, j, ret;
-
-    ret = platform_driver_register(&bf_motor_driver);
-    if (ret < 0)
-        goto mtr_dri_reg_err;
-
-    for (i = 0 ; i < NUM_MOTOR ; i++) {
-        struct platform_device *pdev = &g_data->motor_pdev[i];
-        init_pdev(pdev, MOTOR_DRVNAME, i, motor_attr_groups);
-        ret = platform_device_register(pdev);
-        if (ret != 0)
-            goto mtr_dev_reg_err;
-    }
-    return 0;
-
-mtr_dev_reg_err:
-    for(j=0 ; j<i ; j++)
-        platform_device_unregister(&g_data->motor_pdev[j]);
-    platform_driver_unregister(&bf_motor_driver);
-mtr_dri_reg_err:
-    return ret;
-}
-
-static void motor_exit(void)
-{
-    int i;
-    for (i = 0 ; i < NUM_MOTOR ; i++)
-        platform_device_unregister(&g_data->motor_pdev[i]);
-    platform_driver_unregister(&bf_motor_driver);
-}
-
 static int __init bf_fan_init(void)
 {
     int ret;
@@ -269,17 +191,21 @@ static int __init bf_fan_init(void)
     if (ret < 0)
         goto create_root_sysfs_err;
 
-    ret = fan_init();
+    ret = register_device_and_driver(&bf_fan_driver, FAN_DRVNAME,
+            g_data->fan_pdev, ARRAY_SIZE(g_data->fan_pdev), fan_attr_groups);
     if (ret < 0)
         goto fan_init_err;
 
-    ret = motor_init();
+    ret = register_device_and_driver(&bf_motor_driver, MOTOR_DRVNAME,
+        g_data->motor_pdev, ARRAY_SIZE(g_data->motor_pdev), motor_attr_groups);
     if (ret < 0)
         goto motor_init_err;
 
     return 0;
 
 motor_init_err:
+    unregister_device_and_driver(&bf_fan_driver, g_data->fan_pdev,
+                                 ARRAY_SIZE(g_data->fan_pdev));
 fan_init_err:
     bf_fan_remove_root_attr();
 create_root_sysfs_err:
@@ -290,8 +216,10 @@ alloc_err:
 
 static void __exit bf_fan_exit(void)
 {
-    motor_exit();
-    fan_exit();
+    unregister_device_and_driver(&bf_motor_driver, g_data->motor_pdev,
+                                 ARRAY_SIZE(g_data->motor_pdev));
+    unregister_device_and_driver(&bf_fan_driver, g_data->fan_pdev,
+                                 ARRAY_SIZE(g_data->fan_pdev));
     bf_fan_remove_root_attr();
     kfree(g_data);
 }

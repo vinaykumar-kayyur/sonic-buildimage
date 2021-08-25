@@ -203,85 +203,6 @@ static int bf_temp_remove(struct platform_device *pdev)
 DECL_PLATFORM_DRIVER(bf_temp, TEMP_DRVNAME);
 
 
-static void blanked_device_release(struct device *dev){ }
-
-static inline void init_pdev(struct platform_device *pdev, char *name, int id,
-        const struct attribute_group **groups)
-{
-    pdev->name = name;
-    pdev->id = id;
-    pdev->dev.groups = groups;
-    pdev->dev.release = blanked_device_release;
-    dev_set_drvdata(&pdev->dev, g_data);
-}
-
-static int bf_psu_register(void)
-{
-    int i, j, ret;
-
-    ret = platform_driver_register(&bf_psu_driver);
-    if (ret < 0)
-        goto dri_reg_err;
-
-    for (i = 0 ; i < NUM_DEV ; i++) {
-        struct platform_device *pdev = &g_data->psu_pdev[i];
-        init_pdev(pdev, PSU_DRVNAME, i, dev_attr_groups);
-        ret = platform_device_register(pdev);
-        if (ret != 0)
-            goto dev_reg_err;
-    }
-    return 0;
-
-dev_reg_err:
-    for(j=0 ; j<i ; j++)
-        platform_device_unregister(&g_data->psu_pdev[j]);
-    platform_driver_unregister(&bf_psu_driver);
-dri_reg_err:
-    return ret;
-}
-
-static void bf_psu_unregister(void)
-{
-    int i;
-    for (i = 0 ; i < NUM_DEV ; i++)
-        platform_device_unregister(&g_data->psu_pdev[i]);
-    platform_driver_unregister(&bf_psu_driver);
-}
-
-static int bf_temp_register(void)
-{
-    int i, j, ret;
-
-    ret = platform_driver_register(&bf_temp_driver);
-    if (ret < 0)
-        goto temp_dri_reg_err;
-
-    for (i = 0 ; i < NUM_TEMP ; i++) {
-        struct platform_device *pdev = &g_data->temp_pdev[i];
-        init_pdev(pdev, TEMP_DRVNAME, i, temp_attr_groups);
-        ret = platform_device_register(pdev);
-        if (ret != 0)
-            goto temp_dev_reg_err;
-    }
-    return 0;
-
-temp_dev_reg_err:
-    for(j=0 ; j<i ; j++)
-        platform_device_unregister(&g_data->temp_pdev[j]);
-    platform_driver_unregister(&bf_temp_driver);
-temp_dri_reg_err:
-    return ret;
-}
-
-static void bf_temp_unregister(void)
-{
-    int i;
-    for (i = 0 ; i < NUM_TEMP ; i++)
-        platform_device_unregister(&g_data->temp_pdev[i]);
-    platform_driver_unregister(&bf_temp_driver);
-}
-
-
 static int __init bf_psu_init(void)
 {
     int ret;
@@ -296,18 +217,21 @@ static int __init bf_psu_init(void)
     if (ret < 0)
         goto create_root_sysfs_err;
 
-    ret = bf_psu_register();
+    ret = register_device_and_driver(&bf_psu_driver, PSU_DRVNAME,
+            g_data->psu_pdev, ARRAY_SIZE(g_data->psu_pdev), dev_attr_groups);
     if (ret < 0)
         goto reg_dev_err;
 
-    ret = bf_temp_register();
+    ret = register_device_and_driver(&bf_temp_driver, TEMP_DRVNAME,
+            g_data->temp_pdev, ARRAY_SIZE(g_data->temp_pdev), temp_attr_groups);
     if (ret < 0)
         goto reg_temp_err;
 
     return 0;
 
 reg_temp_err:
-    bf_psu_unregister();
+    unregister_device_and_driver(&bf_psu_driver, g_data->psu_pdev,
+                                 ARRAY_SIZE(g_data->psu_pdev));
 reg_dev_err:
     bf_psu_remove_root_attr();
 create_root_sysfs_err:
@@ -318,8 +242,10 @@ alloc_err:
 
 static void __exit bf_psu_exit(void)
 {
-    bf_temp_unregister();
-    bf_psu_unregister();
+    unregister_device_and_driver(&bf_temp_driver, g_data->temp_pdev,
+                               ARRAY_SIZE(g_data->temp_pdev));
+    unregister_device_and_driver(&bf_psu_driver, g_data->psu_pdev,
+                                 ARRAY_SIZE(g_data->psu_pdev));
     bf_psu_remove_root_attr();
     kfree(g_data);
 }

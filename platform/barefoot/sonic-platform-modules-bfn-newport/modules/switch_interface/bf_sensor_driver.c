@@ -110,52 +110,6 @@ static int bf_sensor_remove(struct platform_device *pdev)
 DECL_PLATFORM_DRIVER(bf_sensor, DRVNAME);
 
 
-static void blanked_device_release(struct device *dev){ }
-
-static inline void init_pdev(struct platform_device *pdev, char *name, int id,
-        const struct attribute_group **groups)
-{
-    pdev->name = name;
-    pdev->id = id;
-    pdev->dev.groups = groups;
-    pdev->dev.release = blanked_device_release;
-    dev_set_drvdata(&pdev->dev, g_data);
-}
-
-static int bf_sensor_register(void)
-{
-    int i, j, ret;
-
-    ret = platform_driver_register(&bf_sensor_driver);
-    if (ret < 0)
-        goto dri_reg_err;
-
-    for (i = 0 ; i < NUM_DEV ; i++) {
-        struct platform_device *pdev = &g_data->pdev[i];
-        init_pdev(pdev, DRVNAME, i, dev_attr_groups);
-        ret = platform_device_register(pdev);
-        if (ret != 0)
-            goto dev_reg_err;
-    }
-    return 0;
-
-dev_reg_err:
-    for(j=0 ; j<i ; j++)
-        platform_device_unregister(&g_data->pdev[j]);
-    platform_driver_unregister(&bf_sensor_driver);
-dri_reg_err:
-    return ret;
-}
-
-static void bf_sensor_unregister(void)
-{
-    int i;
-    for (i = 0 ; i < NUM_DEV ; i++)
-        platform_device_unregister(&g_data->pdev[i]);
-    platform_driver_unregister(&bf_sensor_driver);
-}
-
-
 static int __init bf_sensor_init(void)
 {
     int ret;
@@ -170,7 +124,8 @@ static int __init bf_sensor_init(void)
     if (ret < 0)
         goto create_root_sysfs_err;
 
-    ret = bf_sensor_register();
+    ret = register_device_and_driver(&bf_sensor_driver, DRVNAME,
+            g_data->pdev, ARRAY_SIZE(g_data->pdev), dev_attr_groups);
     if (ret < 0)
         goto reg_dev_err;
 
@@ -186,7 +141,8 @@ alloc_err:
 
 static void __exit bf_sensor_exit(void)
 {
-    bf_sensor_unregister();
+    unregister_device_and_driver(&bf_sensor_driver, g_data->pdev,
+                                 ARRAY_SIZE(g_data->pdev));
     bf_sensor_remove_root_attr();
     kfree(g_data);
 }

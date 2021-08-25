@@ -12,6 +12,7 @@
 #define __BF_SWITCH_SYSFS_H__
 
 #include <linux/hwmon-sysfs.h>
+#include <linux/platform_device.h>
 
 extern struct kobject * bf_get_switch_kobj(void);
 extern struct kobject * create_sysfs_dir_and_attr(char *dir_name,
@@ -20,6 +21,11 @@ extern void remove_sysfs_dir_and_attr(struct kobject *kobj,
         struct attribute_group *attr);
 extern int userlevel_to_kernlevel(int level);
 extern int kernlevel_to_userlevel(int level);
+extern int register_device_and_driver(struct platform_driver *driver, char *name,
+                               struct platform_device devs[], size_t num_dev,
+                               const struct attribute_group *attrs[]);
+extern void unregister_device_and_driver(struct platform_driver *driver,
+        struct platform_device devs[], size_t num_dev);
 
 /*
  * Macro to print kernel message
