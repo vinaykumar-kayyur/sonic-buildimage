@@ -11,7 +11,7 @@ def dhcp_relay_helper():
     """Show DHCP_Relay helper information"""
     pass
 
-@dhcp_relay_helper.command('ip')
+@dhcp_relay_helper.command('ipv6')
 def get_dhcpv6_helper_address():
     config_db = ConfigDBConnector()
     if config_db is not None:
@@ -29,4 +29,3 @@ def get_dhcpv6_helper_address():
 
 def register(cli):
     cli.commands['dhcp_relay_helper'].add_command(dhcp_relay_helper)
-    
