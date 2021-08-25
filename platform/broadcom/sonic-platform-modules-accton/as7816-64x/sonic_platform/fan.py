@@ -48,8 +48,3 @@ class Fan(PddfFan):
 
         return direction
 
-    def get_target_speed(self):
-        if self.is_psu_fan:
-            raise NotImplementedError # Target speed not supported for PSU fans
-        else:
-            return super().get_target_speed()
