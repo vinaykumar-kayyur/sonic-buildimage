@@ -76,3 +76,4 @@ def counts(interface, verbose):
 
 def register(cli):
     cli.commands['dhcp6realy_counters'].add_command(dhcp6relay_counters)
+    

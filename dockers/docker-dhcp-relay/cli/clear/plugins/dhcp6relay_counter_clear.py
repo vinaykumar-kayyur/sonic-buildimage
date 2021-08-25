@@ -21,3 +21,4 @@ def dhcp6relay_counter_clear(interface, verbose):
 
 def register(cli):
     cli.add_command(dhcp6relay_counter_clear)
+    
