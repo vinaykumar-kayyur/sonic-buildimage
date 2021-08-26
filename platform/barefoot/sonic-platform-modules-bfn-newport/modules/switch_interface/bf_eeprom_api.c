@@ -19,7 +19,7 @@
 extern struct bf_eeprom_drv_data *g_data;
 
 
-DEBUG_SHOW_TXT(
+ATTR_SHOW_STR_FUNC(debug,
     "+++DUMMY content+++\n"
     "eeprom present:\n"
     "  0-->present\n"
@@ -51,7 +51,6 @@ DEBUG_SHOW_TXT(
     "---DUMMY content---\n"
 )
 
-LOGLEVEL_SHOW_STORE_FUNC(g_data->loglevel);
 
 ssize_t eeprom_show(struct device *dev, struct device_attribute *da,
                             char *buf)

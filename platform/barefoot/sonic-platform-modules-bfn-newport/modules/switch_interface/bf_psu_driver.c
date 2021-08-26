@@ -25,6 +25,7 @@
 #define ROOT_DIRNAME "psu"
 
 struct bf_psu_drv_data *g_data = NULL;
+int *module_loglevel = NULL;
 
 /* Root Attributes */
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
@@ -213,6 +214,7 @@ static int __init bf_psu_init(void)
         ret = -ENOMEM;
         goto alloc_err;
     }
+    module_loglevel = &g_data->loglevel;
 
     ret = bf_psu_create_root_attr();
     if (ret < 0)
@@ -236,6 +238,7 @@ reg_temp_err:
 reg_dev_err:
     bf_psu_remove_root_attr();
 create_root_sysfs_err:
+    module_loglevel = NULL;
     kfree(g_data);
 alloc_err:
     return ret;
@@ -248,6 +251,7 @@ static void __exit bf_psu_exit(void)
     unregister_device_and_driver(&bf_psu_driver, g_data->psu_pdev,
                                  ARRAY_SIZE(g_data->psu_pdev));
     bf_psu_remove_root_attr();
+    module_loglevel = NULL;
     kfree(g_data);
 }
 

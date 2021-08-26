@@ -14,7 +14,6 @@
 #include <linux/slab.h>
 #include <linux/platform_device.h>
 #include "bf_switch_sysfs.h"
-#include "bf_module_util.h"
 #include "bf_fan_driver.h"
 #include "bf_fan_api.h"
 
@@ -25,6 +24,7 @@
 #define MOTOR_DIRNAME "motor%d"
 
 struct bf_fan_drv_data *g_data = NULL;
+int *module_loglevel = NULL;
 
 /* Root Attributes */
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
@@ -187,10 +187,16 @@ static int __init bf_fan_init(void)
         ret = -ENOMEM;
         goto alloc_err;
     }
+    module_loglevel = &g_data->loglevel;
 
     ret = bf_fan_create_root_attr();
     if (ret < 0)
         goto create_root_sysfs_err;
+
+    /* Set up IPMI interface */
+    ret = init_ipmi_data(&g_data->ipmi, 0);
+    if (ret)
+        goto ipmi_err;
 
     ret = register_device_and_driver(&bf_fan_driver, FAN_DRVNAME,
             g_data->fan_pdev, ARRAY_SIZE(g_data->fan_pdev), fan_attr_groups);
@@ -208,8 +214,11 @@ motor_init_err:
     unregister_device_and_driver(&bf_fan_driver, g_data->fan_pdev,
                                  ARRAY_SIZE(g_data->fan_pdev));
 fan_init_err:
+    ipmi_destroy_user(g_data->ipmi.user);
+ipmi_err:
     bf_fan_remove_root_attr();
 create_root_sysfs_err:
+    module_loglevel = NULL;
     kfree(g_data);
 alloc_err:
     return ret;
@@ -221,7 +230,9 @@ static void __exit bf_fan_exit(void)
                                  ARRAY_SIZE(g_data->motor_pdev));
     unregister_device_and_driver(&bf_fan_driver, g_data->fan_pdev,
                                  ARRAY_SIZE(g_data->fan_pdev));
+    ipmi_destroy_user(g_data->ipmi.user);
     bf_fan_remove_root_attr();
+    module_loglevel = NULL;
     kfree(g_data);
 }
 

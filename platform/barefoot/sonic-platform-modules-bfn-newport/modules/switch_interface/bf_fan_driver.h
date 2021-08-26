@@ -11,6 +11,8 @@
 #ifndef __BF_FAN_DRIVER_H__
 #define __BF_FAN_DRIVER_H__
 
+#include "bf_module_util.h"
+
 #define NUM_FAN 6
 #define MOTOR_PER_FAN 2
 #define NUM_MOTOR (NUM_FAN * MOTOR_PER_FAN)
@@ -47,7 +49,7 @@ struct bf_fan_drv_data {
     // /* 4 bytes for each fan, the last 2 bytes is fan dir */
     // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
     // unsigned char ipmi_resp_cpld;
-    // struct ipmi_data ipmi;
+    struct ipmi_data ipmi;
     // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
 };
 
