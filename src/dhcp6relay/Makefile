@@ -2,7 +2,7 @@ RM := rm -rf
 DHCP6RELAY_TARGET := dhcp6relay
 CP := cp
 MKDIR := mkdir
-CC := g++
+CXX := g++
 MV := mv
 LIBS := -levent -lhiredis -lswsscommon -pthread -lboost_thread -lboost_system
 CFLAGS  = -g -Wall -std=c++17 -fPIC -I $(PWD)/../sonic-swss-common/common
@@ -21,7 +21,7 @@ all: sonic-dhcp6relay
 sonic-dhcp6relay: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
-	$(CC) -o $(DHCP6RELAY_TARGET) $(OBJS) $(LIBS) 
+	$(CXX) -o $(DHCP6RELAY_TARGET) $(OBJS) $(LIBS) 
 	@echo 'Finished building target: $@'
 	@echo ' '
 
