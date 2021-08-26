@@ -14,6 +14,7 @@
 #include <linux/slab.h>
 #include <linux/platform_device.h>
 #include "bf_switch_sysfs.h"
+#include "bf_module_util.h"
 #include "bf_psu_driver.h"
 #include "bf_psu_api.h"
 

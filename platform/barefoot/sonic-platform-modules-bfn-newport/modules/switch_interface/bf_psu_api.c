@@ -13,7 +13,7 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/hwmon-sysfs.h>
-#include "bf_switch_sysfs.h"
+#include "bf_module_util.h"
 #include "bf_psu_driver.h"
 
 extern struct bf_psu_drv_data *g_data;
