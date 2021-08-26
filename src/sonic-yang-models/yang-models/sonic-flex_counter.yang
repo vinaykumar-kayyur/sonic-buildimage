@@ -24,9 +24,9 @@ module sonic-flex_counter {
             }
 
             typedef flex_delay_status {
-                type enumeration {
-                    enum true;
-                    enum false;
+                type boolean {
+                    bool true;
+                    bool false;
                 }
             }
 
