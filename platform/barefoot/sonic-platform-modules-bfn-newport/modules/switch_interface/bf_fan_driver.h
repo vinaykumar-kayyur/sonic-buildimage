@@ -17,6 +17,14 @@
 #define MOTOR_PER_FAN 2
 #define NUM_MOTOR (NUM_FAN * MOTOR_PER_FAN)
 
+enum fan_data_index {
+    FAN_PRESENT = 0,
+    FAN_PWM,
+    FAN_SPEED0,
+    FAN_SPEED1,
+    FAN_DATA_COUNT
+};
+
 enum fan_sysfs_attributes
 {
     MOTOR_SPEED_ATTR_ID,
@@ -43,14 +51,14 @@ struct bf_fan_drv_data {
     int loglevel;
     struct platform_device fan_pdev[NUM_FAN];
     struct platform_device motor_pdev[NUM_MOTOR];
-    // struct mutex update_lock;
-    // char valid; /* != 0 if registers are valid */
-    // unsigned long last_updated;    /* In jiffies */
+    struct mutex update_lock;
+    char valid; /* != 0 if registers are valid */
+    unsigned long last_updated;    /* In jiffies */
     // /* 4 bytes for each fan, the last 2 bytes is fan dir */
-    // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
-    // unsigned char ipmi_resp_cpld;
+    unsigned char ipmi_resp[NUM_MOTOR * FAN_DATA_COUNT + 2];
+    unsigned char ipmi_resp_cpld_ver;
     struct ipmi_data ipmi;
-    // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
+    unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
 };
 
 #endif //__BF_FAN_DRIVER_H__
