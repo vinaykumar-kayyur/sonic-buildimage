@@ -37,7 +37,7 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
     echo "sed -i \"s/$oldimage/$newimage/\" $DOCKERFILE" >> ${new_version_file}.log
     sed -i "s/$oldimage/$newimage/" $DOCKERFILE
 else
-    hash_value=`docker pull $image_tag | grep Digest | awk '{print$2}'`
+    hash_value=`docker pull $image_tag | grep Digest | awk '{print$2}' 2> /dev/null`
     if [ -z hash_value ];then
         hash_value=unknown
     fi
