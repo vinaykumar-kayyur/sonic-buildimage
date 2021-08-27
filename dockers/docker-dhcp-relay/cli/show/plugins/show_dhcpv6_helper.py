@@ -28,4 +28,8 @@ def get_dhcpv6_helper_address():
                 print(tabulate({'Interface':[vlan], vlan:addr.get(vlan)}, tablefmt='simple', stralign='right') + '\n')
 
 def register(cli):
-    cli.commands['dhcp_relay_helper'].add_command(dhcp_relay_helper)
+    cli.add_command(dhcp_relay_helper)
+
+if __name__ == '__main__':
+    dhcp_relay_helper()
+    

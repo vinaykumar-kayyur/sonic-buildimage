@@ -1,14 +1,14 @@
+import sys
 import click
 sys.path.insert(0, '../../show/plugins/')
-import show_dhcp6relay_counters
+from show_dhcp6relay_counters impot DHCPv6_Counter
 
 
 # sonic-clear dhcp6relay_counters
-@click.command()
+@click.command('dhcp6relay_counters')
 @click.option('-i', '--interface', required=False)
-@click.option('--verbose', is_flag=True, help="Enable verbose output")
-def dhcp6relay_counters(interface, verbose):
-    """Clear dhcp6relay message counts"""
+def dhcp6relay_clear_counters(interface):
+    """ Clear dhcp6relay message counts """
     
     counter = DHCPv6_Counter()
     counter_intf = counter.get_interface()
@@ -20,4 +20,7 @@ def dhcp6relay_counters(interface, verbose):
                 counter.clear_table(intf)
 
 def register(cli):
-    cli.add_command(dhcp6relay_counters)
+    cli.add_command(dhcp6relay_clear_counters)
+
+if __name__ == '__main__':
+    dhcp6relay_clear_counters()

@@ -1,8 +1,6 @@
 import click
 import utilities_common.cli as clicommon
 
-import argparse
-import sys
 from tabulate import tabulate
 
 from swsscommon.swsscommon import SonicV2Connector
@@ -22,6 +20,7 @@ class DHCPv6_Counter(object):
 
 
     def get_interface(self):
+        """ Get all names of all interfaces in DHCPv6_COUNTER_TABLE """
         vlans = []
         for key in self.db.keys(self.db.STATE_DB):
             if DHCPv6_COUNTER_TABLE in key:
@@ -30,12 +29,14 @@ class DHCPv6_Counter(object):
         
 
     def get_dhcp6relay_msg_count(self, interface, msg):
+        """ Get count of a dhcp6relay message """
         count = self.db.get(self.db.STATE_DB, self.table_name + str(interface), str(msg))
         data = [str(msg), count]
         return data
 
     
     def clear_table(self, interface):
+        """ Reset all message counts to 0 """
         for msg in messages:
             self.db.set(self.db.STATE_DB, self.table_name + str(interface), str(msg), '0') 
 
@@ -75,5 +76,7 @@ def counts(interface, verbose):
 
 
 def register(cli):
-    cli.commands['dhcp6realy_counters'].add_command(dhcp6relay_counters)
-    
+    cli.add_command(dhcp6relay_counters)
+
+if __name__ == '__main__':
+    dhcp6relay_counters()
