@@ -29,11 +29,11 @@ generate_kvm_image()
 {
     NUM_ASIC=$1
     if [ $NUM_ASIC == 4 ]; then 
-         KVM_IMAGE=$OUTPUT_MKVM_4ASIC_IMAGE
-         RECOVERY_ISO=$onie_recovery_mkvm_4asic_image
+         KVM_IMAGE=$OUTPUT_KVM_4ASIC_IMAGE
+         RECOVERY_ISO=$onie_recovery_kvm_4asic_image
     elif [ $NUM_ASIC == 6 ]; then
-         KVM_IMAGE=$OUTPUT_MKVM_6ASIC_IMAGE
-         RECOVERY_ISO=$onie_recovery_mkvm_6asic_image
+         KVM_IMAGE=$OUTPUT_KVM_6ASIC_IMAGE
+         RECOVERY_ISO=$onie_recovery_kvm_6asic_image
     else 
          KVM_IMAGE=$OUTPUT_KVM_IMAGE
          RECOVERY_ISO=$onie_recovery_image
