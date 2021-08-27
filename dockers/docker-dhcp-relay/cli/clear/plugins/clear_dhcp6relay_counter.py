@@ -1,7 +1,7 @@
 import sys
 import click
 sys.path.insert(0, '../../show/plugins/')
-from show_dhcp6relay_counters impot DHCPv6_Counter
+from show_dhcp6relay_counters import DHCPv6_Counter
 
 
 # sonic-clear dhcp6relay_counters
