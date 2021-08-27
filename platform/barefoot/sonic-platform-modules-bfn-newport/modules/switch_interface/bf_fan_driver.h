@@ -56,6 +56,7 @@ struct bf_fan_drv_data {
     unsigned long last_updated;    /* In jiffies */
     // /* 4 bytes for each fan, the last 2 bytes is fan dir */
     unsigned char ipmi_resp[NUM_MOTOR * FAN_DATA_COUNT + 2];
+    unsigned char ipmi_resp_led_stat[NUM_FAN];
     unsigned char ipmi_resp_cpld_ver;
     struct ipmi_data ipmi;
     unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */

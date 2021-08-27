@@ -20,6 +20,19 @@
 #define IPMI_TIMEOUT (5 * HZ)
 #define IPMI_ERR_RETRY_TIMES 1
 
+enum led_colors
+{
+    COLOR_OFF=0,
+    COLOR_GREEN,
+    COLOR_YELLOW,
+    COLOR_RED,
+    COLOR_GREEN_BLINK,
+    COLOR_YELLOW_BLINK,
+    COLOR_RED_BLINK,
+    COLOR_BLUE,
+    COLOR_BLUE_BLINK,
+    COLOR_FAILED = 0xFF
+};
 
 struct ipmi_data {
     struct completion read_complete;
