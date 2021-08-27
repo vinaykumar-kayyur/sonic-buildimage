@@ -30,7 +30,6 @@ import subprocess
 import getopt
 import sys
 import logging
-import re
 import time
 import os
 
@@ -142,7 +141,6 @@ def driver_install():
             if FORCE == 0:        
                 return status              
     print("Done driver_install")
-
     return 0
     
 def driver_uninstall():
