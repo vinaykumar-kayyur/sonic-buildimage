@@ -24,10 +24,7 @@ module sonic-flex_counter {
             }
 
             typedef flex_delay_status {
-                type boolean {
-                    boolean true;
-                    boolean false;
-                }
+                type boolean;
             }
 
             description "FLEX_COUNTER_TABLE part of config_db.json";
