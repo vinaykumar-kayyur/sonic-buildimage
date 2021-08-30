@@ -17,6 +17,10 @@
         "stringval": "reboot"
     },
     {
+        "key": "disable_watchdog_hm",
+        "intval": 1
+    },
+    {
         "key": "grpc_thermal_monitor",
         "stringval": "yes"
     },
