@@ -47,7 +47,7 @@ class PsuUtil(PsuBase):
         try:
             with open(reg_file, 'r') as fd:
                 retval = fd.read()
-        except Exception as error:
+        except Exception:
             print("Unable to open ", reg_file, "file !")
 
         retval = retval.rstrip('\r\n')

@@ -4,7 +4,6 @@
 #
 
 import commands
-import os
 import sys
 
 SENSORS_CMD = "docker exec -i pmon /usr/bin/sensors"

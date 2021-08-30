@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DELLEMC N3248TE
+# DELLEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platform information
@@ -10,7 +10,6 @@
 
 try:
     import os
-    import select
     import sys
     import time
     from sonic_platform_base.chassis_base import ChassisBase
@@ -26,11 +25,11 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
-MAX_N3248TE_FANTRAY = 3
-MAX_N3248TE_FAN = 1
-MAX_N3248TE_PSU = 2
-MAX_N3248TE_THERMAL = 5
-MAX_N3248TE_COMPONENT = 3 # BIOS, CPU CPLD and SYS CPLD
+MAX_N3248PXE_FANTRAY = 3
+MAX_N3248PXE_FAN = 1
+MAX_N3248PXE_PSU = 2
+MAX_N3248PXE_THERMAL = 5
+MAX_N3248PXE_COMPONENT = 3 # BIOS, CPU CPLD and SYS CPLD
 
 media_part_num_list = set([ \
 "8T47V","XTY28","MHVPK","GF76J","J6FGD","F1KMV","9DN5J","H4DHD","6MCNV","0WRX0","X7F70","5R2PT","WTRD1","WTRD1","WTRD1","WTRD1","5250G","WTRD1","C5RNH","C5RNH","FTLX8571D3BCL-FC",
@@ -60,6 +59,8 @@ class Chassis(ChassisBase):
             50: 21,
             51: 22,
             52: 23,
+            53: 24,
+            54: 25,
             }
 
     def __init__(self):
@@ -67,7 +68,7 @@ class Chassis(ChassisBase):
         # sfp.py will read eeprom contents and retrive the eeprom data.
         # We pass the eeprom path from chassis.py
         self.PORT_START = 1
-        self.PORT_END = 52
+        self.PORT_END = 54
         self.PORTS_IN_BLOCK = (self.PORT_END + 1)
         self.SFP_PORT_START = 49
         self._sfp_port = range(self.SFP_PORT_START, self.PORTS_IN_BLOCK)
@@ -81,21 +82,21 @@ class Chassis(ChassisBase):
 
         self._eeprom = Eeprom()
         self._watchdog = Watchdog()
-        self._num_sfps = 52
-        self._num_fans =  MAX_N3248TE_FANTRAY * MAX_N3248TE_FAN
-        self._fan_list = [Fan(i, j) for i in range(MAX_N3248TE_FANTRAY) \
-                            for j in range(MAX_N3248TE_FAN)]
-        for k in range(MAX_N3248TE_FANTRAY):
+        self._num_sfps = 54
+        self._num_fans =  MAX_N3248PXE_FANTRAY * MAX_N3248PXE_FAN
+        self._fan_list = [Fan(i, j) for i in range(MAX_N3248PXE_FANTRAY) \
+                            for j in range(MAX_N3248PXE_FAN)]
+        for k in range(MAX_N3248PXE_FANTRAY):
             fandrawer = FanDrawer(k)
             self._fan_drawer_list.append(fandrawer)
             self._fan_list.extend(fandrawer._fan_list)
 
-        self._psu_list = [Psu(i) for i in range(MAX_N3248TE_PSU)]
-        self._thermal_list = [Thermal(i) for i in range(MAX_N3248TE_THERMAL)]
-        self._component_list = [Component(i) for i in range(MAX_N3248TE_COMPONENT)]
+        self._psu_list = [Psu(i) for i in range(MAX_N3248PXE_PSU)]
+        self._thermal_list = [Thermal(i) for i in range(MAX_N3248PXE_THERMAL)]
+        self._component_list = [Component(i) for i in range(MAX_N3248PXE_COMPONENT)]
         for port_num in self._sfp_port:
             # sfp get uses zero-indexing, but port numbers start from 1
-            presence = self.get_sfp(port_num-1).get_presence()
+            presence = self.get_sfp(port_num).get_presence()
             self._global_port_pres_dict[port_num] = '1' if presence else '0'
 
         self._watchdog = Watchdog()
@@ -119,13 +120,12 @@ class Chassis(ChassisBase):
         cpld_reg_file = self.CPLD_DIR + '/' + reg_name
 
         if (not os.path.isfile(cpld_reg_file)):
-            #print "open error"
             return rv
 
         try:
            with open(cpld_reg_file, 'w') as fd:
                 rv = fd.write(str(value))
-        except:
+        except Exception:
             rv = 'ERR'
 
         return rv
@@ -143,7 +143,7 @@ class Chassis(ChassisBase):
         while True:
             for port_num in self._sfp_port:
                 # sfp get uses zero-indexing, but port numbers start from 1
-                presence = self.get_sfp(port_num-1).get_presence()
+                presence = self.get_sfp(port_num).get_presence()
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
@@ -175,7 +175,7 @@ class Chassis(ChassisBase):
 
         try:
             # The index will start from 0
-            sfp = self._sfp_list[index]
+            sfp = self._sfp_list[index-1]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
                              index, len(self._sfp_list)-1))

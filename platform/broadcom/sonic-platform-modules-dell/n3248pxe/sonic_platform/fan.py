@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# DellEMC Z9332F
+# DellEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Fans' information which are available in the platform.
@@ -66,7 +66,7 @@ class Fan(FanBase):
         """
         try:
             val = open(self.eeprom, "rb").read()[13:19]
-        except:
+        except Exception:
             val = None
         return val.decode()
 
@@ -78,7 +78,7 @@ class Fan(FanBase):
         """
         try:
             val = open(self.eeprom, "rb").read()[21:41]
-        except:
+        except Exception:
             val = None
         return val.decode()
 
@@ -126,7 +126,7 @@ class Fan(FanBase):
         else:
             try:
                 val = open(self.eeprom, "rb").read()[0xe1:0xe8]
-            except:
+            except Exception:
                 return None
             direction = 'Exhaust' if val == 'FORWARD' else 'Intake'
         return direction
@@ -147,7 +147,7 @@ class Fan(FanBase):
                 dps_dir = self.dps_hwmon + '/' + os.listdir(self.dps_hwmon)[0]
                 rpm_file = dps_dir + '/' + 'fan1_input'
             fan_speed = int(open(rpm_file, "rb").read())
-        except:
+        except Exception:
             return None
         speed = (100 * fan_speed)//self.max_speed
         return speed
@@ -166,6 +166,6 @@ class Fan(FanBase):
                 dps_dir = self.dps_hwmon + '/' + os.listdir(self.dps_hwmon)[0]
                 rpm_file = dps_dir + '/' + 'fan1_input'
             fan_speed = int(open(rpm_file, "rb").read())
-        except:
+        except Exception:
             return None
         return fan_speed

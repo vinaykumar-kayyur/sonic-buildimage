@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# DellEMC Z9332F
+# DellEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the PSUs' information which are available in the platform
@@ -101,7 +101,8 @@ class Psu(PsuBase):
             string: Part number of PSU
         """
         try: val = open(self.eeprom, "rb").read()[0x50:0x62]
-        except: val = None
+        except Exception:
+            val = None
         return val.decode()
 
     def get_serial(self):
@@ -112,7 +113,8 @@ class Psu(PsuBase):
             string: Serial number of PSU
         """
         try: val = open(self.eeprom, "rb").read()[0xc4:0xd9]
-        except: val = None
+        except Exception:
+            val = None
         return val.decode()
 
     def get_status(self):
@@ -134,11 +136,11 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        voltage = 0.0
         volt_reading = self._get_dps_register(self.psu_voltage_reg)
         try:
             voltage = int(volt_reading)/1000
-        except : return None
+        except Exception:
+            return None
         return "{:.1f}".format(voltage)
 
     def get_current(self):
@@ -149,11 +151,11 @@ class Psu(PsuBase):
             A float number, electric current in amperes,
             e.g. 15.4
         """
-        current = 0.0
         curr_reading = self._get_dps_register(self.psu_current_reg)
         try:
             current = int(curr_reading)/1000
-        except : return None
+        except Exception:
+            return None
         return "{:.1f}".format(current)
 
     def get_power(self):
@@ -164,11 +166,11 @@ class Psu(PsuBase):
             A float number, the power in watts,
             e.g. 302.6
         """
-        power = 0.0
         power_reading = self._get_dps_register(self.psu_power_reg)
         try:
             power = int(power_reading)/1000
-        except : return None
+        except Exception:
+            return None
         return "{:.1f}".format(power)
 
     def get_powergood_status(self):
@@ -200,5 +202,6 @@ class Psu(PsuBase):
             A string, PSU power type
         """
         try: val = open(self.eeprom, "rb").read()[0xe8:0xea]
-        except: return None
-        return val
+        except Exception:
+            return None
+        return val.decode()

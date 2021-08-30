@@ -323,6 +323,10 @@ phy_an_c73=3
 oversubscribe_mode=1
 core_clock_frequency=1525
 
+#25G,10G and 1G support
+serdes_10g_at_25g_vco=1
+serdes_1000x_at_25g_vco=1
+
 l2xmsg_mode=1
 
 l2xmsg_hostbuf_size=16384
@@ -360,5 +364,26 @@ riot_overlay_ecmp_resilient_hash_size=16384
 pfc_deadlock_seq_control=1
 
 #Common configs from broadcom/x86_64-broadcom_common/x86_64-broadcom_b77/broadcom-sonic-td3.config.bcm (Lower version of Td3 (0xb771))
-
+mem_cache_enable=0
+ifp_inports_support_enable=1
+ipv6_lpm_128b_enable=0x1
+l3_max_ecmp_mode=1
+lpm_scaling_enable=0
+bcm_num_cos=10
+default_cpu_tx_queue=9
+mmu_lossless=0
+host_as_route_disable=1
+sai_eapp_config_file=/etc/broadcom/eapps_cfg.json
+sai_fast_convergence_support=1
 flow_init_mode=1
+sai_interface_type_auto_detect=0
+mpls_mem_entries=16384
+vlan_xlate_1_mem_entries=65536
+vlan_xlate_2_mem_entries=16384
+sai_load_hw_config=/usr/lib/cancun/
+sai_nbr_bcast_ifp_optimized=1
+sai_brcm_sonic_acl_enhancements=1
+# Reduced Trap Group QSET for BRCM Sonic
+sai_brcm_sonic_trap_group=1
+l2_entry_used_as_my_station=1
+multi_hash_recurse_depth_l3=2

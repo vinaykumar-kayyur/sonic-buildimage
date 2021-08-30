@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DellEmc Z9332F
+# DellEmc N3248PXE
 #
 # Platform and model specific eeprom subclass, inherits from the base class,
 # and provides the followings:

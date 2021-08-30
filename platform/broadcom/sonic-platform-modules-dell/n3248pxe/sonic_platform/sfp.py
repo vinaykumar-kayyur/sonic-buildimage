@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DELLEMC S5248F
+# DELLEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platform information
@@ -37,7 +37,7 @@ QSFP_DOM_OFFSET = 0
 QSFP_DOM_OFFSET1 = 384
 
 SFP_PORT_START = 49
-SFP_PORT_END = 52
+SFP_PORT_END = 54
 
 SFP_INFO_OFFSET = 0
 SFP_DOM_OFFSET = 256
@@ -69,8 +69,8 @@ sfp_compliance_code_tup = ('10GEthernetComplianceCode', 'InfinibandComplianceCod
                            'FibreChannelTechnology', 'SFP+CableTechnology',
                            'FibreChannelTransmissionMedia', 'FibreChannelSpeed')
 
-info_dict_keys = ['type', 'hardwarerev', 'serialnum',
-                  'manufacturename', 'modelname', 'Connector',
+info_dict_keys = ['type', 'hardware_rev', 'serial',
+                  'manufacturer', 'model', 'connector',
                   'encoding', 'ext_identifier', 'ext_rateselect_compliance',
                   'cable_type', 'cable_length', 'nominal_bit_rate',
                   'specification_compliance', 'type_abbrv_name','vendor_date', 'vendor_oui']
@@ -109,7 +109,7 @@ sff8436_parser = {
 
        'cable_type': [QSFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
      'cable_length': [QSFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
-        'Connector': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
+        'connector': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
              'type': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
          'encoding': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
    'ext_identifier': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
@@ -119,11 +119,11 @@ sff8436_parser = {
  'specification_compliance':
                      [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
   'type_abbrv_name': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
-  'manufacturename': [QSFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
+  'manufacturer': [QSFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
        'vendor_oui': [QSFP_INFO_OFFSET, 37,  3, 'parse_vendor_oui'],
-        'modelname': [QSFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
-      'hardwarerev': [QSFP_INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
-        'serialnum': [QSFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
+        'model': [QSFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
+     'hardware_rev': [QSFP_INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
+        'serial': [QSFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
       'vendor_date': [QSFP_INFO_OFFSET, 84,  8, 'parse_vendor_date'],
    'dom_capability': [QSFP_INFO_OFFSET, 92,  1, 'parse_qsfp_dom_capability'],
           'dom_rev': [QSFP_DOM_OFFSET,   1,  1, 'parse_sfp_dom_rev'],
@@ -138,7 +138,7 @@ sff8472_parser = {
 
        'cable_type': [SFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
      'cable_length': [SFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
-        'Connector': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
+        'connector': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
              'type': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
          'encoding': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
    'ext_identifier': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
@@ -148,11 +148,11 @@ sff8472_parser = {
  'specification_compliance':
                      [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
   'type_abbrv_name': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
-  'manufacturename': [SFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
+  'manufacturer': [SFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
        'vendor_oui': [SFP_INFO_OFFSET,  37, 3, 'parse_vendor_oui'],
-        'modelname': [SFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
-      'hardwarerev': [SFP_INFO_OFFSET, 56,  4, 'parse_vendor_rev'],
-        'serialnum': [SFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
+        'model': [SFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
+     'hardware_rev': [SFP_INFO_OFFSET, 56,  4, 'parse_vendor_rev'],
+        'serial': [SFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
       'vendor_date': [SFP_INFO_OFFSET, 84,  8, 'parse_vendor_date'],
   'ModuleThreshold': [SFP_DOM_OFFSET,   0, 56, 'parse_alarm_warning_threshold'],
 }
@@ -207,6 +207,7 @@ class Sfp(SfpBase):
 
     def _read_eeprom_bytes(self, eeprom_path, offset, num_bytes):
         eeprom_raw = []
+        print(eeprom_path, num_bytes)
         try:
             eeprom = open(eeprom_path, mode="rb", buffering=0)
         except IOError:
@@ -222,9 +223,11 @@ class Sfp(SfpBase):
             eeprom.close()
             return None
 
+        raw = bytearray(raw)
+
         try:
             for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+                eeprom_raw[n] = hex((raw[n]))[2:].zfill(2)
         except BaseException:
             eeprom.close()
             return None
@@ -322,7 +325,7 @@ class Sfp(SfpBase):
 
             transceiver_info_dict['type_abbrv_name']=type_abbrv_name
             transceiver_info_dict['type'] = identifier
-            transceiver_info_dict['Connector'] = connector
+            transceiver_info_dict['connector'] = connector
             transceiver_info_dict['encoding'] = encoding
             transceiver_info_dict['ext_identifier'] = ext_id
             transceiver_info_dict['ext_rateselect_compliance'] = rate_identifier
@@ -341,9 +344,9 @@ class Sfp(SfpBase):
 
         # Vendor Name
         try:
-            vendor_name_data = self._get_eeprom_data('manufacturename')
+            vendor_name_data = self._get_eeprom_data('manufacturer')
             vendor_name = vendor_name_data['data']['Vendor Name']['value']
-            transceiver_info_dict['manufacturename'] = vendor_name
+            transceiver_info_dict['manufacturer'] = vendor_name
         except (ValueError, TypeError) : pass
 
         # Vendor OUI
@@ -355,23 +358,23 @@ class Sfp(SfpBase):
 
         # Vendor PN
         try:
-            vendor_pn_data = self._get_eeprom_data('modelname')
+            vendor_pn_data = self._get_eeprom_data('model')
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['modelname'] = vendor_pn
+            transceiver_info_dict['model'] = vendor_pn
         except (ValueError, TypeError) : pass
 
         # Vendor Revision
         try:
-            vendor_rev_data = self._get_eeprom_data('hardwarerev')
+            vendor_rev_data = self._get_eeprom_data('hardware_rev')
             vendor_rev = vendor_rev_data['data']['Vendor Rev']['value']
-            transceiver_info_dict['hardwarerev'] = vendor_rev
+            transceiver_info_dict['hardware_rev'] = vendor_rev
         except (ValueError, TypeError) : pass
 
         # Vendor Serial Number
         try:
-            vendor_sn_data = self._get_eeprom_data('serialnum')
+            vendor_sn_data = self._get_eeprom_data('serial')
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
-            transceiver_info_dict['serialnum'] = vendor_sn
+            transceiver_info_dict['serial'] = vendor_sn
         except (ValueError, TypeError) : pass
 
         return transceiver_info_dict
@@ -540,12 +543,13 @@ class Sfp(SfpBase):
         except: pass
         return presence
 
+
     def get_model(self):
         """
         Retrieves the model number (or part number) of the sfp
         """
         try:
-            vendor_pn_data = self._get_eeprom_data('modelname')
+            vendor_pn_data = self._get_eeprom_data('model')
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
         except (TypeError, ValueError):
             return 'N/A'
@@ -557,7 +561,7 @@ class Sfp(SfpBase):
         Retrieves the serial number of the sfp
         """
         try:
-            vendor_sn_data = self._get_eeprom_data('serialnum')
+            vendor_sn_data = self._get_eeprom_data('serial')
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
         except (TypeError, ValueError):
             return 'N/A'

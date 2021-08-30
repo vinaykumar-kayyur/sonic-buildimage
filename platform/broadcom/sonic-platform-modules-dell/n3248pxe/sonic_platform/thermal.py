@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# DellEMC Z9332F
+# DellEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Thermals' information which are available in the platform
@@ -91,7 +91,8 @@ class Thermal(ThermalBase):
         temperature = 0.0
         try :
             temperature = float(open(self.temp_file).read()) / 1000.0
-        except : pass
+        except Exception:
+            pass
         return float(temperature)
 
     def get_high_threshold(self):

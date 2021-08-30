@@ -2,7 +2,7 @@
 
 ########################################################################
 #
-# DELLEMC Z9332F
+# DELLEMC N3248PXE
 #
 # Abstract base class for implementing a platform-specific class with
 # which to interact with a hardware watchdog module in SONiC
@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -128,7 +126,6 @@ class Watchdog(WatchdogBase):
 
             self.armed_time = self._get_time()
             self.timeout = seconds
-            return seconds
         else:
             # Setting 4th bit to enable WD
             # 4th bit = Enable WD
@@ -137,9 +134,8 @@ class Watchdog(WatchdogBase):
 
             self.armed_time = self._get_time()
             self.timeout = seconds
-            return seconds
 
-        return -1
+        return seconds
 
     def disarm(self):
         """
@@ -187,7 +183,7 @@ class Watchdog(WatchdogBase):
             their watchdog timer. If the watchdog is not armed, returns
             -1.
 
-            S5232 doesnot have hardware support to show remaining time.
+            N3248PXE doesnot have hardware support to show remaining time.
             Due to this limitation, this API is implemented in software.
             This API would return correct software time difference if it
             is called from the process which armed the watchdog timer.

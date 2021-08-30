@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# DELLEMC N3248TE
+# DELLEMC N3248PXE
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Components' (e.g., BIOS, CPLD, FPGA, BMC etc.) available in
@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import os
-    import re
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
 
