@@ -9,21 +9,67 @@ schedules:
     - internal
   always: true
 
-resources:
-  repositories:
-  - repository: buildimage
-    type: git
-    name: Networking-acs-buildimage
-    ref: 'refs/heads/internal'
+parameters:
+- name: branches
+  type: object
+  default:
+  - master
+  - 201811
+  - 201911
+  - 202012
+  - 202106
 
-jobs:
-  - job: code_merge_buildimage
-    pool:
-      vmImage: ubuntu-20.04
-    timeoutInMinutes: 10
-    displayName: 'Networking-acs-buildimage  Code Merge'
-    steps:
-    - template: code-merge-template.yml
-      parameters:
-        repo: buildimage
-        remote_url: https://github.com/Azure/sonic-buildimage
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+  - checkout: self
+    clean: true
+    persistCredentials: true
+  - powershell: cp .\.pipelines\MsVstsUtils.ps1 $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy utils script'
+  - ${{each branch in parameters.branches}}:
+    - powershell: |
+        $FAILED=""
+        git remote add target https://github.com/Azure/sonic-buildimage
+        git remote update; if (-not $?) { exit 1 }
+        git config --global user.email "svc-acs@microsoft.com"
+        git config --global user.name "Sonic Automation"
+
+        git reset --hard
+        git clean -xdff
+        $base_branch="internal-${{branch}}"
+        $target_branch="${{branch}}"
+        if ( ${base_branch} -eq "internal-master" ) {
+          $base_branch="internal"
+        }
+        git ls-remote origin refs/heads/${base_branch}; if (-not $?) { Write-Error "Base branch not found" ;exit 1 }
+        git ls-remote target refs/heads/${target_branch}; if (-not $?) { Write-Error "Target branch not found" ;exit 1 }
+
+        git checkout -b ${base_branch} --track origin/${base_branch}
+        $curr_tag="${base_branch}-"+$(Get-Date -format "yyyyMMdd-HHmm")+".pre-merge"
+        $post_tag="${base_branch}-"+$(Get-Date -format "yyyyMMdd-HHmm")+".post-merge"
+        git tag ${curr_tag}
+
+        git pull target ${target_branch} --no-edit; if (-not $?) { git merge --abort; exit 1 }
+
+        $head_tag=git tag --contains HEAD
+
+        if ($head_tag -contains $curr_tag) {
+          Write-Host "======No change after rebasing ...======"
+          exit 0
+        } else {
+          git tag ${post_tag}; if (-not $?) { exit 1 }
+        }
+        # push code
+        git push --set-upstream origin HEAD:sonicbld/${base_branch}/code-sync; if (-not $?) { exit 1 }
+        # send PR
+        . $(Build.ArtifactStagingDirectory)\MsVstsUtils.ps1
+        Create-MergePullRequest "sonicbld/${base_branch}/code-sync" "${base_branch}" "Code sync from github"
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      condition: always()
+      displayName: '${{branch}} code merge'
+  - powershell: Write-Host finished.
+    condition: succeeded()
+    displayName: 'Success Flag'
