@@ -10,19 +10,13 @@
 
 try:
     import os
-    import time
     import struct
-    import sys
-    import getopt
-    import select
     import mmap
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
-    from sonic_platform_base.sonic_sfp.sff8472 import sffbase
 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -540,7 +534,8 @@ class Sfp(SfpBase):
             sfp_mod_prs = self._get_cpld_register('sfp_modprs')
             if sfp_mod_prs == 'ERR' : return presence
             presence =  ((int(sfp_mod_prs, 16) & bit_mask) == 0)
-        except: pass
+        except Exception:
+            pass
         return presence
 
 
@@ -586,7 +581,8 @@ class Sfp(SfpBase):
             sfp_rxlos = self._get_cpld_register('sfp_rxlos')
             if sfp_rxlos == 'ERR' : return rx_los
             rx_los =  ((int(sfp_rxlos, 16) & bit_mask) != 0)
-        except: pass
+        except Exception:
+            pass
         return rx_los
 
     def get_tx_fault(self):
@@ -600,7 +596,8 @@ class Sfp(SfpBase):
             sfp_txfault = self._get_cpld_register('sfp_txfault')
             if sfp_txfault == 'ERR' : return tx_fault
             tx_fault =  ((int(sfp_txfault, 16) & bit_mask) != 0)
-        except: pass
+        except Exception:
+            pass
         return tx_fault
 
     def get_tx_disable(self):
@@ -614,7 +611,8 @@ class Sfp(SfpBase):
             sfp_txdisable = self._get_cpld_register('sfp_txdis')
             if sfp_txdisable == 'ERR' : return tx_disable
             tx_disable =  ((int(sfp_txdisable, 16) & bit_mask) != 0)
-        except: pass
+        except Exception:
+            pass
         return tx_disable
 
     def get_tx_disable_channel(self):
@@ -657,7 +655,6 @@ class Sfp(SfpBase):
         """
         Retrieves the temperature of this SFP
         """
-        temperature = 'N/A'
         try :
             temperature_data = self._get_eeprom_data('Temperature')
             temperature = temperature_data['data']['Temperature']['value']
@@ -669,7 +666,6 @@ class Sfp(SfpBase):
         """
         Retrieves the supply voltage of this SFP
         """
-        voltage = 'N/A'
         try:
             voltage_data = self._get_eeprom_data('Voltage')
             voltage = voltage_data['data']['Vcc']['value']
