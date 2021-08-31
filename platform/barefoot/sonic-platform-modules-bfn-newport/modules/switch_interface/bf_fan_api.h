@@ -15,11 +15,11 @@ ssize_t num_fan_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t num_motor_show(struct device *dev, struct device_attribute *da,
                             char *buf);
-ssize_t fan_num_show(struct device *dev, struct device_attribute *da,
+ssize_t fan_show(struct device *dev, struct device_attribute *da,
                             char *buf);
-ssize_t motor_num_show(struct device *dev, struct device_attribute *da,
+ssize_t motor_show(struct device *dev, struct device_attribute *da,
                             char *buf);
-ssize_t motor_num_store(struct device *dev, struct device_attribute *da,
+ssize_t motor_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count);
 
 #endif //__BF_FAN_API_H__

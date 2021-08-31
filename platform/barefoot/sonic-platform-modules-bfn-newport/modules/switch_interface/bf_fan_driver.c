@@ -47,10 +47,10 @@ BF_DEV_ATTR_RO(model_name, na, FAN_MODEL_ATTR_ID);
 BF_DEV_ATTR_RO(serial_number, na, FAN_SERIAL_ATTR_ID);
 BF_DEV_ATTR_RO(vendor, na, FAN_VENDOR_ATTR_ID);
 BF_DEV_ATTR_RO(part_number, na, FAN_PARTNUM_ATTR_ID);
-BF_DEV_ATTR_RO(hardware_version, fan_num, FAN_HWVER_ATTR_ID);
+BF_DEV_ATTR_RO(hardware_version, fan, FAN_HWVER_ATTR_ID);
 BF_DEV_ATTR_RO(num_motors, num_motor, FAN_NUMMOTOR_ATTR_ID);
-BF_DEV_ATTR_RO(status, fan_num, FAN_STATUS_ATTR_ID);
-BF_DEV_ATTR_RO(led_status, fan_num, FAN_LED_ATTR_ID);
+BF_DEV_ATTR_RO(status, fan, FAN_STATUS_ATTR_ID);
+BF_DEV_ATTR_RO(led_status, fan, FAN_LED_ATTR_ID);
 
 static struct attribute *fan_attrs[] = {
     &sensor_dev_attr_model_name.dev_attr.attr,
@@ -73,11 +73,11 @@ static const struct attribute_group *fan_attr_groups[] = {
 };
 
 /* Motor Attributes */
-BF_DEV_ATTR_RO(speed, motor_num, MOTOR_SPEED_ATTR_ID);
+BF_DEV_ATTR_RO(speed, motor, MOTOR_SPEED_ATTR_ID);
 BF_DEV_ATTR_RO(speed_tolerance, na, MOTOR_SPEED_TOL_ATTR_ID);
 BF_DEV_ATTR_RO(speed_target, na, MOTOR_SPEED_TARGET_ATTR_ID);
-BF_DEV_ATTR_RW(ratio, motor_num, MOTOR_RATIO_ATTR_ID);
-BF_DEV_ATTR_RO(direction, motor_num, MOTOR_DIR_ATTR_ID);
+BF_DEV_ATTR_RW(ratio, motor, MOTOR_RATIO_ATTR_ID);
+BF_DEV_ATTR_RO(direction, motor, MOTOR_DIR_ATTR_ID);
 
 static struct attribute *motor_attrs[] = {
     &sensor_dev_attr_speed.dev_attr.attr,

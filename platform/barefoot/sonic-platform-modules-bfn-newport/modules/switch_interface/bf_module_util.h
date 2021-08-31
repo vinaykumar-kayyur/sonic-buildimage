@@ -20,8 +20,7 @@
 #define IPMI_TIMEOUT (5 * HZ)
 #define IPMI_ERR_RETRY_TIMES 1
 
-enum led_colors
-{
+enum led_colors {
     COLOR_OFF=0,
     COLOR_GREEN,
     COLOR_YELLOW,
