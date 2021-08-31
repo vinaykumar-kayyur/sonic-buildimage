@@ -14,6 +14,7 @@
 #define NUM_DEV 2
 #define NUM_TEMP_PER_DEV 3
 #define NUM_TEMP (NUM_DEV * NUM_TEMP_PER_DEV)
+#define IPMI_MODEL_SERIAL_LEN 21
 
 enum psu_sysfs_attributes
 {
@@ -50,19 +51,67 @@ enum psu_sysfs_attributes
     PSU_MAX_ATTR_ID
 };
 
+enum ipmi_psu_resp_index {
+    PSU_PRESENT = 0,
+    PSU_TEMP_FAULT,
+    PSU_POWER_GOOD_CPLD,
+    PSU_POWER_GOOD_PMBUS,
+    PSU_OVER_VOLTAGE,
+    PSU_OVER_CURRENT,
+    PSU_POWER_ON,
+    PSU_VIN0,
+    PSU_VIN1,
+    PSU_VIN2,
+    PSU_VOUT0,
+    PSU_VOUT1,
+    PSU_VOUT2,
+    PSU_IIN0,
+    PSU_IIN1,
+    PSU_IIN2,
+    PSU_IOUT0,
+    PSU_IOUT1,
+    PSU_IOUT2,
+    PSU_PIN0,
+    PSU_PIN1,
+    PSU_PIN2,
+    PSU_PIN3,
+    PSU_POUT0,
+    PSU_POUT1,
+    PSU_POUT2,
+    PSU_POUT3,
+    PSU_TEMP1_0,
+    PSU_TEMP1_1,
+    PSU_TEMP2_0,
+    PSU_TEMP2_1,
+    PSU_TEMP3_0,
+    PSU_TEMP3_1,
+    PSU_FAN0,
+    PSU_FAN1,
+    PSU_VOUT_MODE,
+    PSU_STATUS_COUNT,
+    PSU_MODEL = 0,
+    PSU_SERIAL = 0,
+    PSU_VENDOR = 0
+};
+
+struct ipmi_psu_resp_data {
+    unsigned char status[PSU_STATUS_COUNT];
+    char serial[IPMI_MODEL_SERIAL_LEN+1];
+    char model[IPMI_MODEL_SERIAL_LEN+1];
+    char vendor[IPMI_MODEL_SERIAL_LEN+1];
+};
+
 struct bf_psu_drv_data {
     struct kobject *root_kobj;
     int loglevel;
     struct platform_device psu_pdev[NUM_DEV];
     struct platform_device temp_pdev[NUM_TEMP];
-    // struct mutex update_lock;
-    // char valid; /* != 0 if registers are valid */
-    // unsigned long last_updated;    /* In jiffies */
-    // /* 4 bytes for each fan, the last 2 bytes is fan dir */
-    // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
-    // unsigned char ipmi_resp_cpld;
-    // struct ipmi_data ipmi;
-    // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
+    struct mutex update_lock;
+    char valid[NUM_DEV]; /* != 0 if registers are valid */
+    unsigned long last_updated[NUM_DEV];    /* In jiffies */
+    struct ipmi_data ipmi;
+    struct ipmi_psu_resp_data ipmi_resp[NUM_DEV]; /* 0: PSU1, 1: PSU2 */
+    unsigned char ipmi_tx_data[2];
 };
 
 #endif //__BF_PSU_DRIVER_H__

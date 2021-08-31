@@ -46,14 +46,14 @@ static struct attribute_group root_attr_group = {
 /* PSU Attributes */
 BF_DEV_ATTR_RO(model_name, psu, PSU_MODEL_ATTR_ID);
 BF_DEV_ATTR_RO(serial_number, psu, PSU_SERIAL_ATTR_ID);
-BF_DEV_ATTR_RO(date, psu, PSU_DATE_ATTR_ID);
+BF_DEV_ATTR_RO(date, psu_TBD, PSU_DATE_ATTR_ID);
 BF_DEV_ATTR_RO(vendor, psu, PSU_VENDOR_ATTR_ID);
-BF_DEV_ATTR_RO(hardware_version, psu, PSU_HW_VER_ATTR_ID);
-BF_DEV_ATTR_RO(alarm, psu, PSU_ALARM_ATTR_ID);
-BF_DEV_ATTR_RO(alarm_threshold_curr, psu, PSU_ALARM_TH_CURR_ATTR_ID);
-BF_DEV_ATTR_RO(alarm_threshold_vol, psu, PSU_ALARM_TH_VOL_ATTR_ID);
-BF_DEV_ATTR_RO(part_number, psu, PSU_PART_NUM_ATTR_ID);
-BF_DEV_ATTR_RO(max_output_power, psu, PSU_POUT_MAX_ATTR_ID);
+BF_DEV_ATTR_RO(hardware_version, psu_TBD, PSU_HW_VER_ATTR_ID);
+BF_DEV_ATTR_RO(alarm, psu_TBD, PSU_ALARM_ATTR_ID);
+BF_DEV_ATTR_RO(alarm_threshold_curr, psu_TBD, PSU_ALARM_TH_CURR_ATTR_ID);
+BF_DEV_ATTR_RO(alarm_threshold_vol, psu_TBD, PSU_ALARM_TH_VOL_ATTR_ID);
+BF_DEV_ATTR_RO(part_number, psu_TBD, PSU_PART_NUM_ATTR_ID);
+BF_DEV_ATTR_RO(max_output_power, na, PSU_POUT_MAX_ATTR_ID);
 BF_DEV_ATTR_RO(in_curr, psu, PSU_IIN_ATTR_ID);
 BF_DEV_ATTR_RO(in_vol, psu, PSU_VIN_ATTR_ID);
 BF_DEV_ATTR_RO(in_power, psu, PSU_PIN_ATTR_ID);
@@ -61,8 +61,8 @@ BF_DEV_ATTR_RO(out_curr, psu, PSU_IOUT_ATTR_ID);
 BF_DEV_ATTR_RO(out_vol, psu, PSU_VOUT_ATTR_ID);
 BF_DEV_ATTR_RO(out_power, psu, PSU_POUT_ATTR_ID);
 BF_DEV_ATTR_RO(status, psu, PSU_STATUS_ATTR_ID);
-BF_DEV_ATTR_RO(led_status, psu, PSU_LED_STATUS_ATTR_ID);
-BF_DEV_ATTR_RO(type, psu, PSU_TYPE_ATTR_ID);
+BF_DEV_ATTR_RO(led_status, na, PSU_LED_STATUS_ATTR_ID);
+BF_DEV_ATTR_RO(type, na, PSU_TYPE_ATTR_ID);
 BF_DEV_ATTR_RO(num_temp_sensors, num_temp, PSU_NUM_TEMP_ATTR_ID);
 BF_DEV_ATTR_RO(fan_speed, psu, PSU_FAN_SPEED_ATTR_ID);
 
@@ -102,10 +102,10 @@ static const struct attribute_group *dev_attr_groups[] = {
 
 /* Temp Attributes */
 BF_DEV_ATTR_RO(temp_alias, temp, TEMP_ALIAS_ATTR_ID);
-BF_DEV_ATTR_RO(temp_type, temp, TEMP_TYPE_ATTR_ID);
-BF_DEV_ATTR_RO(temp_max, temp, TEMP_MAX_ATTR_ID);
-BF_DEV_ATTR_RO(temp_max_hyst, temp, TEMP_MAX_HYST_ATTR_ID);
-BF_DEV_ATTR_RO(temp_min, temp, TEMP_MIN_ATTR_ID);
+BF_DEV_ATTR_RO(temp_type, na, TEMP_TYPE_ATTR_ID);
+BF_DEV_ATTR_RO(temp_max, na, TEMP_MAX_ATTR_ID);
+BF_DEV_ATTR_RO(temp_max_hyst, na, TEMP_MAX_HYST_ATTR_ID);
+BF_DEV_ATTR_RO(temp_min, na, TEMP_MIN_ATTR_ID);
 BF_DEV_ATTR_RO(temp_input, temp, TEMP_INPUT_ATTR_ID);
 
 static struct attribute *temp_attrs[] = {
@@ -215,10 +215,16 @@ static int __init bf_psu_init(void)
         goto alloc_err;
     }
     module_loglevel = &g_data->loglevel;
+    mutex_init(&g_data->update_lock);
 
     ret = bf_psu_create_root_attr();
     if (ret < 0)
         goto create_root_sysfs_err;
+
+    /* Set up IPMI interface */
+    ret = init_ipmi_data(&g_data->ipmi, 0);
+    if (ret)
+        goto ipmi_err;
 
     ret = register_device_and_driver(&bf_psu_driver, PSU_DRVNAME,
             g_data->psu_pdev, ARRAY_SIZE(g_data->psu_pdev), dev_attr_groups);
@@ -236,6 +242,8 @@ reg_temp_err:
     unregister_device_and_driver(&bf_psu_driver, g_data->psu_pdev,
                                  ARRAY_SIZE(g_data->psu_pdev));
 reg_dev_err:
+    ipmi_destroy_user(g_data->ipmi.user);
+ipmi_err:
     bf_psu_remove_root_attr();
 create_root_sysfs_err:
     module_loglevel = NULL;
@@ -250,6 +258,7 @@ static void __exit bf_psu_exit(void)
                                ARRAY_SIZE(g_data->temp_pdev));
     unregister_device_and_driver(&bf_psu_driver, g_data->psu_pdev,
                                  ARRAY_SIZE(g_data->psu_pdev));
+    ipmi_destroy_user(g_data->ipmi.user);
     bf_psu_remove_root_attr();
     module_loglevel = NULL;
     kfree(g_data);

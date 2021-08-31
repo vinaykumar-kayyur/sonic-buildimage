@@ -15,6 +15,8 @@ ssize_t devnum_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t num_temp_show(struct device *dev, struct device_attribute *da,
                             char *buf);
+ssize_t psu_TBD_show(struct device *dev, struct device_attribute *da,
+                            char *buf); //SEAN TODO
 ssize_t psu_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t temp_show(struct device *dev, struct device_attribute *da,
