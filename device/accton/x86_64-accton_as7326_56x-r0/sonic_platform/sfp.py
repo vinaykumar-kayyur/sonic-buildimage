@@ -81,6 +81,7 @@ QSFP_CHANNL_TX_FAULT_STATUS_OFFSET = 4
 QSFP_CHANNL_TX_FAULT_STATUS_WIDTH = 1
 QSFP_POWEROVERRIDE_OFFSET = 93
 QSFP_POWEROVERRIDE_WIDTH = 1
+QSFP_PAGE03_OFFSET = 384
 QSFP_MODULE_THRESHOLD_OFFSET = 128
 QSFP_MODULE_THRESHOLD_WIDTH = 24
 QSFP_CHANNEL_THRESHOLD_OFFSET = 176
@@ -789,11 +790,13 @@ class Sfp(SfpBase):
 
             if not self.get_presence() or not sfpd_obj:
                 return {}
-
+            
+            offset = QSFP_PAGE03_OFFSET
+            
             transceiver_dom_threshold_dict = dict.fromkeys(
                 self.threshold_dict_keys, 'N/A')
             dom_thres_raw = self.__read_eeprom_specific_bytes(
-                QSFP_MODULE_THRESHOLD_OFFSET, QSFP_MODULE_THRESHOLD_WIDTH
+                offset + QSFP_MODULE_THRESHOLD_OFFSET, QSFP_MODULE_THRESHOLD_WIDTH
             ) if self.get_presence() and sfpd_obj else None
 
             if dom_thres_raw:
@@ -827,7 +830,7 @@ class Sfp(SfpBase):
                             'VccLowWarning']['value']
 
             dom_thres_raw = self.__read_eeprom_specific_bytes(
-                QSFP_CHANNEL_THRESHOLD_OFFSET, QSFP_CHANNEL_THRESHOLD_WIDTH
+                offset + QSFP_CHANNEL_THRESHOLD_OFFSET, QSFP_CHANNEL_THRESHOLD_WIDTH
             ) if self.get_presence() and sfpd_obj else None
             channel_threshold_values = sfpd_obj.parse_channel_threshold_values(
                 dom_thres_raw, 0)
