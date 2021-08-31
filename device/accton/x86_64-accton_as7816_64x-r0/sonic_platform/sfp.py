@@ -339,9 +339,6 @@ class Sfp(SfpBase):
             (offset + XCVR_VENDOR_DATE_OFFSET), XCVR_VENDOR_DATE_WIDTH)
         sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
             sfp_vendor_date_raw, 0)
-
-        sfp_dom_capability_raw = self.__read_eeprom_specific_bytes(
-            (offset + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
  
         transceiver_info_dict = dict.fromkeys(self.info_dict_keys, 'N/A')
         compliance_code_dict = dict()
@@ -531,7 +528,8 @@ class Sfp(SfpBase):
     
         if not self.get_presence() or not sfpd_obj:
             return {}
-            offset = QSFP_PAGE03_OFFSET
+        
+        offset = QSFP_PAGE03_OFFSET
     
         transceiver_dom_threshold_dict = dict.fromkeys(
             self.threshold_dict_keys, 'N/A')
