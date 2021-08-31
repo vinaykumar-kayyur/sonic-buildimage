@@ -20,7 +20,7 @@
 [
     {
         "SWITCH_TABLE:switch": {
-{% if "broadcom" not in asic_type %}
+{% if "broadcom" not in asic_type and "marvell" not in asic_type %}
             "vxlan_port": "{{ vxlan_port }}",
             "vxlan_router_mac": "{{ vxlan_mac }}",
 {% endif %}
