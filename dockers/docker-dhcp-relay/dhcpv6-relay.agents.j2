@@ -8,7 +8,6 @@
 {% if relay_for_ipv6.flag %}
 {% set _dummy = relay_for_ipv6.update({'flag': False}) %}
 [program:dhcp6relay]
-{# We treat this VLAN as a downstream interface (-l), as we only want to listen for requests #}
 command=/usr/sbin/dhcp6relay
 
 priority=3
