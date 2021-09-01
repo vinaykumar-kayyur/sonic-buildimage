@@ -156,7 +156,7 @@ class LldpManager(daemon_base.DaemonBase):
                 port_name, swsscommon.CFG_PORT_TABLE_NAME))
             port_alias = port_name
 
-        lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local {1}".format(port_name, port_alias)
+        lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local '{1}'".format(port_name, port_alias)
 
         # if there is a description available, also configure that
         if port_desc:
