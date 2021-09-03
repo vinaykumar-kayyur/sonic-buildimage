@@ -8,6 +8,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf bash-$(BASH_VERSION_MAJOR)
 
 	dget -u https://launchpad.net/debian/+archive/primary/+sourcefiles/bash/$(BASH_VERSION_FULL)/bash_$(BASH_VERSION_FULL).dsc
+	
+	# Apply plugin suport patch
+	git apply 0001-Add-plugin-support-to-bash.patch
 
 	pushd bash-$(BASH_VERSION_MAJOR)
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
