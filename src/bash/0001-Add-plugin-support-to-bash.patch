@@ -1,4 +1,4 @@
-From dd62400bb86039d64114c49cdc7f68c35e6c2bfa Mon Sep 17 00:00:00 2001
+From b4962d09ab2d41a5e993bf3d8e4ebe32114999dc Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Fri, 3 Sep 2021 14:05:36 +0800
 Subject: [PATCH] Add plugin support to bash.
@@ -8,9 +8,9 @@ Subject: [PATCH] Add plugin support to bash.
  config.h.in   |  3 +++
  configure     |  9 +++++++++
  configure.ac  |  7 +++++++
- execute_cmd.c |  9 +++++++++
- shell.c       | 13 +++++++++++++
- 6 files changed, 46 insertions(+), 4 deletions(-)
+ execute_cmd.c |  8 ++++++++
+ shell.c       | 12 ++++++++++++
+ 6 files changed, 44 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile.in b/Makefile.in
 index 5fcb44b..2a11f69 100644
@@ -162,27 +162,26 @@ index 52b4cdb..2d73d90 100644
  AC_DEFINE(ALIAS)
  fi
 diff --git a/execute_cmd.c b/execute_cmd.c
-index 8b3c83a..5477853 100644
+index 8b3c83a..c83efea 100644
 --- a/execute_cmd.c
 +++ b/execute_cmd.c
-@@ -5458,6 +5458,15 @@ execute_disk_command (words, redirects, command_line, pipe_in, pipe_out,
+@@ -5458,6 +5458,14 @@ execute_disk_command (words, redirects, command_line, pipe_in, pipe_out,
  	 leave it there, in the same format that the user used to
  	 type it in. */
        args = strvec_from_word_list (words, 0, 0, (int *)NULL);
-+	  
-+	  
++
 +#if defined (BASH_PLUGIN)
 +      result = invoke_plugin_on_shell_execve (current_user.user_name, command, args);
 +      if (result) {
 +        exit (EXECUTION_FAILURE);
 +      }
 +#endif /* BASH_PLUGIN */
-+	  
++
        exit (shell_execve (command, args, export_env));
      }
    else
 diff --git a/shell.c b/shell.c
-index a2b2a55..0ec6d95 100644
+index a2b2a55..fb94b22 100644
 --- a/shell.c
 +++ b/shell.c
 @@ -46,6 +46,10 @@
@@ -207,11 +206,10 @@ index a2b2a55..0ec6d95 100644
    /* From here on in, the shell must be a normal functioning shell.
       Variables from the environment are expected to be set, etc. */
    shell_initialize ();
-@@ -804,6 +812,11 @@ main (argc, argv, env)
+@@ -804,6 +812,10 @@ main (argc, argv, env)
    /* Read commands until exit condition. */
    reader_loop ();
    exit_shell (last_command_exit_value);
-+  
 +
 +#if defined (BASH_PLUGIN)
 +	free_plugins ();
