@@ -1,0 +1,1 @@
+../../common/sonic_platform/media_settings_plugin.py
