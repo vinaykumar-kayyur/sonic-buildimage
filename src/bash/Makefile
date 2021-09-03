@@ -14,6 +14,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	
 	# Apply plugin suport patch
 	patch -p1 < ../0001-Add-plugin-support-to-bash.patch
+    cp ../plugin.h ./plugin.h
+    cp ../plugin.c ./plugin.c
+    cp ../unittest ./unittest
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 
 
