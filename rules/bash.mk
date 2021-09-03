@@ -6,9 +6,9 @@
 # completed.
 
 # Bash major release-number corresponding to Debian-8 (Jessie)
-BASH_VERSION_MAJOR = 4.3
+BASH_VERSION_MAJOR = 5.0
 # Bash complete release-number. This image contains all 4.3 fixes  up to patch '42'.
-BASH_VERSION_FULL = $(BASH_VERSION_MAJOR)-14
+BASH_VERSION_FULL = $(BASH_VERSION_MAJOR)-4
 
 export BASH_VERSION_MAJOR BASH_VERSION_FULL
 
