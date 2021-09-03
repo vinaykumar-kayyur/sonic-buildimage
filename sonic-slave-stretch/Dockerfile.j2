@@ -254,6 +254,10 @@ RUN apt-get update && apt-get install -y \
         iproute2 \
 # For bash
         texi2html \
+        sharutils \
+        locales \
+        time \
+        man2html-base \
 # For initramfs
         bash-completion \
 {%- if CONFIGURED_ARCH == "amd64" %}
