@@ -163,7 +163,17 @@
 {% endfor %}
 {% else %}
 {% for port in port_names_inactive.split(',') %}
-        "{{ port }}|0-7": {
+        "{{ port }}|3-4": {
+            "profile" : "[BUFFER_PROFILE|egress_lossless_zero_profile]"
+        },
+{% endfor %}
+{% for port in port_names_inactive.split(',') %}
+        "{{ port }}|0-2": {
+            "profile" : "[BUFFER_PROFILE|egress_lossy_zero_profile]"
+        },
+{% endfor %}
+{% for port in port_names_inactive.split(',') %}
+        "{{ port }}|5-6": {
             "profile" : "[BUFFER_PROFILE|egress_lossy_zero_profile]"
         }{% if not loop.last %},{% endif %}
 
