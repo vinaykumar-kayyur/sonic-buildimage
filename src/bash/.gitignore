@@ -1,7 +1,7 @@
 *
 !.gitignore
 !Makefile
-!*.patch
-!*.c
-!*.h
-!unittest/
+!Files/
+!Files/*
+!patches/
+!patches/*

@@ -1,0 +1,278 @@
+From bbb54228ffc084da4eea01e9227d4f0f96a1f814 Mon Sep 17 00:00:00 2001
+From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
+Date: Fri, 3 Sep 2021 14:05:36 +0800
+Subject: [PATCH] Add plugin support to bash.
+
+---
+ Makefile.in   | 14 +++++++++-----
+ config.h.in   |  3 +++
+ configure     | 18 ++++++++++++++----
+ configure.ac  | 10 ++++++++++
+ execute_cmd.c | 12 ++++++++++++
+ shell.c       | 12 ++++++++++++
+ 6 files changed, 60 insertions(+), 9 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 5fcb44b..9e4e4c3 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -379,6 +379,9 @@ LTLIBINTL = @LTLIBINTL@
+ INTLLIBS = @INTLLIBS@
+ INTLOBJS = @INTLOBJS@
+ 
++# Dynamic load library.
++DYNAMICLOAD_LIB = @DYNAMICLOAD_LIB@
++
+ # Our malloc.
+ MALLOC_TARGET = @MALLOC_TARGET@
+ 
+@@ -420,7 +423,7 @@ BASHINCFILES =	 $(BASHINCDIR)/posixstat.h $(BASHINCDIR)/ansi_stdlib.h \
+ 		 $(BASHINCDIR)/ocache.h
+ 
+ LIBRARIES = $(GLOB_LIB) $(SHLIB_LIB) $(READLINE_LIB) $(HISTORY_LIB) $(TERMCAP_LIB) \
+-	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIB) $(LIBICONV) $(LOCAL_LIBS)
++	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIB) $(LIBICONV) $(LOCAL_LIBS) $(DYNAMICLOAD_LIB)
+ 
+ LIBDEP = $(GLOB_DEP) $(SHLIB_DEP) $(INTL_DEP) $(READLINE_DEP) $(HISTORY_DEP) $(TERMCAP_DEP) \
+ 	 $(TILDE_DEP) $(MALLOC_DEP)
+@@ -440,7 +443,7 @@ CSOURCES = shell.c eval.c parse.y general.c make_cmd.c print_cmd.c y.tab.c \
+ 	   input.c bashhist.c array.c arrayfunc.c assoc.c sig.c pathexp.c \
+ 	   unwind_prot.c siglist.c bashline.c bracecomp.c error.c \
+ 	   list.c stringlib.c locale.c findcmd.c redir.c \
+-	   pcomplete.c pcomplib.c syntax.c xmalloc.c
++	   pcomplete.c pcomplib.c syntax.c xmalloc.c plugin.c
+ 
+ HSOURCES = shell.h flags.h trap.h hashcmd.h hashlib.h jobs.h builtins.h \
+ 	   general.h variables.h config.h $(ALLOC_HEADERS) alias.h \
+@@ -448,7 +451,7 @@ HSOURCES = shell.h flags.h trap.h hashcmd.h hashlib.h jobs.h builtins.h \
+ 	   command.h input.h error.h bashansi.h dispose_cmd.h make_cmd.h \
+ 	   subst.h externs.h siglist.h bashhist.h bashline.h bashtypes.h \
+ 	   array.h arrayfunc.h sig.h mailcheck.h bashintl.h bashjmp.h \
+-	   execute_cmd.h parser.h pathexp.h pathnames.h pcomplete.h assoc.h \
++	   execute_cmd.h parser.h pathexp.h pathnames.h pcomplete.h assoc.h plugin.h \
+ 	   $(BASHINCFILES)
+ 
+ SOURCES	 = $(CSOURCES) $(HSOURCES) $(BUILTIN_DEFS)
+@@ -481,7 +484,7 @@ OBJECTS	 = shell.o eval.o y.tab.o general.o make_cmd.o print_cmd.o $(GLOBO) \
+ 	   trap.o input.o unwind_prot.o pathexp.o sig.o test.o version.o \
+ 	   alias.o array.o arrayfunc.o assoc.o braces.o bracecomp.o bashhist.o \
+ 	   bashline.o $(SIGLIST_O) list.o stringlib.o locale.o findcmd.o redir.o \
+-	   pcomplete.o pcomplib.o syntax.o xmalloc.o $(SIGNAMES_O)
++	   pcomplete.o pcomplib.o syntax.o xmalloc.o plugin.o $(SIGNAMES_O)
+ 
+ # Where the source code of the shell builtins resides.
+ BUILTIN_SRCDIR=$(srcdir)/builtins
+@@ -1015,7 +1018,7 @@ eval.o: quit.h ${BASHINCDIR}/maxpath.h unwind_prot.h dispose_cmd.h
+ eval.o: make_cmd.h subst.h sig.h pathnames.h externs.h parser.h
+ eval.o: input.h execute_cmd.h 
+ execute_cmd.o: config.h bashtypes.h ${BASHINCDIR}/filecntl.h ${BASHINCDIR}/posixstat.h bashansi.h ${BASHINCDIR}/ansi_stdlib.h
+-execute_cmd.o: shell.h syntax.h config.h bashjmp.h ${BASHINCDIR}/posixjmp.h command.h ${BASHINCDIR}/stdc.h error.h
++execute_cmd.o: shell.h syntax.h config.h bashjmp.h ${BASHINCDIR}/posixjmp.h command.h ${BASHINCDIR}/stdc.h error.h plugin.h
+ execute_cmd.o: general.h xmalloc.h bashtypes.h variables.h arrayfunc.h conftypes.h array.h hashlib.h
+ execute_cmd.o: quit.h ${BASHINCDIR}/maxpath.h unwind_prot.h dispose_cmd.h
+ execute_cmd.o: make_cmd.h subst.h sig.h pathnames.h externs.h parser.h
+@@ -1024,6 +1027,7 @@ execute_cmd.o: execute_cmd.h findcmd.h redir.h trap.h test.h pathexp.h
+ execute_cmd.o: $(DEFSRC)/common.h ${DEFDIR}/builtext.h ${GLOB_LIBSRC}/strmatch.h
+ execute_cmd.o: ${BASHINCDIR}/posixtime.h ${BASHINCDIR}/chartypes.h
+ execute_cmd.o: $(DEFSRC)/getopt.h
++plugin.o: plugin.h
+ expr.o: config.h bashansi.h ${BASHINCDIR}/ansi_stdlib.h 
+ expr.o: shell.h syntax.h config.h bashjmp.h ${BASHINCDIR}/posixjmp.h command.h ${BASHINCDIR}/stdc.h error.h
+ expr.o: general.h xmalloc.h bashtypes.h variables.h arrayfunc.h conftypes.h array.h hashlib.h
+diff --git a/config.h.in b/config.h.in
+index 8554aec..7f17024 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -38,6 +38,9 @@
+    BSD-like job control. */
+ #undef JOB_CONTROL
+ 
++/* Define BASH_SHELL_EXECVE_PLUGIN if need plugin support. */
++#undef BASH_SHELL_EXECVE_PLUGIN
++
+ /* Define ALIAS if you want the alias features. */
+ #undef ALIAS
+ 
+diff --git a/configure b/configure
+index 2f62662..cae212f 100644
+--- a/configure
++++ b/configure
+@@ -630,6 +630,7 @@ LOCAL_DEFS
+ LOCAL_LDFLAGS
+ LOCAL_CFLAGS
+ LOCAL_LIBS
++DYNAMICLOAD_LIB
+ MALLOC_DEBUG
+ DEBUG
+ RELSTATUS
+@@ -827,6 +828,7 @@ enable_single_help_strings
+ enable_strict_posix_default
+ enable_usg_echo_default
+ enable_xpg_echo_default
++enable_bash_shell_execve_plugin
+ enable_mem_scramble
+ enable_profiling
+ enable_static_link
+@@ -1535,6 +1537,7 @@ Optional Features:
+   --enable-xpg-echo-default
+                           make the echo builtin expand escape sequences by
+                           default
++  --enable-bash-plugin    enable bash plugin features
+   --enable-mem-scramble   scramble memory on calls to malloc and free
+   --enable-profiling      allow profiling with gprof
+   --enable-static-link    link bash statically, for use as a root shell
+@@ -2989,6 +2992,7 @@ opt_dircomplete_expand_default=no
+ opt_globascii_default=yes
+ opt_function_import=yes
+ opt_dev_fd_stat_broken=no
++opt_bash_shell_execve_plugin=yes
+ 
+ opt_static_link=no
+ opt_profiling=no
+@@ -3010,6 +3014,7 @@ if test $opt_minimal_config = yes; then
+ 	opt_multibyte=yes opt_cond_regexp=no opt_coproc=no
+ 	opt_casemod_attrs=no opt_casemod_expansions=no opt_extglob_default=no
+ 	opt_globascii_default=yes
++	opt_bash_shell_execve_plugin=no
+ fi
+ 
+ # Check whether --enable-alias was given.
+@@ -3197,6 +3202,10 @@ if test "${enable_xpg_echo_default+set}" = set; then :
+   enableval=$enable_xpg_echo_default; opt_xpg_echo=$enableval
+ fi
+ 
++# Check whether --enable-bash-shell-execve-plugin was given.
++if test "${enable_bash_shell_execve_plugin+set}" = set; then :
++  enableval=$enable_bash_shell_execve_plugin; opt_bash_shell_execve_plugin=$enableval
++fi
+ 
+ # Check whether --enable-mem-scramble was given.
+ if test "${enable_mem_scramble+set}" = set; then :
+@@ -3216,10 +3225,11 @@ fi
+ 
+ 
+ 
+-
+-
+-
+-
++DYNAMICLOAD_LIB=
++if test $opt_bash_shell_execve_plugin = yes; then
++$as_echo "#define BASH_SHELL_EXECVE_PLUGIN 1" >>confdefs.h
++DYNAMICLOAD_LIB=-ldl
++fi
+ 
+ if test $opt_alias = yes; then
+ $as_echo "#define ALIAS 1" >>confdefs.h
+diff --git a/configure.ac b/configure.ac
+index 52b4cdb..8070b94 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -185,6 +185,7 @@ opt_dircomplete_expand_default=no
+ opt_globascii_default=yes
+ opt_function_import=yes
+ opt_dev_fd_stat_broken=no
++opt_bash_shell_execve_plugin=yes
+ 
+ dnl options that affect how bash is compiled and linked
+ opt_static_link=no
+@@ -206,6 +207,7 @@ if test $opt_minimal_config = yes; then
+ 	opt_multibyte=yes opt_cond_regexp=no opt_coproc=no
+ 	opt_casemod_attrs=no opt_casemod_expansions=no opt_extglob_default=no
+ 	opt_globascii_default=yes
++	opt_bash_shell_execve_plugin=no
+ fi
+ 
+ AC_ARG_ENABLE(alias, AC_HELP_STRING([--enable-alias], [enable shell aliases]), opt_alias=$enableval)
+@@ -245,6 +247,7 @@ AC_ARG_ENABLE(single-help-strings, AC_HELP_STRING([--enable-single-help-strings]
+ AC_ARG_ENABLE(strict-posix-default, AC_HELP_STRING([--enable-strict-posix-default], [configure bash to be posix-conformant by default]), opt_strict_posix=$enableval)
+ AC_ARG_ENABLE(usg-echo-default, AC_HELP_STRING([--enable-usg-echo-default], [a synonym for --enable-xpg-echo-default]), opt_xpg_echo=$enableval)
+ AC_ARG_ENABLE(xpg-echo-default, AC_HELP_STRING([--enable-xpg-echo-default], [make the echo builtin expand escape sequences by default]), opt_xpg_echo=$enableval)
++AC_ARG_ENABLE(bash-shell-execve-plugin, AC_HELP_STRING([--enable-bash-shell-execve-plugin], [enable bash shell execve plugin features]), opt_bash_shell_execve_plugin=$enableval)
+ 
+ dnl options that alter how bash is compiled and linked
+ AC_ARG_ENABLE(mem-scramble, AC_HELP_STRING([--enable-mem-scramble], [scramble memory on calls to malloc and free]), opt_memscramble=$enableval)
+@@ -263,6 +266,13 @@ dnl opt_readline and opt_history are handled later, because AC_PROG_CC needs
+ dnl to be run before we can check the version of an already-installed readline
+ dnl library
+ 
++DYNAMICLOAD_LIB=
++if test $opt_bash_shell_execve_plugin = yes; then
++AC_DEFINE(BASH_SHELL_EXECVE_PLUGIN)
++DYNAMICLOAD_LIB=-ldl
++fi
++AC_SUBST(DYNAMICLOAD_LIB)
++
+ if test $opt_alias = yes; then
+ AC_DEFINE(ALIAS)
+ fi
+diff --git a/execute_cmd.c b/execute_cmd.c
+index 8b3c83a..b7157aa 100644
+--- a/execute_cmd.c
++++ b/execute_cmd.c
+@@ -82,6 +82,10 @@ extern int errno;
+ #  include "test.h"
+ #endif
+ 
++#if defined (BASH_SHELL_EXECVE_PLUGIN)
++#include "plugin.h"
++#endif /* BASH_SHELL_EXECVE_PLUGIN */
++
+ #include "builtins/common.h"
+ #include "builtins/builtext.h"	/* list of builtins */
+ 
+@@ -5458,6 +5462,14 @@ execute_disk_command (words, redirects, command_line, pipe_in, pipe_out,
+ 	 leave it there, in the same format that the user used to
+ 	 type it in. */
+       args = strvec_from_word_list (words, 0, 0, (int *)NULL);
++
++#if defined (BASH_SHELL_EXECVE_PLUGIN)
++      result = invoke_plugin_on_shell_execve (current_user.user_name, command, args);
++      if (result) {
++        exit (EXECUTION_FAILURE);
++      }
++#endif /* BASH_SHELL_EXECVE_PLUGIN */
++
+       exit (shell_execve (command, args, export_env));
+     }
+   else
+diff --git a/shell.c b/shell.c
+index a2b2a55..237afbb 100644
+--- a/shell.c
++++ b/shell.c
+@@ -46,6 +46,10 @@
+ #  include <unistd.h>
+ #endif
+ 
++#if defined (BASH_SHELL_EXECVE_PLUGIN)
++#include "plugin.h"
++#endif /* BASH_SHELL_EXECVE_PLUGIN */
++
+ #include "bashintl.h"
+ 
+ #define NEED_SH_SETLINEBUF_DECL		/* used in externs.h */
+@@ -561,6 +565,10 @@ main (argc, argv, env)
+   if (shopt_alist)
+     run_shopt_alist ();
+ 
++#if defined (BASH_SHELL_EXECVE_PLUGIN)
++	load_plugins ();
++#endif /* BASH_SHELL_EXECVE_PLUGIN */
++
+   /* From here on in, the shell must be a normal functioning shell.
+      Variables from the environment are expected to be set, etc. */
+   shell_initialize ();
+@@ -804,6 +812,10 @@ main (argc, argv, env)
+   /* Read commands until exit condition. */
+   reader_loop ();
+   exit_shell (last_command_exit_value);
++
++#if defined (BASH_SHELL_EXECVE_PLUGIN)
++	free_plugins ();
++#endif /* BASH_SHELL_EXECVE_PLUGIN */
+ }
+ 
+ static int
+-- 
+2.17.1.windows.2
+
