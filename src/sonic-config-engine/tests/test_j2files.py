@@ -244,7 +244,7 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_buffers_mellanox2700_render_template(self):
-        # Mellanox buffer template rendering for single ingress pool mode 
+        # Mellanox buffer template rendering for single ingress pool mode
         mellanox_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8')
         buffers_file = os.path.join(mellanox_dir_path, 'buffers.json.j2')
         port_config_ini_file = os.path.join(mellanox_dir_path, 'port_config.ini')
@@ -264,7 +264,7 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_buffers_mellanox2410_render_template(self):
-        # Mellanox buffer template rendering for double ingress pools mode 
+        # Mellanox buffer template rendering for double ingress pools mode
         mellanox_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410')
         buffers_file = os.path.join(mellanox_dir_path, 'buffers.json.j2')
         port_config_ini_file = os.path.join(mellanox_dir_path, 'port_config.ini')
