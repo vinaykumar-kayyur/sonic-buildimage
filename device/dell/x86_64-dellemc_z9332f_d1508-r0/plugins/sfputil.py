@@ -26,7 +26,7 @@ class SfpUtil(SfpUtilBase):
 
     PORT_START = 1
     PORT_END = 34
-    PORTS_IN_BLOCK = 34
+    PORTS_IN_BLOCK = 32
 
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:09:00.0/resource0"
 
