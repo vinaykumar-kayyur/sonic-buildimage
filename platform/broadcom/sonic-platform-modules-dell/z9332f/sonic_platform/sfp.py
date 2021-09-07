@@ -13,7 +13,6 @@ try:
     import re
     import time
     import subprocess
-    import struct
     import mmap
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
