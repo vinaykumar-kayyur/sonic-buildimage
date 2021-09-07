@@ -4,7 +4,6 @@
 #
 
 try:
-    import struct
     import sys
     import getopt
     import time

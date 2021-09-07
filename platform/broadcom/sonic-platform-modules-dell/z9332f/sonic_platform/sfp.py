@@ -989,7 +989,7 @@ class Sfp(SfpBase):
         """
         lpmode_state = False
         try:
-            if self.port_type == 'QSFP_DD'::
+            if self.port_type == 'QSFP_DD':
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)
 
