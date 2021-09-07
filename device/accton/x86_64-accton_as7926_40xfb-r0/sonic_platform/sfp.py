@@ -1581,7 +1581,7 @@ class Sfp(SfpBase):
                 # Write to eeprom
                 port_eeprom_path = I2C_EEPROM_PATH.format(self._port_to_i2c_mapping[self._port_num][0])
 
-                eeprom = open(port_eeprom_path, "rb")
+                eeprom = open(port_eeprom_path, "rb", buffering=0)
                 eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 lpmode = ord(eeprom.read(1))
 
