@@ -311,16 +311,12 @@ class Sfp(SfpBase):
 
     def pci_mem_read(self, mm, offset):
         mm.seek(offset)
-        read_data_stream = mm.read(4)
-        reg_val = struct.unpack('I', read_data_stream)
-        mem_val = str(reg_val)[1:-2]
-        # print "reg_val read:%x"%reg_val
-        return mem_val
+        return mm.read_byte()
 
     def pci_mem_write(self, mm, offset, data):
         mm.seek(offset)
         # print "data to write:%x"%data
-        mm.write(struct.pack('I', data))
+        mm.write_byte(data)
 
     def pci_set_value(self, resource, val, offset):
         fd = os.open(resource, os.O_RDWR)
@@ -993,7 +989,7 @@ class Sfp(SfpBase):
         """
         lpmode_state = False
         try:
-            if self.sfp_type.startswith('QSFP'):
+            if self.port_type == 'QSFP_DD'::
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)
 
@@ -1004,7 +1000,8 @@ class Sfp(SfpBase):
                 mask = (1 << 6)
 
                 lpmode_state = (reg_value & mask)
-        except  ValueError: pass
+        except ValueError:
+            pass
         return lpmode_state
 
     def get_power_override(self):

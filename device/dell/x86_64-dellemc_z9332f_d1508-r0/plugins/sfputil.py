@@ -89,16 +89,12 @@ class SfpUtil(SfpUtilBase):
 
     def pci_mem_read(self, mm, offset):
         mm.seek(offset)
-        read_data_stream = mm.read(4)
-        reg_val = struct.unpack('I', read_data_stream)
-        mem_val = str(reg_val)[1:-2]
-        # print "reg_val read:%x"%reg_val
-        return mem_val
+        return mm.read_byte()
 
     def pci_mem_write(self, mm, offset, data):
         mm.seek(offset)
         # print "data to write:%x"%data
-        mm.write(struct.pack('I', data))
+        mm.write_byte(data)
 
     def pci_set_value(self, resource, val, offset):
         fd = open(resource, O_RDWR)
@@ -181,7 +177,8 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-
+        if port_num > self.PORTS_IN_BLOCK:
+            return False
         # Port offset starts with 0x4000
         port_offset = 16384 + ((port_num-1) * 16)
 
@@ -205,6 +202,8 @@ class SfpUtil(SfpUtilBase):
 
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
+            return False
+        if port_num > self.PORTS_IN_BLOCK:
             return False
 
         # Port offset starts with 0x4000
