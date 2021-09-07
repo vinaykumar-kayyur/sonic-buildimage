@@ -117,7 +117,7 @@ stages:
                 PREVIOUS_VERSION=
                 latest_path=/azmirrors/$(PUBLISH_BLOB_PREFIX)/$(GROUP_NAME)/$(BUILD_NUMBER)
                 [[ "${{ parameters.trusty8LinkPath }}" != 'default' ]] && BRANCH_NAME=${{ parameters.trusty8LinkPath }}
-                link_path=/data/$(dirname $(PUBLISH_BLOB_PREFIX))/$(GROUP_NAME)/$(BRANCH_NAME)/$link_foldername
+                link_path=/data/$(dirname $(PUBLISH_BLOB_PREFIX))/$(GROUP_NAME)/$BRANCH_NAME/$link_foldername
                 [ -e $link_path/latest ] && LATEST_VERSION=$(cat $link_path/latest/target/sonic.version)
                 mkdir -p $link_path
 
