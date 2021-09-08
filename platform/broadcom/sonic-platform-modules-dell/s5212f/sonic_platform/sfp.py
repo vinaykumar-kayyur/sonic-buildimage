@@ -12,11 +12,7 @@ try:
     import os
     import time
     import struct
-    import sys
-    import getopt
-    import select
     import mmap
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -710,7 +706,6 @@ class Sfp(SfpBase):
         """
         Retrieves the temperature of this SFP
         """
-        temperature = 'N/A'
         try :
             temperature_data = self._get_eeprom_data('Temperature')
             temperature = temperature_data['data']['Temperature']['value']
@@ -722,7 +717,6 @@ class Sfp(SfpBase):
         """
         Retrieves the supply voltage of this SFP
         """
-        voltage = 'N/A'
         try:
             voltage_data = self._get_eeprom_data('Voltage')
             voltage = voltage_data['data']['Vcc']['value']
@@ -817,7 +811,7 @@ class Sfp(SfpBase):
                 reg_value = reg_value & ~mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
                 # Sleep 1 second to allow it to settle
                 time.sleep(1)
@@ -825,7 +819,7 @@ class Sfp(SfpBase):
                 reg_value = reg_value | mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
         except  ValueError:
             return  False
         return True
@@ -852,7 +846,7 @@ class Sfp(SfpBase):
                     reg_value = reg_value & ~mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
         except  ValueError:
             return  False
         return True
