@@ -9,7 +9,7 @@
                         "auto_restart": "always_enabled",
                         "has_timer": false,
                         "has_global_scope": true,
-                        "has_asic_scope": true
+                        "has_per_asic_scope": true
                     },
                     {
                         "name": "swss",
@@ -17,7 +17,7 @@
                         "auto_restart": "always_enabled",
                         "has_timer": false,
                         "has_global_scope": false,
-                        "has_asic_scope": true
+                        "has_per_asic_scope": true
                     },
                     {
                         "name": "syncd",
@@ -25,7 +25,7 @@
                         "auto_restart": "always_enabled",
                         "has_timer": false,
                         "has_global_scope": false,
-                        "has_asic_scope": true
+                        "has_per_asic_scope": true
                     },
                     {
                         "name": "snmp",
@@ -33,7 +33,7 @@
                         "auto_restart": "enabled",
                         "has_timer": false,
                         "has_global_scope": true,
-                        "has_asic_scope": false
+                        "has_per_asic_scope": false
                     },
                     {
                         "name": "lldp",
@@ -41,7 +41,7 @@
                         "auto_restart": "disabled",
                         "has_timer": false,
                         "has_global_scope": false,
-                        "has_asic_scope": true
+                        "has_per_asic_scope": true
                     }
                 ]
             }
@@ -57,7 +57,7 @@
                         "auto_restart": "always_enabled",
                         "has_timer": false,
                         "has_global_scope": true,
-                        "has_asic_scope": true
+                        "has_per_asic_scope": true
                     }
                 ]
             }
