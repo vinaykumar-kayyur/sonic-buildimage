@@ -26,9 +26,8 @@ except ImportError as e:
 ext_media_module = None
 try:
     import ext_media_api as ext_media_module
-except:
+except ImportError:
     ext_media_module = None
-    pass
 
 PAGE_OFFSET = 0
 KEY_OFFSET = 1
