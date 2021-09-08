@@ -165,4 +165,23 @@ module sonic-types {
             pattern "enabled|disabled|always_enabled";
         }
     }
+    typedef meter_type {
+        type enumeration {
+            enum packets; 
+            enum bytes;
+        }
+    }
+
+    typedef copp_packet_action {
+        type enumeration {
+            enum drop;
+            enum forward;
+            enum copy;
+            enum copy_cancel;
+            enum trap;
+            enum log;
+            enum deny;
+            enum transit;
+        }
+    }        
 }
