@@ -1117,7 +1117,8 @@
                 "has_timer": "False",
                 "high_mem_alert": "disabled",
                 "state": "enabled"
-
+            }
+        }
     },
 
     "SAMPLE_CONFIG_DB_UNKNOWN": {
