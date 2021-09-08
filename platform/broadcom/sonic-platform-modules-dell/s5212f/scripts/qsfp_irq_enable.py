@@ -2,7 +2,6 @@
 
 try:
         import struct
-        import sys
         from os import *
         from mmap import *
 

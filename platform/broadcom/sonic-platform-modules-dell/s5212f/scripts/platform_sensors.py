@@ -11,7 +11,6 @@
 #   * PSU
 
 
-import os
 import sys
 import logging
 import commands
@@ -79,7 +78,7 @@ def get_switch_details():
             if (partno  in switch_sku): return switch_sku[partno]
     return None
 
-ret_status, ipmi_cmd_ret = commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
 print_temperature_sensors()
 
 # Print the information for 1 Fan Tray

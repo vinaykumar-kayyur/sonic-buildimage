@@ -150,7 +150,7 @@ install_python_api_package() {
 }
 
 remove_python_api_package() {
-    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    rv=$(pip3 show sonic-platform > /dev/null 2>/dev/null)
     if [ $? -eq 0 ]; then
         rv=$(pip3 uninstall -y sonic-platform > /dev/null 2>/dev/null)
     fi

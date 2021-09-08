@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     import syslog
@@ -140,8 +138,6 @@ class Watchdog(WatchdogBase):
             self.armed_time = self._get_time()
             self.timeout = seconds
             return seconds
-
-        return -1
 
     def disarm(self):
         """
