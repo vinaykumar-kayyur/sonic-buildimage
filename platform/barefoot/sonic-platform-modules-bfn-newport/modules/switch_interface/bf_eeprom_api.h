@@ -11,7 +11,11 @@
 #ifndef __BF_EEPROM_API_H__
 #define __BF_EEPROM_API_H__
 
-ssize_t eeprom_show(struct device *dev, struct device_attribute *da,
+ssize_t eeprom_read(struct file *, struct kobject *, struct bin_attribute *,
+            char *, loff_t, size_t);
+ssize_t eeprom_write(struct file *, struct kobject *, struct bin_attribute *,
+            char *, loff_t, size_t);
+ssize_t bsp_ver_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 
 #endif //__BF_EEPROM_API_H__

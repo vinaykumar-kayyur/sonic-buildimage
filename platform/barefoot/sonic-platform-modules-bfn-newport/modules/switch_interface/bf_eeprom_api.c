@@ -13,13 +13,23 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/hwmon-sysfs.h>
+#include <linux/delay.h>
 #include "bf_module_util.h"
 #include "bf_eeprom_driver.h"
+#include "bf_fpga_i2c_util.h"
+
+#define MUX_CHN (0x40)
+#define EEPROM_ADDR (0x51)
+#define BUS_NO (32)
+#define REGADDR_LEN (2)
+#define PAGE_BITW (5)
+#define PAGE_SZ (0x1 << PAGE_BITW)
 
 extern struct bf_eeprom_drv_data *g_data;
 
+ATTR_SHOW_STR_FUNC(bsp_ver, BSP_VERSION)
 
-ATTR_SHOW_STR_FUNC(debug,
+ATTR_SHOW_STR_FUNC(debug, //SEAN TODO
     "+++DUMMY content+++\n"
     "eeprom present:\n"
     "  0-->present\n"
@@ -51,11 +61,87 @@ ATTR_SHOW_STR_FUNC(debug,
     "---DUMMY content---\n"
 )
 
-
-ssize_t eeprom_show(struct device *dev, struct device_attribute *da,
-                            char *buf)
+inline void set_addr(uint8_t addr[REGADDR_LEN], loff_t off)
 {
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    bf_print("attr_name(%s) attr_idx=%d\n", da->attr.name, attr->index);
-    return 0;
+    addr[0] = (uint8_t) (( off >> 8) & 0xFF);
+    addr[1] = (uint8_t) (off & 0xFF);
+}
+
+ssize_t eeprom_read(struct file *fp, struct kobject *kobj,
+            struct bin_attribute *attr, char *buf, loff_t off, size_t count)
+{
+    uint8_t addr[REGADDR_LEN];
+    size_t remain = count;
+    uint8_t rd_sz;
+    int ret;
+
+    while(remain > 0) {
+        rd_sz = (remain <= FPGA_I2C_MAX_DATA)? remain : FPGA_I2C_MAX_DATA;
+        set_addr(addr, off);
+        ret = bf_fpga_i2c_addr_read(BUS_NO, WITH_MUX, MUX_CHN, EEPROM_ADDR,
+                                    addr, buf, REGADDR_LEN, rd_sz);
+        if(ret != 0){
+            bf_print("read sys eeprom fail (%s), addr(%lld), len(%d)\n",
+                     bf_pltfm_err_str(ret), off, rd_sz);
+            return count - remain;
+        }
+        buf += rd_sz;
+        remain -= rd_sz;
+        off += rd_sz;
+    }
+    return count;
+}
+ssize_t eeprom_write(struct file *fp, struct kobject *kobj,
+            struct bin_attribute *attr, char *buf, loff_t off, size_t len)
+{
+    uint8_t addr[REGADDR_LEN];
+    int ret;
+    int chunk;
+    ssize_t retval;
+    size_t pending_len = 0, chunk_len = 0;
+    loff_t chunk_offset = 0, chunk_start_offset = 0;
+    loff_t chunk_end_offset = 0;
+
+    if(off + len - 1 > EEPROM_SIZE)
+        return -EINVAL;
+
+    pending_len = len; /* amount remaining to transfer */
+    retval = 0;  /* amount transferred */
+    for(chunk = off >> PAGE_BITW ;
+                chunk <= (off + len - 1) >> PAGE_BITW ; chunk++) {
+
+        /* make sure each write won't exceed a physical page */
+        chunk_start_offset = chunk * PAGE_SZ;
+        chunk_end_offset = chunk_start_offset + PAGE_SZ;
+
+        if (chunk_start_offset < off) {
+            chunk_offset = off;
+            if ((off + pending_len) < chunk_end_offset)
+                chunk_len = pending_len;
+            else
+                chunk_len = chunk_end_offset - off;
+        } else {
+            chunk_offset = chunk_start_offset;
+            if (pending_len < PAGE_SZ)
+                chunk_len = pending_len;
+            else
+                chunk_len = PAGE_SZ;
+        }
+
+        set_addr(addr, chunk_offset);
+        ret = bf_fpga_i2c_addr_write(BUS_NO, WITH_MUX, MUX_CHN, EEPROM_ADDR,
+                                     addr, REGADDR_LEN, buf, chunk_len);
+        if(ret != 0){
+            bf_print("write sys eeprom fail (%s), addr(%lld), len(%ld)\n",
+                     bf_pltfm_err_str(ret), chunk_offset, chunk_len);
+            return retval;
+        }
+
+        buf += chunk_len;
+        pending_len -= chunk_len;
+        retval += chunk_len;
+        mdelay(50);
+    }
+
+    return retval;
 }

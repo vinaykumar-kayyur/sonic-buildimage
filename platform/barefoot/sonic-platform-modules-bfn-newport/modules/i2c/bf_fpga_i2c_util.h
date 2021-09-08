@@ -22,6 +22,7 @@ enum bf_mux_addr_enum{
   WITHOUT_MUX = 0xFF
 };
 
+#define FPGA_I2C_MAX_DATA 128 /* limited by buf size in bf_fpga_i2c_t */
 
 #define BF_PLTFM_STATUS_VALUES                                         \
   BF_PLTFM_STATUS_(BF_PLTFM_SUCCESS, "Success"),                       \
@@ -76,5 +77,14 @@ bf_pltfm_status_t bf_fpga_i2c_write(int bus,
                                     uint8_t i2c_addr,
                                     uint8_t *wr_buf,
                                     uint8_t wr_sz);
+
+bf_pltfm_status_t bf_fpga_i2c_addr_write(int bus,
+                                         uint8_t mux_addr,
+                                         uint8_t mux_chn,
+                                         uint8_t i2c_addr,
+                                         uint8_t *reg_addr,
+                                         uint8_t reg_sz,
+                                         uint8_t *wr_buf,
+                                         uint8_t wr_sz);
 
 #endif //__BF_FPGA_I2C_UTIL_H__

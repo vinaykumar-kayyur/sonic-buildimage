@@ -11,6 +11,8 @@
 #ifndef __BF_EEPROM_DRIVER_H__
 #define __BF_EEPROM_DRIVER_H__
 
+#define BSP_VERSION "0.1.0"
+#define EEPROM_SIZE (256) /* only first 256B matter as syseeprom */
 
 enum eeprom_sysfs_attributes
 {
@@ -24,14 +26,6 @@ enum eeprom_sysfs_attributes
 struct bf_eeprom_drv_data {
     struct kobject *root_kobj;
     int loglevel;
-    // struct mutex update_lock;
-    // char valid; /* != 0 if registers are valid */
-    // unsigned long last_updated;    /* In jiffies */
-    // /* 4 bytes for each fan, the last 2 bytes is fan dir */
-    // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
-    // unsigned char ipmi_resp_cpld;
-    // struct ipmi_data ipmi;
-    // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
 };
 
 #endif //__BF_EEPROM_DRIVER_H__

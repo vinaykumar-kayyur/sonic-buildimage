@@ -25,21 +25,25 @@ struct bf_eeprom_drv_data *g_data = NULL;
 int *module_loglevel = NULL;
 
 /* Root Attributes */
-BF_DEV_ATTR_RO(eeprom, eeprom, DEBUG_ATTR_ID);
-BF_DEV_ATTR_RO(bsp_version, eeprom, DEBUG_ATTR_ID);
+static BIN_ATTR_RW(eeprom, EEPROM_SIZE);
+BF_DEV_ATTR_RO(bsp_version, bsp_ver, BSP_VER_ATTR_ID);
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
 BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_debug.dev_attr.attr,
     &sensor_dev_attr_loglevel.dev_attr.attr,
-    &sensor_dev_attr_eeprom.dev_attr.attr,
     &sensor_dev_attr_bsp_version.dev_attr.attr,
+    NULL
+};
+static struct bin_attribute *root_bin_attrs[] = {
+    &bin_attr_eeprom,
     NULL
 };
 
 static struct attribute_group root_attr_group = {
     .attrs = root_attrs,
+    .bin_attrs = root_bin_attrs
 };
 
 

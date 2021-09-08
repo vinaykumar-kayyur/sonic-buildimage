@@ -45,7 +45,7 @@ bf_pltfm_status_t _bf_fpga_i2c_write(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !wr_sz || !wr_buf ||
-      bus >= BF_I2C_FPGA_NUM_CTRL) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || wr_sz > BF_FPGA_MAX_I2C_WR_DATA) {
     return BF_PLTFM_INVALID_ARG; /* BF_PLTFM_COMM_FAILED */
   }
   i2c_op.one_time = 1;
@@ -62,6 +62,33 @@ bf_pltfm_status_t _bf_fpga_i2c_write(int fd,
   return ret;
 }
 
+bf_pltfm_status_t _bf_fpga_i2c_addr_write(int bus,
+                                          uint8_t addr,
+                                          uint8_t *reg_addr,
+                                          uint8_t reg_sz,
+                                          uint8_t *wr_buf,
+                                          uint8_t wr_sz) {
+  bf_fpga_i2c_t i2c_op;
+  int ret;
+
+  if (!reg_addr || !reg_sz || !wr_sz || !wr_buf ||
+      bus >= BF_I2C_FPGA_NUM_CTRL || reg_sz + wr_sz > BF_FPGA_MAX_I2C_WR_DATA) {
+    return BF_PLTFM_INVALID_ARG; /* BF_PLTFM_COMM_FAILED */
+  }
+  i2c_op.one_time = 1;
+  i2c_op.num_i2c = 1;
+  i2c_op.inst_hndl.bus_id = bus;
+  /* populate i2c operation */
+  populate_i2c_inst_ctrl_fields(
+      &i2c_op, 0, false, true, addr, BF_FPGA_I2C_WRITE, 0, reg_sz + wr_sz, 0);
+  memcpy(i2c_op.i2c_inst[0].wr_buf, reg_addr, reg_sz);
+  memcpy(i2c_op.i2c_inst[0].wr_buf + reg_sz, wr_buf, wr_sz);
+  ret = fpga_i2c_oneshot(&i2c_op);
+  if (ret) {
+    ret = BF_PLTFM_COMM_FAILED; /* errorno has the actual system error code */
+  }
+  return ret;
+}
 
 bf_pltfm_status_t _bf_fpga_i2c_addr_read(int fd,
                                         int bus,
@@ -75,7 +102,7 @@ bf_pltfm_status_t _bf_fpga_i2c_addr_read(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !wr_sz || !rd_sz || !wr_buf || !rd_buf ||
-      bus >= BF_I2C_FPGA_NUM_CTRL) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || rd_sz > BF_FPGA_MAX_I2C_RD_DATA) {
     return BF_PLTFM_INVALID_ARG; /* BF_PLTFM_COMM_FAILED */
   }
   i2c_op.one_time = 1;
@@ -111,7 +138,7 @@ bf_pltfm_status_t _bf_fpga_i2c_read(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !rd_sz || !rd_buf ||
-      bus >= BF_I2C_FPGA_NUM_CTRL) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || rd_sz > BF_FPGA_MAX_I2C_RD_DATA) {
     return BF_PLTFM_INVALID_ARG; /* BF_PLTFM_COMM_FAILED */
   }
   i2c_op.one_time = 1;
@@ -142,7 +169,8 @@ bf_pltfm_status_t _bf_fpga_i2c_write_mux(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !wr_sz || !wr_buf ||
-      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F ||
+      wr_sz > BF_FPGA_MAX_I2C_WR_DATA) {
     return BF_PLTFM_INVALID_ARG;
   }
   i2c_op.one_time = 1;
@@ -171,6 +199,49 @@ bf_pltfm_status_t _bf_fpga_i2c_write_mux(int fd,
   return ret;
 }
 
+bf_pltfm_status_t _bf_fpga_i2c_addr_write_mux(int bus,
+                                              uint8_t mux_addr,
+                                              uint8_t mux_chn,
+                                              uint8_t i2c_addr,
+                                              uint8_t *reg_addr,
+                                              uint8_t reg_sz,
+                                              uint8_t *wr_buf,
+                                              uint8_t wr_sz) {
+  bf_fpga_i2c_t i2c_op;
+  int ret;
+
+  if (!reg_addr || !reg_sz || !wr_sz || !wr_buf ||
+      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F ||
+      reg_sz + wr_sz > BF_FPGA_MAX_I2C_WR_DATA ) {
+    return BF_PLTFM_INVALID_ARG;
+  }
+  i2c_op.one_time = 1;
+  i2c_op.num_i2c = 3;
+  i2c_op.inst_hndl.bus_id = bus;
+  /* populate first operation -> set mux channel */
+  populate_i2c_inst_ctrl_fields(
+      &i2c_op, 0, true, true, mux_addr, BF_FPGA_I2C_WRITE, 0, 1, 0);
+  i2c_op.i2c_inst[0].wr_buf[0] = mux_chn;
+
+  /* populate second operation -> perform data transfer */
+  populate_i2c_inst_ctrl_fields(
+      &i2c_op, 1, true, true, i2c_addr, BF_FPGA_I2C_WRITE, 0, reg_sz+wr_sz, 0);
+  memcpy(i2c_op.i2c_inst[1].wr_buf, reg_addr, reg_sz);
+  memcpy(i2c_op.i2c_inst[1].wr_buf + reg_sz, wr_buf, wr_sz);
+
+  /* populate third operation -> reset mux channel */
+  populate_i2c_inst_ctrl_fields(
+      &i2c_op, 2, false, true, mux_addr, BF_FPGA_I2C_WRITE, 0, 1, 0);
+  i2c_op.i2c_inst[2].wr_buf[0] =
+      0x00; /* disable all mux channels */
+
+  ret = fpga_i2c_oneshot(&i2c_op);
+  if (ret) {
+    ret = BF_PLTFM_COMM_FAILED; /* errorno has the actual system error code */
+  }
+  return ret;
+}
+
 bf_pltfm_status_t _bf_fpga_i2c_read_mux(int fd,
                                        int bus,
                                        uint8_t delay,
@@ -183,7 +254,8 @@ bf_pltfm_status_t _bf_fpga_i2c_read_mux(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !rd_buf || !rd_sz ||
-      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F ||
+      rd_sz > BF_FPGA_MAX_I2C_RD_DATA) {
     return BF_PLTFM_INVALID_ARG;
   }
   i2c_op.one_time = 1;
@@ -228,7 +300,8 @@ bf_pltfm_status_t _bf_fpga_i2c_addr_read_mux(int fd,
   int ret;
 
   if (fd >= BF_FPGA_MAX_CNT || !wr_sz || !rd_sz || !wr_buf || !rd_buf ||
-      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F) {
+      bus >= BF_I2C_FPGA_NUM_CTRL || mux_addr > 0x7F ||
+      rd_sz > BF_FPGA_MAX_I2C_RD_DATA) {
     return BF_PLTFM_INVALID_ARG;
   }
   i2c_op.one_time = 1;
@@ -320,3 +393,20 @@ bf_pltfm_status_t bf_fpga_i2c_write(int bus,
                                   wr_buf, wr_sz);
 }
 EXPORT_SYMBOL(bf_fpga_i2c_write);
+
+bf_pltfm_status_t bf_fpga_i2c_addr_write(int bus,
+                                         uint8_t mux_addr,
+                                         uint8_t mux_chn,
+                                         uint8_t i2c_addr,
+                                         uint8_t *reg_addr,
+                                         uint8_t reg_sz,
+                                         uint8_t *wr_buf,
+                                         uint8_t wr_sz) {
+  if(mux_addr > 0x80)
+    return _bf_fpga_i2c_addr_write(bus, i2c_addr, reg_addr, reg_sz, wr_buf,
+                                   wr_sz);
+  else
+    return _bf_fpga_i2c_addr_write_mux(bus, mux_addr, mux_chn, i2c_addr,
+                                       reg_addr, reg_sz, wr_buf, wr_sz);
+}
+EXPORT_SYMBOL(bf_fpga_i2c_addr_write);
