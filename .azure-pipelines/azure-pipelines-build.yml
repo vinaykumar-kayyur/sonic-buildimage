@@ -104,8 +104,9 @@ jobs:
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
-            gzip -kd sonic-vs.img.gz
-            docker run sonic-slave-buster qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx
+            gzip -kd target/sonic-vs.img.gz
+            docker run --rm -v "`pwd`:/sonic" -w "/sonic" sonicdev-microsoft.azurecr.io:443/sonic-slave-buster qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx 
+            rm target/sonic-vs.img
           else
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
