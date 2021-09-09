@@ -4,8 +4,8 @@ Documentation=man:fstrim
 
 [Timer]
 OnCalendar=weekly
-OnBootSec=10min
-AccuracySec=1h
+OnBootSec=600
+AccuracySec=3600
 Persistent=true
 
 [Install]
