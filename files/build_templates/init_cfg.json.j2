@@ -30,6 +30,7 @@
                    ("teamd", "enabled", false, "enabled")] %}
 {% do features.append(("dhcp_relay", "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}", false, "enabled")) %}
 {%- if sonic_routing_stack == "framewave" %}
+{% do features.append(("swan-agent", "enabed", false, "enabled")) %}
 {% do features.append(("framewave-proxy", "disabled", false, "enabled")) %}
 {% do features.remove(("dhcp_relay", "enabled", false, "enabled")) %}
 {% do features.remove(("teamd", "enabled", false, "enabled")) %}
