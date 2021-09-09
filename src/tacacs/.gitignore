@@ -2,7 +2,7 @@
 !.gitignore
 bash/*
 !bash/Makefile
-!bash/*.patch
+!bash/bash_tacplus/*
 nsm/*
 !nsm/Makefile
 !nsm/*.patch

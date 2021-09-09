@@ -8,6 +8,8 @@ all:
 	gcc mock_helper.c $(IFLAGS) $(CFLAGS) -o mock_helper.o
 	gcc ../bash_tacplus.c   $(IFLAGS) $(CFLAGS) $(MFLAG) -o bash_tacplus.o
 	gcc  plugin_test.o  mock_helper.o bash_tacplus.o -o plugin_test  -lc -lcunit 
+	# run unit test, if UT failed, build will break
+	./plugin_test
 
 clean:
 	rm *.o

@@ -213,6 +213,7 @@ int main(void) {
   }
 
   CU_basic_show_failures(CU_get_failure_list());
-  CU_cleanup_registry();
-  return CU_get_error();
+
+  // use failed UT count as return value
+  return CU_get_number_of_failure_records();
 }
