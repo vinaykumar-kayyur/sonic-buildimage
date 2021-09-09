@@ -29,18 +29,30 @@ enum xcvr_sysfs_attributes
     XCVR_MAX_ATTR_ID
 };
 
+struct optoe_data {
+    int use_smbus;
+    u32 byte_len;
+
+    /*
+     * Lock protects against activities from other Linux tasks,
+     * but not from changes by other I2C masters.
+     */
+    struct mutex lock;
+    struct bin_attribute bin;
+    unsigned int write_max;
+    unsigned int num_addresses;
+
+    /* dev_class: ONE_ADDR (QSFP) or TWO_ADDR (SFP) */
+    int dev_class;
+
+    struct platform_device *pdev;
+};
+
 struct bf_xcvr_drv_data {
     struct kobject *root_kobj;
     int loglevel;
     struct platform_device pdev[NUM_DEV];
-    // struct mutex update_lock;
-    // char valid; /* != 0 if registers are valid */
-    // unsigned long last_updated;    /* In jiffies */
-    // /* 4 bytes for each fan, the last 2 bytes is fan dir */
-    // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
-    // unsigned char ipmi_resp_cpld;
-    // struct ipmi_data ipmi;
-    // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
+    struct optoe_data optoe[NUM_DEV];
 };
 
 #endif //__BF_XCVR_DRIVER_H__

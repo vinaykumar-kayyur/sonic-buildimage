@@ -17,6 +17,7 @@
 #include "bf_module_util.h"
 #include "bf_xcvr_driver.h"
 #include "bf_xcvr_api.h"
+#include "bf_xcvr_optoe.h"
 
 #define DRVNAME "bf_xcvr"
 #define DIRNAME "eth%d"
@@ -51,7 +52,6 @@ BF_DEV_ATTR_RW(reset, xcvr, ETH_RESET_ATTR_ID);
 BF_DEV_ATTR_RW(lpmode, xcvr, ETH_LPMODE_ATTR_ID);
 BF_DEV_ATTR_RO(present, xcvr, ETH_PRESENT_ATTR_ID);
 BF_DEV_ATTR_RO(interrupt, xcvr, ETH_INTR_ATTR_ID);
-BF_DEV_ATTR_RW(eeprom, xcvr, ETH_EEPROM_ATTR_ID);
 
 static struct attribute *dev_attrs[] = {
     &sensor_dev_attr_power_on.dev_attr.attr,
@@ -59,7 +59,6 @@ static struct attribute *dev_attrs[] = {
     &sensor_dev_attr_lpmode.dev_attr.attr,
     &sensor_dev_attr_present.dev_attr.attr,
     &sensor_dev_attr_interrupt.dev_attr.attr,
-    &sensor_dev_attr_eeprom.dev_attr.attr,
     NULL
 };
 
@@ -103,13 +102,31 @@ static void bf_xcvr_remove_root_attr(void)
 
 static int bf_xcvr_probe(struct platform_device *pdev)
 {
-    bf_print("found dev id=%d\n", pdev->id);
-    return bf_xcvr_create_symlink(pdev);
+    int ret;
+    struct optoe_data *optoe = &g_data->optoe[pdev->id];
+
+    pdev->dev.platform_data = optoe;
+    ret = optoe_probe(pdev, optoe);
+    if(ret != 0)
+        goto probe_err;
+
+    ret = bf_xcvr_create_symlink(pdev);
+    if(ret != 0)
+        goto create_link_err;
+
+    bf_print("dev id=%d probed.\n", pdev->id);
+    return 0;
+
+create_link_err:
+    optoe_remove(optoe);
+probe_err:
+    return ret;
 }
 
 static int bf_xcvr_remove(struct platform_device *pdev)
 {
     bf_xcvr_remove_symlink(pdev);
+    optoe_remove(pdev->dev.platform_data);
     return 0;
 }
 

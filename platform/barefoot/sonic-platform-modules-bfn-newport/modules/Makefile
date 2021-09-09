@@ -10,7 +10,8 @@ bf_fan-y := switch_interface/bf_fan_driver.o \
 			switch_interface/bf_module_util.o
 bf_xcvr-y := switch_interface/bf_xcvr_driver.o \
 				switch_interface/bf_xcvr_api.o \
-				switch_interface/bf_module_util.o
+				switch_interface/bf_module_util.o \
+				switch_interface/bf_xcvr_optoe.o
 bf_sensor-y := switch_interface/bf_sensor_driver.o \
 				switch_interface/bf_sensor_api.o \
 				switch_interface/bf_module_util.o
