@@ -1,5 +1,8 @@
 *
 !.gitignore
+bash/*
+!bash/Makefile
+!bash/*.patch
 nsm/*
 !nsm/Makefile
 !nsm/*.patch
