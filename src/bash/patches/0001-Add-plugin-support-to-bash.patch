@@ -1,4 +1,4 @@
-From 8db363a7408976b808e9b2fc79549322381dc37a Mon Sep 17 00:00:00 2001
+From 2dea243108b0c59724cbf86ce73a4caf0c0c3f4a Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Thu, 9 Sep 2021 11:04:13 +0800
 Subject: [PATCH] Add plugin support to bash.
@@ -8,11 +8,11 @@ Subject: [PATCH] Add plugin support to bash.
  bash-5.0/config.h.in   |   3 +
  bash-5.0/configure     |  18 +-
  bash-5.0/configure.ac  |  10 +
- bash-5.0/execute_cmd.c |  15 ++
- bash-5.0/plugin.c      | 421 +++++++++++++++++++++++++++++++++++++++++
+ bash-5.0/execute_cmd.c |  16 ++
+ bash-5.0/plugin.c      | 427 +++++++++++++++++++++++++++++++++++++++++
  bash-5.0/plugin.h      |  75 ++++++++
  bash-5.0/shell.c       |  12 ++
- 8 files changed, 559 insertions(+), 9 deletions(-)
+ 8 files changed, 566 insertions(+), 9 deletions(-)
  create mode 100644 bash-5.0/plugin.c
  create mode 100644 bash-5.0/plugin.h
 
@@ -211,7 +211,7 @@ index 52b4cdb..8070b94 100644
  AC_DEFINE(ALIAS)
  fi
 diff --git a/bash-5.0/execute_cmd.c b/bash-5.0/execute_cmd.c
-index 8b3c83a..8e1920b 100644
+index 8b3c83a..5485fd9 100644
 --- a/bash-5.0/execute_cmd.c
 +++ b/bash-5.0/execute_cmd.c
 @@ -82,6 +82,10 @@ extern int errno;
@@ -225,17 +225,18 @@ index 8b3c83a..8e1920b 100644
  #include "builtins/common.h"
  #include "builtins/builtext.h"	/* list of builtins */
  
-@@ -5458,6 +5462,17 @@ execute_disk_command (words, redirects, command_line, pipe_in, pipe_out,
+@@ -5458,6 +5462,18 @@ execute_disk_command (words, redirects, command_line, pipe_in, pipe_out,
  	 leave it there, in the same format that the user used to
  	 type it in. */
        args = strvec_from_word_list (words, 0, 0, (int *)NULL);
 +
 +#if defined (BASH_SHELL_EXECVE_PLUGIN)
 +      result = invoke_plugin_on_shell_execve (current_user.user_name, command, args);
-+      if (result) {
++
 +#if defined (DEBUG)
-+        itrace("invoke_plugin_on_shell_execve: failed invoke plugin with user:%s, command:%s", current_user.user_name, command);
++      itrace("invoke_plugin_on_shell_execve: failed invoke plugin with user:%s, command:%s, result: %d", current_user.user_name, command, result);
 +#endif
++      if (result) {
 +        exit (EXECUTION_FAILURE);
 +      }
 +#endif /* BASH_SHELL_EXECVE_PLUGIN */
@@ -245,10 +246,10 @@ index 8b3c83a..8e1920b 100644
    else
 diff --git a/bash-5.0/plugin.c b/bash-5.0/plugin.c
 new file mode 100644
-index 0000000..2bfdf5a
+index 0000000..32efe91
 --- /dev/null
 +++ b/bash-5.0/plugin.c
-@@ -0,0 +1,421 @@
+@@ -0,0 +1,427 @@
 +/* plugin.c -- Bash plugin support. */
 +
 +/* Copyright (C) 1987-2016 Free Software Foundation, Inc.
@@ -398,7 +399,7 @@ index 0000000..2bfdf5a
 +PLUGIN_NODE *global_plugin_list = NULL;
 +
 +/* Load plugin by plugin path */
-+void
++int
 +append_plugin(
 +        plugin_handle,
 +        on_shell_execve,
@@ -414,10 +415,8 @@ index 0000000..2bfdf5a
 +    if (new_plugin_node == NULL)
 +    {
 +        /* When allocate memory failed, stop and return. */
-+#ifdef DEBUG
-+        itrace("Plugin: failed to allocate memory for plugin node.\n");
-+#endif
-+        return;
++        fprintf(stderr, "Plugin: failed to allocate memory for plugin node.\n");
++        return PLUGIN_LOAD_FAILED;
 +    }
 +
 +    new_plugin_node->next = NULL;
@@ -446,6 +445,8 @@ index 0000000..2bfdf5a
 +#ifdef DEBUG
 +    itrace("Plugin: append new plugin node %p to %p\n", new_plugin_node, current_plugin_node);
 +#endif
++
++    return PLUGIN_LOAD_SUCCESS;
 +}
 +
 +
@@ -502,14 +503,20 @@ index 0000000..2bfdf5a
 +    }
 +
 +    /* Add plugin to plugin list */
-+    append_plugin(plugin_handle,
++    int plugin_load_result = append_plugin(plugin_handle,
 +                    plugin_on_shell_execve_handle,
 +                    plugin_init_handle,
 +                    plugin_uninit_handle);
-+    
++
++    if (plugin_load_result == PLUGIN_LOAD_SUCCESS) {
 +#ifdef DEBUG
-+    itrace("Plugin: plugin %s loaded\n", plugin_path);
++        itrace("Plugin: plugin %s loaded\n", plugin_path);
 +#endif
++    }
++    else {
++        /* Output plugin load error message. */
++        fprintf(stderr, "Plugin: plugin %s load failed, result: %d\n", plugin_path, plugin_load_result);
++    }
 +}
 +
 +/* Load plugin by config file */
@@ -660,10 +667,10 @@ index 0000000..2bfdf5a
 +    if (absolute_program (cmd)) {
 +        // find real path for relative path command
 +        char resolved_path[PATH_MAX];
-+		
-+		// real_path_buffer should not free here because we pass resolved_path as parameter.
-+	    char* real_path_buffer = realpath(cmd, resolved_path);
-+		
++
++        // real_path_buffer should not free here because we pass resolved_path as parameter.
++        char* real_path_buffer = realpath(cmd, resolved_path);
++
 +        return invoke_loaded_plugins(user, shell_level, resolved_path, argv);
 +    }
 +    else {
