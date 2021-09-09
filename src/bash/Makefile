@@ -13,8 +13,15 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	quilt push -a
 
 	pushd bash-$(BASH_VERSION_MAJOR)
+
 	# copy UT and source code.
 	cp -a ../Files/. ./
+
+	# run UT before build package
+	pushd unittest
+	make
+	popd
+
 	# build package
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 
