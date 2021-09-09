@@ -11,10 +11,8 @@
 #   * PSU
 
 
-import os
 import sys
 import logging
-import subprocess
 import commands
 
 S5224F_MAX_FAN_TRAYS = 4
@@ -38,7 +36,6 @@ ipmi_sdr_list = ""
 
 def ipmi_sensor_dump():
 
-    status = 1
     global ipmi_sdr_list
     ipmi_cmd = IPMI_SENSOR_DATA
     status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
@@ -231,7 +228,6 @@ def get_psu_status(index):
     :param index: An integer, index of the PSU of which to query status
     :return: Boolean, True if PSU is plugged, False if not
     """
-    status = 0
     ret_status = 1
     ipmi_cmd_ret = 'f'
 
