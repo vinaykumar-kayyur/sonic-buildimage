@@ -176,10 +176,6 @@ pbmp_xport_xe=0x7fff9fffffffffffffffe
 port_flex_enable=1
 phy_an_c73=3
 
-#25G,10G,1G support
-serdes_10g_at_25g_vco=1
-serdes_1000x_at_25g_vco=1
-
 l2xmsg_mode=1
 
 #Need for mac learn scale
@@ -238,14 +234,4 @@ host_as_route_disable=1
 sai_eapp_config_file=/etc/broadcom/eapps_cfg.json
 sai_fast_convergence_support=1
 flow_init_mode=1
-mpls_mem_entries=16384
-vlan_xlate_1_mem_entries=65536
-vlan_xlate_2_mem_entries=16384
 sai_load_hw_config=/usr/lib/cancun/
-sai_nbr_bcast_ifp_optimized=1
-sai_brcm_sonic_acl_enhancements=1
-# Reduced Trap Group QSET for BRCM Sonic
-sai_brcm_sonic_trap_group=1
-l2_entry_used_as_my_station=1
-multi_hash_recurse_depth_l3=2
-sai_interface_type_auto_detect=0
