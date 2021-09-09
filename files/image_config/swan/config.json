@@ -1,0 +1,25 @@
+{
+  "agent": {
+    "apiport": 10000,
+    "agentfilepath": "/root/config/swanagent.txt",
+    "bindingsids": "24000-24999",
+    "insecurehttpmodeenable": false,
+    "interactivedscp": 48,
+    "interactiveexp": 4,
+    "loglevel": "debug",
+    "sapiport": 10001,
+    "scavengerdscp": 8,
+    "scavengerexp": 1,
+    "fibsynctimeoutsec": "300s"  
+  },
+  "tls": {
+    "tlscafile": "/root/config/certs/ApPrss2014.pem",
+    "tlscertfile": "/root/config/certs/machine.crt",
+    "tlskeyfile": "/root/config/certs/machine.key"
+  },
+  "tunnel": {
+    "defaultalive": true,
+    "intervalms": "0ms",
+    "lossthreshold": 3
+  }
+}

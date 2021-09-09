@@ -878,6 +878,11 @@ sudo chmod -R 640 $FILESYSTEM_ROOT/etc/sonic/frr/
 sudo chmod 750 $FILESYSTEM_ROOT/etc/sonic/frr
 {%- endif %}
 
+{%- if SONIC_ROUTING_STACK == "framewave" %}
+# Copy SWAN configuration files
+sudo cp $IMAGE_CONFIGS/swan/config.json $FILESYSTEM_ROOT/etc/sonic/
+{%- endif %}
+
 # Mask services which are disabled by default
 sudo cp $BUILD_SCRIPTS_DIR/mask_disabled_services.py $FILESYSTEM_ROOT/tmp/
 sudo chmod a+x $FILESYSTEM_ROOT/tmp/mask_disabled_services.py
