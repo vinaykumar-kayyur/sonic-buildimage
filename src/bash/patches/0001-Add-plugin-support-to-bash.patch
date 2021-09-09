@@ -1,25 +1,25 @@
-From 11df0bddd65c84af9c4015489bf652b9d6e68fa9 Mon Sep 17 00:00:00 2001
+From 8db363a7408976b808e9b2fc79549322381dc37a Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Fri, 3 Sep 2021 14:05:36 +0800
+Date: Thu, 9 Sep 2021 11:04:13 +0800
 Subject: [PATCH] Add plugin support to bash.
 
 ---
- Makefile.in   |  14 +-
- config.h.in   |   3 +
- configure     |  18 ++-
- configure.ac  |  10 ++
- execute_cmd.c |  15 ++
- plugin.c      | 421 ++++++++++++++++++++++++++++++++++++++++++++++++++
- plugin.h      |  75 +++++++++
- shell.c       |  12 ++
+ bash-5.0/Makefile.in   |  14 +-
+ bash-5.0/config.h.in   |   3 +
+ bash-5.0/configure     |  18 +-
+ bash-5.0/configure.ac  |  10 +
+ bash-5.0/execute_cmd.c |  15 ++
+ bash-5.0/plugin.c      | 421 +++++++++++++++++++++++++++++++++++++++++
+ bash-5.0/plugin.h      |  75 ++++++++
+ bash-5.0/shell.c       |  12 ++
  8 files changed, 559 insertions(+), 9 deletions(-)
- create mode 100644 plugin.c
- create mode 100644 plugin.h
+ create mode 100644 bash-5.0/plugin.c
+ create mode 100644 bash-5.0/plugin.h
 
-diff --git a/Makefile.in b/Makefile.in
+diff --git a/bash-5.0/Makefile.in b/bash-5.0/Makefile.in
 index 5fcb44b..9e4e4c3 100644
---- a/Makefile.in
-+++ b/Makefile.in
+--- a/bash-5.0/Makefile.in
++++ b/bash-5.0/Makefile.in
 @@ -379,6 +379,9 @@ LTLIBINTL = @LTLIBINTL@
  INTLLIBS = @INTLLIBS@
  INTLOBJS = @INTLOBJS@
@@ -83,10 +83,10 @@ index 5fcb44b..9e4e4c3 100644
  expr.o: config.h bashansi.h ${BASHINCDIR}/ansi_stdlib.h 
  expr.o: shell.h syntax.h config.h bashjmp.h ${BASHINCDIR}/posixjmp.h command.h ${BASHINCDIR}/stdc.h error.h
  expr.o: general.h xmalloc.h bashtypes.h variables.h arrayfunc.h conftypes.h array.h hashlib.h
-diff --git a/config.h.in b/config.h.in
+diff --git a/bash-5.0/config.h.in b/bash-5.0/config.h.in
 index 8554aec..7f17024 100644
---- a/config.h.in
-+++ b/config.h.in
+--- a/bash-5.0/config.h.in
++++ b/bash-5.0/config.h.in
 @@ -38,6 +38,9 @@
     BSD-like job control. */
  #undef JOB_CONTROL
@@ -97,10 +97,10 @@ index 8554aec..7f17024 100644
  /* Define ALIAS if you want the alias features. */
  #undef ALIAS
  
-diff --git a/configure b/configure
+diff --git a/bash-5.0/configure b/bash-5.0/configure
 index 2f62662..cae212f 100644
---- a/configure
-+++ b/configure
+--- a/bash-5.0/configure
++++ b/bash-5.0/configure
 @@ -630,6 +630,7 @@ LOCAL_DEFS
  LOCAL_LDFLAGS
  LOCAL_CFLAGS
@@ -168,10 +168,10 @@ index 2f62662..cae212f 100644
  
  if test $opt_alias = yes; then
  $as_echo "#define ALIAS 1" >>confdefs.h
-diff --git a/configure.ac b/configure.ac
+diff --git a/bash-5.0/configure.ac b/bash-5.0/configure.ac
 index 52b4cdb..8070b94 100644
---- a/configure.ac
-+++ b/configure.ac
+--- a/bash-5.0/configure.ac
++++ b/bash-5.0/configure.ac
 @@ -185,6 +185,7 @@ opt_dircomplete_expand_default=no
  opt_globascii_default=yes
  opt_function_import=yes
@@ -210,10 +210,10 @@ index 52b4cdb..8070b94 100644
  if test $opt_alias = yes; then
  AC_DEFINE(ALIAS)
  fi
-diff --git a/execute_cmd.c b/execute_cmd.c
+diff --git a/bash-5.0/execute_cmd.c b/bash-5.0/execute_cmd.c
 index 8b3c83a..8e1920b 100644
---- a/execute_cmd.c
-+++ b/execute_cmd.c
+--- a/bash-5.0/execute_cmd.c
++++ b/bash-5.0/execute_cmd.c
 @@ -82,6 +82,10 @@ extern int errno;
  #  include "test.h"
  #endif
@@ -243,11 +243,11 @@ index 8b3c83a..8e1920b 100644
        exit (shell_execve (command, args, export_env));
      }
    else
-diff --git a/plugin.c b/plugin.c
+diff --git a/bash-5.0/plugin.c b/bash-5.0/plugin.c
 new file mode 100644
 index 0000000..2bfdf5a
 --- /dev/null
-+++ b/plugin.c
++++ b/bash-5.0/plugin.c
 @@ -0,0 +1,421 @@
 +/* plugin.c -- Bash plugin support. */
 +
@@ -670,11 +670,11 @@ index 0000000..2bfdf5a
 +        return invoke_loaded_plugins(user, shell_level, cmd, argv);
 +    }
 +}
-diff --git a/plugin.h b/plugin.h
+diff --git a/bash-5.0/plugin.h b/bash-5.0/plugin.h
 new file mode 100644
 index 0000000..5aa5e67
 --- /dev/null
-+++ b/plugin.h
++++ b/bash-5.0/plugin.h
 @@ -0,0 +1,75 @@
 +/* plugin.h - functions from plugin.c. */
 +
@@ -751,10 +751,10 @@ index 0000000..5aa5e67
 +extern int invoke_plugin_on_shell_execve __P((char *, char *, char **));
 +
 +#endif /* _PLUGIN_H_ */
-diff --git a/shell.c b/shell.c
+diff --git a/bash-5.0/shell.c b/bash-5.0/shell.c
 index a2b2a55..1eedf31 100644
---- a/shell.c
-+++ b/shell.c
+--- a/bash-5.0/shell.c
++++ b/bash-5.0/shell.c
 @@ -46,6 +46,10 @@
  #  include <unistd.h>
  #endif
