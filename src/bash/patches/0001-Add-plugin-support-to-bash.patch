@@ -1,4 +1,4 @@
-From b358f583f2548dfb387a031e102742138dde321f Mon Sep 17 00:00:00 2001
+From 0390c526253b627e3680eca2faf6bbfcf3f75525 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Thu, 9 Sep 2021 11:04:13 +0800
 Subject: [PATCH] Add plugin support to bash.
@@ -9,10 +9,10 @@ Subject: [PATCH] Add plugin support to bash.
  bash-5.0/configure     |  18 +-
  bash-5.0/configure.ac  |  10 +
  bash-5.0/execute_cmd.c |  16 ++
- bash-5.0/plugin.c      | 427 +++++++++++++++++++++++++++++++++++++++++
+ bash-5.0/plugin.c      | 428 +++++++++++++++++++++++++++++++++++++++++
  bash-5.0/plugin.h      |  79 ++++++++
  bash-5.0/shell.c       |  12 ++
- 8 files changed, 570 insertions(+), 9 deletions(-)
+ 8 files changed, 571 insertions(+), 9 deletions(-)
  create mode 100644 bash-5.0/plugin.c
  create mode 100644 bash-5.0/plugin.h
 
@@ -246,10 +246,10 @@ index 8b3c83a..5485fd9 100644
    else
 diff --git a/bash-5.0/plugin.c b/bash-5.0/plugin.c
 new file mode 100644
-index 0000000..32efe91
+index 0000000..df72830
 --- /dev/null
 +++ b/bash-5.0/plugin.c
-@@ -0,0 +1,427 @@
+@@ -0,0 +1,428 @@
 +/* plugin.c -- Bash plugin support. */
 +
 +/* Copyright (C) 1987-2016 Free Software Foundation, Inc.
@@ -295,6 +295,7 @@ index 0000000..32efe91
 +#include "filecntl.h"
 +#include "posixstat.h"
 +#include <signal.h>
++#include <syslog.h>
 +#if defined (HAVE_SYS_PARAM_H)
 +#  include <sys/param.h>
 +#endif
@@ -414,8 +415,8 @@ index 0000000..32efe91
 +    PLUGIN_NODE *new_plugin_node = (PLUGIN_NODE*)malloc(sizeof(PLUGIN_NODE));
 +    if (new_plugin_node == NULL)
 +    {
-+        /* When allocate memory failed, stop and return. */
-+        fprintf(stderr, "Plugin: failed to allocate memory for plugin node.\n");
++        /* When allocate memory failed, stop and return. also output log to both syslog and stderr with LOG_PERROR*/
++        syslog(LOG_PERROR, "Plugin: failed to allocate memory for plugin node.\n");
 +        return PLUGIN_LOAD_FAILED;
 +    }
 +
@@ -514,8 +515,8 @@ index 0000000..32efe91
 +#endif
 +    }
 +    else {
-+        /* Output plugin load error message. */
-+        fprintf(stderr, "Plugin: plugin %s load failed, result: %d\n", plugin_path, plugin_load_result);
++        /* Output plugin load error message, also output log to both syslog and stderr with LOG_PERROR*/
++        syslog(LOG_PERROR,"Plugin: plugin %s load failed, result: %d\n", plugin_path, plugin_load_result);
 +    }
 +}
 +
