@@ -17,7 +17,7 @@
 
 /* Output syslog to mock method when build with UT */
 #if defined (BASH_PLUGIN_UT)
-#       define syslog mock_syslog
+#define syslog mock_syslog
 #endif
 
 /* Config file path */
@@ -40,59 +40,59 @@ int tacacs_ctrl;
  */
 void output_verbose(const char *format, ...)
 {
-  fprintf (stderr, "TACACS+: ");
-  syslog(LOG_INFO,"TACACS+: ");
-  
-  // convert log to a string because va args resoursive issue:
-  // http://www.c-faq.com/varargs/handoff.html
-  char logBuffer[512];
-  va_list args;
-  va_start (args, format);
-  vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-  va_end (args);
+    fprintf (stderr, "TACACS+: ");
+    syslog(LOG_INFO,"TACACS+: ");
 
-  fprintf (stderr, logBuffer);
-  syslog(LOG_INFO, logBuffer);
+    // convert log to a string because va args resoursive issue:
+    // http://www.c-faq.com/varargs/handoff.html
+    char logBuffer[512];
+    va_list args;
+    va_start (args, format);
+    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
+    va_end (args);
+
+    fprintf (stderr, logBuffer);
+    syslog(LOG_INFO, logBuffer);
 }
 
 /*
  * Output error message.
  */
-void output_error (const char *format, ...)
+void output_error(const char *format, ...)
 {
-  fprintf (stderr, "TACACS+: ");
-  syslog(LOG_ERR,"TACACS+: ");
-  
-  // convert log to a string because va args resoursive issue:
-  // http://www.c-faq.com/varargs/handoff.html
-  char logBuffer[512];
-  va_list args;
-  va_start (args, format);
-  vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-  va_end (args);
+    fprintf (stderr, "TACACS+: ");
+    syslog(LOG_ERR,"TACACS+: ");
 
-  fprintf (stderr, logBuffer);
-  syslog(LOG_ERR, logBuffer);
+    // convert log to a string because va args resoursive issue:
+    // http://www.c-faq.com/varargs/handoff.html
+    char logBuffer[512];
+    va_list args;
+    va_start (args, format);
+    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
+    va_end (args);
+
+    fprintf (stderr, logBuffer);
+    syslog(LOG_ERR, logBuffer);
 }
 
 /*
  * Output debug message.
  */
-void output_debug (const char *format, ...)
+void output_debug(const char *format, ...)
 {
-  if ((tacacs_ctrl & PAM_TAC_DEBUG) == 0) {
-      return;
-  }
-  
-  // convert log to a string because va args resoursive issue:
-  // http://www.c-faq.com/varargs/handoff.html
-  char logBuffer[512];
-  va_list args;
-  va_start (args, format);
-  vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-  va_end (args);
-  
-  output_error (logBuffer);
+    if ((tacacs_ctrl & PAM_TAC_DEBUG) == 0) {
+        return;
+    }
+
+    // convert log to a string because va args resoursive issue:
+    // http://www.c-faq.com/varargs/handoff.html
+    char logBuffer[512];
+    va_list args;
+    va_start (args, format);
+    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
+    va_end (args);
+
+    output_error (logBuffer);
 }
 
 
