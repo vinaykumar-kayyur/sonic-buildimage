@@ -14,16 +14,16 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	pushd bash-$(BASH_VERSION_MAJOR)
 
-	# copy UT and source code.
+	# build package
+	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+
+	# copy UT code.
 	cp -a ../Files/. ./
 
-	# run UT before build package
+	# run UT after build package because we need config.h
 	pushd unittest
 	make
 	popd
-
-	# build package
-	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 
 	popd
 
