@@ -29,6 +29,18 @@ $(LIBNSS_TACPLUS)_RDEPENDS += $(LIBTAC2)
 $(LIBNSS_TACPLUS)_SRC_PATH = $(SRC_PATH)/tacacs/nss
 SONIC_MAKE_DEBS += $(LIBNSS_TACPLUS)
 
+
+# audisp-tacplus packages
+AUDISP_TACPLUS_VERSION = 1.0.2
+
+export AUDISP_TACPLUS_VERSION
+
+AUDISP_TACPLUS = audisp-tacplus_$(AUDISP_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
+$(AUDISP_TACPLUS)_DEPENDS += $(LIBTAC_DEV)
+$(AUDISP_TACPLUS)_RDEPENDS += $(LIBTAC2)
+$(AUDISP_TACPLUS)_SRC_PATH = $(SRC_PATH)/tacacs/audisp
+SONIC_MAKE_DEBS += $(AUDISP_TACPLUS)
+
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
 #
