@@ -1,4 +1,4 @@
-From 2dea243108b0c59724cbf86ce73a4caf0c0c3f4a Mon Sep 17 00:00:00 2001
+From b358f583f2548dfb387a031e102742138dde321f Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Thu, 9 Sep 2021 11:04:13 +0800
 Subject: [PATCH] Add plugin support to bash.
@@ -10,9 +10,9 @@ Subject: [PATCH] Add plugin support to bash.
  bash-5.0/configure.ac  |  10 +
  bash-5.0/execute_cmd.c |  16 ++
  bash-5.0/plugin.c      | 427 +++++++++++++++++++++++++++++++++++++++++
- bash-5.0/plugin.h      |  75 ++++++++
+ bash-5.0/plugin.h      |  79 ++++++++
  bash-5.0/shell.c       |  12 ++
- 8 files changed, 566 insertions(+), 9 deletions(-)
+ 8 files changed, 570 insertions(+), 9 deletions(-)
  create mode 100644 bash-5.0/plugin.c
  create mode 100644 bash-5.0/plugin.h
 
@@ -679,10 +679,10 @@ index 0000000..32efe91
 +}
 diff --git a/bash-5.0/plugin.h b/bash-5.0/plugin.h
 new file mode 100644
-index 0000000..5aa5e67
+index 0000000..116b2c5
 --- /dev/null
 +++ b/bash-5.0/plugin.h
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,79 @@
 +/* plugin.h - functions from plugin.c. */
 +
 +/* Copyright (C) 1993-2015 Free Software Foundation, Inc.
@@ -710,6 +710,10 @@ index 0000000..5aa5e67
 +
 +/* System-wide bash plugin configuration. */
 +#define SYS_BASH_PLUGIN "/etc/bash.plugin"
++
++/* Plugin load result. */
++#define PLUGIN_LOAD_SUCCESS              0
++#define PLUGIN_LOAD_FAILED               1
 +
 +typedef enum { T_COMMAND } plugin_type_t;
 +
