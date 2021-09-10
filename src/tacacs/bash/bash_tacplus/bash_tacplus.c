@@ -1,34 +1,3 @@
-/* bash_tacplus.c - Bash plugin for TACACS+ protocol.
- * Copyright (C) 2021, Liu Hua <liuh@microsoft.com>
- *
- *   TACACS+ work based on pam_tacplus.c
- *     Copyright (C) 2010, Pawel Krawczyk <pawel.krawczyk@hush.com> and
- *     Jeroen Nijhof <jeroen@jeroennijhof.nl>
- *
- *   TACACS+ authorization work based on tacplus-auth.c
- *     https://github.com/daveolson53/tacplus-auth/blob/master/tacplus-auth.c
- *     Copyright 2016 Cumulus Networks, Inc.  All rights reserved.
- *     Author: Dave Olson <olson@cumulusnetworks.com>
- *     Cumulus Networks, Inc.
- *     185 E. Dana Street
- *     Mountain View, CA 94041
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program - see the file COPYING.
- *
- * See `CHANGES' file for revision history.
- */
- 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

@@ -11,15 +11,15 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	autoreconf
 	./configure
 
-	# run UT before build package
+	# build bash_tacplus
+	make
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+
+	# run UT after build package
 	pushd unittest
 	make
 	popd
 
-	# build bash_tacplus
-	make
-
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/
