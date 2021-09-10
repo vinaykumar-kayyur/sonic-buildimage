@@ -234,13 +234,11 @@ class Thermal(ThermalBase):
         return float("{:.3f}".format(thermal_high_crit_threshold))
 
     def get_minimum_recorded(self):
-        if self._minimum is None:
-           self.get_temperature()
+        self.get_temperature()
         return self._minimum
 
     def get_maximum_recorded(self):
-        if self._maximum is None:
-           self.get_temperature()
+        self.get_temperature()
         return self._maximum
 
     def get_position_in_parent(self):
