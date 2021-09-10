@@ -79,7 +79,7 @@ ssize_t eeprom_read(struct file *fp, struct kobject *kobj,
         rd_sz = (remain <= FPGA_I2C_MAX_DATA)? remain : FPGA_I2C_MAX_DATA;
         set_addr(addr, off);
         ret = bf_fpga_i2c_addr_read(BUS_NO, WITH_MUX, MUX_CHN, EEPROM_ADDR,
-                                    addr, buf, REGADDR_LEN, rd_sz);
+                                    addr, REGADDR_LEN, buf, rd_sz);
         if(ret != 0){
             bf_print("read sys eeprom fail (%s), addr(%lld), len(%d)\n",
                      bf_pltfm_err_str(ret), off, rd_sz);

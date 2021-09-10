@@ -368,8 +368,8 @@ bf_pltfm_status_t bf_fpga_i2c_addr_read(int bus,
                                         uint8_t mux_chn,
                                         uint8_t i2c_addr,
                                         uint8_t *wr_buf,
-                                        uint8_t *rd_buf,
                                         uint8_t wr_sz,
+                                        uint8_t *rd_buf,
                                         uint8_t rd_sz)  {
   if(mux_addr > 0x80)
     return _bf_fpga_i2c_addr_read(0, bus, 0, i2c_addr, wr_buf, rd_buf, wr_sz,

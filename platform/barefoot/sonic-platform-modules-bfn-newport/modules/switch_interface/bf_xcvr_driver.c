@@ -27,8 +27,8 @@ struct bf_xcvr_drv_data *g_data = NULL;
 int *module_loglevel = NULL;
 
 /* Root Attributes */
-BF_DEV_ATTR_RW_2(power_on, _r, root, POWERON_ATTR_ID);
-BF_DEV_ATTR_RW_2(present, _r, root, PRESENT_ATTR_ID);
+BF_DEV_ATTR_RO_2(power_on, _r, root, POWERON_ATTR_ID);
+BF_DEV_ATTR_RO_2(present, _r, root, PRESENT_ATTR_ID);
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
 BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
 BF_DEV_ATTR_RO(num, devnum, NUM_ATTR_ID);
@@ -143,6 +143,7 @@ static int __init bf_xcvr_init(void)
         goto alloc_err;
     }
     module_loglevel = &g_data->loglevel;
+    mutex_init(&g_data->update_lock);
 
     ret = bf_xcvr_create_root_attr();
     if (ret < 0)

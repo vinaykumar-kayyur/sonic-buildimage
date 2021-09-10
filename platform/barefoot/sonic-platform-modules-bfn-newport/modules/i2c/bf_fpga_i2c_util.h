@@ -67,8 +67,8 @@ bf_pltfm_status_t bf_fpga_i2c_addr_read(int bus,
                                         uint8_t mux_chn,
                                         uint8_t addr,
                                         uint8_t *wr_buf,
-                                        uint8_t *rd_buf,
                                         uint8_t wr_sz,
+                                        uint8_t *rd_buf,
                                         uint8_t rd_sz);
 
 bf_pltfm_status_t bf_fpga_i2c_write(int bus,

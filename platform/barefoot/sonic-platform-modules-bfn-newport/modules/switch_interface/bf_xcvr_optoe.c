@@ -182,11 +182,11 @@ static ssize_t optoe_eeprom_read(struct optoe_data *optoe,
         read_time = jiffies;
 
         status = bf_fpga_i2c_addr_read(bus_no, WITHOUT_MUX, 0, EEPROM_ADDR,
-                                           &offset, buf, 1, count);
+                                           &offset, 1, buf, count);
         if (status == 0)
             status = count;
         else
-            bf_print("bus%d eeprom read %zu@%d --> %d (%ld)\n",
+            bf_print("bus%d eeprom read fail %zu@%d --> %d (%ld)\n",
                      bus_no, count, offset, status, jiffies);
 
         if (status == count)  /* happy path */
@@ -254,7 +254,7 @@ static ssize_t optoe_eeprom_write(struct optoe_data *optoe,
         if (status == 0)
             status = count;
         else
-            bf_print("bus%d eeprom write %zu@%d --> %ld (%lu)\n",
+            bf_print("bus%d eeprom write fail %zu@%d --> %ld (%lu)\n",
                      bus_no, count, offset, (long int) status, jiffies);
 
         if (status == count)

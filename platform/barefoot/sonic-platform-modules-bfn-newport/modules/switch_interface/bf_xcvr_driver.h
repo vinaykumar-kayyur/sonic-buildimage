@@ -53,6 +53,14 @@ struct bf_xcvr_drv_data {
     int loglevel;
     struct platform_device pdev[NUM_DEV];
     struct optoe_data optoe[NUM_DEV];
+    uint32_t power_on;
+    uint32_t present;
+    uint32_t reset;
+    uint32_t lpmode;
+    uint32_t interrupt;
+    struct mutex update_lock;
+    unsigned long last_updated;
+    char valid; /* != 0 if registers are valid */
 };
 
 #endif //__BF_XCVR_DRIVER_H__
