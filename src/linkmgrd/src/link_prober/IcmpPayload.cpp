@@ -44,7 +44,7 @@ void IcmpPayload::generateGuid()
     boost::uuids::random_generator gen;
     mGuid = gen();
 
-    MUXLOGINFO(boost::format("Link Prober generated GUID: {%s}") % boost::uuids::to_string(mGuid));
+    MUXLOGWARNING(boost::format("Link Prober generated GUID: {%s}") % boost::uuids::to_string(mGuid));
 }
 
 } /* namespace link_prober */
