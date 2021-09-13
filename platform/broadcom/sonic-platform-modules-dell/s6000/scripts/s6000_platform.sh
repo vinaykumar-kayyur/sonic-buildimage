@@ -97,6 +97,10 @@ remove_python_api_package() {
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
 
+if [ ! -e /var/run/platform_cache/sfp_lock ]; then
+    touch /var/run/platform_cache/sfp_lock
+fi
+
 if [[ "$1" == "init" ]]; then
         depmod -a
         modprobe nvram
