@@ -346,7 +346,12 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config
+        pkg-config \
+# For iproute2
+        libbpf-dev=1:0.3-2~bpo10+1 \
+        dwz=0.13-5~bpo10+1 \
+        debhelper=13.3.3~bpo10+1
+
 
 RUN apt-get -y build-dep openssh
 
