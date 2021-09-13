@@ -78,12 +78,15 @@ class SfpUtil(SfpUtilBase):
             fd = open(self.SFP_LOCK_FILE, "r")
         except IOError as e:
             print("Error: unable to open file: "+ str(e))
+            return False
+        fcntl.flock(fd, fcntl.LOCK_EX)
         self.set_modsel(port_num)
 
         try:
             reg_file = open("/sys/devices/platform/dell-s6000-cpld.0/qsfp_modprs")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            fcntl.flock(fd, fcntl.LOCK_UN)
             return False
 
         content = reg_file.readline().rstrip()
@@ -142,9 +145,7 @@ class SfpUtil(SfpUtilBase):
 
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
-        clear_bit = "0xffffffff"
-        clear_bit = int(clear_bit, 16)
-        reg_value = reg_value | clear_bit
+        reg_value = reg_value | int("0xffffffff", 16)
         reg_value = reg_value & ~mask
 
         # Convert our register value back to a hex string and write back
@@ -162,6 +163,7 @@ class SfpUtil(SfpUtilBase):
             fd = open(self.SFP_LOCK_FILE, "r")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            return None
         fcntl.flock(fd, fcntl.LOCK_EX)
         self.set_modsel(port_num)
         eeprom_bytes = self._read_eeprom_devid(port_num, self.IDENTITY_EEPROM_ADDR, 0, num_bytes)
@@ -181,6 +183,8 @@ class SfpUtil(SfpUtilBase):
                     fd = open(self.SFP_LOCK_FILE, "r")
                 except IOError as e:
                     print("Error: unable to open file: %s" % str(e))
+                    return None
+                fcntl.flock(fd, fcntl.LOCK_EX)
                 self.set_modsel(port_num)
                 eeprom_bytes = self._read_eeprom_devid(port_num, self.DOM_EEPROM_ADDR, 0)
                 fcntl.flock(fd, fcntl.LOCK_UN)

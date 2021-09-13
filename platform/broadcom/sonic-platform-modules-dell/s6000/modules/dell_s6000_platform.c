@@ -327,7 +327,7 @@ static ssize_t set_modsel(struct device *dev, struct device_attribute *devattr, 
     dell_i2c_smbus_write_byte_data(pdata[master_cpld].client, 0xa, (u8)((data >> 16) & 0xff));
     dell_i2c_smbus_write_byte_data(pdata[master_cpld].client, 0xb, (u8)((data >> 24) & 0xff));
 
-    msleep(2);
+    msleep(2); // As per HW spec
     return count;
 }
 

@@ -152,15 +152,17 @@ class Sfp(SfpBase):
         eeprom_data = None
         page_offset = None
 
+        if (self.sfpInfo is None):
+            return None
+
         SFP_LOCK_FILE="/var/run/platform_cache/sfp_lock"
         try:
             fd = open(SFP_LOCK_FILE, "r")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            return None
         fcntl.flock(fd, fcntl.LOCK_EX)
         self.set_modsel()
-        if (self.sfpInfo is None):
-            return None
 
         page_offset = sff8436_parser[eeprom_key][PAGE_OFFSET]
         eeprom_data_raw = self._read_eeprom_bytes(
@@ -438,6 +440,7 @@ class Sfp(SfpBase):
             fd = open(SFP_LOCK_FILE, "r")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            return False
         fcntl.flock(fd, fcntl.LOCK_EX)
         self.set_modsel()
 
@@ -503,10 +506,8 @@ class Sfp(SfpBase):
 
         # Mask off the bit corresponding to our port
         index = self.sfp_ctrl_idx
-        clear_bit = "0xffffffff"
-        clear_bit = int(clear_bit, 16)
 
-        reg_value = reg_value | clear_bit
+        reg_value = reg_value | int("0xffffffff", 16)
         mask = (1 << index)
 
         reg_value = (reg_value & ~mask)
