@@ -20,7 +20,7 @@ class SfpUtil(SfpUtilBase):
     PORTS_IN_BLOCK = 32
 
     EEPROM_OFFSET = 20
-    SFP_LOCK_FILE="/var/run/platform_cache/sfp_lock"
+    SFP_LOCK_FILE="/etc/sonic/sfp_lock"
 
     _port_to_eeprom_mapping = {}
     port_dict = {}

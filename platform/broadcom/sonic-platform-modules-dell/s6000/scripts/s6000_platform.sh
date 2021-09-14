@@ -97,8 +97,8 @@ remove_python_api_package() {
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
 
-if [ ! -e /var/run/platform_cache/sfp_lock ]; then
-    touch /var/run/platform_cache/sfp_lock
+if [ ! -e /etc/sonic/sfp_lock ]; then
+    touch /etc/sonic/sfp_lock
 fi
 
 if [[ "$1" == "init" ]]; then

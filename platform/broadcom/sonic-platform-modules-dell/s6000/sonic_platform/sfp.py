@@ -155,7 +155,7 @@ class Sfp(SfpBase):
         if (self.sfpInfo is None):
             return None
 
-        SFP_LOCK_FILE="/var/run/platform_cache/sfp_lock"
+        SFP_LOCK_FILE="/etc/sonic/sfp_lock"
         try:
             fd = open(SFP_LOCK_FILE, "r")
         except IOError as e:
@@ -434,7 +434,7 @@ class Sfp(SfpBase):
         Retrieves the presence of the sfp
         """
         presence_ctrl = self.sfp_control + 'qsfp_modprs'
-        SFP_LOCK_FILE="/var/run/platform_cache/sfp_lock"
+        SFP_LOCK_FILE="/etc/sonic/sfp_lock"
 
         try:
             fd = open(SFP_LOCK_FILE, "r")
