@@ -235,6 +235,8 @@ RUN apt-get update && apt-get install -y \
         locales \
         time \
         man2html-base \
+        libcunit1 \
+        libcunit1-dev \
 # For initramfs
         bash-completion \
 {% if CONFIGURED_ARCH == "amd64" -%}
