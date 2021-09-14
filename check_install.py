@@ -64,6 +64,8 @@ def main():
     p.expect([cmd_prompt])
     p.sendline('show ip bgp sum')
     p.expect([cmd_prompt])
+    p.sendline('sudo rm -r /host/image-*/rw/')
+    p.expect([cmd_prompt])
     p.sendline('sync')
     p.expect([cmd_prompt])
 
