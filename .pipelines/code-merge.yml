@@ -15,7 +15,6 @@ parameters:
   default:
   - master
   - 201811
-  - 201911
   - 202012
   - 202106
 
