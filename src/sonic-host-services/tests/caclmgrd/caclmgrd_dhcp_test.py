@@ -29,7 +29,7 @@ class TestCaclmgrdDhcp(TestCase):
     """
     @parameterized.expand(CACLMGRD_DHCP_TEST_VECTOR)
 #    @patchfs
-    def test_caclmgrd_dhcp(self, test_name, test_data, fs):
+    def test_caclmgrd_dhcp(self, test_name, test_data):
 #        if not os.path.exists(DBCONFIG_PATH):
 #            fs.create_file(DBCONFIG_PATH) # fake database_config.json
 
