@@ -20,7 +20,10 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# copy UT code.
 	cp -a ../Files/. ./
 
-	# run UT after build package because we need config.h
+	# generate config.h which need by UT
+	./configure
+
+	# run UT after config.h ready.
 	pushd unittest
 	make
 	popd
