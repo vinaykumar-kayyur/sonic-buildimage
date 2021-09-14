@@ -15,6 +15,9 @@
 #include "bf_fpga_i2c_util.h"
 
 #define BF_FPGA_MAX_CNT 1
+#define BF_FPGA_BAR_SIZE(i) ((i == 0) ? (256 * 1024) : 0)
+
+extern void __iomem *get_fpga_mem(void);
 
 static void populate_i2c_inst_ctrl_fields(bf_fpga_i2c_t *i2c_op,
                                           int inst_id,
@@ -332,22 +335,23 @@ bf_pltfm_status_t _bf_fpga_i2c_addr_read_mux(int fd,
   return ret;
 }
 
-// void bf_fpga_reg_write32(int fd, uint32_t offset, uint32_t val) {
-//   if (fd > BF_FPGA_MAX_CNT || offset > BF_FPGA_BAR_SIZE(0)) {
-//     LOG_ERROR("invalid arguments\n");
-//     return;
-//   }
-//   *(uint32_t *)(bf_fpga_fd[fd].base_addr + offset) = val;
-// }
+int bf_fpga_reg_write32(uint32_t offset, uint32_t val) {
+  if (offset > BF_FPGA_BAR_SIZE(0)) {
+    return -EINVAL;
+  }
+  iowrite32(val, get_fpga_mem() + offset);
+  return 0;
+}
+EXPORT_SYMBOL(bf_fpga_reg_write32);
 
-// int bf_fpga_reg_read32(int fd, uint32_t offset, uint32_t *val) {
-//   if (fd > BF_FPGA_MAX_CNT || offset > BF_FPGA_BAR_SIZE(0)) {
-//     LOG_ERROR("invalid arguments\n");
-//     return -1;
-//   }
-//   *val = *(uint32_t *)(bf_fpga_fd[fd].base_addr + offset);
-//   return 0;
-// }
+int bf_fpga_reg_read32(uint32_t offset, uint32_t *val) {
+  if (offset > BF_FPGA_BAR_SIZE(0)) {
+    return -EINVAL;
+  }
+  *val = ioread32(get_fpga_mem() + offset);
+  return 0;
+}
+EXPORT_SYMBOL(bf_fpga_reg_read32);
 
 bf_pltfm_status_t bf_fpga_i2c_read(uint8_t bus,
                                    bf_mux_addr_t mux_addr,

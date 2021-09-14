@@ -87,4 +87,7 @@ bf_pltfm_status_t bf_fpga_i2c_addr_write(int bus,
                                          uint8_t *wr_buf,
                                          uint8_t wr_sz);
 
+int bf_fpga_reg_write32(uint32_t offset, uint32_t val);
+int bf_fpga_reg_read32(uint32_t offset, uint32_t *val);
+
 #endif //__BF_FPGA_I2C_UTIL_H__

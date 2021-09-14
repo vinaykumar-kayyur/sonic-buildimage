@@ -96,6 +96,11 @@ static spinlock_t bf_nonisr_lock;
 /* dev->minor should index into this array */
 static struct bf_global bf_global[BF_FPGA_MAX_DEVICE_CNT];
 
+void __iomem *get_fpga_mem(void)
+{
+  return bf_global[0].bfdev->info.mem[0].internal_addr;
+}
+
 static void bf_add_listener(struct bf_pci_dev *bfdev,
                             struct bf_listener *listener) {
   struct bf_listener **cur_listener = &bfdev->listener_head;
