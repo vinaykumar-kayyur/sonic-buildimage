@@ -5,13 +5,13 @@ import swsscommon
 from parameterized import parameterized
 from sonic_py_common.general import load_module_from_source
 from unittest import TestCase, mock
-from pyfakefs.fake_filesystem_unittest import patchfs
+#from pyfakefs.fake_filesystem_unittest import patchfs
 
 from .test_dhcp_vectors import CACLMGRD_DHCP_TEST_VECTOR
 from tests.common.mock_configdb import MockConfigDb
 
 
-DBCONFIG_PATH = '/var/run/redis/sonic-db/database_config.json'
+#DBCONFIG_PATH = '/var/run/redis/sonic-db/database_config.json'
 
 
 swsscommon.swsscommon.ConfigDBConnector = MockConfigDb
@@ -28,10 +28,10 @@ class TestCaclmgrdDhcp(TestCase):
         Test caclmgrd dhcp
     """
     @parameterized.expand(CACLMGRD_DHCP_TEST_VECTOR)
-    @patchfs
+#    @patchfs
     def test_caclmgrd_dhcp(self, test_name, test_data, fs):
-        if not os.path.exists(DBCONFIG_PATH):
-            fs.create_file(DBCONFIG_PATH) # fake database_config.json
+#        if not os.path.exists(DBCONFIG_PATH):
+#            fs.create_file(DBCONFIG_PATH) # fake database_config.json
 
         MockConfigDb.set_config_db(test_data["config_db"])
 
