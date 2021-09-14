@@ -105,7 +105,7 @@ jobs:
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
             gzip -kd target/sonic-vs.img.gz
-            docker run --rm -v "`pwd`:/sonic" -w "/sonic" sonicdev-microsoft.azurecr.io:443/sonic-slave-buster qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx 
+            SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make sonic-slave-run
             rm target/sonic-vs.img
           else
             if [ $(dbg_image) == yes ]; then
