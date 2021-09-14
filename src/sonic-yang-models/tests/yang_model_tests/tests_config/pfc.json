@@ -6,7 +6,7 @@
                 {
                     "admin_status": "up",
                     "alias": "eth0",
-                    "description": "Ethernet0",
+                    "description": "Ethernet4",
                     "lanes": "65",
                     "mtu": "9000",
                     "name": "Ethernet4",
@@ -16,8 +16,8 @@
                 ]
             }
         },
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -36,7 +36,7 @@
                 {
                     "admin_status": "up",
                     "alias": "eth0",
-                    "description": "Ethernet0",
+                    "description": "Ethernet4",
                     "lanes": "65",
                     "mtu": "9000",
                     "name": "Ethernet4",
@@ -46,8 +46,8 @@
                 ]
             }
         },
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -66,7 +66,7 @@
                 {
                     "admin_status": "up",
                     "alias": "eth0",
-                    "description": "Ethernet0",
+                    "description": "Ethernet4",
                     "lanes": "65",
                     "mtu": "9000",
                     "name": "Ethernet4",
@@ -77,8 +77,8 @@
             }
         },
 
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -91,8 +91,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_ACTION_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -105,8 +105,8 @@
         }
     },
     "PFC_WDOG_WITH_CORRECT_POLL_INTERVAL_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "GLOBAL",
@@ -117,8 +117,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_LOW_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "GLOBAL",
@@ -129,8 +129,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_POLL_INTERVAL_HIGH_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "GLOBAL",
@@ -141,8 +141,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_DETECTION_TIME_LOW_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -155,8 +155,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_DETECTION_TIME_HIGH_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -169,8 +169,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_LOW_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",
@@ -183,8 +183,8 @@
         }
     },
     "PFC_WDOG_WITH_WRONG_RESTORATION_TIME_HIGH_VALUE": {
-        "sonic-qos-pfc:sonic-qos-pfc": {
-            "sonic-qos-pfc:PFC_WD": {
+        "sonic-pfcwd:sonic-pfcwd": {
+            "sonic-pfcwd:PFC_WD": {
                 "PFC_WD_LIST": [
                     {
                         "ifname": "Ethernet4",

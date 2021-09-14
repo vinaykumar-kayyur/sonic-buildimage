@@ -1,11 +1,11 @@
-module sonic-qos-pfc {
-    namespace "http://github.com/Azure/sonic-qos-pfc";
-    prefix sonic-qos-pfc;
+module sonic-pfcwd {
+    namespace "http://github.com/Azure/sonic-pfcwd";
+    prefix sonic-pfcwd;
 
     yang-version 1.1;
 
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
 
     organization
@@ -15,21 +15,21 @@ module sonic-qos-pfc {
         "SONiC";
 
     description
-        "SONIC QoS Priority-based Flow Control";
+        "SONIC PFC Watchdog parameters";
 
     revision 2021-07-01 {
         description
             "Initial revision.";
     }
 
-    container sonic-qos-pfc {
+    container sonic-pfcwd {
         container PFC_WD {
             list PFC_WD_LIST {
                 key "ifname";
                 leaf ifname {
                     type union {
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                         }
                         type string {
                             pattern "GLOBAL" {
@@ -71,8 +71,7 @@ module sonic-qos-pfc {
                         range 100..3000;
                     }
                     description
-                        "Priority-based Flow Control global watchdog polling
-                        interval in msec.";
+                        "PFC watchdog global polling interval in msec.";
                 }
             }
         }
