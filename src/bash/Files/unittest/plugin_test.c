@@ -19,7 +19,7 @@ void testcase_try_load_plugin_by_path_not_exist() {
 	
 	try_load_plugin_by_path("./testplugin.so");
 
-	CU_ASSERT_STRING_NOT_EQUAL(mock_itrace_message_buffer, "Plugin: can't load plugin ./testplugin.so: MOCK error\n");
+	CU_ASSERT_STRING_EQUAL(mock_itrace_message_buffer, "Plugin: can't load plugin ./testplugin.so: MOCK error\n");
 }
 
 /* Test plugin exist but not support shell_execve scenario */
