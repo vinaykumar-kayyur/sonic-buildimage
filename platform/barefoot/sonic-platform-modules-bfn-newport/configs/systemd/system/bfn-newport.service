@@ -7,6 +7,15 @@ User=root
 ExecStartPre=/sbin/depmod -a
 ExecStart=/sbin/modprobe bf_fpga
 ExecStartPost=/sbin/modprobe bf_tun
+ExecStartPost=/sbin/modprobe bf_syseeprom
+ExecStartPost=/sbin/modprobe bf_xcvr
+ExecStartPost=/sbin/modprobe bf_sensor
+ExecStartPost=/sbin/modprobe bf_fan
+ExecStartPost=/sbin/modprobe bf_psu
+ExecStartPost=/sbin/modprobe bf_sysled
+ExecStartPost=/sbin/modprobe bf_cpld
+ExecStartPost=/sbin/modprobe bf_watchdog
+ExecStartPost=/sbin/modprobe bf_fpga_swi
 RemainAfterExit=yes
 
 [Install]
