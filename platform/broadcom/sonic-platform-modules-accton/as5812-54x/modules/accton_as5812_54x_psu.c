@@ -38,16 +38,18 @@
 
 #define PSU_STATUS_I2C_ADDR			0x60
 #define PSU_STATUS_I2C_REG_OFFSET	0x2
-
+#define MAX_SERIAL_NUMBER           15
 #define IS_POWER_GOOD(id, value)	(!!(value & BIT(id*4 + 1)))
 #define IS_PRESENT(id, value)		(!(value & BIT(id*4)))
 
 static ssize_t show_index(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t show_status(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t show_model_name(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t show_serial_number(struct device *dev, struct device_attribute *da, char *buf);
 static int as5812_54x_psu_read_block(struct i2c_client *client, u8 command, u8 *data,int data_len);
 extern int as5812_54x_cpld_read(unsigned short cpld_addr, u8 reg);
 static int as5812_54x_psu_model_name_get(struct device *dev);
+static int as5812_54x_psu_serial_number_get(struct device *dev);
 
 /* Addresses scanned
  */
@@ -63,6 +65,7 @@ struct as5812_54x_psu_data {
     u8  index;           /* PSU index */
     u8  status;          /* Status(present/power_good) register read from CPLD */
     char model_name[14]; /* Model name, read from eeprom */
+    char serial_number[MAX_SERIAL_NUMBER]; /* serial number, read from eeprom */
 };
 
 static struct as5812_54x_psu_data *as5812_54x_psu_update_device(struct device *dev);
@@ -71,7 +74,9 @@ enum as5812_54x_psu_sysfs_attributes {
     PSU_INDEX,
     PSU_PRESENT,
     PSU_MODEL_NAME,
-    PSU_POWER_GOOD
+    PSU_POWER_GOOD,
+    PSU_SERIAL_NUMBER,
+    
 };
 
 /* sysfs attributes for hwmon
@@ -80,12 +85,14 @@ static SENSOR_DEVICE_ATTR(psu_index,      S_IRUGO, show_index,     NULL, PSU_IND
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status,    NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_model_name,NULL, PSU_MODEL_NAME);
 static SENSOR_DEVICE_ATTR(psu_power_good, S_IRUGO, show_status,    NULL, PSU_POWER_GOOD);
+static SENSOR_DEVICE_ATTR(psu_serial_number, S_IRUGO, show_serial_number,NULL, PSU_SERIAL_NUMBER);
 
 static struct attribute *as5812_54x_psu_attributes[] = {
     &sensor_dev_attr_psu_index.dev_attr.attr,
     &sensor_dev_attr_psu_present.dev_attr.attr,
     &sensor_dev_attr_psu_model_name.dev_attr.attr,
     &sensor_dev_attr_psu_power_good.dev_attr.attr,
+    &sensor_dev_attr_psu_serial_number.dev_attr.attr,
     NULL
 };
 
@@ -137,6 +144,26 @@ static ssize_t show_model_name(struct device *dev, struct device_attribute *da,
     }
 
     return sprintf(buf, "%s\n", data->model_name);
+}
+
+static ssize_t show_serial_number(struct device *dev, struct device_attribute *da,
+             char *buf)
+{
+    struct as5812_54x_psu_data *data = as5812_54x_psu_update_device(dev);
+
+    if (!data->valid) {
+        return 0;
+    }
+
+    if (!IS_POWER_GOOD(data->index, data->status)) {
+        return 0;
+    }
+
+    if (as5812_54x_psu_serial_number_get(dev) < 0) {
+        return -ENXIO;
+    }
+
+    return sprintf(buf, "%s\n", data->serial_number);
 }
 
 static const struct attribute_group as5812_54x_psu_group = {
@@ -315,6 +342,31 @@ static int as5812_54x_psu_model_name_get(struct device *dev)
 
     return -ENODATA;
 }
+
+static int as5812_54x_psu_serial_number_get(struct device *dev)
+{
+    struct i2c_client *client = to_i2c_client(dev);
+    struct as5812_54x_psu_data *data = i2c_get_clientdata(client);
+    int i, status;
+    
+    memset(data->serial_number, 0, sizeof(data->serial_number));
+    status = as5812_54x_psu_read_block(client, 0x47,
+                                           data->serial_number, MAX_SERIAL_NUMBER);
+
+    if (status < 0) {
+        data->model_name[0] = '\0';
+        dev_dbg(&client->dev, "unable to read serial from (0x%x) offset(0x%x)\n", 
+                              client->addr, 0x47);
+        return status;
+    }
+    else {
+        data->serial_number[MAX_SERIAL_NUMBER] = '\0';
+        return 0;
+    }
+    
+    return -ENODATA;
+}
+
 
 static struct as5812_54x_psu_data *as5812_54x_psu_update_device(struct device *dev)
 {
