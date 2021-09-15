@@ -3,7 +3,7 @@ ifneq ($(KERNELRELEASE),)
 ccflags-y=-I$(src)/i2c
 
 obj-m := bf_fpga.o bf_switch_sysfs.o bf_fan.o bf_xcvr.o bf_sensor.o \
-			bf_syseeprom.o bf_psu.o bf_fpga_swi.o
+			bf_syseeprom.o bf_psu.o bf_fpga_swi.o bf_watchdog.o
 bf_switch_sysfs-y := switch_interface/bf_switch_sysfs.o
 bf_fan-y := switch_interface/bf_fan_driver.o \
 			switch_interface/bf_fan_api.o \
@@ -30,6 +30,9 @@ bf_fpga-y := bf_fpga_main.o \
 				i2c/bf_fpga_i2c_util.o
 bf_fpga_swi-y := switch_interface/bf_fpga_swi_driver.o \
 					switch_interface/bf_fpga_swi_api.o \
+					switch_interface/bf_module_util.o
+bf_watchdog-y := switch_interface/bf_watchdog_driver.o \
+					switch_interface/bf_watchdog_api.o \
 					switch_interface/bf_module_util.o
 
 else
