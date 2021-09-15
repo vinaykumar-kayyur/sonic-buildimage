@@ -20,7 +20,6 @@ try:
 
     from sonic_py_common import daemon_base, device_info
     from swsscommon import swsscommon
-    from swsssdk import SonicDBConfig, ConfigDBConnector
 except ImportError as err:
     raise ImportError("%s - required module not found" % str(err))
 
@@ -103,10 +102,10 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         self.lock[DEFAULT_NAMESPACE] = threading.Lock()
         self.num_changes[DEFAULT_NAMESPACE] = 0
 
-        SonicDBConfig.load_sonic_global_db_config()
+        swsscommon.SonicDBConfig.load_sonic_global_db_config()
         self.config_db_map = {}
         self.iptables_cmd_ns_prefix = {}
-        self.config_db_map[DEFAULT_NAMESPACE] = ConfigDBConnector(use_unix_socket_path=True, namespace=DEFAULT_NAMESPACE)
+        self.config_db_map[DEFAULT_NAMESPACE] = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=DEFAULT_NAMESPACE)
         self.config_db_map[DEFAULT_NAMESPACE].connect()
         self.iptables_cmd_ns_prefix[DEFAULT_NAMESPACE] = ""
         self.namespace_mgmt_ip = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[DEFAULT_NAMESPACE], DEFAULT_NAMESPACE)
@@ -124,7 +123,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             self.lock[front_asic_namespace] = threading.Lock()
             self.num_changes[front_asic_namespace] = 0
 
-            self.config_db_map[front_asic_namespace] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespace)
+            self.config_db_map[front_asic_namespace] = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespace)
             self.config_db_map[front_asic_namespace].connect()
             self.iptables_cmd_ns_prefix[front_asic_namespace] = "ip netns exec " + front_asic_namespace + " "
             self.namespace_docker_mgmt_ip[front_asic_namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[front_asic_namespace],
@@ -378,27 +377,27 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 execute = 1
 
             if execute == 1:
-                self.run_commands([update_cmd])
+                subprocess.call(update_cmd, shell=True)
                 self.log_info("Update DHCP chain: {}".format(update_cmd))
 
     def update_dhcp_acl(self, key, op, data):
-        if "status" not in data:
+        if "state" not in data:
             self.log_warning("Unexpected update in MUX_CABLE_TABLE")
             return
 
         intf = key
-        status = data["status"]
+        state = data["state"]
 
-        if status == "active":
+        if state == "active":
             self.update_dhcp_chain("delete", intf)
-        elif status == "standby":
+        elif state == "standby":
             self.update_dhcp_chain("insert", intf)
-        elif status == "unknown":
+        elif state == "unknown":
             self.update_dhcp_chain("delete", intf)
-        elif status == "error":
-            self.log_warning("Cable status shows error")
+        elif state == "error":
+            self.log_warning("Cable state shows error")
         else:
-            self.log_warning("Unexpected cable status")
+            self.log_warning("Unexpected cable state")
 
     def get_acl_rules_and_translate_to_iptables_commands(self, namespace):
         """
