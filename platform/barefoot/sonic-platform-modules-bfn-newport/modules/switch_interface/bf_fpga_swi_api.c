@@ -26,42 +26,21 @@
 ATTR_SHOW_STR_FUNC(fpga_alias, "FPGA1")
 ATTR_SHOW_STR_FUNC(fpga_type, "Xilinx Artix7")
 
-ATTR_SHOW_STR_FUNC(debug, //SEAN TODO
-    "+++DUMMY content+++\n"
-    "fpga present:\n"
-    "  0-->present\n"
-    "  1-->unpresent\n"
-    "  bit0-->fpga1, bit4-->fpga2\n"
-    "  eg:\n"
-    "  1.show present info: i2cget -f -y 2 0x1d 0x34\n"
+ATTR_SHOW_STR_FUNC(debug,
+    "FPGA reg addr list:\n"
+    "    version_num = 0x3F000\n"
+    "    build_date  = 0x3F004\n"
+    "    reset_ctrl1 = 0x3F008, set 1 to reset, not self cleared.\n"
+    "    reset_ctrl2 = 0x3F00C, set 1 to reset, not self cleared.\n"
     "\n"
-    "fpga data:\n"
-    "                    path\n"
-    "  fpga1             81-0058\n"
-    "  fpga2             82-0058\n"
-    "                    sysfs\n"
-    "  temp     :    temp1_input\n"
-    "  fan_speed:    fan1_input\n"
-    "  i_in     :    curr1_input\n"
-    "  v_in     :    in1_input\n"
-    "  p_in     :    power1_input\n"
-    "  i_out    :    curr2_input\n"
-    "  v_out    :    in2_input\n"
-    "  p_out    :    power2_input\n"
-    "  eg:\n"
-    "  1.show data info: cat /sys/bus/i2c/devices/$path/hwmon/hwmon*/$sysfs\n"
-    "fpga vendor, model, serial, version:\n"
-    "  fpga1-->$bus = 81, $addr = 0x50\n"
-    "  fpga2-->$bus = 82, $addr = 0x50\n"
-    "  eg:\n"
-    "  1.show all info: i2cdump -f -y $bus $addr\n"
-    "---DUMMY content---\n"
+    "Read FPGA reg:\n"
+    "    $ fpga_util reg_read 0 <reg_addr>\n"
+    "\n"
+    "Write FPGA reg:\n"
+    "    $ fpga_util reg_write 0 <reg_addr> <32bit_data>\n"
 )
 
-
-
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
-
 
 ssize_t reset_reg_show(struct device *dev, struct device_attribute *da,
                             char *buf)
