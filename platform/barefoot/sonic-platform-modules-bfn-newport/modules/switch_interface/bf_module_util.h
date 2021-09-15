@@ -53,6 +53,8 @@ struct ipmi_data {
 
 int userlevel_to_kernlevel(int level);
 int kernlevel_to_userlevel(int level);
+void init_bf_print(const char *modname, int *loglevel);
+void deinit_bf_print(void);
 int register_device_and_driver(struct platform_driver *driver, char *name,
                                struct platform_device devs[], size_t num_dev,
                                const struct attribute_group *attrs[]);
@@ -72,7 +74,7 @@ ssize_t debug_show(struct device *dev, struct device_attribute *da, char *buf);
 /* show 'NA' */
 ssize_t na_show(struct device *dev, struct device_attribute *da, char *buf);
 
-/* Must be defined and assigned in bf_xxx_driver.c */
+/* Must be assigned with init_bf_print() by bf_xxx_driver.c */
 extern int *module_loglevel;
 
 /*
@@ -102,12 +104,19 @@ struct sensor_device_attribute sensor_dev_attr_##_name##_mangle             \
     static SENSOR_DEVICE_ATTR_M(_name, _mangle, 0644, _func##_show, \
             _func##_store, _index)
 
+#define BF_DEV_ATTR_WO_2(_name, _mangle, _func, _index)             \
+    static SENSOR_DEVICE_ATTR_M(_name, _mangle, 0200, _func##_show, \
+            _func##_store, _index)
+
 /* Ordinary BF_DEV_ATTR */
 #define BF_DEV_ATTR_RO(_name, _func, _index)            \
     BF_DEV_ATTR_RO_2(_name, , _func, _index)
 
 #define BF_DEV_ATTR_RW(_name, _func, _index)            \
     BF_DEV_ATTR_RW_2(_name, , _func, _index)
+
+#define BF_DEV_ATTR_WO(_name, _func, _index)            \
+    BF_DEV_ATTR_WO_2(_name, , _func, _index)
 
 /* Declare platform driver one-liner */
 #define DECL_PLATFORM_DRIVER(_func, _name)              \

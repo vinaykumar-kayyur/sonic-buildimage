@@ -24,7 +24,6 @@
 #define ROOT_DIRNAME "transceiver"
 
 struct bf_xcvr_drv_data *g_data = NULL;
-int *module_loglevel = NULL;
 
 /* Root Attributes */
 BF_DEV_ATTR_RO_2(power_on, _r, root, POWERON_ATTR_ID);
@@ -142,7 +141,7 @@ static int __init bf_xcvr_init(void)
         ret = -ENOMEM;
         goto alloc_err;
     }
-    module_loglevel = &g_data->loglevel;
+    init_bf_print(KBUILD_MODNAME, &g_data->loglevel);
     mutex_init(&g_data->update_lock);
 
     ret = bf_xcvr_create_root_attr();
@@ -159,7 +158,7 @@ static int __init bf_xcvr_init(void)
 reg_dev_err:
     bf_xcvr_remove_root_attr();
 create_root_sysfs_err:
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 alloc_err:
     return ret;
@@ -170,7 +169,7 @@ static void __exit bf_xcvr_exit(void)
     unregister_device_and_driver(&bf_xcvr_driver, g_data->pdev,
                                  ARRAY_SIZE(g_data->pdev));
     bf_xcvr_remove_root_attr();
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 }
 

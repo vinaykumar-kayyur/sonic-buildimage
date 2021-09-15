@@ -23,7 +23,6 @@
 #define ROOT_DIRNAME "fpga"
 
 struct bf_fpga_swi_drv_data *g_data = NULL;
-int *module_loglevel = NULL;
 
 /* Root Attributes */
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
@@ -186,7 +185,7 @@ static int __init bf_fpga_swi_init(void)
         ret = -ENOMEM;
         goto alloc_err;
     }
-    module_loglevel = &g_data->loglevel;
+    init_bf_print(KBUILD_MODNAME, &g_data->loglevel);
 
     ret = bf_fpga_swi_create_root_attr();
     if (ret < 0)
@@ -202,7 +201,7 @@ static int __init bf_fpga_swi_init(void)
 reg_dev_err:
     bf_fpga_swi_remove_root_attr();
 create_root_sysfs_err:
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 alloc_err:
     return ret;
@@ -213,7 +212,7 @@ static void __exit bf_fpga_swi_exit(void)
     unregister_device_and_driver(&bf_fpga_swi_driver, g_data->pdev,
                                  ARRAY_SIZE(g_data->pdev));
     bf_fpga_swi_remove_root_attr();
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 }
 

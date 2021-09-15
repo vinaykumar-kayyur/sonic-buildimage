@@ -24,7 +24,6 @@
 #define MOTOR_DIRNAME "motor%d"
 
 struct bf_fan_drv_data *g_data = NULL;
-int *module_loglevel = NULL;
 
 /* Root Attributes */
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
@@ -187,7 +186,7 @@ static int __init bf_fan_init(void)
         ret = -ENOMEM;
         goto alloc_err;
     }
-    module_loglevel = &g_data->loglevel;
+    init_bf_print(KBUILD_MODNAME, &g_data->loglevel);
     mutex_init(&g_data->update_lock);
 
     ret = bf_fan_create_root_attr();
@@ -219,7 +218,7 @@ fan_init_err:
 ipmi_err:
     bf_fan_remove_root_attr();
 create_root_sysfs_err:
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 alloc_err:
     return ret;
@@ -233,7 +232,7 @@ static void __exit bf_fan_exit(void)
                                  ARRAY_SIZE(g_data->fan_pdev));
     ipmi_destroy_user(g_data->ipmi.user);
     bf_fan_remove_root_attr();
-    module_loglevel = NULL;
+    deinit_bf_print();
     kfree(g_data);
 }
 

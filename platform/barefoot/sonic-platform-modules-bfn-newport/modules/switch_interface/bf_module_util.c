@@ -8,7 +8,11 @@
  * Implementation of common module utilities, includes IPMI funcs
  */
 
-#define pr_fmt(fmt) "%s:%s: " fmt, KBUILD_MODNAME,  __func__
+/* Must be assigned with init_bf_print() by bf_xxx_driver.c */
+const char *module_name="";
+int *module_loglevel;
+
+#define pr_fmt(fmt) "%s:%s: " fmt, module_name,  __func__
 
 #include <linux/module.h>
 #include <linux/platform_device.h>
@@ -40,6 +44,18 @@ int kernlevel_to_userlevel(int level){
     return level_map[level];
 }
 
+void init_bf_print(const char *modname, int *loglevel)
+{
+    module_loglevel = loglevel;
+    module_name = modname;
+}
+
+void deinit_bf_print(void)
+{
+    static int dummy_loglevel = 0; //LOG_WARN
+    module_loglevel = &dummy_loglevel;
+    module_name = "";
+}
 
 static void blanked_device_release(struct device *dev){ }
 
