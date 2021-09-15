@@ -37,22 +37,19 @@ def main():
                 raise
             time.sleep(1)
 
-    # select ONIE embed
+    # select default SONiC Image
     p.expect(grub_selection)
-    p.sendline(KEY_DOWN)
+    p.sendline()
 
-    # install sonic image
+    # bootup sonic image
     while True:
-        i = p.expect([login_prompt, passwd_prompt, grub_selection, cmd_prompt])
+        i = p.expect([login_prompt, passwd_prompt, cmd_prompt])
         if i == 0:
             # send user name
             p.sendline(args.u)
         elif i == 1:
             # send password
             p.sendline(args.P)
-        elif i == 2:
-            # select onie install
-            p.sendline()
         else:
             break
 
