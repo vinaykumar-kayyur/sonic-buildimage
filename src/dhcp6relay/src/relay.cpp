@@ -325,12 +325,12 @@ int sock_open(int ifindex, const struct sock_fprog *fprog)
  *
  * @return                      none
  */
-void prepare_relay_config(relay_config *interface_config, int local_sock, int filter) {
+void prepare_relay_config(relay_config *interface_config, int *local_sock, int filter) {
     struct ifaddrs *ifa, *ifa_tmp;
     sockaddr_in6 non_link_local;
     sockaddr_in6 link_local;
     
-    interface_config->local_sock = local_sock; 
+    interface_config->local_sock = *local_sock; 
     interface_config->filter = filter; 
 
     for(auto server: interface_config->servers) {
@@ -376,22 +376,20 @@ void prepare_relay_config(relay_config *interface_config, int local_sock, int fi
 }
 
 /**
- * @code                prepare_socket(int *local_sock, relay_config *config);
+ * @code                prepare_socket(int *local_sock);
  * 
  * @brief               prepare L3 socket for sending
  *
  * @param local_sock    pointer to socket to be prepared
- * @param config       relay config that contains strings of server and interface addresses
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, relay_config *config, int index) {
+void prepare_socket(int *local_sock) {
     int flag = 1;
     sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family = AF_INET6;
     addr.sin6_addr = in6addr_any;
-    addr.sin6_scope_id = index;
     addr.sin6_port = htons(RELAY_PORT);
 
     if ((*local_sock = socket(AF_INET6, SOCK_DGRAM, 0)) == -1) {
@@ -679,11 +677,11 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
 
         filter = sock_open(index, &ether_relay_fprog);
 
-        prepare_socket(&local_sock, &config, index);
+        prepare_socket(&local_sock);
         sockets.push_back(filter);
         sockets.push_back(local_sock);
 
-        prepare_relay_config(&config, local_sock, filter);
+        prepare_relay_config(&config, &local_sock, filter);
 
         evutil_make_listen_socket_reuseable(filter);
         evutil_make_socket_nonblocking(filter);
