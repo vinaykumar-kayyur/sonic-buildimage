@@ -15,11 +15,6 @@ def main():
 
     args = parser.parse_args()
 
-    KEY_UP = '\x1b[A'
-    KEY_DOWN = '\x1b[B'
-    KEY_RIGHT = '\x1b[C'
-    KEY_LEFT = '\x1b[D'
-
     login_prompt = 'sonic login:'
     passwd_prompt = 'Password:'
     cmd_prompt = "{}@sonic:~\$ $".format(args.u)
@@ -60,8 +55,6 @@ def main():
     p.sendline('show version')
     p.expect([cmd_prompt])
     p.sendline('show ip bgp sum')
-    p.expect([cmd_prompt])
-    p.sendline('sudo rm -r /host/image-*/rw/')
     p.expect([cmd_prompt])
     p.sendline('sync')
     p.expect([cmd_prompt])
