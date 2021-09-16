@@ -713,6 +713,7 @@ class Sfp(SfpBase):
         Retrieves transceiver bulk status of this SFP
         """
         tx_bias_list = []
+        tx_power_list = []
         rx_power_list = []
         transceiver_dom_dict = {}
         transceiver_dom_dict = dict.fromkeys(dom_dict_keys, 'N/A')
