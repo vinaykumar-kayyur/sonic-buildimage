@@ -235,15 +235,6 @@ exit:
     return g_data;
 }
 
-ssize_t psu_TBD_show(struct device *dev, struct device_attribute *da, // SEAN TODO
-                            char *buf)
-{
-    struct platform_device *pdev = to_platform_device(dev);
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
-    return 0;
-}
-
 ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
 {
     struct platform_device *pdev = to_platform_device(dev);
@@ -258,7 +249,6 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
     int divisor = 1;
     unsigned char * const read_status = g_data->ipmi_resp[p_id].status;
     unsigned char * const read_alarm_threshold = g_data->ipmi_resp[p_id].alarm_threshold;
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
 
     mutex_lock(&g_data->update_lock);
 
@@ -386,7 +376,6 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
     int index = 0;
     const int temp_index[] = {PSU_TEMP1_0, PSU_TEMP2_0, PSU_TEMP3_0};
     unsigned char * const read_status = g_data->ipmi_resp[p_id].status;
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
     mutex_lock(&g_data->update_lock);
 

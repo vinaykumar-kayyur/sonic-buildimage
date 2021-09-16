@@ -98,13 +98,10 @@ exit:
 
 ssize_t sysled_show(struct device *dev, struct device_attribute *da, char *buf)
 {
-    struct platform_device *pdev = to_platform_device(dev);
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 
     int val = 0, error = 0;
     unsigned char * const read_status = g_data->ipmi_resp;
-
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
 
     mutex_lock(&g_data->update_lock);
 
@@ -137,14 +134,11 @@ exit:
 ssize_t sysled_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count)
 {
-    struct platform_device *pdev = to_platform_device(dev);
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 
     int status;
     long led_status;
     unsigned char * const read_status = g_data->ipmi_resp;
-
-    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
      /* This function now only handle SYSLED_SYS_STATUS_ATTR_ID and SYSLED_LOC_STATUS_ATTR_ID */
     if( (attr->index != SYSLED_SYS_STATUS_ATTR_ID) &&

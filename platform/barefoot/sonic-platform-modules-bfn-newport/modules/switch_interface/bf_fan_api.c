@@ -187,7 +187,6 @@ ssize_t fan_show(struct device *dev, struct device_attribute *da,
     int index = 0;
     int error = 0;
     int present = 0;
-    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
     mutex_lock(&g_data->update_lock);
 
@@ -238,7 +237,6 @@ ssize_t motor_show(struct device *dev, struct device_attribute *da,
     int index = 0;
     int error = 0;
     int present = 0;
-    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
     mutex_lock(&g_data->update_lock);
 
@@ -294,8 +292,6 @@ ssize_t motor_store(struct device *dev, struct device_attribute *da,
     long pwm;
     int status;
     int f_id = pdev->id / MOTOR_PER_FAN;
-
-    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
     /* This function now only handle MOTOR_RATIO_ATTR_ID */
     if(attr->index != MOTOR_RATIO_ATTR_ID)

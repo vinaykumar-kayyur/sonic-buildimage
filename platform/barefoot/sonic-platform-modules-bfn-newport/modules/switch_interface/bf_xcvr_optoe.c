@@ -434,9 +434,9 @@ ssize_t optoe_read_write(struct optoe_data *optoe,
     loff_t chunk_offset = 0, chunk_start_offset = 0;
     loff_t chunk_end_offset = 0;
 
-    bf_print("off %lld  len:%ld, opcode:%s\n",
-             off, (long int) len,
-             (opcode == OPTOE_READ_OP) ? "r" : "w");
+    // bf_print("off %lld  len:%ld, opcode:%s\n",
+    //          off, (long int) len,
+    //          (opcode == OPTOE_READ_OP) ? "r" : "w");
     if (unlikely(!len))
         return len;
 

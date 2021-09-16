@@ -170,8 +170,6 @@ ssize_t cpld_show(struct device *dev, struct device_attribute *da, char *buf)
     bool is_show_hex = false;
     unsigned char * const read_hw_ver = g_data->ipmi_resp[p_id].hw_version;
 
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
-
     mutex_lock(&g_data->update_lock);
 
     g_data = update_cpld_status(p_id);
@@ -236,8 +234,6 @@ ssize_t reset_show(struct device *dev, struct device_attribute *da, char *buf)
     int val = 0, error = 0;
     bool is_show_int = false;
 
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
-
     mutex_lock(&g_data->update_lock);
 
     g_data = update_cpld_status(p_id);
@@ -274,13 +270,10 @@ exit:
 ssize_t reset_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count)
 {
-    struct platform_device *pdev = to_platform_device(dev);
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 
     int status;
     long reset_status;
-
-    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
 
      /* This function now only handle SYSLED_SYS_STATUS_ATTR_ID and SYSLED_LOC_STATUS_ATTR_ID */
     if( (attr->index != CPLD_RST_CPU_ATTR_ID) &&

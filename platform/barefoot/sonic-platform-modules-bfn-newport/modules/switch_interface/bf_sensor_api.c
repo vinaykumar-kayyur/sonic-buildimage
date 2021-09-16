@@ -229,7 +229,6 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
     bool is_show_int = false;
     char *str = NULL;
     unsigned char * const read_status = g_data->ipmi_resp;
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);
 
     mutex_lock(&g_data->update_lock);
 
@@ -243,7 +242,6 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
     case TEMP_INPUT_ATTR_ID:
         index = (EACH_DEV_STATUS_BYTE * p_id) + 2;
         bytelen = 2;
-        bf_print("pdev_id=%d, low=%x high=%x\n", pdev->id, read_status[index], read_status[index+1]);
         break;
     case TEMP_TYPE_ATTR_ID:
         str = g_data->ipmi_resp_data[p_id].type;
@@ -283,12 +281,4 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
 exit:
     mutex_unlock(&g_data->update_lock);
     return error;
-}
-ssize_t temp_store(struct device *dev, struct device_attribute *da,
-                            const char *buf, size_t count)
-{
-    struct platform_device *pdev = to_platform_device(dev);
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);
-    return count;
 }

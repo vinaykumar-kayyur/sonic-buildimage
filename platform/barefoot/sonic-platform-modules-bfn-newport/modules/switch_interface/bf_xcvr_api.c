@@ -217,7 +217,6 @@ ssize_t root_show(struct device *dev, struct device_attribute *da,
     int i, error = 0;
     uint32_t value = 0;
     bool bit_val;
-    bf_print("attr_name(%s) attr_idx=%d\n", da->attr.name, attr->index);
 
     mutex_lock(&g_data->update_lock);
     g_data = update_all_xcvr_data();
