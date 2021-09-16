@@ -432,11 +432,6 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     memcpy(current_buffer_position, &new_message, sizeof(dhcpv6_relay_msg));
     current_buffer_position += sizeof(dhcpv6_relay_msg);
 
-
-    auto dhcp_message_length = len;
-    relay_forward(current_buffer_position, parse_dhcpv6_hdr(msg), dhcp_message_length);
-    current_buffer_position += dhcp_message_length + sizeof(dhcpv6_option);
-
     if(config->is_option_79) {
         linklayer_addr_option option79;
         option79.link_layer_type = htons(1);
@@ -445,10 +440,14 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
         
         memcpy(current_buffer_position, &option79, sizeof(linklayer_addr_option));
         current_buffer_position += sizeof(linklayer_addr_option);
+
+        memcpy(current_buffer_position, &ether_hdr->ether_shost, sizeof(ether_hdr->ether_shost));
+        current_buffer_position += sizeof(ether_hdr->ether_shost);
     }
 
-    memcpy(current_buffer_position, &ether_hdr->ether_shost, sizeof(ether_hdr->ether_shost));
-    current_buffer_position += sizeof(ether_hdr->ether_shost);
+    auto dhcp_message_length = len;
+    relay_forward(current_buffer_position, parse_dhcpv6_hdr(msg), dhcp_message_length);
+    current_buffer_position += dhcp_message_length + sizeof(dhcpv6_option);
 
     for(auto server: config->servers_sock) {
         send_udp(sock, buffer, server, current_buffer_position - buffer);

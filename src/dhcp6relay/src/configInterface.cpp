@@ -117,6 +117,7 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
         std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
         relay_config intf;
+        intf.is_option_79 = true;
         intf.interface = vlan;
         for (auto &fieldValue: fieldValues) {
             std::string f = fvField(fieldValue);
@@ -130,11 +131,8 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
                 }
                 syslog(LOG_DEBUG, "key: %s, Operation: %s, f: %s, v: %s", vlan.c_str(), operation.c_str(), f.c_str(), v.c_str());
             }
-            if(f == "dhcpv6_option|rfc6939_support") {
-                if(v == "true")
-                    intf.is_option_79 = true;
-                else if(v == "false")
-                    intf.is_option_79 = false;
+            if(f == "dhcpv6_option|rfc6939_support" && v == "false") {
+                intf.is_option_79 = false;
             }
         }
         vlans->push_back(intf);
