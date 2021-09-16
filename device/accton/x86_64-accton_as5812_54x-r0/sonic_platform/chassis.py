@@ -122,7 +122,6 @@ class Chassis(ChassisBase):
             string: The name of the device
         """
         return self._eeprom.get_product_name()
-        #return self._api_helper.hwsku
 
     def get_presence(self):
         """

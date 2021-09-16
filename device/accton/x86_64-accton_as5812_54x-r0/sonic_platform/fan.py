@@ -167,7 +167,7 @@ class Fan(FanBase):
         """
         
         if not self.is_psu_fan and self.get_presence():            
-            speed_path = "{}{}".format(CPLD_FAN_PATH, '_duty_cycle_percentage')
+            speed_path = "{}{}{}".format(CPLD_FAN_PATH, self.fan_tray_index+1, '_duty_cycle_percentage')
             return self._api_helper.write_txt_file(speed_path, int(speed))
 
         return False
@@ -278,7 +278,7 @@ class Fan(FanBase):
             integer: The 1-based relative physical position in parent device
             or -1 if cannot determine the position
         """
-        return (self.fan_tray_index+1) \
+        return (self.fan_index+1) \
             if not self.is_psu_fan else (self.psu_index+1)
 
     def is_replaceable(self):
