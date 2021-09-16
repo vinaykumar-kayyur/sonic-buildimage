@@ -460,6 +460,7 @@ RUN pip2 install \
 # Install pyangbind here, outside sonic-config-engine dependencies, as pyangbind causes enum34 to be installed.
 # enum34 causes Python 're' package to not work properly as it redefines an incompatible enum.py module
 # https://github.com/robshakir/pyangbind/issues/232
+RUN apt-get install -y python3-jinja2
 RUN pip3 install pyangbind==0.8.1
 RUN pip3 uninstall -y enum34
 
