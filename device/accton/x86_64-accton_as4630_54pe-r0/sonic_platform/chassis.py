@@ -114,8 +114,7 @@ class Chassis(ChassisBase):
             Returns:
             string: The name of the device
         """
-        
-        return self._api_helper.hwsku
+        return self._eeprom.get_product_name()
 
     def get_presence(self):
         """
@@ -179,7 +178,7 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-      
+
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self._api_helper.read_txt_file(
             reboot_cause_path) or "Unknown"
