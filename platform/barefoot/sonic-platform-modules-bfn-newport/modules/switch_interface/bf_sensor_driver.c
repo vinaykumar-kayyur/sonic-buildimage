@@ -28,11 +28,15 @@ struct bf_sensor_drv_data *g_data = NULL;
 BF_DEV_ATTR_RO(debug, debug, DEBUG_ATTR_ID);
 BF_DEV_ATTR_RW(loglevel, loglevel, LOGLEVEL_ATTR_ID);
 BF_DEV_ATTR_RO(num_temp_sensors, devnum, NUM_TEMP_ATTR_ID);
+BF_DEV_ATTR_RO(num_in_sensors, num_in, NUM_IN_ATTR_ID);
+BF_DEV_ATTR_RO(num_curr_sensors, num_curr, NUM_CURR_ATTR_ID);
 
 static struct attribute *root_attrs[] = {
     &sensor_dev_attr_debug.dev_attr.attr,
     &sensor_dev_attr_loglevel.dev_attr.attr,
     &sensor_dev_attr_num_temp_sensors.dev_attr.attr,
+    &sensor_dev_attr_num_in_sensors.dev_attr.attr,
+    &sensor_dev_attr_num_curr_sensors.dev_attr.attr,
     NULL
 };
 

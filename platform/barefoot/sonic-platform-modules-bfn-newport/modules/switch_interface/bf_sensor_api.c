@@ -58,7 +58,9 @@ ATTR_SHOW_STR_FUNC(debug,
     "---DUMMY content---\n"
 )
 
-ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
+ATTR_SHOW_NUM_FUNC(devnum, NUM_TEMP_SENSORS)
+ATTR_SHOW_NUM_FUNC(num_in, NUM_IN_SENSORS)
+ATTR_SHOW_NUM_FUNC(num_curr, NUM_CURR_SENSORS)
 
 static inline u32 carray_to_u32(unsigned char *array, size_t bytelen)
 {
@@ -74,7 +76,8 @@ static inline u32 carray_to_u32(unsigned char *array, size_t bytelen)
 
 static inline int get_sensor_addr(unsigned char p_id)
 {
-    int thermal_i2c_reg[NUM_DEV] = {0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x33, 0x33};
+    int thermal_i2c_reg[NUM_TEMP_SENSORS] = {0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d,
+                                             0x33, 0x33};
     return thermal_i2c_reg[p_id];
 }
 

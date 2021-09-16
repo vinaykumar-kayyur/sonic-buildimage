@@ -13,6 +13,10 @@
 
 ssize_t devnum_show(struct device *dev, struct device_attribute *da,
                             char *buf);
+ssize_t num_in_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
+ssize_t num_curr_show(struct device *dev, struct device_attribute *da,
+                            char *buf);
 ssize_t temp_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t temp_store(struct device *dev, struct device_attribute *da,
