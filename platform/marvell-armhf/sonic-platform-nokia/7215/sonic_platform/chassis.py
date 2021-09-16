@@ -8,7 +8,6 @@
 try:
     import os
     import sys
-    import subprocess
     import glob
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
