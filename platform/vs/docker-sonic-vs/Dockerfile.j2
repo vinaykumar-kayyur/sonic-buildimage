@@ -166,7 +166,6 @@ COPY ["files/arp_update", "/usr/bin/"]
 COPY ["files/buffers_config.j2", "files/qos_config.j2", "files/arp_update_vars.j2", "files/copp_cfg.j2", "/usr/share/sonic/templates/"]
 COPY ["files/sonic_version.yml", "/etc/sonic/"]
 COPY ["port_breakout_config_db.json", "/etc/sonic/"]
-COPY ["database_config.json", "/etc/default/sonic-db/"]
 COPY ["hostname.j2", "/usr/share/sonic/templates/"]
 COPY ["init_cfg.json.j2", "/usr/share/sonic/templates/"]
 COPY ["default_chassis_cfg.json", "/etc/default/sonic-db/"]
@@ -179,6 +178,9 @@ COPY ["hwsku.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/brcm_gearbox_v
 
 # Workaround the tcpdump issue
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
+
+# Backup database_config.json from package libswsscommon, restore it in start.sh
+RUN cp /var/run/redis/sonic-db/database_config.json /etc/default/sonic-db/
 
 RUN echo "docker-sonic-vs" > /etc/hostname
 RUN mkdir -p /etc/quagga
