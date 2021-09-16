@@ -184,15 +184,30 @@ def main():
     # Check if the previous reboot was warm/fast reboot by testing whether there is "fast|fastfast|warm" in /proc/cmdline
     proc_cmdline_reboot_cause = find_proc_cmdline_reboot_cause()
 
+    # Check if the previous reboot was caused by hardware
+    hardware_reboot_cause = find_hardware_reboot_cause()
+
+    # Check if the previous reboot was caused by software, get the reboot cause from REBOOT_CAUSE_FILE
+    software_reboot_cause = find_software_reboot_cause()
+
     # If /proc/cmdline does not indicate reboot cause, check if the previous reboot was caused by hardware
     if proc_cmdline_reboot_cause is None:
-        previous_reboot_cause = find_hardware_reboot_cause()
+        previous_reboot_cause = hardware_reboot_cause
         if previous_reboot_cause.startswith(REBOOT_CAUSE_NON_HARDWARE):
-            # If the reboot cause is non-hardware, get the reboot cause from REBOOT_CAUSE_FILE
-            previous_reboot_cause = find_software_reboot_cause()
+            # If the reboot cause is non-hardware, set the previous reboot cause with software_reboot_cause
+            previous_reboot_cause = software_reboot_cause
+        else:
+            # Check if any software reboot was issued before this hardware reboot happened
+            if software_reboot_cause is not REBOOT_CAUSE_UNKNOWN:
+                additional_reboot_info = software_reboot_cause
+
     else:
         # Get the reboot cause from REBOOT_CAUSE_FILE
-        previous_reboot_cause = find_software_reboot_cause()
+        previous_reboot_cause = software_reboot_cause
+        # Check if there is any hardware reboot or reset
+        if not hardware_reboot_cause.startswith(REBOOT_CAUSE_NON_HARDWARE):
+            # Add the hardware_reboot_cause into additional_reboot_info
+            additional_reboot_info = hardware_reboot_cause
 
     # Current time
     reboot_cause_gen_time = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
