@@ -23,6 +23,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# generate config.h which need by UT
 	./configure
 
+	# generate 'pathnames.h' by make bash again, which is needed by UT.
+	make
+
 	# run UT after config.h ready.
 	make -C unittest && make test -C unittest
 
