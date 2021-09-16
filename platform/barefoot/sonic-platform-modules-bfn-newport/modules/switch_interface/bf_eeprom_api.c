@@ -47,6 +47,13 @@ ATTR_SHOW_STR_FUNC(debug,
     "    $ echo 1 > /sys/switch/fpga/fpga1/reset_i2c32\n"
     "    $ sleep 1\n"
     "    $ echo 0 > /sys/switch/fpga/fpga1/reset_i2c32\n"
+    "\n"
+    "fpga_util usage:\n"
+    "    fpga_util i2c_read <fpga_id> <bus> <mux_i2c_adr> <mux_chn> <i2c_addr> <length>\n"
+    "    fpga_util i2c_write <fpga_id> <bus> <mux_i2c_adr> <mux_chn> <i2c_addr> <length> <byte1> [<byte2> ...]\n"
+    "    fpga_util i2c_addr_read <fpga_id> <bus> <mux_i2c_adr> <mux_chn> <i2c_addr> <read_length> <write_length> <byte1> [<byte2> ...]\n"
+    "    fpga_util reg_read <fpga_id> <reg_addr>\n"
+    "    fpga_util reg_write <fpga_id> <reg_addr> <32bit data>\n"
 )
 
 inline void set_addr(uint8_t addr[REGADDR_LEN], loff_t off)

@@ -27,6 +27,9 @@ ATTR_SHOW_STR_FUNC(fpga_alias, "FPGA1")
 ATTR_SHOW_STR_FUNC(fpga_type, "Xilinx Artix7")
 
 ATTR_SHOW_STR_FUNC(debug,
+    "FPGA info:\n"
+    "    Num of FPGA = 1\n"
+    "\n"
     "FPGA reg addr list:\n"
     "    version_num = 0x3F000\n"
     "    build_date  = 0x3F004\n"
@@ -93,13 +96,12 @@ ssize_t fpga_ver_show(struct device *dev, struct device_attribute *da,
                             char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    uint32_t val, timestamp;
+    uint32_t val;
 
     if(attr->index != FPGA_HWVER_ATTR_ID)
         return 0;
 
     bf_fpga_reg_read32(BF_FPGA_VER_REG, &val);
-    bf_fpga_reg_read32(BF_FPGA_BUILD_DATE, &timestamp);
-    return sprintf(buf, "%d.%d date_%x\n", val >> 16, val & 0xFFFF, timestamp);
+    return sprintf(buf, "%d.%d\n", val >> 16, val & 0xFFFF);
 }
 
