@@ -16,9 +16,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 
 	# run UT after build package
-	pushd unittest
-	make
-	popd
+	make -C unittest && make test -C unittest
 
 	popd
 

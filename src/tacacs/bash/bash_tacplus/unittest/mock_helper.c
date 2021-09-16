@@ -12,13 +12,12 @@
 #include "mock_helper.h"
 
 // define BASH_PLUGIN_UT_DEBUG to output UT debug message.
-//#define BASH_PLUGIN_UT_DEBUG
 #if defined (BASH_PLUGIN_UT_DEBUG)
-#       define debug_printf printf
-#       define debug_vprintf vprintf
+#define debug_printf printf
+#define debug_vprintf vprintf
 #else
-#       define debug_printf
-#       define debug_vprintf
+#define debug_printf
+#define debug_vprintf
 #endif
 
 /* Mock syslog buffer */
