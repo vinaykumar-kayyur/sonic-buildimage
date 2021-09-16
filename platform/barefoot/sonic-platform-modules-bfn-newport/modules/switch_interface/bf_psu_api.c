@@ -90,14 +90,6 @@ ATTR_SHOW_STR_FUNC(debug,
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
 ATTR_SHOW_NUM_FUNC(num_temp, NUM_TEMP_PER_DEV)
 
-static inline ssize_t sprintf_float(char *buf, int num, int present)
-{
-    if(present)
-        return sprintf(buf, "%d.%03d\n", num / 1000, num % 1000);
-    else
-        return sprintf(buf, "0.000\n");
-}
-
 static inline u32 carray_to_u32(unsigned char *array, size_t bytelen)
 {
     u32 val = 0;
@@ -255,7 +247,6 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
     size_t bytelen = 0xFF; /* Need to assign it to assemble bytes to num.*/
     size_t index = 0;
     int present = 0, error = 0;
-    bool is_show_int = false;
     bool is_show_hex = false;
     char *str = NULL;
     int divisor = 1;
@@ -328,19 +319,16 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
         divisor = 1000; // to miniwatt
         break;
     case PSU_FAN_SPEED_ATTR_ID:
-        is_show_int = true;
         index = PSU_FAN0;
         bytelen = 2;
         break;
     case PSU_STATUS_ATTR_ID:
-        is_show_int = true;
         if(present)
             val = (read_status[PSU_POWER_GOOD_CPLD] == 1)? 1 : 2;
         else
             val = 0;
         break;
     case PSU_ALARM_ATTR_ID:
-        is_show_int = true;
         if(present) {
             val += (read_status[PSU_TEMP_FAULT] == 1)?   1 : 0;
             val += (read_status[PSU_FAN_FAULT] == 1)?    2 : 0;
@@ -369,11 +357,9 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
 
     if(str != NULL)
         return sprintf(buf, "%s\n", present? str : "");
-    if(is_show_int)
-        return sprintf(buf, "%d\n", present? val : 0);
     if(is_show_hex)
         return sprintf(buf, "0x%x\n", present? val : 0);
-    return sprintf_float(buf, val, present);
+    return sprintf(buf, "%d\n", present? val : 0);
 
 exit:
     mutex_unlock(&g_data->update_lock);
@@ -423,7 +409,7 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
 
     if(strlen(str) != 0)
         return sprintf(buf, "%s\n", str);
-    return sprintf_float(buf, value, present);
+    return sprintf(buf, "%d\n", (present)? value : 0);
 
 exit:
     mutex_unlock(&g_data->update_lock);

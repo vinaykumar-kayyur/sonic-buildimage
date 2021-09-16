@@ -60,14 +60,6 @@ ATTR_SHOW_STR_FUNC(debug,
 
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
 
-static inline ssize_t sprintf_float(char *buf, int num, int present)
-{
-    if(present)
-        return sprintf(buf, "%d.%03d\n", num / 1000, num % 1000);
-    else
-        return sprintf(buf, "0.000\n");
-}
-
 static inline u32 carray_to_u32(unsigned char *array, size_t bytelen)
 {
     u32 val = 0;
@@ -254,8 +246,8 @@ ssize_t temp_show(struct device *dev, struct device_attribute *da,
     if(str != NULL)
         return sprintf(buf, "%s\n", str);
     if(is_show_int)
-        return sprintf_float(buf, val*1000, 1);
-    return sprintf_float(buf, val, 1);
+        return sprintf(buf, "%d\n", val*1000);
+    return sprintf(buf, "%d\n", val);
 
 exit:
     mutex_unlock(&g_data->update_lock);
