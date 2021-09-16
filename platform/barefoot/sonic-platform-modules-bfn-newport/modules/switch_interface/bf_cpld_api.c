@@ -1,0 +1,317 @@
+/*
+ * Copyright (c) 2021 Edgecore Networks Corporation
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2. This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ *
+ * device attribute handler implementation for bf cpld driver
+ */
+
+#define pr_fmt(fmt) "%s:%s: " fmt, KBUILD_MODNAME,  __func__
+
+#include <linux/module.h>
+#include <linux/platform_device.h>
+#include <linux/hwmon-sysfs.h>
+#include "bf_module_util.h"
+#include "bf_cpld_driver.h"
+
+#define IPMI_CPLD_READ_CMD 0x20
+#define IPMI_RESET_READ_CMD 0x64
+#define IPMI_RESET_WRITE_CMD 0x65
+#define IPMI_CPLD_READ_BD_VER_PARM 0x01
+#define IPMI_CPLD_READ_TYPE_PARM 0x02
+#define IPMI_CPLD_READ_REBOOT_CAUSE_PARM 0x03
+
+#define SET_RESET_DISABLE 0
+#define SET_RESET_ENABLE 1
+
+extern struct bf_cpld_drv_data *g_data;
+
+//SEAN TODO
+ATTR_SHOW_STR_FUNC(debug,
+    "+++DUMMY content+++\n"
+    "psu present:\n"
+    "  0-->present\n"
+    "  1-->unpresent\n"
+    "  bit0-->psu1, bit4-->psu2\n"
+    "  eg:\n"
+    "  1.show present info: i2cget -f -y 2 0x1d 0x34\n"
+    "\n"
+    "psu data:\n"
+    "                    path\n"
+    "  psu1             81-0058\n"
+    "  psu2             82-0058\n"
+    "                    sysfs\n"
+    "  temp     :    temp1_input\n"
+    "  fan_speed:    fan1_input\n"
+    "  i_in     :    curr1_input\n"
+    "  v_in     :    in1_input\n"
+    "  p_in     :    power1_input\n"
+    "  i_out    :    curr2_input\n"
+    "  v_out    :    in2_input\n"
+    "  p_out    :    power2_input\n"
+    "  eg:\n"
+    "  1.show data info: cat /sys/bus/i2c/devices/$path/hwmon/hwmon*/$sysfs\n"
+    "psu vendor, model, serial, version:\n"
+    "  psu1-->$bus = 81, $addr = 0x50\n"
+    "  psu2-->$bus = 82, $addr = 0x50\n"
+    "  eg:\n"
+    "  1.show all info: i2cdump -f -y $bus $addr\n"
+    "---DUMMY content---\n"
+)
+
+ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV);
+
+static struct bf_cpld_drv_data *update_cpld_status(unsigned char p_id)
+{
+    int status = 0;
+
+    if(time_before(jiffies, g_data->last_updated[p_id] + HZ * 5) &&
+            g_data->valid[p_id])
+        return g_data;
+
+    g_data->valid[p_id] = 0;
+
+    /* Get hw_version from ipmi */
+    g_data->ipmi_tx_data[0] = I2C_CPLD_ADDRESS;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_CPLD_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp[p_id].hw_version,
+                                sizeof(g_data->ipmi_resp[p_id].hw_version));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /* Get bd_version from ipmi */
+    g_data->ipmi_tx_data[0] = IPMI_CPLD_READ_BD_VER_PARM;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_CPLD_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp[p_id].bd_version,
+                                sizeof(g_data->ipmi_resp[p_id].bd_version));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /* Get bd_version from ipmi */
+    g_data->ipmi_tx_data[0] = IPMI_CPLD_READ_TYPE_PARM;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_CPLD_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp[p_id].type,
+                                sizeof(g_data->ipmi_resp[p_id].type));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /* Get reboot_cause from ipmi */
+    g_data->ipmi_tx_data[0] = IPMI_CPLD_READ_REBOOT_CAUSE_PARM;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_CPLD_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp[p_id].reboot_cause,
+                                sizeof(g_data->ipmi_resp[p_id].reboot_cause));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /* Get reset_status from ipmi */
+    status = ipmi_send_message(&g_data->ipmi, IPMI_RESET_READ_CMD, NULL, 0,
+                               g_data->ipmi_resp[p_id].reset_status, sizeof(g_data->ipmi_resp[p_id].reset_status));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+
+    g_data->last_updated[p_id] = jiffies;
+    g_data->valid[p_id] = 1;
+
+exit:
+    return g_data;
+}
+
+ssize_t cpld_show(struct device *dev, struct device_attribute *da, char *buf)
+{
+    struct platform_device *pdev = to_platform_device(dev);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    unsigned char p_id = pdev->id;
+    int val = 0, error = 0;
+    char *str = NULL;
+    char alias[5] = {0};
+    bool is_show_int_hw = false;
+    bool is_show_int = false;
+    bool is_show_hex = false;
+    unsigned char * const read_hw_ver = g_data->ipmi_resp[p_id].hw_version;
+
+    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
+
+    mutex_lock(&g_data->update_lock);
+
+    g_data = update_cpld_status(p_id);
+    if (!g_data->valid) {
+        error = -EIO;
+        goto exit;
+    }
+
+    switch(attr->index) {
+    case REBOOT_CAUSE_ATTR_ID:
+        is_show_hex = true;
+        val = g_data->ipmi_resp[p_id].reboot_cause[0];
+        break;
+    case CPLD_ALIAS_ATTR_ID:
+        sprintf(alias, "CPLD%d", (pdev->id)+1);
+        str = alias;
+        break;
+    case CPLD_HW_VER_ATTR_ID:
+        is_show_int_hw = true;
+        break;
+    case CPLD_BD_VER_ATTR_ID:
+        is_show_hex = true;
+        val = g_data->ipmi_resp[p_id].bd_version[0];
+        break;
+    case CPLD_TYPE_ATTR_ID:
+        str = g_data->ipmi_resp[p_id].type;
+        break;
+    case CPLD_RST_CPU_ATTR_ID:
+        is_show_int = true;
+        val = g_data->ipmi_resp[p_id].reset_status[0];
+        break;
+    case CPLD_RST_MAC_ATTR_ID:
+        is_show_int = true;
+        val = g_data->ipmi_resp[p_id].reset_status[1];
+        break;
+    default:
+        error = -EINVAL;
+        goto exit;
+    }
+
+    mutex_unlock(&g_data->update_lock);
+
+    if(str != NULL)
+        return sprintf(buf, "%s\n", str);
+    if(is_show_int_hw)
+        return sprintf(buf, "%d.%d\n", read_hw_ver[0], read_hw_ver[1]);
+    if(is_show_int)
+        return sprintf(buf, "%d\n", val);
+    if(is_show_hex)
+        return sprintf(buf, "0x%x\n", val);
+
+exit:
+    mutex_unlock(&g_data->update_lock);
+    return error;
+}
+
+ssize_t reset_show(struct device *dev, struct device_attribute *da, char *buf)
+{
+    struct platform_device *pdev = to_platform_device(dev);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    unsigned char p_id = pdev->id;
+    int val = 0, error = 0;
+    bool is_show_int = false;
+
+    bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
+
+    mutex_lock(&g_data->update_lock);
+
+    g_data = update_cpld_status(p_id);
+    if (!g_data->valid) {
+        error = -EIO;
+        goto exit;
+    }
+
+    switch(attr->index) {
+    case CPLD_RST_CPU_ATTR_ID:
+        is_show_int = true;
+        val = g_data->ipmi_resp[p_id].reset_status[0];
+        break;
+    case CPLD_RST_MAC_ATTR_ID:
+        is_show_int = true;
+        val = g_data->ipmi_resp[p_id].reset_status[1];
+        break;
+    default:
+        error = -EINVAL;
+        goto exit;
+    }
+
+    mutex_unlock(&g_data->update_lock);
+
+    if(is_show_int)
+        return sprintf(buf, "%d\n", val);
+
+
+exit:
+    mutex_unlock(&g_data->update_lock);
+    return error;
+}
+
+ssize_t reset_store(struct device *dev, struct device_attribute *da,
+                            const char *buf, size_t count)
+{
+    struct platform_device *pdev = to_platform_device(dev);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+
+    int status;
+    long reset_status;
+
+    bf_print("dev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index); //SEAN TODO
+
+     /* This function now only handle SYSLED_SYS_STATUS_ATTR_ID and SYSLED_LOC_STATUS_ATTR_ID */
+    if( (attr->index != CPLD_RST_CPU_ATTR_ID) &&
+        (attr->index != CPLD_RST_MAC_ATTR_ID) )
+        return -EINVAL;
+
+    status = kstrtol(buf, 10, &reset_status);
+    if (status)
+        return status;
+
+    if(reset_status == SET_RESET_DISABLE) {
+        return -EINVAL;
+    }
+
+    mutex_lock(&g_data->update_lock);
+
+    switch(attr->index) {
+    case CPLD_RST_CPU_ATTR_ID:
+        g_data->ipmi_tx_reset_data[0] = SET_RESET_ENABLE;
+        g_data->ipmi_tx_reset_data[1] = SET_RESET_DISABLE;
+        break;
+    case CPLD_RST_MAC_ATTR_ID:
+        g_data->ipmi_tx_reset_data[0] = SET_RESET_DISABLE;
+        g_data->ipmi_tx_reset_data[1] = SET_RESET_ENABLE;
+        break;
+    default:
+        status = -EINVAL;
+        goto exit;
+    }
+
+    /* Send IPMI write command */
+    status = ipmi_send_message(&g_data->ipmi, IPMI_RESET_WRITE_CMD,
+                                g_data->ipmi_tx_reset_data, sizeof(g_data->ipmi_tx_reset_data),
+                                NULL, 0);
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+
+    status = count;
+
+exit:
+    mutex_unlock(&g_data->update_lock);
+    return status;
+}

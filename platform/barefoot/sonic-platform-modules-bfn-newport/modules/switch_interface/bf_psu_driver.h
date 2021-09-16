@@ -15,6 +15,8 @@
 #define NUM_TEMP_PER_DEV 3
 #define NUM_TEMP (NUM_DEV * NUM_TEMP_PER_DEV)
 #define IPMI_MODEL_SERIAL_LEN 21
+#define IPMI_PSU_DATE_LEN 4
+#define IPMI_PSU_VOLT_AM_DATA_LEN 3
 
 enum psu_sysfs_attributes
 {
@@ -88,6 +90,7 @@ enum ipmi_psu_resp_index {
     PSU_FAN0,
     PSU_FAN1,
     PSU_VOUT_MODE,
+    PSU_FAN_FAULT,
     PSU_STATUS_COUNT,
     PSU_MODEL = 0,
     PSU_SERIAL = 0,
@@ -99,6 +102,10 @@ struct ipmi_psu_resp_data {
     char serial[IPMI_MODEL_SERIAL_LEN+1];
     char model[IPMI_MODEL_SERIAL_LEN+1];
     char vendor[IPMI_MODEL_SERIAL_LEN+1];
+    char part_num[IPMI_MODEL_SERIAL_LEN+1];
+    char date[IPMI_PSU_DATE_LEN+1];
+    unsigned char hw_ver;
+    unsigned char alarm_threshold[IPMI_PSU_VOLT_AM_DATA_LEN*2];
 };
 
 struct bf_psu_drv_data {

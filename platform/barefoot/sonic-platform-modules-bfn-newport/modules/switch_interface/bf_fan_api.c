@@ -22,16 +22,37 @@ extern struct bf_fan_drv_data *g_data;
 #define IPMI_FAN_WRITE_CMD 0x15
 #define IPMI_FAN_READ_CPLD_VER_CMD 0x1
 #define IPMI_FAN_READ_LED_STAT_CMD 0x2
+#define IPMI_FAN_READ_SPEED_TARGET 0x3
+#define IPMI_FAN_READ_SPEED_TOLERANCE 0x4
 #define B2F (1)
 #define F2B (0)
 
-ATTR_SHOW_STR_FUNC(debug,  //SEAN TODO
-    "+++DUMMY content+++\n"
-    "fan present:\n"
-    "  0-->present\n"
-    "  1-->unpresent\n"
-    "  bit0-->fan1, bit4-->fan2\n"
-    "  eg:\n"
+ATTR_SHOW_STR_FUNC(debug,
+    "Fan Info:\n"
+    "    num of fans = 6\n"
+    "    num of motors per fan = 2\n"
+    "\n"
+    "Get all fans' status:\n"
+    "    $ ipmitool raw 0x34 0x14\n"
+    "    Output format:\n"
+    "        "
+    "        OFFSET SIZE FIELD         DESCRIPTION\n"
+    "        ------------------------------------------------------------\n"
+    "        0      1    present       0:Plugged, 1:Unplugged\n"
+    "        1      1    temp_fault    0:Normal, 1:temp fault\n"
+    "        2      1    power_good    0:Failed, 1:OK\n"
+    "        4      1    over_voltage  0:Normal, 1:voltage over threshold\n"
+    "        5      1    over_current  0:Normal, 1:current over threshold\n"
+    "        7      3    VIN           input voltage in milliVolt.\n"
+    "        10     3    VOUT          output voltage in milliVolt.\n"
+    "        13     3    IIN           input current in milliAmpere.\n"
+    "        16     3    IOUT          output current in milliAmpere.\n"
+    "        19     4    PIN           input power in microWatt.\n"
+    "        23     4    POUT          output power in microWatt.\n"
+    "        27     2    TEMP1         Temperture sensor1 in milliDegree.\n"
+    "        29     2    TEMP2         Temperture sensor2 in milliDegree.\n"
+    "        31     2    TEMP3         Temperture sensor3 in milliDegree.\n"
+    "        33     2    fan_speed     Fan speed in RPM.\n"
     "  1.show present info: i2cget -f -y 2 0x1d 0x34\n"
     "\n"
     "fan data:\n"
@@ -104,6 +125,32 @@ static struct bf_fan_drv_data *update_fan_status(void)
         goto exit;
     }
 
+    g_data->ipmi_tx_data[0] = IPMI_FAN_READ_SPEED_TARGET;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_FAN_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp_speed_target,
+                                sizeof(g_data->ipmi_resp_speed_target));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+
+    g_data->ipmi_tx_data[0] = IPMI_FAN_READ_SPEED_TOLERANCE;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_FAN_READ_CMD,
+                                g_data->ipmi_tx_data, 1,
+                                g_data->ipmi_resp_speed_tolerance,
+                                sizeof(g_data->ipmi_resp_speed_tolerance));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+
     g_data->last_updated = jiffies;
     g_data->valid = 1;
 
@@ -159,7 +206,11 @@ ssize_t fan_show(struct device *dev, struct device_attribute *da,
     }
 
     mutex_unlock(&g_data->update_lock);
-    return sprintf(buf, "%d\n", value);
+    if(attr->index == FAN_HWVER_ATTR_ID) {
+        return sprintf(buf, "0x%x\n", value);
+    } else {
+        return sprintf(buf, "%d\n", value);
+    }
 
 exit:
     mutex_unlock(&g_data->update_lock);
@@ -203,6 +254,14 @@ ssize_t motor_show(struct device *dev, struct device_attribute *da,
         index += (m_id)? (NUM_FAN * FAN_DATA_COUNT): 0;
         value = (int)g_data->ipmi_resp[index + FAN_SPEED0] |
                 (int)g_data->ipmi_resp[index + FAN_SPEED1] << 8;
+        break;
+    case MOTOR_SPEED_TARGET_ATTR_ID:
+        value = (int)g_data->ipmi_resp_speed_target[MOTOR_PER_FAN * m_id] |
+                (int)g_data->ipmi_resp_speed_target[(MOTOR_PER_FAN * m_id) + 1] << 8;
+        break;
+    case MOTOR_SPEED_TOL_ATTR_ID:
+        value = (int)g_data->ipmi_resp_speed_tolerance[MOTOR_PER_FAN * m_id] |
+                (int)g_data->ipmi_resp_speed_tolerance[(MOTOR_PER_FAN * m_id) + 1] << 8;
         break;
     default:
         error = -EINVAL;

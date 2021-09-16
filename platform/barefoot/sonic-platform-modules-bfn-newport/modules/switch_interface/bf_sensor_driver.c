@@ -126,6 +126,11 @@ static int __init bf_sensor_init(void)
     if (ret < 0)
         goto create_root_sysfs_err;
 
+    /* Set up IPMI interface */
+    ret = init_ipmi_data(&g_data->ipmi, 0);
+    if (ret)
+        goto ipmi_err;
+
     ret = register_device_and_driver(&bf_sensor_driver, DRVNAME,
             g_data->pdev, ARRAY_SIZE(g_data->pdev), dev_attr_groups);
     if (ret < 0)
@@ -134,6 +139,8 @@ static int __init bf_sensor_init(void)
     return 0;
 
 reg_dev_err:
+    ipmi_destroy_user(g_data->ipmi.user);
+ipmi_err:
     bf_sensor_remove_root_attr();
 create_root_sysfs_err:
     deinit_bf_print();
@@ -146,6 +153,7 @@ static void __exit bf_sensor_exit(void)
 {
     unregister_device_and_driver(&bf_sensor_driver, g_data->pdev,
                                  ARRAY_SIZE(g_data->pdev));
+    ipmi_destroy_user(g_data->ipmi.user);
     bf_sensor_remove_root_attr();
     deinit_bf_print();
     kfree(g_data);

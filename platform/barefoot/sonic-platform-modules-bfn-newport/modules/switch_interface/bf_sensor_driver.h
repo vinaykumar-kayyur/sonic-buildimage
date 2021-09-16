@@ -11,7 +11,13 @@
 #ifndef __BF_SENSOR_DRIVER_H__
 #define __BF_SENSOR_DRIVER_H__
 
-#define NUM_DEV 6
+#define NUM_DEV 8
+#define EACH_DEV_STATUS_BYTE 4
+#define SENSOR_ONCPU_NUM 2 /*0x33-1, 0x33-2*/
+#define SENSOR_ONBOARD_NUM 6 /*0x48~0x4d*/
+#define IPMI_CPU_SENSOR_TYPE1_LEN 8 /*COMe CPU*/
+#define IPMI_CPU_SENSOR_TYPE2_LEN 9 /*COMe DIMM*/
+#define IPMI_SENSOR_ALIAS_LEN 20
 
 enum sensor_sysfs_attributes
 {
@@ -27,18 +33,34 @@ enum sensor_sysfs_attributes
     SENSOR_MAX_ATTR_ID
 };
 
+enum ipmi_sensor_resp_index {
+    SENSOR_ADDR = 0,
+    SENSOR_STATUS,
+    SENSOR_TEMP_LOW_BYTE,
+    SENSOR_TEMP_HIGH_BYTE,
+    SENSOR_STATUS_COUNT
+};
+
+struct ipmi_sensor_resp_data {
+    char type[IPMI_CPU_SENSOR_TYPE2_LEN+1];
+    char alias[IPMI_SENSOR_ALIAS_LEN+1];
+    unsigned char temp_max;
+    unsigned char temp_max_hyst;
+    unsigned char temp_min;
+    unsigned char temp_input;
+};
+
 struct bf_sensor_drv_data {
     struct kobject *root_kobj;
     int loglevel;
     struct platform_device pdev[NUM_DEV];
-    // struct mutex update_lock;
-    // char valid; /* != 0 if registers are valid */
-    // unsigned long last_updated;    /* In jiffies */
-    // /* 4 bytes for each fan, the last 2 bytes is fan dir */
-    // unsigned char ipmi_resp[NUM_OF_FAN * FAN_DATA_COUNT + 2];
-    // unsigned char ipmi_resp_cpld;
-    // struct ipmi_data ipmi;
-    // unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
+    struct mutex update_lock;
+    char valid[NUM_DEV]; /* != 0 if registers are valid */
+    unsigned long last_updated[NUM_DEV];    /* In jiffies */
+    struct ipmi_data ipmi;
+    unsigned char ipmi_resp[NUM_DEV*EACH_DEV_STATUS_BYTE];
+    struct ipmi_sensor_resp_data ipmi_resp_data[NUM_DEV]; /*0:temp0~7:temp7*/
+    unsigned char ipmi_tx_data[3];
 };
 
 #endif //__BF_SENSOR_DRIVER_H__

@@ -59,7 +59,12 @@ struct bf_fan_drv_data {
     unsigned char ipmi_resp_led_stat[NUM_FAN];
     unsigned char ipmi_resp_cpld_ver;
     struct ipmi_data ipmi;
-    unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
+    /* 0: FAN id, 1: 0x02, 2: PWM */
+    unsigned char ipmi_tx_data[3];
+    /* 0: front_target[0], 1: front_target[1], 2: rear_target[0], 3: rear_target[1]*/
+    unsigned char ipmi_resp_speed_target[4];
+    /* 0: front_tol[0], 1: front_tol[1], 2: rear_tol[0], 3: rear_tol[1]*/
+    unsigned char ipmi_resp_speed_tolerance[4];
 };
 
 #endif //__BF_FAN_DRIVER_H__

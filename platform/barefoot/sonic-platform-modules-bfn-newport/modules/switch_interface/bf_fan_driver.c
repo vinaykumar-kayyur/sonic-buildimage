@@ -73,8 +73,8 @@ static const struct attribute_group *fan_attr_groups[] = {
 
 /* Motor Attributes */
 BF_DEV_ATTR_RO(speed, motor, MOTOR_SPEED_ATTR_ID);
-BF_DEV_ATTR_RO(speed_tolerance, na, MOTOR_SPEED_TOL_ATTR_ID);
-BF_DEV_ATTR_RO(speed_target, na, MOTOR_SPEED_TARGET_ATTR_ID);
+BF_DEV_ATTR_RO(speed_tolerance, motor, MOTOR_SPEED_TOL_ATTR_ID);
+BF_DEV_ATTR_RO(speed_target, motor, MOTOR_SPEED_TARGET_ATTR_ID);
 BF_DEV_ATTR_RW(ratio, motor, MOTOR_RATIO_ATTR_ID);
 BF_DEV_ATTR_RO(direction, motor, MOTOR_DIR_ATTR_ID);
 

@@ -45,13 +45,13 @@ static struct attribute_group root_attr_group = {
 /* PSU Attributes */
 BF_DEV_ATTR_RO(model_name, psu, PSU_MODEL_ATTR_ID);
 BF_DEV_ATTR_RO(serial_number, psu, PSU_SERIAL_ATTR_ID);
-BF_DEV_ATTR_RO(date, psu_TBD, PSU_DATE_ATTR_ID);
+BF_DEV_ATTR_RO(date, psu, PSU_DATE_ATTR_ID);
 BF_DEV_ATTR_RO(vendor, psu, PSU_VENDOR_ATTR_ID);
-BF_DEV_ATTR_RO(hardware_version, psu_TBD, PSU_HW_VER_ATTR_ID);
-BF_DEV_ATTR_RO(alarm, psu_TBD, PSU_ALARM_ATTR_ID);
-BF_DEV_ATTR_RO(alarm_threshold_curr, psu_TBD, PSU_ALARM_TH_CURR_ATTR_ID);
-BF_DEV_ATTR_RO(alarm_threshold_vol, psu_TBD, PSU_ALARM_TH_VOL_ATTR_ID);
-BF_DEV_ATTR_RO(part_number, psu_TBD, PSU_PART_NUM_ATTR_ID);
+BF_DEV_ATTR_RO(hardware_version, psu, PSU_HW_VER_ATTR_ID);
+BF_DEV_ATTR_RO(alarm, psu, PSU_ALARM_ATTR_ID);
+BF_DEV_ATTR_RO(alarm_threshold_curr, psu, PSU_ALARM_TH_CURR_ATTR_ID);
+BF_DEV_ATTR_RO(alarm_threshold_vol, psu, PSU_ALARM_TH_VOL_ATTR_ID);
+BF_DEV_ATTR_RO(part_number, psu, PSU_PART_NUM_ATTR_ID);
 BF_DEV_ATTR_RO(max_output_power, na, PSU_POUT_MAX_ATTR_ID);
 BF_DEV_ATTR_RO(in_curr, psu, PSU_IIN_ATTR_ID);
 BF_DEV_ATTR_RO(in_vol, psu, PSU_VIN_ATTR_ID);

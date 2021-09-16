@@ -20,41 +20,71 @@
 #define IPMI_PSU_MODEL_NAME_CMD 0x10
 #define IPMI_PSU_SERIAL_NUM_CMD 0x11
 #define IPMI_PSU_VENDOR_CMD 0x12
+#define IPMI_PSU_DATE_CMD 0x14
+#define IPMI_PSU_PART_NUM__CMD 0x15
+#define IPMI_PSU_HW_VER_CMD 0x16
 #define IPMI_PSU_ALARM_CMD 0x17
+#define IPMI_PSU_ALARM_THRESHOLD 0x18
 
 extern struct bf_psu_drv_data *g_data;
 
-//SEAN TODO
 ATTR_SHOW_STR_FUNC(debug,
-    "+++DUMMY content+++\n"
-    "psu present:\n"
-    "  0-->present\n"
-    "  1-->unpresent\n"
-    "  bit0-->psu1, bit4-->psu2\n"
-    "  eg:\n"
-    "  1.show present info: i2cget -f -y 2 0x1d 0x34\n"
+    "PSU Info:\n"
+    "    num of PSUs = 2\n"
+    "    num of temp sensors per PSU = 3\n"
     "\n"
-    "psu data:\n"
-    "                    path\n"
-    "  psu1             81-0058\n"
-    "  psu2             82-0058\n"
-    "                    sysfs\n"
-    "  temp     :    temp1_input\n"
-    "  fan_speed:    fan1_input\n"
-    "  i_in     :    curr1_input\n"
-    "  v_in     :    in1_input\n"
-    "  p_in     :    power1_input\n"
-    "  i_out    :    curr2_input\n"
-    "  v_out    :    in2_input\n"
-    "  p_out    :    power2_input\n"
-    "  eg:\n"
-    "  1.show data info: cat /sys/bus/i2c/devices/$path/hwmon/hwmon*/$sysfs\n"
-    "psu vendor, model, serial, version:\n"
-    "  psu1-->$bus = 81, $addr = 0x50\n"
-    "  psu2-->$bus = 82, $addr = 0x50\n"
-    "  eg:\n"
-    "  1.show all info: i2cdump -f -y $bus $addr\n"
-    "---DUMMY content---\n"
+    "Get PSU status:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID>\n"
+    "    Output format:\n"
+    "        OFFSET SIZE FIELD         DESCRIPTION\n"
+    "        -------------------------------------------------------------\n"
+    "        0      1    present       0:Plugged, 1:Unplugged\n"
+    "        1      1    temp_fault    0:Normal, 1:temp fault\n"
+    "        2      1    power_good    0:Failed, 1:OK\n"
+    "        4      1    over_voltage  0:Normal, 1:voltage over threshold\n"
+    "        5      1    over_current  0:Normal, 1:current over threshold\n"
+    "        7      3    VIN           input voltage in milliVolt.\n"
+    "        10     3    VOUT          output voltage in milliVolt.\n"
+    "        13     3    IIN           input current in milliAmpere.\n"
+    "        16     3    IOUT          output current in milliAmpere.\n"
+    "        19     4    PIN           input power in microWatt.\n"
+    "        23     4    POUT          output power in microWatt.\n"
+    "        27     2    TEMP1         Temperture sensor1 in milliDegree.\n"
+    "        29     2    TEMP2         Temperture sensor2 in milliDegree.\n"
+    "        31     2    TEMP3         Temperture sensor3 in milliDegree.\n"
+    "        33     2    fan_speed     Fan speed in RPM.\n"
+    "        36     1    fan_fault     0:Normal, 1:fan fault\n"
+    "    NOTE: all numbers are represnted in littel-endian.\n"
+    "\n"
+    "Get PSU model name:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x10\n"
+    "\n"
+    "Get PSU serial number:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x11\n"
+    "\n"
+    "Get PSU vendor:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x12\n"
+    "\n"
+    "Get PSU date:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x14\n"
+    "        Format: YYMM in ASCII.\n"
+    "\n"
+    "Get PSU part number:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x15\n"
+    "\n"
+    "Get PSU hardware version:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x16\n"
+    "\n"
+    "Get PSU alarm:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x17\n"
+    "\n"
+    "Get PSU voltage/current thresholds:\n"
+    "    $ ipmitool raw 0x34 0x16 <PSU_ID> 0x18\n"
+    "    Output format:\n"
+    "        OFFSET SIZE FIELD    DESCRIPTION\n"
+    "        -------------------------------------------------------------\n"
+    "        0      3    VIN_MAX  0:Plugged, 1:Unplugged\n"
+    "        3      3    IIN_MAX  0:Normal, 1:temp fault\n"
 )
 
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
@@ -147,6 +177,58 @@ static struct bf_psu_drv_data *update_psu_status(unsigned char p_id)
         status = -EIO;
         goto exit;
     }
+    /* Get date from ipmi */
+    g_data->ipmi_tx_data[1] = IPMI_PSU_DATE_CMD;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_PSU_READ_CMD,
+                                g_data->ipmi_tx_data, 2,
+                                g_data->ipmi_resp[p_id].date,
+                                sizeof(g_data->ipmi_resp[p_id].date) - 1);
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /*Get hardware version for ipmi*/
+    g_data->ipmi_tx_data[1] = IPMI_PSU_HW_VER_CMD;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_PSU_READ_CMD,
+                                g_data->ipmi_tx_data, 2,
+                                &g_data->ipmi_resp[p_id].hw_ver,
+                                sizeof(g_data->ipmi_resp[p_id].hw_ver));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /* Get part number from ipmi */
+    g_data->ipmi_tx_data[1] = IPMI_PSU_PART_NUM__CMD;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_PSU_READ_CMD,
+                                g_data->ipmi_tx_data, 2,
+                                g_data->ipmi_resp[p_id].part_num,
+                                sizeof(g_data->ipmi_resp[p_id].part_num) - 1);
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
+    /*Get alarm threshold for ipmi*/
+    g_data->ipmi_tx_data[1] = IPMI_PSU_ALARM_THRESHOLD;
+    status = ipmi_send_message(&g_data->ipmi, IPMI_PSU_READ_CMD,
+                                g_data->ipmi_tx_data, 2,
+                                g_data->ipmi_resp[p_id].alarm_threshold,
+                                sizeof(g_data->ipmi_resp[p_id].alarm_threshold));
+    if (unlikely(status != 0))
+        goto exit;
+
+    if (unlikely(g_data->ipmi.rx_result != 0)) {
+        status = -EIO;
+        goto exit;
+    }
 
     g_data->last_updated[p_id] = jiffies;
     g_data->valid[p_id] = 1;
@@ -174,9 +256,11 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
     size_t index = 0;
     int present = 0, error = 0;
     bool is_show_int = false;
+    bool is_show_hex = false;
     char *str = NULL;
     int divisor = 1;
     unsigned char * const read_status = g_data->ipmi_resp[p_id].status;
+    unsigned char * const read_alarm_threshold = g_data->ipmi_resp[p_id].alarm_threshold;
     bf_print("pdev_id=%d, attr_name(%s) attr_idx=%d\n", pdev->id, da->attr.name, attr->index);//SEAN TODO
 
     mutex_lock(&g_data->update_lock);
@@ -198,6 +282,24 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
         break;
     case PSU_VENDOR_ATTR_ID:
         str = g_data->ipmi_resp[p_id].vendor;
+        break;
+    case PSU_DATE_ATTR_ID:
+        str = g_data->ipmi_resp[p_id].date;
+        break;
+    case PSU_HW_VER_ATTR_ID:
+        is_show_hex = true;
+        val = g_data->ipmi_resp[p_id].hw_ver;
+        break;
+    case PSU_PART_NUM_ATTR_ID:
+        str = g_data->ipmi_resp[p_id].part_num;
+        break;
+    case PSU_ALARM_TH_CURR_ATTR_ID:
+        index = 3;
+        bytelen = 3;
+        break;
+    case PSU_ALARM_TH_VOL_ATTR_ID:
+        index = 0;
+        bytelen = 3;
         break;
     case PSU_IIN_ATTR_ID:
         index = PSU_IIN0;
@@ -237,6 +339,16 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
         else
             val = 0;
         break;
+    case PSU_ALARM_ATTR_ID:
+        is_show_int = true;
+        if(present) {
+            val += (read_status[PSU_TEMP_FAULT] == 1)?   1 : 0;
+            val += (read_status[PSU_FAN_FAULT] == 1)?    2 : 0;
+            val += (read_status[PSU_OVER_VOLTAGE] == 1)? 4 : 0;
+        }
+        else
+            val = 0;
+        break;
     default:
         error = -EINVAL;
         goto exit;
@@ -244,7 +356,12 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
 
     if(bytelen <= 0x4)
     {
-        val = carray_to_u32(&read_status[index], bytelen);
+        if( ((attr->index)==PSU_ALARM_TH_VOL_ATTR_ID) || ((attr->index)==PSU_ALARM_TH_CURR_ATTR_ID) ) {
+            val = carray_to_u32(&read_alarm_threshold[index], bytelen);
+        }
+        else {
+            val = carray_to_u32(&read_status[index], bytelen);
+        }
         val /= divisor;
     }
 
@@ -254,6 +371,8 @@ ssize_t psu_show(struct device *dev, struct device_attribute *da, char *buf)
         return sprintf(buf, "%s\n", present? str : "");
     if(is_show_int)
         return sprintf(buf, "%d\n", present? val : 0);
+    if(is_show_hex)
+        return sprintf(buf, "0x%x\n", present? val : 0);
     return sprintf_float(buf, val, present);
 
 exit:
