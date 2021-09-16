@@ -24,9 +24,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	./configure
 
 	# run UT after config.h ready.
-	pushd unittest
-	make
-	popd
+	make -C unittest && make test -C unittest
 
 	popd
 

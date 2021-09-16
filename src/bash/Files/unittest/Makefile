@@ -8,6 +8,8 @@ all:
 	gcc mock_helper.c $(IFLAGS) $(CFLAGS) -o mock_helper.o
 	gcc ../plugin.c   $(IFLAGS) $(CFLAGS) $(MFLAG) -o plugin.o
 	gcc  plugin_test.o  mock_helper.o plugin.o -o plugin_test  -lc -lcunit 
+
+test:
 	# run unit test, if UT failed, build will break
 	./plugin_test
 
