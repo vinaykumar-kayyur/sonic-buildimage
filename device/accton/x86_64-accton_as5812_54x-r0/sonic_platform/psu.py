@@ -174,12 +174,6 @@ class Psu(PsuBase):
             e.g. 12.1 
         """
         return 14.72
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')        
-        vout_val=self._api_helper.read_txt_file(vout_path)
-        if vout_val is not None:
-            return float(vout_val)/ 1000
-        else:
-            return 0
 
     def get_voltage_low_threshold(self):
         """
@@ -189,12 +183,7 @@ class Psu(PsuBase):
             e.g. 12.1 
         """
         return 7.68
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')        
-        vout_val=self._api_helper.read_txt_file(vout_path)
-        if vout_val is not None:
-            return float(vout_val)/ 1000
-        else:
-            return 0
+
 
     def get_name(self):
         """
