@@ -1,0 +1,13 @@
+[Unit]
+Description=Config chassis service
+After=rc-local.service
+Requires=rc-local.service
+Before=config-chassisd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/config-chassis.py
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

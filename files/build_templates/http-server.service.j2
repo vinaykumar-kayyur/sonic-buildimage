@@ -1,0 +1,21 @@
+[Unit]
+Description=http-server service
+ConditionPathExists=/etc/sonic/http_config.yaml
+Requires=network.target docker.service
+After=network.target
+After=config-chassis.service
+After=interfaces-config.service
+
+StartLimitIntervalSec=1200
+StartLimitBurst=3
+
+[Service]
+ExecStart=/usr/bin/http-server.py
+Restart=on-failure
+RestartSec=30
+TimeoutStartSec=0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

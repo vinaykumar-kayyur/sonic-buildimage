@@ -584,6 +584,18 @@ sudo cp $IMAGE_CONFIGS/config-chassisdb/config-chassisdb $FILESYSTEM_ROOT/usr/bi
 echo "config-chassisdb.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-chassisdb.service
 
+# Copy config-chassis script and service file
+j2 files/build_templates/config-chassis.service.j2 | sudo tee $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/config-chassis.service
+sudo cp $IMAGE_CONFIGS/config-chassis/config-chassis.py $FILESYSTEM_ROOT/usr/bin/config-chassis.py
+echo "config-chassis.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-chassis.service
+
+# Copy http-server script and service file
+j2 files/build_templates/http-server.service.j2 | sudo tee $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/http-server.service
+sudo cp $IMAGE_CONFIGS/http-server/http-server.py $FILESYSTEM_ROOT/usr/bin/http-server.py
+echo "http-server.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable http-server.service
+
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
 
