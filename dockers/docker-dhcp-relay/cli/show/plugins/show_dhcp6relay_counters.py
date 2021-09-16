@@ -41,6 +41,7 @@ class DHCPv6_Counter(object):
             self.db.set(self.db.STATE_DB, self.table_name + str(interface), str(msg), '0') 
 
 def print_count(counter, intf):
+    """Print count of each message"""
     data = []
     for i in messages:
         data.append(counter.get_dhcp6relay_msg_count(intf, i))

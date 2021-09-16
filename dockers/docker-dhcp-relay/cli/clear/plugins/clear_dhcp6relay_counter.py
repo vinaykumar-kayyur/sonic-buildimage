@@ -3,9 +3,15 @@ import click
 sys.path.insert(0, '../../show/plugins/')
 from show_dhcp6relay_counters import DHCPv6_Counter
 
+import utilities_common.cli as clicommon
+
 
 # sonic-clear dhcp6relay_counters
-@click.command('dhcp6relay_counters')
+@click.group(cls=clicommon.AliasedGroup)
+def dhcp6relay_clear():
+    pass
+
+@dhcp6relay_clear.command('dhcp6relay_counters')
 @click.option('-i', '--interface', required=False)
 def dhcp6relay_clear_counters(interface):
     """ Clear dhcp6relay message counts """
