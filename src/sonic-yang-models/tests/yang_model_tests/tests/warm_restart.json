@@ -20,14 +20,14 @@
     },
     "WARM_RESTART_TEST_WITH_INCORRECT_BGP_TIMER": {
         "desc": "Configure Warm restart for bgp module with an out of range bgp timer.",
-        "eStr": ["Timer must be 1..3599"]
+        "eStr": ["Timer must be 1..3600"]
     },
     "WARM_RESTART_TEST_WITH_INCORRECT_TEAMSYNCD_TIMER": {
         "desc": "Configure Warm restart for teamsyncd module with an out of range teamsyncd timer.",
-        "eStr": ["Timer must be 1..3599"]
+        "eStr": ["Timer must be 1..3600"]
     },
     "WARM_RESTART_TEST_WITH_INCORRECT_NEIGHSYNCD_TIMER": {
         "desc": "Configure Warm restart for neighsyncd module with an out of range neighsyncd timer.",
-        "eStr": ["Timer must be 1..9998"]
+        "eStr": ["Timer must be 1..9999"]
     }
 }
