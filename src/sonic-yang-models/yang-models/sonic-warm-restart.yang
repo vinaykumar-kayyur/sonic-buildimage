@@ -63,8 +63,8 @@ module sonic-warm-restart  {
 
                 leaf bgp_timer {
                     type uint16 {
-                        range "1..3599" {
-                            error-message "Timer must be 1..3599";
+                        range "1..3600" {
+                            error-message "Timer must be 1..3600";
                             error-app-tag timer-invalid;
                         }
                     }
@@ -75,8 +75,8 @@ module sonic-warm-restart  {
 
                 leaf teamsyncd_timer {
                     type uint16 {
-                        range "1..3599" {
-                            error-message "Timer must be 1..3599";
+                        range "1..3600" {
+                            error-message "Timer must be 1..3600";
                             error-app-tag timer-invalid;
                         }
                     }
@@ -87,8 +87,8 @@ module sonic-warm-restart  {
 
                 leaf neighsyncd_timer {
                     type uint16 {
-                        range "1..9998" {
-                            error-message "Timer must be 1..9998";
+                        range "1..9999" {
+                            error-message "Timer must be 1..9999";
                             error-app-tag timer-invalid;
                         }
                     }
