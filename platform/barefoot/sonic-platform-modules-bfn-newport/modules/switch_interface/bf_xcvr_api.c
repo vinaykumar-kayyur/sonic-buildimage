@@ -118,6 +118,21 @@ ATTR_SHOW_STR_FUNC(debug,
 
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV)
 
+static inline ssize_t sprintf_bits(char *buf, uint32_t num)
+{
+    int i;
+    BUILD_BUG_ON(NUM_DEV > 32);
+
+    strcpy(buf, "");
+    for(i=0 ; i<NUM_DEV ; i++)
+    {
+        strcat(buf, (num & 0x1)? "1" : "0");
+        num >>= 1;
+    }
+    strcat(buf,"\n");
+    return NUM_DEV + 1; /* plus newline */
+}
+
 static int read_pio(uint32_t attr, uint32_t *_val)
 {
     uint8_t *val = (uint8_t*) _val;
@@ -242,7 +257,7 @@ ssize_t root_show(struct device *dev, struct device_attribute *da,
         goto exit;
     }
     mutex_unlock(&g_data->update_lock);
-    return sprintf(buf, "0x%08X\n", value);
+    return sprintf_bits(buf, value);
 exit:
     mutex_unlock(&g_data->update_lock);
     return error;
