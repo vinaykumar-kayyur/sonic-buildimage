@@ -60,7 +60,7 @@
             "sonic-warm-restart:WARM_RESTART": {
                 "WARM_RESTART_LIST": [{
                         "module": "bgp",
-                        "bgp_timer": 3600
+                        "bgp_timer": 3601
                 }]
             }
         }
@@ -71,7 +71,7 @@
             "sonic-warm-restart:WARM_RESTART": {
                 "WARM_RESTART_LIST": [{
                         "module": "teamd",
-                        "teamsyncd_timer": 3600
+                        "teamsyncd_timer": 3601
                 }]
             }
         }
@@ -82,7 +82,7 @@
             "sonic-warm-restart:WARM_RESTART": {
                 "WARM_RESTART_LIST": [{
                         "module": "swss",
-                        "neighsyncd_timer": 9999
+                        "neighsyncd_timer": 0
                 }]
             }
         }
