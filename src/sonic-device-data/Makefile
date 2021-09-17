@@ -12,24 +12,18 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Create a new dir and copy all ONIE-platform-string-named dirs into it
 	mkdir ./device
-	for d in `find -L ../../../device -maxdepth 2 -mindepth 2 -type d`; do \
-		if [ -f $$d/platform_asic ] && grep -Fxq "$$CONFIGURED_PLATFORM" $$d/platform_asic; then \
-			cp -r -L $$d device/; \
-		fi; \
-	done
+	cp -r -L ../../../device/*/* ./device/
 
 	# Create hwsku for virtual switch
-	if [ -d "device/x86_64-kvm_x86_64-r0/" ]; then \
-		for d in `find -L ../../../device -maxdepth 3 -mindepth 3 -type d | grep -vE "(plugins|led-code)"`; do \
-			cp -Lr $$d device/x86_64-kvm_x86_64-r0/ ; \
-			cp ./sai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai.profile; \
-			cp ./sai_mlnx.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai_mlnx.profile; \
-			grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini
-			cp ./pai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/pai.profile; \
-			grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini
+	for d in `find -L ../../../device -maxdepth 3 -mindepth 3 -type d | grep -vE "(plugins|led-code)"`; do \
+		cp -Lr $$d device/x86_64-kvm_x86_64-r0/ ; \
+		cp ./sai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai.profile; \
+		cp ./sai_mlnx.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai_mlnx.profile; \
+		grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini
+		cp ./pai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/pai.profile; \
+		grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini
 
-		done; \
-	fi
+	done;
 
 	# Build the package
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
