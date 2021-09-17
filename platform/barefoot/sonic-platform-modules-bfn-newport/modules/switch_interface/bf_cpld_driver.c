@@ -99,6 +99,8 @@ static void bf_cpld_remove_root_attr(void)
 static int bf_cpld_probe(struct platform_device *pdev)
 {
     bf_print("found dev id=%d\n", pdev->id);
+    g_data->reboot_cause_id[pdev->id] = REBOOT_CAUSE_CPU_COLD_RESET;
+    update_cpld_status(pdev->id);
     return bf_cpld_create_symlink(pdev);
 }
 

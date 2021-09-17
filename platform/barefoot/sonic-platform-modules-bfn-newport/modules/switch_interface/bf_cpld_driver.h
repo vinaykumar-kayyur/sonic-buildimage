@@ -29,6 +29,25 @@ enum cpld_sysfs_attributes
     REBOOT_CAUSE_ATTR_ID
 };
 
+enum reboot_cause_id_enum {
+    REBOOT_CAUSE_NON_HARDWARE = 0,
+    REBOOT_CAUSE_POWER_LOSS,
+    REBOOT_CAUSE_THERMAL_OVERLOAD_CPU,
+    REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC,
+    REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER,
+    REBOOT_CAUSE_INSUFFICIENT_FAN_SPEED,
+    REBOOT_CAUSE_WATCHDOG,
+    REBOOT_CAUSE_HARDWARE_OTHER,
+    REBOOT_CAUSE_CPU_COLD_RESET,
+    REBOOT_CAUSE_CPU_WARM_RESET,
+    REBOOT_CAUSE_BIOS_RESET,
+    REBOOT_CAUSE_PSU_SHUTDOWN,
+    REBOOT_CAUSE_BMC_SHUTDOWN,
+    REBOOT_CAUSE_RESET_BUTTON_SHUTDOWN,
+    REBOOT_CAUSE_RESET_BUTTON_COLD_SHUTDOWN,
+    REBOOT_CAUSE_INVALID = -1
+};
+
 struct ipmi_cpld_resp_data {
     unsigned char hw_version[2];
     unsigned char bd_version[1];
@@ -48,6 +67,7 @@ struct bf_cpld_drv_data {
     struct ipmi_cpld_resp_data ipmi_resp[NUM_DEV];
     unsigned char ipmi_tx_data[1];
     unsigned char ipmi_tx_reset_data[2];
+    int reboot_cause_id[NUM_DEV];
 };
 
 #endif //__BF_CPLD_DRIVER_H__

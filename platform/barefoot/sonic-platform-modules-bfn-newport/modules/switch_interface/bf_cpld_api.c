@@ -77,9 +77,37 @@ ATTR_SHOW_STR_FUNC(debug,
 
 ATTR_SHOW_NUM_FUNC(devnum, NUM_DEV);
 
-static struct bf_cpld_drv_data *update_cpld_status(unsigned char p_id)
+static inline int get_cause_id_by_val(uint8_t val)
 {
-    int status = 0;
+    switch(val){
+    case 0x5:
+        return REBOOT_CAUSE_NON_HARDWARE;
+    case 0x1:
+    case 0x2:
+        return REBOOT_CAUSE_POWER_LOSS;
+    case 0x0:
+    case 0x12:
+    case 0x13:
+        return REBOOT_CAUSE_CPU_COLD_RESET;
+    case 0x10:
+    case 0x11:
+        return REBOOT_CAUSE_CPU_WARM_RESET;
+    case 0x20:
+    case 0x22:
+    case 0x23:
+    case 0x24:
+        return REBOOT_CAUSE_BMC_SHUTDOWN;
+    case 0x3:
+    case 0x4:
+        return REBOOT_CAUSE_RESET_BUTTON_COLD_SHUTDOWN;
+    default:
+        return REBOOT_CAUSE_INVALID;
+    }
+}
+
+struct bf_cpld_drv_data *update_cpld_status(unsigned char p_id)
+{
+    int reboot_cause_id, status = 0;
 
     if(time_before(jiffies, g_data->last_updated[p_id] + HZ * 5) &&
             g_data->valid[p_id])
@@ -139,9 +167,14 @@ static struct bf_cpld_drv_data *update_cpld_status(unsigned char p_id)
         status = -EIO;
         goto exit;
     }
+    /* Translate fetched value to reboot_cause_id */
+    reboot_cause_id = get_cause_id_by_val(g_data->ipmi_resp[p_id].reboot_cause[0]);
+    if(reboot_cause_id != REBOOT_CAUSE_INVALID)
+        g_data->reboot_cause_id[p_id] = reboot_cause_id;
     /* Get reset_status from ipmi */
     status = ipmi_send_message(&g_data->ipmi, IPMI_RESET_READ_CMD, NULL, 0,
-                               g_data->ipmi_resp[p_id].reset_status, sizeof(g_data->ipmi_resp[p_id].reset_status));
+                               g_data->ipmi_resp[p_id].reset_status,
+                               sizeof(g_data->ipmi_resp[p_id].reset_status));
     if (unlikely(status != 0))
         goto exit;
 
@@ -180,8 +213,8 @@ ssize_t cpld_show(struct device *dev, struct device_attribute *da, char *buf)
 
     switch(attr->index) {
     case REBOOT_CAUSE_ATTR_ID:
-        is_show_hex = true;
-        val = g_data->ipmi_resp[p_id].reboot_cause[0];
+        is_show_int = true;
+        val = g_data->reboot_cause_id[p_id];
         break;
     case CPLD_ALIAS_ATTR_ID:
         sprintf(alias, "CPLD%d", (pdev->id)+1);
@@ -275,7 +308,7 @@ ssize_t reset_store(struct device *dev, struct device_attribute *da,
     int status;
     long reset_status;
 
-     /* This function now only handle SYSLED_SYS_STATUS_ATTR_ID and SYSLED_LOC_STATUS_ATTR_ID */
+     /*only handle SYSLED_SYS_STATUS_ATTR_ID and SYSLED_LOC_STATUS_ATTR_ID now*/
     if( (attr->index != CPLD_RST_CPU_ATTR_ID) &&
         (attr->index != CPLD_RST_MAC_ATTR_ID) )
         return -EINVAL;
@@ -306,7 +339,8 @@ ssize_t reset_store(struct device *dev, struct device_attribute *da,
 
     /* Send IPMI write command */
     status = ipmi_send_message(&g_data->ipmi, IPMI_RESET_WRITE_CMD,
-                                g_data->ipmi_tx_reset_data, sizeof(g_data->ipmi_tx_reset_data),
+                                g_data->ipmi_tx_reset_data,
+                                sizeof(g_data->ipmi_tx_reset_data),
                                 NULL, 0);
     if (unlikely(status != 0))
         goto exit;

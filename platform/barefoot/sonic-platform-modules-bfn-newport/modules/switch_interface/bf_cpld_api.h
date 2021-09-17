@@ -21,5 +21,6 @@ ssize_t reset_show(struct device *dev, struct device_attribute *da,
                             char *buf);
 ssize_t reset_store(struct device *dev, struct device_attribute *da,
                             const char *buf, size_t count);
+struct bf_cpld_drv_data *update_cpld_status(unsigned char p_id);
 
 #endif //__BF_CPLD_API_H__
