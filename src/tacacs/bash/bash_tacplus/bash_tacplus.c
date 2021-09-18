@@ -40,7 +40,7 @@ int tacacs_ctrl;
  */
 void output_verbose(const char *format, ...)
 {
-    fprintf (stderr, "TACACS+: ");
+    fprintf(stderr, "TACACS+: ");
     syslog(LOG_INFO,"TACACS+: ");
 
     // convert log to a string because va args resoursive issue:
@@ -51,8 +51,8 @@ void output_verbose(const char *format, ...)
     vsnprintf(logBuffer, sizeof(logBuffer), format, args);
     va_end (args);
 
-    fprintf (stderr, logBuffer);
-    syslog(LOG_INFO, logBuffer);
+    fprintf(stderr, "%s", logBuffer);
+    syslog(LOG_INFO, "%s", logBuffer);
 }
 
 /*
@@ -71,8 +71,8 @@ void output_error(const char *format, ...)
     vsnprintf(logBuffer, sizeof(logBuffer), format, args);
     va_end (args);
 
-    fprintf (stderr, logBuffer);
-    syslog(LOG_ERR, logBuffer);
+    fprintf(stderr, "%s", logBuffer);
+    syslog(LOG_ERR, "%s", logBuffer);
 }
 
 /*
