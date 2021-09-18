@@ -31,7 +31,6 @@ import logging
 import os.path
 import subprocess
 import yaml
-from pathlib import Path
 
 ETC_HOSTS_FILE = '/etc/hosts'
 HTTP_CONFIG_FILE = '/etc/sonic/http_config.yaml'
@@ -79,7 +78,7 @@ class ChassisConfig():
                 HTTP server shall bind to this hostname.'''
         if self.http_config:
             start_http_server = self.http_config.get('start_http_server')
-            if start_http_server == 'yes' or 'start_http_server' == '1':
+            if start_http_server == 'yes' or start_http_server == '1':
                 # Create HTTP_CONFIG_FILE with http_config, generally on the Supervisor card.
                 logger.info('start_http_server is set, creating {}'.format(HTTP_CONFIG_FILE))
                 with open(HTTP_CONFIG_FILE, 'w') as f:

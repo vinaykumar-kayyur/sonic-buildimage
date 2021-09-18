@@ -32,7 +32,6 @@
 import argparse
 import http.server
 import logging
-import os.path
 import socketserver
 import yaml
 
