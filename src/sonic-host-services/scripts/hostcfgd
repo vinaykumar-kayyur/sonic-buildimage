@@ -9,33 +9,55 @@ import syslog
 
 import jinja2
 from sonic_py_common import device_info
-from swsssdk import ConfigDBConnector
+from swsscommon.swsscommon import ConfigDBConnector
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
 PAM_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/common-auth-sonic.j2"
 NSS_TACPLUS_CONF = "/etc/tacplus_nss.conf"
 NSS_TACPLUS_CONF_TEMPLATE = "/usr/share/sonic/templates/tacplus_nss.conf.j2"
+NSS_RADIUS_CONF = "/etc/radius_nss.conf"
+NSS_RADIUS_CONF_TEMPLATE = "/usr/share/sonic/templates/radius_nss.conf.j2"
+PAM_RADIUS_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_radius_auth.conf.j2"
 NSS_CONF = "/etc/nsswitch.conf"
+ETC_PAMD_SSHD = "/etc/pam.d/sshd"
+ETC_PAMD_LOGIN = "/etc/pam.d/login"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 
-def run_cmd(cmd, log_err = True):
+# RADIUS
+RADIUS_SERVER_AUTH_PORT_DEFAULT = "1812"
+RADIUS_SERVER_PASSKEY_DEFAULT = ""
+RADIUS_SERVER_RETRANSMIT_DEFAULT = "3"
+RADIUS_SERVER_TIMEOUT_DEFAULT = "5"
+RADIUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
+RADIUS_PAM_AUTH_CONF_DIR = "/etc/pam_radius_auth.d/"
+
+
+def run_cmd(cmd, log_err=True, raise_exception=False):
     try:
-        subprocess.check_call(cmd, shell = True)
+        subprocess.check_call(cmd, shell=True)
     except Exception as err:
         if log_err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                   .format(err.cmd, err.returncode, err.output))
+        if raise_exception:
+            raise
+
 
 def is_true(val):
     if val == 'True' or val == 'true':
         return True
     else:
         return False
+
+
+def is_vlan_sub_interface(ifname):
+    ifname_split = ifname.split(".")
+    return (len(ifname_split) == 2)
 
 
 def sub(l, start, end):
@@ -49,13 +71,237 @@ def obfuscate(data):
         return data
 
 
-def run_cmd(cmd, log_err = True):
-    try:
-        subprocess.check_call(cmd, shell = True)
-    except Exception as err:
-        if log_err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                  .format(err.cmd, err.returncode, err.output))
+class Feature(object):
+    """ Represents a feature configuration from CONFIG_DB data. """
+
+    def __init__(self, feature_name, feature_cfg, device_config=None):
+        """ Initialize Feature object based on CONFIG_DB data.
+
+        Args:
+            feature_name (str): Feature name string
+            feature_cfg (dict): Feature CONFIG_DB configuration
+            deviec_config (dict): DEVICE_METADATA section of CONFIG_DB
+        """
+
+        self.name = feature_name
+        self.state = self._get_target_state(feature_cfg.get('state'), device_config or {})
+        self.auto_restart = feature_cfg.get('auto_restart', 'disabled')
+        self.has_timer = ast.literal_eval(feature_cfg.get('has_timer', 'False'))
+        self.has_global_scope = ast.literal_eval(feature_cfg.get('has_global_scope', 'True'))
+        self.has_per_asic_scope = ast.literal_eval(feature_cfg.get('has_per_asic_scope', 'False'))
+
+    def _get_target_state(self, state_configuration, device_config):
+        """ Returns the target state for the feature by rendering the state field as J2 template.
+
+        Args:
+            state_configuration (str): State configuration from CONFIG_DB
+            deviec_config (dict): DEVICE_METADATA section of CONFIG_DB
+        Returns:
+            (str): Target feature state
+        """
+
+        if state_configuration is None:
+            return None
+
+        template = jinja2.Template(state_configuration)
+        target_state = template.render(device_config)
+        if target_state not in ('enabled', 'disabled', 'always_enabled', 'always_disabled'):
+            raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
+        return target_state
+
+
+class FeatureHandler(object):
+    """ Handles FEATURE table updates. """
+
+    SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
+    SYSTEMD_SERVICE_CONF_DIR = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
+
+    def __init__(self, config_db, device_config):
+        self._config_db = config_db
+        self._device_config = device_config
+        self._cached_config = {}
+        self.is_multi_npu = device_info.is_multi_npu()
+
+    def handle(self, feature_name, feature_cfg):
+        if not feature_cfg:
+            self._cached_config.pop(feature_name)
+            syslog.syslog(syslog.LOG_INFO, "Deregistering feature {}".format(feature_name))
+            return
+
+        feature = Feature(feature_name, feature_cfg, self._device_config)
+        self._cached_config.setdefault(feature_name, Feature(feature_name, {}))
+
+        # Change auto-restart configuration first.
+        # If service reached failed state before this configuration applies (e.g. on boot)
+        # the next called self.update_feature_state will start it again. If it will fail
+        # again the auto restart will kick-in. Another order may leave it in failed state
+        # and not auto restart.
+        if self._cached_config[feature_name].auto_restart != feature.auto_restart:
+            self.update_feature_auto_restart(feature)
+            self._cached_config[feature_name].auto_restart = feature.auto_restart
+
+        # Enable/disable the container service if the feature state was changed from its previous state.
+        if self._cached_config[feature_name].state != feature.state:
+            if self.update_feature_state(feature):
+                self._cached_config[feature_name].state = feature.state
+            else:
+                self.resync_feature_state(self._cached_config[feature_name])
+
+    def update_all_features_config(self):
+        feature_table = self._config_db.get_table('FEATURE')
+        for feature_name in feature_table.keys():
+            if not feature_name:
+                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
+                continue
+
+            feature = Feature(feature_name, feature_table[feature_name], self._device_config)
+            self._cached_config.setdefault(feature_name, feature)
+
+            self.update_feature_auto_restart(feature)
+
+            self.update_feature_state(feature)
+            self.resync_feature_state(feature)
+
+    def update_feature_state(self, feature):
+        cached_feature = self._cached_config[feature.name]
+        enable = False
+        disable = False
+
+        # Allowed transitions:
+        #  None           -> always_enabled
+        #                 -> always_disabled
+        #                 -> enabled
+        #                 -> disabled
+        #  always_enabled -> always_disabled
+        #  enabled        -> disabled
+        #  disabled       -> enabled
+        if cached_feature.state is None:
+            enable = feature.state in ("always_enabled", "enabled")
+            disable = feature.state in ("always_disabled", "disabled")
+        elif cached_feature.state in ("always_enabled", "always_disabled"):
+            disable = feature.state == "always_disabled"
+        elif cached_feature.state in ("enabled", "disabled"):
+            enable = feature.state == "enabled"
+            disable = feature.state == "disabled"
+        else:
+            syslog.syslog(syslog.LOG_INFO, "Feature {} service is {}".format(feature.name, cached_feature.state))
+            return False
+
+        if not enable and not disable:
+            syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature {}"
+                          .format(feature.state, feature.name))
+            return False
+
+        if enable:
+            self.enable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is enabled and started".format(feature.name))
+
+        if disable:
+            self.disable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
+
+        return True
+
+    def update_feature_auto_restart(self, feature):
+        restart_config = "always" if feature.auto_restart == "enabled" else "no"
+        service_conf = "[Service]\nRestart={}\n".format(restart_config)
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+
+        for feature_name in feature_names:
+            dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
+            if not os.path.exists(dir_name):
+                os.mkdir(dir_name)
+            with open(os.path.join(dir_name, 'auto_restart.conf'), 'w') as cfgfile:
+                cfgfile.write(service_conf)
+
+        try:
+            run_cmd("sudo systemctl daemon-reload", raise_exception=True)
+        except Exception as err:
+            syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to configure auto_restart".format(feature.name))
+            return
+
+    def get_feature_attribute(self, feature):
+        # Create feature name suffix depending feature is running in host or namespace or in both
+        feature_names = (
+            ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
+            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus())
+                if feature.has_per_asic_scope and self.is_multi_npu])
+        )
+
+        if not feature_names:
+            syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
+                          .format(feature.name))
+
+        feature_suffixes = ["service"] + (["timer"] if feature.has_timer else [])
+
+        return feature_names, feature_suffixes
+
+    def get_systemd_unit_state(self, unit):
+        """ Returns service configuration """
+
+        cmd = "sudo systemctl show {} --property UnitFileState".format(unit)
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            syslog.syslog(syslog.LOG_ERR, "Failed to get status of {}: rc={} stderr={}".format(unit, proc.returncode, stderr))
+            return 'invalid'  # same as systemd's "invalid indicates that it could not be determined whether the unit file is enabled".
+
+        props = dict([line.split("=") for line in stdout.decode().strip().splitlines()])
+        return props["UnitFileState"]
+
+
+    def enable_feature(self, feature):
+        cmds = []
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        for feature_name in feature_names:
+            # Check if it is already enabled, if yes skip the system call
+            unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
+            if unit_file_state == "enabled":
+                continue
+
+            for suffix in feature_suffixes:
+                cmds.append("sudo systemctl unmask {}.{}".format(feature_name, suffix))
+
+            # If feature has timer associated with it, start/enable corresponding systemd .timer unit
+            # otherwise, start/enable corresponding systemd .service unit
+
+            cmds.append("sudo systemctl enable {}.{}".format(feature_name, feature_suffixes[-1]))
+            cmds.append("sudo systemctl start {}.{}".format(feature_name, feature_suffixes[-1]))
+
+            for cmd in cmds:
+                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                try:
+                    run_cmd(cmd, raise_exception=True)
+                except Exception as err:
+                    syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
+                                    .format(feature.name, feature_suffixes[-1]))
+                    return
+
+    def disable_feature(self, feature):
+        cmds = []
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        for feature_name in feature_names:
+            # Check if it is already disabled, if yes skip the system call
+            unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
+            if unit_file_state in ("disabled", "masked"):
+                continue
+
+            for suffix in reversed(feature_suffixes):
+                cmds.append("sudo systemctl stop {}.{}".format(feature_name, suffix))
+                cmds.append("sudo systemctl disable {}.{}".format(feature_name, feature_suffixes[-1]))
+                cmds.append("sudo systemctl mask {}.{}".format(feature_name, feature_suffixes[-1]))
+            for cmd in cmds:
+                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                try:
+                    run_cmd(cmd, raise_exception=True)
+                except Exception as err:
+                    syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
+                                    .format(feature.name, feature_suffixes[-1]))
+                    return
+
+    def resync_feature_state(self, feature):
+        self._config_db.mod_entry('FEATURE', feature.name, {'state': feature.state})
+
 
 class Iptables(object):
     def __init__(self):
@@ -144,19 +390,40 @@ class AaaCfg(object):
             'timeout': TACPLUS_SERVER_TIMEOUT_DEFAULT,
             'passkey': TACPLUS_SERVER_PASSKEY_DEFAULT
         }
-        self.auth = {}
         self.tacplus_global = {}
         self.tacplus_servers = {}
+
+        self.radius_global_default = {
+            'priority': 0,
+            'auth_port': RADIUS_SERVER_AUTH_PORT_DEFAULT,
+            'auth_type': RADIUS_SERVER_AUTH_TYPE_DEFAULT,
+            'retransmit': RADIUS_SERVER_RETRANSMIT_DEFAULT,
+            'timeout': RADIUS_SERVER_TIMEOUT_DEFAULT,
+            'passkey': RADIUS_SERVER_PASSKEY_DEFAULT
+        }
+        self.radius_global = {}
+        self.radius_servers = {}
+
+        self.auth = {}
         self.debug = False
+        self.trace = False
+
+        self.hostname = ""
 
     # Load conf from ConfigDb
-    def load(self, aaa_conf, tac_global_conf, tacplus_conf):
+    def load(self, aaa_conf, tac_global_conf, tacplus_conf, rad_global_conf, radius_conf):
         for row in aaa_conf:
             self.aaa_update(row, aaa_conf[row], modify_conf=False)
         for row in tac_global_conf:
             self.tacacs_global_update(row, tac_global_conf[row], modify_conf=False)
         for row in tacplus_conf:
             self.tacacs_server_update(row, tacplus_conf[row], modify_conf=False)
+
+        for row in rad_global_conf:
+            self.radius_global_update(row, rad_global_conf[row], modify_conf=False)
+        for row in radius_conf:
+            self.radius_server_update(row, radius_conf[row], modify_conf=False)
+
         self.modify_conf_file()
 
     def aaa_update(self, key, data, modify_conf=True):
@@ -168,6 +435,29 @@ class AaaCfg(object):
                 self.debug = is_true(data['debug'])
         if modify_conf:
             self.modify_conf_file()
+
+    def pick_src_intf_ipaddrs(self, keys, src_intf):
+        new_ipv4_addr = ""
+        new_ipv6_addr = ""
+
+        for it in keys:
+            if src_intf != it[0] or (isinstance(it, tuple) == False):
+                continue
+            if new_ipv4_addr != "" and new_ipv6_addr != "":
+                break
+            ip_str = it[1].split("/")[0]
+            ip_addr = ipaddress.IPAddress(ip_str)
+            # Pick the first IP address from the table that matches the source interface
+            if isinstance(ip_addr, ipaddress.IPv6Address):
+                if new_ipv6_addr != "":
+                    continue
+                new_ipv6_addr = ip_str
+            else:
+                if new_ipv4_addr != "":
+                    continue
+                new_ipv4_addr = ip_str
+
+        return(new_ipv4_addr, new_ipv6_addr)
 
     def tacacs_global_update(self, key, data, modify_conf=True):
         if key == 'global':
@@ -184,6 +474,106 @@ class AaaCfg(object):
 
         if modify_conf:
             self.modify_conf_file()
+
+    def handle_radius_source_intf_ip_chg(self, key):
+        modify_conf=False
+        if 'src_intf' in self.radius_global:
+            if key[0] == self.radius_global['src_intf']:
+                modify_conf=True
+        for addr in self.radius_servers:
+            if ('src_intf' in self.radius_servers[addr]) and \
+                    (key[0] == self.radius_servers[addr]['src_intf']):
+                modify_conf=True
+                break
+
+        if not modify_conf:
+            return
+
+        syslog.syslog(syslog.LOG_INFO, 'RADIUS IP change - key:{}, current server info {}'.format(key, self.radius_servers))
+        self.modify_conf_file()
+
+    def handle_radius_nas_ip_chg(self, key):
+        modify_conf=False
+        # Mgmt IP configuration affects only the default nas_ip
+        if 'nas_ip' not in self.radius_global:
+            for addr in self.radius_servers:
+                if 'nas_ip' not in self.radius_servers[addr]:
+                    modify_conf=True
+                    break
+
+        if not modify_conf:
+            return
+
+        syslog.syslog(syslog.LOG_INFO, 'RADIUS (NAS) IP change - key:{}, current global info {}'.format(key, self.radius_global))
+        self.modify_conf_file()
+
+    def radius_global_update(self, key, data, modify_conf=True):
+        if key == 'global':
+            self.radius_global = data
+            if 'statistics' in data:
+                self.radius_global['statistics'] = is_true(data['statistics'])
+            if modify_conf:
+                self.modify_conf_file()
+
+    def radius_server_update(self, key, data, modify_conf=True):
+        if data == {}:
+            if key in self.radius_servers:
+                del self.radius_servers[key]
+        else:
+            self.radius_servers[key] = data
+
+        if modify_conf:
+            self.modify_conf_file()
+
+    def hostname_update(self, hostname, modify_conf=True):
+        if self.hostname == hostname:
+            return
+
+        self.hostname = hostname
+
+        # Currently only used for RADIUS
+        if len(self.radius_servers) == 0:
+            return
+
+        if modify_conf:
+            self.modify_conf_file()
+
+    def get_hostname(self):
+        return self.hostname
+
+    def get_interface_ip(self, source, addr=None):
+        keys = None
+        try:
+            if source.startswith("Eth"):
+                if is_vlan_sub_interface(source):
+                    keys = self.config_db.get_keys('VLAN_SUB_INTERFACE')
+                else:
+                    keys = self.config_db.get_keys('INTERFACE')
+            elif source.startswith("Po"):
+                if is_vlan_sub_interface(source):
+                    keys = self.config_db.get_keys('VLAN_SUB_INTERFACE')
+                else:
+                    keys = self.config_db.get_keys('PORTCHANNEL_INTERFACE')
+            elif source.startswith("Vlan"):
+                keys = self.config_db.get_keys('VLAN_INTERFACE')
+            elif source.startswith("Loopback"):
+                keys = self.config_db.get_keys('LOOPBACK_INTERFACE')
+            elif source == "eth0":
+                keys = self.config_db.get_keys('MGMT_INTERFACE')
+        except Exception as e:
+            pass
+
+        interface_ip = ""
+        if keys != None:
+            ipv4_addr, ipv6_addr = self.pick_src_intf_ipaddrs(keys, source)
+            # Based on the type of addr, return v4 or v6
+            if addr and isinstance(addr, ipaddress.IPv6Address):
+                interface_ip = ipv6_addr
+            else:
+                # This could be tuned, but that involves a DNS query, so
+                # offline configuration might trip (or cause delays).
+                interface_ip = ipv4_addr
+        return interface_ip
 
     def modify_single_file(self, filename, operations=None):
         if operations:
@@ -209,29 +599,82 @@ class AaaCfg(object):
                 servers_conf.append(server)
             servers_conf = sorted(servers_conf, key=lambda t: int(t['priority']), reverse=True)
 
+        radius_global = self.radius_global_default.copy()
+        radius_global.update(self.radius_global)
+
+        # RADIUS: Set the default nas_ip, and nas_id
+        if 'nas_ip' not in radius_global:
+            nas_ip = self.get_interface_ip("eth0")
+            if len(nas_ip) > 0:
+                radius_global['nas_ip'] = nas_ip
+        if 'nas_id' not in radius_global:
+            nas_id = self.get_hostname()
+            if len(nas_id) > 0:
+                radius_global['nas_id'] = nas_id
+
+        radsrvs_conf = []
+        if self.radius_servers:
+            for addr in self.radius_servers:
+                server = radius_global.copy()
+                server['ip'] = addr
+                server.update(self.radius_servers[addr])
+
+                if 'src_intf' in server:
+                    # RADIUS: Log a message if src_ip is already defined.
+                    if 'src_ip' in server:
+                        syslog.syslog(syslog.LOG_INFO, \
+            "RADIUS_SERVER|{}: src_intf found. Ignoring src_ip".format(addr))
+                    # RADIUS: If server.src_intf, then get the corresponding
+                    # src_ip based on the server.ip, and set it.
+                    src_ip = self.get_interface_ip(server['src_intf'], addr)
+                    if len(src_ip) > 0:
+                        server['src_ip'] = src_ip
+                    elif 'src_ip' in server:
+                        syslog.syslog(syslog.LOG_INFO, \
+            "RADIUS_SERVER|{}: src_intf has no usable IP addr.".format(addr))
+                        del server['src_ip']
+
+                radsrvs_conf.append(server)
+            radsrvs_conf = sorted(radsrvs_conf, key=lambda t: int(t['priority']), reverse=True)
+
         template_file = os.path.abspath(PAM_AUTH_CONF_TEMPLATE)
         env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
         env.filters['sub'] = sub
         template = env.get_template(template_file)
-        pam_conf = template.render(auth=auth, src_ip=src_ip, servers=servers_conf)
-        with open(PAM_AUTH_CONF, 'w') as f:
-            f.write(pam_conf)
-
-        # Modify common-auth include file in /etc/pam.d/login and sshd
-        if os.path.isfile(PAM_AUTH_CONF):
-            self.modify_single_file('/etc/pam.d/sshd',  [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
-            self.modify_single_file('/etc/pam.d/login', [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
+        if 'radius' in auth['login']:
+            pam_conf = template.render(debug=self.debug, trace=self.trace, auth=auth, servers=radsrvs_conf)
         else:
-            self.modify_single_file('/etc/pam.d/sshd',  [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
-            self.modify_single_file('/etc/pam.d/login', [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
+            pam_conf = template.render(auth=auth, src_ip=src_ip, servers=servers_conf)
 
-        # Add tacplus in nsswitch.conf if TACACS+ enable
+        # Use rename(), which is atomic (on the same fs) to avoid empty file
+        with open(PAM_AUTH_CONF + ".tmp", 'w') as f:
+            f.write(pam_conf)
+        os.chmod(PAM_AUTH_CONF + ".tmp", 0o644)
+        os.rename(PAM_AUTH_CONF + ".tmp", PAM_AUTH_CONF)
+
+        # Modify common-auth include file in /etc/pam.d/login, sshd.
+        # /etc/pam.d/sudo is not handled, because it would change the existing
+        # behavior. It can be modified once a config knob is added for sudo.
+        if os.path.isfile(PAM_AUTH_CONF):
+            self.modify_single_file(ETC_PAMD_SSHD,  [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
+            self.modify_single_file(ETC_PAMD_LOGIN, [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
+        else:
+            self.modify_single_file(ETC_PAMD_SSHD,  [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
+            self.modify_single_file(ETC_PAMD_LOGIN, [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
+
+        # Add tacplus/radius in nsswitch.conf if TACACS+/RADIUS enable
         if 'tacacs+' in auth['login']:
             if os.path.isfile(NSS_CONF):
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/ radius//'" ])
                 self.modify_single_file(NSS_CONF, [ "'/tacplus/b'", "'/^passwd/s/compat/tacplus &/'", "'/^passwd/s/files/tacplus &/'" ])
+        elif 'radius' in auth['login']:
+            if os.path.isfile(NSS_CONF):
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //'" ])
+                self.modify_single_file(NSS_CONF, [ "'/radius/b'", "'/^passwd/s/compat/& radius/'", "'/^passwd/s/files/& radius/'" ])
         else:
             if os.path.isfile(NSS_CONF):
                 self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //g'" ])
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/ radius//'" ])
 
         # Set tacacs+ server in nss-tacplus conf
         template_file = os.path.abspath(NSS_TACPLUS_CONF_TEMPLATE)
@@ -239,6 +682,41 @@ class AaaCfg(object):
         nss_tacplus_conf = template.render(debug=self.debug, src_ip=src_ip, servers=servers_conf)
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
+
+        # Set debug in nss-radius conf
+        template_file = os.path.abspath(NSS_RADIUS_CONF_TEMPLATE)
+        template = env.get_template(template_file)
+        nss_radius_conf = template.render(debug=self.debug, trace=self.trace, servers=radsrvs_conf)
+        with open(NSS_RADIUS_CONF, 'w') as f:
+            f.write(nss_radius_conf)
+
+        # Create the per server pam_radius_auth.conf
+        if radsrvs_conf:
+            for srv in radsrvs_conf:
+                # Configuration File
+                pam_radius_auth_file = RADIUS_PAM_AUTH_CONF_DIR + srv['ip'] + "_" + srv['auth_port'] + ".conf"
+                template_file = os.path.abspath(PAM_RADIUS_AUTH_CONF_TEMPLATE)
+                template = env.get_template(template_file)
+                pam_radius_auth_conf = template.render(server=srv)
+
+                open(pam_radius_auth_file, 'a').close()
+                os.chmod(pam_radius_auth_file, 0o600)
+                with open(pam_radius_auth_file, 'w+') as f:
+                    f.write(pam_radius_auth_conf)
+
+        # Start the statistics service. Only RADIUS implemented
+        if ('radius' in auth['login']) and ('statistics' in radius_global) and\
+                radius_global['statistics']:
+            cmd = 'service aaastatsd start'
+        else:
+            cmd = 'service aaastatsd stop'
+        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
+        try:
+            subprocess.check_call(cmd, shell=True)
+        except subprocess.CalledProcessError as err:
+            syslog.syslog(syslog.LOG_ERR,
+                    "{} - failed: return code - {}, output:\n{}"
+                    .format(err.cmd, err.returncode, err.output))
 
 class KdumpCfg(object):
     def __init__(self, CfgDb):
@@ -294,7 +772,7 @@ class NtpCfg(object):
     def __init__(self, CfgDb):
         self.config_db = CfgDb
         self.ntp_global = {}
-        self.has_ntp_servers = False 
+        self.has_ntp_servers = False
 
     def load(self, ntp_global_conf, ntp_server_conf):
         syslog.syslog(syslog.LOG_INFO, "NtpCfg load ...")
@@ -375,7 +853,7 @@ class NtpCfg(object):
                 self.has_ntp_servers = True
         else:
             # for runtime ntp server change, to determine if there is ntp server configured, need to
-            # get from configDB, as delete triggers 2 event handling 
+            # get from configDB, as delete triggers 2 event handling
             ntp_servers_tbl = self.config_db.get_table('NTP_SERVER')
             if ntp_servers_tbl != {}:
                 self.has_ntp_servers = True
@@ -398,11 +876,11 @@ class HostConfigDaemon:
         self.device_config = {}
         self.device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
 
+        self.hostname_cache=""
         self.aaacfg = AaaCfg()
         self.iptables = Iptables()
+        self.feature_handler = FeatureHandler(self.config_db, self.device_config)
         self.ntpcfg = NtpCfg(self.config_db)
-        # Cache the values of 'state' field in 'FEATURE' table of each container
-        self.cached_feature_states = {}
 
         self.is_multi_npu = device_info.is_multi_npu()
 
@@ -415,7 +893,9 @@ class HostConfigDaemon:
         aaa = self.config_db.get_table('AAA')
         tacacs_global = self.config_db.get_table('TACPLUS')
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        radius_global = self.config_db.get_table('RADIUS')
+        radius_server = self.config_db.get_table('RADIUS_SERVER')
+        self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
 
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables.load(lpbk_table)
@@ -425,124 +905,15 @@ class HostConfigDaemon:
         ntp_global = self.config_db.get_table('NTP')
         self.ntpcfg.load(ntp_global, ntp_server)
 
-    def get_target_state(self, feature_name, state):
-        template = jinja2.Template(state)
-        target_state = template.render(self.device_config)
-        entry = self.config_db.get_entry('FEATURE', feature_name)
-        entry["state"] = target_state
-        self.config_db.set_entry("FEATURE", feature_name, entry)
-
-        return target_state
-
-    def get_feature_attribute(self, feature_name, feature_table):
-        has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
-        has_global_scope = ast.literal_eval(feature_table[feature_name].get('has_global_scope', 'True'))
-        has_per_asic_scope = ast.literal_eval(feature_table[feature_name].get('has_per_asic_scope', 'False'))
-
-        # Create feature name suffix depending feature is running in host or namespace or in both 
-        feature_names = (
-            ([feature_name] if has_global_scope or not self.is_multi_npu else []) +
-            ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
-                if has_per_asic_scope and self.is_multi_npu])
-        )
-
-        if not feature_names:
-            syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
-                          .format(feature_name))
-
-        feature_suffixes = ["service"] + (["timer"] if has_timer else [])
-
-        return feature_names, feature_suffixes
-
-    def enable_feature(self, feature_names, feature_suffixes):
-        start_cmds = []
-        for feature_name in feature_names:
-            for suffix in feature_suffixes:
-                start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name, suffix))
-            # If feature has timer associated with it, start/enable corresponding systemd .timer unit
-            # otherwise, start/enable corresponding systemd .service unit
-            start_cmds.append("sudo systemctl enable {}.{}".format(feature_name, feature_suffixes[-1]))
-            start_cmds.append("sudo systemctl start {}.{}".format(feature_name, feature_suffixes[-1]))
-            for cmd in start_cmds:
-                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                                  .format(err.cmd, err.returncode, err.output))
-                    syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be  enabled and started"
-                                  .format(feature_name, feature_suffixes[-1]))
-                    return
-
-    def disable_feature(self, feature_names, feature_suffixes):
-        stop_cmds = []
-        for feature_name in feature_names:
-            for suffix in reversed(feature_suffixes):
-                stop_cmds.append("sudo systemctl stop {}.{}".format(feature_name, suffix))
-                stop_cmds.append("sudo systemctl disable {}.{}".format(feature_name, suffix))
-                stop_cmds.append("sudo systemctl mask {}.{}".format(feature_name, suffix))
-            for cmd in stop_cmds:
-                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                                  .format(err.cmd, err.returncode, err.output))
-                    syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to be stopped and disabled".format(feature_name))
-                    return
-
-    def is_invariant_feature(self, feature_name, state, feature_table):
-        invariant_feature = self.cached_feature_states[feature_name] == "always_enabled" or \
-                            self.cached_feature_states[feature_name] == "always_disabled"
-        if invariant_feature:
-            invariant_state = self.cached_feature_states[feature_name]
-            if state != invariant_state:
-                syslog.syslog(syslog.LOG_INFO, "Feature '{}' service is '{}'"
-                              .format(feature_name, invariant_state))
-                entry = self.config_db.get_entry('FEATURE', feature_name)
-                entry['state'] = invariant_state
-                self.config_db.set_entry('FEATURE', feature_name, entry)
-
-            if state == "always_disabled":
-                feature_names, feature_suffixes = self.get_feature_attribute(feature_name, feature_table)
-                self.disable_feature(feature_names, feature_suffixes)
-                syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature_name))
-
-        return invariant_feature
-
-    def update_feature_state(self, feature_name, state, feature_table):
-        if not self.is_invariant_feature(feature_name, state, feature_table):
-            self.cached_feature_states[feature_name] = state
-
-            feature_names, feature_suffixes = self.get_feature_attribute(feature_name, feature_table)
-            if state == "enabled":
-                self.enable_feature(feature_names, feature_suffixes)
-                syslog.syslog(syslog.LOG_INFO, "Feature '{}.{}' is enabled and started"
-                              .format(feature_name, feature_suffixes[-1]))
-            elif state == "disabled":
-                self.disable_feature(feature_names, feature_suffixes)
-                syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature_name))
-            else:
-                syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
-                              .format(state, feature_name))
-
-    def update_all_feature_states(self):
-        feature_table = self.config_db.get_table('FEATURE')
-        for feature_name in feature_table:
-            if not feature_name:
-                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
-                continue
-
-            state = feature_table[feature_name]['state']
-            if not state:
-                syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-                continue
-
-            target_state = self.get_target_state(feature_name, state)
-            # Store the initial value of 'state' field in 'FEATURE' table of a specific container
-            self.cached_feature_states[feature_name] = target_state
-
-            self.update_feature_state(feature_name, target_state, feature_table)
+        try:
+            dev_meta = self.config_db.get_table('DEVICE_METADATA')
+            if 'localhost' in dev_meta:
+                if 'hostname' in dev_meta['localhost']:
+                    self.hostname_cache = dev_meta['localhost']['hostname']
+        except Exception as e:
+            pass
+        # Update AAA with the hostname
+        self.aaacfg.hostname_update(self.hostname_cache)
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -561,6 +932,24 @@ class HostConfigDaemon:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
+    def radius_server_handler(self, key, data):
+        self.aaacfg.radius_server_update(key, data)
+        log_data = copy.deepcopy(data)
+        if 'passkey' in log_data:
+            log_data['passkey'] = obfuscate(log_data['passkey'])
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
+
+    def radius_global_handler(self, key, data):
+        self.aaacfg.radius_global_update(key, data)
+        log_data = copy.deepcopy(data)
+        if 'passkey' in log_data:
+            log_data['passkey'] = obfuscate(log_data['passkey'])
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
+
+    def mgmt_intf_handler(self, key, data):
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
+        self.aaacfg.handle_radius_nas_ip_chg(key)
+
     def lpbk_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
         # Check if delete operation by fetch existing keys
@@ -572,24 +961,23 @@ class HostConfigDaemon:
 
         self.iptables.iptables_handler(key, data, add)
         self.ntpcfg.handle_ntp_source_intf_chg(key)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
-    def feature_state_handler(self, key, data):
-        feature_name = key
-        feature_table = self.config_db.get_table('FEATURE')
-        if feature_name not in feature_table:
-            syslog.syslog(syslog.LOG_WARNING, "Feature '{}' not in FEATURE table".format(feature_name))
-            return
+    def vlan_intf_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
-        state = feature_table[feature_name]['state']
-        if not state:
-            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            return
+    def vlan_sub_intf_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
-        self.cached_feature_states.setdefault(feature_name, 'disabled')
+    def portchannel_intf_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
-        # Enable/disable the container service if the feature state was changed from its previous state.
-        if self.cached_feature_states[feature_name] != state:
-            self.update_feature_state(feature_name, state, feature_table)
+    def phy_intf_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def ntp_server_handler (self, key, data):
         syslog.syslog(syslog.LOG_INFO, 'NTP server handler...')
@@ -613,12 +1001,18 @@ class HostConfigDaemon:
         subprocess.call(systemctl_cmd, shell=True)
 
     def start(self):
-
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
+        self.config_db.subscribe('RADIUS_SERVER', lambda table, key, data: self.radius_server_handler(key, data))
+        self.config_db.subscribe('RADIUS', lambda table, key, data: self.radius_global_handler(key, data))
+        self.config_db.subscribe('MGMT_INTERFACE', lambda table, key, data: self.mgmt_intf_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
-        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_state_handler(key, data))
+        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_handler.handle(key, data))
+        self.config_db.subscribe('VLAN_INTERFACE', lambda table, key, data: self.vlan_intf_handler(key, data))
+        self.config_db.subscribe('VLAN_SUB_INTERFACE', lambda table, key, data: self.vlan_sub_intf_handler(key, data))
+        self.config_db.subscribe('PORTCHANNEL_INTERFACE', lambda table, key, data: self.portchannel_intf_handler(key, data))
+        self.config_db.subscribe('INTERFACE', lambda table, key, data: self.phy_intf_handler(key, data))
         self.config_db.subscribe('NTP_SERVER', lambda table, key, data: self.ntp_server_handler(key, data))
         self.config_db.subscribe('NTP', lambda table, key, data: self.ntp_global_handler(key, data))
         self.config_db.subscribe('KDUMP', lambda table, key, data: self.kdump_handler(key, data))
@@ -630,7 +1024,7 @@ class HostConfigDaemon:
                       "systemctl has finished initialization -- proceeding ...")
 
         # Update all feature states once upon starting
-        self.update_all_feature_states()
+        self.feature_handler.update_all_features_config()
 
         # Defer load until subscribe
         self.load()

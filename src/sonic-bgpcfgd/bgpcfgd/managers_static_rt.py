@@ -3,6 +3,7 @@ from .log import log_crit, log_err, log_debug
 from .manager import Manager
 from .template import TemplateFabric
 import socket
+from swsscommon import swsscommon
 
 class StaticRouteMgr(Manager):
     """ This class updates static routes when STATIC_ROUTE table is updated """
@@ -19,8 +20,10 @@ class StaticRouteMgr(Manager):
             db,
             table,
         )
-
+        
+        self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),], self.on_bgp_asn_change)
         self.static_routes = {}
+        self.vrf_pending_redistribution = set()
 
     OP_DELETE = 'DELETE'
     OP_ADD = 'ADD'
@@ -44,6 +47,13 @@ class StaticRouteMgr(Manager):
             log_crit("Got an exception %s: Traceback: %s" % (str(exc), traceback.format_exc()))
             return False
 
+        # Enable redistribution of static routes when it is the first one get set
+        if not self.static_routes.get(vrf, {}):
+            if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
+                cmd_list.extend(self.enable_redistribution_command(vrf))
+            else:
+                self.vrf_pending_redistribution.add(vrf)
+
         if cmd_list:
             self.cfg_mgr.push_list(cmd_list)
             log_debug("Static route {} is scheduled for updates".format(key))
@@ -62,6 +72,12 @@ class StaticRouteMgr(Manager):
         ip_nh_set = IpNextHopSet(is_ipv6)
         cur_nh_set = self.static_routes.get(vrf, {}).get(ip_prefix, IpNextHopSet(is_ipv6))
         cmd_list = self.static_route_commands(ip_nh_set, cur_nh_set, ip_prefix, vrf)
+
+        # Disable redistribution of static routes when it is the last one to delete
+        if self.static_routes.get(vrf, {}).keys() == {ip_prefix}:
+            if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
+                cmd_list.extend(self.disable_redistribution_command(vrf))
+            self.vrf_pending_redistribution.discard(vrf)
 
         if cmd_list:
             self.cfg_mgr.push_list(cmd_list)
@@ -109,6 +125,38 @@ class StaticRouteMgr(Manager):
             ip_nh,
             ' vrf {}'.format(vrf) if vrf != 'default' else ''
         )
+
+    def enable_redistribution_command(self, vrf):
+        log_debug("Enabling static route redistribution")
+        cmd_list = []
+        bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
+        if vrf == 'default':
+            cmd_list.append("router bgp %s" % bgp_asn)
+        else:
+            cmd_list.append("router bgp %s vrf %s" % (bgp_asn, vrf))
+        for af in ["ipv4", "ipv6"]:
+            cmd_list.append(" address-family %s" % af)
+            cmd_list.append("  redistribute static")
+        return cmd_list
+
+    def disable_redistribution_command(self, vrf):
+        log_debug("Disabling static route redistribution")
+        cmd_list = []
+        bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
+        if vrf == 'default':
+            cmd_list.append("router bgp %s" % bgp_asn)
+        else:
+            cmd_list.append("router bgp %s vrf %s" % (bgp_asn, vrf))
+        for af in ["ipv4", "ipv6"]:
+            cmd_list.append(" address-family %s" % af)
+            cmd_list.append("  no redistribute static")
+        return cmd_list
+
+    def on_bgp_asn_change(self):
+        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
+            for vrf in self.vrf_pending_redistribution:
+                self.cfg_mgr.push_list(self.enable_redistribution_command(vrf))
+            self.vrf_pending_redistribution.clear()
 
 class IpNextHop:
     def __init__(self, af_id, blackhole, dst_ip, if_name, dist, vrf):
