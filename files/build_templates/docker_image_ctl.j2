@@ -171,7 +171,7 @@ function postStartAction()
                 fi
             fi
 
-	    # Indicates the device performed fast_reboot when the BOOT_TYPE is "fast_reboot"
+            # Set the db setting to indicate that the device performed fast_reboot when the BOOT_TYPE is "fast_reboot"
             if [[ "$BOOT_TYPE" == "fast" ]]; then
                 # set the key to expire in 3 minutes
                 $SONIC_DB_CLI STATE_DB SET "FAST_REBOOT|system" "1" "EX" "180"
@@ -203,7 +203,7 @@ function postStartAction()
         # Clear the FAST_REBOOT|system db setting if PLATFORM_REBOOT_CAUSE is not "software" before starting swss
         if  [[ "$PLATFORM_REBOOT_CAUSE" != "software" ]]; then
             # Delete the FAST_REBOOT|system db setting 
-            $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system"
+            $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
         else
             test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
             test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss$DEV:/
