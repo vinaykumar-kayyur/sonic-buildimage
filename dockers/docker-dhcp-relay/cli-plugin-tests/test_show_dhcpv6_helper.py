@@ -1,18 +1,18 @@
 import sys
 import os
-from unittest import mock
+import pytest
 sys.path.append('../cli/show/plugins/')
 import show_dhcpv6_helper as show
 from click.testing import CliRunner
+from swsscommon import swsscommon
+from mock_config import TEST_DATA
+from parameterized import parameterized
+from pyfakefs.fake_filesystem_unittest import patchfs
 
 try:
-    modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
-    test_path = os.path.join(modules_path, "tests")
-    mock_table_path = os.path.join(test_path, "mock_tables")
-    sys.path.insert(0, modules_path)
-    sys.path.insert(0, test_path)
-    sys.path.insert(0, mock_table_path)
-    import dbconnector
+    sys.path.insert(0, '../../../src/sonic-host-services/tests/common')
+    from mock_configdb import MockConfigDb
+    swsscommon.ConfigDBConnector = MockConfigDb 
 except KeyError:
     pass
     
@@ -21,12 +21,20 @@ expected_table = """\
 Vlan1000  fc02:2000::1
           fc02:2000::2
 --------  ------------
-
 """
+
+DBCONFIG_PATH = '/var/run/redis/sonic-db/database_config.json'
+
 class TestDhcpRelayHelper(object):
 
-    def test_show_dhcpv6_helper(self):
+    @parameterized.expand(TEST_DATA)
+    @patchfs
+    def test_show_dhcpv6_helper(self, test_name, test_data, fs):
+        if not os.path.exists(DBCONFIG_PATH):
+            fs.create_file(DBCONFIG_PATH) 
+        MockConfigDb.set_config_db(test_data["config_db"])
         runner = CliRunner()
-        result = runner.invoke(show.dhcp_relay_helper.commands["ipv6"], [])
-        assert result.output == expected_table
+        table = MockConfigDb.get_table(self, "DHCP_RELAY")
+        result = show.get_data(table, "Vlan1000")
+        assert result == expected_table
 
