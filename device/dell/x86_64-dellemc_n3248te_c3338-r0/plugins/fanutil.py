@@ -3,8 +3,7 @@
 # Platform-specific FAN status interface for SONiC
 #
 
-import commands
-import os
+import subprocess
 import sys
 
 SENSORS_CMD = "docker exec -i pmon /usr/bin/sensors"
@@ -48,9 +47,9 @@ class FanUtil(FanBase):
     def get_speed(self, idx):
         dockerenv = self.isDockerEnv()
         if not dockerenv:
-            status, cmd_output = commands.getstatusoutput(SENSORS_CMD)
+            status, cmd_output = subprocess.getstatusoutput(SENSORS_CMD)
         else :
-            status, cmd_output = commands.getstatusoutput(DOCKER_SENSORS_CMD)
+            status, cmd_output = subprocess.getstatusoutput(DOCKER_SENSORS_CMD)
 
         if status:
             print('Failed to execute sensors command')

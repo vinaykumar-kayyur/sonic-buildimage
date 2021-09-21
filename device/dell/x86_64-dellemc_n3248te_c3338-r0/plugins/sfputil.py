@@ -5,10 +5,6 @@
 
 try:
     import time
-    import datetime
-    import os
-    import struct
-    import traceback
     from socket import *
     from select import *
     from sonic_sfp.sfputilbase import SfpUtilBase

@@ -2,7 +2,7 @@
 
 ########################################################################
 #
-# DELLEMC Z9332F
+# DELLEMC N3248TE
 #
 # Abstract base class for implementing a platform-specific class with
 # which to interact with a hardware watchdog module in SONiC
@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -138,8 +136,6 @@ class Watchdog(WatchdogBase):
             self.armed_time = self._get_time()
             self.timeout = seconds
             return seconds
-
-        return -1
 
     def disarm(self):
         """

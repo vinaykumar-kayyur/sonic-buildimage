@@ -64,7 +64,6 @@ def main(argv):
     opts = ''
     val = ''
     choice = ''
-    resouce = ''
     offset = ''
 
     try:

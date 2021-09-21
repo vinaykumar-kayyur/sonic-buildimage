@@ -28,7 +28,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self.eeprom_tlv_dict = dict()
         try:
             self.eeprom_data = self.read_eeprom()
-        except:
+        except Exception:
             self.eeprom_data = "N/A"
             raise RuntimeError("Eeprom is not Programmed")
 

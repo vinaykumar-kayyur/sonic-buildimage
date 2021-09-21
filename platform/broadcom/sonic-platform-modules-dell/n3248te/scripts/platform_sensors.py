@@ -5,9 +5,6 @@
 #   * PSU
 
 
-import os
-import sys
-import logging
 import subprocess
 
 output = ""

@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import os
-    import re
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
 

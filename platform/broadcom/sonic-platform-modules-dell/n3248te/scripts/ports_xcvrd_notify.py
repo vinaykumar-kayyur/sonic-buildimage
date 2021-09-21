@@ -6,9 +6,6 @@
 """
 
 try:
-    import os
-    import sys
-    import time
     from datetime import datetime
     from swsscommon import swsscommon
     from sonic_py_common import daemon_base, logger
@@ -89,9 +86,6 @@ def main():
     helper_logger.log_notice("Start port_notify")
     # Connect to APP_DB and create transceiver dom info table
     appl_db = daemon_base.db_connect("APPL_DB")
-    cst = swsscommon.SubscriberStateTable(appl_db, swsscommon.APP_PORT_TABLE_NAME)
-
-    app_port_tbl = swsscommon.ProducerStateTable(appl_db, swsscommon.APP_PORT_TABLE_NAME)
 
     app_status_port_tbl = swsscommon.ProducerStateTable(appl_db,
                                                      swsscommon.APP_PORT_APP_STATUS_TABLE_NAME)

@@ -10,7 +10,6 @@
 
 try:
     import os
-    import select
     import sys
     import time
     from sonic_platform_base.chassis_base import ChassisBase
@@ -132,7 +131,7 @@ class Chassis(ChassisBase):
         try:
            with open(cpld_reg_file, 'w') as fd:
                 rv = fd.write(str(value))
-        except:
+        except Exception:
             rv = 'ERR'
 
         return rv
