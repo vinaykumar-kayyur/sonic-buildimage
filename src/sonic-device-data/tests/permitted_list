@@ -257,3 +257,7 @@ appl_param_module_id
 serdes_lane_config_cl72_auto_polarity_en
 serdes_lane_config_cl72_restart_timeout_en
 bist_enable
+ifa_enable
+port_gmii_mode
+phy_force_firmware_load
+phy_pcs_repeater
