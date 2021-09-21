@@ -110,11 +110,11 @@ class Chassis(ChassisBase):
             34: 2,
             }
 
-    reboot_reason_dict = { 0x11: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Power on reset"),
+    reboot_reason_dict = { 0x11: (ChassisBase.REBOOT_CAUSE_POWER_LOSS, "Power on reset"),
                            0x22: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU warm reset"),
                            0x33: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU cold reset"),
                            0x66: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "GPIO watchdog reset"),
-                           0x77: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Power cycle reset"),
+                           0x77: (ChassisBase.REBOOT_CAUSE_POWER_LOSS, "Power cycle reset"),
                            0x88: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "CPLD watchdog reset")
                         }
 
@@ -269,6 +269,15 @@ class Chassis(ChassisBase):
             A string containing the hardware serial number for this chassis.
         """
         return self._eeprom.serial_number_str()
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()
 
     def get_system_eeprom_info(self):
         """
