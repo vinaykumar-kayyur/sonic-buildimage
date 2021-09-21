@@ -13,7 +13,7 @@
 
 import sys
 import logging
-import commands
+import subprocess
 
 S5224F_MAX_FAN_TRAYS = 4
 S5224F_MAX_PSUS = 2
@@ -38,7 +38,7 @@ def ipmi_sensor_dump():
 
     global ipmi_sdr_list
     ipmi_cmd = IPMI_SENSOR_DATA
-    status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
+    status, ipmi_sdr_list = subprocess.getstatusoutput(ipmi_cmd)
 
     if status:
         logging.error('Failed to execute:' + ipmi_sdr_list)
@@ -47,7 +47,7 @@ def ipmi_sensor_dump():
 # Fetch a Fan Status
 
 def get_fan_status(fan_id):
-    ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_FAN_PRESENCE.format(fan_id))
+    ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_FAN_PRESENCE.format(fan_id))
     if ret_status:
         logging.error('Failed to execute : %s'%IPMI_FAN_PRESENCE.format(fan_id))
         sys.exit(0)
@@ -75,7 +75,7 @@ def get_pmc_register(reg_name):
 #Fetch FRU Data for given fruid
 def get_psu_airflow(psu_id):
     fru_id = 'PSU' + str(psu_id) + '_fru'
-    ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_FRU)
+    ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_FRU)
     if ret_status:
         logging.error('Failed to execute ipmitool: '+ IPMI_FRU)
         sys.exit(0)
@@ -89,11 +89,11 @@ def get_psu_airflow(psu_id):
 
 # Fetch FRU on given offset
 def fetch_raw_fru(dev_id, offset):
-    ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_RAW_STORAGE_READ.format(dev_id))
+    ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_RAW_STORAGE_READ.format(dev_id))
     if ret_status:
         logging.error('Failed to execute ipmitool :' + IPMI_RAW_STORAGE_READ.format(dev_id))
         sys.exit(0)
-    return int((ipmi_cmd_ret.splitlines()[offset/16]).split(' ')[(offset%16+1)])
+    return int((ipmi_cmd_ret.splitlines()[int(offset/16)]).split(' ')[(int(offset%16)+1)])
 
 def get_fan_airflow(fan_id):
     Airflow_Direction = ['Exhaust', 'Intake']
@@ -119,7 +119,9 @@ def print_temperature_sensors():
     print ('  CPU Temp:                       ',\
         (get_pmc_register('CPU_temp')))
 
-ret_status, ipmi_cmd_ret = commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+ret_status, ipmi_cmd_ret = subprocess.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+if ret_status:
+    logging.error("platform_sensors: Failed to set kipmid_max_busy_us to 0")
 ipmi_sensor_dump()
 
 print_temperature_sensors()
@@ -210,9 +212,9 @@ def get_psu_presence(index):
     ret_status = 1
 
     if index == 1:
-       ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
+       ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
     elif index == 2:
-       ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
+       ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
 
     if ret_status:
         logging.error('Failed to execute ipmitool :' + IPMI_PSU1_DATA_DOCKER)
@@ -232,9 +234,9 @@ def get_psu_status(index):
     ipmi_cmd_ret = 'f'
 
     if index == 1:
-       ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
+       ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
     elif index == 2:
-       ret_status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
+       ret_status, ipmi_cmd_ret = subprocess.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
 
     if ret_status:
         logging.error('Failed to execute ipmitool : ' + IPMI_PSU2_DATA_DOCKER)
@@ -314,4 +316,6 @@ for psu in range(1, S5224F_MAX_PSUS + 1):
 print ('\n    Total Power:                     ',\
     get_pmc_register('PSU_Total_watt'))
 
-ret_status, ipmi_cmd_ret = commands.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+ret_status, ipmi_cmd_ret = subprocess.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+if ret_status:
+    logging.error("platform_sensors: Failed to set kipmid_max_busy_us to 1000")
