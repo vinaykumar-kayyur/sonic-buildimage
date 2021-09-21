@@ -1,5 +1,3 @@
-from unittest.mock import call
-
 TEST_DATA = [ 
     [
         "DHCPv6_Helpers",

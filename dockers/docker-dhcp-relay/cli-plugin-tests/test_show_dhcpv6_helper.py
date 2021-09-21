@@ -1,5 +1,3 @@
-import sys
-import os
 import pytest
 sys.path.append('../cli/show/plugins/')
 import show_dhcpv6_helper as show
