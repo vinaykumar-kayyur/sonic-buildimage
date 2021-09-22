@@ -236,7 +236,6 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        sfp = None
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
 
