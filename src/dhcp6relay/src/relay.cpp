@@ -18,6 +18,7 @@ struct event *server_listen_event;
 struct event_base *base;
 struct event *ev_sigint;
 struct event *ev_sigterm;
+static std::string counter_table = "DHCPv6_COUNTER_TABLE|";
 
 /* DHCPv6 filter */
 /* sudo tcpdump -dd "ip6 dst ff02::1:2 && udp dst port 547" */
@@ -543,11 +544,23 @@ void callback(evutil_socket_t fd, short event, void *arg) {
 
     auto msg = parse_dhcpv6_hdr(current_position);
     counters[msg->msg_type]++;
-    update_counter(config->db, config->counterVlan, msg->msg_type);
+    std::string counterVlan = counter_table;
+    update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
 
     relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
 }
 
+/**
+ * @code                void server_callback(evutil_socket_t fd, short event, void *arg);
+ * 
+ * @brief               callback for libevent that is called everytime data is received at the server socket
+ *
+ * @param fd            filter socket
+ * @param event         libevent triggered event  
+ * @param arg           callback argument provided by user
+ *
+ * @return              none
+ */
 void server_callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
     sockaddr_in6 from;
@@ -560,9 +573,9 @@ void server_callback(evutil_socket_t fd, short event, void *arg) {
     }
 
     auto msg = parse_dhcpv6_hdr(message_buffer);
-
     counters[msg->msg_type]++;
-    update_counter(config->db, config->counterVlan, msg->msg_type);
+    std::string counterVlan = counter_table;
+    update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
     if (msg->msg_type == DHCPv6_MESSAGE_TYPE_RELAY_REPL) {
         relay_relay_reply(config->local_sock, message_buffer, data, config);
     }
@@ -670,9 +683,8 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         int index = if_nametoindex(ifname);
         config.db = db;
 
-        config.counterVlan = "DHCPv6_COUNTER_TABLE|";
-        config.counterVlan.append(ifname);
-        initialize_counter(config.db, config.counterVlan);
+        std::string counterVlan = counter_table;
+        initialize_counter(config.db, counterVlan.append(config.interface));
 
         filter = sock_open(index, &ether_relay_fprog);
 

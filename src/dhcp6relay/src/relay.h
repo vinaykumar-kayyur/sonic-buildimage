@@ -49,7 +49,6 @@ struct relay_config {
     std::vector<std::string> servers;
     std::vector<sockaddr_in6> servers_sock;
     bool is_option_79;
-    std::string counterVlan;
 };
 
 
