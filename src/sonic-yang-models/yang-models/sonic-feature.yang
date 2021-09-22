@@ -3,7 +3,7 @@ module sonic-feature{
     yang-version 1.1;
 
     namespace "http://github.com/Azure/sonic-feature";
-    prefix port;
+    prefix feature;
 
     import sonic-types {
         prefix stypes;
@@ -31,32 +31,36 @@ module sonic-feature{
                 leaf state {
                     description "state of the feature";
                     type stypes:feature_state;
+                    default "enabled"
                 }
 
                 leaf auto_restart {
                     type stypes:feature_state;
-
+                    default "enabled"
                 }
 
                 leaf has_timer {
                     description "This configuration identicates if there is
                                 timer associated to this feature";
-                    type boolean;
-                    default false;
+                    type string;
+                    pattern "True|False";
+                    default "False";
                 }
 
                 leaf has_global_scope {
                     description "This configuration identicates there will only one service
                                 spawned for the device";
-                    type boolean;
-                    default false;
+                    type string;
+                    pattern "True|False";
+                    default "False";
                 }
 
                 leaf has_per_asic_scope {
                     description "This configuration identicates there will only one service
                                 spawned per asic";
-                    type boolean;
-                    default false;
+                    type string;
+                    pattern "True|False";
+                    default "False";
                 }
 
                 leaf high_mem_alert {
