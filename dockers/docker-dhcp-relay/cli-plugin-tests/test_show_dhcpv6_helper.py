@@ -1,4 +1,6 @@
 import pytest
+import sys
+import os
 sys.path.append('../cli/show/plugins/')
 import show_dhcpv6_helper as show
 from click.testing import CliRunner

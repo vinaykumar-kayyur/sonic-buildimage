@@ -1,8 +1,6 @@
 import click
 from tabulate import tabulate
 from swsscommon.swsscommon import ConfigDBConnector
-import os
-import sys
 
 import utilities_common.cli as clicommon
 
