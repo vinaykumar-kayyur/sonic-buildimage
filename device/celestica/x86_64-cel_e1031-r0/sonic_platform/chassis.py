@@ -240,13 +240,7 @@ class Chassis(ChassisBase):
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
 
-        try:
-            # The index will start from 1
-            sfp = self._sfp_list[index-1]
-        except IndexError:
-            print("SFP index {} out of range (1-{})\n".format(
-                index, len(self._sfp_list)))
-        return sfp
+        return super(Chassis, self).get_sfp(index - 1)
 
     ##############################################################
     ################## ThermalManager methods ####################
