@@ -65,6 +65,7 @@ init:
 
 #
 # Function to invoke target $@ in Makefile.work with proper BLDENV
+# Function to invoke target $@ in Makefile.work with proper BLDENV
 #
 define make_work
 	@echo "+++ Making $@ +++"
