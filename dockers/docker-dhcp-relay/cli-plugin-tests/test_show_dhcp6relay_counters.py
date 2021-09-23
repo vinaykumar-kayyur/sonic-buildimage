@@ -2,7 +2,7 @@ import sys
 import os
 from unittest import mock
 sys.path.append('../cli/show/plugins/')
-import show_dhcp6relay_counters as show
+import show_dhcp_relay as show
 
 from click.testing import CliRunner
 

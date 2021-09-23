@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 sys.path.append('../cli/show/plugins/')
-import show_dhcpv6_helper as show
+import show_dhcp_relay as show
 from click.testing import CliRunner
 from swsscommon import swsscommon
 from mock_config import TEST_DATA
