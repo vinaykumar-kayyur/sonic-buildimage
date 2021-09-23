@@ -1,0 +1,10 @@
+# docker image for docker-ptf
+
+DOCKER_PTF = docker-ptf.gz
+$(DOCKER_PTF)_PATH = $(DOCKERS_PATH)/docker-ptf
+$(DOCKER_PTF)_DEPENDS += $(LIBTHRIFT_0_13_0) $(PYTHON_THRIFT_0_13_0) $(PTF) $(PYTHON_SAITHRIFT)
+SONIC_DOCKER_IMAGES += $(DOCKER_PTF)
+
+ifneq ($(ENABLE_SYNCD_RPC),y)
+SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_PTF)
+endif
