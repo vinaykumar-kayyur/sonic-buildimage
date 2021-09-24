@@ -1,0 +1,177 @@
+{
+    "GLOBAL_MEDIA_SETTINGS": {
+        "49": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001b4900",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "50": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4503"
+                }
+            }
+        },
+        "51": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4305",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4404"
+                }
+            }
+        },
+        "52": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "53": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001b4900",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "54": {
+            "Default": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        }
+    }, 
+    "PORT_MEDIA_SETTINGS": {
+        
+    },
+    "SPEED_MEDIA_SETTINGS": {
+        "49": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000d3800",
+                    "lane1": "0x000d3800",
+                    "lane2": "0x000d3800",
+                    "lane3": "0x000d3800"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001b4900",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "50": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000d3800",
+                    "lane1": "0x000f3800",
+                    "lane2": "0x000d3800",
+                    "lane3": "0x000d3800"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4503"
+                }
+            }
+        },
+        "51": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000f3800",
+                    "lane1": "0x00103800",
+                    "lane2": "0x000e3800",
+                    "lane3": "0x000f3800"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4305",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4404"
+                }
+            }
+        },
+        "52": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000b3000",
+                    "lane1": "0x000b3000",
+                    "lane2": "0x000b3000",
+                    "lane3": "0x000b3000"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "53": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000b3000",
+                    "lane1": "0x000b3000",
+                    "lane2": "0x000b3000",
+                    "lane3": "0x000b3000"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001b4900",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        },
+        "54": {
+            "10000": {
+                "preemphasis": {
+                    "lane0": "0x000b3000",
+                    "lane1": "0x000b3000",
+                    "lane2": "0x000b3000",
+                    "lane3": "0x000d3000"
+                }
+            },
+            "25000": {
+                "preemphasis": {
+                    "lane0": "0x001c4800",
+                    "lane1": "0x001c4800",
+                    "lane2": "0x001c4800",
+                    "lane3": "0x001c4800"
+                }
+            }
+        }
+    }
+}
