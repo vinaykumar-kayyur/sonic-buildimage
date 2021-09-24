@@ -20,6 +20,7 @@
 
 namespace test {
 class MuxManagerTest;
+class FakeMuxPort;
 }
 
 namespace mux
@@ -237,6 +238,7 @@ public:
 
 protected:
     friend class test::MuxManagerTest;
+    friend class test::FakeMuxPort;
     /**
     *@method getLinkManagerStateMachine
     *

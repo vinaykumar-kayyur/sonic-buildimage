@@ -29,6 +29,7 @@ public:
     void probePeerTor();
     void suspendTxProbes(uint32_t suspendTime_msec);
     void resumeTxProbes();
+    void sendPeerSwitchCommand();
 
 public:
     uint32_t mInitializeCallCount = 0;
@@ -37,6 +38,7 @@ public:
     uint32_t mProbePeerTorCallCount = 0;
     uint32_t mSuspendTxProbeCallCount = 0;
     uint32_t mResumeTxProbeCallCount = 0;
+    uint32_t mSendPeerSwitchCommand = 0;
 
 private:
     link_prober::LinkProberStateMachine *mLinkProberStateMachine;

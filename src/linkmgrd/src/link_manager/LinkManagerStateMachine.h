@@ -442,6 +442,24 @@ public:
     */
     void handleSuspendTimerExpiry();
 
+    /**
+    *@method handleSwitchActiveCommandCompletion
+    *
+    *@brief handle completion of sending switch command to peer ToR
+    *
+    *@return none
+    */
+    void handleSwitchActiveCommandCompletion();
+
+    /**
+    *@method handleSwitchActiveRequestEvent
+    *
+    *@brief handle switch active request from peer ToR
+    *
+    *@return none
+    */
+    void handleSwitchActiveRequestEvent();
+
 private:
     /**
     *@method updateMuxLinkmgrState
@@ -820,6 +838,19 @@ private:
     void setResumeTxFnPtr(boost::function<void ()> resumeTxFnPtr) {mResumeTxFnPtr = resumeTxFnPtr;};
 
     /**
+    *@method setSendPeerSwitchCommandFnPtr
+    *
+    *@brief set new SendPeerSwitchCommandFnPtr for the state machine. This method is used for testing
+    *
+    *@param sendPeerSwitchCommandFnPtr (in)  pointer to new  ResumeTxFnPtr
+    *
+    *@return none
+    */
+    void setSendPeerSwitchCommandFnPtr(boost::function<void ()> sendPeerSwitchCommandFnPtr) {
+        mSendPeerSwitchCommandFnPtr = sendPeerSwitchCommandFnPtr;
+    };
+
+    /**
     *@method setComponentInitState
     *
     *@brief set component inti state. This method is used for testing
@@ -867,6 +898,7 @@ private:
     boost::function<void ()> mProbePeerTorFnPtr;
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
     boost::function<void ()> mResumeTxFnPtr;
+    boost::function<void ()> mSendPeerSwitchCommandFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
     uint32_t mMuxUnknownBackoffFactor = 1;

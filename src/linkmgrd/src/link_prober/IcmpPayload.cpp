@@ -29,7 +29,8 @@ uint32_t IcmpPayload::mVersion = 0;
 //
 IcmpPayload::IcmpPayload() :
     cookie(htonl(mCookie)),
-    version(htonl(mVersion))
+    version(htonl(mVersion)),
+    command(htonl(static_cast<uint32_t> (Command::COMMAND_NONE)))
 {
     memcpy(un.uuid.data, mGuid.data, sizeof(un.uuid.data));
 }

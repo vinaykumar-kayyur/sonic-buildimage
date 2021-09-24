@@ -28,6 +28,18 @@ namespace link_prober
 {
 
 /**
+ *@enum Command
+ *
+ *@brief Command to be sent to peer device
+ */
+enum class Command: uint32_t {
+    COMMAND_NONE,
+    COMMAND_SWITCH_ACTIVE,
+
+    Count
+};
+
+/**
  *@struct IcmpPayload
  *
  *@brief Build ICMP packet to sent to server
@@ -39,6 +51,7 @@ struct IcmpPayload {
         uint64_t guid[2];
         boost::uuids::uuid uuid;
     } un;
+    uint32_t command;
 
     /**
     *@method IcmpPayload

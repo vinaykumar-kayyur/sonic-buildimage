@@ -98,4 +98,11 @@ void FakeLinkProber::resumeTxProbes()
     mResumeTxProbeCallCount++;
 }
 
+void FakeLinkProber::sendPeerSwitchCommand()
+{
+    MUXLOGINFO("");
+
+    mSendPeerSwitchCommand++;
+}
+
 } /* namespace test */

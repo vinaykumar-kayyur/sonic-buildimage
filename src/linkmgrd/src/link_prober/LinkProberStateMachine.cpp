@@ -22,6 +22,8 @@ IcmpSelfEvent LinkProberStateMachine::mIcmpSelfEvent;
 IcmpPeerEvent LinkProberStateMachine::mIcmpPeerEvent;
 IcmpUnknownEvent LinkProberStateMachine::mIcmpUnknownEvent;
 SuspendTimerExpiredEvent LinkProberStateMachine::mSuspendTimerExpiredEvent;
+SwitchActiveCommandCompleteEvent LinkProberStateMachine::mSwitchActiveCommandCompleteEvent;
+SwitchActiveRequestEvent LinkProberStateMachine::mSwitchActiveRequestEvent;
 
 //
 // ---> LinkProberStateMachine(
@@ -187,6 +189,36 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleSuspendTimerExpiry,
+        &mLinkManagerStateMachine
+    )));
+}
+
+//
+// ---> processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent);
+//
+// process LinkProberState switch active complete event
+//
+void LinkProberStateMachine::processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleSwitchActiveCommandCompletion,
+        &mLinkManagerStateMachine
+    )));
+}
+
+//
+// ---> processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
+//
+// process LinkProberState switch active request event
+//
+void LinkProberStateMachine::processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent)
+{
+    boost::asio::io_service::strand &strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleSwitchActiveRequestEvent,
         &mLinkManagerStateMachine
     )));
 }

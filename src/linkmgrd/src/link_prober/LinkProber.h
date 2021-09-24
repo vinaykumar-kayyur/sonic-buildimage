@@ -135,6 +135,15 @@ public:
     */
     void probePeerTor();
 
+    /**
+    *@method sendPeerSwitchCommand
+    *
+    *@brief send switch command to peer ToR
+    *
+    *@return none
+    */
+    void sendPeerSwitchCommand();
+
 private:
     /**
     *@method handleUpdateEthernetFrame
@@ -144,6 +153,15 @@ private:
     *@return none
     */
     void handleUpdateEthernetFrame();
+
+    /**
+    *@method handleSendSwitchCommand
+    *
+    *@brief send switch command to peer ToR
+    *
+    *@return none
+    */
+    void handleSendSwitchCommand();
 
     /**
     *@method sendHeartbeat

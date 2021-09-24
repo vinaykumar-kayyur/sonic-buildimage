@@ -65,6 +65,28 @@ public:
 };
 
 /**
+ *@class SwitchActiveCommandCompleteEvent
+ *
+ *@brief signals a SwitchActiveCommandCompleteEvent event to LinkProber state machine
+ */
+class SwitchActiveCommandCompleteEvent {
+public:
+    SwitchActiveCommandCompleteEvent() = default;
+    ~SwitchActiveCommandCompleteEvent() = default;
+};
+
+/**
+ *@class SwitchActiveRequestEvent
+ *
+ *@brief signals a SwitchActiveRequestEvent event to LinkProber state machine
+ */
+class SwitchActiveRequestEvent {
+public:
+    SwitchActiveRequestEvent() = default;
+    ~SwitchActiveRequestEvent() = default;
+};
+
+/**
  *@class LinkProberStateMachine
  *
  *@brief maintains LinkProber state machine
@@ -159,6 +181,28 @@ public:
     void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
 
     /**
+    *@method processEvent
+    *
+    *@brief process LinkProberState send switch command completion
+    *
+    *@param switchActiveCommandCompleteEvent (in)  reference to the SwitchActiveCommandCompleteEvent event
+    *
+    *@return none
+    */
+    void processEvent(SwitchActiveCommandCompleteEvent &switchActiveCommandCompleteEvent);
+
+    /**
+    *@method processEvent
+    *
+    *@brief process LinkProberState switch active request
+    *
+    *@param switchActiveRequestEvent (in)  reference to the SwitchActiveRequestEvent event
+    *
+    *@return none
+    */
+    void processEvent(SwitchActiveRequestEvent &switchActiveRequestEvent);
+
+    /**
     *@method handleMackAddressUpdate
     *
     *@brief process LinkProberState MAC address update event
@@ -241,6 +285,24 @@ public:
     */
     static SuspendTimerExpiredEvent& getSuspendTimerExpiredEvent() {return mSuspendTimerExpiredEvent;};
 
+    /**
+    *@method getSwitchActiveCommandCompleteEvent
+    *
+    *@brief getter for SwitchActiveCommandCompleteEvent object
+    *
+    *@return pointer to SwitchActiveCommandCompleteEvent object
+    */
+    static SwitchActiveCommandCompleteEvent& getSwitchActiveCommandCompleteEvent() {return mSwitchActiveCommandCompleteEvent;};
+
+    /**
+    *@method getSwitchActiveRequestEvent
+    *
+    *@brief getter for SwitchActiveRequestEvent object
+    *
+    *@return pointer to SwitchActiveRequestEvent object
+    */
+    static SwitchActiveRequestEvent& getSwitchActiveRequestEvent() {return mSwitchActiveRequestEvent;};
+
 private:
     /**
     *@method postLinkManagerEvent
@@ -258,6 +320,8 @@ private:
     static IcmpPeerEvent mIcmpPeerEvent;
     static IcmpUnknownEvent mIcmpUnknownEvent;
     static SuspendTimerExpiredEvent mSuspendTimerExpiredEvent;
+    static SwitchActiveCommandCompleteEvent mSwitchActiveCommandCompleteEvent;
+    static SwitchActiveRequestEvent mSwitchActiveRequestEvent;
 
 private:
     link_manager::LinkManagerStateMachine &mLinkManagerStateMachine;

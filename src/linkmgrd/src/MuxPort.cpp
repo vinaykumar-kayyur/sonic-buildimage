@@ -200,6 +200,8 @@ void MuxPort::handleMuxConfig(const std::string &config)
         mode = common::MuxPortConfig::Active;
     } else if (config == "manual") {
         mode = common::MuxPortConfig::Manual;
+    } else if (config == "standby") {
+        mode = common::MuxPortConfig::Standby;
     }
 
     boost::asio::io_service &ioService = mStrand.context();

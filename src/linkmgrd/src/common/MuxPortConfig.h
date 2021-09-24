@@ -33,7 +33,8 @@ public:
     enum Mode {
         Auto,
         Manual,
-        Active
+        Active,
+        Standby
     };
 
 public:
@@ -240,7 +241,7 @@ private:
     boost::asio::ip::address mBladeIpv4Address;
     std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
-    Mode mMode = Auto;
+    Mode mMode = Manual;
 };
 
 } /* namespace common */

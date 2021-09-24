@@ -384,6 +384,9 @@ void LinkManagerStateMachine::handleSwssBladeIpv4AddressUpdate(boost::asio::ip::
             mResumeTxFnPtr = boost::bind(
                 &link_prober::LinkProber::resumeTxProbes, mLinkProberPtr.get()
             );
+            mSendPeerSwitchCommandFnPtr = boost::bind(
+                &link_prober::LinkProber::sendPeerSwitchCommand, mLinkProberPtr.get()
+            );
             mComponentInitState.set(LinkProberComponent);
 
             activateStateMachine();
@@ -688,15 +691,18 @@ void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::
 void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortConfig::Mode mode)
 {
     if (mComponentInitState.all()) {
-        if (mode == common::MuxPortConfig::Mode::Active) {
-            if (ms(mCompositeState) != mux_state::MuxState::Label::Active &&
-                ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
-                CompositeState nextState = mCompositeState;
-                enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
-                switchMuxState(nextState, mux_state::MuxState::Label::Active);
-                LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
-                mCompositeState = nextState;
-            }
+        if (mode == common::MuxPortConfig::Mode::Active &&
+            ms(mCompositeState) != mux_state::MuxState::Label::Active &&
+            ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+            CompositeState nextState = mCompositeState;
+            enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
+            switchMuxState(nextState, mux_state::MuxState::Label::Active);
+            LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+            mCompositeState = nextState;
+        } else if(mode == common::MuxPortConfig::Mode::Standby &&
+                  ms(mCompositeState) != mux_state::MuxState::Label::Standby &&
+                  ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+            mSendPeerSwitchCommandFnPtr();
         } else {
             mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
             mMuxPortPtr->probeMuxState();
@@ -726,6 +732,44 @@ void LinkManagerStateMachine::handleSuspendTimerExpiry()
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
         LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+    }
+}
+
+//
+// ---> handleSwitchActiveCommandCompletion();
+//
+// handle completion of sending switch command to peer ToR
+//
+void LinkManagerStateMachine::handleSwitchActiveCommandCompletion()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (ms(mCompositeState) != mux_state::MuxState::Label::Standby &&
+        ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+        CompositeState nextState = mCompositeState;
+        enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
+        switchMuxState(nextState, mux_state::MuxState::Label::Standby);
+        LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        mCompositeState = nextState;
+    }
+}
+
+//
+// ---> handleSwitchActiveRequestEvent();
+//
+// handle switch active request from peer ToR
+//
+void LinkManagerStateMachine::handleSwitchActiveRequestEvent()
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (ms(mCompositeState) != mux_state::MuxState::Label::Active &&
+        ms(mCompositeState) != mux_state::MuxState::Label::Wait) {
+        CompositeState nextState = mCompositeState;
+        enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
+        switchMuxState(nextState, mux_state::MuxState::Label::Active);
+        LOGWARNING_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        mCompositeState = nextState;
     }
 }
 

@@ -37,6 +37,7 @@ FakeMuxPort::FakeMuxPort(
     common::MuxLogger::getInstance()->initialize(prog_name, log_filename, boost::log::trivial::debug);
     common::MuxLogger::getInstance()->setLevel(boost::log::trivial::trace);
     link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
+    mMuxPortConfig.setMode(common::MuxPortConfig::Mode::Auto);
     getLinkManagerStateMachine()->setInitializeProberFnPtr(
         boost::bind(&FakeLinkProber::initialize, mFakeLinkProber.get())
     );
@@ -53,6 +54,9 @@ FakeMuxPort::FakeMuxPort(
         boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1)
     );
     getLinkManagerStateMachine()->setResumeTxFnPtr(
+        boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
+    );
+    getLinkManagerStateMachine()->setSendPeerSwitchCommandFnPtr(
         boost::bind(&FakeLinkProber::resumeTxProbes, mFakeLinkProber.get())
     );
 }

@@ -54,7 +54,7 @@ TEST_F(LinkProberTest, InitializeSendBuffer)
     EXPECT_TRUE(ipHeader->frag_off == 0);
     EXPECT_TRUE(ipHeader->ttl == 64);
     EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
-    EXPECT_TRUE(ipHeader->check == 63687);
+    EXPECT_TRUE(ipHeader->check == 62663);
     EXPECT_TRUE(ipHeader->saddr == htonl(mFakeMuxPort.getMuxPortConfig().getLoopbackIpv4Address().to_v4().to_uint()));
     EXPECT_TRUE(ipHeader->daddr == htonl(mFakeMuxPort.getMuxPortConfig().getBladeIpv4Address().to_v4().to_uint()));
 
