@@ -1,10 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import collections
-from bitarray import bitarray
-from datetime import datetime, timedelta
-import sys
-
 
 class FantlvException(Exception):
     def __init__(self,  message='fantlverror', code=-100):
@@ -13,7 +8,7 @@ class FantlvException(Exception):
         self.code = code
         self.message = message
 
-class fan_tlv():
+class fan_tlv(object):
     HEAD_INFO = "\x01\x7e\x01\xf1"
     VERSION = 0x01
     FLAG = 0x7E
@@ -69,9 +64,11 @@ class fan_tlv():
         self._typedevtype = ""
         self._dstatus = 0
 
-    def strtoarr(self, str):
+    def strtoarr(self, string):
         s = []
-        for index in str:
+        if not isinstance(string, str):
+            return s
+        for index in string:
             s.append(index)
         return s
 
@@ -86,7 +83,7 @@ class fan_tlv():
         if len_t % 2 != 0:
             return 0
         ret = ""
-        for t in range(0, len_t / 2):
+        for t in range(0, int(len_t / 2)):
             ret += chr(int(s[2 * t:2 * t + 2], 16))
         return ret
 
@@ -137,7 +134,7 @@ class fan_tlv():
         return bin_buffer
 
     def encode(self):
-        e = []
+        pass
 
     def decode(self, e2):
         if e2[0:4] != self.HEAD_INFO:
@@ -166,7 +163,7 @@ class fan_tlv():
                 e2[tlv_index:tlv_index + 2 + ord(e2[tlv_index + 1])])
             tlv_index += ord(e2[tlv_index + 1]) + 2
             ret.append(s)
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
+        # sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
 
         return ret
 

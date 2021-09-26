@@ -5,7 +5,6 @@
 #   * PSU
 #
 import os
-import commands
 import xml.etree.ElementTree as ET
 import glob
 from fru import *
@@ -49,7 +48,7 @@ def get_pmc_register(reg_name):
     retval = retval.rstrip('\r\n')
     retval = retval.lstrip(" ")
     return retval
-    
+
 class checktype():
     def __init__(self, test1):
         self.test1 = test1
@@ -104,7 +103,7 @@ class checktype():
         fru = ipmifru()
         fru.decodeBin(retval)
         return fru
-        
+
     @staticmethod
     def printbinvalue(b):
         index = 0
@@ -119,7 +118,7 @@ class checktype():
             print "%02x " % ord(b[i]),
             index += 1
         print ""
-        
+
     @staticmethod
     def getfruValue(val):
         try:
@@ -135,7 +134,7 @@ class checktype():
             return fanpro
         except Exception as error:
             return "ERR " + str(error)
-    
+
     @staticmethod
     def getslottlvValue(val):
         try:
@@ -145,6 +144,8 @@ class checktype():
             slotpro = {}
             slottlv = fan_tlv()
             rets = slottlv.decode(binval)
+            if len(rets) == 0:
+                raise Exception("decode fan tlv fail")
             slotpro['slot_type']  = slottlv.typename
             slotpro['hw_version']  = slottlv.typehwinfo
             slotpro['sn']  = slottlv.typesn
@@ -172,13 +173,13 @@ class checktype():
 class status():
     def __init__(self, productname):
         self.productname = productname
-        
+
     @staticmethod
     def getETroot(filename):
         tree = ET.parse(filename)
         root = tree.getroot()
         return root;
-    
+
     @staticmethod
     def getDecodValue(collection, decode):
         decodes = collection.find('decode')
@@ -227,7 +228,7 @@ class status():
                 else:
                     val = ret["type"]
                 if ('bit' not in ret.keys()):
-                    bit = "0"; 
+                    bit = "0";
                 else:
                     bit = ret["bit"]
                 s = checktype.getValue(ret["location"], int(bit),int(val))
@@ -256,10 +257,10 @@ class status():
         root = status.getETroot(filename)
         for neighbor in root.iter(tagname):
             location =  neighbor.attrib["location"]
-        L=[]   
+        L=[]
         for dirpath, dirnames, filenames in os.walk(location):
-            for file in filenames :  
-                if file.endswith("input"):  
+            for file in filenames :
+                if file.endswith("input"):
                     L.append(os.path.join(dirpath, file))
             L =sorted(L,reverse=False)
         for i in range(len(L)):
@@ -270,7 +271,7 @@ class status():
             prob_t["crit"] = float(getPMCreg("%s/temp%d_crit"%(location,i+1)))/1000
             prob_t["max"] = float(getPMCreg("%s/temp%d_max"%(location,i+1)))/1000
             a.append(prob_t)
-            
+
     @staticmethod
     def getFileName():
         return  os.path.dirname(os.path.realpath(__file__)) + "/"+ CONFIG_NAME
@@ -297,11 +298,11 @@ class status():
        # _filename = "/usr/local/bin/" + status.getFileName()
         _tagname = "psu"
         status.getETValue(ret, _filename, _tagname)
-        
+
     @staticmethod
     def getcputemp(ret):
         _filename = status.getFileName()
-        _tagname = "cpus" 
+        _tagname = "cpus"
         status.getCPUValue(ret, _filename, _tagname)
 
     @staticmethod
@@ -311,4 +312,4 @@ class status():
         _tagname = "slot"
         status.getETValue(ret, _filename, _tagname)
 
-        
+

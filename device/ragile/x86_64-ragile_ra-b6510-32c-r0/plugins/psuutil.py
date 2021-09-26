@@ -3,8 +3,6 @@
 # Platform-specific PSU status interface for SONiC
 #
 
-import os.path
-
 try:
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:

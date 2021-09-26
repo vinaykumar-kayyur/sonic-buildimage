@@ -5,10 +5,7 @@
 
 try:
     import time
-    import commands
-    import re
     import os
-    import threading
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -65,7 +62,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 file_path.seek(offset)
                 read_buf = file_path.read(num_bytes)
-            except:
+            except Exception:
                 attempts += 1
                 time.sleep(0.05)
             else:
@@ -101,7 +98,7 @@ class SfpUtil(SfpUtilBase):
             return 0
 
     def _get_port_eeprom_path(self, port_num, devid):
-        sysfs_i2c_adapter_base_path = "/sys/class/i2c-adapter"
+        sysfs_i2c_adapter_base_path = ""
 
         if port_num in self.port_to_eeprom_mapping.keys():
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[port_num]
@@ -154,7 +151,7 @@ class SfpUtil(SfpUtilBase):
         try:
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except Exception:
             return None
 
         return eeprom_raw

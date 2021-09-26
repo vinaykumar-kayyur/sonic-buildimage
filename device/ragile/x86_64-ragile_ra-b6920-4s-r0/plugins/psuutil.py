@@ -3,8 +3,6 @@
 # Platform-specific PSU status interface for SONiC
 #
 
-import os.path
-
 try:
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
@@ -21,7 +19,7 @@ class PsuUtil(PsuBase):
         return 4
 
     def get_psu_status(self, index):
-        if index < 1 and index > 4:
+        if index < 1 or index > 4:
             return False
 
         path_tmp = "/sys/devices/pci0000:00/0000:00:1f.0/psu_status_"
@@ -41,7 +39,7 @@ class PsuUtil(PsuBase):
         return False
 
     def get_psu_presence(self, index):
-        if index < 1 and index > 4:
+        if index < 1 or index > 4:
             return False
 
         path_tmp = "/sys/devices/pci0000:00/0000:00:1f.0/psu_status_"

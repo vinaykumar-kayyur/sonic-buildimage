@@ -226,8 +226,8 @@ class BoardInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
-        
+
+
         for i in range(1, 11):
             valtmp = "boardextra%d" % i
             if self.data[index] != chr(0xc1):
@@ -238,7 +238,6 @@ class BoardInfoArea(BaseArea):
                 d_print("decode boardextra%d:%s" % (i, tmpval))
             else:
                 break
-        pass
 
     def recalcute(self):
         d_print("boardInfoArea version:%x" % ord(self.boardversion))
@@ -481,7 +480,7 @@ class ProductInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
+
         for i in range(1, 11):
             valtmp = "productextra%d" % i
             if self.data[index] != chr(0xc1) and index < self.size - 1:
@@ -626,7 +625,7 @@ class MultiRecordArea(BaseArea):
     pass
 
 
-class Field():
+class Field(object):
 
     def __init__(self, fieldType="ASCII", fieldData=""):
         self.fieldData = fieldData
