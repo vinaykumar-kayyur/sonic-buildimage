@@ -6,20 +6,14 @@
 
 try:
     import time
-    import subprocess
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
-    from rgutil.logutil import Logger
-    from .fan_drawer import FanDrawer
+    from sonic_platform.fan_drawer import FanDrawer
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 PORT_START = 0
-PORT_END = 127
 PORTS_IN_BLOCK = 128
-
-logger = Logger("CHASSIS", syslog=True)
 FAN_NUM_PER_DRAWER = 2
-
 
 class Chassis(PddfChassis):
     """

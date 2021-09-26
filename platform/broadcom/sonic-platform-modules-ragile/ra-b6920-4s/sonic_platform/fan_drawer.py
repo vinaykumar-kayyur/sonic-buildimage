@@ -1,8 +1,5 @@
 #
-# fan_drawer_base.py
-#
-# Abstract base class for implementing a platform-specific class with which
-# to interact with a fan drawer module in SONiC
+# fan_drawer
 #
 
 try:

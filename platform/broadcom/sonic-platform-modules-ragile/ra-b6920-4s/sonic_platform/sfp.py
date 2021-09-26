@@ -1,7 +1,22 @@
 #!/usr/bin/env python
 
 try:
-    from sonic_platform_pddf_base.pddf_sfp import *
+    #from sonic_platform_pddf_base.pddf_sfp import *
+    from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
+    from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
+    from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
+    from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
+    from sonic_platform_pddf_base.pddf_sfp import PddfSfp
+    from sonic_platform_pddf_base.pddf_sfp import SFP_VOLT_OFFSET
+    from sonic_platform_pddf_base.pddf_sfp import SFP_VOLT_WIDTH
+    from sonic_platform_pddf_base.pddf_sfp import SFP_CHANNL_MON_OFFSET
+    from sonic_platform_pddf_base.pddf_sfp import SFP_CHANNL_MON_WIDTH
+    from sonic_platform_pddf_base.pddf_sfp import SFP_TEMPE_OFFSET
+    from sonic_platform_pddf_base.pddf_sfp import SFP_TEMPE_WIDTH
+    from sonic_platform_pddf_base.pddf_sfp import QSFP_DOM_REV_OFFSET
+    from sonic_platform_pddf_base.pddf_sfp import QSFP_DOM_REV_WIDTH
+    from sonic_platform_pddf_base.pddf_sfp import QSFP_CHANNL_MON_OFFSET
+    from sonic_platform_pddf_base.pddf_sfp import QSFP_CHANNL_MON_WITH_TX_POWER_WIDTH
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -141,7 +156,8 @@ class Sfp(PddfSfp):
                 return None
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
-        except:
+        except Exception as e:
+            print("Error: Exception info: %s" % (str(e)))
             return None
 
         return eeprom_raw

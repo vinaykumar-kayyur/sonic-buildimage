@@ -347,8 +347,6 @@ fanlevel = {
     "high_speed":[3000,7000,14000]
 }
 
-fanlevel = fanlevel
-
 fanloc =[ {"name":"FAN1", "location":"2-0020/fan1_pwm" ,
           "childfans":[{"name":"FRONT ROTOR", "location":"2-0020/fan1_input"},{"name":"BACK ROTOR", "location":"2-0020/fan2_input"} ]},
           {"name":"FAN2", "location":"2-0020/fan3_pwm",
