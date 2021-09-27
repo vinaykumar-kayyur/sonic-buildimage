@@ -1,5 +1,6 @@
 from sonic_platform_base.sonic_thermal_control.thermal_manager_base import ThermalManagerBase
-from .thermal_infos import *
+# from .thermal_infos import *
+from helper import APIHelper
 
 
 class ThermalManager(ThermalManagerBase):
