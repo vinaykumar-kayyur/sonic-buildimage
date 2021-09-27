@@ -143,7 +143,7 @@ class Sfp(SfpBase):
                                'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length',
                                'nominal_bit_rate', 'specification_compliance',
-                               'vendor_date', 'vendor_oui']
+                               'type_abbrv_name', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode',
                               'tx_disable', 'tx_disable_channel', 'temperature',
@@ -274,6 +274,7 @@ class Sfp(SfpBase):
         cable_length               |INT            |cable length in m
         nominal_bit_rate           |INT            |nominal bit rate by 100Mbs
         specification_compliance   |1*255VCHAR     |specification compliance
+        type_abbrv_name            |1*255VCHAR     |type of SFP (abbreviated)
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
         application_advertisement  |1*255VCHAR     |supported applications advertisement
@@ -338,33 +339,47 @@ class Sfp(SfpBase):
             end = start + XCVR_VENDOR_DATE_WIDTH
             sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
                 sfp_interface_bulk_raw[start: end], 0)
-            transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
-            transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
-            transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
-            transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
-            transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
-                'data']['VendorDataCode(YYYY-MM-DD Lot)']['value']
-            transceiver_info_dict['connector'] = sfp_interface_bulk_data['data']['Connector']['value']
-            transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
-            transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
-            transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
+
+            transceiver_info_dict['type'] = sfp_interface_bulk_data \
+                ['data']['type']['value']
+            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data \
+                ['data']['Vendor Name']['value']
+            transceiver_info_dict['model'] = sfp_vendor_pn_data \
+                ['data']['Vendor PN']['value']
+            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data \
+                ['data']['Vendor Rev']['value']
+            transceiver_info_dict['serial'] = sfp_vendor_sn_data \
+                ['data']['Vendor SN']['value']
+            transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data \
+                ['data']['Vendor OUI']['value']
+            transceiver_info_dict['vendor_date'] = sfp_vendor_date_data \
+                ['data']['VendorDataCode(YYYY-MM-DD Lot)']['value']
+            transceiver_info_dict['connector'] = sfp_interface_bulk_data \
+                ['data']['Connector']['value']
+            transceiver_info_dict['encoding'] = sfp_interface_bulk_data \
+                ['data']['EncodingCodes']['value']
+            transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data \
+                ['data']['Extended Identifier']['value']
+            transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data \
+                ['data']['RateIdentifier']['value']
+            transceiver_info_dict['type_abbrv_name'] = sfp_interface_bulk_data \
+                ['data']['type_abbrv_name']['value']
 
             for key in sfp_cable_length_tup:
                 if key in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['cable_type'] = key
-                    transceiver_info_dict['cable_length'] = str(
-                        sfp_interface_bulk_data['data'][key]['value'])
+                    transceiver_info_dict['cable_length'] = \
+                        str(sfp_interface_bulk_data['data'][key]['value'])
 
             for key in sfp_compliance_code_tup:
                 if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
-                    compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
-            transceiver_info_dict['specification_compliance'] = str(
-                compliance_code_dict)
+                    compliance_code_dict[key] = sfp_interface_bulk_data \
+                        ['data']['Specification compliance']['value'][key]['value']
 
-            transceiver_info_dict['nominal_bit_rate'] = str(
-                sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
+            transceiver_info_dict['specification_compliance'] = \
+                str(compliance_code_dict)
+            transceiver_info_dict['nominal_bit_rate'] = \
+                str(sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
             transceiver_info_dict['application_advertisement'] = 'N/A'
 
         return transceiver_info_dict
@@ -799,6 +814,9 @@ class Sfp(SfpBase):
         Returns: 
             A boolean, True if tx_disable is set successfully, False if not
         """
+        if self.sfp_type == COPPER_TYPE:
+            return False
+        
         if smbus_present == 0:  # if called from sfputil outside of pmon
             cmdstatus, register = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
             if cmdstatus:
@@ -888,7 +906,7 @@ class Sfp(SfpBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        name = sfputil_helper.logical[self.index-1] or "Unknown"
         return name
 
     def get_presence(self):
