@@ -1274,7 +1274,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['FLEX_COUNTER_TABLE'] = {
         'ACL': {
             'FLEX_COUNTER_STATUS': 'enable',
-            'FLEX_COUNTER_DELAY_STATUS': 'false',
+            'FLEX_COUNTER_DELAY_STATUS': 'true',
             'POLL_INTERVAL': '10000'
         }
     }
