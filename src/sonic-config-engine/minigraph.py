@@ -1271,6 +1271,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+    results['FLEX_COUNTER_TABLE'] = {
+        'ACL': {
+            'FLEX_COUNTER_STATUS': 'enable',
+            'FLEX_COUNTER_DELAY_STATUS': 'false',
+            'POLL_INTERVAL': '10000'
+        }
+    }
 
     cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
     if cluster:
