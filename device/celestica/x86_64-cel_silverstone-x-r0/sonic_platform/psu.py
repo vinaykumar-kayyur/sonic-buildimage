@@ -9,7 +9,6 @@
 #############################################################################
 
 import os
-import sonic_platform
 import subprocess
 import sys
 import re
@@ -53,8 +52,6 @@ class Psu(PsuBase):
 
         self.psu1_id = "0x3a"
         self.psu2_id = "0x3b"
-
-
         self.dx010_psu_gpio = [
             {'base': self.__get_gpio_base()},
             {'prs': 27, 'status': 22},
@@ -64,7 +61,7 @@ class Psu(PsuBase):
         self.i2c_addr = PSU_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = HWMON_PATH.format(self.i2c_num, self.i2c_addr)
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
-            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
+            fan = Fan(fan_index, 0, True, self.index)
             self._fan_list.append(fan)
 
     def __search_file_by_contain(self, directory, search_str, file_start):

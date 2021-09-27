@@ -347,6 +347,7 @@ class Chassis(ChassisBase):
         fan_dict = {}
         change_dict = {'fan':{}, 'sfp':{}}
         port = self.port_start
+        fan = self.fan_start
         forever = False
         change_event = False
 
@@ -355,13 +356,12 @@ class Chassis(ChassisBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print 'get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout
+            print('get_transceiver_change_event:time wrap / invalid timeout value', timeout)
 
             return False, {} # Time wrap or possibly incorrect timeout
         while timeout >= 0:
@@ -389,8 +389,7 @@ class Chassis(ChassisBase):
             value = self.get_fan_status()
             if value != self.fan_init_status:
                 changed_fans = self.fan_init_status ^ value
-                while fan >= self.fan_start and fan <= self.fan_end:
-
+                while self.fan_start <= fan <= self.fan_end:
                     # Mask off the bit corresponding to our port
                     mask = (1 << fan)
 
@@ -421,7 +420,7 @@ class Chassis(ChassisBase):
                     if timeout > 0:
                         time.sleep(timeout)
                     return True, change_dict
-        print "get_transceiver_change_event: Should not reach here."
+        print("get_transceiver_change_event: Should not reach here.")
         return False, change_dict
     
     
