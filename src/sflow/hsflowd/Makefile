@@ -2,8 +2,13 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = $(HSFLOWD)
-DERIVED_TARGET = $(HSFLOWD_DBG)
+DEBUG_TARGETS = $(HSFLOWD_DBG)
+DERIVED_TARGET =
+
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -fr ./host-sflow

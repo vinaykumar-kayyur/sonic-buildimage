@@ -2,8 +2,13 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = $(LIBYANG)
-DERIVED_TARGETS = $(LIBYANG_DEV) $(LIBYANG_DBG) $(LIBYANG_PY2) $(LIBYANG_PY3) $(LIBYANG_CPP)
+DEBUG_TARGETS = $(LIBYANG_DBG)
+DERIVED_TARGETS = $(LIBYANG_DEV) $(LIBYANG_PY2) $(LIBYANG_PY3) $(LIBYANG_CPP)
+
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
         # Obtaining the libyang

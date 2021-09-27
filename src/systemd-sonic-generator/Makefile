@@ -7,11 +7,15 @@ LFLAGS=-lpthread -lboost_filesystem -lboost_system -lgtest
 
 BINARY = systemd-sonic-generator
 MAIN_TARGET = $(BINARY)_1.0.0_$(CONFIGURED_ARCH).deb
+DEBUG_TARGETS = $(BINARY)-dbgsym_1.0.0_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	mv ../$(MAIN_TARGET) $(DEST)/
-	rm ../$(BINARY)-* ../$(BINARY)_*
+	rm ../$(BINARY)_*
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+	rm ../$(DEBUG_TARGETS)
+endif
 
 $(BINARY): systemd-sonic-generator.c
 	rm -f ./systemd-sonic-generator
