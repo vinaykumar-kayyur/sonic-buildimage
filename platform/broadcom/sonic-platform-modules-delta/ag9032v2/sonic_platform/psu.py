@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ########################################################################
 # Delta AG9032V2
@@ -22,10 +22,9 @@ class Psu(PsuBase):
     def __init__(self, index):
         PsuBase.__init__(self)
         self.index = index + 1
-
+        fan_index = self.index
         # Passing True to specify it is a PSU fan
-        self._fan_list.append(Fan(fan_index=self.index, psu_fan=True,
-                              dependency=self))
+        self._fan_list.append(Fan(0, fan_index, True))
 
     def get_name(self):
         """

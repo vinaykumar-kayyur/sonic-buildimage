@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #############################################################################
 # Delta AG9032V2
@@ -9,11 +9,9 @@
 # - specific encoder/decoder if there is special need
 #############################################################################
 try:
-    import os.path
     from sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 

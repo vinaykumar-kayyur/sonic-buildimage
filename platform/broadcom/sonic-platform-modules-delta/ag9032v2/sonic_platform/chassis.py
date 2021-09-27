@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #############################################################################
 #
@@ -8,15 +8,14 @@
 #############################################################################
 
 try:
-    import time
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
     from sonic_platform.thermal import Thermal
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.sfp import Sfp
+    from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -78,11 +77,11 @@ class Chassis(ChassisBase):
         self._eeprom = Eeprom()
 
         # Initialize FAN
-        for i in range(0, MAX_AG9032V2_FANTRAY):
-            fandrawer = FanDrawer(i)
-            self._fan_drawer_list.append(fandrawer)
-            self._fan_list.extend(fandrawer._fan_list)
-        self._num_fans=MAX_AG9032V2_FANTRAY * MAX_AG9032V2_FAN
+        for i in range(MAX_AG9032V2_FANTRAY):
+            fan_drawer = FanDrawer(i)
+            fan = Fan(i, 0, False)
+            fan_drawer._fan_list.append(fan)
+            self._fan_drawer_list.append(fan_drawer)
 
         # Initialize PSU
         for i in range(MAX_AG9032V2_PSU):

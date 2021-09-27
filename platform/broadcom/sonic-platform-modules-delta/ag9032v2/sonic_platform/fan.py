@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ########################################################################
 # Delta AG9032V2
@@ -16,7 +16,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 class Fan(FanBase):
-    def __init__(self, fantray_index=1, fan_index=1, psu_fan=False, dependency=None):
+    def __init__(self, fantray_index, fan_index, psu_fan):
         FanBase.__init__(self)
         self.is_psu_fan = psu_fan
         if not self.is_psu_fan:

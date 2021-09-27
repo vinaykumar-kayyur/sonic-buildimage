@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ########################################################################
 # Delta AG9032V2
@@ -14,7 +14,6 @@ try:
     from sonic_platform_base.thermal_base import ThermalBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
 
 class Thermal(ThermalBase):
     THERMAL_NAME = (
