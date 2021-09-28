@@ -667,8 +667,8 @@
         {
             "attr_list":
             [
-                {"attr_name":"amber", "descr": "Amber" , "bits" : "5:4",  "value" : "0x0", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
-                {"attr_name":"off", "descr": "Off" , "bits" : "5:4",  "value" : "0x1", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"}
+                {"attr_name":"STATUS_LED_COLOR_AMBER", "descr": "Amber" , "bits" : "5:4",  "value" : "0x0", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
+                {"attr_name":"STATUS_LED_COLOR_OFF", "descr": "Off" , "bits" : "5:4",  "value" : "0x1", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"}
                 
             ]
         }
@@ -681,9 +681,9 @@
          {
              "attr_list":
              [
-                 {"attr_name":"green", "descr": "Green" , "bits" : "3:2", "value" : "0x2", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
-                 {"attr_name":"amber", "descr": "Amber" , "bits" : "3:2", "value" : "0x1", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
-                 {"attr_name":"off",   "descr": "Off" , "bits" : "3:2", "value" : "0x3", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"}
+                 {"attr_name":"STATUS_LED_COLOR_GREEN", "descr": "Green" , "bits" : "3:2", "value" : "0x2", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
+                 {"attr_name":"STATUS_LED_COLOR_AMBER", "descr": "Amber" , "bits" : "3:2", "value" : "0x1", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"},
+                 {"attr_name":"STATUS_LED_COLOR_OFF",   "descr": "Off" , "bits" : "3:2", "value" : "0x3", "swpld_addr" : "0x60", "swpld_addr_offset" : "0x0A"}
              ]
         }
     }
