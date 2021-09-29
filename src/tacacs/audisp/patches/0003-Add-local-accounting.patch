@@ -1,0 +1,99 @@
+From 993ca93d5a58f60f5ca21a45db276c97288c8c60 Mon Sep 17 00:00:00 2001
+From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
+Date: Wed, 29 Sep 2021 16:18:29 +0800
+Subject: [PATCH 3/3] Add local accounting.
+
+---
+ audisp-tacplus/Makefile.am        |  2 +-
+ audisp-tacplus/audisp-tacplus.c   | 11 ++++++++++-
+ audisp-tacplus/local_accounting.c | 19 +++++++++++++++++++
+ audisp-tacplus/local_accounting.h |  7 +++++++
+ 4 files changed, 37 insertions(+), 2 deletions(-)
+ create mode 100644 audisp-tacplus/local_accounting.c
+ create mode 100644 audisp-tacplus/local_accounting.h
+
+diff --git a/audisp-tacplus/Makefile.am b/audisp-tacplus/Makefile.am
+index bc92783..f5c6a7c 100644
+--- a/audisp-tacplus/Makefile.am
++++ b/audisp-tacplus/Makefile.am
+@@ -4,7 +4,7 @@
+ EXTRA_DIST = ChangeLog README audisp_tacplus.spec \
+ 	audisp-tac_plus.conf audisp-tacplus.conf
+ 
+-audisp_tacplus_SOURCES = audisp-tacplus.c user_secret.c regex_helper.c trace.c
++audisp_tacplus_SOURCES = audisp-tacplus.c user_secret.c regex_helper.c trace.c local_accounting.c
+ audisp_tacplus_CFLAGS = -O
+ audisp_tacplus_LDADD = -lauparse -ltacsupport -ltac
+ sbin_PROGRAMS = audisp-tacplus
+diff --git a/audisp-tacplus/audisp-tacplus.c b/audisp-tacplus/audisp-tacplus.c
+index e7fec29..2533caf 100644
+--- a/audisp-tacplus/audisp-tacplus.c
++++ b/audisp-tacplus/audisp-tacplus.c
+@@ -68,6 +68,9 @@
+ /* Remove user secret */
+ #include "user_secret.h"
+ 
++/* Local accounting */
++#include "local_accounting.h"
++
+ #define _VMAJ 1
+ #define _VMIN 0
+ #define _VPATCH 0
+@@ -511,7 +514,13 @@ static void get_acct_record(auparse_state_t *au, int type)
+      * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
+      *  unknown, and in some cases, host may be not be set.
+      */
+-    send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++    if (tacacs_ctrl & ACCOUNTING_FLAG_TACACS) {
++        send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++    }
++    
++    if (tacacs_ctrl & ACCOUNTING_FLAG_LOCAL) {
++        accounting_to_syslog(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++    }
+ 
+     if(freeloguser) {
+         free(loguser);
+diff --git a/audisp-tacplus/local_accounting.c b/audisp-tacplus/local_accounting.c
+new file mode 100644
+index 0000000..e700994
+--- /dev/null
++++ b/audisp-tacplus/local_accounting.c
+@@ -0,0 +1,19 @@
++#include <stdint.h>
++#include <stdarg.h>
++#include <stdio.h>
++#include <string.h>
++#include <syslog.h>
++#include <stdlib.h>
++
++#include "trace.h"
++
++/* Accounting log format. */
++#define ACCOUNTING_LOG_FORMAT "Accounting: user: %s, tty: %s, host: %s, command: %s, type: %d, task ID: %d"
++
++/* Write the accounting information to syslog. */
++void accounting_to_syslog(char *user, char *tty, char *host, char *cmdmsg, int type, uint16_t task_id)
++{
++    char accounting_buffer[MAX_LINE_SIZE];
++    snprintf(accounting_buffer, sizeof(accounting_buffer), ACCOUNTING_LOG_FORMAT, user, tty, host, cmdmsg, type, task_id);
++    syslog(LOG_INFO, "%s", accounting_buffer);
++}
+\ No newline at end of file
+diff --git a/audisp-tacplus/local_accounting.h b/audisp-tacplus/local_accounting.h
+new file mode 100644
+index 0000000..8a6ecf8
+--- /dev/null
++++ b/audisp-tacplus/local_accounting.h
+@@ -0,0 +1,7 @@
++#if !defined (LOCAL_ACCOUNTING_H)
++#define LOCAL_ACCOUNTING_H
++
++/* Write accounting information to syslog. */
++extern void accounting_to_syslog(char *user, char *tty, char *host, char *cmdmsg, int type, uint16_t task_id);
++
++#endif /* LOCAL_ACCOUNTING_H */
+\ No newline at end of file
+-- 
+2.17.1.windows.2
+
