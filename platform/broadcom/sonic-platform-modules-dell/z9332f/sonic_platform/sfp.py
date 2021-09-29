@@ -335,7 +335,7 @@ class Sfp(SfpBase):
         os.close(fd)
         return val
 
-    def write_eeprom(self, offset, num_bytes, value):
+    def _write_eeprom_bytes(self, offset, num_bytes, value):
         try:
             with open(self.eeprom_path, mode='r+b', buffering=0) as f:
                 f.seek(offset)
@@ -1264,7 +1264,7 @@ class Sfp(SfpBase):
                 # Convert our register value back to a hex string and write back
                 self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
                 if self.sfp_type == 'QSFP_DD':
-                    self.write_eeprom(26, 1, bytearray([write_val]))
+                    self._write_eeprom_bytes(26, 1, bytearray([write_val]))
         except  ValueError:
             return  False
         return True

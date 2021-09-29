@@ -105,7 +105,7 @@ class SfpUtil(SfpUtilBase):
     def port_to_eeprom_mapping(self):
         return self._port_to_eeprom_mapping
 
-    def _read_eeprom_specific_bytes(self, eeprom_path, offset, num_bytes):
+    def _read_eeprom_bytes(self, eeprom_path, offset, num_bytes):
         eeprom_raw = []
         try:
             eeprom = io.open(eeprom_path, mode="rb", buffering=0)
@@ -130,14 +130,14 @@ class SfpUtil(SfpUtilBase):
                 for n in range(0, num_bytes):
                     eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
 
-        except BaseException:
+        except (OSError, IOError):
             eeprom.close()
             return None
 
         eeprom.close()
         return eeprom_raw
 
-    def write_eeprom(self, eeprom_path, offset, num_bytes, value):
+    def _write_eeprom_bytes(self, eeprom_path, offset, num_bytes, value):
         try:
             with io.open(eeprom_path, mode='r+b', buffering=0) as f:
                 f.seek(offset)
@@ -152,7 +152,7 @@ class SfpUtil(SfpUtilBase):
         Reads optic eeprom byte to determine media type inserted
         """
         eeprom_raw = []
-        eeprom_raw = self._read_eeprom_specific_bytes(self.port_to_eeprom_mapping[port_num], MEDIA_TYPE_OFFSET, 
+        eeprom_raw = self._read_eeprom_bytes(self.port_to_eeprom_mapping[port_num], MEDIA_TYPE_OFFSET,
                      MEDIA_TYPE_WIDTH)
         if eeprom_raw is not None:
             if eeprom_raw[0] in SFP_TYPE_LIST:
@@ -261,7 +261,7 @@ class SfpUtil(SfpUtilBase):
         if port_num > self.PORTS_IN_BLOCK:
             return False
         if self.get_media_type(port_num) == 'QSFP_DD':
-            lpmode = self._read_eeprom_specific_bytes(self.port_to_eeprom_mapping[port_num], QSFP_DD_MODULE_ENC_OFFSET, 
+            lpmode = self._read_eeprom_bytes(self.port_to_eeprom_mapping[port_num], QSFP_DD_MODULE_ENC_OFFSET, 
                      QSFP_DD_MODULE_ENC_WIDTH)
             if lpmode is not None:
                 if int(lpmode[0])>>1 == 1:
@@ -272,11 +272,11 @@ class SfpUtil(SfpUtilBase):
             port_offset = 16384 + ((port_num-1) * 16)
 
             status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
-            reg_value = int(status)
-
             # Absence of status throws error
-            if (reg_value == ""):
+            if (status == ""):
                 return False
+
+            reg_value = int(status)
 
             # Mask off 4th bit for presence
             mask = (1 << 6)
@@ -318,7 +318,7 @@ class SfpUtil(SfpUtilBase):
         status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
         if self.get_media_type(port_num) == 'QSFP_DD':
-            self.write_eeprom(self.port_to_eeprom_mapping[port_num], 26, 1, bytearray([write_val]))
+            self._write_eeprom_bytes(self.port_to_eeprom_mapping[port_num], 26, 1, bytearray([write_val]))
         return True
 
     def reset(self, port_num):
