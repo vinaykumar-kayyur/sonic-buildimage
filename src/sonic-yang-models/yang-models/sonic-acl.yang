@@ -220,6 +220,32 @@ module sonic-acl {
 		}
 		/* end of container ACL_RULE */
 
+		container ACL_TABLE_TYPE {
+			list ACL_TABLE_TYPE_LIST {
+				key "ACL_TABLE_TYPE_NAME";
+
+				leaf ACL_TABLE_TYPE_NAME {
+					type string;
+				}
+
+				leaf-list matches {
+					type string;
+				}
+
+				leaf-list actions {
+					type string;
+					default "";
+				}
+
+				leaf-list bind_points {
+					type enumeration {
+						enum PORT;
+						enum LAG;
+					}
+				}
+			}
+		}
+
 		container ACL_TABLE {
 
 			description "ACL_TABLE part of config_db.json";
@@ -240,7 +266,12 @@ module sonic-acl {
 
 				leaf type {
 					mandatory true;
-					type stypes:acl_table_type;
+					type union {
+						type leafref {
+							path "/acl:sonic-acl/acl:ACL_TABLE_TYPE/acl:ACL_TABLE_TYPE_LIST/acl:ACL_TABLE_TYPE_NAME";
+						}
+						type stypes:acl_table_type;
+					}
 				}
 
 				leaf stage {

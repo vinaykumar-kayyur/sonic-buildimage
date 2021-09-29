@@ -61,5 +61,8 @@
             "key": "sonic-acl:services",
             "value": ["SNMP"]
         }
+    },
+    "ACL_TABLE_CUSTOM_TABLE_TYPE": {
+        "desc": "ACL_TABLE LOAD TABLE TYPE SUCCESSFULLY."
     }
 }
