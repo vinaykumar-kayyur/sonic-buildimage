@@ -112,6 +112,14 @@ function preStartAction()
     fi
 {%- elif docker_container_name == "snmp" %}
     $SONIC_DB_CLI STATE_DB HSET 'DEVICE_METADATA|localhost' chassis_serial_number $(decode-syseeprom -s)
+{%- elif docker_container_name == "swss" %}
+    if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
+        # Clear the FAST_REBOOT|system db setting if PLATFORM_REBOOT_CAUSE is not "software" before starting swss
+        if  [[ "$PLATFORM_REBOOT_CAUSE" != "software" ]]; then
+            # Delete the FAST_REBOOT|system db setting 
+            $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
+        fi
+    fi
 {%- else %}
     : # nothing
 {%- endif %}
@@ -200,16 +208,10 @@ function postStartAction()
 {%- elif docker_container_name == "swss" %}
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
-        # Clear the FAST_REBOOT|system db setting if PLATFORM_REBOOT_CAUSE is not "software" before starting swss
-        if  [[ "$PLATFORM_REBOOT_CAUSE" != "software" ]]; then
-            # Delete the FAST_REBOOT|system db setting 
-            $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
-        else
-            test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
-            test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss$DEV:/
-            test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss$DEV:/
-            rm -fr /host/fast-reboot
-        fi
+        test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
+        test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss$DEV:/
+        test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss$DEV:/
+        rm -fr /host/fast-reboot
     fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go
 {%- elif docker_container_name == "pmon" %}
