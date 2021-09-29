@@ -259,7 +259,9 @@ class FeatureHandler(object):
         service_conf = "[Service]\nRestart={}\n".format(restart_config)
         feature_names, feature_suffixes = self.get_feature_attribute(feature)
 
-        for feature_name in feature_names:
+        for name in feature_names:
+            dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(name)
+            auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
             if not os.path.exists(dir_name):
                 os.mkdir(dir_name)
             with open(auto_restart_conf, 'w') as cfgfile:
@@ -777,9 +779,7 @@ class KdumpCfg(object):
         kdump_conf = kdump_table.get("config", {})
         for row in self.kdump_defaults:
             value = self.kdump_defaults.get(row)
-            if kdump_conf.get(row) is not None:
-                value = kdump_conf.get(row)
-            else:
+            if not kdump_conf.get(row):
                 self.config_db.mod_entry("KDUMP", "config", {row : value})
 
     def kdump_update(self, key, data):
@@ -1084,7 +1084,7 @@ class HostConfigDaemon:
             subscriber, table = self.subscriber_map.get(fd, (None, ""))
             if not subscriber:
                 syslog.syslog(syslog.LOG_ERR,
-                        "No Subscriber object found for fd: {}, subscriber map: {}".format(fd. subscriber_map))
+                        "No Subscriber object found for fd: {}, subscriber map: {}".format(fd, subscriber_map))
                 continue
             key, op, fvs = subscriber.pop()
             # Get the registered callback
