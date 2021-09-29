@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import re
+import random
 import subprocess
 
 import yaml
@@ -516,6 +517,10 @@ def get_system_mac(namespace=None):
         last_byte = mac[-2:]
         aligned_last_byte = format(int(int(last_byte, 16) + 1), '02x')
         mac = mac[:-2] + aligned_last_byte
+    if version_info and version_info['asic_type'] == 'cisco-8000':
+        random_last_byte = format(random.randrange(1, 255), '02x')
+        mac = mac[:-2] + random_last_byte 
+
     return mac
 
 

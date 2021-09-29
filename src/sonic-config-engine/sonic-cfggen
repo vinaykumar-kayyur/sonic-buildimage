@@ -388,7 +388,8 @@ def main():
             if device_id is None:
                 print('Warning: Failed to get device ID from asic.conf file for', asic_name, file=sys.stderr)
             else:
-                hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=device_id)
+                pass
+                #hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=device_id)
 
         deep_update(data, hardware_data)
 
