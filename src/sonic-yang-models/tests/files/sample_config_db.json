@@ -880,6 +880,24 @@
             }
         },
 
+        "WARM_RESTART": {
+            "bgp": {
+                "bgp_timer": "500"
+            }
+        },
+
+        "PFC_WD": {
+            "Ethernet9": {
+               "action": "drop",
+               "detection_time": "100",
+               "restoration_time": "400"
+            }
+        },
+        "PFC_WD": {
+            "GLOBAL": {
+                "POLL_INTERVAL": "100"
+            }
+        },
         "SFLOW_COLLECTOR": {
             "collector1": {
                 "collector_ip": "10.100.12.13",
@@ -908,7 +926,6 @@
                 "agent_id": "Ethernet0"
             }
         },
-
         "AAA": {
             "authentication": {
                 "login": "local" 
@@ -925,7 +942,6 @@
                 "timeout": "10"
             }
         },
-
         "NAT_BINDINGS": {
             "bind1": {
                 "nat_pool": "pool1",
@@ -1049,6 +1065,24 @@
             "ip2me": {
                 "trap_ids": "ip2me",
                 "trap_group": "queue1_group1"
+            }
+        },
+        "LLDP": {
+            "GLOBAL": {
+                "mode": "TRANSMIT",
+                "enabled": "true",
+                "hello_time": "12",
+                "multiplier": "5",
+                "supp_mgmt_address_tlv": "true",
+                "supp_system_capabilities_tlv": "false",
+                "system_name": "sonic",
+                "system_description": "sonic-system"
+            }
+        },
+        "LLDP_PORT": {
+            "Ethernet0": {
+                "mode": "TRANSMIT",
+                "enabled": "true"
             }
         }
 

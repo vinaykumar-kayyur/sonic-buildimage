@@ -53,6 +53,10 @@ else
 fi
 sonic-cfggen -t /usr/share/sonic/templates/copp_cfg.j2 > /etc/sonic/copp_cfg.json
 
+if [ "$fake_platform" == "mellanox" ]; then
+    cp /usr/share/sonic/hwsku/sai_mlnx.profile /usr/share/sonic/hwsku/sai.profile
+fi
+
 mkdir -p /etc/swss/config.d/
 
 rm -f /var/run/rsyslogd.pid
@@ -104,6 +108,11 @@ if [ "$conn_chassis_db" == "1" ]; then
 fi
 
 /usr/bin/configdb-load.sh
+
+if [ "$HWSKU" = "brcm_gearbox_vs" ]; then
+    supervisorctl start gbsyncd
+    supervisorctl start gearsyncd
+fi
 
 supervisorctl start syncd
 
