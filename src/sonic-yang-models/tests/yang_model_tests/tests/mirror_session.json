@@ -8,23 +8,43 @@
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_DST_IP": {
         "desc": "Configurinng ERSPAN entry with invalid dst_ip",
-        "eStrKey" : "Pattern"
+        "eStrKey" : "Must"
+    },
+    "MIRROR_ERSPAN_ENTRY_WRONG_DST_IP_TYPE": {
+        "desc": "Configurinng ERSPAN entry with invalid dst_ip",
+        "eStrKey" : "When"
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_SRC_IP": {
         "desc": "Configurinng ERSPAN entry with invalid src_ip",
-        "eStrKey" : "Pattern"
+        "eStrKey" : "Must"
+    },
+    "MIRROR_ERSPAN_ENTRY_WRONG_SRC_IP_TYPE": {
+        "desc": "Configurinng ERSPAN entry with invalid src_ip",
+        "eStrKey" : "When"
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_GRE_TYPE": {
         "desc": "Configurinng ERSPAN entry with invalid GRE type",
         "eStrKey" : "Pattern"
     },
+    "MIRROR_ERSPAN_ENTRY_GRE_WRONG_TYPE": {
+        "desc": "Configurinng ERSPAN entry with invalid GRE type",
+        "eStrKey" : "When"
+    },
     "MIRROR_ERSPAN_ENTRY_WRONG_DSCP": {
         "desc": "Configurinng ERSPAN entry with invalid dscp",
         "eStr" : "Invalid dscp value"
     },
+    "MIRROR_ERSPAN_ENTRY_WRONG_DSCP_TYPE": {
+        "desc": "Configurinng ERSPAN entry with invalid dscp",
+        "eStrKey" : "When"
+    },
     "MIRROR_ERSPAN_ENTRY_WRONG_TTL": {
         "desc": "Configurinng ERSPAN entry with invalid ttl",
         "eStr": "Invalid TTL value"
+    },
+    "MIRROR_ERSPAN_ENTRY_WRONG_TTL_TYPE": {
+        "desc": "Configurinng ERSPAN entry with invalid ttl",
+        "eStrKey" : "When"
     },
     "MIRROR_ERSPAN_ENTRY_VALID_SRC_PORT": {
         "desc": "Configurinng ERSPAN entry with valid source port"
@@ -41,7 +61,14 @@
     },
     "MIRROR_SPAN_ENTRY_INVALID_DST_PORT": {
         "desc": "Configurinng SPAN entry with invalid destination ports",
-        "eStrKey" : "LeafRef"
+        "eStrKey" : "InvalidValue"
+    },
+    "MIRROR_SPAN_ENTRY_INVALID_DST_PORT_TYPE": {
+        "desc": "Configurinng SPAN entry with invalid destination ports",
+        "eStrKey" : "When"
+    },
+    "MIRROR_SPAN_ENTRY_VALID_DST_PORT_CPU": {
+        "desc": "Configurinng SPAN entry with valid destination port CPU"
     },
     "MIRROR_SPAN_ENTRY_INVALID_SRC_PORT": {
         "desc": "Configurinng SPAN entry with invalid destination ports",

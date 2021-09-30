@@ -77,20 +77,25 @@ module sonic-mirror-session {
                 }
 
                 leaf src_ip {
-                    type inet:ipv4-address;
+                    when "current()/../type = 'ERSPAN'";
+                    must "(contains(current(), '.'))";
+                    type inet:ip-address;
                     description
                         "ERSPAN source ip. This IP will be set as source ip in
                         outer header of mirrored frame ";
                 }
 
                 leaf dst_ip {
-                    type inet:ipv4-address;
+                    when "current()/../type = 'ERSPAN'";
+                    must "(contains(current(), '.'))";
+                    type inet:ip-address;
                     description
                         "ERSPAN destination ip. Mirrored frames will be routed to this destination.
                         This IP will be set as destination ip in outer header of mirrored frame ";
                 }
 
                 leaf gre_type {
+                    when "current()/../type = 'ERSPAN'";
                     type string {
                         pattern "0[xX][0-9a-fA-F]*";
                         length 1..6 {
@@ -98,11 +103,13 @@ module sonic-mirror-session {
                             error-app-tag gre-type-invalid;
                         }
                     }
+                    default 0x88be;
                     description
                         "ERSPAN outer header GRE type.";
                 }
 
                 leaf dscp {
+                    when "current()/../type = 'ERSPAN'";
                     type uint8 {
                         range "0..63" {
                             error-message "Invalid dscp value";
@@ -114,6 +121,7 @@ module sonic-mirror-session {
                 }
 
                 leaf ttl {
+                    when "current()/../type = 'ERSPAN'";
                     type uint8 {
                         range "0..63" {
                             error-message "Invalid TTL value";
@@ -131,8 +139,14 @@ module sonic-mirror-session {
                 }
 
                 leaf dst_port {
-                    type leafref {
-                        path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                    when "current()/../type = 'SPAN'";
+                    type union {
+                        type leafref {
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type string {
+                            pattern "CPU";
+                        }
                     }
                     description
                         "Destination port configuration for port mirroring(SPAN).";
