@@ -71,6 +71,11 @@ FILESYSTEM_ROOT=${FILESYSTEM_BASE}/fsroot
 ## Check if not a last stage of RFS build
 if [[ $RFS_SPLIT_LAST_STAGE != y ]]; then
 
+#FILESYSTEM_BASE=/sonic/build
+#mkdir -p ${FILESYSTEM_BASE}
+#sudo mount -t tmpfs -o size=16G tmpfs ${FILESYSTEM_BASE}
+#FILESYSTEM_ROOT=${FILESYSTEM_BASE}/fsroot
+
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
