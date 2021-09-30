@@ -307,8 +307,6 @@ RUN apt-get update && apt-get install -y \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libhiredis-dev       \
-        libnl-3-dev          \
         swig3.0              \
         libpython2.7-dev     \
         libssl-dev           \
@@ -349,6 +347,8 @@ RUN apt-get update && apt-get install -y \
         libgirepository1.0-dev \
         libsystemd-dev \
         pkg-config
+
+RUN apt-get -y build-dep openssh
 
 # Build fix for ARMHF buster libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
@@ -485,6 +485,10 @@ EXPOSE 22
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
+
+# Install dependencies for dhcp relay test 
+RUN pip3 install parameterized==0.8.1
+RUN pip3 install pyfakefs
 
 # Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
 RUN apt-get update

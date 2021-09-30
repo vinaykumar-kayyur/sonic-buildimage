@@ -37,18 +37,19 @@ QSFP_DD_PAGE0 = 0
 QSFP_DD_PAGE1 = 128
 QSFP_DD_PAGE2 = 256
 QSFP_DD_PAGE3 = 384
+QSFP_DD_PAGE17 = 2176
 QSFP_DD_DOM_CAPABILITY_OFFSET = 2
 QSFP_DD_DOM_CAPABILITY_WIDTH = 1
 QSFP_DD_TEMP_OFFSET = 14
 QSFP_DD_TEMP_WIDTH = 2
 QSFP_DD_VOLT_OFFSET = 16
 QSFP_DD_VOLT_WIDTH = 2
-QSFP_DD_TXBIAS_OFFSET = 26
+QSFP_DD_TXBIAS_OFFSET = 170
 QSFP_DD_TXBIAS_WIDTH = 16
-QSFP_DD_TXPOWER_OFFSET = 42
+QSFP_DD_TXPOWER_OFFSET = 154
 QSFP_DD_TXPOWER_WIDTH = 16
-QSFP_DD_RXPOWER_WIDTH = 58
-QSFP_DD_RXPOWER_OFFSET = 16
+QSFP_DD_RXPOWER_OFFSET = 186
+QSFP_DD_RXPOWER_WIDTH = 16
 QSFP_DD_RXLOS_OFFSET = 19
 QSFP_DD_RXLOS_WIDTH = 1
 QSFP_DD_TX_DISABLE_OFFSET = 86
@@ -278,6 +279,9 @@ class Sfp(SfpBase):
         self.qsfp_dd_Info = qsfp_dd_InterfaceId()
         self.qsfp_dd_DomInfo = qsfp_dd_Dom()
         self.qsfp_dd_app2_list = False
+        self.qsfp_dd_rxpower_supported = False
+        self.qsfp_dd_txpower_supported = False
+        self.qsfp_dd_txbias_supported = False
 
     def get_eeprom_sysfs_path(self):
         return self.eeprom_path
@@ -293,6 +297,9 @@ class Sfp(SfpBase):
                 dom_capability = self.qsfp_dd_Info.parse_dom_capability(qsfp_dom_capability_raw, 0)
                 if dom_capability['data']['Flat_MEM']['value'] == 'Off':
                     self.qsfp_dd_app2_list = True
+                    self.qsfp_dd_rxpower_supported = True
+                    self.qsfp_dd_txpower_supported = True
+                    self.qsfp_dd_txbias_supported = True
 
     def _strip_unit_from_str(self, value_str):
         match = re.match(r'(.*)C$|(.*)Volts$|(.*)mA$|(.*)dBm$', value_str)
@@ -706,6 +713,7 @@ class Sfp(SfpBase):
         Retrieves transceiver bulk status of this SFP
         """
         tx_bias_list = []
+        tx_power_list = []
         rx_power_list = []
         transceiver_dom_dict = {}
         transceiver_dom_dict = dict.fromkeys(dom_dict_keys, 'N/A')
@@ -744,7 +752,7 @@ class Sfp(SfpBase):
         rx_power_list = self.get_rx_power()
 
         if self.sfp_type == 'QSFP_DD':
-            if tx_bias_list is not None:
+            if tx_bias_list:
                 transceiver_dom_dict['tx1bias'] = tx_bias_list[0]
                 transceiver_dom_dict['tx2bias'] = tx_bias_list[1]
                 transceiver_dom_dict['tx3bias'] = tx_bias_list[2]
@@ -755,17 +763,17 @@ class Sfp(SfpBase):
                 transceiver_dom_dict['tx8bias'] = tx_bias_list[7]
 
         elif self.sfp_type == 'QSFP':
-            if tx_bias_list is not None:
+            if tx_bias_list:
                 transceiver_dom_dict['tx1bias'] = tx_bias_list[0]
                 transceiver_dom_dict['tx2bias'] = tx_bias_list[1]
                 transceiver_dom_dict['tx3bias'] = tx_bias_list[2]
                 transceiver_dom_dict['tx4bias'] = tx_bias_list[3]
         else:
-            if tx_bias_list is not None:
+            if tx_bias_list:
                transceiver_dom_dict['tx1bias'] = tx_bias_list[0]
 
         if self.sfp_type == 'QSFP_DD':
-            if rx_power_list is not None:
+            if rx_power_list:
                 transceiver_dom_dict['rx1power'] = rx_power_list[0]
                 transceiver_dom_dict['rx2power'] = rx_power_list[1]
                 transceiver_dom_dict['rx3power'] = rx_power_list[2]
@@ -776,17 +784,17 @@ class Sfp(SfpBase):
                 transceiver_dom_dict['rx8power'] = rx_power_list[7]
 
         elif self.sfp_type == 'QSFP':
-            if rx_power_list is not None:
+            if rx_power_list:
                 transceiver_dom_dict['rx1power'] = rx_power_list[0]
                 transceiver_dom_dict['rx2power'] = rx_power_list[1]
                 transceiver_dom_dict['rx3power'] = rx_power_list[2]
                 transceiver_dom_dict['rx4power'] = rx_power_list[3]
         else:
-            if rx_power_list is not None:
+            if rx_power_list:
                 transceiver_dom_dict['rx1power'] = rx_power_list[0]
 
         if self.sfp_type == 'QSFP_DD':
-            if tx_power_list is not None:
+            if tx_power_list:
                 transceiver_dom_dict['tx1power'] = tx_power_list[0]
                 transceiver_dom_dict['tx2power'] = tx_power_list[1]
                 transceiver_dom_dict['tx3power'] = tx_power_list[2]
@@ -796,14 +804,14 @@ class Sfp(SfpBase):
                 transceiver_dom_dict['tx7power'] = tx_power_list[6]
                 transceiver_dom_dict['tx8power'] = tx_power_list[7]
         elif self.sfp_type == 'QSFP':
-            if tx_power_list is not None:
+            if tx_power_list:
                 transceiver_dom_dict['tx1power'] = tx_power_list[0]
                 transceiver_dom_dict['tx2power'] = tx_power_list[1]
                 transceiver_dom_dict['tx3power'] = tx_power_list[2]
                 transceiver_dom_dict['tx4power'] = tx_power_list[3]
         else:
-             if tx_power_list is not None:
-                 transceiver_dom_dict['tx1power'] = tx_power_list[0]
+            if tx_power_list:
+                transceiver_dom_dict['tx1power'] = tx_power_list[0]
         transceiver_dom_dict['rx_los'] = rx_los
         transceiver_dom_dict['tx_fault'] = tx_fault
         transceiver_dom_dict['reset_status'] = reset_state
@@ -1064,10 +1072,15 @@ class Sfp(SfpBase):
         """
         tx_bias_list = []
         try:
-            offset = 128
+            offset = QSFP_DD_PAGE17
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
                     return None
+                if not self.qsfp_dd_txbias_supported:
+                    for lane in range(0, 8):
+                        tx_bias_list.append("N/A")
+                    return tx_bias_list
+
                 tx_bias_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXBIAS_OFFSET, QSFP_DD_TXBIAS_WIDTH)
                 tx_bias_data = self.qsfp_dd_DomInfo.parse_dom_tx_bias(tx_bias_data_raw, 0)
 
@@ -1086,8 +1099,6 @@ class Sfp(SfpBase):
                 if tx_bias_data is not None:
                     tx1_bias = self._strip_unit_from_str(tx_bias_data['data']['TXBias']['value'])
                     tx_bias_list.append(tx1_bias)
-                else:
-                    tx_bias_list.append(0.0)
 
         except (TypeError, ValueError):
             return None
@@ -1102,8 +1113,12 @@ class Sfp(SfpBase):
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
                     return None
+                if not self.qsfp_dd_rxpower_supported:
+                    for lane in range(0, 8):
+                        rx_power_list.append("N/A")
+                    return rx_power_list
 
-                offset = 128
+                offset = QSFP_DD_PAGE17
                 rx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_RXPOWER_OFFSET, QSFP_DD_TXPOWER_WIDTH)
                 rx_power_data = self.qsfp_dd_DomInfo.parse_dom_rx_power(rx_power_data_raw, 0)
 
@@ -1121,9 +1136,7 @@ class Sfp(SfpBase):
                 rx_power_data = self._get_eeprom_data('ChannelMonitor')
                 if rx_power_data is not None:
                      rx1_pw = self._strip_unit_from_str(rx_power_data['data']['RXPower']['value'])
-                else:
-                     rx1_pw = 0.0
-                rx_power_list.append(rx1_pw)
+                     rx_power_list.append(rx1_pw)
         except (TypeError, ValueError):
             return None
         return rx_power_list
@@ -1133,12 +1146,16 @@ class Sfp(SfpBase):
         Retrieves the TX power of this SFP
         """
         tx_power_list = []
-        offset = 128
         try:
             if self.sfp_type == 'QSFP_DD':
                 if self.qsfp_dd_DomInfo is None:
                     return None
+                if not self.qsfp_dd_txpower_supported:
+                    for lane in range(0, 8):
+                        tx_power_list.append("N/A")
+                    return tx_power_list
 
+                offset = QSFP_DD_PAGE17
                 tx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXPOWER_OFFSET,
                                                          QSFP_DD_TXPOWER_WIDTH)
                 tx_power_data = self.qsfp_dd_DomInfo.parse_dom_tx_power(tx_power_data_raw, 0)
@@ -1170,9 +1187,7 @@ class Sfp(SfpBase):
                 channel_monitor_data = self._get_eeprom_data('ChannelMonitor')
                 if channel_monitor_data is not None:
                     tx1_pw = self._strip_unit_from_str(channel_monitor_data['data']['TXPower']['value'])
-                else:
-                    tx1_pw = 0.0
-                tx_power_list.append(tx1_pw)
+                    tx_power_list.append(tx1_pw)
         except (TypeError, ValueError):
             return None
         return tx_power_list
@@ -1205,6 +1220,8 @@ class Sfp(SfpBase):
 
                 # Convert our register value back to a hex string and write back
                 self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+            else:
+                return False
         except  ValueError:
             return  False
         return True
