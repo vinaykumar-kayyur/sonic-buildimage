@@ -88,3 +88,8 @@ sonic-slave*/**/buildinfo
 coverage.xml
 test-results.xml
 htmlcov/
+
+# Dev tools
+.vscode/
+.idea/
+
