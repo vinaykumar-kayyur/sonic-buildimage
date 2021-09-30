@@ -7,41 +7,41 @@
                         "name": "database",
                         "state": "always_enabled",
                         "auto_restart": "always_enabled",
-                        "has_timer": "False",
-                        "has_global_scope": "True",
-                        "has_per_asic_scope": "True"
+                        "has_timer": "false",
+                        "has_global_scope": "true",
+                        "has_per_asic_scope": "true"
                     },
                     {
                         "name": "swss",
                         "state": "always_enabled",
                         "auto_restart": "always_enabled",
-                        "has_timer": "False",
-                        "has_global_scope": "False",
-                        "has_per_asic_scope": "True"
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true"
                     },
                     {
                         "name": "syncd",
                         "state": "always_enabled",
                         "auto_restart": "always_enabled",
-                        "has_timer": "False",
-                        "has_global_scope": "False",
-                        "has_per_asic_scope": "True"
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true"
                     },
                     {
                         "name": "snmp",
                         "state": "enabled",
                         "auto_restart": "enabled",
-                        "has_timer": "False",
-                        "has_global_scope": "True",
-                        "has_per_asic_scope": "False"
+                        "has_timer": "false",
+                        "has_global_scope": "true",
+                        "has_per_asic_scope": "false"
                     },
                     {
                         "name": "lldp",
                         "state": "disabled",
                         "auto_restart": "disabled",
-                        "has_timer": "False",
-                        "has_global_scope": "False",
-                        "has_per_asic_scope": "True"
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true"
                     }
                 ]
             }
@@ -55,9 +55,9 @@
                         "name": "database",
                         "state": "dontcare",
                         "auto_restart": "always_enabled",
-                        "has_timer": "False",
-                        "has_global_scope": "True",
-                        "has_per_asic_scope": "True"
+                        "has_timer": "false",
+                        "has_global_scope": "true",
+                        "has_per_asic_scope": "true"
                     }
                 ]
             }
