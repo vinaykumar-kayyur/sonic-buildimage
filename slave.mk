@@ -43,8 +43,7 @@ BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
 BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
-BUILD_WORKDIR = /sonic
-DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
+DPKG_ADMINDIR_PATH = /bld-tmp
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -1016,6 +1015,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$$($$*.gz_PATH)/Dockerfile.j2 \
 		$(call dpkg_depend,$(TARGET_PATH)/%.gz.dep)
 	$(HEADER)
+	
+	docker login -u sonicbrcm -p 4b5d1f28-6f43-41da-a794-88805ee8fc2d 
 
 	# Load the target deb from DPKG cache
 	$(call LOAD_CACHE,$*.gz,$@)
