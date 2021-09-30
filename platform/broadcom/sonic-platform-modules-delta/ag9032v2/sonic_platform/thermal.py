@@ -28,7 +28,7 @@ class Thermal(ThermalBase):
 
     def __init__(self, thermal_index):
         ThermalBase.__init__(self)
-        self.index = thermal_index + 1
+        self.thermal_index = thermal_index + 1
 
     def get_name(self):
         """
@@ -37,7 +37,7 @@ class Thermal(ThermalBase):
         Returns:
             string: The name of the thermal
         """
-        return self.THERMAL_NAME[self.index - 1]
+        return self.THERMAL_NAME[self.thermal_index - 1]
 
     def get_presence(self):
         """
@@ -84,7 +84,7 @@ class Thermal(ThermalBase):
             integer: The 1-based relative physical position in parent
             device or -1 if cannot determine the position
         """
-        return self.index
+        return self.thermal_index
 
     def is_replaceable(self):
         """
@@ -103,7 +103,7 @@ class Thermal(ThermalBase):
             nearest thousandth of one degree Celsius, e.g. 30.125
         """
         try:
-            command = ("ipmitool sdr get Sensor_Temp_{}").format(self.index)
+            command = ("ipmitool sdr get Sensor_Temp_{}").format(self.thermal_index)
             p = os.popen(command)
             content = p.read().rstrip()
             info_req = re.search(r"%s\s*:(.*)" %  "Sensor Reading", content)
@@ -124,7 +124,7 @@ class Thermal(ThermalBase):
             Celsius up to nearest thousandth of one degree Celsius,
             e.g. 30.125
         """
-        thermal_high_threshold = self.THERMAL_THRESHOLD_MAPPING[self.index]["high_threshold"]
+        thermal_high_threshold = self.THERMAL_THRESHOLD_MAPPING[self.thermal_index]["high_threshold"]
         return thermal_high_threshold / 1.0
 
     def get_low_threshold(self):
@@ -136,7 +136,7 @@ class Thermal(ThermalBase):
             Celsius up to nearest thousandth of one degree Celsius,
             e.g. 30.125
         """
-        thermal_low_threshold = self.THERMAL_THRESHOLD_MAPPING[self.index]["low_threshold"]
+        thermal_low_threshold = self.THERMAL_THRESHOLD_MAPPING[self.thermal_index]["low_threshold"]
         return thermal_low_threshold / 1.0
 
     def get_high_critical_threshold(self):
@@ -148,7 +148,7 @@ class Thermal(ThermalBase):
             thermal in Celsius up to nearest thousandth of one degree
             Celsius, e.g. 30.125
         """
-        thermal_high_crit_threshold = self.THERMAL_THRESHOLD_MAPPING[self.index]["critical_threshold"]
+        thermal_high_crit_threshold = self.THERMAL_THRESHOLD_MAPPING[self.thermal_index]["critical_threshold"]
         return thermal_high_crit_threshold / 1.0
 
     def set_high_threshold(self, temperature):

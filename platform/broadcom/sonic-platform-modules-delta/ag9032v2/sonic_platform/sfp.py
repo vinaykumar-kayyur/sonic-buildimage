@@ -288,8 +288,7 @@ class Sfp(SfpBase):
         self.eeprom_path = eeprom_path
         #port_type is the native port type and sfp_type is the transceiver type
         #sfp_type will be detected in get_transceiver_info
-        self.port_type = sfp_type
-        self.sfp_type = self.port_type
+        self.sfp_type = sfp_type
         self.qsfpInfo = sff8436InterfaceId()
         self.qsfpDomInfo = sff8436Dom()
         self.sfpInfo = sff8472InterfaceId()
@@ -1344,7 +1343,7 @@ class Sfp(SfpBase):
         """
         Retrieves the native port type
         """
-        return self.port_type
+        return self.sfp_type
 
     def get_max_port_power(self):
         """
@@ -1354,7 +1353,7 @@ class Sfp(SfpBase):
         TODO: enhance by placing power limits in config file
         ***
         """
-        return 12.0 if self.port_type == 'QSFP_DD' else 2.5
+        return 12.0 if self.sfp_type == 'QSFP_DD' else 2.5
 
     def set_media_type(self):
         """
@@ -1371,9 +1370,9 @@ class Sfp(SfpBase):
                 self.sfp_type = 'QSFP_DD'
             else:
                 #Set native port type if EEPROM type is not recognized/readable
-                self.sfp_type = self.port_type
+                self.sfp_type = self.sfp_type
         else:
-            self.sfp_type = self.port_type
+            self.sfp_type = self.sfp_type
 
         return self.sfp_type
 

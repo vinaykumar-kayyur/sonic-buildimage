@@ -22,9 +22,8 @@ class Psu(PsuBase):
     def __init__(self, index):
         PsuBase.__init__(self)
         self.index = index + 1
-        fan_index = self.index
         # Passing True to specify it is a PSU fan
-        self._fan_list.append(Fan(0, fan_index, True))
+        self._fan_list.append(Fan(0, self.index, True))
 
     def get_name(self):
         """

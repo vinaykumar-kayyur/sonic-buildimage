@@ -20,7 +20,7 @@ class FanDrawer(FanDrawerBase):
 
         FanDrawerBase.__init__(self)
         # FanTray is 1-based in Delta platforms
-        self.index = fantray_index + 1
+        self.fantray_index = fantray_index + 1
 
     def get_name(self):
         """
@@ -28,4 +28,4 @@ class FanDrawer(FanDrawerBase):
         Returns:
             string: The name of the device
         """
-        return "FanTray{}".format(self.index)
+        return "FanTray{}".format(self.fantray_index)

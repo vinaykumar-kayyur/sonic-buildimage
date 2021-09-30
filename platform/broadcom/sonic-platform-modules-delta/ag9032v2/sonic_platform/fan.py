@@ -18,22 +18,22 @@ except ImportError as e:
 class Fan(FanBase):
     def __init__(self, fantray_index, fan_index, psu_fan):
         FanBase.__init__(self)
-        self.is_psu_fan = psu_fan
-        if not self.is_psu_fan:
-            self.fantrayindex = fantray_index + 1
-            self.fanindex = fan_index + 1
+        self.psu_fan = psu_fan
+        if not self.psu_fan:
+            self.fantray_index = fantray_index + 1
+            self.fan_index = fan_index + 1
         else:
-            self.fanindex = fan_index
+            self.fan_index = fan_index
     def get_name(self):
         """
         Retrieves the fan name
         Returns:
             string: The name of the device
         """
-        if not self.is_psu_fan:
-            return "FanTray{}-Fan{}".format(self.fantrayindex, self.fanindex)
+        if not self.psu_fan:
+            return "FanTray{}-Fan{}".format(self.fantray_index, self.fan_index)
         else:
-            return "PSU{} Fan".format(self.fanindex)
+            return "PSU{} Fan".format(self.fan_index)
 
     def get_model(self):
         """
@@ -41,7 +41,7 @@ class Fan(FanBase):
         Returns:
             string: Part number of FAN
         """
-        if self.is_psu_fan:
+        if self.psu_fan:
             return None
         else:
             return 'N/A'
@@ -52,7 +52,7 @@ class Fan(FanBase):
         Returns:
             string: Serial number of FAN
         """
-        if self.is_psu_fan:
+        if self.psu_fan:
             return None
         else:
             return 'N/A'
@@ -65,11 +65,11 @@ class Fan(FanBase):
         """
         presence = False
         try:
-            if self.is_psu_fan:
+            if self.psu_fan:
                 p = os.popen("ipmitool raw 0x38 0x2 3 0x6a 0x3 1")
                 content = p.readline().rstrip()
                 reg_value = int(content,16)
-                if self.fanindex == 1:
+                if self.fan_index == 1:
                     mask = (1 << 7)
                 else:
                     mask = (1 << 3)
@@ -80,7 +80,7 @@ class Fan(FanBase):
                 p = os.popen(command)
                 content = p.readline().rstrip()
                 reg_value = int(content, 16)
-                mask = (16 >> self.fantrayindex - 1)
+                mask = (16 >> self.fantray_index - 1)
                 if reg_value & mask == 0:
                     presence = True
             p.close()
@@ -95,12 +95,12 @@ class Fan(FanBase):
             bool: True if FAN is operating properly, False if not
         """
         presence = True
-        if self.is_psu_fan:
+        if self.psu_fan:
             try:
                 p = os.popen("ipmitool raw 0x38 0x2 3 0x6a 0x3 1")
                 content = p.readline().rstrip()
                 reg_value = int(content,16)
-                if self.fanindex == 1:
+                if self.fan_index == 1:
                     mask = (1 << 6)
                 else:
                     mask = (1 << 2)
@@ -133,10 +133,10 @@ class Fan(FanBase):
             int: percentage of the max fan speed
         """
         try:
-            if self.is_psu_fan:
-                command = "ipmitool sdr get PSU{}_Fan".format(self.fanindex)
+            if self.psu_fan:
+                command = "ipmitool sdr get PSU{}_Fan".format(self.fan_index)
             else:
-                command = "ipmitool sdr get Fantray_{}_{}".format(self.fantrayindex, self.fanindex)
+                command = "ipmitool sdr get Fantray_{}_{}".format(self.fantray_index, self.fan_index)
             p = os.popen(command)
             content = p.read().rstrip()
             info_req = re.search(r"%s\s*:(.*)" %  "Sensor Reading", content)
