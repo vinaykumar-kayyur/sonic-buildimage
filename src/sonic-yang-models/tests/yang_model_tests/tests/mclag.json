@@ -6,17 +6,20 @@
 	"desc": "valid mclag configuration test with peer link ethernet"
     },
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
-	"desc": "configure mclag domain id in range"
+	"desc": "configure mclag domain id in range",
+    "eStrKey": "MCLAG Domain ID out of range"
     },
     "MCLAG_INVALID_KEEPALIVE_TEST": {
-	"desc": "configure mclag keepalive values in range"
+	"desc": "configure mclag keepalive values in range",
+    "eStrKey" : "MCLAG Domain keepalive interval out of range"
     },
     "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
-	"desc": "configure mclag session timeout in range"
+	"desc": "configure mclag session timeout in range",
+    "eStrKey" : "MCLAG Domain session timeout out of range"
     },
     "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
 	"desc": "Invalid session and keepalive multiplier",
-	"eStrKey" : "Must",
+	"eStrKey" : "MCLAG Domain keepalive interval out of range",
 	"eStr": ["session_timeout"]
     },
     "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
@@ -25,12 +28,12 @@
     },
     "MCLAG_UNIQUE_IP_DOMAIN_ABSENT_TEST": {
 	"desc": "mclag unique ip configured without domain",
-	"eStrKey" : "Must",
+	"eStrKey" : "mclag not configured",
 	"eStr": ["domain_id"]
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
 	"desc": "mclag unique ip configured without domain",
-	"eStrKey" : "Must",
+	"eStrKey" : "remove configured ip/v6 address and reconfigure after separate ip configuration",
 	"eStr": ["domain_id"]
     }
 }

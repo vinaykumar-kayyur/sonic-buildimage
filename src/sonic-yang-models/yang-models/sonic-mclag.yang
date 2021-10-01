@@ -1,16 +1,16 @@
 module sonic-mclag {
-	namespace "http://github.com/Azure/sonic-mclag";
-	prefix smclag;
-	yang-version 1.1;
+    namespace "http://github.com/Azure/sonic-mclag";
+    prefix smclag;
+    yang-version 1.1;
 
 
     import ietf-yang-types {
         prefix yang;
     }
 
-	import ietf-inet-types {
-		prefix inet;
-	}
+    import ietf-inet-types {
+        prefix inet;
+    }
 
     import sonic-types {
         prefix stypes;
@@ -21,32 +21,28 @@ module sonic-mclag {
     }
 
     import sonic-portchannel {
-        prefix spc;
+		prefix lag;
     }
 
     import sonic-vlan {
-        prefix svlan;
+        prefix vlan;
     }
 
-	organization
-		"SONiC";
+    organization
+        "SONiC";
 
-	contact
-		"SONiC";
+    contact
+        "SONiC";
 
-	description
-		"SONIC MCLAG";
+    description
+        "SONIC MCLAG";
 
-	revision 2021-07-28 {
-		description
-			"Addressed review comments";
-	}
-	revision 2019-10-01 {
-		description
-			"Initial revision.";
-	}
+    revision 2019-10-01 {
+        description
+            "Initial revision.";
+    }
 
-	container sonic-mclag {
+    container sonic-mclag {
 
         container MCLAG_DOMAIN {
 
@@ -56,7 +52,7 @@ module sonic-mclag {
 
                 leaf domain_id {
                     description  "MCLAG Domain ID";
-                     type uint16 {
+                    type uint16 {
                         range "1..4095" {
                             error-message "MCLAG Domain ID out of range";
                         }
@@ -78,7 +74,7 @@ module sonic-mclag {
                             path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
                         }
                         type leafref {
-                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
                     }
                 }
@@ -103,8 +99,8 @@ module sonic-mclag {
                     default 30;
                 }
                 must "(keepalive_interval * 3) <= session_timeout" {
-                        error-message "(keepalive interval * 3) <= session_timeout value";
-                        error-app-tag keepalive_interval-invalid;
+                    error-message "(keepalive interval * 3) <= session_timeout value";
+                    error-app-tag keepalive_interval-invalid;
                 }
             }
         }
@@ -125,7 +121,7 @@ module sonic-mclag {
                 leaf if_name {
                     description  "MCLAG interface name";
                     type leafref {
-                        path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                        path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                     }
                 }
                 leaf if_type {
@@ -147,15 +143,15 @@ module sonic-mclag {
                 }
 
                 must
-                    "count(/svlan:sonic-vlan/svlan:VLAN_INTERFACE/svlan:VLAN_INTERFACE_IPPREFIX_LIST[svlan:name=current()/if_name]) = 0" {
-                    error-message "remove configured ip/v6 address and reconfigure after separate ip configuration";
-                    error-app-tag vlan-intf-ip-invalid;
-                }
+                    "count(/vlan:sonic-vlan/vlan:VLAN_INTERFACE/vlan:VLAN_INTERFACE_IPPREFIX_LIST[vlan:name=current()/if_name]) = 0" {
+                        error-message "remove configured ip/v6 address and reconfigure after separate ip configuration";
+                        error-app-tag vlan-intf-ip-invalid;
+                    }
 
                 leaf if_name {
                     description  "Vlan interface name on which MCLAG unique ip config is done";
                     type leafref {
-                        path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                        path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                     }
                 }
                 leaf unique_ip {
