@@ -1,58 +1,23 @@
-From 953857b6a43d659f441d7d9341c003559f68ac9c Mon Sep 17 00:00:00 2001
+From 6707a9a947894cdfd0abe680812a2a62488a6d57 Mon Sep 17 00:00:00 2001
 From: liuh <liuh@microsoft.com>
-Date: Fri, 1 Oct 2021 17:56:54 +0800
+Date: Fri, 1 Oct 2021 22:49:01 +0800
 Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
 
 ---
- libtacsupport.pc.in | 11 +++++++++++
- support.c           | 12 ++++++++++--
- support.h           | 10 +++++++++-
- 3 files changed, 30 insertions(+), 3 deletions(-)
- create mode 100644 libtacsupport.pc.in
+ support.c | 10 +++++++++-
+ support.h |  8 ++++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/libtacsupport.pc.in b/libtacsupport.pc.in
-new file mode 100644
-index 0000000..1f12fe0
---- /dev/null
-+++ b/libtacsupport.pc.in
-@@ -0,0 +1,11 @@
-+prefix=@prefix@
-+exec_prefix=@exec_prefix@
-+libdir=@libdir@
-+includedir=@includedir@/libtac
-+
-+Name: libtacsupport
-+Description: TACACS+ support lib implementation
-+URL: https://github.com/jeroennijhof/pam_tacplus
-+Version: @VERSION@
-+Libs: -L${libdir} -ltacsupport
-+Cflags: -I${includedir}
 diff --git a/support.c b/support.c
-index 789533e..f7498f6 100644
+index 4be5339..27dd27a 100644
 --- a/support.c
 +++ b/support.c
-@@ -298,7 +298,7 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
-             }
-             if ((rv = getaddrinfo(server_name, (port == NULL) ? "49" : port, &hints, &servers)) == 0) {
-                 for(server = servers; server != NULL && tac_srv_no < TAC_PLUS_MAXSERVERS; server = server->ai_next) {
--                /* set server address with allocate memory */
-+                    /* set server address with allocate memory */
-                     set_tacacs_server_addr(tac_srv_no, server);
- 
-                     /* copy secret to key */
-@@ -306,7 +306,7 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
-                     tac_srv_no++;
-                 }
- 
--        /* release servers memory */
-+                /* release servers memory */
-                 freeaddrinfo(servers);
-             } else {
-                 _pam_log (LOG_ERR,
-@@ -346,6 +346,14 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
+@@ -344,7 +344,15 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
+     } else if (!strncmp (arg, "source_ip=", strlen("source_ip="))) {
          /* source ip for the packets */
          strncpy (tac_source_ip, arg + strlen("source_ip="), sizeof(tac_source_ip));
-         set_source_ip (tac_source_ip);
+-        set_source_ip (tac_source_ip);
++        set_source_ip (tac_source_ip);
 +    } else if (!strcmp (arg, "local_accounting")) {
 +        ctrl |= ACCOUNTING_FLAG_LOCAL;
 +    } else if (!strcmp (arg, "tacacs_accounting")) {
@@ -65,15 +30,12 @@ index 789533e..f7498f6 100644
          _pam_log (LOG_WARNING, "unrecognized option: %s", arg);
      }
 diff --git a/support.h b/support.h
-index 24436ad..01033b8 100644
+index 6820be3..7862e58 100644
 --- a/support.h
 +++ b/support.h
-@@ -32,8 +32,16 @@
- 
- /* account on all specified servers */
+@@ -32,6 +32,14 @@
  #define PAM_TAC_USE_FIRST_PASS 0x04
--#define PAM_TAC_TRY_FIRST_PASS 0x08
-+#define PAM_TAC_TRY_FIRST_PASS 0x08
+ #define PAM_TAC_TRY_FIRST_PASS 0x08
  
 +/* accounting setting flag */
 +#define ACCOUNTING_FLAG_LOCAL  0x10
