@@ -14,6 +14,7 @@ SONIC_INTERFACE_PREFIXES = {
     "Vlan": "Vlan",
     "Loopback": "Loopback",
     "Ethernet-Backplane": "Ethernet-BP",
+    "Ethernet-Inband": "Ethernet-IB",
     "Ethernet-SubPort": "Eth",
     "PortChannel-SubPort": "Po"
 }
@@ -49,6 +50,12 @@ def loopback_prefix():
     Retrieves the SONIC Loopback interface name prefix.
     """
     return SONIC_INTERFACE_PREFIXES["Loopback"]
+
+def inband_prefix():
+    """
+    Retrieves the SONIC recycle port inband interface name prefix.
+    """
+    return SONIC_INTERFACE_PREFIXES["Ethernet-Inband"]
 
 def physical_subinterface_prefix():
     """
