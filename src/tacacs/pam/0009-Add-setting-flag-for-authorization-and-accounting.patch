@@ -1,17 +1,26 @@
-From 6707a9a947894cdfd0abe680812a2a62488a6d57 Mon Sep 17 00:00:00 2001
+From ad4136ca0e9f37861b17e15ec69860486ac00268 Mon Sep 17 00:00:00 2001
 From: liuh <liuh@microsoft.com>
 Date: Fri, 1 Oct 2021 22:49:01 +0800
-Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
+Subject: [PATCH] Add setting flag for authorization and accounting.
 
 ---
- support.c | 10 +++++++++-
+ support.c | 12 ++++++++++--
  support.h |  8 ++++++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/support.c b/support.c
-index 4be5339..27dd27a 100644
+index 4be5339..d065023 100644
 --- a/support.c
 +++ b/support.c
+@@ -324,7 +324,7 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
+ 
+         /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
+         for(i = tac_srv_no-1; i >= 0; i--) {
+-            if (tac_srv[i].key != NULL)
++            if (tac_srv[i].key[0] != 0)
+                 break;
+ 
+             /* copy secret to key */
 @@ -344,7 +344,15 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
      } else if (!strncmp (arg, "source_ip=", strlen("source_ip="))) {
          /* source ip for the packets */
