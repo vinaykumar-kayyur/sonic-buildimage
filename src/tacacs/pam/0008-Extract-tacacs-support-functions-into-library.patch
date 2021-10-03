@@ -1,6 +1,6 @@
-From ad348a42acfa3da49ae5e2151e37668b91c6de32 Mon Sep 17 00:00:00 2001
+From 7f560af088f3398885bbcc6996dfccfb06673a59 Mon Sep 17 00:00:00 2001
 From: liuh <liuh@microsoft.com>
-Date: Fri, 1 Oct 2021 22:37:20 +0800
+Date: Sun, 3 Oct 2021 12:49:05 +0800
 Subject: [PATCH 2/3] Extract tacacs support functions into library.
 
 ---
@@ -10,8 +10,8 @@ Subject: [PATCH 2/3] Extract tacacs support functions into library.
  pam_tacplus.c       |   5 +-
  pam_tacplus.h       |   6 -
  support.c           | 332 ++++++++++++++++++++++++--------------------
- support.h           |  17 ++-
- 7 files changed, 221 insertions(+), 169 deletions(-)
+ support.h           |  16 ++-
+ 7 files changed, 220 insertions(+), 169 deletions(-)
  create mode 100644 libtacsupport.pc.in
 
 diff --git a/Makefile.am b/Makefile.am
@@ -124,7 +124,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index 29a7691..4be5339 100644
+index 2e85bc0..da7a58b 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,6 +29,7 @@
@@ -234,7 +234,7 @@ index 29a7691..4be5339 100644
 -
 -            /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
 -            for(i = tac_srv_no-1; i >= 0; i--) {
--                if (tac_srv[i].key != NULL)
+-                if (tac_srv[i].key[0] != 0)
 -                    break;
 -
 -                /* copy secret to key */
@@ -335,11 +335,11 @@ index 29a7691..4be5339 100644
 +
 +            if (*server_buf == '[' && (close_bracket = strchr(server_buf, ']')) != NULL) { /* Check for URI syntax */
 +                server_name = server_buf + 1;
-+                port = strchr(close_bracket, ':');
++                port = strrchr(close_bracket, ':');
 +                *close_bracket = '\0';
 +            } else { /* Fall back to traditional syntax */
 +                server_name = server_buf;
-+                port = strchr(server_buf, ':');
++                port = strrchr(server_buf, ':');
 +            }
 +            if (port != NULL) {
 +                *port = '\0';
@@ -347,7 +347,7 @@ index 29a7691..4be5339 100644
 +            }
 +            if ((rv = getaddrinfo(server_name, (port == NULL) ? "49" : port, &hints, &servers)) == 0) {
 +                for(server = servers; server != NULL && tac_srv_no < TAC_PLUS_MAXSERVERS; server = server->ai_next) {
-+                /* set server address with allocate memory */
++                    /* set server address with allocate memory */
 +                    set_tacacs_server_addr(tac_srv_no, server);
 +
 +                    /* copy secret to key */
@@ -355,7 +355,7 @@ index 29a7691..4be5339 100644
 +                    tac_srv_no++;
 +                }
 +
-+        /* release servers memory */
++                /* release servers memory */
 +                freeaddrinfo(servers);
 +            } else {
 +                _pam_log (LOG_ERR,
@@ -381,7 +381,7 @@ index 29a7691..4be5339 100644
 -        _pam_log(LOG_ERR, "error setting the source ip information");
 +        /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
 +        for(i = tac_srv_no-1; i >= 0; i--) {
-+            if (tac_srv[i].key != NULL)
++            if (tac_srv[i].key[0] != 0)
 +                break;
 +
 +            /* copy secret to key */
@@ -476,7 +476,7 @@ index 29a7691..4be5339 100644
 +    return ctrl;
 +}    /* _pam_parse */
 diff --git a/support.h b/support.h
-index 097c349..6820be3 100644
+index 097c349..bccc034 100644
 --- a/support.h
 +++ b/support.h
 @@ -24,7 +24,13 @@
@@ -494,17 +494,15 @@ index 097c349..6820be3 100644
  
  typedef struct {
      struct addrinfo *addr;
-@@ -32,7 +38,9 @@ typedef struct {
- } tacplus_server_t;
+@@ -33,6 +39,7 @@ typedef struct {
  
  extern tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
-+
  extern int tac_srv_no;
 +extern char *__vrfname;
  
  extern char tac_service[64];
  extern char tac_protocol[64];
-@@ -48,7 +56,12 @@ void _pam_log (int, const char *, ...);
+@@ -48,7 +55,12 @@ void _pam_log (int, const char *, ...);
  void *_xcalloc (size_t);
  char *_pam_get_user(pam_handle_t *);
  char *_pam_get_terminal(pam_handle_t *);
