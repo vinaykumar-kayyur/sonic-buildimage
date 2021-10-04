@@ -7,33 +7,33 @@
     },
     "MCLAG_INVALID_DOMAIN_IDS_TEST": {
 	"desc": "configure mclag domain id in range",
-    "eStrKey": "MCLAG Domain ID out of range"
+    "eStr": "MCLAG Domain ID out of range"
     },
     "MCLAG_INVALID_KEEPALIVE_TEST": {
 	"desc": "configure mclag keepalive values in range",
-    "eStrKey" : "MCLAG Domain keepalive interval out of range"
+    "eStr" : "MCLAG Domain keepalive interval out of range"
     },
     "MCLAG_INVALID_SESSION_TIMEOUT_TEST": {
 	"desc": "configure mclag session timeout in range",
-    "eStrKey" : "MCLAG Domain session timeout out of range"
+    "eStr" : "MCLAG Domain session timeout out of range"
     },
     "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
 	"desc": "Invalid session and keepalive multiplier",
-	"eStrKey" : "MCLAG Domain keepalive interval out of range",
+	"eStrKey" : "Must",
 	"eStr": ["session_timeout"]
     },
     "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
 	"desc": "mclag interface configured without domain",
-	"eStr": ["domain_id"]
+    "eStrKey" : "LeafRef"
     },
     "MCLAG_UNIQUE_IP_DOMAIN_ABSENT_TEST": {
 	"desc": "mclag unique ip configured without domain",
-	"eStrKey" : "mclag not configured",
+	"eStrKey" : "Must",
 	"eStr": ["domain_id"]
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
 	"desc": "mclag unique ip configured without domain",
-	"eStrKey" : "remove configured ip/v6 address and reconfigure after separate ip configuration",
+	"eStrKey" : "Must",
 	"eStr": ["domain_id"]
     }
 }
