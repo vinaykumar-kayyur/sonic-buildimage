@@ -60,26 +60,6 @@ function getMountPoint()
     echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source'])" 2>/dev/null
 }
 
-function getPlatformRebootCause()
-{
-    IMPORT_ERR="*ImportError*"
-    err=$(python -c "import sonic_platform.platform" 2>&1 > /dev/null)
-    err2=$(python3 -c "import sonic_platform.platform" 2>&1 > /dev/null)
-    output="Non-Hardware"
-    if [[ "$err" =~ "$IMPORT_ERR"]]; then
-         output=$(python3 -c "import sonic_platform.platform; p = sonic_platform.platform.Platform(); c = p.get_chassis(); hw_rc_major, hw_rc_minor = c.get_reboot_cause(); print(hw_rc_major)" 2>/dev/null)
-    fi
-    if [[ "$err2" =~ "$IMPORT_ERR"]]; then
-         output=$(python -c "import sonic_platform.platform; p = sonic_platform.platform.Platform(); c = p.get_chassis(); hw_rc_major, hw_rc_minor = c.get_reboot_cause(); print(hw_rc_major)" 2>/dev/null)
-    fi
-    if [[ "${output}" == "Non-Hardware" ]]; then
-        PlatformRebootCause='software'
-    else
-        PlatformRebootCause='hardware'
-    fi
-    echo "${PlatformRebootCause}"
-}
-
 function getBootType()
 {
     # same code snippet in files/scripts/syncd.sh
@@ -117,11 +97,20 @@ function preStartAction()
     $SONIC_DB_CLI STATE_DB HSET 'DEVICE_METADATA|localhost' chassis_serial_number $(decode-syseeprom -s)
 {%- elif docker_container_name == "swss" %}
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
-        # Clear the FAST_REBOOT|system db setting if PLATFORM_REBOOT_CAUSE is not "software" before starting swss
-        if  [[ "$PLATFORM_REBOOT_CAUSE" != "software" ]]; then
-            # Delete the FAST_REBOOT|system db setting 
-            $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
-        fi
+        if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
+            REG_BOOT_TYPE="fast*"
+	    CAUSE_NO_AVAIL="\"N/A\""
+            REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
+            EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
+
+            # Clear the FAST_REBOOT|system db setting if EXTRA_REBOOT_CAUSE is not "N/A" before starting swss
+            if [[ $REBOOT_CAUSE =~ $REG_BOOT_TYPE ]]; then
+                if [[ "${EXTRA_CAUSE}" != "${CAUSE_NO_AVAIL}" ]]; then
+                    # Delete the FAST_REBOOT|system db setting
+                    $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
+                 fi
+             fi
+         fi
     fi
 {%- else %}
     : # nothing
@@ -237,8 +226,6 @@ start() {
     # Obtain boot type from kernel arguments
     BOOT_TYPE=`getBootType`
 
-    # Obttain boot type from Platform API
-    PLATFORM_REBOOT_CAUSE=`getPlatformRebootCause`
 
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=${PLATFORM:-`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`}
