@@ -11,6 +11,7 @@ import os
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from .helper import APIHelper
+    from .event import SfpEvent
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -42,7 +43,6 @@ class Chassis(ChassisBase):
     def __init__(self):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
-        self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
 
         self.config_data = {}
@@ -59,6 +59,7 @@ class Chassis(ChassisBase):
         for index in range(0, PORT_END):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
+        self._sfpevent = SfpEvent(self._sfp_list)
         self.sfp_module_initialized = True
 
     def __initialize_fan(self):
@@ -175,6 +176,12 @@ class Chassis(ChassisBase):
 
 
         return ('REBOOT_CAUSE_NON_HARDWARE', sw_reboot_cause)
+
+    def get_change_event(self, timeout=0):
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+        return self._sfpevent.get_sfp_event(timeout)
 
     def get_sfp(self, index):
         """
