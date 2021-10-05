@@ -15,7 +15,7 @@ was executed, the string in it will be appended to Monit syslog messages.
 The following is an example in Monit configuration file to show how Monit will run
 this script:
 
-check program container_memory_<container_name> with path "/usr/bin/memory_checker <container_name> <threshold_value>"
+check program container_memory_<container_name> with path "/usr/bin/memory_checker <container_name>"
     if status == 3 for X times within Y cycles exec "/usr/bin/restart_service <container_name>"
 """
 
@@ -25,15 +25,21 @@ import sys
 import syslog
 import re
 
+import swsssdk
+
+# The FEATURE table in config db contains high memory restart state
+# and memory threshold of each container.
+FEATURE_TABLE_NAME = "FEATURE"
+
 
 def get_command_result(command):
     """Executes the command and return the resulting output.
 
     Args:
-        command: A string contains the command to be executed.
+      command: A string contains the command to be executed.
 
     Returns:
-        A string which contains the output of command.
+      A string which contains the output of command.
     """
     command_stdout = ""
 
@@ -58,11 +64,11 @@ def check_memory_usage(container_name, threshold_value):
     the syslog if the memory usage is larger than the threshold value.
 
     Args:
-        container_name: A string represtents name of a container
-        threshold_value: An integer indicates the threshold value (Bytes) of memory usage.
+      container_name: A string represtents name of a container
+      threshold_value: An integer indicates the threshold value (Bytes) of memory usage.
 
     Returns:
-        None.
+      None.
     """
     command = "docker stats --no-stream --format \{{\{{.MemUsage\}}\}} {}".format(container_name)
     command_stdout = get_command_result(command)
@@ -92,17 +98,52 @@ def check_memory_usage(container_name, threshold_value):
         sys.exit(4)
 
 
+def get_restart_state_and_threshold(container_name):
+    """Read the state of high memory restart feature and memory threshold
+    of a container from Config_DB.
+
+    Args:
+      container_name: A string shows the name of a container.
+
+    Returns: 
+      high_mem_restart_state: A string shows state of high memory restart feature.
+      mem_threshold: A string shows memory threshold of a container.
+    """
+    config_db = swsssdk.ConfigDBConnector()
+    config_db.connect()
+    features_table = config_db.get_table(FEATURE_TABLE_NAME)
+    if not features_table:
+        syslog.syslog(syslog.LOG_ERR, "Unable to retrieve 'FEATURE' table from Config DB. Exiting...")
+        sys.exit(5)
+
+    if container_name not in features_table:
+        syslog.syslog(syslog.LOG_ERR, "Unable to retrieve feature '{}'. Exiting...".format(container_name))
+        sys.exit(6)
+
+    high_mem_restart_state = features_table[container_name].get("high_mem_restart")
+    mem_threshold = features_table[container_name].get("mem_threshold")
+    if not high_mem_restart_state:
+        syslog.syslog(
+            syslog.LOG_ERR, "Unable to determine high memory restart state of feature '{}'. Exiting...".format(container_name))
+        sys.exit(7)
+    if not mem_threshold:
+        syslog.syslog(
+            syslog.LOG_ERR, "Unable to determine memory threshold of feature '{}'. Exiting...".format(container_name))
+        sys.exit(8)
+
+    return high_mem_restart_state, int(mem_threshold)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check memory usage of a container \
             and an alerting message will be written into syslog if memory usage \
-            is larger than the threshold value", usage="/usr/bin/memory_checker <container_name> <threshold_value_in_bytes>")
+            is larger than the threshold value", usage="/usr/bin/memory_checker <container_name>")
     parser.add_argument("container_name", help="container name")
-    # TODO: Currently the threshold value is hard coded as a command line argument and will
-    # remove this in the new version since we want to read this value from 'CONFIG_DB'.
-    parser.add_argument("threshold_value", type=int, help="threshold value in bytes")
     args = parser.parse_args()
+    container_name = args.container_name
 
-    check_memory_usage(args.container_name, args.threshold_value)
+    high_mem_restart_state, mem_threshold = get_restart_state_and_threshold(container_name)
+    check_memory_usage(container_name, mem_threshold)
 
 
 if __name__ == "__main__":
