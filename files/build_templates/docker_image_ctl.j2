@@ -36,6 +36,23 @@ function preStartAction()
         echo -n > /tmp/dump.rdb
         docker cp /tmp/dump.rdb database:/var/lib/redis/
     fi
+{%- elif docker_container_name == "swss" %}
+    if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
+        if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
+            REG_BOOT_TYPE="fast*"
+	    CAUSE_NO_AVAIL="\"N/A\""
+            REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
+            EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
+
+            # Clear the FAST_REBOOT|system db setting if EXTRA_REBOOT_CAUSE is not "N/A" before starting swss
+            if [[ $REBOOT_CAUSE =~ $REG_BOOT_TYPE ]]; then
+                if [[ "${EXTRA_CAUSE}" != "${CAUSE_NO_AVAIL}" ]]; then
+                    # Delete the FAST_REBOOT|system db setting
+                    $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
+                 fi
+             fi
+         fi
+    fi
 {%- else %}
     : # nothing
 {%- endif %}
