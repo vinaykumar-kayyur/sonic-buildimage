@@ -183,7 +183,10 @@ class IpNextHop:
     def __hash__(self):
         return hash((self.af, self.blackhole, self.ip, self.interface, self.distance, self.nh_vrf))
     def is_zero_ip(self):
-        return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
+        if self.ip.startswith('PortChannel'):
+            return False
+        else:
+            return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
     def __format__(self, format):
         ret_val = ''
         if self.blackhole == 'true':

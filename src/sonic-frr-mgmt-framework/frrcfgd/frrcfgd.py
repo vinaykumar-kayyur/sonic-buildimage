@@ -1653,7 +1653,10 @@ class IpNextHop:
         return 'AF %d BKH %s IP %s TRACK %d INTF %s TAG %d DIST %d VRF %s' % (
                 self.af, self.blackhole, self.ip, self.track, self.interface, self.tag, self.distance, self.nh_vrf)
     def is_zero_ip(self):
-        return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
+        if self.ip.startswith('PortChannel'):
+            return False
+        else:
+            return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
     def get_arg_list(self):
         arg = lambda x: '' if x is None else x
         num_arg = lambda x: '' if x is None or x == 0 else str(x)
