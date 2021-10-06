@@ -4,11 +4,7 @@ module sonic-pfc-priority-queue-map {
 
     namespace "http://github.com/Azure/sonic-pfc-priority-queue-map";
 
-    prefix ppq;
-
-    import sonic-extension {
-        prefix sonic-ext;
-    }
+    prefix ppqm;
 
     organization
         "SONiC";
@@ -34,9 +30,6 @@ module sonic-pfc-priority-queue-map {
 
                 key "name";
 
-                //sonic-ext:map-list true; //special conversion for map tables
-                //sonic-ext:map-leaf "pfc_priority qindex"; //every key:value pair is mapped to list keys, e.g. "1":"7" ==> pfc_priority=1, qindex=7
-
                 leaf name {
                     type string {
                         pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
@@ -49,7 +42,7 @@ module sonic-pfc-priority-queue-map {
 
                 list MAP_PFC_PRIORITY_TO_QUEUE { //this is list inside list for storing mapping between two fields
 
-                    key "pfc_priority qindex";
+                    key "pfc_priority";
 
                     leaf pfc_priority {
                         type string {
@@ -62,7 +55,7 @@ module sonic-pfc-priority-queue-map {
 
                     leaf qindex {
                         type string {
-                            pattern "[0-9]?" {
+                            pattern "[0-7]?" {
                                error-message "Invalid queue index";
                                error-app-tag queue-index-invalid;
                             }
