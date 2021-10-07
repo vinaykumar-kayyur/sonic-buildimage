@@ -1243,7 +1243,15 @@ class Sfp(SfpBase):
         Sets the lpmode(low power mode) of this SFP
         """
         try:
-            if self.sfp_type.startswith('QSFP'):
+            if self.sfp_type == 'QSFP_DD':
+                if lpmode is True:
+                    write_val = 0x10
+                else:
+                    write_val = 0x0
+
+                self._write_eeprom_bytes(26, 1, bytearray([write_val]))
+                return True
+            else:
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)
 
@@ -1256,15 +1264,11 @@ class Sfp(SfpBase):
                 # LPMode is active high; set or clear the bit accordingly
                 if lpmode is True:
                     reg_value = reg_value | mask
-                    write_val = 0x10
                 else:
                     reg_value = reg_value & ~mask
-                    write_val = 0x0
 
                 # Convert our register value back to a hex string and write back
                 self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
-                if self.sfp_type == 'QSFP_DD':
-                    self._write_eeprom_bytes(26, 1, bytearray([write_val]))
         except  ValueError:
             return  False
         return True

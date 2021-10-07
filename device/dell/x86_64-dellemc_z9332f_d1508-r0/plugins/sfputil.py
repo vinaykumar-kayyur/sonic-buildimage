@@ -294,32 +294,38 @@ class SfpUtil(SfpUtilBase):
             return False
         if port_num > self.PORTS_IN_BLOCK:
             return False
-        # Port offset starts with 0x4000
-        port_offset = 16384 + ((port_num-1) * 16)
-        status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
-        reg_value = int(status)
-
-        # Absence of status throws error
-        if (reg_value == ""):
-            return False
-
-        # Mask off 4th bit for presence
-        mask = (1 << 6)
-
-        # LPMode is active high; set or clear the bit accordingly
-        if lpmode is True:
-            reg_value = reg_value | mask
-            write_val = 0x10
-        else:
-            reg_value = reg_value & ~mask
-            write_val = 0x0
-
-        # Convert our register value back to a hex string and write back
-        status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
         if self.get_media_type(port_num) == 'QSFP_DD':
+            if lpmode is True:
+                write_val = 0x10
+            else:
+                write_val = 0x0
+
             self._write_eeprom_bytes(self.port_to_eeprom_mapping[port_num], 26, 1, bytearray([write_val]))
-        return True
+            return True
+        else:
+            # Port offset starts with 0x4000
+            port_offset = 16384 + ((port_num-1) * 16)
+            status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
+            reg_value = int(status)
+
+            # Absence of status throws error
+            if (reg_value == ""):
+                return False
+
+            # Mask off 4th bit for presence
+            mask = (1 << 6)
+
+            # LPMode is active high; set or clear the bit accordingly
+            if lpmode is True:
+                reg_value = reg_value | mask
+            else:
+                reg_value = reg_value & ~mask
+
+            # Convert our register value back to a hex string and write back
+            status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+
+            return True
 
     def reset(self, port_num):
 
