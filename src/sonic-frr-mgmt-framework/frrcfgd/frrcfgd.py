@@ -1655,7 +1655,7 @@ class IpNextHop:
         return 'AF %d BKH %s IP %s TRACK %d INTF %s TAG %d DIST %d VRF %s' % (
                 self.af, self.blackhole, self.ip, self.track, self.interface, self.tag, self.distance, self.nh_vrf)
     def is_ip_valid(self):
-        return True
+        socket.inet_pton(self.af, self.ip)
     def is_zero_ip(self):
         try:
             return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
