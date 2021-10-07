@@ -301,7 +301,6 @@ class SfpUtil(SfpUtilBase):
                 write_val = 0x0
 
             self._write_eeprom_bytes(self.port_to_eeprom_mapping[port_num], 26, 1, bytearray([write_val]))
-            return True
         else:
             # Port offset starts with 0x4000
             port_offset = 16384 + ((port_num-1) * 16)
@@ -323,7 +322,7 @@ class SfpUtil(SfpUtilBase):
 
             # Convert our register value back to a hex string and write back
             status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
-            return True
+        return True
 
     def reset(self, port_num):
 
