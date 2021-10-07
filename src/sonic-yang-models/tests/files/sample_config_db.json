@@ -943,6 +943,13 @@
                 "polling_interval": "0"
             }
         },
+
+        "WARM_RESTART": {
+            "bgp": {
+                "bgp_timer": "500"
+            }
+        },
+
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
@@ -985,7 +992,7 @@
         },
         "AAA": {
             "authentication": {
-                "login": "local" 
+                "login": "local"
             }
         },
         "TACPLUS": {
@@ -1066,6 +1073,10 @@
                 "rrclient":"0"
             },
             "default|192.168.1.1": {
+                "local_asn": "65200",
+                "asn": "65100",
+                "name": "bgp peer 65100",
+                "ebgp_multihop_ttl": "3"
             }
         },
         "BGP_NEIGHBOR_AF": {
@@ -1100,7 +1111,7 @@
         },
         "PREFIX_SET": {
             "prefix1": {
-            } 
+            }
         },
         "PREFIX": {
             "prefix1|1|10.0.0.0/8|8..16": {
@@ -1141,8 +1152,57 @@
                 "mode": "TRANSMIT",
                 "enabled": "true"
             }
+        },
+        "FEATURE": {
+            "bgp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "database": {
+                "auto_restart": "always_enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "always_enabled"
+            },
+            "snmp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "false",
+                "has_timer": "true",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "swss": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "syncd": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "lldp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            }
         }
-
     },
 
     "SAMPLE_CONFIG_DB_UNKNOWN": {
@@ -1150,5 +1210,5 @@
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
     }
-    
+
 }
