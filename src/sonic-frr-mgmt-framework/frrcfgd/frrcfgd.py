@@ -1636,7 +1636,7 @@ class IpNextHop:
         self.interface = '' if if_name is None else if_name
         self.tag = 0 if tag is None else int(tag)
         self.nh_vrf = '' if vrf is None else vrf
-        if self.blackhole != 'true' and self.is_zero_ip() and len(self.interface.strip()) == 0:
+        if self.blackhole != 'true' and self.is_zero_ip() and not self.is_portchannel() and len(self.interface.strip()) == 0:
             syslog.syslog(syslog.LOG_ERR, 'Mandatory attribute not found for nexthop')
             raise ValueError
     def __eq__(self, other):
@@ -1653,10 +1653,12 @@ class IpNextHop:
         return 'AF %d BKH %s IP %s TRACK %d INTF %s TAG %d DIST %d VRF %s' % (
                 self.af, self.blackhole, self.ip, self.track, self.interface, self.tag, self.distance, self.nh_vrf)
     def is_zero_ip(self):
-        if self.ip.startswith('PortChannel'):
-            return False
-        else:
+        try:
             return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
+        except:
+            return False
+    def is_portchannel(self):
+        return True if self.ip.startswith('PortChannel') else False
     def get_arg_list(self):
         arg = lambda x: '' if x is None else x
         num_arg = lambda x: '' if x is None or x == 0 else str(x)
