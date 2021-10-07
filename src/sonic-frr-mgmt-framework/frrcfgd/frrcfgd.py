@@ -1636,6 +1636,8 @@ class IpNextHop:
         self.interface = '' if if_name is None else if_name
         self.tag = 0 if tag is None else int(tag)
         self.nh_vrf = '' if vrf is None else vrf
+        if not self.is_portchannel():
+            self.is_ip_valid()
         if self.blackhole != 'true' and self.is_zero_ip() and not self.is_portchannel() and len(self.interface.strip()) == 0:
             syslog.syslog(syslog.LOG_ERR, 'Mandatory attribute not found for nexthop')
             raise ValueError
@@ -1652,6 +1654,8 @@ class IpNextHop:
     def __str__(self):
         return 'AF %d BKH %s IP %s TRACK %d INTF %s TAG %d DIST %d VRF %s' % (
                 self.af, self.blackhole, self.ip, self.track, self.interface, self.tag, self.distance, self.nh_vrf)
+    def is_ip_valid(self):
+        return True
     def is_zero_ip(self):
         try:
             return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0

@@ -71,6 +71,25 @@ def test_set():
         ]
     )
 
+def test_set_portchannel_nexthop():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "nexthop": "PortChannel0002",
+        }),
+        True,
+        [
+            "ip route 10.1.0.0/24 PortChannel0002",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  redistribute static",
+            " address-family ipv6",
+            "  redistribute static"
+        ]
+    )
+
 def test_set_nhvrf():
     mgr = constructor()
     set_del_test(
