@@ -31,6 +31,7 @@ class Psu(PsuBase):
     """Nokia platform-specific PSU class for 7215 """
 
     def __init__(self, psu_index):
+        PsuBase.__init__(self)
         # PSU is 1-based in Nokia platforms
         self.index = psu_index + 1
         self._fan_list = []
@@ -233,3 +234,23 @@ class Psu(PsuBase):
         # The firmware running in the PSU controls the LED
         # and the PSU LED state cannot be changed from CPU.
         return False
+
+    def get_status_master_led(self):
+        """
+        Gets the state of the front panel PSU status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings.
+        """
+        return self._psu_master_led_color
+
+    def set_status_master_led(self, color):
+        """
+        Sets the state of the front panel PSU status LED
+
+        Returns:
+            bool: True if status LED state is set successfully, False if
+                  not
+        """
+        self._psu_master_led_color = color
+        return True

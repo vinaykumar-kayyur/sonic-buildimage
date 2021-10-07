@@ -37,7 +37,7 @@ mkdir -p /var/run/redis/sonic-db
 cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db/
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
-sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'", "buffer_model": "traditional"}}}' $CHASS_CFG --print-data > /etc/sonic/init_cfg.json
+sonic-cfggen -t /usr/share/sonic/templates/init_cfg.json.j2 -a "{\"system_mac\": \"$SYSTEM_MAC_ADDRESS\"}" $CHASS_CFG > /etc/sonic/init_cfg.json
 
 if [ -f /etc/sonic/config_db.json ]; then
     sonic-cfggen -j /etc/sonic/init_cfg.json -j /etc/sonic/config_db.json --print-data > /tmp/config_db.json
@@ -52,6 +52,10 @@ else
     sonic-cfggen -j /etc/sonic/init_cfg.json -j /tmp/buffers.json -j /tmp/qos.json -j /tmp/ports.json --print-data > /etc/sonic/config_db.json
 fi
 sonic-cfggen -t /usr/share/sonic/templates/copp_cfg.j2 > /etc/sonic/copp_cfg.json
+
+if [ "$fake_platform" == "mellanox" ]; then
+    cp /usr/share/sonic/hwsku/sai_mlnx.profile /usr/share/sonic/hwsku/sai.profile
+fi
 
 mkdir -p /etc/swss/config.d/
 
@@ -104,6 +108,11 @@ if [ "$conn_chassis_db" == "1" ]; then
 fi
 
 /usr/bin/configdb-load.sh
+
+if [ "$HWSKU" = "brcm_gearbox_vs" ]; then
+    supervisorctl start gbsyncd
+    supervisorctl start gearsyncd
+fi
 
 supervisorctl start syncd
 
