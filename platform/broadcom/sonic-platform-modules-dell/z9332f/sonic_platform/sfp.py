@@ -1018,7 +1018,7 @@ class Sfp(SfpBase):
                 lpmode_state = (reg_value & mask)
         except ValueError:
             pass
-        return lpmode_state
+        return bool(lpmode_state)
 
     def get_power_override(self):
         """
@@ -1250,7 +1250,6 @@ class Sfp(SfpBase):
                     write_val = 0x0
 
                 self._write_eeprom_bytes(26, 1, bytearray([write_val]))
-                return True
             else:
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)

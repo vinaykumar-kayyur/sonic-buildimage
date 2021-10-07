@@ -284,8 +284,7 @@ class SfpUtil(SfpUtilBase):
             # LPMode is active high
             if reg_value & mask == 0:
                 return False
-
-        return True
+            return True
 
     def set_low_power_mode(self, port_num, lpmode):
 
@@ -324,7 +323,6 @@ class SfpUtil(SfpUtilBase):
 
             # Convert our register value back to a hex string and write back
             status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
-
             return True
 
     def reset(self, port_num):
