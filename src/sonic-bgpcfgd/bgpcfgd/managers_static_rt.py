@@ -185,7 +185,7 @@ class IpNextHop:
     def __hash__(self):
         return hash((self.af, self.blackhole, self.ip, self.interface, self.distance, self.nh_vrf))
     def is_ip_valid(self):
-        socket.inet_aton(self.ip)
+        socket.inet_pton(self.af, self.ip)
     def is_zero_ip(self):
         try:
             return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
