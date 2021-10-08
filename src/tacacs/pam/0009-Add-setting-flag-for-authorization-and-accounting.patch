@@ -1,23 +1,21 @@
-From 436df1bd7841154f979872653558748a4033fdba Mon Sep 17 00:00:00 2001
-From: liuh <liuh@microsoft.com>
-Date: Sun, 3 Oct 2021 12:51:28 +0800
+From f45e079f1f73e8c4ac315b62aa395754c1e53eb5 Mon Sep 17 00:00:00 2001
+From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
+Date: Fri, 8 Oct 2021 13:07:17 +0800
 Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
 
 ---
- support.c | 10 +++++++++-
- support.h | 12 +++++++++++-
- 2 files changed, 20 insertions(+), 2 deletions(-)
+ support.c | 8 ++++++++
+ support.h | 8 ++++++++
+ 2 files changed, 16 insertions(+)
 
 diff --git a/support.c b/support.c
-index da7a58b..10d9749 100644
+index 8f08370..890616c 100644
 --- a/support.c
 +++ b/support.c
-@@ -344,7 +344,15 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
-     } else if (!strncmp (arg, "source_ip=", strlen("source_ip="))) {
+@@ -345,6 +345,14 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
          /* source ip for the packets */
          strncpy (tac_source_ip, arg + strlen("source_ip="), sizeof(tac_source_ip));
--        set_source_ip (tac_source_ip);
-+        set_source_ip (tac_source_ip);
+         set_source_ip (tac_source_ip);
 +    } else if (!strcmp (arg, "local_accounting")) {
 +        ctrl |= ACCOUNTING_FLAG_LOCAL;
 +    } else if (!strcmp (arg, "tacacs_accounting")) {
@@ -30,17 +28,10 @@ index da7a58b..10d9749 100644
          _pam_log (LOG_WARNING, "unrecognized option: %s", arg);
      }
 diff --git a/support.h b/support.h
-index bccc034..920689c 100644
+index 3193168..d5945a0 100644
 --- a/support.h
 +++ b/support.h
-@@ -28,10 +28,20 @@
- 
- /* pam_tacplus command line options */
- #define PAM_TAC_DEBUG 0x01
--#define PAM_TAC_ACCT  0x02 /* account on all specified servers */
-+#define PAM_TAC_ACCT  0x02
-+
-+/* account on all specified servers */
+@@ -34,6 +34,14 @@
  #define PAM_TAC_USE_FIRST_PASS 0x04
  #define PAM_TAC_TRY_FIRST_PASS 0x08
  
@@ -56,5 +47,5 @@ index bccc034..920689c 100644
      struct addrinfo *addr;
      char key[256];
 -- 
-2.27.0.windows.1
+2.17.1.windows.2
 
