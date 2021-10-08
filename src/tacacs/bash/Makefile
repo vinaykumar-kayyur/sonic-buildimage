@@ -2,7 +2,7 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = bash-tacplus_$(NSS_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
+MAIN_TARGET = bash-tacplus_$(BASH_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd ./bash_tacplus

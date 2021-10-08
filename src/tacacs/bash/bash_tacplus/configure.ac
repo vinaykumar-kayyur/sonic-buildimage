@@ -66,5 +66,6 @@ AC_SUBST(plugindir)
 
 dnl --------------------------------------------------------------------
 dnl Generate made files
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile
+                    unittest/Makefile])
 AC_OUTPUT
