@@ -13,7 +13,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git clone https://github.com/daveolson53/audisp-tacplus.git
 
 	# checkout by sha1
-	pushd ./pam_tacplus
+	pushd ./audisp-tacplus
 	git checkout 559c9f22edd4f2dea0ecedffb3ad9502b12a75b6
 	popd
 
@@ -21,7 +21,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	quilt push -a
 
 	# build package
-	pushd ./pam_tacplus
+	pushd ./audisp-tacplus
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
