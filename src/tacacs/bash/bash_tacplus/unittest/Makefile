@@ -1,4 +1,4 @@
-#disable some warning because UT need test functions not in header file.
+# disable some warning because UT need test functions not in header file.
 CFLAGS = -Wno-parentheses -Wno-format-security -Wno-implicit-function-declaration -Wno-int-to-pointer-cast -c
 IFLAGS = -I.. -I../include -I../lib
 MFLAG = -DDEBUG -DBASH_PLUGIN_UT

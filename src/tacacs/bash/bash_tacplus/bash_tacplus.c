@@ -47,9 +47,9 @@ void output_verbose(const char *format, ...)
     // http://www.c-faq.com/varargs/handoff.html
     char logBuffer[512];
     va_list args;
-    va_start (args, format);
+    va_start(args, format);
     vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end (args);
+    va_end(args);
 
     fprintf(stderr, "%s", logBuffer);
     syslog(LOG_INFO, "%s", logBuffer);
@@ -60,16 +60,16 @@ void output_verbose(const char *format, ...)
  */
 void output_error(const char *format, ...)
 {
-    fprintf (stderr, "TACACS+: ");
+    fprintf(stderr, "TACACS+: ");
     syslog(LOG_ERR,"TACACS+: ");
 
     // convert log to a string because va args resoursive issue:
     // http://www.c-faq.com/varargs/handoff.html
     char logBuffer[512];
     va_list args;
-    va_start (args, format);
+    va_start(args, format);
     vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end (args);
+    va_end(args);
 
     fprintf(stderr, "%s", logBuffer);
     syslog(LOG_ERR, "%s", logBuffer);
@@ -88,9 +88,9 @@ void output_debug(const char *format, ...)
     // http://www.c-faq.com/varargs/handoff.html
     char logBuffer[512];
     va_list args;
-    va_start (args, format);
+    va_start(args, format);
     vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end (args);
+    va_end(args);
 
     output_error (logBuffer);
 }

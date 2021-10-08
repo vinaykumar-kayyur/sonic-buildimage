@@ -66,6 +66,5 @@ AC_SUBST(plugindir)
 
 dnl --------------------------------------------------------------------
 dnl Generate made files
-AC_CONFIG_FILES([Makefile
-                 bash_tacplus.spec])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
