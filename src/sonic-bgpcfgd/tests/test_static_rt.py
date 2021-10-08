@@ -93,9 +93,7 @@ def test_set_nhportchannel():
     set_del_test(
         mgr,
         "DEL",
-        ("10.1.0.0/24", {
-            "nexthop": "PortChannel0001",
-        }),
+        ("10.1.0.0/24",),
         True,
         [
             "no ip route 10.1.0.0/24 PortChannel0001",
