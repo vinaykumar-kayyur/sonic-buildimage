@@ -1,17 +1,17 @@
-From 8e48036b7379896dbef720401fb084254ffd1966 Mon Sep 17 00:00:00 2001
+From 80d195aa6e3a67d8080835102645622211f34d32 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Fri, 10 Sep 2021 17:30:18 +0800
-Subject: [PATCH 2/2] Extract tacacs support functions into library
+Date: Fri, 8 Oct 2021 13:06:22 +0800
+Subject: [PATCH 2/3] Extract tacacs support functions into library.
 
 ---
- Makefile.am         |  16 +-
+ Makefile.am         |  16 ++-
  configure.ac        |   3 +-
  libtacsupport.pc.in |  11 ++
- pam_tacplus.c       |  27 ++--
- pam_tacplus.h       |   6 -
- support.c           | 363 +++++++++++++++++++++++++-------------------
- support.h           |  19 ++-
- 7 files changed, 265 insertions(+), 180 deletions(-)
+ pam_tacplus.c       |   3 -
+ pam_tacplus.h       |   6 --
+ support.c           | 255 ++++++++++++++++++++++++++------------------
+ support.h           |  14 +++
+ 7 files changed, 190 insertions(+), 118 deletions(-)
  create mode 100644 libtacsupport.pc.in
 
 diff --git a/Makefile.am b/Makefile.am
@@ -91,101 +91,19 @@ index 0000000..1f12fe0
 +Libs: -L${libdir} -ltacsupport
 +Cflags: -I${includedir}
 diff --git a/pam_tacplus.c b/pam_tacplus.c
-index 8a93c9b..916b4d0 100644
+index 79d8e34..4e6b3bb 100644
 --- a/pam_tacplus.c
 +++ b/pam_tacplus.c
-@@ -51,10 +51,7 @@
- static tacplus_server_t active_server;
- 
+@@ -53,9 +53,6 @@ static tacplus_server_t active_server;
  /* accounting task identifier */
--static short int task_id = 0;
--
+ static short int task_id = 0;
+ 
 -extern char *__vrfname;
 -
-+static short int task_id = 0;
- 
+-
  /* Helper functions */
  int _pam_send_account(int tac_fd, int type, const char *user, char *tty,
-@@ -136,10 +133,10 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
-         syslog (LOG_DEBUG, "%s: [%s] called (pam_tacplus v%u.%u.%u)",
-             __FUNCTION__, typemsg, PAM_TAC_VMAJ, PAM_TAC_VMIN, PAM_TAC_VPAT);
-         syslog(LOG_DEBUG, "%s: tac_srv_no=%d", __FUNCTION__, tac_srv_no);
--    }
--
-+    }
-+
-     if ((user = _pam_get_user(pamh)) == NULL) {
--        return PAM_USER_UNKNOWN;
-+        return PAM_USER_UNKNOWN;
-     }
- 
- 
-@@ -242,7 +239,7 @@ int pam_sm_authenticate (pam_handle_t * pamh, int flags,
-             __FUNCTION__, PAM_TAC_VMAJ, PAM_TAC_VMIN, PAM_TAC_VPAT);
- 
-     if ((user = _pam_get_user(pamh)) == NULL) {
--        return PAM_USER_UNKNOWN;
-+        return PAM_USER_UNKNOWN;
-     }
- 
-     if (ctrl & PAM_TAC_DEBUG)
-@@ -326,7 +323,7 @@ int pam_sm_authenticate (pam_handle_t * pamh, int flags,
-                     }
-                     status = PAM_SUCCESS;
-                     communicating = 0;
--                    active_server.addr = tac_srv[srv_i].addr;
-+                    active_server.addr = tac_srv[srv_i].addr;
-                     /* copy secret to key */
-                     snprintf(active_server.key, sizeof(active_server.key), "%s", tac_srv[srv_i].key);
- 
-@@ -543,7 +540,7 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
-             , __FUNCTION__, PAM_TAC_VMAJ, PAM_TAC_VMIN, PAM_TAC_VPAT);
- 
-     if ((user = _pam_get_user(pamh)) == NULL) {
--        return PAM_USER_UNKNOWN;
-+        return PAM_USER_UNKNOWN;
-     }
- 
-     if (ctrl & PAM_TAC_DEBUG)
-@@ -589,7 +586,7 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
-     if(tac_fd < 0) {
-         _pam_log (LOG_ERR, "TACACS+ server unavailable");
-         if(arep.msg != NULL) {
--            free (arep.msg);
-+            free (arep.msg);
-         }
- 
-         return PAM_AUTH_ERR;
-@@ -732,9 +729,9 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
-     syslog(LOG_DEBUG, "%s(flags=%d, argc=%d)", __func__, flags, argc);
- 
-     if (   (pam_get_item(pamh, PAM_OLDAUTHTOK, &pam_pass) == PAM_SUCCESS)
--        && (pam_pass != NULL) ) {
-+        && (pam_pass != NULL) ) {
-          if ((pass = strdup(pam_pass)) == NULL) {
--              return PAM_BUF_ERR;
-+              return PAM_BUF_ERR;
-          }
-     } else {
-         pass = strdup("");
-@@ -743,7 +740,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
-     if ((user = _pam_get_user(pamh)) == NULL) {
-         if(pass) {
-                 free(pass);
--        }
-+        }
- 
-         return PAM_USER_UNKNOWN;
-     }
-@@ -828,7 +825,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
-                     status = PAM_SUCCESS;
-                     communicating = 0;
- 
--                    active_server.addr = tac_srv[srv_i].addr;
-+                    active_server.addr = tac_srv[srv_i].addr;
-                     /* copy secret to key */
-                     snprintf(active_server.key, sizeof(active_server.key), "%s", tac_srv[srv_i].key);
- 
+     char *r_addr, char *cmd) {
 diff --git a/pam_tacplus.h b/pam_tacplus.h
 index bc71b54..e7b30f7 100644
 --- a/pam_tacplus.h
@@ -204,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index 3d38f24..6b2e72d 100644
+index b940a40..8f08370 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,6 +29,7 @@
@@ -215,93 +133,10 @@ index 3d38f24..6b2e72d 100644
  
  /* tacacs server information */
  tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
-@@ -42,7 +43,7 @@ char tac_service[64];
- char tac_protocol[64];
- char tac_prompt[64];
- char *__vrfname=NULL;
--char tac_source_ip[64];
-+char tac_source_ip[64];
- 
- /* source address */
- struct addrinfo tac_source_addr;
-@@ -181,12 +182,33 @@ int tacacs_get_password (pam_handle_t * pamh, int flags
- 
-     return PAM_SUCCESS;
- }
--
-+
-+/*
-+ * Set tacacs server addrinfo.
-+ */
-+void set_tacacs_server_addr(int tac_srv_no, struct addrinfo* server) {
-+    tac_srv[tac_srv_no].addr = &(tac_srv_addr[tac_srv_no]);
-+    memcpy(tac_srv[tac_srv_no].addr, server, sizeof(struct addrinfo));
-+
-+    if (server->ai_family == AF_INET6) {
-+        tac_srv[tac_srv_no].addr->ai_addr = (struct sockaddr *)&(tac_sock6_addr[tac_srv_no]);
-+        memcpy(tac_srv[tac_srv_no].addr->ai_addr, server->ai_addr, sizeof(struct sockaddr_in6));
-+    }
-+    else {
-+        tac_srv[tac_srv_no].addr->ai_addr = &(tac_sock_addr[tac_srv_no]);
-+        memcpy(tac_srv[tac_srv_no].addr->ai_addr, server->ai_addr, sizeof(struct sockaddr));
-+    }
-+
-+    tac_srv[tac_srv_no].addr->ai_canonname = NULL;
-+    tac_srv[tac_srv_no].addr->ai_next = NULL;
- }
-+
- /* set source ip address for the outgoing tacacs packets */
- void set_source_ip(const char *tac_source_ip) {
-+
-     struct addrinfo hints, *source_address;
-     int rv;
-+
-     /* set the source ip address for the tacacs packets */
-     memset(&hints, 0, sizeof(hints));
-     hints.ai_family = AF_UNSPEC;
-@@ -195,163 +217,200 @@ void set_source_ip(const char *tac_source_ip) {
-                           &source_address)) != 0) {
-         _pam_log(LOG_ERR, "error setting the source ip information");
-     } else {
--		memcpy(&tac_source_addr, source_address, sizeof(struct addrinfo));
--		if (source_address->ai_family == AF_INET6) {
--			tac_source_addr.ai_addr = (struct sockaddr *)&(tac_source_sock6_addr);
--			memcpy(tac_source_addr.ai_addr, source_address->ai_addr, sizeof(struct sockaddr_in6));
--		}
--		else {
--			tac_source_addr.ai_addr = &(tac_source_sock_addr);
--			memcpy(tac_source_addr.ai_addr, source_address->ai_addr, sizeof(struct sockaddr));
--		}
--		
--		
-+        memcpy(&tac_source_addr, source_address, sizeof(struct addrinfo));
-+
-+        if (source_address->ai_family == AF_INET6) {
-+            tac_source_addr.ai_addr = (struct sockaddr *)&(tac_source_sock6_addr);
-+            memcpy(tac_source_addr.ai_addr, source_address->ai_addr, sizeof(struct sockaddr_in6));
-+        }
-+        else {
-+            tac_source_addr.ai_addr = &(tac_source_sock_addr);
-+            memcpy(tac_source_addr.ai_addr, source_address->ai_addr, sizeof(struct sockaddr));
-+        }
-+
-         freeaddrinfo(source_address);
-         _pam_log(LOG_DEBUG, "source ip is set");
+@@ -234,9 +235,155 @@ void set_source_ip(const char *tac_source_ip) {
      }
  }
--int _pam_parse (int argc, const char **argv) {
--    int ctrl = 0;
--    char current_secret[256];
--    memset(current_secret, 0, sizeof(current_secret));
--
--    /* otherwise the list will grow with each call */
--    memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
--    tac_srv_no = 0;
--
--    tac_service[0] = 0;
--    tac_protocol[0] = 0;
--    tac_prompt[0] = 0;
-+
+ 
 +/*
 + * Parse one arguments.
 + * Use this method for both:
@@ -352,11 +187,11 @@ index 3d38f24..6b2e72d 100644
 +
 +            if (*server_buf == '[' && (close_bracket = strchr(server_buf, ']')) != NULL) { /* Check for URI syntax */
 +                server_name = server_buf + 1;
-+                port = strchr(close_bracket, ':');
++                port = strrchr(close_bracket, ':');
 +                *close_bracket = '\0';
 +            } else { /* Fall back to traditional syntax */
 +                server_name = server_buf;
-+                port = strchr(server_buf, ':');
++                port = strrchr(server_buf, ':');
 +            }
 +            if (port != NULL) {
 +                *port = '\0';
@@ -391,7 +226,7 @@ index 3d38f24..6b2e72d 100644
 +
 +        /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
 +        for(i = tac_srv_no-1; i >= 0; i--) {
-+            if (tac_srv[i].key != NULL)
++            if (tac_srv[i].key[0] != 0)
 +                break;
 +
 +            /* copy secret to key */
@@ -446,29 +281,19 @@ index 3d38f24..6b2e72d 100644
 +    fclose(config_file);
 +    return ctrl;
 +}
-+int _pam_parse (int argc, const char **argv) {
-+    int ctrl = 0;
++
+ int _pam_parse (int argc, const char **argv) {
+     int ctrl = 0;
+-    const char *current_secret = NULL;
 +    char current_secret[256];
 +    memset(current_secret, 0, sizeof(current_secret));
-+
-+    /* otherwise the list will grow with each call */
-+    memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
-+    tac_srv_no = 0;
-+
-+    tac_service[0] = 0;
-+    tac_protocol[0] = 0;
-+    tac_prompt[0] = 0;
-     tac_login[0] = 0;
+ 
+     /* otherwise the list will grow with each call */
+     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
+@@ -249,109 +396,7 @@ int _pam_parse (int argc, const char **argv) {
      tac_source_ip[0] = 0;
  
--    if (tac_source_addr != NULL) {
--        freeaddrinfo(tac_source_addr);
--        tac_source_addr = NULL;
-+    for (ctrl = 0; argc-- > 0; ++argv) {
-+        ctrl |= _pam_parse_arg(*argv, current_secret, sizeof(current_secret));
-     }
--
--    for (ctrl = 0; argc-- > 0; ++argv) {
+     for (ctrl = 0; argc-- > 0; ++argv) {
 -        if (!strcmp (*argv, "debug")) { /* all */
 -            ctrl |= PAM_TAC_DEBUG;
 -        } else if (!strcmp (*argv, "use_first_pass")) {
@@ -544,12 +369,11 @@ index 3d38f24..6b2e72d 100644
 -        } else if (!strncmp (*argv, "secret=", 7)) {
 -            int i;
 -
--            /* points right into arg (which is const) */
--            snprintf(current_secret, sizeof(current_secret), "%s", arg + 7);
+-            current_secret = *argv + 7;     /* points right into argv (which is const) */
 -
 -            /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
 -            for(i = tac_srv_no-1; i >= 0; i--) {
--                if (tac_srv[i].key != NULL)
+-                if (tac_srv[i].key[0] != 0)
 -                    break;
 -
 -                /* copy secret to key */
@@ -573,79 +397,48 @@ index 3d38f24..6b2e72d 100644
 -        } else {
 -            _pam_log (LOG_WARNING, "unrecognized option: %s", *argv);
 -        }
--    }
--
--    if (ctrl & PAM_TAC_DEBUG) {
--        int n;
--
--        _pam_log(LOG_DEBUG, "%d servers defined", tac_srv_no);
--
--        for(n = 0; n < tac_srv_no; n++) {
-+
-+    if (ctrl & PAM_TAC_DEBUG) {
-+        int n;
-+
-+        _pam_log(LOG_DEBUG, "%d servers defined", tac_srv_no);
-+
-+        for(n = 0; n < tac_srv_no; n++) {
-             _pam_log(LOG_DEBUG, "server[%d] { addr=%s, key='%c*****' }", n, tac_ntop(tac_srv[n].addr->ai_addr), tac_srv[n].key[0]);
--        }
--
--        _pam_log(LOG_DEBUG, "tac_service='%s'", tac_service);
--        _pam_log(LOG_DEBUG, "tac_protocol='%s'", tac_protocol);
--        _pam_log(LOG_DEBUG, "tac_prompt='%s'", tac_prompt);
--        _pam_log(LOG_DEBUG, "tac_login='%s'", tac_login);
-+        }
-+
-+        _pam_log(LOG_DEBUG, "tac_service='%s'", tac_service);
-+        _pam_log(LOG_DEBUG, "tac_protocol='%s'", tac_protocol);
-+        _pam_log(LOG_DEBUG, "tac_prompt='%s'", tac_prompt);
-+        _pam_log(LOG_DEBUG, "tac_login='%s'", tac_login);
-         _pam_log(LOG_DEBUG, "tac_source_ip='%s'", tac_source_ip);
--    }
--
--    return ctrl;
++        ctrl |= _pam_parse_arg(*argv, current_secret, sizeof(current_secret));
+     }
+ 
+     if (ctrl & PAM_TAC_DEBUG) {
+@@ -371,4 +416,4 @@ int _pam_parse (int argc, const char **argv) {
+     }
+ 
+     return ctrl;
 -}    /* _pam_parse */
-+    }
-+
-+    return ctrl;
+\ No newline at end of file
 +}    /* _pam_parse */
 diff --git a/support.h b/support.h
-index feadbf5..bdb60b4 100644
+index e20e227..3193168 100644
 --- a/support.h
 +++ b/support.h
-@@ -24,15 +24,23 @@
+@@ -26,6 +26,14 @@
  
- #include "libtac.h"
+ #include <security/pam_modules.h>
  
--#include <security/pam_modules.h>
-+#include <security/pam_modules.h>
-+
 +/* pam_tacplus command line options */
 +#define PAM_TAC_DEBUG 0x01
-+#define PAM_TAC_ACCT  0x02 /* account on all specified servers */
++#define PAM_TAC_ACCT  0x02
++
++/* account on all specified servers */
 +#define PAM_TAC_USE_FIRST_PASS 0x04
 +#define PAM_TAC_TRY_FIRST_PASS 0x08
- 
++
  typedef struct {
--    struct addrinfo *addr;
-+    struct addrinfo *addr;
+     struct addrinfo *addr;
      char key[256];
- } tacplus_server_t;
+@@ -33,6 +41,7 @@ typedef struct {
  
  extern tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
-+
  extern int tac_srv_no;
 +extern char *__vrfname;
  
  extern char tac_service[64];
  extern char tac_protocol[64];
-@@ -48,7 +56,12 @@ void _pam_log (int, const char *, ...);
- void *_xcalloc (size_t);
+@@ -49,6 +58,11 @@ void *_xcalloc (size_t);
  char *_pam_get_user(pam_handle_t *);
  char *_pam_get_terminal(pam_handle_t *);
--char *_pam_get_rhost(pam_handle_t *);
-+char *_pam_get_rhost(pam_handle_t *);
+ char *_pam_get_rhost(pam_handle_t *);
 +
 +/*
 + * Parse config file.
