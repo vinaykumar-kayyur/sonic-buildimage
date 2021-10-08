@@ -90,6 +90,23 @@ def test_set_nhportchannel():
         ]
     )
 
+    set_del_test(
+        mgr,
+        "DEL",
+        ("10.1.0.0/24", {
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+            "no ip route 10.1.0.0/24 PortChannel0001",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  no redistribute static",
+            " address-family ipv6",
+            "  no redistribute static"
+        ]
+    )
+
 def test_set_several_nhportchannels():
     mgr = constructor()
     set_del_test(
