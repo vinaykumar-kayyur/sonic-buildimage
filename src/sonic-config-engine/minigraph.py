@@ -527,14 +527,15 @@ def parse_dpg(dpg, hname):
         vlans = {}
         vlan_members = {}
         dhcp_relay_table = {}
-        vlantype_name = ""
         # Dict: vlan member (port/PortChannel) -> set of VlanID, in which the member if an untagged vlan member
         untagged_vlan_mbr = defaultdict(set)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vlantype = vintf.find(str(QName(ns, "Type")))
-            if vlantype != None:
-                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
+            if vlantype is None:
+                vlantype_name = ""
+            else:
+                vlantype_name = vlantype.text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vmbr_list = vintfmbr.split(';')
             if vlantype_name != "Tagged":
@@ -545,8 +546,10 @@ def parse_dpg(dpg, hname):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vlantype = vintf.find(str(QName(ns, "Type")))
-            if vlantype != None:
-                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
+            if vlantype is None:
+                vlantype_name = ""
+            else:
+                vlantype_name = vlantype.text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
