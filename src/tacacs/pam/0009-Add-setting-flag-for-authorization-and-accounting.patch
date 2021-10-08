@@ -1,0 +1,51 @@
+From f45e079f1f73e8c4ac315b62aa395754c1e53eb5 Mon Sep 17 00:00:00 2001
+From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
+Date: Fri, 8 Oct 2021 13:07:17 +0800
+Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
+
+---
+ support.c | 8 ++++++++
+ support.h | 8 ++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/support.c b/support.c
+index 8f08370..890616c 100644
+--- a/support.c
++++ b/support.c
+@@ -345,6 +345,14 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
+         /* source ip for the packets */
+         strncpy (tac_source_ip, arg + strlen("source_ip="), sizeof(tac_source_ip));
+         set_source_ip (tac_source_ip);
++    } else if (!strcmp (arg, "local_accounting")) {
++        ctrl |= ACCOUNTING_FLAG_LOCAL;
++    } else if (!strcmp (arg, "tacacs_accounting")) {
++        ctrl |= ACCOUNTING_FLAG_TACACS;
++    } else if (!strcmp (arg, "local_authorization")) {
++        ctrl |= AUTHORIZATION_FLAG_LOCAL;
++    } else if (!strcmp (arg, "tacacs_authorization")) {
++        ctrl |= AUTHORIZATION_FLAG_TACACS;
+     } else {
+         _pam_log (LOG_WARNING, "unrecognized option: %s", arg);
+     }
+diff --git a/support.h b/support.h
+index 3193168..d5945a0 100644
+--- a/support.h
++++ b/support.h
+@@ -34,6 +34,14 @@
+ #define PAM_TAC_USE_FIRST_PASS 0x04
+ #define PAM_TAC_TRY_FIRST_PASS 0x08
+ 
++/* accounting setting flag */
++#define ACCOUNTING_FLAG_LOCAL  0x10
++#define ACCOUNTING_FLAG_TACACS 0x20
++
++/* authorization setting flag */
++#define AUTHORIZATION_FLAG_LOCAL  0x40
++#define AUTHORIZATION_FLAG_TACACS 0x80
++
+ typedef struct {
+     struct addrinfo *addr;
+     char key[256];
+-- 
+2.17.1.windows.2
+
