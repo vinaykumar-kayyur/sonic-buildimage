@@ -421,22 +421,41 @@ class SonicYangExtMixin:
     are displayed only when an entry is not xlated properly from ConfigDB
     to sonic_yang.json.
 
-    QOS MAPS Yang has netsted list, which is diffrent from config DB.
-    Each field value in config db should be converted to netsted list with
+    QOS MAPS Yang has inner list, which is diffrent from config DB.
+    Each field value in config db should be converted to inner list with
     key and value.
+    Example: 
+
+    Config DB: 
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": { 
+          "1": "1",
+          "2": "2"
+       }
+    }
+
+    Yang: 
+    module: sonic-dscp-tc-map
+     +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
     """
     def _xlateQosMapList(self, model, yang, config, table, exceptionList):
 
         #create a dict to map each key under primary key with a dict yang model.
         #This is done to improve performance of mapping from values of TABLEs in
         #config DB to leaf in YANG LIST.
-        nested_clist = model.get('list')
-        if nested_clist:
-            nested_listKey = nested_clist['key']['@value']
-            nested_leafDict = self._createLeafDict(nested_clist, table)
-            for lkey in nested_leafDict:
-                if nested_listKey != lkey:
-                    nested_listVal = lkey
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
 
         leafDict = self._createLeafDict(model, table)
         # get keys from YANG model list itself
@@ -451,17 +470,17 @@ class SonicYangExtMixin:
                 # Find and extracts key from each dict in config
                 keyDict = self._extractKey(pkey, listKeys)
 
-                if nested_clist:
-                   nested_yang = list()
+                if inner_clist:
+                   inner_yang_list = list()
                    for vKey in config[pkey]:
-                      nested_keyDict = dict()
+                      inner_keyDict = dict()
                       self.sysLog(syslog.LOG_DEBUG, "xlateList Key {} vkey {} Val {} vval {}".\
-                          format(nested_listKey, str(vKey), nested_listVal, str(config[pkey][vKey])))
-                      nested_keyDict[nested_listKey] = str(vKey)
-                      nested_keyDict[nested_listVal] = str(config[pkey][vKey])
-                      nested_yang.append(nested_keyDict)
+                          format(inner_listKey, str(vKey), inner_listVal, str(config[pkey][vKey])))
+                      inner_keyDict[inner_listKey] = str(vKey)
+                      inner_keyDict[inner_listVal] = str(config[pkey][vKey])
+                      inner_yang_list.append(inner_keyDict)
 
-                keyDict[nested_clist['@name']] = nested_yang
+                keyDict[inner_clist['@name']] = inner_yang_list
                 yang.append(keyDict)
                 # delete pkey from config, done to match one key with one list
                 del config[pkey]
@@ -485,14 +504,17 @@ class SonicYangExtMixin:
     to sonic_yang.json.
     """
     def _xlateList(self, model, yang, config, table, exceptionList):
-
-        #create a dict to map each key under primary key with a dict yang model.
-        #This is done to improve performance of mapping from values of TABLEs in
-        #config DB to leaf in YANG LIST.
+        
+        #Qos Map lists needs special handling because of inner yang list and
+        #config db format.
         if model['@name'] in qos_maps_model:
             self.sysLog(msg="_xlateQosMapList: {}".format(model['@name']))
             self._xlateQosMapList(model, yang,config, table, exceptionList)
             return
+
+        #create a dict to map each key under primary key with a dict yang model.
+        #This is done to improve performance of mapping from values of TABLEs in
+        #config DB to leaf in YANG LIST.
 
         leafDict = self._createLeafDict(model, table)
         # get keys from YANG model list itself
@@ -702,8 +724,25 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
-    QOS MAP Yang has netsted list, each nested list key:val should 
-    be mapped to field:value in Config DB. 
+    QOS MAP Yang has inner list, each inner list key:val should 
+    be mapped to field:value in Config DB.
+    Example: 
+    Yang:
+    module: sonic-dscp-tc-map
+    +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
+    Config DB: 
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": { 
+          "1": "1",
+          "2": "2"
+       }
+    }
     """
 
     def _revQosMapXlateList(self, model, yang, config, table):
@@ -714,15 +753,14 @@ class SonicYangExtMixin:
         # config DB to leaf in YANG LIST.
         leafDict = self._createLeafDict(model, table)
 
-        # Gather netsted list key and value from model  
-        nested_clist = model.get('list')
-        if nested_clist:
-            nested_map = nested_clist['@name']
-            nested_listKey = nested_clist['key']['@value']
-            nested_leafDict = self._createLeafDict(nested_clist, table)
-            for lkey in nested_leafDict:
-                if nested_listKey != lkey:
-                    nested_listVal = lkey
+        # Gather inner list key and value from model  
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
 
         # list with name <NAME>_LIST should be removed,
         if "_LIST" in model['@name']:
@@ -732,21 +770,22 @@ class SonicYangExtMixin:
                 self.sysLog(syslog.LOG_DEBUG, "revXlateList pkey:{}".format(pkey))
                 config[pkey]= dict()
                 # fill rest of the entries
-                nested_list = entry[nested_map]
-                for index in range(len(nested_list)):
+                inner_list = entry[inner_clist['@name']]
+                for index in range(len(inner_list)):
                     self.sysLog(syslog.LOG_DEBUG, "revXlateList fkey:{} fval {}".\
-                         format(str(nested_list[index][nested_listKey]),\
-                             str(nested_list[index][nested_listVal])))
-                    config[pkey][str(nested_list[index][nested_listKey])] = str(nested_list[index][nested_listVal])
+                         format(str(inner_list[index][inner_listKey]),\
+                             str(inner_list[index][inner_listVal])))
+                    config[pkey][str(inner_list[index][inner_listKey])] = str(inner_list[index][inner_listVal])
         return
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
     """
     def _revXlateList(self, model, yang, config, table):
-
+        
+        # special processing for QOS Map table.
         if model['@name'] in qos_maps_model:
-           self._revQosMapXlateList(model,yang,config,table)
+           self._revQosMapXlateList(model, yang, config, table)
            return
 
         # get keys from YANG model list itself
