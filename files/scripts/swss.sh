@@ -1,5 +1,13 @@
 #!/bin/bash
 
+DEV=$2
+
+SERVICE="swss"
+PEER="syncd"
+DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
+LOCKFILE="/tmp/swss-syncd-lock$DEV"
+NAMESPACE_PREFIX="asic"
+
 DEPENDENT="radv"
 MULTI_INST_DEPENDENT="teamd"
 
@@ -269,13 +277,6 @@ stop() {
     stop_peer_and_dependent_services
 }
 
-DEV=$2
-
-SERVICE="swss"
-PEER="syncd"
-DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
-LOCKFILE="/tmp/swss-syncd-lock$DEV"
-NAMESPACE_PREFIX="asic"
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
