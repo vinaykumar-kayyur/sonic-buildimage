@@ -30,6 +30,14 @@
                     {
                         "brkout_mode": "1x400G[200G,100G,50G,40G,25G,10G,1G]",
                         "port": "Ethernet24"
+                    },
+                    {
+                        "brkout_mode": "2x50G[25G,10G,1G]",
+                        "port": "Ethernet28"
+                    },
+                    {
+                        "brkout_mode": "2x50G[25G,10G]",
+                        "port": "Ethernet32"
                     }
                 ]
             }
