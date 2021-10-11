@@ -1,7 +1,7 @@
-From 80d195aa6e3a67d8080835102645622211f34d32 Mon Sep 17 00:00:00 2001
+From ed73b206f1303a75c03a1cb7d7a06c375519a4e0 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Fri, 8 Oct 2021 13:06:22 +0800
-Subject: [PATCH 2/3] Extract tacacs support functions into library.
+Date: Mon, 11 Oct 2021 15:58:49 +0800
+Subject: [PATCH 3/4] Extract tacacs support functions into library.
 
 ---
  Makefile.am         |  16 ++-
@@ -11,7 +11,7 @@ Subject: [PATCH 2/3] Extract tacacs support functions into library.
  pam_tacplus.h       |   6 --
  support.c           | 255 ++++++++++++++++++++++++++------------------
  support.h           |  14 +++
- 7 files changed, 190 insertions(+), 118 deletions(-)
+ 7 files changed, 194 insertions(+), 114 deletions(-)
  create mode 100644 libtacsupport.pc.in
 
 diff --git a/Makefile.am b/Makefile.am
@@ -91,7 +91,7 @@ index 0000000..1f12fe0
 +Libs: -L${libdir} -ltacsupport
 +Cflags: -I${includedir}
 diff --git a/pam_tacplus.c b/pam_tacplus.c
-index 79d8e34..4e6b3bb 100644
+index d062359..2a484f0 100644
 --- a/pam_tacplus.c
 +++ b/pam_tacplus.c
 @@ -53,9 +53,6 @@ static tacplus_server_t active_server;
@@ -122,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index b940a40..8f08370 100644
+index c1ea21b..e4b667d 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,6 +29,7 @@
@@ -133,7 +133,7 @@ index b940a40..8f08370 100644
  
  /* tacacs server information */
  tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
-@@ -234,9 +235,155 @@ void set_source_ip(const char *tac_source_ip) {
+@@ -234,9 +235,160 @@ void set_source_ip(const char *tac_source_ip) {
      }
  }
  
@@ -269,6 +269,11 @@ index b940a40..8f08370 100644
 +        return 0;
 +    }
 +
++    if (tac_source_addr != NULL) {
++        /* reset source address */
++        tac_source_addr = NULL;
++    }
++
 +    char current_secret[256];
 +    memset(current_secret, 0, sizeof(current_secret));
 +    while (fgets(line_buffer, sizeof line_buffer, config_file)) {
@@ -290,8 +295,8 @@ index b940a40..8f08370 100644
  
      /* otherwise the list will grow with each call */
      memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
-@@ -249,109 +396,7 @@ int _pam_parse (int argc, const char **argv) {
-     tac_source_ip[0] = 0;
+@@ -254,106 +406,7 @@ int _pam_parse (int argc, const char **argv) {
+     }
  
      for (ctrl = 0; argc-- > 0; ++argv) {
 -        if (!strcmp (*argv, "debug")) { /* all */
@@ -354,9 +359,6 @@ index b940a40..8f08370 100644
 -                        snprintf(tac_srv[tac_srv_no].key, sizeof(tac_srv[tac_srv_no].key), "%s", current_secret);
 -                        tac_srv_no++;
 -                    }
--
--                    /* release servers memory */
--                    freeaddrinfo(servers);
 -                } else {
 -                    _pam_log (LOG_ERR,
 -                        "skip invalid server: %s (getaddrinfo: %s)",
@@ -393,7 +395,7 @@ index b940a40..8f08370 100644
 -        } else if (!strncmp (*argv, "source_ip=", strlen("source_ip="))) {
 -            /* source ip for the packets */
 -            strncpy (tac_source_ip, *argv + strlen("source_ip="), sizeof(tac_source_ip));
--            set_source_ip (tac_source_ip);
+-            set_source_ip(tac_source_ip);
 -        } else {
 -            _pam_log (LOG_WARNING, "unrecognized option: %s", *argv);
 -        }
@@ -401,15 +403,8 @@ index b940a40..8f08370 100644
      }
  
      if (ctrl & PAM_TAC_DEBUG) {
-@@ -371,4 +416,4 @@ int _pam_parse (int argc, const char **argv) {
-     }
- 
-     return ctrl;
--}    /* _pam_parse */
-\ No newline at end of file
-+}    /* _pam_parse */
 diff --git a/support.h b/support.h
-index e20e227..3193168 100644
+index 6bcb07f..201ae55 100644
 --- a/support.h
 +++ b/support.h
 @@ -26,6 +26,14 @@

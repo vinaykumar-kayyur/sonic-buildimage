@@ -1,7 +1,7 @@
-From f45e079f1f73e8c4ac315b62aa395754c1e53eb5 Mon Sep 17 00:00:00 2001
+From a14c6557cf473e6367ace3905147dad24133b681 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Fri, 8 Oct 2021 13:07:17 +0800
-Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
+Date: Mon, 11 Oct 2021 16:01:22 +0800
+Subject: [PATCH 4/4] Add setting flag for authorization and accounting.
 
 ---
  support.c | 8 ++++++++
@@ -9,7 +9,7 @@ Subject: [PATCH 3/3] Add setting flag for authorization and accounting.
  2 files changed, 16 insertions(+)
 
 diff --git a/support.c b/support.c
-index 8f08370..890616c 100644
+index e4b667d..820f1d0 100644
 --- a/support.c
 +++ b/support.c
 @@ -345,6 +345,14 @@ int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_b
@@ -28,7 +28,7 @@ index 8f08370..890616c 100644
          _pam_log (LOG_WARNING, "unrecognized option: %s", arg);
      }
 diff --git a/support.h b/support.h
-index 3193168..d5945a0 100644
+index 201ae55..dbd85e1 100644
 --- a/support.h
 +++ b/support.h
 @@ -34,6 +34,14 @@
