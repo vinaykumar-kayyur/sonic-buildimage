@@ -109,7 +109,7 @@ THERMAL_ZONE_FOLDER_WILDCARD = '/run/hw-management/thermal/mlxsw*'
 THERMAL_ZONE_POLICY_FILE = 'thermal_zone_policy'
 THERMAL_ZONE_MODE_FILE = 'thermal_zone_mode'
 THERMAL_ZONE_TEMP_FILE = 'thermal_zone_temp'
-THERMAL_ZONE_THRESHOLD_FILE = 'temp_trip_norm'
+THERMAL_ZONE_THRESHOLD_FILE = 'temp_trip_high'
 MODULE_TEMP_FAULT_WILDCARRD = '/run/hw-management/thermal/module*_temp_fault'
 MAX_AMBIENT_TEMP = 120
 
