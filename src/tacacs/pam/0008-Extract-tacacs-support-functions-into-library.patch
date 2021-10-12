@@ -1,6 +1,6 @@
-From ed73b206f1303a75c03a1cb7d7a06c375519a4e0 Mon Sep 17 00:00:00 2001
+From d820001f60e0a9f5e5df83b1edb229be5212e0b5 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Mon, 11 Oct 2021 15:58:49 +0800
+Date: Tue, 12 Oct 2021 10:09:10 +0800
 Subject: [PATCH 3/4] Extract tacacs support functions into library.
 
 ---
@@ -122,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index c1ea21b..e4b667d 100644
+index e22fa31..5b6e1fa 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,6 +29,7 @@
@@ -133,7 +133,7 @@ index c1ea21b..e4b667d 100644
  
  /* tacacs server information */
  tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
-@@ -234,9 +235,160 @@ void set_source_ip(const char *tac_source_ip) {
+@@ -236,9 +237,160 @@ void set_source_ip(const char *tac_source_ip) {
      }
  }
  
@@ -295,7 +295,7 @@ index c1ea21b..e4b667d 100644
  
      /* otherwise the list will grow with each call */
      memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
-@@ -254,106 +406,7 @@ int _pam_parse (int argc, const char **argv) {
+@@ -256,106 +408,7 @@ int _pam_parse (int argc, const char **argv) {
      }
  
      for (ctrl = 0; argc-- > 0; ++argv) {
@@ -404,7 +404,7 @@ index c1ea21b..e4b667d 100644
  
      if (ctrl & PAM_TAC_DEBUG) {
 diff --git a/support.h b/support.h
-index 6bcb07f..201ae55 100644
+index 6bcb07f..569172e 100644
 --- a/support.h
 +++ b/support.h
 @@ -26,6 +26,14 @@
@@ -430,16 +430,15 @@ index 6bcb07f..201ae55 100644
  
  extern char tac_service[64];
  extern char tac_protocol[64];
-@@ -49,6 +58,11 @@ void *_xcalloc (size_t);
- char *_pam_get_user(pam_handle_t *);
+@@ -50,5 +59,10 @@ char *_pam_get_user(pam_handle_t *);
  char *_pam_get_terminal(pam_handle_t *);
  char *_pam_get_rhost(pam_handle_t *);
-+
+ 
 +/*
 + * Parse config file.
 + */
 +int parse_config_file(const char *file);
- 
++
  #endif  /* PAM_TACPLUS_SUPPORT_H */
  
 -- 

@@ -1,7 +1,8 @@
-From 3fe58149e32e9ccef64443d15d51052c5fedde13 Mon Sep 17 00:00:00 2001
+From 99eeeccd14c905b7ad77210343bb07334eb0e8d1 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Mon, 11 Oct 2021 15:53:17 +0800
+Date: Tue, 12 Oct 2021 10:05:28 +0800
 Subject: [PATCH 2/4] Fix memory leak when parse configuration.
+The fix code in this patch are copy from upstream project: https://github.com/kravietz/pam_tacplus/blob/master/support.c
 
 ---
  pam_tacplus.c |  6 ++++--
@@ -34,7 +35,7 @@ index 9fc6be7..d062359 100644
                      if (ctrl & PAM_TAC_DEBUG)
                          syslog(LOG_DEBUG, "%s: active srv %d", __FUNCTION__, srv_i);
 diff --git a/support.c b/support.c
-index 893712e..c1ea21b 100644
+index 164df62..e22fa31 100644
 --- a/support.c
 +++ b/support.c
 @@ -30,7 +30,12 @@
@@ -50,7 +51,7 @@ index 893712e..c1ea21b 100644
  int tac_srv_no = 0;
  
  char tac_service[64];
-@@ -178,6 +183,26 @@ int tacacs_get_password (pam_handle_t * pamh, int flags
+@@ -173,6 +178,26 @@ int tacacs_get_password (pam_handle_t * pamh, int flags
      return PAM_SUCCESS;
  }
  
@@ -76,8 +77,8 @@ index 893712e..c1ea21b 100644
 +
  /* set source ip address for the outgoing tacacs packets */
  void set_source_ip(const char *tac_source_ip) {
- 
-@@ -282,8 +307,11 @@ int _pam_parse (int argc, const char **argv) {
+     /*
+@@ -284,8 +309,11 @@ int _pam_parse (int argc, const char **argv) {
                  }
                  if ((rv = getaddrinfo(server_name, (port == NULL) ? "49" : port, &hints, &servers)) == 0) {
                      for(server = servers; server != NULL && tac_srv_no < TAC_PLUS_MAXSERVERS; server = server->ai_next) {
@@ -91,7 +92,7 @@ index 893712e..c1ea21b 100644
                          tac_srv_no++;
                      }
                  } else {
-@@ -302,10 +330,11 @@ int _pam_parse (int argc, const char **argv) {
+@@ -304,10 +332,11 @@ int _pam_parse (int argc, const char **argv) {
  
              /* if 'secret=' was given after a 'server=' parameter, fill in the current secret */
              for(i = tac_srv_no-1; i >= 0; i--) {
