@@ -1,7 +1,11 @@
 module sonic-system-aaa {
     namespace "http://github.com/Azure/sonic-system-aaa";
     prefix ssys;
-    yang-version 1.1;
+    yang-version 1.2;
+
+    revision 2021-10-12 {
+        description "Add AAA authorization/accounting support.";
+    }
 
     revision 2021-04-15 {
         description "Initial revision.";
@@ -21,7 +25,7 @@ module sonic-system-aaa {
                     description "AAA type authentication/authorization/accounting";
                 }
 
-                leaf method {
+                leaf login {
                     type string;
                     description "AAA authentication/authorization/accounting methods - local/tacacs+/disable";
                     default "local";
