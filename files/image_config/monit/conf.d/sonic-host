@@ -25,6 +25,5 @@ check process rsyslog with pidfile /var/run/rsyslogd.pid
 # Raise syslog error message, in case of underlying issues
 #
 check program diskCheck with path "/usr/local/bin/disk_check.py"
-    every 5 cycles
-    if status != 0 for 3 cycle then alert repeat every 1 cycles
+    if status != 0 then alert
 
