@@ -20,6 +20,17 @@
 #define syslog mock_syslog
 #endif
 
+/* 
+    Convert log to a string because va args resoursive issue:
+    http://www.c-faq.com/varargs/handoff.html
+*/
+#define GENERATE_LOG_FROM_VA(logBufferName)                 \
+    char logBufferName[512];                                \
+    va_list args;                                           \
+    va_start(args, format);                                 \
+    vsnprintf(logBufferName, sizeof(logBufferName), format, args);  \
+    va_end(args);
+
 /* Config file path */
 const char *tacacs_config_file = "/etc/tacplus_servers";
 
@@ -40,18 +51,9 @@ int tacacs_ctrl;
  */
 void output_verbose(const char *format, ...)
 {
-    fprintf(stderr, "TACACS+: ");
     syslog(LOG_INFO,"TACACS+: ");
 
-    // convert log to a string because va args resoursive issue:
-    // http://www.c-faq.com/varargs/handoff.html
-    char logBuffer[512];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end(args);
-
-    fprintf(stderr, "%s", logBuffer);
+    GENERATE_LOG_FROM_VA(logBuffer);
     syslog(LOG_INFO, "%s", logBuffer);
 }
 
@@ -63,13 +65,7 @@ void output_error(const char *format, ...)
     fprintf(stderr, "TACACS+: ");
     syslog(LOG_ERR,"TACACS+: ");
 
-    // convert log to a string because va args resoursive issue:
-    // http://www.c-faq.com/varargs/handoff.html
-    char logBuffer[512];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end(args);
+    GENERATE_LOG_FROM_VA(logBuffer);
 
     fprintf(stderr, "%s", logBuffer);
     syslog(LOG_ERR, "%s", logBuffer);
@@ -84,14 +80,7 @@ void output_debug(const char *format, ...)
         return;
     }
 
-    // convert log to a string because va args resoursive issue:
-    // http://www.c-faq.com/varargs/handoff.html
-    char logBuffer[512];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(logBuffer, sizeof(logBuffer), format, args);
-    va_end(args);
-
+    GENERATE_LOG_FROM_VA(logBuffer);
     output_error (logBuffer);
 }
 
@@ -268,7 +257,7 @@ void load_tacacs_config()
     output_verbose("tacacs config updated:\n");
     int server_idx;
     for(server_idx = 0; server_idx < tac_srv_no; server_idx++) {
-        output_verbose("Server %d, address:%s, key:%s\n", server_idx, tac_ntop(tac_srv[server_idx].addr->ai_addr),tac_srv[server_idx].key);
+        output_verbose("Server %d, address:%s, key length:%d\n", server_idx, tac_ntop(tac_srv[server_idx].addr->ai_addr),strlen(tac_srv[server_idx].key));
     }
 }
 
