@@ -142,15 +142,6 @@
 
                 ]
             },
-            "sonic-mclag:MCLAG_UNIQUE_IP": {
-                "MCLAG_UNIQUE_IP_LIST": [
-                   {
-                           "if_name"  : "Vlan12",
-                           "unique_ip": "enable"
-                       }
-                    ]
-                }
-            },
             "sonic-vlan:sonic-vlan": {
                 "sonic-vlan:VLAN_INTERFACE": {
                     "VLAN_INTERFACE_IPPREFIX_LIST": [
@@ -160,6 +151,15 @@
                         "scope": "global",
                         "name": "Vlan12"
                     }
+                    ]
+                }
+            },
+            "sonic-mclag:MCLAG_UNIQUE_IP": {
+                "MCLAG_UNIQUE_IP_LIST": [
+                   {
+                           "if_name"  : "Vlan12",
+                           "unique_ip": "enable"
+                       }
                     ]
                 }
             }
