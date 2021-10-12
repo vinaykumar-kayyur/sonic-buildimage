@@ -189,7 +189,7 @@ class IpNextHop:
     def is_zero_ip(self):
         try:
             return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
-        except:
+        except socket.error:
             return False
     def is_portchannel(self):
         return True if self.ip.startswith('PortChannel') else False
