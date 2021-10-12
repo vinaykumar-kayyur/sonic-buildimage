@@ -912,6 +912,12 @@
         "AAA": {
             "authentication": {
                 "login": "local" 
+            },
+            "authorization": {
+                "login": "local" 
+            },
+            "accounting": {
+                "login": "local" 
             }
         },
         "TACPLUS": {
