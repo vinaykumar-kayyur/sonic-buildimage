@@ -32,6 +32,8 @@ class TestCfgGen(TestCase):
         self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
         self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.voq_port_config = os.path.join(self.test_dir, 'voq-sample-port-config.ini')
+        self.packet_chassis_graph = os.path.join(self.test_dir, 'sample-chassis-packet-lc-graph.xml')
+        self.packet_chassis_port_ini = os.path.join(self.test_dir, 'sample-chassis-packet-lc-port-config.ini')
         # To ensure that mock config_db data is used for unit-test cases
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
