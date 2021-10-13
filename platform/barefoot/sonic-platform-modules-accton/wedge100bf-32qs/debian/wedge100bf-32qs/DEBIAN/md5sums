@@ -1,0 +1,6 @@
+a40642f1ffbc4a73f07d5cfced535350  usr/local/bin/bf-fancontrol
+b7278fc32aef991ca27c048b5ec57b09  usr/local/bin/sensors
+b03232d5a06481dc7960b22ab0288f2b  usr/share/doc/wedge100bf-32qs/changelog.gz
+37d37508aee6dc254d8e2e6df5c4b922  usr/share/doc/wedge100bf-32qs/copyright
+b865ca2379dbafe2c2604f42304aa669  usr/share/sonic/device/x86_64-accton_wedge100bf_32qs-r0/sonic_platform-1.0-py2-none-any.whl
+71ef345f924a0d49aa8f7db0055d42e6  usr/share/sonic/device/x86_64-accton_wedge100bf_32qs-r0/sonic_platform-1.0-py3-none-any.whl
