@@ -698,7 +698,7 @@ class AaaCfg(object):
         local_authorization_conf = None
         if 'tacacs+' in authorization['login']:
             tacacs_authorization_conf = "on"
-        if 'local' in authentication['login']:
+        if 'local' in authorization['login']:
             local_authorization_conf = "on"
 
         # Add tacplus accounting configration in nsswitch.conf
