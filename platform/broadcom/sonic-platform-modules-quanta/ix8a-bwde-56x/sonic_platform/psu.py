@@ -21,44 +21,20 @@ class Psu(PsuBase):
         fan = Fan(index, True)
         self._fan_list.append(fan)
 
-        self.psu_index_mapping = {
-            1:114,
-            2:126,
-        }
-        self.psu_powerin_index_mapping = {
-            1:119,
-            2:131,
-        }
-        self.psu_currentout_index_mapping = {
-            1:130,
-            2:115,
-        }
-        self.psu_currentin_index_mapping = {
-            1:130,
-            2:115,
-        }
-        self.psu_voltageout_index_mapping = {
-            1:129,
-            2:124,
-        }
-        self.psu_voltagein_index_mapping = {
-            1:125,
-            2:128,
-        }
         self.index                = index
-        self.psu_presence_attr    = "power{}_present".format(self.psu_index_mapping[self.index])
-        self.psu_status_attr      = "curr{}_input".format(self.psu_currentout_index_mapping[self.index])
-        self.psu_power_in_attr    = "power{}_input".format(self.psu_powerin_index_mapping[self.index])
-        self.psu_power_out_attr   = "power{}_input".format(self.psu_index_mapping[self.index])
-        self.psu_voltage_out_attr = "in{}_input".format(self.psu_voltageout_index_mapping[self.index])
-        self.psu_current_out_attr = "curr{}_input".format(self.psu_currentout_index_mapping[self.index])
-        self.psu_voltage_in_attr = "in{}_input".format(self.psu_voltagein_index_mapping[self.index])
-        self.psu_current_in_attr = "curr{}_input".format(self.psu_currentin_index_mapping[self.index])
-        self.psu_serial_attr      = "power{}_sn".format(self.psu_index_mapping[self.index])
-        self.psu_model_attr       = "power{}_model".format(self.psu_index_mapping[self.index])
-        self.psu_mfr_id_attr      = "power{}_mfrid".format(self.psu_index_mapping[self.index])
-        self.psu_capacity_attr    = "power{}_pout_max".format(self.psu_index_mapping[self.index])
-        self.psu_type_attr        = "power{}_vin_type".format(self.psu_index_mapping[self.index])
+        self.psu_presence_attr    = "PSU{}_POWER_OUT_present".format(self.index)
+        self.psu_status_attr      = "PSU{}_CURRENT_OUT_input".format(self.index)
+        self.psu_power_in_attr    = "PSU{}_POWER_IN_input".format(self.index)
+        self.psu_power_out_attr   = "PSU{}_POWER_OUT_input".format(self.index)
+        self.psu_voltage_out_attr = "PSU{}_VOLTAGE_OUT_input".format(self.index)
+        self.psu_current_out_attr = "PSU{}_CURRENT_OUT_input".format(self.index)
+        self.psu_voltage_in_attr  = "PSU{}_VOLTAGE_IN_input".format(self.index)
+        self.psu_current_in_attr  = "PSU{}_CURRENT_IN_input".format(self.index)
+        self.psu_serial_attr      = "PSU{}_POWER_OUT_sn".format(self.index)
+        self.psu_model_attr       = "PSU{}_POWER_OUT_model".format(self.index)
+        self.psu_mfr_id_attr      = "PSU{}_POWER_OUT_mfrid".format(self.index)
+        self.psu_capacity_attr    = "PSU{}_POWER_OUT_pout_max".format(self.index)
+        self.psu_type_attr        = "PSU{}_POWER_OUT_vin_type".format(self.index)
 
     def __get_attr_value(self, attr_path):
 
@@ -212,10 +188,10 @@ class Psu(PsuBase):
 
     def get_input_voltage(self):
         """
-        Retrieves current PSU voltage output
+        Retrieves current PSU voltage input
 
         Returns:
-            A float number, the output voltage in volts,
+            A float number, the input voltage in volts,
             e.g. 12.1
         """
         voltage_in = 0.0

@@ -20,8 +20,6 @@ except ImportError as e:
 # Global
 ###############
 HWMON_DIR = "/sys/class/hwmon/hwmon2/"
-FAN_INDEX_START = 18
-NUM_FANTRAYS = 6
 FANS_PERTRAY = 2
 
 class Fan(FanBase):
@@ -30,24 +28,19 @@ class Fan(FanBase):
     def __init__(self, index, is_psu_fan=False):
         self.is_psu_fan = is_psu_fan
         self.fan_index = index
-        self.psu_fan_index_mapping = {
-            1:120,
-            2:132,
-        }
-        self.psu_index_mapping = {
-            1:114,
-            2:126,
-        }
+
         if self.is_psu_fan:
-            self.fan_presence_attr = "power{}_present".format(self.psu_index_mapping[index])
-            self.fan_pwm_attr = "fan{}_pwm".format(self.psu_fan_index_mapping[index])
-            self.fan_rpm_attr = "fan{}_input".format(self.psu_fan_index_mapping[index])
-            self.fan_direction_attr = "fan{}_direction".format(self.psu_fan_index_mapping[index])
+            self.fan_presence_attr = "PSU{}_POWER_OUT_present".format(index)
+            self.fan_pwm_attr = "PSU{}_Fan_pwm".format(index)
+            self.fan_rpm_attr = "PSU{}_Fan_input".format(index)
+            self.fan_direction_attr = "PSU{}_Fan_direction".format(index)
         else:
-            self.fan_presence_attr = "fan{}_present".format(FAN_INDEX_START+(index-1))
-            self.fan_pwm_attr = "fan{}_pwm".format(FAN_INDEX_START+(index-1))
-            self.fan_rpm_attr = "fan{}_input".format(FAN_INDEX_START+(index-1))
-            self.fan_direction_attr = "fan{}_direction".format(FAN_INDEX_START+(index-1))
+            fantray_index = (self.fan_index-1)//FANS_PERTRAY+1
+            fan_index_intray = self.fan_index - ((fantray_index-1)*FANS_PERTRAY)
+            self.fan_presence_attr = "Fan_SYS_{}_{}_present".format(fantray_index, fan_index_intray)
+            self.fan_pwm_attr = "Fan_SYS_{}_{}_pwm".format(fantray_index, fan_index_intray)
+            self.fan_rpm_attr = "Fan_SYS_{}_{}_input".format(fantray_index, fan_index_intray)
+            self.fan_direction_attr = "Fan_SYS_{}_{}_direction".format(fantray_index, fan_index_intray)
 
 
 #######################

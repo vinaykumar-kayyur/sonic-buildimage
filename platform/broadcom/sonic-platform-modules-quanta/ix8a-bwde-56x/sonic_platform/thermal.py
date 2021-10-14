@@ -19,34 +19,34 @@ except ImportError as e:
 HWMON_DIR = "/sys/class/hwmon/hwmon2/"
 
 thermal_index_mapping = {
-    1:53,
-    2:54,
-    3:55,
-    4:56,
-    5:57,
-    6:58,
-    7:59,
-    8:60,
-    9:61,
-   10:62,
-   11:63,
-   12:64,
-   13:86,
-   14:87,
-   15:88,
-   16:89,
-   17:90,
-   18:91,
-   19:92,
-   20:93,
-   21:94,
-   22:109,
-   23:116,
-   24:117,
-   25:121,
-   26:122,
-   27:123,
-   28:127
+    1:'PSU1_TEMP1',
+    2:'PSU1_TEMP2',
+    3:'PSU1_TEMP3',
+    4:'PSU2_TEMP1',
+    5:'PSU2_TEMP2',
+    6:'PSU2_TEMP3',
+    7:'QMACTemp_0',
+    8:'QMACTemp_1',
+    9:'QMACTemp_2',
+   10:'QMACTemp_3',
+   11:'QMACTemp_4',
+   12:'QMACTemp_5',
+   13:'QMACTemp_6',
+   14:'QMACTemp_7',
+   15:'QMACTemp_8',
+   16:'QMACTemp_9',
+   17:'Temp_1V05_PCH_VR',
+   18:'Temp_Ambient_1',
+   19:'Temp_Ambient_2',
+   20:'Temp_Ambient_3',
+   21:'Temp_Ambient_4',
+   22:'Temp_Ambient_5',
+   23:'Temp_Ambient_6',
+   24:'Temp_CPU',
+   25:'Temp_DDRAB_VR',
+   26:'Temp_SOC_DIMMA0',
+   27:'Temp_VCCGBE_VR',
+   28:'Temp_VCCIN_VR'
 }
 
 
@@ -56,10 +56,10 @@ class Thermal(ThermalBase):
 
     def __init__(self, thermal_index):
         self.index        = thermal_index
-        self.temp_attr    = "temp{}_input".format(thermal_index_mapping[self.index])
-        self.high_th_attr = "temp{}_ncrit".format(thermal_index_mapping[self.index])
-        self.high_crit_th_attr = "temp{}_crit".format(thermal_index_mapping[self.index])
-        self.name_attr    = "temp{}_label".format(thermal_index_mapping[self.index])
+        self.temp_attr    = "{}_input".format(thermal_index_mapping[self.index])
+        self.high_th_attr = "{}_ncrit".format(thermal_index_mapping[self.index])
+        self.high_crit_th_attr = "{}_crit".format(thermal_index_mapping[self.index])
+        self.name_attr    = "{}_label".format(thermal_index_mapping[self.index])
 
 
     def __get_attr_value(self, attr_path):
