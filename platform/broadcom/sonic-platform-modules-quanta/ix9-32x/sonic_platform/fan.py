@@ -84,7 +84,7 @@ class Fan(FanBase):
         if self.is_psu_fan:
             return "PSU-{}_FAN".format(self.fan_index)
         else:
-            fantray_index = (self.fan_index-1)/FANS_PERTRAY+1
+            fantray_index = (self.fan_index-1)//FANS_PERTRAY+1
             fan_index_intray = self.fan_index - ((fantray_index-1)*FANS_PERTRAY)
             return "Fantray{}_{}".format(fantray_index, fan_index_intray)
 
