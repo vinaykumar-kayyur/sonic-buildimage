@@ -424,17 +424,17 @@ class SonicYangExtMixin:
     QOS MAPS Yang has inner list, which is diffrent from config DB.
     Each field value in config db should be converted to inner list with
     key and value.
-    Example: 
+    Example:
 
-    Config DB: 
+    Config DB:
     "DSCP_TO_TC_MAP": {
-       "Dscp_to_tc_map1": { 
+       "Dscp_to_tc_map1": {
           "1": "1",
           "2": "2"
        }
     }
 
-    Yang: 
+    YANG Model:
     module: sonic-dscp-tc-map
      +--rw sonic-dscp-tc-map
      +--rw DSCP_TO_TC_MAP
@@ -443,6 +443,27 @@ class SonicYangExtMixin:
            +--rw DSCP_TO_TC_MAP* [dscp]
               +--rw dscp    string
               +--rw tc?     string
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+        "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+             "DSCP_TO_TC_MAP_LIST": [
+                   {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+    }
     """
     def _xlateQosMapList(self, model, yang, config, table, exceptionList):
 
@@ -724,10 +745,11 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
-    QOS MAP Yang has inner list, each inner list key:val should 
+    QOS MAP Yang has inner list, each inner list key:val should
     be mapped to field:value in Config DB.
-    Example: 
-    Yang:
+    Example:
+
+    YANG:
     module: sonic-dscp-tc-map
     +--rw sonic-dscp-tc-map
      +--rw DSCP_TO_TC_MAP
@@ -736,9 +758,31 @@ class SonicYangExtMixin:
            +--rw DSCP_TO_TC_MAP* [dscp]
               +--rw dscp    string
               +--rw tc?     string
-    Config DB: 
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+            "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+                "DSCP_TO_TC_MAP_LIST": [
+                    {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+    Config DB:
     "DSCP_TO_TC_MAP": {
-       "Dscp_to_tc_map1": { 
+       "Dscp_to_tc_map1": {
           "1": "1",
           "2": "2"
        }
