@@ -1,0 +1,6 @@
+#!/bin/sh
+
+depmod -a
+
+systemctl enable esqc610-platform-init.service
+systemctl start esqc610-platform-init.service
