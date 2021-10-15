@@ -121,6 +121,8 @@ static struct sock_fprog dhcp_sock_bfp = {
  */
 static dhcp_device_context_t aggregate_dev = {0};
 
+static dhcp_device_context_t *mgmt_intf = NULL;
+
 /** Monitored DHCPv4 message type */
 static dhcpv4_message_type_t v4_monitored_msgs[] = {
     DHCPv4_MESSAGE_TYPE_DISCOVER,
@@ -176,6 +178,11 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
         if ((context->giaddr_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
             (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
             context->counters.v4counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            // If the packet recieved on the mgmt interface, we don't want to increment the aggregate device
+            if (context == mgmt_intf)
+            {
+                break;
+            }
             aggregate_dev.counters.v4counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
         }
         break;
@@ -186,6 +193,11 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
         if ((context->giaddr_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             context->counters.v4counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            // If the packet recieved on the mgmt interface, we don't want to increment the aggregate device
+            if (context == mgmt_intf)
+            {
+                break;
+            }
             aggregate_dev.counters.v4counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
         }
         break;
@@ -224,6 +236,11 @@ static void handle_dhcpv6_option(dhcp_device_context_t *context,
     case DHCPv6_MESSAGE_TYPE_RECONFIGURE:
     case DHCPv6_MESSAGE_TYPE_INFORMATION_REQUEST:
         context->counters.v6counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option]++;
+        // If the packet recieved on the mgmt interface, we don't want to increment the aggregate device
+        if (context == mgmt_intf)
+        {
+            break;
+        }
         aggregate_dev.counters.v6counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option]++;
         break;
     default:
@@ -554,7 +571,7 @@ static dhcp_mon_status_t dhcp_device_check_health(dhcp_mon_check_t check_type,
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
-    if (dhcp_device_is_dhcp_inactive(aggregate_dev.counters.v4counters, aggregate_dev.counters.v6counters, type)) {
+    if (dhcp_device_is_dhcp_inactive(v4counters, v6counters, type)) {
         rv = DHCP_MON_STATUS_INDETERMINATE;
     } else if (check_type == DHCP_MON_CHECK_POSITIVE) {
         rv = dhcp_device_check_positive_health(v4counters, v6counters, type);
@@ -947,4 +964,14 @@ void dhcp_device_active_types(bool dhcpv4, bool dhcpv6)
 {
     dhcpv4_enabled = dhcpv4;
     dhcpv6_enabled = dhcpv6;
+}
+
+/**
+ * @code dhcp_device_init_mgmt_intf(mgmt_intf_context);
+ *
+ * @brief assign context address of mgmt interface
+ */
+void dhcp_device_init_mgmt_intf(dhcp_device_context_t *mgmt_intf_context)
+{
+    mgmt_intf = mgmt_intf_context;
 }
