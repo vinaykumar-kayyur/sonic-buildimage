@@ -140,3 +140,9 @@ def test_bgp_conf_all():
              "bgpd/bgpd.conf.j2",
              "bgpd.conf.j2/all.json",
              "bgpd.conf.j2/all.conf")
+
+def test_staticd_default_route_chassis():
+    run_test("staticd.default_route.conf.j2",
+             "staticd/staticd.default_route.conf.j2",
+             "staticd/staticd.default_route_chassis.conf.json",
+             "staticd/staticd.default_route_chassis.conf")
