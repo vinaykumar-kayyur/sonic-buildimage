@@ -24,7 +24,7 @@ BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
    ("CPLD1", "CPLD 1"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 
 class Component(ComponentBase):

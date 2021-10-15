@@ -124,7 +124,7 @@ class Sfp(SfpBase):
     # Path to sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
         
     PLATFORM = "x86_64-accton_as4630_54pe-r0"
     HWSKU = "Accton-AS4630-54PE"
@@ -965,7 +965,7 @@ class Sfp(SfpBase):
         
         if self.port_num < 53:
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)      
-            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
+            ret = self._api_helper.write_txt_file(tx_path,  1 if tx_disable else 0)
             if ret is not None:
                 time.sleep(0.01)
                 return ret

@@ -27,7 +27,7 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
+HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
 SYSLED_FNODE = "/sys/class/leds/diag/brightness"
 SYSLED_MODES = {
     "0" : "STATUS_LED_COLOR_OFF",
@@ -43,25 +43,25 @@ class Chassis(ChassisBase):
     def __init__(self):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
-        self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         for index in range(0, PORT_END):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
+        self._sfpevent = SfpEvent(self._sfp_list)
         self.sfp_module_initialized = True
-        
+
     def __initialize_fan(self):
        from sonic_platform.fan_drawer import FanDrawer
        for fant_index in range(NUM_FAN_TRAY):
@@ -94,7 +94,7 @@ class Chassis(ChassisBase):
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
-    
+
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
@@ -123,7 +123,7 @@ class Chassis(ChassisBase):
             bool: True if Chassis is present, False if not
         """
         return True
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -131,7 +131,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
-    
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -148,7 +148,7 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self._eeprom.get_pn()
-        
+
     def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
@@ -190,10 +190,7 @@ class Chassis(ChassisBase):
         # SFP event
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
-
-        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
-        
-        return status, sfp_event
+        return self._sfpevent.get_sfp_event(timeout)
 
     def get_sfp(self, index):
         """
@@ -235,7 +232,7 @@ class Chassis(ChassisBase):
         """
         return False
 
-        
+
     def initizalize_system_led(self):
         return True
 
@@ -253,4 +250,4 @@ class Chassis(ChassisBase):
             return False
         else:
             return self._api_helper.write_txt_file(SYSLED_FNODE, mode)
-            
+
