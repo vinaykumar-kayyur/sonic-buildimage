@@ -150,6 +150,9 @@ sudo cp {{swsssdk_py3_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SWSSSDK_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY3_WHEEL_NAME
 
+# Install Python module for psutil 
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install psutil
+
 # Install SwSS SDK Python 2 package
 SWSSSDK_PY2_WHEEL_NAME=$(basename {{swsssdk_py2_wheel_path}})
 sudo cp {{swsssdk_py2_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
