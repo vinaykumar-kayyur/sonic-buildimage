@@ -478,7 +478,6 @@ class SonicYangExtMixin:
                 if inner_listKey != lkey:
                     inner_listVal = lkey
 
-        leafDict = self._createLeafDict(model, table)
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         self.sysLog(msg="xlateList keyList:{}".format(listKeys))
@@ -795,7 +794,6 @@ class SonicYangExtMixin:
         # create a dict to map each key under primary key with a dict yang model.
         # This is done to improve performance of mapping from values of TABLEs in
         # config DB to leaf in YANG LIST.
-        leafDict = self._createLeafDict(model, table)
 
         # Gather inner list key and value from model  
         inner_clist = model.get('list')
