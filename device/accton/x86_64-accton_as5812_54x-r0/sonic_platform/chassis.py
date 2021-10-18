@@ -28,7 +28,7 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
+HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
 SYSLED_FNODE= "/sys/class/leds/accton_as5812_54x_led::diag/brightness"
 
 SYSLED_MODES = {
@@ -44,18 +44,17 @@ class Chassis(ChassisBase):
     def __init__(self):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
-        self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
         
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         self.QSFP_PORT_START = QSFP_PORT_START
@@ -67,27 +66,28 @@ class Chassis(ChassisBase):
                 sfp_module = Sfp(index, 'SFP')
             self._sfp_list.append(sfp_module)
 
+        self._sfpevent = SfpEvent(self._sfp_list)
         self.sfp_module_initialized = True
-        
+
     def __initialize_fan(self):
-       from sonic_platform.fan_drawer import FanDrawer
-       for fant_index in range(NUM_FAN_TRAY):
-           fandrawer = FanDrawer(fant_index)
-           self._fan_drawer_list.append(fandrawer)
-           self._fan_list.extend(fandrawer._fan_list)
+        from sonic_platform.fan_drawer import FanDrawer
+        for fant_index in range(NUM_FAN_TRAY):
+            fandrawer = FanDrawer(fant_index)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-    
+
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
@@ -197,10 +197,7 @@ class Chassis(ChassisBase):
         # SFP event
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
-
-        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
-        
-        return status, sfp_event
+        return self._sfpevent.get_sfp_event(timeout)
 
     def get_sfp(self, index):
         """
