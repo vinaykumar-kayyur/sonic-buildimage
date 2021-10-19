@@ -326,7 +326,7 @@ static void read_callback(int fd, short event, void *arg)
             }
         }
         else if (!is_ipv4 && dhcpv6_enabled && (buffer_sz > UDPv6_START_OFFSET + sizeof(struct udphdr) + DHCPv6_TYPE_LENGTH)) {
-            const u_char* dhcp_option = context->buffer + dhcp_option_offset;
+            const u_char* dhcp_header = context->buffer + dhcp_option_offset;
             dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
                                            ethhdr->ether_shost[1] == context->mac[1] &&
                                            ethhdr->ether_shost[2] == context->mac[2] &&
@@ -336,23 +336,25 @@ static void read_callback(int fd, short event, void *arg)
                                            DHCP_TX : DHCP_RX;
             int offset = 0;
             uint16_t option = 0;
+            uint16_t current_option_len = 0;
             // Get to inner DHCP header from encapsulated RELAY_FORWARD or RELAY_REPLY header
-            while (dhcp_option[offset] == DHCPv6_MESSAGE_TYPE_RELAY_FORWARD || dhcp_option[offset] == DHCPv6_MESSAGE_TYPE_RELAY_REPLY)
+            while (dhcp_header[offset] == DHCPv6_MESSAGE_TYPE_RELAY_FORWARD || dhcp_header[offset] == DHCPv6_MESSAGE_TYPE_RELAY_REPLY)
             {
                 // Get to DHCPv6_OPTION_RELAY_MSG from all options
                 offset += DHCPv6_RELAY_MSG_OPTIONS_OFFSET;
-                option = htons(*((uint16_t*)(&(dhcp_option[offset]))));
+                option = htons(*((uint16_t*)(&(dhcp_header[offset]))));
 
                 while (option != DHCPv6_OPTION_RELAY_MSG)
                 {
-                    offset += DHCPv6_OPTION_LENGTH;
                     // Add to offset the option length and get the next option ID
-                    offset += htons(*((uint16_t*)(&(dhcp_option[offset]))));
-                    option = htons(*((uint16_t*)(&(dhcp_option[offset]))));
+                    current_option_len = htons(*((uint16_t*)(&(dhcp_header[offset + DHCPv6_OPTION_LENGTH]))));
+                    offset += DHCPv6_OPTION_LENGTH + DHCPv6_OPTION_LEN_LENGTH + current_option_len;
+                    option = htons(*((uint16_t*)(&(dhcp_header[offset]))));
                 }
+                // Set the offset to DHCP-relay-message data
                 offset += DHCPv6_OPTION_LENGTH + DHCPv6_OPTION_LEN_LENGTH;
             }
-            handle_dhcpv6_option(context, dhcp_option[offset], dir);
+            handle_dhcpv6_option(context, dhcp_header[offset], dir);
         } else {
             syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
                    context->intf, buffer_sz);
