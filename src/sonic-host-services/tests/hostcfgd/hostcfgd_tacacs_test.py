@@ -40,12 +40,12 @@ class TestHostcfgdTACACS(TestCase):
         return subprocess.check_output('diff -uR {} {} || true'.format(file1, file2), shell=True)
 
     """
-        Test different config 
+        Check different config 
     """
-    def test_config(self, test_name, test_data, config_name):
+    def check_config(self, test_name, test_data, config_name):
         t_path = templates_path
-        op_path = output_path + "/" + test_name + config_name
-        sop_path = sample_output_path + "/" + test_name + config_name
+        op_path = output_path + "/" + test_name + "_" + config_name
+        sop_path = sample_output_path + "/" +  test_name + "_" + config_name
 
         hostcfgd.PAM_AUTH_CONF_TEMPLATE = t_path + "/common-auth-sonic.j2"
         hostcfgd.NSS_TACPLUS_CONF_TEMPLATE = t_path + "/tacplus_nss.conf.j2"
@@ -105,10 +105,10 @@ class TestHostcfgdTACACS(TestCase):
                 None
         """
         # test local config
-        self.test_config(test_name, test_data, "config_db_local")
+        self.check_config(test_name, test_data, "config_db_local")
         # test remote config
-        self.test_config(test_name, test_data, "config_db_tacacs")
+        self.check_config(test_name, test_data, "config_db_tacacs")
         # test local + tacacs config
-        self.test_config(test_name, test_data, "config_db_local_and_tacacs")
+        self.check_config(test_name, test_data, "config_db_local_and_tacacs")
         # test disable accounting
-        self.test_config(test_name, test_data, "config_db_disable_accounting")
+        self.check_config(test_name, test_data, "config_db_disable_accounting")
