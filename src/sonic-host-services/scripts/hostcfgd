@@ -10,7 +10,7 @@ import syslog
 import signal
 
 import jinja2
-from sonic_py_common.device_info import is_multi_npu, get_num_npus
+from sonic_py_common import device_info
 from swsscommon.swsscommon import SubscriberStateTable, DBConnector, Select
 from swsscommon.swsscommon import ConfigDBConnector, TableConsumable
 
@@ -45,14 +45,23 @@ HOSTCFGD_MAX_PRI = 10  # Used to enforce ordering b/w daemons under Hostcfgd
 DEFAULT_SELECT_TIMEOUT = 1000
 
 
+def safe_eval_bool(val, default_value=False):
+    """ Safely evaluate the boolean expression, without raising an exception """
+    try:
+        ret = ast.literal_eval(val)
+    except ValueError:
+        ret = default_value
+    return ret
+
+
 def signal_handler(sig, frame):
     if sig == signal.SIGHUP:
-        syslog.syslog(syslog.LOG_INFO, "HostCfgd: Caught SIGHUP - ignoring..")
+        syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGHUP' is caught and ignoring..")
     elif sig == signal.SIGINT:
-        syslog.syslog(syslog.LOG_INFO, "HostCfgd: Caught SIGINT - exiting..")
+        syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGINT' is caught and exiting...")
         sys.exit(128 + sig)
     elif sig == signal.SIGTERM:
-        syslog.syslog(syslog.LOG_INFO, "HostCfgd: Caught SIGTERM - exiting..")
+        syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGTERM' is caught and exiting...")
         sys.exit(128 + sig)
     else:
         syslog.syslog(syslog.LOG_INFO, "HostCfgd: invalid signal - ignoring..")
@@ -107,9 +116,9 @@ class Feature(object):
         self.name = feature_name
         self.state = self._get_target_state(feature_cfg.get('state'), device_config or {})
         self.auto_restart = feature_cfg.get('auto_restart', 'disabled')
-        self.has_timer = self.__safe_eval_bool(feature_cfg.get('has_timer', 'False'))
-        self.has_global_scope = self.__safe_eval_bool(feature_cfg.get('has_global_scope', 'True'))
-        self.has_per_asic_scope = self.__safe_eval_bool(feature_cfg.get('has_per_asic_scope', 'False'))
+        self.has_timer = safe_eval_bool(feature_cfg.get('has_timer', 'False'))
+        self.has_global_scope = safe_eval_bool(feature_cfg.get('has_global_scope', 'True'))
+        self.has_per_asic_scope = safe_eval_bool(feature_cfg.get('has_per_asic_scope', 'False'))
 
     def _get_target_state(self, state_configuration, device_config):
         """ Returns the target state for the feature by rendering the state field as J2 template.
@@ -130,14 +139,6 @@ class Feature(object):
             raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
         return target_state
 
-    def __safe_eval_bool(self, val):
-        """ Safely evaluate the boolean expression, without raising an exception """
-        try:
-            ret = ast.literal_eval(val)
-        except ValueError:
-            ret = False
-        return ret
-
     def compare_state(self, feature_name, feature_cfg):
         if self.name != feature_name or not isinstance(feature_cfg, dict):
             return False
@@ -157,7 +158,7 @@ class FeatureHandler(object):
         self._config_db = config_db
         self._device_config = device_config
         self._cached_config = {}
-        self.is_multi_npu_device = is_multi_npu()
+        self.is_multi_npu = device_info.is_multi_npu()
 
     def handle(self, feature_name, op, feature_cfg):
         if not feature_cfg:
@@ -276,9 +277,9 @@ class FeatureHandler(object):
     def get_feature_attribute(self, feature):
         # Create feature name suffix depending feature is running in host or namespace or in both
         feature_names = (
-            ([feature.name] if feature.has_global_scope or not self.is_multi_npu_device else []) +
-            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(get_num_npus())
-                if feature.has_per_asic_scope and self.is_multi_npu_device])
+            ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
+            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus())
+                if feature.has_per_asic_scope and self.is_multi_npu])
         )
 
         if not feature_names:
@@ -914,7 +915,7 @@ class HostConfigDaemon:
         # Initialize Ntp Config Handler
         self.ntpcfg = NtpCfg()
 
-        self.is_multi_npu_device = is_multi_npu()
+        self.is_multi_npu = device_info.is_multi_npu()
 
         # Initialize AAACfg
         self.hostname_cache=""
@@ -1101,7 +1102,6 @@ def main():
     daemon.register_callbacks()
     daemon.load()
     daemon.start()
-    
 
 if __name__ == "__main__":
     main()
