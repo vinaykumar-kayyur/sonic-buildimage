@@ -643,7 +643,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi
-		pip$($*_PYTHON_VERSION) install .
+		sudo pip$($*_PYTHON_VERSION) install .
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 		# clean up
