@@ -1453,7 +1453,7 @@ class Sfp(SfpBase):
                         sysfsfile_eeprom = open(
                             sysfs_sfp_i2c_client_eeprom_path, mode="r+b", buffering=0)
                         buffer = create_string_buffer(1)
-                        buffer[0] = chr(tx_disable_ctl)
+                        buffer[0] = tx_disable_ctl
                         # Write to eeprom
                         sysfsfile_eeprom.seek(offset + SFP_STATUS_CONTROL_OFFSET)
                         sysfsfile_eeprom.write(buffer[0])
@@ -1506,7 +1506,7 @@ class Sfp(SfpBase):
                     else:
                         tx_disable_ctl = channel_state & (~channel)
                     buffer = create_string_buffer(1)
-                    buffer[0] = chr(tx_disable_ctl)
+                    buffer[0] = tx_disable_ctl
                     # Write to eeprom
                     sysfsfile_eeprom = open(
                         self.port_to_eeprom_mapping[self.port_num], "r+b")
@@ -1594,7 +1594,7 @@ class Sfp(SfpBase):
                     power_set_bit |= 1 << 1
 
                 buffer = create_string_buffer(1)
-                buffer[0] = chr(power_override_bit | power_set_bit)
+                buffer[0] = power_override_bit | power_set_bit
                 # Write to eeprom
                 sysfsfile_eeprom = open(self.port_to_eeprom_mapping[self.port_num], "r+b")
                 sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
