@@ -55,12 +55,32 @@ class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
     def __init__(self, thermal_index):
-        self.index        = thermal_index
-        self.temp_attr    = "{}_input".format(thermal_index_mapping[self.index])
-        self.high_th_attr = "{}_ncrit".format(thermal_index_mapping[self.index])
-        self.high_crit_th_attr = "{}_crit".format(thermal_index_mapping[self.index])
-        self.name_attr    = "{}_label".format(thermal_index_mapping[self.index])
+        self.index             = thermal_index
+        thermal_prefix         = self.__get_hwmon_attr_prefix(HWMON_DIR, thermal_index_mapping[self.index], 'temp')
+        self.temp_attr         = "{}input".format(thermal_prefix)
+        self.high_th_attr      = "{}ncrit".format(thermal_prefix)
+        self.high_crit_th_attr = "{}crit".format(thermal_prefix)
+        self.low_th_attr       = "{}lncrit".format(thermal_prefix)
+        self.low_crit_th_attr  = "{}lcrit".format(thermal_prefix)
+        self.name_attr         = "{}label".format(thermal_prefix)
 
+    def __get_hwmon_attr_prefix(self, dir, label, type):
+
+        retval = 'ERR'
+        if not os.path.isdir(dir):
+            return retval
+
+        try:
+            for filename in os.listdir(dir):
+                if filename[-5:] == 'label' and type in filename:
+                    file_path = os.path.join(dir, filename)
+                    if os.path.isfile(file_path):
+                        if label == self.__get_attr_value(file_path):
+                            return file_path[0:-5]
+        except Exception as error:
+            logging.error("Error when getting {} label path: {}".format(label, error))
+
+        return retval
 
     def __get_attr_value(self, attr_path):
 
@@ -72,7 +92,7 @@ class Thermal(ThermalBase):
             with open(attr_path, 'r') as fd:
                 retval = fd.read()
         except Exception as error:
-            logging.error("Unable to open " + attr_path + " file !")
+            logging.error("Unable to open {} file: {}".format(attr_path, error))
 
         retval = retval.rstrip(' \t\n\r')
         return retval
@@ -84,8 +104,7 @@ class Thermal(ThermalBase):
         Returns:
             string: The name of the device
         """
-        attr_path = HWMON_DIR + self.name_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.name_attr)
 
         if (attr_rv != 'ERR'):
             return attr_rv
@@ -99,8 +118,7 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if device is present, False if not
         """
-        attr_path = HWMON_DIR + self.name_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.name_attr)
 
         if (attr_rv != 'ERR'):
             return True
@@ -127,8 +145,37 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
-        attr_path = HWMON_DIR + self.temp_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.temp_attr)
+
+        if (attr_rv != 'ERR'):
+            return float(attr_rv) / 1000
+        else:
+            return None
+
+    def get_low_threshold(self):
+        """
+        Retrieves the low threshold temperature of thermal
+
+        Returns:
+            A float number, the low threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        attr_rv = self.__get_attr_value(self.low_th_attr)
+
+        if (attr_rv != 'ERR'):
+            return float(attr_rv) / 1000
+        else:
+            return None
+
+    def get_low_critical_threshold(self):
+        """
+        Retrieves the low critical threshold temperature of thermal
+
+        Returns:
+            A float number, the low critical threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        attr_rv = self.__get_attr_value(self.low_crit_th_attr)
 
         if (attr_rv != 'ERR'):
             return float(attr_rv) / 1000
@@ -143,8 +190,7 @@ class Thermal(ThermalBase):
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        attr_path = HWMON_DIR + self.high_th_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.high_th_attr)
 
         if (attr_rv != 'ERR'):
             return float(attr_rv) / 1000
@@ -159,8 +205,7 @@ class Thermal(ThermalBase):
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        attr_path = HWMON_DIR + self.high_crit_th_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.high_crit_th_attr)
 
         if (attr_rv != 'ERR'):
             return float(attr_rv) / 1000

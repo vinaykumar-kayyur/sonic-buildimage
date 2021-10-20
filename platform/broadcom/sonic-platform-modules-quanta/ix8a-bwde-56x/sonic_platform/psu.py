@@ -20,21 +20,46 @@ class Psu(PsuBase):
         PsuBase.__init__(self)
         fan = Fan(index, True)
         self._fan_list.append(fan)
+        self.index = index
 
-        self.index                = index
-        self.psu_presence_attr    = "PSU{}_POWER_OUT_present".format(self.index)
-        self.psu_status_attr      = "PSU{}_CURRENT_OUT_input".format(self.index)
-        self.psu_power_in_attr    = "PSU{}_POWER_IN_input".format(self.index)
-        self.psu_power_out_attr   = "PSU{}_POWER_OUT_input".format(self.index)
-        self.psu_voltage_out_attr = "PSU{}_VOLTAGE_OUT_input".format(self.index)
-        self.psu_current_out_attr = "PSU{}_CURRENT_OUT_input".format(self.index)
-        self.psu_voltage_in_attr  = "PSU{}_VOLTAGE_IN_input".format(self.index)
-        self.psu_current_in_attr  = "PSU{}_CURRENT_IN_input".format(self.index)
-        self.psu_serial_attr      = "PSU{}_POWER_OUT_sn".format(self.index)
-        self.psu_model_attr       = "PSU{}_POWER_OUT_model".format(self.index)
-        self.psu_mfr_id_attr      = "PSU{}_POWER_OUT_mfrid".format(self.index)
-        self.psu_capacity_attr    = "PSU{}_POWER_OUT_pout_max".format(self.index)
-        self.psu_type_attr        = "PSU{}_POWER_OUT_vin_type".format(self.index)
+        current_in_prefix  = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_CURRENT_IN".format(self.index), 'curr')
+        current_out_prefix = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_CURRENT_OUT".format(self.index), 'curr')
+        power_in_prefix    = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_POWER_IN".format(self.index), 'power')
+        power_out_prefix   = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_POWER_OUT".format(self.index), 'power')
+        voltage_in_prefix  = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_VOLTAGE_IN".format(self.index), 'in')
+        voltage_out_prefix = self.__get_hwmon_attr_prefix(HWMON_DIR, "PSU{}_VOLTAGE_OUT".format(self.index), 'in')
+
+        self.psu_current_in_attr  = current_in_prefix + 'input'
+        self.psu_current_out_attr = current_out_prefix + 'input'
+        self.psu_power_in_attr    = power_in_prefix + 'input'
+        self.psu_power_out_attr   = power_out_prefix + 'input'
+        self.psu_voltage_in_attr  = voltage_in_prefix + 'input'
+        self.psu_voltage_out_attr = voltage_out_prefix + 'input'
+        self.psu_status_attr      = current_out_prefix + 'input'
+        self.psu_presence_attr    = power_out_prefix + 'present'
+        self.psu_serial_attr      = power_out_prefix + 'sn'
+        self.psu_model_attr       = power_out_prefix + 'model'
+        self.psu_mfr_id_attr      = power_out_prefix + 'mfrid'
+        self.psu_capacity_attr    = power_out_prefix + 'pout_max'
+        self.psu_type_attr        = power_out_prefix + 'vin_type'
+
+    def __get_hwmon_attr_prefix(self, dir, label, type):
+
+        retval = 'ERR'
+        if not os.path.isdir(dir):
+            return retval
+
+        try:
+            for filename in os.listdir(dir):
+                if filename[-5:] == 'label' and type in filename:
+                    file_path = os.path.join(dir, filename)
+                    if os.path.isfile(file_path):
+                        if label == self.__get_attr_value(file_path):
+                            return file_path[0:-5]
+        except Exception as error:
+            logging.error("Error when getting {} label path: {}".format(label, error))
+
+        return retval
 
     def __get_attr_value(self, attr_path):
 
@@ -46,10 +71,9 @@ class Psu(PsuBase):
             with open(attr_path, 'r') as fd:
                 retval = fd.read()
         except Exception as error:
-            logging.error("Unable to open " + attr_path + " file !")
+            logging.error("Unable to open {} file: {}".format(attr_path, error))
 
         retval = retval.rstrip(' \t\n\r')
-        fd.close()
         return retval
 
 ##############################################
@@ -73,10 +97,9 @@ class Psu(PsuBase):
             bool: True if device is present, False if not
         """
         presence = False
-        attr_path = HWMON_DIR+self.psu_presence_attr
         attr_normal = '1'
 
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_presence_attr)
         if (attr_rv != 'ERR'):
             if (attr_rv == attr_normal):
                 presence = True
@@ -91,8 +114,7 @@ class Psu(PsuBase):
             string: Model/part number of device
         """
         model = "N/A"
-        attr_path = HWMON_DIR+self.psu_model_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_model_attr)
         if (attr_rv != 'ERR'):
             model = attr_rv
 
@@ -106,8 +128,7 @@ class Psu(PsuBase):
             string: Manufacturer's id of device
         """
         mfr_id = "N/A"
-        attr_path = HWMON_DIR+self.psu_mfr_id_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_mfr_id_attr)
         if (attr_rv != 'ERR'):
             mfr_id = attr_rv
 
@@ -121,9 +142,7 @@ class Psu(PsuBase):
             string: Serial number of device
         """
         serial = "N/A"
-        attr_path = HWMON_DIR+self.psu_serial_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_serial_attr)
         if (attr_rv != 'ERR'):
             serial = attr_rv
 
@@ -137,9 +156,7 @@ class Psu(PsuBase):
             A boolean value, True if device is operating properly, False if not
         """
         status = False
-        attr_path = HWMON_DIR+self.psu_status_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_status_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             if (int(attr_rv) != 0):
@@ -160,9 +177,7 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         voltage_out = 0.0
-        attr_path = HWMON_DIR+self.psu_voltage_out_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_voltage_out_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             voltage_out = float(attr_rv) / 1000
@@ -177,9 +192,7 @@ class Psu(PsuBase):
             A float number, the electric current in amperes, e.g 15.4
         """
         current_out = 0.0
-        attr_path = HWMON_DIR+self.psu_current_out_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_current_out_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             current_out = float(attr_rv) / 1000
@@ -195,9 +208,7 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         voltage_in = 0.0
-        attr_path = HWMON_DIR+self.psu_voltage_in_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_voltage_in_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             voltage_in = float(attr_rv) / 1000
@@ -212,9 +223,7 @@ class Psu(PsuBase):
             A float number, the electric current in amperes, e.g 15.4
         """
         current_in = 0.0
-        attr_path = HWMON_DIR+self.psu_current_in_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_current_in_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             current_in = float(attr_rv) / 1000
@@ -229,9 +238,7 @@ class Psu(PsuBase):
             A float number, the power in watts, e.g. 302.6
         """
         power_out = 0.0
-        attr_path = HWMON_DIR+self.psu_power_out_attr
-
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_power_out_attr)
         if (attr_rv != 'ERR'):
             attr_rv, dummy = attr_rv.split('.', 1)
             power_out = float(attr_rv) / 1000
@@ -268,8 +275,7 @@ class Psu(PsuBase):
             A string, the type of PSU (AC/DC)
         """
         type = "AC"
-        attr_path = HWMON_DIR+self.psu_type_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_type_attr)
         if (attr_rv != 'ERR'):
             type = attr_rv
 
@@ -283,8 +289,7 @@ class Psu(PsuBase):
             An integer, the capacity of PSU
         """
         capacity = 0
-        attr_path = HWMON_DIR+self.psu_capacity_attr
-        attr_rv = self.__get_attr_value(attr_path)
+        attr_rv = self.__get_attr_value(self.psu_capacity_attr)
         if (attr_rv != 'ERR'):
             try:
                 capacity = int(attr_rv)

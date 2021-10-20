@@ -29,7 +29,7 @@
 #define __TO_B_EXP(bacc)  (int32_t)(tos32((BSWAP_32(bacc) & 0xf), 4))
 
 #define SENSOR_ATTR_MAX         19
-#define SENSOR_ATTR_NAME_LENGTH 32
+#define SENSOR_ATTR_NAME_LENGTH 20
 
 #define SENSOR_GET_CAP_LABEL  0x001
 #define SENSOR_GET_CAP_ALARM  0x002
@@ -1574,13 +1574,13 @@ static ssize_t(*const attr_store_func_ptr[SENSOR_ATTR_MAX])(struct device *dev,
 
 static const char *const sensor_attrnames[SENSOR_ATTR_MAX] =
 {
-  "%s_label", "%s_crit_alarm", "%s_input"
-  , "%s_lncrit", "%s_lcrit", "%s_min"
-  , "%s_ncrit", "%s_crit", "%s_max"
-  , "%s_model", "%s_sn", "%s_pwm"
-  , "%s_controlmode", "%s_direction", "%s_present"
-  , "%s_present", "%s_mfrid", "%s_vin_type"
-  , "%s_pout_max"
+  "%s%d_label", "%s%d_crit_alarm", "%s%d_input"
+  , "%s%d_lncrit", "%s%d_lcrit", "%s%d_min"
+  , "%s%d_ncrit", "%s%d_crit", "%s%d_max"
+  , "%s%d_model", "%s%d_sn", "%s%d_pwm"
+  , "%s%d_controlmode", "%s%d_direction", "%s%d_present"
+  , "%s%d_present", "%s%d_mfrid", "%s%d_vin_type"
+  , "%s%d_pout_max"
 };
 
 static int32_t create_sensor_attrs(int32_t attr_no)
@@ -1598,7 +1598,7 @@ static int32_t create_sensor_attrs(int32_t attr_no)
     if ((g_sensor_data[attr_no].capability >> i) & 0x01)
     {
       snprintf(attrdata->attr_name[j], SENSOR_ATTR_NAME_LENGTH, sensor_attrnames[i],
-               g_sensor_data[attr_no].sensor_idstring);
+               attrdata->attr_type_str, attr_no - DEBUGUSE_SHIFT);
 
       sysfs_attr_init(&attrdata->sd_attrs[j].dev_attr.attr);
       attrdata->sd_attrs[j].dev_attr.attr.name = attrdata->attr_name[j];
