@@ -74,6 +74,7 @@ setup(
                          './yang-models/sonic-vlan.yang',
                          './yang-models/sonic-vrf.yang',
                          './yang-models/sonic-lldp.yang',
+                         './yang-models/sonic-static-anycast-gateway.yang',
                          './yang-models/sonic_yang_tree']),
     ],
     zip_safe=False,

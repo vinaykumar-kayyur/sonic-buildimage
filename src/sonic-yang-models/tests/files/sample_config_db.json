@@ -38,7 +38,8 @@
         },
         "VLAN_INTERFACE": {
             "Vlan111": {
-                "nat_zone": "0"
+                "nat_zone": "0",
+                "static-anycast-gateway": "true"
             },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
@@ -921,7 +922,7 @@
         },
         "AAA": {
             "authentication": {
-                "login": "local" 
+                "login": "local"
             }
         },
         "TACPLUS": {
@@ -1036,7 +1037,7 @@
         },
         "PREFIX_SET": {
             "prefix1": {
-            } 
+            }
         },
         "PREFIX": {
             "prefix1|1|10.0.0.0/8|8..16": {
@@ -1077,6 +1078,11 @@
                 "mode": "TRANSMIT",
                 "enabled": "true"
             }
+        },
+        "SAG": {
+            "GLOBAL": {
+                "gwmac": "00:11:22:33:44:55"
+            }
         }
 
     },
@@ -1086,5 +1092,5 @@
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
     }
-    
+
 }
