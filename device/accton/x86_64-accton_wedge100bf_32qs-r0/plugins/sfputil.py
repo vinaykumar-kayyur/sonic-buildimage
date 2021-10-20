@@ -5,8 +5,8 @@ try:
     import time
 
     sys.path.append(os.path.dirname(__file__))
-    import pltfm_mgr_rpc
-    from pltfm_mgr_rpc.ttypes import *
+    #import pltfm_mgr_rpc
+    #from pltfm_mgr_rpc.ttypes import *
 
     from thrift.transport import TSocket
     from thrift.transport import TTransport
@@ -157,7 +157,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         self.thrift_setup()
-        status = pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, True)
+        pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, True)
         status = pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, False)
         self.thrift_teardown()
         return (status == 0)
@@ -170,6 +170,9 @@ class SfpUtil(SfpUtilBase):
 
         try:
             self.thrift_setup()
+        except Exception as e:
+            print(e.__doc__)
+            print(e.message)
         except:
             return
 
@@ -177,6 +180,9 @@ class SfpUtil(SfpUtilBase):
         for port in range(self.port_start, self.port_end + 1):
             try:
                 sfp_resent = pltfm_mgr.pltfm_mgr_qsfp_presence_get(port)
+            except Exception as e:
+                print(e.__doc__)
+                print(e.message)
             except:
                 sfp_resent = False
             sfp_state = '1' if sfp_resent else '0'
@@ -207,6 +213,9 @@ class SfpUtil(SfpUtilBase):
                 try:
                     self.thrift_setup()
                     self.thrift_teardown()
+                except Exception as e:
+                    print(e.__doc__)
+                    print(e.message)
                 except:
                     pass
                 else:

@@ -2,7 +2,7 @@ try:
     import importlib
     import time
     import os
-    import re
+    #import re
     import sys
     import errno
     import datetime
@@ -11,15 +11,15 @@ try:
     import yaml
 
     sys.path.append(os.path.dirname(__file__))
-    import pltfm_mgr_rpc
-    from pltfm_mgr_rpc.ttypes import *
+    #import pltfm_mgr_rpc
+    #from pltfm_mgr_rpc.ttypes import *
 
     from thrift.transport import TSocket
     from thrift.transport import TTransport
     from thrift.protocol import TBinaryProtocol
     from thrift.protocol import TMultiplexedProtocol
 
-    from argparse import ArgumentParser
+    #from argparse import ArgumentParser
 
     if sys.version_info.major == 3:
         from io import StringIO
@@ -142,6 +142,9 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
             self.thrift_setup()
             eeprom = pltfm_mgr.pltfm_mgr_sys_eeprom_get()
             self.thrift_teardown()
+        except Exception as e:
+            print(e.__doc__)
+            print(e.message)
         except:
             return False
 

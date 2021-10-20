@@ -4,8 +4,8 @@ try:
     import importlib
 
     sys.path.append(os.path.dirname(__file__))
-    import pltfm_mgr_rpc
-    from pltfm_mgr_rpc.ttypes import *
+    #import pltfm_mgr_rpc
+    #from pltfm_mgr_rpc.ttypes import *
 
     from thrift.transport import TSocket
     from thrift.transport import TTransport
@@ -69,7 +69,8 @@ class PsuUtil(PsuBase):
             self.thrift_setup()
             psu_info = pltfm_mgr.pltfm_mgr_pwr_supply_info_get(index)
             self.thrift_teardown()
-        except:
+        except Exception as e:
+            print(e.__doc__)
             return False
 
         return (psu_info.ffault == False)
@@ -90,7 +91,8 @@ class PsuUtil(PsuBase):
             self.thrift_setup()
             status = pltfm_mgr.pltfm_mgr_pwr_supply_present_get(index)
             self.thrift_teardown()
-        except:
+        except Exception as e:
+            print(e.__doc__)
             return False
 
         return status
