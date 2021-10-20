@@ -145,7 +145,6 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
         except Exception as e:
             print(e.__doc__)
             print(e.message)
-        except:
             return False
 
         f = open(EEPROM_STATUS, 'w')

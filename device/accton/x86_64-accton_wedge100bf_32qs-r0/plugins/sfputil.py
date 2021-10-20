@@ -173,7 +173,6 @@ class SfpUtil(SfpUtilBase):
         except Exception as e:
             print(e.__doc__)
             print(e.message)
-        except:
             return
 
         # Get presence of each SFP
@@ -183,8 +182,8 @@ class SfpUtil(SfpUtilBase):
             except Exception as e:
                 print(e.__doc__)
                 print(e.message)
-            except:
                 sfp_resent = False
+                
             sfp_state = '1' if sfp_resent else '0'
 
             if port in self.phy_port_cur_state:
@@ -216,7 +215,6 @@ class SfpUtil(SfpUtilBase):
                 except Exception as e:
                     print(e.__doc__)
                     print(e.message)
-                except:
                     pass
                 else:
                     self.ready = True
