@@ -92,7 +92,7 @@ module sonic-vlan {
 					description "Enable/disable static anycast gateway for the vlan interface";
 					type boolean;
 					default false;
-					}
+				}
 			}
 			/* end of VLAN_INTERFACE_LIST */
 
