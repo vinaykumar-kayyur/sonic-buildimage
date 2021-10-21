@@ -523,7 +523,9 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     char* ptr = (char *)message_buffer;
     const uint8_t *current_position = (uint8_t *)ptr; 
     const uint8_t *tmp = NULL;
+    const uint8_t *prev = NULL;
 
+    
     auto ether_header = parse_ether_frame(current_position, &tmp);
     current_position = tmp;
 
@@ -533,8 +535,12 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     if (ip_header->ip6_ctlun.ip6_un1.ip6_un1_nxt != IPPROTO_UDP) {
         const struct ip6_ext *ext_header;
         do {
+            prev = current_position;
             ext_header = (const struct ip6_ext *)current_position;
             current_position += ext_header->ip6e_len;
+            if(current_position == prev) {
+                return;
+            }
         }
         while (ext_header->ip6e_nxt != IPPROTO_UDP);
     }  
