@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import logging
 import time
 
 from sonic_py_common import logger as log
 from swsscommon.swsscommon import ConfigDBConnector, DBConnector, FieldValuePairs, ProducerStateTable, SonicV2Connector
-from swsscommon.swsscommon import APPL_DB, ASIC_DB
+from swsscommon.swsscommon import APPL_DB 
 
 logger = log.Logger('write_standby')
 
@@ -15,7 +14,7 @@ REDIS_SOCK_PATH = '/var/run/redis/redis.sock'
 def create_fvs(**kwargs):
     return FieldValuePairs(list(kwargs.items()))
 
-class MuxStateWriter:
+class MuxStateWriter(object):
     """
     Class used to write standby mux state to APP DB
     """
