@@ -40,7 +40,7 @@ module sonic-buffer-profile {
 
                 leaf dynamic_th {
                     type int32 {
-                        range "-7..3";
+                        range "-8..7";
                     }
                     description "The maximum proportion of the free size of the buffer pool the port can occupy (Alpha value)";
                 }
@@ -48,7 +48,7 @@ module sonic-buffer-profile {
                 leaf size {
                     mandatory true;
                     type uint64;
-                    description "Headroom Size";
+                    description "Reserved Size";
                 }
 
                 leaf pool {
@@ -75,6 +75,15 @@ module sonic-buffer-profile {
                     type uint64;
                     default 0;
                     description "Xoff Threshold for ingress PG";
+                }
+
+                leaf headroom_type {
+                    default static;
+                    type enumeration {
+                        enum static;
+                        enum dynamic;
+                    }
+                    description "Profile is dynamically calculated or user configured";
                 }
             }
         }

@@ -153,18 +153,5 @@
                 ]
             }
         }
-    },
-    "BUFFER_POOL_MANDATORY_SIZE_VALUE": {
-        "sonic-buffer-pool:sonic-buffer-pool": {
-            "sonic-buffer-pool:BUFFER_POOL": {
-                "BUFFER_POOL_LIST": [
-                {
-                    "name": "Ethernet4",
-                    "mode": "static",
-                    "type": "ingress"
-                }
-                ]
-            }
-        }
     }
 }

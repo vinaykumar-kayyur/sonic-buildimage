@@ -38,7 +38,7 @@ module sonic-buffer-pool {
                 }
 
                 leaf mode {
-                    default dynamic;
+                    mandatory true;
                     type enumeration {
                         enum static;
                         enum dynamic;
@@ -47,7 +47,6 @@ module sonic-buffer-pool {
                 }
 
                 leaf size {
-                    mandatory true;
                     type uint64;
                     description "Buffer Pool Size (in Bytes)";
                 }

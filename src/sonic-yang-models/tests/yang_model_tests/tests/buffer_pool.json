@@ -36,9 +36,5 @@
     "BUFFER_POOL_WRONG_SIZE_VALUE": {
         "desc": "BUFFER_POOL_WRONG_SIZE_VALUE pattern failure.",
         "eStr": "wrong"
-    },
-    "BUFFER_POOL_MANDATORY_SIZE_VALUE": {
-        "desc": "BUFFER_POOL_MANDATORY_SIZE_VALUE no size.",
-        "eStrKey": "Mandatory" 
     }
 }

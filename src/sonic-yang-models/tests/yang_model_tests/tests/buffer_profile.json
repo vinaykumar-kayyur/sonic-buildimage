@@ -51,6 +51,16 @@
     "BUFFER_PROFILE_CORRECT_XOFF_VALUE": {
         "desc": "BUFFER_PROFILE_CORRECT_XOFF_VALUE no failure."
     },
+    "BUFFER_PROFILE_CORRECT_HEADROOM_TYPE_STATIC": {
+        "desc": "BUFFER_PROFILE_CORRECT_HEADROOM_TYPE_STATIC no failure."
+    },
+    "BUFFER_PROFILE_CORRECT_HEADROOM_TYPE_DYNAMIC": {
+        "desc": "BUFFER_PROFILE_CORRECT_HEADROOM_TYPE_DYNAMIC no failure."
+    },
+    "BUFFER_PROFILE_WRONG_HEADROOM_TYPE": {
+        "desc": "BUFFER_PROFILE_WRONG_HEADROOM_TYPE no failure.",
+        "eStr": "Invalid"
+    },
     "BUFFER_PROFILE_WRONG_XOFF_VALUE": {
         "desc": "BUFFER_PROFILE_WRONG_XOFF_VALUE no failure.",
         "eStr": "-1"

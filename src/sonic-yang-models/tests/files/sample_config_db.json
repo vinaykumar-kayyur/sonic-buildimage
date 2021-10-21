@@ -8,6 +8,11 @@
             "ingress_lossy_pool": {
                "mode": "static",
                "size": "33004032",
+               "type": "ingress"
+            },
+            "ingress_lossless_pool": {
+               "mode": "static",
+               "size": "33004032",
                "xoff": "196608",
                "type": "ingress"
             },
@@ -26,7 +31,7 @@
         "BUFFER_PROFILE": {
             "pg_lossless_100000_300m_profile": {
                 "dynamic_th": "1",
-                "pool": "egress_lossless_pool",
+                "pool": "ingress_lossless_pool",
                 "size": "9427",
                 "xoff": "50176",
                 "xon": "0",
@@ -65,7 +70,7 @@
         },
         "BUFFER_PORT_EGRESS_PROFILE_LIST": {
             "Ethernet9": {
-                "profile_list": ["egress_lossless_profile", "pg_lossless_100000_300m_profile"]
+                "profile_list": ["egress_lossless_profile", "egress_lossy_profile"]
             }
         },
         "PORTCHANNEL": {
