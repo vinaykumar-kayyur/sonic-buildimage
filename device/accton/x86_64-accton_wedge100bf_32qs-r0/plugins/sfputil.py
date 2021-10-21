@@ -215,7 +215,6 @@ class SfpUtil(SfpUtilBase):
                 except Exception as e:
                     print(e.__doc__)
                     print(e.message)
-                    pass
                 else:
                     self.ready = True
                     self.phy_port_dict = {}

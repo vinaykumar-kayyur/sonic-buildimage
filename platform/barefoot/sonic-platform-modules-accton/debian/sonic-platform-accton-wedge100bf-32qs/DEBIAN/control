@@ -1,9 +1,9 @@
-Package: wedge100bf-32qs
+Package: sonic-platform-accton-wedge100bf-32qs
+Source: sonic-accton-platform-modules
 Version: 1.1
 Architecture: amd64
 Maintainer: Support <support@edge-core.com>
-Installed-Size: 70
-Depends: linux-image-4.19.0-12-2-amd64-unsigned
+Installed-Size: 59
 Section: main
 Priority: extra
 Description: kernel modules for platform devices such as fan, led, sfp
