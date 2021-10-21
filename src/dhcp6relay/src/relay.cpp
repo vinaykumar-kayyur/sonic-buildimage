@@ -517,11 +517,12 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     static uint8_t message_buffer[4096];
     int32_t len = recv(config->filter, message_buffer, 4096, 0);
     if (len <= 0) {
-        syslog(LOG_WARNING, "recv: Failed to receive data at filter socket\n");
+        syslog(LOG_WARNING, "recv: Failed to receive data at filter socket: %s\n", strerror(errno));
+        return;
     }
 
     char* ptr = (char *)message_buffer;
-    const uint8_t *current_position = (uint8_t *)ptr; 
+    const uint8_t *current_position = (uint8_t *)ptr;
     const uint8_t *tmp = NULL;
     const uint8_t *prev = NULL;
 
@@ -542,8 +543,8 @@ void callback(evutil_socket_t fd, short event, void *arg) {
             }
             prev = current_position;
         }
-        while (ext_header->ip6e_nxt != IPPROTO_UDP);
-    }  
+        while ((ext_header->ip6e_nxt != IPPROTO_UDP) && (current_position < (uint8_t *)ptr + sizeof(message_buffer)));
+    }
 
     auto udp_header = parse_udp(current_position, &tmp);
     current_position = tmp;
