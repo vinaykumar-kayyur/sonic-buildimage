@@ -538,7 +538,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
         do {
             ext_header = (const struct ip6_ext *)current_position;
             current_position += ext_header->ip6e_len;
-            if((current_position == prev) || (current_position <= (uint8_t *)ptr + sizeof(message_buffer))) {
+            if((current_position == prev) || (current_position >= (uint8_t *)ptr + sizeof(message_buffer))) {
                 return;
             }
             prev = current_position;
