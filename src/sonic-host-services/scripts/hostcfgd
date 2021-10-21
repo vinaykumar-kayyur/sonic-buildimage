@@ -45,7 +45,7 @@ HOSTCFGD_MAX_PRI = 10  # Used to enforce ordering b/w daemons under Hostcfgd
 DEFAULT_SELECT_TIMEOUT = 1000
 
 
-def safe_eval_bool(val, default_value=False):
+def safe_eval(val, default_value=False):
     """ Safely evaluate the boolean expression, without raising an exception """
     try:
         ret = ast.literal_eval(val)
@@ -116,9 +116,9 @@ class Feature(object):
         self.name = feature_name
         self.state = self._get_target_state(feature_cfg.get('state'), device_config or {})
         self.auto_restart = feature_cfg.get('auto_restart', 'disabled')
-        self.has_timer = safe_eval_bool(feature_cfg.get('has_timer', 'False'))
-        self.has_global_scope = safe_eval_bool(feature_cfg.get('has_global_scope', 'True'))
-        self.has_per_asic_scope = safe_eval_bool(feature_cfg.get('has_per_asic_scope', 'False'))
+        self.has_timer = safe_eval(feature_cfg.get('has_timer', 'False'))
+        self.has_global_scope = safe_eval(feature_cfg.get('has_global_scope', 'True'))
+        self.has_per_asic_scope = safe_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
     def _get_target_state(self, state_configuration, device_config):
         """ Returns the target state for the feature by rendering the state field as J2 template.

@@ -98,8 +98,6 @@ class TestHostcfgd(TestCase):
             attrs = test_data['popen_attributes']
             popen_mock.configure_mock(**attrs)
             mocked_subprocess.Popen.return_value = popen_mock
-            hostcfgd.is_multi_npu = mock.Mock(return_value=False)
-            hostcfgd.get_num_npus = mock.Mock(return_value=1)
 
             # Initialize Feature Handler
             device_config = {}
