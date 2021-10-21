@@ -525,22 +525,22 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     const uint8_t *tmp = NULL;
     const uint8_t *prev = NULL;
 
-    
     auto ether_header = parse_ether_frame(current_position, &tmp);
     current_position = tmp;
 
     auto ip_header = parse_ip6_hdr(current_position, &tmp);
     current_position = tmp;
 
+    prev = current_position;
     if (ip_header->ip6_ctlun.ip6_un1.ip6_un1_nxt != IPPROTO_UDP) {
         const struct ip6_ext *ext_header;
         do {
-            prev = current_position;
             ext_header = (const struct ip6_ext *)current_position;
             current_position += ext_header->ip6e_len;
             if(current_position == prev) {
                 return;
             }
+            prev = current_position;
         }
         while (ext_header->ip6e_nxt != IPPROTO_UDP);
     }  
