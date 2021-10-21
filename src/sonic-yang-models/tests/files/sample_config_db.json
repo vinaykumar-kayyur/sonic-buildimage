@@ -1089,7 +1089,6 @@
                 "enabled": "true"
             }
         },
-
         "FEATURE": {
             "bgp": {
                 "auto_restart": "enabled",
@@ -1296,7 +1295,7 @@
                 "src_port": "Ethernet3",
                 "type": "SPAN"
             }
-        },
+        }
     },
 
     "SAMPLE_CONFIG_DB_UNKNOWN": {
