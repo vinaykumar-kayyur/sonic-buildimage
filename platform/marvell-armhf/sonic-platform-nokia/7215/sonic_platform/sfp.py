@@ -5,7 +5,6 @@
 
 import os
 import sys
-import time
 
 try:
     from sonic_platform_base.sfp_base import SfpBase
