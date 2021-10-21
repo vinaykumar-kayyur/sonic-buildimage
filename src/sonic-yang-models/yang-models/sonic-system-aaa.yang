@@ -1,7 +1,7 @@
 module sonic-system-aaa {
     namespace "http://github.com/Azure/sonic-system-aaa";
     prefix ssys;
-    yang-version 1.2;
+    yang-version 1.1;
 
     revision 2021-10-12 {
         description "Add AAA authorization/accounting support.";
