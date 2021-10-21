@@ -12,6 +12,8 @@ ETC_SONIC_PATH="/etc/sonic/"
 DEPENDENT="radv"
 MULTI_INST_DEPENDENT="teamd"
 
+. /usr/local/bin/asic_status.sh
+
 function debug()
 {
     /usr/bin/logger $1
@@ -28,8 +30,6 @@ function read_dependent_services()
     if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent ]]; then
         MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent"
     fi
-
-    . /usr/local/bin/asic_status.sh
 }
 
 function lock_service_state_change()
