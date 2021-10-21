@@ -58,17 +58,16 @@ class MarkDhcpPacket(object):
         Returns a list of mux cable interfaces
         """
         mux_cables = self.config_db.get_table('MUX_CABLE')
-        mux_intfs = [intf for intf in mux_cables if intf.startswith('Ethernet')]
+        mux_intfs = [intf for intf in mux_cables]
 
         return mux_intfs
 
-    def generate_mark_for_intf(self, intf):
+    def generate_mark_from_index(self, index):
         '''
         type: string, format: hexadecimal
-        Example: 0x67024 is corresponding to Ethernet24
+        Example: 0x67001, 0x67002, ...
         '''
-        intf_index_str = intf[8:]
-        intf_mark = "0x67" + intf_index_str.zfill(3)
+        intf_mark = "0x67" + str(index).zfill(3)
 
         return intf_mark
 
@@ -82,12 +81,10 @@ class MarkDhcpPacket(object):
         '''
         self.run_command("sudo ebtables -F INPUT")
 
-    def apply_mark_in_ebtables(self, intf):
-        mark = self.generate_mark_for_intf(intf)
+    def apply_mark_in_ebtables(self, intf, mark):
         self.run_command("sudo ebtables -A INPUT -i {} -j mark --mark-set {}".format(intf, mark))
 
-    def update_mark_in_state_db(self, intf):
-        mark = self.generate_mark_for_intf(intf)
+    def update_mark_in_state_db(self, intf, mark):
         self.state_db.set(self.state_db.STATE_DB, 'DHCP_PACKET_MARK', intf, mark)
 
     def apply_marks(self):
@@ -99,11 +96,10 @@ class MarkDhcpPacket(object):
 
         self.clear_dhcp_packet_marks()
 
-        mux_intfs = self.get_mux_intfs()
-
-        for intf in mux_intfs:
-            self.apply_mark_in_ebtables(intf)
-            self.update_mark_in_state_db(intf)
+        for (index, intf) in enumerate(self.get_mux_intfs(), 1):
+            mark = self.generate_mark_from_index(index)
+            self.apply_mark_in_ebtables(intf, mark)
+            self.update_mark_in_state_db(intf, mark)
 
         log.log_info("Finish marking dhcp packets in ebtables.")
 
