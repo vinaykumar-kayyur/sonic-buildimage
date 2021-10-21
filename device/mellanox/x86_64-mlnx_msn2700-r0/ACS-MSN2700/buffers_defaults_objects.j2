@@ -1,6 +1,6 @@
-{%- macro generate_buffer_pool_and_profiles() %}
+{%- macro generate_buffer_pool_and_profiles_with_inactive_ports(port_names_inactive) %}
     "BUFFER_POOL": {
-        {% if dynamic_mode is not defined and PORT_INACTIVE is defined and PORT_INACTIVE|length > 0 -%}
+        {% if dynamic_mode is not defined and port_names_inactive|length > 0 -%}
         "ingress_zero_pool" : {
             "mode": "static",
             "type": "ingress",
@@ -35,7 +35,7 @@
         }
     },
     "BUFFER_PROFILE": {
-        {% if dynamic_mode is not defined and PORT_INACTIVE is defined and PORT_INACTIVE|length > 0 -%}
+        {% if dynamic_mode is not defined and port_names_inactive|length > 0 -%}
         "ingress_lossy_pg_zero_profile" : {
           "pool":"ingress_zero_pool",
           "size":"0",
