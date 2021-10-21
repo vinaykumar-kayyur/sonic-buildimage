@@ -538,12 +538,12 @@ void callback(evutil_socket_t fd, short event, void *arg) {
         do {
             ext_header = (const struct ip6_ext *)current_position;
             current_position += ext_header->ip6e_len;
-            if(current_position == prev) {
+            if((current_position == prev) || (current_position <= (uint8_t *)ptr + sizeof(message_buffer))) {
                 return;
             }
             prev = current_position;
         }
-        while ((ext_header->ip6e_nxt != IPPROTO_UDP) && (current_position < (uint8_t *)ptr + sizeof(message_buffer)));
+        while (ext_header->ip6e_nxt != IPPROTO_UDP);
     }
 
     auto udp_header = parse_udp(current_position, &tmp);
