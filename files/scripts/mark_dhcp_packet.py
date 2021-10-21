@@ -65,6 +65,7 @@ class MarkDhcpPacket(object):
     def generate_mark_for_intf(self, intf):
         '''
         type: string, format: hexadecimal
+        Example: 0x67024 is corresponding to Ethernet24
         '''
         intf_index_str = intf[8:]
         intf_mark = "0x67" + intf_index_str.zfill(3)
@@ -76,6 +77,9 @@ class MarkDhcpPacket(object):
         log.log_info("run command: {}".format(cmd))
 
     def clear_dhcp_packet_marks(self):
+        '''
+        Flush the INPUT chain in ebtables upon restart
+        '''
         self.run_command("sudo ebtables -F INPUT")
 
     def apply_mark_in_ebtables(self, intf):
