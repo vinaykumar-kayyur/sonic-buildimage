@@ -129,9 +129,6 @@
         "Ethernet5|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet22|0": {
-            "profile" : "ingress_lossy_profile"
-        },
         "Ethernet58|0": {
             "profile" : "ingress_lossy_profile"
         },
@@ -159,7 +156,7 @@
         "Ethernet39|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet14|0": {
+        "Ethernet32|0": {
             "profile" : "ingress_lossy_profile"
         },
         "Ethernet15|0": {
@@ -171,19 +168,19 @@
         "Ethernet17|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet10|0": {
-            "profile" : "ingress_lossy_profile"
-        },
-        "Ethernet11|0": {
-            "profile" : "ingress_lossy_profile"
-        },
-        "Ethernet12|0": {
+        "Ethernet36|0": {
             "profile" : "ingress_lossy_profile"
         },
         "Ethernet37|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet32|0": {
+        "Ethernet12|0": {
+            "profile" : "ingress_lossy_profile"
+        },
+        "Ethernet13|0": {
+            "profile" : "ingress_lossy_profile"
+        },
+        "Ethernet14|0": {
             "profile" : "ingress_lossy_profile"
         },
         "Ethernet30|0": {
@@ -195,7 +192,7 @@
         "Ethernet48|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet36|0": {
+        "Ethernet10|0": {
             "profile" : "ingress_lossy_profile"
         },
         "Ethernet42|0": {
@@ -213,6 +210,9 @@
         "Ethernet28|0": {
             "profile" : "ingress_lossy_profile"
         },
+        "Ethernet11|0": {
+            "profile" : "ingress_lossy_profile"
+        },
         "Ethernet21|0": {
             "profile" : "ingress_lossy_profile"
         },
@@ -222,7 +222,7 @@
         "Ethernet23|0": {
             "profile" : "ingress_lossy_profile"
         },
-        "Ethernet13|0": {
+        "Ethernet22|0": {
             "profile" : "ingress_lossy_profile"
         },
         "Ethernet25|0": {
@@ -264,9 +264,6 @@
         "Ethernet5|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet22|3-4": {
-            "profile" : "egress_lossless_profile"
-        },
         "Ethernet58|3-4": {
             "profile" : "egress_lossless_profile"
         },
@@ -294,7 +291,7 @@
         "Ethernet39|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet14|3-4": {
+        "Ethernet32|3-4": {
             "profile" : "egress_lossless_profile"
         },
         "Ethernet15|3-4": {
@@ -306,19 +303,19 @@
         "Ethernet17|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet10|3-4": {
-            "profile" : "egress_lossless_profile"
-        },
-        "Ethernet11|3-4": {
-            "profile" : "egress_lossless_profile"
-        },
-        "Ethernet12|3-4": {
+        "Ethernet36|3-4": {
             "profile" : "egress_lossless_profile"
         },
         "Ethernet37|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet32|3-4": {
+        "Ethernet12|3-4": {
+            "profile" : "egress_lossless_profile"
+        },
+        "Ethernet13|3-4": {
+            "profile" : "egress_lossless_profile"
+        },
+        "Ethernet14|3-4": {
             "profile" : "egress_lossless_profile"
         },
         "Ethernet30|3-4": {
@@ -330,7 +327,7 @@
         "Ethernet48|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet36|3-4": {
+        "Ethernet10|3-4": {
             "profile" : "egress_lossless_profile"
         },
         "Ethernet42|3-4": {
@@ -348,6 +345,9 @@
         "Ethernet28|3-4": {
             "profile" : "egress_lossless_profile"
         },
+        "Ethernet11|3-4": {
+            "profile" : "egress_lossless_profile"
+        },
         "Ethernet21|3-4": {
             "profile" : "egress_lossless_profile"
         },
@@ -357,7 +357,7 @@
         "Ethernet23|3-4": {
             "profile" : "egress_lossless_profile"
         },
-        "Ethernet13|3-4": {
+        "Ethernet22|3-4": {
             "profile" : "egress_lossless_profile"
         },
         "Ethernet25|3-4": {
@@ -396,9 +396,6 @@
         "Ethernet5|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet22|0-2": {
-            "profile" : "egress_lossy_profile"
-        },
         "Ethernet58|0-2": {
             "profile" : "egress_lossy_profile"
         },
@@ -426,7 +423,7 @@
         "Ethernet39|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet14|0-2": {
+        "Ethernet32|0-2": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet15|0-2": {
@@ -438,19 +435,19 @@
         "Ethernet17|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet10|0-2": {
-            "profile" : "egress_lossy_profile"
-        },
-        "Ethernet11|0-2": {
-            "profile" : "egress_lossy_profile"
-        },
-        "Ethernet12|0-2": {
+        "Ethernet36|0-2": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet37|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet32|0-2": {
+        "Ethernet12|0-2": {
+            "profile" : "egress_lossy_profile"
+        },
+        "Ethernet13|0-2": {
+            "profile" : "egress_lossy_profile"
+        },
+        "Ethernet14|0-2": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet30|0-2": {
@@ -462,7 +459,7 @@
         "Ethernet48|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet36|0-2": {
+        "Ethernet10|0-2": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet42|0-2": {
@@ -480,6 +477,9 @@
         "Ethernet28|0-2": {
             "profile" : "egress_lossy_profile"
         },
+        "Ethernet11|0-2": {
+            "profile" : "egress_lossy_profile"
+        },
         "Ethernet21|0-2": {
             "profile" : "egress_lossy_profile"
         },
@@ -489,7 +489,7 @@
         "Ethernet23|0-2": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet13|0-2": {
+        "Ethernet22|0-2": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet25|0-2": {
@@ -528,9 +528,6 @@
         "Ethernet5|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet22|5-6": {
-            "profile" : "egress_lossy_profile"
-        },
         "Ethernet58|5-6": {
             "profile" : "egress_lossy_profile"
         },
@@ -558,7 +555,7 @@
         "Ethernet39|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet14|5-6": {
+        "Ethernet32|5-6": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet15|5-6": {
@@ -570,19 +567,19 @@
         "Ethernet17|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet10|5-6": {
-            "profile" : "egress_lossy_profile"
-        },
-        "Ethernet11|5-6": {
-            "profile" : "egress_lossy_profile"
-        },
-        "Ethernet12|5-6": {
+        "Ethernet36|5-6": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet37|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet32|5-6": {
+        "Ethernet12|5-6": {
+            "profile" : "egress_lossy_profile"
+        },
+        "Ethernet13|5-6": {
+            "profile" : "egress_lossy_profile"
+        },
+        "Ethernet14|5-6": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet30|5-6": {
@@ -594,7 +591,7 @@
         "Ethernet48|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet36|5-6": {
+        "Ethernet10|5-6": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet42|5-6": {
@@ -612,6 +609,9 @@
         "Ethernet28|5-6": {
             "profile" : "egress_lossy_profile"
         },
+        "Ethernet11|5-6": {
+            "profile" : "egress_lossy_profile"
+        },
         "Ethernet21|5-6": {
             "profile" : "egress_lossy_profile"
         },
@@ -621,7 +621,7 @@
         "Ethernet23|5-6": {
             "profile" : "egress_lossy_profile"
         },
-        "Ethernet13|5-6": {
+        "Ethernet22|5-6": {
             "profile" : "egress_lossy_profile"
         },
         "Ethernet25|5-6": {
