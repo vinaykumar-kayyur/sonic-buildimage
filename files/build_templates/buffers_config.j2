@@ -110,10 +110,11 @@ def
 {%- if DEVICE_NEIGHBOR is not defined %}
     {%- set PORT_ACTIVE = PORT_ALL %}
 {%- else %}
+    {%- for port in DEVICE_NEIGHBOR.keys() %}
+        {%- if PORT_ACTIVE.append(port) %}{%- endif %}
+    {%- endfor %}
     {%- for port in PORT_ALL %}
-        {%- if port in DEVICE_NEIGHBOR.keys() %}
-            {%- if PORT_ACTIVE.append(port) %}{%- endif %}
-        {%- else %}
+        {%- if port not in DEVICE_NEIGHBOR.keys() %}
             {%- if PORT_INACTIVE.append(port) %}{%- endif %}
         {%- endif %}
     {%- endfor %}
