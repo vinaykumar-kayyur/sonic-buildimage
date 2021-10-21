@@ -220,6 +220,17 @@
                 "dhcp_servers": [
                     "10.222.72.116"
                 ],
+                "dhcp_relay_src_intf": "Loopback0",
+                "dhcp_relay_link_select": "enable",
+                "dhcp_relay_vrf_select": "enable",
+                "dhcp_relay_policy_action": "append",
+                "dhcp_relay_max_hop_count": "5",
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
+                ],
+                "dhcpv6_relay_max_hop_count": "6",
+                "dhcpv6_relay_src_intf": "Loopback0",
+                "dhcpv6_relay_vrf_select": "enable",
                 "vlanid": "111",
                 "mtu": "9216",
                 "admin_status": "up"
@@ -229,6 +240,17 @@
                 "dhcp_servers": [
                     "10.222.72.116"
                 ],
+                "dhcp_relay_src_intf": "Loopback0",
+                "dhcp_relay_link_select": "enable",
+                "dhcp_relay_vrf_select": "enable",
+                "dhcp_relay_policy_action": "append",
+                "dhcp_relay_max_hop_count": "7",
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
+                ],
+                "dhcpv6_relay_max_hop_count": "8",
+                "dhcpv6_relay_src_intf": "Loopback0",
+                "dhcpv6_relay_vrf_select": "enable",
                 "vlanid": "777",
                 "mtu": "9216",
                 "admin_status": "up"
