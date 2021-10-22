@@ -36,13 +36,12 @@ from sonic_platform.psu import FixedPsu, Psu
 class TestLed:
     def test_chassis_led(self):
         chassis = Chassis()
-        assert chassis._led is None  
+        assert chassis._led is None
         assert chassis.set_status_led('red') is False
         physical_led = chassis._led
         assert physical_led is not None
         self._verify_non_shared_led(physical_led, chassis)
-        
-    @mock.patch('sonic_platform.led.Led._wait_files_ready', mock.MagicMock(return_value=True))
+
     def _verify_non_shared_led(self, physical_led, obj):
         mock_file_content = self._mock_led_file_content(physical_led)
 
@@ -67,7 +66,7 @@ class TestLed:
 
         assert obj.set_status_led(Led.STATUS_LED_COLOR_RED_BLINK)
         assert obj.get_status_led() == Led.STATUS_LED_COLOR_RED_BLINK
-        
+
         mock_file_content[physical_led.get_red_led_delay_off_path()] = Led.LED_OFF
         mock_file_content[physical_led.get_red_led_delay_on_path()] = Led.LED_OFF
 
@@ -144,9 +143,3 @@ class TestLed:
         psu = FixedPsu(0)
         physical_led = psu.led
         self._verify_non_shared_led(physical_led, psu)
-
-    @mock.patch('os.path.exists', mock.MagicMock(side_effect=[False, False, False, True, True, True]))
-    @mock.patch('time.sleep', mock.MagicMock())
-    def test_wait_file_ready(self):
-        led = Led()
-        assert led._wait_files_ready(['f1', 'f2'])
