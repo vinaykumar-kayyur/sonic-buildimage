@@ -385,7 +385,7 @@
             }
         }
     },
-    "DHCP_SERVER_VALID_PARAMETERS_FORMAT": {
+    "DHCP_SERVER_VALID_FORMAT": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -441,7 +441,7 @@
             }
         }
     },
-    "DHCPV6_SERVER_VALID_PARAMETERS_FORMAT": {
+    "DHCPV6_SERVER_VALID_FORMAT": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
