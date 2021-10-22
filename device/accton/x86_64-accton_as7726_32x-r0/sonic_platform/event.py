@@ -1,6 +1,5 @@
 try:
-    import time
-    from .helper import APIHelper
+    import time    
     from sonic_py_common.logger import Logger
 except ImportError as e:
     raise ImportError(repr(e) + " - required module not found")

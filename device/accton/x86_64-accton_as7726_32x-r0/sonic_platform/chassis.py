@@ -26,7 +26,7 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "which systemctl > /dev/null 2>&1
+HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
 SYSLED_FNODE = "/sys/class/leds/accton_as7726_32x_led::diag/brightness"
 SYSLED_MODES = {
     "0" :  "STATUS_LED_COLOR_OFF",
