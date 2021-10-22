@@ -32,23 +32,18 @@ module sonic-buffer-profile {
                     type string;
                     description "Buffer Profile name";
                 }
-		choice threshold_type {
-			mandatory true;
-			case static {
-				leaf static_th {
-					type uint64;
-					description "The maximum size of the buffer pool the port can occupy";
-				}
-			}
-			case dynamic {
-				leaf dynamic_th {
-					type int32 {
-						range "-8..7";
-					}
-					description "The maximum proportion of the free size of the buffer pool the port can occupy (Alpha value)";
-				}
-			}
-		}
+
+                leaf static_th {
+                    type uint64;
+                    description "The maximum size of the buffer pool the port can occupy";
+                }
+
+                leaf dynamic_th {
+                    type int32 {
+                        range "-8..7";
+                    }
+                    description "The maximum proportion of the free size of the buffer pool the port can occupy (Alpha value)";
+                }
 
                 leaf size {
                     mandatory true;
