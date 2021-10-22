@@ -48,10 +48,10 @@
     "VLAN_INTERFACE_VALID_NAT_ZONE_RANGE": {
         "desc": "Configure valid value for nat zone."
     },
-    "DHCP_SERVER_VALID_PARAMETERS_FORMAT": {
-        "desc": "Add dhcp_server and it's parameters in correct format."
+    "DHCP_SERVER_VALID_FORMAT": {
+        "desc": "Add dhcp_server in correct format."
     },
-    "DHCPV6_SERVER_VALID_PARAMETERS_FORMAT": {
-        "desc": "Add dhcpv6_server and it's parameters in correct format."
+    "DHCPV6_SERVER_VALID_FORMAT": {
+        "desc": "Add dhcpv6_server in correct format."
     }
 }

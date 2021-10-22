@@ -168,74 +168,9 @@ module sonic-vlan {
 					type inet:ip-address;
 				}
 
-				leaf dhcp_relay_src_intf {
-					description "Set source interface for the relay";
-					type string;
-				}
-
-				leaf dhcp_relay_link_select {
-					description "Enable/Disable link-select option for the relay";
-					type stypes:mode_enable;
-				}
-
-				leaf dhcp_relay_max_hop_count {
-					description "Max hop count for the relay";
-					type uint8 {
-						range "1..15" {
-							error-message "Invalid max hop count for the relay";
-							error-app-tag max-hop-count-invalid;
-						}
-					}
-					default "10";
-				}
-
-				leaf dhcp_server_vrf {
-					description "Vrf configured on the server";
-					type string;
-				}
-
-				leaf dhcp_relay_vrf_select {
-					description "Enable/Disable vrf-select sub-option for the relay";
-					type stypes:mode_enable;
-					default disable;
-				}
-
-				leaf dhcp_relay_policy_action {
-					description "Configure policy action for the relay";
-					type stypes:relay_policy_action;
-					default discard;
-				}
-
 				leaf-list dhcpv6_servers {
 					description "Configure the dhcp v6 servers";
 					type inet:ipv6-address;
-				}
-
-				leaf dhcpv6_relay_src_intf {
-					description "Set source interface for the relay";
-					type string;
-				}
-
-				leaf dhcpv6_relay_max_hop_count {
-					description "Max hop count for the relay";
-					type uint8 {
-					range "1..15" {
-							error-message "Invalid max hop count for the relay";
-							error-app-tag max-hop-count-invalid;
-						}
-					}
-					default "10";
-				}
-
-				leaf dhcpv6_server_vrf {
-					description "Vrf configured on the server";
-					type string;
-				}
-
-				leaf dhcpv6_relay_vrf_select {
-					description "Enable/Disable vrf-select sub-option for the relay";
-					type stypes:mode_enable;
-					default disable;
 				}
 
 				leaf mtu {

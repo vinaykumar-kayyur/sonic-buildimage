@@ -410,12 +410,6 @@
                         "dhcp_servers": [
                             "10.186.72.10"
                         ],
-                        "dhcp_relay_src_intf": "Loopback1",
-                        "dhcp_relay_link_select": "enable",
-                        "dhcp_relay_max_hop_count": "10",
-                        "dhcp_server_vrf": "VrfRed",
-                        "dhcp_relay_vrf_select": "enable",
-                        "dhcp_relay_policy_action": "append",
                         "mtu": "9216",
                         "name": "Vlan300"
                     }
@@ -472,10 +466,6 @@
                         "dhcpv6_servers": [
                             "2001:1::2"
                         ],
-                        "dhcpv6_relay_src_intf": "Loopback1",
-                        "dhcpv6_relay_max_hop_count": "10",
-                        "dhcpv6_server_vrf": "VrfRed",
-                        "dhcpv6_relay_vrf_select": "enable",
                         "mtu": "9216",
                         "name": "Vlan400"
                     }
