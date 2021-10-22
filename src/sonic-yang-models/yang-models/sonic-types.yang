@@ -184,19 +184,4 @@ module sonic-types {
             enum transit;
         }
     }        
-
-    typedef relay_policy_action {
-        type enumeration {
-            enum discard;
-            enum append;
-            enum replace;
-        }
-    }
-
-    typedef mode_enable {
-        type enumeration {
-            enum enable;
-            enum disable;
-        }
-    }
 }
