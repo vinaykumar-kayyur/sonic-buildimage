@@ -223,69 +223,30 @@ class TestJ2Files():
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     @pytest.mark.parametrize('sku_information',
-                             [('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers-dell6100.json'),
-                              ('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers-mellanox2700.json'),
-                              ('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers-mellanox2410.json')
+                             [('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json'),
+                              ('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json'),
+                              ('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2410.json'),
+                              ('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers_dynamic.json.j2', 'buffers-mellanox2410-dynamic.json')
                              ])
-    def test_buffers_dell6100_render_template(self, sku_information):
-        vendor, platform, sku, minigraph, expected = sku_information
-        dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
-        buffers_file = os.path.join(dell_dir_path, 'buffers.json.j2')
-        port_config_ini_file = os.path.join(dell_dir_path, 'port_config.ini')
+    def test_buffers_render_template(self, sku_information):
+        vendor, platform, sku, minigraph, buffer_template, expected = sku_information
+        dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
+        buffers_file = os.path.join(dir_path, buffer_template)
+        port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
 
-        # copy buffers_config.j2 to the Dell S6100 directory to have all templates in one directory
+        # copy buffers_config.j2 to the SKU directory to have all templates in one directory
         buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
-        shutil.copy2(buffers_config_file, dell_dir_path)
+        shutil.copy2(buffers_config_file, dir_path)
 
         minigraph = os.path.join(self.test_dir, minigraph)                              
         argument = '-m ' + minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
         self.run_script(argument)
 
         # cleanup
-        buffers_config_file_new = os.path.join(dell_dir_path, 'buffers_config.j2')
+        buffers_config_file_new = os.path.join(dir_path, 'buffers_config.j2')
         os.remove(buffers_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, expected)
-        assert filecmp.cmp(sample_output_file, self.output_file)
-
-    def test_buffers_mellanox2700_render_template(self):
-        # Mellanox buffer template rendering for single ingress pool mode
-        mellanox_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8')
-        buffers_file = os.path.join(mellanox_dir_path, 'buffers.json.j2')
-        port_config_ini_file = os.path.join(mellanox_dir_path, 'port_config.ini')
-
-        # copy buffers_config.j2 to the Mellanox 2700 directory to have all templates in one directory
-        buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
-        shutil.copy2(buffers_config_file, mellanox_dir_path)
-
-        argument = '-m ' + self.mellanox2700_t0_minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
-        self.run_script(argument)
-
-        # cleanup
-        buffers_config_file_new = os.path.join(mellanox_dir_path, 'buffers_config.j2')
-        os.remove(buffers_config_file_new)
-
-        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-mellanox2700.json')
-        assert filecmp.cmp(sample_output_file, self.output_file)
-
-    def test_buffers_mellanox2410_render_template(self):
-        # Mellanox buffer template rendering for double ingress pools mode
-        mellanox_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410')
-        buffers_file = os.path.join(mellanox_dir_path, 'buffers.json.j2')
-        port_config_ini_file = os.path.join(mellanox_dir_path, 'port_config.ini')
-
-        # copy buffers_config.j2 to the Mellanox 2410 directory to have all templates in one directory
-        buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
-        shutil.copy2(buffers_config_file, mellanox_dir_path)
-
-        argument = '-m ' + self.mellanox2410_t1_minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
-        self.run_script(argument)
-
-        # cleanup
-        buffers_config_file_new = os.path.join(mellanox_dir_path, 'buffers_config.j2')
-        os.remove(buffers_config_file_new)
-
-        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-mellanox2410.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_ipinip_multi_asic(self):
