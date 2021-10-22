@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 import os
-import time
 from sonic_py_common.logger import Logger
 
 from . import utils
