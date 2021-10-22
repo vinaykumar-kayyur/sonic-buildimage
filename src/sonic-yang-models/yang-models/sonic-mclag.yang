@@ -1,4 +1,4 @@
- ip address presentmodule sonic-mclag {
+ module sonic-mclag {
     namespace "http://github.com/Azure/sonic-mclag";
     prefix smclag;
     yang-version 1.1;
