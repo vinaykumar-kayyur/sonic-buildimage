@@ -32,7 +32,7 @@
 	"eStr": ["domain_id"]
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
-	"desc": "mclag unique ip configured without domain",
+	"desc": "mclag unique ip configured with ip address present",
 	"eStrKey" : "Must",
 	"eStr": ["domain_id"]
     }
