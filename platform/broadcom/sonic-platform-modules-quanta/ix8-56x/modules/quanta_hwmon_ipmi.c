@@ -1242,7 +1242,7 @@ int32_t ipmi_get_vin_type(uint8_t idx, uint8_t *retbuf)
 		if (rv) {
 			printk("BMC down at (%d)!!\n", __LINE__);
 		}
-		else {			
+		else {
 			switch (returnData)
 			{
 				case 0x7: //LVDC
@@ -1857,21 +1857,15 @@ static int32_t __init quanta_hwmon_ipmi_init(void)
   return 0;
 
 init_sensor_err:
-  if (g_sensor_data)
-  {
-    kfree(g_sensor_data);
-    g_sensor_data = NULL;
-  }
+  kfree(g_sensor_data);
+  g_sensor_data = NULL;
 ipmi_create_err:
   hwmon_device_unregister(data->ipmi_hwmon_dev);
 hwmon_register_err:
   platform_device_unregister(data->ipmi_platform_dev);
 device_reg_err:
-  if (data)
-  {
-    kfree(data);
-    data = NULL;
-  }
+  kfree(data);
+  data = NULL;
 alloc_err:
   return err;
 }
@@ -1887,17 +1881,10 @@ static void __exit quanta_hwmon_ipmi_exit(void)
 
   platform_device_unregister(data->ipmi_platform_dev);
 
-  if (g_sensor_data)
-  {
-    kfree(g_sensor_data);
-    g_sensor_data = NULL;
-  }
-
-  if (data)
-  {
-    kfree(data);
-    data = NULL;
-  }
+  kfree(g_sensor_data);
+  g_sensor_data = NULL;
+  kfree(data);
+  data = NULL;
 }
 
 module_init(quanta_hwmon_ipmi_init);
