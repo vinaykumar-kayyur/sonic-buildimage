@@ -86,14 +86,6 @@
                 {
                     "name": "Vlan12"
                 }
-                ],
-                "VLAN_INTERFACE_IPPREFIX_LIST": [
-                {
-                    "family": "IPv4",
-                    "ip-prefix": "12.1.1.1/24",
-                    "scope": "global",
-                    "name": "Vlan12"
-                }
                 ]
             }
         },
@@ -116,13 +108,7 @@
                        "domain_id": "123",
                        "if_name"  : "PortChannel10",
                        "if_type"  : "Portchannel"
-                   },
-                   {
-                       "domain_id": "123",
-                       "if_name"  : "PortChannel20",
-                       "if_type"  : "Portchannel"
                    }
-
                 ]
             },
             "sonic-mclag:MCLAG_UNIQUE_IP": {

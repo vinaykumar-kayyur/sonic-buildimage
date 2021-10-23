@@ -19,8 +19,7 @@
     },
     "MCLAG_INVALID_KEEPALIVE_MUST_COND_TEST": {
 	"desc": "Invalid session and keepalive multiplier",
-	"eStrKey" : "Must",
-	"eStr": ["session_timeout"]
+	"eStrKey" : "Must"
     },
     "MCLAG_INTERFACE_DOMAIN_ABSENT_TEST": {
 	"desc": "mclag interface configured without domain",
@@ -28,12 +27,10 @@
     },
     "MCLAG_UNIQUE_IP_DOMAIN_ABSENT_TEST": {
 	"desc": "mclag unique ip configured without domain",
-	"eStrKey" : "Must",
-	"eStr": ["domain_id"]
+	"eStrKey" : "Must"
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
 	"desc": "mclag unique ip configured with ip address present",
-	"eStrKey" : "Must",
-	"eStr": ["domain_id"]
+	"eStrKey" : "Must"
     }
 }
