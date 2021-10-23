@@ -230,6 +230,7 @@ module sonic-acl {
 
 				leaf-list matches {
 					type string;
+					min-elements 1;
 				}
 
 				leaf-list actions {
@@ -242,6 +243,7 @@ module sonic-acl {
 						enum PORT;
 						enum LAG;
 					}
+					min-elements 1;
 				}
 			}
 		}
