@@ -159,8 +159,8 @@ DEVICE_DATA = {
             "capability": {
                 "comex_amb": False
             }
-        },
-    },
+        }
+    }
 }
 
 
