@@ -28,8 +28,6 @@ parameters:
 - name: 'arches'
   type: object
   default:
-  - amd64
-  - armhf
   - arm64
 - name: 'dists'
   type: object
@@ -37,22 +35,15 @@ parameters:
   - bullseye
   - buster
   - stretch
-  - jessie
-- name: registry_url
-  type: string
-  default: sonicdev-microsoft.azurecr.io
-- name: registry_conn
-  type: string
-  default: sonicdev
 
 stages:
 - stage: Build
   jobs:
   - ${{ each dist in parameters.dists }}:
-    - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
+    - ${{ if contains(variables['Build.DefinitionName'], dist) }}:
       - ${{ each arch in parameters.arches }}:
         - template: docker-sonic-slave-template.yml
           parameters:
-            pool: sonicbld
+            pool: sonicbld-arm64
             arch: ${{ arch }}
             dist: ${{ dist }}
