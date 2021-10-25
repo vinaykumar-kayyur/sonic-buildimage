@@ -11,6 +11,7 @@
 try:
     import time
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
+    import fcntl
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -36,6 +37,16 @@ class Sfp(SfpOptoeBase):
         Retrieves the presence of the sfp
         """
         presence_ctrl = self.sfp_control + 'qsfp_modprs'
+        SFP_LOCK_FILE="/etc/sonic/sfp_lock"
+
+        try:
+            fd = open(SFP_LOCK_FILE, "r")
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return False
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        self.set_modsel()
+
         try:
             reg_file = open(presence_ctrl)
         except IOError as e:
@@ -50,11 +61,68 @@ class Sfp(SfpOptoeBase):
         # Mask off the bit corresponding to our port
         mask = (1 << self.sfp_ctrl_idx)
 
+        fcntl.flock(fd, fcntl.LOCK_UN)
+
         # ModPrsL is active low
         if ((reg_value & mask) == 0):
             return True
 
         return False
+
+    def get_modsel(self):
+        modsel_ctrl = self.sfp_control + 'qsfp_modsel'
+        try:
+            reg_file = open(modsel_ctrl, "r+")
+        except IOError as e:
+            return False
+
+        reg_hex = reg_file.readline().rstrip()
+
+        # content is a string containing the hex
+        # representation of the register
+        reg_value = int(reg_hex, 16)
+
+        # Mask off the bit corresponding to our port
+        index = self.sfp_ctrl_idx
+
+        mask = (1 << index)
+
+        if ((reg_value & mask) == 1):
+            modsel_state = False
+        else:
+            modsel_state = True
+
+        return modsel_state
+
+    def set_modsel(self):
+        modsel_ctrl = self.sfp_control + 'qsfp_modsel'
+        try:
+            reg_file = open(modsel_ctrl, "r+")
+        except IOError as e:
+            return False
+
+        reg_hex = reg_file.readline().rstrip()
+
+        # content is a string containing the hex
+        # representation of the register
+        reg_value = int(reg_hex, 16)
+
+        # Mask off the bit corresponding to our port
+        index = self.sfp_ctrl_idx
+
+        reg_value = reg_value | int("0xffffffff", 16)
+        mask = (1 << index)
+
+        reg_value = (reg_value & ~mask)
+
+        # Convert our register value back to a hex string and write back
+        content = hex(reg_value)
+
+        reg_file.seek(0)
+        reg_file.write(content)
+        reg_file.close()
+
+        return True
 
     def get_reset_status(self):
         """
