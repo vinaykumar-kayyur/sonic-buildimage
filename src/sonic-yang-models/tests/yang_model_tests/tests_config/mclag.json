@@ -466,6 +466,7 @@
                         "name": "Vlan113"
                     }
                 ]
+            }
         },
         "sonic-mclag:sonic-mclag": {
             "sonic-mclag:MCLAG_UNIQUE_IP": {
