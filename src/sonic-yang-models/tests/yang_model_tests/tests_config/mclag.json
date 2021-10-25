@@ -326,6 +326,21 @@
         }
     },
     "MCLAG_UNIQUE_IP_DOMAIN_ABSENT_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet12",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet12",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
           "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
                 "VLAN_LIST": [
@@ -378,6 +393,31 @@
                 ]
             }
         },
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+						"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet12",
+						"lanes": "65",
+						"mtu": 9000,
+						"name": "Ethernet12",
+						"speed": 25000
+					},
+                    {
+						"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet16",
+						"lanes": "65",
+						"mtu": 9000,
+						"name": "Ethernet16",
+						"speed": 25000
+					}
+				]
+			}
+		},
+
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
                 "VLAN_LIST": [
@@ -404,6 +444,15 @@
                 ]
             },
 
+            "sonic-vlan:VLAN_INTERFACE": {
+                "VLAN_INTERFACE_LIST": [
+                    {
+                        "name": "Vlan112"
+                    },
+                    {
+                        "name": "Vlan113"
+                    }
+                ],
             "VLAN_INTERFACE_IPPREFIX_LIST": [
                     {
                         "family": "IPv4",
@@ -433,5 +482,4 @@
             }
         }
     }
-
 }
