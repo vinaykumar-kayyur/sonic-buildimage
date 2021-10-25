@@ -127,7 +127,7 @@
                             "name": "Vlan12"
                         }
                     ]
-                }.
+                },
                 "sonic-vlan:VLAN_INTERFACE": {
                     "VLAN_INTERFACE_IPPREFIX_LIST": [
                     {
