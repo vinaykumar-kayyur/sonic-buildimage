@@ -120,6 +120,7 @@
                     ]
                 }
             },
+
             "sonic-vlan:sonic-vlan": {
                 "sonic-vlan:VLAN": {
                     "VLAN_LIST": [
@@ -129,6 +130,11 @@
                     ]
                 },
                 "sonic-vlan:VLAN_INTERFACE": {
+                    "VLAN_INTERFACE_LIST": [
+                        {
+                            "name": "Vlan12"
+                        }
+                    ],
                     "VLAN_INTERFACE_IPPREFIX_LIST": [
                     {
                         "family": "IPv4",
