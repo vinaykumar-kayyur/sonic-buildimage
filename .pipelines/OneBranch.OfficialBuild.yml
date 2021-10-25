@@ -13,7 +13,7 @@ pr: none
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
-pool: sonic-image-builder
+pool: sonic-image-builder-1ES
 
 parameters:
 - name: 'jobFilters'
@@ -52,6 +52,7 @@ stages:
         PASSWORD: '$(PASSWORD)'
       jobFilters: ${{ parameters.jobFilters }}
       preSteps:
+        - template: disk_nfs.yml
         - template: ../.azure-pipelines/cleanup.yml
         - checkout: self
           clean: true
@@ -174,7 +175,7 @@ stages:
         - name: vs
           script: |
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
-            make $OPTIONS target/docker-ptf.gz
+            make $OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         - name: generic
           script: |
             make all

@@ -12,7 +12,7 @@ name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd
 
 stages:
 - stage: Build
-  pool: sonic-image-builder
+  pool: sonic-image-builder-1ES
   variables:
     CACHE_MODE: rcache
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
@@ -27,3 +27,5 @@ stages:
         variables:
           swi_image: yes
       - name: mellanox
+      preSteps:
+        - template: disk_nfs.yml
