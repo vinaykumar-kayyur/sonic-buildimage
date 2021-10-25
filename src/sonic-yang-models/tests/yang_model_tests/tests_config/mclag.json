@@ -80,13 +80,6 @@
                         "name": "Vlan100"
                     }
                 ]
-            },
-            "sonic-vlan:VLAN_INTERFACE": {
-                "VLAN_INTERFACE_LIST": [
-                {
-                    "name": "Vlan12"
-                }
-                ]
             }
         },
         "sonic-mclag:sonic-mclag": {
@@ -129,7 +122,7 @@
                         }
                     ]
                 },
-                "sonic-vlan:VLAN_INTERFACE": {
+               "sonic-vlan:VLAN_INTERFACE": {
                     "VLAN_INTERFACE_LIST": [
                         {
                             "name": "Vlan12"
