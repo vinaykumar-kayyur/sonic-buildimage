@@ -1,5 +1,4 @@
- module sonic-mclag {
-    namespace "http://github.com/Azure/sonic-mclag";
+     namespace "http://github.com/Azure/sonic-mclag";
     prefix smclag;
     yang-version 1.1;
 
@@ -100,7 +99,7 @@
                 }
                 must "(keepalive_interval * 3) <= session_timeout" {
                     error-message "(keepalive interval * 3) <= session_timeout value";
-                    error-app-tag keepalive_interval-invalid;
+                    error-app-tag keepalive_session_multiplier-invalid;
                 }
             }
         }
