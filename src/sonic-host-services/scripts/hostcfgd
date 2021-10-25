@@ -745,7 +745,7 @@ class AaaCfg(object):
                     f.write(pam_radius_auth_conf)
 
         # Start the statistics service. Only RADIUS implemented
-        if ('radius' in authentication['login']) and ('statistics' in radius_global) and\
+        if ('radius' in authentication['login']) and ('statistics' in radius_global) and \
                 radius_global['statistics']:
             cmd = 'service aaastatsd start'
         else:
