@@ -1,0 +1,10 @@
+Source: sonic-inspur-platform-modules
+Section: main
+Priority: extra
+Maintainer: Inspur Switch Team <switchsupport@inspur.com>
+Build-Depends: debhelper (>= 8.0.0), bzip2
+Standards-Version: 3.9.3
+
+Package: sonic-platform-inspur-sc5630el
+Architecture: amd64
+Description: Kernel modules for Inspur platform devices such as eeprom, psu, sfp

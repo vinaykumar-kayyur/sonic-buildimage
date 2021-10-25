@@ -1,0 +1,4 @@
+#!/bin/sh
+depmod -a
+systemctl enable inspur-sc5630el-platform.service
+systemctl start inspur-sc5630el-platform.service
