@@ -9,7 +9,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "true",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "local"
                     },
                     {
                         "name": "swss",
@@ -17,7 +18,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "false",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "local"
                     },
                     {
                         "name": "syncd",
@@ -25,7 +27,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "false",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "local"
                     },
                     {
                         "name": "snmp",
@@ -33,7 +36,8 @@
                         "auto_restart": "enabled",
                         "has_timer": "false",
                         "has_global_scope": "true",
-                        "has_per_asic_scope": "false"
+                        "has_per_asic_scope": "false",
+                        "set_owner": "kube"
                     },
                     {
                         "name": "lldp",
@@ -41,7 +45,8 @@
                         "auto_restart": "disabled",
                         "has_timer": "false",
                         "has_global_scope": "false",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "kube"
                     }
                 ]
             }
@@ -57,7 +62,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "true",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "lcoal"
                     }
                 ]
             }

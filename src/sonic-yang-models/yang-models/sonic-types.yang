@@ -165,6 +165,13 @@ module sonic-types {
             pattern "enabled|disabled|always_enabled";
         }
     }
+
+    typedef feature-owner {
+        type string {
+            pattern "kube|local";
+        }
+    }
+
     typedef meter_type {
         type enumeration {
             enum packets; 
