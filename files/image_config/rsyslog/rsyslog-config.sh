@@ -13,7 +13,7 @@ fi
 # on Single NPU platforms we continue to use loopback adddres
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
-    udp_server_ip=$(ip -j -4 addr list docker0 | jq -r -M '.[0].addr_info[0].local')
+    udp_server_ip=$(ip -j -4 addr list docker0 scope global | jq -r -M '.[0].addr_info[0].local')
 else
     udp_server_ip=$(ip -j -4 addr list lo scope host | jq -r -M '.[0].addr_info[0].local')
 fi
