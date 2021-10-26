@@ -40,7 +40,7 @@ function preStartAction()
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
         if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
             REG_BOOT_TYPE="fast*"
-	    CAUSE_NO_AVAIL="\"N/A\""
+            CAUSE_NO_AVAIL="\"N/A\""
             REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
             EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
 
@@ -75,8 +75,20 @@ function postStartAction()
         fi
 
         if [[ "$BOOT_TYPE" == "fast" ]]; then
-            # set the key to expire in 3 minutes
-            redis-cli -n 6 SET "FAST_REBOOT|system" "1" "EX" "180"
+            if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
+                REG_BOOT_TYPE="fast*"
+                CAUSE_NO_AVAIL="\"N/A\""
+                REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
+                EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
+
+                # Clear the FAST_REBOOT|system db setting if EXTRA_REBOOT_CAUSE is not "N/A" before starting swss
+                if [[ $REBOOT_CAUSE =~ $REG_BOOT_TYPE ]]; then
+                    if [[ "${EXTRA_CAUSE}" == "${CAUSE_NO_AVAIL}" ]]; then
+                        # set the key to expire in 3 minutes
+                        redis-cli -n 6 SET "FAST_REBOOT|system" "1" "EX" "180"
+                    fi
+                fi
+            fi
         fi
 
         redis-cli -n 4 SET "CONFIG_DB_INITIALIZED" "1"
