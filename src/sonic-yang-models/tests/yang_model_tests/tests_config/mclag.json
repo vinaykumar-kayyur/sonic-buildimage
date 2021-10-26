@@ -354,23 +354,9 @@
         }
     },
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
-        "sonic-mclag:sonic-mclag": {
-            "sonic-mclag:MCLAG_DOMAIN": {
-                "MCLAG_DOMAIN_LIST": [
-                {
-                    "domain_id": "123",
-                    "source_ip": "12.1.1.1",
-                    "peer_ip"  : "12.1.1.2",
-                    "peer_link": "PortChannel2",
-                    "keepalive_interval" : "1",
-                    "session_timeout": "30"
-                }
-                ]
-            }
-        },
-		"sonic-port:sonic-port": {
-			"sonic-port:PORT": {
-				"PORT_LIST": [
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
 					{
 						"admin_status": "up",
 						"alias": "eth0",
@@ -392,7 +378,6 @@
 				]
 			}
 		},
-
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
                 "VLAN_LIST": [
@@ -444,6 +429,18 @@
             }
         },
         "sonic-mclag:sonic-mclag": {
+            "sonic-mclag:MCLAG_DOMAIN": {
+                "MCLAG_DOMAIN_LIST": [
+                {
+                    "domain_id": "123",
+                    "source_ip": "12.1.1.1",
+                    "peer_ip"  : "12.1.1.2",
+                    "peer_link": "PortChannel2",
+                    "keepalive_interval" : "1",
+                    "session_timeout": "30"
+                }
+                ]
+            },
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
                 {
