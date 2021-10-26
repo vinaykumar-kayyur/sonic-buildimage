@@ -61,7 +61,7 @@ class Thermal(ThermalBase):
             psu_i2c_bus = PSU_CPLD_I2C_MAPPING[psu_index]["num"]
             psu_i2c_addr = PSU_CPLD_I2C_MAPPING[psu_index]["addr"]
             self.cpld_path = PSU_I2C_PATH.format(psu_i2c_bus, psu_i2c_addr)
-       
+
         # Set hwmon path
         i2c_path = {
             0: "61-0048/hwmon/hwmon*/", 

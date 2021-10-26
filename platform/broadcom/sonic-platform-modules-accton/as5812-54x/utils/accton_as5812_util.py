@@ -200,6 +200,8 @@ kos = [
 'depmod -ae',
 'modprobe i2c_dev',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
+'modprobe i2c_i801',
+'modprobe i2c_ismt',
 'modprobe optoe',
 'modprobe i2c-mux-accton_as5812_54x_cpld',
 'modprobe cpr_4011_4mxx',
@@ -455,82 +457,6 @@ def get_path_sfp_presence(port_index):
     else:
         dev = cpld_p+"module_present_"+str(port_index)
         return True, dev
-
-
-def set_device(args):
-    global DEVICE_NO
-    global ALL_DEVICE
-    if system_ready()==False:
-        print("System's not ready.")
-        print("Please install first!")
-        return
-
-    if len(ALL_DEVICE)==0:
-        devices_info()
-
-    if args[0]=='led':
-        if int(args[1])>4:
-            show_set_help()
-            return
-        #print(ALL_DEVICE['led'])
-        for i in range(0,len(ALL_DEVICE['led'])):
-            for k in (ALL_DEVICE['led']['led'+str(i+1)]):
-                ret, log = log_os_system("echo "+args[1]+" >"+k, 1)
-                if ret:
-                    return ret
-    elif args[0]=='fan':
-        if int(args[1])>100:
-            show_set_help()
-            return
-        #print( ALL_DEVICE['fan'])
-        #fan1~6 is all fine, all fan share same setting
-        node = ALL_DEVICE['fan1'] ['fan11'][0]
-        node = node.replace(node.split("/")[-1], 'fan1_duty_cycle_percentage')
-        ret, log = log_os_system("cat "+ node, 1)
-        if ret==0:
-            print("Previous fan duty: " + log.strip() +"%")
-        ret, log = log_os_system("echo "+args[1]+" >"+node, 1)
-        if ret==0:
-            print("Current fan duty: " + args[1] +"%")
-        return ret
-    elif args[0]=='sfp':
-        #if int(args[1])> DEVICE_NO[args[0]] or int(args[1])==0:
-        #There no tx_disable for QSFP port
-        if int(args[1]) > QSFP_START or int(args[1])==0:
-            show_set_help()
-            return
-        if len(args)<2:
-            show_set_help()
-            return
-
-        if int(args[2])>1:
-            show_set_help()
-            return
-
-        port_index = int(args[1])
-        ret, dev = get_path_sfp_tx_dis(port_index)
-        if ret == False:
-            return False
-        else:
-            ret, log = log_os_system("echo "+args[2]+" >"+ dev, 1)
-            return ret
-    return
-
-#get digits inside a string.
-#Ex: 31 for "sfp31"
-def get_value(input):
-    digit = re.findall('\d+', input)
-    return int(digit[0])
-
-def print_1_device_traversal(i, j, k):
-    ret, log = log_os_system("cat "+k, 0)
-    func = k.split("/")[-1].strip()
-    func = re.sub(j+'_','',func,1)
-    func = re.sub(i.lower()+'_','',func,1)
-    if ret==0:
-        return func+"="+log+" "
-    else:
-        return func+"="+"X"+" "
 
 def device_exist():
     ret1, log = log_os_system("ls "+i2c_prefix+"*0070", 0)

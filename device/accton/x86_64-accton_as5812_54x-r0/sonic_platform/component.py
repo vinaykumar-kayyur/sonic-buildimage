@@ -17,9 +17,9 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CPLD_ADDR_MAPPING = {
-    "CPLD1": "1-0060",
-    "CPLD2": "1-0061",
-    "CPLD3": "1-0062",
+    "CPLD1": "0-0060",
+    "CPLD2": "0-0061",
+    "CPLD3": "0-0062",
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"

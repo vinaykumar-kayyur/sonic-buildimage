@@ -30,11 +30,11 @@ except ImportError as e:
 #Edge-core definitions
 CPLD_ADDR_MAPPING = {
     0: {
-        "bus": 1,
+        "bus": 0,
         "addr": "61"
     },  # port 1-24
     1: {
-        "bus": 1,
+        "bus": 0,
         "addr": "62"
     },  # port  25-54
 }
