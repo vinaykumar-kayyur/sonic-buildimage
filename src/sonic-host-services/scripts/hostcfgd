@@ -187,7 +187,7 @@ class FeatureHandler(object):
         """
         Summary:
         Updates the state field in the FEATURE|* tables as the state field
-        might have to to be rendered based on DEVICE_METADATA table
+        might have to be rendered based on DEVICE_METADATA table
         """
         feature_table = self._config_db.get_table('FEATURE')
         for feature_name in feature_table.keys():
