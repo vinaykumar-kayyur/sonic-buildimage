@@ -443,14 +443,14 @@
             },
             "sonic-mclag:MCLAG_UNIQUE_IP": {
                 "MCLAG_UNIQUE_IP_LIST": [
-                {
-                    "if_name"  : "Vlan112",
-                    "unique_ip": "enable"
-                },
-                {
-                    "if_name"  : "Vlan113",
-                    "unique_ip": "enable"
-                }
+                    {
+                        "if_name"  : "Vlan112",
+                        "unique_ip": "enable"
+                    },
+                    {
+                        "if_name"  : "Vlan113",
+                        "unique_ip": "enable"
+                    }
                 ]
             }
         }
