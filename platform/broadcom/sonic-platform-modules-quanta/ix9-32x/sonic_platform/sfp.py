@@ -278,7 +278,6 @@ class Sfp(SfpBase):
         # Init index
         self.index = sfp_index
         self.port_num = self.index
-        #self.dom_supported = False
         self.sfp_type = sfp_type
         self.reset_path = "/sys/class/cpld-qsfpdd/port-"+str(self.port_num)+"/reset"
         self.lpmode_path = "/sys/class/cpld-qsfpdd/port-"+str(self.port_num)+"/lpmode"
@@ -354,15 +353,6 @@ class Sfp(SfpBase):
         else:
             return 'N/A'
 
-    def __read_txt_file(self, file_path):
-        try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            pass
-        return ""
-
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -436,26 +426,6 @@ class Sfp(SfpBase):
             # eeprom_raw being None indicates the module is not present.
             # in this case we treat it as the default type according to the SKU
             self.sfp_type = sfp_type
-
-    def __convert_string_to_num(self, value_str):
-        if "-inf" in value_str:
-            return 'N/A'
-        elif "Unknown" in value_str:
-            return 'N/A'
-        elif 'dBm' in value_str:
-            t_str = value_str.rstrip('dBm')
-            return float(t_str)
-        elif 'mA' in value_str:
-            t_str = value_str.rstrip('mA')
-            return float(t_str)
-        elif 'C' in value_str:
-            t_str = value_str.rstrip('C')
-            return float(t_str)
-        elif 'Volts' in value_str:
-            t_str = value_str.rstrip('Volts')
-            return float(t_str)
-        else:
-            return 'N/A'
 
     def _dom_capability_detect(self):
         if not self.get_presence():
@@ -828,9 +798,7 @@ class Sfp(SfpBase):
                 else:
                     if not self.get_presence():
                         return transceiver_info_dict
-                    elif i == max_retry-1:
-                        pass
-                    else:
+                    elif i < max_retry-1:
                         time.sleep(0.5)
 
             if sfp_interface_bulk_raw is None:
