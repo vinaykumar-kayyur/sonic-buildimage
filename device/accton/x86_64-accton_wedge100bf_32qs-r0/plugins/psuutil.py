@@ -69,7 +69,8 @@ class PsuUtil(PsuBase):
             self.thrift_setup()
             psu_info = pltfm_mgr.pltfm_mgr_pwr_supply_info_get(index)
             self.thrift_teardown()
-        except BaseException:
+        except Exception as e:
+            print(e.__doc__)
             return False
 
         return (psu_info.ffault == False)
@@ -90,7 +91,8 @@ class PsuUtil(PsuBase):
             self.thrift_setup()
             status = pltfm_mgr.pltfm_mgr_pwr_supply_present_get(index)
             self.thrift_teardown()
-        except BaseException:
+        except Exception as e:
+            print(e.__doc__)
             return False
 
         return status

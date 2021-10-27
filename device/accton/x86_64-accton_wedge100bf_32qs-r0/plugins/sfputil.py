@@ -170,14 +170,18 @@ class SfpUtil(SfpUtilBase):
 
         try:
             self.thrift_setup()
-        except BaseException:
+        except Exception as e:
+            print(e.__doc__)
+            print(e.message)
             return
 
         # Get presence of each SFP
         for port in range(self.port_start, self.port_end + 1):
             try:
                 sfp_resent = pltfm_mgr.pltfm_mgr_qsfp_presence_get(port)
-            except BaseException:
+            except Exception as e:
+                print(e.__doc__)
+                print(e.message)
                 sfp_resent = False
             sfp_state = '1' if sfp_resent else '0'
 
@@ -207,8 +211,9 @@ class SfpUtil(SfpUtilBase):
                 try:
                     self.thrift_setup()
                     self.thrift_teardown()
-                except BaseException:
-                    pass
+                except Exception as e:
+                    print(e.__doc__)
+                    print(e.message)
                 else:
                     self.ready = True
                     self.phy_port_dict = {}

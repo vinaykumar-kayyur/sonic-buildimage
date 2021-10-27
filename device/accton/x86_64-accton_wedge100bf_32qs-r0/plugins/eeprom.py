@@ -142,7 +142,9 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
             self.thrift_setup()
             eeprom = pltfm_mgr.pltfm_mgr_sys_eeprom_get()
             self.thrift_teardown()
-        except BaseException:
+        except Exception as e:
+            print(e.__doc__)
+            print(e.message)
             return False
 
         f = open(EEPROM_STATUS, 'w')
