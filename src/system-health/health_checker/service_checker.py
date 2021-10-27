@@ -3,8 +3,7 @@ import os
 import pickle
 import re
 
-
-import swsssdk
+from swsscommon import swsscommon
 from sonic_py_common import multi_asic
 from sonic_py_common.logger import Logger
 from .health_checker import HealthChecker
@@ -41,7 +40,7 @@ class ServiceChecker(HealthChecker):
         'Filesystem': 'Accessible',
         'Program': 'Status ok'
     }
-    
+
     def __init__(self):
         HealthChecker.__init__(self)
         self.critical_process_dict = {}
@@ -65,13 +64,13 @@ class ServiceChecker(HealthChecker):
         """
         containers = set()
         container_feature_dict = {}
-        for feature_name in feature_table.keys():
-            if feature_table[feature_name]["state"] not in ["disabled", "always_disabled"]:
+        for feature_name, feature_entry in feature_table.items():
+            if feature_entry["state"] not in ["disabled", "always_disabled"]:
                 if multi_asic.is_multi_asic():
-                    if feature_table[feature_name]["has_global_scope"] == "True":
+                    if feature_entry["has_global_scope"] == "True":
                         containers.add(feature_name)
                         container_feature_dict[feature_name] = feature_name
-                    if feature_table[feature_name]["has_per_asic_scope"] == "True":
+                    if feature_entry["has_per_asic_scope"] == "True":
                         num_asics = multi_asic.get_num_asics()
                         for asic_id in range(num_asics):
                             containers.add(feature_name + str(asic_id))
@@ -98,10 +97,10 @@ class ServiceChecker(HealthChecker):
             for ctr in lst:
                 running_containers.add(ctr.name)
                 if ctr.name not in self.critical_process_dict:
-                    self.get_critical_process_by_container(ctr.name)
+                    self.fill_critical_process_by_container(ctr.name)
         except docker.errors.APIError as err:
             logger.log_debug("Failed to retrieve the running container list. Error: '{}'".format(err))
-            pass
+
         return running_containers
 
     def get_critical_process_list_from_file(self, container, critical_processes_file):
@@ -113,25 +112,22 @@ class ServiceChecker(HealthChecker):
 
         with open(critical_processes_file, 'r') as file:
             for line in file:
-                # ignore blank lines
-                if re.match(r"^\s*$", line):
-                    continue
-                line_info = line.strip(' \n').split(':')
-                if len(line_info) != 2:
-                    # Invalid syntax in critical_processes file, save it as an error
-                    self.bad_containers.add(container)
-                    logger.log_error('Invalid syntax in critical_processes file of {}'.format(container))
+                # Try to match a line like "program:<process_name>"
+                match = re.match(r"^\s*((.+):(.*))*\s*$", line)
+                if match is None:
+                    if container not in self.bad_containers:
+                        self.bad_containers.add(container)
+                        logger.log_error('Invalid syntax in critical_processes file of {}'.format(container))
                     continue
 
-                identifier_key = line_info[0].strip()
-                identifier_value = line_info[1].strip()
+                identifier_key = match.group(2)
+                identifier_value = match.group(3)
                 if identifier_key == "program" and identifier_value:
-                    # We only count lines like "program:<name>"
                     critical_process_list.append(identifier_value)
 
         return critical_process_list
 
-    def get_critical_process_by_container(self, container):
+    def fill_critical_process_by_container(self, container):
         """Get critical process for a given container
 
         Args:
@@ -160,7 +156,6 @@ class ServiceChecker(HealthChecker):
         # Get critical process list from critical_processes
         critical_process_list = self.get_critical_process_list_from_file(container, critical_processes_file)
         self._update_critical_process_dict(container, critical_process_list)
-        return
 
     def _update_critical_process_dict(self, container, critical_process_list):
         self.critical_process_dict[container] = critical_process_list
@@ -175,7 +170,7 @@ class ServiceChecker(HealthChecker):
         if not self.need_save_cache:
             return
 
-        self.need_save_cache = True
+        self.need_save_cache = False
         if not self.critical_process_dict:
             # if critical_process_dict is empty, don't save it
             return
@@ -245,7 +240,7 @@ class ServiceChecker(HealthChecker):
         Args:
             config (config.Config): Health checker configuration.
         """
-        config_db = swsssdk.ConfigDBConnector()
+        config_db = swsscommon.ConfigDBConnector()
         config_db.connect()
         feature_table = config_db.get_table("FEATURE")
         expected_running_containers, self.container_feature_dict = self.get_expected_runnning_container_set(feature_table)
@@ -269,14 +264,14 @@ class ServiceChecker(HealthChecker):
 
     def check(self, config):
         """
-        Check critical system service status. 
+        Check critical system service status.
         :param config: Health checker configuration.
         :return:
         """
         self.reset()
         self.check_by_monit(config)
         self.check_services(config)
-        
+
 
     def _parse_supervisorctl_status(self, process_status):
         """Expected input:
@@ -292,6 +287,8 @@ class ServiceChecker(HealthChecker):
             if not line:
                 continue
             items = line.split()
+            if len(items) < 2:
+                continue
             data[items[0].strip()] = items[1].strip()
         return data
 
@@ -315,7 +312,7 @@ class ServiceChecker(HealthChecker):
                     for process_name in critical_process_list:
                         self.set_object_not_ok('Process', '{}:{}'.format(container_name, process_name), "'{}' is not running".format(process_name))
                     return
-                
+
                 process_status = self._parse_supervisorctl_status(process_status.strip().splitlines())
                 for process_name in critical_process_list:
                     if config and config.ignore_services and process_name in config.ignore_services:

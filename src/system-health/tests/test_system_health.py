@@ -68,13 +68,17 @@ def test_user_defined_checker(mock_run):
     assert checker._info['Device2'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
 
-@patch('swsssdk.ConfigDBConnector.connect', MagicMock())
+@patch('swsscommon.swsscommon.ConfigDBConnector.connect', MagicMock())
 @patch('health_checker.service_checker.ServiceChecker._get_container_folder', MagicMock(return_value=test_path))
 @patch('sonic_py_common.multi_asic.is_multi_asic', MagicMock(return_value=False))
 @patch('docker.DockerClient')
 @patch('health_checker.utils.run_command')
-@patch('swsssdk.ConfigDBConnector.get_table')
-def test_service_checker_single_asic(mock_get_table, mock_run, mock_docker_client):
+@patch('swsscommon.swsscommon.ConfigDBConnector')
+def test_service_checker_single_asic(mock_config_db, mock_run, mock_docker_client):
+    mock_db_data = MagicMock()
+    mock_get_table = MagicMock()
+    mock_db_data.get_table = mock_get_table
+    mock_config_db.return_value = mock_db_data
     mock_get_table.return_value = {
         'snmp': {
             'state': 'enabled',
@@ -148,7 +152,8 @@ def test_service_checker_single_asic(mock_get_table, mock_run, mock_docker_clien
     assert origin_critical_process_dict == checker.critical_process_dict
 
 
-@patch('swsssdk.ConfigDBConnector.connect', MagicMock())
+
+@patch('swsscommon.swsscommon.ConfigDBConnector.connect', MagicMock())
 @patch('health_checker.service_checker.ServiceChecker._get_container_folder', MagicMock(return_value=test_path))
 @patch('health_checker.utils.run_command', MagicMock(return_value=mock_supervisorctl_output))
 @patch('sonic_py_common.multi_asic.get_num_asics', MagicMock(return_value=3))
@@ -156,9 +161,13 @@ def test_service_checker_single_asic(mock_get_table, mock_run, mock_docker_clien
 @patch('sonic_py_common.multi_asic.get_namespace_list', MagicMock(return_value=[str(x) for x in range(3)]))
 @patch('sonic_py_common.multi_asic.get_current_namespace', MagicMock(return_value=''))
 @patch('docker.DockerClient')
-@patch('swsssdk.ConfigDBConnector.get_table')
-def test_service_checker_multi_asic(mock_get_table, mock_docker_client):
-    mock_get_table.return_value = {
+@patch('swsscommon.swsscommon.ConfigDBConnector')
+def test_service_checker_multi_asic(mock_config_db, mock_docker_client):
+    mock_db_data = MagicMock()
+    mock_db_data.get_table = MagicMock()
+    mock_config_db.return_value = mock_db_data
+
+    mock_db_data.get_table.return_value = {
         'snmp': {
             'state': 'enabled',
             'has_global_scope': 'True',
@@ -166,6 +175,7 @@ def test_service_checker_multi_asic(mock_get_table, mock_docker_client):
 
         }
     }
+
     mock_containers = MagicMock()
     mock_snmp_container = MagicMock()
     mock_snmp_container.name = 'snmp'
@@ -203,10 +213,12 @@ def test_service_checker_multi_asic(mock_get_table, mock_docker_client):
     assert 'snmp2:snmp-subagent' in checker._info
     assert checker._info['snmp2:snmp-subagent'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
-@patch('swsssdk.ConfigDBConnector.connect', MagicMock())
+
+@patch('swsscommon.swsscommon.ConfigDBConnector', MagicMock())
+@patch('swsscommon.swsscommon.ConfigDBConnector.connect', MagicMock())
 @patch('health_checker.service_checker.ServiceChecker.check_by_monit', MagicMock())
 @patch('docker.DockerClient')
-@patch('swsssdk.ConfigDBConnector.get_table')
+@patch('swsscommon.swsscommon.ConfigDBConnector.get_table')
 def test_service_checker_no_critical_process(mock_get_table, mock_docker_client):
     mock_get_table.return_value = {
         'snmp': {
@@ -417,11 +429,12 @@ def test_config():
     assert not config._last_mtime
 
 
-@patch('swsssdk.ConfigDBConnector.connect', MagicMock())
+@patch('swsscommon.swsscommon.ConfigDBConnector', MagicMock())
+@patch('swsscommon.swsscommon.ConfigDBConnector.connect', MagicMock())
 @patch('health_checker.service_checker.ServiceChecker.check', MagicMock())
 @patch('health_checker.hardware_checker.HardwareChecker.check', MagicMock())
 @patch('health_checker.user_defined_checker.UserDefinedChecker.check', MagicMock())
-@patch('swsssdk.ConfigDBConnector.get_table', MagicMock())
+@patch('swsscommon.swsscommon.ConfigDBConnector.get_table', MagicMock())
 @patch('health_checker.user_defined_checker.UserDefinedChecker.get_category', MagicMock(return_value='UserDefine'))
 @patch('health_checker.user_defined_checker.UserDefinedChecker.get_info')
 @patch('health_checker.service_checker.ServiceChecker.get_info')
