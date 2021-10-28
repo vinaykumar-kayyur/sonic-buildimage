@@ -9,3 +9,4 @@
 0009-Link-local-scope-was-not-set-while-binding-socket-for-bgp-ipv6-link-local-neighbors.patch
 0010-remove-doc-png-install.patch
 0011-Ipv4-Link-local-address-for-Ipv6-linl-local-nexthop.patch
+0012-treat-f-as-a-request-to-read-commands-from-stdin-in-.patch

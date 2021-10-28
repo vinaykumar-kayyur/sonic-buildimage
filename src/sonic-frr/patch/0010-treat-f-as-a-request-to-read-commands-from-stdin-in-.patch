@@ -1,0 +1,36 @@
+From 8ec7ca61b4824179ec211fd70931d00e47b37199 Mon Sep 17 00:00:00 2001
+From: Chris Ward <tjcw@uk.ibm.com>
+Date: Tue, 26 Oct 2021 12:04:10 +0100
+Subject: [PATCH] treat '-f -' as a request to read commands from stdin in a
+ way which works with a pipe or a file redirection
+
+---
+ vtysh/vtysh_config.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/vtysh/vtysh_config.c b/vtysh/vtysh_config.c
+index 7ca3ed9c5..1519cef98 100644
+--- a/vtysh/vtysh_config.c
++++ b/vtysh/vtysh_config.c
+@@ -497,7 +497,8 @@ int vtysh_read_config(const char *config_default_dir)
+ 	FILE *confp = NULL;
+ 	int ret;
+ 
+-	confp = fopen(config_default_dir, "r");
++	if ( strcmp(config_default_dir,"-") == 0 ) confp = stdin ;
++	else confp = fopen(config_default_dir, "r");
+ 	if (confp == NULL) {
+ 		fprintf(stderr,
+ 			"%% Can't open configuration file %s due to '%s'.\n",
+@@ -506,7 +507,7 @@ int vtysh_read_config(const char *config_default_dir)
+ 	}
+ 
+ 	ret = vtysh_read_file(confp);
+-	fclose(confp);
++	if ( confp != stdin ) fclose(confp);
+ 
+ 	return (ret);
+ }
+-- 
+2.25.1
+
