@@ -1,9 +1,25 @@
+#
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
 import sys
 import pytest
 import json
 from mock import MagicMock
-from .mock_platform import MockChassis, MockFan, MockPsu
+from .mock_platform import MockChassis, MockFan, MockFanDrawer, MockPsu
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
@@ -13,9 +29,20 @@ from sonic_platform.thermal_manager import ThermalManager
 from sonic_platform.thermal_infos import FanInfo, PsuInfo
 from sonic_platform.fan import Fan
 from sonic_platform.thermal import Thermal
+from sonic_platform.device_data import DeviceDataManager
 
-Thermal.check_thermal_zone_temperature = MagicMock()
-Thermal.set_thermal_algorithm_status = MagicMock()
+
+@pytest.fixture(scope='module', autouse=True)
+def configure_mocks():
+    check_thermal_zone_temperature = Thermal.check_thermal_zone_temperature
+    set_thermal_algorithm_status = Thermal.set_thermal_algorithm_status
+    Thermal.check_thermal_zone_temperature = MagicMock()
+    Thermal.set_thermal_algorithm_status = MagicMock()
+
+    yield
+
+    Thermal.check_thermal_zone_temperature = check_thermal_zone_temperature
+    Thermal.set_thermal_algorithm_status = set_thermal_algorithm_status
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -49,15 +76,14 @@ def test_fan_info():
     assert len(fan_info.get_fault_fans()) == 0
     assert fan_info.is_status_changed()
 
-    fan_list = chassis.get_all_fans()
-    fan_list[0].presence = True
+    chassis.get_all_fan_drawers()[0].get_all_fans()[0].presence = True
     fan_info.collect(chassis)
     assert len(fan_info.get_absence_fans()) == 0
     assert len(fan_info.get_presence_fans()) == 1
     assert len(fan_info.get_fault_fans()) == 0
     assert fan_info.is_status_changed()
 
-    fan_list[0].status = False
+    chassis.get_all_fan_drawers()[0].get_all_fans()[0].status = False
     fan_info.collect(chassis)
     assert len(fan_info.get_absence_fans()) == 0
     assert len(fan_info.get_presence_fans()) == 1
@@ -90,10 +116,10 @@ def test_psu_info():
 def test_fan_policy(thermal_manager):
     chassis = MockChassis()
     chassis.make_fan_absence()
-    chassis.fan_list.append(MockFan())
+    chassis.get_all_fan_drawers()[0].get_all_fans().append(MockFan())
     thermal_manager.run_policy(chassis)
 
-    fan_list = chassis.get_all_fans()
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     assert fan_list[1].speed == 100
     Thermal.set_thermal_algorithm_status.assert_called_with(False, False)
 
@@ -144,7 +170,7 @@ def test_any_fan_absence_condition():
     condition = AnyFanAbsenceCondition()
     assert condition.is_match({'fan_info': fan_info})
 
-    fan = chassis.get_all_fans()[0]
+    fan = chassis.get_all_fan_drawers()[0].get_all_fans()[0]
     fan.presence = True
     fan_info.collect(chassis)
     assert not condition.is_match({'fan_info': fan_info})
@@ -154,7 +180,7 @@ def test_all_fan_absence_condition():
     chassis = MockChassis()
     chassis.make_fan_absence()
     fan = MockFan()
-    fan_list = chassis.get_all_fans()
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(fan)
     fan_info = FanInfo()
     fan_info.collect(chassis)
@@ -172,7 +198,7 @@ def test_all_fan_presence_condition():
     chassis = MockChassis()
     chassis.make_fan_absence()
     fan = MockFan()
-    fan_list = chassis.get_all_fans()
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(fan)
     fan_info = FanInfo()
     fan_info.collect(chassis)
@@ -187,8 +213,9 @@ def test_all_fan_presence_condition():
 
 def test_any_fan_fault_condition():
     chassis = MockChassis()
+    chassis.get_all_fan_drawers().append(MockFanDrawer())
     fan = MockFan()
-    fan_list = chassis.get_all_fans()
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(fan)
     fault_fan = MockFan()
     fault_fan.status = False
@@ -206,8 +233,9 @@ def test_any_fan_fault_condition():
 
 def test_all_fan_good_condition():
     chassis = MockChassis()
+    chassis.get_all_fan_drawers().append(MockFanDrawer())
     fan = MockFan()
-    fan_list = chassis.get_all_fans()
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(fan)
     fault_fan = MockFan()
     fault_fan.status = False
@@ -302,7 +330,8 @@ def test_load_set_fan_speed_action():
 
 def test_execute_set_fan_speed_action():
     chassis = MockChassis()
-    fan_list = chassis.get_all_fans()
+    chassis.get_all_fan_drawers().append(MockFanDrawer())
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(MockFan())
     fan_list.append(MockFan())
     fan_info = FanInfo()
@@ -364,7 +393,8 @@ def test_load_check_and_set_speed_action():
 
 def test_execute_check_and_set_fan_speed_action():
     chassis = MockChassis()
-    fan_list = chassis.get_all_fans()
+    chassis.get_all_fan_drawers().append(MockFanDrawer())
+    fan_list = chassis.get_all_fan_drawers()[0].get_all_fans()
     fan_list.append(MockFan())
     fan_list.append(MockFan())
     fan_info = FanInfo()
@@ -470,7 +500,7 @@ def check_minimum_table_data(platform, minimum_table):
 def test_dynamic_minimum_policy(thermal_manager):
     from sonic_platform.thermal_conditions import MinCoolingLevelChangeCondition
     from sonic_platform.thermal_actions import ChangeMinCoolingLevelAction
-    from sonic_platform.thermal_infos import ChassisInfo
+    from sonic_platform.thermal_infos import ChassisInfo, FanInfo
     from sonic_platform.thermal import Thermal
     from sonic_platform.fan import Fan
     ThermalManager.initialize()
@@ -497,10 +527,15 @@ def test_dynamic_minimum_policy(thermal_manager):
     assert MinCoolingLevelChangeCondition.temperature == 25
 
     chassis = MockChassis()
-    chassis.platform_name = 'invalid'
     info = ChassisInfo()
     info._chassis = chassis
-    thermal_info_dict = {ChassisInfo.INFO_NAME: info}
+    fan_info = FanInfo()
+
+    thermal_info_dict = {
+        ChassisInfo.INFO_NAME: info,
+        FanInfo.INFO_NAME: fan_info
+    }
+    DeviceDataManager.get_platform_name = MagicMock(return_value=None)
     Fan.get_cooling_level = MagicMock(return_value=5)
     Fan.set_cooling_level = MagicMock()
     action.execute(thermal_info_dict)
@@ -508,7 +543,8 @@ def test_dynamic_minimum_policy(thermal_manager):
     Fan.set_cooling_level.assert_called_with(6, 6)
     Fan.set_cooling_level.call_count = 0
 
-    chassis.platform_name = 'x86_64-mlnx_msn2700-r0'
+    DeviceDataManager.get_platform_name = MagicMock(return_value='x86_64-mlnx_msn2700-r0')
+    print('Before execute')
     action.execute(thermal_info_dict)
     assert Fan.min_cooling_level == 3
     Fan.set_cooling_level.assert_called_with(3, 5)

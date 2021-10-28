@@ -9,8 +9,14 @@ schedules:
   branches:
     include:
     - master
-    - '202012'
+    - 202012
   always: true
+- cron: "0 4 * * *"
+  displayName: nightly build for release
+  branches:
+    include:
+    - 201911
+    - 201811
 
 trigger: none
 pr: none
@@ -22,7 +28,6 @@ stages:
     CACHE_MODE: wcache
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
       VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web'
-
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
@@ -35,3 +40,8 @@ stages:
           git add files/build/versions
           git diff HEAD files/build/versions
         displayName: "Show git diff"
+  jobs:
+  - template: azure-pipelines-build.yml
+    parameters:
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      jobFilters: none

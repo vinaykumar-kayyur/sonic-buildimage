@@ -2,6 +2,9 @@ parameters:
 - name: 'preSteps'
   type: stepList
   default: []
+- name: 'buildSteps'
+  type: stepList
+  default: []
 - name: "postSteps"
   type: stepList
   default: []
@@ -16,7 +19,7 @@ parameters:
   default: ''
 - name: 'timeoutInMinutes'
   type: 'number'
-  default: 1440
+  default: 720
 - name: 'jobFilters'
   type: object
   default: ''
@@ -51,4 +54,5 @@ jobs:
           displayName: 'JobScript'
       - ${{ if ne(jobGroup.steps, '') }}:
         - ${{ jobGroup.steps }}
+      - ${{ parameters.buildSteps }}
       - ${{ parameters.postSteps }}
