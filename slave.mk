@@ -160,6 +160,10 @@ ifeq ($(SONIC_INCLUDE_MACSEC),y)
 INCLUDE_MACSEC = y
 endif
 
+ifeq ($(SONIC_INCLUDE_MUX),y)
+INCLUDE_MUX = y
+endif
+
 include $(RULES_PATH)/functions
 
 ifeq ($(SONIC_USE_PDDF_FRAMEWORK),y)
@@ -281,6 +285,7 @@ $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_DHCP_RELAY"              : "$(INCLUDE_DHCP_RELAY)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
+$(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
@@ -638,6 +643,8 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi
+		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
+		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python setup.py --name`
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 		# clean up
@@ -1003,6 +1010,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export components="$(foreach component,$(notdir $^),\
 		$(shell [[ ! -z '$($(component)_VERSION)' && ! -z '$($(component)_NAME)' ]] && \
 			echo $($(component)_NAME)==$($(component)_VERSION)))"
+	export include_mux="$(INCLUDE_MUX)"
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
 		export docker_image_name="$(basename $(docker))"
