@@ -71,6 +71,7 @@ XCVR_HW_REV_OFFSET = 56
 XCVR_HW_REV_WIDTH_OSFP = 2
 XCVR_HW_REV_WIDTH_QSFP = 2
 XCVR_HW_REV_WIDTH_SFP = 4
+XCVR_CC_BASE_OFFSET= 63
 XCVR_EXT_SPECIFICATION_COMPLIANCE_OFFSET = 64
 XCVR_EXT_SPECIFICATION_COMPLIANCE_WIDTH = 1
 XCVR_VENDOR_SN_OFFSET = 68
@@ -2258,6 +2259,52 @@ class Sfp(SfpBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and not self.get_reset_status()
+    
+    def get_cc_base(self):
+        if self.sfp_type == SFP_TYPE:
+            get_data = self._read_eeprom_specific_bytes(
+                0, 63) if self.get_presence() else None
+            if get_data is None:
+                return False
+
+            get_sum=0
+            for i in range(0, 63):
+                get_sum=get_sum + int(get_data[i], 16)
+        
+            ccb= get_sum & 0xff
+
+            ccb_data = self._read_eeprom_specific_bytes(
+                XCVR_CC_BASE_OFFSET, 2) if self.get_presence() else None
+        
+
+            if int(ccb_data[0], 16) == ccb:
+                return True
+            else:
+                return False
+        elif self.sfp_type == QSFP_TYPE or self.sfp_type == QSFP_DD_TYPE:
+            offset=128
+            get_data = self._read_eeprom_specific_bytes(
+                offset, 63) if self.get_presence() else None
+            if get_data is None:
+                return False
+
+            get_sum=0
+            for i in range(0, 63):
+                get_sum=get_sum + int(get_data[i], 16)
+        
+            ccb= get_sum & 0xff
+
+            ccb_data = self._read_eeprom_specific_bytes(
+                offset + XCVR_CC_BASE_OFFSET, 2) if self.get_presence() else None
+        
+
+            if int(ccb_data[0], 16) == ccb:
+                return True
+            else:
+                return False
+
+        
+        return False
 
     def get_position_in_parent(self):
         """
