@@ -272,9 +272,6 @@ class Sfp(SfpBase):
     HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
     PLATFORM = "x86_64-accton_minipack-r0"
     HWSKU = "Accton-MINIPACK"
-    #LOCAL_OOM_PATH = "/usr/local/bin/minipack_qsfp/port%d_eeprom"
-    # port_N is from 0 to 127
-   
 
     def __init__(self, sfp_index=0, sfp_name=None):
         self._api_helper=APIHelper()
@@ -284,7 +281,7 @@ class Sfp(SfpBase):
         self._eeprom_path = self._get_eeprom_path()
         #pim = FpgaUtil()
         #pim.init_pim_fpga()
-        self._dom_capability_detect()
+        #self._dom_capability_detect()
         
         SfpBase.__init__(self)
   
@@ -552,6 +549,11 @@ class Sfp(SfpBase):
         transceiver_info_dict = dict.fromkeys(
             info_dict_keys, NULL_VAL)
         transceiver_info_dict["specification_compliance"] = '{}'
+        
+        # If some port is not inserted module when xcvrd do _init_(), it will not get port_type from eeprom.
+        # So its defaut type is QSFP. But user can insert QSFP-DD to the port later
+        # So we need to check port before access port eeporm.
+        self._dom_capability_detect()
 
         # ToDo: OSFP tranceiver info parsing not fully supported.
         # in inf8628.py lack of some memory map definition
@@ -1286,7 +1288,7 @@ class Sfp(SfpBase):
             A Boolean, True if reset enabled, False if disabled
         """
         if not self.get_presence():
-            return True #FPGA SPEC:It is set to 1¡¦s if the corresponding QSFP is not present
+            return True #FPGA SPEC:It is set to 1 if the corresponding QSFP is not present
 
         pim=FpgaUtil()
         val=pim.get_reset(self.port_num-1)        

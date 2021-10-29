@@ -18,12 +18,9 @@
 #    5/29/2019:  Jostar create for minipack
 # -----------------------------------------------------------
 try:
-    import sys
     import time  # this is only being used as part of the example
     import fbfpgaio
-    import re
     import time
-    from select import select
 
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
