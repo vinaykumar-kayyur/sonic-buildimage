@@ -15,6 +15,9 @@ qos_maps_model = ['DSCP_TO_TC_MAP_LIST',
             'MAP_PFC_PRIORITY_TO_QUEUE_LIST',
             'PFC_PRIORITY_TO_PRIORITY_GROUP_MAP_LIST']
 
+cbf_maps_model = ['DSCP_TO_FC_MAP_LIST',
+            'EXP_TO_FC_MAP_LIST']
+
 """
 This is the Exception thrown out of all public function of this class.
 """
@@ -413,7 +416,7 @@ class SonicYangExtMixin:
         return vValue
 
     """
-    Xlate a Qos Maps list
+    Xlate a Maps list
     This function will xlate from a dict in config DB to a Yang JSON list
     using yang model. Output will be go in self.xlateJson
 
@@ -465,7 +468,7 @@ class SonicYangExtMixin:
             }
     }
     """
-    def _xlateQosMapList(self, model, yang, config, table, exceptionList):
+    def _xlateMapList(self, model, yang, config, table, exceptionList):
 
         #create a dict to map each key under primary key with a dict yang model.
         #This is done to improve performance of mapping from values of TABLEs in
@@ -527,9 +530,9 @@ class SonicYangExtMixin:
         
         #Qos Map lists needs special handling because of inner yang list and
         #config db format.
-        if model['@name'] in qos_maps_model:
-            self.sysLog(msg="_xlateQosMapList: {}".format(model['@name']))
-            self._xlateQosMapList(model, yang,config, table, exceptionList)
+        if model['@name'] in qos_maps_model or model['@name'] in cbf_maps_model:
+            self.sysLog(msg="_xlateMapList: {}".format(model['@name']))
+            self._xlateMapList(model, yang, config, table, exceptionList)
             return
 
         #create a dict to map each key under primary key with a dict yang model.
