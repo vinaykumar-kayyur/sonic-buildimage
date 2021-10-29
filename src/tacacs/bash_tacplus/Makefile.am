@@ -24,3 +24,4 @@ MAINTAINERCLEANFILES = Makefile.in config.h.in configure aclocal.m4 \
 
 pkgconfigdir = $(libdir)/pkgconfig
 
+SUBDIRS = unittest
