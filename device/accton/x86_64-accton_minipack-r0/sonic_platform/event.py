@@ -3,7 +3,6 @@ try:
     from .helper import APIHelper
     from sonic_py_common.logger import Logger
     from minipack.fpgautil import FpgaUtil
-    import fbfpgaio
 except ImportError as e:
     raise ImportError(repr(e) + " - required module not found")
 

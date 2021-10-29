@@ -5,9 +5,6 @@
 # provides the thermal device status which are available in the platform
 #
 #############################################################################
-
-import os
-import os.path
 import glob
 
 try:

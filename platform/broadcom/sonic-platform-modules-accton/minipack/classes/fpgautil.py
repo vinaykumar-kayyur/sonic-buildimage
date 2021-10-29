@@ -18,21 +18,12 @@
 #    5/29/2019:  Jostar create for minipack
 # -----------------------------------------------------------
 try:
-    import os
-    import sys, getopt
-    import subprocess
-    import imp
-    import logging
-    import logging.config
-    import logging.handlers
-    import types
+    import sys
     import time  # this is only being used as part of the example
-    import traceback
     import fbfpgaio
     import re
     import time
     from select import select
-    #from ctypes import fbfpgaio 
 
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))

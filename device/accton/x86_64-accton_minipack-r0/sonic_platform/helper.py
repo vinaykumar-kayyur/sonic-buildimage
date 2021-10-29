@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import os
-import io
-import fcntl
-import termios
 import struct
 import subprocess
 from mmap import *
