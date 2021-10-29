@@ -374,7 +374,16 @@
 						"mtu": 9000,
 						"name": "Ethernet16",
 						"speed": 25000
-					}
+					},
+                    {
+                        "admin_status": "up",
+                        "alias": "eth4",
+                        "description": "Ethernet4",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet4",
+                        "speed": 25000
+                    }
 				]
 			}
 		},
@@ -435,7 +444,7 @@
                     "domain_id": "123",
                     "source_ip": "12.1.1.1",
                     "peer_ip"  : "12.1.1.2",
-                    "peer_link": "PortChannel2",
+                    "peer_link": "Ethernet4",
                     "keepalive_interval" : "1",
                     "session_timeout": "30"
                 }
