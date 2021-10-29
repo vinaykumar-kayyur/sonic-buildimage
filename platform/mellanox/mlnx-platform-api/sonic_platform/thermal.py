@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #############################################################################
 # Mellanox
 #
@@ -46,7 +62,7 @@ THERMAL_ZONE_GEARBOX_PATH = "/var/run/hw-management/thermal/mlxsw-gearbox{}/"
 THERMAL_ZONE_MODE = "thermal_zone_mode"
 THERMAL_ZONE_POLICY = "thermal_zone_policy"
 THERMAL_ZONE_TEMPERATURE = "thermal_zone_temp"
-THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
+THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_high"
 
 MODULE_TEMPERATURE_FAULT_PATH = "/var/run/hw-management/thermal/module{}_temp_fault"
 

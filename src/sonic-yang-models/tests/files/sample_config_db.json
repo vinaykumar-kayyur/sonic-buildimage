@@ -880,6 +880,24 @@
             }
         },
 
+        "WARM_RESTART": {
+            "bgp": {
+                "bgp_timer": "500"
+            }
+        },
+
+        "PFC_WD": {
+            "Ethernet9": {
+               "action": "drop",
+               "detection_time": "100",
+               "restoration_time": "400"
+            }
+        },
+        "PFC_WD": {
+            "GLOBAL": {
+                "POLL_INTERVAL": "100"
+            }
+        },
         "SFLOW_COLLECTOR": {
             "collector1": {
                 "collector_ip": "10.100.12.13",
@@ -908,10 +926,9 @@
                 "agent_id": "Ethernet0"
             }
         },
-
         "AAA": {
             "authentication": {
-                "login": "local" 
+                "login": "local"
             }
         },
         "TACPLUS": {
@@ -925,7 +942,6 @@
                 "timeout": "10"
             }
         },
-
         "NAT_BINDINGS": {
             "bind1": {
                 "nat_pool": "pool1",
@@ -993,6 +1009,10 @@
                 "rrclient":"0"
             },
             "default|192.168.1.1": {
+                "local_asn": "65200",
+                "asn": "65100",
+                "name": "bgp peer 65100",
+                "ebgp_multihop_ttl": "3"
             }
         },
         "BGP_NEIGHBOR_AF": {
@@ -1027,7 +1047,7 @@
         },
         "PREFIX_SET": {
             "prefix1": {
-            } 
+            }
         },
         "PREFIX": {
             "prefix1|1|10.0.0.0/8|8..16": {
@@ -1068,8 +1088,194 @@
                 "mode": "TRANSMIT",
                 "enabled": "true"
             }
-        }
+        },
+        "FEATURE": {
+            "bgp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "database": {
+                "auto_restart": "always_enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "always_enabled"
+            },
+            "snmp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "false",
+                "has_timer": "true",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "swss": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "syncd": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            },
+            "lldp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled"
+            }
+        },
 
+        "SCHEDULER": {
+            "TEST@0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+
+            "TEST@1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
+            }
+        },
+
+        "WRED_PROFILE": {
+            "Wred1": {
+                "ecn": "ecn_all",
+                "green_drop_probability": "50",
+                "green_max_threshold": "2048000",
+                "green_min_threshold": "1024000",
+                "wred_green_enable": "true",
+                "yellow_drop_probability": "50",
+                "yellow_max_threshold": "2048000",
+                "yellow_min_threshold": "1024000",
+                "wred_yellow_enable": "true",
+                "red_drop_probability": "50",
+                "red_max_threshold": "2048000",
+                "red_min_threshold": "1024000",
+                "wred_red_enable": "true"
+            }
+        },
+
+        "QUEUE": {
+            "Ethernet0|0": {
+                "scheduler": "TEST@0",
+                "wred_profile": "Wred1"
+            },
+            "Ethernet0|1": {
+                "scheduler": "TEST@1",
+                "wred_profile": "Wred1"
+            }
+         },		
+
+        "DSCP_TO_TC_MAP": {
+           "Dscp_to_tc_map1": { 
+              "1": "1",
+              "2": "2"
+            }, 
+           "Dscp_to_tc_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "DOT1P_TO_TC_MAP": {
+           "Dot1p_to_tc_map1": { 
+              "1": "1",
+              "2": "2"
+            }, 
+           "Dot1p_to_tc_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "TC_TO_PRIORITY_GROUP_MAP": {
+           "tc_to_pg_map1": { 
+              "1": "1",
+              "2": "2"
+            }, 
+           "tc_to_pg_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "TC_TO_QUEUE_MAP": {
+           "tc_to_q_map1": { 
+              "1": "1",
+              "2": "2"
+            }, 
+           "tc_to_q_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "MAP_PFC_PRIORITY_TO_QUEUE": {
+           "pfc_prio_to_q_map1": { 
+              "1": "1",
+              "2": "2"
+           }, 
+           "pfc_prio_to_q_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "PFC_PRIORITY_TO_PRIORITY_GROUP_MAP": {
+           "pfc_prio_to_pg_map1": { 
+              "1": "1",
+              "2": "2"
+            }, 
+            "pfc_prio_to_pg_map2": { 
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "PORT_QOS_MAP": {
+           "Ethernet0": { 
+              "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
+              "dscp_to_tc_map": "Dscp_to_tc_map1",
+	          "tc_to_queue_map": "tc_to_q_map1",
+	          "tc_to_pg_map": "tc_to_pg_map1",
+	          "pfc_to_queue_map": "pfc_prio_to_q_map1",
+	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map1",
+	          "pfc_enable"      : "3,4"
+            }, 
+            "Ethernet4": { 
+              "dot1p_to_tc_map" : "Dot1p_to_tc_map2",
+              "dscp_to_tc_map": "Dscp_to_tc_map2",
+	          "tc_to_queue_map": "tc_to_q_map2",
+	          "tc_to_pg_map": "tc_to_pg_map2",
+	          "pfc_to_queue_map": "pfc_prio_to_q_map2",
+	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map2",
+	          "pfc_enable"      : "3,4"
+            }
+        }
     },
 
     "SAMPLE_CONFIG_DB_UNKNOWN": {
@@ -1077,5 +1283,4 @@
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
     }
-    
 }
