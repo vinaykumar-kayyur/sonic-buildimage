@@ -24,6 +24,10 @@ module sonic-portchannel {
 
     description "PORTCHANNEL yang Module for SONiC OS";
 
+    revision 2021-06-13 {
+        description "Change min-links valid range from 1-128 to 1-1024";
+    }
+
     revision 2021-03-31 {
         description "Add PortChannel Interface List with VRF attribute";
     }
@@ -72,8 +76,8 @@ module sonic-portchannel {
                 }
 
                 leaf min_links {
-                    type uint8 {
-                        range 1..128;
+                    type uint16 {
+                        range 1..1024;
                     }
                 }
 
@@ -107,7 +111,15 @@ module sonic-portchannel {
                         }
                     }
                 }
-			} /* end of list PORTCHANNEL_LIST */
+
+                leaf tpid {
+                    description "This leaf describes the possible TPID value that can be configured
+                                to the specified portchannel if the HW supports TPID configuration. The possible
+                                values are 0x8100, 0x9100, 0x9200, 0x88a8, and 0x88A8";
+                    type stypes:tpid_type;
+                }
+
+            } /* end of list PORTCHANNEL_LIST */
 
         } /* end of container PORTCHANNEL */
 
@@ -154,6 +166,24 @@ module sonic-portchannel {
                         path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                     }
                 }
+
+		leaf nat_zone {
+		    description "NAT Zone for the portchannel interface";
+		    type uint8 {
+		        range "0..3" {
+			    error-message "Invalid nat zone for the portchannel interface.";
+			    error-app-tag nat-zone-invalid;
+			}
+		    }
+		    default "0";
+		}
+		leaf mpls {
+			description "Enable/disable MPLS routing for the portchannel interface";
+                        type enumeration {
+				enum enable;
+				enum disable;
+			}
+		}
             } /* end of list PORTCHANNEL_INTERFACE_LIST */
 
             list PORTCHANNEL_INTERFACE_IPPREFIX_LIST {

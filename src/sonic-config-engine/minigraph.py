@@ -12,7 +12,6 @@ from lxml.etree import QName
 
 
 from portconfig import get_port_config
-from sonic_py_common.multi_asic import get_asic_id_from_name
 from sonic_py_common.interface import backplane_prefix
 
 # TODO: Remove this once we no longer support Python 2
@@ -181,7 +180,6 @@ def parse_png(png, hname, dpg_ecmp_content = None):
     port_speeds = {}
     console_ports = {}
     mux_cable_ports = {}
-    is_storage_device = False
     port_device_map = {}
     png_ecmp_content = {}
     FG_NHG_MEMBER = {}
@@ -199,18 +197,18 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                     startport = link.find(str(QName(ns, "StartPort"))).text
                     baudrate = link.find(str(QName(ns, "Bandwidth"))).text
                     flowcontrol = 1 if link.find(str(QName(ns, "FlowControl"))) is not None and link.find(str(QName(ns, "FlowControl"))).text == 'true' else 0
-                    if enddevice.lower() == hname.lower():
+                    if enddevice.lower() == hname.lower() and endport.isdigit():
                         console_ports[endport] = {
                             'remote_device': startdevice,
                             'baud_rate': baudrate,
                             'flow_control': flowcontrol
-                            }
-                    else:
+                        }
+                    elif startport.isdigit():
                         console_ports[startport] = {
                             'remote_device': enddevice,
                             'baud_rate': baudrate,
                             'flow_control': flowcontrol
-                            }
+                        }
                     continue
 
                 if linktype == "DeviceInterfaceLink":
@@ -218,7 +216,7 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                     startdevice = link.find(str(QName(ns, "StartDevice"))).text
                     port_device_map[endport] = startdevice
 
-                if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink":
+                if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink" and linktype != "DeviceMgmtLink":
                     continue
 
                 enddevice = link.find(str(QName(ns, "EndDevice"))).text
@@ -230,13 +228,15 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                 if enddevice.lower() == hname.lower():
                     if endport in port_alias_map:
                         endport = port_alias_map[endport]
-                    neighbors[endport] = {'name': startdevice, 'port': startport}
+                    if linktype != "DeviceMgmtLink":
+                        neighbors[endport] = {'name': startdevice, 'port': startport}
                     if bandwidth:
                         port_speeds[endport] = bandwidth
                 elif startdevice.lower() == hname.lower():
                     if startport in port_alias_map:
                         startport = port_alias_map[startport]
-                    neighbors[startport] = {'name': enddevice, 'port': endport}
+                    if linktype != "DeviceMgmtLink":
+                        neighbors[startport] = {'name': enddevice, 'port': endport}
                     if bandwidth:
                         port_speeds[startport] = bandwidth
 
@@ -251,10 +251,6 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                 if lo_prefix_v6:
                     device_data['lo_addr_v6'] = lo_prefix_v6
                 devices[name] = device_data
-
-                if name == hname:
-                    if cluster and "str" in cluster.lower():
-                        is_storage_device = True
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for if_link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
@@ -292,7 +288,7 @@ def parse_png(png, hname, dpg_ecmp_content = None):
 
             png_ecmp_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "NEIGH": NEIGH}
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports, is_storage_device, png_ecmp_content)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports, png_ecmp_content)
 
 
 def parse_asic_external_link(link, asic_name, hostname):
@@ -401,6 +397,7 @@ def parse_loopback_intf(child):
 def parse_dpg(dpg, hname):
     aclintfs = None
     mgmtintfs = None
+    subintfs = None
     tunnelintfs = defaultdict(dict)
     for child in dpg:
         """ 
@@ -439,6 +436,16 @@ def parse_dpg(dpg, hname):
             intfs[(intfname, ipprefix)] = {}
             ip_intfs_map[ipprefix] = intfalias
         lo_intfs =  parse_loopback_intf(child)
+
+        subintfs = child.find(str(QName(ns, "SubInterfaces")))
+        if subintfs is not None:
+            for subintf in subintfs.findall(str(QName(ns, "SubInterface"))):
+                intfalias = subintf.find(str(QName(ns, "AttachTo"))).text
+                intfname = port_alias_map.get(intfalias, intfalias)
+                ipprefix = subintf.find(str(QName(ns, "Prefix"))).text
+                subintfvlan = subintf.find(str(QName(ns, "Vlan"))).text
+                subintfname = intfname + VLAN_SUB_INTERFACE_SEPARATOR + subintfvlan
+                intfs[(subintfname, ipprefix)] = {}
 
         mvrfConfigs = child.find(str(QName(ns, "MgmtVrfConfigs")))
         mvrf = {}
@@ -490,6 +497,7 @@ def parse_dpg(dpg, hname):
         nhg_int = ""
         nhportlist = []
         dpg_ecmp_content = {}
+        static_routes = {}
         ipnhs = child.find(str(QName(ns, "IPNextHops")))
         if ipnhs is not None:
             for ipnh in ipnhs.findall(str(QName(ns, "IPNextHop"))):
@@ -501,8 +509,12 @@ def parse_dpg(dpg, hname):
                         port_nhipv4_map[ipnhfmbr] = ipnhaddr
                     elif ":" in ipnhaddr:
                         port_nhipv6_map[ipnhfmbr] = ipnhaddr
+                elif ipnh.find(str(QName(ns, "Type"))).text == 'StaticRoute':
+                    prefix = ipnh.find(str(QName(ns, "AttachTo"))).text
+                    nexthop = ipnh.find(str(QName(ns, "Address"))).text
+                    static_routes[prefix] = {'nexthop': nexthop }
 
-            if port_nhipv4_map is not None and port_nhipv6_map is not None:
+            if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
                 for subnet_range in ip_intfs_map:
                     if ("." in subnet_range):
@@ -519,6 +531,7 @@ def parse_dpg(dpg, hname):
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlans = {}
         vlan_members = {}
+        dhcp_relay_table = {}
         vlantype_name = ""
         intf_vlan_mbr = defaultdict(list)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
@@ -546,6 +559,7 @@ def parse_dpg(dpg, hname):
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid, 'members': vmbr_list }
+            dhcp_attributes = {}
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
@@ -555,8 +569,17 @@ def parse_dpg(dpg, hname):
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
 
+            vintf_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
+            if vintf_node is not None and vintf_node.text is not None:
+                vintfdhcpservers = vintf_node.text
+                vdhcpserver_list = vintfdhcpservers.split(';')
+                vlan_attributes['dhcpv6_servers'] = vdhcpserver_list
+                dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
+            sonic_vlan_member_name = "Vlan%s" % (vlanid)
+            dhcp_relay_table[sonic_vlan_member_name] = dhcp_attributes
+
             vlanmac = vintf.find(str(QName(ns, "MacAddress")))
-            if vlanmac != None:
+            if vlanmac is not None and vlanmac.text is not None:
                 vlan_attributes['mac'] = vlanmac.text
 
             sonic_vlan_name = "Vlan%s" % vlanid
@@ -578,6 +601,7 @@ def parse_dpg(dpg, hname):
             acl_intfs = []
             is_mirror = False
             is_mirror_v6 = False
+            is_mirror_dscp = False
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
@@ -600,8 +624,10 @@ def parse_dpg(dpg, hname):
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
                     if port_alias_map[member] in intfs_inpc:
                         print("Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface", file=sys.stderr)
-                elif member.lower().startswith('erspan') or member.lower().startswith('egress_erspan'):
-                    if member.lower().startswith('erspanv6') or member.lower().startswith('egress_erspanv6'):
+                elif member.lower().startswith('erspan') or member.lower().startswith('egress_erspan') or member.lower().startswith('erspan_dscp'):
+                    if 'dscp' in member.lower():
+                        is_mirror_dscp = True
+                    elif member.lower().startswith('erspanv6') or member.lower().startswith('egress_erspanv6'):
                         is_mirror_v6 = True
                     else:
                         is_mirror = True
@@ -621,7 +647,7 @@ def parse_dpg(dpg, hname):
             # are binded then do not classify as Control plane.
             # For multi-asic platforms it's possible there is no
             # interface are binded to everflow in host namespace.
-            if acl_intfs or is_mirror_v6 or is_mirror:
+            if acl_intfs or is_mirror_v6 or is_mirror or is_mirror_dscp:
                 # Remove duplications
                 dedup_intfs = []
                 for intf in acl_intfs:
@@ -635,6 +661,8 @@ def parse_dpg(dpg, hname):
                     acls[aclname]['type'] = 'MIRROR'
                 elif is_mirror_v6:
                     acls[aclname]['type'] = 'MIRRORV6'
+                elif is_mirror_dscp:
+                    acls[aclname]['type'] = 'MIRROR_DSCP'
                 else:
                     acls[aclname]['type'] = 'L3V6' if  'v6' in aclname.lower() else 'L3'
             else:
@@ -678,8 +706,10 @@ def parse_dpg(dpg, hname):
                     if mg_key in mg_tunnel.attrib:
                         tunnelintfs[tunnel_type][tunnel_name][table_key] = mg_tunnel.attrib[mg_key]
 
-        return intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, pcs, pc_members, acls, vni, tunnelintfs, dpg_ecmp_content
-    return None, None, None, None, None, None, None, None, None, None, None, None, None
+        return intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, vni, tunnelintfs, dpg_ecmp_content, static_routes
+    return None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+
+
 
 def parse_host_loopback(dpg, hname):
     for child in dpg:
@@ -715,9 +745,12 @@ def parse_cpg(cpg, hname, local_devices=[]):
                 nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
 
                 # choose the right table and admin_status for the peer
-                voq_chassis = session.find(str(QName(ns, "VoQChassisInternal")))
-                if voq_chassis is not None and voq_chassis.text == "true":
+                chassis_internal_ibgp = session.find(str(QName(ns, "ChassisInternal")))
+                if chassis_internal_ibgp is not None and chassis_internal_ibgp.text == "voq":
                     table = bgp_voq_chassis_sessions
+                    admin_status = 'up'
+                elif chassis_internal_ibgp is not None and chassis_internal_ibgp.text == "chassis-packet":
+                    table = bgp_internal_sessions
                     admin_status = 'up'
                 elif end_router.lower() in local_devices and start_router.lower() in local_devices:
                     table = bgp_internal_sessions
@@ -796,6 +829,7 @@ def parse_cpg(cpg, hname, local_devices=[]):
 def parse_meta(meta, hname):
     syslog_servers = []
     dhcp_servers = []
+    dhcpv6_servers = []
     ntp_servers = []
     tacacs_servers = []
     mgmt_routes = []
@@ -849,7 +883,7 @@ def parse_meta(meta, hname):
                     kube_data["enable"] = value
                 elif name == "KubernetesServerIp":
                     kube_data["ip"] = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data
 
 
 def parse_linkmeta(meta, hname):
@@ -1069,7 +1103,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         # Control Plane ACL has no Interface associated and
         # Data Plane ACL Interface are attached via minigraph
         # AclInterface.
-        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
+        if group_type != 'MIRROR' and group_type != 'MIRRORV6' and group_type != 'MIRROR_DSCP':
             continue
 
         # Filters out back-panel ports from the binding list for Everflow (Mirror)
@@ -1145,6 +1179,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     tunnel_intfs = None
     vlans = None
     vlan_members = None
+    dhcp_relay_table = None
     pcs = None
     mgmt_intf = None
     voq_inband_intfs = None
@@ -1163,6 +1198,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     mux_cable_ports = {}
     syslog_servers = []
     dhcp_servers = []
+    dhcpv6_servers = []
     ntp_servers = []
     tacacs_servers = []
     mgmt_routes = []
@@ -1180,12 +1216,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     is_storage_device = False
     local_devices = []
     kube_data = {}
-
-    # hostname is the asic_name, get the asic_id from the asic_name
-    if asic_name is not None:
-        asic_id = get_asic_id_from_name(asic_name)
-    else:
-        asic_id = None
+    static_routes = {}
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -1198,7 +1229,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -1208,22 +1239,22 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for child in root:
         if asic_name is None:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, hostname)
+                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content, static_routes) = parse_dpg(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
-                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports, is_storage_device, png_ecmp_content) = parse_png(child, hostname, dpg_ecmp_content)
+                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports, png_ecmp_content) = parse_png(child, hostname, dpg_ecmp_content)
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, asic_name)
+                (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content, static_routes) = parse_dpg(child, asic_name)
                 host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name, local_devices)
@@ -1277,9 +1308,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             print("Warning: more than one peer switch was found. Only the first will be parsed: {}".format(results['PEER_SWITCH'].keys()[0]))
 
         results['DEVICE_METADATA']['localhost']['peer_switch'] = list(results['PEER_SWITCH'].keys())[0]
-
-    if is_storage_device:
-        results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
 
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
@@ -1377,6 +1405,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 }
             else:
                 vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
+        elif VLAN_SUB_INTERFACE_SEPARATOR in intf[0]:
+            vlan_sub_intfs[intf] = {}
+            vlan_sub_intfs[intf[0]] = {'admin_status': 'up'}
         elif intf[0][0:11] == 'PortChannel':
             pc_intfs[intf] = {}
             pc_intfs[intf[0]] = {}
@@ -1404,6 +1435,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             if port_name not in ports:
                 print("Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name, file=sys.stderr)
                 continue
+
+        # skip management ports
+        if port_name in mgmt_alias_reverse_mapping.keys():
+            continue
 
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
@@ -1444,9 +1479,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 # for the ports w/o neighbor info, set it to port alias
                 port['description'] = port.get('alias', port_name)
 
-    # set default port MTU as 9100
+    # set default port MTU as 9100 and default TPID 0x8100
     for port in ports.values():
         port['mtu'] = '9100'
+        port['tpid'] = '0x8100'
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1457,6 +1493,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if port[0] in ports:
             ports.get(port[0])['admin_status'] = 'up'
 
+    if len(vlan_sub_intfs):
+        for subintf in vlan_sub_intfs:
+            if not isinstance(subintf, tuple):
+                parent_port = subintf.split(".")[0]
+                if parent_port in ports:
+                     ports.get(parent_port)['admin_status'] = 'up'
+
     for member in list(pc_members.keys()) + list(vlan_members.keys()):
         port = ports.get(member[1])
         if port:
@@ -1466,6 +1509,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if port in ports.keys():
             # make all neighbors connected ports to 'admin_up'
             ports[port]['admin_status'] = 'up'
+
+    # bring up the inband voq interfaces
+    for inband_port in voq_inband_intfs:
+        if inband_port in ports.keys():
+            ports[inband_port]['admin_status'] = 'up'
 
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
@@ -1479,9 +1527,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 print("Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name, file=sys.stderr)
                 del pcs[pc_name]
 
-    # set default port channel MTU as 9100 and admin status up
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
     for pc in pcs.values():
         pc['mtu'] = '9100'
+        pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
@@ -1496,9 +1545,19 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    if current_device['type'] in backend_device_types and is_storage_device:
+    # for storage backend subinterface info present in minigraph takes precedence over ResourceType
+    if current_device['type'] in backend_device_types and bool(vlan_sub_intfs):
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
+        is_storage_device = True
+        results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+        # storage backend T0 have all vlan members tagged
+        for vlan in vlan_members:
+            vlan_members[vlan]["tagging_mode"] = "tagged"
+    elif current_device['type'] in backend_device_types and (resource_type is None or 'Storage' in resource_type):
+        del results['INTERFACE']
+        del results['PORTCHANNEL_INTERFACE']
+        is_storage_device = True
 
         for intf in phyport_intfs.keys():
             if isinstance(intf, tuple):
@@ -1519,8 +1578,18 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             else:
                 sub_intf = pc_intf + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
                 vlan_sub_intfs[sub_intf] = {"admin_status" : "up"}
-
         results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+        # storage backend T0 have all vlan members tagged
+        for vlan in vlan_members:
+            vlan_members[vlan]["tagging_mode"] = "tagged"
+    elif resource_type is not None and 'Storage' in resource_type:
+        is_storage_device = True
+    elif bool(vlan_sub_intfs):
+        results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+
+
+    if is_storage_device:
+        results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
 
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
@@ -1528,6 +1597,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['TUNNEL'] = get_tunnel_entries(tunnel_intfs, lo_intfs, hostname)
 
     results['MUX_CABLE'] = get_mux_cable_entries(mux_cable_ports, neighbors, devices)
+
+    if static_routes:
+        results['STATIC_ROUTE'] = static_routes
 
     for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
@@ -1542,6 +1614,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in {device['name'] for device in neighbors.values()} }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
+    results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
@@ -1566,7 +1639,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'config': {
             'client_auth': 'true',
             'allow_insecure': 'false',
-            'log_level': 'trace'
+            'log_level': 'info'
         },
         'certs': {
             'server_crt': '/etc/sonic/credentials/restapiserver.crt',

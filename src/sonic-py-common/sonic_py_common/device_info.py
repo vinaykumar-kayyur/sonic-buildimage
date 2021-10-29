@@ -29,8 +29,16 @@ HWSKU_JSON_FILE = 'hwsku.json'
 NPU_NAME_PREFIX = "asic"
 NAMESPACE_PATH_GLOB = "/run/netns/*"
 ASIC_CONF_FILENAME = "asic.conf"
+PLATFORM_ENV_CONF_FILENAME = "platform_env.conf"
 FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
+
+# Chassis STATE_DB keys
+CHASSIS_INFO_TABLE = 'CHASSIS_INFO|chassis {}'
+CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
+CHASSIS_INFO_SERIAL_FIELD = 'serial'
+CHASSIS_INFO_MODEL_FIELD = 'model'
+CHASSIS_INFO_REV_FIELD = 'revision'
 
 
 def get_localhost_info(field):
@@ -153,6 +161,29 @@ def get_asic_conf_file_path():
     for asic_conf_file_path in asic_conf_path_candidates:
         if os.path.isfile(asic_conf_file_path):
             return asic_conf_file_path
+
+    return None
+
+
+def get_platform_env_conf_file_path():
+    """
+    Retrieves the path to the PLATFORM ENV conguration file on the device
+
+    Returns:
+        A string containing the path to the PLATFORM ENV conguration file on success,
+        None on failure
+    """
+    platform_env_conf_path_candidates = []
+
+    platform_env_conf_path_candidates.append(os.path.join(CONTAINER_PLATFORM_PATH, PLATFORM_ENV_CONF_FILENAME))
+
+    platform = get_platform()
+    if platform:
+        platform_env_conf_path_candidates.append(os.path.join(HOST_DEVICE_PATH, platform, PLATFORM_ENV_CONF_FILENAME))
+
+    for platform_env_conf_file_path in platform_env_conf_path_candidates:
+        if os.path.isfile(platform_env_conf_file_path):
+            return platform_env_conf_file_path
 
     return None
 
@@ -303,6 +334,47 @@ def get_sonic_version_file():
 
     return SONIC_VERSION_YAML_PATH
 
+
+# Get hardware information
+def get_platform_info():
+    """
+    This function is used to get the HW info helper function
+    """
+    from .multi_asic import get_num_asics
+
+    hw_info_dict = {}
+
+    version_info = get_sonic_version_info()
+
+    hw_info_dict['platform'] = get_platform()
+    hw_info_dict['hwsku'] = get_hwsku()
+    hw_info_dict['asic_type'] = version_info['asic_type']
+    hw_info_dict['asic_count'] = get_num_asics()
+
+    return hw_info_dict
+
+
+def get_chassis_info():
+    """
+    This function is used to get the Chassis serial / model / rev number
+    """
+
+    chassis_info_dict = {}
+
+    try:
+        # Init statedb connection
+        db = SonicV2Connector()
+        db.connect(db.STATE_DB)
+        table = CHASSIS_INFO_TABLE.format(1)
+
+        chassis_info_dict['serial'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_FIELD)
+        chassis_info_dict['model'] = db.get(db.STATE_DB, table, CHASSIS_INFO_MODEL_FIELD)
+        chassis_info_dict['revision'] = db.get(db.STATE_DB, table, CHASSIS_INFO_REV_FIELD)
+    except Exception:
+        pass
+
+    return chassis_info_dict
+
 #
 # Multi-NPU functionality
 #
@@ -325,6 +397,22 @@ def is_multi_npu():
     num_npus = get_num_npus()
     return (num_npus > 1)
 
+
+def is_supervisor():
+    platform_env_conf_file_path = get_platform_env_conf_file_path()
+    if platform_env_conf_file_path is None:
+        return False
+    with open(platform_env_conf_file_path) as platform_env_conf_file:
+        for line in platform_env_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0].lower() == 'supervisor':
+                val = tokens[1].strip()
+                if val == '1':
+                    return True
+        return False
+ 
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
@@ -400,7 +488,7 @@ def get_system_mac(namespace=None):
         machine_vars = get_machine_info()
         if machine_vars is not None and machine_key in machine_vars:
             hwsku = machine_vars[machine_key]
-            profile_cmd = 'cat' + HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini | grep switchMacAddress | cut -f2 -d='
+            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini | grep switchMacAddress | cut -f2 -d='
         else:
             profile_cmd = "false"
         hw_mac_entry_cmds = ["sudo decode-syseeprom -m", profile_cmd, "ip link show eth0 | grep ether | awk '{print $2}'"]

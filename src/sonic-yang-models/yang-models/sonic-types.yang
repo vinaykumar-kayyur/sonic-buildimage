@@ -67,6 +67,7 @@ module sonic-types {
             enum DROP;
             enum FORWARD;
             enum REDIRECT;
+            enum DO_NOT_NAT;
         }
     }
 
@@ -119,6 +120,20 @@ module sonic-types {
         }
     }
 
+    typedef admin_mode {
+        type enumeration {
+            enum enabled;
+            enum disabled;
+        }
+    }
+
+    typedef ip-protocol-type {
+        type enumeration {
+            enum TCP;
+            enum UDP;
+        }
+    }
+    
     typedef interface_type {
         type enumeration {
             enum CR;
@@ -179,21 +194,34 @@ module sonic-types {
             "Integer indicating a percentage value";
     }
 
-    // Defined as container because it will be used as xpath in MUST/WHEN
-    // expressions in yang.
-    container operation {
-        leaf operation {
-            type enumeration {
-                enum NOP;
-                enum CREATE;
-                enum UPDATE;
-                enum DELETE;
-            }
-            description
-                "This allows evaluation of must/when expression
-                for CREATE/UPDATE/DELETE operation.";
-            default NOP;
+    typedef tpid_type {
+        type string {
+            pattern "0x8100|0x9100|0x9200|0x88a8|0x88A8";
         }
-        description "Sonic data operation types required during validation";
     }
+
+    typedef feature_state {
+        type string {
+            pattern "enabled|disabled|always_enabled";
+        }
+    }
+    typedef meter_type {
+        type enumeration {
+            enum packets; 
+            enum bytes;
+        }
+    }
+
+    typedef copp_packet_action {
+        type enumeration {
+            enum drop;
+            enum forward;
+            enum copy;
+            enum copy_cancel;
+            enum trap;
+            enum log;
+            enum deny;
+            enum transit;
+        }
+    }        
 }
