@@ -162,7 +162,11 @@ class ServiceChecker(HealthChecker):
         self.need_save_cache = True
 
     def _get_container_folder(self, container):
-        return utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD.format(container))
+        container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD.format(container))
+        if container_folder is None:
+            return container_folder
+
+        return container_folder.strip()
 
     def save_critical_process_cache(self):
         """Save self.critical_process_dict to a cache file
@@ -203,7 +207,7 @@ class ServiceChecker(HealthChecker):
         :return:
         """
         output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD)
-        if not output or output != 'active':
+        if output != 'active':
             self.set_object_not_ok('Service', 'monit', 'monit service is not running')
             return
 
