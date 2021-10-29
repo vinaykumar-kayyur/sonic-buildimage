@@ -46,6 +46,12 @@ build:
 			$(PYTHON3) sonic_platform_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
 			echo "Finished makig whl package for $$mod"; \
 		fi; \
+		if [ -f fpga_setup.py ]; then\
+			$(PYTHON) fpga_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
+			mv $(MOD_SRC_DIR)/$${mod}/minipack_platform_fpga-1.0-cp27*.whl $(MOD_SRC_DIR)/$${mod}/minipack_platform_fpga-1.0-py2-none-any.whl; \
+			$(PYTHON3) fpga_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
+			mv $(MOD_SRC_DIR)/$${mod}/minipack_platform_fpga-1.0-cp37*.whl $(MOD_SRC_DIR)/$${mod}/minipack_platform_fpga-1.0-py3-none-any.whl; \
+		fi;\
 		cd $(MOD_SRC_DIR); \
 	done)
 

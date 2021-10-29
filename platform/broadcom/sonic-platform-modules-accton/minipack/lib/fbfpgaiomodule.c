@@ -119,13 +119,6 @@ static char docstr[] = "\
      In reading operation: data which is read from FPGA\n\
      In writing operation: None\n";
 
-#if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC
-initfbfpgaio(void)
-{
-  (void) Py_InitModule3("fbfpgaio", FbfpgaMethods, docstr);
-}
-#else
 static struct PyModuleDef FbfpgaModule =
 {
     PyModuleDef_HEAD_INIT,
@@ -140,5 +133,5 @@ PyInit_fbfpgaio(void)
 {
   return PyModule_Create(&FbfpgaModule);
 }
-#endif
+
 
