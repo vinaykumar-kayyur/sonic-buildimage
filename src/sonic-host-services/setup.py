@@ -9,9 +9,10 @@ setup(
     author_email = 'linuxnetdev@microsoft.com',
     url = 'https://github.com/Azure/sonic-buildimage',
     maintainer = 'Joe LeVeque',
-    maintainer_email = 'jolevequ@microsoft.com',
+    maintainer_email = 'jolevequ@microsoft.com', #TODO invalid e-mail
     packages = [
-        'host_modules'
+        'host_modules',
+        'health_checker'
     ],
     scripts = [
         'scripts/caclmgrd',
@@ -20,7 +21,8 @@ setup(
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
-        'scripts/sonic-host-server'
+        'scripts/sonic-host-server',
+        'scripts/healthd'
     ],
     install_requires = [
         'dbus-python',
@@ -37,7 +39,8 @@ setup(
         'pytest',
         'pyfakefs',
         'sonic-py-common',
-        'deepdiff'
+        'deepdiff',
+        'mock>=2.0.0'
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',
