@@ -20,7 +20,7 @@ struct event *ev_sigint;
 struct event *ev_sigterm;
 static std::string counter_table = "DHCPv6_COUNTER_TABLE|";
 swss::DBConnector state_db(6, "localhost", 6379, 0);
-swss::RedisClient m_applDbRedisClient(&state_db);
+swss::RedisClient m_stateDbRedisClient(&state_db);
 
 /* DHCPv6 filter */
 /* sudo tcpdump -dd "ip6 dst ff02::1:2 && udp dst port 547" */
@@ -73,17 +73,17 @@ std::map<int, std::string> counterMap = {{1, "Solicit"},
  * @return              none
  */
 void initialize_counter(std::string counterVlan) {
-    m_applDbRedisClient.hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
-    m_applDbRedisClient.hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
-    m_applDbRedisClient.hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
-    m_applDbRedisClient.hset(counterVlan, "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
-    m_applDbRedisClient.hset(counterVlan, "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
-    m_applDbRedisClient.hset(counterVlan, "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
-    m_applDbRedisClient.hset(counterVlan, "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
-    m_applDbRedisClient.hset(counterVlan, "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
-    m_applDbRedisClient.hset(counterVlan, "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
-    m_applDbRedisClient.hset(counterVlan, "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
-    m_applDbRedisClient.hset(counterVlan, "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
+    m_stateDbRedisClient.hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
+    m_stateDbRedisClient.hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
+    m_stateDbRedisClient.hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
+    m_stateDbRedisClient.hset(counterVlan, "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
+    m_stateDbRedisClient.hset(counterVlan, "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
+    m_stateDbRedisClient.hset(counterVlan, "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
+    m_stateDbRedisClient.hset(counterVlan, "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
+    m_stateDbRedisClient.hset(counterVlan, "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
+    m_stateDbRedisClient.hset(counterVlan, "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
+    m_stateDbRedisClient.hset(counterVlan, "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
+    m_stateDbRedisClient.hset(counterVlan, "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
 }
 
 /**
@@ -97,7 +97,7 @@ void initialize_counter(std::string counterVlan) {
  * @return              none
  */
 void update_counter(std::string counterVlan, uint8_t msg_type) {
-    m_applDbRedisClient.hset(counterVlan, counterMap.find(msg_type)->second, toString(counters[msg_type]));
+    m_stateDbRedisClient.hset(counterVlan, counterMap.find(msg_type)->second, toString(counters[msg_type]));
 }
 
 /**
