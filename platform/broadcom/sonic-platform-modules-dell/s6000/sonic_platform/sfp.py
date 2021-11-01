@@ -15,6 +15,8 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+SFP_LOCK_FILE="sfp_lock"
+
 class Sfp(SfpOptoeBase):
     """
     DELLEMC Platform-specific Sfp class
@@ -32,12 +34,46 @@ class Sfp(SfpOptoeBase):
     def get_eeprom_path(self):
         return self.eeprom_path
 
+    def read_eeprom(self, offset, num_bytes):
+        try:
+            fd = open(SFP_LOCK_FILE, "r")
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return None
+        try:
+            with open(self.get_eeprom_path(), mode='rb', buffering=0) as f:
+                fcntl.flock(fd, fcntl.LOCK_EX)
+                self.set_modsel()
+                f.seek(offset)
+                read_bytes=f.read(num_bytes)
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                return bytearray(read_bytes)
+        except (OSError, IOError):
+            return None
+
+    def write_eeprom(self, offset, num_bytes, write_buffer):
+        try:
+            fd = open(SFP_LOCK_FILE, "r")
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return None
+
+        try:
+            with open(self.get_eeprom_path(), mode='r+b', buffering=0) as f:
+                fcntl.flock(fd, fcntl.LOCK_EX)
+                self.set_modsel()
+                f.seek(offset)
+                f.write(write_buffer[0:num_bytes])
+                fcntl.flock(fd, fcntl.LOCK_UN)
+        except (OSError, IOError):
+            return False
+        return True
+
     def get_presence(self):
         """
         Retrieves the presence of the sfp
         """
         presence_ctrl = self.sfp_control + 'qsfp_modprs'
-        SFP_LOCK_FILE="/etc/sonic/sfp_lock"
 
         try:
             fd = open(SFP_LOCK_FILE, "r")
