@@ -9,7 +9,6 @@
 
 #include "dbconnector.h" 
 #include "configInterface.h"
-#include "table.h"
 #include "redisclient.h"
 
 
@@ -20,7 +19,7 @@ struct event *ev_sigint;
 struct event *ev_sigterm;
 static std::string counter_table = "DHCPv6_COUNTER_TABLE|";
 swss::DBConnector state_db(6, "localhost", 6379, 0);
-swss::RedisClient m_stateDbRedisClient(&state_db);
+swss::RedisClient m_applDbRedisClient(&state_db);
 
 /* DHCPv6 filter */
 /* sudo tcpdump -dd "ip6 dst ff02::1:2 && udp dst port 547" */
@@ -73,17 +72,17 @@ std::map<int, std::string> counterMap = {{1, "Solicit"},
  * @return              none
  */
 void initialize_counter(std::string counterVlan) {
-    m_stateDbRedisClient.hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
-    m_stateDbRedisClient.hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
-    m_stateDbRedisClient.hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
-    m_stateDbRedisClient.hset(counterVlan, "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
-    m_stateDbRedisClient.hset(counterVlan, "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
-    m_stateDbRedisClient.hset(counterVlan, "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
-    m_stateDbRedisClient.hset(counterVlan, "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
-    m_stateDbRedisClient.hset(counterVlan, "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
-    m_stateDbRedisClient.hset(counterVlan, "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
-    m_stateDbRedisClient.hset(counterVlan, "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
-    m_stateDbRedisClient.hset(counterVlan, "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
+    m_applDbRedisClient.hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
+    m_applDbRedisClient.hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
+    m_applDbRedisClient.hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
+    m_applDbRedisClient.hset(counterVlan, "Confirm", toString(counters[DHCPv6_MESSAGE_TYPE_CONFIRM]));
+    m_applDbRedisClient.hset(counterVlan, "Renew", toString(counters[DHCPv6_MESSAGE_TYPE_RENEW]));
+    m_applDbRedisClient.hset(counterVlan, "Rebind", toString(counters[DHCPv6_MESSAGE_TYPE_REBIND]));
+    m_applDbRedisClient.hset(counterVlan, "Reply", toString(counters[DHCPv6_MESSAGE_TYPE_REPLY]));
+    m_applDbRedisClient.hset(counterVlan, "Release", toString(counters[DHCPv6_MESSAGE_TYPE_RELEASE]));
+    m_applDbRedisClient.hset(counterVlan, "Decline", toString(counters[DHCPv6_MESSAGE_TYPE_DECLINE]));
+    m_applDbRedisClient.hset(counterVlan, "Relay-Forward", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_FORW]));
+    m_applDbRedisClient.hset(counterVlan, "Relay-Reply", toString(counters[DHCPv6_MESSAGE_TYPE_RELAY_REPL]));
 }
 
 /**
@@ -97,7 +96,7 @@ void initialize_counter(std::string counterVlan) {
  * @return              none
  */
 void update_counter(std::string counterVlan, uint8_t msg_type) {
-    m_stateDbRedisClient.hset(counterVlan, counterMap.find(msg_type)->second, toString(counters[msg_type]));
+    m_applDbRedisClient.hset(counterVlan, counterMap.find(msg_type)->second, toString(counters[msg_type]));
 }
 
 /**
@@ -682,15 +681,15 @@ void dhcp6relay_stop()
 void loop_relay(std::vector<relay_config> *vlans) {
     std::vector<int> sockets;
     
-    for(std::size_t i = 0; i<vlans->size(); i++) {
-        struct relay_config config = vlans->at(i);
+    for(relay_config vlan: *vlans) {
+        relay_config *config = new relay_config(vlan);
         int filter = 0;
         int local_sock = 0; 
-        const char *ifname = config.interface.c_str();
+        const char *ifname = config->interface.c_str();
         int index = if_nametoindex(ifname);
 
         std::string counterVlan = counter_table;
-        initialize_counter(counterVlan.append(config.interface));
+        initialize_counter(counterVlan.append(config->interface));
 
         filter = sock_open(index, &ether_relay_fprog);
 
@@ -698,7 +697,7 @@ void loop_relay(std::vector<relay_config> *vlans) {
         sockets.push_back(filter);
         sockets.push_back(local_sock);
 
-        prepare_relay_config(&config, &local_sock, filter);
+        prepare_relay_config(config, &local_sock, filter);
 
         evutil_make_listen_socket_reuseable(filter);
         evutil_make_socket_nonblocking(filter);
@@ -711,8 +710,8 @@ void loop_relay(std::vector<relay_config> *vlans) {
             syslog(LOG_ERR, "libevent: Failed to create base\n");
         }
 
-        listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
-        server_listen_event = event_new(base, local_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
+        listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, config);
+        server_listen_event = event_new(base, local_sock, EV_READ|EV_PERSIST, server_callback, config);
         if (listen_event == NULL || server_listen_event == NULL) {
             syslog(LOG_ERR, "libevent: Failed to create libevent\n");
         }
