@@ -15,7 +15,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-SFP_LOCK_FILE="sfp_lock"
+SFP_LOCK_FILE="/etc/sonic/sfp_lock"
 
 class Sfp(SfpOptoeBase):
     """
