@@ -74,7 +74,7 @@ class Component(ComponentBase):
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
-        for cpld_name in CPLD_ADDR_MAPPING:            
+        for cpld_name in CPLD_ADDR_MAPPING:
             try:
                 cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
                 cpld_version_raw= self._api_helper.read_txt_file(cpld_path)
