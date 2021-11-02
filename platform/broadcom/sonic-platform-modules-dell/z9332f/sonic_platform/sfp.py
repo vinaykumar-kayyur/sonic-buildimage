@@ -95,16 +95,16 @@ class Sfp(SfpOptoeBase):
         """
         return self.eeprom_path
 
-    @classmethod
-    def pci_mem_read(cls, mem, offset):
+    @staticmethod
+    def pci_mem_read(mem, offset):
         """
         Returns the desired byte in PCI memory space
         """
         mem.seek(offset)
         return mem.read_byte()
 
-    @classmethod
-    def pci_mem_write(cls, mem, offset, data):
+    @staticmethod
+    def pci_mem_write(mem, offset, data):
         """
         Writes the desired byte in PCI memory space
         """
@@ -118,7 +118,7 @@ class Sfp(SfpOptoeBase):
         """
         filed = os.open(resource, os.O_RDWR)
         mem = mmap.mmap(filed, 0)
-        val = self.pci_mem_write(mem, offset, val)
+        self.pci_mem_write(mem, offset, val)
         mem.close()
         os.close(filed)
         return val
@@ -383,8 +383,8 @@ class Sfp(SfpOptoeBase):
         """
         return self.index
 
-    @classmethod
-    def is_replaceable(cls):
+    @staticmethod
+    def is_replaceable():
         """
         Indicate whether this device is replaceable.
         Returns:
