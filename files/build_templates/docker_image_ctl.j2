@@ -36,7 +36,7 @@ function preStartAction()
         echo -n > /tmp/dump.rdb
         docker cp /tmp/dump.rdb database:/var/lib/redis/
     fi
-{%- elif docker_container_name == "swss" %}
+{%- elif docker_container_name == "swss" or docker_container_name == "syncd" %}
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
         if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
             REG_BOOT_TYPE="fast*"
