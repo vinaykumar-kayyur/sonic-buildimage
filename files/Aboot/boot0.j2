@@ -483,10 +483,12 @@ write_platform_specific_cmdline() {
     if [ "$sid" = "Upperlake" ] || [ "$sid" = "UpperlakeES" ]; then
         aboot_machine=arista_7060_cx32s
         flash_size=3700
+        cmdline_add docker_inram=on
     fi
     if [ "$sid" = "UpperlakePlus" ]; then
         aboot_machine=arista_7060cx2_32s
         flash_size=3700
+        cmdline_add docker_inram=on
     fi
     if [ "$sid" = "Gardena" ] || [ "$sid" = "GardenaE" ]; then
         aboot_machine=arista_7260cx3_64
