@@ -270,7 +270,7 @@ class Sfp(SfpOptoeBase):
 
         return self.sfp_type
 
-   def reinit_sfp_driver(self):
+    def reinit_sfp_driver(self):
         """
         Changes the driver based on media type detected
         """
