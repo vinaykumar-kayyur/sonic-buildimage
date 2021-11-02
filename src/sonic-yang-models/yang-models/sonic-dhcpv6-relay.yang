@@ -10,10 +10,6 @@ module sonic-dhcpv6-relay {
 		prefix inet;
 	}
 
-	import sonic-vlan {
-		prefix vlan;
-	}
-
 	organization "SONiC";
 
 	contact "SONiC";
@@ -35,9 +31,7 @@ module sonic-dhcpv6-relay {
 				key "name";
         
 				leaf name {
-					type leafref {
-						path /vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name;
-					}
+					type string;
 				}
 
                                 leaf-list dhcpv6_servers {
