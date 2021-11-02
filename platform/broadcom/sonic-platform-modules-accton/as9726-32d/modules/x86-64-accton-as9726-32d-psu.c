@@ -94,15 +94,15 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     //printk("data->status=0x%x, attr->index=%d,data->index=%d \n", data->status, attr->index, data->index);
     if (attr->index == PSU_PRESENT) {
         if(data->index==0)
-            status = !( (data->status) & 0x1);
-        else
             status = !( (data->status >> 1) & 0x1);
+        else
+            status = !( (data->status) & 0x1);
     }
     else { /* PSU_POWER_GOOD */
         if(data->index==0)
-           status = ( (data->status >> 2) & 0x1);
+           status = ( (data->status >> 3) & 0x1);
         else
-           status = ( (data->status >> 3) & 0x1); 
+           status = ( (data->status >> 2) & 0x1);
     }
 
     return sprintf(buf, "%d\n", status);

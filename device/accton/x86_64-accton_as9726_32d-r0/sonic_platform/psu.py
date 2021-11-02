@@ -137,8 +137,18 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
+        status_ps=self.get_presence() #present
+        status=self.get_status()   #power good
 
-        return False  #Controlled by HW
+        if status is None or status_ps is False:
+            return  self.STATUS_LED_COLOR_OFF
+
+        return {
+            1: self.STATUS_LED_COLOR_GREEN,
+            0: self.STATUS_LED_COLOR_AMBER
+        }.get(status, self.STATUS_LED_COLOR_OFF)
+
+        return False
 
     def get_temperature(self):
         """
