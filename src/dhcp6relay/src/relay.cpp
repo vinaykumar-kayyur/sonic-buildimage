@@ -680,11 +680,9 @@ void dhcp6relay_stop()
  */
 void loop_relay(std::vector<relay_config> *vlans) {
     std::vector<int> sockets;
-    std::vector<relay_config *> configs;
 
-    for(relay_config vlan: *vlans) {
-        relay_config *config = new relay_config(vlan);
-        configs.push_back(config);
+    for(relay_config &vlan : *vlans) {
+        relay_config *config = &vlan;
         int filter = 0;
         int local_sock = 0; 
         const char *ifname = config->interface.c_str();
@@ -726,9 +724,6 @@ void loop_relay(std::vector<relay_config> *vlans) {
         shutdown();
         for(std::size_t i = 0; i<sockets.size(); i++) {
             close(sockets.at(i));
-        }
-        for(relay_config* config : configs) {
-            delete(config);
         }
     }
 }
