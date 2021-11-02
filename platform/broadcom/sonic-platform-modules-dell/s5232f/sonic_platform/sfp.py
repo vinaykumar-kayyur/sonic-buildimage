@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DELLEMC
+# DELLEMC S5232F
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platform information

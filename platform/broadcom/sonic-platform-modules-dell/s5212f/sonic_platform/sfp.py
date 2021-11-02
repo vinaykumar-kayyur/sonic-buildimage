@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DELLEMC
+# DELLEMC S5212F
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platform information
@@ -34,7 +34,7 @@ class Sfp(SfpOptoeBase):
     """
     DELLEMC Platform-specific Sfp class
     """
-    BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
+    BASE_RES_PATH = "/sys/bus/pci/devices/0000:03:00.0/resource0"
 
     def __init__(self, index, sfp_type, eeprom_path):
         SfpOptoeBase.__init__(self)
