@@ -75,6 +75,8 @@
                         "dhcpv6_servers": [
                             "2001:1::2"
                         ],
+                        "rfc6939_support": "true",
+
                         "name": "Vlan400"
                     }
                 ]
