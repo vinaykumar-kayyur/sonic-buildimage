@@ -11,7 +11,7 @@ import time
 from ctypes import create_string_buffer
 
 try:
-     from sonic_platform_base.sfp_standard import SfpStandard
+     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
      from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
      from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
      from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
@@ -249,7 +249,7 @@ QSFP_DD_TYPE = "QSFP_DD"
 # Global logger class instance
 logger = Logger()
 
-class Sfp(SfpStandard):
+class Sfp(SfpOptoeBase):
     """Platform-specific Sfp class"""
 
     # Port number
@@ -329,18 +329,9 @@ class Sfp(SfpStandard):
             'ext_rateselect_compliance', 'cable_type', 'cable_length',
             'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui', 'application_advertisement']
 
-        SfpStandard.__init__(self)
+        SfpOptoeBase.__init__(self)
 
-    @property
-    def port_index(self):
-        return self.index
-
-    @property
-    def port_type(self):
-        return SfpStandard.PORT_TYPE_QSFPDD
-
-    @property
-    def eeprom_path(self):
+    def get_eeprom_path(self):
         return self.port_to_eeprom_mapping[self.index]
 
     def _convert_string_to_num(self, value_str):
