@@ -1,0 +1,15 @@
+{
+    "SYSLOG_SERVER_TEST": {
+        "desc": "LOAD SYSLOG SERVER TABLE WITH ADDRESS WITH IPV4, IPV6 AND HOST NAME AS SYSLOG SERVERS."
+    },
+    "SYSLOG_SERVER_1_NEG_TEST": {
+        "desc": "LOAD SYSLOG SERVER TABLE WITH EMPTY ADDRESS AS SYSLOG SERVER.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["server_address"]
+    },
+    "SYSLOG_SERVER_2_NEG_TEST": {
+        "desc": "LOAD SYSLOG SERVER TABLE WITH INVALID IP ADDRESS AS SYSLOG SERVER.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["server_address"]
+    }
+}

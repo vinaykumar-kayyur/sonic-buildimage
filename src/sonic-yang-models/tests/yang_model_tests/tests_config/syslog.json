@@ -1,0 +1,38 @@
+{
+    "SYSLOG_SERVER_TEST": {
+        "sonic-syslog:sonic-syslog": {
+            "sonic-syslog:SYSLOG_SERVER": {
+                "SYSLOG_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13"
+                    },
+                    {
+                        "server_address": "20.1.1.1"
+                    }
+                ]
+            }
+        }
+    },
+    "SYSLOG_SERVER_1_NEG_TEST": {
+        "sonic-syslog:sonic-syslog": {
+            "sonic-syslog:SYSLOG_SERVER": {
+                "SYSLOG_SERVER_LIST": [
+                    {
+                        "server_address": ""
+                    }
+                ]
+            }
+        }
+    },
+    "SYSLOG_SERVER_2_NEG_TEST": {
+        "sonic-syslog:sonic-syslog": {
+            "sonic-syslog:SYSLOG_SERVER": {
+                "SYSLOG_SERVER_LIST": [
+                    {
+                        "server_address": "2001:aa:aa:aa"
+                    }
+                ]
+            }
+        }
+    }
+}
