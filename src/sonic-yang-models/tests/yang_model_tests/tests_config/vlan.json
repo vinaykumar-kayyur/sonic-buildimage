@@ -414,7 +414,7 @@
                 "VLAN_INTERFACE_LIST": [
                     {
                         "name": "Vlan100",
-                        "static-anycast-gateway": "true"
+                        "static_anycast_gateway": "true"
                     }
                 ]
             }
@@ -466,7 +466,7 @@
                 "VLAN_INTERFACE_LIST": [
                     {
                         "name": "Vlan100",
-                        "static-anycast-gateway": "enabled"
+                        "static_anycast_gateway": "enabled"
                     }
                 ]
             }

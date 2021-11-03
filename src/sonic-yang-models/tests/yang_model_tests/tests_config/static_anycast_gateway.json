@@ -3,7 +3,7 @@
         "sonic-static-anycast-gateway:sonic-static-anycast-gateway": {
             "sonic-static-anycast-gateway:SAG": {
                 "sonic-static-anycast-gateway:GLOBAL": {
-                    "gwmac": "00:11:22:33:44:55"
+                    "gateway_mac": "00:11:22:33:44:55"
                 }
             }
         }
@@ -12,7 +12,7 @@
         "sonic-static-anycast-gateway:sonic-static-anycast-gateway": {
             "sonic-static-anycast-gateway:SAG": {
                 "sonic-static-anycast-gateway:GLOBAL": {
-                    "gwmac": "001122334455"
+                    "gateway_mac": "001122334455"
                 }
             }
         }

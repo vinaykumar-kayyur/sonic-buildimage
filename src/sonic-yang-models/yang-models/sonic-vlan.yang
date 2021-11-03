@@ -88,7 +88,7 @@ module sonic-vlan {
 					}
 				}
 
-				leaf static-anycast-gateway {
+				leaf static_anycast_gateway {
 					description "Enable/disable static anycast gateway for the vlan interface";
 					type boolean;
 					default false;

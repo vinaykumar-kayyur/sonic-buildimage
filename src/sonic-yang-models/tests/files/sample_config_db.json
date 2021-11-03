@@ -39,7 +39,7 @@
         "VLAN_INTERFACE": {
             "Vlan111": {
                 "nat_zone": "0",
-                "static-anycast-gateway": "true"
+                "static_anycast_gateway": "true"
             },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
@@ -1092,7 +1092,7 @@
         },
         "SAG": {
             "GLOBAL": {
-                "gwmac": "00:11:22:33:44:55"
+                "gateway_mac": "00:11:22:33:44:55"
             }
         },
         "FEATURE": {

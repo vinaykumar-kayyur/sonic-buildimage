@@ -21,7 +21,7 @@ module sonic-static-anycast-gateway {
             container GLOBAL {
                 description "Global static anycast gateway configuration";
 
-                leaf gwmac {
+                leaf gateway_mac {
                     type yang:mac-address;
                 }
             }
