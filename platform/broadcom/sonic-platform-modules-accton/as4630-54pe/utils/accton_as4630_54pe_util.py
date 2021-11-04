@@ -167,6 +167,8 @@ def driver_inserted():
 kos = [
 'depmod -ae',
 'modprobe i2c_dev',
+'modprobe i2c_i801',
+'modprobe i2c_ismt',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
 'modprobe ym2651y',
 'modprobe x86_64_accton_as4630_54pe_cpld',
@@ -176,17 +178,7 @@ kos = [
 
 def driver_install():
     global FORCE
-    
-    ret=log_os_system("lsmod|grep i2c_ismt",1)    
-    my_log("rmmond i2cismt")
-    log_os_system("rmmod i2c_ismt", 1)
-    log_os_system("rmmod i2c_i801", 1)
-    log_os_system("modprobe i2c-i801", 1)
-    time.sleep(1)
-    log_os_system("modprobe i2c-ismt", 1)
-  
-        
-    
+
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
         if status:
