@@ -1,4 +1,4 @@
-From 834d439c8df3574d54ba88fe6cae3fbd61e4ac1f Mon Sep 17 00:00:00 2001
+From 8cfa2b4dbfcdbacbb47054f9fde182405bd95573 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 12 Oct 2021 10:09:10 +0800
 Subject: [PATCH] Extract tacacs support functions into library.
@@ -9,9 +9,9 @@ Subject: [PATCH] Extract tacacs support functions into library.
  libtacsupport.pc.in |  11 ++
  pam_tacplus.c       |   3 -
  pam_tacplus.h       |   6 -
- support.c           | 284 +++++++++++++++++++++++++++-----------------
+ support.c           | 288 ++++++++++++++++++++++++++++----------------
  support.h           |  14 +++
- 7 files changed, 214 insertions(+), 123 deletions(-)
+ 7 files changed, 222 insertions(+), 119 deletions(-)
  create mode 100644 libtacsupport.pc.in
 
 diff --git a/Makefile.am b/Makefile.am
@@ -122,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index 2f77bc8..0e8aae3 100644
+index 2f77bc8..e86f511 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,7 +29,11 @@
@@ -137,31 +137,24 @@ index 2f77bc8..0e8aae3 100644
  /* tacacs server information */
  tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
  struct addrinfo tac_srv_addr[TAC_PLUS_MAXSERVERS];
-@@ -234,13 +238,13 @@ void set_source_ip(const char *tac_source_ip) {
+@@ -234,11 +238,182 @@ void set_source_ip(const char *tac_source_ip) {
          freeaddrinfo(source_address);
          _pam_log(LOG_DEBUG, "source ip is set");
      }
--}
--
--int _pam_parse (int argc, const char **argv) {
--    int ctrl = 0;
--    const char *current_secret = NULL;
 +}
- 
--    /* otherwise the list will grow with each call */
++
 +/*
 + * Reset configuration variables.
 + * This method need to be called before parse config, otherwise the server list will grow with each call.
 + */
 +int reset_config_variables () {
-     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
-     tac_srv_no = 0;
- 
-@@ -248,114 +252,174 @@ int _pam_parse (int argc, const char **argv) {
-     tac_protocol[0] = 0;
-     tac_prompt[0] = 0;
-     tac_login[0] = 0;
--    tac_source_ip[0] = 0;
++    memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
++    tac_srv_no = 0;
++
++    tac_service[0] = 0;
++    tac_protocol[0] = 0;
++    tac_prompt[0] = 0;
++    tac_login[0] = 0;
 +    tac_source_ip[0] = 0;
 +
 +    if (tac_source_addr != NULL) {
@@ -261,10 +254,7 @@ index 2f77bc8..0e8aae3 100644
 +        for(i = tac_srv_no-1; i >= 0; i--) {
 +            if (tac_srv[i].key[0] != 0)
 +                break;
- 
--    if (tac_source_addr != NULL) {
--        /* reset source address */
--        tac_source_addr = NULL;
++
 +            /* copy secret to key */
 +            snprintf(tac_srv[i].key, sizeof(tac_srv[i].key), "%s", current_secret);
 +        }
@@ -307,7 +297,7 @@ index 2f77bc8..0e8aae3 100644
 +    if(config_file == NULL) {
 +        _pam_log(LOG_ERR, "Failed to open config file %s: %m", file);
 +        return 0;
-     }
++    }
 +
 +    while (fgets(line_buffer, sizeof line_buffer, config_file)) {
 +        if(*line_buffer == '#' || isspace(*line_buffer))
@@ -321,15 +311,31 @@ index 2f77bc8..0e8aae3 100644
 +
 +    fclose(config_file);
 +    return ctrl;
-+}
-+
-+int _pam_parse (int argc, const char **argv) {
-+    int ctrl = 0;
+ }
+ 
+ int _pam_parse (int argc, const char **argv) {
+     int ctrl = 0;
+-    const char *current_secret = NULL;
 +    char current_secret[256];
 +    memset(current_secret, 0, sizeof(current_secret));
+ 
+     /* otherwise the list will grow with each call */
+     memset(tac_srv, 0, sizeof(tacplus_server_t) * TAC_PLUS_MAXSERVERS);
+@@ -248,114 +423,15 @@ int _pam_parse (int argc, const char **argv) {
+     tac_protocol[0] = 0;
+     tac_prompt[0] = 0;
+     tac_login[0] = 0;
+-    tac_source_ip[0] = 0;
+-
+-    if (tac_source_addr != NULL) {
+-        /* reset source address */
+-        tac_source_addr = NULL;
++    tac_source_ip[0] = 0;
 +
-+    /* otherwise the list will grow with each call */
-+    reset_config_variables();
++    if (tac_source_addr != NULL) {
++        /* reset source address */
++        tac_source_addr = NULL;
+     }
  
      for (ctrl = 0; argc-- > 0; ++argv) {
 -        if (!strcmp (*argv, "debug")) { /* all */
