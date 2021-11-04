@@ -1430,7 +1430,7 @@ class Sfp(SfpBase):
             return self.SFP_STATUS_UNPLUGGED
         else:
             if not os.path.isfile(self.eeprom_path):
-                return "EEPROM driver is not initialized"
+                return "EEPROM driver is not attached"
 
             if self.sfp_type == 'SFP':
                 offset = SFP_INFO_OFFSET
