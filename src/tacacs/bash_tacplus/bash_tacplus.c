@@ -33,9 +33,14 @@
 #define syslog mock_syslog
 #endif
 
-
 /* Tacacs+ log format */
 #define  TACACS_LOG_FORMAT "TACACS+: %s"
+
+/* Tacacs+ config file timestamp string format */
+#define  CONFIG_FILE_TIME_STAMP_FORMAT "%d.%m.%Y %H:%M:%S"
+
+/* Tacacs+ config file timestamp string length */
+#define  CONFIG_FILE_TIME_STAMP_LEN  100
 
 /* 
     Convert log to a string because va args resoursive issue:
@@ -146,7 +151,7 @@ int send_authorization_message(
     output_debug("authorization result: %d\n", retval);
 
     if(retval < 0) {
-            output_error("send of authorization message failed: %s\n", strerror(errno));
+        output_error("send of authorization message failed: %s\n", strerror(errno));
     }
     else {
         retval = tac_author_read(tac_fd, &re);
@@ -296,8 +301,8 @@ void check_and_load_changed_tacacs_config()
     struct stat attr;
     // get config file stat, check if file changed
     stat(tacacs_config_file, &attr);
-    char date[36];
-    strftime(date, 36, "%d.%m.%Y %H:%M:%S", localtime(&(attr.st_mtime)));
+    char date[CONFIG_FILE_TIME_STAMP_LEN];
+    strftime(date, sizeof(date), CONFIG_FILE_TIME_STAMP_FORMAT, localtime(&(attr.st_mtime)));
     if (difftime(attr.st_mtime, config_file_attr.st_mtime) == 0) {
         output_debug("tacacs config file not change: last modified time: %s.\n", date);
         return;
@@ -387,7 +392,7 @@ int is_local_user(char *user)
  */
 char* get_user_name(char *user)
 {
-    if (user != NULL) {
+    if (user != NULL && strlen(user) != 0) {
         return user;
     }
 
@@ -462,7 +467,7 @@ int on_shell_execve (char *user, int shell_level, char *cmd, char **argv)
             case 0:
             break;
             case -2:
-                //  -2 means no servers, so not authorized
+                // -2 means no servers, so not authorized
                 fprintf(stdout, "%s not authorized by TACACS+ with given arguments, not executing\n", cmd);
             break;
             default:
