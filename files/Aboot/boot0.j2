@@ -468,6 +468,8 @@ write_platform_specific_cmdline() {
     # detect the size of the flash partition from name in Aboot/EOS/SONiC
     local flash_size=$(($(df "$target_path" | tail -1 | tr -s ' ' | cut -f2 -d' ') / 1000))
 
+    local force_log_on_disk="no"
+
     if [ "$platform" = "raven" ]; then
         # Assuming sid=Cloverdale
         aboot_machine=arista_7050_qx32
@@ -483,11 +485,13 @@ write_platform_specific_cmdline() {
     if [ "$sid" = "Upperlake" ] || [ "$sid" = "UpperlakeES" ]; then
         aboot_machine=arista_7060_cx32s
         flash_size=3700
+        force_log_on_disk="yes"
         cmdline_add docker_inram=on
     fi
     if [ "$sid" = "UpperlakePlus" ]; then
         aboot_machine=arista_7060cx2_32s
         flash_size=3700
+        force_log_on_disk="yes"
         cmdline_add docker_inram=on
     fi
     if [ "$sid" = "Gardena" ] || [ "$sid" = "GardenaE" ]; then
@@ -597,7 +601,9 @@ write_platform_specific_cmdline() {
         varlog_size=400
     else
         varlog_size=256
-        cmdline_add logs_inram=on
+        if [ $force_log_on_disk = "no" ]; then
+            cmdline_add logs_inram=on
+        fi
         if [ $flash_size -le 2000 ]; then
             # enable docker_inram for switches with less than 2G of flash
             varlog_size=128
