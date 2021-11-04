@@ -5,7 +5,7 @@
 # Build and push sonic-slave-[buster|jessie|stretch] images for amd64/armhf/arm64
 
 schedules:
-- cron: "0 8 * * *"
+- cron: "0 2 * * *"
   branches:
     include:
     - master
