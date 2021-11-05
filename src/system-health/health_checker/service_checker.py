@@ -207,7 +207,7 @@ class ServiceChecker(HealthChecker):
         :return:
         """
         output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD)
-        if output != 'active':
+        if not output or output.strip() != 'active':
             self.set_object_not_ok('Service', 'monit', 'monit service is not running')
             return
 
@@ -249,6 +249,11 @@ class ServiceChecker(HealthChecker):
         feature_table = config_db.get_table("FEATURE")
         expected_running_containers, self.container_feature_dict = self.get_expected_runnning_container_set(feature_table)
         current_running_containers = self.get_current_running_container_set()
+
+        newly_disabled_containers = set(self.critical_process_dict.keys()).difference(expected_running_containers)
+        for newly_disabled_container in newly_disabled_containers:
+            self.critical_process_dict.pop(newly_disabled_container)
+
         self.save_critical_process_cache()
 
         not_running_containers = expected_running_containers.difference(current_running_containers)
