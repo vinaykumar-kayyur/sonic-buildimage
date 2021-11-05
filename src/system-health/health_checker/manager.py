@@ -77,7 +77,8 @@ class HealthCheckerManager(object):
             error_msg = 'Failed to perform health check for {} due to exception - {}'.format(checker, repr(e))
             entry = {str(checker): {
                 HealthChecker.INFO_FIELD_OBJECT_STATUS: HealthChecker.STATUS_NOT_OK,
-                HealthChecker.INFO_FIELD_OBJECT_MSG: error_msg
+                HealthChecker.INFO_FIELD_OBJECT_MSG: error_msg,
+                HealthChecker.INFO_FIELD_OBJECT_TYPE: "Internal"
             }}
             if 'Internal' not in stats:
                 stats['Internal'] = entry
