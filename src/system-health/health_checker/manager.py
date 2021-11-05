@@ -74,6 +74,7 @@ class HealthCheckerManager(object):
             else:
                 stats[category].update(info)
         except Exception as e:
+            HealthChecker.summary = HealthChecker.STATUS_NOT_OK
             error_msg = 'Failed to perform health check for {} due to exception - {}'.format(checker, repr(e))
             entry = {str(checker): {
                 HealthChecker.INFO_FIELD_OBJECT_STATUS: HealthChecker.STATUS_NOT_OK,
