@@ -527,7 +527,7 @@ class SonicYangExtMixin:
     to sonic_yang.json.
     """
     def _xlateList(self, model, yang, config, table, exceptionList):
-        
+
         #Qos Map lists needs special handling because of inner yang list and
         #config db format.
         if model['@name'] in qos_maps_model or model['@name'] in cbf_maps_model:
@@ -791,14 +791,14 @@ class SonicYangExtMixin:
     }
     """
 
-    def _revQosMapXlateList(self, model, yang, config, table):
+    def _revMapXlateList(self, model, yang, config, table):
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         # create a dict to map each key under primary key with a dict yang model.
         # This is done to improve performance of mapping from values of TABLEs in
         # config DB to leaf in YANG LIST.
 
-        # Gather inner list key and value from model  
+        # Gather inner list key and value from model
         inner_clist = model.get('list')
         if inner_clist:
             inner_listKey = inner_clist['key']['@value']
@@ -827,10 +827,10 @@ class SonicYangExtMixin:
     Rev xlate from <TABLE>_LIST to table in config DB
     """
     def _revXlateList(self, model, yang, config, table):
-        
+
         # special processing for QOS Map table.
-        if model['@name'] in qos_maps_model:
-           self._revQosMapXlateList(model, yang, config, table)
+        if model['@name'] in qos_maps_model or model['@name'] in cbf_maps_model:
+           self._revMapXlateList(model, yang, config, table)
            return
 
         # get keys from YANG model list itself
