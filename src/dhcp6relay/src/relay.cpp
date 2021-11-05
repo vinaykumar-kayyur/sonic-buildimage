@@ -393,7 +393,6 @@ void prepare_socket(int *local_sock, int *server_sock, relay_config *config, int
                 in6->sin6_family = AF_INET6;
                 in6->sin6_port = htons(RELAY_PORT);
                 ll_addr = *in6;
-                break;
             }
         }
     ifa_tmp = ifa_tmp->ifa_next;
