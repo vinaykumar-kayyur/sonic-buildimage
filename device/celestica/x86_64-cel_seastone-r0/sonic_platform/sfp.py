@@ -347,7 +347,7 @@ class Sfp(SfpBase):
                 for n in range(0, num_bytes):
                     eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
 
-        except Exception:
+        except BaseException:
             eeprom.close()
             return None
 
@@ -1482,7 +1482,7 @@ class Sfp(SfpBase):
         try:
             reg_file = open(self.LP_PATH, "r")
             content = reg_file.readline().rstrip()
-        except Exception as e:
+        except BaseException as e:
             print("Error: unable to open file: %s" % str(e))
             return False
 
@@ -1950,7 +1950,7 @@ class Sfp(SfpBase):
 
         try:
             reg_file = open(self.RESET_PATH, "r+")
-        except Exception as e:
+        except BaseException as e:
             print("Error: unable to open file: %s" % str(e))
             return False
 
@@ -2040,7 +2040,7 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.read(1)
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', tx_disable_value))
-            except Exception as e:
+            except BaseException as e:
                 print("Error: unable to open file: %s" % str(e))
             finally:
                 if sysfsfile_eeprom is not None:
@@ -2060,7 +2060,7 @@ class Sfp(SfpBase):
         """
         try:
             reg_file = open(self.LP_PATH, "r+")
-        except Exception as e:
+        except BaseException as e:
             print("Error: unable to open file: %s" % str(e))
             return False
 
@@ -2115,7 +2115,7 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.read(1)
                 sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', value))
-            except Exception as e:
+            except BaseException as e:
                 print("Error: unable to open file: %s" % str(e))
             finally:
                 if sysfsfile_eeprom is not None:

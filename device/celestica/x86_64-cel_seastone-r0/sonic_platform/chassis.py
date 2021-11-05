@@ -223,17 +223,10 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        sfp = None
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
 
-        try:
-            # The index will start from 1
-            sfp = self._sfp_list[index - 1]
-        except IndexError:
-            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
-                             index, len(self._sfp_list)))
-        return sfp
+        return super(Chassis, self).get_sfp(index - 1)
 
     ##############################################################
     ####################### Other methods ########################
@@ -345,7 +338,7 @@ class Chassis(ChassisBase):
         """
         status = self._api_helper.read_txt_file(STATUS_LED_PATH)
         status_str = {
-            '255': self.STATUS_LED_COLOR_GREEN,
+            '1': self.STATUS_LED_COLOR_GREEN,
             '0': self.STATUS_LED_COLOR_OFF
         }.get(status, None)
 
