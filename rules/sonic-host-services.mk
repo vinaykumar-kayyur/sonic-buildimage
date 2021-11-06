@@ -1,5 +1,6 @@
 # SONiC host services package
 
+
 SONIC_HOST_SERVICES_PY3 = sonic_host_services-1.0-py3-none-any.whl
 $(SONIC_HOST_SERVICES_PY3)_SRC_PATH = $(SRC_PATH)/sonic-host-services
 $(SONIC_HOST_SERVICES_PY3)_PYTHON_VERSION = 3
