@@ -17,25 +17,25 @@ class my_build_py(build_py):
         if not os.path.exists("./yang-models"):
             os.makedirs("./yang-models")
 
-        if not os.path.exists("./iyang-models"):
-            os.makedirs("./iyang-models")
+        if not os.path.exists("./cvlyang-models"):
+            os.makedirs("./cvlyang-models")
 
         # copy non-template yang model to internal yang model directory
         for fname in glob.glob("./yang-models/*.yang"):
             bfname = os.path.basename(fname)
-            shutil.copyfile("./yang-models/{}".format(bfname), "./iyang-models/{}".format(bfname))
+            shutil.copyfile("./yang-models/{}".format(bfname), "./cvlyang-models/{}".format(bfname))
 
         # templated yang models
         env = jinja2.Environment(loader=jinja2.FileSystemLoader('./yang-templates/'), trim_blocks=True)
         for fname in glob.glob("./yang-templates/*.yang.j2"):
             bfname = os.path.basename(fname)
             template = env.get_template(bfname)
-            yang_model = template.render(yang_model_type="ext")
-            iyang_model = template.render(yang_model_type="int")
+            yang_model = template.render(yang_model_type="py")
+            cvlyang_model = template.render(yang_model_type="cvl")
             with open("./yang-models/{}".format(bfname.strip(".j2")), 'w') as f:
                 f.write(yang_model)
-            with open("./iyang-models/{}".format(bfname.strip(".j2")), 'w') as f:
-                f.write(iyang_model)
+            with open("./cvlyang-models/{}".format(bfname.strip(".j2")), 'w') as f:
+                f.write(cvlyang_model)
 
         build_py.run(self)
 
@@ -122,51 +122,51 @@ setup(
                          './yang-models/sonic-pfc-priority-queue-map.yang',
                          './yang-models/sonic-pfc-priority-priority-group-map.yang',
                          './yang-models/sonic-port-qos-map.yang']),
-        ('iyang-models', ['./iyang-models/sonic-acl.yang',
-                         './iyang-models/sonic-bgp-common.yang',
-                         './iyang-models/sonic-bgp-global.yang',
-                         './iyang-models/sonic-bgp-neighbor.yang',
-                         './iyang-models/sonic-bgp-peergroup.yang',
-                         './iyang-models/sonic-breakout_cfg.yang',
-                         './iyang-models/sonic-copp.yang',
-                         './iyang-models/sonic-crm.yang',
-                         './iyang-models/sonic-device_metadata.yang',
-                         './iyang-models/sonic-device_neighbor.yang',
-                         './iyang-models/sonic-extension.yang',
-                         './iyang-models/sonic-flex_counter.yang',
-                         './iyang-models/sonic-feature.yang',
-                         './iyang-models/sonic-interface.yang',
-                         './iyang-models/sonic-loopback-interface.yang',
-                         './iyang-models/sonic-mgmt_interface.yang',
-                         './iyang-models/sonic-mgmt_port.yang',
-                         './iyang-models/sonic-mgmt_vrf.yang',
-                         './iyang-models/sonic-ntp.yang',
-                         './iyang-models/sonic-nat.yang',
-                         './iyang-models/sonic-port.yang',
-                         './iyang-models/sonic-portchannel.yang',
-                         './iyang-models/sonic-pfcwd.yang',
-                         './iyang-models/sonic-route-common.yang',
-                         './iyang-models/sonic-route-map.yang',
-                         './iyang-models/sonic-routing-policy-sets.yang',
-                         './iyang-models/sonic-sflow.yang',
-                         './iyang-models/sonic-system-aaa.yang',
-                         './iyang-models/sonic-system-tacacs.yang',
-                         './iyang-models/sonic-types.yang',
-                         './iyang-models/sonic-versions.yang',
-                         './iyang-models/sonic-vlan.yang',
-                         './iyang-models/sonic-vrf.yang',
-                         './iyang-models/sonic-warm-restart.yang',
-                         './iyang-models/sonic-lldp.yang',
-                         './iyang-models/sonic-scheduler.yang',
-                         './iyang-models/sonic-wred-profile.yang',
-                         './iyang-models/sonic-queue.yang',
-                         './iyang-models/sonic-dscp-tc-map.yang',
-                         './iyang-models/sonic-dot1p-tc-map.yang',
-                         './iyang-models/sonic-tc-priority-group-map.yang',
-                         './iyang-models/sonic-tc-queue-map.yang',
-                         './iyang-models/sonic-pfc-priority-queue-map.yang',
-                         './iyang-models/sonic-pfc-priority-priority-group-map.yang',
-                         './iyang-models/sonic-port-qos-map.yang']),
+        ('cvlyang-models', ['./cvlyang-models/sonic-acl.yang',
+                         './cvlyang-models/sonic-bgp-common.yang',
+                         './cvlyang-models/sonic-bgp-global.yang',
+                         './cvlyang-models/sonic-bgp-neighbor.yang',
+                         './cvlyang-models/sonic-bgp-peergroup.yang',
+                         './cvlyang-models/sonic-breakout_cfg.yang',
+                         './cvlyang-models/sonic-copp.yang',
+                         './cvlyang-models/sonic-crm.yang',
+                         './cvlyang-models/sonic-device_metadata.yang',
+                         './cvlyang-models/sonic-device_neighbor.yang',
+                         './cvlyang-models/sonic-extension.yang',
+                         './cvlyang-models/sonic-flex_counter.yang',
+                         './cvlyang-models/sonic-feature.yang',
+                         './cvlyang-models/sonic-interface.yang',
+                         './cvlyang-models/sonic-loopback-interface.yang',
+                         './cvlyang-models/sonic-mgmt_interface.yang',
+                         './cvlyang-models/sonic-mgmt_port.yang',
+                         './cvlyang-models/sonic-mgmt_vrf.yang',
+                         './cvlyang-models/sonic-ntp.yang',
+                         './cvlyang-models/sonic-nat.yang',
+                         './cvlyang-models/sonic-port.yang',
+                         './cvlyang-models/sonic-portchannel.yang',
+                         './cvlyang-models/sonic-pfcwd.yang',
+                         './cvlyang-models/sonic-route-common.yang',
+                         './cvlyang-models/sonic-route-map.yang',
+                         './cvlyang-models/sonic-routing-policy-sets.yang',
+                         './cvlyang-models/sonic-sflow.yang',
+                         './cvlyang-models/sonic-system-aaa.yang',
+                         './cvlyang-models/sonic-system-tacacs.yang',
+                         './cvlyang-models/sonic-types.yang',
+                         './cvlyang-models/sonic-versions.yang',
+                         './cvlyang-models/sonic-vlan.yang',
+                         './cvlyang-models/sonic-vrf.yang',
+                         './cvlyang-models/sonic-warm-restart.yang',
+                         './cvlyang-models/sonic-lldp.yang',
+                         './cvlyang-models/sonic-scheduler.yang',
+                         './cvlyang-models/sonic-wred-profile.yang',
+                         './cvlyang-models/sonic-queue.yang',
+                         './cvlyang-models/sonic-dscp-tc-map.yang',
+                         './cvlyang-models/sonic-dot1p-tc-map.yang',
+                         './cvlyang-models/sonic-tc-priority-group-map.yang',
+                         './cvlyang-models/sonic-tc-queue-map.yang',
+                         './cvlyang-models/sonic-pfc-priority-queue-map.yang',
+                         './cvlyang-models/sonic-pfc-priority-priority-group-map.yang',
+                         './cvlyang-models/sonic-port-qos-map.yang']),
     ],
     zip_safe=False,
 )
