@@ -25,10 +25,6 @@ pr:
     - sonic-slave-bullseye
 
 parameters:
-- name: 'arches'
-  type: object
-  default:
-  - arm64
 - name: 'dists'
   type: object
   default:
@@ -41,9 +37,8 @@ stages:
   jobs:
   - ${{ each dist in parameters.dists }}:
     - ${{ if contains(variables['Build.DefinitionName'], dist) }}:
-      - ${{ each arch in parameters.arches }}:
-        - template: docker-sonic-slave-template.yml
-          parameters:
-            pool: sonicbld-arm64
-            arch: ${{ arch }}
-            dist: ${{ dist }}
+      - template: docker-sonic-slave-template.yml
+        parameters:
+          pool: sonicbld-arm64
+          arch: arm64
+          dist: ${{ dist }}
