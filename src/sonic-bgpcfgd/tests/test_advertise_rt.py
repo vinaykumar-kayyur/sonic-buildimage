@@ -151,3 +151,35 @@ def test_set_del_vrf():
              "  no network fc00:20::/64"]
         ]
     )
+
+
+def test_set_del_bgp_asn_change():
+    mgr = constructor(skip_bgp_asn=True)
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.3.0.0/24", {}),
+        True,
+        []
+    )
+
+
+    test_set_del_bgp_asn_change.push_list_called = False
+    expected_cmds = [
+        ["router bgp 65100 vrf vrfRED",
+         " no bgp network import-check"],
+        ["router bgp 65100 vrf vrfRED",
+         " address-family ipv4 unicast",
+         "  network 10.3.0.0/24"]
+    ]
+    def push_list(cmds):
+        test_set_del_bgp_asn_change.push_list_called = True
+        assert cmds in expected_cmds
+        return True
+
+    mgr.cfg_mgr.push_list = push_list
+    assert not test_set_del_bgp_asn_change.push_list_called
+
+    mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
+
+    assert test_set_del_bgp_asn_change.push_list_called
