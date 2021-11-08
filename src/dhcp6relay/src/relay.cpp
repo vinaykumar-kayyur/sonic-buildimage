@@ -394,7 +394,7 @@ void prepare_socket(int *local_sock, int *server_sock, relay_config *config, int
                 ll_addr = *in6;
             }
         }
-    ifa_tmp = ifa_tmp->ifa_next;
+        ifa_tmp = ifa_tmp->ifa_next;
     }
     freeifaddrs(ifa); 
     
