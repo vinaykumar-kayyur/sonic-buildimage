@@ -55,4 +55,5 @@
     "DEVICE_METADATA_FRR_MGMT_FWK_CONFIG": {
         "desc": "Verifying FRR MGMT framework configuration."
     }
+
 }
