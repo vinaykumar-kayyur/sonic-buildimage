@@ -143,6 +143,10 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install ipaddr
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install ipaddr
 
+# Install prerequisites needed for grpcio
+# These packages can be uninstalled after intallation
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install build-essential
+
 # Install Python module for grpcio and grpcio-toole
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install "grpcio==1.39.0"
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install "grpcio-tools==1.39.0"
