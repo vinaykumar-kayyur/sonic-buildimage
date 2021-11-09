@@ -111,6 +111,23 @@ def get_port_table_name(interface_name):
     else:
         return ""
 
+def subintf_get_longname(intf):
+    if intf is None:
+       return None
+    sub_intf_sep_idx = intf.find(VLAN_SUB_INTERFACE_SEPARATOR)
+    if sub_intf_sep_idx == -1:
+        return str(intf)
+    parent_intf = intf[:sub_intf_sep_idx]
+    sub_intf_idx = intf[(sub_intf_sep_idx+1):]
+    if intf.startswith("Eth"):
+        intf_index=intf[len("Eth"):sub_intf_sep_idx]
+        return "Ethernet"+intf_index+VLAN_SUB_INTERFACE_SEPARATOR+sub_intf_idx
+    elif intf.startswith("Po"):
+        intf_index=intf[len("Po"):sub_intf_sep_idx]
+        return "PortChannel"+intf_index+VLAN_SUB_INTERFACE_SEPARATOR+sub_intf_idx
+    else:
+        return str(intf)
+
 def intf_get_longname(intf):
     if intf is None:
        return None
