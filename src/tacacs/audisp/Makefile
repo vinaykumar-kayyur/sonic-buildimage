@@ -15,13 +15,15 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# checkout by sha1
 	pushd ./audisp-tacplus
 	git checkout 559c9f22edd4f2dea0ecedffb3ad9502b12a75b6
-	popd
 
-	# Apply plugin suport patches
+	# Apply patches
+	cp -r ../patches patches
 	quilt push -a
 
+	# fix aclocal depency issue by run autoconf
+	autoreconf
+
 	# build package
-	pushd ./audisp-tacplus
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
