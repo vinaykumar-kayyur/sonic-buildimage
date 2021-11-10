@@ -1,4 +1,4 @@
-From 8cfa2b4dbfcdbacbb47054f9fde182405bd95573 Mon Sep 17 00:00:00 2001
+From 1b8a06ae2ef3e91236304b70569e0bcd0e9e0cb4 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 12 Oct 2021 10:09:10 +0800
 Subject: [PATCH] Extract tacacs support functions into library.
@@ -122,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index 2f77bc8..e86f511 100644
+index 2f77bc8..c0e743b 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,7 +29,11 @@
@@ -287,8 +287,6 @@ index 2f77bc8..e86f511 100644
 +    FILE *config_file;
 +    char line_buffer[256];
 +    int ctrl = 0;
-+    char current_secret[256];
-+    memset(current_secret, 0, sizeof(current_secret));
 +
 +    /* otherwise the list will grow with each call */
 +    reset_config_variables();
@@ -299,6 +297,8 @@ index 2f77bc8..e86f511 100644
 +        return 0;
 +    }
 +
++    char current_secret[256];
++    memset(current_secret, 0, sizeof(current_secret));
 +    while (fgets(line_buffer, sizeof line_buffer, config_file)) {
 +        if(*line_buffer == '#' || isspace(*line_buffer))
 +            continue; /* skip comments and blank line. */
