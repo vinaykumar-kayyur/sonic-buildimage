@@ -106,4 +106,3 @@ class AdvertiseRouteMgr(Manager):
             return 'default', key
         else:
             return tuple(key.split('|', 1))
-        
