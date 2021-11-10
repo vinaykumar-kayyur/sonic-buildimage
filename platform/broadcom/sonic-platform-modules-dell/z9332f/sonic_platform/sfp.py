@@ -96,6 +96,13 @@ class Sfp(SfpOptoeBase):
         return self.eeprom_path
 
     @staticmethod
+    def get_name():
+        """
+        Returns native transceiver type
+        """
+        return "QSFP-DD Double Density 8X Pluggable Transceiver" if self.index < 33 else "SFP/SFP+/SFP28"
+
+    @staticmethod
     def pci_mem_read(mem, offset):
         """
         Returns the desired byte in PCI memory space
@@ -182,7 +189,7 @@ class Sfp(SfpOptoeBase):
 
                 # Mask off 4th bit for reset status
                 mask = (1 << 4)
-                reset_status = not reg_value & mask
+                reset_status = not (reg_value & mask)
         except ValueError:
             pass
 

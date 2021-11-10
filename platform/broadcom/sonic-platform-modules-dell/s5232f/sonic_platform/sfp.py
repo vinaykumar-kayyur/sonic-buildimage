@@ -46,6 +46,9 @@ class Sfp(SfpOptoeBase):
     def get_eeprom_path(self):
         return self.eeprom_path
 
+    def get_name(self):
+        return "QSFP28 or later" if self.index < 33 else "SFP/SFP+/SFP28"
+
     def pci_mem_read(self, mm, offset):
         mm.seek(offset)
         read_data_stream = mm.read(4)
