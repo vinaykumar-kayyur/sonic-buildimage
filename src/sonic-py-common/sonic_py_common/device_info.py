@@ -358,7 +358,7 @@ def get_platform_info():
         metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
         switch_type = metadata.get('switch_type')
         if switch_type:
-            hw_info_dict['switch_type'] = switch_type
+            hw_info_dict['chassis_type'] = switch_type
     except Exception:
         pass
 
