@@ -440,7 +440,7 @@ class Sfp(SfpBase):
             if ((reg_value & mask) == 0):
                 return True
         except (IOError, ValueError) as err:
-            syslog.syslog(syslog.LOG_ERR, str(e))
+            syslog.syslog(syslog.LOG_ERR, str(err))
         return False
 
     def get_model(self):
@@ -494,7 +494,7 @@ class Sfp(SfpBase):
                 reset_status = False
 
         except (IOError, ValueError) as err:
-            syslog.syslog(syslog.LOG_ERR, str(e))
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
         return reset_status
 
@@ -632,7 +632,7 @@ class Sfp(SfpBase):
                 lpmode_state = True
 
         except (IOError, ValueError) as err:
-            syslog.syslog(syslog.LOG_ERR, str(e))
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
 
         return lpmode_state
@@ -762,7 +762,7 @@ class Sfp(SfpBase):
             reg_file.close()
 
         except (IOError, ValueError) as err:
-            syslog.syslog(syslog.LOG_ERR, str(e))
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
         return True
 
@@ -800,7 +800,7 @@ class Sfp(SfpBase):
             reg_file.write(content)
             reg_file.close()
         except (IOError, ValueError) as err:
-            syslog.syslog(syslog.LOG_ERR, str(e))
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
 
         return True
