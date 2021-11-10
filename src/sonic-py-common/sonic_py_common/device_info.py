@@ -410,12 +410,12 @@ def is_multi_npu():
 
 
 def is_voq_chassis():
-    switch_type = get_platform_info().get('switch_type')
+    switch_type = get_platform_info().get('chassis_type')
     return True if switch_type and switch_type == 'voq' else False
 
 
 def is_packet_chassis():
-    switch_type = get_platform_info().get('switch_type')
+    switch_type = get_platform_info().get('chassis_type')
     return True if switch_type and switch_type == 'chassis-packet' else False
 
 
