@@ -34,6 +34,9 @@ class Sfp(SfpOptoeBase):
     def get_eeprom_path(self):
         return self.eeprom_path
 
+    def get_name(self):
+        return "QSFP+ or later"
+
     def read_eeprom(self, offset, num_bytes):
         try:
             fd = open(SFP_LOCK_FILE, "r")

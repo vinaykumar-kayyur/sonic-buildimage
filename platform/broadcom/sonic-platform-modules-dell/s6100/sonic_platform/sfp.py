@@ -31,6 +31,9 @@ class Sfp(SfpOptoeBase):
     def get_eeprom_path(self):
         return self.eeprom_path
 
+    def get_name(self):
+        return "QSFP+ or later"
+
     def get_presence(self):
         """
         Retrieves the presence of the sfp
