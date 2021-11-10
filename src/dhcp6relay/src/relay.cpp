@@ -515,14 +515,16 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
 void callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
     static uint8_t message_buffer[4096];
-    uint32_t len = recv(config->filter, message_buffer, 4096, 0);
+    int32_t len = recv(config->filter, message_buffer, 4096, 0);
     if (len <= 0) {
-        syslog(LOG_WARNING, "recv: Failed to receive data at filter socket\n");
+        syslog(LOG_WARNING, "recv: Failed to receive data at filter socket: %s\n", strerror(errno));
+        return;
     }
 
     char* ptr = (char *)message_buffer;
-    const uint8_t *current_position = (uint8_t *)ptr; 
+    const uint8_t *current_position = (uint8_t *)ptr;
     const uint8_t *tmp = NULL;
+    const uint8_t *prev = NULL;
 
     auto ether_header = parse_ether_frame(current_position, &tmp);
     current_position = tmp;
@@ -530,14 +532,19 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     auto ip_header = parse_ip6_hdr(current_position, &tmp);
     current_position = tmp;
 
+    prev = current_position;
     if (ip_header->ip6_ctlun.ip6_un1.ip6_un1_nxt != IPPROTO_UDP) {
         const struct ip6_ext *ext_header;
         do {
             ext_header = (const struct ip6_ext *)current_position;
             current_position += ext_header->ip6e_len;
+            if((current_position == prev) || (current_position >= (uint8_t *)ptr + sizeof(message_buffer))) {
+                return;
+            }
+            prev = current_position;
         }
         while (ext_header->ip6e_nxt != IPPROTO_UDP);
-    }  
+    }
 
     auto udp_header = parse_udp(current_position, &tmp);
     current_position = tmp;
@@ -675,16 +682,16 @@ void dhcp6relay_stop()
 void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
     std::vector<int> sockets;
     
-    for(std::size_t i = 0; i<vlans->size(); i++) {
-        struct relay_config config = vlans->at(i);
+    for(relay_config &vlan : *vlans) {
+        relay_config *config = &vlan;
         int filter = 0;
         int local_sock = 0; 
-        const char *ifname = config.interface.c_str();
+        const char *ifname = config->interface.c_str();
         int index = if_nametoindex(ifname);
-        config.db = db;
+        config->db = db;
 
         std::string counterVlan = counter_table;
-        initialize_counter(config.db, counterVlan.append(config.interface));
+        initialize_counter(config->db, counterVlan.append(config->interface));
 
         filter = sock_open(index, &ether_relay_fprog);
 
@@ -692,7 +699,7 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         sockets.push_back(filter);
         sockets.push_back(local_sock);
 
-        prepare_relay_config(&config, &local_sock, filter);
+        prepare_relay_config(config, &local_sock, filter);
 
         evutil_make_listen_socket_reuseable(filter);
         evutil_make_socket_nonblocking(filter);
@@ -705,8 +712,8 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
             syslog(LOG_ERR, "libevent: Failed to create base\n");
         }
 
-        listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, (void *)&config);
-        server_listen_event = event_new(base, local_sock, EV_READ|EV_PERSIST, server_callback, (void *)&config);
+        listen_event = event_new(base, filter, EV_READ|EV_PERSIST, callback, config);
+        server_listen_event = event_new(base, local_sock, EV_READ|EV_PERSIST, server_callback, config);
         if (listen_event == NULL || server_listen_event == NULL) {
             syslog(LOG_ERR, "libevent: Failed to create libevent\n");
         }

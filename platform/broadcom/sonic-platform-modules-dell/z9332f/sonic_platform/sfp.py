@@ -13,7 +13,6 @@ try:
     import re
     import time
     import subprocess
-    import struct
     import mmap
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
@@ -60,6 +59,8 @@ QSFP_DD_APP1_ADV_OFFSET = 86
 QSFP_DD_APP1_ADV_WIDTH = 32
 QSFP_DD_APP2_ADV_OFFSET = 351
 QSFP_DD_APP2_ADV_WIDTH = 28
+QSFP_DD_MODULE_ENC_OFFSET = 3
+QSFP_DD_MODULE_ENC_WIDTH = 1
 
 QSFP_INFO_OFFSET = 128
 QSFP_DOM_OFFSET = 0
@@ -311,16 +312,12 @@ class Sfp(SfpBase):
 
     def pci_mem_read(self, mm, offset):
         mm.seek(offset)
-        read_data_stream = mm.read(4)
-        reg_val = struct.unpack('I', read_data_stream)
-        mem_val = str(reg_val)[1:-2]
-        # print "reg_val read:%x"%reg_val
-        return mem_val
+        return mm.read_byte()
 
     def pci_mem_write(self, mm, offset, data):
         mm.seek(offset)
         # print "data to write:%x"%data
-        mm.write(struct.pack('I', data))
+        mm.write_byte(data)
 
     def pci_set_value(self, resource, val, offset):
         fd = os.open(resource, os.O_RDWR)
@@ -337,6 +334,15 @@ class Sfp(SfpBase):
         mm.close()
         os.close(fd)
         return val
+
+    def _write_eeprom_bytes(self, offset, num_bytes, value):
+        try:
+            with open(self.eeprom_path, mode='r+b', buffering=0) as f:
+                f.seek(offset)
+                f.write(value[0:num_bytes])
+        except (OSError, IOError):
+            return False
+        return True
 
     def _read_eeprom_bytes(self, eeprom_path, offset, num_bytes):
         eeprom_raw = []
@@ -994,7 +1000,13 @@ class Sfp(SfpBase):
         """
         lpmode_state = False
         try:
-            if self.sfp_type.startswith('QSFP'):
+            if self.sfp_type == 'QSFP_DD':
+                lpmode = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_MODULE_ENC_OFFSET, QSFP_DD_MODULE_ENC_WIDTH)
+                if lpmode is not None:
+                    if int(lpmode[0])>>1 == 1:
+                        return True
+                return False
+            else:
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)
 
@@ -1005,8 +1017,9 @@ class Sfp(SfpBase):
                 mask = (1 << 6)
 
                 lpmode_state = (reg_value & mask)
-        except  ValueError: pass
-        return lpmode_state
+        except ValueError:
+            pass
+        return bool(lpmode_state)
 
     def get_power_override(self):
         """
@@ -1231,7 +1244,14 @@ class Sfp(SfpBase):
         Sets the lpmode(low power mode) of this SFP
         """
         try:
-            if self.port_type == 'QSFP_DD':
+            if self.sfp_type == 'QSFP_DD':
+                if lpmode is True:
+                    write_val = 0x10
+                else:
+                    write_val = 0x0
+
+                self._write_eeprom_bytes(26, 1, bytearray([write_val]))
+            else:
                 # Port offset starts with 0x4000
                 port_offset = 16384 + ((self.index-1) * 16)
 
@@ -1396,3 +1416,34 @@ class Sfp(SfpBase):
             bool: True if it is replaceable.
         """
         return True
+
+    def get_error_description(self):
+        """
+        Retrives the error descriptions of the SFP module
+
+        Returns:
+            String that represents the current error descriptions of vendor specific errors
+            In case there are multiple errors, they should be joined by '|',
+            like: "Bad EEPROM|Unsupported cable"
+        """
+        if not self.get_presence():
+            return self.SFP_STATUS_UNPLUGGED
+        else:
+            if not os.path.isfile(self.eeprom_path):
+                return "EEPROM driver is not attached"
+
+            if self.sfp_type == 'SFP':
+                offset = SFP_INFO_OFFSET
+            elif self.sfp_type == 'QSFP':
+                offset = QSFP_INFO_OFFSET
+            elif self.sfp_type == 'QSFP_DD':
+                offset = QSFP_DD_PAGE0
+
+            try:
+                with open(self.eeprom_path, mode="rb", buffering=0) as eeprom:
+                    eeprom.seek(offset)
+                    eeprom.read(1)
+            except OSError as e:
+                return "EEPROM read failed ({})".format(e.strerror)
+
+        return self.SFP_STATUS_OK
