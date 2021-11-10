@@ -95,8 +95,7 @@ class Sfp(SfpOptoeBase):
         """
         return self.eeprom_path
 
-    @staticmethod
-    def get_name():
+    def get_name(self):
         """
         Returns native transceiver type
         """
