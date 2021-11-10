@@ -35,7 +35,7 @@ stages:
 - stage: Build
   pool: sonicbld
   variables:
-    CACHE_MODE: rcache
+    CACHE_MODE: none
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
       VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web,git,docker'
   jobs:
