@@ -4400,7 +4400,6 @@
     }
   },
 
-  
   "FANTRAY5_LED": {
     "dev_info": {
       "device_type": "LED",
