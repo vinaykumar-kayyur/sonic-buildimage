@@ -39,7 +39,7 @@ BASH_TACPLUS = bash-tacplus_$(BASH_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
 $(BASH_TACPLUS)_DEPENDS += $(LIBTAC_DEV)
 $(BASH_TACPLUS)_RDEPENDS += $(LIBTAC2)
 $(BASH_TACPLUS)_SRC_PATH = $(SRC_PATH)/tacacs/bash_tacplus
-SONIC_DPKG_DEBS += $(BASH_TACPLUS)
+SONIC_MAKE_DEBS += $(BASH_TACPLUS)
 
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
