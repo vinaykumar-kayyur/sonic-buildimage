@@ -12,6 +12,7 @@ try:
     import re
     import struct
     import time
+    import syslog
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -439,7 +440,7 @@ class Sfp(SfpBase):
             if ((reg_value & mask) == 0):
                 return True
         except (IOError, ValueError) as err:
-            print("Error:%s" %str(err))
+            syslog.syslog(syslog.LOG_ERR, str(e))
         return False
 
     def get_model(self):
@@ -493,7 +494,7 @@ class Sfp(SfpBase):
                 reset_status = False
 
         except (IOError, ValueError) as err:
-            print("Error:%s" %str(err))
+            syslog.syslog(syslog.LOG_ERR, str(e))
             return False
         return reset_status
 
@@ -631,7 +632,7 @@ class Sfp(SfpBase):
                 lpmode_state = True
 
         except (IOError, ValueError) as err:
-            print("Error:%s" %str(err))
+            syslog.syslog(syslog.LOG_ERR, str(e))
             return False
 
         return lpmode_state
@@ -761,7 +762,7 @@ class Sfp(SfpBase):
             reg_file.close()
 
         except (IOError, ValueError) as err:
-            print("Error:%s" %str(err))
+            syslog.syslog(syslog.LOG_ERR, str(e))
             return False
         return True
 
@@ -799,7 +800,7 @@ class Sfp(SfpBase):
             reg_file.write(content)
             reg_file.close()
         except (IOError, ValueError) as err:
-            print("Error:%s" %str(err))
+            syslog.syslog(syslog.LOG_ERR, str(e))
             return False
 
         return True
