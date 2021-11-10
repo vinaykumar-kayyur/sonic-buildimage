@@ -1558,7 +1558,7 @@
 
   "PORT1": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT1",
       "device_parent": "PORT-MUX0"
     },
@@ -1630,7 +1630,7 @@
 
   "PORT2": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT2",
       "device_parent": "PORT-MUX0"
     },
@@ -1702,7 +1702,7 @@
 
   "PORT3": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT3",
       "device_parent": "PORT-MUX0"
     },
@@ -1775,7 +1775,7 @@
 
   "PORT4": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT4",
       "device_parent": "PORT-MUX0"
     },
@@ -1848,7 +1848,7 @@
 
   "PORT5": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT5",
       "device_parent": "PORT-MUX0"
     },
@@ -1921,7 +1921,7 @@
 
   "PORT6": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT6",
       "device_parent": "PORT-MUX0"
     },
@@ -1993,7 +1993,7 @@
 
   "PORT7": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT7",
       "device_parent": "PORT-MUX0"
     },
@@ -2065,7 +2065,7 @@
 
   "PORT8": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT8",
       "device_parent": "PORT-MUX0"
     },
@@ -2137,7 +2137,7 @@
 
   "PORT9": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT9",
       "device_parent": "PORT-MUX1"
     },
@@ -2209,7 +2209,7 @@
 
   "PORT10": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT10",
       "device_parent": "PORT-MUX1"
     },
@@ -2282,7 +2282,7 @@
 
   "PORT11": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT11",
       "device_parent": "PORT-MUX1"
     },
@@ -2355,7 +2355,7 @@
 
   "PORT12": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT12",
       "device_parent": "PORT-MUX1"
     },
@@ -2428,7 +2428,7 @@
 
   "PORT13": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT13",
       "device_parent": "PORT-MUX1"
     },
@@ -2501,7 +2501,7 @@
 
   "PORT14": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT14",
       "device_parent": "PORT-MUX1"
     },
@@ -2573,7 +2573,7 @@
 
   "PORT15": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT15",
       "device_parent": "PORT-MUX1"
     },
@@ -2645,7 +2645,7 @@
 
   "PORT16": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT16",
       "device_parent": "PORT-MUX1"
     },
@@ -2717,7 +2717,7 @@
 
   "PORT17": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT17",
       "device_parent": "PORT-MUX2"
     },
@@ -2789,7 +2789,7 @@
 
   "PORT18": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT18",
       "device_parent": "PORT-MUX2"
     },
@@ -2862,7 +2862,7 @@
 
   "PORT19": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT19",
       "device_parent": "PORT-MUX2"
     },
@@ -2935,7 +2935,7 @@
 
   "PORT20": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT20",
       "device_parent": "PORT-MUX2"
     },
@@ -3008,7 +3008,7 @@
 
   "PORT21": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT21",
       "device_parent": "PORT-MUX2"
     },
@@ -3081,7 +3081,7 @@
 
   "PORT22": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT22",
       "device_parent": "PORT-MUX2"
     },
@@ -3153,7 +3153,7 @@
 
   "PORT23": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT23",
       "device_parent": "PORT-MUX2"
     },
@@ -3225,7 +3225,7 @@
 
   "PORT24": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT24",
       "device_parent": "PORT-MUX2"
     },
@@ -3297,7 +3297,7 @@
 
   "PORT25": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT25",
       "device_parent": "PORT-MUX3"
     },
@@ -3369,7 +3369,7 @@
 
   "PORT26": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT26",
       "device_parent": "PORT-MUX3"
     },
@@ -3442,7 +3442,7 @@
 
   "PORT27": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT27",
       "device_parent": "PORT-MUX3"
     },
@@ -3515,7 +3515,7 @@
 
   "PORT28": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT28",
       "device_parent": "PORT-MUX3"
     },
@@ -3588,7 +3588,7 @@
 
   "PORT29": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT29",
       "device_parent": "PORT-MUX3"
     },
@@ -3661,7 +3661,7 @@
 
   "PORT30": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT30",
       "device_parent": "PORT-MUX3"
     },
@@ -3733,7 +3733,7 @@
 
   "PORT31": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT31",
       "device_parent": "PORT-MUX3"
     },
@@ -3805,7 +3805,7 @@
 
   "PORT32": {
     "dev_info": {
-      "device_type": "SFP",
+      "device_type": "QSFP",
       "device_name": "PORT32",
       "device_parent": "PORT-MUX3"
     },

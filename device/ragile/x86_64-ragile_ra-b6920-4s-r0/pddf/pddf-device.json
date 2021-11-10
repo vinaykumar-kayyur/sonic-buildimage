@@ -2728,7 +2728,7 @@
         "attr_devname": "LC1-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
+        "attr_offset": "0x10",
         "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
@@ -2874,7 +2874,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT9",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "9"
@@ -2894,7 +2894,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT9-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT9"
     },
     "i2c": {
@@ -2913,7 +2913,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT9-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT9"
     },
     "i2c": {
@@ -2948,7 +2948,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT10",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "10"
@@ -2968,7 +2968,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT10-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT10"
     },
     "i2c": {
@@ -2987,7 +2987,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT10-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT10"
     },
     "i2c": {
@@ -3022,7 +3022,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT11",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "11"
@@ -3042,7 +3042,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT11-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT11"
     },
     "i2c": {
@@ -3061,7 +3061,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT11-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT11"
     },
     "i2c": {
@@ -3096,7 +3096,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT12",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "12"
@@ -3116,7 +3116,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT12-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT12"
     },
     "i2c": {
@@ -3135,7 +3135,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT12-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT12"
     },
     "i2c": {
@@ -3150,7 +3150,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3159,7 +3159,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3170,7 +3170,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT13",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "13"
@@ -3190,7 +3190,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT13-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT13"
     },
     "i2c": {
@@ -3209,7 +3209,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT13-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT13"
     },
     "i2c": {
@@ -3224,7 +3224,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3233,7 +3233,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3244,7 +3244,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT14",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "14"
@@ -3264,7 +3264,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT14-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT14"
     },
     "i2c": {
@@ -3283,7 +3283,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT14-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT14"
     },
     "i2c": {
@@ -3297,8 +3297,8 @@
         "attr_devname": "LC1-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3307,7 +3307,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3318,7 +3318,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT15",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "15"
@@ -3338,7 +3338,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT15-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT15"
     },
     "i2c": {
@@ -3357,7 +3357,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT15-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT15"
     },
     "i2c": {
@@ -3372,7 +3372,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3381,7 +3381,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3392,7 +3392,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT16",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "16"
@@ -3412,7 +3412,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT16-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT16"
     },
     "i2c": {
@@ -3431,7 +3431,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT16-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX1",
       "virt_parent": "PORT16"
     },
     "i2c": {
@@ -3517,7 +3517,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT17",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "17"
@@ -3537,7 +3537,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT17-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT17"
     },
     "i2c": {
@@ -3556,7 +3556,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT17-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT17"
     },
     "i2c": {
@@ -3591,7 +3591,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT18",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "18"
@@ -3611,7 +3611,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT18-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT18"
     },
     "i2c": {
@@ -3630,7 +3630,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT18-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT18"
     },
     "i2c": {
@@ -3665,7 +3665,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT19",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "19"
@@ -3685,7 +3685,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT19-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT19"
     },
     "i2c": {
@@ -3704,7 +3704,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT19-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT19"
     },
     "i2c": {
@@ -3739,7 +3739,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT20",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "20"
@@ -3759,7 +3759,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT20-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT20"
     },
     "i2c": {
@@ -3778,7 +3778,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT20-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT20"
     },
     "i2c": {
@@ -3793,7 +3793,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3802,7 +3802,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3813,7 +3813,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT21",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "21"
@@ -3833,7 +3833,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT21-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT21"
     },
     "i2c": {
@@ -3852,7 +3852,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT21-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT21"
     },
     "i2c": {
@@ -3867,7 +3867,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3876,7 +3876,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3887,7 +3887,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT22",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "22"
@@ -3907,7 +3907,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT22-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT22"
     },
     "i2c": {
@@ -3926,7 +3926,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT22-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT22"
     },
     "i2c": {
@@ -3940,8 +3940,8 @@
         "attr_devname": "LC1-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -3950,7 +3950,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -3961,7 +3961,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT23",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "23"
@@ -3981,7 +3981,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT23-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT23"
     },
     "i2c": {
@@ -4000,7 +4000,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT23-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT23"
     },
     "i2c": {
@@ -4015,7 +4015,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -4024,7 +4024,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -4035,7 +4035,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT24",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "24"
@@ -4055,7 +4055,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT24-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT24"
     },
     "i2c": {
@@ -4074,7 +4074,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT24-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX2",
       "virt_parent": "PORT24"
     },
     "i2c": {
@@ -4160,7 +4160,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT25",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "25"
@@ -4180,7 +4180,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT25-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT25"
     },
     "i2c": {
@@ -4199,7 +4199,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT25-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT25"
     },
     "i2c": {
@@ -4234,7 +4234,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT26",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "26"
@@ -4254,7 +4254,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT26-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT26"
     },
     "i2c": {
@@ -4273,7 +4273,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT26-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT26"
     },
     "i2c": {
@@ -4308,7 +4308,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT27",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "27"
@@ -4328,7 +4328,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT27-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT27"
     },
     "i2c": {
@@ -4347,7 +4347,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT27-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT27"
     },
     "i2c": {
@@ -4382,7 +4382,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT28",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "28"
@@ -4402,7 +4402,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT28-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT28"
     },
     "i2c": {
@@ -4421,7 +4421,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT28-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT28"
     },
     "i2c": {
@@ -4436,7 +4436,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -4445,7 +4445,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -4456,7 +4456,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT29",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "29"
@@ -4476,7 +4476,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT29-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT29"
     },
     "i2c": {
@@ -4495,7 +4495,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT29-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT29"
     },
     "i2c": {
@@ -4510,7 +4510,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -4519,7 +4519,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -4530,7 +4530,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT30",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "30"
@@ -4550,7 +4550,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT30-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT30"
     },
     "i2c": {
@@ -4569,7 +4569,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT30-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT30"
     },
     "i2c": {
@@ -4583,8 +4583,8 @@
         "attr_devname": "LC1-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -4593,7 +4593,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -4604,7 +4604,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT31",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "31"
@@ -4624,7 +4624,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT31-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT31"
     },
     "i2c": {
@@ -4643,7 +4643,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT31-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT31"
     },
     "i2c": {
@@ -4658,7 +4658,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -4667,7 +4667,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -4678,7 +4678,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT32",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC1-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "32"
@@ -4698,7 +4698,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT32-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT32"
     },
     "i2c": {
@@ -4717,7 +4717,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT32-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC1-PORT-MUX3",
       "virt_parent": "PORT32"
     },
     "i2c": {
@@ -4865,7 +4865,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC2-PORT-MUX0",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE2"
     },
     "i2c": {
       "topo_info": {
@@ -4916,7 +4916,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT33",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "33"
@@ -4936,7 +4936,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT33-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT33"
     },
     "i2c": {
@@ -4955,7 +4955,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT33-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT33"
     },
     "i2c": {
@@ -4990,7 +4990,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT34",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "34"
@@ -5010,7 +5010,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT34-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT34"
     },
     "i2c": {
@@ -5029,7 +5029,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT34-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT34"
     },
     "i2c": {
@@ -5064,7 +5064,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT35",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "35"
@@ -5084,7 +5084,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT35-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT35"
     },
     "i2c": {
@@ -5103,7 +5103,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT35-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT35"
     },
     "i2c": {
@@ -5138,7 +5138,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT36",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "36"
@@ -5158,7 +5158,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT36-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT36"
     },
     "i2c": {
@@ -5177,7 +5177,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT36-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT36"
     },
     "i2c": {
@@ -5192,7 +5192,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5201,7 +5201,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5212,7 +5212,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT37",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "37"
@@ -5232,7 +5232,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT37-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT37"
     },
     "i2c": {
@@ -5251,7 +5251,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT37-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT37"
     },
     "i2c": {
@@ -5266,7 +5266,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5275,7 +5275,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5286,7 +5286,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT38",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "38"
@@ -5306,7 +5306,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT38-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT38"
     },
     "i2c": {
@@ -5325,7 +5325,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT38-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT38"
     },
     "i2c": {
@@ -5339,8 +5339,8 @@
         "attr_devname": "LC2-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5349,7 +5349,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5360,7 +5360,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT39",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "39"
@@ -5380,7 +5380,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT39-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT39"
     },
     "i2c": {
@@ -5399,7 +5399,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT39-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT39"
     },
     "i2c": {
@@ -5414,7 +5414,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5423,7 +5423,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5434,7 +5434,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT40",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "40"
@@ -5454,7 +5454,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT40-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT40"
     },
     "i2c": {
@@ -5473,7 +5473,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT40-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX0",
       "virt_parent": "PORT40"
     },
     "i2c": {
@@ -5508,7 +5508,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC2-PORT-MUX1",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE2"
     },
     "i2c": {
       "topo_info": {
@@ -5559,7 +5559,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT41",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "41"
@@ -5579,7 +5579,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT41-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT41"
     },
     "i2c": {
@@ -5598,7 +5598,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT41-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT41"
     },
     "i2c": {
@@ -5633,7 +5633,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT42",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "42"
@@ -5653,7 +5653,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT42-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT42"
     },
     "i2c": {
@@ -5672,7 +5672,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT42-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT42"
     },
     "i2c": {
@@ -5707,7 +5707,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT43",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "43"
@@ -5727,7 +5727,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT43-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT43"
     },
     "i2c": {
@@ -5746,7 +5746,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT43-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT43"
     },
     "i2c": {
@@ -5781,7 +5781,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT44",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "44"
@@ -5801,7 +5801,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT44-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT44"
     },
     "i2c": {
@@ -5820,7 +5820,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT44-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT44"
     },
     "i2c": {
@@ -5835,7 +5835,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5844,7 +5844,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5855,7 +5855,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT45",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "45"
@@ -5875,7 +5875,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT45-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT45"
     },
     "i2c": {
@@ -5894,7 +5894,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT45-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT45"
     },
     "i2c": {
@@ -5909,7 +5909,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5918,7 +5918,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -5929,7 +5929,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT46",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "46"
@@ -5949,7 +5949,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT46-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT46"
     },
     "i2c": {
@@ -5968,7 +5968,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT46-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT46"
     },
     "i2c": {
@@ -5982,8 +5982,8 @@
         "attr_devname": "LC2-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -5992,7 +5992,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6003,7 +6003,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT47",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "47"
@@ -6023,7 +6023,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT47-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT47"
     },
     "i2c": {
@@ -6042,7 +6042,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT47-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT47"
     },
     "i2c": {
@@ -6057,7 +6057,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -6066,7 +6066,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6077,7 +6077,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT48",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "48"
@@ -6097,7 +6097,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT48-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT48"
     },
     "i2c": {
@@ -6116,7 +6116,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT48-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX1",
       "virt_parent": "PORT48"
     },
     "i2c": {
@@ -6151,7 +6151,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC2-PORT-MUX2",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE2"
     },
     "i2c": {
       "topo_info": {
@@ -6202,7 +6202,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT49",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "49"
@@ -6222,7 +6222,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT49-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT49"
     },
     "i2c": {
@@ -6241,7 +6241,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT49-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT49"
     },
     "i2c": {
@@ -6276,7 +6276,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT50",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "50"
@@ -6296,7 +6296,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT50-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT50"
     },
     "i2c": {
@@ -6315,7 +6315,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT50-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT50"
     },
     "i2c": {
@@ -6350,7 +6350,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT51",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "51"
@@ -6370,7 +6370,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT51-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT51"
     },
     "i2c": {
@@ -6389,7 +6389,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT51-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT51"
     },
     "i2c": {
@@ -6424,7 +6424,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT52",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "52"
@@ -6444,7 +6444,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT52-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT52"
     },
     "i2c": {
@@ -6463,7 +6463,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT52-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT52"
     },
     "i2c": {
@@ -6478,7 +6478,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -6487,7 +6487,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6498,7 +6498,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT53",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "53"
@@ -6518,7 +6518,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT53-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT53"
     },
     "i2c": {
@@ -6537,7 +6537,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT53-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT53"
     },
     "i2c": {
@@ -6552,7 +6552,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -6561,7 +6561,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6572,7 +6572,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT54",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "54"
@@ -6592,7 +6592,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT54-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT54"
     },
     "i2c": {
@@ -6611,7 +6611,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT54-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT54"
     },
     "i2c": {
@@ -6625,8 +6625,8 @@
         "attr_devname": "LC2-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -6635,7 +6635,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6646,7 +6646,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT55",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "55"
@@ -6666,7 +6666,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT55-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT55"
     },
     "i2c": {
@@ -6685,7 +6685,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT55-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT55"
     },
     "i2c": {
@@ -6700,7 +6700,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -6709,7 +6709,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -6720,7 +6720,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT56",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "56"
@@ -6740,7 +6740,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT56-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT56"
     },
     "i2c": {
@@ -6759,7 +6759,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT56-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX2",
       "virt_parent": "PORT56"
     },
     "i2c": {
@@ -6794,7 +6794,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC2-PORT-MUX3",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE2"
     },
     "i2c": {
       "topo_info": {
@@ -6845,7 +6845,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT57",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "57"
@@ -6865,7 +6865,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT57-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT57"
     },
     "i2c": {
@@ -6884,7 +6884,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT57-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT57"
     },
     "i2c": {
@@ -6919,7 +6919,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT58",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "58"
@@ -6939,7 +6939,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT58-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT58"
     },
     "i2c": {
@@ -6958,7 +6958,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT58-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT58"
     },
     "i2c": {
@@ -6993,7 +6993,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT59",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "59"
@@ -7013,7 +7013,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT59-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT59"
     },
     "i2c": {
@@ -7032,7 +7032,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT59-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT59"
     },
     "i2c": {
@@ -7067,7 +7067,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT60",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "60"
@@ -7087,7 +7087,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT60-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT60"
     },
     "i2c": {
@@ -7106,7 +7106,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT60-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT60"
     },
     "i2c": {
@@ -7121,7 +7121,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7130,7 +7130,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7141,7 +7141,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT61",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "61"
@@ -7161,7 +7161,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT61-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT61"
     },
     "i2c": {
@@ -7180,7 +7180,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT61-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT61"
     },
     "i2c": {
@@ -7195,7 +7195,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7204,7 +7204,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7215,7 +7215,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT62",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "62"
@@ -7235,7 +7235,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT62-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT62"
     },
     "i2c": {
@@ -7254,7 +7254,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT62-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT62"
     },
     "i2c": {
@@ -7268,8 +7268,8 @@
         "attr_devname": "LC2-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7278,7 +7278,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7289,7 +7289,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT63",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "63"
@@ -7309,7 +7309,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT63-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT63"
     },
     "i2c": {
@@ -7328,7 +7328,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT63-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT63"
     },
     "i2c": {
@@ -7343,7 +7343,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7352,7 +7352,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7363,7 +7363,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT64",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC2-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "64"
@@ -7383,7 +7383,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT64-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT64"
     },
     "i2c": {
@@ -7402,7 +7402,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT64-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC2-PORT-MUX3",
       "virt_parent": "PORT64"
     },
     "i2c": {
@@ -7550,7 +7550,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC3-PORT-MUX0",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE3"
     },
     "i2c": {
       "topo_info": {
@@ -7601,7 +7601,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT65",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "65"
@@ -7621,7 +7621,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT65-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT65"
     },
     "i2c": {
@@ -7640,7 +7640,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT65-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT65"
     },
     "i2c": {
@@ -7675,7 +7675,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT66",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "66"
@@ -7695,7 +7695,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT66-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT66"
     },
     "i2c": {
@@ -7714,7 +7714,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT66-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT66"
     },
     "i2c": {
@@ -7749,7 +7749,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT67",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "67"
@@ -7769,7 +7769,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT67-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT67"
     },
     "i2c": {
@@ -7788,7 +7788,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT67-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT67"
     },
     "i2c": {
@@ -7823,7 +7823,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT68",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "68"
@@ -7843,7 +7843,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT68-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT68"
     },
     "i2c": {
@@ -7862,7 +7862,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT68-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT68"
     },
     "i2c": {
@@ -7877,7 +7877,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7886,7 +7886,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7897,7 +7897,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT69",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "69"
@@ -7917,7 +7917,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT69-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT69"
     },
     "i2c": {
@@ -7936,7 +7936,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT69-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT69"
     },
     "i2c": {
@@ -7951,7 +7951,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -7960,7 +7960,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -7971,7 +7971,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT70",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "70"
@@ -7991,7 +7991,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT70-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT70"
     },
     "i2c": {
@@ -8010,7 +8010,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT70-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT70"
     },
     "i2c": {
@@ -8024,8 +8024,8 @@
         "attr_devname": "LC3-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8034,7 +8034,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8045,7 +8045,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT71",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "71"
@@ -8065,7 +8065,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT71-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT71"
     },
     "i2c": {
@@ -8084,7 +8084,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT71-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT71"
     },
     "i2c": {
@@ -8099,7 +8099,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8108,7 +8108,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8119,7 +8119,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT72",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "72"
@@ -8139,7 +8139,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT72-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT72"
     },
     "i2c": {
@@ -8158,7 +8158,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT72-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX0",
       "virt_parent": "PORT72"
     },
     "i2c": {
@@ -8193,7 +8193,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC3-PORT-MUX1",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE3"
     },
     "i2c": {
       "topo_info": {
@@ -8244,7 +8244,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT73",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "73"
@@ -8264,7 +8264,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT73-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT73"
     },
     "i2c": {
@@ -8283,7 +8283,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT73-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT73"
     },
     "i2c": {
@@ -8318,7 +8318,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT74",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "74"
@@ -8338,7 +8338,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT74-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT74"
     },
     "i2c": {
@@ -8357,7 +8357,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT74-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT74"
     },
     "i2c": {
@@ -8392,7 +8392,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT75",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "75"
@@ -8412,7 +8412,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT75-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT75"
     },
     "i2c": {
@@ -8431,7 +8431,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT75-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT75"
     },
     "i2c": {
@@ -8466,7 +8466,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT76",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "76"
@@ -8486,7 +8486,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT76-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT76"
     },
     "i2c": {
@@ -8505,7 +8505,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT76-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT76"
     },
     "i2c": {
@@ -8520,7 +8520,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8529,7 +8529,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8540,7 +8540,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT77",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "77"
@@ -8560,7 +8560,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT77-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT77"
     },
     "i2c": {
@@ -8579,7 +8579,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT77-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT77"
     },
     "i2c": {
@@ -8594,7 +8594,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8603,7 +8603,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8614,7 +8614,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT78",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "78"
@@ -8634,7 +8634,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT78-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT78"
     },
     "i2c": {
@@ -8653,7 +8653,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT78-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT78"
     },
     "i2c": {
@@ -8667,8 +8667,8 @@
         "attr_devname": "LC3-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8677,7 +8677,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8688,7 +8688,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT79",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "79"
@@ -8708,7 +8708,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT79-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT79"
     },
     "i2c": {
@@ -8727,7 +8727,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT79-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT79"
     },
     "i2c": {
@@ -8742,7 +8742,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -8751,7 +8751,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -8762,7 +8762,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT80",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "80"
@@ -8782,7 +8782,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT80-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT80"
     },
     "i2c": {
@@ -8801,7 +8801,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT80-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX1",
       "virt_parent": "PORT80"
     },
     "i2c": {
@@ -8836,7 +8836,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC3-PORT-MUX2",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE3"
     },
     "i2c": {
       "topo_info": {
@@ -8887,7 +8887,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT81",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "81"
@@ -8907,7 +8907,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT81-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT81"
     },
     "i2c": {
@@ -8926,7 +8926,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT81-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT81"
     },
     "i2c": {
@@ -8961,7 +8961,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT82",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "82"
@@ -8981,7 +8981,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT82-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT82"
     },
     "i2c": {
@@ -9000,7 +9000,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT82-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT82"
     },
     "i2c": {
@@ -9035,7 +9035,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT83",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "83"
@@ -9055,7 +9055,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT83-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT83"
     },
     "i2c": {
@@ -9074,7 +9074,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT83-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT83"
     },
     "i2c": {
@@ -9109,7 +9109,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT84",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "84"
@@ -9129,7 +9129,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT84-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT84"
     },
     "i2c": {
@@ -9148,7 +9148,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT84-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT84"
     },
     "i2c": {
@@ -9163,7 +9163,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9172,7 +9172,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9183,7 +9183,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT85",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "85"
@@ -9203,7 +9203,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT85-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT85"
     },
     "i2c": {
@@ -9222,7 +9222,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT85-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT85"
     },
     "i2c": {
@@ -9237,7 +9237,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9246,7 +9246,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9257,7 +9257,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT86",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "86"
@@ -9277,7 +9277,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT86-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT86"
     },
     "i2c": {
@@ -9296,7 +9296,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT86-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT86"
     },
     "i2c": {
@@ -9310,8 +9310,8 @@
         "attr_devname": "LC3-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9320,7 +9320,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9331,7 +9331,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT87",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "87"
@@ -9351,7 +9351,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT87-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT87"
     },
     "i2c": {
@@ -9370,7 +9370,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT87-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT87"
     },
     "i2c": {
@@ -9385,7 +9385,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9394,7 +9394,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9405,7 +9405,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT88",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "88"
@@ -9425,7 +9425,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT88-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT88"
     },
     "i2c": {
@@ -9444,7 +9444,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT88-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX2",
       "virt_parent": "PORT88"
     },
     "i2c": {
@@ -9479,7 +9479,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC3-PORT-MUX3",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE3"
     },
     "i2c": {
       "topo_info": {
@@ -9530,7 +9530,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT89",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "89"
@@ -9550,7 +9550,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT89-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT89"
     },
     "i2c": {
@@ -9569,7 +9569,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT89-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT89"
     },
     "i2c": {
@@ -9604,7 +9604,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT90",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "90"
@@ -9624,7 +9624,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT90-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT90"
     },
     "i2c": {
@@ -9643,7 +9643,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT90-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT90"
     },
     "i2c": {
@@ -9678,7 +9678,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT91",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "91"
@@ -9698,7 +9698,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT91-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT91"
     },
     "i2c": {
@@ -9717,7 +9717,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT91-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT91"
     },
     "i2c": {
@@ -9752,7 +9752,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT92",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "92"
@@ -9772,7 +9772,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT92-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT92"
     },
     "i2c": {
@@ -9791,7 +9791,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT92-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT92"
     },
     "i2c": {
@@ -9806,7 +9806,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9815,7 +9815,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9826,7 +9826,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT93",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "93"
@@ -9846,7 +9846,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT93-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT93"
     },
     "i2c": {
@@ -9865,7 +9865,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT93-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT93"
     },
     "i2c": {
@@ -9880,7 +9880,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9889,7 +9889,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9900,7 +9900,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT94",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "94"
@@ -9920,7 +9920,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT94-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT94"
     },
     "i2c": {
@@ -9939,7 +9939,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT94-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT94"
     },
     "i2c": {
@@ -9953,8 +9953,8 @@
         "attr_devname": "LC3-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -9963,7 +9963,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -9974,7 +9974,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT95",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "95"
@@ -9994,7 +9994,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT95-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT95"
     },
     "i2c": {
@@ -10013,7 +10013,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT95-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT95"
     },
     "i2c": {
@@ -10028,7 +10028,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -10037,7 +10037,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -10048,7 +10048,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT96",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC3-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "96"
@@ -10068,7 +10068,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT96-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT96"
     },
     "i2c": {
@@ -10087,7 +10087,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT96-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC3-PORT-MUX3",
       "virt_parent": "PORT96"
     },
     "i2c": {
@@ -10235,7 +10235,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC4-PORT-MUX0",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE4"
     },
     "i2c": {
       "topo_info": {
@@ -10286,7 +10286,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT97",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "97"
@@ -10306,7 +10306,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT97-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT97"
     },
     "i2c": {
@@ -10325,7 +10325,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT97-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT97"
     },
     "i2c": {
@@ -10360,7 +10360,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT98",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "98"
@@ -10380,7 +10380,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT98-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT98"
     },
     "i2c": {
@@ -10399,7 +10399,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT98-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT98"
     },
     "i2c": {
@@ -10434,7 +10434,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT99",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "99"
@@ -10454,7 +10454,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT99-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT99"
     },
     "i2c": {
@@ -10473,7 +10473,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT99-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT99"
     },
     "i2c": {
@@ -10508,7 +10508,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT100",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "100"
@@ -10528,7 +10528,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT100-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT100"
     },
     "i2c": {
@@ -10547,7 +10547,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT100-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT100"
     },
     "i2c": {
@@ -10562,7 +10562,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -10571,7 +10571,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -10582,7 +10582,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT101",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "101"
@@ -10602,7 +10602,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT101-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT101"
     },
     "i2c": {
@@ -10621,7 +10621,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT101-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT101"
     },
     "i2c": {
@@ -10636,7 +10636,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -10645,7 +10645,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -10656,7 +10656,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT102",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "102"
@@ -10676,7 +10676,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT102-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT102"
     },
     "i2c": {
@@ -10695,7 +10695,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT102-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT102"
     },
     "i2c": {
@@ -10709,8 +10709,8 @@
         "attr_devname": "LC4-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -10719,7 +10719,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -10730,7 +10730,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT103",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "103"
@@ -10750,7 +10750,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT103-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT103"
     },
     "i2c": {
@@ -10769,7 +10769,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT103-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT103"
     },
     "i2c": {
@@ -10784,7 +10784,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -10793,7 +10793,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -10804,7 +10804,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT104",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX0"
     },
     "dev_attr": {
       "dev_idx": "104"
@@ -10824,7 +10824,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT104-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT104"
     },
     "i2c": {
@@ -10843,7 +10843,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT104-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX0",
       "virt_parent": "PORT104"
     },
     "i2c": {
@@ -10878,7 +10878,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC4-PORT-MUX1",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE4"
     },
     "i2c": {
       "topo_info": {
@@ -10929,7 +10929,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT105",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "105"
@@ -10949,7 +10949,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT105-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT105"
     },
     "i2c": {
@@ -10968,7 +10968,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT105-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT105"
     },
     "i2c": {
@@ -11003,7 +11003,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT106",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "106"
@@ -11023,7 +11023,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT106-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT106"
     },
     "i2c": {
@@ -11042,7 +11042,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT106-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT106"
     },
     "i2c": {
@@ -11077,7 +11077,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT107",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "107"
@@ -11097,7 +11097,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT107-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT107"
     },
     "i2c": {
@@ -11116,7 +11116,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT107-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT107"
     },
     "i2c": {
@@ -11151,7 +11151,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT108",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "108"
@@ -11171,7 +11171,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT108-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT108"
     },
     "i2c": {
@@ -11190,7 +11190,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT108-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT108"
     },
     "i2c": {
@@ -11205,7 +11205,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11214,7 +11214,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11225,7 +11225,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT109",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "109"
@@ -11245,7 +11245,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT109-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT109"
     },
     "i2c": {
@@ -11264,7 +11264,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT109-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT109"
     },
     "i2c": {
@@ -11279,7 +11279,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11288,7 +11288,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11299,7 +11299,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT110",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "110"
@@ -11319,7 +11319,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT110-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT110"
     },
     "i2c": {
@@ -11338,7 +11338,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT110-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT110"
     },
     "i2c": {
@@ -11352,8 +11352,8 @@
         "attr_devname": "LC4-CPLD-A",
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11362,7 +11362,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11373,7 +11373,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT111",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "111"
@@ -11393,7 +11393,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT111-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT111"
     },
     "i2c": {
@@ -11412,7 +11412,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT111-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT111"
     },
     "i2c": {
@@ -11427,7 +11427,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11436,7 +11436,7 @@
         "attr_devaddr": "0x30",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11447,7 +11447,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT112",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX1"
     },
     "dev_attr": {
       "dev_idx": "112"
@@ -11467,7 +11467,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT112-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT112"
     },
     "i2c": {
@@ -11486,7 +11486,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT112-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX1",
       "virt_parent": "PORT112"
     },
     "i2c": {
@@ -11521,7 +11521,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC4-PORT-MUX2",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE4"
     },
     "i2c": {
       "topo_info": {
@@ -11572,7 +11572,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT113",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "113"
@@ -11592,7 +11592,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT113-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT113"
     },
     "i2c": {
@@ -11611,7 +11611,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT113-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT113"
     },
     "i2c": {
@@ -11646,7 +11646,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT114",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "114"
@@ -11666,7 +11666,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT114-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT114"
     },
     "i2c": {
@@ -11685,7 +11685,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT114-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT114"
     },
     "i2c": {
@@ -11720,7 +11720,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT115",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "115"
@@ -11740,7 +11740,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT115-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT115"
     },
     "i2c": {
@@ -11759,7 +11759,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT115-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT115"
     },
     "i2c": {
@@ -11794,7 +11794,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT116",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "116"
@@ -11814,7 +11814,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT116-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT116"
     },
     "i2c": {
@@ -11833,7 +11833,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT116-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT116"
     },
     "i2c": {
@@ -11848,7 +11848,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11857,7 +11857,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11868,7 +11868,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT117",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "117"
@@ -11888,7 +11888,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT117-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT117"
     },
     "i2c": {
@@ -11907,7 +11907,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT117-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT117"
     },
     "i2c": {
@@ -11922,7 +11922,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -11931,7 +11931,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -11942,7 +11942,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT118",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "118"
@@ -11962,7 +11962,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT118-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT118"
     },
     "i2c": {
@@ -11981,7 +11981,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT118-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT118"
     },
     "i2c": {
@@ -11995,8 +11995,8 @@
         "attr_devname": "LC4-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x30",
-        "attr_mask": "0x6",
+        "attr_offset": "0x10",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12005,7 +12005,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12016,7 +12016,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT119",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "119"
@@ -12036,7 +12036,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT119-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT119"
     },
     "i2c": {
@@ -12055,7 +12055,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT119-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT119"
     },
     "i2c": {
@@ -12070,7 +12070,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x10",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12079,7 +12079,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x14",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12090,7 +12090,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT120",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX2"
     },
     "dev_attr": {
       "dev_idx": "120"
@@ -12110,7 +12110,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT120-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT120"
     },
     "i2c": {
@@ -12129,7 +12129,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT120-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX2",
       "virt_parent": "PORT120"
     },
     "i2c": {
@@ -12164,7 +12164,7 @@
     "dev_info": {
       "device_type": "MUX",
       "device_name": "LC4-PORT-MUX3",
-      "device_parent": "CPLD-OCORE1"
+      "device_parent": "CPLD-OCORE4"
     },
     "i2c": {
       "topo_info": {
@@ -12215,7 +12215,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT121",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "121"
@@ -12235,7 +12235,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT121-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT121"
     },
     "i2c": {
@@ -12254,7 +12254,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT121-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT121"
     },
     "i2c": {
@@ -12289,7 +12289,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT122",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "122"
@@ -12309,7 +12309,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT122-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT122"
     },
     "i2c": {
@@ -12328,7 +12328,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT122-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT122"
     },
     "i2c": {
@@ -12363,7 +12363,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT123",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "123"
@@ -12383,7 +12383,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT123-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT123"
     },
     "i2c": {
@@ -12402,7 +12402,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT123-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT123"
     },
     "i2c": {
@@ -12437,7 +12437,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT124",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "124"
@@ -12457,7 +12457,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT124-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT124"
     },
     "i2c": {
@@ -12476,7 +12476,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT124-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT124"
     },
     "i2c": {
@@ -12491,7 +12491,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12500,7 +12500,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x4",
+        "attr_mask": "0x3",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12511,7 +12511,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT125",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "125"
@@ -12531,7 +12531,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT125-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT125"
     },
     "i2c": {
@@ -12550,7 +12550,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT125-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT125"
     },
     "i2c": {
@@ -12565,7 +12565,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12574,7 +12574,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x5",
+        "attr_mask": "0x4",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12585,7 +12585,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT126",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "126"
@@ -12605,7 +12605,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT126-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT126"
     },
     "i2c": {
@@ -12624,7 +12624,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT126-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT126"
     },
     "i2c": {
@@ -12638,8 +12638,8 @@
         "attr_devname": "LC4-CPLD-B",
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
-        "attr_offset": "0x31",
-        "attr_mask": "0x6",
+        "attr_offset": "0x11",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12648,7 +12648,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x6",
+        "attr_mask": "0x5",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12659,7 +12659,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT127",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "127"
@@ -12679,7 +12679,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT127-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT127"
     },
     "i2c": {
@@ -12698,7 +12698,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT127-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT127"
     },
     "i2c": {
@@ -12713,7 +12713,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x11",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }, {
@@ -12722,7 +12722,7 @@
         "attr_devaddr": "0x31",
         "attr_devtype": "cpld",
         "attr_offset": "0x15",
-        "attr_mask": "0x7",
+        "attr_mask": "0x6",
         "attr_cmpval": "0x0",
         "attr_len": "1"
       }]
@@ -12733,7 +12733,7 @@
     "dev_info": {
       "device_type": "QSFP",
       "device_name": "PORT128",
-      "device_parent": "LC1-PORT-MUX0"
+      "device_parent": "LC4-PORT-MUX3"
     },
     "dev_attr": {
       "dev_idx": "128"
@@ -12753,7 +12753,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT128-EEPROM",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT128"
     },
     "i2c": {
@@ -12772,7 +12772,7 @@
     "dev_info": {
       "device_type": "",
       "device_name": "PORT128-CTRL",
-      "device_parent": "LC1-PORT-MUX0",
+      "device_parent": "LC4-PORT-MUX3",
       "virt_parent": "PORT128"
     },
     "i2c": {
