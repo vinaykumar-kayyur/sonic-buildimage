@@ -351,6 +351,17 @@ def get_platform_info():
     hw_info_dict['asic_type'] = version_info['asic_type']
     hw_info_dict['asic_count'] = get_num_asics()
 
+    try:
+        config_db = ConfigDBConnector()
+        config_db.connect()
+
+        metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
+        switch_type = metadata.get('switch_type')
+        if switch_type:
+            hw_info_dict['switch_type'] = switch_type
+    except Exception:
+        pass
+
     return hw_info_dict
 
 
@@ -396,6 +407,20 @@ def get_num_npus():
 def is_multi_npu():
     num_npus = get_num_npus()
     return (num_npus > 1)
+
+
+def is_voq_chassis():
+    switch_type = get_platform_info().get('switch_type')
+    return True if switch_type and switch_type == 'voq' else False
+
+
+def is_packet_chassis():
+    switch_type = get_platform_info().get('switch_type')
+    return True if switch_type and switch_type == 'chassis-packet' else False
+
+
+def is_chassis():
+    return is_voq_chassis() or is_packet_chassis()
 
 
 def is_supervisor():
