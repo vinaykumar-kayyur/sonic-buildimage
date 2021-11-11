@@ -1383,7 +1383,11 @@
             },
             "span": {
                 "direction": "RX",
-                "dst_port": "Ethernet2"
+                "dst_port": "Ethernet2",
+                "src_port": [
+                    "Ethernet3",
+                    "Ethernet4"
+                ]
             }
         }
     },
