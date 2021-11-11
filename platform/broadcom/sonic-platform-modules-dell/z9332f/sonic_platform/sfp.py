@@ -21,6 +21,9 @@ except ImportError as err:
 
 QSFP_DD_MODULE_ENC_OFFSET = 3
 QSFP_DD_MODULE_ENC_WIDTH = 1
+QSFP_INFO_OFFSET = 128
+SFP_INFO_OFFSET = 0
+QSFP_DD_PAGE0 = 0
 
 SFP_TYPE_LIST = [
     '0x3' # SFP/SFP+/SFP28 and later
@@ -39,6 +42,7 @@ class Sfp(SfpOptoeBase):
     DELLEMC Platform-specific Sfp class
     """
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:09:00.0/resource0"
+
     _port_to_i2c_mapping = {
         1:  10,
         2:  11,
@@ -397,3 +401,34 @@ class Sfp(SfpOptoeBase):
             bool: True if it is replaceable.
         """
         return True
+
+    def get_error_description(self):
+        """
+        Retrives the error descriptions of the SFP module
+
+        Returns:
+            String that represents the current error descriptions of vendor specific errors
+            In case there are multiple errors, they should be joined by '|',
+            like: "Bad EEPROM|Unsupported cable"
+        """
+        if not self.get_presence():
+            return self.SFP_STATUS_UNPLUGGED
+        else:
+            if not os.path.isfile(self.eeprom_path):
+                return "EEPROM driver is not attached"
+
+            if self.sfp_type == 'SFP':
+                offset = SFP_INFO_OFFSET
+            elif self.sfp_type == 'QSFP':
+                offset = QSFP_INFO_OFFSET
+            elif self.sfp_type == 'QSFP_DD':
+                offset = QSFP_DD_PAGE0
+
+            try:
+                with open(self.eeprom_path, mode="rb", buffering=0) as eeprom:
+                    eeprom.seek(offset)
+                    eeprom.read(1)
+            except OSError as e:
+                return "EEPROM read failed ({})".format(e.strerror)
+
+        return self.SFP_STATUS_OK
