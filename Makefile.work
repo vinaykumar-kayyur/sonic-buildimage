@@ -274,6 +274,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            NO_PROXY=$(no_proxy) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
                            INCLUDE_DHCP_RELAY=$(INCLUDE_DHCP_RELAY) \
+                           INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
                            TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
