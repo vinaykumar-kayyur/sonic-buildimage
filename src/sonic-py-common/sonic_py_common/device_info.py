@@ -358,7 +358,7 @@ def get_platform_info():
         metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
         switch_type = metadata.get('switch_type')
         if switch_type:
-            hw_info_dict['chassis_type'] = switch_type
+            hw_info_dict['switch_type'] = switch_type
     except Exception:
         pass
 
@@ -410,12 +410,12 @@ def is_multi_npu():
 
 
 def is_voq_chassis():
-    switch_type = get_platform_info().get('chassis_type')
+    switch_type = get_platform_info().get('switch_type')
     return True if switch_type and switch_type == 'voq' else False
 
 
 def is_packet_chassis():
-    switch_type = get_platform_info().get('chassis_type')
+    switch_type = get_platform_info().get('switch_type')
     return True if switch_type and switch_type == 'chassis-packet' else False
 
 
