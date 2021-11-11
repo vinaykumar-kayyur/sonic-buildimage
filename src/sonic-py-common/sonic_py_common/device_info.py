@@ -111,7 +111,7 @@ def get_platform():
     # container in SONiC, where the /host directory is not mounted. In this
     # case the value should already be populated in Config DB so we finally
     # try reading it from there.
-    
+
     return get_localhost_info('platform')
 
 
@@ -437,7 +437,7 @@ def is_supervisor():
                 if val == '1':
                     return True
         return False
- 
+
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
