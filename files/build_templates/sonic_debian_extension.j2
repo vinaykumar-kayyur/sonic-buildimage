@@ -225,7 +225,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-utilities-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # Install customized bash version to patch bash plugin support.
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/bash_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
