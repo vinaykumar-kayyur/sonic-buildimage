@@ -4,7 +4,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2020 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2021 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -88,6 +88,7 @@ proc_release(struct inode *inode, struct file *file)
     return single_release(inode, file);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,6,0)
 static struct file_operations proc_fops = {
     owner:      THIS_MODULE,
     open:       proc_open,
@@ -95,6 +96,14 @@ static struct file_operations proc_fops = {
     llseek:     seq_lseek,
     release:    proc_release,
 };
+#else
+static struct proc_ops proc_fops = {
+    proc_open:       proc_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_release:    proc_release,
+};
+#endif
 
 int
 ngbde_procfs_init(void)
