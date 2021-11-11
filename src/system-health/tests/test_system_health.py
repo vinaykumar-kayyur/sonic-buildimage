@@ -124,7 +124,7 @@ def test_service_checker_single_asic(mock_config_db, mock_run, mock_docker_clien
     mock_ns_container.name = 'new_service'
     mock_containers.list = MagicMock(return_value=[mock_snmp_container, mock_ns_container])
     checker.check(config)
-    assert 'new_service' in checker.critical_process_dict
+    assert 'new_service' in checker.container_critical_processes
 
     assert 'new_service:snmpd' in checker._info
     assert checker._info['new_service:snmpd'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
@@ -146,10 +146,10 @@ def test_service_checker_single_asic(mock_config_db, mock_run, mock_docker_clien
     assert 'new_service:snmp-subagent' in checker._info
     assert checker._info['new_service:snmp-subagent'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
-    origin_critical_process_dict = copy.deepcopy(checker.critical_process_dict)
+    origin_container_critical_processes = copy.deepcopy(checker.container_critical_processes)
     checker.save_critical_process_cache()
     checker.load_critical_process_cache()
-    assert origin_critical_process_dict == checker.critical_process_dict
+    assert origin_container_critical_processes == checker.container_critical_processes
 
 
 
@@ -194,7 +194,7 @@ def test_service_checker_multi_asic(mock_config_db, mock_docker_client):
 
     config = Config()
     checker.check(config)
-    assert 'snmp' in checker.critical_process_dict
+    assert 'snmp' in checker.container_critical_processes
     assert 'snmp:snmpd' in checker._info
     assert checker._info['snmp:snmpd'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
     assert 'snmp0:snmpd' in checker._info

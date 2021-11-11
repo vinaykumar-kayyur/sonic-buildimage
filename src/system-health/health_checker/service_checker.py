@@ -18,7 +18,7 @@ class ServiceChecker(HealthChecker):
     Checker that checks critical system service status via monit service.
     """
 
-    # Cache file to save critical_process_dict
+    # Cache file to save container_critical_processes
     CRITICAL_PROCESS_CACHE = '/tmp/critical_process_cache'
 
     CRITICAL_PROCESSES_PATH = 'etc/supervisor/critical_processes'
@@ -43,7 +43,7 @@ class ServiceChecker(HealthChecker):
 
     def __init__(self):
         HealthChecker.__init__(self)
-        self.critical_process_dict = {}
+        self.container_critical_processes = {}
         # Containers that has invalid critical_processes file
         self.bad_containers = set()
 
@@ -53,40 +53,41 @@ class ServiceChecker(HealthChecker):
 
         self.load_critical_process_cache()
 
-    def get_expected_runnning_container_set(self, feature_table):
+    def get_expected_running_containers(self, feature_table):
         """Get a set of containers that are expected to running on SONiC
 
         Args:
             feature_table (object): FEATURE table in CONFIG_DB
 
         Returns:
-            set: A set of container names
+            expected_running_containers: A set of container names that are expected running
+            container_feature_dict: A dictionary {<container_name>:<feature_name>}
         """
-        containers = set()
+        expected_running_containers = set()
         container_feature_dict = {}
         for feature_name, feature_entry in feature_table.items():
             if feature_entry["state"] not in ["disabled", "always_disabled"]:
                 if multi_asic.is_multi_asic():
                     if feature_entry["has_global_scope"] == "True":
-                        containers.add(feature_name)
+                        expected_running_containers.add(feature_name)
                         container_feature_dict[feature_name] = feature_name
                     if feature_entry["has_per_asic_scope"] == "True":
                         num_asics = multi_asic.get_num_asics()
                         for asic_id in range(num_asics):
-                            containers.add(feature_name + str(asic_id))
+                            expected_running_containers.add(feature_name + str(asic_id))
                             container_feature_dict[feature_name + str(asic_id)] = feature_name
                 else:
-                    containers.add(feature_name)
+                    expected_running_containers.add(feature_name)
                     container_feature_dict[feature_name] = feature_name
 
-        return containers, container_feature_dict
+        return expected_running_containers, container_feature_dict
 
-    def get_current_running_container_set(self):
-        """Get current running containers, if the running container is not in self.critical_process_dict,
+    def get_current_running_containers(self):
+        """Get current running containers, if the running container is not in self.container_critical_processes,
            try get the critical process list
 
         Returns:
-            set: A set of running containers
+            running_containers: A set of running container names
         """
         DOCKER_CLIENT = docker.DockerClient(base_url='unix://var/run/docker.sock')
         running_containers = set()
@@ -96,7 +97,7 @@ class ServiceChecker(HealthChecker):
 
             for ctr in lst:
                 running_containers.add(ctr.name)
-                if ctr.name not in self.critical_process_dict:
+                if ctr.name not in self.container_critical_processes:
                     self.fill_critical_process_by_container(ctr.name)
         except docker.errors.APIError as err:
             logger.log_debug("Failed to retrieve the running container list. Error: '{}'".format(err))
@@ -104,9 +105,14 @@ class ServiceChecker(HealthChecker):
         return running_containers
 
     def get_critical_process_list_from_file(self, container, critical_processes_file):
-        """
-        @summary: Read the critical processes from CRITICAL_PROCESSES_FILE.
-        @return: A list which contain critical processes.
+        """Read critical process name list from critical processes file
+
+        Args:
+            container (str): contianer name
+            critical_processes_file (str): critical processes file path
+
+        Returns:
+            critical_process_list: A list of critical process names
         """
         critical_process_list = []
 
@@ -150,15 +156,15 @@ class ServiceChecker(HealthChecker):
             # Critical process file does not exist, the container has no critical processes.
             # This is fine, don't retry.
             logger.log_debug('Failed to get critical process file for {}, {} does not exist'.format(container, critical_processes_file))
-            self._update_critical_process_dict(container, [])
+            self._update_container_critical_processes(container, [])
             return
 
         # Get critical process list from critical_processes
         critical_process_list = self.get_critical_process_list_from_file(container, critical_processes_file)
-        self._update_critical_process_dict(container, critical_process_list)
+        self._update_container_critical_processes(container, critical_process_list)
 
-    def _update_critical_process_dict(self, container, critical_process_list):
-        self.critical_process_dict[container] = critical_process_list
+    def _update_container_critical_processes(self, container, critical_process_list):
+        self.container_critical_processes[container] = critical_process_list
         self.need_save_cache = True
 
     def _get_container_folder(self, container):
@@ -169,14 +175,14 @@ class ServiceChecker(HealthChecker):
         return container_folder.strip()
 
     def save_critical_process_cache(self):
-        """Save self.critical_process_dict to a cache file
+        """Save self.container_critical_processes to a cache file
         """
         if not self.need_save_cache:
             return
 
         self.need_save_cache = False
-        if not self.critical_process_dict:
-            # if critical_process_dict is empty, don't save it
+        if not self.container_critical_processes:
+            # if container_critical_processes is empty, don't save it
             return
 
         if os.path.exists(ServiceChecker.CRITICAL_PROCESS_CACHE):
@@ -184,7 +190,7 @@ class ServiceChecker(HealthChecker):
             os.remove(ServiceChecker.CRITICAL_PROCESS_CACHE)
 
         with open(ServiceChecker.CRITICAL_PROCESS_CACHE, 'wb+') as f:
-            pickle.dump(self.critical_process_dict, f)
+            pickle.dump(self.container_critical_processes, f)
 
     def load_critical_process_cache(self):
         if not os.path.isfile(ServiceChecker.CRITICAL_PROCESS_CACHE):
@@ -192,7 +198,7 @@ class ServiceChecker(HealthChecker):
             return
 
         with open(ServiceChecker.CRITICAL_PROCESS_CACHE, 'rb') as f:
-            self.critical_process_dict = pickle.load(f)
+            self.container_critical_processes = pickle.load(f)
 
     def reset(self):
         self._info = {}
@@ -247,12 +253,12 @@ class ServiceChecker(HealthChecker):
         config_db = swsscommon.ConfigDBConnector()
         config_db.connect()
         feature_table = config_db.get_table("FEATURE")
-        expected_running_containers, self.container_feature_dict = self.get_expected_runnning_container_set(feature_table)
-        current_running_containers = self.get_current_running_container_set()
+        expected_running_containers, self.container_feature_dict = self.get_expected_running_containers(feature_table)
+        current_running_containers = self.get_current_running_containers()
 
-        newly_disabled_containers = set(self.critical_process_dict.keys()).difference(expected_running_containers)
+        newly_disabled_containers = set(self.container_critical_processes.keys()).difference(expected_running_containers)
         for newly_disabled_container in newly_disabled_containers:
-            self.critical_process_dict.pop(newly_disabled_container)
+            self.container_critical_processes.pop(newly_disabled_container)
 
         self.save_critical_process_cache()
 
@@ -260,12 +266,12 @@ class ServiceChecker(HealthChecker):
         for container in not_running_containers:
             self.set_object_not_ok('Service', container, "Container '{}' is not running".format(container))
 
-        if not self.critical_process_dict:
+        if not self.container_critical_processes:
             # Critical process is empty, not expect
             self.set_object_not_ok('Service', 'system', 'no critical process found')
             return
 
-        for container, critical_process_list in self.critical_process_dict.items():
+        for container, critical_process_list in self.container_critical_processes.items():
             self.check_process_existence(container, critical_process_list, config, feature_table)
 
         for bad_container in self.bad_containers:
