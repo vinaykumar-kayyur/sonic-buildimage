@@ -128,17 +128,10 @@ switch_board_qsfp_lpmode() {
 install_python_api_package() {
     device="/usr/share/sonic/device"
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
-    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
     rv=$(pip3 install $device/$platform/sonic_platform-1.0-py3-none-any.whl)
-
 }
 
 remove_python_api_package() {
-    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
-    if [ $? -eq 0 ]; then
-        rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
-    fi
-
     rv=$(pip3 show sonic-platform > /dev/null 2>/dev/null)
     if [ $? -eq 0 ]; then
         rv=$(pip3 uninstall -y sonic-platform > /dev/null 2>/dev/null)
@@ -147,6 +140,10 @@ remove_python_api_package() {
 
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
+if [ ! -e /etc/sonic/sfp_lock ]; then
+    touch /etc/sonic/sfp_lock
+fi
 
 if [[ "$1" == "init" ]]; then
         depmod -a

@@ -57,7 +57,7 @@ function ebtables_config()
 
 function getMountPoint()
 {
-    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source'])" 2>/dev/null
+    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print('' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source']))" 2>/dev/null
 }
 
 function getBootType()
@@ -196,6 +196,7 @@ function postStartAction()
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
         test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss$DEV:/
         test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss$DEV:/
+        test -e /host/fast-reboot/media_config.json && docker cp /host/fast-reboot/media_config.json swss$DEV:/
         rm -fr /host/fast-reboot
     fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go

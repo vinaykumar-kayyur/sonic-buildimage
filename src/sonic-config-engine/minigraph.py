@@ -279,7 +279,7 @@ def parse_png(png, hname, dpg_ecmp_content = None):
 
                     mux_cable_ports[intf_name] = "true"
 
-        if (len(dpg_ecmp_content)):
+        if dpg_ecmp_content and (len(dpg_ecmp_content)):
             for version, content in dpg_ecmp_content.items():  # version is ipv4 or ipv6
                 fine_grained_content = formulate_fine_grained_ecmp(version, content, port_device_map, port_alias_map)  # port_alias_map
                 FG_NHG_MEMBER.update(fine_grained_content['FG_NHG_MEMBER'])
@@ -1551,6 +1551,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         del results['PORTCHANNEL_INTERFACE']
         is_storage_device = True
         results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+        # storage backend T0 have all vlan members tagged
+        for vlan in vlan_members:
+            vlan_members[vlan]["tagging_mode"] = "tagged"
     elif current_device['type'] in backend_device_types and (resource_type is None or 'Storage' in resource_type):
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
@@ -1576,6 +1579,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 sub_intf = pc_intf + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
                 vlan_sub_intfs[sub_intf] = {"admin_status" : "up"}
         results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+        # storage backend T0 have all vlan members tagged
+        for vlan in vlan_members:
+            vlan_members[vlan]["tagging_mode"] = "tagged"
     elif resource_type is not None and 'Storage' in resource_type:
         is_storage_device = True
     elif bool(vlan_sub_intfs):
@@ -1746,6 +1752,15 @@ def parse_asic_sub_role(filename, asic_name):
         if child.tag == str(QName(ns, "MetadataDeclaration")):
             sub_role, _, _, _ = parse_asic_meta(child, asic_name)
             return sub_role
+
+def parse_asic_switch_type(filename, asic_name):
+    if os.path.isfile(filename):
+        root = ET.parse(filename).getroot()
+        for child in root:
+            if child.tag == str(QName(ns, "MetadataDeclaration")):
+                _, _, switch_type, _ = parse_asic_meta(child, asic_name)
+                return switch_type
+    return None
 
 def parse_asic_meta_get_devices(root):
     local_devices = []
