@@ -39,20 +39,21 @@ def get_cpld_version(bus, i2caddr):
     return '{}'.format(hwaccess.i2c_get(bus, i2caddr, 0))
 
 def get_cpld0_version():
-    return get_cpld_version(37, 0x0d)
+    return get_cpld_version(5, 0x0d)
 
 def get_cpld1_version():
-    return get_cpld_version(36, 0x30)
+    return get_cpld_version(4, 0x30)
 
 def get_cpld2_version():
-    return get_cpld_version(36, 0x31)
+    return get_cpld_version(4, 0x31)
 
 def get_ssd_version():
     val = 'NA'
     try:
-        ssd_ver = subprocess.check_output(['ssdutil','-v'], text=True)
-    except Exception:
-        return val
+        ssd_ver = subprocess.check_output(['ssdutil', '-v'],
+                                          stderr=subprocess.STDOUT, text=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        pass
     else:
         version = re.search(r'Firmware\s*:(.*)',ssd_ver)
         if version:
@@ -63,9 +64,10 @@ def get_ssd_version():
 def get_pciephy_version():
     val = 'NA'
     try:
-        pcie_ver = subprocess.check_output('bcmcmd "pciephy fw version"', shell=True, text=True)
-    except Exception:
-        return val
+        pcie_ver = subprocess.check_output(['bcmcmd', 'pciephy fw version'],
+                                           stderr=subprocess.STDOUT, text=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        pass
     else:
         version = re.search(r'PCIe FW loader version:\s(.*)', pcie_ver)
         if version:
