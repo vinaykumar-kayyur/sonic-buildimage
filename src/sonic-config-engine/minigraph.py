@@ -37,6 +37,7 @@ chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
+backend_hwskus = ['Arista-7050QX32S-Q32', 'Arista-7050-QX-32S', 'Arista-7050-QX32']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -1546,7 +1547,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    # for storage backend subinterface info present in minigraph takes precedence over ResourceType
+    # for storage backend subinterface info present in minigraph takes precedence over hwsku
     if current_device['type'] in backend_device_types and bool(vlan_sub_intfs):
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
@@ -1555,7 +1556,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # storage backend T0 have all vlan members tagged
         for vlan in vlan_members:
             vlan_members[vlan]["tagging_mode"] = "tagged"
-    elif current_device['type'] in backend_device_types and (resource_type is None or 'Storage' in resource_type):
+    elif current_device['type'] in backend_device_types and hwsku in backend_hwskus:
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
         is_storage_device = True

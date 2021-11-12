@@ -16,8 +16,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
-        self.sample_simple_graph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
-        self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
+        self.sample_backend_graph = os.path.join(self.test_dir, 'sample-graph-backend-hwsku.xml')
         self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
 
@@ -292,11 +291,8 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "true")
 
-    def test_minigraph_storage_backend_no_resource_type(self):
-        self.verify_storage_device_set(self.sample_simple_graph)
-
-    def test_minigraph_storage_backend_resource_type(self):
-        self.verify_storage_device_set(self.sample_resource_graph)
+    def test_minigraph_storage_backend_hwsku(self):
+        self.verify_storage_device_set(self.sample_backend_graph)
 
     def test_minigraph_storage_backend_subintf(self):
         self.verify_storage_device_set(self.sample_subintf_graph)
