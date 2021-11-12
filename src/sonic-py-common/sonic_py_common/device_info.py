@@ -575,6 +575,7 @@ def get_system_routing_stack():
 
     return result
 
+
 # Check if System warm reboot or Container warm restart is enabled.
 def is_warm_restart_enabled(container_name):
     state_db = SonicV2Connector(host='127.0.0.1')
@@ -595,6 +596,7 @@ def is_warm_restart_enabled(container_name):
 
     state_db.close(state_db.STATE_DB)
     return wr_enable_state
+
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
