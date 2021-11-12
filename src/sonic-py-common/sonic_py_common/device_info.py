@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 import subprocess
@@ -7,7 +8,7 @@ import yaml
 from natsort import natsorted
 
 # TODO: Replace with swsscommon
-from swsssdk import ConfigDBConnector, SonicDBConfig
+from swsssdk import ConfigDBConnector, SonicDBConfig, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
@@ -28,8 +29,16 @@ HWSKU_JSON_FILE = 'hwsku.json'
 NPU_NAME_PREFIX = "asic"
 NAMESPACE_PATH_GLOB = "/run/netns/*"
 ASIC_CONF_FILENAME = "asic.conf"
+PLATFORM_ENV_CONF_FILENAME = "platform_env.conf"
 FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
+
+# Chassis STATE_DB keys
+CHASSIS_INFO_TABLE = 'CHASSIS_INFO|chassis {}'
+CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
+CHASSIS_INFO_SERIAL_FIELD = 'serial'
+CHASSIS_INFO_MODEL_FIELD = 'model'
+CHASSIS_INFO_REV_FIELD = 'revision'
 
 
 def get_localhost_info(field):
@@ -156,6 +165,29 @@ def get_asic_conf_file_path():
     return None
 
 
+def get_platform_env_conf_file_path():
+    """
+    Retrieves the path to the PLATFORM ENV conguration file on the device
+
+    Returns:
+        A string containing the path to the PLATFORM ENV conguration file on success,
+        None on failure
+    """
+    platform_env_conf_path_candidates = []
+
+    platform_env_conf_path_candidates.append(os.path.join(CONTAINER_PLATFORM_PATH, PLATFORM_ENV_CONF_FILENAME))
+
+    platform = get_platform()
+    if platform:
+        platform_env_conf_path_candidates.append(os.path.join(HOST_DEVICE_PATH, platform, PLATFORM_ENV_CONF_FILENAME))
+
+    for platform_env_conf_file_path in platform_env_conf_path_candidates:
+        if os.path.isfile(platform_env_conf_file_path):
+            return platform_env_conf_file_path
+
+    return None
+
+
 def get_path_to_platform_dir():
     """
     Retreives the paths to the device's platform directory
@@ -255,8 +287,21 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
 
     # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
     # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    """
+    This length check for interfaces in platform.json is performed to make sure
+    the cfggen does not fail if port configuration information is not present
+    TODO: once platform.json has all the necessary port config information
+          remove this check
+    """
+
     if os.path.isfile(hwsku_json_file):
-        port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
+        if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+            json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+            platform_data = json.loads(open(json_file).read())
+            interfaces = platform_data.get('interfaces', None)
+            if interfaces is not None and len(interfaces) > 0:
+                port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
     if asic:
@@ -283,6 +328,52 @@ def get_sonic_version_info():
 
     return data
 
+def get_sonic_version_file():
+    if not os.path.isfile(SONIC_VERSION_YAML_PATH):
+        return None
+
+    return SONIC_VERSION_YAML_PATH
+
+
+# Get hardware information
+def get_platform_info():
+    """
+    This function is used to get the HW info helper function
+    """
+    from .multi_asic import get_num_asics
+
+    hw_info_dict = {}
+
+    version_info = get_sonic_version_info()
+
+    hw_info_dict['platform'] = get_platform()
+    hw_info_dict['hwsku'] = get_hwsku()
+    hw_info_dict['asic_type'] = version_info['asic_type']
+    hw_info_dict['asic_count'] = get_num_asics()
+
+    return hw_info_dict
+
+
+def get_chassis_info():
+    """
+    This function is used to get the Chassis serial / model / rev number
+    """
+
+    chassis_info_dict = {}
+
+    try:
+        # Init statedb connection
+        db = SonicV2Connector()
+        db.connect(db.STATE_DB)
+        table = CHASSIS_INFO_TABLE.format(1)
+
+        chassis_info_dict['serial'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_FIELD)
+        chassis_info_dict['model'] = db.get(db.STATE_DB, table, CHASSIS_INFO_MODEL_FIELD)
+        chassis_info_dict['revision'] = db.get(db.STATE_DB, table, CHASSIS_INFO_REV_FIELD)
+    except Exception:
+        pass
+
+    return chassis_info_dict
 
 #
 # Multi-NPU functionality
@@ -306,6 +397,22 @@ def is_multi_npu():
     num_npus = get_num_npus()
     return (num_npus > 1)
 
+
+def is_supervisor():
+    platform_env_conf_file_path = get_platform_env_conf_file_path()
+    if platform_env_conf_file_path is None:
+        return False
+    with open(platform_env_conf_file_path) as platform_env_conf_file:
+        for line in platform_env_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0].lower() == 'supervisor':
+                val = tokens[1].strip()
+                if val == '1':
+                    return True
+        return False
+ 
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
@@ -377,9 +484,22 @@ def get_system_mac(namespace=None):
     elif (version_info['asic_type'] == 'marvell'):
         # Try valid mac in eeprom, else fetch it from eth0
         platform = get_platform()
-        hwsku = get_hwsku()
-        profile_cmd = 'cat' + HOST_DEVICE_PATH + '/' + platform +'/'+ hwsku +'/profile.ini | grep switchMacAddress | cut -f2 -d='
-        hw_mac_entry_cmds = [ profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
+        machine_key = "onie_machine"
+        machine_vars = get_machine_info()
+        if machine_vars is not None and machine_key in machine_vars:
+            hwsku = machine_vars[machine_key]
+            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini | grep switchMacAddress | cut -f2 -d='
+        else:
+            profile_cmd = "false"
+        hw_mac_entry_cmds = ["sudo decode-syseeprom -m", profile_cmd, "ip link show eth0 | grep ether | awk '{print $2}'"]
+    elif (version_info['asic_type'] == 'cisco-8000'):
+        # Try to get valid MAC from profile.ini first, else fetch it from syseeprom or eth0
+        platform = get_platform()
+        if namespace is not None:
+            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/profile.ini | grep ' + namespace + 'switchMacAddress | cut -f2 -d='
+        else:
+            profile_cmd = "false"
+        hw_mac_entry_cmds = [profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'"]
     else:
         mac_address_cmd = "cat /sys/class/net/eth0/address"
         if namespace is not None:
@@ -388,7 +508,7 @@ def get_system_mac(namespace=None):
         hw_mac_entry_cmds = [mac_address_cmd]
 
     for get_mac_cmd in hw_mac_entry_cmds:
-        proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(get_mac_cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (mac, err) = proc.communicate()
         if err:
             continue
@@ -420,6 +540,7 @@ def get_system_routing_stack():
         proc = subprocess.Popen(command,
                                 stdout=subprocess.PIPE,
                                 shell=True,
+                                universal_newlines=True,
                                 stderr=subprocess.STDOUT)
         stdout = proc.communicate()[0]
         proc.wait()
@@ -428,3 +549,38 @@ def get_system_routing_stack():
         raise OSError("Cannot detect routing stack")
 
     return result
+
+# Check if System warm reboot or Container warm restart is enabled.
+def is_warm_restart_enabled(container_name):
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
+
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+
+    # Get the system warm reboot enable state
+    _hash = '{}{}'.format(prefix, 'system')
+    wr_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state = True if wr_system_state == "true" else False
+
+    # Get the container warm reboot enable state
+    _hash = '{}{}'.format(prefix, container_name)
+    wr_container_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state |= True if wr_container_state == "true" else False
+
+    state_db.close(state_db.STATE_DB)
+    return wr_enable_state
+
+# Check if System fast reboot is enabled.
+def is_fast_reboot_enabled():
+    fb_system_state = 0
+    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
+    proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = proc.communicate()
+
+    if proc.returncode != 0:
+        log.log_error("Error running command '{}'".format(cmd))
+    elif stdout:
+        fb_system_state = stdout.rstrip('\n')
+
+    return fb_system_state

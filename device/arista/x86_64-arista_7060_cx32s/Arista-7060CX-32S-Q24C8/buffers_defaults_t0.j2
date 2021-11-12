@@ -2,22 +2,7 @@
 
 {%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
-    {%- for port_idx in range(0,6) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(10,22) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(24,32) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(6,10) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(22,24) %}
+    {%- for port_idx in range(0,32) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
     {%- endfor %}
 {%- endmacro %}
@@ -43,17 +28,17 @@
     },
     "BUFFER_PROFILE": {
         "ingress_lossy_profile": {
-            "pool":"[BUFFER_POOL|ingress_lossless_pool]",
+            "pool":"ingress_lossless_pool",
             "size":"0",
             "dynamic_th":"3"
         },
         "egress_lossless_profile": {
-            "pool":"[BUFFER_POOL|egress_lossless_pool]",
+            "pool":"egress_lossless_pool",
             "size":"1518",
             "static_th":"15982720"
         },
         "egress_lossy_profile": {
-            "pool":"[BUFFER_POOL|egress_lossy_pool]",
+            "pool":"egress_lossy_pool",
             "size":"1518",
             "dynamic_th":"3"
         }

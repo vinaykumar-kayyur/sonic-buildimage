@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: ksal.c,v 1.1 Broadcom SDK $
@@ -180,9 +191,9 @@ sal_sem_give(sal_sem_t b)
 uint32
 sal_time_usecs(void)
 {
-    struct timeval ltv;
-    do_gettimeofday(&ltv);
-    return (ltv.tv_sec * SECOND_USEC + ltv.tv_usec);
+    // ktime_to_us and ktime_get_real_ns return 64-bit integets, but this
+    // function is returning a 32-bit integer. This should be fine until 2038.
+    return ktime_to_us(ktime_get_real_ns());
 }
     
 void

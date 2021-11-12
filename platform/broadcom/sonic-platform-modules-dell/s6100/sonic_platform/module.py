@@ -51,6 +51,7 @@ class Module(ModuleBase):
       }
 
     def __init__(self, module_index):
+        ModuleBase.__init__(self)
         # Modules are 1-based in DellEMC platforms
         self.index = module_index + 1
         self.port_start = (self.index - 1) * 16
@@ -61,13 +62,8 @@ class Module(ModuleBase):
         self.iom_status_reg = "iom_status"
         self.iom_presence_reg = "iom_presence"
 
-        # Overriding _component_list and _sfp_list class variables defined in
-        # ModuleBase, to make them unique per Module object
-        self._component_list = []
-        self._sfp_list = []
-
         component = Component(is_module=True, iom_index=self.index,
-                              i2c_line=self.port_i2c_line)
+                              i2c_line=self.port_i2c_line, dependency=self)
         self._component_list.append(component)
 
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/i2c-{1}/{1}-0050/eeprom"
@@ -161,6 +157,23 @@ class Module(ModuleBase):
 
         return status
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether Module is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the module
@@ -171,15 +184,6 @@ class Module(ModuleBase):
         """
         # In S6100, individual modules doesn't have MAC address
         return '00:00:00:00:00:00'
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the module
-
-        Returns:
-            A string containing the hardware serial number for this module.
-        """
-        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """

@@ -1,23 +1,44 @@
-#!/usr/bin/env python
-
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #############################################################################
 # Mellanox
 #
 # implementation of new platform api
 #############################################################################
-from __future__ import print_function
 
 
 try:
     import os
     import io
     import re
+    import sys
     import glob
     import tempfile
     import subprocess
-    import ConfigParser
+    if sys.version_info[0] > 2:
+        import configparser
+    else:
+        import ConfigParser as configparser
 
-    from sonic_platform_base.component_base import ComponentBase
+    from sonic_platform_base.component_base import ComponentBase,           \
+                                                    FW_AUTO_INSTALLED,      \
+                                                    FW_AUTO_ERR_BOOT_TYPE,  \
+                                                    FW_AUTO_ERR_IMAGE,      \
+                                                    FW_AUTO_ERR_UKNOWN
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -52,7 +73,7 @@ class MPFAManager(object):
         contents_path = tempfile.mkdtemp(prefix='mpfa-')
 
         cmd = self.MPFA_EXTRACT_COMMAND.format(mpfa_path, contents_path)
-        subprocess.check_call(cmd.split())
+        subprocess.check_call(cmd.split(), universal_newlines=True)
 
         self.__contents_path = contents_path
 
@@ -62,7 +83,7 @@ class MPFAManager(object):
         if not os.path.isfile(metadata_path):
             raise RuntimeError("MPFA metadata doesn't exist: path={}".format(metadata_path))
 
-        cp = ConfigParser.ConfigParser()
+        cp = configparser.ConfigParser()
         with io.open(metadata_path, 'r') as metadata_ini:
             cp.readfp(metadata_ini)
 
@@ -79,7 +100,7 @@ class MPFAManager(object):
     def cleanup(self):
         if os.path.exists(self.__contents_path):
             cmd = self.MPFA_CLEANUP_COMMAND.format(self.__contents_path)
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
 
         self.__contents_path = None
         self.__metadata = None
@@ -117,11 +138,14 @@ class ONIEUpdater(object):
             self.__umount_onie_fs()
 
         cmd = "fdisk -l | grep 'ONIE boot' | awk '{print $1}'"
-        fs_path = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True).rstrip('\n')
+        fs_path = subprocess.check_output(cmd, 
+                                          stderr=subprocess.STDOUT, 
+                                          shell=True, 
+                                          universal_newlines=True).rstrip('\n')
 
         os.mkdir(fs_mountpoint)
         cmd = "mount -n -r -t ext4 {} {}".format(fs_path, fs_mountpoint)
-        subprocess.check_call(cmd, shell=True)
+        subprocess.check_call(cmd, shell=True, universal_newlines=True)
 
         fs_onie_path = os.path.join(fs_mountpoint, 'onie/tools/lib/onie')
         os.symlink(fs_onie_path, onie_path)
@@ -137,7 +161,7 @@ class ONIEUpdater(object):
 
         if os.path.ismount(fs_mountpoint):
             cmd = "umount -rf {}".format(fs_mountpoint)
-            subprocess.check_call(cmd, shell=True)
+            subprocess.check_call(cmd, shell=True, universal_newlines=True)
 
         if os.path.exists(fs_mountpoint):
             os.rmdir(fs_mountpoint)
@@ -146,7 +170,7 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_ADD.format(image_path)
 
         try:
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to stage firmware update: {}".format(str(e)))
 
@@ -154,7 +178,7 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_REMOVE.format(os.path.basename(image_path))
 
         try:
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to unstage firmware update: {}".format(str(e)))
 
@@ -162,7 +186,7 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
 
         try:
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to trigger firmware update: {}".format(str(e)))
 
@@ -170,7 +194,9 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
-            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            output = subprocess.check_output(cmd.split(), 
+                                             stderr=subprocess.STDOUT, 
+                                             universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get pending firmware updates: {}".format(str(e)))
 
@@ -255,7 +281,9 @@ class ONIEUpdater(object):
             cmd = self.ONIE_IMAGE_INFO_COMMAND.format(image_path)
 
             try:
-                output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+                output = subprocess.check_output(cmd.split(), 
+                                                 stderr=subprocess.STDOUT, 
+                                                 universal_newlines=True).rstrip('\n')
             except subprocess.CalledProcessError as e:
                 raise RuntimeError("Failed to get ONIE firmware info: {}".format(str(e)))
 
@@ -275,7 +303,9 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
-            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            output = subprocess.check_output(cmd.split(), 
+                                             stderr=subprocess.STDOUT, 
+                                             universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get pending firmware updates: {}".format(str(e)))
 
@@ -311,6 +341,7 @@ class ONIEUpdater(object):
 
 class Component(ComponentBase):
     def __init__(self):
+        super(Component, self).__init__()
         self.name = None
         self.description = None
         self.image_ext_name = None
@@ -320,6 +351,30 @@ class Component(ComponentBase):
 
     def get_description(self):
         return self.description
+
+    def auto_update_firmware(self, image_path, boot_action):
+        """
+        Default handling of attempted automatic update for a component of a Mellanox switch.
+        Will skip the installation if the boot_action is 'warm' or 'fast' and will call update_firmware()
+        if boot_action is fast.
+        """
+
+        default_supported_boot = ['cold']
+
+        # Verify image path exists
+        if not os.path.exists(image_path):
+            # Invalid image path
+            return FW_AUTO_ERR_IMAGE
+
+        if boot_action in default_supported_boot:
+            if self.update_firmware(image_path):
+                # Successful update
+                return FW_AUTO_INSTALLED
+            # Failed update (unknown reason)
+            return FW_AUTO_ERR_UKNOWN
+
+        # boot_type did not match (skip)
+        return FW_AUTO_ERR_BOOT_TYPE
 
     @staticmethod
     def _read_generic_file(filename, len, ignore_errors=False):
@@ -340,7 +395,11 @@ class Component(ComponentBase):
     @staticmethod
     def _get_command_result(cmdline):
         try:
-            proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen(cmdline, 
+                                    stdout=subprocess.PIPE, 
+                                    shell=True, 
+                                    stderr=subprocess.STDOUT, 
+                                    universal_newlines=True)
             stdout = proc.communicate()[0]
             rc = proc.wait()
             result = stdout.rstrip('\n')
@@ -361,10 +420,6 @@ class Component(ComponentBase):
         if self.image_ext_name is not None:
             if name_list[1] != self.image_ext_name:
                 print("ERROR: Extend name of file {} is wrong. Image for {} should have extend name {}".format(image_path, self.name, self.image_ext_name))
-                return False
-        else:
-            if name_list[1]:
-                print("ERROR: Extend name of file {} is wrong. Image for {} shouldn't have extension".format(image_path, self.name))
                 return False
 
         return True
@@ -445,18 +500,54 @@ class ComponentSSD(Component):
 
         try:
             print("INFO: Installing {} firmware update".format(self.name))
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
         except subprocess.CalledProcessError as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
 
         return True
 
+    def auto_update_firmware(self, image_path, boot_action):
+        """
+        Handling of attempted automatic update for a SSD of a Mellanox switch.
+        Will first check the image_path to determine if a post-install reboot is required, 
+        then compares it against boot_action to determine whether to proceed with install.
+        """
+
+        # All devices support cold boot
+        supported_boot = ['cold']
+
+        # Verify image path exists
+        if not os.path.exists(image_path):
+            # Invalid image path
+            return FW_AUTO_ERR_IMAGE
+
+        # Check if post_install reboot is required
+        try:
+            if self.get_firmware_update_notification(image_path) is None:
+                # No power cycle required
+                supported_boot += ['warm', 'fast', 'none', 'any']
+        except RuntimeError:
+            # Unknown error from firmware probe
+            return FW_AUTO_ERR_UKNOWN
+
+        if boot_action in supported_boot:
+            if self.update_firmware(image_path):
+                # Successful update
+                return FW_AUTO_INSTALLED
+            # Failed update (unknown reason)
+            return FW_AUTO_ERR_UKNOWN
+
+        # boot_type did not match (skip)
+        return FW_AUTO_ERR_BOOT_TYPE
+
     def get_firmware_version(self):
         cmd = self.SSD_INFO_COMMAND
 
         try:
-            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            output = subprocess.check_output(cmd.split(), 
+                                             stderr=subprocess.STDOUT, 
+                                             universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} info: {}".format(self.name, str(e)))
 
@@ -470,7 +561,9 @@ class ComponentSSD(Component):
         cmd = self.SSD_FIRMWARE_INFO_COMMAND.format(image_path)
 
         try:
-            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            output = subprocess.check_output(cmd.split(), 
+                                             stderr=subprocess.STDOUT, 
+                                             universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} firmware info: {}".format(self.name, str(e)))
 
@@ -503,7 +596,9 @@ class ComponentSSD(Component):
         cmd = self.SSD_FIRMWARE_INFO_COMMAND.format(image_path)
 
         try:
-            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            output = subprocess.check_output(cmd.split(), 
+                                             stderr=subprocess.STDOUT, 
+                                             universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} firmware info: {}".format(self.name, str(e)))
 
@@ -575,7 +670,9 @@ class ComponentBIOS(Component):
         cmd = self.BIOS_VERSION_COMMAND
 
         try:
-            version = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT).rstrip('\n')
+            version = subprocess.check_output(cmd.split(), 
+                                              stderr=subprocess.STDOUT, 
+                                              universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} version: {}".format(self.name, str(e)))
 
@@ -652,7 +749,7 @@ class ComponentCPLD(Component):
 
         try:
             print("INFO: Installing {} firmware update: path={}".format(self.name, image_path))
-            subprocess.check_call(cmd.split())
+            subprocess.check_call(cmd.split(), universal_newlines=True)
         except subprocess.CalledProcessError as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
@@ -721,7 +818,7 @@ class ComponentCPLD(Component):
         cpld_number = cls._read_generic_file(cls.CPLD_NUMBER_FILE, cls.CPLD_NUMBER_MAX_LENGTH)
         cpld_number = cpld_number.rstrip('\n')
 
-        for cpld_idx in xrange(1, int(cpld_number) + 1):
+        for cpld_idx in range(1, int(cpld_number) + 1):
             component_list.append(cls(cpld_idx))
 
         return component_list

@@ -1,5 +1,19 @@
-#!/usr/bin/env python
-
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 """
 Mellanox
 
@@ -63,6 +77,7 @@ class WatchdogImplBase(WatchdogBase):
         Open a watchdog handle
         @param wd_device_path Path to watchdog device
         """
+        super(WatchdogImplBase, self).__init__()
 
         self.watchdog_path = wd_device_path
         self.watchdog = os.open(self.watchdog_path, os.O_WRONLY)
@@ -275,6 +290,9 @@ def get_watchdog():
     for device in os.listdir("/dev/"):
         if device.startswith("watchdog") and is_mlnx_wd_main(device):
             watchdog_main_device_name = device
+
+    if watchdog_main_device_name is None:
+        return None
 
     watchdog_device_path = "/dev/{}".format(watchdog_main_device_name)
 

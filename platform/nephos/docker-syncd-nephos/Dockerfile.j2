@@ -1,6 +1,7 @@
 FROM docker-config-engine-stretch
 
 ARG docker_container_name
+
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 ## Make apt-get non-interactive
@@ -43,4 +44,4 @@ COPY ["critical_processes", "/etc/supervisor/"]
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]

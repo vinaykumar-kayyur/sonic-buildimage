@@ -22,18 +22,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
-    import sys, getopt
-    import subprocess
-    import click
-    import imp
+    import getopt
+    import sys
     import logging
     import logging.config
     import logging.handlers
-    import types
     import time  # this is only being used as part of the example
-    import traceback
-    from tabulate import tabulate
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -123,7 +117,7 @@ class device_monitor(object):
             try:
                 val_file = open(node)
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)          
+                print("Error: unable to open file: %s" % str(e))          
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
@@ -144,7 +138,7 @@ class device_monitor(object):
             try:
                 val_file = open(node)
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)          
+                print("Error: unable to open file: %s" % str(e))          
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
@@ -170,11 +164,11 @@ def main(argv):
         try:
             opts, args = getopt.getopt(argv,'hdl:',['lfile='])
         except getopt.GetoptError:
-            print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
             return 0
         for opt, arg in opts:
             if opt == '-h':
-                print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
                 return 0
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG

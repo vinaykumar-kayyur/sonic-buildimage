@@ -174,6 +174,9 @@
 /* Mailbox PowerOn Reason */
 #define TRACK_POWERON_REASON    0x05FF
 
+/* System Status LED */
+#define SYSTEM_STATUS_LED       0x04DF
+
 /* CPU Set IO Modules */
 #define CPU_IOM1_CTRL_FLAG 0x04D9
 #define CPU_IOM2_CTRL_FLAG 0x04DA
@@ -607,6 +610,44 @@ static ssize_t show_mb_poweron_reason(struct device *dev,
     return sprintf(buf, "0x%x\n", ret);
 }
 
+/* System Status LED */
+static ssize_t set_sys_status_led(struct device *dev,
+              struct device_attribute *devattr, const char *buf, size_t count)
+{
+    int              err = 0;
+    unsigned int     dev_data = 0;
+    struct smf_data *data = dev_get_drvdata(dev);
+
+    if (data->kind == z9100smf)
+	return -1;
+
+    err = kstrtouint(buf, 16, &dev_data);
+    if (err)
+        return err;
+
+    err = smf_write_reg(data, SYSTEM_STATUS_LED, dev_data);
+    if(err < 0)
+	return err;
+
+    return count;
+}
+
+static ssize_t show_sys_status_led(struct device *dev,
+                struct device_attribute *devattr, char *buf)
+{
+    unsigned int     ret = 0;
+    struct smf_data *data = dev_get_drvdata(dev);
+
+    if (data->kind == z9100smf)
+	return 0;
+
+    ret = smf_read_reg(data, SYSTEM_STATUS_LED);
+    if(ret < 0)
+       return ret;
+
+    return sprintf(buf, "0x%x\n", ret);
+}
+
 /* FANIN ATTR */
 static ssize_t
 show_fan_label(struct device *dev, struct device_attribute *attr, char *buf)
@@ -718,18 +759,13 @@ static ssize_t show_fan_airflow(struct device *dev,
 {
         int index = to_sensor_dev_attr(devattr)->index;
         struct smf_data *data = dev_get_drvdata(dev);
-        int ret=1, fan_airflow;
+        int ret, fan_airflow;
 
         if (data->kind == s6100smf && index == FAN_TRAY_5)
                 return 0;
 
         fan_airflow = smf_read_reg(data, FAN_TRAY_AIRFLOW);
-
-        if (fan_airflow & (1 << (index)))
-                ret=1;
-
-        if (ret < 0)
-                return ret;
+        ret = (fan_airflow >> index) & 1;
 
         return sprintf(buf, "%d\n", ret);  
 }
@@ -2086,12 +2122,17 @@ static SENSOR_DEVICE_ATTR(smf_poweron_reason, S_IRUGO,
 static SENSOR_DEVICE_ATTR(mb_poweron_reason, S_IRUGO|S_IWUSR,
                             show_mb_poweron_reason, set_mb_poweron_reason, 0);
 
+/* System Status LED */
+static SENSOR_DEVICE_ATTR(sys_status_led, S_IRUGO|S_IWUSR,
+                            show_sys_status_led, set_sys_status_led, 0);
+
 static struct attribute *smf_dell_attrs[] = {
         &sensor_dev_attr_smf_version.dev_attr.attr,
         &sensor_dev_attr_smf_firmware_ver.dev_attr.attr,
         &sensor_dev_attr_smf_reset_reason.dev_attr.attr,
         &sensor_dev_attr_smf_poweron_reason.dev_attr.attr,
         &sensor_dev_attr_mb_poweron_reason.dev_attr.attr,
+        &sensor_dev_attr_sys_status_led.dev_attr.attr,
         &sensor_dev_attr_fan_tray_presence.dev_attr.attr,
         &sensor_dev_attr_fan1_airflow.dev_attr.attr,
         &sensor_dev_attr_fan3_airflow.dev_attr.attr,

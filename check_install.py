@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import pexpect
 import argparse
+import pexpect
 import sys
 import time
+
 
 def main():
 
@@ -21,16 +22,16 @@ def main():
 
     login_prompt = 'sonic login:'
     passwd_prompt = 'Password:'
-    cmd_prompt = "%s@sonic:~\$ $" % args.u
+    cmd_prompt = "{}@sonic:~\$ $".format(args.u)
     grub_selection = "The highlighted entry will be executed"
 
     i = 0
     while True:
         try:
-            p = pexpect.spawn("telnet 127.0.0.1 %s" % args.p, timeout=600, logfile=sys.stdout)
+            p = pexpect.spawn("telnet 127.0.0.1 {}".format(args.p), timeout=600, logfile=sys.stdout, encoding='utf-8')
             break
         except Exception as e:
-            print str(e)
+            print(str(e))
             i += 1
             if i == 10:
                 raise
@@ -57,12 +58,15 @@ def main():
 
     # check version
     time.sleep(5)
+    p.sendline('uptime')
+    p.expect([cmd_prompt])
     p.sendline('show version')
     p.expect([cmd_prompt])
     p.sendline('show ip bgp sum')
     p.expect([cmd_prompt])
     p.sendline('sync')
     p.expect([cmd_prompt])
+
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2016-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 include $(PLATFORM_PATH)/sdk.mk
 include $(PLATFORM_PATH)/fw.mk
 include $(PLATFORM_PATH)/mft.mk
@@ -9,7 +25,6 @@ include $(PLATFORM_PATH)/docker-syncd-mlnx-rpc.mk
 include $(PLATFORM_PATH)/docker-saiserver-mlnx.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
-include $(PLATFORM_PATH)/docker-ptf-mlnx.mk
 include $(PLATFORM_PATH)/mlnx-ffb.mk
 include $(PLATFORM_PATH)/issu-version.mk
 include $(PLATFORM_PATH)/mlnx-onie-fw-update.mk
@@ -31,3 +46,5 @@ $(SYNCD)_RDEPENDS += $(MLNX_SAI)
 
 # Inject mlnx sdk libs to platform monitor
 $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(APPLIBS) $(SX_COMPLIB) $(SXD_LIBS) $(SX_GEN_UTILS) $(PYTHON_SDK_API) $(APPLIBS_DEV) $(SX_COMPLIB_DEV) $(SXD_LIBS_DEV) $(SX_GEN_UTILS_DEV)
+
+export SONIC_BUFFER_MODEL=dynamic

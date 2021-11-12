@@ -1,9 +1,7 @@
 import os
 import subprocess
 
-
-from app.config import ConfigMgr
-from .test_templates import compress_comments, write_result
+from bgpcfgd.config import ConfigMgr
 
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
@@ -14,12 +12,11 @@ CONSTANTS_PATH = os.path.abspath('../../files/image_config/constants/constants.y
 def run_test(name, template_path, json_path, match_path):
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
-    cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
-    command = [cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
+    command = ['sonic-cfggen', "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
     p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, "sonic-cfggen for %s test returned %d code. stderr='%s'" % (name, p.returncode, stderr)
-    raw_generated_result = stdout
+    raw_generated_result = stdout.decode("ascii")
     assert "None" not in raw_generated_result, "Test %s" % name
     canonical_generated_result = ConfigMgr.to_canonical(raw_generated_result)
     match_path = os.path.join(DATA_PATH, match_path)
@@ -47,6 +44,18 @@ def test_bgpd_main_conf_defaults():
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/defaults.json",
              "bgpd.main.conf.j2/defaults.conf")
+
+def test_bgpd_main_conf_voq_chassis():
+    run_test("VOQ bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/voq_chassis.json",
+             "bgpd.main.conf.j2/voq_chassis.conf")
+
+def test_bgpd_main_conf_packet_chassis():
+    run_test("Chassi packet bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/packet_chassis.json",
+             "bgpd.main.conf.j2/packet_chassis.conf")
 
 def test_tsa_isolate():
     run_test("tsa/bgpd.tsa.isolate.conf.j2",
@@ -77,6 +86,12 @@ def test_staticd_default_route():
              "staticd/staticd.default_route.conf.j2",
              "staticd/staticd.default_route.conf.json",
              "staticd/staticd.default_route.conf")
+
+def test_staticd_loopback_route():
+    run_test("staticd.loopback_route.conf.j2",
+             "staticd/staticd.loopback_route.conf.j2",
+             "staticd/staticd.loopback_route.conf.json",
+             "staticd/staticd.loopback_route.conf")
 
 def test_staticd():
     run_test("staticd.conf.j2",

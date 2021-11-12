@@ -355,7 +355,6 @@
       </DeviceLinkBase>
       <DeviceLinkBase>
         <ElementType>DeviceInterfaceLink</ElementType>
-        <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>10000</Bandwidth>
         <EndDevice>switch-t0</EndDevice>
         <EndPort>fortyGigE0/2</EndPort>
@@ -394,6 +393,11 @@
         <a:Name>switch-t0</a:Name>
         <a:Properties>
           <a:DeviceProperty>
+            <a:Name>ForcedMgmtRoutes</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>11.11.11.11;22.22.22.0/23</a:Value>
+          </a:DeviceProperty>
+          <a:DeviceProperty>
             <a:Name>ErspanDestinationIpv4</a:Name>
             <a:Reference i:nil="true"/>
             <a:Value>2.2.2.2</a:Value>
@@ -403,6 +407,21 @@
     </Devices>
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
   </MetadataDeclaration>
+  <LinkMetadataDeclaration>
+    <Link xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
+      <a:LinkMetadata>
+        <a:Name i:nil="true"/>
+        <a:Properties>
+          <a:DeviceProperty>
+            <a:Name>AutoNegotiation</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>True</a:Value>
+          </a:DeviceProperty>
+        </a:Properties>
+        <a:Key>ARISTA05T1:Ethernet1/33;switch-t0:fortyGigE0/2</a:Key>
+      </a:LinkMetadata>
+    </Link>
+  </LinkMetadataDeclaration>
   <Hostname>switch-t0</Hostname>
   <HwSku>Force10-S6000</HwSku>
 </DeviceMiniGraph>

@@ -20,19 +20,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
-    import commands
-    import sys, getopt
     import subprocess
-    import click
-    import imp
+    import getopt, sys
     import logging
     import logging.config
     import logging.handlers
-    import types
     import time  # this is only being used as part of the example
-    import traceback    
-    from tabulate import tabulate
     from as9716_32d.fanutil import FanUtil
     from as9716_32d.thermalutil import ThermalUtil
 except ImportError as e:
@@ -191,7 +184,7 @@ class switch(object):
 
 def power_off_dut():
     cmd_str="i2cset -y -f 19 0x60 0x60 0x10"
-    status, output = commands.getstatusoutput(cmd_str)
+    status, output = subprocess.getstatusoutput(cmd_str)
     return status
 
 #If only one PSU insert(or one of PSU pwoer fail), and watt >800w. Must let DUT fan pwm >= 75% in AFO.
@@ -500,11 +493,11 @@ def main(argv):
         try:
             opts, args = getopt.getopt(argv,'hdlt:',['lfile='])
         except getopt.GetoptError:
-            print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
             return 0
         for opt, arg in opts:
             if opt == '-h':
-                print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
                 return 0
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG
@@ -513,7 +506,7 @@ def main(argv):
         
         if sys.argv[1]== '-t':
             if len(sys.argv)!=10:
-                print "temp test, need input 8 temp"
+                print("temp test, need input 8 temp")
                 return 0
             i=0
             for x in range(2, 10):
@@ -521,7 +514,7 @@ def main(argv):
                i=i+1
             test_temp = 1
             log_level = logging.DEBUG
-            print test_temp_list
+            print(test_temp_list)
     
     fan = FanUtil()
     fan.set_fan_duty_cycle(100)

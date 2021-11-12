@@ -8,10 +8,11 @@ $(DOCKER_SONIC_P4)_DEPENDS += $(SWSS) \
                               $(REDIS_TOOLS) \
                               $(REDIS_SERVER) \
                               $(PYTHON_SWSSCOMMON) \
+                              $(PYTHON3_SWSSCOMMON) \
                               $(LIBTEAMDCTL) \
                               $(LIBTEAM_UTILS) \
                               $(SONIC_DEVICE_DATA) \
-                              $(SONIC_UTILITIES_PY2) \
+                              $(SONIC_UTILITIES_PY3) \
                               $(IPROUTE2)
 
 # ifeq ($(ROUTING_STACK), quagga)

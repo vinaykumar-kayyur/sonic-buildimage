@@ -10,7 +10,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git clone https://github.com/sflow/host-sflow
 
 	pushd ./host-sflow
-	git checkout -b sflow tags/v2.0.26-4
+	git checkout -b sflow tags/v$(HSFLOWD_VERSION)-$(HSFLOWD_SUBVERSION)
 
         # Apply patch series
 	stg init
@@ -21,7 +21,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	chmod u+x debian/rules
 	sed -i -e s/_VERSION_/$(HSFLOWD_VERSION)-$(HSFLOWD_SUBVERSION)/g debian/changelog
 
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --buildinfo-option=-u. --changes-option=-u.
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR) --buildinfo-option=-u. --changes-option=-u.
 
 	mv $(DERIVED_TARGET) $* $(DEST)/
 	popd

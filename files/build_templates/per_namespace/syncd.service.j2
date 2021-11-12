@@ -17,6 +17,8 @@ After=nps-modules.service
 Requires=updategraph.service
 After=updategraph.service
 After=interfaces-config.service
+BindsTo=sonic.target
+After=sonic.target
 Before=ntp-config.service
 
 [Service]
@@ -26,8 +28,8 @@ ExecStartPre=/usr/local/bin/syncd.sh start{% if multi_instance == 'true' %} %i{%
 ExecStart=/usr/local/bin/syncd.sh wait{% if multi_instance == 'true' %} %i{% endif %}
 ExecStop=/usr/local/bin/syncd.sh stop{% if multi_instance == 'true' %} %i{% endif %}
 {% if sonic_asic_platform == 'mellanox' %}
-TimeoutStartSec=150
+TimeoutStartSec=480
 {% endif %}
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sonic.target

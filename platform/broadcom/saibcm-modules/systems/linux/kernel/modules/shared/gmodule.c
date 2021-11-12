@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: gmodule.c,v 1.20 Broadcom SDK $
@@ -26,8 +37,6 @@
 #include <lkm.h>
 #include <gmodule.h>
 #include <linux/init.h>
-#include <linux/seq_file.h>
-
 /* Module Vector Table */
 static gmodule_t* _gmodule = NULL;
 
@@ -94,21 +103,18 @@ gdbg(const char* fmt, ...)
  * Proc FS Utilities
  */
 #if PROC_INTERFACE_KERN_VER_3_10
-static struct seq_file* _proc_buf = NULL;
-
 int 
-pprintf(const char* fmt, ...)
+pprintf(struct seq_file *m, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    seq_vprintf(_proc_buf, fmt, args);
+    seq_vprintf(m, fmt, args);
     va_end(args);
     return 0;
 }
 
 static int _gmodule_proc_show(struct seq_file *m, void *v){
-    _proc_buf = m;
-    _gmodule->pprint();
+    _gmodule->pprint(m);
     return 0;
 }
 
@@ -143,6 +149,7 @@ static int _gmodule_proc_release(struct inode * inode, struct file * file) {
     return single_release(inode, file);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,6,0)
 struct file_operations _gmodule_proc_fops = {
     owner:      THIS_MODULE,
     open:       _gmodule_proc_open,
@@ -151,6 +158,15 @@ struct file_operations _gmodule_proc_fops = {
     write:      _gmodule_proc_write,
     release:    _gmodule_proc_release,
 };
+#else
+struct proc_ops _gmodule_proc_fops = {
+    proc_open:       _gmodule_proc_open,
+    proc_read:       seq_read,
+    proc_lseek:      seq_lseek,
+    proc_write:      _gmodule_proc_write,
+    proc_release:    _gmodule_proc_release,
+};
+#endif
 #else
 int
 gmodule_vpprintf(char** page_ptr, const char* fmt, va_list args)
@@ -174,7 +190,7 @@ gmodule_pprintf(char** page_ptr, const char* fmt, ...)
 static char* _proc_buf = NULL;
 
 int 
-pprintf(const char* fmt, ...)
+pprintf(struct seq_file *m, const char* fmt, ...)
 {  
     int rv;
 
@@ -193,7 +209,7 @@ static int
 _gmodule_pprint(char* buf)
 {
     PSTART(buf);
-    _gmodule->pprint();
+    _gmodule->pprint(NULL);
     return PEND(buf);
 }
 
@@ -265,7 +281,7 @@ _gmodule_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
-#ifdef HAVE_UNLOCKED_IOCTL
+#if defined(HAVE_UNLOCKED_IOCTL) || LINUX_VERSION_CODE >= KERNEL_VERSION(5,9,0)
 static long
 _gmodule_unlocked_ioctl(struct file *filp,
                         unsigned int cmd, unsigned long arg)
@@ -328,7 +344,7 @@ _gmodule_mmap(struct file *filp, struct vm_area_struct *vma)
 /* FILE OPERATIONS */
 
 struct file_operations _gmodule_fops = {
-#ifdef HAVE_UNLOCKED_IOCTL
+#if defined(HAVE_UNLOCKED_IOCTL) || LINUX_VERSION_CODE >= KERNEL_VERSION(5,9,0)
     unlocked_ioctl: _gmodule_unlocked_ioctl,
 #else
     ioctl:      _gmodule_ioctl,

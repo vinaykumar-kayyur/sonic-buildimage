@@ -1,13 +1,14 @@
-import imp
 import signal
 import sys
 
 from . import device_info
+from .general import load_module_from_source
 from .logger import Logger
 
 #
 # Constants ====================================================================
 #
+
 REDIS_TIMEOUT_MSECS = 0
 
 EEPROM_MODULE_NAME = 'eeprom'
@@ -24,13 +25,19 @@ def db_connect(db_name, namespace=EMPTY_NAMESPACE):
     from swsscommon import swsscommon
     return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True, namespace)
 
+
 #
 # DaemonBase ===================================================================
 #
 
+
 class DaemonBase(Logger):
     def __init__(self, log_identifier):
-        super(DaemonBase, self).__init__(log_identifier, Logger.LOG_FACILITY_DAEMON)
+        super(DaemonBase, self).__init__(
+            log_identifier=log_identifier,
+            log_facility=Logger.LOG_FACILITY_DAEMON,
+            log_option=(Logger.LOG_OPTION_NDELAY | Logger.LOG_OPTION_PID)
+        )
 
         # Register our default signal handlers, unless the signal already has a
         # handler registered, most likely from a subclass implementation
@@ -63,7 +70,7 @@ class DaemonBase(Logger):
 
         try:
             module_file = "/".join([platform_path, "plugins", module_name + ".py"])
-            module = imp.load_source(module_name, module_file)
+            module = load_module_from_source(module_name, module_file)
         except IOError as e:
             raise IOError("Failed to load platform module '%s': %s" % (module_name, str(e)))
 

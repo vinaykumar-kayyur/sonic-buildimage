@@ -26,6 +26,7 @@ class Thermal(ThermalBase):
         )
 
     def __init__(self, thermal_index):
+        ThermalBase.__init__(self)
         self.is_cpu_thermal = False
         self.index = thermal_index + 1
 
@@ -49,9 +50,13 @@ class Thermal(ThermalBase):
         self.thermal_temperature_file = self.HWMON_DIR \
             + "temp{}_input".format(hwmon_temp_index)
         self.thermal_high_threshold_file = self.HWMON_DIR \
-            + "temp{}_crit".format(hwmon_temp_index)
+            + "temp{}_max".format(hwmon_temp_index)
         self.thermal_low_threshold_file = self.HWMON_DIR \
             + "temp{}_min".format(hwmon_temp_index)
+
+        if not self.is_cpu_thermal:
+            self.thermal_high_crit_threshold_file = self.HWMON_DIR \
+                + "temp{}_crit".format(hwmon_temp_index)
 
     def _read_sysfs_file(self, sysfs_file):
         # On successful read, returns the value read from given
@@ -127,6 +132,23 @@ class Thermal(ThermalBase):
 
         return status
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this Thermal is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_temperature(self):
         """
         Retrieves current temperature reading from thermal
@@ -179,6 +201,27 @@ class Thermal(ThermalBase):
             thermal_low_threshold = 0
 
         return thermal_low_threshold / 1000.0
+
+    def get_high_critical_threshold(self):
+        """
+        Retrieves the high critical threshold temperature of thermal
+
+        Returns:
+            A float number, the high critical threshold temperature of
+            thermal in Celsius up to nearest thousandth of one degree
+            Celsius, e.g. 30.125
+        """
+        if self.is_cpu_thermal:
+            return super(Thermal, self).get_high_critical_threshold()
+
+        thermal_high_crit_threshold = self._read_sysfs_file(
+            self.thermal_high_crit_threshold_file)
+        if (thermal_high_crit_threshold != 'ERR'):
+            thermal_high_crit_threshold = float(thermal_high_crit_threshold)
+        else:
+            thermal_high_crit_threshold = 0
+
+        return thermal_high_crit_threshold / 1000.0
 
     def set_high_threshold(self, temperature):
         """

@@ -25,18 +25,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
-    import sys, getopt
-    import subprocess
-    import click
-    import imp
+    import getopt
+    import sys
     import logging
     import logging.config
-    import types
     import time  # this is only being used as part of the example
-    import traceback
     import signal
-    from tabulate import tabulate
     from as5835_54t.fanutil import FanUtil
     from as5835_54t.thermalutil import ThermalUtil
 except ImportError as e:
@@ -182,11 +176,11 @@ def main(argv):
         try:
             opts, args = getopt.getopt(argv,'hdl:',['lfile='])
         except getopt.GetoptError:
-            print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
             return 0
         for opt, arg in opts:
             if opt == '-h':
-                print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
                 return 0
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG
