@@ -11,10 +11,6 @@ module sonic-types {
      * respective YANG files.
      */
 
-    revision 2021-02-23 {
-        description "Added new sonic types.";
-    }
-
     revision 2019-07-01 {
         description "First Revision";
     }
