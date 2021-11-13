@@ -210,6 +210,7 @@ def get_path_to_platform_dir():
 
     return platform_path
 
+
 def get_path_to_hwsku_dir():
     """
     Retreives the path to the device's hardware SKU data directory
@@ -227,6 +228,7 @@ def get_path_to_hwsku_dir():
     hwsku_path = os.path.join(platform_path, hwsku)
 
     return hwsku_path
+
 
 def get_paths_to_platform_and_hwsku_dirs():
     """
@@ -248,6 +250,7 @@ def get_paths_to_platform_and_hwsku_dirs():
     hwsku_path = os.path.join(platform_path, hwsku)
 
     return (platform_path, hwsku_path)
+
 
 def get_path_to_port_config_file(hwsku=None, asic=None):
     """
