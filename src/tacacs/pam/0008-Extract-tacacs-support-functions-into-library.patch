@@ -1,4 +1,4 @@
-From 1b8a06ae2ef3e91236304b70569e0bcd0e9e0cb4 Mon Sep 17 00:00:00 2001
+From 81a8b6135cb0c97a291195b04375d0ca33943621 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 12 Oct 2021 10:09:10 +0800
 Subject: [PATCH] Extract tacacs support functions into library.
@@ -122,7 +122,7 @@ index bc71b54..e7b30f7 100644
  #define PAM_TAC_VMAJ 1
  #define PAM_TAC_VMIN 3
 diff --git a/support.c b/support.c
-index 2f77bc8..c0e743b 100644
+index 2f77bc8..5f43b1a 100644
 --- a/support.c
 +++ b/support.c
 @@ -29,7 +29,11 @@
@@ -172,7 +172,7 @@ index 2f77bc8..c0e743b 100644
 +int _pam_parse_arg (const char *arg, char* current_secret, uint current_secret_buffer_size) {
 +    int ctrl = 0;
 +
-+    if (!strcmp (arg, "debug") || !strcmp (arg, "debug=on")) { /* all */
++    if (!strcmp (arg, "debug")) { /* all */
 +        ctrl |= PAM_TAC_DEBUG;
 +    } else if (!strcmp (arg, "use_first_pass")) {
 +        ctrl |= PAM_TAC_USE_FIRST_PASS;
