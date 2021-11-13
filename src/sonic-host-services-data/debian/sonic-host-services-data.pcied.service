@@ -1,0 +1,16 @@
+#first attempt
+
+[Unit]
+Description=PCIe check daemon for SONiC
+Requires=database.service updategraph.service
+After=database.service updategraph.service
+#Maintainer='Sujin Kang',
+#maintainer_email='sujkang@microsoft.com'
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/pcied
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

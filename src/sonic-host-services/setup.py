@@ -9,7 +9,7 @@ setup(
     author_email = 'linuxnetdev@microsoft.com',
     url = 'https://github.com/Azure/sonic-buildimage',
     maintainer = 'Joe LeVeque',
-    maintainer_email = 'jolevequ@microsoft.com',
+    maintainer_email = 'jolevequ@microsoft.com', #TODO invalid e-mail
     packages = [
         'host_modules'
     ],
@@ -20,13 +20,15 @@ setup(
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
-        'scripts/sonic-host-server'
+        'scripts/sonic-host-server',
+        'scripts/pcied'
     ],
     install_requires = [
         'dbus-python',
         'Jinja2>=2.10',
         'PyGObject',
-        'sonic-py-common'
+        'sonic-py-common',
+        'enum34; python_version < "3.4"'
     ],
     setup_requires = [
         'pytest-runner',
@@ -37,7 +39,10 @@ setup(
         'pytest',
         'pyfakefs',
         'sonic-py-common',
-        'deepdiff'
+        'deepdiff',
+        'mock>=2.0.0; python_version < "3.3"',
+        'pytest-cov'#,
+        #'sonic-platform-common'
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',
