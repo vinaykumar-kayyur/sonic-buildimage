@@ -16,8 +16,6 @@ LIBTAC_DEV = libtac-dev_$(PAM_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
 $(LIBTAC_DEV)_DEPENDS += $(LIBTAC2)
 $(eval $(call add_derived_package,$(LIBTAC2),$(LIBTAC_DEV)))
 
-
-
 # libnss-tacplus packages
 NSS_TACPLUS_VERSION = 1.0.4-1
 
