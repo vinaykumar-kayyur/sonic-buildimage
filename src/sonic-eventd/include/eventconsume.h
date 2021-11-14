@@ -19,7 +19,7 @@ using namespace std;
 class EventConsume
 {
 public:
-    EventConsume(DBConnector* dbConn);
+    EventConsume(DBConnector *dbConn);
     ~EventConsume();
     void run();
     void read_eventd_config(bool read_all=true);
@@ -44,11 +44,16 @@ private:
     void update_events(string seq_id, string ts, vector<FieldValueTuple> vec);
     void purge_events();
     void modifyEventStats(string seq_id);
-    void initEventStats(int, int, int, int);
-    void initAlarmStats();
     void clearAckAlarmStatistic();
+    void resetAlarmStats(int, int, int, int, int, int);
+    void fetchFieldValues(const vector<FieldValueTuple>& , vector<FieldValueTuple> &, string &, string &, string &, string &, string &);
+    bool isFloodedEvent(string, string, string, string);
+    bool staticInfoExists(string &, string &, string &, string &, vector<FieldValueTuple> &);
+    bool udpateLocalCacheAndAlarmTable(string, bool &);
+    void initStats();
+    void updateAckInfo(bool, string, string, string, string);
+    void fetchRaiseInfo(vector<FieldValueTuple> &, string, string &, string &, string &, string &, string &);
 };
 }
 
 #endif /* __EVENTCONSUME_H__ */
-

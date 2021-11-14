@@ -82,10 +82,10 @@ EventConsume::EventConsume(DBConnector* dbConn) :
     // open syslog connection
     openSyslog();
 
-    // intialize statistics
-    initAlarmStats();
+    // init stats
+    initStats();
 
-    // populate local queue of event histor table
+    // populate local queue of event history table
     read_events();
 
     // read and apply eventd configuration files 
@@ -128,9 +128,11 @@ void EventConsume::run()
             if (sel == &m_evprofileTable) {
                 m_evprofileTable.pops(kco);
                 handle_custom_evprofile(kco);
-            } else {
+            } else if (sel == &m_consumerTable) {
                 m_consumerTable.pops(kco);
                 handle_notification(kco);
+            } else {
+                SWSS_LOG_DEBUG("received invalid trigger by select");
             }
         }
     }
@@ -146,6 +148,7 @@ void EventConsume::read_eventd_config(bool read_all) {
     static_event_table.clear();
     if (!parse(EVENTD_DEFAULT_MAP_FILE, static_event_table)) {
         SWSS_LOG_ERROR("Can not initialize event map");
+        closeSyslog();
         exit(0);
     }
 
@@ -186,71 +189,21 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
             continue;
         }
 
+        // parse the record and fetch various event fields
         const vector<FieldValueTuple>& data = kfvFieldsValues(entry);
-        for (auto idx : data) {
-            if (fvField(idx) == "type-id") {
-                ev_id = fvValue(idx);
-                vec.push_back(idx);
-                SWSS_LOG_DEBUG("type-id: <%s> ", ev_id.c_str());
-            } else if (fvField(idx) == "text") {
-                ev_msg = fvValue(idx);
-                vec.push_back(idx);
-                SWSS_LOG_DEBUG("text: <%s> ", ev_msg.c_str());
-            } else if (fvField(idx) == "resource") {
-                ev_src = fvValue(idx);
-                vec.push_back(idx);
-                SWSS_LOG_DEBUG("resource: <%s> ", ev_src.c_str());
-            } else if (fvField(idx) == "action") {
-                ev_act = fvValue(idx);
-                // for events, action is empty
-                if (!ev_act.empty()) {
-                    vec.push_back(idx);
-                }     
-            } else if (fvField(idx) == "time-created") {
-                ev_timestamp = fvValue(idx);
-                vec.push_back(idx);
-                SWSS_LOG_DEBUG("time-created: <%s> ", ev_timestamp.c_str());
-            }
-        }
+        fetchFieldValues(data, vec, ev_id, ev_msg, ev_src, ev_act, ev_timestamp);
         
-	    m_eventPubSubTable.del(ev_reckey);
+        // delete the pubsub entry
+	m_eventPubSubTable.del(ev_reckey);
 
         // flood protection. If a rogue application sends same event repeatedly, throttle repeated instances of that event
-        if (!flood_ev_resource.compare(ev_src) && 
-            !flood_ev_action.compare(ev_act) &&
-            !flood_ev_id.compare(ev_id) &&
-            !(flood_ev_msg.compare(ev_msg))) {
-                SWSS_LOG_INFO("Ignoring the event %s from %s action %s msg %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str(), ev_msg.c_str());
-                continue;
+        if (isFloodedEvent(ev_src, ev_act, ev_id, ev_msg)) {
+            continue;
         }
 
-        flood_ev_resource = ev_src;
-        flood_ev_action = ev_act;
-        flood_ev_id = ev_id;
-        flood_ev_msg = ev_msg;
-
         // get static info
-        auto it = static_event_table.find(ev_id);
-        if (it != static_event_table.end()) {
-            EventInfo tmp = (EventInfo) (it->second);
-            // discard the event as event_static_map shows enable is false for this event
-            if (tmp.enable == EVENT_ENABLE_FALSE_STR) {
-                SWSS_LOG_NOTICE("Discarding event <%s> as it is set to disabled", ev_id.c_str());
-                continue;
-            }
-
-            // get severity in the map and store it in the db
-            ev_sev = tmp.severity;
-            ev_static_msg = tmp.static_event_msg;
-            SWSS_LOG_DEBUG("static info: <%s> <%s> ", tmp.severity.c_str(), tmp.static_event_msg.c_str());
-
-            FieldValueTuple seqfv1("severity", tmp.severity);
-            vec.push_back(seqfv1);
-        } else {
-            if ((ev_act.compare(EVENT_ACTION_ACK_STR) && ev_act.compare(EVENT_ACTION_UNACK_STR))) {
-                SWSS_LOG_ERROR("static info NOT FOUND for <%s> ", ev_id.c_str());
-                continue;
-            }
+        if (!staticInfoExists(ev_id, ev_act, ev_sev, ev_static_msg, vec)) {
+            continue;
         }
 
         // increment save seq-id for the newly received event
@@ -271,6 +224,7 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
 		// add entry to the lookup map
                 cal_lookup_map.insert(make_pair(almkey, seq_id));
 
+                // add acknowledged field intializing it to false
                 FieldValueTuple seqfv1("acknowledged", "false");
                 vec.push_back(seqfv1);
                 m_alarmTable.set(to_string(seq_id), vec);
@@ -279,114 +233,56 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
                 updateAlarmStatistics(ev_sev, ev_act);
             } else if (ev_act.compare(EVENT_ACTION_CLEAR_STR) == 0) {
                 is_clear = true;
-                SWSS_LOG_NOTICE(" Received clear alarm for %s", almkey.c_str());
+                SWSS_LOG_DEBUG(" Received clear alarm for %s", almkey.c_str());
 
-                // find and remove the raised alarm
-                uint64_t lookup_seq_id = 0; 
                 bool ack_flag = false;
-                auto it = cal_lookup_map.find(almkey);
-                if (it != cal_lookup_map.end()) {
-                    lookup_seq_id = (uint64_t) (it->second);
-                    cal_lookup_map.erase(almkey);
-
-                    // get status of is_aknowledged flag so that we dont decrement counters twice
-                    vector<FieldValueTuple> alm_rec;
-                    m_alarmTable.get(to_string(lookup_seq_id), alm_rec);
-                    for (auto fvr: alm_rec) {
-                        if (!fvr.first.compare("acknowledged")) {
-                            ack_flag = (fvr.second.compare("true") == 0) ? true : false;
-                            break;
-                        }
-                    }
-
-                    // delete the record from alarm table
-                    m_alarmTable.del(to_string(lookup_seq_id));
-                } else {
-                    // possible - when event profile removes alarms for which enable is false and application cleared them later.
-                    // ignore by logging a debug message..
-                    SWSS_LOG_INFO("Received alarm-clear for non-existing alarm %s", almkey.c_str());
+                // remove entry from local cache, alarm table
+                if (! udpateLocalCacheAndAlarmTable(almkey, ack_flag)) {
                     continue;
                 }
-                // update alarm counters ONLY if it has not been ack'd before. This is because when alarm is ack'd, alarms/severity counter is reduced already.
+
+                // update alarm counters ONLY if it has not been ack'd before. 
+                // This is because when alarm is ack'd, alarms/severity counter is reduced already.
                 if (!ack_flag) {
                     updateAlarmStatistics(ev_sev, ev_act);
                 } else {
-		    // if it has been ack'd before, ack counter would have been incremented for this alrm. Now is the time reduce it.
+		    // if it has been ack'd before, ack counter would have been incremented for this alrm. 
+                    // Now is the time reduce it.
 	            clearAckAlarmStatistic();
 		}
             } else {
                 // ack/unack events comes with seq-id of raised alarm as resource field.
                 // fetch details of "raised" alarm record
-                vector<FieldValueTuple> raise_vec;
-                m_alarmTable.get(ev_src, raise_vec);
                 string raise_act;
                 string raise_ack_flag;
                 string raise_ts;
-                for (auto fv: raise_vec) {
-                    if (!fv.first.compare("type-id")) {
-                        ev_id = fv.second;
-                        vec.push_back(fv);
-                    }
-                    if (!fv.first.compare("severity")) {
-                        ev_sev = fv.second;
-                        vec.push_back(fv);
-                    }
-                    if (!fv.first.compare("action")) {
-                        raise_act = fv.second;
-                    }
-                    if (!fv.first.compare("acknowledged")) {
-                        raise_ack_flag = fv.second;
-                    }
-                    if (!fv.first.compare("time-created")) {
-                        raise_ts = fv.second;
-                    }
-                }
 
-                // vector to hold those parameters that change on the raised record
-                vector<FieldValueTuple> ack_vec;
+                // fetch information from raised event record
+                fetchRaiseInfo(vec, ev_src, ev_id, ev_sev, raise_act, raise_ack_flag, raise_ts);
 
                 if (ev_act.compare(EVENT_ACTION_ACK_STR) == 0) {
                     if (raise_ack_flag.compare("true") == 0) {
-                        SWSS_LOG_ERROR(" %s/%s is already acknowledged", ev_id.c_str(), ev_src.c_str());
+                        SWSS_LOG_NOTICE(" %s/%s is already acknowledged", ev_id.c_str(), ev_src.c_str());
                         continue;
                     }
                     if (raise_act.compare(EVENT_ACTION_RAISE_STR) == 0) {
                         is_ack = true;
-                        SWSS_LOG_NOTICE(" received ACKnowledge event - %s/%s", ev_id.c_str(), ev_src.c_str());
-
-                        FieldValueTuple seqfv1("acknowledged", "true");
-                        ack_vec.push_back(seqfv1);
-
-                        FieldValueTuple seqfv2("acknowledge-time", ev_timestamp);
-                        ack_vec.push_back(seqfv2);
-
-                        // update alarm stats
-                        updateAlarmStatistics(ev_sev, ev_act);
-
-                        // update alarm/event tables for the "raise" record with ack flag and ack timestamp
-                        m_alarmTable.set(ev_src, ack_vec);
-                        m_eventTable.set(ev_src, ack_vec);
+                        SWSS_LOG_DEBUG(" received ACKnowledge event - %s/%s", ev_id.c_str(), ev_src.c_str());
+                        
+                        // update the record with ack flag and ack-time and stats
+                        updateAckInfo(is_ack, ev_timestamp, ev_sev, ev_act, ev_src);
                     } else {
-                        SWSS_LOG_ERROR(" %s/%s is not in raised state", ev_id.c_str(), ev_src.c_str());
+                        SWSS_LOG_NOTICE(" %s/%s is not in raised state", ev_id.c_str(), ev_src.c_str());
                         continue;
                     }
                 } else if (ev_act.compare(EVENT_ACTION_UNACK_STR) == 0) {
                     if (raise_ack_flag.compare("true") == 0) {
-                        SWSS_LOG_NOTICE(" received un-ACKnowledge event - %s/%s", ev_id.c_str(), ev_src.c_str());
+                        SWSS_LOG_DEBUG(" received un-ACKnowledge event - %s/%s", ev_id.c_str(), ev_src.c_str());
 
-                        FieldValueTuple seqfv1("acknowledged", "false");
-                        ack_vec.push_back(seqfv1);
-
-                        FieldValueTuple seqfv2("acknowledge-time", ev_timestamp);
-                        ack_vec.push_back(seqfv2);
-
-                        // update alarm stats as it is un-ack, is in effect, a raise action for stats
-                        updateAlarmStatistics(ev_sev, ev_act);
-                        // update alarm/event tables for the "raise" record with ack flag and ack timestamp
-                        m_alarmTable.set(ev_src, ack_vec);
-                        m_eventTable.set(ev_src, ack_vec);
+                        // update the record with ack flag and ack-time and stats
+                        updateAckInfo(is_ack, ev_timestamp, ev_sev, ev_act, ev_src);
                     } else {
-                        SWSS_LOG_ERROR(" %s/%s is already un-acknowledged", ev_id.c_str(), ev_src.c_str());
+                        SWSS_LOG_NOTICE(" %s/%s is already un-acknowledged", ev_id.c_str(), ev_src.c_str());
                         continue;
                     }
                 }
@@ -407,14 +303,10 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
 void EventConsume::read_events() {
     vector<KeyOpFieldsValuesTuple> tuples;
     m_eventTable.getContent(tuples);
-    int total = 0;
-    int raised = 0;
-    int acked = 0;
-    int cleared = 0;
 
     SWSS_LOG_ENTER();
+    // find out last sequence-id; build local history list
     for (auto tuple: tuples) {
-	total++;
         for (auto fv: kfvFieldsValues(tuple)) {
             if (fvField(fv) == "time-created") {
                 char* end;
@@ -425,18 +317,8 @@ void EventConsume::read_events() {
                 uint64_t val = strtoull(fvValue(fv).c_str(), &end,10);
                 event_history_list.push(make_pair( seq, val ));
             }
-            if (fvField(fv) == "action") {
-                if (!fvValue(fv).compare(EVENT_ACTION_RAISE_STR)) {
-	            raised++;
-		} else if (!fvValue(fv).compare(EVENT_ACTION_CLEAR_STR)) {
-	            cleared++;
-	        } else if (!fvValue(fv).compare(EVENT_ACTION_ACK_STR)) {
-	            acked++;
-		}
-	    }
         }
     }
-    initEventStats(total, raised, cleared, acked);
     SWSS_LOG_NOTICE("eventd sequence-id intialized to %lu", seq_id);
 }
 
@@ -474,7 +356,7 @@ void EventConsume::updateAlarmStatistics(string ev_sev, string ev_act) {
         }
         m_alarmStatsTable.set("state", temp);
     } else {
-        SWSS_LOG_ERROR("Can not update Alarm Statistics table");
+        SWSS_LOG_ERROR("Can not update alarm statistics (table does not exist)");
     }
 }
 
@@ -517,12 +399,13 @@ void EventConsume::updateEventStatistics(bool is_add, bool is_raise, bool is_ack
                         fv.second = to_string(stoi(fv.second.c_str())-1);
                     }
                     temp.push_back(fv);
-                } 
+                }
             }
         }
+
         m_eventStatsTable.set("state", temp);
     } else {
-        SWSS_LOG_ERROR("Can not update Event Statistics table");
+        SWSS_LOG_ERROR("Can not update event statistics (table does not exist)");
     }
 }
 
@@ -629,7 +512,7 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
     }
     string custom_profile = EVENTD_PROFILE_DIR + filename;
 
-    SWSS_LOG_NOTICE("Received profile is %s", custom_profile.c_str());
+    SWSS_LOG_DEBUG("Received profile is %s", custom_profile.c_str());
     
     // make sure that event profile is not already configured
     char buf[1024];
@@ -651,7 +534,7 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
     if (symlink(custom_profile.c_str(), EVENTD_PROFILE_SYMLINK) != 0) {
         SWSS_LOG_ERROR("Error applying custom profile");
     } else {
-        SWSS_LOG_NOTICE("Applying custom profile");
+        SWSS_LOG_DEBUG("Applying custom profile");
         read_eventd_config(false);
         // generate an event informing new profile is in effect
         LOG_EVENT(CUSTOM_EVPROFILE_CHANGE, custom_profile.c_str(), NOTIFY, "Custom Event Profile %s is applied.", filename.c_str());
@@ -678,41 +561,32 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
     }
 }
 
-void EventConsume::initEventStats(int total, int raised, int cleared, int acked) {
-    vector<FieldValueTuple> temp;
-    FieldValueTuple fv;
-    fv = FieldValueTuple("events", to_string(total));
-    temp.push_back(fv);
-    fv = FieldValueTuple("raised", to_string(raised));
-    temp.push_back(fv);
-    fv = FieldValueTuple("cleared", to_string(cleared));
-    temp.push_back(fv);
-    fv = FieldValueTuple("acked", to_string(acked));
-    temp.push_back(fv);
-    m_eventStatsTable.set("state", temp);
-}
-
-void EventConsume::initAlarmStats() {
+void EventConsume::resetAlarmStats(int alarms, int critical, int major, int minor, int warning, int acknowledged) {
     vector<FieldValueTuple> temp;
     FieldValueTuple fv;
     map<int, string>::iterator it;
     for (it = SYSLOG_SEVERITY_STR.begin(); it != SYSLOG_SEVERITY_STR.end(); it++) {
         // there wont be any informational alarms
-        if (it->second.compare(EVENT_SEVERITY_INFORMATIONAL_STR) != 0) {
-            string str = it->second;
-            // severity counter names are of lower case
-            transform(str.begin(), str.end(),str.begin(), ::tolower);
-            fv = FieldValueTuple(str, "0");
+        if (it->second.compare(EVENT_SEVERITY_CRITICAL_STR) == 0) {
+            fv = FieldValueTuple("critical", to_string(critical));
+            temp.push_back(fv);
+        } else if (it->second.compare(EVENT_SEVERITY_MAJOR_STR) == 0) {
+            fv = FieldValueTuple("major", to_string(major));
+            temp.push_back(fv);
+        } else if (it->second.compare(EVENT_SEVERITY_MINOR_STR) == 0) {
+            fv = FieldValueTuple("minor", to_string(minor));
+            temp.push_back(fv);
+        } else if (it->second.compare(EVENT_SEVERITY_WARNING_STR) == 0) {
+            fv = FieldValueTuple("warning", to_string(warning));
             temp.push_back(fv);
         }
     }
-    fv = FieldValueTuple("alarms", "0");
+    fv = FieldValueTuple("alarms", to_string(alarms));
     temp.push_back(fv);
-    fv = FieldValueTuple("acknowledged", "0");
+    fv = FieldValueTuple("acknowledged", to_string(acknowledged));
     temp.push_back(fv);
     m_alarmStatsTable.set("state", temp);
 }
-
 
 void EventConsume::clearAckAlarmStatistic() {
     vector<FieldValueTuple> vec;
@@ -730,6 +604,182 @@ void EventConsume::clearAckAlarmStatistic() {
     } 
 }
 
+
+void EventConsume::fetchFieldValues(const vector<FieldValueTuple>& data, 
+                                    vector<FieldValueTuple> &vec, 
+                                    string &ev_id, 
+                                    string &ev_msg, 
+                                    string &ev_src, 
+                                    string &ev_act, 
+                                    string &ev_timestamp) {
+    for (auto idx : data) {
+        if (fvField(idx) == "type-id") {
+            ev_id = fvValue(idx);
+            vec.push_back(idx);
+            SWSS_LOG_DEBUG("type-id: <%s> ", ev_id.c_str());
+        } else if (fvField(idx) == "text") {
+            ev_msg = fvValue(idx);
+            vec.push_back(idx);
+            SWSS_LOG_DEBUG("text: <%s> ", ev_msg.c_str());
+        } else if (fvField(idx) == "resource") {
+            ev_src = fvValue(idx);
+            vec.push_back(idx);
+            SWSS_LOG_DEBUG("resource: <%s> ", ev_src.c_str());
+        } else if (fvField(idx) == "action") {
+            ev_act = fvValue(idx);
+            // for events, action is empty
+            if (!ev_act.empty()) {
+                vec.push_back(idx);
+            }
+        } else if (fvField(idx) == "time-created") {
+            ev_timestamp = fvValue(idx);
+            vec.push_back(idx);
+            SWSS_LOG_DEBUG("time-created: <%s> ", ev_timestamp.c_str());
+        }
+    }
+}
+
+bool EventConsume::isFloodedEvent(string ev_src, string ev_act, string ev_id, string ev_msg) {
+    // flood protection. If a rogue application sends same event repeatedly, throttle repeated instances of that event
+    if (!flood_ev_resource.compare(ev_src) &&
+        !flood_ev_action.compare(ev_act) &&
+        !flood_ev_id.compare(ev_id) &&
+        !(flood_ev_msg.compare(ev_msg))) {
+            SWSS_LOG_INFO("Ignoring the event %s from %s action %s msg %s as it is repeated", ev_id.c_str(), ev_src.c_str(), ev_act.c_str(), ev_msg.c_str());
+            return true;
+    }
+
+    flood_ev_resource = ev_src;
+    flood_ev_action = ev_act;
+    flood_ev_id = ev_id;
+    flood_ev_msg = ev_msg;
+    return false;
+}
+
+bool EventConsume::staticInfoExists(string &ev_id, string &ev_act, string &ev_sev, string &ev_static_msg, vector<FieldValueTuple> &vec) {
+    auto it = static_event_table.find(ev_id);
+    if (it != static_event_table.end()) {
+        EventInfo tmp = (EventInfo) (it->second);
+        // discard the event as event_static_map shows enable is false for this event
+        if (tmp.enable == EVENT_ENABLE_FALSE_STR) {
+            SWSS_LOG_INFO("Discarding event <%s> as it is set to disabled", ev_id.c_str());
+            return false;;
+        }
+
+        // get severity in the map and store it in the db
+        ev_sev = tmp.severity;
+        ev_static_msg = tmp.static_event_msg;
+        SWSS_LOG_DEBUG("static info: <%s> <%s> ", tmp.severity.c_str(), tmp.static_event_msg.c_str());
+
+        FieldValueTuple seqfv1("severity", tmp.severity);
+        vec.push_back(seqfv1);
+        return true;
+    } else {
+        // dont process the incoming alarms if action is neither raise nor clear
+        // for ack/unack, no need for this check
+        if ((ev_act.compare(EVENT_ACTION_ACK_STR) && ev_act.compare(EVENT_ACTION_UNACK_STR))) {
+            SWSS_LOG_ERROR("static info NOT FOUND for <%s> ", ev_id.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EventConsume::udpateLocalCacheAndAlarmTable(string almkey, bool &ack_flag) {
+    // find and remove the raised alarm
+    uint64_t lookup_seq_id = 0;
+    auto it = cal_lookup_map.find(almkey);
+    if (it != cal_lookup_map.end()) {
+        lookup_seq_id = (uint64_t) (it->second);
+        cal_lookup_map.erase(almkey);
+
+        // get status of is_aknowledged flag so that we dont decrement counters twice
+        vector<FieldValueTuple> alm_rec;
+        m_alarmTable.get(to_string(lookup_seq_id), alm_rec);
+        for (auto fvr: alm_rec) {
+            if (!fvr.first.compare("acknowledged")) {
+                ack_flag = (fvr.second.compare("true") == 0) ? true : false;
+                break;
+            }
+        }
+
+        // delete the record from alarm table
+        m_alarmTable.del(to_string(lookup_seq_id));
+    } else {
+        // possible - when event profile removes alarms for which enable is false and application cleared them later.
+        // ignore by logging a debug message..
+        SWSS_LOG_INFO("Received alarm-clear for non-existing alarm %s", almkey.c_str());
+        return false;
+    }
+    return true;
+}
+
+void EventConsume::initStats() {
+    vector<FieldValueTuple> vec;
+    // possible after a cold-boot or very first time
+    if (! m_eventStatsTable.get("state", vec)) {
+        FieldValueTuple fv;
+        vector<FieldValueTuple> temp;
+
+        SWSS_LOG_DEBUG("resetting Event Statistics table");
+        fv = FieldValueTuple("events", to_string(0));
+        temp.push_back(fv);
+        fv = FieldValueTuple("raised", to_string(0));
+        temp.push_back(fv);
+        fv = FieldValueTuple("cleared", to_string(0));
+        temp.push_back(fv);
+        fv = FieldValueTuple("acked", to_string(0));
+        temp.push_back(fv);
+        m_eventStatsTable.set("state", temp);
+    }
+    if (! m_alarmStatsTable.get("state", vec)) {
+        SWSS_LOG_DEBUG("resetting Alarm Statistics table");
+        resetAlarmStats(0, 0, 0, 0, 0, 0);
+    }
+}
+
+void EventConsume::updateAckInfo(bool is_ack, string ev_timestamp, string ev_sev, string ev_act, string ev_src) {
+    vector<FieldValueTuple> ack_vec;
+
+    FieldValueTuple seqfv1("acknowledged", (is_ack ? "true" : "false"));
+    ack_vec.push_back(seqfv1);
+
+    FieldValueTuple seqfv2("acknowledge-time", ev_timestamp);
+    ack_vec.push_back(seqfv2);
+
+    // update alarm stats
+    updateAlarmStatistics(ev_sev, ev_act);
+
+    // update alarm/event tables for the "raise" record with ack flag and ack timestamp
+    // for ack/unack, ev_src contains the "seq-id"
+    m_alarmTable.set(ev_src, ack_vec);
+    m_eventTable.set(ev_src, ack_vec);
+}
+
+
+void EventConsume::fetchRaiseInfo(vector<FieldValueTuple> &vec, string ev_src, string &ev_id, string &ev_sev, string &raise_act, 
+                                  string &raise_ack_flag, string &raise_ts) {
+    vector<FieldValueTuple> raise_vec;
+    m_alarmTable.get(ev_src, raise_vec);
+    for (auto fv: raise_vec) {
+        if (!fv.first.compare("type-id")) {
+            ev_id = fv.second;
+            vec.push_back(fv);
+        }
+        if (!fv.first.compare("severity")) {
+            ev_sev = fv.second;
+            vec.push_back(fv);
+        }
+        if (!fv.first.compare("action")) {
+            raise_act = fv.second;
+        }
+        if (!fv.first.compare("acknowledged")) {
+            raise_ack_flag = fv.second;
+        }
+        if (!fv.first.compare("time-created")) {
+            raise_ts = fv.second;
+        }
+    }
+}
+
 };
-
-
