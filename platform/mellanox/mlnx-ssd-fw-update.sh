@@ -683,7 +683,12 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
                 else
                     LOG_MSG "SSD FW update completed successfully."
 
-                    if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
+		    if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
+
+                        if [[ $ARG_FORCE_NO_POWER_CYCLE_FLAG == $TRUE ]]
+				LOG_MSG_AND_EXIT "An IMMEDIATE power cycle is REQUIRED to upgrade the SSD. Please perform a cold reboot as soon as possible."
+			fi
+                        
                         LOG_MSG "Execute power cycle..."
                         sleep 1
                         sync

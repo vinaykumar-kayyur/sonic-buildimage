@@ -186,7 +186,11 @@ case "${cmd}" in
             rc=$?
             disable_onie_access
             if [[ ${rc} -eq 0 ]]; then
-                system_reboot
+                if [[ "${arg}" == "--no-reboot" ]]
+                    echo "ONIE firmware update successfully staged for install at next cold reboot"
+                else
+                    system_reboot
+                fi
             else
                 echo "ERROR: failed to enable ONIE firmware update mode"
                 exit ${rc}
