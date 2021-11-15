@@ -108,7 +108,7 @@ class LldpManager(daemon_base.DaemonBase):
 
     def is_port_up(self, port_name):
         """
-        Determine if a port is up or down by looking into the oper-status for the port in
+        Determine if a port is up or down by looking into the netdev_oper_status for the port in
         PORT TABLE in the State DB
         """
         # Retrieve all entires for this port from the Port table
@@ -146,9 +146,6 @@ class LldpManager(daemon_base.DaemonBase):
         
         # Get the port description. If None or empty string, we'll skip this configuration
         port_desc = port_table_dict.get("description")
-
-        if port_alias == None:
-            port_alias = port_name
         
         lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local {1}".format(port_name, port_alias)
 
@@ -305,15 +302,16 @@ class LldpManager(daemon_base.DaemonBase):
                 (key, op, fvp) = sst_appdb.pop()
                 if (key != "PortInitDone") and (key != "PortConfigDone"):
                     if op == "SET":
-                        if fvp and "up" in dict(fvp).get("oper_status",""):
-                            self.generate_pending_lldp_config_cmd_for_port(key, dict(fvp))
-                        else:
-                            self.pending_cmds.pop(key, None)
+                        if fvp:
+                            if "up" in dict(fvp).get("oper_status",""):
+                                self.generate_pending_lldp_config_cmd_for_port(key, dict(fvp))
+                            else:
+                                self.pending_cmds.pop(key, None)
                     elif op == "DEL":
                         self.pending_cmds.pop(key, None)
                     else:
                         self.log_error("unknown operation")
-                        
+
                 elif key == "PortInitDone":
                     port_init_done = True
                 elif key == "PortConfigDone":
