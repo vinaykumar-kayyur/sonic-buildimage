@@ -61,7 +61,7 @@ class LldpManager(daemon_base.DaemonBase):
                                               self.REDIS_TIMEOUT_MS,
                                               False)
 
-        # Open a handle to the Application database
+        # Open a handle to the State database
         self.state_db = swsscommon.DBConnector("STATE_DB",
                                               self.REDIS_TIMEOUT_MS,
                                               False)
@@ -168,7 +168,6 @@ class LldpManager(daemon_base.DaemonBase):
 
         for (port_name, port_item) in self.pending_cmds.items():
             cmd = port_item['cmd']
-            self.log_debug("Running command: '{}'".format(cmd))
 
             # check if linux port is up
             if not self.is_port_up(port_name):
@@ -177,6 +176,8 @@ class LldpManager(daemon_base.DaemonBase):
                 
             if 'failed_timestamp' in port_item and time.time()-port_item['failed_timestamp']<FAILED_CMD_TIMEOUT:
                 continue
+
+            self.log_debug("Running command: '{}'".format(cmd))
             rc, stderr = run_cmd(self, cmd)
             # If the command succeeds, add the port name to our to_delete list.
             # We will delete this command from self.pending_cmds below.
