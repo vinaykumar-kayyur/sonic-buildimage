@@ -17,7 +17,7 @@ command=/usr/sbin/dhcrelay -d -6 --name-alias-map-file /tmp/port-name-alias-map.
 {%- for dhcpv6_server in dhcpv6_server_list %}
 {%- if dhcpv6_server | ipv6 %}
 {%- for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
-{%- if prefix | ipv6  %} -u {{ dhcpv6_server }}%%{{ name }} {% endif -%}
+{%- if prefix | ipv6 and name not in v6_vlan_list%} -u {{ dhcpv6_server }}%%{{ name }} {% endif -%}
 {% endfor %}
 {% for (name, prefix) in INTERFACE|pfx_filter %}
 {% if prefix | ipv6 %} -u {{ dhcpv6_server }}%%{{ name }} {% endif -%}
