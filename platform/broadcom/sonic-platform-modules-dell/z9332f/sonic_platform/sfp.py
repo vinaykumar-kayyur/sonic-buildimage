@@ -205,7 +205,7 @@ class Sfp(SfpOptoeBase):
         lpmode_state = False
         try:
             if self.sfp_type == 'QSFP_DD':
-                lpmode = self._read_eeprom(QSFP_DD_MODULE_ENC_OFFSET, QSFP_DD_MODULE_ENC_WIDTH)
+                lpmode = self.read_eeprom(QSFP_DD_MODULE_ENC_OFFSET, QSFP_DD_MODULE_ENC_WIDTH)
                 if lpmode is not None:
                     if int(lpmode[0])>>1 == 1:
                         return True
