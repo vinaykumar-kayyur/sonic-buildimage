@@ -13,10 +13,6 @@ module sonic-vlan-sub-interface {
         prefix port;
     }
 
-    import sonic-portchannel {
-        prefix lag;
-    }
-
 	import sonic-vrf {
 		prefix vrf;
 	}
