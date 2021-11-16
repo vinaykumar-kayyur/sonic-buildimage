@@ -5,6 +5,16 @@ function getMountPoint()
     echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.basename(mnts[0]['Source'])" 2>/dev/null
 }
 
+function isPlatformReset()
+{
+    output="$(cat /host/reboot-cause/platform-reboot-cause)"
+    if [[ "${output}" != "Non-Hardware" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 function getBootType()
 {
     # same code snippet in files/scripts/syncd.sh
@@ -21,6 +31,9 @@ function getBootType()
     *)
         TYPE='cold'
     esac
+    if isPlatformReset; then
+        TYPE='cold'
+    fi
     echo "${TYPE}"
 }
 
@@ -35,23 +48,6 @@ function preStartAction()
         # Create an emtpy file and overwrite any RDB if already there
         echo -n > /tmp/dump.rdb
         docker cp /tmp/dump.rdb database:/var/lib/redis/
-    fi
-{%- elif docker_container_name == "swss" or docker_container_name == "syncd" %}
-    if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
-        if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
-            REG_BOOT_TYPE="fast*"
-            CAUSE_NO_AVAIL="\"N/A\""
-            REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
-            EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
-
-            # Clear the FAST_REBOOT|system db setting if EXTRA_REBOOT_CAUSE is not "N/A" before starting swss
-            if [[ $REBOOT_CAUSE =~ $REG_BOOT_TYPE ]]; then
-                if [[ "${EXTRA_CAUSE}" != "${CAUSE_NO_AVAIL}" ]]; then
-                    # Delete the FAST_REBOOT|system db setting
-                    $SONIC_DB_CLI STATE_DB DEL "FAST_REBOOT|system" &>/dev/null
-                 fi
-             fi
-         fi
     fi
 {%- else %}
     : # nothing
@@ -75,20 +71,8 @@ function postStartAction()
         fi
 
         if [[ "$BOOT_TYPE" == "fast" ]]; then
-            if [[ -f /host/reboot-cause/previous-reboot-cause.json ]]; then
-                REG_BOOT_TYPE="fast*"
-                CAUSE_NO_AVAIL="\"N/A\""
-                REBOOT_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.cause')"
-                EXTRA_CAUSE="$(cat /host/reboot-cause/previous-reboot-cause.json | jq '.comment')"
-
-                # Clear the FAST_REBOOT|system db setting if EXTRA_REBOOT_CAUSE is not "N/A" before starting swss
-                if [[ $REBOOT_CAUSE =~ $REG_BOOT_TYPE ]]; then
-                    if [[ "${EXTRA_CAUSE}" == "${CAUSE_NO_AVAIL}" ]]; then
-                        # set the key to expire in 3 minutes
-                        redis-cli -n 6 SET "FAST_REBOOT|system" "1" "EX" "180"
-                    fi
-                fi
-            fi
+            # set the FAST_REBOOT|system key to expire in 3 minutes
+            redis-cli -n 6 SET "FAST_REBOOT|system" "1" "EX" "180"
         fi
 
         redis-cli -n 4 SET "CONFIG_DB_INITIALIZED" "1"
