@@ -3,19 +3,20 @@ module sonic-vlan-sub-interface {
     yang-version 1.1;
 
     namespace  "http://github.com/Azure/sonic-vlan-sub-interface";
+
     prefix vlan-sub-interface;
 
-	import sonic-types {
-		prefix stypes;
-	}
+    import sonic-types {
+        prefix stypes;
+    }
 
     import sonic-port {
         prefix port;
     }
 
-	import sonic-vrf {
-		prefix vrf;
-	}
+    import sonic-vrf {
+        prefix vrf;
+    }
 
     description "VLAN sub interface for SONiC OS";
 
@@ -49,11 +50,11 @@ module sonic-vlan-sub-interface {
                     type stypes:admin_status;
                 }
 
-				leaf vrf_name {
-					type leafref {
-						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
-					}
-				}
+                leaf vrf_name {
+                    type leafref {
+                        path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
+                    }
+                }
             }
 
             list VLAN_SUB_INTERFACE_IPPREFIX_LIST {
@@ -62,18 +63,16 @@ module sonic-vlan-sub-interface {
 
                 key "name ip-prefix";
 
-				leaf name {
-					type leafref {
-						path "../../VLAN_SUB_INTERFACE_LIST/name";
-					}
-				}
+                leaf name {
+                    type leafref {
+                        path "../../VLAN_SUB_INTERFACE_LIST/name";
+                    }
+                }
 
-				leaf ip-prefix {
-					type stypes:sonic-ip-prefix;
-				}
-
+                leaf ip-prefix {
+                    type stypes:sonic-ip-prefix;
+                }
             }
-
         }
     }
 }
