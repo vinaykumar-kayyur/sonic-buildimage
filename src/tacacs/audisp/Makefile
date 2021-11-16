@@ -18,8 +18,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	cp -r ../patches patches
 	quilt push -a
 
-	# fix aclocal depency issue by run autoconf
-	autoreconf
+	# fix aclocal depency issue by run auto.sh
+	./auto.sh
 
 	# build package
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
