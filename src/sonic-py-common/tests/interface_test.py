@@ -19,7 +19,7 @@ class TestInterface(object):
         assert result == "LOOPBACK_INTERFACE"
         result = interface.get_interface_table_name("Eth0.1001")
         assert result == "VLAN_SUB_INTERFACE"
-        result = interface.get_interface_table_name("Pol0.1001")
+        result = interface.get_interface_table_name("Po0.1001")
         assert result == "VLAN_SUB_INTERFACE"
 
     def test_get_port_table_name(self):
@@ -37,5 +37,5 @@ class TestInterface(object):
         assert result == "LOOPBACK_INTERFACE"
         result = interface.get_port_table_name("Eth0.1001")
         assert result == "VLAN_SUB_INTERFACE"
-        result = interface.get_port_table_name("Pol0.1001")
+        result = interface.get_port_table_name("Po0.1001")
         assert result == "VLAN_SUB_INTERFACE"
