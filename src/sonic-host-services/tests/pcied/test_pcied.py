@@ -9,7 +9,7 @@ if sys.version_info.major == 3:
     from unittest import mock
 else:
     import mock
-from sonic_py_common import daemon_base, device_info
+from sonic_py_common import daemon_base
 
 from .mock_platform import MockPcieUtil
 

@@ -28,7 +28,8 @@ setup(
         'Jinja2>=2.10',
         'PyGObject',
         'sonic-py-common',
-        'enum34; python_version < "3.4"'
+        'enum34; python_version < "3.4"'#,
+        #'sonic-platform-common' #TEST
     ],
     setup_requires = [
         'pytest-runner',
@@ -42,6 +43,7 @@ setup(
         'deepdiff',
         'mock>=2.0.0; python_version < "3.3"',
         'pytest-cov'#,
+        #'sonic-utilities', #TEST
         #'sonic-platform-common'
     ],
     classifiers = [
