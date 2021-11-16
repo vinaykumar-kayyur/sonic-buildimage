@@ -338,6 +338,9 @@ sonic-build-hooks:
 	@cp src/sonic-build-hooks/buildinfo/sonic-build-hooks* $(SLAVE_DIR)/buildinfo
 
 sonic-slave-base-build : sonic-build-hooks
+ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+	@$(DOCKER_MULTIARCH_CHECK)
+endif
 	@$(OVERLAY_MODULE_CHECK)
 	@echo Checking sonic-slave-base image: $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
