@@ -169,6 +169,11 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 1..4294967295;
+                    }
+                }
             }
 
         }
