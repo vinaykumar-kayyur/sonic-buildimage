@@ -100,7 +100,7 @@ class ServiceChecker(HealthChecker):
                 if ctr.name not in self.container_critical_processes:
                     self.fill_critical_process_by_container(ctr.name)
         except docker.errors.APIError as err:
-            logger.log_debug("Failed to retrieve the running container list. Error: '{}'".format(err))
+            logger.log_error("Failed to retrieve the running container list. Error: '{}'".format(err))
 
         return running_containers
 
@@ -142,19 +142,17 @@ class ServiceChecker(HealthChecker):
         # Get container volumn folder
         container_folder = self._get_container_folder(container)
         if not container_folder:
-            logger.log_debug('Failed to get container folder for {}'.format(container_folder))
+            logger.log_error('Failed to get container folder for {}'.format(container_folder))
             return
 
-        # If container folder does not exist, the container is probably not up, retry it
         if not os.path.exists(container_folder):
-            logger.log_debug('Container folder does not exist: {}'.format(container_folder))
+            logger.log_error('Container folder does not exist: {}'.format(container_folder))
             return
 
         # Get critical_processes file path
         critical_processes_file = os.path.join(container_folder, ServiceChecker.CRITICAL_PROCESSES_PATH)
         if not os.path.isfile(critical_processes_file):
             # Critical process file does not exist, the container has no critical processes.
-            # This is fine, don't retry.
             logger.log_debug('Failed to get critical process file for {}, {} does not exist'.format(container, critical_processes_file))
             self._update_container_critical_processes(container, [])
             return
@@ -278,10 +276,10 @@ class ServiceChecker(HealthChecker):
             self.set_object_not_ok('Service', bad_container, 'Syntax of critical_processes file is incorrect')
 
     def check(self, config):
-        """
-        Check critical system service status.
-        :param config: Health checker configuration.
-        :return:
+        """Check critical system service status.
+
+        Args:
+            config (object): Health checker configuration.
         """
         self.reset()
         self.check_by_monit(config)
@@ -308,8 +306,13 @@ class ServiceChecker(HealthChecker):
         return data
 
     def check_process_existence(self, container_name, critical_process_list, config, feature_table):
-        """
-        @summary: Check whether the process in the specified container is running or not.
+        """Check whether the process in the specified container is running or not.
+
+        Args:
+            container_name (str): Container name
+            critical_process_list (list): Critical processes
+            config (object): Health checker configuration.
+            feature_table (object): Feature table
         """
         feature_name = self.container_feature_dict[container_name]
         if feature_name in feature_table:
