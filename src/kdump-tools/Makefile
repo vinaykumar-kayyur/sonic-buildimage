@@ -23,7 +23,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build source and Debian packages
 ifeq ($(CROSS_BUILD_ENVIRON), y)
 	sed -i "s/dh_auto_build \-\-/dh_auto_build -- TARGET=$(CONFIGURED_ARCH)/" debian/rules
-	CONFIG_SITE=/etc/dpkg-cross/cross-config.$(CONFIGURED_ARCH) LD_LIBRARY_PATH=$(CROSS_LIB_PATH) dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -Tbinary-indep -j$(SONIC_CONFIG_MAKE_JOBS)
+	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -Tbinary-indep -j$(SONIC_CONFIG_MAKE_JOBS)
 else
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 endif

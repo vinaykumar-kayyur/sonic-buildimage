@@ -3,9 +3,7 @@
 include /usr/share/dpkg/pkg-info.mk
 
 PACKAGE_PRE_NAME := mrvlprestera
-ifeq ($(CROSS_BUILD_ENVIRON), y)
-KVERSION    ?= $(KVERSION)
-else
+ifneq ($(CROSS_BUILD_ENVIRON), y)
 KVERSION   ?= $(shell uname -r)
 endif
 KERNEL_SRC :=  /lib/modules/$(KVERSION)

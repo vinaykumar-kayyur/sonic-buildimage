@@ -24,7 +24,7 @@ ifeq ($(CROSS_BUILD_ENVIRON), y)
 	sed -i "s/doc\/manpages/build\/doc\/manpages/g" debian/frr.manpages
 	sed -i "s/doc\/user\/_build\/texinfo/build\/doc\/user\/_build\/texinfo/g" debian/frr-doc.info
 
-	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L $$CROSS_PKGS_LIB_PATH" CONFIG_SITE=/etc/dpkg-cross/cross-config.$(CONFIGURED_ARCH) LD_LIBRARY_PATH=$(CROSS_LIB_PATH) dpkg-buildpackage -rfakeroot -b -d -us -uc -Ppkg.frr.nortrlib -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L $$CROSS_PKGS_LIB_PATH" dpkg-buildpackage -rfakeroot -b -d -us -uc -Ppkg.frr.nortrlib -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 else
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 endif
