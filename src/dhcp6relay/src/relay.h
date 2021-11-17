@@ -317,15 +317,17 @@ const struct dhcpv6_relay_msg *parse_dhcpv6_relay(const uint8_t *buffer);
 const struct dhcpv6_option *parse_dhcpv6_opt(const uint8_t *buffer, const uint8_t **out_end);
 
 /**
- * @code                            void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n);
+ * @code                            void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n, relay_config *config, uint8_t msg_type);
  *
  * @brief                           send udp packet
  *
  * @param *buffer                   message buffer
  * @param sockaddr_in6 target       target socket
  * @param n                         length of message
+ * @param relay_config *config      pointer to relay_config
+ * @param uint8_t msg_type          message type of dhcpv6 option of relayed message
  * 
  * @return dhcpv6_option   end of dhcpv6 message option
  */
-void send_udp(int sock, struct sockaddr_in6 target, uint8_t *buffer, uint32_t n);
+void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n, relay_config *config, uint8_t msg_type);
 
