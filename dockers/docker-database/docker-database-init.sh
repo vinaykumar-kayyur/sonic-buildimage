@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Set io-threads to the number of physical CPU cores.
+sed -i "s/io-threads [0-9]*/io-threads $(nproc --all)/g" /etc/redis/redis.conf
+
 # For linux host namespace, in both single and multi ASIC platform use the loopback interface
 # For other namespaces, use eth0 interface which is connected to the docker0 bridge in the host.
 if [[ $NAMESPACE_ID == "" ]]
