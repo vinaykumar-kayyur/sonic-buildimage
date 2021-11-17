@@ -1,7 +1,7 @@
 From 2cd9a2640c41325ee679f5c9b5ec89da2ac4dd3b Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 9 Nov 2021 16:34:12 +0800
-Subject: [PATCH] Fix audisp-tacplus build error.
+Subject: [PATCH] Porting to sonic.
 
 ---
  Makefile.am      |   2 +-
