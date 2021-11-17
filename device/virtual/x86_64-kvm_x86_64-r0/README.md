@@ -70,7 +70,7 @@ set default_sku to:
 brcm_gearbox_vs t1
 ```
 
-And create file gbsyncd.init with:
+And create file gbsyncd.ini with:
 
 ```
 platform=gbsyncd
