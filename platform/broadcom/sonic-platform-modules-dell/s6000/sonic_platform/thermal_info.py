@@ -36,9 +36,9 @@ class ChassisInfo(ThermalPolicyInfoBase):
         for thermal in self._thermal_list:
             self._temperature_list.append(thermal.get_temperature())
 
-        self._system_temperature = sum(self._temperature_list) / len(self._temperature_list)
+        system_temperature = sum(self._temperature_list) / len(self._temperature_list)
         curr_level = chassis.get_system_thermal_level(self._system_thermal_level,
-                                                      self._system_temperature)
+                                                      system_temperature)
         if curr_level != self._system_thermal_level:
             self._is_status_changed = True
             self._system_thermal_level = curr_level
@@ -105,17 +105,23 @@ class FanDrawerInfo(ThermalPolicyInfoBase):
                 self._present_fandrawers.discard(fandrawer)
                 self._present_fans.difference_update(fandrawer.get_all_fans())
 
+            fan_fault = False
             for fan in fandrawer.get_all_fans():
                 status = fan.get_status()
+                fan_fault |= not status
 
                 if status and (fan in self._fault_fans):
                     self._is_status_changed = True
-                    self._fault_fandrawers.discard(fandrawer)
                     self._fault_fans.discard(fan)
                 elif not status and (fan not in self._fault_fans):
                     self._is_status_changed = True
-                    self._fault_fandrawers.add(fandrawer)
                     self._fault_fans.add(fan)
+
+            if self._is_status_changed:
+                if fan_fault and (fandrawer not in self._fault_fandrawers):
+                    self._fault_fandrawers.add(fandrawer)
+                elif not fan_fault:
+                    self._fault_fandrawers.discard(fandrawer)
 
         if self._fault_fans or (chassis.get_num_fans() != len(self._present_fans)):
             fault = True

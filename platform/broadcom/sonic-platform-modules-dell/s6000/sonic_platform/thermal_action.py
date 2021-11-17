@@ -5,19 +5,23 @@ from sonic_py_common.logger import Logger
 logger = Logger()
 
 class ThermalPolicyAction(ThermalPolicyActionBase):
-    def get_chassis_info(self, thermal_info_dict):
+
+    @staticmethod
+    def get_chassis_info(thermal_info_dict):
         from .thermal_info import ChassisInfo
 
         chassis_info = thermal_info_dict.get(ChassisInfo.INFO_NAME)
         return chassis_info if isinstance(chassis_info, ChassisInfo) else None
 
-    def get_fandrawer_info(self, thermal_info_dict):
+    @staticmethod
+    def get_fandrawer_info(thermal_info_dict):
         from .thermal_info import FanDrawerInfo
 
         fandrawer_info = thermal_info_dict.get(FanDrawerInfo.INFO_NAME)
         return fandrawer_info if isinstance(fandrawer_info, FanDrawerInfo) else None
 
-    def get_psu_fan_info(self, thermal_info_dict):
+    @staticmethod
+    def get_psu_fan_info(thermal_info_dict):
         from .thermal_info import PsuFanInfo
 
         psu_fan_info = thermal_info_dict.get(PsuFanInfo.INFO_NAME)
@@ -61,9 +65,6 @@ class SetAllFanMaxSpeedAction(ThermalPolicyAction):
                 if psu_fan_info:
                     for fan in psu_fan_info.present_fans:
                         fan.set_speed(100)
-
-            for fan in fandrawer_info.fault_fans:
-                fan.set_speed(100)
 
 
 @thermal_json_object('fan.all.set_thermal_level_speed')

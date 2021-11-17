@@ -3,7 +3,9 @@ from sonic_platform_base.sonic_thermal_control.thermal_json_object import therma
 
 
 class FanDrawerCondition(ThermalPolicyConditionBase):
-    def get_fandrawer_info(self, thermal_info_dict):
+
+    @staticmethod
+    def get_fandrawer_info(thermal_info_dict):
         from .thermal_info import FanDrawerInfo
 
         fandrawer_info = thermal_info_dict.get(FanDrawerInfo.INFO_NAME)
@@ -24,7 +26,9 @@ class AllFanDrawerGoodCondition(FanDrawerCondition):
 
 @thermal_json_object('chassis.over_temperature')
 class OverTemperatureCondition(ThermalPolicyConditionBase):
-    def is_match(self, thermal_info_dict):
+
+    @staticmethod
+    def is_match(thermal_info_dict):
         from .thermal_info import ChassisInfo
 
         chassis_info = thermal_info_dict.get(ChassisInfo.INFO_NAME)

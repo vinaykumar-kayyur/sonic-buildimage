@@ -126,17 +126,17 @@ switch_board_qsfp_lpmode() {
 }
 
 set_max6620_dynamic_reg() {
-    DEVICE1=/sys/class/i2c-adapter/i2c-11/11-0029/fan1_div
-    DEVICE2=/sys/class/i2c-adapter/i2c-11/11-002a/fan1_div
+    DEVICE1=/sys/class/i2c-adapter/i2c-11/11-0029/hwmon/hwmon*/fan1_div
+    DEVICE2=/sys/class/i2c-adapter/i2c-11/11-002a/hwmon/hwmon*/fan1_div
 
     # Retry three times
     for count in `seq 1 3`; do
         if [ -w $DEVICE1 -o -w $DEVICE2 ]; then
             for i in `seq 1 4`; do
-                echo $1 > /sys/class/i2c-adapter/i2c-11/11-0029/fan${i}_div
+                echo $1 > /sys/class/i2c-adapter/i2c-11/11-0029/hwmon/hwmon*/fan${i}_div
             done
             for i in `seq 1 2`; do
-                echo $1 > /sys/class/i2c-adapter/i2c-11/11-002a/fan${i}_div
+                echo $1 > /sys/class/i2c-adapter/i2c-11/11-002a/hwmon/hwmon*/fan${i}_div
             done
             return
         fi

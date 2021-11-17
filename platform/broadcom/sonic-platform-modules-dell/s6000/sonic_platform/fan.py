@@ -48,12 +48,16 @@ class Fan(FanBase):
             self.fantray_index = fantray_index
             self.index = fan_index
             self.dependency = dependency
-            self.fan_status_reg = self.I2C_DIR +\
-                    "{}/fan{}_alarm".format(*self.FAN_DEV_MAPPING[fantray_index][fan_index])
-            self.get_fan_speed_reg = self.I2C_DIR +\
-                    "{}/fan{}_input".format(*self.FAN_DEV_MAPPING[fantray_index][fan_index])
-            self.set_fan_speed_reg = self.I2C_DIR +\
-                    "{}/fan{}_target".format(*self.FAN_DEV_MAPPING[fantray_index][fan_index])
+
+            hwmon_dir = self.I2C_DIR +\
+                    "{}/hwmon/".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][0])
+            hwmon_node = os.listdir(hwmon_dir)[0]
+            self.fan_status_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_alarm".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
+            self.get_fan_speed_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_input".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
+            self.set_fan_speed_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_target".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
             self.max_fan_speed = MAX_S6000_FAN_SPEED
             self.thermal_level_to_speed = THERMAL_LEVEL_FAN_SPEED
         else:
