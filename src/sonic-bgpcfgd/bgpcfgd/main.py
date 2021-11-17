@@ -61,7 +61,7 @@ def do_work():
         # Static Route Managers
         StaticRouteMgr(common_objs, "CONFIG_DB", "STATIC_ROUTE"),
         # Route Advertisement Managers
-        AdvertiseRouteMgr(common_objs, "STATE_DB", "ADVERTISE_NETWORK"),
+        AdvertiseRouteMgr(common_objs, "STATE_DB", swsscommon.STATE_ADVERTISE_NETWORK_TABLE_NAME),
     ]
     runner = Runner(common_objs['cfg_mgr'])
     for mgr in managers:

@@ -4,7 +4,7 @@ from swsscommon import swsscommon
 
 
 class AdvertiseRouteMgr(Manager):
-    """ This class Advertises routes when ADVERTISE_NETWORK table in STATE_DB is updated """
+    """ This class Advertises routes when ADVERTISE_NETWORK_TABLE in STATE_DB is updated """
     def __init__(self, common_objs, db, table):
         """
         Initialize the object

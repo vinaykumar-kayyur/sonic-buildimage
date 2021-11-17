@@ -15,7 +15,7 @@ def constructor(skip_bgp_asn=False):
         'constants': {},
     }
 
-    mgr = AdvertiseRouteMgr(common_objs, "STATE_DB", "ADVERTISE_NETWORK")
+    mgr = AdvertiseRouteMgr(common_objs, "STATE_DB", swsscommon.STATE_ADVERTISE_NETWORK_TABLE_NAME)
     if not skip_bgp_asn:
         mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
     assert len(mgr.advertised_routes) == 0
