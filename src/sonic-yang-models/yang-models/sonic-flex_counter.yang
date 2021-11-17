@@ -39,6 +39,12 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 1000..30000;
+                    }
+                    default 10000;
+                }
             }
 
             container DEBUG_COUNTER {
@@ -69,6 +75,12 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 1000..30000;
+                    }
+                    default 10000;
+                }
             }
 
             container PG_WATERMARK {
@@ -79,6 +91,12 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 1000..30000;
+                    }
+                    default 10000;
+                }
             }
 
             container PORT {
@@ -88,6 +106,12 @@ module sonic-flex_counter {
                 }
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 100..30000;
+                    }
+                    default 1000;
                 }
             }
 
@@ -109,6 +133,12 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 30000..300000;
+                    }
+                    default 60000;
+                }
             }
 
             container QUEUE {
@@ -119,6 +149,12 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 100..30000;
+                    }
+                    default 10000;
+                }
             }
 
             container QUEUE_WATERMARK {
@@ -128,6 +164,12 @@ module sonic-flex_counter {
                 }
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type uint32 {
+                        range 1000..30000;
+                    }
+                    default 10000;
                 }
             }
 
@@ -171,8 +213,9 @@ module sonic-flex_counter {
                 }
                 leaf POLL_INTERVAL {
                     type uint32 {
-                        range 1..4294967295;
+                        range 1000..30000;
                     }
+                    default 10000;
                 }
             }
 

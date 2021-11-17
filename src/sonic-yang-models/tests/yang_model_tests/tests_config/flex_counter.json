@@ -3,7 +3,8 @@
         "sonic-flex_counter:sonic-flex_counter": {
             "sonic-flex_counter:FLEX_COUNTER_TABLE": {
                 "BUFFER_POOL_WATERMARK": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
                 },
                 "DEBUG_COUNTER": {
                     "FLEX_COUNTER_STATUS": "enable"
@@ -12,28 +13,35 @@
                     "FLEX_COUNTER_STATUS": "enable"
                 },
                 "PG_DROP": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
                 },
                 "PG_WATERMARK": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
                 },
                 "PORT": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 1000
                 },
                 "PORT_BUFFER_DROP": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 60000
                 },
                 "PORT_RATES": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
                 "QUEUE": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
                 },
                 "QUEUE_WATERMARK": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
                 },
                 "ACL": {
-                    "FLEX_COUNTER_STATUS": "enable"
+                    "FLEX_COUNTER_STATUS": "enable",
+		    "POLL_INTERVAL": 10000
                 },
                 "FLOW_CNT_TRAP": {
                     "FLEX_COUNTER_STATUS": "enable"
