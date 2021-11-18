@@ -49,7 +49,8 @@ const struct sock_fprog ether_relay_fprog = {
 
 /* DHCPv6 Counter */
 uint64_t counters[DHCPv6_MESSAGE_TYPE_COUNT];
-std::map<int, std::string> counterMap = {{1, "Solicit"},
+std::map<int, std::string> counterMap = {{0, "Unknown"},
+                                      {1, "Solicit"},
                                       {2, "Advertise"},
                                       {3, "Request"},
                                       {4, "Confirm"},
@@ -224,9 +225,6 @@ void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n,
     std::string counterVlan = counter_table;
     if(sendto(sock, buffer, n, 0, (const struct sockaddr *)&target, sizeof(target)) == -1)
         syslog(LOG_ERR, "sendto: Failed to send to target address\n");
-    else if (msg_type == 0) {
-        syslog(LOG_ERR, "counter: Failed to update correct message counter");
-    }
     else {
         counters[msg_type]++;
         update_counter(config->db, counterVlan.append(config->interface), msg_type);
