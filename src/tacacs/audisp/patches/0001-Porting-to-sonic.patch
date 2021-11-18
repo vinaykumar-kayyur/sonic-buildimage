@@ -8,11 +8,9 @@ Fixed issue in this patch:
 
 2. The libpam-tacplus been changed to support 'source address', which add new parameter to tacacs functions.
 
-3. Some code in upstream project have build warning, which will break build in sonic, for example strncpy(username, pws->pw_name, new_buffer_size);, which may cause buffer overflow, we need change to 'new_buffer_size-1'.
+3. Upstream project using a patched version of libpam_tacplus, so some method in that not exist in sonic version.
 
-4. Upstream project using a patched version of libpam_tacplus, so some method in that not exist in sonic version.
-
-5. For tacacs config file parse and load, code change using the shared method in tacsupport lib.
+4. For tacacs config file parse and load, code change using the shared method in tacsupport lib.
 
 5. Check and reload config when tacacs config changed.
 ---
