@@ -11,5 +11,11 @@
         "desc": "LOAD SYSLOG SERVER TABLE WITH INVALID IP ADDRESS AS SYSLOG SERVER.",
         "eStrKey": "InvalidValue",
         "eStr": ["server_address"]
+    },
+    "SYSLOG_SERVER_INVALID_IPADDR_TEST": {
+        "desc": "LOAD SYSLOG SERVER TABLE WITH INVALID IPv4 ADDRESS AS SYSLOG SERVER.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["server_address"]
     }
+
 }

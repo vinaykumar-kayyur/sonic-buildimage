@@ -16,7 +16,6 @@ module sonic-syslog {
             description "SYSLOG SERVER part of config_db.json";
 
             list SYSLOG_SERVER_LIST {
-                max-elements 10;
                 description
                     "Number of upstream SYSLOG servers, limiting to 10";
 
