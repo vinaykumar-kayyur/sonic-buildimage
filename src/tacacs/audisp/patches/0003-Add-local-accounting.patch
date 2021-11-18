@@ -1,20 +1,20 @@
-From 28988030198dc25fb9df20146c061bc938f73775 Mon Sep 17 00:00:00 2001
+From b63ba61b491b9ed32673b0b2d6a3eb0c5228a5fb Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Tue, 9 Nov 2021 16:45:13 +0800
+Date: Thu, 18 Nov 2021 10:29:33 +0800
 Subject: [PATCH] Add local accounting.
 
 ---
  Makefile.am        |  3 +--
  Makefile.in        |  3 +--
- audisp-tacplus.c   | 11 ++++++++++-
+ audisp-tacplus.c   | 13 +++++++++++--
  local_accounting.c | 19 +++++++++++++++++++
  local_accounting.h |  7 +++++++
- 5 files changed, 38 insertions(+), 5 deletions(-)
+ 5 files changed, 39 insertions(+), 6 deletions(-)
  create mode 100644 local_accounting.c
  create mode 100644 local_accounting.h
 
 diff --git a/Makefile.am b/Makefile.am
-index bc92783..1cada7c 100644
+index 6d7a7a0..a00318a 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -4,7 +4,7 @@
@@ -49,37 +49,39 @@ index d124c16..5482a9a 100644
  audisp_tacplus_SOURCES = audisp-tacplus.c
  audisp_tacplus_CFLAGS = -O
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index f444f97..4d13d7e 100644
+index a02390d..ddc6705 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
-@@ -68,6 +68,9 @@
- /* Remove user secret */
- #include "user_secret.h"
+@@ -66,7 +66,10 @@
+ #include <libtac/support.h>
  
+ /* Remove user secret */
+-#include "user_secret.h"
++#include "user_secret.h"
++
 +/* Local accounting */
 +#include "local_accounting.h"
-+
+ 
  #define _VMAJ 1
  #define _VMIN 0
- #define _VPATCH 0
-@@ -508,7 +511,13 @@ static void get_acct_record(auparse_state_t *au, int type)
-      * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
+@@ -502,7 +505,13 @@ static void get_acct_record(auparse_state_t *au, int type)
       *  unknown, and in some cases, host may be not be set.
       */
--    send_tacacs_acct(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
+     char* fixed_log_buffer = remove_user_secret(logbase);
+-    send_tacacs_acct(loguser, tty?tty:"UNK", host, (fixed_log_buffer != NULL)?fixed_log_buffer:logbase, acct_type, taskno);
 +    if (tacacs_ctrl & ACCOUNTING_FLAG_TACACS) {
-+        send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++        send_tacacs_acct(loguser, tty?tty:"UNK", host, (fixed_log_buffer != NULL)?fixed_log_buffer:logbase, acct_type, taskno);
 +    }
 +    
 +    if (tacacs_ctrl & ACCOUNTING_FLAG_LOCAL) {
-+        accounting_to_syslog(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++        accounting_to_syslog(loguser, tty?tty:"UNK", host, (fixed_log_buffer != NULL)?fixed_log_buffer:logbase, acct_type, taskno);
 +    }
  
      if(freeloguser)
          free(loguser);
 diff --git a/local_accounting.c b/local_accounting.c
 new file mode 100644
-index 0000000..47ba17d
+index 0000000..e700994
 --- /dev/null
 +++ b/local_accounting.c
 @@ -0,0 +1,19 @@
@@ -105,11 +107,11 @@ index 0000000..47ba17d
 \ No newline at end of file
 diff --git a/local_accounting.h b/local_accounting.h
 new file mode 100644
-index 0000000..04ec6e2
+index 0000000..9e880a7
 --- /dev/null
 +++ b/local_accounting.h
 @@ -0,0 +1,7 @@
-+#if !defined (LOCAL_ACCOUNTING_H)
++#ifndef LOCAL_ACCOUNTING_H
 +#define LOCAL_ACCOUNTING_H
 +
 +/* Write accounting information to syslog. */

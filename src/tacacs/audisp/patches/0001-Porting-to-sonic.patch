@@ -1,13 +1,23 @@
-From 2cd9a2640c41325ee679f5c9b5ec89da2ac4dd3b Mon Sep 17 00:00:00 2001
+From 781c6f11a72e325071fef526a04c48ab3e76fd03 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 9 Nov 2021 16:34:12 +0800
 Subject: [PATCH] Porting to sonic.
 
+Fixed issue in this patch:
+1. The upstream project using 'libtacplus-map' library to lookup_logname, remove that depency by implement by ourself because libtacplus-map not porting to sonic, also because the libnss-tacplus in sonic not using libtacplus-map for user name mapping, sonic using a different solution for user login handling.
+
+2. The libpam-tacplus been changed to support 'source address', which add new parameter to tacacs functions.
+
+3. Some code in upstream project have build warning, which will break build in sonic, for example strncpy(username, pws->pw_name, new_buffer_size);, which may cause buffer overflow, we need change to 'new_buffer_size-1'.
+
+4. Upstream project using a patched version of libpam_tacplus, so some method in that not exist in sonic version.
+
+5. For tacacs config file parse and load, code change using the shared method in tacsupport lib.
 ---
  Makefile.am      |   2 +-
  audisp-tacplus.c | 241 ++++++++++++-----------------------------------
  debian/control   |   6 +-
- 3 files changed, 66 insertions(+), 183 deletions(-)
+ 3 files changed, 65 insertions(+), 184 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
 index ad70ca0..b476e38 100644
@@ -23,7 +33,7 @@ index ad70ca0..b476e38 100644
  man_MANS = audisp-tacplus.8
  
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index 42841e5..3d25ae9 100644
+index 42841e5..294df2d 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
 @@ -45,8 +45,10 @@
@@ -310,18 +320,16 @@ index 42841e5..3d25ae9 100644
          if(srv_fd < 0) {
              syslog(LOG_WARNING, "connection to %s failed (%d) to send"
                  " accounting record: %m",
-@@ -393,8 +269,9 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
+@@ -393,7 +269,7 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
          close(srv_fd);
          if(!retval) {
              connected_ok = 1;
 -            if(!acct_all)
-+            if(!(tacacs_ctrl & PAM_TAC_ACCT)) {
++            if(!(tacacs_ctrl & PAM_TAC_ACCT))
                  break; /* only send to first responding server */
-+            }
          }
      }
- }
-@@ -458,9 +335,18 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -458,10 +334,18 @@ static void get_acct_record(auparse_state_t *au, int type)
      pid_t pid;
      uint16_t taskno;
      unsigned argc=0, session=0, auid;
@@ -329,8 +337,7 @@ index 42841e5..3d25ae9 100644
 +    char *auser = NULL, *loguser, *tty = NULL;
      char *cmd = NULL, *ausyscall = NULL;
      char logbuf[240], *logptr, *logbase;
-+    char fixed_log_buffer[240];
-+
+ 
 +    /* get hostname. */
 +    char host[HOST_NAME_MAX];
 +    memset(host, 0, sizeof(host));
@@ -338,10 +345,11 @@ index 42841e5..3d25ae9 100644
 +    {
 +        strncpy(host, unknown_hostname, sizeof(host)-1);
 +    }
- 
++
      if(get_field(au, "syscall"))
          ausyscall = (char *)auparse_interpret_field(au);
-@@ -501,7 +387,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+ 
+@@ -501,7 +385,7 @@ static void get_acct_record(auparse_state_t *au, int type)
          taskno = (uint16_t) pid;
      }
      else /* should never happen, if it does, records won't match */
@@ -350,7 +358,7 @@ index 42841e5..3d25ae9 100644
  
      if(get_field(au, "auid")) {
          auser = (char *)auparse_interpret_field(au);
-@@ -520,7 +406,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -520,7 +404,7 @@ static void get_acct_record(auparse_state_t *au, int type)
       * the NSS library, the username in auser will likely already be the login
       * name.
       */
@@ -359,16 +367,18 @@ index 42841e5..3d25ae9 100644
      if(!loguser) {
          char *user = NULL;
  
-@@ -607,9 +493,6 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -605,10 +489,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+      * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
+      *  unknown, and in some cases, host may be not be set.
       */
-     send_tacacs_acct(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
- 
+-    send_tacacs_acct(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
+-
 -    if(host)
 -        free(host);
--
++    send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
+ 
      if(freeloguser)
          free(loguser);
- }
 diff --git a/debian/control b/debian/control
 index 5306bd9..28c7324 100644
 --- a/debian/control
