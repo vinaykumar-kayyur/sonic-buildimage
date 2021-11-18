@@ -1,20 +1,20 @@
-From b63ba61b491b9ed32673b0b2d6a3eb0c5228a5fb Mon Sep 17 00:00:00 2001
+From 2b7c8f0730911afd3bf8c966cdf2def97dfa5b90 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Thu, 18 Nov 2021 10:29:33 +0800
-Subject: [PATCH] Add local accounting.
+Subject: [PATCH 3/3] Add local accounting.
 
 ---
  Makefile.am        |  3 +--
  Makefile.in        |  3 +--
- audisp-tacplus.c   | 13 +++++++++++--
+ audisp-tacplus.c   | 14 ++++++++++++--
  local_accounting.c | 19 +++++++++++++++++++
  local_accounting.h |  7 +++++++
- 5 files changed, 39 insertions(+), 6 deletions(-)
+ 5 files changed, 40 insertions(+), 6 deletions(-)
  create mode 100644 local_accounting.c
  create mode 100644 local_accounting.h
 
 diff --git a/Makefile.am b/Makefile.am
-index 6d7a7a0..a00318a 100644
+index bc92783..a00318a 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -4,7 +4,7 @@
@@ -49,22 +49,36 @@ index d124c16..5482a9a 100644
  audisp_tacplus_SOURCES = audisp-tacplus.c
  audisp_tacplus_CFLAGS = -O
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index a02390d..ddc6705 100644
+index 5381a07..67084f0 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
-@@ -66,7 +66,10 @@
- #include <libtac/support.h>
- 
+@@ -72,6 +72,9 @@
  /* Remove user secret */
--#include "user_secret.h"
-+#include "user_secret.h"
-+
+ #include "user_secret.h"
+ 
 +/* Local accounting */
 +#include "local_accounting.h"
- 
++
  #define _VMAJ 1
  #define _VMIN 0
-@@ -502,7 +505,13 @@ static void get_acct_record(auparse_state_t *au, int type)
+ #define _VPATCH 0
+@@ -322,7 +325,6 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
+ {
+     int retval, srv_i, srv_fd;
+ 
+-    check_and_load_changed_tacacs_config();
+     for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
+         srv_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, tac_source_addr, tac_timeout, __vrfname);
+         if(srv_fd < 0) {
+@@ -553,13 +555,21 @@ static void get_acct_record(auparse_state_t *au, int type)
+         logptr += llen;
+         tlen += llen;
+     }
++
++    check_and_load_changed_tacacs_config();
+ 
+     /*
+      * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
       *  unknown, and in some cases, host may be not be set.
       */
      char* fixed_log_buffer = remove_user_secret(logbase);
