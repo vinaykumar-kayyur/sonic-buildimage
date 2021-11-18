@@ -7,7 +7,6 @@
 #############################################################################
 
 try:
-    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_py_common import device_info
