@@ -327,7 +327,7 @@
                 "vlanid": "12",
                 "mtu": "9216",
                 "admin_status": "up"
-            },
+            }
 
         },
         "DEVICE_NEIGHBOR": {
