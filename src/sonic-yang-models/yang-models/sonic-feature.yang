@@ -9,7 +9,7 @@ module sonic-feature{
     
     typedef feature-state {
         type string {
-            pattern "enabled|disabled|always_enabled";
+            pattern "enabled|disabled|always_enabled|always_disabled";
         }
     }
 

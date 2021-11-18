@@ -63,7 +63,40 @@
                         "has_timer": "false",
                         "has_global_scope": "true",
                         "has_per_asic_scope": "true",
-                        "set_owner": "lcoal"
+                        "set_owner": "local"
+                    }
+                ]
+            }
+        }
+    },
+    "FEATURE_WITH_INVALID_OWNER": {
+        "sonic-feature:sonic-feature": {
+            "sonic-feature:FEATURE": {
+                "FEATURE_LIST": [
+                    {
+                        "name": "lldp",
+                        "state": "disabled",
+                        "auto_restart": "disabled",
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true",
+                        "set_owner": "invalid"
+                    }
+                ]
+            }
+        }
+    },
+    "FEATURE_WITH_NO_OWNER": {
+        "sonic-feature:sonic-feature": {
+            "sonic-feature:FEATURE": {
+                "FEATURE_LIST": [
+                    {
+                        "name": "lldp",
+                        "state": "disabled",
+                        "auto_restart": "disabled",
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true"
                     }
                 ]
             }
