@@ -221,4 +221,27 @@ module sonic-types {
             enum transit;
         }
     }
+
+
+
+    /* Required for CVL */
+    {% if yang_model_type == "cvl" %}
+    container operation {
+        description
+            "This definition is used internally by CVL and
+            is not exposed in NBI. Leaf 'operation' allows
+            evaluation of must expression for
+            CREATE/UPDATE/DELETE operation.";
+
+        leaf operation {
+            type enumeration {
+                enum NOP;
+                enum CREATE;
+                enum UPDATE;
+                enum DELETE;
+            }
+        }
+    }
+    {% else %}
+    {% endif %}
 }
