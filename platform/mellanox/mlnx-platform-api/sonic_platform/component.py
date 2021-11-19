@@ -119,6 +119,7 @@ class ONIEUpdater(object):
     ONIE_FW_UPDATE_CMD_ADD = '/usr/bin/mlnx-onie-fw-update.sh add {}'
     ONIE_FW_UPDATE_CMD_REMOVE = '/usr/bin/mlnx-onie-fw-update.sh remove {}'
     ONIE_FW_UPDATE_CMD_UPDATE = '/usr/bin/mlnx-onie-fw-update.sh update'
+    ONIE_FW_UPDATE_CMD_INSTALL = '/usr/bin/mlnx-onie-fw-update.sh --no-reboot update'
     ONIE_FW_UPDATE_CMD_SHOW_PENDING = '/usr/bin/mlnx-onie-fw-update.sh show-pending'
 
     ONIE_VERSION_PARSE_PATTERN = '([0-9]{4})\.([0-9]{2})-([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)'
@@ -182,8 +183,12 @@ class ONIEUpdater(object):
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to unstage firmware update: {}".format(str(e)))
 
-    def __trigger_update(self):
-        cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
+    def __trigger_update(self, reboot=False):
+
+        if reboot:
+            cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
+        else:
+            cmd = self.ONIE_FW_UPDATE_CMD_INSTALL
 
         try:
             subprocess.check_call(cmd.split(), universal_newlines=True)
@@ -299,7 +304,7 @@ class ONIEUpdater(object):
 
         return firmware_info
 
-    def update_firmware(self, image_path):
+    def update_firmware(self, image_path, reboot=False):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
@@ -321,7 +326,7 @@ class ONIEUpdater(object):
 
         try:
             self.__stage_update(image_path)
-            self.__trigger_update()
+            self.__trigger_update(reboot)
         except:
             if self.__is_update_staged(image_path):
                 self.__unstage_update(image_path)
@@ -367,11 +372,8 @@ class Component(ComponentBase):
             return FW_AUTO_ERR_IMAGE
 
         if boot_action in default_supported_boot:
-            if self.update_firmware(image_path):
-                # Successful update
-                return FW_AUTO_INSTALLED
-            # Failed update (unknown reason)
-            return FW_AUTO_ERR_UKNOWN
+            # Deferred to next boot
+            return FW_AUTO_INSTALLED
 
         # boot_type did not match (skip)
         return FW_AUTO_ERR_BOOT_TYPE
@@ -438,13 +440,13 @@ class ComponentONIE(Component):
         self.description = self.COMPONENT_DESCRIPTION
         self.onie_updater = ONIEUpdater()
 
-    def __install_firmware(self, image_path):
+    def __install_firmware(self, image_path, reboot=False):
         if not self._check_file_validity(image_path):
             return False
 
         try:
             print("INFO: Staging {} firmware update with ONIE updater".format(self.name))
-            self.onie_updater.update_firmware(image_path)
+            self.onie_updater.update_firmware(image_path, reboot)
         except Exception as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
@@ -468,7 +470,7 @@ class ComponentONIE(Component):
         return self.__install_firmware(image_path)
 
     def update_firmware(self, image_path):
-        self.__install_firmware(image_path)
+        self.__install_firmware(image_path, reboot=True)
 
 
 class ComponentSSD(Component):
@@ -483,6 +485,7 @@ class ComponentSSD(Component):
 
     SSD_INFO_COMMAND = "/usr/bin/mlnx-ssd-fw-update.sh -q"
     SSD_FIRMWARE_INFO_COMMAND = "/usr/bin/mlnx-ssd-fw-update.sh -q -i {}"
+    SSD_FIRMWARE_INSTALL_COMMAND = "/usr/bin/mlnx-ssd-fw-update.sh --no-power-cycle -y -u -i {}"
     SSD_FIRMWARE_UPDATE_COMMAND = "/usr/bin/mlnx-ssd-fw-update.sh -y -u -i {}"
 
     def __init__(self):
@@ -492,11 +495,14 @@ class ComponentSSD(Component):
         self.description = self.COMPONENT_DESCRIPTION
         self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
 
-    def __install_firmware(self, image_path):
+    def __install_firmware(self, image_path, allow_reboot=True):
         if not self._check_file_validity(image_path):
             return False
 
-        cmd = self.SSD_FIRMWARE_UPDATE_COMMAND.format(image_path)
+        if allow_reboot:
+            cmd = self.SSD_FIRMWARE_UPDATE_COMMAND.format(image_path)
+        else:
+            cmd = self.SSD_FIRMWARE_INSTALL_COMMAND.format(image_path)
 
         try:
             print("INFO: Installing {} firmware update".format(self.name))
@@ -532,11 +538,12 @@ class ComponentSSD(Component):
             return FW_AUTO_ERR_UKNOWN
 
         if boot_action in supported_boot:
-            if self.update_firmware(image_path):
-                # Successful update
+            if boot_action == 'cold':
+                # Defer this to during reboot
                 return FW_AUTO_INSTALLED
-            # Failed update (unknown reason)
-            return FW_AUTO_ERR_UKNOWN
+            else:
+                self.update_firmware(image_path):
+                return FW_AUTO_UPDATED
 
         # boot_type did not match (skip)
         return FW_AUTO_ERR_BOOT_TYPE
@@ -628,7 +635,7 @@ class ComponentSSD(Component):
         return notification
 
     def install_firmware(self, image_path):
-        return self.__install_firmware(image_path)
+        return self.__install_firmware(image_path, allow_reboot=False)
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path)
@@ -649,7 +656,7 @@ class ComponentBIOS(Component):
         self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
         self.onie_updater = ONIEUpdater()
 
-    def __install_firmware(self, image_path):
+    def __install_firmware(self, image_path, reboot=False):
         if not self.onie_updater.is_non_onie_firmware_update_supported():
             print("ERROR: ONIE {} or later is required".format(self.onie_updater.get_onie_required_version()))
             return False
@@ -659,7 +666,7 @@ class ComponentBIOS(Component):
 
         try:
             print("INFO: Staging {} firmware update with ONIE updater".format(self.name))
-            self.onie_updater.update_firmware(image_path)
+            self.onie_updater.update_firmware(image_path, reboot)
         except Exception as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
@@ -688,7 +695,7 @@ class ComponentBIOS(Component):
         return self.__install_firmware(image_path)
 
     def update_firmware(self, image_path):
-        self.__install_firmware(image_path)
+        self.__install_firmware(image_path, reboot=True)
 
 
 class ComponentCPLD(Component):
@@ -792,7 +799,17 @@ class ComponentCPLD(Component):
         return "Immediate power cycle is required to complete {} firmware update".format(self.name)
 
     def install_firmware(self, image_path):
-        return self.__install_firmware(image_path)
+        if ".mpfa" in image_path:
+            with MPFAManager(image_path) as mpfa:
+                if not mpfa.get_metadata().has_option('firmware', 'burn'):
+                    raise RuntimeError("Failed to get {} burn firmware".format(self.name))
+
+                burn_firmware = mpfa.get_metadata().get('firmware', 'burn')
+
+                print("INFO: Processing {} burn file: firmware install".format(self.name))
+                self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware)):
+        else:
+            return self.__install_firmware(image_path)
 
     def update_firmware(self, image_path):
         with MPFAManager(image_path) as mpfa:

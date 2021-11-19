@@ -48,6 +48,7 @@ ARG_IMAGE_VAL=""
 ARG_QUERY_FLAG=$FALSE
 ARG_YES_FLAG=$FALSE
 ARG_POWER_CYCLE_FLAG=$FALSE
+ARG_FORCE_POWER_CYCLE_FLAG=$FALSE
 ARG_HELP_FLAG=$FALSE
 ARG_VERSION_FLAG=$FALSE
 ARG_PACKAGE_INFO_FLAG=$FALSE
@@ -178,6 +179,10 @@ function check_usage() {
             ARG_POWER_CYCLE_FLAG=$TRUE
             shift # past argument
             ;;
+	--no-power-cycle)
+	    ARG_FORCE_NO_POWER_CYCLE_FLAG=$TRUE
+	    shift # past argument
+	    ;;
         *)
             LOG_MSG "Error: false usage given."
             usage
@@ -197,6 +202,7 @@ function check_usage() {
           ("$ARG_UPDATE_FLAG" == "$TRUE" && "$ARG_IMAGE_FLAG" == "$FALSE") ||
           ("$ARG_PACKAGE_INFO_FLAG" == "$TRUE" && "$ARG_IMAGE_FLAG" == "$FALSE") ||
           ("$ARG_POWER_CYCLE_FLAG" == "$TRUE" && "$ARG_UPDATE_FLAG" == "$FALSE") ||
+	  ("$ARG_FORCE_NO_POWER_CYCLE_FLAG" == "$TRUE" && "$ARG_POWER_CYCLE_FLAG" == "$TRUE") ||
           ("$ARG_UPDATE_FLAG" == "$TRUE" && "$ARG_PACKAGE_INFO_FLAG" == "$TRUE") ]]; then
 
         LOG_MSG "Error: false usage given."
@@ -213,6 +219,7 @@ function check_usage() {
     LOG_MSG "ARG_VERSION_FLAG          = ${ARG_VERSION_FLAG}"           ${DEBUG_MSG}
     LOG_MSG "ARG_PACKAGE_INFO_FLAG     = ${ARG_PACKAGE_INFO_FLAG}"      ${DEBUG_MSG}
     LOG_MSG "ARG_POWER_CYCLE_FLAG      = ${ARG_POWER_CYCLE_FLAG}"       ${DEBUG_MSG}
+    LOG_MSG "ARG_FORCE_NO_POWER_CYCLE_FLAG      = ${ARG_FORCE_NO_POWER_CYCLE_FLAG}"       ${DEBUG_MSG}
 
 }
 
