@@ -73,6 +73,7 @@ std::map<int, std::string> counterMap = {{0, "Unknown"},
  * @return              none
  */
 void initialize_counter(std::string counterVlan) {
+    m_stateDbRedisClient.hset(counterVlan, "Unknown", toString(counters[DHCPv6_MESSAGE_TYPE_UNKNOWN]));
     m_stateDbRedisClient.hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
     m_stateDbRedisClient.hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
     m_stateDbRedisClient.hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
