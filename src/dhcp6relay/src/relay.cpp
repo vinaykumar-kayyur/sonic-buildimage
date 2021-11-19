@@ -73,6 +73,7 @@ std::map<int, std::string> counterMap = {{0, "Unknown"},
  * @return              none
  */
 void initialize_counter(swss::DBConnector *db, std::string counterVlan) {
+    db->hset(counterVlan, "Unknown", toString(counters[DHCPv6_MESSAGE_TYPE_UNKNOWN]));
     db->hset(counterVlan, "Solicit", toString(counters[DHCPv6_MESSAGE_TYPE_SOLICIT]));
     db->hset(counterVlan, "Advertise", toString(counters[DHCPv6_MESSAGE_TYPE_ADVERTISE]));
     db->hset(counterVlan, "Request", toString(counters[DHCPv6_MESSAGE_TYPE_REQUEST]));
