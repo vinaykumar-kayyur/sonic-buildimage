@@ -1,4 +1,4 @@
-From 05a2f5f8a497228e8ef3131e5ad77e90f7be2488 Mon Sep 17 00:00:00 2001
+From 5d14588329f102b50526e6471ed4c5282cf82244 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
 Date: Tue, 9 Nov 2021 16:34:12 +0800
 Subject: [PATCH 1/3] Porting to sonic.
@@ -11,16 +11,15 @@ Fixed issue in this patch:
 3. Upstream project using a patched version of libpam_tacplus, so some method in that not exist in sonic version.
 
 4. For tacacs config file parse and load, code change using the shared method in tacsupport lib.
-
-5. Check and reload config when tacacs config changed.
 ---
- Makefile.am      |   2 +-
- audisp-tacplus.c | 277 ++++++++++++++++++-----------------------------
+ Makefile.am      |   3 +-
+ Makefile.in      |   3 +-
+ audisp-tacplus.c | 252 ++++++++++++++---------------------------------
  debian/control   |   6 +-
- 3 files changed, 111 insertions(+), 174 deletions(-)
+ 4 files changed, 81 insertions(+), 183 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index ad70ca0..b476e38 100644
+index ad70ca0..caead49 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -6,7 +6,7 @@ EXTRA_DIST = ChangeLog README audisp_tacplus.spec \
@@ -32,8 +31,30 @@ index ad70ca0..b476e38 100644
  sbin_PROGRAMS = audisp-tacplus
  man_MANS = audisp-tacplus.8
  
+@@ -27,7 +27,6 @@ install-data-hook:
+ 	${INSTALL} -m 755 audisp-tacplus $(DESTDIR)$(sbindir)
+ 	${INSTALL} -d $(DESTDIR)$(sysconfdir)/audisp/plugins.d
+ 	${INSTALL} -d $(DESTDIR)$(sysconfdir)/audit/rules.d
+-	${INSTALL} -m 600 audisp-tac_plus.conf $(DESTDIR)$(sysconfdir)/audisp/
+ 	${INSTALL} -m 644 audisp-tacplus.conf $(DESTDIR)$(sysconfdir)/audisp/plugins.d
+ 	${INSTALL} -m 644 -o 0 audisp-tacplus.rules $(DESTDIR)$(sysconfdir)/audit/rules.d
+ 
+diff --git a/Makefile.in b/Makefile.in
+index d124c16..5482a9a 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -345,8 +345,7 @@ target_alias = @target_alias@
+ top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+-EXTRA_DIST = ChangeLog README audisp_tacplus.spec \
+-	audisp-tac_plus.conf audisp-tacplus.conf
++EXTRA_DIST = ChangeLog README audisp_tacplus.spec audisp-tacplus.conf
+ 
+ audisp_tacplus_SOURCES = audisp-tacplus.c
+ audisp_tacplus_CFLAGS = -O
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index 42841e5..32328c3 100644
+index 42841e5..45ef80f 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
 @@ -45,8 +45,10 @@
@@ -47,16 +68,12 @@ index 42841e5..32328c3 100644
  #include <inttypes.h>
  #include <signal.h>
  #include <string.h>
-@@ -54,10 +56,18 @@
+@@ -54,10 +56,14 @@
  #include <errno.h>
  #include <libaudit.h>
  #include <auparse.h>
 +#include <unistd.h>
 +#include <limits.h>
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <time.h>
-+#include <unistd.h>
  
 +#include <libtac/libtac.h>
 +#include <trace.h>
@@ -68,7 +85,7 @@ index 42841e5..32328c3 100644
  
  #define _VMAJ 1
  #define _VMIN 0
-@@ -69,7 +79,23 @@ static volatile int hup = 0;
+@@ -69,7 +75,14 @@ static volatile int hup = 0;
  static auparse_state_t *au = NULL;
  static unsigned connected_ok;
  
@@ -81,19 +98,10 @@ index 42841e5..32328c3 100644
 +
 +/* Config file path */
 +const char *tacacs_config_file = "/etc/tacplus_nss.conf";
-+
-+/* Config file attribute */
-+struct stat config_file_attr;
-+
-+/* Tacacs+ config file timestamp string format */
-+#define  CONFIG_FILE_TIME_STAMP_FORMAT "%d.%m.%Y %H:%M:%S"
-+
-+/* Tacacs+ config file timestamp string length */
-+#define  CONFIG_FILE_TIME_STAMP_LEN  100
  
  /* Local declarations */
  static void handle_event(auparse_state_t *au,
-@@ -93,179 +119,85 @@ hup_handler(int sig __attribute__ ((unused)))
+@@ -93,179 +106,62 @@ hup_handler(int sig __attribute__ ((unused)))
          hup = 1;
  }
  
@@ -113,12 +121,9 @@ index 42841e5..32328c3 100644
 -
  static const char *progname = "audisp-tacplus"; /* for syslogs and errors */
  
--static void
+ static void
 -audisp_tacplus_config(char *cfile, int level)
-+/*
-+ * Load tacacs config.
-+ */
-+void check_and_load_changed_tacacs_config()
++reload_config(void)
  {
 -    FILE *conf;
 -    char lbuf[256];
@@ -127,15 +132,9 @@ index 42841e5..32328c3 100644
 -    if(conf == NULL) {
 -        syslog(LOG_WARNING, "%s: can't open config file %s: %m",
 -            progname, cfile);
-+    struct stat attr;
-+    // get config file stat, check if file changed
-+    stat(tacacs_config_file, &attr);
-+    char date[CONFIG_FILE_TIME_STAMP_LEN];
-+    strftime(date, sizeof(date), CONFIG_FILE_TIME_STAMP_FORMAT, localtime(&(attr.st_mtime)));
-+    if (difftime(attr.st_mtime, config_file_attr.st_mtime) == 0) {
-+        trace("tacacs config file not change: last modified time: %s.\n", date);
-         return;
-     }
+-        return;
+-    }
++    hup = 0;
  
 -    while(fgets(lbuf, sizeof lbuf, conf)) {
 -        if(*lbuf == '#' || isspace(*lbuf))
@@ -231,39 +230,35 @@ index 42841e5..32328c3 100644
 -            syslog(LOG_WARNING, "%s: unrecognized parameter: %s",
 -                progname, lbuf);
 -    }
-+    trace("tacacs config file changed: last modified time: %s.\n", date);
++    connected_ok = 0; /*  reset connected state (for possible vrf) */
  
 -    if(level == 0 && (!tac_service[0] || tac_srv_no == 0))
 -        syslog(LOG_ERR, "%s version %d.%d.%d: missing tacacs fields in file %s, %d servers",
 -            progname, _VMAJ, _VMIN, _VPATCH, configfile, tac_srv_no);
-+    // config file changed, update file stat and reload config.
-+    config_file_attr = attr;
++    /* load config file: tacacs_config_file */
++    tacacs_ctrl = parse_config_file(tacacs_config_file);
  
 -    if(debug) {
 -        int n;
 -        syslog(LOG_NOTICE, "%s version %d.%d.%d tacacs service=%s", progname,
 -            _VMAJ, _VMIN, _VPATCH, tac_service);
-+    /* load config file: tacacs_config_file */
-+    tacacs_ctrl = parse_config_file(tacacs_config_file);
++    trace("tacacs config updated:\n");
++    int server_idx;
++    for(server_idx = 0; server_idx < tac_srv_no; server_idx++) {
++        trace("Server %d, address:%s, key length:%d\n", server_idx, tac_ntop(tac_srv[server_idx].addr->ai_addr),strlen(tac_srv[server_idx].key));
++    }
  
 -        for(n = 0; n < tac_srv_no; n++)
 -            syslog(LOG_DEBUG, "%s: tacacs server[%d] { addr=%s, key='%s' }",
 -                progname, n, tac_ntop(tac_srv[n].addr->ai_addr),
 -                tac_srv[n].key);
-+    trace("tacacs config updated:\n");
-+    int server_idx;
-+    for(server_idx = 0; server_idx < tac_srv_no; server_idx++) {
-+        trace("Server %d, address:%s, key length:%d\n", server_idx, tac_ntop(tac_srv[server_idx].addr->ai_addr),strlen(tac_srv[server_idx].key));
-     }
- 
--    fclose(conf);
--}
 +    trace("TACACS+ control flag: 0x%x\n", tacacs_ctrl);
 +    
 +    if (tacacs_ctrl & AUTHORIZATION_FLAG_TACACS) {
 +        trace("TACACS+ per-command authorization enabled.\n");
-+    }
+     }
  
+-    fclose(conf);
 +    if (tacacs_ctrl & AUTHORIZATION_FLAG_LOCAL) {
 +        trace("Local per-command authorization enabled.\n");
 +    }
@@ -271,15 +266,21 @@ index 42841e5..32328c3 100644
 +    if (tacacs_ctrl & PAM_TAC_DEBUG) {
 +        trace("TACACS+ debug enabled.\n");
 +    }
-+}
+ }
  
- static void
- reload_config(void)
+-
+-static void
+-reload_config(void)
++/*
++ * Get user name by UID, and return NULL when not found user name by UID.
++ * The returned username should be free by caller.
++ */
++char *lookup_logname(uid_t auid)
  {
 -    int i, nservers;
 -
-     hup = 0;
- 
+-    hup = 0;
+-
 -    /*  reset the config variables that we use, freeing memory where needed */
 -    nservers = tac_srv_no;
 -    tac_srv_no = 0;
@@ -298,26 +299,16 @@ index 42841e5..32328c3 100644
 -            tac_srv[i].key = NULL;
 -        }
 -        tac_srv[i].addr = NULL;
--    }
--
-     connected_ok = 0; /*  reset connected state (for possible vrf) */
- 
--    audisp_tacplus_config(configfile, 0);
-+    check_and_load_changed_tacacs_config();
-+}
-+
-+/*
-+ * Get user name by UID, and return NULL when not found user name by UID.
-+ * The returned username should be free by caller.
-+ */
-+char *lookup_logname(uid_t auid)
-+{
 +    struct passwd *pws;
 +    pws = getpwuid(auid);
 +    if (pws == NULL) {
 +        /* Failed to get user information. */
 +        return NULL;
-+    }
+     }
+-
+-    connected_ok = 0; /*  reset connected state (for possible vrf) */
+-
+-    audisp_tacplus_config(configfile, 0);
 +    
 +    int new_buffer_size = strlen(pws->pw_name) + 1;
 +    char* username = malloc(new_buffer_size);
@@ -332,7 +323,7 @@ index 42841e5..32328c3 100644
  }
  
  int
-@@ -273,10 +205,10 @@ main(int argc, char *argv[])
+@@ -273,10 +169,10 @@ main(int argc, char *argv[])
  {
  	char tmp[MAX_AUDIT_MESSAGE_LENGTH+1];
  	struct sigaction sa;
@@ -346,7 +337,7 @@ index 42841e5..32328c3 100644
      reload_config();
  
  	/* Register sighandlers */
-@@ -334,7 +266,7 @@ send_acct_msg(int tac_fd, int type, char *user, char *tty, char *host,
+@@ -334,7 +230,7 @@ send_acct_msg(int tac_fd, int type, char *user, char *tty, char *host,
      int retval;
      struct areply re;
  
@@ -355,11 +346,9 @@ index 42841e5..32328c3 100644
  
      snprintf(buf, sizeof buf, "%lu", (unsigned long)time(NULL));
      tac_add_attrib(&attr, "start_time", buf);
-@@ -377,9 +309,9 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
- {
+@@ -378,8 +274,7 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
      int retval, srv_i, srv_fd;
  
-+    check_and_load_changed_tacacs_config();
      for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
 -        srv_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
 -            NULL, vrfname[0]?vrfname:NULL);
@@ -367,7 +356,7 @@ index 42841e5..32328c3 100644
          if(srv_fd < 0) {
              syslog(LOG_WARNING, "connection to %s failed (%d) to send"
                  " accounting record: %m",
-@@ -393,7 +325,7 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
+@@ -393,7 +288,7 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
          close(srv_fd);
          if(!retval) {
              connected_ok = 1;
@@ -376,7 +365,7 @@ index 42841e5..32328c3 100644
                  break; /* only send to first responding server */
          }
      }
-@@ -458,10 +390,18 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -458,10 +353,18 @@ static void get_acct_record(auparse_state_t *au, int type)
      pid_t pid;
      uint16_t taskno;
      unsigned argc=0, session=0, auid;
@@ -396,7 +385,7 @@ index 42841e5..32328c3 100644
      if(get_field(au, "syscall"))
          ausyscall = (char *)auparse_interpret_field(au);
  
-@@ -501,7 +441,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -501,7 +404,7 @@ static void get_acct_record(auparse_state_t *au, int type)
          taskno = (uint16_t) pid;
      }
      else /* should never happen, if it does, records won't match */
@@ -405,7 +394,7 @@ index 42841e5..32328c3 100644
  
      if(get_field(au, "auid")) {
          auser = (char *)auparse_interpret_field(au);
-@@ -520,7 +460,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -520,7 +423,7 @@ static void get_acct_record(auparse_state_t *au, int type)
       * the NSS library, the username in auser will likely already be the login
       * name.
       */
@@ -414,7 +403,7 @@ index 42841e5..32328c3 100644
      if(!loguser) {
          char *user = NULL;
  
-@@ -605,10 +545,7 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -605,10 +508,7 @@ static void get_acct_record(auparse_state_t *au, int type)
       * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
       *  unknown, and in some cases, host may be not be set.
       */

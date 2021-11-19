@@ -1,20 +1,19 @@
-From 86e616fc08a69a9465e64e02711cc0602533eb5b Mon Sep 17 00:00:00 2001
+From 7638a310a69dea9f47a845799dd3b5209937310c Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Thu, 18 Nov 2021 15:20:17 +0800
-Subject: [PATCH] Add local accounting.
+Date: Fri, 19 Nov 2021 13:11:10 +0800
+Subject: [PATCH 3/3] Add local accounting.
 
 ---
- Makefile.am        |  3 +--
- Makefile.in        |  3 +--
- audisp-tacplus.c   | 14 ++++++++++++--
+ Makefile.am        |  2 +-
+ audisp-tacplus.c   | 11 ++++++++++-
  local_accounting.c | 17 +++++++++++++++++
  local_accounting.h |  7 +++++++
- 5 files changed, 38 insertions(+), 6 deletions(-)
+ 4 files changed, 35 insertions(+), 2 deletions(-)
  create mode 100644 local_accounting.c
  create mode 100644 local_accounting.h
 
 diff --git a/Makefile.am b/Makefile.am
-index cc85c0f..002ec8a 100644
+index c5bf861..002ec8a 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -4,7 +4,7 @@
@@ -26,33 +25,11 @@ index cc85c0f..002ec8a 100644
  audisp_tacplus_CFLAGS = -O
  audisp_tacplus_LDADD = -lauparse -ltacsupport -ltac
  sbin_PROGRAMS = audisp-tacplus
-@@ -27,7 +27,6 @@ install-data-hook:
- 	${INSTALL} -m 755 audisp-tacplus $(DESTDIR)$(sbindir)
- 	${INSTALL} -d $(DESTDIR)$(sysconfdir)/audisp/plugins.d
- 	${INSTALL} -d $(DESTDIR)$(sysconfdir)/audit/rules.d
--	${INSTALL} -m 600 audisp-tac_plus.conf $(DESTDIR)$(sysconfdir)/audisp/
- 	${INSTALL} -m 644 audisp-tacplus.conf $(DESTDIR)$(sysconfdir)/audisp/plugins.d
- 	${INSTALL} -m 644 -o 0 audisp-tacplus.rules $(DESTDIR)$(sysconfdir)/audit/rules.d
- 
-diff --git a/Makefile.in b/Makefile.in
-index d124c16..5482a9a 100644
---- a/Makefile.in
-+++ b/Makefile.in
-@@ -345,8 +345,7 @@ target_alias = @target_alias@
- top_build_prefix = @top_build_prefix@
- top_builddir = @top_builddir@
- top_srcdir = @top_srcdir@
--EXTRA_DIST = ChangeLog README audisp_tacplus.spec \
--	audisp-tac_plus.conf audisp-tacplus.conf
-+EXTRA_DIST = ChangeLog README audisp_tacplus.spec audisp-tacplus.conf
- 
- audisp_tacplus_SOURCES = audisp-tacplus.c
- audisp_tacplus_CFLAGS = -O
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index 50ec07e..ea294c8 100644
+index 169ccac..b7c8f56 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
-@@ -72,6 +72,9 @@
+@@ -68,6 +68,9 @@
  /* Remove password */
  #include "password.h"
  
@@ -62,22 +39,7 @@ index 50ec07e..ea294c8 100644
  #define _VMAJ 1
  #define _VMIN 0
  #define _VPATCH 0
-@@ -322,7 +325,6 @@ send_tacacs_acct(char *user, char *tty, char *host, char *cmdmsg, int type,
- {
-     int retval, srv_i, srv_fd;
- 
--    check_and_load_changed_tacacs_config();
-     for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
-         srv_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, tac_source_addr, tac_timeout, __vrfname);
-         if(srv_fd < 0) {
-@@ -554,12 +556,20 @@ static void get_acct_record(auparse_state_t *au, int type)
-         tlen += llen;
-     }
- 
-+    check_and_load_changed_tacacs_config();
-+
-     /*
-      * loguser is always set, we bail if not.  For ANOM_ABEND, tty may be
+@@ -522,7 +525,13 @@ static void get_acct_record(auparse_state_t *au, int type)
       *  unknown, and in some cases, host may be not be set.
       */
      remove_password(logbase);
@@ -94,7 +56,7 @@ index 50ec07e..ea294c8 100644
          free(loguser);
 diff --git a/local_accounting.c b/local_accounting.c
 new file mode 100644
-index 0000000..3beaed3
+index 0000000..e23acec
 --- /dev/null
 +++ b/local_accounting.c
 @@ -0,0 +1,17 @@
