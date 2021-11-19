@@ -217,15 +217,15 @@ def device_install():
     global FORCE
 
     for i in range(0, len(mknod)):
-        # for pca954x need times to built new i2c buses
-        if mknod[i].find('pca954') != -1:
-            time.sleep(1)
-
         (status, output) = log_os_system(mknod[i], 1)
         if status:
             print output
             if FORCE == 0:
                 return status
+
+        # for pca954x need times to built new i2c buses
+        if mknod[i].find('pca954') != -1:
+            time.sleep(2)
 
     for i in range(27, 31):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/12-0061/module_reset_"+str(i), 1)
