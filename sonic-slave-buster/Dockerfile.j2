@@ -243,6 +243,8 @@ RUN apt-get update && apt-get install -y \
 # For gtest
         libgtest-dev \
         cmake \
+# For gmock
+        libgmock-dev \
 # For pam_tacplus build
         autoconf-archive \
 # For iproute2
@@ -455,7 +457,7 @@ RUN pip2 install "lxml==4.6.2"
 RUN pip3 install "lxml==4.6.2"
 
 # For sonic-platform-common testing
-RUN pip3 install redis
+RUN pip3 install redis==3.5.3
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0

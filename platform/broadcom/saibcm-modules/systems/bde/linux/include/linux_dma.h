@@ -49,7 +49,7 @@
 /* ioremap is broken in kernel */
 #define IOREMAP(addr, size) ((void *)KSEG1ADDR(addr))
 #else
-#define IOREMAP(addr, size) ioremap_nocache(addr, size)
+#define IOREMAP(addr, size) ioremap(addr, size)
 #endif
 
 #if defined (__mips__)
@@ -69,7 +69,8 @@
 #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
 #endif
 
-extern void _dma_init(int dev_index);
+extern void _dma_init(void);
+extern void _dma_per_device_init(int dev_index);
 extern int _dma_cleanup(void);
 extern void _dma_pprint(struct seq_file *m);
 extern uint32_t *_salloc(int d, int size, const char *name);
