@@ -151,7 +151,7 @@ setup(
                          './cvlyang-models/sonic-mgmt_vrf.yang',
                          './cvlyang-models/sonic-ntp.yang',
                          './cvlyang-models/sonic-nat.yang',
-                         './cvlyang-models/sonic-pbh.yang'
+                         './cvlyang-models/sonic-pbh.yang',
                          './cvlyang-models/sonic-port.yang',
                          './cvlyang-models/sonic-portchannel.yang',
                          './cvlyang-models/sonic-pfcwd.yang',
