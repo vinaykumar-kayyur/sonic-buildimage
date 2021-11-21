@@ -42,6 +42,7 @@ typedef enum
 
 struct relay_config {
     int local_sock; 
+    int server_sock;
     int filter;
     sockaddr_in6 link_address;
     swss::DBConnector *db;
@@ -49,7 +50,6 @@ struct relay_config {
     std::vector<std::string> servers;
     std::vector<sockaddr_in6> servers_sock;
     bool is_option_79;
-    std::string counterVlan;
 };
 
 
@@ -91,17 +91,17 @@ struct linklayer_addr_option  {
 int sock_open(int ifindex, const struct sock_fprog *fprog);
 
 /**
- * @code                prepare_socket(int *local_sock, arg_config *config);
+ * @code                prepare_socket(int *local_sock, int *server_sock, relay_config *config, int index);
  * 
  * @brief               prepare L3 socket for sending
  *
- * @param local_sock    pointer to socket to be prepared
- * @param config        argument config that contains strings of server and interface addresses
- * @param index         interface id
+ * @param local_sock    pointer to socket binded to global address for relaying client message to server and listening for server message
+ * @param server_sock       pointer to socket binded to link_local address for relaying server message to client
+ * @param index         scope id of interface
  *
  * @return              none
  */
-void prepare_socket(int *local_sock, relay_config *config, int index);
+void prepare_socket(int *local_sock, int *server_sock, relay_config *config, int index);
 
 /**
  * @code                        prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
@@ -114,7 +114,7 @@ void prepare_socket(int *local_sock, relay_config *config, int index);
  *
  * @return                      none
  */
-void prepare_relay_config(relay_config *interface_config, int local_sock, int filter);
+void prepare_relay_config(relay_config *interface_config, int *local_sock, int filter);
 
 /**
  * @code                relay_forward(uint8_t *buffer, const struct dhcpv6_msg *msg, uint16_t msg_length);
@@ -247,28 +247,6 @@ void update_counter(swss::DBConnector *db, std::string counterVlan, uint8_t msg_
  * @return              count in string
  */
 std::string toString(uint16_t count);
-
-/**
- * @code                bool is_addr_gua(in6_addr addr);
- *
- * @brief               check if address is global
- *
- * @param addr         ipv6 address
- * 
- * @return              bool
- */
-bool is_addr_gua(in6_addr addr);
-
-/**
- * @code                is_addr_link_local(in6_addr addr);
- *
- * @brief               check if address is link_local
- *
- * @param addr         ipv6 address
- * 
- * @return              bool
- */
-bool is_addr_link_local(in6_addr addr);
 
 /**
  * @code                const struct ether_header *parse_ether_frame(const uint8_t *buffer, const uint8_t **out_end);
