@@ -25,7 +25,6 @@ try:
      from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
      from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
      from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
-     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

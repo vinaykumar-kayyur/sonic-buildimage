@@ -10,14 +10,7 @@
 #############################################################################
 
 try:
-    import binascii
-    import time
-    import optparse
-    import warnings
     import os
-    import sys
-    import subprocess
-    from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
     from sonic_py_common import device_info
 except ImportError as e:

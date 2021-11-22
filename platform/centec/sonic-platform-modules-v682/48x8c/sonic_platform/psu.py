@@ -2,9 +2,6 @@
 
 from __future__ import print_function
 
-import time
-import imp
-import os
 from subprocess import Popen, PIPE, STDOUT
 
 try:

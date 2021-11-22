@@ -14,7 +14,6 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.fan_drawer import FanDrawer
-    from sonic_platform.fan import Fan
     from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
     from sonic_platform.eeprom import Eeprom

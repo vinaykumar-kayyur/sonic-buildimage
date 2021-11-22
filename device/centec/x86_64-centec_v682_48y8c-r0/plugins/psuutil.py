@@ -8,7 +8,6 @@
 #
 #############################################################################
 
-import os.path
 from subprocess import Popen, PIPE, STDOUT
 
 try:

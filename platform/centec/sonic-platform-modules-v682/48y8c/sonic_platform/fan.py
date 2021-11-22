@@ -8,7 +8,6 @@
 #
 #############################################################################
 
-import json
 import math
 import os.path
 
@@ -46,7 +45,7 @@ class Fan(FanBase):
         try:
             with open(file_path, 'w') as fd:
                 fd.write(str(value))
-        except:
+        except IOError:
             return False
         return True
 
@@ -147,8 +146,6 @@ class Fan(FanBase):
         fan_target_sysfs_path = self.__search_file_by_name(
             FAN_PATH.format(self.fan_tray_index + 1), fan_target_sysfs_name)
         return self.__write_txt_file(fan_target_sysfs_path, int(pwm))
-
-        return False
 
     def set_status_led(self, color):
         """

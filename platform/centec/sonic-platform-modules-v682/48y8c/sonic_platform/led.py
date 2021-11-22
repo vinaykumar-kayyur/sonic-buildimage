@@ -7,7 +7,6 @@
 #
 #############################################################################
 
-import os
 from subprocess import Popen, PIPE, STDOUT
 
 class SystemLed(object):

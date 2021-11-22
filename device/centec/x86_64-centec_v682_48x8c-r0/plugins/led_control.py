@@ -9,11 +9,10 @@ try:
     import os
     import re
     import syslog
-    import logging
     import collections
     from sonic_led.led_control_base import LedControlBase
     from sonic_py_common import device_info
-    from subprocess import Popen, PIPE, STDOUT
+    from subprocess import Popen
 except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
@@ -202,7 +201,7 @@ class LedControl(LedControlBase):
     # Concrete implementation of port_link_state_change() method
     def port_link_state_change(self, portname, state):
         port_idx = self._port_name_to_index(portname)
-        if port_idx == None:
+        if port_idx is None:
             return
         ledMode = self._port_state_to_mode(port_idx, state)
         with open(self.f_led.format("port{}".format(port_idx)), 'r') as led_file:
