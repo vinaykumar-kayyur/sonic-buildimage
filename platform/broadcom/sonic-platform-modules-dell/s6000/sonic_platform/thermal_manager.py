@@ -1,8 +1,16 @@
 from sonic_platform_base.sonic_thermal_control.thermal_manager_base import ThermalManagerBase
 
-from .thermal_info import *
-from .thermal_action import *
-from .thermal_condition import *
+from .thermal_action import (
+    SetAllFanMaxSpeedAction, SetAllFanThermalLevelSpeedAction,
+    SetFanDrawerFaultStatusLed, SetFanDrawerNormalStatusLed,
+    ThermalShutdownAction
+)
+from .thermal_condition import (
+    AllFanDrawerGoodCondition, AnyFanDrawerAbsentOrFaultCondition,
+    OverTemperatureCondition
+)
+from .thermal_info import ChassisInfo, FanDrawerInfo, PsuFanInfo
+
 
 class ThermalManager(ThermalManagerBase):
 

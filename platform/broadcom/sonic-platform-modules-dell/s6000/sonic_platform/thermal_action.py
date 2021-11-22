@@ -95,7 +95,7 @@ class SetAllFanThermalLevelSpeedAction(ThermalPolicyAction):
 
 
 @thermal_json_object('chassis.thermal_shutdown')
-class SetFanThermalLevelSpeedAction(ThermalPolicyAction):
+class ThermalShutdownAction(ThermalPolicyAction):
     def execute(self, thermal_info_dict):
 
         chassis_info = self.get_chassis_info(thermal_info_dict)
