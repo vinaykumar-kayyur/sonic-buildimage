@@ -12,7 +12,7 @@
 [EFD_SUPPORT]      = 1;
 [FCOE_SUPPORT]     = 0;
 [TRILL_SUPPORT]    = 0;
-[WLAN_SUPPORT]     = 1;
+[WLAN_SUPPORT]     = 0;
 [NPM_SUPPORT]      = 1;
 [DOT1AE_SUPPORT]   = 1;
 [SRV6_SUPPORT]     = 0;
