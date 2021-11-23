@@ -35,7 +35,7 @@ try:
         import ConfigParser as configparser
 
     from sonic_platform_base.component_base import ComponentBase,           \
-                                                    FW_AUTO_INSTALLED,      \
+                                                    FW_AUTO_SCHEDULED,      \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
                                                     FW_AUTO_ERR_UKNOWN
@@ -119,7 +119,7 @@ class ONIEUpdater(object):
     ONIE_FW_UPDATE_CMD_ADD = '/usr/bin/mlnx-onie-fw-update.sh add {}'
     ONIE_FW_UPDATE_CMD_REMOVE = '/usr/bin/mlnx-onie-fw-update.sh remove {}'
     ONIE_FW_UPDATE_CMD_UPDATE = '/usr/bin/mlnx-onie-fw-update.sh update'
-    ONIE_FW_UPDATE_CMD_INSTALL = '/usr/bin/mlnx-onie-fw-update.sh --no-reboot update'
+    ONIE_FW_UPDATE_CMD_INSTALL = '/usr/bin/mlnx-onie-fw-update.sh update --no-reboot'
     ONIE_FW_UPDATE_CMD_SHOW_PENDING = '/usr/bin/mlnx-onie-fw-update.sh show-pending'
 
     ONIE_VERSION_PARSE_PATTERN = '([0-9]{4})\.([0-9]{2})-([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)'
@@ -373,7 +373,7 @@ class Component(ComponentBase):
 
         if boot_action in default_supported_boot:
             # Deferred to next boot
-            return FW_AUTO_INSTALLED
+            return FW_AUTO_SCHEDULED
 
         # boot_type did not match (skip)
         return FW_AUTO_ERR_BOOT_TYPE
@@ -540,9 +540,9 @@ class ComponentSSD(Component):
         if boot_action in supported_boot:
             if boot_action == 'cold':
                 # Defer this to during reboot
-                return FW_AUTO_INSTALLED
+                return FW_AUTO_SCHEDULED
             else:
-                self.update_firmware(image_path):
+                self.update_firmware(image_path)
                 return FW_AUTO_UPDATED
 
         # boot_type did not match (skip)
@@ -807,7 +807,7 @@ class ComponentCPLD(Component):
                 burn_firmware = mpfa.get_metadata().get('firmware', 'burn')
 
                 print("INFO: Processing {} burn file: firmware install".format(self.name))
-                self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware)):
+                self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware))
         else:
             return self.__install_firmware(image_path)
 

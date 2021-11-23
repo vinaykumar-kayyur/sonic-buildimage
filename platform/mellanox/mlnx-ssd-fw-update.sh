@@ -692,7 +692,7 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
 
 		    if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
 
-                        if [[ $ARG_FORCE_NO_POWER_CYCLE_FLAG == $TRUE ]]
+                        if [[ $ARG_FORCE_NO_POWER_CYCLE_FLAG == $TRUE ]]; then
 				LOG_MSG_AND_EXIT "An IMMEDIATE power cycle is REQUIRED to upgrade the SSD. Please perform a cold reboot as soon as possible."
 			fi
                         

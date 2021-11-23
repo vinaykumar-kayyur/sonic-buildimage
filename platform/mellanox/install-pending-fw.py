@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from config.fwutil.lib import ComponentStatusProvider, PlatformComponentsParser
+from fwutil.lib import ComponentStatusProvider, PlatformComponentsParser
 from sonic_platform.component import ComponentCPLD
 
 #Globals
@@ -15,14 +15,14 @@ pcp = PlatformComponentsParser(csp.is_modular_chassis())
 update_status = csp.read_au_status_file_if_exists()
 
 if update_status is None:
-    quit()
+    exit(0)
 
 # Parse platform components file
 pcp.parse_platform_components()
 
 
 # Iterate each component in the status file
-for boot_type, components in update_status:
+for boot_type, components in update_status.items():
     for comp in components:
 
         if comp["info"] != "scheduled": continue
@@ -43,7 +43,7 @@ for boot_type, components in update_status:
         if type(component) == ComponentCPLD:
             if CPLD_FLAG is not None:
                 print("WARNING: Multiple CPLD firmwares defined. Some CPLD updates may not fully complete.")
-            CPLD_FLAG = (component, fw_filw)
+            CPLD_FLAG = (component, fw_file)
         else:
             component.install_firmware(fw_file)
 

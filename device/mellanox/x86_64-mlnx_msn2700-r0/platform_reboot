@@ -30,8 +30,6 @@ function SafePwrCycle() {
 
 ParseArguments "$@"
 
-${PENDING_COMPONENT_FW}
-
 ${FW_UPGRADE_SCRIPT} --upgrade --verbose
 EXIT_CODE="$?"
 if [[ "${EXIT_CODE}" != "${EXIT_SUCCESS}" ]]; then
@@ -42,5 +40,7 @@ if [[ "${EXIT_CODE}" != "${EXIT_SUCCESS}" ]]; then
         exit "${EXIT_ERROR}"
     fi
 fi
+
+${PENDING_COMPONENT_FW}
 
 SafePwrCycle
