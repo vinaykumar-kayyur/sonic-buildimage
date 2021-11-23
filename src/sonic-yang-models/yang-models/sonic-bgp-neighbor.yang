@@ -9,7 +9,6 @@ module sonic-bgp-neighbor {
 
     import sonic-types {
         prefix stypes;
-        revision-date 2019-07-01;
     }
 
     import sonic-bgp-common {
