@@ -7,6 +7,11 @@ module sonic-bgp-neighbor {
         prefix inet;
     }
 
+    import sonic-types {
+        prefix stypes;
+        revision-date 2019-07-01;
+    }
+
     import sonic-bgp-common {
         prefix bgpcmn;
     }
@@ -99,8 +104,8 @@ module sonic-bgp-neighbor {
                 }
 
                 leaf admin_status {
-                    type boolean;
-                    description "To enable BGP peer";
+                    type stypes:admin_status;
+                    description "Admin status of BGP peer";
                 }
             }
 
