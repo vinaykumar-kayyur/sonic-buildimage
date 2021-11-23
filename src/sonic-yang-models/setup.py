@@ -78,6 +78,7 @@ setup(
     cmdclass={'build_py': my_build_py},
     data_files=[
         ('yang-models', ['./yang-models/sonic-acl.yang',
+                         './yang-models/sonic-auto_techsupport.yang',
                          './yang-models/sonic-bgp-common.yang',
                          './yang-models/sonic-bgp-global.yang',
                          './yang-models/sonic-bgp-neighbor.yang',
@@ -104,6 +105,7 @@ setup(
                          './yang-models/sonic-mgmt_vrf.yang',
                          './yang-models/sonic-ntp.yang',
                          './yang-models/sonic-nat.yang',
+                         './yang-models/sonic-pbh.yang',
                          './yang-models/sonic-port.yang',
                          './yang-models/sonic-portchannel.yang',
                          './yang-models/sonic-pfcwd.yang',
@@ -149,6 +151,7 @@ setup(
                          './cvlyang-models/sonic-mgmt_vrf.yang',
                          './cvlyang-models/sonic-ntp.yang',
                          './cvlyang-models/sonic-nat.yang',
+                         './cvlyang-models/sonic-pbh.yang',
                          './cvlyang-models/sonic-port.yang',
                          './cvlyang-models/sonic-portchannel.yang',
                          './cvlyang-models/sonic-pfcwd.yang',
