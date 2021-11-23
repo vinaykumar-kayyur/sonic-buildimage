@@ -203,7 +203,7 @@ class TestCfgGen(TestCase):
     # more robust by adding better parsing logic.
     def test_minigraph_acl(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
-        output = self.run_script(argument, True, True)
+        output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip().replace("Warning: Ignoring Control Plane ACL NTP_ACL without type\n", '')),
             utils.to_dict(
