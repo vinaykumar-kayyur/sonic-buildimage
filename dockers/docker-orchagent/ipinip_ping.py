@@ -53,6 +53,8 @@ class IPinIPListener(object):
             try:
                 output = subprocess.check_output(cmds)
             except subprocess.CalledProcessError:
+                # This error will be raised if the host interface has
+                # not been created yet and the `ip link` command fails
                 return False
             if 'state UP' not in str(output):
                 return False
