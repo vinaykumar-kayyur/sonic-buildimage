@@ -1,6 +1,6 @@
-From 7638a310a69dea9f47a845799dd3b5209937310c Mon Sep 17 00:00:00 2001
+From 79b07171c2c2651e535a468d7a56621a2a7049b9 Mon Sep 17 00:00:00 2001
 From: liuh-80 <58683130+liuh-80@users.noreply.github.com>
-Date: Fri, 19 Nov 2021 13:11:10 +0800
+Date: Tue, 23 Nov 2021 13:34:00 +0800
 Subject: [PATCH 3/3] Add local accounting.
 
 ---
@@ -13,25 +13,25 @@ Subject: [PATCH 3/3] Add local accounting.
  create mode 100644 local_accounting.h
 
 diff --git a/Makefile.am b/Makefile.am
-index c5bf861..002ec8a 100644
+index b6cb92b..dacc8fd 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -4,7 +4,7 @@
  EXTRA_DIST = ChangeLog README audisp_tacplus.spec \
  	audisp-tac_plus.conf audisp-tacplus.conf
  
--audisp_tacplus_SOURCES = audisp-tacplus.c password.c regex_helper.c trace.c
-+audisp_tacplus_SOURCES = audisp-tacplus.c password.c regex_helper.c trace.c local_accounting.c
+-audisp_tacplus_SOURCES = audisp-tacplus.c password.c regex_helper.c trace.c sudoers_helper.c
++audisp_tacplus_SOURCES = audisp-tacplus.c password.c regex_helper.c trace.c local_accounting.c sudoers_helper.c
  audisp_tacplus_CFLAGS = -O
  audisp_tacplus_LDADD = -lauparse -ltacsupport -ltac
  sbin_PROGRAMS = audisp-tacplus
 diff --git a/audisp-tacplus.c b/audisp-tacplus.c
-index 169ccac..b7c8f56 100644
+index 229694b..7a4ab9e 100644
 --- a/audisp-tacplus.c
 +++ b/audisp-tacplus.c
-@@ -68,6 +68,9 @@
- /* Remove password */
+@@ -69,6 +69,9 @@
  #include "password.h"
+ #include "sudoers_helper.h"
  
 +/* Local accounting */
 +#include "local_accounting.h"
@@ -39,21 +39,21 @@ index 169ccac..b7c8f56 100644
  #define _VMAJ 1
  #define _VMIN 0
  #define _VPATCH 0
-@@ -522,7 +525,13 @@ static void get_acct_record(auparse_state_t *au, int type)
+@@ -526,7 +529,13 @@ static void get_acct_record(auparse_state_t *au, int type)
       *  unknown, and in some cases, host may be not be set.
       */
      remove_password(logbase);
--    send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
+-    send_tacacs_acct(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
 +    if (tacacs_ctrl & ACCOUNTING_FLAG_TACACS) {
-+        send_tacacs_acct(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++        send_tacacs_acct(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
 +    }
 +    
 +    if (tacacs_ctrl & ACCOUNTING_FLAG_LOCAL) {
-+        accounting_to_syslog(loguser, tty?tty:"UNK", host, logbase, acct_type, taskno);
++        accounting_to_syslog(loguser, tty?tty:"UNK", host?host:"UNK", logbase, acct_type, taskno);
 +    }
  
-     if(freeloguser)
-         free(loguser);
+     if(host)
+         free(host);
 diff --git a/local_accounting.c b/local_accounting.c
 new file mode 100644
 index 0000000..e23acec
