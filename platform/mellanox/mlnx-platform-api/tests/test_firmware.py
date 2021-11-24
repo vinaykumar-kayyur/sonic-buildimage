@@ -27,7 +27,8 @@ sys.path.insert(0, modules_path)
 from sonic_platform.component import Component, ComponentSSD
 
 from sonic_platform_base.component_base import ComponentBase,           \
-                                                FW_AUTO_INSTALLED,      \
+                                                FW_AUTO_SCHEDULED,      \
+                                                FW_AUTO_UPDATED,        \
                                                 FW_AUTO_ERR_BOOT_TYPE,  \
                                                 FW_AUTO_ERR_IMAGE,      \
                                                 FW_AUTO_ERR_UKNOWN
@@ -51,7 +52,7 @@ test_data_default = [
         (None, False, None, FW_AUTO_ERR_IMAGE),
         (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
         (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UKNOWN),
-        (mock_update_firmware_success, True, 'cold', FW_AUTO_INSTALLED)
+        (mock_update_firmware_success, True, 'cold', FW_AUTO_SCHEDULED)
         ]
 
 test_data_ssd = [
@@ -59,9 +60,9 @@ test_data_ssd = [
         (None, mock_update_notification_error, True, None, FW_AUTO_ERR_UKNOWN),
         (mock_update_firmware_fail,    mock_update_notification_cold_boot, True, 'cold', FW_AUTO_ERR_UKNOWN),
         (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
-        (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'cold', FW_AUTO_INSTALLED),
-        (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'warm', FW_AUTO_INSTALLED),
-        (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'cold', FW_AUTO_INSTALLED)
+        (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'cold', FW_AUTO_SCHEDULED),
+        (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'warm', FW_AUTO_UPDATED),
+        (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'cold', FW_AUTO_UPDATED)
         ]
 
 @pytest.mark.parametrize('update_func, image_found, boot_type, expect', test_data_default)
