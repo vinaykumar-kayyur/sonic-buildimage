@@ -11,13 +11,25 @@ import subprocess
 import time
 
 from datetime import datetime
+from ipaddress import ip_interface
 from scapy.layers.inet import IP
 from scapy.layers.inet6 import IPv6
 from scapy.sendrecv import sniff
-from swsssdk import ConfigDBConnector
+from swsssdk import ConfigDBConnector, SonicV2Connector
 from sonic_py_common import logger as log
 
 logger = log.Logger()
+
+STATE_DB = 'STATE_DB'
+PORTCHANNEL_INTERFACE_TABLE = 'PORTCHANNEL_INTERFACE'
+TUNNEL_TABLE = 'TUNNEL'
+PEER_SWITCH_TABLE = 'PEER_SWITCH'
+INTF_TABLE_TEMPLATE = 'INTERFACE_TABLE|{}|{}'
+STATE_KEY = 'state'
+TUNNEL_TYPE_KEY = 'tunnel_type'
+DST_IP_KEY = 'dst_ip'
+ADDRESS_IPV4_KEY = 'address_ipv4'
+IPINIP_TUNNEL = 'ipinip'
 
 
 class IPinIPListener(object):
@@ -25,42 +37,55 @@ class IPinIPListener(object):
     def __init__(self):
         self.config_db = ConfigDBConnector()
         self.config_db.connect()
+        self.state_db = SonicV2Connector()
+        self.state_db.connect(STATE_DB)
+        self._portchannel_intfs = None
 
-    def get_portchannel_members(self):
+    @property
+    def portchannel_intfs(self):
         """
-        Gets all interfaces which are portchannel members in config DB
+        Gets all portchannel interfaces and IPv4 addresses in config DB
 
         Returns:
-            (list) Interface names which are portchannel members, stored
-                   as strings
+            (list) Tuples of a portchannel interface name (str) and
+                   associated IPv4 address (str)
         """
-        raw_members = self.config_db.get_keys('PORTCHANNEL_MEMBER')
-        members = [pair[1] for pair in raw_members]
-        return members
+        if self._portchannel_intfs is None:
+            intf_keys = self.config_db.get_keys(PORTCHANNEL_INTERFACE_TABLE)
+            portchannel_intfs = []
 
-    def all_ports_ok(self):
+            for key in intf_keys:
+                if isinstance(key, tuple) and len(key) > 1:
+                    if ip_interface(key[1]).version == 4:
+                        portchannel_intfs.append(key)
+
+            self._portchannel_intfs = portchannel_intfs
+
+        return self._portchannel_intfs
+
+    def all_portchannels_up(self):
         """
-        Checks if the host interfaces corresponding to portchannel
-        members are up
+        Checks if the portchannel interfaces are up
 
         Returns:
             (bool) True, if all interfaces are up
                    False, otherwise
         """
-        members = self.get_portchannel_members()
-        for intf in members:
-            cmds = ['ip', 'link', 'show', intf]
-            try:
-                output = subprocess.check_output(cmds)
-            except subprocess.CalledProcessError:
-                # This error will be raised if the host interface has
-                # not been created yet and the `ip link` command fails
+        intfs = self.portchannel_intfs
+        for intf in intfs:
+            intf_table_name = INTF_TABLE_TEMPLATE.format(intf[0], intf[1])
+            intf_state = self.state_db.get(
+                                STATE_DB,
+                                intf_table_name,
+                                STATE_KEY
+                              )
+
+            if intf_state and intf_state.lower() != 'ok':
                 return False
-            if 'state UP' not in str(output):
-                return False
+
         return True
 
-    def wait_for_ports_up(self, interval=5, timeout=60):
+    def wait_for_portchannels(self, interval=5, timeout=60):
         """
         Continuosly checks if all portchannel member host interfaces are up
 
@@ -76,13 +101,13 @@ class IPinIPListener(object):
         start = datetime.now()
 
         while (datetime.now() - start).seconds < 60:
-            if self.all_ports_ok():
-                logger.log_info("All portchannel members are up")
+            if self.all_portchannels_up():
+                logger.log_info("All portchannel intfs are up")
                 return None
-            logger.log_info("Not all portchannel members are up")
+            logger.log_info("Not all portchannel intfs are up")
             time.sleep(interval)
 
-        raise RuntimeError('Portchannel member interfaces did not come '
+        raise RuntimeError('Portchannel intfs did not come '
                            'up within {}'.format(timeout))
 
     def get_ipinip_tunnel_addrs(self):
@@ -95,24 +120,26 @@ class IPinIPListener(object):
         Returns:
             ((str) self_loopback_ip, (str) peer_loopback_ip)
             or
-            (None, None) if an error is encountered. This most likely means
-                        the host device is not a dual ToR device
+            (None, None) If the tunnel type is not IPinIP
+                         or
+                         if an error is encountered. This most likely means
+                         the host device is not a dual ToR device
         """
         try:
-            peer_switch = self.config_db.get_keys('PEER_SWITCH')[0]
-            tunnel = self.config_db.get_keys('TUNNEL')[0]
+            peer_switch = self.config_db.get_keys(PEER_SWITCH_TABLE)[0]
+            tunnel = self.config_db.get_keys(TUNNEL_TABLE)[0]
         except IndexError:
             logger.log_warning('PEER_SWITCH or TUNNEL table'
                                'not found in config DB')
             return None, None
 
         try:
+            tunnel_table = self.config_db.get_entry(TUNNEL_TABLE, tunnel)
+            tunnel_type = tunnel_table[TUNNEL_TYPE_KEY].lower()
+            self_loopback_ip = tunnel_table[DST_IP_KEY]
             peer_loopback_ip = self.config_db.get_entry(
-                                    'PEER_SWITCH', peer_switch
-                                    )['address_ipv4']
-            self_loopback_ip = self.config_db.get_entry(
-                                    'TUNNEL', tunnel
-                                    )['dst_ip']
+                                    PEER_SWITCH_TABLE, peer_switch
+                                    )[ADDRESS_IPV4_KEY]
         except KeyError as e:
             logger.log_warning(
                 'PEER_SWITCH or TUNNEL table missing data, '
@@ -121,7 +148,10 @@ class IPinIPListener(object):
             )
             return None, None
 
-        return self_loopback_ip, peer_loopback_ip
+        if tunnel_type == IPINIP_TUNNEL:
+            return self_loopback_ip, peer_loopback_ip
+
+        return None, None
 
     def get_inner_pkt_type(self, packet):
         """
@@ -158,7 +188,8 @@ class IPinIPListener(object):
             """
             inner_packet_type = self.get_inner_pkt_type(packet)
             if inner_packet_type and packet[IP].dst == self_ip:
-                cmds = ['ping', '-c1', '-W1']
+                cmds = ['timeout', '0.2', 'ping', '-c1',
+                        '-W1', '-i0', '-n', '-q']
                 if inner_packet_type == IPv6:
                     cmds.append('-6')
                 dst_ip = packet[IP][inner_packet_type].dst
@@ -173,17 +204,22 @@ class IPinIPListener(object):
             return None
 
         packet_filter = 'host {} and host {}'.format(self_ip, peer_ip)
-        logger.log_notice('Starting IPinIP listener for IPs {} and {}'
-                          .format(self_ip, peer_ip))
+        logger.log_notice('Starting IPinIP listener for {}'
+                          .format(packet_filter))
+
+        portchannel_intfs = self.portchannel_intfs
+        portchannels = [pair[0] for pair in portchannel_intfs]
+        logger.log_info("Listening on interfaces {}".format(portchannels))
+
         while True:
             sniff(
-                iface=self.get_portchannel_members(),
+                iface=portchannels,
                 filter=packet_filter,
                 prn=_ping_inner_dst
                 )
 
     def run(self):
-        self.wait_for_ports_up()
+        self.wait_for_portchannels()
         self.listen_for_ipinip()
 
 
