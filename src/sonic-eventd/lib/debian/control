@@ -1,0 +1,17 @@
+Source: sonic
+Maintainer: Dell
+Section: net
+Priority: optional
+Build-Depends: dh-exec (>=0.3), debhelper (>= 9), autotools-dev
+Standards-Version: 1.0.0
+
+Package: libeventnotify
+Architecture: any
+Section: libs
+Description: This package contains Event notify API.
+
+Package: libeventnotify-dev
+Architecture: any
+Depends: libeventnotify (= ${binary:Version})
+Section: libdevel
+Description: This package contains development files for Event Notify
