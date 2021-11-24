@@ -185,7 +185,6 @@ class ONIEUpdater(object):
             raise RuntimeError("Failed to unstage firmware update: {}".format(str(e)))
 
     def __trigger_update(self, reboot):
-
         if reboot:
             cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
         else:
@@ -467,6 +466,9 @@ class ComponentONIE(Component):
     def get_firmware_update_notification(self, image_path):
         return "Immediate cold reboot is required to complete {} firmware update".format(self.name)
 
+    def install_firmware_no_reboot(self, image_path):
+        return self.__install_firmware(image_path, allow_reboot=False)
+
     def install_firmware(self, image_path):
         return self.__install_firmware(image_path)
 
@@ -638,6 +640,9 @@ class ComponentSSD(Component):
     def install_firmware(self, image_path):
         return self.__install_firmware(image_path)
 
+    def install_firmware_no_reboot(self, image_path):
+        return self.__install_firmware(image_path, allow_reboot=False)
+
     def update_firmware(self, image_path):
         self.__install_firmware(image_path)
 
@@ -694,6 +699,9 @@ class ComponentBIOS(Component):
 
     def install_firmware(self, image_path):
         return self.__install_firmware(image_path)
+
+    def install_firmware_no_reboot(self, image_path):
+        return self.__install_firmware(image_path, allow_reboot=False)
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path, reboot=True)

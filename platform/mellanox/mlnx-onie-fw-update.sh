@@ -188,7 +188,7 @@ case "${cmd}" in
             if [[ ${rc} -eq 0 ]]; then
                 if [[ "${arg}" == "--no-reboot" ]]; then
                     echo "ONIE firmware update successfully STAGED for install at NEXT reboot. Please reboot manually to complete installation."
-		    exit 0
+                    exit 0
                 else
                     system_reboot
                 fi

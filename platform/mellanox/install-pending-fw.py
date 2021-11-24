@@ -18,7 +18,13 @@ if update_status is None:
     exit(0)
 
 # Parse platform components file
-pcp.parse_platform_components()
+try:
+    pcp.parse_platform_components()
+except Exception as e:
+    print("Error parsing platform components. Firmware update failed: {}".format(str(e)))
+    print("System will reboot in 10 seconds please fix issue and run update command again.")
+    time.sleep(10)
+    exit(-1)
 
 
 # Iterate each component in the status file
@@ -45,7 +51,7 @@ for boot_type, components in update_status.items():
                 print("WARNING: Multiple CPLD firmwares defined. Some CPLD updates may not fully complete.")
             CPLD_FLAG = (component, fw_file)
         else:
-            component.__install_firmware(fw_file, allow_reboot=False)
+            component.install_firmware_no_reboot(fw_file)
 
 # Run CPLD refresh last if needed
 if CPLD_FLAG is not None:
