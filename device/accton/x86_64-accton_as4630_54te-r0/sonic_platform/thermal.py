@@ -9,32 +9,40 @@
 import os
 import os.path
 import glob
+from collections import namedtuple
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+Threshold = namedtuple('Threshold', ['high_crit', 'high_err', 'high_warn',
+                       'low_warn', 'low_err', 'low_crit'], defaults=[0]*6)
+
 
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
-    THERMAL_NAME_LIST = []
+    THERMAL_NAME_LIST = (
+        "Main Board 0x48",
+        "CPU Board 0x4B",
+        "Fan Board 0x4A"
+    )
     SYSFS_PATH = "/sys/bus/i2c/devices"
+    THRESHOLDS = {
+        0: Threshold(55.0, 50.0, 45.0),
+        1: Threshold(55.0, 50.0, 45.0),
+        2: Threshold(55.0, 50.0, 45.0)
+    }
 
     def __init__(self, thermal_index=0):
-        self.THERMAL_NAME_LIST = []
         self.SYSFS_PATH = "/sys/bus/i2c/devices"
         self.index = thermal_index
-        # Add thermal name
-        self.THERMAL_NAME_LIST.append("Temp sensor 1")
-        self.THERMAL_NAME_LIST.append("Temp sensor 2")
-        self.THERMAL_NAME_LIST.append("Temp sensor 3")        
 
         # Set hwmon path
         i2c_path = {
-            0: "14-0048/hwmon/hwmon*/", 
-            1: "24-004b/hwmon/hwmon*/", 
+            0: "14-0048/hwmon/hwmon*/",
+            1: "24-004b/hwmon/hwmon*/",
             2: "25-004a/hwmon/hwmon*/"
         }.get(self.index, None)
 
@@ -45,7 +53,7 @@ class Thermal(ThermalBase):
     def __read_txt_file(self, file_path):
         for filename in glob.glob(file_path):
             try:
-                with open(filename, 'r') as fd:                    
+                with open(filename, 'r') as fd:
                     data =fd.readline().rstrip()
                     return data
             except IOError as e:
@@ -59,18 +67,13 @@ class Thermal(ThermalBase):
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0        
+            return 0
 
-    def __set_threshold(self, file_name, temperature):
-        temp_file_path = os.path.join(self.hwmon_path, file_name)
-        for filename in glob.glob(temp_file_path):
-            try:
-                with open(filename, 'w') as fd:
-                    fd.write(str(temperature))
-                return True
-            except IOError as e:
-                print("IOError")
-
+    def __try_get_threshold(self, type):
+        if self.index in self.THRESHOLDS:
+            return getattr(self.THRESHOLDS[self.index], type)
+        else:
+            return None
 
     def get_temperature(self):
         """
@@ -81,31 +84,6 @@ class Thermal(ThermalBase):
         """
         temp_file = "temp{}_input".format(self.ss_index)
         return self.__get_temp(temp_file)
-
-    def get_high_threshold(self):
-        """
-        Retrieves the high threshold temperature of thermal
-        Returns:
-            A float number, the high threshold temperature of thermal in Celsius
-            up to nearest thousandth of one degree Celsius, e.g. 30.125
-        """
-        temp_file = "temp{}_max".format(self.ss_index)
-        return self.__get_temp(temp_file)
-
-    def set_high_threshold(self, temperature):
-        """
-        Sets the high threshold temperature of thermal
-        Args :
-            temperature: A float number up to nearest thousandth of one degree Celsius,
-            e.g. 30.125
-        Returns:
-            A boolean, True if threshold is set successfully, False if not
-        """
-        temp_file = "temp{}_max".format(self.ss_index)
-        temperature = temperature *1000
-        self.__set_threshold(temp_file, temperature)
-
-        return True
 
     def get_name(self):
         """
@@ -141,5 +119,23 @@ class Thermal(ThermalBase):
         raw_txt = self.__read_txt_file(file_path)
         if raw_txt is None:
             return False
-        else:     
+        else:
             return int(raw_txt) != 0
+
+    def get_high_critical_threshold(self):
+        return self.__try_get_threshold('high_crit')
+
+    def get_low_critical_threshold(self):
+        return self.__try_get_threshold('low_crit')
+
+    def get_high_threshold(self):
+        return self.__try_get_threshold('high_err')
+
+    def get_low_threshold(self):
+        return self.__try_get_threshold('low_err')
+
+    def get_high_warning_threshold(self):
+        return self.__try_get_threshold('high_warn')
+
+    def get_low_warning_threshold(self):
+        return self.__try_get_threshold('low_warn')
