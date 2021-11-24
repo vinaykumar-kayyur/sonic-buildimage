@@ -35,6 +35,7 @@ try:
         import ConfigParser as configparser
 
     from sonic_platform_base.component_base import ComponentBase,           \
+                                                    FW_AUTO_UPDATED         \
                                                     FW_AUTO_SCHEDULED,      \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
@@ -538,7 +539,7 @@ class ComponentSSD(Component):
             return FW_AUTO_ERR_UKNOWN
 
         if boot_action in supported_boot:
-            if boot_action == 'cold':
+            if supported_boot == ['cold']:
                 # Defer this to during reboot
                 return FW_AUTO_SCHEDULED
             else:
@@ -762,6 +763,41 @@ class ComponentCPLD(Component):
             return False
 
         return True
+
+    def __refresh_cpld(self, image_path):
+        with MPFAManager(image_path) as mpfa:
+            if not mpfa.get_metadata().has_option('firmware', 'refresh'):
+                raise RuntimeError("Failed to get {} refresh firmware".format(self.name))
+
+            refresh_firmware = mpfa.get_metadata().get('firmware', 'refresh')
+
+            print("INFO: Processing {} refresh file: firmware update".format(self.name))
+            self.__install_firmware(os.path.join(mpfa.get_path(), refresh_firmware))
+
+
+    def auto_update_firmware(self, image_path, boot_action):
+        """
+        Default handling of attempted automatic update for a component of a Mellanox switch.
+        Will skip the installation if the boot_action is 'warm' or 'fast' and will call update_firmware()
+        if boot_action is fast.
+        """
+
+        default_supported_boot = ['cold']
+
+        # Verify image path exists
+        if not os.path.exists(image_path):
+            # Invalid image path
+            return FW_AUTO_ERR_IMAGE
+
+        if boot_action in default_supported_boot:
+            # Defer refresh to next boot
+            if self.install_firmware(image_path):
+                return FW_AUTO_SCHEDULED
+            else:
+                return FW_AUTO_ERROR_UNKNOWN
+
+        # boot_type did not match (skip)
+        return FW_AUTO_ERR_BOOT_TYPE
 
     def get_firmware_version(self):
         part_number_file = self.CPLD_PART_NUMBER_FILE.format(self.idx)

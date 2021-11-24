@@ -36,9 +36,6 @@ from sonic_platform_base.component_base import ComponentBase,           \
 def mock_update_firmware_success(image_path):
     return True
 
-def mock_update_firmware_fail(image_path):
-    return False
-
 def mock_update_notification_cold_boot(image_path):
     return "Immediate power cycle is required to complete NAME firmware update"
 
@@ -51,14 +48,20 @@ def mock_update_notification_error(image_path):
 test_data_default = [
         (None, False, None, FW_AUTO_ERR_IMAGE),
         (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
-        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UKNOWN),
+        (mock_update_firmware_success, True, 'cold', FW_AUTO_SCHEDULED)
+        ]
+
+test_data_cpld = [
+        (None, False, None, FW_AUTO_ERR_IMAGE),
+        (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
+        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UNKNOWN)
         (mock_update_firmware_success, True, 'cold', FW_AUTO_SCHEDULED)
         ]
 
 test_data_ssd = [
         (None, None, False, None, FW_AUTO_ERR_IMAGE),
         (None, mock_update_notification_error, True, None, FW_AUTO_ERR_UKNOWN),
-        (mock_update_firmware_fail,    mock_update_notification_cold_boot, True, 'cold', FW_AUTO_ERR_UKNOWN),
+        (mock_update_firmware_fail,    mock_update_notification_warm_boot, True, 'cold', FW_AUTO_ERR_UKNOWN),
         (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
         (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'cold', FW_AUTO_SCHEDULED),
         (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'warm', FW_AUTO_UPDATED),
@@ -73,7 +76,22 @@ def test_auto_update_firmware_default(monkeypatch, update_func, image_found, boo
 
     test_component = Component()
 
-    monkeypatch.setattr(test_component, 'update_firmware', update_func)
+    monkeypatch.setattr(os.path, 'exists', mock_path_exists)
+
+    result = test_component.auto_update_firmware(None, boot_type)
+
+    assert result == expect
+
+
+@pytest.mark.parametrize('update_func, image_found, boot_type, expect', test_data_cpld)
+def test_auto_update_firmware_cpld(monkeypatch, update_func, image_found, boot_type, expect):
+
+    def mock_path_exists(path):
+        return image_found
+
+    test_component = ComponentCPLD()
+
+    monkeypatch.setattr(test_component, 'install_firmware', update_func)
     monkeypatch.setattr(os.path, 'exists', mock_path_exists)
 
     result = test_component.auto_update_firmware(None, boot_type)

@@ -49,5 +49,5 @@ for boot_type, components in update_status.items():
 
 # Run CPLD refresh last if needed
 if CPLD_FLAG is not None:
-    CPLD_FLAG[0].update_firmware(CPLD_FLAG[1])
+    CPLD_FLAG[0].__refresh_cpld(CPLD_FLAG[1])
     
