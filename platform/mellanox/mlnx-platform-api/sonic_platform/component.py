@@ -184,7 +184,7 @@ class ONIEUpdater(object):
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to unstage firmware update: {}".format(str(e)))
 
-    def __trigger_update(self, reboot=False):
+    def __trigger_update(self, reboot):
 
         if reboot:
             cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
@@ -305,7 +305,7 @@ class ONIEUpdater(object):
 
         return firmware_info
 
-    def update_firmware(self, image_path, reboot=False):
+    def update_firmware(self, image_path, reboot):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
@@ -441,7 +441,7 @@ class ComponentONIE(Component):
         self.description = self.COMPONENT_DESCRIPTION
         self.onie_updater = ONIEUpdater()
 
-    def __install_firmware(self, image_path, reboot=False):
+    def __install_firmware(self, image_path, allow_reboot=True):
         if not self._check_file_validity(image_path):
             return False
 
@@ -636,7 +636,7 @@ class ComponentSSD(Component):
         return notification
 
     def install_firmware(self, image_path):
-        return self.__install_firmware(image_path, allow_reboot=False)
+        return self.__install_firmware(image_path)
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path)
@@ -657,7 +657,7 @@ class ComponentBIOS(Component):
         self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
         self.onie_updater = ONIEUpdater()
 
-    def __install_firmware(self, image_path, reboot=False):
+    def __install_firmware(self, image_path, allow_reboot=True):
         if not self.onie_updater.is_non_onie_firmware_update_supported():
             print("ERROR: ONIE {} or later is required".format(self.onie_updater.get_onie_required_version()))
             return False
@@ -835,7 +835,7 @@ class ComponentCPLD(Component):
         return "Immediate power cycle is required to complete {} firmware update".format(self.name)
 
     def install_firmware(self, image_path):
-        if ".mpfa" in image_path:
+        if MPFAManager.MPFA_EXTENSION in image_path:
             with MPFAManager(image_path) as mpfa:
                 if not mpfa.get_metadata().has_option('firmware', 'burn'):
                     raise RuntimeError("Failed to get {} burn firmware".format(self.name))

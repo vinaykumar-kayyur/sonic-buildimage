@@ -45,7 +45,7 @@ for boot_type, components in update_status.items():
                 print("WARNING: Multiple CPLD firmwares defined. Some CPLD updates may not fully complete.")
             CPLD_FLAG = (component, fw_file)
         else:
-            component.install_firmware(fw_file)
+            component.__install_firmware(fw_file, allow_reboot=False)
 
 # Run CPLD refresh last if needed
 if CPLD_FLAG is not None:
