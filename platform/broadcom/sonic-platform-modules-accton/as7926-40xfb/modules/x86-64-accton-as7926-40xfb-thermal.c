@@ -32,6 +32,7 @@
 #include <linux/platform_device.h>
 
 #define DRVNAME "as7926_40xfb_thermal"
+#define THERMAL_COUNT 10
 #define ACCTON_IPMI_NETFN 0x34
 #define IPMI_THERMAL_READ_CMD 0x12
 #define IPMI_THERMAL_WRITE_CMD 0x13
@@ -42,8 +43,6 @@
 static void ipmi_msg_handler(struct ipmi_recv_msg *msg, void *user_msg_data);
 static ssize_t show_temp(struct device *dev, struct device_attribute *attr,
 	char *buf);
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-	const char *buf, size_t count);
 static ssize_t set_max(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
 static int as7926_40xfb_thermal_probe(struct platform_device *pdev);
@@ -78,10 +77,10 @@ struct as7926_40xfb_thermal_data {
 	struct mutex update_lock;
 	char valid;		   /* != 0 if registers are valid */
 	unsigned long last_updated;	/* In jiffies */
-	char   ipmi_resp[36]; /* 3 bytes for each thermal */
+	char ipmi_resp[THERMAL_COUNT*TEMP_DATA_COUNT];/* 3 bytes for each thermal */
 	struct ipmi_data ipmi;
 	unsigned char ipmi_tx_data[2];  /* 0: thermal id, 1: temp */
-	char temp_max[12];
+	char temp_max[THERMAL_COUNT];
 };
 
 struct as7926_40xfb_thermal_data *data = NULL;
@@ -106,8 +105,6 @@ enum as7926_40xfb_thermal_sysfs_attrs {
 	TEMP8_INPUT,
 	TEMP9_INPUT,
 	TEMP10_INPUT,
-	TEMP11_INPUT,
-	TEMP12_INPUT,
 	TEMP1_MAX,
 	TEMP2_MAX,
 	TEMP3_MAX,
@@ -118,17 +115,9 @@ enum as7926_40xfb_thermal_sysfs_attrs {
 	TEMP8_MAX,
 	TEMP9_MAX,
 	TEMP10_MAX,
-	TEMP11_MAX,
-	TEMP12_MAX,
 };
 
-#define DECLARE_THERMAL_SENSOR_DEVICE_ATTR_1(index) \
-	static SENSOR_DEVICE_ATTR(temp##index##_input, S_IWUSR | S_IRUGO, \
-					show_temp, set_temp, TEMP##index##_INPUT); \
-	static SENSOR_DEVICE_ATTR(temp##index##_max, S_IWUSR | S_IRUGO, show_temp,\
-					set_max, TEMP##index##_MAX)
-
-#define DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(index) \
+#define DECLARE_THERMAL_SENSOR_DEVICE_ATTR(index) \
 	static SENSOR_DEVICE_ATTR(temp##index##_input, S_IRUGO, show_temp, \
 					NULL, TEMP##index##_INPUT); \
 	static SENSOR_DEVICE_ATTR(temp##index##_max, S_IWUSR | S_IRUGO, show_temp,\
@@ -138,18 +127,16 @@ enum as7926_40xfb_thermal_sysfs_attrs {
 	&sensor_dev_attr_temp##index##_input.dev_attr.attr, \
 	&sensor_dev_attr_temp##index##_max.dev_attr.attr
 
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_1(1);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_1(2);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(3);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(4);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(5);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(6);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(7);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(8);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(9);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(10);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(11);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_2(12);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(1);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(2);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(3);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(4);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(5);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(6);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(7);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(8);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(9);
+DECLARE_THERMAL_SENSOR_DEVICE_ATTR(10);
 
 static struct attribute *as7926_40xfb_thermal_attributes[] = {
 	DECLARE_THERMAL_ATTR(1),
@@ -162,8 +149,6 @@ static struct attribute *as7926_40xfb_thermal_attributes[] = {
 	DECLARE_THERMAL_ATTR(8),
 	DECLARE_THERMAL_ATTR(9),
 	DECLARE_THERMAL_ATTR(10),
-	DECLARE_THERMAL_ATTR(11),
-	DECLARE_THERMAL_ATTR(12),
 	NULL
 };
 
@@ -316,7 +301,7 @@ static ssize_t show_temp(struct device *dev, struct device_attribute *da,
 
 	mutex_lock(&data->update_lock);
 
-	if (attr->index >= TEMP1_MAX && attr->index <= TEMP12_MAX) {
+	if (attr->index >= TEMP1_MAX && attr->index <= TEMP10_MAX) {
 		int max = data->temp_max[attr->index-TEMP1_MAX];
 		mutex_unlock(&data->update_lock);
 		return sprintf(buf, "%d\n", max * 1000);
@@ -352,43 +337,6 @@ static ssize_t show_temp(struct device *dev, struct device_attribute *da,
 
 	mutex_unlock(&data->update_lock);
 	return sprintf(buf, "%d\n", status);
-
-exit:
-	mutex_unlock(&data->update_lock);
-	return status;
-}
-
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-			const char *buf, size_t count)
-{
-	long temp;
-	int status;
-	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-
-	status = kstrtol(buf, 10, &temp);
-	if (status)
-		return status;
-
-	if (temp > 127 || temp < -128)
-		return -EINVAL;
-
-	mutex_lock(&data->update_lock);
-
-	/* Send IPMI write command */
-	data->ipmi_tx_data[0] = attr->index + 1;
-	data->ipmi_tx_data[1] = (s8)temp;
-	status = ipmi_send_message(&data->ipmi, IPMI_THERMAL_WRITE_CMD,
-								data->ipmi_tx_data, sizeof(data->ipmi_tx_data), NULL, 0);
-	if (unlikely(status != 0))
-		goto exit;
-
-	if (unlikely(data->ipmi.rx_result != 0)) {
-		status = -EIO;
-		goto exit;
-	}
-
-	data->ipmi_resp[attr->index * TEMP_DATA_COUNT + TEMP_INPUT] = temp;
-	status = count;
 
 exit:
 	mutex_unlock(&data->update_lock);

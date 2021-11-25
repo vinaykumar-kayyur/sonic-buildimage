@@ -18,7 +18,7 @@ except ImportError as e:
 NUM_FAN_TRAY = 5
 NUM_FAN = 2
 NUM_PSU = 2
-NUM_THERMAL = 12
+NUM_THERMAL = 10
 NUM_QSFP = 53
 PORT_START = 1
 PORT_END = 55
@@ -29,7 +29,7 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
+HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
 
 
 class Chassis(ChassisBase):
