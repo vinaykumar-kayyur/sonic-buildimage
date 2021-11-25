@@ -40,7 +40,7 @@
             "sonic-syslog:SYSLOG_SERVER": {
                 "SYSLOG_SERVER_LIST": [
                     {
-                        "server_address": "1111:22:33.1"
+                        "server_address": "1111.22.33.1"
                     }
                 ]
             }

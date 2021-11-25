@@ -16,14 +16,12 @@ module sonic-syslog {
             description "SYSLOG SERVER part of config_db.json";
 
             list SYSLOG_SERVER_LIST {
-                description
-                    "Number of upstream SYSLOG servers, limiting to 10";
 
                 key "server_address";
 
                 leaf server_address {
                     description "syslog server ip address";
-                    type inet:host;
+                    type inet:ipv4-address;
                 }
             } /* end of list SYSLOG_SERVER_LIST */ 
 
