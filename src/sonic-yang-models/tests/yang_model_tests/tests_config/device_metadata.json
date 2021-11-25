@@ -44,12 +44,13 @@
             }
         }
     },
-    "DEVICE_METADATA_TYPE_CORRECT_PATTERN": {
+    "DEVICE_METADATA_DEFAULT_SYNCHRONOUS_MODE": {
         "sonic-device_metadata:sonic-device_metadata": {
             "sonic-device_metadata:DEVICE_METADATA": {
                 "sonic-device_metadata:localhost": {
-                    "bgp_asn": "65002",
-                    "type": "BackEndToRRouter"
+                    "bgp_asn": "65001",
+                    "hostname": "DUT-CSW",
+                    "platform": "Stone-DX010"
                 }
             }
         }
