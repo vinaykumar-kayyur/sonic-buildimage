@@ -192,7 +192,7 @@ class IPinIPListener(object):
                         '-W1', '-i0', '-n', '-q']
                 if inner_packet_type == IPv6:
                     cmds.append('-6')
-                dst_ip = packet[IP][inner_packet_type].dst
+                dst_ip = packet[IP].payload[inner_packet_type].dst
                 cmds.append(dst_ip)
                 logger.log_info("Running command '{}'".format(' '.join(cmds)))
                 subprocess.run(cmds, stdout=subprocess.DEVNULL)
