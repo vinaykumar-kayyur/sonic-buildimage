@@ -31,11 +31,6 @@ class Thermal(ThermalBase):
         self.THERMAL_NAME_LIST.append("Temp sensor 4")
         self.THERMAL_NAME_LIST.append("Temp sensor 5")
         self.THERMAL_NAME_LIST.append("Temp sensor 6")
-        self.THERMAL_NAME_LIST.append("Temp sensor 7")
-        self.THERMAL_NAME_LIST.append("Temp sensor 8")
-        self.THERMAL_NAME_LIST.append("Temp sensor 9")
-        self.THERMAL_NAME_LIST.append("Temp sensor 10")
-        self.THERMAL_NAME_LIST.append("Temp sensor 11")
 
         self.hwmon_path = self.SYSFS_PATH
         self.ss_key = self.THERMAL_NAME_LIST[self.index]

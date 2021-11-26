@@ -5,8 +5,8 @@ After=sysinit.target
 DefaultDependencies=no
 
 [Service]
-ExecStartPre=/usr/local/bin/accton_as7535_32xb_util.py install
-ExecStart=/usr/local/bin/accton_as7535_32xb_monitor.py
+Type=oneshot
+ExecStart=/usr/local/bin/accton_as7535_32xb_util.py install
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
 TimeoutSec=300
@@ -16,4 +16,3 @@ LimitCORE=infinity
 
 [Install]
 WantedBy=multi-user.target
-

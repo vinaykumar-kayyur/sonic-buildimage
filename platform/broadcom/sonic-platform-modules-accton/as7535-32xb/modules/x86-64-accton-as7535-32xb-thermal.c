@@ -35,7 +35,6 @@
 #define DRVNAME "as7535_32xb_thermal"
 #define ACCTON_IPMI_NETFN 0x34
 #define IPMI_THERMAL_READ_CMD 0x12
-#define IPMI_THERMAL_WRITE_CMD 0x13
 
 #define IPMI_TIMEOUT (5 * HZ)
 #define IPMI_ERR_RETRY_TIMES 1
@@ -43,8 +42,6 @@
 static void ipmi_msg_handler(struct ipmi_recv_msg *msg, void *user_msg_data);
 static ssize_t show_temp(struct device *dev, struct device_attribute *attr,
 	char *buf);
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-	const char *buf, size_t count);
 static ssize_t set_max(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
 static int as7535_32xb_thermal_probe(struct platform_device *pdev);
@@ -103,30 +100,13 @@ enum as7535_32xb_thermal_sysfs_attrs {
 	TEMP4_INPUT, // 0x4D lm75
 	TEMP5_INPUT, // 0x4E lm75
 	TEMP6_INPUT, // 0x4F lm75
-	TEMP7_INPUT, // FPGA 0x30
-	TEMP8_INPUT, // FPGA 0x31
-	TEMP9_INPUT, // FPGA 0x32
-	TEMP10_INPUT, // FPGA 0x33
-	TEMP11_INPUT, // FPGA 0x34
 	TEMP1_MAX,
 	TEMP2_MAX,
 	TEMP3_MAX,
 	TEMP4_MAX,
 	TEMP5_MAX,
-	TEMP6_MAX,
-	TEMP7_MAX,
-	TEMP8_MAX,
-	TEMP9_MAX,
-	TEMP10_MAX,
-	TEMP11_MAX,
+	TEMP6_MAX
 };
-
-// Writable temp_input, for FPGA sensors
-#define DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(index) \
-	static SENSOR_DEVICE_ATTR(temp##index##_input, S_IWUSR | S_IRUGO, \
-					show_temp, set_temp, TEMP##index##_INPUT); \
-	static SENSOR_DEVICE_ATTR(temp##index##_max, S_IWUSR | S_IRUGO, show_temp,\
-					set_max, TEMP##index##_MAX)
 
 // Read only temp_input
 #define DECLARE_THERMAL_SENSOR_DEVICE_ATTR_R(index) \
@@ -145,11 +125,6 @@ DECLARE_THERMAL_SENSOR_DEVICE_ATTR_R(3);
 DECLARE_THERMAL_SENSOR_DEVICE_ATTR_R(4);
 DECLARE_THERMAL_SENSOR_DEVICE_ATTR_R(5);
 DECLARE_THERMAL_SENSOR_DEVICE_ATTR_R(6);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(7);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(8);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(9);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(10);
-DECLARE_THERMAL_SENSOR_DEVICE_ATTR_W(11);
 
 static struct attribute *as7535_32xb_thermal_attributes[] = {
 	DECLARE_THERMAL_ATTR(1),
@@ -158,11 +133,6 @@ static struct attribute *as7535_32xb_thermal_attributes[] = {
 	DECLARE_THERMAL_ATTR(4),
 	DECLARE_THERMAL_ATTR(5),
 	DECLARE_THERMAL_ATTR(6),
-	DECLARE_THERMAL_ATTR(7),
-	DECLARE_THERMAL_ATTR(8),
-	DECLARE_THERMAL_ATTR(9),
-	DECLARE_THERMAL_ATTR(10),
-	DECLARE_THERMAL_ATTR(11),
 	NULL
 };
 
@@ -315,7 +285,7 @@ static ssize_t show_temp(struct device *dev, struct device_attribute *da,
 
 	mutex_lock(&data->update_lock);
 
-	if (attr->index >= TEMP1_MAX && attr->index <= TEMP11_MAX) {
+	if (attr->index >= TEMP1_MAX && attr->index <= TEMP6_MAX) {
 		int max = data->temp_max[attr->index - TEMP1_MAX];
 		mutex_unlock(&data->update_lock);
 		return sprintf(buf, "%d\n", max * 1000);
@@ -351,43 +321,6 @@ static ssize_t show_temp(struct device *dev, struct device_attribute *da,
 
 	mutex_unlock(&data->update_lock);
 	return sprintf(buf, "%d\n", status);
-
-exit:
-	mutex_unlock(&data->update_lock);
-	return status;
-}
-
-static ssize_t set_temp(struct device *dev, struct device_attribute *da,
-			const char *buf, size_t count)
-{
-	long temp;
-	int status;
-	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-
-	status = kstrtol(buf, 10, &temp);
-	if (status)
-		return status;
-
-	if (temp > 127 || temp < -128)
-		return -EINVAL;
-
-	mutex_lock(&data->update_lock);
-
-	/* Send IPMI write command */
-	data->ipmi_tx_data[0] = attr->index - TEMP6_INPUT;
-	data->ipmi_tx_data[1] = (s8)temp;
-	status = ipmi_send_message(&data->ipmi, IPMI_THERMAL_WRITE_CMD,
-								data->ipmi_tx_data, sizeof(data->ipmi_tx_data), NULL, 0);
-	if (unlikely(status != 0))
-		goto exit;
-
-	if (unlikely(data->ipmi.rx_result != 0)) {
-		status = -EIO;
-		goto exit;
-	}
-
-	data->ipmi_resp[attr->index * TEMP_DATA_COUNT + TEMP_INPUT] = temp;
-	status = count;
 
 exit:
 	mutex_unlock(&data->update_lock);
