@@ -362,6 +362,8 @@ def do_install():
                 return  status        
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
+    do_sonic_platform_install()
+
     return
     
 def do_uninstall():
@@ -384,6 +386,8 @@ def do_uninstall():
             if FORCE == 0:        
                 return  status                          
                     
+    do_sonic_platform_clean() 
+
     return       
 
 def device_exist():
