@@ -1,0 +1,4 @@
+http_config:
+    start_http_server: 'yes'
+    http_server_ip: '127.0.0.2'
+    http_server_dir: '/var/tftp'
