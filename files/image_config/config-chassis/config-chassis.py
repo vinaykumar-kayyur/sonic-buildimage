@@ -69,7 +69,7 @@ class ChassisConfig():
         self.platform = outp.decode().rstrip('\n')
 
     def config_http(self):
-        ''' Setup HTTP server configiguration.
+        ''' Setup HTTP server configuration.
             if http_config is not none:
               if start_http_server is 'yes' or '1',
                  create HTTP_CONFIG_FILE file with the config. 
