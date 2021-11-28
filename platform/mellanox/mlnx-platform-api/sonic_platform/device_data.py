@@ -153,6 +153,8 @@ DEVICE_DATA = {
         'sfp': {
             'max_port_per_line_card': 16
         }
+    },
+    'x86_64-nvidia_sn5600-r0': {
     }
 }
 
