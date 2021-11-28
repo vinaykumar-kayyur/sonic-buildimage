@@ -364,19 +364,17 @@ class Component(ComponentBase):
         if boot_action is fast.
         """
 
-        default_supported_boot = ['cold']
-
         # Verify image path exists
         if not os.path.exists(image_path):
             # Invalid image path
             return FW_AUTO_ERR_IMAGE
 
-        if boot_action in default_supported_boot:
-            # Deferred to next boot
-            return FW_AUTO_SCHEDULED
-
         # boot_type did not match (skip)
-        return FW_AUTO_ERR_BOOT_TYPE
+        if boot_action != "cold":
+            return FW_AUTO_ERR_BOOT_TYPE
+
+        # Deferred to next boot
+        return FW_AUTO_SCHEDULED
 
     @staticmethod
     def _read_generic_file(filename, len, ignore_errors=False):
@@ -466,14 +464,11 @@ class ComponentONIE(Component):
     def get_firmware_update_notification(self, image_path):
         return "Immediate cold reboot is required to complete {} firmware update".format(self.name)
 
-    def install_firmware_no_reboot(self, image_path):
-        return self.__install_firmware(image_path, allow_reboot=False)
-
-    def install_firmware(self, image_path):
-        return self.__install_firmware(image_path)
+    def install_firmware(self, image_path, allow_reboot=True):
+        return self.__install_firmware(image_path, allow_reboot)
 
     def update_firmware(self, image_path):
-        self.__install_firmware(image_path, reboot=True)
+        self.__install_firmware(image_path)
 
 
 class ComponentSSD(Component):
@@ -523,9 +518,6 @@ class ComponentSSD(Component):
         then compares it against boot_action to determine whether to proceed with install.
         """
 
-        # All devices support cold boot
-        supported_boot = ['cold']
-
         # Verify image path exists
         if not os.path.exists(image_path):
             # Invalid image path
@@ -533,23 +525,21 @@ class ComponentSSD(Component):
 
         # Check if post_install reboot is required
         try:
-            if self.get_firmware_update_notification(image_path) is None:
-                # No power cycle required
-                supported_boot += ['warm', 'fast', 'none', 'any']
-        except RuntimeError:
-            # Unknown error from firmware probe
-            return FW_AUTO_ERR_UKNOWN
-
-        if boot_action in supported_boot:
-            if supported_boot == ['cold']:
-                # Defer this to during reboot
-                return FW_AUTO_SCHEDULED
-            else:
-                self.update_firmware(image_path)
-                return FW_AUTO_UPDATED
+            reboot_required = self.get_firmware_update_notification(image_path) is not None
+        except RuntimeError as e:
+            return FW_AUTO_ERR_UKNOWN                    
+        
+        # Update if no reboot needed
+        if not reboot_required:
+            self.update_firmware(image_path)
+            return FW_AUTO_UPDATED
 
         # boot_type did not match (skip)
-        return FW_AUTO_ERR_BOOT_TYPE
+        if boot_action != "cold":
+            return FW_AUTO_ERR_BOOT_TYPE
+
+        # Schedule if we need a cold boot
+         return FW_AUTO_SCHEDULED
 
     def get_firmware_version(self):
         cmd = self.SSD_INFO_COMMAND
@@ -637,11 +627,8 @@ class ComponentSSD(Component):
 
         return notification
 
-    def install_firmware(self, image_path):
-        return self.__install_firmware(image_path)
-
-    def install_firmware_no_reboot(self, image_path):
-        return self.__install_firmware(image_path, allow_reboot=False)
+    def install_firmware(self, image_path, allow_reboot=True):
+        return self.__install_firmware(image_path, allow_reboot)
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path)
@@ -697,11 +684,8 @@ class ComponentBIOS(Component):
     def get_firmware_update_notification(self, image_path):
         return "Immediate cold reboot is required to complete {} firmware update".format(self.name)
 
-    def install_firmware(self, image_path):
-        return self.__install_firmware(image_path)
-
-    def install_firmware_no_reboot(self, image_path):
-        return self.__install_firmware(image_path, allow_reboot=False)
+    def install_firmware(self, image_path, allow_reboot=True):
+        return self.__install_firmware(image_path, allow_reboot)
 
     def update_firmware(self, image_path):
         self.__install_firmware(image_path, reboot=True)
@@ -772,7 +756,7 @@ class ComponentCPLD(Component):
 
         return True
 
-    def __refresh_cpld(self, image_path):
+    def refresh_firmware(self, image_path):
         with MPFAManager(image_path) as mpfa:
             if not mpfa.get_metadata().has_option('firmware', 'refresh'):
                 raise RuntimeError("Failed to get {} refresh firmware".format(self.name))
@@ -782,7 +766,6 @@ class ComponentCPLD(Component):
             print("INFO: Processing {} refresh file: firmware update".format(self.name))
             self.__install_firmware(os.path.join(mpfa.get_path(), refresh_firmware))
 
-
     def auto_update_firmware(self, image_path, boot_action):
         """
         Default handling of attempted automatic update for a component of a Mellanox switch.
@@ -790,22 +773,21 @@ class ComponentCPLD(Component):
         if boot_action is fast.
         """
 
-        default_supported_boot = ['cold']
-
         # Verify image path exists
         if not os.path.exists(image_path):
             # Invalid image path
             return FW_AUTO_ERR_IMAGE
 
-        if boot_action in default_supported_boot:
-            # Defer refresh to next boot
-            if self.install_firmware(image_path):
-                return FW_AUTO_SCHEDULED
-            else:
-                return FW_AUTO_ERROR_UNKNOWN
-
         # boot_type did not match (skip)
-        return FW_AUTO_ERR_BOOT_TYPE
+        if boot_action != "cold":
+            return FW_AUTO_ERR_BOOT_TYPE
+
+        # Install burn. Error if fail.
+        if not self.install_firmware(image_path):
+            return FW_AUTO_ERROR_UNKNOWN
+            
+        # Schedule refresh
+        return FW_AUTO_SCHEDULED    
 
     def get_firmware_version(self):
         part_number_file = self.CPLD_PART_NUMBER_FILE.format(self.idx)
