@@ -36,6 +36,9 @@ from sonic_platform_base.component_base import ComponentBase,           \
 def mock_update_firmware_success(image_path):
     return True
 
+def mock_update_firmware_fail(image_path):
+    return False
+
 def mock_update_notification_cold_boot(image_path):
     return "Immediate power cycle is required to complete NAME firmware update"
 

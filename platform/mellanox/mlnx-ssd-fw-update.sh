@@ -179,10 +179,10 @@ function check_usage() {
             ARG_POWER_CYCLE_FLAG=$TRUE
             shift # past argument
             ;;
-	--no-power-cycle)
-	    ARG_FORCE_NO_POWER_CYCLE_FLAG=$TRUE
-	    shift # past argument
-	    ;;
+        --no-power-cycle)
+            ARG_FORCE_NO_POWER_CYCLE_FLAG=$TRUE
+            shift # past argument
+            ;;
         *)
             LOG_MSG "Error: false usage given."
             usage
@@ -202,7 +202,7 @@ function check_usage() {
           ("$ARG_UPDATE_FLAG" == "$TRUE" && "$ARG_IMAGE_FLAG" == "$FALSE") ||
           ("$ARG_PACKAGE_INFO_FLAG" == "$TRUE" && "$ARG_IMAGE_FLAG" == "$FALSE") ||
           ("$ARG_POWER_CYCLE_FLAG" == "$TRUE" && "$ARG_UPDATE_FLAG" == "$FALSE") ||
-	  ("$ARG_FORCE_NO_POWER_CYCLE_FLAG" == "$TRUE" && "$ARG_POWER_CYCLE_FLAG" == "$TRUE") ||
+          ("$ARG_FORCE_NO_POWER_CYCLE_FLAG" == "$TRUE" && "$ARG_POWER_CYCLE_FLAG" == "$TRUE") ||
           ("$ARG_UPDATE_FLAG" == "$TRUE" && "$ARG_PACKAGE_INFO_FLAG" == "$TRUE") ]]; then
 
         LOG_MSG "Error: false usage given."
@@ -690,11 +690,11 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
                 else
                     LOG_MSG "SSD FW update completed successfully."
 
-		    if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
+                   if [[ "yes" == "$power_policy" || $ARG_POWER_CYCLE_FLAG == $TRUE ]]; then
 
                         if [[ $ARG_FORCE_NO_POWER_CYCLE_FLAG == $TRUE ]]; then
-				LOG_MSG_AND_EXIT "An IMMEDIATE power cycle is REQUIRED to upgrade the SSD. Please perform a cold reboot as soon as possible."
-			fi
+                            LOG_MSG_AND_EXIT "An IMMEDIATE power cycle is REQUIRED to upgrade the SSD. Please perform a cold reboot as soon as possible."
+                        fi
                         
                         LOG_MSG "Execute power cycle..."
                         sleep 1
