@@ -54,13 +54,16 @@ for boot_type, components in update_status.items():
 
         # Get component object and target firmware file
         key = comp["comp"]
+        comp_path = key.split("/")
 
-        if csp.is_modular_chassis(): 
-            _, parent_name, comp_name = key.split('/')
+        if len(comp_path) == 3:
+            # Module component
+            _, parent_name, comp_name = comp_path
             fw_file = pcp.module_component_map[parent_name][comp_name]["firmware"]
             component = csp.module_component_map[parent_name][comp_name]
         else: 
-            parent_name, comp_name = key.split('/')
+            # Chassis component
+            parent_name, comp_name = comp_path
             fw_file = pcp.chassis_component_map[parent_name][comp_name]["firmware"]
             component = csp.chassis_component_map[parent_name][comp_name]
 
