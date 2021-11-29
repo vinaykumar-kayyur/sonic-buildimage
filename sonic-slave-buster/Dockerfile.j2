@@ -354,6 +354,7 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
+        cgroup-tools \
         pkg-config
 
 RUN apt-get -y build-dep openssh
