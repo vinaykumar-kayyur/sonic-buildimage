@@ -356,6 +356,12 @@ RUN apt-get update && apt-get install -y \
         libsystemd-dev \
         pkg-config
 
+# For iproute2
+RUN apt-get install -y -t buster-backports \
+        libbpf-dev \
+        dwz \
+        debhelper
+
 RUN apt-get -y build-dep openssh
 
 # Build fix for ARMHF buster libsairedis
@@ -457,7 +463,7 @@ RUN pip2 install "lxml==4.6.2"
 RUN pip3 install "lxml==4.6.2"
 
 # For sonic-platform-common testing
-RUN pip3 install redis
+RUN pip3 install redis==3.5.3
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0
