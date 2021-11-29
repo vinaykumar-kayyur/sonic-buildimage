@@ -57,11 +57,12 @@ for boot_type, components in update_status.items():
 
         if csp.is_modular_chassis(): 
             _, parent_name, comp_name = key.split('/')
+            fw_file = pcp.module_component_map[parent_name][comp_name]["firmware"]
+            component = csp.module_component_map[parent_name][comp_name]
         else: 
             parent_name, comp_name = key.split('/')
-            
-        fw_file = pcp.chassis_component_map[parent_name][comp_name]["firmware"]
-        component = csp.chassis_component_map[parent_name][comp_name]
+            fw_file = pcp.chassis_component_map[parent_name][comp_name]["firmware"]
+            component = csp.chassis_component_map[parent_name][comp_name]
 
         # Install firmware. If CPLD flag to be installed last due to force reboot during refresh
         if type(component) == ComponentCPLD:

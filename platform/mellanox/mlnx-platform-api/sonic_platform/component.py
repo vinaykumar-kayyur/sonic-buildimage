@@ -184,8 +184,8 @@ class ONIEUpdater(object):
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to unstage firmware update: {}".format(str(e)))
 
-    def __trigger_update(self, reboot):
-        if reboot:
+    def __trigger_update(self, allow_reboot):
+        if allow_reboot:
             cmd = self.ONIE_FW_UPDATE_CMD_UPDATE
         else:
             cmd = self.ONIE_FW_UPDATE_CMD_INSTALL
@@ -304,7 +304,7 @@ class ONIEUpdater(object):
 
         return firmware_info
 
-    def update_firmware(self, image_path, reboot):
+    def update_firmware(self, image_path, allow_reboot=True):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
@@ -326,7 +326,7 @@ class ONIEUpdater(object):
 
         try:
             self.__stage_update(image_path)
-            self.__trigger_update(reboot)
+            self.__trigger_update(allow_reboot)
         except:
             if self.__is_update_staged(image_path):
                 self.__unstage_update(image_path)
@@ -444,7 +444,7 @@ class ComponentONIE(Component):
 
         try:
             print("INFO: Staging {} firmware update with ONIE updater".format(self.name))
-            self.onie_updater.update_firmware(image_path, reboot)
+            self.onie_updater.update_firmware(image_path, allow_reboot)
         except Exception as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
@@ -659,7 +659,7 @@ class ComponentBIOS(Component):
 
         try:
             print("INFO: Staging {} firmware update with ONIE updater".format(self.name))
-            self.onie_updater.update_firmware(image_path, reboot)
+            self.onie_updater.update_firmware(image_path, allow_reboot)
         except Exception as e:
             print("ERROR: Failed to update {} firmware: {}".format(self.name, str(e)))
             return False
@@ -688,7 +688,7 @@ class ComponentBIOS(Component):
         return self.__install_firmware(image_path, allow_reboot)
 
     def update_firmware(self, image_path):
-        self.__install_firmware(image_path, reboot=True)
+        self.__install_firmware(image_path)
 
 
 class ComponentCPLD(Component):
@@ -833,7 +833,7 @@ class ComponentCPLD(Component):
                 burn_firmware = mpfa.get_metadata().get('firmware', 'burn')
 
                 print("INFO: Processing {} burn file: firmware install".format(self.name))
-                self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware))
+                return self.__install_firmware(os.path.join(mpfa.get_path(), burn_firmware))
         else:
             return self.__install_firmware(image_path)
 
