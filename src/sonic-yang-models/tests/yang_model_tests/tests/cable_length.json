@@ -2,6 +2,9 @@
     "CABLE_LENGTH_TEST": {
         "desc": "Configure CABLE_LENGTH table."
     },
+    "CABLE_LENGTH_NAME_TEST": {
+        "desc": "Configure CABLE_LENGTH table with different name other than AZURE."
+    },
     "CABLE_LENGTH_NON_EXISTING_PORT_TEST": {
         "desc": "Configure CABLE_LENGTH table with non-existing port.",
         "eStrKey": "LeafRef"
