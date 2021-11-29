@@ -17,7 +17,6 @@ try:
     from sonic_platform.fan import Fan
     from sonic_platform.module import Module
     from sonic_platform.psu import Psu
-    from sonic_platform.sfp import Sfp
     from sonic_platform.thermal import Thermal
     from sonic_platform.watchdog import Watchdog
 except ImportError as e:
