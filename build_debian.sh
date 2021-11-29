@@ -309,6 +309,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     tcptraceroute           \
     mtr-tiny                \
     locales                 \
+    libcgroup1            \
     cgroup-tools            \
     ipmitool                \
     ndisc6                  \
