@@ -92,6 +92,7 @@ RUN pip install cffi==1.10.0 \
     && pip install dpkt    \
     && pip install scapy==2.4.5 --upgrade
 
+RUN echo hello
 # Install docker-ce-cli
 RUN apt-get update                  \
     && apt-get install -y           \
