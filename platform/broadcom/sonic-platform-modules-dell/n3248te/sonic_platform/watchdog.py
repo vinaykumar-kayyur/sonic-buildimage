@@ -36,36 +36,47 @@ class Watchdog(WatchdogBase):
     CLOCK_MONOTONIC = 1
 
     def __init__(self):
+        WatchdogBase.__init__(self)
         self._librt = ctypes.CDLL('librt.so.1', use_errno=True)
         self._clock_gettime = self._librt.clock_gettime
         self._clock_gettime.argtypes=[ctypes.c_int, ctypes.POINTER(_timespec)]
+        self.watchdog_reg = "watchdog"
 
-    def _get_command_result(self, cmdline):
+    def _get_cpld_register(self, reg_name):
+        # On successful read, returns the value read from given
+        # reg name and on failure rethrns 'ERR'
+        cpld_dir = "/sys/devices/platform/dell-n3248te-cpld.0/"
+        cpld_reg_file = cpld_dir + '/' + reg_name
         try:
-            proc = subprocess.Popen(cmdline.split(), stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            result = stdout.rstrip('\n')
-        except OSError:
-            result = None
+            rv = open(cpld_reg_file, 'r').read()
+        except IOError : return 'ERR'
+        return rv.strip('\r\n').lstrip(' ')
 
-        return result
+    def _set_cpld_register(self, reg_name, value):
+        # On successful write, returns the value will be written on
+        # reg_name and on failure returns 'ERR'
+        rv = 'ERR'
+        cpld_dir = "/sys/devices/platform/dell-n3248te-cpld.0/"
+        cpld_reg_file = cpld_dir + '/' + reg_name
+
+        try:
+           with open(cpld_reg_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except Exception:
+            rv = 'ERR'
+
+        return rv
 
     def _get_reg_val(self):
-        # 0x31 = CPLD I2C Base Address
-        # 0x07 = Watchdog Function Register
-        value = self._get_command_result("/usr/sbin/i2cget -y 601 0x31 0x07")
-        if not value:
-            return None
-        else:
-            return int(value, 16)
+        value = self._get_cpld_register(self.watchdog_reg).strip()
+        if value == 'ERR': return False
+
+        return int(value,16)
 
     def _set_reg_val(self,val):
         # 0x31 = CPLD I2C Base Address
         # 0x07 = Watchdog Function Register
-        value = self._get_command_result("/usr/sbin/i2cset -y 601 0x31 0x07 %s"
-                % (val))
+        value = self._set_cpld_register(self.watchdog_reg, val)
         return value
 
     def _get_time(self):
@@ -93,7 +104,7 @@ class Watchdog(WatchdogBase):
         """
         timer_offset = -1
         for key,timer_seconds in enumerate(self.TIMERS):
-            if seconds <= timer_seconds:
+            if seconds > 0 and seconds <= timer_seconds:
                 timer_offset = key
                 seconds = timer_seconds
                 break
@@ -117,25 +128,22 @@ class Watchdog(WatchdogBase):
             # Setting 5th to 7th bits
             # value from timer_offset
             self.disarm()
-            self._set_reg_val(reg_val | (timer_offset << 4))
+            self._set_reg_val((reg_val & 0x8F) | (timer_offset << 4))
 
         if self.is_armed():
             # Setting last bit to WD Timer punch
             # Last bit = WD Timer punch
             self._set_reg_val(reg_val & 0xFE)
 
-            self.armed_time = self._get_time()
-            self.timeout = seconds
-            return seconds
         else:
             # Setting 4th bit to enable WD
             # 4th bit = Enable WD
             reg_val = self._get_reg_val()
             self._set_reg_val(reg_val | 0x8)
 
-            self.armed_time = self._get_time()
-            self.timeout = seconds
-            return seconds
+        self.armed_time = self._get_time()
+        self.timeout = seconds
+        return seconds
 
     def disarm(self):
         """
@@ -183,7 +191,7 @@ class Watchdog(WatchdogBase):
             their watchdog timer. If the watchdog is not armed, returns
             -1.
 
-            S5232 doesnot have hardware support to show remaining time.
+            N3248PXE doesnot have hardware support to show remaining time.
             Due to this limitation, this API is implemented in software.
             This API would return correct software time difference if it
             is called from the process which armed the watchdog timer.
@@ -207,4 +215,3 @@ class Watchdog(WatchdogBase):
                 return self.timeout - diff_time
 
         return 0
-
