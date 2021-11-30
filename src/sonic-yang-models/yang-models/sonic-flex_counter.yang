@@ -31,7 +31,18 @@ module sonic-flex_counter {
                 type uint32 {
                     range 1000..30000;
                 }
-                default 10000;
+            }
+
+            typedef poll_interval_range_100ms_30s {
+                type uint32 {
+                    range 100..30000;
+                }
+            }
+
+            typedef poll_interval_range_30s_300s {
+                type uint32 {
+                    range 30000..300000;
+                }
             }
 
             description "FLEX_COUNTER_TABLE part of config_db.json";
@@ -106,10 +117,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type uint32 {
-                        range 100..30000;
-                    }
-                    default 1000;
+                    type poll_interval_range_100ms_30s
                 }
             }
 
@@ -132,10 +140,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type uint32 {
-                        range 30000..300000;
-                    }
-                    default 60000;
+                    type poll_interval_range_30s_300s
                 }
             }
 
@@ -148,10 +153,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type uint32 {
-                        range 100..30000;
-                    }
-                    default 10000;
+                    type poll_interval_range_100ms_30s
                 }
             }
 
