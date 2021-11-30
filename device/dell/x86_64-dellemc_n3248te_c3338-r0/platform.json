@@ -1,0 +1,290 @@
+{
+    "chassis": {
+        "name": "N3248TE-ON",
+        "status_led": {
+            "controllable": true,
+            "colors": ["green", "blink_green", "yellow", "blink_yellow"]
+	},
+        "components": [
+            {
+                "name": "BIOS"
+            },
+            {
+                "name": "CPU CPLD"
+            },
+            {
+                "name": "SYS CPLD"
+            }
+        ],
+        "fans": [
+            {
+                "name": "FanTray1-Fan1",
+                "status_led": {
+                "controllable": false
+	        }
+            },
+            {
+                "name": "FanTray2-Fan1",
+                "status_led": {
+                "controllable": false
+	        }
+            },
+            {
+                "name": "FanTray3-Fan1",
+                "status_led": {
+                "controllable": false
+	        }
+            }
+        ],
+        "fan_drawers":[
+            {
+                "name": "FanTray1",
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["off", "green", "yellow"]
+	        },
+                "fans": [
+                    {
+                        "name": "FanTray1-Fan1"
+                    }
+                ]
+            },
+            {
+                "name": "FanTray2",
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["off", "green", "yellow"]
+	        },
+                "fans": [
+                    {
+                        "name": "FanTray2-Fan1"
+                    }
+                ]
+            },
+            {
+                "name": "FanTray3",
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["off", "green", "yellow"]
+	        },
+                "fans": [
+                    {
+                        "name": "FanTray3-Fan1"
+                    }
+                ]
+            }
+        ],
+        "psus": [
+            {
+                "name": "PSU1",
+                "status_led": {
+                    "controllable": false
+	        },
+                "fans": [
+                    {
+                        "name": "PSU1 Fan"
+                    }
+                ]
+            },
+            {
+                "name": "PSU2",
+                "status_led": {
+                    "controllable": false
+	        },
+                "fans": [
+                    {
+                        "name": "PSU2 Fan"
+                    }
+                ]
+            }
+        ],
+        "thermals": [
+            {
+                "name": "Front Panel PHY Temperature",
+                "controllable": false
+            },
+            {
+                "name": "Middle Fan Tray Temperature",
+                "controllable": false
+            },
+            {
+                "name": "Near Front Panel Temperature",
+                "controllable": false
+            },
+            {
+                "name": "Switch Near Temperature",
+                "controllable": false
+            },
+            {
+                "name": "Switch Rear Temperature",
+                "controllable": false
+            }
+        ],
+        "modules": [],
+        "sfps": [
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "1GSFPCu"
+            },
+            {
+                "name": "10GSFP+"
+            },
+            {
+                "name": "10GSFP+"
+            },
+            {
+                "name": "10GSFP+"
+            },
+            {
+                "name": "10GSFP+"
+            },
+            {
+                "name": "QSFP28"
+            },
+            {
+                "name": "QSFP28"
+            }
+        ]
+    },
+    "interfaces": {}
+}
