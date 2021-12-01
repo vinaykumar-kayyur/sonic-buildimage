@@ -21,7 +21,7 @@ module sonic-syslog {
 
                 leaf server_address {
                     description "syslog server ip address";
-                    type inet:ipv4-address;
+                    type inet:ip-address;
                 }
             } /* end of list SYSLOG_SERVER_LIST */ 
 

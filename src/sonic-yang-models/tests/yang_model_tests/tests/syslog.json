@@ -4,15 +4,15 @@
     },
     "SYSLOG_SERVER_1_NEG_TEST": {
         "desc": "Load syslog server table with empty address as syslog server.",
-        "eStr": ["Value", "does not satisfy the constraint"]
-    },
-    "SYSLOG_SERVER_2_NEG_TEST": {
-        "desc": "Load syslog server table with ipv6 address as syslog server.",
-        "eStr": ["Value", "does not satisfy the constraint"]
+        "eStrKey": "InvalidValue"
     },
     "SYSLOG_SERVER_INVALID_IPADDR_TEST": {
         "desc": "Load syslog server table with invalid ipv4 address as syslog server.",
-        "eStr": ["Value", "does not satisfy the constraint"]
+        "eStrKey": "InvalidValue"
+    },
+    "SYSLOG_SERVER_INVALID_IPV6_ADDR_TEST": {
+        "desc": "Load syslog server table with invalid ipv6 address as syslog server.",
+        "eStrKey": "InvalidValue"
     }
 
 }
