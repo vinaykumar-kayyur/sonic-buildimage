@@ -8,12 +8,15 @@ module sonic-feature{
     description "Feature Table yang Module for SONiC";
     
     typedef feature-state {
+        description "configuration to set the feature running state";
         type string {
             pattern "enabled|disabled|always_enabled|always_disabled";
         }
     }
 
     typedef feature-owner {
+        description "configuration to set if the container is controlled
+                     by kubernetes or locally";
         type string {
             pattern "kube|local";
         }
