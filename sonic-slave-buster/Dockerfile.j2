@@ -304,7 +304,17 @@ RUN apt-get update && apt-get install -y \
         libboost-regex1.71-dev \
         googletest \
         libgtest-dev \
-        libgcc-8-dev
+        libgcc-8-dev \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
+
+# For iproute2
+RUN apt-get install -y -t buster-backports \
+        libbpf-dev \
+        dwz \
+        debhelper
+>>>>>>> 739c45645... [TACACS+] Add audisp-tacplus for per-command accounting. (#8750)
 
 RUN apt-get -y build-dep openssh
 
