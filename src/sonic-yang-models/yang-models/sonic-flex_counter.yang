@@ -27,9 +27,9 @@ module sonic-flex_counter {
                 type boolean;
             }
 
-            typedef poll_interval_range_1s_30s {
+            typedef poll_interval_range_1s_60s {
                 type uint32 {
-                    range 1000..30000;
+                    range 1000..60000;
                 }
             }
 
@@ -58,7 +58,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_30s;
+                    type poll_interval_range_1s_60s;
                 }
             }
 
@@ -91,7 +91,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_30s;
+                    type poll_interval_range_1s_60s;
                 }
             }
 
@@ -104,7 +104,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_30s;
+                    type poll_interval_range_1s_60s;
                 }
             }
 
@@ -117,7 +117,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_100ms_30s
+                    type poll_interval_range_100ms_30s;
                 }
             }
 
@@ -140,7 +140,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_30s_300s
+                    type poll_interval_range_30s_300s;
                 }
             }
 
@@ -153,7 +153,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_100ms_30s
+                    type poll_interval_range_100ms_30s;
                 }
             }
 
@@ -166,7 +166,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_30s;
+                    type poll_interval_range_1s_60s;
                 }
             }
 
@@ -209,7 +209,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_30s;
+                    type poll_interval_range_1s_60s;
                 }
             }
 
