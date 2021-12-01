@@ -28,7 +28,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 2.7',
         'Topic :: Utilities',
     ],
     keywords='sonic SONiC platform PLATFORM',
