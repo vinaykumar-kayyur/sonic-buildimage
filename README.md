@@ -6,45 +6,45 @@
 
 *master builds*:
 
-[![Barefoot](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-all/badge/icon?subject=Barefoot)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-all)
-[![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
-[![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-all/badge/icon?subject=Centec)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-all)
-[![Centec(arm64)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-all/badge/icon?subject=Centec(arm64))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-all)
-[![Innovium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-all/badge/icon?subject=Innovium)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-all)
-[![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)
-[![Marvell(armhf)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-all/badge/icon?subject=Marvell(armhf))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-all)
-[![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all)
+[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=master&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=master)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=master&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=master)
+[![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=master&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=master)
+[![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=master&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=master)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=master&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=master)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=master&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=master)
+[![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=master&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=master)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=master&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=master)
 [![P4](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon?subject=P4)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
-[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=master&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=master)
 
 *202012 builds*:
 
-[![Barefoot](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-202012/badge/icon?subject=Barefoot)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-202012/)
-[![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-202012/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-202012)
-[![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-202012/badge/icon?subject=Centec)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-202012)
-[![Centec(arm64)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-202012/badge/icon?subject=Centec(arm64))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-arm64-202012)
-[![Innovium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-202012/badge/icon?subject=Innovium)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-202012/)
-[![Marvell(armhf)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-202012/badge/icon?subject=Marvell(armhf))](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-armhf-202012)
-[![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-202012/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-202012)
-[![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-202012/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-202012)
-[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image-202012/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-image-202012)
+[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=202012&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=202012)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=202012&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=202012)
+[![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=202012&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=202012)
+[![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=202012&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=202012)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=202012&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=202012)
+[![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=202012&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=202012)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=202012&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=202012)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=202012&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=202012)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=202012&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=202012)
 
 *201911 builds*:
 
-[![Barefoot](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-201911/badge/icon?subject=Barefoot)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-201911/)
-[![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201911/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201911/)
-[![Innovium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-201911/badge/icon?subject=Innovium)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-201911/)
-[![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201911/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201911/)
-[![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201911/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201911)
-[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201911/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201911)
+[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=201911&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=201911)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=201911&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=201911)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=201911&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=201911)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=201911&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=201911)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=201911&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=201911)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=201911&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=201911)
 
 *201811 builds*:
 
-[![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201811/badge/icon?subject=Broadcom)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201811/)
-[![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201811/badge/icon?subject=Mellanox)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201811/)
-[![Innovium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-201811/badge/icon?subject=Innovium)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/innovium/job/buildimage-invm-201811/)
-[![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201811/badge/icon?subject=Nephos)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201811)
-[![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201811/badge/icon?subject=VS)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-201811)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=201811&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=201811)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=201811&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=201811)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=201811&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=201811)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=201811&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=201811)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=201811&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=201811)
 
 *201807 builds*:
 
@@ -67,24 +67,27 @@
 Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatible network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [list](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms)
 
 # Hardware
-Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
+
+Any server can be a build image server as long as it has:
+
+  * Multiple cores to increase build speed
+  * Plenty of RAM (less than 8 GiB is likely to cause issues)
+  * 300G of free disk space
+
+A good choice of OS for building SONiC is currently Ubuntu 20.04.
 
 ## Prerequisites
 
-Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available:
+ * Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available:
 
-    sudo apt-get install -y python-pip
-    sudo python2 -m pip install -U pip==9.0.3
-    sudo pip install --force-reinstall --upgrade jinja2>=2.10
-    sudo pip install j2cli
+```
+sudo apt install -y python3-pip
+sudo pip3 install j2cli
+```
 
-Configure your system to allow running the 'docker' command without 'sudo':
-    Add current user to the docker group
-	 `sudo gpasswd -a ${USER} docker`
-    Log out and log back in so that your group membership is re-evaluated
-
-## SAI Version
-Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release.
+ * Install [Docker](https://docs.docker.com/engine/install/) and configure your system to allow running the 'docker' command without 'sudo':
+    * Add current user to the docker group: `sudo gpasswd -a ${USER} docker`
+    * Log out and log back in so that your group membership is re-evaluated
 
 ## Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer:
@@ -110,8 +113,22 @@ To build SONiC installer image and docker images, run the following commands:
     # Execute make configure once to configure ASIC
     make configure PLATFORM=[ASIC_VENDOR]
 
-    # Build SONiC image
-    make all
+    # Build SONiC image with 4 jobs in parallel.
+    # Note: You can set this higher, but 4 is a good number for most cases
+    # and is well-tested.
+    make SONIC_BUILD_JOBS=4 all
+
+ The supported ASIC vendors are:
+
+- PLATFORM=broadcom
+- PLATFORM=marvell
+- PLATFORM=mellanox
+- PLATFORM=cavium
+- PLATFORM=centec
+- PLATFORM=nephos
+- PLATFORM=innovium
+- PLATFORM=p4
+- PLATFORM=vs
 
 ## Usage for ARM Architecture
 To build Arm32 bit for (ARMHF) platform
@@ -147,26 +164,16 @@ To build Arm64 bit for platform
 
  **NOTE**:
 
-- Recommend reserving 50G free space to build one platform.
+- Recommend reserving at least 100G free space to build one platform with a single job. The build process will use more disk if you are setting `SONIC_BUILD_JOBS` to more than 1.
 - If Docker's workspace folder, `/var/lib/docker`, resides on a partition without sufficient free space, you may encounter an error like the following during a Docker container build job:
 
     `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
 
     The solution is to [move the directory](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) to a partition with more free space.
-- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
+- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] no_proxy=[your_no_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
-The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor. The supported ASIC vendors are:
-
-- PLATFORM=broadcom
-- PLATFORM=marvell
-- PLATFORM=mellanox
-- PLATFORM=cavium
-- PLATFORM=centec
-- PLATFORM=nephos
-- PLATFORM=innovium
-- PLATFORM=p4
-- PLATFORM=vs
+The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor.
 
 For Broadcom ASIC, we build ONIE and EOS image. EOS image is used for Arista devices, ONIE image is used for all other Broadcom ASIC based devices.
 
@@ -196,7 +203,10 @@ Every target has a clean target, so in order to clean swss, execute:
 It is recommended to use clean targets to clean all packages that are built together, like dev packages for instance. In order to be more familiar with build process and make some changes to it, it is recommended to read this short [Documentation](README.buildsystem.md).
 
 ## Build debug dockers and debug SONiC installer image:
-SONiC build system supports building dockers and ONE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
+SONiC build system supports building dockers and ONIE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
+
+## SAI Version
+Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release.
 
 ## Notes:
 - If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.

@@ -36,6 +36,9 @@ class SonicYang(SonicYangExtMixin):
         self.revXlateJson = dict()
         # below dict store the input config tables which have no YANG models
         self.tablesWithOutYang = dict()
+        # below dict will store preProcessed yang objects, which may be needed by
+        # all yang modules, such as grouping.
+        self.preProcessedYang = dict()
 
         try:
             self.ctx = ly.Context(yang_dir)
@@ -526,7 +529,7 @@ class SonicYang(SonicYangExtMixin):
 
             schema_node = ly.Schema_Node_Leaf(data_node.schema())
             backlinks = schema_node.backlinks()
-            if backlinks.number() > 0:
+            if backlinks is not None and backlinks.number() > 0:
                 for link in backlinks.schema():
                      node_set = node.find_path(link.path())
                      for data_set in node_set.data():

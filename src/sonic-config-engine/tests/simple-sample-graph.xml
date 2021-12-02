@@ -49,6 +49,26 @@
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
+      <BGPSession>
+        <StartRouter>switch-t0</StartRouter>
+        <StartPeer>FC00::75</StartPeer>
+        <EndRouter>ARISTA02T1</EndRouter>
+        <EndPeer>FC00::76</EndPeer>
+        <Multihop>1</Multihop>
+        <HoldTime>180</HoldTime>
+        <KeepAliveTime>60</KeepAliveTime>
+      </BGPSession>
+      <BGPSession>
+        <MacSec>false</MacSec>
+        <StartRouter>switch-t0</StartRouter>
+        <StartPeer>10.2.0.20</StartPeer>
+        <EndRouter>CHASSIS_PEER</EndRouter>
+        <EndPeer>10.2.0.21</EndPeer>
+        <Multihop>1</Multihop>
+        <HoldTime>180</HoldTime>
+        <KeepAliveTime>60</KeepAliveTime>
+        <ChassisInternal>voq</ChassisInternal>
+      </BGPSession>
     </PeeringSessions>
     <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
       <a:BGPRouterDeclaration>
@@ -82,6 +102,12 @@
             <RouteMapOut i:nil="true"/>
             <Vrf i:nil="true"/>
           </BGPPeer>
+          <BGPPeer>
+            <Address>10.2.0.21</Address>
+            <RouteMapIn i:nil="true"/>
+            <RouteMapOut i:nil="true"/>
+            <Vrf i:nil="true"/>
+          </BGPPeer>
         </a:Peers>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
@@ -103,6 +129,11 @@
       <a:BGPRouterDeclaration>
         <a:ASN>64600</a:ASN>
         <a:Hostname>ARISTA04T1</a:Hostname>
+        <a:RouteMaps/>
+      </a:BGPRouterDeclaration>
+      <a:BGPRouterDeclaration>
+        <a:ASN>65100</a:ASN>
+        <a:Hostname>CHASSIS_PEER</a:Hostname>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
     </Routers>
@@ -276,6 +307,25 @@
         <StartPort>Ethernet1/33</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceMgmtLink">
+        <ElementType>DeviceMgmtLink</ElementType>
+        <Bandwidth>1000</Bandwidth>
+        <EndDevice>switch-t0</EndDevice>
+        <EndPort>fortyGigE0/16</EndPort>
+        <FlowControl>true</FlowControl>
+        <StartDevice>ChassisMTS1</StartDevice>
+        <StartPort>mgmt0</StartPort>
+        <Validate>true</Validate>
+      </DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceMgmtLink">
+      <ElementType>DeviceMgmtLink</ElementType>
+      <Bandwidth>1000</Bandwidth>
+      <EndDevice>switch-t0</EndDevice>
+      <EndPort>Management1</EndPort>
+      <StartDevice>switch-m0</StartDevice>
+      <StartPort>Management1</StartPort>
+      <Validate>true</Validate>
+      </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
       <Device i:type="ToRRouter">
@@ -377,6 +427,18 @@
           <Priority>0</Priority>
           <Speed>100000</Speed>
           <Description>Interface description</Description>
+        </a:EthernetInterface>
+        <a:EthernetInterface>
+          <ElementType>DeviceInterface</ElementType>
+          <AlternateSpeeds i:nil="true"/>
+          <EnableFlowControl>true</EnableFlowControl>
+          <Index>1</Index>
+          <InterfaceName>fortyGigE0/16</InterfaceName>
+          <InterfaceType i:nil="true"/>
+          <MultiPortsInterface>false</MultiPortsInterface>
+          <PortName>0</PortName>
+          <Priority>0</Priority>
+          <Speed>100000</Speed>
         </a:EthernetInterface>
       </EthernetInterfaces>
       <FlowControl>true</FlowControl>

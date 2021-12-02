@@ -1,12 +1,35 @@
 #!/bin/bash
 
-DEPENDENT="radv dhcp_relay"
+DEV=$2
+
+SERVICE="swss"
+PEER="syncd"
+DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
+LOCKFILE="/tmp/swss-syncd-lock$DEV"
+NAMESPACE_PREFIX="asic"
+ETC_SONIC_PATH="/etc/sonic/"
+
+DEPENDENT="radv"
 MULTI_INST_DEPENDENT="teamd"
+
+. /usr/local/bin/asic_status.sh
 
 function debug()
 {
     /usr/bin/logger $1
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
+}
+
+function read_dependent_services()
+{
+    # Update dependent list based on other packages requirements
+    if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_dependent ]]; then
+        DEPENDENT="${DEPENDENT} $(cat ${ETC_SONIC_PATH}/${SERVICE}_dependent)"
+    fi
+
+    if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent ]]; then
+        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent"
+    fi
 }
 
 function lock_service_state_change()
@@ -146,18 +169,38 @@ start() {
         $SONIC_DB_CLI ASIC_DB FLUSHDB
         $SONIC_DB_CLI COUNTERS_DB FLUSHDB
         $SONIC_DB_CLI FLEX_COUNTER_DB FLUSHDB
-        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*', '*MUX_CABLE_TABLE*'"
+        $SONIC_DB_CLI GB_ASIC_DB FLUSHDB
+        $SONIC_DB_CLI GB_COUNTERS_DB FLUSHDB
+        $SONIC_DB_CLI RESTAPI_DB FLUSHDB
+        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*', 'MUX_CABLE_TABLE*', 'ADVERTISE_NETWORK_TABLE*'"
+        $SONIC_DB_CLI APPL_STATE_DB FLUSHDB
     fi
 
-    # start service docker
-    /usr/bin/${SERVICE}.sh start $DEV
-    debug "Started ${SERVICE}$DEV service..."
+    # On supervisor card, skip starting asic related services here. In wait(),
+    # wait until the asic is detected by pmon and published via database.
+    if ! is_chassis_supervisor; then
+        # start service docker
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
 }
 
 wait() {
+    # On supervisor card, wait for asic to be online before starting the docker.
+    if is_chassis_supervisor; then
+        check_asic_status
+        ASIC_STATUS=$?
+
+        # start service docker
+        if [[ $ASIC_STATUS == 0 ]]; then
+            /usr/bin/${SERVICE}.sh start $DEV
+            debug "Started ${SERVICE}$DEV service..."
+        fi
+    fi
+
     start_peer_and_dependent_services
 
     # Allow some time for peer container to start
@@ -240,13 +283,6 @@ stop() {
     stop_peer_and_dependent_services
 }
 
-DEV=$2
-
-SERVICE="swss"
-PEER="syncd"
-DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
-LOCKFILE="/tmp/swss-syncd-lock$DEV"
-NAMESPACE_PREFIX="asic"
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
@@ -254,6 +290,8 @@ else
     NET_NS=""
     SONIC_DB_CLI="sonic-db-cli"
 fi
+
+read_dependent_services
 
 case "$1" in
     start|wait|stop)
