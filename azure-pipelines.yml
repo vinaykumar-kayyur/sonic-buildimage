@@ -27,7 +27,8 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
+    name: liuh-80/sonic-mgmt
+    ref: refs/heads/dev/liuh/test_ignore_version
     endpoint: build
 
 stages:
