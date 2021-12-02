@@ -319,6 +319,7 @@ module sonic-bgp-common {
 
         leaf admin_status {
             type stypes:admin_status;
+            description "To enable BGP peer";
         }
 
         leaf local_as_no_prepend {
@@ -341,7 +342,7 @@ module sonic-bgp-common {
         }
 
         leaf admin_status {
-            type boolean;
+            type stypes:admin_status;
             description "Indicates address family active/inactive status";
         }
 
