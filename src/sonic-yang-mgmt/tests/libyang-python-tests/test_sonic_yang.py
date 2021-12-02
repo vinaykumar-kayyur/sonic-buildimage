@@ -268,7 +268,7 @@ class Test_SonicYang(object):
     """
     @pytest.fixture(autouse=True, scope='class')
     def sonic_yang_data(self):
-        sonic_yang_dir = "../sonic-yang-models/yang-models/"
+        sonic_yang_dir = "/usr/local/yang-models/"
         sonic_yang_test_file = "../sonic-yang-models/tests/files/sample_config_db.json"
 
         syc = sy.SonicYang(sonic_yang_dir)
@@ -292,17 +292,17 @@ class Test_SonicYang(object):
         '''
         test_file = sonic_yang_data['test_file']
         syc = sonic_yang_data['syc']
-        # Currently only 2 YANG files are not directly related to config
-        # which are: sonic-extension.yang and sonic-types.yang. Hard coding
+        # Currently only 3 YANG files are not directly related to config
+        # which are: sonic-extension.yang, sonic-types.yang and sonic-bgp-common.yang. Hard coding
         # it right now.
         # If any more such helper yang files are added, we need to update here.
-        NON_CONFIG_YANG_FILES = 2
+        NON_CONFIG_YANG_FILES = 3
         # read config
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON')
         jIn = json.loads(jIn)
         numTables = len(jIn)
         # load config and create Data tree
-        syc.loadData(jIn, debug=True)
+        syc.loadData(jIn)
         # check all tables are loaded and config related to all Yang Models is
         # loaded in Data tree.
         assert len(syc.jIn) == numTables
@@ -329,22 +329,20 @@ class Test_SonicYang(object):
         jIn = json.loads(jIn)
         numTables = len(jIn)
 
-        syc.loadData(jIn, debug=True)
+        syc.loadData(jIn)
         # check all tables are loaded and no tables is without Yang Models
         assert len(syc.jIn) == numTables
         assert len(syc.tablesWithOutYang) == 0
 
-        syc.getData(debug=True)
+        syc.getData()
 
         if syc.jIn and syc.jIn == syc.revXlateJson:
             print("Xlate and Rev Xlate Passed")
         else:
             print("Xlate and Rev Xlate failed")
             # print for better debugging, in case of failure.
-            print("syc.jIn: {}".format({t:syc.jIn[t].keys() \
-                for t in syc.jIn.keys()}))
-            print("syc.revXlateJson: {}".format({t:syc.revXlateJson[t].keys() \
-                for t in syc.revXlateJson.keys()}))
+            from jsondiff import diff
+            print(diff(syc.jIn, syc.revXlateJson, syntax='symmetric'))
             # make it fail
             assert False == True
 
