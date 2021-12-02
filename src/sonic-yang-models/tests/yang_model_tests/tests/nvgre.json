@@ -13,9 +13,9 @@
         "eStrKey": "LeafRef"
     },
 
-    "NVGRE_TUNNEL_MAP_UNEXISTING_VLAN_NAME": {
-        "desc": "Unexisting VLAN NAME",
-        "eStrKey": "LeafRef"
+    "NVGRE_TUNNEL_MAP_INVALID_VLAN_ID": {
+        "desc": "Invalid VLAN ID",
+        "eStrKey": "Pattern"
     },
 
     "NVGRE_TUNNEL_MAP_INVALID_VSID": {

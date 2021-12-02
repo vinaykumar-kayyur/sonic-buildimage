@@ -22,7 +22,7 @@
                 "NVGRE_TUNNEL_MAP_LIST": [
                     {
                         "tunnel_name": "tunnel_1",
-                        "vlan_name": "Vlan200",
+                        "tunnel_map_name": "Vlan200",
                         "vlan_id": 200,
                         "vsid": 5000
                     }
@@ -59,7 +59,7 @@
                 "NVGRE_TUNNEL_MAP_LIST": [
                     {
                         "tunnel_name": "INVALID",
-                        "vlan_name": "Vlan200",
+                        "tunnel_map_name": "Vlan200",
                         "vlan_id": 200,
                         "vsid": 5000
                     }
@@ -68,7 +68,7 @@
         }
     },
 
-    "NVGRE_TUNNEL_MAP_UNEXISTING_VLAN_NAME": {
+    "NVGRE_TUNNEL_MAP_INVALID_VLAN_ID": {
         "sonic-nvgre-tunnel:sonic-nvgre-tunnel": {
             "sonic-nvgre-tunnel:NVGRE_TUNNEL": {
                 "NVGRE_TUNNEL_LIST": [
@@ -82,8 +82,8 @@
                 "NVGRE_TUNNEL_MAP_LIST": [
                     {
                         "tunnel_name": "tunnel_1",
-                        "vlan_name": "Vlan200",
-                        "vlan_id": 200,
+                        "tunnel_map_name": "Vlan200",
+                        "vlan_id": 5000,
                         "vsid": 5000
                     }
                 ]
@@ -114,7 +114,7 @@
                 "NVGRE_TUNNEL_MAP_LIST": [
                     {
                         "tunnel_name": "tunnel_1",
-                        "vlan_name": "Vlan200",
+                        "tunnel_map_name": "Vlan200",
                         "vlan_id": 200,
                         "vsid": 999999999
                     }
