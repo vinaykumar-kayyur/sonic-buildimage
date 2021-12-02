@@ -54,6 +54,13 @@
     },
     "DEVICE_METADATA_FRR_MGMT_FWK_CONFIG": {
         "desc": "Verifying FRR MGMT framework configuration."
+    },
+    "DEVICE_METADATA_INVLAID_CLOUDTYPE": {
+        "desc": "DEVICE_METADATA invalid length for CLOUDTYPE field.",
+        "eStrKey" : "Range"
+    },
+    "DEVICE_METADATA_INVLAID_REGION": {
+        "desc": "DEVICE_METADATA invalid length for REGION field.",
+        "eStrKey" : "Range"
     }
-
 }
