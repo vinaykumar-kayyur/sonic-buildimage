@@ -100,7 +100,7 @@ class IPinIPListener(object):
         """
         start = datetime.now()
 
-        while (datetime.now() - start).seconds < 60:
+        while (datetime.now() - start).seconds < timeout:
             if self.all_portchannels_up():
                 logger.log_info("All portchannel intfs are up")
                 return None
@@ -199,8 +199,8 @@ class IPinIPListener(object):
 
         self_ip, peer_ip = self.get_ipinip_tunnel_addrs()
         if self_ip is None or peer_ip is None:
-            logger.log_error('Could not get IPinIP tunnel addresses from '
-                             'config DB, exiting...')
+            logger.log_notice('Could not get IPinIP tunnel addresses from '
+                              'config DB, exiting...')
             return None
 
         packet_filter = 'host {} and host {}'.format(self_ip, peer_ip)
