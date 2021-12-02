@@ -8,7 +8,6 @@ trigger:
     include:
       - master
       - 202012
-      - move_pcied_to_host_services
   paths:
     exclude:
       - .github
