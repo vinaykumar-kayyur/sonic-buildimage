@@ -6,5 +6,10 @@
         "desc": "Referring invalid feature state.",
         "eStrKey": "Pattern",
         "eStr": ["enabled|disabled|always_enabled"]
+    },
+    "FEATURE_WITH_INVALID_BOOLEAN_TYPE" : {
+        "desc": "Referring invalid feature boolean types.",
+        "eStrKey": "Pattern",
+        "eStr": ["false|true|False|True"]
     }
 }
