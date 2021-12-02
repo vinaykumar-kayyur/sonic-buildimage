@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 """
-Adds neighbor to kernel for undeliverable IPinIP packets
+Adds neighbor to kernel for undeliverable tunnel packets
 
-When receiving IPinIP packets, if the hardware doesn't contain neighbor
+When receiving tunnel packets, if the hardware doesn't contain neighbor
 information for the inner packet's destination IP, the entire encapsulated
 packet is trapped to the CPU. In this case, we should ping the inner
 destination IP to trigger the process of obtaining neighbor information
@@ -32,7 +32,7 @@ ADDRESS_IPV4_KEY = 'address_ipv4'
 IPINIP_TUNNEL = 'ipinip'
 
 
-class IPinIPListener(object):
+class TunnelPacketHandler(object):
 
     def __init__(self):
         self.config_db = ConfigDBConnector()
@@ -171,9 +171,9 @@ class IPinIPListener(object):
                 return IPv6
         return False
 
-    def listen_for_ipinip(self):
+    def listen_for_tunnel_pkts(self):
         """
-        Listens for IPinIP packets that are trapped to CPU
+        Listens for tunnel packets that are trapped to CPU
 
         These packets may be trapped if there is no neighbor info for the
         inner packet destination IP in the hardware.
@@ -181,10 +181,10 @@ class IPinIPListener(object):
 
         def _ping_inner_dst(packet):
             """
-            Pings the inner destination IP for an IPinIP packet
+            Pings the inner destination IP for an encapsulated packet
 
             Args:
-                packet: The IPinIP packet received
+                packet: The encapsulated packet received
             """
             inner_packet_type = self.get_inner_pkt_type(packet)
             if inner_packet_type and packet[IP].dst == self_ip:
@@ -199,12 +199,12 @@ class IPinIPListener(object):
 
         self_ip, peer_ip = self.get_ipinip_tunnel_addrs()
         if self_ip is None or peer_ip is None:
-            logger.log_notice('Could not get IPinIP tunnel addresses from '
+            logger.log_notice('Could not get tunnel addresses from '
                               'config DB, exiting...')
             return None
 
         packet_filter = 'host {} and host {}'.format(self_ip, peer_ip)
-        logger.log_notice('Starting IPinIP listener for {}'
+        logger.log_notice('Starting tunnel packet handler for {}'
                           .format(packet_filter))
 
         portchannel_intfs = self.portchannel_intfs
@@ -220,13 +220,13 @@ class IPinIPListener(object):
 
     def run(self):
         self.wait_for_portchannels()
-        self.listen_for_ipinip()
+        self.listen_for_tunnel_pkts()
 
 
 def main():
     logger.set_min_log_priority_info()
-    listener = IPinIPListener()
-    listener.run()
+    handler = TunnelPacketHandler()
+    handler.run()
 
 
 if __name__ == "__main__":

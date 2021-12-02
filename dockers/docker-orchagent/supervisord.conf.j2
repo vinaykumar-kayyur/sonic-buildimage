@@ -244,8 +244,8 @@ dependent_startup_wait_for=swssconfig:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
-[program:ipinip_ping]
-command=/usr/bin/ipinip_ping.py
+[program:tunnel_packet_handler]
+command=/usr/bin/tunnel_packet_handler.py
 priority=12
 autostart=false
 autorestart=unexpected
