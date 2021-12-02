@@ -8,15 +8,14 @@ from json import dump, dumps, loads
 from xmltodict import parse
 from glob import glob
 
-qos_maps_model = ['DSCP_TO_TC_MAP_LIST',
-            'DOT1P_TO_TC_MAP_LIST',
-            'TC_TO_PRIORITY_GROUP_MAP_LIST',
-            'TC_TO_QUEUE_MAP_LIST',
-            'MAP_PFC_PRIORITY_TO_QUEUE_LIST',
-            'PFC_PRIORITY_TO_PRIORITY_GROUP_MAP_LIST']
-
-cbf_maps_model = ['DSCP_TO_FC_MAP_LIST',
-            'EXP_TO_FC_MAP_LIST']
+Type_1_list_maps_model = ['DSCP_TO_TC_MAP_LIST',
+    'DOT1P_TO_TC_MAP_LIST',
+    'TC_TO_PRIORITY_GROUP_MAP_LIST',
+    'TC_TO_QUEUE_MAP_LIST',
+    'MAP_PFC_PRIORITY_TO_QUEUE_LIST',
+    'PFC_PRIORITY_TO_PRIORITY_GROUP_MAP_LIST',
+    'DSCP_TO_FC_MAP_LIST',
+    'EXP_TO_FC_MAP_LIST']
 
 """
 This is the Exception thrown out of all public function of this class.
@@ -416,7 +415,7 @@ class SonicYangExtMixin:
         return vValue
 
     """
-    Xlate a Maps list
+    Xlate a Type 1 map list
     This function will xlate from a dict in config DB to a Yang JSON list
     using yang model. Output will be go in self.xlateJson
 
@@ -424,7 +423,7 @@ class SonicYangExtMixin:
     are displayed only when an entry is not xlated properly from ConfigDB
     to sonic_yang.json.
 
-    QOS MAPS Yang has inner list, which is diffrent from config DB.
+    Type 1 map Yang has inner list, which is diffrent from config DB.
     Each field value in config db should be converted to inner list with
     key and value.
     Example:
@@ -468,7 +467,7 @@ class SonicYangExtMixin:
             }
     }
     """
-    def _xlateMapList(self, model, yang, config, table, exceptionList):
+    def _xlateType1MapList(self, model, yang, config, table, exceptionList):
 
         #create a dict to map each key under primary key with a dict yang model.
         #This is done to improve performance of mapping from values of TABLEs in
@@ -528,11 +527,11 @@ class SonicYangExtMixin:
     """
     def _xlateList(self, model, yang, config, table, exceptionList):
 
-        #Qos Map lists needs special handling because of inner yang list and
-        #config db format.
-        if model['@name'] in qos_maps_model or model['@name'] in cbf_maps_model:
-            self.sysLog(msg="_xlateMapList: {}".format(model['@name']))
-            self._xlateMapList(model, yang, config, table, exceptionList)
+        # Type 1 lists need special handling because of inner yang list and
+        # config db format.
+        if model['@name'] in Type_1_list_maps_model:
+            self.sysLog(msg="_xlateType1MapList: {}".format(model['@name']))
+            self._xlateType1MapList(model, yang, config, table, exceptionList)
             return
 
         #create a dict to map each key under primary key with a dict yang model.
@@ -747,7 +746,7 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
-    QOS MAP Yang has inner list, each inner list key:val should
+    Type 1 MAPs Yang has inner list, each inner list key:val should
     be mapped to field:value in Config DB.
     Example:
 
@@ -791,7 +790,7 @@ class SonicYangExtMixin:
     }
     """
 
-    def _revMapXlateList(self, model, yang, config, table):
+    def _revXlateType1MapList(self, model, yang, config, table):
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         # create a dict to map each key under primary key with a dict yang model.
@@ -828,9 +827,9 @@ class SonicYangExtMixin:
     """
     def _revXlateList(self, model, yang, config, table):
 
-        # special processing for QOS Map table.
-        if model['@name'] in qos_maps_model or model['@name'] in cbf_maps_model:
-           self._revMapXlateList(model, yang, config, table)
+        # special processing for Type 1 Map tables.
+        if model['@name'] in Type_1_list_maps_model:
+           self._revXlateType1MapList(model, yang, config, table)
            return
 
         # get keys from YANG model list itself
