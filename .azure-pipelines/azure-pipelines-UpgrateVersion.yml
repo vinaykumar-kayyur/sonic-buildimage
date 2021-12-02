@@ -12,6 +12,8 @@ schedules:
   branches:
     include:
     - 202012
+    - '202[1-9]*'
+    - '20[3-9]*'
   always: true
 
 pool: sonicbld
