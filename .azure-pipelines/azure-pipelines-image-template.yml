@@ -40,7 +40,7 @@ jobs:
         displayName: 'Checkout code'
       - script: |
           BRANCH_NAME=$(Build.SourceBranchName)
-          [ -n "$SYSTEM_PULLREQUEST_PULLREQUESTID" ] && BRANCH_NAME="move_pcied_to_host_services"
+          [ -n "$SYSTEM_PULLREQUEST_PULLREQUESTID" ] && BRANCH_NAME="$SYSTEM_PULLREQUEST_TARGETBRANCH-$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"
           git checkout -b $BRANCH_NAME
           sudo modprobe overlay
           sudo apt-get install -y acl
