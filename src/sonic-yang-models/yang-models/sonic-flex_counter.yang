@@ -27,21 +27,9 @@ module sonic-flex_counter {
                 type boolean;
             }
 
-            typedef poll_interval_range_1s_60s {
+            typedef poll_interval {
                 type uint32 {
-                    range 1000..60000;
-                }
-            }
-
-            typedef poll_interval_range_100ms_30s {
-                type uint32 {
-                    range 100..30000;
-                }
-            }
-
-            typedef poll_interval_range_30s_300s {
-                type uint32 {
-                    range 30000..300000;
+                    range 100..4294967295;
                 }
             }
 
@@ -58,7 +46,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_60s;
+                    type poll_interval;
                 }
             }
 
@@ -91,7 +79,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_60s;
+                    type poll_interval;
                 }
             }
 
@@ -104,7 +92,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_60s;
+                    type poll_interval;
                 }
             }
 
@@ -117,12 +105,12 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_100ms_30s;
+                    type poll_interval;
                 }
             }
 
             container PORT_RATES {
-                /* PORT_BUFFER_DROP_COUNTER_FLEX_COUNTER_GROUP */
+                /* PORT_RATES_COUNTER_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
                     type flex_status;
                 }
@@ -140,7 +128,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_30s_300s;
+                    type poll_interval;
                 }
             }
 
@@ -153,7 +141,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_100ms_30s;
+                    type poll_interval;
                 }
             }
 
@@ -166,7 +154,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_60s;
+                    type poll_interval;
                 }
             }
 
@@ -177,6 +165,9 @@ module sonic-flex_counter {
                 }
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
                 }
             }
 
@@ -198,6 +189,9 @@ module sonic-flex_counter {
                 leaf FLEX_COUNTER_DELAY_STATUS {
                     type flex_delay_status;
                 }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
             }
 
             container FLOW_CNT_TRAP {
@@ -209,7 +203,7 @@ module sonic-flex_counter {
                     type flex_delay_status;
                 }
                 leaf POLL_INTERVAL {
-                    type poll_interval_range_1s_60s;
+                    type poll_interval;
                 }
             }
 
