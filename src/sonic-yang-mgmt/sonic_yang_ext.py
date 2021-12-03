@@ -423,7 +423,7 @@ class SonicYangExtMixin:
     are displayed only when an entry is not xlated properly from ConfigDB
     to sonic_yang.json.
 
-    Type 1 map Yang has inner list, which is diffrent from config DB.
+    Type 1 Lists have inner list, which is diffrent from config DB.
     Each field value in config db should be converted to inner list with
     key and value.
     Example:
@@ -746,7 +746,7 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
-    Type 1 MAPs Yang has inner list, each inner list key:val should
+    Type 1 Lists have inner list, each inner list key:val should
     be mapped to field:value in Config DB.
     Example:
 
