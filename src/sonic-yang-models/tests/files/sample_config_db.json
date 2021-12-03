@@ -281,8 +281,8 @@
                 "bgp_asn": "64850",
                 "hwsku": "Stone",
                 "buffer_model": "dynamic",
-                "cloudtype": "None",
-                "region": "None"
+                "cloudtype": "Public",
+                "region": "usfoo"
             }
         },
         "VLAN": {

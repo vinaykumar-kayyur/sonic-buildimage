@@ -139,23 +139,5 @@
                 }
             }
         }
-    },
-    "DEVICE_METADATA_INVLAID_CLOUDTYPE": {
-        "sonic-device_metadata:sonic-device_metadata": {
-            "sonic-device_metadata:DEVICE_METADATA": {
-                "sonic-device_metadata:localhost": {
-                    "cloudtype": ""
-                }
-            }
-        }
-    },
-    "DEVICE_METADATA_INVLAID_REGION": {
-        "sonic-device_metadata:sonic-device_metadata": {
-            "sonic-device_metadata:DEVICE_METADATA": {
-                "sonic-device_metadata:localhost": {
-                    "region": ""
-                }
-            }
-        }
     }
 }
