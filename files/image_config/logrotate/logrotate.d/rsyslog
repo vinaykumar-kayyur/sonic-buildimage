@@ -35,7 +35,7 @@
 /var/log/swss/swss*.rec
 /var/log/swss/responsepublisher.rec
 {
-    size 1M
+    size 16M
     rotate 5000
     missingok
     notifempty
@@ -47,7 +47,7 @@
         NUM_LOGS_TO_ROTATE=8
 
         # Adjust LOG_FILE_ROTATE_SIZE_KB to reflect the "size" parameter specified above, in kB
-        LOG_FILE_ROTATE_SIZE_KB=1024
+        LOG_FILE_ROTATE_SIZE_KB=16384
 
         # Reserve space for btmp, wtmp, dpkg.log, monit.log, etc., as well as logs that
         # should be disabled, just in case they get created and rotated
