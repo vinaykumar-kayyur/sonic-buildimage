@@ -12,9 +12,10 @@ import time
 
 from datetime import datetime
 from ipaddress import ip_interface
+from pyroute2 import IPRoute
 from scapy.layers.inet import IP
 from scapy.layers.inet6 import IPv6
-from scapy.sendrecv import sniff
+from scapy.sendrecv import AsyncSniffer
 from swsssdk import ConfigDBConnector, SonicV2Connector
 from sonic_py_common import logger as log
 
@@ -31,6 +32,8 @@ DST_IP_KEY = 'dst_ip'
 ADDRESS_IPV4_KEY = 'address_ipv4'
 IPINIP_TUNNEL = 'ipinip'
 
+RTM_NEWLINK = 'RTM_NEWLINK'
+
 
 class TunnelPacketHandler(object):
 
@@ -40,6 +43,8 @@ class TunnelPacketHandler(object):
         self.state_db = SonicV2Connector()
         self.state_db.connect(STATE_DB)
         self._portchannel_intfs = None
+        self.up_portchannels = None
+        self.netlink_api = IPRoute()
 
     @property
     def portchannel_intfs(self):
@@ -63,12 +68,46 @@ class TunnelPacketHandler(object):
 
         return self._portchannel_intfs
 
-    def all_portchannels_up(self):
+    def get_portchannel_index_mapping(self):
         """
-        Checks if the portchannel interfaces are up
+        Gets a mapping of interface kernel indices to portchannel interfaces
 
         Returns:
-            (bool) True, if all interfaces are up
+            (list) integers representing kernel indices
+        """
+        index_map = {}
+        for portchannel in self.portchannel_intfs:
+            index = self.netlink_api.link_lookup(ifname=portchannel[0])[0]
+            index_map[index] = portchannel
+
+        return index_map
+
+    def get_up_portchannels(self):
+        """
+        Returns the portchannels which are operationally up
+
+        Returns:
+            (list) of interface names which are up, as strings
+        """
+        pc_index_map = self.get_portchannel_index_mapping()
+        pc_indices = list(pc_index_map.keys())
+        link_statuses = self.netlink_api.get_links(*pc_indices)
+        up_portchannels = []
+
+        for status in link_statuses:
+            if status['state'] == 'up':
+                port_index = status['index']
+                up_portchannels.append(pc_index_map[port_index][0])
+
+        return up_portchannels
+
+    def all_portchannels_established(self):
+        """
+        Checks if the portchannel interfaces are established
+
+        Note that this status does not indicate operational state
+        Returns:
+            (bool) True, if all interfaces are established
                    False, otherwise
         """
         intfs = self.portchannel_intfs
@@ -87,7 +126,7 @@ class TunnelPacketHandler(object):
 
     def wait_for_portchannels(self, interval=5, timeout=60):
         """
-        Continuosly checks if all portchannel member host interfaces are up
+        Continuosly checks if all portchannel host interfaces are established
 
         Args:
             interval: the interval (in seconds) at which to perform the check
@@ -101,14 +140,14 @@ class TunnelPacketHandler(object):
         start = datetime.now()
 
         while (datetime.now() - start).seconds < timeout:
-            if self.all_portchannels_up():
-                logger.log_info("All portchannel intfs are up")
+            if self.all_portchannels_established():
+                logger.log_info("All portchannel intfs are established")
                 return None
-            logger.log_info("Not all portchannel intfs are up")
+            logger.log_info("Not all portchannel intfs are established")
             time.sleep(interval)
 
-        raise RuntimeError('Portchannel intfs did not come '
-                           'up within {}'.format(timeout))
+        raise RuntimeError('Portchannel intfs were not established '
+                           'within {}'.format(timeout))
 
     def get_ipinip_tunnel_addrs(self):
         """
@@ -171,6 +210,47 @@ class TunnelPacketHandler(object):
                 return IPv6
         return False
 
+    def wait_for_netlink_msgs(self):
+        """
+        Gathers any RTM_NEWLINK messages
+
+        Returns:
+            (list) containing any received messages
+        """
+        msgs = []
+        with IPRoute() as ipr:
+            ipr.bind()
+            for msg in ipr.get():
+                if msg['event'] == RTM_NEWLINK:
+                    msgs.append(msg)
+
+        return msgs
+
+    def sniffer_restart_required(self, messages):
+        """
+        Determines if the packet sniffer needs to be restarted
+
+        A restart is required if all of the following conditions are met:
+            1. A netlink message of type RTM_NEWLINK is received
+               (this is checked by `wait_for_netlink_msgs`)
+            2. The interface index of the message corresponds to a portchannel
+               interface
+            3. The state of the interface in the message is 'up'
+                    Here, we do not care about an interface going down since
+                    the sniffer is able to continue sniffing on the other
+                    interfaces. However, if an interface has gone down and
+                    come back up, we need to restart the sniffer to be able
+                    to sniff traffic on the interface that has come back up.
+        """
+        pc_index_map = self.get_portchannel_index_mapping()
+        for msg in messages:
+            if msg['index'] in pc_index_map:
+                if msg['state'] == 'up':
+                    logger.log_info('{} came back up, sniffer restart required'
+                                    .format(pc_index_map[msg['index']]))
+                    return True
+        return False
+
     def listen_for_tunnel_pkts(self):
         """
         Listens for tunnel packets that are trapped to CPU
@@ -207,16 +287,29 @@ class TunnelPacketHandler(object):
         logger.log_notice('Starting tunnel packet handler for {}'
                           .format(packet_filter))
 
-        portchannel_intfs = self.portchannel_intfs
-        portchannels = [pair[0] for pair in portchannel_intfs]
-        logger.log_info("Listening on interfaces {}".format(portchannels))
+        sniff_intfs = self.get_up_portchannels()
+        logger.log_info("Listening on interfaces {}".format(sniff_intfs))
 
+        sniffer = AsyncSniffer(
+            iface=sniff_intfs,
+            filter=packet_filter,
+            prn=_ping_inner_dst
+
+        )
+        sniffer.start()
         while True:
-            sniff(
-                iface=portchannels,
-                filter=packet_filter,
-                prn=_ping_inner_dst
+            msgs = self.wait_for_netlink_msgs()
+            if self.sniffer_restart_required(msgs):
+                sniffer.stop()
+                sniff_intfs = self.get_up_portchannels()
+                logger.log_notice('Restarting tunnel packet handler on '
+                                  'interfaces {}'.format(sniff_intfs))
+                sniffer = AsyncSniffer(
+                    iface=sniff_intfs,
+                    filter=packet_filter,
+                    prn=_ping_inner_dst
                 )
+                sniffer.start()
 
     def run(self):
         self.wait_for_portchannels()
