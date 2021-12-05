@@ -358,10 +358,7 @@ RUN apt-get -y build-dep openssh
 
 # Build fix for ARM64 and ARMHF /etc/debian_version
 {%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
-RUN mv /var/lib/dpkg/info/libc-bin.* /tmp/
-RUN dpkg --remove --force-remove-reinstreq libc-bin || true
-RUN dpkg --purge libc-bin || true
-RUN apt upgrade -y base-files
+RUN apt upgrade -y base-files libc-bin=$(dpkg-query -W -f '${Version}' libc-bin)
 {%- endif %}
 
 # Build fix for ARMHF bullseye libsairedis
