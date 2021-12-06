@@ -224,7 +224,6 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'qos-dell6100.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
 
-<<<<<<< HEAD
     def test_buffers_dell6100_render_template(self):
         dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100')
         buffers_file = os.path.join(dell_dir_path, 'buffers.json.j2')
@@ -271,14 +270,6 @@ class TestJ2Files(TestCase):
         port_config_ini_file = os.path.join(mellanox_dir_path, 'port_config.ini')
 
         # copy buffers_config.j2 to the Mellanox 2410 directory to have all templates in one directory
-=======
-    def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
-        dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
-        buffers_file = os.path.join(dir_path, buffer_template)
-        port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
-
-        # copy buffers_config.j2 to the SKU directory to have all templates in one directory
->>>>>>> d9c4428... Do not use pytest fixture in test_buffer_render_template test
         buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
         shutil.copy2(buffers_config_file, mellanox_dir_path)
 
@@ -291,18 +282,6 @@ class TestJ2Files(TestCase):
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-mellanox2410.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
-
-    def test_buffers_dell6100_render_template(self):
-        self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
-
-    def test_buffers_mellanox2700_render_template(self):
-        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json')
-
-    def test_buffers_mellanox2700_render_template(self):
-        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2410.json')
-
-    def test_buffers_mellanox2700_render_template(self):
-        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers_dynamic.json.j2', 'buffers-mellanox2410-dynamic.json')
 
     def test_ipinip_multi_asic(self):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
