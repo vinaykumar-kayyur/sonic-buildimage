@@ -39,9 +39,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd ./sonic-pins
 	bazel $(BAZEL_OPTS) build $(BAZEL_BUILD_OPTS) $(BAZEL_BUILD_TARGETS)
 	bazel $(BAZEL_OPTS) test $(BAZEL_BUILD_OPTS) //$(BAZEL_TARGET_PATH)/...
-	pushd ./bazel-bin/$(BAZEL_TARGET_PATH)
+	cd ./bazel-bin/$(BAZEL_TARGET_PATH)
 	mv $* $(DERIVED_TARGETS) $(DEST)/
-	popd
 	popd
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
