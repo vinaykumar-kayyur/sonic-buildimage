@@ -286,7 +286,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        vendor_rev               |1*255VCHAR     |hardware version of SFP
+        vendor_rev                 |1*255VCHAR     |vendor revision of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
