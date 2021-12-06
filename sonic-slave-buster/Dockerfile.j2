@@ -29,7 +29,7 @@ RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bust
         echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
 
-{%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
+{%- if CONFIGURED_ARCH == "armhf" and CROSS_BUILD_ENVIRON != "y" %}
 RUN echo "deb [arch=armhf] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://deb.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
@@ -39,7 +39,7 @@ RUN echo "deb [arch=armhf] http://deb.debian.org/debian buster main contrib non-
         echo 'deb [arch=armhf] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
-{%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+{%- elif CONFIGURED_ARCH == "arm64" and CROSS_BUILD_ENVIRON != "y" %}
 RUN echo "deb [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
