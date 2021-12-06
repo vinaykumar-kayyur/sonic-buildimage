@@ -41,28 +41,24 @@ class Sfp(SfpOptoeBase):
         presence_ctrl = self.sfp_control + 'qsfp_modprs'
         try:
             reg_file = open(presence_ctrl)
-        except IOError as e:
-            return False
 
-        reg_hex = reg_file.readline().rstrip()
+            reg_hex = reg_file.readline().rstrip()
+            # content is a string containing the hex
+            # representation of the register
+            reg_value = int(reg_hex, 16)
+            # Mask off the bit corresponding to our port
+            if (self.sfp_ctrl_idx > 15):
+                index = self.sfp_ctrl_idx % 16
+            else:
+                index = self.sfp_ctrl_idx
 
-        # content is a string containing the hex
-        # representation of the register
-        reg_value = int(reg_hex, 16)
-
-        # Mask off the bit corresponding to our port
-        if (self.sfp_ctrl_idx > 15):
-            index = self.sfp_ctrl_idx % 16
-        else:
-            index = self.sfp_ctrl_idx
-
-        # Mask off the bit corresponding to our port
-        mask = (1 << index)
-
-        # ModPrsL is active low
-        if ((reg_value & mask) == 0):
-            return True
-
+            # Mask off the bit corresponding to our port
+            mask = (1 << index)
+            # ModPrsL is active low
+            if ((reg_value & mask) == 0):
+                return True
+        except (IOError, ValueError) as err:
+            syslog.syslog(syslog.LOG_ERR, str(err))
         return False
 
     def get_reset_status(self):
@@ -73,28 +69,27 @@ class Sfp(SfpOptoeBase):
         reset_ctrl = self.sfp_control + 'qsfp_reset'
         try:
             reg_file = open(reset_ctrl, "r+")
-        except IOError as e:
+
+            reg_hex = reg_file.readline().rstrip()
+            # content is a string containing the hex
+            # representation of the register
+            reg_value = int(reg_hex, 16)
+            # Mask off the bit corresponding to our port
+            if (self.sfp_ctrl_idx > 15):
+                index = self.sfp_ctrl_idx % 16
+            else:
+                index = self.sfp_ctrl_idx
+
+            mask = (1 << index)
+
+            if ((reg_value & mask) == 0):
+                reset_status = True
+            else:
+                reset_status = False
+
+        except (IOError, ValueError) as err:
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
-
-        reg_hex = reg_file.readline().rstrip()
-
-        # content is a string containing the hex
-        # representation of the register
-        reg_value = int(reg_hex, 16)
-
-        # Mask off the bit corresponding to our port
-        if (self.sfp_ctrl_idx > 15):
-            index = self.sfp_ctrl_idx % 16
-        else:
-            index = self.sfp_ctrl_idx
-
-        mask = (1 << index)
-
-        if ((reg_value & mask) == 0):
-            reset_status = True
-        else:
-            reset_status = False
-
         return reset_status
 
     def get_lpmode(self):
@@ -104,27 +99,29 @@ class Sfp(SfpOptoeBase):
         lpmode_ctrl = self.sfp_control + 'qsfp_lpmode'
         try:
             reg_file = open(lpmode_ctrl, "r+")
-        except IOError as e:
+
+            reg_hex = reg_file.readline().rstrip()
+
+            # content is a string containing the hex
+            # representation of the register
+            reg_value = int(reg_hex, 16)
+
+            # Mask off the bit corresponding to our port
+            if (self.sfp_ctrl_idx > 15):
+                index = self.sfp_ctrl_idx % 16
+            else:
+                index = self.sfp_ctrl_idx
+
+            mask = (1 << index)
+
+            if ((reg_value & mask) == 0):
+                lpmode_state = False
+            else:
+                lpmode_state = True
+
+        except (IOError, ValueError) as err:
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
-
-        reg_hex = reg_file.readline().rstrip()
-
-        # content is a string containing the hex
-        # representation of the register
-        reg_value = int(reg_hex, 16)
-
-        # Mask off the bit corresponding to our port
-        if (self.sfp_ctrl_idx > 15):
-            index = self.sfp_ctrl_idx % 16
-        else:
-            index = self.sfp_ctrl_idx
-
-        mask = (1 << index)
-
-        if ((reg_value & mask) == 0):
-            lpmode_state = False
-        else:
-            lpmode_state = True
 
         return lpmode_state
 
@@ -136,45 +133,41 @@ class Sfp(SfpOptoeBase):
         try:
             # Open reset_ctrl in both read & write mode
             reg_file = open(reset_ctrl, "r+")
-        except IOError as e:
-            return False
 
-        reg_hex = reg_file.readline().rstrip()
-        reg_value = int(reg_hex, 16)
+            reg_hex = reg_file.readline().rstrip()
+            reg_value = int(reg_hex, 16)
+            # Mask off the bit corresponding to our port
+            if (self.sfp_ctrl_idx > 15):
+                index = self.sfp_ctrl_idx % 16
+            else:
+                index = self.sfp_ctrl_idx
 
-        # Mask off the bit corresponding to our port
-        if (self.sfp_ctrl_idx > 15):
-            index = self.sfp_ctrl_idx % 16
-        else:
-            index = self.sfp_ctrl_idx
+            # Mask off the bit corresponding to our port
+            mask = (1 << index)
 
-        # Mask off the bit corresponding to our port
-        mask = (1 << index)
+            # ResetL is active low
+            reg_value = (reg_value & ~mask)
 
-        # ResetL is active low
-        reg_value = (reg_value & ~mask)
+            # Convert our register value back to a
+            # hex string and write back
+            reg_file.seek(0)
+            reg_file.write(hex(reg_value))
+            reg_file.close()
 
-        # Convert our register value back to a
-        # hex string and write back
-        reg_file.seek(0)
-        reg_file.write(hex(reg_value))
-        reg_file.close()
-
-        # Sleep 1 second to allow it to settle
-        time.sleep(1)
-
-        # Flip the bit back high and write back to the
-        # register to take port out of reset
-        try:
+            # Sleep 1 second to allow it to settle
+            time.sleep(1)
+            # Flip the bit back high and write back to the
+            # register to take port out of reset
             reg_file = open(reset_ctrl, "w")
-        except IOError as e:
+
+            reg_value = reg_value | mask
+            reg_file.seek(0)
+            reg_file.write(hex(reg_value))
+            reg_file.close()
+
+        except (IOError, ValueError) as err:
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
-
-        reg_value = reg_value | mask
-        reg_file.seek(0)
-        reg_file.write(hex(reg_value))
-        reg_file.close()
-
         return True
 
     def set_lpmode(self, lpmode):
@@ -184,35 +177,35 @@ class Sfp(SfpOptoeBase):
         lpmode_ctrl = self.sfp_control + 'qsfp_lpmode'
         try:
             reg_file = open(lpmode_ctrl, "r+")
-        except IOError as e:
+
+            reg_hex = reg_file.readline().rstrip()
+            # content is a string containing the hex
+            # representation of the register
+            reg_value = int(reg_hex, 16)
+
+            # Mask off the bit corresponding to our port
+            if (self.sfp_ctrl_idx > 15):
+                index = self.sfp_ctrl_idx % 16
+            else:
+                index = self.sfp_ctrl_idx
+
+            mask = (1 << index)
+
+            # LPMode is active high; set or clear the bit accordingly
+            if lpmode is True:
+                reg_value = (reg_value | mask)
+            else:
+                reg_value = (reg_value & ~mask)
+
+            # Convert our register value back to a hex string and write back
+            content = hex(reg_value)
+
+            reg_file.seek(0)
+            reg_file.write(content)
+            reg_file.close()
+        except (IOError, ValueError) as err:
+            syslog.syslog(syslog.LOG_ERR, str(err))
             return False
-
-        reg_hex = reg_file.readline().rstrip()
-
-        # content is a string containing the hex
-        # representation of the register
-        reg_value = int(reg_hex, 16)
-
-        # Mask off the bit corresponding to our port
-        if (self.sfp_ctrl_idx > 15):
-            index = self.sfp_ctrl_idx % 16
-        else:
-            index = self.sfp_ctrl_idx
-
-        mask = (1 << index)
-
-        # LPMode is active high; set or clear the bit accordingly
-        if lpmode is True:
-            reg_value = (reg_value | mask)
-        else:
-            reg_value = (reg_value & ~mask)
-
-        # Convert our register value back to a hex string and write back
-        content = hex(reg_value)
-
-        reg_file.seek(0)
-        reg_file.write(content)
-        reg_file.close()
 
         return True
 
