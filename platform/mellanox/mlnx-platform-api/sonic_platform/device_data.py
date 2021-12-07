@@ -223,7 +223,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -236,7 +236,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -254,7 +254,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return 0
-        
+
         sfp_data = platform_data.get('sfp', None)
         if not sfp_data:
             return 0
