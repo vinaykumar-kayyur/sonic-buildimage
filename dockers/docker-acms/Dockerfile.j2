@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM ubuntu:18.04
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 
@@ -21,18 +21,19 @@ RUN rm -rf               \
     /usr/share/locale/*
 
 # Update apt's cache of available packages
-RUN apt-get update &&       \
-    apt-get install -f -y   \
-        rsyslog             \
-        gnupg               \
-        gnupg1              \
-        gnupg2              \
-        curl                \
-        libcurl4            \
-        libacl1             \
-        libuuid1            \
-        libxml2             \
-        python-pip
+RUN apt-get update &&               \   
+    apt-get install -f -y           \
+        rsyslog                     \
+        gnupg                       \
+        gnupg1                      \
+        gnupg2                      \
+        libcurl4=7.74.0-1.2~bpo10+1 \
+        curl=7.74.0-1.2~bpo10+1     \
+        libacl1                     \
+        libuuid1                    \
+        libxml2                     \
+        python-pip                  \
+        python-setuptools
 
 {% if docker_acms_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -70,7 +71,7 @@ RUN cd /acms && sh install_acms.sh
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 RUN pip install supervisor==4.1.0
-RUN pip install redis==3.5.0
+RUN pip install redis==3.5.3
 
 RUN apt-mark manual python python-setuptools
 
