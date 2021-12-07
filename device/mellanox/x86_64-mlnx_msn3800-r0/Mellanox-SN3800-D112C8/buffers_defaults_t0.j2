@@ -6,8 +6,8 @@
 
 {% import 'buffers_defaults_objects.j2' as defs with context %}
 
-{%- macro generate_buffer_pool_and_profiles() %}
-{{ defs.generate_buffer_pool_and_profiles() }}
+{%- macro generate_buffer_pool_and_profiles_with_inactive_ports(port_names_inactive) %}
+{{ defs.generate_buffer_pool_and_profiles_with_inactive_ports(port_names_inactive) }}
 {%- endmacro %}
 
 {%- macro generate_profile_lists_with_inactive_ports(port_names_active, port_names_inactive) %}
