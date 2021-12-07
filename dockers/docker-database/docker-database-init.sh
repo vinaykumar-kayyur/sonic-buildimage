@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
 
-# Set io-threads to the number of physical CPU cores.
-sed -ri "s/^# io-threads [0-9]+/io-threads $(nproc --all)/g" /etc/redis/redis.conf
+# Get the number of ASICs.
+ASIC_CONF="/usr/share/sonic/platform/asic.conf"
+if [ ! -f $ASIC_CONF ]; then
+    NUM_ASIC=1
+else
+    NUM_ASIC=$(sed -n 's/^NUM_ASIC=//p' $ASIC_CONF)
+fi
+
+# Calculate appropriate io-threads for redis-server.
+# The multi-threading feature will be disabled in multi ASIC platform.
+NUM_CORE=$(nproc --all)
+if [ $NUM_ASIC -gt "1" ]; then
+    NUM_THREAD=1
+if [ $NUM_CORE -lt "4" ]; then
+    NUM_THREAD=1
+else
+    NUM_THREAD=$(( $NUM_CORE/2 < 8 ? $NUM_CORE/2 : 8 ))
+fi
+
+if [ $NUM_THREAD -gt "1" ]; then
+    sed -ri "s/^# io-threads [0-9]+/io-threads $NUM_THREAD/g" /etc/redis/redis.conf
+fi
 
 # For linux host namespace, in both single and multi ASIC platform use the loopback interface
 # For other namespaces, use eth0 interface which is connected to the docker0 bridge in the host.
