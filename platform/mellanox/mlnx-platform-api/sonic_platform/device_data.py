@@ -29,7 +29,9 @@ DEVICE_DATA = {
                 "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
             },
             "capability": {
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -41,7 +43,9 @@ DEVICE_DATA = {
             },
             "capability": {
                 "cpu_pack": False,
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -53,7 +57,9 @@ DEVICE_DATA = {
             },
             "capability": {
                 "cpu_pack": False,
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -64,7 +70,9 @@ DEVICE_DATA = {
                 "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
             },
             "capability": {
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -76,7 +84,9 @@ DEVICE_DATA = {
             },
             "capability": {
                 "cpu_pack": False,
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -85,6 +95,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:25":12, "26:40":13 , "41:120":14},
                 "unk_untrust": {"-127:15":12, "16:30":13 , "31:35":14, "36:40":15, "41:120":16},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -93,6 +107,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:40":12, "41:120":13},
                 "unk_untrust": {"-127:10":12, "11:20":13 , "21:30":14, "31:35":15, "36:120":16},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -101,6 +119,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:30":12, "31:40":13 , "41:120":14},
                 "unk_untrust": {"-127:0":12, "1:10":13 , "11:15":14, "16:20":15, "21:35":16, "36:120":17},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -109,6 +131,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:35":14, "36:120":15},
                 "unk_untrust": {"-127:35":14, "36:120":15},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -117,6 +143,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:40":12, "41:120":13},
                 "unk_untrust": {"-127:10":12, "11:20":13, "21:30":14, "31:35":15, "36:120":16},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -125,6 +155,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:120":12},
                 "unk_untrust": {"-127:25":12, "26:35":13, "36:40":14, "41:120":16},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -133,6 +167,10 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust":   {"-127:40":12, "41:120":13},
                 "unk_untrust": {"-127:5":12, "6:20":13, "21:30":14, "31:35":15, "36:40":16, "41:120":17},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
@@ -141,13 +179,19 @@ DEVICE_DATA = {
             'minimum_table': {
                 "unk_trust": {"-127:40": 12, "41:120": 13},
                 "unk_untrust": {"-127:5": 12, "6:20": 13, "21:30": 14, "31:35": 15, "36:40": 16, "41:120": 17},
+            },
+            "capability": {
+                "cpu_amb": False,
+                "swb_amb": False
             }
         }
     },
     'x86_64-mlnx_msn4800-r0': {
         'thermal': {
             "capability": {
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": False,
+                "swb_amb": False
             }
         },
         'sfp': {
