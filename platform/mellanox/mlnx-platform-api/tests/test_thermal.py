@@ -48,7 +48,8 @@ class TestThermal:
             thermal_type = rule.get('type', 'single')
             if thermal_type == 'single':
                 thermal_name = rule['name']
-                if rule['temperature'] == 'comex_amb':
+                excluded_thermals = ['comex_amb', 'cpu_amb', 'swb_amb']
+                if rule['temperature'] in excluded_thermals:
                     assert thermal_name not in thermal_dict
                     continue
                 assert thermal_name in thermal_dict
