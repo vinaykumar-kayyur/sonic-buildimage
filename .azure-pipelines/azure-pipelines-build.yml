@@ -35,6 +35,7 @@ jobs:
       docker_syncd_rpc_image: no
       syncd_rpc_image: no
       platform_rpc: no
+      dep_platform_rpc: no
     ${{ if ne(parameters.jobGroups, '') }}:
       jobGroups: ${{ parameters.jobGroups }}
     ${{ if eq(parameters.jobGroups, '') }}:
@@ -56,6 +57,7 @@ jobs:
             raw_image: yes
             docker_syncd_rpc_image: yes
             platform_rpc: brcm
+            dep_platform_rpc: brcm-dnx
 
         - name: centec
           variables:
@@ -123,6 +125,9 @@ jobs:
             fi
             if [ $(docker_syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
+              if [ $(dep_platform_rpc) != no ]; then
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(dep_platform_rpc)-rpc.gz
+              fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
