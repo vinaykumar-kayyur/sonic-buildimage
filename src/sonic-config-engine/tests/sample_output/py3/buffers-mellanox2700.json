@@ -1,5 +1,4 @@
 
-
 {
     "CABLE_LENGTH": {
         "AZURE": {
@@ -133,6 +132,18 @@
         }
     },
     "BUFFER_PORT_INGRESS_PROFILE_LIST": {
+        "Ethernet64": {
+            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
+        },
+        "Ethernet66": {
+            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
+        },
+        "Ethernet68": {
+            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
+        },
+        "Ethernet70": {
+            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
+        },
         "Ethernet2": {
             "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
         },
@@ -203,18 +214,6 @@
             "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
         },
         "Ethernet56": {
-            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
-        },
-        "Ethernet64": {
-            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
-        },
-        "Ethernet66": {
-            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
-        },
-        "Ethernet68": {
-            "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
-        },
-        "Ethernet70": {
             "profile_list" : "[BUFFER_PROFILE|ingress_lossless_profile]"
         }
 ,
@@ -304,6 +303,18 @@
         }
     },
     "BUFFER_PORT_EGRESS_PROFILE_LIST": {
+        "Ethernet64": {
+            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
+        },
+        "Ethernet66": {
+            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
+        },
+        "Ethernet68": {
+            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
+        },
+        "Ethernet70": {
+            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
+        },
         "Ethernet2": {
             "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
         },
@@ -374,18 +385,6 @@
             "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
         },
         "Ethernet56": {
-            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
-        },
-        "Ethernet64": {
-            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
-        },
-        "Ethernet66": {
-            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
-        },
-        "Ethernet68": {
-            "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
-        },
-        "Ethernet70": {
             "profile_list" : "[BUFFER_PROFILE|egress_lossless_profile],[BUFFER_PROFILE|egress_lossy_profile]"
         }
 ,
@@ -475,6 +474,18 @@
         }
     },
     "BUFFER_PG": {
+        "Ethernet64|0": {
+            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
+        },
+        "Ethernet66|0": {
+            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
+        },
+        "Ethernet68|0": {
+            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
+        },
+        "Ethernet70|0": {
+            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
+        },
         "Ethernet2|0": {
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         },
@@ -545,18 +556,6 @@
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         },
         "Ethernet56|0": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-        },
-        "Ethernet64|0": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-        },
-        "Ethernet66|0": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-        },
-        "Ethernet68|0": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-        },
-        "Ethernet70|0": {
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         }
 ,       "Ethernet0|0": {
@@ -646,6 +645,18 @@
     },
 
     "BUFFER_QUEUE": {
+        "Ethernet64|3-4": {
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        },
+        "Ethernet66|3-4": {
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        },
+        "Ethernet68|3-4": {
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        },
+        "Ethernet70|3-4": {
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        },
         "Ethernet2|3-4": {
             "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
@@ -718,17 +729,17 @@
         "Ethernet56|3-4": {
             "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
-        "Ethernet64|3-4": {
-            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        "Ethernet64|0-2": {
+            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet66|3-4": {
-            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        "Ethernet66|0-2": {
+            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet68|3-4": {
-            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        "Ethernet68|0-2": {
+            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet70|3-4": {
-            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
+        "Ethernet70|0-2": {
+            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
         "Ethernet2|0-2": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
@@ -802,16 +813,16 @@
         "Ethernet56|0-2": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet64|0-2": {
+        "Ethernet64|5-6": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet66|0-2": {
+        "Ethernet66|5-6": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet68|0-2": {
+        "Ethernet68|5-6": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
-        "Ethernet70|0-2": {
+        "Ethernet70|5-6": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
         "Ethernet2|5-6": {
@@ -884,18 +895,6 @@
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         },
         "Ethernet56|5-6": {
-            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-        },
-        "Ethernet64|5-6": {
-            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-        },
-        "Ethernet66|5-6": {
-            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-        },
-        "Ethernet68|5-6": {
-            "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
-        },
-        "Ethernet70|5-6": {
             "profile" : "[BUFFER_PROFILE|q_lossy_profile]"
         }
 ,
