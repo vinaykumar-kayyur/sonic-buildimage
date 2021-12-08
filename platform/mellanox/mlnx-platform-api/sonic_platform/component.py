@@ -35,7 +35,8 @@ try:
         import ConfigParser as configparser
 
     from sonic_platform_base.component_base import ComponentBase,           \
-                                                    FW_AUTO_UPDATED         \
+                                                    FW_AUTO_INSTALLED,      \
+                                                    FW_AUTO_UPDATED,        \
                                                     FW_AUTO_SCHEDULED,      \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
@@ -373,8 +374,12 @@ class Component(ComponentBase):
         if boot_action != "cold":
             return FW_AUTO_ERR_BOOT_TYPE
 
-        # Deferred to next boot
-        return FW_AUTO_SCHEDULED
+        # Install firmware
+        if not self.install_firmware(image_path, allow_reboot=False):
+            return FW_AUTO_ERR_UNKNOWN
+
+        # Installed pending next reboot
+        return FW_AUTO_INSTALLED
 
     @staticmethod
     def _read_generic_file(filename, len, ignore_errors=False):

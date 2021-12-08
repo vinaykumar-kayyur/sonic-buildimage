@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+import os
+
 from collections import namedtuple
 
 from fwutil.lib import ComponentStatusProvider, PlatformComponentsParser
@@ -44,6 +46,9 @@ except Exception as e:
     print("System will reboot in 10 seconds please fix issue and run update command again.")
     time.sleep(10)
     exit(-1)
+
+# Make file system read only for install
+os.system("echo u > /proc/sysrq-trigger")
 
 # Iterate each component in the status file
 for boot_type, components in update_status.items():
