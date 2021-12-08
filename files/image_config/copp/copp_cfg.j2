@@ -59,8 +59,47 @@
 		    "red_action": "drop",
 		    "trap_action": "trap",
 		    "trap_priority": "1"
-
-	    }
+	    }{%- if include_p4rt == "y" %},
+	    "trap.group.cpu.queue.1": {
+		    "queue": "1",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.2": {
+		    "queue": "2",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.3": {
+		    "queue": "3",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.4": {
+		    "queue": "4",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.5": {
+		    "queue": "5",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.6": {
+		    "queue": "6",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.7": {
+		    "queue": "7",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    },
+	    "trap.group.cpu.queue.8": {
+		    "queue": "8",
+		    "genetlink_name" : "genl_packet",
+		    "genetlink_mcgrp_name" : "packets"
+	    }{% endif %}
     },
     "COPP_TRAP": {
 	    "bgp": {

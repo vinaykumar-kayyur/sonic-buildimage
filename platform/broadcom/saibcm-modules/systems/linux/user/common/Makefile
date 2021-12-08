@@ -195,6 +195,11 @@ ADD_TO_CFLAGS += -I$(SDK)/systems/bde/linux/include
 # Use raw IOCTL for KNET
 ADD_TO_CFLAGS += -DPROXY_SUPPORT=0
 
+# Generic packet in support using genetlink
+ifdef BUILD_GENL_PACKET
+ADD_TO_CFLAGS += -DGENL_PACKET_SUPPORT
+endif
+
 CFLAGS += $(ADD_TO_CFLAGS)
 
 #SAI_FIXUP

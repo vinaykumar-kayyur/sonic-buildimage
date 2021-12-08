@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE = 1
+
+KVERSION ?= $(shell uname -r)
+KVERSION_SHORT ?=
+ARCH ?= amd64
+
+MOD_PREFIX ?= /lib/modules/$(KVERSION)/extra
+INCLUDE_PREFIX ?= $(strip $(if $(KVERSION_SHORT), \
+	/usr/src/linux-headers-$(KVERSION_SHORT)-common/include, \
+	/usr/src/linux-headers-$(KVERSION)/include \
+))
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure
+
+	sed 's|@MOD_PREFIX@|$(MOD_PREFIX)|g' \
+		debian/genl-packet.install.in > debian/genl-packet.install
+	sed 's|@INCLUDE_PREFIX@|$(INCLUDE_PREFIX)|g' \
+		debian/genl-packet-dev.install.in > debian/genl-packet-dev.install
+
+override_dh_auto_install:
+	dh_auto_install
+
+	# Sonic specific behavior to automatically rewrite kernel dependency
+	if [ ! -z "$(KVERSION_SHORT)" ]; then \
+	   echo "Rewriting linux-image dependency in debian/control to $(KVERSION_SHORT)"; \
+	   sed -Ei "s/linux-image-.+-$(ARCH)/linux-image-$(KVERSION_SHORT)-$(ARCH)/" debian/control; \
+	fi
+	if echo "$(KVERSION_SHORT)" | grep -q "^4\.19\."; then \
+	   echo "Rewriting linux-image dependency in debian/control to $(KVERSION_SHORT)-unsigned"; \
+	   sed -Ei "s/linux-image-.+-$(ARCH).*\$$/linux-image-$(KVERSION_SHORT)-$(ARCH)-unsigned/" debian/control; \
+	fi
+
+override_dh_auto_clean:
+	dh_auto_clean
+
+	-rm debian/genl-packet.install
+	-rm debian/genl-packet-dev.install
+
+# To override version, enabled the following:
+# override_dh_gencontrol:
+# 	dh_gencontrol -- -v$(PACKAGEVERSION)

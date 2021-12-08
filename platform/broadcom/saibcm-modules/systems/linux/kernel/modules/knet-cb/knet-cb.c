@@ -50,6 +50,11 @@
 #include "psample-cb.h"
 #endif
 
+/* Enable generic packet in using genetlink */
+#ifdef GENL_PACKET_SUPPORT
+#include "generic-cb.h"
+#endif
+
 MODULE_AUTHOR("Broadcom Corporation");
 MODULE_DESCRIPTION("Broadcom Linux KNET Call-Back Driver");
 MODULE_LICENSE("GPL");
@@ -372,6 +377,11 @@ knet_filter_cb(uint8_t * pkt, int size, int dev_no, void *meta,
         return psample_filter_cb (pkt, size, dev_no, meta, chan, kf);
     }
 #endif
+#ifdef GENL_PACKET_SUPPORT
+    if (strncmp(kf->desc, GENERIC_CB_NAME, KCOM_FILTER_DESC_MAX) == 0) {
+        return generic_filter_cb (pkt, size, dev_no, meta, chan, kf);
+    }
+#endif
     return strip_tag_filter_cb (pkt, size, dev_no, meta, chan, kf);
 }
 
@@ -382,6 +392,9 @@ knet_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
 #ifdef PSAMPLE_SUPPORT
     retv = psample_netif_create_cb(unit, netif, dev);
 #endif
+#ifdef GENL_PACKET_SUPPORT
+    retv = generic_netif_create_cb(unit, netif, dev);
+#endif
     return retv;
 }
 
@@ -391,6 +404,9 @@ knet_netif_destroy_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
     int retv = 0;
 #ifdef PSAMPLE_SUPPORT
     retv = psample_netif_destroy_cb(unit, netif, dev);
+#endif
+#ifdef GENL_PACKET_SUPPORT
+    retv = generic_netif_destroy_cb(unit, netif, dev);
 #endif
     return retv;
 }
@@ -430,6 +446,10 @@ _cleanup(void)
 #ifdef PSAMPLE_SUPPORT
     psample_cleanup();
 #endif
+#ifdef GENL_PACKET_SUPPORT
+    generic_cb_cleanup();
+#endif
+
     return 0;
 }
 
@@ -448,6 +468,10 @@ _init(void)
 #ifdef PSAMPLE_SUPPORT
     psample_init();
 #endif
+#ifdef GENL_PACKET_SUPPORT
+    generic_cb_init();
+#endif
+
     bkn_filter_cb_register(knet_filter_cb);
     bkn_netif_create_cb_register(knet_netif_create_cb);
     bkn_netif_destroy_cb_register(knet_netif_destroy_cb);

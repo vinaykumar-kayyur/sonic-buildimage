@@ -1,0 +1,17 @@
+Source: genl-packet
+Section: misc
+Priority: optional
+Maintainer: PINS Working Group <pins-wg@opennetworking.org>
+Build-Depends: debhelper (>= 11)
+Standards-Version: 4.1.3
+
+Package: genl-packet
+Architecture: linux-any
+Depends: ${misc:Depends},
+   linux-image-4.19.0-12-2-amd64-unsigned
+Description: genl-packet kernel module
+
+Package: genl-packet-dev
+Architecture: linux-any
+Depends: ${misc:Depends}
+Description: genl-packet kernel module headers
