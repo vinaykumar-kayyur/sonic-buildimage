@@ -63,6 +63,7 @@ RUN apt-get update && apt-get install -y \
         perl-modules \
         libswitch-perl \
         dh-systemd \
+        jq \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -230,8 +231,17 @@ RUN apt-get update && apt-get install -y \
         texlive-latex-recommended \
 # For bash
         texi2html \
+        sharutils \
+        locales \
+        time \
+        man2html-base \
+        libcunit1 \
+        libcunit1-dev \
 # For initramfs
         bash-completion \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd \
 {% if CONFIGURED_ARCH == "amd64" -%}
 # For sonic vs image build
         dosfstools \
@@ -332,7 +342,7 @@ RUN apt-get install -y docker-ce=18.03.1~ce-0~debian
 {%- elif CONFIGURED_ARCH == "armhf" %}
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 {%- endif %}
-RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 
 # For jenkins slave
 RUN echo "deb [arch={{ CONFIGURED_ARCH }}] http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
@@ -344,3 +354,10 @@ RUN pip install m2crypto==0.36.0
 
 # Install swi tools
 RUN python -m pip install git+https://github.com/aristanetworks/swi-tools.git@d51761ec0bb93c73039233f3c01ed48235ffad00
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
+{% endif -%}

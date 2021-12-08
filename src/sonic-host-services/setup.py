@@ -16,6 +16,7 @@ setup(
     scripts = [
         'scripts/caclmgrd',
         'scripts/hostcfgd',
+        'scripts/aaastatsd',
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
@@ -25,16 +26,18 @@ setup(
         'dbus-python',
         'Jinja2>=2.10',
         'PyGObject',
-        'sonic-py-common',
-        'swsssdk>=2.0.1',
-        'systemd-python',
+        'sonic-py-common'
     ],
     setup_requires = [
         'pytest-runner',
         'wheel'
     ],
     tests_require = [
+        'parameterized',
         'pytest',
+        'pyfakefs',
+        'sonic-py-common',
+        'deepdiff'
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',
