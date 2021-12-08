@@ -245,10 +245,10 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'members': ['Ethernet8']}, "
-                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001', 'members': ['Ethernet12']},"
-                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000', 'members': ['Ethernet12']},"
-                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020', 'members': ['Ethernet12']}}"
+                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000'}, "
+                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001'},"
+                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000'},"
+                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020'}}"
             )
         )
 
@@ -904,14 +904,14 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2'}}")
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'advertise':'false'}}")
         )
 
         argument = '-m "' + self.packet_chassis_graph + '" -p "' + self.packet_chassis_port_ini + '" -n "' + "asic1" + '" -v "STATIC_ROUTE"'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2'}}")
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'advertise':'false'}}")
         )
 
     def test_minigraph_bgp_packet_chassis_vlan_subintf(self):

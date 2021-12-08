@@ -391,6 +391,11 @@
             "23.92.29.245": {},
             "2001:aa:aa::aa": {}
         },
+        "SYSLOG_SERVER" : {
+            "10.13.14.17": {},
+            "20.1.1.1": {},
+            "2001:aa:aa::aa": {}
+        },
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",
@@ -1111,7 +1116,8 @@
                 "local_addr": "10.0.0.2",
                 "name":"PEER1",
                 "nhopself":"0",
-                "rrclient":"0"
+                "rrclient":"0",
+                "admin_status":"up"
             },
             "default|192.168.1.1": {
                 "local_asn": "65200",
@@ -1333,7 +1339,29 @@
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
             }
-         },		
+        },
+
+        "DSCP_TO_FC_MAP": {
+            "Dscp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Dscp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
+
+        "EXP_TO_FC_MAP": {
+            "Exp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Exp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
 
         "DSCP_TO_TC_MAP": {
            "Dscp_to_tc_map1": { 
@@ -1421,6 +1449,7 @@
 	          "pfc_enable"      : "3,4"
             }
         },
+
         
         "MCLAG_DOMAIN": {
             "123": {
@@ -1439,6 +1468,29 @@
         "MCLAG_UNIQUE_IP": {
             "Vlan12": {
                 "unique_ip": "enable"
+            }
+        },
+
+
+        "MIRROR_SESSION": {
+            "erspan": {
+                "dscp": "10",
+                "dst_ip": "11.1.1.1",
+                "gre_type": "0x1234",
+                "queue": "0",
+                "src_ip": "10.1.1.1",
+                "ttl": "10",
+                "type": "ERSPAN"
+            },
+            "span": {
+                "direction": "RX",
+                "type": "SPAN",
+                "dst_port": "Ethernet2",
+                "src_port": [
+                    "Ethernet3",
+                    "Ethernet4"
+                ]
+
             }
         }
     },

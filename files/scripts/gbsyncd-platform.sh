@@ -7,6 +7,9 @@ PLATFORM=${PLATFORM:-`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`}
 DEVPATH="/usr/share/sonic/device"
 CONFIGFILE="${DEVPATH}/${PLATFORM}/gbsyncd.ini"
 
+# Skip checking the service for vs
+[ "$sonic_asic_platform" = vs ] && exit 0
+
 if [ ! -f "$CONFIGFILE" ]; then
     exit 1
 fi
