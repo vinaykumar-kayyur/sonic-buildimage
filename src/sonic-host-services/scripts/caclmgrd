@@ -18,7 +18,7 @@ try:
     import threading
     import time
 
-    from sonic_py_common import daemon_base, device_info
+    from sonic_py_common import daemon_base, device_info, multi_asic
     from swsscommon import swsscommon
 except ImportError as err:
     raise ImportError("%s - required module not found" % str(err))
@@ -97,7 +97,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         self.lock[DEFAULT_NAMESPACE] = threading.Lock()
         self.num_changes[DEFAULT_NAMESPACE] = 0
 
-        swsscommon.SonicDBConfig.load_sonic_global_db_config()
+        if device_info.is_multi_npu():
+            swsscommon.SonicDBConfig.load_sonic_global_db_config()
+
         self.config_db_map = {}
         self.iptables_cmd_ns_prefix = {}
         self.config_db_map[DEFAULT_NAMESPACE] = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=DEFAULT_NAMESPACE)
@@ -108,7 +110,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         self.namespace_docker_mgmt_ip = {}
         self.namespace_docker_mgmt_ipv6 = {}
 
-        namespaces = device_info.get_all_namespaces()
+        namespaces = multi_asic.get_all_namespaces()
         for front_asic_namespace in namespaces['front_ns']:
             self.update_thread[front_asic_namespace] = None
             self.lock[front_asic_namespace] = threading.Lock()
