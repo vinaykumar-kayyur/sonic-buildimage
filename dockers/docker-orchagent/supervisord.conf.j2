@@ -85,6 +85,18 @@ stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=orchagent:running
 
+[program:portinitdone]
+command=/usr/bin/portinitdone.sh
+priority=6
+autostart=false
+autorestart=unexpected
+startretries=0
+startsecs=0
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=swssconfig:exited
+
 {% if is_fabric_asic == 0 %}
 [program:restore_neighbors]
 command=/usr/bin/restore_neighbors.py
@@ -116,114 +128,114 @@ dependent_startup_wait_for=orchagent:running
 {% if is_fabric_asic == 0 %}
 [program:neighsyncd]
 command=/usr/bin/neighsyncd
-priority=7
-autostart=false
-autorestart=false
-stdout_logfile=syslog
-stderr_logfile=syslog
-dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
-{%- endif %}
-
-{% if is_fabric_asic == 0 %}
-[program:vlanmgrd]
-command=/usr/bin/vlanmgrd
 priority=8
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
-[program:intfmgrd]
-command=/usr/bin/intfmgrd
+[program:vlanmgrd]
+command=/usr/bin/vlanmgrd
 priority=9
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
-[program:portmgrd]
-command=/usr/bin/portmgrd
+[program:intfmgrd]
+command=/usr/bin/intfmgrd
 priority=10
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
-[program:buffermgrd]
-command=/usr/bin/buffermgrd.sh
+[program:portmgrd]
+command=/usr/bin/portmgrd
 priority=11
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
+{%- endif %}
+
+{% if is_fabric_asic == 0 %}
+[program:buffermgrd]
+command=/usr/bin/buffermgrd.sh
+priority=12
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
 [program:vrfmgrd]
 command=/usr/bin/vrfmgrd
-priority=13
+priority=14
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
 [program:nbrmgrd]
 command=/usr/bin/nbrmgrd
-priority=15
-autostart=false
-autorestart=false
-stdout_logfile=syslog
-stderr_logfile=syslog
-dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
-{%- endif %}
-
-{% if is_fabric_asic == 0 %}
-[program:vxlanmgrd]
-command=/usr/bin/vxlanmgrd
 priority=16
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
-[program:tunnelmgrd]
-command=/usr/bin/tunnelmgrd
+[program:vxlanmgrd]
+command=/usr/bin/vxlanmgrd
 priority=17
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
+{%- endif %}
+
+{% if is_fabric_asic == 0 %}
+[program:tunnelmgrd]
+command=/usr/bin/tunnelmgrd
+priority=18
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 [program:enable_counters]
 command=/usr/bin/enable_counters.py
-priority=12
+priority=13
 autostart=false
 autorestart=false
 stdout_logfile=syslog
@@ -234,13 +246,13 @@ dependent_startup_wait_for=swssconfig:exited
 {% if is_fabric_asic == 0 %}
 [program:fdbsyncd]
 command=/usr/bin/fdbsyncd
-priority=17
+priority=18
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=swssconfig:exited
+dependent_startup_wait_for=portinitdone:exited
 {%- endif %}
 
 {% if is_fabric_asic == 0 %}
