@@ -51,9 +51,9 @@ jobs:
 
         - name: broadcom
           variables:
-            dbg_image: yes
+            dbg_image: no
             swi_image: yes
-            raw_image: yes
+            raw_image: no
             docker_syncd_rpc_image: yes
             platform_rpc: brcm
 
@@ -85,7 +85,7 @@ jobs:
 
         - name: mellanox
           variables:
-            dbg_image: yes
+            dbg_image: no
             docker_syncd_rpc_image: yes
             syncd_rpc_image: yes
             platform_rpc: mlnx
