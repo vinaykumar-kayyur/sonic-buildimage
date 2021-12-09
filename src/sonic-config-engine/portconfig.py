@@ -226,6 +226,12 @@ class BreakoutCfg(object):
             else:
                 return False
 
+        def __ne__(self, other):
+            return not self == other
+
+        def __hash__(self):
+            return hash((self.num_ports, tuple(self.supported_speed), self.num_assigned_lanes))
+
     def __init__(self, name, bmode, properties):
         self._interface_base_id = int(name.replace(PORT_STR, ''))
         self._properties = properties
