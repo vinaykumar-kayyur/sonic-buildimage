@@ -34,7 +34,7 @@
 	"eStrKey" : "Pattern"
     },
     "DEVICE_METADATA_TYPE_CORRECT_PATTERN": {
-       "desc": "DEVICE_METADATA correct value for Type field"
+        "desc": "DEVICE_METADATA correct value for Type field"
     },
 	"DEVICE_METADATA_DEFAULT_SYNCHRONOUS_MODE": {
 	"desc": "DEVICE_METADATA DEFAULT VALUE FOR SYNCHRONOUS MODE.",
