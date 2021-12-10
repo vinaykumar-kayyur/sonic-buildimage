@@ -344,6 +344,9 @@ sudo LANG=c chroot $FILESYSTEM_ROOT chmod 644 /etc/group
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/conf.d"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
 
+# Needed for auditd
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /var/log/audit"
+
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
