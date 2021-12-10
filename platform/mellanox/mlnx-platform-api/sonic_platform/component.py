@@ -306,25 +306,6 @@ class ONIEUpdater(object):
         return firmware_info
 
     def update_firmware(self, image_path, allow_reboot=True):
-        cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
-
-        try:
-            output = subprocess.check_output(cmd.split(), 
-                                             stderr=subprocess.STDOUT, 
-                                             universal_newlines=True).rstrip('\n')
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError("Failed to get pending firmware updates: {}".format(str(e)))
-
-        no_pending_updates = False
-
-        for line in output.splitlines():
-            if line.startswith(self.ONIE_NO_PENDING_UPDATES_ATTR):
-                no_pending_updates = True
-                break
-
-        if not no_pending_updates:
-            raise RuntimeError("Failed to complete firmware update: pending updates are present")
-
         try:
             self.__stage_update(image_path)
             self.__trigger_update(allow_reboot)
