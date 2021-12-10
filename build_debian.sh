@@ -346,6 +346,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/in
 
 # Needed for auditd
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /var/log/audit"
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "touch /var/log/audit/audit.log"
 
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
