@@ -5,8 +5,12 @@ module sonic-feature{
     namespace "http://github.com/Azure/sonic-feature";
     prefix feature;
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     description "Feature Table yang Module for SONiC";
-    
+
     typedef feature-state {
         description "configuration to set the feature running state";
         type string {
