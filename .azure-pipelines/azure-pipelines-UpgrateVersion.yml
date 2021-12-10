@@ -13,8 +13,8 @@ schedules:
     include:
     - 20????
     exclude:
-    - 200*
-    - 201*
+    - 200???
+    - 201???
     - 202006
   always: true
 
