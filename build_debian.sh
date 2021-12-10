@@ -344,10 +344,6 @@ sudo LANG=c chroot $FILESYSTEM_ROOT chmod 644 /etc/group
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/conf.d"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
 
-# Needed for auditd
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /var/log/audit"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "touch /var/log/audit/audit.log"
-
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
@@ -451,6 +447,10 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
+
+# Needed for auditd
+sudo mkdir -p $FILESYSTEM_ROOT/var/log/audit
+sudo echo '' >> $FILESYSTEM_ROOT/var/log/audit/audit.log
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
