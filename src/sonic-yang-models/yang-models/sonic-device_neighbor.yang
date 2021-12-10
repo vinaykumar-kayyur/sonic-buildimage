@@ -11,6 +11,7 @@ module sonic-device_neighbor {
 
     import sonic-extension {
         prefix ext;
+        revision-date 2019-07-01;
     }
 
     import sonic-port {
@@ -60,6 +61,45 @@ module sonic-device_neighbor {
                     type string {
                         length 1..255;
                     }
+                }
+
+                leaf type {
+                    type string {
+                        length 1..255;
+                    }
+                }
+            }
+            /* end of list DEVICE_NEIGHBOR_LIST */
+        }
+
+        container DEVICE_NEIGHBOR_METADATA {
+
+            description "DEVICE_NEIGHBOR_METADATA part of config_db.json";
+
+            list DEVICE_NEIGHBOR_METADATA_LIST {
+
+                key "peer_name";
+
+                leaf peer_name {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf hwsku {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf lo_addr {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf mgmt_addr {
+                    type inet:ip-address;
                 }
 
                 leaf type {

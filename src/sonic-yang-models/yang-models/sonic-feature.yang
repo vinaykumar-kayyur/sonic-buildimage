@@ -28,9 +28,23 @@ module sonic-feature{
                     }
                 }
 
+                leaf set_owner {
+                    description "feature set_owner in Feature table";
+                    type string {
+                        length 1..32;
+                    }
+                }
+
+                leaf status {
+                    description "feature status in Feature table";
+                    type string {
+                        length 1..32;
+                    }
+                }
+
                 leaf state {
                     description "state of the feature";
-                    type stypes:feature_state;
+                    type string;
                     default "enabled";
                 }
 
@@ -42,22 +56,19 @@ module sonic-feature{
                 leaf has_timer {
                     description "This configuration identicates if there is
                                 timer associated to this feature";
-                    type boolean;
-                    default false;
+                    type string;
                 }
 
                 leaf has_global_scope {
                     description "This configuration identicates there will only one service
                                 spawned for the device";
-                    type boolean;
-                    default false;
+                    type string;
                 }
 
                 leaf has_per_asic_scope {
                     description "This configuration identicates there will only one service
                                 spawned per asic";
-                    type boolean;
-                    default false;
+                    type string;
                 }
 
                 leaf high_mem_alert {

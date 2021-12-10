@@ -70,15 +70,15 @@ module sonic-queue {
                 }
 
                 leaf scheduler {
-                    type leafref {
-                        path "/sch:sonic-scheduler/sch:SCHEDULER/sch:SCHEDULER_LIST/sch:name"; //Reference to SCHEDULER table
+                    type string {
+                        length 1..255;
                     }
                     description "Scheduler for queue.";
                 }
 
                 leaf wred_profile {
-                    type leafref {
-                        path "/wrd:sonic-wred-profile/wrd:WRED_PROFILE/wrd:WRED_PROFILE_LIST/wrd:name"; // Reference to WRED_PROFILE table
+                    type string {
+                        length 1..255;
                     }
                     description "Wred profile for queue.";
                 }
