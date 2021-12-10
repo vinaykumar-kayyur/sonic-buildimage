@@ -135,10 +135,6 @@ def show_help():
     print(__doc__ % {'scriptName': sys.argv[0].split("/")[-1]})
     sys.exit(0)
 
-
-
-
-
 def my_log(txt):
     if DEBUG:
         print("[ACCTON DBG]: " + txt)
@@ -155,7 +151,7 @@ def log_os_system(cmd, show):
     if status:
         logging.info('Failed :' + cmd)
         if show:
-            print('Failed :' + cmd)
+            print(('Failed :' + cmd))
     return status, output
 
 
@@ -300,24 +296,24 @@ def do_sonic_platform_install():
             else:
                 print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
-            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
+            print(('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3)))
     else:        
-        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
+        print(('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3)))
 
     return 
 
 def do_sonic_platform_clean():
     status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
     if status:
-        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
+        print(('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3)))
 
     else:        
         status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
-            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+            print(('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3)))
             return status
         else:
-            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
+            print(('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3)))
 
     return
 

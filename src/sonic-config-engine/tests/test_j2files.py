@@ -222,24 +222,37 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'qos-dell6100.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
 
-    def test_buffers_dell6100_render_template(self):
-        dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100')
-        buffers_file = os.path.join(dell_dir_path, 'buffers.json.j2')
-        port_config_ini_file = os.path.join(dell_dir_path, 'port_config.ini')
+    def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
+        dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
+        buffers_file = os.path.join(dir_path, buffer_template)
+        port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
 
-        # copy buffers_config.j2 to the Dell S6100 directory to have all templates in one directory
+        # copy buffers_config.j2 to the SKU directory to have all templates in one directory
         buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
-        shutil.copy2(buffers_config_file, dell_dir_path)
+        shutil.copy2(buffers_config_file, dir_path)
 
-        argument = '-m ' + self.dell6100_t0_minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
+        minigraph = os.path.join(self.test_dir, minigraph)                              
+        argument = '-m ' + minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
         self.run_script(argument)
 
         # cleanup
-        buffers_config_file_new = os.path.join(dell_dir_path, 'buffers_config.j2')
+        buffers_config_file_new = os.path.join(dir_path, 'buffers_config.j2')
         os.remove(buffers_config_file_new)
 
-        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-dell6100.json')
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, expected)
         assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_buffers_dell6100_render_template(self):
+        self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
+
+    def test_buffers_mellanox2700_render_template(self):
+        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json')
+
+    def test_buffers_mellanox2410_render_template(self):
+        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2410.json')
+
+    def test_buffers_mellanox2410_dynamic_render_template(self):
+        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers_dynamic.json.j2', 'buffers-mellanox2410-dynamic.json')
 
     def test_ipinip_multi_asic(self):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
