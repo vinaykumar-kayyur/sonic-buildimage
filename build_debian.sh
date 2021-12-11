@@ -450,7 +450,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
 
 # Needed for auditd
 sudo mkdir -p $FILESYSTEM_ROOT/var/log/audit
-sudo echo '' >> $FILESYSTEM_ROOT/var/log/audit/audit.log
+sudo touch $FILESYSTEM_ROOT/var/log/audit/audit.log
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
