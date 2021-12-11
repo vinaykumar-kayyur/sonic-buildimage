@@ -327,6 +327,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd
 
+
+# Needed for auditd
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo mkdir -p var/log/audit"
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo echo '' >> /var/log/audit/audit.log"
+
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
@@ -447,10 +452,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
-
-# Needed for auditd
-sudo mkdir -p $FILESYSTEM_ROOT/var/log/audit
-sudo touch $FILESYSTEM_ROOT/var/log/audit/audit.log
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
