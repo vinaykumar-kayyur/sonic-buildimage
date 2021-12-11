@@ -327,10 +327,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd
 
-
-# Needed for auditd
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo mkdir -p var/log/audit"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo echo '' >> /var/log/audit/audit.log"
+# Change auditd log file path, because can't create /var/log/audit/ during build image
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/log_file = \/var\/log\/audit\/audit.log/log_file = \/var\/log\/audit.log/g' /etc/audit/auditd.conf"
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
