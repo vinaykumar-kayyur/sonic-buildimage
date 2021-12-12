@@ -512,7 +512,8 @@ def parse_dpg(dpg, hname):
                 elif ipnh.find(str(QName(ns, "Type"))).text == 'StaticRoute':
                     prefix = ipnh.find(str(QName(ns, "AttachTo"))).text
                     nexthop = ipnh.find(str(QName(ns, "Address"))).text
-                    static_routes[prefix] = {'nexthop': nexthop }
+                    advertise = ipnh.find(str(QName(ns, "Advertise"))).text
+                    static_routes[prefix] = {'nexthop': nexthop, 'advertise': advertise}
 
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
@@ -965,6 +966,7 @@ def parse_asic_meta(meta, hname):
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
+    sys_ports = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -979,7 +981,6 @@ def parse_deviceinfo(meta, hwsku):
                 port_speeds[port_alias_map.get(alias, alias)] = speed
 
             sysports = device_info.find(str(QName(ns, "SystemPorts")))
-            sys_ports = {}
             if sysports is not None:
                 for sysport in sysports.findall(str(QName(ns, "SystemPort"))):
                     portname = sysport.find(str(QName(ns, "Name"))).text
