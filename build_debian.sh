@@ -327,8 +327,9 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd
 
-# Change auditd log file path, because can't create /var/log/audit/ during build image
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/log_file = \/var\/log\/audit\/audit.log/log_file = \/var\/log\/audit.log/g' /etc/audit/auditd.conf"
+# Change auditd log file path, find log file path setting with '^\s*log_file\s*=.*' and replace with 'log_file = /var/log/audit.log'
+# auditd can't start when /var/log/audit/ not exist, but SONiC mount a empty ram disk to /var/log/
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/^\s*log_file\s*=.*/log_file = \/var\/log\/audit.log/g' /etc/audit/auditd.conf"
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
