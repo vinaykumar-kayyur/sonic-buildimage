@@ -1,7 +1,7 @@
 module sonic-vxlan {
+    yang-version 1.1;
     namespace "http://github.com/Azure/sonic-vxlan";
     prefix svxlan;
-    yang-version 1.1;
 
     import ietf-yang-types {
         prefix yang;
@@ -73,7 +73,7 @@ module sonic-vxlan {
 
                 leaf name {
                     type leafref {
-                        path "../../../VXLAN_TUNNEL/VXLAN_TUNNEL_LIST/name";
+                        path "/svxlan:sonic-vxlan/svxlan:VXLAN_TUNNEL/svxlan:VXLAN_TUNNEL_LIST/svxlan:name";
                     }
                 }
 
@@ -117,7 +117,7 @@ module sonic-vxlan {
                 leaf source_vtep {
                     mandatory true;
                     type leafref {
-                        path "../../../VXLAN_TUNNEL/VXLAN_TUNNEL_LIST/name";
+                        path "/svxlan:sonic-vxlan/svxlan:VXLAN_TUNNEL/svxlan:VXLAN_TUNNEL_LIST/svxlan:name";
                     }
                 }
             }
