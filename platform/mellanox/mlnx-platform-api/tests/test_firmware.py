@@ -31,7 +31,7 @@ from sonic_platform_base.component_base import ComponentBase,           \
                                                 FW_AUTO_UPDATED,        \
                                                 FW_AUTO_ERR_BOOT_TYPE,  \
                                                 FW_AUTO_ERR_IMAGE,      \
-                                                FW_AUTO_ERR_UKNOWN
+                                                FW_AUTO_ERR_UNKNOWN
 
 def mock_update_firmware_success(image_path, allow_reboot=False):
     return True
@@ -64,8 +64,8 @@ test_data_cpld = [
 
 test_data_ssd = [
         (None, None, False, None, FW_AUTO_ERR_IMAGE),
-        (None, mock_update_notification_error, True, None, FW_AUTO_ERR_UKNOWN),
-        (mock_update_firmware_fail,    mock_update_notification_warm_boot, True, 'cold', FW_AUTO_ERR_UKNOWN),
+        (None, mock_update_notification_error, True, None, FW_AUTO_ERR_UNKNOWN),
+        (mock_update_firmware_fail,    mock_update_notification_warm_boot, True, 'cold', FW_AUTO_ERR_UNKNOWN),
         (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
         (mock_update_firmware_success, mock_update_notification_cold_boot, True, 'cold', FW_AUTO_SCHEDULED),
         (mock_update_firmware_success, mock_update_notification_warm_boot, True, 'warm', FW_AUTO_UPDATED),
