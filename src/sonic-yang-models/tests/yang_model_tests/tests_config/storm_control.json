@@ -2,66 +2,78 @@
     "STORM_BROADCAST_TEST": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "Ethernet0",
                         "storm_type": "broadcast",
                         "kbps": "100000"
-                }
+                    }
+                ]
             }
         }
     },
     "STORM_UUCAST_TEST": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "Ethernet0",
                         "storm_type": "unknown-unicast",
                         "kbps": "200000"
-                }
+                    }
+                ]
             }
         }
     },
     "STORM_UMCAST_TEST": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "Ethernet0",
                         "storm_type": "unknown-multicast",
                         "kbps": "300000"
-                }
+                    }
+                ]
             }
         }
     },
     "STORM_INVALID_STORM_TYPE_TEST": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "Ethernet0",
                         "storm_type": "xyz",
                         "kbps": "400000"
-                }
+                    }
+                ]
             }
         }
     },
     "STORM_BROADCAST_INVALID_KBPS": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "Ethernet0",
                         "storm_type": "broadcast",
                         "kbps": "xyz-kbps-value"
-                }
+                    }
+                ]
             }
         }
     },
     "STORM_BROADCAST_INVALID_INTERFACE": {
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
-                "sonic-storm-control:PORT_STORM_CONTROL_LIST": {
+                "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
+                    {
                         "ifname": "xyz",
                         "storm_type": "broadcast",
                         "kbps": "500000"
-                }
+                    }
+                ]
             }
         }
     }
