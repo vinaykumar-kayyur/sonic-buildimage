@@ -126,12 +126,14 @@ Function Create-MergePullRequest(){
         $resp | Write-Host
         Write-Host "PR :  $($resp.url) "
         
-        $pullRequstId=$resp.pullRequestId
+        $pullRequestId=$resp.pullRequestId
         Sleep 5
-        $prResp=Get-PullRequest $pullRequstId
+        $prResp=Get-PullRequest $pullRequestId
         $createdById=$prResp.createdBy.id
-        Set-PullRequestAutoComplete $pullRequstId $createdById
+        Set-PullRequestAutoComplete $pullRequestId $createdById
+        return $pullRequestId
     } else{
         Write-Host PR already exist: https://msazure.visualstudio.com/One/_git/Networking-acs-buildimage/pullrequest/$prID
+        return $prID
     }
 }
