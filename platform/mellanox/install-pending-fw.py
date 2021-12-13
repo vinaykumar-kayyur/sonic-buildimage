@@ -21,12 +21,11 @@ import os
 from collections import namedtuple
 
 from fwutil.lib import ComponentStatusProvider, PlatformComponentsParser
-from sonic_platform.component import ComponentCPLD
+from sonic_platform.component import ComponentCPLD, MPFAManager
 
 # Globals
 FW_STATUS_SCHEDULED = "scheduled"
-CPLDRefresh = namedtuple("CPLDRefresh", ["cpld", "fw_file"])
-CPLD_FLAG = None
+CPLD_FLAG = False
 
 # Init platform chassis helper classes
 csp = ComponentStatusProvider()
@@ -47,10 +46,10 @@ except Exception as e:
     time.sleep(10)
     exit(-1)
 
-# Make file system read only for install
-os.system("echo u > /proc/sysrq-trigger")
-
 # Iterate each component in the status file
+comp_install = []
+files = []
+
 for boot_type, components in update_status.items():
     for comp in components:
 
@@ -74,13 +73,24 @@ for boot_type, components in update_status.items():
 
         # Install firmware. If CPLD flag to be installed last due to force reboot during refresh
         if type(component) == ComponentCPLD:
-            if CPLD_FLAG is not None:
+            if CPLD_FLAG:
                 print("WARNING: Multiple CPLD firmwares defined. Some CPLD updates may not fully complete.")
-            CPLD_FLAG = CPLDRefresh(component, fw_file)
+            CPLD_FLAG = True
+            mpfa = MPFAManager(fw_file)
+            mpfa.extract()
+            if not mpfa.get_metadata().has_option('firmware', 'refresh'):
+                raise RuntimeError("Failed to get {} refresh firmware".format(self.name))
+            refresh_firmware = mpfa.get_metadata().get('firmware', 'refresh')
+            comp_install = comp_install + [component]
+            files = files + [os.path.join(mpfa.get_path(), refresh_firmware)]
         else:
-            component.install_firmware(fw_file, allow_reboot=False)
+            comp_install = [component] + comp_install
+            files = [fw_file] + files
 
-# Run CPLD refresh last if needed
-if CPLD_FLAG is not None:
-    CPLD_FLAG.cpld.refresh_firmware(CPLD_FLAG.fw_file)
-    
+# Do install
+for i, c in enumerate(comp_install):
+    if type(c) == ComponentCPLD:
+        c.install_firmware(files[i])
+    else:
+        c.install_firmware(files[i], allow_reboot=False)
+

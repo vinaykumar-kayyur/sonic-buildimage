@@ -40,7 +40,7 @@ try:
                                                     FW_AUTO_SCHEDULED,      \
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
-                                                    FW_AUTO_ERR_UKNOWN
+                                                    FW_AUTO_ERR_UNKNOWN
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -525,7 +525,7 @@ class ComponentSSD(Component):
             return FW_AUTO_ERR_BOOT_TYPE
 
         # Schedule if we need a cold boot
-         return FW_AUTO_SCHEDULED
+        return FW_AUTO_SCHEDULED
 
     def get_firmware_version(self):
         cmd = self.SSD_INFO_COMMAND
@@ -741,16 +741,6 @@ class ComponentCPLD(Component):
             return False
 
         return True
-
-    def refresh_firmware(self, image_path):
-        with MPFAManager(image_path) as mpfa:
-            if not mpfa.get_metadata().has_option('firmware', 'refresh'):
-                raise RuntimeError("Failed to get {} refresh firmware".format(self.name))
-
-            refresh_firmware = mpfa.get_metadata().get('firmware', 'refresh')
-
-            print("INFO: Processing {} refresh file: firmware update".format(self.name))
-            self.__install_firmware(os.path.join(mpfa.get_path(), refresh_firmware))
 
     def auto_update_firmware(self, image_path, boot_action):
         """
