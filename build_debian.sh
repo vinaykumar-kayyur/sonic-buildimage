@@ -325,6 +325,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     fdisk                   \
     gpg                     \
     jq                      \
+    libpam-systemd          \
     auditd
 
 # Change auditd log file path, find log file path setting with '^\s*log_file\s*=.*' and replace with 'log_file = /var/log/audit.log'
