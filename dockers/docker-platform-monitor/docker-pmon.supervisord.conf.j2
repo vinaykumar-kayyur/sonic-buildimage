@@ -112,9 +112,9 @@ dependent_startup_wait_for=rsyslogd:running
 {% if not skip_ycabled %}
 [program:ycabled]
 {% if delay_ycabled %}
-command=bash -c "sleep 30 && {% if API_VERSION == 3 and 'ycabled' not in python2_daemons %}nice -n -20 python3 {% else %} nice -n -20 python2 {% endif %}/usr/local/bin/ycabled"
+command=bash -c "sleep 30 nice -n -20 python3 /usr/local/bin/ycabled"
 {% else %}
-command=nice -n -20 {% if API_VERSION == 3 and 'ycabled' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/ycabled
+command=nice -n -20 python3 /usr/local/bin/ycabled
 {% endif %}
 priority=6
 autostart=false
