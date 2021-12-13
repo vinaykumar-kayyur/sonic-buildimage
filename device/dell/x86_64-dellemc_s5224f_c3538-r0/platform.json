@@ -1,0 +1,226 @@
+{
+    "chassis": {
+        "name": "S5224F-ON",
+        "components": [
+            {
+                "name": "BIOS"
+            },
+            {
+                "name": "FPGA"
+            },
+            {
+                "name": "BMC"
+            },
+            {
+                "name": "System CPLD"
+            },
+            {
+                "name": "Slave CPLD 1"
+            }
+        ],
+        "fans": [
+            {
+                "name": "FanTray1-Fan1"
+            },
+            {
+                "name": "FanTray1-Fan2"
+            },
+            {
+                "name": "FanTray2-Fan1"
+            },
+            {
+                "name": "FanTray2-Fan2"
+            },
+            {
+                "name": "FanTray3-Fan1"
+            },
+            {
+                "name": "FanTray3-Fan2"
+            },
+            {
+                "name": "FanTray4-Fan1"
+            },
+            {
+                "name": "FanTray4-Fan2"
+            }
+        ],
+        "fan_drawers":[
+            {
+                "name": "FanTray1",
+                "fans": [
+                    {
+                        "name": "FanTray1-Fan1"
+                    },
+                    {
+                        "name": "FanTray1-Fan2"
+                    }
+                ]
+            },
+            {
+                "name": "FanTray2",
+                "fans": [
+                    {
+                        "name": "FanTray2-Fan1"
+                    },
+                    {
+                        "name": "FanTray2-Fan2"
+                    }
+                ]
+            },
+            {
+                "name": "FanTray3",
+                "fans": [
+                    {
+                        "name": "FanTray3-Fan1"
+                    },
+                    {
+                        "name": "FanTray3-Fan2"
+                    }
+                ]
+            },
+            {
+                "name": "FanTray4",
+                "fans": [
+                    {
+                        "name": "FanTray4-Fan1"
+                    },
+                    {
+                        "name": "FanTray4-Fan2"
+                    }
+                ]
+            }
+        ],
+        "psus": [
+            {
+                "name": "PSU1",
+                "fans": [
+                    {
+                        "name": "PSU1 Fan"
+                    }
+                ]
+            },
+            {
+                "name": "PSU2",
+                "fans": [
+                    {
+                        "name": "PSU2 Fan"
+                    }
+                ]
+            }
+        ],
+        "thermals": [
+            {
+                "name": "ASIC On-board"
+            },
+            {
+                "name": "CPU On-board"
+            },
+            {
+                "name": "Inlet Airflow Sensor"
+            },
+            {
+                "name": "PSU1 Airflow Sensor"
+            },
+            {
+                "name": "PSU2 Airflow Sensor"
+            },
+            {
+                "name": "System Front Left"
+            },
+            {
+                "name": "System Front Middle"
+            },
+            {
+                "name": "System Front Right"
+            }
+        ],
+        "modules": [],
+        "sfps": [
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "SFP28"
+            },
+            {
+                "name": "QSFP28"
+            },
+            {
+                "name": "QSFP28"
+            },
+            {
+                "name": "QSFP28"
+            },
+            {
+                "name": "QSFP28"
+            }
+        ]
+    },
+    "interfaces": {}
+}
