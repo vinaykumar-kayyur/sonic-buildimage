@@ -28,6 +28,7 @@ class Thermal(ThermalBase):
         "CPU Board 0x4B",
         "Fan Board 0x4A"
     )
+    CPU_THERMAL_NAME = "CPU Core temp"
     SYSFS_PATH = "/sys/bus/i2c/devices"
     THRESHOLDS = {
         0: Threshold(55.0, 50.0, 45.0),
@@ -35,9 +36,14 @@ class Thermal(ThermalBase):
         2: Threshold(55.0, 50.0, 45.0)
     }
 
-    def __init__(self, thermal_index=0):
+    def __init__(self, thermal_index=0, is_cpu=False):
         self.SYSFS_PATH = "/sys/bus/i2c/devices"
         self.index = thermal_index
+        self.is_cpu = is_cpu
+
+        if self.is_cpu:
+            self.cpu_paths = glob.glob('/sys/devices/platform/coretemp.0/hwmon/hwmon*/temp*_input')
+            self.cpu_path_idx = 0
 
         # Set hwmon path
         i2c_path = {
@@ -69,7 +75,32 @@ class Thermal(ThermalBase):
         else:
             return 0
 
+    def __get_max_temp(self, paths):
+        max_temp = -1.0
+        max_idx = 0
+        for i, path in enumerate(paths):
+            read_temp = self.__get_temp(path)
+            if(read_temp > max_temp):
+                max_temp = read_temp
+                max_idx = i
+        return max_temp, max_idx
+
+    def __get_cpu_threshold(self, type):
+        path = self.cpu_paths[self.cpu_path_idx]
+        high_warn = self.__get_temp(path.replace('_input', '_max'))
+        if type == 'high_warn':
+            return high_warn
+        high_crit = self.__get_temp(path.replace('_input', '_crit'))
+        if type == 'high_crit':
+            return high_crit
+        if type == 'high_err':
+            return (high_crit + high_warn) / 2
+        return 0 # for all low_* thresholds
+
     def __try_get_threshold(self, type):
+        if self.is_cpu:
+            return self.__get_cpu_threshold(type)
+
         if self.index in self.THRESHOLDS:
             return getattr(self.THRESHOLDS[self.index], type)
         else:
@@ -82,6 +113,10 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
+        if self.is_cpu:
+            cpu_temp, self.cpu_path_idx = self.__get_max_temp(self.cpu_paths)
+            return cpu_temp
+
         temp_file = "temp{}_input".format(self.ss_index)
         return self.__get_temp(temp_file)
 
@@ -91,6 +126,8 @@ class Thermal(ThermalBase):
             Returns:
             string: The name of the thermal device
         """
+        if self.is_cpu:
+            return self.CPU_THERMAL_NAME
         return self.THERMAL_NAME_LIST[self.index]
 
     def get_presence(self):
@@ -99,6 +136,9 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if Thermal is present, False if not
         """
+        if self.is_cpu:
+            return True
+
         temp_file = "temp{}_input".format(self.ss_index)
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_txt = self.__read_txt_file(temp_file_path)
@@ -113,6 +153,8 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
+        if self.is_cpu:
+            return True
 
         file_str = "temp{}_input".format(self.ss_index)
         file_path = os.path.join(self.hwmon_path, file_str)
