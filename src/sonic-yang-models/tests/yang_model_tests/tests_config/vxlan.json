@@ -17,9 +17,7 @@
                         "src_ip": "1.2.3.4"
                     }
                 ]
-             }
-         },
-        "sonic-vxlan:sonic-vxlan": {
+             },
             "sonic-vxlan:VXLAN_EVPN_NVO": {
                 "VXLAN_EVPN_NVO_LIST": [
                     {
@@ -27,9 +25,7 @@
                         "source_vtep": "vtep1"
                     }
                 ]
-             }
-         },
-        "sonic-vxlan:sonic-vxlan": {
+             },
             "sonic-vxlan:VXLAN_TUNNEL_MAP": {
                 "VXLAN_TUNNEL_MAP_LIST": [
                     {
@@ -98,9 +94,7 @@
                         "src_ip": "1.2.3.4"
                     }
                 ]
-             }
-         },
-        "sonic-vxlan:sonic-vxlan": {
+             },
             "sonic-vxlan:VXLAN_TUNNEL_MAP": {
                 "VXLAN_TUNNEL_MAP_LIST": [
                     {
@@ -131,9 +125,7 @@
                         "src_ip": "1.2.3.4"
                     }
                 ]
-             }
-         },
-        "sonic-vxlan:sonic-vxlan": {
+             },
             "sonic-vxlan:VXLAN_TUNNEL_MAP": {
                 "VXLAN_TUNNEL_MAP_LIST": [
                     {

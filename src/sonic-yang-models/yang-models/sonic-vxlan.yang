@@ -17,6 +17,9 @@ module sonic-vxlan {
     import sonic-vlan {
         prefix svlan;
     }
+	import sonic-types {
+		prefix stypes;
+	}
 
 
     organization
@@ -37,7 +40,10 @@ module sonic-vxlan {
 
         container VXLAN_TUNNEL {
 
+            description "config db VXLAN_TUNNEL table";
+
             list VXLAN_TUNNEL_LIST {
+
                 key "name";
                 max-elements 1;
 
@@ -59,6 +65,8 @@ module sonic-vxlan {
         }
 
         container VXLAN_TUNNEL_MAP {
+
+            description "config db VXLAN_TUNNEL_MAP table";
 
             list VXLAN_TUNNEL_MAP_LIST {
                 key "name mapname";
@@ -95,6 +103,8 @@ module sonic-vxlan {
 
         container VXLAN_EVPN_NVO {
 
+            description "config db VXLAN_EVPN_NVO table";
+
             list VXLAN_EVPN_NVO_LIST { 
 
                 key "name";
@@ -114,7 +124,6 @@ module sonic-vxlan {
         }
         container VXLAN_TUNNEL_TABLE { 
             sonic-ext:db-name "STATE_DB"; 
-            sonic-ext:key-delim ":"; 
 
             config false;
             description "state db vxlan tunnel table";
@@ -127,11 +136,11 @@ module sonic-vxlan {
                 }
 
                 leaf src_ip {
-                    type string;
+                    type inet:ipv4-address;
                 }
 
                 leaf dst_ip {
-                    type string;
+                    type inet:ipv4-address;
                 }
 
                 leaf tnl_src {
@@ -139,13 +148,12 @@ module sonic-vxlan {
                 }
 
                 leaf operstatus {
-                    type string;
+                    type stypes:oper-status;
                 }
             }
         }
         container VXLAN_REMOTE_VNI_TABLE {
             sonic-ext:db-name "APPL_DB";
-            sonic-ext:key-delim ":";
 
             config false;
             description "app db vxlan remote vni table";
@@ -170,7 +178,6 @@ module sonic-vxlan {
         }
         container VXLAN_FDB_TABLE{
             sonic-ext:db-name "APPL_DB";
-            sonic-ext:key-delim ":";
 
             config false;
             description "app db vxlan fdb table";
