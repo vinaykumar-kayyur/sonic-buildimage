@@ -1,5 +1,20 @@
 {
     "STORM_BROADCAST_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
@@ -13,6 +28,21 @@
         }
     },
     "STORM_UUCAST_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
@@ -26,6 +56,21 @@
         }
     },
     "STORM_UMCAST_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
@@ -39,6 +84,21 @@
         }
     },
     "STORM_INVALID_STORM_TYPE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
@@ -52,6 +112,21 @@
         }
     },
     "STORM_BROADCAST_INVALID_KBPS": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
@@ -65,11 +140,26 @@
         }
     },
     "STORM_BROADCAST_INVALID_INTERFACE": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
         "sonic-storm-control:sonic-storm-control": {
             "sonic-storm-control:PORT_STORM_CONTROL": {
                 "sonic-storm-control:PORT_STORM_CONTROL_LIST": [
                     {
-                        "ifname": "xyz",
+                        "ifname": "Eth",
                         "storm_type": "broadcast",
                         "kbps": "500000"
                     }
