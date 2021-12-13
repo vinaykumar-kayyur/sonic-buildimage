@@ -21,7 +21,7 @@ module sonic-storm-control {
         Rate is defined in bits-per-second. All three types of storm-control can be 
         enabled on an interface.";
 
-    revision 2019-09-03 {
+    revision 2021-12-13 {
         description 
             "Initial revision";
     }
@@ -30,7 +30,7 @@ module sonic-storm-control {
         container PORT_STORM_CONTROL {
             list PORT_STORM_CONTROL_LIST {
                 key "ifname storm_type";
-                /*scommon:key-pattern "PORT_STORM_CONTROL|{ifname}:{storm_type}";*/
+                /*scommon:key-pattern "PORT_STORM_CONTROL|{ifname}|{storm_type}";*/
                 leaf ifname {
                     type leafref {
                         path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name"; 
