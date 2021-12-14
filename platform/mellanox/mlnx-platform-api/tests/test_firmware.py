@@ -24,7 +24,7 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
-from sonic_platform.component import Component, ComponentSSD
+from sonic_platform.component import Component, ComponentSSD, ComponentCPLD
 
 from sonic_platform_base.component_base import ComponentBase,           \
                                                 FW_AUTO_INSTALLED,      \

@@ -513,7 +513,7 @@ class ComponentSSD(Component):
         try:
             reboot_required = self.get_firmware_update_notification(image_path) is not None
         except RuntimeError as e:
-            return FW_AUTO_ERR_UKNOWN                    
+            return FW_AUTO_ERR_UNKNOWN                    
         
         # Update if no reboot needed
         if not reboot_required:
