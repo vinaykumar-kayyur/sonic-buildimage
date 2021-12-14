@@ -760,7 +760,7 @@ class ComponentCPLD(Component):
 
         # Install burn. Error if fail.
         if not self.install_firmware(image_path):
-            return FW_AUTO_ERROR_UNKNOWN
+            return FW_AUTO_ERR_UNKNOWN
             
         # Schedule refresh
         return FW_AUTO_SCHEDULED    
