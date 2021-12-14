@@ -95,7 +95,7 @@ def test_auto_update_firmware_cpld(monkeypatch, update_func, image_found, boot_t
     def mock_path_exists(path):
         return image_found
 
-    test_component = ComponentCPLD()
+    test_component = ComponentCPLD(0)
 
     monkeypatch.setattr(test_component, 'install_firmware', update_func)
     monkeypatch.setattr(os.path, 'exists', mock_path_exists)
