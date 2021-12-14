@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 from sonic_platform_base.sonic_thermal_control.thermal_action_base import ThermalPolicyActionBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 from .thermal import logger
@@ -150,19 +166,19 @@ class ThermalRecoverAction(ThermalPolicyActionBase):
 class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
     UNKNOWN_SKU_COOLING_LEVEL = 6
     def execute(self, thermal_info_dict):
-        from .device_data import DEVICE_DATA
+        from .device_data import DeviceDataManager
         from .fan import Fan
         from .thermal_infos import ChassisInfo
         from .thermal_conditions import MinCoolingLevelChangeCondition
         from .thermal_conditions import UpdateCoolingLevelToMinCondition
 
-        chassis = thermal_info_dict[ChassisInfo.INFO_NAME].get_chassis()
-        if chassis.platform_name not in DEVICE_DATA or 'thermal' not in DEVICE_DATA[chassis.platform_name] or 'minimum_table' not in DEVICE_DATA[chassis.platform_name]['thermal']:
+        minimum_table = DeviceDataManager.get_minimum_table()
+        if not minimum_table:
             Fan.min_cooling_level = ChangeMinCoolingLevelAction.UNKNOWN_SKU_COOLING_LEVEL
         else:
             trust_state = MinCoolingLevelChangeCondition.trust_state
             temperature = MinCoolingLevelChangeCondition.temperature
-            minimum_table = DEVICE_DATA[chassis.platform_name]['thermal']['minimum_table']['unk_{}'.format(trust_state)]
+            minimum_table = minimum_table['unk_{}'.format(trust_state)]
 
             for key, cooling_level in minimum_table.items():
                 temp_range = key.split(':')

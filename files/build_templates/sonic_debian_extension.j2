@@ -102,25 +102,19 @@ sudo mkdir -p $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/ifupdown2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
-# Install ipables  (and its dependencies via 'apt-get -y install -f')
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/iptables_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-
-# Install a more recent version of ntp  (and its dependencies via 'apt-get -y install -f')
+# Install a patched version of ntp  (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT --force-confdef --force-confold -i $debs_path/ntp_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -f
 
 # Install dependencies for SONiC config engine
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
-    python-dev     \
     python3-dev
 
 # Install j2cli for handling jinja template
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "j2cli==0.3.10"
 
 # Install Python client for Redis
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install "redis==3.5.3"
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "redis==3.5.3"
 
 # Install redis-dump-load Python 3 package
@@ -130,18 +124,15 @@ sudo cp {{redis_dump_load_py3_wheel_path}} $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY3
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $REDIS_DUMP_LOAD_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY3_WHEEL_NAME
 
-# Install redis-dump-load Python 2 package
-REDIS_DUMP_LOAD_PY2_WHEEL_NAME=$(basename {{redis_dump_load_py2_wheel_path}})
-sudo cp {{redis_dump_load_py2_wheel_path}} $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $REDIS_DUMP_LOAD_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY2_WHEEL_NAME
-
 # Install Python module for psutil
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 
 # Install Python module for ipaddr
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install ipaddr
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install ipaddr
+
+# Install Python module for grpcio and grpcio-toole
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "grpcio==1.39.0"
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "grpcio-tools==1.39.0"
 
 # Install SwSS SDK Python 3 package
 # Note: the scripts will be overwritten by corresponding Python 2 package
@@ -149,18 +140,6 @@ SWSSSDK_PY3_WHEEL_NAME=$(basename {{swsssdk_py3_wheel_path}})
 sudo cp {{swsssdk_py3_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SWSSSDK_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY3_WHEEL_NAME
-
-# Install SwSS SDK Python 2 package
-SWSSSDK_PY2_WHEEL_NAME=$(basename {{swsssdk_py2_wheel_path}})
-sudo cp {{swsssdk_py2_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SWSSSDK_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
-
-# Install sonic-py-common Python 2 package
-SONIC_PY_COMMON_PY2_WHEEL_NAME=$(basename {{sonic_py_common_py2_wheel_path}})
-sudo cp {{sonic_py_common_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_PY_COMMON_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2_WHEEL_NAME
 
 # Install sonic-py-common Python 3 package
 SONIC_PY_COMMON_PY3_WHEEL_NAME=$(basename {{sonic_py_common_py3_wheel_path}})
@@ -176,7 +155,6 @@ fi
 # Install sonic-yang-models Python 3 package, install dependencies
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python3-yang_*.deb
 SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
 sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
@@ -188,12 +166,6 @@ SONIC_YANG_MGMT_PY3_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py3_wheel_path}})
 sudo cp {{sonic_yang_mgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MGMT_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
-
-# Install SONiC config engine Python 2 package
-CONFIG_ENGINE_PY2_WHEEL_NAME=$(basename {{config_engine_py2_wheel_path}})
-sudo cp {{config_engine_py2_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $CONFIG_ENGINE_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
 
 # For sonic-config-engine Python 3 package
 # Install pyangbind here, outside sonic-config-engine dependencies, as pyangbind causes enum34 to be installed.
@@ -210,12 +182,6 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $CONFI
 sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY3_WHEEL_NAME
 
 
-# Install sonic-platform-common Python 2 package
-PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
-sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
-
 # Install sonic-platform-common Python 3 package
 PLATFORM_COMMON_PY3_WHEEL_NAME=$(basename {{platform_common_py3_wheel_path}})
 sudo cp {{platform_common_py3_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY3_WHEEL_NAME
@@ -223,12 +189,6 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $PLATF
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY3_WHEEL_NAME
 
 {% if pddf_support == "y" %}
-# Install pddf-platform-api-base Python 2 package
-PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME=$(basename {{pddf_platform_api_base_py2_wheel_path}})
-sudo cp {{pddf_platform_api_base_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
-
 # Install pddf-platform-api-base Python 3 package
 PLATFORM_PDDF_COMMON_PY3_WHEEL_NAME=$(basename {{pddf_platform_api_base_py3_wheel_path}})
 sudo cp {{pddf_platform_api_base_py3_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY3_WHEEL_NAME
@@ -238,7 +198,6 @@ sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY3_WHEEL_NAME
 
 {# Barefoot platform vendors' sonic_platform packages import the Python 'thrift' library #}
 {% if sonic_asic_platform == "barefoot" %}
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install thrift==0.13.0
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install thrift==0.13.0
 {% endif %}
 
@@ -265,18 +224,20 @@ sudo rm -rf $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY3_WHEEL_NAME
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-utilities-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# Install customized bash version to patch bash plugin support.
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 # sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
 # in bash.bashrc, so we copy a version of the file with it enabled here.
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 
 # Install prerequisites needed for installing the dependent Python packages of sonic-host-services
 # These packages can be uninstalled after installation
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libcairo2-dev libdbus-1-dev libgirepository1.0-dev pkg-config
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t $IMAGE_DISTRO-backports install libsystemd-dev
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libcairo2-dev libdbus-1-dev libgirepository1.0-dev libsystemd-dev pkg-config
 
-# Manually install runtime dependencies to avoid them being auto-removed while uninstalling build dependencies
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gir1.2-glib-2.0 libdbus-1-3 libgirepository-1.0-1
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t $IMAGE_DISTRO-backports install libsystemd0
+# Mark runtime dependencies as manually installed to avoid them being auto-removed while uninstalling build dependencies
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-mark manual gir1.2-glib-2.0 libdbus-1-3 libgirepository-1.0-1 libsystemd0
 
 # Install SONiC host services package
 SONIC_HOST_SERVICES_PY3_WHEEL_NAME=$(basename {{sonic_host_services_py3_wheel_path}})
@@ -313,6 +274,12 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libpam-tacplus_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libnss-tacplus_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+# Install bash-tacplus
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash-tacplus_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+# Install audisp-tacplus
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/audisp-tacplus_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 # Disable tacplus by default
 sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
@@ -330,8 +297,13 @@ sudo sed -i -e '/^passwd/s/ radius//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 # Install a custom version of kdump-tools  (and its dependencies via 'apt-get -y install -f')
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends install
     cat $IMAGE_CONFIGS/kdump/kdump-tools | sudo tee -a $FILESYSTEM_ROOT/etc/default/kdump-tools > /dev/null
+
+for kernel_release in $(ls $FILESYSTEM_ROOT/lib/modules/); do
+	sudo LANG=C chroot $FILESYSTEM_ROOT /etc/kernel/postinst.d/kdump-tools $kernel_release > /dev/null 2>&1
+	sudo LANG=C chroot $FILESYSTEM_ROOT kdump-config symlinks $kernel_release
+done
 fi
 
 # Install python-swss-common package and all its dependent packages
@@ -533,6 +505,11 @@ if [ -f platform/{{ sonic_asic_platform }}/peripheral_table.j2 ]
 then
     sudo cp platform/{{ sonic_asic_platform }}/peripheral_table.j2 $FILESYSTEM_ROOT/usr/share/sonic/templates/peripheral_table.j2
 fi
+
+if [ -f platform/{{ sonic_asic_platform }}/zero_profiles.j2 ]
+then
+    sudo cp platform/{{ sonic_asic_platform }}/zero_profiles.j2 $FILESYSTEM_ROOT/usr/share/sonic/templates/zero_profiles.j2
+fi
 {% endif %}
 
 # Copy hostname configuration scripts
@@ -669,7 +646,7 @@ clean_proc() {
     sudo umount /proc || true
 }
 trap_push clean_proc
-sudo mount proc /proc -t proc
+sudo mount proc /proc -t proc || true
 sudo mkdir $FILESYSTEM_ROOT/target
 sudo mount --bind target $FILESYSTEM_ROOT/target
 sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker info
@@ -809,6 +786,12 @@ sudo LANG=C cp $SCRIPTS_DIR/asic_status.py $FILESYSTEM_ROOT/usr/local/bin/asic_s
 # Copy sonic-netns-exec script
 sudo LANG=C cp $SCRIPTS_DIR/sonic-netns-exec $FILESYSTEM_ROOT/usr/bin/sonic-netns-exec
 
+# Copy write_standby script for mux state
+sudo LANG=C cp $SCRIPTS_DIR/write_standby.py $FILESYSTEM_ROOT/usr/local/bin/write_standby.py
+
+# Copy mark_dhcp_packet script
+sudo LANG=C cp $SCRIPTS_DIR/mark_dhcp_packet.py $FILESYSTEM_ROOT/usr/local/bin/mark_dhcp_packet.py
+
 # Copy systemd timer configuration
 # It implements delayed start of services
 sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
@@ -830,7 +813,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable sonic.target
 sudo cp $BUILD_TEMPLATES/sonic-delayed.target $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable sonic-delayed.target
 
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-dev python3-dev
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python3-dev
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y build-essential libssl-dev swig
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y libcairo2-dev libdbus-1-dev libgirepository1.0-dev libsystemd-dev pkg-config
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y
@@ -855,12 +838,6 @@ sudo cp $files_path/$MLNX_ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_ONIE_FW_
 sudo cp $files_path/$MLNX_SSD_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_SSD_FW_UPDATE
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
-
-# Install mlnx-sonic-platform Python 2 package
-MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME=$(basename {{mlnx_platform_api_py2_wheel_path}})
-sudo cp {{mlnx_platform_api_py2_wheel_path}} $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
 
 # Install mlnx-sonic-platform Python 3 package
 MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME=$(basename {{mlnx_platform_api_py3_wheel_path}})
