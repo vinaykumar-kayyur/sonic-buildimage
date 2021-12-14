@@ -74,7 +74,8 @@ for boot_type, components in update_status.items():
         # Install firmware. If CPLD flag to be installed last due to force reboot during refresh
         if type(component) == ComponentCPLD:
             if CPLD_FLAG:
-                print("WARNING: Multiple CPLD firmwares defined. Some CPLD updates may not fully complete.")
+                # Only need one refresh
+                continue
             CPLD_FLAG = True
             mpfa = MPFAManager(fw_file)
             mpfa.extract()
