@@ -52,14 +52,14 @@ def mock_update_notification_error(image_path):
 test_data_default = [
         (None, False, None, FW_AUTO_ERR_IMAGE),
         (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
-        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UNKNOWN)
+        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UNKNOWN),
         (mock_update_firmware_success, True, 'cold', FW_AUTO_INSTALLED)
         ]
 
 test_data_cpld = [
         (None, False, None, FW_AUTO_ERR_IMAGE),
         (None, True, 'warm', FW_AUTO_ERR_BOOT_TYPE),
-        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UNKNOWN)
+        (mock_update_firmware_fail, True, 'cold', FW_AUTO_ERR_UNKNOWN),
         (mock_update_firmware_success, True, 'cold', FW_AUTO_SCHEDULED)
         ]
 
