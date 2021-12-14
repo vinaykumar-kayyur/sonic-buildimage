@@ -64,11 +64,10 @@ module sonic-loopback-interface {
 
                 leaf name{
                     /* This node must be present in LOOPBACK_INTERFACE_LIST */
-                    must "(current() = ../../LOOPBACK_INTERFACE_LIST[name=current()]/name)"
-                    {
-                        error-message "Must condition not satisfied, Try adding lo<>: {}, Example: 'lo1': {}";
+                    type leafref {
+                        path "../../LOOPBACK_INTERFACE_LIST/name";
+                        description "Loopback interface name";
                     }
-                    type string;
                 }
 
                 leaf ip-prefix {
