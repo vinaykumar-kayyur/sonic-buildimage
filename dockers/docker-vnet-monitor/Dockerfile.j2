@@ -15,7 +15,9 @@ RUN apt-get update &&     \
 # Upgrade pip via PyPI and uninstall the Debian version
 RUN pip3 install --upgrade pip
 RUN apt-get purge -y python3-pip
-RUN pip3 install 'scapy==2.4.4'
+RUN pip3 install \
+         scapy==2.4.4 \
+         pyroute2==0.5.14
 
 {% if docker_vnet_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies
