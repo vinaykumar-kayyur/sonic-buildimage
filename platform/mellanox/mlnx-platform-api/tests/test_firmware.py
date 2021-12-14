@@ -27,6 +27,7 @@ sys.path.insert(0, modules_path)
 from sonic_platform.component import Component, ComponentSSD
 
 from sonic_platform_base.component_base import ComponentBase,           \
+                                                FW_AUTO_INSTALLED,      \
                                                 FW_AUTO_SCHEDULED,      \
                                                 FW_AUTO_UPDATED,        \
                                                 FW_AUTO_ERR_BOOT_TYPE,  \
