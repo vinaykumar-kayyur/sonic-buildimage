@@ -91,8 +91,11 @@ for boot_type, components in update_status.items():
 
 # Do install
 for i, c in enumerate(comp_install):
-    if type(c) == ComponentCPLD:
-        c.install_firmware(files[i])
-    else:
-        c.install_firmware(files[i], allow_reboot=False)
+    try:
+        if type(c) == ComponentCPLD:
+            c.install_firmware(files[i])
+        else:
+            c.install_firmware(files[i], allow_reboot=False)
+    except Exception as e:
+        print("Firmware install for {} FAILED with: {}".format(c.get_name(),e))
 
