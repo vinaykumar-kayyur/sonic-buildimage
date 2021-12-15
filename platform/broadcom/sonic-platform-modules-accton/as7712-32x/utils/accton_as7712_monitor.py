@@ -164,7 +164,7 @@ class accton_as7712_monitor(object):
 
             # Determine the current fan duty cycle from a working fan
             if not cur_duty_cycle:
-                cur_duty_cycle = platform_chassis.get_fan(x).get_duty_cycle_percentage()
+                cur_duty_cycle = platform_chassis.get_fan(x).get_speed()
 
         fan_dir = platform_chassis.get_fan(0).get_direction()
         if fan_dir == '1':
