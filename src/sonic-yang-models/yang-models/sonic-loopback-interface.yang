@@ -63,10 +63,10 @@ module sonic-loopback-interface {
                 key "name ip-prefix";
 
                 leaf name{
-                    /* This node must be present in LOOPBACK_INTERFACE_LIST */
+                    description "Loopback interface name";
+
                     type leafref {
                         path "../../LOOPBACK_INTERFACE_LIST/name";
-                        description "Loopback interface name";
                     }
                 }
 
