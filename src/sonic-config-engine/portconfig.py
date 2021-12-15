@@ -40,6 +40,7 @@ INTF_KEY = "interfaces"
 OPTIONAL_HWSKU_ATTRIBUTES = ["fec", "autoneg"]
 
 BRKOUT_PATTERN = r'(\d{1,6})x(\d{1,6}G?)(\[(\d{1,6}G?,?)*\])?(\((\d{1,6})\))?'
+BRKOUT_PATTERN_GROUPS = 6
 
 #
 # Helper Functions
@@ -250,7 +251,7 @@ class BreakoutCfg(object):
             raise RuntimeError("Unsupported breakout mode {}!".format(bmode))
 
     def _re_group_to_entry(self, group):
-        if len(group) != 6:
+        if len(group) != BRKOUT_PATTERN_GROUPS:
             raise RuntimeError("Unsupported breakout mode format!")
 
         num_ports, default_speed, supported_speed, _, num_assigned_lanes, _ = group
@@ -270,7 +271,11 @@ class BreakoutCfg(object):
             2x50G ---------------> [('2', '50G', None, None, None)]
         """
 
-        groups_list = [re.match(BRKOUT_PATTERN, i).groups() for i in bmode.split("+")]
+        try:
+            groups_list = [re.match(BRKOUT_PATTERN, i).groups() for i in bmode.split("+")]
+        except Exception:
+            raise RuntimeError('Breakout mode "{}" validation failed!'.format(bmode))
+
         return [self._re_group_to_entry(group) for group in groups_list]
 
     def get_config(self):
