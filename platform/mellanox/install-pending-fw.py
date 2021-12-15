@@ -76,11 +76,12 @@ for boot_type, components in update_status.items():
             if CPLD_FLAG:
                 # Only need one refresh
                 continue
-            CPLD_FLAG = True
             mpfa = MPFAManager(fw_file)
             mpfa.extract()
             if not mpfa.get_metadata().has_option('firmware', 'refresh'):
-                raise RuntimeError("Failed to get {} refresh firmware".format(self.name))
+                print("Failed to get CPLD refresh firmware. Skipping.")
+                continue
+            CPLD_FLAG = True
             refresh_firmware = mpfa.get_metadata().get('firmware', 'refresh')
             comp_install = comp_install + [component]
             files = files + [os.path.join(mpfa.get_path(), refresh_firmware)]
