@@ -85,6 +85,19 @@ class TestThermal:
         assert gearbox_thermal_count == 2
         assert cpu_thermal_count == 2
 
+    def test_chassis_thermal_excludes(self):
+        from sonic_platform.thermal import THERMAL_NAMING_RULE
+        DeviceDataManager.get_platform_name = mock.MagicMock(return_value='x86_64-nvidia_sn2201-r0')
+        chassis = Chassis()
+        thermal_list = chassis.get_all_thermals()
+        assert thermal_list
+        thermal_dict = {thermal.get_name(): thermal for thermal in thermal_list}
+        for rule in THERMAL_NAMING_RULE['chassis thermals']:
+            default_present = rule.get('default_present', True)
+            if default_present == False:
+                thermal_name = rule['name']
+                assert thermal_name in thermal_dict
+
     def test_psu_thermal(self):
         from sonic_platform.thermal import initialize_psu_thermal, THERMAL_NAMING_RULE
         os.path.exists = mock.MagicMock(return_value=True)
