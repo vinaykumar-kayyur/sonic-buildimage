@@ -21,7 +21,7 @@ module sonic-mclag {
     }
 
     import sonic-portchannel {
-		prefix lag;
+        prefix lag;
     }
 
     import sonic-vlan {
@@ -51,7 +51,7 @@ module sonic-mclag {
                 max-elements 1;
 
                 leaf domain_id {
-                    description  "MCLAG Domain ID";
+                    description "MCLAG Domain ID";
                     type uint16 {
                         range "1..4095" {
                             error-message "MCLAG Domain ID out of range";
