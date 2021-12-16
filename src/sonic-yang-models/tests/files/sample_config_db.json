@@ -377,6 +377,12 @@
             "20.1.1.1": {},
             "2001:aa:aa::aa": {}
         },
+        "CABLE_LENGTH": {
+            "AZURE": {
+                "Ethernet0": "5m",
+                "Ethernet1": "5m"
+            }
+        },
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",
@@ -1214,11 +1220,12 @@
         "FEATURE": {
             "bgp": {
                 "auto_restart": "enabled",
-                "has_global_scope": "false",
-                "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "has_global_scope": "False",
+                "has_per_asic_scope": "True",
+                "has_timer": "False",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "database": {
                 "auto_restart": "always_enabled",
@@ -1226,7 +1233,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "always_enabled"
+                "state": "always_enabled",
+                "set_owner": "local"
             },
             "snmp": {
                 "auto_restart": "enabled",
@@ -1234,7 +1242,8 @@
                 "has_per_asic_scope": "false",
                 "has_timer": "true",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
             },
             "swss": {
                 "auto_restart": "enabled",
@@ -1242,7 +1251,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "syncd": {
                 "auto_restart": "enabled",
@@ -1250,7 +1260,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "lldp": {
                 "auto_restart": "enabled",
@@ -1258,7 +1269,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
             }
         },
         "DHCP_RELAY": {
