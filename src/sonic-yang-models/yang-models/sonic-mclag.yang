@@ -162,6 +162,5 @@ module sonic-mclag {
                 }
             }
         }
-
     }
 }
