@@ -34,6 +34,8 @@ try:
     else:
         import ConfigParser as configparser
 
+    from shutil import copyfile
+
     from sonic_platform_base.component_base import ComponentBase,           \
                                                     FW_AUTO_INSTALLED,      \
                                                     FW_AUTO_UPDATED,        \
@@ -133,6 +135,18 @@ class ONIEUpdater(object):
 
     ONIE_IMAGE_INFO_COMMAND = '/bin/bash {} -q -i'
 
+    BIOS_UPDATE_FILE_EXT = '.rom'
+
+    def __add_prefix(self, image_path):
+        if self.BIOS_UPDATE_FILE_EXT not in image_path:
+            rename_path = "/tmp/00-{}".format(os.path.basename(image_path))
+        else:
+            rename_path = "/tmp/99-{}".format(os.path.basename(image_path))
+
+        copyfile(image_path, rename_path)
+
+        return rename_path
+
     def __mount_onie_fs(self):
         fs_mountpoint = '/mnt/onie-fs'
         onie_path = '/lib/onie'
@@ -170,7 +184,9 @@ class ONIEUpdater(object):
             os.rmdir(fs_mountpoint)
 
     def __stage_update(self, image_path):
-        cmd = self.ONIE_FW_UPDATE_CMD_ADD.format(image_path)
+        rename_path = self.__add_prefix(image_path)
+
+        cmd = self.ONIE_FW_UPDATE_CMD_ADD.format(rename_path)
 
         try:
             subprocess.check_call(cmd.split(), universal_newlines=True)
@@ -178,7 +194,9 @@ class ONIEUpdater(object):
             raise RuntimeError("Failed to stage firmware update: {}".format(str(e)))
 
     def __unstage_update(self, image_path):
-        cmd = self.ONIE_FW_UPDATE_CMD_REMOVE.format(os.path.basename(image_path))
+        rename_path = self.__add_prefix(image_path)
+
+        cmd = self.ONIE_FW_UPDATE_CMD_REMOVE.format(os.path.basename(rename_path))
 
         try:
             subprocess.check_call(cmd.split(), universal_newlines=True)
@@ -206,7 +224,8 @@ class ONIEUpdater(object):
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get pending firmware updates: {}".format(str(e)))
 
-        basename = os.path.basename(image_path)
+        rename_path = self.__add_prefix(image_path)
+        basename = os.path.basename(rename_path)
 
         for line in output.splitlines():
             if line.startswith(basename):
