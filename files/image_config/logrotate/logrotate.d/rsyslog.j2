@@ -33,9 +33,13 @@
 /var/log/frr/zebra.log
 /var/log/swss/sairedis*.rec
 /var/log/swss/swss*.rec
-/var/log/swss/responsepublisher.rec
+/var/log/swss/responsepublisher.ec
 {
+{% if var_log_kb <= 204800 %}
+    size 1M
+{% else %}
     size 16M
+{% endif %}
     rotate 5000
     missingok
     notifempty
@@ -47,13 +51,14 @@
         NUM_LOGS_TO_ROTATE=8
 
         # Adjust LOG_FILE_ROTATE_SIZE_KB to reflect the "size" parameter specified above, in kB
-        LOG_FILE_ROTATE_SIZE_KB=16384
+        LOG_FILE_ROTATE_SIZE_KB=1024
 
         # Reserve space for btmp, wtmp, dpkg.log, monit.log, etc., as well as logs that
         # should be disabled, just in case they get created and rotated
         RESERVED_SPACE_KB=4096
 
-        VAR_LOG_SIZE_KB=$(df -k /var/log | sed -n 2p | awk '{ print $2 }')
+        VARL_LOG_SIZE_KB={{var_log_kb}}
+        #VAR_LOG_SIZE_KB=$(df -k /var/log | sed -n 2p | awk '{ print $2 }')
 
         # Limit usable space to 90% of the partition minus the reserved space for other logs
         USABLE_SPACE_KB=$(( (VAR_LOG_SIZE_KB * 90 / 100) - RESERVED_SPACE_KB))
