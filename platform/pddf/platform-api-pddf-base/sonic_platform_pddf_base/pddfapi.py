@@ -867,8 +867,6 @@ class PddfApi():
     ###################################################################################################################
     def populate_bmc_cache_db(self, bmc_attr):
         bmc_cmd = str(bmc_attr['bmc_cmd']).strip()
-        field_name = str(bmc_attr['field_name']).strip()
-        field_pos= int(bmc_attr['field_pos'])-1
 
         sdr_dump_file = "/usr/local/sdr_dump"
         __bmc_cmd = bmc_cmd
