@@ -58,7 +58,6 @@
         RESERVED_SPACE_KB=4096
 
         VARL_LOG_SIZE_KB={{var_log_kb}}
-        #VAR_LOG_SIZE_KB=$(df -k /var/log | sed -n 2p | awk '{ print $2 }')
 
         # Limit usable space to 90% of the partition minus the reserved space for other logs
         USABLE_SPACE_KB=$(( (VAR_LOG_SIZE_KB * 90 / 100) - RESERVED_SPACE_KB))
