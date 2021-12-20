@@ -2,6 +2,7 @@
     "DEVICE_METADATA": {
         "localhost": {
             "buffer_model": {% if default_buffer_model == "dynamic" %}"dynamic"{% else %}"traditional"{% endif %},
+            {%- if include_p4rt == "y" %}"synchronous_mode":"enable",{% endif %}
             "default_bgp_status": {% if shutdown_bgp_on_start == "y" %}"down"{% else %}"up"{% endif %},
             "default_pfcwd_status": {% if enable_pfcwd_on_start == "y" %}"enable"{% else %}"disable"{% endif %}
         }
@@ -12,7 +13,7 @@
 {%- for crm_res in ["ipv4_route", "ipv6_route", "ipv4_nexthop", "ipv6_nexthop", "ipv4_neighbor",
                     "ipv6_neighbor", "nexthop_group_member", "nexthop_group", "acl_table",
                     "acl_group", "acl_entry", "acl_counter", "fdb_entry", "snat_entry", "dnat_entry",
-                    "ipmc_entry", "mpls_inseg", "mpls_nexthop", "srv6_my_sid_entry", "srv6_nexthop"] %}
+                    "ipmc_entry", "mpls_inseg", "mpls_nexthop"] %}
             "{{crm_res}}_threshold_type": "percentage",
             "{{crm_res}}_low_threshold": "70",
             "{{crm_res}}_high_threshold": "85"{% if not loop.last %},{% endif -%}
@@ -41,6 +42,7 @@
 {%- if include_mgmt_framework == "y" %}{% do features.append(("mgmt-framework", "enabled", true, "enabled")) %}{% endif %}
 {%- if include_mux == "y" %}{% do features.append(("mux", "{% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %}enabled{% else %}always_disabled{% endif %}", false, "enabled")) %}{% endif %}
 {%- if include_nat == "y" %}{% do features.append(("nat", "disabled", false, "enabled")) %}{% endif %}
+{%- if include_p4rt == "y" %}{% do features.append(("p4rt", "enabled", false, "enabled")) %}{% endif %}
 {%- if include_restapi == "y" %}{% do features.append(("restapi", "enabled", false, "enabled")) %}{% endif %}
 {%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled")) %}{% endif %}
 {%- if include_macsec == "y" %}{% do features.append(("macsec", "disabled", false, "enabled")) %}{% endif %}
