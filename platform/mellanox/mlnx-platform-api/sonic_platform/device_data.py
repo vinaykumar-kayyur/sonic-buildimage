@@ -144,7 +144,7 @@ DEVICE_DATA = {
             }
         }
     },
-    'x86_64-mlnx_msn4800-r0': {
+    'x86_64-nvidia_sn4800-r0': {
         'thermal': {
             "capability": {
                 "comex_amb": False
@@ -160,6 +160,8 @@ DEVICE_DATA = {
                 "comex_amb": False
             }
         }
+    },
+    'x86_64-nvidia_sn5600-r0': {
     }
 }
 
