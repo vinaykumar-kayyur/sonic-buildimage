@@ -54,10 +54,10 @@ do
         else
             logger "Failed to retrieve server certificate, key or Root CA certificate from ACMS!"
         fi
-	elif [ -n "$X509" ]; then
+    elif [ -n "$X509" ]; then
         SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
         SERVER_KEY=$(echo $X509 | jq -r '.server_key')
-	    if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
+        if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
             TELEMETRY_ARGS+=" --insecure"
         else
             TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
