@@ -21,9 +21,7 @@ CERTIFICATE_CHECKING_INTERVAL_SECS = 3600
 
 
 def get_file_last_mod_time(file_path):
-    """Gets the last modification time of a specific file.
-
-    Args:
+    """Gets the last modification time of a specific file.  Args:
         file_path: A string represents the file path.
 
     Returns:
@@ -55,7 +53,6 @@ def restart_streaming_telemetry():
     syslog.syslog(syslog.LOG_INFO,
                   "Restarting streaming telemetry service by terminating the process with pid: '{}'".format(root_process_pid))
     os.kill(root_process_pid, signal.SIGTERM)
-    sys.exit(0)
 
 
 def certificate_rollover_check():
@@ -98,7 +95,7 @@ def certificate_rollover_check():
     while True:
         if not os.path.exists(certificate_path) or not os.path.exists(private_key_path):
             syslog.syslog(syslog.LOG_ERR,
-                          "Certificate or key file did not exist on device and sleep '{}' seconds to check again {} ...".format(CERTIFICATE_CHECKING_INTERVAL_SECS))
+                          "Certificate or key file did not exist on device and sleep '{}' seconds to check again ...".format(CERTIFICATE_CHECKING_INTERVAL_SECS))
             time.sleep(CERTIFICATE_CHECKING_INTERVAL_SECS)
         else:
             break
