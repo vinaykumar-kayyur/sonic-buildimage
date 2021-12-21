@@ -48,11 +48,11 @@ int xcvr_i2c_cpld_read(XCVR_ATTR *info)
 {
     int status = -1;
     int retry = 10;
+    struct i2c_client *client_ptr=NULL;
 
     if (info!=NULL)
     {
         /* Get the I2C client for the CPLD */
-        struct i2c_client *client_ptr=NULL;
         client_ptr = (struct i2c_client *)get_device_table(info->devname);
         if (client_ptr)
         {
