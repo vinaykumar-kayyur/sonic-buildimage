@@ -5,55 +5,55 @@
             {
                 "name": "counter-rotating-fan-1",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             },
             {
                 "name": "counter-rotating-fan-2",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             },
             {
                 "name": "counter-rotating-fan-3",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             },
             {
                 "name": "counter-rotating-fan-4",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             },
             {
                 "name": "counter-rotating-fan-5",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             },
             {
                 "name": "counter-rotating-fan-6",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "speed": {
-                    "controllable": false
+                    "controllable": 0
                 }
             }
         ],
@@ -61,61 +61,61 @@
             {
                 "name": "fantray-1",
                 "status_led": {
-                    "controllable": false
+                    "controllable": 0
                 },
                 "fans": [
                     {
                         "name": "counter-rotating-fan-1",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     },
                     {
                         "name": "counter-rotating-fan-2",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     },
                     {
                         "name": "counter-rotating-fan-3",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     },
                     {
                         "name": "counter-rotating-fan-4",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     },
                     {
                         "name": "counter-rotating-fan-5",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     },
                     {
                         "name": "counter-rotating-fan-6",
                         "status_led": {
-                            "controllable": false
+                            "controllable": 0
                         },
                         "speed": {
-                            "controllable": false
+                            "controllable": 0
                         }
                     }
                 ]
@@ -124,11 +124,11 @@
         "psus": [
             {
                 "name": "psu-1",
-                "temperature": false
+                "temperature": 0
             },
             {
                 "name": "psu-2",
-                "temperature": false
+                "temperature": 0
             }
         ],
         "thermals": [
