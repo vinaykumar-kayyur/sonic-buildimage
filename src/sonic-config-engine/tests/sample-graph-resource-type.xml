@@ -180,11 +180,6 @@
           <AttachTo>fortyGigE0/4</AttachTo>
           <SubInterface/>
         </PortChannel>
-        <PortChannel>
-          <Name>PortChannel1001</Name>
-          <AttachTo>fortyGigE0/1;fortyGigE0/2</AttachTo>
-          <SubInterface/>
-        </PortChannel>
       </PortChannelInterfaces>
       <VlanInterfaces>
         <VlanInterface>
