@@ -594,7 +594,16 @@ class TestCfgGen(TestCase):
                 "'Ethernet112': {'alias': 'fortyGigE0/112', 'pfc_asym': 'off', 'lanes': '89,90,91,92', 'description': 'config_db:fortyGigE0/112', 'mtu': '9100', 'tpid': '0x8100'}, "
                 "'Ethernet116': {'alias': 'fortyGigE0/116', 'pfc_asym': 'off', 'lanes': '93,94,95,96', 'description': 'config_db:fortyGigE0/116', 'mtu': '9100', 'tpid': '0x8100'}, "
                 "'Ethernet120': {'alias': 'fortyGigE0/120', 'pfc_asym': 'off', 'lanes': '97,98,99,100', 'description': 'config_db:fortyGigE0/120', 'mtu': '9100', 'tpid': '0x8100'}, "
-                "'Ethernet124': {'alias': 'fortyGigE0/124', 'pfc_asym': 'off', 'lanes': '101,102,103,104', 'description': 'config_db:fortyGigE0/124', 'mtu': '9100', 'tpid': '0x8100'}}"
+                "'Ethernet124': {'alias': 'fortyGigE0/124', 'pfc_asym': 'off', 'lanes': '101,102,103,104', 'description': 'config_db:fortyGigE0/124', 'mtu': '9100', 'tpid': '0x8100'}, "
+                "'Ethernet1': {'lanes': '1,2,3,4', 'description': 'Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/1': {'lanes': '1', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/2': {'lanes': '2', 'description': 'Ethernet1/2', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/3': {'lanes': '3', 'description': 'Ethernet1/3', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/4': {'lanes': '4', 'description': 'Ethernet1/4', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/5': {'lanes': '5', 'description': 'Ethernet1/5', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/6': {'lanes': '6', 'description': 'Ethernet1/6', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/7': {'lanes': '7', 'description': 'Ethernet1/7', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}, "
+                "'Ethernet1/8': {'lanes': '8', 'description': 'Ethernet1/8', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}}"
             )
         )
 
