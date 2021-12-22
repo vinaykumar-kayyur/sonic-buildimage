@@ -60,7 +60,7 @@ class Chassis(ChassisBase):
 
         # Initialize SFP
         for index in range(1, self.__num_of_ports + 1):
-            sfp = Sfp(index, 'QSFP')
+            sfp = Sfp(index, 'QSFP_DD')
             self._sfp_list.append(sfp)
             self.__xcvr_presence[index] = self._sfp_list[index-1].get_presence()
 
