@@ -234,30 +234,30 @@
         "mtu": "9100"
     },
     "PORT|Ethernet1": {
-        "lanes": "1,2,3,4"
+        "lanes": "200"
     },
     "PORT|Ethernet1/1": {
-        "lanes": "1"
+        "lanes": "201"
     },
     "PORT|Ethernet1/2": {
-        "lanes": "2"
+        "lanes": "202"
     },
     "PORT|Ethernet1/3": {
-        "lanes": "3"
+        "lanes": "203"
     },
     "PORT|Ethernet1/4": {
-        "lanes": "4"
+        "lanes": "204"
     },
     "PORT|Ethernet1/5": {
-        "lanes": "5"
+        "lanes": "205"
     },
     "PORT|Ethernet1/6": {
-        "lanes": "6"
+        "lanes": "206"
     },
     "PORT|Ethernet1/7": {
-        "lanes": "7"
+        "lanes": "207"
     },
     "PORT|Ethernet1/8": {
-        "lanes": "8"
+        "lanes": "208"
     }
 }
