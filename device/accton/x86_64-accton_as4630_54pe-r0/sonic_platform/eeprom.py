@@ -129,3 +129,6 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_mac(self):
         return self._eeprom.get('0x24', NULL)
+
+    def get_product_name(self):
+        return self._eeprom.get('0x21', NULL)

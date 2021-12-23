@@ -736,6 +736,7 @@ static int read_devfile_temp1_input(
         return -ENOENT;
     }
 
+#if 0
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
 	old_fs = get_fs();
 	set_fs(get_ds());
@@ -746,6 +747,8 @@ static int read_devfile_temp1_input(
 	old_fs = force_uaccess_begin();
 #endif
     rdlen = sfd->f_op->read(sfd, buffer, sizeof(buffer), &sfd->f_pos);
+#endif
+    rdlen = kernel_read(sfd, buffer, sizeof(buffer), &sfd->f_pos);
     if (rdlen == 0) {
         pr_err( "File(%s) empty!\n", devfile);
         rc = -EIO;

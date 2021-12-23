@@ -29,7 +29,6 @@ import subprocess
 import getopt
 import sys
 import logging
-import re
 import time
 import os
 
@@ -173,6 +172,8 @@ def driver_inserted():
 kos = [
 'depmod -ae',
 'modprobe i2c_dev',
+'modprobe i2c_i801',
+'modprobe i2c_ismt',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
 'modprobe ym2651y',
 'modprobe x86_64_accton_as4630_54pe_cpld',
@@ -182,16 +183,6 @@ kos = [
 
 def driver_install():
     global FORCE
-    
-    ret=log_os_system("lsmod|grep i2c_ismt",1)    
-    my_log("rmmond i2cismt")
-    log_os_system("rmmod i2c_ismt", 1)
-    log_os_system("rmmod i2c_i801", 1)
-    log_os_system("modprobe i2c-i801", 1)
-    time.sleep(1)
-    log_os_system("modprobe i2c-ismt", 1)
-  
-        
     
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
@@ -299,6 +290,7 @@ def do_sonic_platform_install():
     device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
     SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
 
+    #Check API2.0 on py whl file
     status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
@@ -316,18 +308,17 @@ def do_sonic_platform_install():
     return
 
 def do_sonic_platform_clean():
-    status, output = log_os_system("python3 -m pip show sonic-platform > /dev/null 2>&1", 0)
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY2))
 
     else:
-        status, output = log_os_system("python3 -m pip uninstall sonic-platform -y", 0)
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
             return status
         else:
             print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
-
 
     return
 
