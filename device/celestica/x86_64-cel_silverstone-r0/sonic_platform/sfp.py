@@ -712,6 +712,8 @@ class Sfp(SfpBase):
                 (offset + QSFP_DD_TYPE_OFFSET), XCVR_TYPE_WIDTH)
             if sfp_type_raw is not None:
                 sfp_type_data = sfpi_obj.parse_sfp_type(sfp_type_raw, 0)
+                sfp_type_abbrv_name_data = sfpi_obj.parse_sfp_type_abbrv_name(
+                    sfp_type_raw, 0)
             else:
                 return transceiver_info_dict
 
@@ -848,6 +850,9 @@ class Sfp(SfpBase):
                 sfp_cable_len_data['data']['Length Cable Assembly(m)']['value'])
             transceiver_info_dict['nominal_bit_rate'] = "Not supported for CMIS cables"
             transceiver_info_dict['application_advertisement'] = host_media_list
+            transceiver_info_dict['type_abbrv_name'] = str(
+                sfp_type_abbrv_name_data['data']['type_abbrv_name']['value'])
+            transceiver_info_dict['specification_compliance'] = "passive_copper_media_interface"
 
         else:
             offset = 0
