@@ -3,6 +3,6 @@
     "skip_ledd": true,
     "skip_psud": false,
     "skip_syseepromd": false,
-    "skip_thermalctld": true,
-    "skip_xcvrd": true
+    "skip_thermalctld": false,
+    "skip_xcvrd": false
 }
