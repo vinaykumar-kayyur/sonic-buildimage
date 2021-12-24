@@ -294,7 +294,7 @@ class Sfp(SfpBase):
         SfpBase.__init__(self)
 
         self._index = sfp_index
-        self._port_num = self._index + 1
+        self.port_num = self._index + 1
         self._api_helper = APIHelper()
         self._name = sfp_name
         self._port_info_name = self._get_port_info_name()
@@ -305,8 +305,8 @@ class Sfp(SfpBase):
         self._eeprom_path = self._get_eeprom_path()
 
     def _get_port_info_name(self):
-        name = "QSFP" + str(self._port_num - OSFP_PORT_START + 1) if self._port_num in range(
-            OSFP_PORT_START, OSFP_PORT_END+1) else "SFP" + str(self._port_num - SFP_PORT_START + 1)
+        name = "QSFP" + str(self.port_num - OSFP_PORT_START + 1) if self.port_num in range(
+            OSFP_PORT_START, OSFP_PORT_END+1) else "SFP" + str(self.port_num - SFP_PORT_START + 1)
         return name
 
     def _read_porttab_mappings(self):
@@ -363,7 +363,7 @@ class Sfp(SfpBase):
             33: 1,
             34: 2
         }
-        return I2C_EEPROM_PATH.format(self.port_to_i2c_mapping.get(self._port_num))
+        return I2C_EEPROM_PATH.format(self.port_to_i2c_mapping.get(self.port_num))
 
     def _convert_string_to_num(self, value_str):
         if "-inf" in value_str:
@@ -852,7 +852,9 @@ class Sfp(SfpBase):
             transceiver_info_dict['application_advertisement'] = host_media_list
             transceiver_info_dict['type_abbrv_name'] = str(
                 sfp_type_abbrv_name_data['data']['type_abbrv_name']['value'])
-            transceiver_info_dict['specification_compliance'] = "passive_copper_media_interface"
+            transceiver_info_dict['specification_compliance'] = "Not supported for CMIS cables"
+            print(transceiver_info_dict['type_abbrv_name'],sfp_media_type_dict, sfp_media_type_raw)
+            print(self.decode_media_type(sfp_media_type_raw, 0, 1))
 
         else:
             offset = 0
