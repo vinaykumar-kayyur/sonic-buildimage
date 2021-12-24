@@ -21,6 +21,7 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from sonic_platform_base.sonic_sfp.sff8024 import type_of_media_interface
     from .helper import APIHelper
 
 except ImportError as e:
@@ -852,9 +853,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['application_advertisement'] = host_media_list
             transceiver_info_dict['type_abbrv_name'] = str(
                 sfp_type_abbrv_name_data['data']['type_abbrv_name']['value'])
-            transceiver_info_dict['specification_compliance'] = "Not supported for CMIS cables"
-            print(transceiver_info_dict['type_abbrv_name'],sfp_media_type_dict, sfp_media_type_raw)
-            print(self.decode_media_type(sfp_media_type_raw, 0, 1))
+            transceiver_info_dict['specification_compliance'] = type_of_media_interface[sfp_media_type_raw[0]]
 
         else:
             offset = 0
