@@ -158,36 +158,34 @@ class Chassis(ChassisBase):
 
         return (reboot_cause, description)
 
-    # def get_change_event(self, timeout=0):
-    #     """
-    #     Returns a nested dictionary containing all devices which have
-    #     experienced a change at chassis level
-    #     Args:
-    #         timeout: Timeout in milliseconds (optional). If timeout == 0,
-    #             this method will block until a change is detected.
-    #     Returns:
-    #         (bool, dict):
-    #             - True if call successful, False if not;
-    #             - A nested dictionary where key is a device type,
-    #               value is a dictionary with key:value pairs in the format of
-    #               {'device_id':'device_event'},
-    #               where device_id is the device ID for this device and
-    #                     device_event,
-    #                          status='1' represents device inserted,
-    #                          status='0' represents device removed.
-    #               Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
-    #                   indicates that fan 0 has been removed, fan 2
-    #                   has been inserted and sfp 11 has been removed.
-    #     """
-    #     # SFP event
-    #     if not self.sfp_module_initialized:
-    #         self.__initialize_sfp()
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+        """
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
 
-    #     sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
-    #     if sfp_event:
-    #         return True, {'sfp': sfp_event}
+        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        return status, sfp_event
 
-    #     return False, {'sfp': {}}
 
     ##############################################################
     ######################## SFP methods #########################

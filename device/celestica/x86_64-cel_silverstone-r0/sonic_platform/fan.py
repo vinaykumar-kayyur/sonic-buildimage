@@ -120,8 +120,7 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        target = 0
-        return target
+        return "N/A"
 
     def get_speed_tolerance(self):
         """
