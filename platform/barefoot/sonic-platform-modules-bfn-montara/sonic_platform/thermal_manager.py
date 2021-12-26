@@ -65,5 +65,3 @@ class ThermalManager():
 
     def deinitialize(self):
         self.stop()
-        del self
-    
