@@ -17,6 +17,9 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+SFP_PORT_START = 49
+SFP_PORT_END   = 54
+
 class Sfp(SfpOptoeBase):
     """
     DELLEMC Platform-specific Sfp class

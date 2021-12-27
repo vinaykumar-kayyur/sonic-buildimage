@@ -84,8 +84,6 @@ class Chassis(ChassisBase):
         self._watchdog = Watchdog()
         self._num_sfps = 54
         self._num_fans =  MAX_N3248PXE_FANTRAY * MAX_N3248PXE_FAN
-        self._fan_list = [Fan(i, j) for i in range(MAX_N3248PXE_FANTRAY) \
-                            for j in range(MAX_N3248PXE_FAN)]
         for k in range(MAX_N3248PXE_FANTRAY):
             fandrawer = FanDrawer(k)
             self._fan_drawer_list.append(fandrawer)
@@ -96,7 +94,7 @@ class Chassis(ChassisBase):
         self._component_list = [Component(i) for i in range(MAX_N3248PXE_COMPONENT)]
         for port_num in self._sfp_port:
             # sfp get uses zero-indexing, but port numbers start from 1
-            presence = self.get_sfp(port_num).get_presence()
+            presence = self.get_sfp(port_num-1).get_presence()
             self._global_port_pres_dict[port_num] = '1' if presence else '0'
 
         self._watchdog = Watchdog()
@@ -143,7 +141,7 @@ class Chassis(ChassisBase):
         while True:
             for port_num in self._sfp_port:
                 # sfp get uses zero-indexing, but port numbers start from 1
-                presence = self.get_sfp(port_num).get_presence()
+                presence = self.get_sfp(port_num-1).get_presence()
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
@@ -177,8 +175,8 @@ class Chassis(ChassisBase):
             # The index will start from 0
             sfp = self._sfp_list[index-1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
-                             index, len(self._sfp_list)-1))
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
+                             index, len(self._sfp_list)))
         return sfp
 
     def get_name(self):
@@ -187,7 +185,7 @@ class Chassis(ChassisBase):
         Returns:
            string: The name of the chassis
         """
-        return self._eeprom.modelstr().decode()
+        return self._eeprom.modelstr()
 
     def get_presence(self):
         """
@@ -342,3 +340,28 @@ class Chassis(ChassisBase):
                 return self.LOCATOR_LED_OFF
         else:
             return self.LOCATOR_LED_OFF
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+    def get_revision(self):
+        """
+        Retrives the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()
