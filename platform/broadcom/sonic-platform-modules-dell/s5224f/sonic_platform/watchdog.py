@@ -95,7 +95,7 @@ class Watchdog(WatchdogBase):
         """
         timer_offset = -1
         for key,timer_seconds in enumerate(self.TIMERS):
-            if seconds <= timer_seconds:
+            if seconds > 0 and seconds <= timer_seconds:
                 timer_offset = key
                 seconds = timer_seconds
                 break
@@ -125,19 +125,15 @@ class Watchdog(WatchdogBase):
             # Setting last bit to WD Timer punch
             # Last bit = WD Timer punch
             self._set_reg_val(reg_val & 0xFE)
-
-            self.armed_time = self._get_time()
-            self.timeout = seconds
-            return seconds
         else:
             # Setting 4th bit to enable WD
             # 4th bit = Enable WD
             reg_val = self._get_reg_val()
             self._set_reg_val(reg_val | 0x8)
 
-            self.armed_time = self._get_time()
-            self.timeout = seconds
-            return seconds
+        self.armed_time = self._get_time()
+        self.timeout = seconds
+        return seconds
 
     def disarm(self):
         """

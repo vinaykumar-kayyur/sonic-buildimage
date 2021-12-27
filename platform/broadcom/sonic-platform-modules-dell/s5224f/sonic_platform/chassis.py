@@ -98,11 +98,6 @@ class Chassis(ChassisBase):
             self._psu_list.append(psu)
 
         for i in range(MAX_S5224F_FANTRAY):
-            for j in range(MAX_S5224F_FAN):
-                fan = Fan(i,j)
-                self._fan_list.append(fan)
-
-        for i in range(MAX_S5224F_FANTRAY):
             fandrawer = FanDrawer(i)
             self._fan_drawer_list.append(fandrawer)
             self._fan_list.extend(fandrawer._fan_list)
@@ -339,3 +334,27 @@ class Chassis(ChassisBase):
         else:
             return self.LOCATOR_LED_ON
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+    def get_revision(self):
+        """
+        Retrives the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()

@@ -91,6 +91,27 @@ class Psu(PsuBase):
         """
         return self.fru.get_board_serial()
 
+    def get_revision(self):
+        """
+        Retrives thehardware revision of the device
+
+        Returns:
+            String: revision value of device
+        """
+        serial = self.fru.get_board_serial()
+        if serial != "NA" and len(serial) == 23:
+            return serial[-3:]
+        else:
+            return "NA"
+
+    def is_replaceable(self):
+        """
+        Indicate whether this PSU is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
     def get_status(self):
         """
         Retrieves the operational status of the PSU
@@ -118,7 +139,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(voltage)
+        return float(voltage)
 
     def get_current(self):
         """
@@ -132,7 +153,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(current)
+        return float(current)
 
     def get_power(self):
         """
@@ -146,7 +167,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(power)
+        return float(power)
 
     def get_input_voltage(self):
         """
@@ -228,3 +249,12 @@ class Psu(PsuBase):
             if 'AC' in info : return 'AC'
             if 'DC' in info : return 'DC'
         return None
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
