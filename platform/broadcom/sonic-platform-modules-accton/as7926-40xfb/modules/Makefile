@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 obj-m:= x86-64-accton-as7926-40xfb-cpld.o x86-64-accton-as7926-40xfb-fan.o  \
         x86-64-accton-as7926-40xfb-leds.o x86-64-accton-as7926-40xfb-psu.o \
-        x86-64-accton-as7926-40xfb-thermal.o
+        x86-64-accton-as7926-40xfb-thermal.o x86-64-accton-as7926-40xfb-sys.o
          
 else
 ifeq (,$(KERNEL_SRC))

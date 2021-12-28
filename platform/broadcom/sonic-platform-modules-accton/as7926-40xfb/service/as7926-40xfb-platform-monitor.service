@@ -5,14 +5,14 @@ After=sysinit.target
 DefaultDependencies=no
 
 [Service]
-ExecStartPre=/usr/local/bin/accton_as7926_40xfb_util.py install
-ExecStart=/usr/local/bin/accton_as7926_40xfb_monitor.py
+Type=oneshot
+ExecStart=/usr/local/bin/accton_as7926_40xfb_util.py install
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
+TimeoutSec=300
 
 # Resource Limitations
 LimitCORE=infinity
 
 [Install]
 WantedBy=multi-user.target
-

@@ -78,10 +78,16 @@ class Fan(FanBase):
                 return 0
 
         elif self.get_presence():
-            speed_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_pwm')
-            speed = self._api_helper.read_txt_file(speed_path)
-            if speed is None:
+            input_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_input')
+            input = self._api_helper.read_txt_file(input_path)
+
+            target_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_target')
+            target = self._api_helper.read_txt_file(target_path)
+
+            if input is None or target is None:
                 return 0
+
+            speed = (int(input) * self.get_target_speed()) / int(target)
 
         return int(speed)
 
@@ -98,7 +104,23 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        return False #Not supported
+        speed = 0
+        if self.is_psu_fan:
+            psu_fan_path = "{}{}".format(self.psu_hwmon_path, '_fan1_input')
+            fan_speed_rpm = self._api_helper.read_txt_file(psu_fan_path)
+            if fan_speed_rpm is not None:
+                speed = (int(fan_speed_rpm, 10)) * 100 / PSU_FAN_MAX_RPM
+                if speed > 100:
+                    speed = 100
+            else:
+                return 0
+        else:
+            speed_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_pwm')
+            speed = self._api_helper.read_txt_file(speed_path)
+            if speed is None:
+                return 0
+
+        return int(speed)
 
     def get_speed_tolerance(self):
         """
@@ -107,7 +129,14 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        return False #Not supported
+        speed = 0
+        if not self.is_psu_fan:
+            speed_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_tolerance')
+            speed = self._api_helper.read_txt_file(speed_path)
+            if speed is None:
+                return 0
+
+        return int(speed)
 
     def set_speed(self, speed):
         """

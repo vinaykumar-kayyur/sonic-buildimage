@@ -129,7 +129,12 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return False #Not supported
+        temp_path = "{}{}".format(self.hwmon_path, '_temp1_input_max')
+        val=self._api_helper.read_txt_file(temp_path)
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
 
     def get_voltage_high_threshold(self):
         """
@@ -138,7 +143,12 @@ class Psu(PsuBase):
             A float number, the high threshold output voltage in volts,
             e.g. 12.1
         """
-        return 0
+        vout_path = "{}{}".format(self.hwmon_path, '_vout_max')
+        vout_val=self._api_helper.read_txt_file(vout_path)
+        if vout_val is not None:
+            return float(vout_val)/1000
+        else:
+            return 0
 
     def get_voltage_low_threshold(self):
         """
@@ -147,7 +157,26 @@ class Psu(PsuBase):
             A float number, the low threshold output voltage in volts,
             e.g. 12.1
         """
-        return 0
+        vout_path = "{}{}".format(self.hwmon_path, '_vout_min')
+        vout_val=self._api_helper.read_txt_file(vout_path)
+        if vout_val is not None:
+            return float(vout_val)/1000
+        else:
+            return 0
+
+    def get_maximum_supplied_power(self):
+        """
+        Retrieves the maximum supplied power by PSU
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        pout_path = "{}{}".format(self.hwmon_path, '_pout_max')
+        val=self._api_helper.read_txt_file(pout_path)
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
 
     def get_name(self):
         """
@@ -182,3 +211,29 @@ class Psu(PsuBase):
             return int(val, 10) == 1
         else:
             return 0
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        model_path="{}{}".format(self.hwmon_path, '_model')
+        model=self._api_helper.read_txt_file(model_path)
+
+        if model is None:
+            return "N/A"
+        return model
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial_path="{}{}".format(self.hwmon_path, '_serial')
+        serial=self._api_helper.read_txt_file(serial_path)
+
+        if serial is None:
+            return "N/A"
+        return serial

@@ -161,14 +161,75 @@ def driver_check():
     else :
         return True
 
-
-
-kos = [
-'depmod -ae',
+ipmi_ko = [
 'modprobe ipmi_msghandler',
 'modprobe ipmi_ssif',
 'modprobe ipmi_si',
 'modprobe ipmi_devintf',
+]
+
+ATTEMPTS = 5
+
+def init_ipmi_dev_intf():
+    attempts = ATTEMPTS
+    interval = 3
+
+    while attempts:
+        for i in range(0, len(ipmi_ko)):
+            commands.getstatusoutput(ipmi_ko[i])
+
+        if os.path.exists('/dev/ipmi0') or os.path.exists('/dev/ipmidev/0'):
+            return (0, (ATTEMPTS - attempts) * interval)
+
+        for i in reversed(range(0, len(ipmi_ko))):
+            rm = ipmi_ko[i].replace("modprobe", "modprobe -rq")
+            commands.getstatusoutput(rm)
+
+        attempts -= 1
+        time.sleep(interval)
+
+    return (1, ATTEMPTS * interval)
+
+def init_ipmi_oem_cmd():
+    attempts = ATTEMPTS
+    interval = 3
+
+    while attempts:
+        (status, output) = commands.getstatusoutput('ipmitool raw 0x34 0x95')
+        if status:
+            attempts -= 1
+            time.sleep(interval)
+            continue
+
+        return (0, (ATTEMPTS - attempts) * interval)
+
+    return (1, ATTEMPTS * interval)
+
+def init_ipmi():
+    attempts = ATTEMPTS
+    interval = 60
+
+    while attempts:
+        attempts -= 1
+
+        (status, elapsed_dev) = init_ipmi_dev_intf()
+        if status:
+            time.sleep(interval - elapsed_dev)
+            continue
+
+        (status, elapsed_oem) = init_ipmi_oem_cmd()
+        if status:
+            time.sleep(interval - elapsed_dev - elapsed_oem)
+            continue
+
+        print('IPMI dev interface is ready.')
+        return 0
+
+    print('Failed to initialize IPMI dev interface')
+    return 1
+
+kos = [
+'depmod -ae',
 'modprobe i2c_dev',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
 'modprobe x86-64-accton-as7926-40xfb-cpld',
@@ -176,10 +237,17 @@ kos = [
 'modprobe x86-64-accton-as7926-40xfb-thermal',
 'modprobe x86-64-accton-as7926-40xfb-leds',
 'modprobe x86-64-accton-as7926-40xfb-psu',
+'modprobe x86-64-accton-as7926-40xfb-sys',
 'modprobe optoe']
 
 def driver_install():
     global FORCE
+
+    status = init_ipmi()
+    if status:
+        if FORCE == 0:
+            return status
+
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
         if status:
@@ -225,7 +293,6 @@ sfp_map =  [33, 34, 37, 38, 41, 42, 45, 46, 49, 50,
 qsfp_start = 1
 
 mknod =[
-'echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo pca9548 0x76 > /sys/bus/i2c/devices/i2c-1/new_device',
 'echo pca9548 0x72 > /sys/bus/i2c/devices/i2c-2/new_device',
@@ -247,15 +314,15 @@ def device_install():
     global FORCE
 
     for i in range(0, len(mknod)):
-        # for pca954x need times to built new i2c buses
-        if mknod[i].find('pca954') != -1:
-            time.sleep(1)
-
         (status, output) = log_os_system(mknod[i], 1)
         if status:
             print output
             if FORCE == 0:
                 return status
+
+        # for pca954x need times to built new i2c buses
+        if mknod[i].find('pca954') != -1:
+            time.sleep(2)
 
     for i in range(1, 11):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/12-0062/module_reset_"+str(i), 1)
