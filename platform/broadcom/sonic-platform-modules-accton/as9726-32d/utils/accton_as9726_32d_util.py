@@ -135,9 +135,6 @@ def show_help():
     print(__doc__ % {'scriptName': sys.argv[0].split("/")[-1]})
     sys.exit(0)
 
-
-
-
 def my_log(txt):
     if DEBUG:
         print("[ACCTON DBG]: " + txt)
