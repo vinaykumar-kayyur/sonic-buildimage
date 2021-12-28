@@ -99,10 +99,18 @@ enum psu_data_index {
 	PSU_STATUS_COUNT,
 	PSU_MODEL = 0,
 	PSU_SERIAL = 0,
-	PSU_TEMP_MAX0 = 2,
-	PSU_TEMP_MAX1,
-	PSU_TEMP_MIN0,
-	PSU_TEMP_MIN1,
+	PSU_TEMP1_MAX0 = 2,
+	PSU_TEMP1_MAX1,
+	PSU_TEMP1_MIN0,
+	PSU_TEMP1_MIN1,
+	PSU_TEMP2_MAX0,
+	PSU_TEMP2_MAX1,
+	PSU_TEMP2_MIN0,
+	PSU_TEMP2_MIN1,
+	PSU_TEMP3_MAX0,
+	PSU_TEMP3_MAX1,
+	PSU_TEMP3_MIN0,
+	PSU_TEMP3_MIN1,
 	PSU_VIN_UPPER_CRIT0,
 	PSU_VIN_UPPER_CRIT1,
 	PSU_VIN_UPPER_CRIT2,
@@ -134,7 +142,8 @@ enum psu_data_index {
 	PSU_POUT_MAX0,
 	PSU_POUT_MAX1,
 	PSU_POUT_MAX2,
-	PSU_POUT_MAX3
+	PSU_POUT_MAX3,
+	PSU_INFO_COUNT
 };
 
 struct ipmi_data {
@@ -156,7 +165,7 @@ struct ipmi_data {
 
 struct ipmi_psu_resp_data {
 	unsigned char status[PSU_STATUS_COUNT];
-	unsigned char info[38];
+	unsigned char info[PSU_INFO_COUNT];
 	char serial[IPMI_MODEL_SERIAL_LEN+1];
 	char model[IPMI_MODEL_SERIAL_LEN+1];
 	char fandir[IPMI_FAN_DIR_LEN+1];
@@ -199,8 +208,12 @@ static struct platform_driver as7535_32xb_psu_driver = {
 #define PSU_FAN_INPUT_ATTR_ID(index) PSU##index##_FAN_INPUT
 #define PSU_FAN_DIR_ATTR_ID(index) PSU##index##_FAN_DIR
 
-#define PSU_TEMP_INPUT_MAX_ATTR_ID(index) PSU##index##_TEMP_INPUT_MAX
-#define PSU_TEMP_INPUT_MIN_ATTR_ID(index) PSU##index##_TEMP_INPUT_MIN
+#define PSU_TEMP1_INPUT_MAX_ATTR_ID(index) PSU##index##_TEMP1_INPUT_MAX
+#define PSU_TEMP1_INPUT_MIN_ATTR_ID(index) PSU##index##_TEMP1_INPUT_MIN
+#define PSU_TEMP2_INPUT_MAX_ATTR_ID(index) PSU##index##_TEMP2_INPUT_MAX
+#define PSU_TEMP2_INPUT_MIN_ATTR_ID(index) PSU##index##_TEMP2_INPUT_MIN
+#define PSU_TEMP3_INPUT_MAX_ATTR_ID(index) PSU##index##_TEMP3_INPUT_MAX
+#define PSU_TEMP3_INPUT_MIN_ATTR_ID(index) PSU##index##_TEMP3_INPUT_MIN
 #define PSU_VIN_MAX_ATTR_ID(index) PSU##index##_VIN_MAX
 #define PSU_VIN_MIN_ATTR_ID(index) PSU##index##_VIN_MIN
 #define PSU_VIN_UPPER_CRIT_ATTR_ID(index) PSU##index##_VIN_UPPER_CRIT
@@ -228,8 +241,12 @@ static struct platform_driver as7535_32xb_psu_driver = {
 	PSU_TEMP3_INPUT_ATTR_ID(psu_id), \
 	PSU_FAN_INPUT_ATTR_ID(psu_id), \
 	PSU_FAN_DIR_ATTR_ID(psu_id), \
-	PSU_TEMP_INPUT_MAX_ATTR_ID(psu_id), \
-	PSU_TEMP_INPUT_MIN_ATTR_ID(psu_id), \
+	PSU_TEMP1_INPUT_MAX_ATTR_ID(psu_id), \
+	PSU_TEMP1_INPUT_MIN_ATTR_ID(psu_id), \
+	PSU_TEMP2_INPUT_MAX_ATTR_ID(psu_id), \
+	PSU_TEMP2_INPUT_MIN_ATTR_ID(psu_id), \
+	PSU_TEMP3_INPUT_MAX_ATTR_ID(psu_id), \
+	PSU_TEMP3_INPUT_MIN_ATTR_ID(psu_id), \
 	PSU_VIN_MAX_ATTR_ID(psu_id), \
 	PSU_VIN_MIN_ATTR_ID(psu_id), \
 	PSU_VIN_UPPER_CRIT_ATTR_ID(psu_id), \
@@ -282,9 +299,17 @@ enum as7535_32xb_psu_sysfs_attrs {
 	static SENSOR_DEVICE_ATTR(psu##index##_fan_dir, S_IRUGO, show_string, NULL,\
 								PSU##index##_FAN_DIR); \
 	static SENSOR_DEVICE_ATTR(psu##index##_temp1_input_max, S_IRUGO, \
-						show_psu_info, NULL, PSU##index##_TEMP_INPUT_MAX); \
+						show_psu_info, NULL, PSU##index##_TEMP1_INPUT_MAX); \
 	static SENSOR_DEVICE_ATTR(psu##index##_temp1_input_min, S_IRUGO, \
-						show_psu_info, NULL, PSU##index##_TEMP_INPUT_MIN); \
+						show_psu_info, NULL, PSU##index##_TEMP1_INPUT_MIN); \
+	static SENSOR_DEVICE_ATTR(psu##index##_temp2_input_max, S_IRUGO, \
+						show_psu_info, NULL, PSU##index##_TEMP2_INPUT_MAX); \
+	static SENSOR_DEVICE_ATTR(psu##index##_temp2_input_min, S_IRUGO, \
+						show_psu_info, NULL, PSU##index##_TEMP2_INPUT_MIN); \
+	static SENSOR_DEVICE_ATTR(psu##index##_temp3_input_max, S_IRUGO, \
+						show_psu_info, NULL, PSU##index##_TEMP3_INPUT_MAX); \
+	static SENSOR_DEVICE_ATTR(psu##index##_temp3_input_min, S_IRUGO, \
+						show_psu_info, NULL, PSU##index##_TEMP3_INPUT_MIN); \
 	static SENSOR_DEVICE_ATTR(psu##index##_vin_max, S_IRUGO, \
 						show_psu_info, NULL,  PSU##index##_VIN_MAX); \
 	static SENSOR_DEVICE_ATTR(psu##index##_vin_min, S_IRUGO, \
@@ -324,6 +349,10 @@ enum as7535_32xb_psu_sysfs_attrs {
 	&sensor_dev_attr_psu##index##_fan_dir.dev_attr.attr, \
 	&sensor_dev_attr_psu##index##_temp1_input_max.dev_attr.attr, \
 	&sensor_dev_attr_psu##index##_temp1_input_min.dev_attr.attr, \
+	&sensor_dev_attr_psu##index##_temp2_input_max.dev_attr.attr, \
+	&sensor_dev_attr_psu##index##_temp2_input_min.dev_attr.attr, \
+	&sensor_dev_attr_psu##index##_temp3_input_max.dev_attr.attr, \
+	&sensor_dev_attr_psu##index##_temp3_input_min.dev_attr.attr, \
 	&sensor_dev_attr_psu##index##_vin_max.dev_attr.attr, \
 	&sensor_dev_attr_psu##index##_vin_min.dev_attr.attr, \
 	&sensor_dev_attr_psu##index##_vin_upper_crit.dev_attr.attr, \
@@ -664,18 +693,21 @@ static ssize_t show_psu(struct device *dev, struct device_attribute *da,
 		VALIDATE_PRESENT_RETURN(pid);
 		value = ((u32)data->ipmi_resp[pid].status[PSU_TEMP1_0] |
 					(u32)data->ipmi_resp[pid].status[PSU_TEMP1_1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
 		break;
 	case PSU1_TEMP2_INPUT:
 	case PSU2_TEMP2_INPUT:
 		VALIDATE_PRESENT_RETURN(pid);
 		value = ((u32)data->ipmi_resp[pid].status[PSU_TEMP2_0] |
 					(u32)data->ipmi_resp[pid].status[PSU_TEMP2_1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
 		break;
 	case PSU1_TEMP3_INPUT:
 	case PSU2_TEMP3_INPUT:
 		VALIDATE_PRESENT_RETURN(pid);
 		value = ((u32)data->ipmi_resp[pid].status[PSU_TEMP3_0] |
 					(u32)data->ipmi_resp[pid].status[PSU_TEMP3_1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
 		break;
 	case PSU1_FAN_INPUT:
 	case PSU2_FAN_INPUT:
@@ -703,7 +735,7 @@ static ssize_t show_psu_info(struct device *dev, struct device_attribute *da,
 {
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	unsigned char pid = attr->index / NUM_OF_PER_PSU_ATTR;
-	u32 value = 0;
+	s32 value = 0;
 	int present = 0;
 	int error = 0;
 	int multiplier = 1000;
@@ -719,17 +751,47 @@ static ssize_t show_psu_info(struct device *dev, struct device_attribute *da,
 	present = !!(data->ipmi_resp[pid].status[PSU_PRESENT]);
 
 	switch (attr->index) {
-	case PSU1_TEMP_INPUT_MAX:
-	case PSU2_TEMP_INPUT_MAX:
+	case PSU1_TEMP1_INPUT_MAX:
+	case PSU2_TEMP1_INPUT_MAX:
 		VALIDATE_PRESENT_RETURN(pid);
-		value = ((u32)data->ipmi_resp[pid].info[PSU_TEMP_MAX0] |
-				(u32)data->ipmi_resp[pid].info[PSU_TEMP_MAX1] << 8);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP1_MAX0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP1_MAX1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
 		break;
-	case PSU1_TEMP_INPUT_MIN:
-	case PSU2_TEMP_INPUT_MIN:
+	case PSU1_TEMP1_INPUT_MIN:
+	case PSU2_TEMP1_INPUT_MIN:
 		VALIDATE_PRESENT_RETURN(pid);
-		value = ((u32)data->ipmi_resp[pid].info[PSU_TEMP_MIN0] |
-				(u32)data->ipmi_resp[pid].info[PSU_TEMP_MIN1] << 8);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP1_MIN0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP1_MIN1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
+		break;
+	case PSU1_TEMP2_INPUT_MAX:
+	case PSU2_TEMP2_INPUT_MAX:
+		VALIDATE_PRESENT_RETURN(pid);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP2_MAX0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP2_MAX1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
+		break;
+	case PSU1_TEMP2_INPUT_MIN:
+	case PSU2_TEMP2_INPUT_MIN:
+		VALIDATE_PRESENT_RETURN(pid);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP2_MIN0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP2_MIN1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
+		break;
+	case PSU1_TEMP3_INPUT_MAX:
+	case PSU2_TEMP3_INPUT_MAX:
+		VALIDATE_PRESENT_RETURN(pid);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP3_MAX0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP3_MAX1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
+		break;
+	case PSU1_TEMP3_INPUT_MIN:
+	case PSU2_TEMP3_INPUT_MIN:
+		VALIDATE_PRESENT_RETURN(pid);
+		value = (s16)((u16)data->ipmi_resp[pid].info[PSU_TEMP3_MIN0] |
+					  (u16)data->ipmi_resp[pid].info[PSU_TEMP3_MIN1] << 8);
+		value *= 1000; // Convert to millidegree Celsius
 		break;
 	case PSU1_VIN_UPPER_CRIT:
 	case PSU2_VIN_UPPER_CRIT:
