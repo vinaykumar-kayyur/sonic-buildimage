@@ -1502,37 +1502,20 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self._port_num > 32: 
+        if self._port_num > 32:
             # SFP doesn't support this feature
             return False
+
+        if self._port_num <= 16:
+            lpmode_path = "{}{}{}".format(CPLD2_I2C_PATH, '/module_lpmode_', self._port_num)
         else:
-            try:
-                eeprom = None
-    
-                if not self.get_presence():
-                    return False
-                # Write to eeprom
-                port_to_i2c_mapping = SFP_I2C_START + self._index
-                port_eeprom_path = I2C_EEPROM_PATH.format(port_to_i2c_mapping)
-    
-                eeprom = open(port_eeprom_path, "rb")
-                eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
-                lpmode = ord(eeprom.read(1))
-    
-                if ((lpmode & 0x3) == 0x3):
-                    return True  # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
-                else:
-                    # High Power Mode if one of the following conditions is matched:
-                    # 1. "Power override" bit is 0
-                    # 2. "Power override" bit is 1 and "Power set" bit is 0
-                    return False
-            except IOError as e:
-                print("Error: unable to open file: %s" % str(e))
-                return False
-            finally:
-                if eeprom is not None:
-                    eeprom.close()
-                    time.sleep(0.01)
+            lpmode_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_lpmode_', self._port_num)
+
+        val=self._api_helper.read_txt_file(lpmode_path)
+        if val is not None:
+            return int(val, 10)==0
+        else:
+            return False
 
     def get_power_set(self):        
 
@@ -2095,12 +2078,17 @@ class Sfp(SfpBase):
             if not self.get_presence():
                 return False
 
-            if lpmode is True:
-                self.set_power_override(True, True)
+            if self._port_num <= self.CPLD2_PORT_END:
+                lpmode_path = "{}{}{}".format(CPLD2_I2C_PATH, 'module_lpmode_', self._port_num)
             else:
-                self.set_power_override(True, False)
+                lpmode_path = "{}{}{}".format(CPLD3_I2C_PATH, 'module_lpmode_', self._port_num)
 
-            return True
+        if lpmode is True:
+            ret = self.__write_txt_file(lpmode_path, 0) #enable lpmode
+        else:
+            ret = self.__write_txt_file(lpmode_path, 1) #disable lpmode
+
+        return ret
 
     def set_power_override(self, power_override, power_set):
         """
@@ -2158,7 +2146,7 @@ class Sfp(SfpBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        name = sfputil_helper.logical[self._index] or "Unknown"
         return name
 
     def get_presence(self):
@@ -2207,10 +2195,12 @@ class Sfp(SfpBase):
 
     def get_position_in_parent(self):
         """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
         Returns:
-            Temp return 0
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
-        return 0
+        return self.port_num
 
     def is_replaceable(self):
         """
