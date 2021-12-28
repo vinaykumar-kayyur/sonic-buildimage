@@ -2,7 +2,7 @@
 Description=Accton MiniPack Platform setup qsfp oom service
 Before=pmon.service
 After=minipack-platform-init.service
-DefaultDependencies=no
+Requires=minipack-platform-init.service
 
 [Service]
 ExecStart=/usr/local/bin/setup_qsfp_eeprom.py
