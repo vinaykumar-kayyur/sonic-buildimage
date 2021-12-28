@@ -71,11 +71,13 @@ mknod =[
 'echo as5812_54x_psu1 0x38 > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo cpr_4011_4mxx  0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo as5812_54x_psu1 0x50 > /sys/bus/i2c/devices/i2c-57/new_device',
+'echo ym2401 0x58 > /sys/bus/i2c/devices/i2c-57/new_device',
 
 # PSU-2
 'echo as5812_54x_psu2 0x3b > /sys/bus/i2c/devices/i2c-58/new_device',
 'echo cpr_4011_4mxx 0x3f > /sys/bus/i2c/devices/i2c-58/new_device',
 'echo as5812_54x_psu2 0x53 > /sys/bus/i2c/devices/i2c-58/new_device',
+'echo ym2401 0x5b > /sys/bus/i2c/devices/i2c-58/new_device',
 
 'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-61/new_device',
 'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-62/new_device',
@@ -95,11 +97,13 @@ mknod2 =[
 'echo as5812_54x_psu1 0x38 > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo cpr_4011_4mxx  0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo as5812_54x_psu1 0x50 > /sys/bus/i2c/devices/i2c-57/new_device',
+'echo ym2401  0x58 > /sys/bus/i2c/devices/i2c-57/new_device',
 
 # PSU-2
 'echo as5812_54x_psu2 0x3b > /sys/bus/i2c/devices/i2c-58/new_device',
 'echo cpr_4011_4mxx 0x3f > /sys/bus/i2c/devices/i2c-58/new_device',
 'echo as5812_54x_psu2 0x53 > /sys/bus/i2c/devices/i2c-58/new_device',
+'echo ym2401 0x5b > /sys/bus/i2c/devices/i2c-58/new_device',
 
 'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-61/new_device',
 'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-62/new_device',
