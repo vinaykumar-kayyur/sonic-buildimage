@@ -9,7 +9,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include "../../../../pddf/i2c/modules/include/pddf_psu_defs.h"
+#include "pddf_psu_defs.h"
 
 ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribute *da, char *buf);
 ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribute *da, char *buf);
@@ -51,7 +51,7 @@ struct model_name_info models[] = {
 };
 
 struct serial_number_info serials[] = {
-{PSU_TYPE_AC_110V, 0x35, 18, 18,  "YM-2651Y"},
+{PSU_TYPE_AC_110V, 0x2e, 18, 18,  "YM-2651Y"},
 {PSU_TYPE_DC_48V,  0x2e, 18, 18,  "YM-2651V"},
 {PSU_TYPE_DC_12V,  0x2e, 18, 18,  "PSU-12V-750"},
 {PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF019-"}
@@ -97,7 +97,6 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct pddf_psu_data data;
-    char sub_type[4];
     int i, status;
 
     for (i = 0; i < ARRAY_SIZE(models); i++) {
@@ -118,30 +117,6 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
         /* Determine if the model name is known, if not, read next index
          */
         if (strncmp(data.model_name, models[i].model_name, models[i].chk_length) == 0) {
-            /*For YM-2651Y BR. BR use offset-0x2e to store SN.
-             *B01R use offset-0x35 to store store SN. Default use 0x35 for YM-2651Y
-             */
-            if(!strncmp(models[i].model_name, "YM-2651Y", sizeof(models[i].model_name)))
-            {
-            	memset(sub_type, 0, sizeof(sub_type));
-                status = pddf_psu_read_block(client, 0x29,
-                                           sub_type, sizeof(sub_type));
-                
-                if (status < 0) {
-                    data.serial_number[0] = '\0';
-                    dev_dbg(&client->dev, "unable to read sub_type from (0x%x) offset(0x%x)\n",
-                                  client->addr, 0x29);
-                    return status;
-                }
-                else
-                {
-                    if(!strncmp(sub_type,"BR" , 2))
-                    {                       
-                        serials[i].offset=0x2e;
-                    }
-                }
-            }
-            
             status = pddf_psu_read_block(client, serials[i].offset,
                                            data.serial_number, serials[i].length);
             
@@ -216,7 +191,6 @@ static int __init pddf_custom_psu_init(void)
 
 static void __exit pddf_custom_psu_exit(void)
 {
-	printk(KERN_ERR "pddf_custom_psu_exit\n");
 	return;
 }
 
