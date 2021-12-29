@@ -1,3 +1,4 @@
+/*
 # Copyright (c) 2019 Edgecore Networks Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -11,6 +12,7 @@
 #
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
+*/
 
 #include <Python.h>
 #include <sys/types.h>
@@ -38,21 +40,21 @@ static PyObject *fbfpgaio_hw_init(PyObject *self)
     IDEBUG("[ERROR] %s: open hw resource node\n", __func__);
     return Py_False;
   }
-  
+
   IDEBUG("[PASS] %s: open hw resource node\n", __func__);
 
   /* Mapping hardware resource */
   io_base = mmap(NULL, FPGA_RESOURCE_LENGTH, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_NORESERVE, hw_handle, 0);
   if (io_base == MAP_FAILED) {
     IDEBUG("[ERROR] %s: mapping resource node\n", __func__);
-    perror("map_failed"); 
+    perror("map_failed");
     fprintf(stderr,"%d %s\\n",errno,strerror(errno));
     return Py_False;
   }
-  
+
   IDEBUG("[PASS] %s: mapping resource node\n", __func__);
 
-  return Py_True; 
+  return Py_True;
 }
 
 static PyObject *fbfpgaio_hw_release(PyObject *self)
@@ -69,7 +71,7 @@ static PyObject *fbfpgaio_hw_release(PyObject *self)
   }
 
   IDEBUG("[ERROR] %s: unmapping resource node\n", __func__);
-  return Py_False; 
+  return Py_False;
 }
 
 static PyObject *fbfpgaio_hw_io(PyObject *self, PyObject *args)
