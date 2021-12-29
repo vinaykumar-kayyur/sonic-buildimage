@@ -9,7 +9,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include "../../../../pddf/i2c/modules/include/pddf_psu_defs.h"
+#include "pddf_psu_defs.h"
 
 ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribute *da, char *buf);
 ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribute *da, char *buf);
@@ -23,7 +23,8 @@ enum psu_type {
     PSU_TYPE_AC_110V,
     PSU_TYPE_DC_48V,
     PSU_TYPE_DC_12V,
-    PSU_TYPE_AC_ACBEL_FSF019
+    PSU_TYPE_AC_ACBEL_FSF019,
+    PSU_TYPE_AC_ACBEL_FSF045
 };
 
 struct model_name_info {
@@ -46,7 +47,8 @@ struct model_name_info models[] = {
 {PSU_TYPE_AC_110V, 0x20, 8, 8,  "YM-2651Y"},
 {PSU_TYPE_DC_48V,  0x20, 8, 8,  "YM-2651V"},
 {PSU_TYPE_DC_12V,  0x00, 11, 11, "PSU-12V-750"},
-{PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"}
+{PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"},
+{PSU_TYPE_AC_ACBEL_FSF045, 0x15, 10, 7, "FSF045-"}
 
 };
 
@@ -54,7 +56,8 @@ struct serial_number_info serials[] = {
 {PSU_TYPE_AC_110V, 0x2e, 18, 18,  "YM-2651Y"},
 {PSU_TYPE_DC_48V,  0x2e, 18, 18,  "YM-2651V"},
 {PSU_TYPE_DC_12V,  0x2e, 18, 18,  "PSU-12V-750"},
-{PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF019-"}
+{PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF019-"},
+{PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF045-"}
 
 };
 
@@ -117,9 +120,9 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
         /* Determine if the model name is known, if not, read next index
          */
         if (strncmp(data.model_name, models[i].model_name, models[i].chk_length) == 0) {
+
             status = pddf_psu_read_block(client, serials[i].offset,
-                                           data.serial_number, serials[i].length);
-            
+                                      data.serial_number, serials[i].length);
             if (status < 0) {
                 data.serial_number[0] = '\0';
                 dev_dbg(&client->dev, "unable to read serial num from (0x%x) offset(0x%x)\n",
