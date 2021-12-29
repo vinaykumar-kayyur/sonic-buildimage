@@ -25,7 +25,6 @@ try:
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from .helper import APIHelper
     from minipack.fpgautil import FpgaUtil
-    import fbfpgaio
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -282,9 +281,9 @@ class Sfp(SfpBase):
         #pim = FpgaUtil()
         #pim.init_pim_fpga()
         #self._dom_capability_detect()
-        
+
         SfpBase.__init__(self)
-  
+
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -549,7 +548,7 @@ class Sfp(SfpBase):
         transceiver_info_dict = dict.fromkeys(
             info_dict_keys, NULL_VAL)
         transceiver_info_dict["specification_compliance"] = '{}'
-        
+
         # If some port is not inserted module when xcvrd do _init_(), it will not get port_type from eeprom.
         # So its defaut type is QSFP. But user can insert QSFP-DD to the port later
         # So we need to check port before access port eeporm.
@@ -1291,7 +1290,7 @@ class Sfp(SfpBase):
             return True #FPGA SPEC:It is set to 1 if the corresponding QSFP is not present
 
         pim=FpgaUtil()
-        val=pim.get_reset(self.port_num-1)        
+        val=pim.get_reset(self.port_num-1)
         if val is not None:
             return val==1
         else:
@@ -1987,7 +1986,7 @@ class Sfp(SfpBase):
                 if sysfsfile_eeprom is not None:
                     sysfsfile_eeprom.close()
                     time.sleep(0.01)
-            return True            
+            return True
 
         elif self.sfp_type == SFP_TYPE:
             disable_path = "{}{}{}".format(self.i2c_cpld_path, 'module_tx_disable_', self.port_num)
@@ -2110,13 +2109,13 @@ class Sfp(SfpBase):
         #print("Check get_presence, self.port_num=%d" %(self.port_num))
         #self._dom_capability_detect()
         pim = FpgaUtil()
-        
+
         status = pim.get_qsfp_presence(self.port_num-1)
         #print("Port=%d , presence=%d"%(self.port_num, status))
         if status is not None:
             return status==1
         else:
-            return False        
+            return False
 
     def get_model(self):
         """
@@ -2154,12 +2153,12 @@ class Sfp(SfpBase):
             get_sum=0
             for i in range(0, 63):
                 get_sum=get_sum + int(get_data[i], 16)
-        
+
             ccb= get_sum & 0xff
 
             ccb_data = self._read_eeprom_specific_bytes(
                 XCVR_CC_BASE_OFFSET, 2) if self.get_presence() else None
-        
+
 
             if int(ccb_data[0], 16) == ccb:
                 return True
@@ -2175,12 +2174,12 @@ class Sfp(SfpBase):
             get_sum=0
             for i in range(0, 63):
                 get_sum=get_sum + int(get_data[i], 16)
-        
+
             ccb= get_sum & 0xff
 
             ccb_data = self._read_eeprom_specific_bytes(
                 offset + XCVR_CC_BASE_OFFSET, 2) if self.get_presence() else None
-        
+
 
             if int(ccb_data[0], 16) == ccb:
                 return True
