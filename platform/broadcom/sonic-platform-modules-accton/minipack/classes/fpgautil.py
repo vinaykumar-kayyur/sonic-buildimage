@@ -313,7 +313,6 @@ class FpgaUtil(object):
         end_time = start_time + timeout
         if start_time > end_time:
             print('get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout)
                        'time wrap / invalid timeout value=%d'%timeout)
 
             return False, {} # Time wrap or possibly incorrect timeout

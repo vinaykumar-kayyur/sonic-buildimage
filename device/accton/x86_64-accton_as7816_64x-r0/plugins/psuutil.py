@@ -33,7 +33,6 @@ class PsuUtil(PsuBase):
             return False
 
         for id in self.psu_mapping:
-            psu_name = str()
             node = self.psu_path + self.psu_mapping[id] + "/name"
 
             try:
