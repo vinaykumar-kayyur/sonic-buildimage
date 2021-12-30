@@ -84,7 +84,7 @@ enum fan_data_index {
 struct ipmi_data {
 	struct completion read_complete;
 	struct ipmi_addr address;
-	ipmi_user_t user;
+	struct ipmi_user *user;
 	int interface;
 
 	struct kernel_ipmi_msg tx_message;
@@ -565,7 +565,6 @@ static ssize_t show_threshold(struct device *dev, struct device_attribute *da,
 {
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	int value = 0;
-	int index = 0;
 	int error = 0;
 
 	mutex_lock(&data->update_lock);

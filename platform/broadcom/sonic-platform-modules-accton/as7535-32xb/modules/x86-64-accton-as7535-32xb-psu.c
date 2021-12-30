@@ -149,7 +149,7 @@ enum psu_data_index {
 struct ipmi_data {
 	struct completion read_complete;
 	struct ipmi_addr address;
-	ipmi_user_t user;
+	struct ipmi_user *user;
 	int interface;
 
 	struct kernel_ipmi_msg tx_message;
@@ -738,7 +738,6 @@ static ssize_t show_psu_info(struct device *dev, struct device_attribute *da,
 	s32 value = 0;
 	int present = 0;
 	int error = 0;
-	int multiplier = 1000;
 
 	mutex_lock(&data->update_lock);
 
