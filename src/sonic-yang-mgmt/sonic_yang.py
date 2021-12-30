@@ -22,6 +22,7 @@ class SonicYang(SonicYangExtMixin):
         # logging vars
         self.SYSLOG_IDENTIFIER = "sonic_yang"
         self.DEBUG = debug
+        self.enable_logging()
 
         # yang model files, need this map it to module
         self.yangFiles = list()
@@ -53,15 +54,17 @@ class SonicYang(SonicYangExtMixin):
 
     def disable_logging(self):
         ly.set_log_options(0)
-        self.syslogging_disabled = True
+        self.logging_disabled = True
 
     def enable_logging(self):
         # ly.LY_LOLOG: If callback is set use it, otherwise just print. If flag is not set, do nothing.
-        ly.set_log_options(ly.LY_LOLOG)
-        self.syslogging_disabled = False
+        # ly.LY_LOSTORE_LAST: Store only last error occuring in libyang, can be accessed using ly.get_ly_errors()
+        # Choose these 2 options because they are the default options of libyang
+        ly.set_log_options(ly.LY_LOLOG|ly.LY_LOSTORE_LAST)
+        self.logging_disabled = False
 
     def sysLog(self, debug=syslog.LOG_INFO, msg=None, doPrint=False):
-        if self.syslogging_disabled:
+        if self.logging_disabled:
             return
 
         # log debug only if enabled
