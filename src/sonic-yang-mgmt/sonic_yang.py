@@ -13,7 +13,6 @@ i.e. it is mixin not parent class.
 class SonicYang(SonicYangExtMixin):
 
     def __init__(self, yang_dir, debug=False):
-        self.enable_logging()
         self.yang_dir = yang_dir
         self.ctx = None
         self.module = None
