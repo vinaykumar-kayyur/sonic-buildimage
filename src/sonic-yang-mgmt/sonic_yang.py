@@ -52,13 +52,15 @@ class SonicYang(SonicYangExtMixin):
         pass
 
     def disable_logging(self):
-        ly.set_log_options(0)
+        # ly.LY_LOSTORE_LAST: Store only last error occuring in libyang, can be accessed using ly.get_ly_errors()
+        # Chose this option because it makes libyang return an error upon failures instead of empty errors
+        ly.set_log_options(ly.LY_LOSTORE_LAST)
         self.logging_disabled = True
 
     def enable_logging(self):
         # ly.LY_LOLOG: If callback is set use it, otherwise just print. If flag is not set, do nothing.
         # ly.LY_LOSTORE_LAST: Store only last error occuring in libyang, can be accessed using ly.get_ly_errors()
-        # Choose these 2 options because they are the default options of libyang
+        # Chose these 2 options because they are the default options of libyang
         ly.set_log_options(ly.LY_LOLOG|ly.LY_LOSTORE_LAST)
         self.logging_disabled = False
 
