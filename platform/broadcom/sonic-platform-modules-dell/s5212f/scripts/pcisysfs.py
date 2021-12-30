@@ -23,7 +23,7 @@ def usage():
     ''' This is the Usage Method '''
 
     print('\t\t pcisysfs.py  --get --offset <offset> --res <resource>')
-    print('\t\t pcisysfs.py --set --val <val>  --offset <offset> --res <resource>')
+    print('\t\t pcisysfs.py --set --val <val> --offset <offset> --res <resource>')
     sys.exit(1)
 
 def pci_mem_read(mm,offset):
