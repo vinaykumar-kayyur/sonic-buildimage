@@ -12,7 +12,7 @@ i.e. it is mixin not parent class.
 """
 class SonicYang(SonicYangExtMixin):
 
-    def __init__(self, yang_dir, debug=False):
+    def __init__(self, yang_dir, debug=False, logging_disabled=False):
         self.yang_dir = yang_dir
         self.ctx = None
         self.module = None
@@ -21,7 +21,11 @@ class SonicYang(SonicYangExtMixin):
         # logging vars
         self.SYSLOG_IDENTIFIER = "sonic_yang"
         self.DEBUG = debug
-        self.enable_logging()
+        self.logging_disabled = logging_disabled
+        if logging_disabled:
+            # The default log options are ly.LY_LOLOG|ly.LY_LOSTORE_LAST.
+            # Removing ly.LY_LOLOG will stop libyang from printing the logs.
+            ly.set_log_options(ly.LY_LOSTORE_LAST)
 
         # yang model files, need this map it to module
         self.yangFiles = list()
@@ -50,19 +54,6 @@ class SonicYang(SonicYangExtMixin):
 
     def __del__(self):
         pass
-
-    def disable_logging(self):
-        # ly.LY_LOSTORE_LAST: Store only last error occuring in libyang, can be accessed using ly.get_ly_errors()
-        # Chose this option because it makes libyang return an error upon failures instead of empty errors
-        ly.set_log_options(ly.LY_LOSTORE_LAST)
-        self.logging_disabled = True
-
-    def enable_logging(self):
-        # ly.LY_LOLOG: If callback is set use it, otherwise just print. If flag is not set, do nothing.
-        # ly.LY_LOSTORE_LAST: Store only last error occuring in libyang, can be accessed using ly.get_ly_errors()
-        # Chose these 2 options because they are the default options of libyang
-        ly.set_log_options(ly.LY_LOLOG|ly.LY_LOSTORE_LAST)
-        self.logging_disabled = False
 
     def sysLog(self, debug=syslog.LOG_INFO, msg=None, doPrint=False):
         if self.logging_disabled:
