@@ -23,7 +23,7 @@ class SonicYang(SonicYangExtMixin):
         self.DEBUG = debug
         self.logging_disabled = logging_disabled
         if logging_disabled:
-            # The default log options are ly.LY_LOLOG|ly.LY_LOSTORE_LAST.
+            # The default libyang log options are ly.LY_LOLOG|ly.LY_LOSTORE_LAST.
             # Removing ly.LY_LOLOG will stop libyang from printing the logs.
             ly.set_log_options(ly.LY_LOSTORE_LAST)
 
