@@ -12,7 +12,7 @@ i.e. it is mixin not parent class.
 """
 class SonicYang(SonicYangExtMixin):
 
-    def __init__(self, yang_dir, debug=False, logging_disabled=False):
+    def __init__(self, yang_dir, debug=False, print_log_enabled=True):
         self.yang_dir = yang_dir
         self.ctx = None
         self.module = None
@@ -21,8 +21,8 @@ class SonicYang(SonicYangExtMixin):
         # logging vars
         self.SYSLOG_IDENTIFIER = "sonic_yang"
         self.DEBUG = debug
-        self.logging_disabled = logging_disabled
-        if logging_disabled:
+        self.print_log_enabled = print_log_enabled
+        if not print_log_enabled:
             # The default libyang log options are ly.LY_LOLOG|ly.LY_LOSTORE_LAST.
             # Removing ly.LY_LOLOG will stop libyang from printing the logs.
             ly.set_log_options(ly.LY_LOSTORE_LAST)
@@ -56,13 +56,10 @@ class SonicYang(SonicYangExtMixin):
         pass
 
     def sysLog(self, debug=syslog.LOG_INFO, msg=None, doPrint=False):
-        if self.logging_disabled:
-            return
-
         # log debug only if enabled
         if self.DEBUG == False and debug == syslog.LOG_DEBUG:
             return
-        if doPrint:
+        if doPrint and self.print_log_enabled:
             print("{}({}):{}".format(self.SYSLOG_IDENTIFIER, debug, msg))
         syslog.openlog(self.SYSLOG_IDENTIFIER)
         syslog.syslog(debug, msg)
