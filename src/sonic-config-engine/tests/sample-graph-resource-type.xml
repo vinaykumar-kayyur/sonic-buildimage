@@ -20,7 +20,6 @@
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
-        <VoQChassisInternal>false</VoQChassisInternal>
       </BGPSession>
       <BGPSession>
         <StartRouter>switch-t0</StartRouter>
@@ -68,7 +67,7 @@
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
-        <VoQChassisInternal>true</VoQChassisInternal>
+        <ChassisInternal>voq</ChassisInternal>
       </BGPSession>
     </PeeringSessions>
     <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
@@ -463,6 +462,11 @@
       <a:DeviceMetadata>
         <a:Name>switch-t0</a:Name>
         <a:Properties>
+          <a:DeviceProperty>
+            <a:Name>DeploymentId</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>1</a:Value>
+          </a:DeviceProperty>
           <a:DeviceProperty>
             <a:Name>ResourceType</a:Name>
             <a:Reference i:nil="true"/>
