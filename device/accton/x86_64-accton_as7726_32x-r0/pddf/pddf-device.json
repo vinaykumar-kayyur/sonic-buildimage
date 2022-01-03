@@ -1663,7 +1663,7 @@
 	},
 	"PSU2-EEPROM":
     {
-        "dev_info": { "device_type":"PSU-EEPROM", "device_name":"PSU1-EEPROM", "device_parent":"MUX7", "virt_parent":"PSU2"},
+        "dev_info": { "device_type":"PSU-EEPROM", "device_name":"PSU2-EEPROM", "device_parent":"MUX7", "virt_parent":"PSU2"},
         "i2c":
         {
             "topo_info":{ "parent_bus":"0x31", "dev_addr":"0x50", "dev_type":"psu_eeprom"}, 
