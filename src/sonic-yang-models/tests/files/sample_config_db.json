@@ -973,13 +973,22 @@
                 "polling_interval": "0"
             }
         },
-
         "WARM_RESTART": {
             "bgp": {
                 "bgp_timer": "500"
             }
         },
-
+        "PORT_STORM_CONTROL": {
+            "Ethernet0|broadcast": {
+                "kbps": "10000"
+            },
+            "Ethernet0|unknown-multicast": {
+                "kbps": "30000"
+            },
+            "Ethernet0|unknown-unicast": {
+                "kbps": "20000"
+            }
+        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
@@ -1220,11 +1229,12 @@
         "FEATURE": {
             "bgp": {
                 "auto_restart": "enabled",
-                "has_global_scope": "false",
-                "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "has_global_scope": "False",
+                "has_per_asic_scope": "True",
+                "has_timer": "False",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "database": {
                 "auto_restart": "always_enabled",
@@ -1232,7 +1242,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "always_enabled"
+                "state": "always_enabled",
+                "set_owner": "local"
             },
             "snmp": {
                 "auto_restart": "enabled",
@@ -1240,7 +1251,8 @@
                 "has_per_asic_scope": "false",
                 "has_timer": "true",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
             },
             "swss": {
                 "auto_restart": "enabled",
@@ -1248,7 +1260,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "syncd": {
                 "auto_restart": "enabled",
@@ -1256,7 +1269,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "lldp": {
                 "auto_restart": "enabled",
@@ -1264,7 +1278,17 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
+            },
+            "dhcp_relay": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
+                "set_owner": "kube"
             }
         },
         "DHCP_RELAY": {

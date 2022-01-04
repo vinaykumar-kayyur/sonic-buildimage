@@ -7,9 +7,10 @@
                         "name": "database",
                         "state": "always_enabled",
                         "auto_restart": "always_enabled",
-                        "has_timer": "false",
-                        "has_global_scope": "true",
-                        "has_per_asic_scope": "true"
+                        "has_timer": "False",
+                        "has_global_scope": "True",
+                        "has_per_asic_scope": "True",
+                        "set_owner": "local"
                     },
                     {
                         "name": "swss",
@@ -17,7 +18,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "false",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "local"
                     },
                     {
                         "name": "syncd",
@@ -25,7 +27,8 @@
                         "auto_restart": "always_enabled",
                         "has_timer": "false",
                         "has_global_scope": "false",
-                        "has_per_asic_scope": "true"
+                        "has_per_asic_scope": "true",
+                        "set_owner": "local"
                     },
                     {
                         "name": "snmp",
@@ -33,8 +36,52 @@
                         "auto_restart": "enabled",
                         "has_timer": "false",
                         "has_global_scope": "true",
-                        "has_per_asic_scope": "false"
+                        "has_per_asic_scope": "false",
+                        "set_owner": "kube"
                     },
+                    {
+                        "name": "lldp",
+                        "state": "disabled",
+                        "auto_restart": "disabled",
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true",
+                        "set_owner": "kube"
+                    },
+                    {
+                        "name": "dhcp_relay",
+                        "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
+                        "auto_restart": "disabled",
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true",
+                        "set_owner": "kube"
+                    }
+                ]
+            }
+        }
+    },
+    "FEATURE_WITH_INVALID_OWNER": {
+        "sonic-feature:sonic-feature": {
+            "sonic-feature:FEATURE": {
+                "FEATURE_LIST": [
+                    {
+                        "name": "lldp",
+                        "state": "disabled",
+                        "auto_restart": "disabled",
+                        "has_timer": "false",
+                        "has_global_scope": "false",
+                        "has_per_asic_scope": "true",
+                        "set_owner": "invalid"
+                    }
+                ]
+            }
+        }
+    },
+    "FEATURE_WITH_NO_OWNER": {
+        "sonic-feature:sonic-feature": {
+            "sonic-feature:FEATURE": {
+                "FEATURE_LIST": [
                     {
                         "name": "lldp",
                         "state": "disabled",
@@ -47,17 +94,17 @@
             }
         }
     },
-    "FEATURE_WITH_INVALID_STATE": {
+    "FEATURE_WITH_INVALID_BOOLEAN_TYPE": {
         "sonic-feature:sonic-feature": {
             "sonic-feature:FEATURE": {
                 "FEATURE_LIST": [
                     {
                         "name": "database",
-                        "state": "dontcare",
+                        "state": "always_enabled",
                         "auto_restart": "always_enabled",
-                        "has_timer": "false",
-                        "has_global_scope": "true",
-                        "has_per_asic_scope": "true"
+                        "has_timer": "FALSE",
+                        "has_global_scope": "TRUE",
+                        "has_per_asic_scope": "TRUE"
                     }
                 ]
             }
