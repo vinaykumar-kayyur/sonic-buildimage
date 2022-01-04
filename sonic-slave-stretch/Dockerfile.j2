@@ -239,6 +239,8 @@ RUN apt-get update && apt-get install -y \
 {%- endif %}
 # For lockfile
         procmail \
+# For gmock
+        libgmock-dev -t stretch-backports \
 # For pam_tacplus build
         autoconf-archive \
 # For iproute2
