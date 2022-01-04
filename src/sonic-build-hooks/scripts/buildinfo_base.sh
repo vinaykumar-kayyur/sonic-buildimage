@@ -17,10 +17,10 @@ REPR_MIRROR_URL_PATTERN='http:\/\/packages.trafficmanager.net\/debian'
 
 URL_PREFIX=$(echo "${PACKAGE_URL_PREFIX}" | sed -E "s#(//[^/]*/).*#\1#")
 
-if [[ $USER == 'root' ]];then
-    SUDO=''
-else
+if [ $USER != 'root' ] && [ -n $(which sudo) ];then
     SUDO=sudo
+else
+    SUDO=''
 fi
 
 log_err()
