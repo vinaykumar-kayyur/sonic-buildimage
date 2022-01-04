@@ -25,6 +25,7 @@ options:
 command:
     install     : install drivers and generate related sysfs nodes
     clean       : uninstall drivers and remove related sysfs nodes
+    reset       : reset i2c
 """
 import subprocess
 import getopt
@@ -142,6 +143,16 @@ def main():
            do_install()
         elif arg == 'clean':
            do_uninstall()
+        elif arg == 'reset':
+            if len(args) != 2:
+                show_reset_help()
+
+            if args[1] == 'i2c':
+                return reset_i2c()
+            else:
+                show_reset_help()
+
+            return
         else:
             show_help()
 
@@ -151,6 +162,26 @@ def main():
 def show_help():
     print(( __doc__ % {'scriptName' : sys.argv[0].split("/")[-1]}))
     sys.exit(0)
+
+def show_reset_help():
+    cmd =  sys.argv[0].split("/")[-1]+ " " + args[0]
+    print("    use \""+ cmd + " i2c\" to reset i2c")
+    sys.exit(0)
+
+def reset_i2c():
+    cmd = "io_port 0xD 0"
+    status, output = subprocess.getstatusoutput(cmd)
+    if status != 0:
+        return status
+    time.sleep(0.5)
+
+    cmd = "io_port 0xD 1"
+    status, output = subprocess.getstatusoutput(cmd)
+    if status != 0:
+        return status
+    time.sleep(0.5)
+
+    return status
 
 def dis_i2c_ir3570a(addr):
     cmd = "i2cset -y 0 0x%x 0xE5 0x01" % addr
