@@ -220,7 +220,7 @@ class Sfp(SfpBase):
                 self._port_to_i2c_mapping[x][0])
 
         self.info_dict_keys = [
-            'type', 'hardware_rev', 'serial', 'manufacturer', 'model',
+            'type', 'vendor_rev', 'serial', 'manufacturer', 'model',
             'connector', 'encoding', 'ext_identifier',
             'ext_rateselect_compliance', 'cable_type', 'cable_length',
             'nominal_bit_rate', 'specification_compliance', 'vendor_date',
