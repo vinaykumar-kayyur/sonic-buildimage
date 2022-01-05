@@ -211,8 +211,51 @@ module sonic-flex_counter {
                 }
             }
 
+            container FLOW_CNT_ROUTE {
+                /* ROUTE_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+                leaf FLEX_COUNTER_DELAY_STATUS {
+                    type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
+            }
+
         }
         /* end of container FLEX_COUNTER_TABLE */
+
+        container FLOW_COUNTER_ROUTE_PATTERN_TABLE {
+            description "Flow counter route pattern of config_db.json";
+
+            list PATTERN_LIST {
+
+                key "vrf_name ip_prefix";
+
+                leaf vrf_name {
+                    type string {
+                        length 0..16;
+                    }
+                }
+
+                leaf ip_prefix {
+                    type union {
+                        type stypes:sonic-ip4-prefix;
+                        type stypes:sonic-ip6-prefix;
+                    }
+                }
+
+                leaf max_match_count {
+                    type uint32 {
+                        range 1..50;
+                    }
+                }
+
+            }
+        }
+        /* end of container FLOW_COUNTER_ROUTE_PATTERN_TABLE */
     }
     /* end of top level container */
 }
