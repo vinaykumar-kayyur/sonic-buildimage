@@ -77,7 +77,7 @@ do
     package=${PACKAGE_ARR[$i]}
     packagename=$(echo $package | sed -E 's/=[^=]*$//')
     encoded_packagename=$(urlencode $packagename)
-    url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encode_packagename}_")
+    url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encoded_packagename}_")
     if [ -z "$url" ] || [[ $(echo "$url" | wc -l) -gt 1 ]]; then
         echo "No found package or found multiple package for package $packagename, url: $url" 2>&1
         exit 1
