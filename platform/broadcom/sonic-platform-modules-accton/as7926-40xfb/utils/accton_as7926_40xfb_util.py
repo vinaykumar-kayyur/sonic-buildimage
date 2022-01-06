@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2019 Accton Networks, Inc.
 #
@@ -30,7 +30,7 @@ command:
     set         : change board setting with fan|led|sfp
 """
 
-import commands
+import subprocess
 import getopt
 import sys
 import logging
@@ -57,8 +57,8 @@ FORCE = 0
 # logging.basicConfig(level=logging.INFO)
 
 if DEBUG == True:
-    print sys.argv[0]
-    print 'ARGV      :', sys.argv[1:]
+    print(sys.argv[0])
+    print('ARGV      :', sys.argv[1:])
 
 
 def main():
@@ -72,9 +72,9 @@ def main():
     (options, ARGS) = getopt.getopt(sys.argv[1:], 'hdf',
                                 ['help','debug', 'force'])
     if DEBUG == True:
-        print options
-        print ARGS
-        print len(sys.argv)
+        print(options)
+        print(ARGS)
+        print(len(sys.argv))
 
     for (opt, arg) in options:
         if opt in ('-h', '--help'):
@@ -117,39 +117,39 @@ def main():
 
 
 def show_help():
-    print __doc__ % {'scriptName': sys.argv[0].split('/')[-1]}
+    print(__doc__ % {'scriptName': sys.argv[0].split('/')[-1]})
     sys.exit(0)
 
 def  show_set_help():
     cmd = sys.argv[0].split('/')[-1] + ' ' + ARGS[0]
-    print cmd + ' [led|sfp|fan]'
-    print '    use "' + cmd + ' led 0/10/16/17/18 "  to set led color'
-    print '    use "' + cmd + ' fan 0-100" to set fan duty percetage'
-    print '    use "' + cmd + ' sfp 54-55 {0|1}" to set sfp# tx_disable'
+    print(cmd + ' [led|sfp|fan]')
+    print('    use "' + cmd + ' led 0/10/16/17/18 "  to set led color')
+    print('    use "' + cmd + ' fan 0-100" to set fan duty percetage')
+    print('    use "' + cmd + ' sfp 54-55 {0|1}" to set sfp# tx_disable')
     sys.exit(0)
 
 
 def show_eeprom_help():
     cmd = sys.argv[0].split('/')[-1] + ' ' + ARGS[0]
-    print '    use "' + cmd + ' 1-54 " to dump sfp# eeprom'
+    print('    use "' + cmd + ' 1-54 " to dump sfp# eeprom')
     sys.exit(0)
 
 
 def my_log(txt):
     if DEBUG == True:
-        print '[DBG]' + txt
+        print('[DBG]' + txt)
     return
 
 
 def log_os_system(cmd, show):
     logging.info('Run :' + cmd)
-    (status, output) = commands.getstatusoutput(cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     my_log(cmd + 'with result:' + str(status))
     my_log('      output:' + output)
     if status:
         logging.info('Failed :' + cmd)
         if show:
-            print 'Failed :' + cmd
+            print('Failed :' + cmd)
     return (status, output)
 
 
@@ -176,14 +176,14 @@ def init_ipmi_dev_intf():
 
     while attempts:
         for i in range(0, len(ipmi_ko)):
-            commands.getstatusoutput(ipmi_ko[i])
+            subprocess.getstatusoutput(ipmi_ko[i])
 
         if os.path.exists('/dev/ipmi0') or os.path.exists('/dev/ipmidev/0'):
             return (0, (ATTEMPTS - attempts) * interval)
 
         for i in reversed(range(0, len(ipmi_ko))):
             rm = ipmi_ko[i].replace("modprobe", "modprobe -rq")
-            commands.getstatusoutput(rm)
+            subprocess.getstatusoutput(rm)
 
         attempts -= 1
         time.sleep(interval)
@@ -195,7 +195,7 @@ def init_ipmi_oem_cmd():
     interval = 3
 
     while attempts:
-        (status, output) = commands.getstatusoutput('ipmitool raw 0x34 0x95')
+        status, output = subprocess.getstatusoutput('ipmitool raw 0x34 0x95')
         if status:
             attempts -= 1
             time.sleep(interval)
@@ -316,7 +316,7 @@ def device_install():
     for i in range(0, len(mknod)):
         (status, output) = log_os_system(mknod[i], 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
@@ -327,35 +327,35 @@ def device_install():
     for i in range(1, 11):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/12-0062/module_reset_"+str(i), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
     for i in range(21, 31):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/12-0062/module_reset_"+str(i), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
     for i in range(11, 21):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/13-0063/module_reset_"+str(i), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
     for i in range(31, 41):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/13-0063/module_reset_"+str(i), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
     for i in range(41, 54):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/76-0064/module_reset_"+str(i), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
@@ -369,13 +369,13 @@ def device_install():
             status, output =log_os_system("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
 
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
         path = "/sys/bus/i2c/devices/{0}-0050/port_name"
         status, output =log_os_system("echo port{0} > ".format(i+1)+path.format(sfp_map[i]), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
     return
@@ -388,7 +388,7 @@ def device_uninstall():
             + '/delete_device'
         (status, output) = log_os_system('echo 0x50 > ' + target, 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
     nodelist = mknod
@@ -400,7 +400,7 @@ def device_uninstall():
         temp[-1] = temp[-1].replace('new_device', 'delete_device')
         (status, output) = log_os_system(' '.join(temp), 1)
         if status:
-            print output
+            print(output)
             if FORCE == 0:
                 return status
 
@@ -426,10 +426,10 @@ def do_sonic_platform_install():
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
-                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
+                print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
                 return status
             else:
-                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3)
+                print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
             print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
     else:
@@ -451,23 +451,23 @@ def do_sonic_platform_clean():
     return
 
 def do_install():
-    print 'Checking system....'
+    print('Checking system....')
     if driver_check() is False:
-        print 'No driver, installing....'
+        print('No driver, installing....')
         status = driver_install()
         if status:
             if FORCE == 0:
                 return status
     else:
-        print PROJECT_NAME.upper() + ' drivers detected....'
+        print(PROJECT_NAME.upper() + ' drivers detected....')
     if not device_exist():
-        print 'No device, installing....'
+        print('No device, installing....')
         status = device_install()
         if status:
             if FORCE == 0:
                 return status
     else:
-        print PROJECT_NAME.upper() + ' devices detected....'
+        print(PROJECT_NAME.upper() + ' devices detected....')
 
     do_sonic_platform_install()
 
@@ -475,19 +475,19 @@ def do_install():
 
 
 def do_uninstall():
-    print 'Checking system....'
+    print('Checking system....')
     if not device_exist():
-        print PROJECT_NAME.upper() + ' has no device installed....'
+        print(PROJECT_NAME.upper() + ' has no device installed....')
     else:
-        print 'Removing device....'
+        print('Removing device....')
         status = device_uninstall()
         if status and FORCE == 0:
             return status
 
     if driver_check() is False:
-        print PROJECT_NAME.upper() + ' has no driver installed....'
+        print(PROJECT_NAME.upper() + ' has no driver installed....')
     else:
-        print 'Removing installed driver....'
+        print('Removing installed driver....')
         status = driver_uninstall()
         if status and FORCE == 0:
             return status
@@ -546,11 +546,11 @@ def devices_info():
     # show dict all in the order
     if DEBUG == True:
         for i in sorted(ALL_DEVICE.keys()):
-            print i + ': '
+            print(i + ': ')
             for j in sorted(ALL_DEVICE[i].keys()):
-                print '   ' + j
+                print('   ' + j)
                 for k in ALL_DEVICE[i][j]:
-                    print '   ' + '   ' + k
+                    print('   ' + '   ' + k)
     return
 
 
@@ -575,14 +575,14 @@ def show_eeprom(index):
     else:
         log = 'Failed : no hexdump cmd!!'
         logging.info(log)
-        print log
+        print(log)
         return 1
 
-    print node + ':'
+    print(node + ':')
     (ret, log) = log_os_system('cat ' + node + '| ' + hex_cmd + ' -C',
                                1)
     if ret == 0:
-        print log
+        print(log)
     else:
         print( '**********device no found**********')
     return
@@ -623,10 +623,10 @@ def set_device(args):
                             'fan_duty_cycle_percentage')
         (ret, log) = log_os_system('cat ' + node, 1)
         if ret == 0:
-            print 'Previous fan duty: ' + log.strip() + '%'
+            print('Previous fan duty: ' + log.strip() + '%')
         ret = log_os_system('echo ' + args[1] + ' >' + node, 1)
         if ret[0] == 0:
-            print 'Current fan duty: ' + args[1] + '%'
+            print('Current fan duty: ' + args[1] + '%')
         return ret
     elif args[0] == 'sfp':
         if int(args[1]) > qsfp_start or int(args[1]) == 0:
@@ -661,30 +661,30 @@ def get_value(i):
 
 def device_traversal():
     if system_ready() is False:
-        print "System is  not ready."
-        print 'Please install first!'
+        print("System is  not ready.")
+        print('Please install first!')
         return
 
     if not ALL_DEVICE:
         devices_info()
     for i in sorted(ALL_DEVICE.keys()):
-        print '============================================'
-        print i.upper() + ': '
-        print '============================================'
+        print('============================================')
+        print(i.upper() + ': ')
+        print('============================================')
         for j in sorted(ALL_DEVICE[i].keys(), key=get_value):
-            print '   ' + j + ':',
+            print('   ' + j + ':',)
             for k in ALL_DEVICE[i][j]:
                 (ret, log) = log_os_system('cat ' + k, 0)
                 func = k.split('/')[-1].strip()
                 func = re.sub(j + '_', '', func, 1)
                 func = re.sub(i.lower() + '_', '', func, 1)
                 if ret == 0:
-                    print func + '=' + log + ' ',
+                    print(func + '=' + log + ' ',)
                 else:
-                    print func + '=' + 'X' + ' ',
-            print
-            print '----------------------------------------------------------------'
-        print
+                    print(func + '=' + 'X' + ' ',)
+            print()
+            print('----------------------------------------------------------------')
+        print()
     return
 
 
