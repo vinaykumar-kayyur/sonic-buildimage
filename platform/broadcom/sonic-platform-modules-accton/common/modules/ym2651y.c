@@ -42,6 +42,7 @@ enum chips {
 	YM2651,
 	YM2401,
 	YM2851,
+	YM1401A,
     YPEB1200AM
 };
 
@@ -422,7 +423,7 @@ static ssize_t show_vout(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);
     struct ym2651y_data *data = i2c_get_clientdata(client);
 
-    if (data->chip == YM2401) {
+    if (data->chip == YM2401 || data->chip==YM1401A) {
         return show_vout_by_mode(dev, da, buf);
     }
     else {
@@ -500,6 +501,7 @@ static const struct i2c_device_id ym2651y_id[] = {
     { "ym2651", YM2651 },
     { "ym2401", YM2401 },
     { "ym2851", YM2851 },
+    { "ym1401a",YM1401A},
     { "ype1200am", YPEB1200AM },
     {}
 };
@@ -641,23 +643,7 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
         strncpy(data->fan_dir, fan_dir+1, ARRAY_SIZE(data->fan_dir)-1);
         data->fan_dir[ARRAY_SIZE(data->fan_dir)-1] = '\0';
 
-        /* Read mfr_serial */
-        command = 0x9e;
-        length  = 1;
-        /* Read first byte to determine the length of data */
-        status = ym2651y_read_block(client, command, &buf, length);
-        if (status < 0) {
-            dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
-            goto exit;
-        }        
-        status = ym2651y_read_block(client, command, data->mfr_serial, buf+1);
-        data->mfr_serial[buf+1] = '\0';
-        if (status < 0)
-        {
-            dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
-            goto exit;
-        }
-
+       
         /* Read mfr_id */
         command = 0x99;
         status = ym2651y_read_block(client, command, data->mfr_id,
@@ -687,6 +673,36 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
             goto exit;
         }
+        
+        /*YM-1401A PSU doens't support to get serial_num, so ignore it.
+         *It's vout doesn't support linear, so let it use show_vout_by_mode().
+         */
+        if(!strncmp("YM-1401A", data->mfr_model, strlen("YM-1401A")))
+        {
+            printk("match YM-1401A, not read SN\n");
+            data->chip=YM1401A;
+        }
+        else
+        {
+             /* Read mfr_serial */
+            command = 0x9e;
+            length  = 1;
+            /* Read first byte to determine the length of data */
+            status = ym2651y_read_block(client, command, &buf, length);
+            if (status < 0) {
+                dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
+                goto exit;
+            }        
+            status = ym2651y_read_block(client, command, data->mfr_serial, buf+1);
+            data->mfr_serial[buf+1] = '\0';
+            if (status < 0)
+            {
+                dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
+                goto exit;
+            }
+        }
+        
+        
 
         /* Read mfr_revsion */
         command = 0x9b;
@@ -699,6 +715,9 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
             goto exit;
         }
+
+        
+
 
         data->last_updated = jiffies;
         data->valid = 1;
