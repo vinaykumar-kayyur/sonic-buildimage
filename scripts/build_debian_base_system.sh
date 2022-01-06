@@ -14,6 +14,7 @@ TARGET_BASEIMAGE_PATH=$TARGET/versions/host-base-image
 mkdir -p $TARGET_BASEIMAGE_PATH
 
 alias urlencode='python3 -c "import sys, urllib.parse as ul; print (ul.quote_plus(sys.argv[1]))"'
+shopt -s expand_aliases
 
 generate_version_file()
 {
