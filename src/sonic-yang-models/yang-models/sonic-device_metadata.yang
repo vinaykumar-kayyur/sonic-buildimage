@@ -128,6 +128,14 @@ module sonic-device_metadata {
                 leaf region {
                     type string;
                 }
+
+                leaf downstream_subrole {
+                    type string;
+                }
+
+                leaf resource_type {
+                    type string;
+                }
             }
             /* end of container localhost */
         }
