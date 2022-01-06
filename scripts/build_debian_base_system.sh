@@ -13,6 +13,8 @@ TARGET=$TARGET_PATH
 TARGET_BASEIMAGE_PATH=$TARGET/versions/host-base-image
 mkdir -p $TARGET_BASEIMAGE_PATH
 
+alias urlencode='python3 -c "import sys, urllib.parse as ul; print (ul.quote_plus(sys.argv[1]))"'
+
 generate_version_file()
 {
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "dpkg-query -W -f '\${Package}==\${Version}\n'" > $TARGET_BASEIMAGE_PATH/versions-deb-${IMAGE_DISTRO}-${CONFIGURED_ARCH}
@@ -74,7 +76,8 @@ for ((i=0;i<LENGTH;i++))
 do
     package=${PACKAGE_ARR[$i]}
     packagename=$(echo $package | sed -E 's/=[^=]*$//')
-    url=$(echo "$URL_ARR" | grep "/${packagename}_")
+    encoded_packagename=$(urlencode $packagename)
+    url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encode_packagename}_")
     if [ -z "$url" ] || [[ $(echo "$url" | wc -l) -gt 1 ]]; then
         echo "No found package or found multiple package for package $packagename, url: $url" 2>&1
         exit 1
