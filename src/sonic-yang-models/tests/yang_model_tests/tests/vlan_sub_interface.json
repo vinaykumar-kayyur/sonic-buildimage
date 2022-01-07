@@ -14,6 +14,10 @@
         "desc": "Configure vlan sub interface with invalid vlan id.",
         "eStrKey": "Pattern"
     },
+    "VLAN_SUB_INTERFACE_INVALID_VLAN_ID_WITH_LEADING_ZERO_TEST": {
+        "desc": "Configure vlan sub interface with invalid vlan id with leading zeros.",
+        "eStrKey": "Pattern"
+    },
     "VLAN_SUB_INTERFACE_IP_PREFIX_EMPTY_STRING_TEST": {
         "desc": "Configure ip prefix vlan sub interface with empty ip prefx.",
         "eStrKey": "InvalidValue"

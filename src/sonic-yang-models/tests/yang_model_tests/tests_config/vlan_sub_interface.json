@@ -127,6 +127,38 @@
             }
         }
     },
+    "VLAN_SUB_INTERFACE_INVALID_VLAN_ID_WITH_LEADING_ZERO_TEST": {
+        "sonic-vlan-sub-interface:sonic-vlan-sub-interface": {
+            "sonic-vlan-sub-interface:VLAN_SUB_INTERFACE": {
+                "VLAN_SUB_INTERFACE_LIST": [
+                    {
+                        "name": "Ethernet8.095"
+                    }
+                ],
+                "VLAN_SUB_INTERFACE_IPPREFIX_LIST": [
+                    {
+                        "name": "Ethernet8.095",
+                        "ip-prefix": "10.0.0.1/30"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "admin_status": "up",
+                        "alias": "Ethernet8/1",
+                        "description": "Ethernet8",
+                        "lanes": "45,46,47,48",
+                        "mtu": 9000,
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
     "VLAN_SUB_INTERFACE_IP_PREFIX_EMPTY_STRING_TEST": {
         "sonic-vlan-sub-interface:sonic-vlan-sub-interface": {
             "sonic-vlan-sub-interface:VLAN_SUB_INTERFACE": {
