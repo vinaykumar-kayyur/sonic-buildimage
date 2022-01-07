@@ -76,7 +76,7 @@
 	},
 	"DEVICE_METADATA_INVALID_STORAGE_DEVICE": {
 		"desc": "Verifying invalid storage device value",
-		"eStrKey": "Pattern"
+		"eStrKey": "InvalidValue"
 	}
 
 }

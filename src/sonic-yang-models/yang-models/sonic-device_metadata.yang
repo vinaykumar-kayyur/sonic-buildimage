@@ -138,9 +138,7 @@ module sonic-device_metadata {
                 }
 
                 leaf storage_device {
-                    type string {
-                        pattern "true|false";
-                    }
+                    type boolean;
                 }
             }
             /* end of container localhost */

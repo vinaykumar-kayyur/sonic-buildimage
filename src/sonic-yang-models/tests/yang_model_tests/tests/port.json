@@ -72,6 +72,6 @@
      },
      "PORT_INVALID_MUX_CABLE_TEST": {
          "desc": "PORT_INVALID_MUX_CABLE_TEST non-boolean values, expect fail",
-         "eStrKey": "Pattern"
+         "eStrKey": "InvalidValue"
      }
 }
