@@ -72,6 +72,7 @@ QSFP_CHANNL_TX_FAULT_STATUS_OFFSET = 4
 QSFP_CHANNL_TX_FAULT_STATUS_WIDTH = 1
 QSFP_POWEROVERRIDE_OFFSET = 93
 QSFP_POWEROVERRIDE_WIDTH = 1
+QSFP_PAGE03_OFFSET = 384
 QSFP_MODULE_THRESHOLD_OFFSET = 128
 QSFP_MODULE_THRESHOLD_WIDTH = 24
 QSFP_CHANNEL_THRESHOLD_OFFSET = 176
@@ -85,6 +86,12 @@ qsfp_compliance_code_tup = ('10/40G Ethernet Compliance Code', 'SONET Compliance
                             'SAS/SATA compliance codes', 'Gigabit Ethernet Compliant codes',
                             'Fibre Channel link length/Transmitter Technology',
                             'Fibre Channel transmission media', 'Fibre Channel Speed')
+
+qsfp_dom_capability_tup = ('Tx_power_support', 'Rx_power_support',
+                           'Voltage_support', 'Temp_support')
+
+# Add an EOL to prevent this being viewed as string instead of list
+sfp_dom_capability_tup = ('sff8472_dom_support', 'EOL')
 
 
 # Offset for values in SFP eeprom
@@ -125,7 +132,7 @@ class Sfp(SfpBase):
     # Path to sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
         
     PLATFORM = "x86_64-accton_as5835_54x-r0"
     HWSKU = "Accton-AS5835-54X"
@@ -207,7 +214,7 @@ class Sfp(SfpBase):
         
         self.info_dict_keys = ['type', 'vendor_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui',
-                               'application_advertisement', 'type_abbrv_name']
+                               'application_advertisement', 'type_abbrv_name', 'dom_capability']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
                               'rx1power', 'rx2power', 'rx3power', 'rx4power', 'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx1power', 'tx2power', 'tx3power', 'tx4power']
@@ -286,7 +293,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        vendor_rev                 |1*255VCHAR     |vendor revision of SFP
+        vendor_rev                 |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -358,8 +365,16 @@ class Sfp(SfpBase):
         sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
             sfp_vendor_date_raw, 0)
 
+        sfp_dom_capability_raw = self.__read_eeprom_specific_bytes(
+            (offset + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
+        if sfp_dom_capability_raw is not None:
+            sfp_dom_capability_data = sfpi_obj.parse_dom_capability(
+                sfp_dom_capability_raw, 0)
+
+
         transceiver_info_dict = dict.fromkeys(self.info_dict_keys, 'N/A')
         compliance_code_dict = dict()
+        dom_capability_dict = dict()
 
         if sfp_interface_bulk_data:
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
@@ -395,6 +410,12 @@ class Sfp(SfpBase):
                 compliance_code_dict)
             transceiver_info_dict['nominal_bit_rate'] = str(
                 sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
+
+            for key in sfp_dom_capability_tup:
+                if key in sfp_dom_capability_data['data']:
+                    dom_capability_dict[key] = "yes" if sfp_dom_capability_data['data'][key]['value'] == 'on' else "no"
+            transceiver_info_dict['dom_capability'] = str(dom_capability_dict)
+
         else:
             for key in qsfp_cable_length_tup:
                 if key in sfp_interface_bulk_data['data']:
@@ -410,7 +431,11 @@ class Sfp(SfpBase):
                 compliance_code_dict)
             transceiver_info_dict['nominal_bit_rate'] = str(
                 sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
-       
+
+            for key in qsfp_dom_capability_tup:
+                if key in sfp_dom_capability_data['data']:
+                    dom_capability_dict[key] = "yes" if sfp_dom_capability_data['data'][key]['value'] == 'on' else "no"
+            transceiver_info_dict['dom_capability'] = str(dom_capability_dict)
 
         return transceiver_info_dict
 
@@ -649,10 +674,11 @@ class Sfp(SfpBase):
             if not self.get_presence() or not sfpd_obj:
                 return {}
     
+            offset = QSFP_PAGE03_OFFSET
             transceiver_dom_threshold_dict = dict.fromkeys(
                 self.threshold_dict_keys, 'N/A')
             dom_thres_raw = self.__read_eeprom_specific_bytes(
-                QSFP_MODULE_THRESHOLD_OFFSET, QSFP_MODULE_THRESHOLD_WIDTH) if self.get_presence() and sfpd_obj else None
+                offset + QSFP_MODULE_THRESHOLD_OFFSET, QSFP_MODULE_THRESHOLD_WIDTH) if self.get_presence() and sfpd_obj else None
     
             if dom_thres_raw:
                 module_threshold_values = sfpd_obj.parse_module_threshold_values(
@@ -669,7 +695,7 @@ class Sfp(SfpBase):
                     transceiver_dom_threshold_dict['vcclowwarning'] = module_threshold_data['VccLowWarning']['value']
     
             dom_thres_raw = self.__read_eeprom_specific_bytes(
-                QSFP_CHANNEL_THRESHOLD_OFFSET, QSFP_CHANNEL_THRESHOLD_WIDTH) if self.get_presence() and sfpd_obj else None
+                offset + QSFP_CHANNEL_THRESHOLD_OFFSET, QSFP_CHANNEL_THRESHOLD_WIDTH) if self.get_presence() and sfpd_obj else None
             channel_threshold_values = sfpd_obj.parse_channel_threshold_values(
                 dom_thres_raw, 0)
             channel_threshold_data = channel_threshold_values.get('data')
@@ -725,8 +751,10 @@ class Sfp(SfpBase):
             rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)
 
             rx_los=self._api_helper.read_txt_file(rx_path)
-            if rx_los is None:
-                return False
+            if int(rx_los, 10) == 1:
+                return [True]
+            else:
+                return [False]
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             #if status_control_raw:
@@ -743,15 +771,18 @@ class Sfp(SfpBase):
                 rx_los_list.append(rx_los_data & 0x02 != 0)
                 rx_los_list.append(rx_los_data & 0x04 != 0)
                 rx_los_list.append(rx_los_data & 0x08 != 0)
-                rx_los = rx_los_list[0] and rx_los_list[1] and rx_los_list[2] and rx_los_list[3]
-                
-        return rx_los
+                return rx_los_list
+            else:
+                return [False]*4
 
     def get_tx_fault(self):
         """
         Retrieves the TX fault status of SFP
         Returns:
-            A Boolean, True if SFP has TX fault, False if not
+            A list of boolean values, representing the TX fault status
+            of each available channel, value is True if SFP channel
+            has TX fault, False if not.
+            E.g., for a tranceiver with four channels: [False, False, True, False]
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
         tx_fault = False
@@ -761,8 +792,10 @@ class Sfp(SfpBase):
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)
 
             tx_fault=self._api_helper.read_txt_file(tx_path)
-            if tx_fault is None:
-                return False
+            if int(tx_fault, 10) == 1:
+                return [True]
+            else:
+                return [False]
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             #if status_control_raw:
@@ -778,15 +811,19 @@ class Sfp(SfpBase):
                 tx_fault_list.append(tx_fault_data & 0x02 != 0)
                 tx_fault_list.append(tx_fault_data & 0x04 != 0)
                 tx_fault_list.append(tx_fault_data & 0x08 != 0)
-                tx_fault = tx_fault_list[0] and tx_fault_list[1] and tx_fault_list[2] and tx_fault_list[3]
+                return tx_fault_list
+            else:
+                return [False]*4
 
-        return tx_fault
 
     def get_tx_disable(self):
         """
         Retrieves the tx_disable status of this SFP
         Returns:
-            A Boolean, True if tx_disable is enabled, False if disabled
+            A list of boolean values, representing the TX disable status
+            of each available channel, value is True if SFP channel
+            is TX disabled, False if not.
+            E.g., for a tranceiver with four channels: [False, False, True, False]
         """
         if self.port_num < 49: 
             tx_disable = False
@@ -806,10 +843,11 @@ class Sfp(SfpBase):
             #    tx_disable_soft = (sffbase().test_bit(
             #        data, SFP_TX_DISABLE_SOFT_BIT) != 0)
             #    tx_disable = tx_disable_hard | tx_disable_soft
-            if tx_disable is not None:
-                return tx_disable
+            if int(tx_disable, 10)==0:
+                return [False]
             else:
-                return False
+                return [True]
+
         else:
             tx_disable_list = []
     
@@ -829,8 +867,9 @@ class Sfp(SfpBase):
                     'On' == dom_control_data['data']['TX3Disable']['value'])
                 tx_disable_list.append(
                     'On' == dom_control_data['data']['TX4Disable']['value'])
-    
-            return tx_disable_list
+                return tx_disable_list
+            else:
+                return [False]*4
 
     def get_tx_disable_channel(self):
         """
@@ -841,18 +880,14 @@ class Sfp(SfpBase):
             As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
-        if self.port_num < 49: 
-            # SFP doesn't support this feature
-            return False
-        else:
-            tx_disable_list = self.get_tx_disable()
-            if tx_disable_list is None:
-                return 0
-            tx_disabled = 0
-            for i in range(len(tx_disable_list)):
-                if tx_disable_list[i]:
-                    tx_disabled |= 1 << i
-            return tx_disabled
+        tx_disable_list = self.get_tx_disable()
+        if tx_disable_list is None:
+            return 0
+        tx_disabled = 0
+        for i in range(len(tx_disable_list)):
+            if tx_disable_list[i]:
+                tx_disabled |= 1 << i
+        return tx_disabled
 
     def get_lpmode(self):
         """
@@ -1000,15 +1035,15 @@ class Sfp(SfpBase):
         cpld_path = self._cpld_mapping[cpld_i]        
         reset_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_reset_', self.port_num)      
         ret = self._api_helper.write_txt_file(reset_path, 1)
-        
-        if ret is not True:
-            time.sleep(0.01)
-            ret = self.self._api_helper.write_txt_file(reset_path, 0)
-            time.sleep(0.2)        
-            return ret
-        else:
-            return False
 
+        if ret is not True:
+            return ret
+
+        time.sleep(0.01)
+        ret = self._api_helper.write_txt_file(reset_path, 0)
+        time.sleep(0.2)
+        
+        return ret
       
     def tx_disable(self, tx_disable):
         """
@@ -1120,7 +1155,7 @@ class Sfp(SfpBase):
         if self.port_num < 49:
             return False # SFP doesn't support this feature
         else:
-            if lpmode is True:
+            if lpmode:
                 self.set_power_override(True, True)
             else:
                 self.set_power_override(False, False)
@@ -1220,3 +1255,20 @@ class Sfp(SfpBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and self.get_transceiver_bulk_status()
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return self.port_num
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
