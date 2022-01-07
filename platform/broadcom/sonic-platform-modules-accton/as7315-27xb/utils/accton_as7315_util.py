@@ -233,7 +233,7 @@ mknod =[
 'echo ym2401  0x58 > /sys/bus/i2c/devices/i2c-12/new_device',
 'echo as7315_27xb_psu1  0x53 > /sys/bus/i2c/devices/i2c-13/new_device',
 'echo ym2401  0x5b > /sys/bus/i2c/devices/i2c-13/new_device',
-'echo as7315_fan  0x66 > /sys/bus/i2c/devices/i2c-50/new_device',
+'echo as7315_fan  0x66 > /sys/bus/i2c/devices/i2c-9/new_device',
 'echo lm75  0x49 > /sys/bus/i2c/devices/i2c-51/new_device',
 'echo lm75  0x4a > /sys/bus/i2c/devices/i2c-52/new_device',
 'echo lm75  0x4c > /sys/bus/i2c/devices/i2c-53/new_device',

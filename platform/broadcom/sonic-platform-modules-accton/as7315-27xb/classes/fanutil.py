@@ -44,8 +44,8 @@ class FanUtil(object):
     #FAN_NODE_DUTY_IDX_OF_MAP = 4
     #FANR_NODE_FAULT_IDX_OF_MAP = 5
 
-    BASE_VAL_PATH = '/sys/bus/i2c/devices/50-0066/{0}'
-    FAN_DUTY_PATH = '/sys/bus/i2c/devices/50-0066/fan{0}_pwm'
+    BASE_VAL_PATH = '/sys/bus/i2c/devices/9-0066/{0}'
+    FAN_DUTY_PATH = '/sys/bus/i2c/devices/9-0066/fan{0}_pwm'
 
     #logfile = ''
     #loglevel = self.logger.INFO
@@ -84,7 +84,7 @@ class FanUtil(object):
             return None
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
@@ -115,7 +115,7 @@ class FanUtil(object):
         val_file.write(content)
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
