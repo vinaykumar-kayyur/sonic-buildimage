@@ -1,10 +1,6 @@
 pr: none
 trigger: none
 
-variables:
-- name: PATCHFILE
-  value: $(PATCHFILE)
-
 stages:
 - stage: build
   jobs:
