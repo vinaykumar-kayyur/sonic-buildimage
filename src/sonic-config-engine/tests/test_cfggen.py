@@ -2,13 +2,17 @@ import json
 import subprocess
 import os
 import re
+import sys
 
-import sonic_yang
 import tests.common_utils as utils
 
 from unittest import TestCase
 
-YANG_MODELS_DIR = "/usr/local/yang-models"
+PY3x = sys.version_info >= (3, 0)
+if PY3x:
+    import sonic_yang
+    YANG_MODELS_DIR = "/usr/local/yang-models"
+
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
 LEAF_ROUTER = 'LeafRouter'
@@ -17,8 +21,9 @@ BACKEND_LEAF_ROUTER = 'BackEndLeafRouter'
 class TestCfgGen(TestCase):
 
     def setUp(self):
-        self.yang_parser = sonic_yang.SonicYang(YANG_MODELS_DIR)
-        self.yang_parser.loadYangModel()
+        if PY3x:
+            self.yang_parser = sonic_yang.SonicYang(YANG_MODELS_DIR)
+            self.yang_parser.loadYangModel()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_dir, 'sample_graph.xml')
@@ -54,7 +59,7 @@ class TestCfgGen(TestCase):
 
     def run_script(self, argument, check_stderr=False, verbose=False):
         print('\n    Running sonic-cfggen ' + argument)
-        if "-m" in argument:
+        if PY3x and "-m" in argument:
             pattern = r'-m\s+(\S+)\s*'
             minigraph = re.findall(r'-m\s+(\S+)\s*', argument)
             hwsku     = re.findall(r'-S\s+(\S+)\s*', argument)
