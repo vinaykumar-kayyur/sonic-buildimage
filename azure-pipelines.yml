@@ -37,7 +37,7 @@ stages:
   variables:
   - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
   - name: CACHE_MODE
-    value: none
+    value: rcache
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:

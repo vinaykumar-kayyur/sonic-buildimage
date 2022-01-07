@@ -128,6 +128,6 @@ jobs:
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
             fi
-            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
+            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin || sleep 36000
           fi
         displayName: "Build sonic image"
