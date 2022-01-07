@@ -5,6 +5,7 @@ stages:
 - stage: build
   jobs:
   - job: build
+    timeoutInMinutes: 600
     pool: sonicbld
     steps:
     - checkout: self
