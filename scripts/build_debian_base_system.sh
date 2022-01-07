@@ -61,7 +61,7 @@ rm -rf $BASEIMAGE_TARBALLPATH $BASEIMAGE_TARBALL
 ARCHIEVES=$BASEIMAGE_TARBALLPATH/var/cache/apt/archives
 APTLIST=$BASEIMAGE_TARBALLPATH/var/lib/apt/lists
 TARGET_DEBOOTSTRAP=$BASEIMAGE_TARBALLPATH/debootstrap
-APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_buster_main_binary-${CONFIGURED_ARCH}_Packages"
+APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_${DISTRO}_main_binary-${CONFIGURED_ARCH}_Packages"
 DEBPATHS=$TARGET_DEBOOTSTRAP/debpaths
 DEBOOTSTRAP_BASE=$TARGET_DEBOOTSTRAP/base
 DEBOOTSTRAP_REQUIRED=$TARGET_DEBOOTSTRAP/required
@@ -84,7 +84,7 @@ do
         exit 1
     fi
     filename=$(basename "$url")
-    SKIP_BUILD_HOOK=y wget $url -P $ARCHIEVES
+    SKIP_BUILD_HOOK=y wget $url -O $ARCHIEVES/$filename
     echo $packagename >> $DEBOOTSTRAP_REQUIRED
     echo "$packagename /var/cache/apt/archives/$filename" >> $DEBPATHS
 done
