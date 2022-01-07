@@ -162,7 +162,6 @@ kos = [
 'modprobe optoe',
 'modprobe ym2651y',
 'modprobe accton_as7315_27xb_fan',
-'modprobe at24_as7315_27xb',
 'modprobe x86-64-accton-as7315_27xb-cpld',
 'modprobe x86-64-accton-as7315_27xb-led',
 'modprobe x86-64-accton-as7315_27xb-psu' ]
@@ -227,7 +226,7 @@ mknod =[
 'echo as7315_cpld1  0x63 > /sys/bus/i2c/devices/i2c-8/new_device',
 'echo as7315_cpld2  0x64 > /sys/bus/i2c/devices/i2c-7/new_device',
 
-'echo 24cxb04  0x57 > /sys/bus/i2c/devices/i2c-4/new_device',
+'echo 24c32 0x57 > /sys/bus/i2c/devices/i2c-4/new_device',
 'echo as7315_27xb_psu2  0x50 > /sys/bus/i2c/devices/i2c-12/new_device',
 'echo ym2401  0x58 > /sys/bus/i2c/devices/i2c-12/new_device',
 'echo as7315_27xb_psu1  0x53 > /sys/bus/i2c/devices/i2c-13/new_device',
