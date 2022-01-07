@@ -5,12 +5,14 @@ import shutil
 import subprocess
 import unittest
 import yaml
+import re
 
+import sonic_yang
 import tests.common_utils as utils
 
 from unittest import TestCase
 
-
+YANG_MODELS_DIR = "/usr/local/yang-models"
 SKU = 'multi-npu-01'
 ASIC_SKU = 'multi-npu-asic'
 NUM_ASIC = 4
@@ -20,6 +22,8 @@ DEVICE_TYPE = 'LeafRouter'
 class TestMultiNpuCfgGen(TestCase):
 
     def setUp(self):
+        self.yang_parser = sonic_yang.SonicYang(YANG_MODELS_DIR)
+        self.yang_parser.loadYangModel()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.test_data_dir = os.path.join(self.test_dir,  'multi_npu_data')
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
@@ -33,6 +37,32 @@ class TestMultiNpuCfgGen(TestCase):
 
     def run_script(self, argument, check_stderr=False):
         print('\n    Running sonic-cfggen ' + argument)
+        if "-m" in argument:
+            pattern = r'-m\s+(\S+)\s*'
+            minigraph = re.findall(r'-m\s+(\S+)\s*', argument)
+            hwsku     = re.findall(r'-S\s+(\S+)\s*', argument)
+            port_conf = re.findall(r'-p\s+(\S+)\s*', argument)
+            namespace = re.findall(r'-n\s+(\S+)\s*', argument)
+            if minigraph:
+                print('\n    Validating yang schema')
+                cmd = self.script_file + ' -m ' + minigraph[0]
+                if hwsku:
+                    cmd += ' -S ' + hwsku[0]
+                if port_conf:
+                    cmd += ' -p ' + port_conf[0]
+                if namespace:
+                    cmd += ' -n ' + namespace[0]
+                cmd += ' --print-data'
+                output = subprocess.check_output(cmd, shell=True).decode()
+                # "NULL": "NULL" is placeholder for redis, remove to pass yang validation.
+                output = output.replace("\"NULL\": \"NULL\"", "")
+                self.yang_parser.loadData(configdbJson=json.loads(output))
+                try:
+                    self.yang_parser.validate_data_tree()
+                except sonic_yang.SonicYangException as e:
+                    print("yang data generated from %s is not valid"%(minigraph[0]))
+                    raise
+
         if check_stderr:
             output = subprocess.check_output(self.script_file + ' ' + argument, stderr=subprocess.STDOUT, shell=True)
         else:
