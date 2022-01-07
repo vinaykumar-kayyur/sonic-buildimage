@@ -159,6 +159,8 @@ def driver_check():
 kos = [
 'modprobe i2c_dev',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
+'modprobe i2c_ismt',
+'modprobe i2c_i801',
 'modprobe optoe',
 'modprobe ym2651y',
 'modprobe accton_as7315_27xb_fan',
