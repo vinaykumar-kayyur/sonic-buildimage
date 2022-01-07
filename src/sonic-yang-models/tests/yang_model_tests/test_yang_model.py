@@ -16,7 +16,7 @@ PASS = 0
 FAIL = 1
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger("YANG-TEST")
-log.setLevel(logging.INFO)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.NullHandler())
 
 # Global functions
