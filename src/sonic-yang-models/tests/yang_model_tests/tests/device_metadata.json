@@ -71,6 +71,10 @@
 	"DEVICE_METADATA_VALID_PEER_SWITCH": {
 		"desc": "Verifying valid peer switch hostname"
 	},
+	"DEVICE_METADATA_INVALID_PEER_SWITCH": {
+		"desc": "Verifying test fails with hostname that is too long",
+		"eStrKey": "Range"
+	},
 	"DEVICE_METADATA_VALID_STORAGE_DEVICE": {
 		"desc": "Verifying valid storage device value"
 	},
