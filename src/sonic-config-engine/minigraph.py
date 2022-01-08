@@ -532,6 +532,7 @@ def parse_dpg(dpg, hname):
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlans = {}
         vlan_members = {}
+        vlan_member_list = {}
         dhcp_relay_table = {}
         vlantype_name = ""
         intf_vlan_mbr = defaultdict(list)
@@ -559,7 +560,7 @@ def parse_dpg(dpg, hname):
                 else:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
-            vlan_attributes = {'vlanid': vlanid, 'members': vmbr_list }
+            vlan_attributes = {'vlanid': vlanid}
             dhcp_attributes = {}
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
@@ -587,6 +588,7 @@ def parse_dpg(dpg, hname):
             if sonic_vlan_name != vintfname:
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
+            vlan_member_list[sonic_vlan_name] = vmbr_list
 
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
@@ -617,7 +619,7 @@ def parse_dpg(dpg, hname):
                 elif member in vlans:
                     # For egress ACL attaching to vlan, we break them into vlan members
                     if stage == "egress":
-                        acl_intfs.extend(vlans[member]['members'])
+                        acl_intfs.extend(vlan_member_list[member])
                     else:
                         acl_intfs.append(member)
                 elif member in port_alias_map:
@@ -964,6 +966,7 @@ def parse_asic_meta(meta, hname):
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
+    sys_ports = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -978,7 +981,6 @@ def parse_deviceinfo(meta, hwsku):
                 port_speeds[port_alias_map.get(alias, alias)] = speed
 
             sysports = device_info.find(str(QName(ns, "SystemPorts")))
-            sys_ports = {}
             if sysports is not None:
                 for sysport in sysports.findall(str(QName(ns, "SystemPort"))):
                     portname = sysport.find(str(QName(ns, "Name"))).text
