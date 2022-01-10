@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+
+"""
+certificate_rotation_checker
+
+This script will be leveraged to periodically check whether the certificate and private key
+files of streaming telemetry were rotated by dSMS service or not. The streaming telemetry
+server process will be restarted if the certificate and private key are rotated by dSMS service
+and then updated by the acms agent running in ACMS container.
+"""
+
+import os
+import signal
+import subprocess
+import sys
+import syslog
+import time
+
+import inotify.adapters
+
+from swsscommon import swsscommon
+
+MAX_RETRY_TIMES = 10
+CERTIFICATE_CHECKING_INTERVAL_SECS = 3600
+
+CREDENTIALS_DIR_PATH = "/etc/sonic/credentials/"
+
+
+def get_command_result(command):
+    """Executes the command and returns the exiting code and resulting output.
+
+    Args:
+        command: A string contains the command to be executed.
+
+    Returns:
+        An integer indicates the exiting code.
+        A string which contains the output of command.
+    """
+    command_stdout = ""
+    command_stderr = ""
+
+    try:
+        proc_instance = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                         shell=True, universal_newlines=True)
+        command_stdout, command_stderr = proc_instance.communicate()
+    except (OSError, ValueError) as err:
+        syslog.syslog(syslog.LOG_ERR, "Failed to execute the command '{}'. Error: '{}'"
+                      .format(command, err))
+        return 2, command_stderr
+
+    return proc_instance.returncode, command_stdout.strip()
+
+
+def check_telemetry_server_running():
+    """Checkes whether telemetry server process is running.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+    """
+    processes_status_cmd = "supervisorctl status"
+    retry_times = 0
+    is_running = False
+
+    while retry_times <= MAX_RETRY_TIMES:
+        retry_times += 1
+        exit_code, command_stdout = get_command_result(processes_status_cmd)
+        if exit_code != 3:
+            syslog.syslog(syslog.LOG_INFO,
+                          "Failed to get the processes running status in telemetry container and retry after 60 seconds ...")
+            time.sleep(60)
+        else:
+            for line in command_stdout.splitlines():
+                if "telemetry" in line and "RUNNING" in line:
+                    is_running = True
+                    break
+            if is_running:
+                syslog.syslog(syslog.LOG_INFO,
+                              "Telemetry server process is running after certificate and private key were rotated!")
+                break
+
+    if not is_running:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Telemetry server process is not running after certificate and private key were rotated and exiting ...")
+        sys.exit(1)
+
+
+def restart_telemetry_server():
+    """Restarts the telemetry server process by Supervisord and then checks
+    it is actually running.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    restart_telemetry_server_cmd = "supervisorctl restart telemetry"
+    retry_times = 0
+
+    while retry_times <= MAX_RETRY_TIMES:
+        retry_times += 1
+        exit_code, command_stdout = get_command_result(restart_telemetry_server_cmd)
+        if exit_code != 0:
+            syslog.syslog(syslog.LOG_INFO,
+                          "Failed to restart telemetry server process and retry after 60 seconds ...")
+            time.sleep(60)
+        else:
+            break
+
+    if retry_times > MAX_RETRY_TIMES:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Failed to restart telemetry server process after trying '{}' times and exiting ..."
+                      .format(MAX_RETRY_TIMES))
+        sys.exit(2)
+
+    check_telemetry_server_running()
+
+
+def check_certificate_rotated(certificate_file_name, private_key_file_name):
+    """Leverages the 'inotify' module to monitor the file system events under the
+    directory which stores the SONiC credentials and restarts telemetry server
+    process if certificate and private key were rotated.
+
+
+    Args:
+        certificate_file_name: A string indicates the telemetry certificate file name.
+        private_key_file_name: A string indicates the telemetry private key file name.
+
+    Returns:
+        None.
+    """
+    certificate_file_rotated = False
+    private_key_file_rotated = False
+
+    inotify_instance = inotify.adapters.Inotify()
+    inotify_instance.add_watch(CREDENTIALS_DIR_PATH)
+    for event in inotify_instance.event_gen(yield_nones=False):
+        header, event_type, monitoring_path, file_name = event
+        if (file_name == certificate_file_name
+                and ("IN_CREATE" in event_type or "IN_MOVED_TO" in event_type)):
+            certificate_file_rotated = True
+        if (file_name == private_key_file_name
+                and ("IN_CREATE" in event_type or "IN_MOVED_TO" in event_type)):
+            private_key_file_rotated = True
+
+        if certificate_file_rotated and private_key_file_rotated:
+            certificate_file_rotated = False
+            private_key_file_rotated = False
+            syslog.syslog(syslog.LOG_INFO,
+                          "Certificate and private key were rotated and restarting telemetry server process ...")
+            restart_telemetry_server()
+
+            # Wait for specified seconds and then do the next round checking
+            syslog.syslog(syslog.LOG_INFO,
+                          "Sleeping '{}' seconds before doing the next round certifcate rotation checking ..."
+                          .format(CERTIFICATE_CHECKING_INTERVAL_SECS))
+            time.sleep(CERTIFICATE_CHECKING_INTERVAL_SECS)
+
+
+def certificate_rotated_checker():
+    """Checks rotation of certificate and key files and restart streaming telemetry server if necessary.
+
+    Leverages 'inotify' module to check whether the certificate and private key files of
+    streaming telemetry were already rotated by dSMS service and updated by acms agent running
+    in ACMS container. The streaming telemetry server process will be restarted if they were rotated.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    certificate_file_path = ""
+    private_key_file_path = ""
+    certificate_file_name = ""
+    private_key_file_name = ""
+
+    config_db = swsscommon.DBConnector("CONFIG_DB", 0)
+    telemetry_table = swsscommon.Table(config_db, "TELEMETRY")
+    telemetry_table_keys = telemetry_table.getKeys()
+    if "certs" in telemetry_table_keys:
+        certs_info = dict(telemetry_table.get("certs")[1])
+        if "server_crt" in certs_info and "server_key" in certs_info:
+            certificate_file_path = certs_info["server_crt"]
+            private_key_file_path = certs_info["server_key"]
+            syslog.syslog(syslog.LOG_INFO, "Path of certificate file is '{}'".format(certificate_file_path))
+            syslog.syslog(syslog.LOG_INFO, "Path of key file is '{}'".format(private_key_file_path))
+        else:
+            syslog.syslog(syslog.LOG_ERR,
+                          "Failed to retrieve the path of certificate and key file from 'TELEMETRY' table!")
+            sys.exit(3)
+    else:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Failed to retrieve the certificate and key information from 'TELEMETRY' table!")
+        sys.exit(4)
+
+    while True:
+        if not os.path.exists(certificate_file_path) or not os.path.exists(private_key_file_path):
+            syslog.syslog(syslog.LOG_ERR,
+                          "Certificate or key file did not exist on device and sleep '{}' seconds to check again ..."
+                          .format(CERTIFICATE_CHECKING_INTERVAL_SECS))
+            time.sleep(CERTIFICATE_CHECKING_INTERVAL_SECS)
+        else:
+            break
+
+    certificate_file_name = certificate_file_path.strip().split("/")[-1]
+    private_key_file_name = private_key_file_path.strip().split("/")[-1]
+    syslog.syslog(syslog.LOG_INFO, "cer_file_name: {}, key_file_name: {}".format(certificate_file_name, private_key_file_name))
+    if not certificate_file_name or not private_key_file_name:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Failed to retrieve the file name of certificate or private key!")
+        sys.exit(5)
+
+    check_certificate_rotated(certificate_file_name, private_key_file_name)
+
+
+def main():
+    certificate_rotated_checker()
+
+
+if __name__ == "__main__":
+    main()
+    sys.exit(0)
