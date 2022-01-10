@@ -20,7 +20,7 @@ class TestVlanDhcpRelay(object):
 
     def test_dhcp_relay_column_output(self):
         ctx = (
-            ({'Vlan100': {'dhcp_servers': ['192.0.0.1', '192.168.0.2']}}, {}),
+            ({'Vlan100': {'dhcp_servers': ['192.0.0.1', '192.168.0.2']}}, {}, {}),
             (),
         )
         assert show_dhcp_relay.get_dhcp_helper_address(ctx, 'Vlan100') == '192.0.0.1\n192.168.0.2'
