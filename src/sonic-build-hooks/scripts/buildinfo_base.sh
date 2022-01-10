@@ -11,10 +11,17 @@ POST_VERSION_PATH=$BUILDINFO_PATH/post-versions
 VERSION_DEB_PREFERENCE=$BUILDINFO_PATH/versions/01-versions-deb
 WEB_VERSION_FILE=$VERSION_PATH/versions-web
 BUILD_WEB_VERSION_FILE=$BUILD_VERSION_PATH/versions-web
+REPR_MIRROR_URL_PATTERN='http:\/\/packages.trafficmanager.net\/debian'
 
 . $BUILDINFO_PATH/config/buildinfo.config
 
 URL_PREFIX=$(echo "${PACKAGE_URL_PREFIX}" | sed -E "s#(//[^/]*/).*#\1#")
+
+if [ $USER != 'root' ] && [ -n $(which sudo) ];then
+    SUDO=sudo
+else
+    SUDO=''
+fi
 
 log_err()
 {
@@ -59,6 +66,22 @@ check_if_url_exist()
     fi
 }
 
+# Enable or disable the reproducible mirrors
+set_reproducible_mirrors()
+{
+    # Remove the charater # in front of the line if matched
+    local expression="s/^#\(.*$REPR_MIRROR_URL_PATTERN\)/\1/"
+    if [ "$1" = "-d" ]; then
+        # Add the charater # in front of the line if match
+        expression="s/^deb.*$REPR_MIRROR_URL_PATTERN/#\0/"
+    fi
+
+    local mirrors="/etc/apt/sources.list $(find /etc/apt/sources.list.d/ -type f)"
+    for mirror in $mirrors; do
+        $SUDO sed -i "$expression" "$mirror"
+    done
+}
+
 download_packages()
 {
     local parameters=("$@")
@@ -82,8 +105,8 @@ download_packages()
                 local filename=$(echo $url | awk -F"/" '{print $NF}' | cut -d? -f1 | cut -d# -f1)
                 [ -f $WEB_VERSION_FILE ] && version=$(grep "^${url}=" $WEB_VERSION_FILE | awk -F"==" '{print $NF}')
                 if [ -z "$version" ]; then
-                    echo "Failed to verify the package: $url, the version is not specified" 2>&1
-                    exit 1
+                    echo "Warning: Failed to verify the package: $url, the version is not specified" 1>&2
+                    continue
                 fi
 
                 local version_filename="${filename}-${version}"
@@ -144,7 +167,7 @@ run_pip_command()
             install=y
         elif [[ "$para" == *.whl ]]; then
             package_name=$(echo $para | cut -d- -f1 | tr _ .)
-            sed "/^${package_name}==/d" -i $tmp_version_file
+            $SUDO sed "/^${package_name}==/d" -i $tmp_version_file
         fi
     done
 

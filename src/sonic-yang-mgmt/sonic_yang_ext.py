@@ -4,10 +4,21 @@
 from __future__ import print_function
 import yang as ly
 import syslog
-
 from json import dump, dumps, loads
 from xmltodict import parse
 from glob import glob
+
+Type_1_list_maps_model = [
+    'DSCP_TO_TC_MAP_LIST',
+    'DOT1P_TO_TC_MAP_LIST',
+    'TC_TO_PRIORITY_GROUP_MAP_LIST',
+    'TC_TO_QUEUE_MAP_LIST',
+    'MAP_PFC_PRIORITY_TO_QUEUE_LIST',
+    'PFC_PRIORITY_TO_PRIORITY_GROUP_MAP_LIST',
+    'DSCP_TO_FC_MAP_LIST',
+    'EXP_TO_FC_MAP_LIST',
+    'CABLE_LENGTH_LIST'
+]
 
 """
 This is the Exception thrown out of all public function of this class.
@@ -44,7 +55,6 @@ class SonicYangExtMixin:
             self._loadJsonYangModel()
             # create a map from config DB table to yang container
             self._createDBTableToModuleMap()
-
         except Exception as e:
             self.sysLog(msg="Yang Models Load failed:{}".format(str(e)), \
                 debug=syslog.LOG_ERR, doPrint=True)
@@ -71,6 +81,70 @@ class SonicYangExtMixin:
 
         return
 
+    def _preProcessYangGrouping(self, moduleName, module):
+        '''
+            PreProcess Grouping Section of YANG models, and store it in
+            self.preProcessedYang['grouping'] as
+            {'<moduleName>':
+                {'<groupingName>':
+                    [<List of Leafs>]
+                }
+            }
+
+            Parameters:
+                moduleName (str): name of yang module.
+                module (dict): json format of yang module.
+
+            Returns:
+                void
+        '''
+        try:
+            # create grouping dict
+            if self.preProcessedYang.get('grouping') is None:
+                self.preProcessedYang['grouping'] = dict()
+            self.preProcessedYang['grouping'][moduleName] = dict()
+
+            # get groupings from yang module
+            groupings = module['grouping']
+
+            # if grouping is a dict, make it a list for common processing
+            if isinstance(groupings, dict):
+                groupings = [groupings]
+
+            for grouping in groupings:
+                gName = grouping["@name"]
+                gLeaf = grouping["leaf"]
+                self.preProcessedYang['grouping'][moduleName][gName] = gLeaf
+
+        except Exception as e:
+            self.sysLog(msg="_preProcessYangGrouping failed:{}".format(str(e)), \
+                debug=syslog.LOG_ERR, doPrint=True)
+            raise e
+        return
+
+    # preProcesss Generic Yang Objects
+    def _preProcessYang(self, moduleName, module):
+        '''
+            PreProcess Generic Section of YANG models by calling
+            _preProcessYang<SectionName> methods.
+
+            Parameters:
+                moduleName (str): name of yang module.
+                module (dict): json format of yang module.
+
+            Returns:
+                void
+        '''
+        try:
+            # preProcesss Grouping
+            if module.get('grouping') is not None:
+                self._preProcessYangGrouping(moduleName, module)
+        except Exception as e:
+            self.sysLog(msg="_preProcessYang failed:{}".format(str(e)), \
+                debug=syslog.LOG_ERR, doPrint=True)
+            raise e
+        return
+
     """
     Create a map from config DB tables to container in yang model
     This module name and topLevelContainer are fetched considering YANG models are
@@ -82,6 +156,8 @@ class SonicYangExtMixin:
         for j in self.yJson:
             # get module name
             moduleName = j['module']['@name']
+            # preProcesss Generic Yang Objects
+            self._preProcessYang(moduleName, j['module'])
             # get top level container
             topLevelContainer = j['module'].get('container')
             # if top level container is none, this is common yang files, which may
@@ -104,14 +180,16 @@ class SonicYangExtMixin:
                     self.confDbYangMap[c['@name']] = {
                         "module" : moduleName,
                         "topLevelContainer": topLevelContainer['@name'],
-                        "container": c
+                        "container": c,
+                        "yangModule": j['module']
                         }
             # container is a dict
             else:
                 self.confDbYangMap[container['@name']] = {
                     "module" : moduleName,
                     "topLevelContainer": topLevelContainer['@name'],
-                    "container": container
+                    "container": container,
+                    "yangModule": j['module']
                     }
         return
 
@@ -141,10 +219,7 @@ class SonicYangExtMixin:
                 del self.jIn[table]
 
         if len(self.tablesWithOutYang):
-            print("Note: Below table(s) have no YANG models:")
-            for table in self.tablesWithOutYang.keys():
-                print(str(table), end=", ")
-            print()
+            self.sysLog(msg=f"Note: Below table(s) have no YANG models: {', '.join(self.tablesWithOutYang)}", doPrint=True)
 
         if croppedFile:
             with open(croppedFile, 'w') as f:
@@ -201,13 +276,87 @@ class SonicYangExtMixin:
 
         return
 
-    """
-    create a dict to map each key under primary key with a dict yang model.
-    This is done to improve performance of mapping from values of TABLEs in
-    config DB to leaf in YANG LIST.
-    """
-    def _createLeafDict(self, model):
+    def _findYangModuleFromPrefix(self, prefix, module):
+        '''
+            Find yang module name from prefix used in given yang module.
 
+            Parameters:
+                prefix (str): prefix used in given yang module.
+                module (dict): json format of yang module.
+
+            Returns:
+                 (str): module name or None
+        '''
+        try:
+            # get imports
+            yangImports = module.get("import");
+            if yangImports is None:
+                return None
+            # make a list
+            if isinstance(yangImports, dict):
+                yangImports = [yangImports]
+            # find module for given prefix
+            for yImport in yangImports:
+                if yImport['prefix']['@value'] == prefix:
+                    return yImport['@module']
+        except Exception as e:
+            self.sysLog(msg="_findYangModuleFromPrefix failed:{}".format(str(e)), \
+                debug=syslog.LOG_ERR, doPrint=True)
+            raise e
+        return None
+
+    def _fillLeafDictUses(self, uses_s, table, leafDict):
+        '''
+            Find the leaf(s) in a grouping which maps to given uses statement,
+            then fill leafDict with leaf(s) information.
+
+            Parameters:
+                uses_s (str): uses statement in yang module.
+                table (str): config DB table, this table is being translated.
+                leafDict (dict): dict with leaf(s) information for List\Container
+                    corresponding to config DB table.
+
+            Returns:
+                 (void)
+        '''
+        try:
+            # make a list
+            if isinstance(uses_s, dict):
+                uses_s = [uses_s]
+            # find yang module for current table
+            table_module = self.confDbYangMap[table]['yangModule']
+            # uses Example: "@name": "bgpcmn:sonic-bgp-cmn"
+            for uses in uses_s:
+                # Assume ':'  means reference to another module
+                if ':' in uses['@name']:
+                    prefix = uses['@name'].split(':')[0].strip()
+                    uses_module = self._findYangModuleFromPrefix(prefix, table_module)
+                else:
+                    uses_module = table_module
+                grouping = uses['@name'].split(':')[-1].strip()
+                leafs = self.preProcessedYang['grouping'][uses_module][grouping]
+                self._fillLeafDict(leafs, leafDict)
+        except Exception as e:
+            self.sysLog(msg="_fillLeafDictUses failed:{}".format(str(e)), \
+                debug=syslog.LOG_ERR, doPrint=True)
+            raise e
+
+        return
+
+    def _createLeafDict(self, model, table):
+        '''
+            create a dict to map each key under primary key with a leaf in yang model.
+            This is done to improve performance of mapping from values of TABLEs in
+            config DB to leaf in YANG LIST.
+
+            Parameters:
+                module (dict): json format of yang module.
+                table (str): config DB table, this table is being translated.
+
+            Returns:
+                 leafDict (dict): dict with leaf(s) information for List\Container
+                    corresponding to config DB table.
+        '''
         leafDict = dict()
         #Iterate over leaf, choices and leaf-list.
         self._fillLeafDict(model.get('leaf'), leafDict)
@@ -222,6 +371,10 @@ class SonicYangExtMixin:
 
         # leaf-lists
         self._fillLeafDict(model.get('leaf-list'), leafDict, True)
+
+        # uses should map to grouping,
+        if model.get('uses') is not None:
+            self._fillLeafDictUses(model.get('uses'), table, leafDict)
 
         return leafDict
 
@@ -245,7 +398,7 @@ class SonicYangExtMixin:
             elif 'leafref' in type:
                 vValue = val
             #TODO: find type in sonic-head, as of now, all are enumeration
-            elif 'head:' in type:
+            elif 'stypes:' in type:
                 vValue = val
             else:
                 vValue = val
@@ -262,6 +415,108 @@ class SonicYangExtMixin:
         return vValue
 
     """
+    Xlate a Type 1 map list
+    This function will xlate from a dict in config DB to a Yang JSON list
+    using yang model. Output will be go in self.xlateJson
+
+    Note: Exceptions from this function are collected in exceptionList and
+    are displayed only when an entry is not xlated properly from ConfigDB
+    to sonic_yang.json.
+
+    Type 1 Lists have inner list, which is diffrent from config DB.
+    Each field value in config db should be converted to inner list with
+    key and value.
+    Example:
+
+    Config DB:
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": {
+          "1": "1",
+          "2": "2"
+       }
+    }
+
+    YANG Model:
+    module: sonic-dscp-tc-map
+     +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+        "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+             "DSCP_TO_TC_MAP_LIST": [
+                   {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+    }
+    """
+    def _xlateType1MapList(self, model, yang, config, table, exceptionList):
+
+        #create a dict to map each key under primary key with a dict yang model.
+        #This is done to improve performance of mapping from values of TABLEs in
+        #config DB to leaf in YANG LIST.
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
+
+        # get keys from YANG model list itself
+        listKeys = model['key']['@value']
+        self.sysLog(msg="xlateList keyList:{}".format(listKeys))
+        primaryKeys = list(config.keys())
+        for pkey in primaryKeys:
+            try:
+                vKey = None
+                self.sysLog(syslog.LOG_DEBUG, "xlateList Extract pkey:{}".\
+                    format(pkey))
+                # Find and extracts key from each dict in config
+                keyDict = self._extractKey(pkey, listKeys)
+
+                if inner_clist:
+                   inner_yang_list = list()
+                   for vKey in config[pkey]:
+                      inner_keyDict = dict()
+                      self.sysLog(syslog.LOG_DEBUG, "xlateList Key {} vkey {} Val {} vval {}".\
+                          format(inner_listKey, str(vKey), inner_listVal, str(config[pkey][vKey])))
+                      inner_keyDict[inner_listKey] = str(vKey)
+                      inner_keyDict[inner_listVal] = str(config[pkey][vKey])
+                      inner_yang_list.append(inner_keyDict)
+
+                keyDict[inner_clist['@name']] = inner_yang_list
+                yang.append(keyDict)
+                # delete pkey from config, done to match one key with one list
+                del config[pkey]
+
+            except Exception as e:
+                # log debug, because this exception may occur with multilists
+                self.sysLog(msg="xlateList Exception:{}".format(str(e)), \
+                    debug=syslog.LOG_DEBUG, doPrint=True)
+                exceptionList.append(str(e))
+                # with multilist, we continue matching other keys.
+                continue
+        return
+
+    """
     Xlate a list
     This function will xlate from a dict in config DB to a Yang JSON list
     using yang model. Output will be go in self.xlateJson
@@ -272,15 +527,21 @@ class SonicYangExtMixin:
     """
     def _xlateList(self, model, yang, config, table, exceptionList):
 
+        # Type 1 lists need special handling because of inner yang list and
+        # config db format.
+        if model['@name'] in Type_1_list_maps_model:
+            self.sysLog(msg="_xlateType1MapList: {}".format(model['@name']))
+            self._xlateType1MapList(model, yang, config, table, exceptionList)
+            return
+
         #create a dict to map each key under primary key with a dict yang model.
         #This is done to improve performance of mapping from values of TABLEs in
         #config DB to leaf in YANG LIST.
-        leafDict = self._createLeafDict(model)
 
+        leafDict = self._createLeafDict(model, table)
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         self.sysLog(msg="xlateList keyList:{}".format(listKeys))
-
         primaryKeys = list(config.keys())
         for pkey in primaryKeys:
             try:
@@ -314,7 +575,6 @@ class SonicYangExtMixin:
     """
     def _xlateListInContainer(self, model, yang, configC, table, exceptionList):
         clist = model
-        #print(clist['@name'])
         yang[clist['@name']] = list()
         self.sysLog(msg="xlateProcessListOfContainer: {}".format(clist['@name']))
         self._xlateList(clist, yang[clist['@name']], configC, table, exceptionList)
@@ -380,7 +640,7 @@ class SonicYangExtMixin:
                 self._xlateContainerInContainer(modelContainer, yang, configC, table)
 
         ## Handle other leaves in container,
-        leafDict = self._createLeafDict(model)
+        leafDict = self._createLeafDict(model, table)
         vKeys = list(configC.keys())
         for vKey in vKeys:
             #vkey must be a leaf\leaf-list\choice in container
@@ -486,15 +746,98 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
+    Type 1 Lists have inner list, each inner list key:val should
+    be mapped to field:value in Config DB.
+    Example:
+
+    YANG:
+    module: sonic-dscp-tc-map
+    +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+            "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+                "DSCP_TO_TC_MAP_LIST": [
+                    {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+    Config DB:
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": {
+          "1": "1",
+          "2": "2"
+       }
+    }
+    """
+
+    def _revXlateType1MapList(self, model, yang, config, table):
+        # get keys from YANG model list itself
+        listKeys = model['key']['@value']
+        # create a dict to map each key under primary key with a dict yang model.
+        # This is done to improve performance of mapping from values of TABLEs in
+        # config DB to leaf in YANG LIST.
+
+        # Gather inner list key and value from model
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
+
+        # list with name <NAME>_LIST should be removed,
+        if "_LIST" in model['@name']:
+            for entry in yang:
+                # create key of config DB table
+                pkey, pkeydict = self._createKey(entry, listKeys)
+                self.sysLog(syslog.LOG_DEBUG, "revXlateList pkey:{}".format(pkey))
+                config[pkey]= dict()
+                # fill rest of the entries
+                inner_list = entry[inner_clist['@name']]
+                for index in range(len(inner_list)):
+                    self.sysLog(syslog.LOG_DEBUG, "revXlateList fkey:{} fval {}".\
+                         format(str(inner_list[index][inner_listKey]),\
+                             str(inner_list[index][inner_listVal])))
+                    config[pkey][str(inner_list[index][inner_listKey])] = str(inner_list[index][inner_listVal])
+        return
+
+    """
+    Rev xlate from <TABLE>_LIST to table in config DB
     """
     def _revXlateList(self, model, yang, config, table):
+
+        # special processing for Type 1 Map tables.
+        if model['@name'] in Type_1_list_maps_model:
+           self._revXlateType1MapList(model, yang, config, table)
+           return
 
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         # create a dict to map each key under primary key with a dict yang model.
         # This is done to improve performance of mapping from values of TABLEs in
         # config DB to leaf in YANG LIST.
-        leafDict = self._createLeafDict(model)
+        leafDict = self._createLeafDict(model, table)
 
         # list with name <NAME>_LIST should be removed,
         if "_LIST" in model['@name']:
@@ -559,7 +902,7 @@ class SonicYangExtMixin:
                 self._revXlateContainerInContainer(modelContainer, yang, config, table)
 
         ## Handle other leaves in container,
-        leafDict = self._createLeafDict(model)
+        leafDict = self._createLeafDict(model, table)
         for vKey in yang:
             #vkey must be a leaf\leaf-list\choice in container
             if leafDict.get(vKey):

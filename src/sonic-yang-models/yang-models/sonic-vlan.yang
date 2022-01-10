@@ -11,12 +11,10 @@ module sonic-vlan {
 
 	import sonic-types {
 		prefix stypes;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-extension {
 		prefix ext;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-port {
@@ -157,6 +155,10 @@ module sonic-vlan {
 					}
 				}
 
+				leaf alias {
+					type string;
+				}
+
 				leaf description {
 					type string {
 						length 1..255;
@@ -164,7 +166,13 @@ module sonic-vlan {
 				}
 
 				leaf-list dhcp_servers {
+					description "Configure the dhcp v4 servers";
 					type inet:ip-address;
+				}
+
+				leaf-list dhcpv6_servers {
+					description "Configure the dhcp v6 servers";
+					type inet:ipv6-address;
 				}
 
 				leaf mtu {
