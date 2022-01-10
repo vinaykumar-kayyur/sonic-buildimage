@@ -10,7 +10,6 @@ and then updated by the acms agent running in ACMS container.
 """
 
 import os
-import signal
 import subprocess
 import sys
 import syslog
