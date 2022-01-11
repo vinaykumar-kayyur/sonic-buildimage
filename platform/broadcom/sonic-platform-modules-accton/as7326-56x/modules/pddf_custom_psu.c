@@ -9,7 +9,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include "../../../../pddf/i2c/modules/include/pddf_psu_defs.h"
+#include "pddf_psu_defs.h"
 
 ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribute *da, char *buf);
 ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribute *da, char *buf);
