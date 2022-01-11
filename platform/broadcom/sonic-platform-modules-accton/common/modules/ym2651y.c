@@ -360,11 +360,13 @@ static ssize_t show_ascii(struct device *dev, struct device_attribute *da,
 
     switch (attr->index) {
     case PSU_FAN_DIRECTION: /* psu_fan_dir */
+
         if (data->chip==YPEB1200AM)
         {
             memcpy(data->fan_dir, "F2B", 3);
             data->fan_dir[3]='\0';
         }
+
         ptr = data->fan_dir;
         break;
     case PSU_MFR_SERIAL: /* psu_mfr_serial */
@@ -666,7 +668,13 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             goto exit;
         }
         status = ym2651y_read_block(client, command, data->mfr_model, buf+1);
-        data->mfr_model[buf+1] = '\0';
+        
+        if ((buf+1) >= (ARRAY_SIZE(data->mfr_model)-1))
+        {            
+            data->mfr_model[ARRAY_SIZE(data->mfr_model)-1] = '\0';
+        }
+        else
+            data->mfr_model[buf+1] = '\0';
 
         if (status < 0)
         {
@@ -677,9 +685,8 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
         /*YM-1401A PSU doens't support to get serial_num, so ignore it.
          *It's vout doesn't support linear, so let it use show_vout_by_mode().
          */
-        if(!strncmp("YM-1401A", data->mfr_model, strlen("YM-1401A")))
+        if(!strncmp("YM-1401A", data->mfr_model+1, strlen("YM-1401A")))
         {
-            printk("match YM-1401A, not read SN\n");
             data->chip=YM1401A;
         }
         else
@@ -692,9 +699,16 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             if (status < 0) {
                 dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
                 goto exit;
-            }        
+            }
             status = ym2651y_read_block(client, command, data->mfr_serial, buf+1);
-            data->mfr_serial[buf+1] = '\0';
+
+            if ((buf+1) >= (ARRAY_SIZE(data->mfr_serial)-1))
+            {
+                 data->mfr_serial[ARRAY_SIZE(data->mfr_serial)-1] = '\0';
+            }
+            else
+                data->mfr_serial[buf+1] = '\0';
+            
             if (status < 0)
             {
                 dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
