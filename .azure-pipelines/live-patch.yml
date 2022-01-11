@@ -44,7 +44,6 @@ stages:
         SONIC_RUN_CMDS="./kpatch/kpatch-build/kpatch-build -t vmlinux -v src/sonic-linux-kernel/linux-${KERNEL_VERSION}/debian/linux-image-${KVERSION_SHORT}-amd64-dbg/usr/lib/debug/boot/vmlinux-${KVERSION_SHORT}-amd64 -s src/sonic-linux-kernel/linux-${KERNEL_VERSION}/ -c src/sonic-linux-kernel/linux-${KERNEL_VERSION}/debian/build/build_amd64_none_amd64/.config src/sonic-linux-kernel/patch/$(PATCHFILE) || cat ~/.kpatch/build.log" make sonic-slave-run NOJESSIE=1
 
         cp *.ko $(Build.ArtifactStagingDirectory)/
-        cp src/sonic-linux-kernel/linux-${KERNEL_VERSION} $(Build.ArtifactStagingDirectory)/linux-${KERNEL_VERSION} -r
       displayName: "Build kernel live patch"
     - publish: $(Build.ArtifactStagingDirectory)/
       artifact: sonic-buildimage.live-patch
