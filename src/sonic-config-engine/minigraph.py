@@ -487,7 +487,7 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
-                pc_members[(pcintfname, pcmbr_list[i])] = {'NULL': 'NULL'}
+                pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
@@ -966,6 +966,7 @@ def parse_asic_meta(meta, hname):
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
+    sys_ports = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -980,7 +981,6 @@ def parse_deviceinfo(meta, hwsku):
                 port_speeds[port_alias_map.get(alias, alias)] = speed
 
             sysports = device_info.find(str(QName(ns, "SystemPorts")))
-            sys_ports = {}
             if sysports is not None:
                 for sysport in sysports.findall(str(QName(ns, "SystemPort"))):
                     portname = sysport.find(str(QName(ns, "Name"))).text
