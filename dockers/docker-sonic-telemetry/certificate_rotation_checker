@@ -9,7 +9,6 @@ will be restarted if the certificate file was rotated.
 """
 
 import os
-import signal
 import subprocess
 import sys
 import syslog
