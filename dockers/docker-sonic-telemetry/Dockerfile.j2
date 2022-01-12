@@ -29,7 +29,8 @@ RUN apt-get clean -y      && \
 # Install the python `inotify` package
 RUN pip3 install inotify
 
-COPY ["start.sh", "telemetry.sh", "dialout.sh", "certificate_rollover_checker", "/usr/bin/"]
+COPY ["start.sh", "telemetry.sh", "dialout.sh", "/usr/bin/"]
+COPY ["certificate_rotation_checker", "/usr/bin/"]
 COPY ["telemetry_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
