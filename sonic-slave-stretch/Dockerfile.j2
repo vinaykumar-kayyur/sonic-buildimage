@@ -390,6 +390,7 @@ RUN pip2 install mmh3
 
 # Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp
+RUN apt-get -y build-dep isc-dhcp-server
 
 # Install vim
 RUN apt-get install -y vim
