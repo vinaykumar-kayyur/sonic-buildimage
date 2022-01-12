@@ -1,13 +1,11 @@
 #!/bin/bash
 
 # toggle the mux to standby if dualtor and any mux active
-[[ "$(sonic-cfggen -d -v DEVICE_METADATA.localhost.subtype | tr [:upper:] [:lower:])" == *"dualtor"* ]]
-is_dualtor=$?
-[[ $(show mux status | grep active | wc -l) > 0 ]]
-any_active=$?
-
-if [[ (${is_dualtor} -eq 0) && (${any_active} -eq 0) ]];
+if
+[[ "$(sonic-cfggen -d -v DEVICE_METADATA.localhost.subtype | tr [:upper:] [:lower:])" == *"dualtor"* ]] &&
+[[ $(show mux status | grep active | wc -l) > 0 ]];
 then
+  logger -t TSA -p user.info "Toggle all mux mode to standby"
   sudo config mux mode standby all
 fi
 
