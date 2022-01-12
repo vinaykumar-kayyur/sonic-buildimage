@@ -335,11 +335,6 @@ RUN add-apt-repository \
            $(lsb_release -cs) \
            stable"
 RUN apt-get update
-RUN pip install --upgrade pip
-RUN apt-get install -y libssl-dev
-RUN apt-get install -y swig
-RUN apt-get install -y build-essential libssl-dev libffi-dev python-dev python-m2crypto
-
 {%- if CONFIGURED_ARCH == "amd64" %}
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
 {%- elif CONFIGURED_ARCH == "arm64" %}

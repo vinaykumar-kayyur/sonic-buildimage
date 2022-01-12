@@ -247,28 +247,6 @@ def _get_jinja2_env(paths):
 
     return env
 
-def _increment_mac(mac, count):
-    """
-    Increments the MAC address by the required count.
-    For example:
-       1. The MAC address "00:00:00:b7:12:10" with count as 3
-          will return "00:00:00:b7:12:13"
-       2. Address "00:00:00:b7:12:ff" with count 3
-          will return "00:00:00:b7:13:02"
-    Return:
-       Returns the converted MAC address. If the converted value
-       is a single digit, then add leading 0 to keep the string
-       representation of the hex value sane
-    """
-    mac_int = [int("0x" + m, 16) for m in mac.split(':')]
-    for index, val in reversed(list(enumerate(mac_int))):
-        val += count
-        mac_int[index] = val % (1 << 8)
-        if mac_int[index] == val:
-            break
-        count = val >> 8
-    return ":".join([hex(x)[2:].rjust(2, '0') for x in mac_int])
-
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
@@ -401,14 +379,6 @@ def main():
                 mac = device_info.get_system_mac()
         else:
             mac = device_info.get_system_mac()
-
-        # There are 3 managament interfaces on the devices. For each of these
-        # interfaces they use unique mac. To avoid conlflict as seen by the
-        # peer when both management and front plane interfaces are connected,
-        # Increment the MAC address by 3 (to avoid conflict on 3 management interfaces)
-        # TODO: Should check if there a way to find the count of management interfaces
-        #       and use that as count here to increment instead of a static value
-        mac = _increment_mac(mac, 3)
 
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'platform': platform,

@@ -284,16 +284,6 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/audisp-tacplus_*.deb || \
 sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 
-# Install usbmount and dependencies
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/liblockfile-bin_1.14-1.1_amd64.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/liblockfile1_1.14-1.1_amd64.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/lockfile-progs_0.1.18_amd64.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/usbmount_0.0.24_all.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-
 # Install pam-radius-auth and nss-radius
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libpam-radius-auth_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f

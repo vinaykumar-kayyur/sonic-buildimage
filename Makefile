@@ -1,6 +1,5 @@
 # SONiC make file
 
-UMASK := umask 022
 NOJESSIE ?= 1
 NOSTRETCH ?= 0
 NOBUSTER ?= 0
