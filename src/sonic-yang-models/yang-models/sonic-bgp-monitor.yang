@@ -1,0 +1,90 @@
+module sonic-bgp-monitor {
+    namespace "http://github.com/Azure/sonic-bgp-monitor";
+    prefix bgpmon;
+    yang-version 1.1;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
+    import sonic-types {
+        prefix stypes;
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC BGP Monitor";
+
+    revision 2022-01-11 {
+        description
+            "Initial revision.";
+    }
+
+    container sonic-bgp-monitor {
+        container BGP_MONITORS {
+            list BGP_MONITORS_LIST {
+                description "This list is to support BGP monitor configuration handled by bgpcfgd";
+                key "addr";
+
+                leaf addr {
+                    type inet:ip-address;
+                    description "BGP monitor address";
+                }
+
+                leaf asn {
+                    type uint32 {
+                        range "1..4294967295";
+                    }
+                    description "Peer AS number";
+                }
+
+                leaf holdtime {
+                    type uint16;
+                    description "Hold time";
+                }
+
+                leaf keepalive {
+                    type uint16;
+                    description "Keepalive interval";
+                }
+
+                leaf local_addr {
+                    type inet:ip-address;
+                    description "Local source address or interface name to use for connection.";
+                }
+
+                leaf name {
+                    type string {
+                        pattern "BGPMonitor" {
+                            error-message "Invalid BGP monitor name";
+                        }
+                    }
+                }
+
+                leaf nhopself {
+                    type uint8 {
+                        range "0..1";
+                    }
+                    description "Nexthop is self, no nexthop calculation";
+                }
+
+                leaf rrclient {
+                    type uint8 {
+                        range "0..1";
+                    }
+                    description "Route reflector client";
+                }
+
+                leaf admin_status {
+                    type stypes:admin_status;
+                    description "Admin status of BGP peer";
+                }
+            }
+        }
+    }
+}
