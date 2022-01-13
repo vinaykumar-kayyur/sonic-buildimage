@@ -161,11 +161,12 @@ def driver_inserted():
 kos = [
 'depmod -ae',
 'modprobe i2c_dev',
-'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
+'modprobe i2c_mux_pca954x',
 'modprobe optoe',
 'modprobe minipack_psensor']
 
 def driver_install():
+    global FORCE
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
         if status:
@@ -174,6 +175,7 @@ def driver_install():
     return 0
 
 def driver_uninstall():
+    global FORCE
     for i in range(0,len(kos)):
         #remove parameter if any
         rm = kos[-(i+1)]
@@ -204,6 +206,7 @@ def sfp_map(index):
     return bus
 
 def device_install():
+    global FORCE
     for i in range(0,len(mknod)):
         #for pca932x need times to built new i2c buses
         if mknod[i].find('pca954') != -1:
@@ -215,6 +218,14 @@ def device_install():
             if FORCE == 0:
                 return status
 
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status
+
     rm_cmd="rm -rf /usr/local/bin/minipack_qsfp > /dev/null 2>&1"
     log_os_system(rm_cmd, 1)
     mk_cmd= "mkdir /usr/local/bin/minipack_qsfp"
@@ -223,6 +234,7 @@ def device_install():
     return
 
 def device_uninstall():
+    global FORCE
     nodelist = mknod
     for i in range(len(nodelist)):
         target = nodelist[-(i+1)]
@@ -282,6 +294,7 @@ def do_minipack_fpga_clean():
     return
 
 def do_install():
+    global FORCE
     print("Checking system....")
     if driver_inserted() == False:
         print("No driver, installing....")
@@ -304,6 +317,7 @@ def do_install():
     return
 
 def do_uninstall():
+    global FORCE
     print("Checking system....")
     if not device_exist():
         print(PROJECT_NAME.upper() +" has no device installed....")
