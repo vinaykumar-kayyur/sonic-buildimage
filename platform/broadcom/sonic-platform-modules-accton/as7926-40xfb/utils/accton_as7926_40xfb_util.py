@@ -231,7 +231,7 @@ def init_ipmi():
 kos = [
 'depmod -ae',
 'modprobe i2c_dev',
-'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
+'modprobe i2c_mux_pca954x',
 'modprobe x86-64-accton-as7926-40xfb-cpld',
 'modprobe x86-64-accton-as7926-40xfb-fan',
 'modprobe x86-64-accton-as7926-40xfb-thermal',
@@ -323,6 +323,14 @@ def device_install():
         # for pca954x need times to built new i2c buses
         if mknod[i].find('pca954') != -1:
             time.sleep(2)
+
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status
 
     for i in range(1, 11):
         status, output =log_os_system("echo 0 > /sys/bus/i2c/devices/12-0062/module_reset_"+str(i), 1)
