@@ -38,6 +38,13 @@ class ThriftClient(object):
     def __exit__(self, exc_type, exc_value, tb):
         self.close()
 
+def pltfm_mgr_ready():
+    try:
+        with ThriftClient():
+            return True
+    except Exception:
+        return False
+
 def thrift_try(func, attempts=35):
     for attempt in range(attempts):
         try:
