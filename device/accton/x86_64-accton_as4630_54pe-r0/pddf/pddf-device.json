@@ -33,7 +33,7 @@
         "std_kos":
         [
             "i2c_dev",
-            "i2c_mux_pca954x force_deselect_on_exit=1",
+            "i2c_mux_pca954x",
             "optoe"
         ],
         "description":"kernel modules are loaded while moving to pdf mode, but they should not be unloaded while moving to nonpddf mode.",
