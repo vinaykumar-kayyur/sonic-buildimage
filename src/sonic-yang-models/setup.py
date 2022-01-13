@@ -90,6 +90,7 @@ setup(
                          './yang-models/sonic-buffer-port-egress-profile-list.yang',
                          './yang-models/sonic-buffer-profile.yang',
                          './yang-models/sonic-buffer-queue.yang',
+                         './yang-models/sonic-cable-length.yang',
                          './yang-models/sonic-copp.yang',
                          './yang-models/sonic-crm.yang',
                          './yang-models/sonic-device_metadata.yang',
@@ -121,7 +122,11 @@ setup(
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',
                          './yang-models/sonic-vrf.yang',
+
                          './yang-models/sonic-mclag.yang',
+
+                         './yang-models/sonic-vlan-sub-interface.yang',
+
                          './yang-models/sonic-warm-restart.yang',
                          './yang-models/sonic-lldp.yang',
                          './yang-models/sonic-scheduler.yang',
@@ -131,6 +136,7 @@ setup(
                          './yang-models/sonic-exp-fc-map.yang',
                          './yang-models/sonic-dscp-tc-map.yang',
                          './yang-models/sonic-dot1p-tc-map.yang',
+                         './yang-models/sonic-storm-control.yang',
                          './yang-models/sonic-tc-priority-group-map.yang',
                          './yang-models/sonic-tc-queue-map.yang',
                          './yang-models/sonic-pfc-priority-queue-map.yang',
