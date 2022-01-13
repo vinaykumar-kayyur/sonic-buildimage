@@ -14,10 +14,9 @@ $(eval $(call add_derived_package,$(ISC_DHCP_RELAY),$(ISC_DHCP_RELAY_DBG)))
 
 ISC_DHCP_SERVER = isc-dhcp-server_$(ISC_DHCP_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(ISC_DHCP_SERVER)_SRC_PATH = $(SRC_PATH)/isc-dhcp
-SONIC_MAKE_DEBS += $(ISC_DHCP_SERVER)
 
 ISC_DHCP_SERVER_DBG = isc-dhcp-server-dbgsym_$(ISC_DHCP_VERSION_FULL)_$(CONFIGURED_ARCH).deb
-$(eval $(call add_derived_package,$(ISC_DHCP_SERVER),$(ISC_DHCP_SERVER_DBG)))
+$(eval $(call add_extra_package,$(ISC_DHCP_SERVER),$(ISC_DHCP_SERVER_DBG)))
 
 export ISC_DHCP_RELAY ISC_DHCP_RELAY_DBG
 export ISC_DHCP_SERVER ISC_DHCP_SERVER_DBG
