@@ -9,6 +9,7 @@ from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
 from .device_info import get_platform
 from .device_info import is_supervisor
+from .device_info import is_chassis
 
 ASIC_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
@@ -25,6 +26,10 @@ NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 
+
+# Dictionary to cache config_db connection handle per namespace
+# to prevent duplicate connections from being opened
+config_db_handle = {}
 
 def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     """
@@ -236,7 +241,9 @@ def get_all_namespaces():
     if is_multi_asic():
         for asic in range(num_asics):
             namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
-            config_db = connect_config_db_for_ns(namespace)
+            if namespace not in config_db_handle:
+                config_db_handle[namespace] =  connect_config_db_for_ns(namespace)
+            config_db = config_db_handle[namespace]
 
             metadata = config_db.get_table('DEVICE_METADATA')
             if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
@@ -410,7 +417,7 @@ def get_back_end_interface_set(namespace=None):
 
 def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
 
-    if not is_multi_asic():
+    if not is_multi_asic() and not is_chassis():
         return False
 
     ns_list = get_namespace_list(namespace)
@@ -418,7 +425,15 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
     for ns in ns_list:
 
         config_db = connect_config_db_for_ns(ns)
-        bgp_sessions = config_db.get_entry(BGP_INTERNAL_NEIGH_CFG_DB_TABLE, bgp_neigh_ip)
+        bgp_sessions = config_db.get_entry(
+            BGP_INTERNAL_NEIGH_CFG_DB_TABLE, bgp_neigh_ip
+        )
+        if bgp_sessions:
+            return True
+
+        bgp_sessions = config_db.get_entry(
+            'BGP_VOQ_CHASSIS_NEIGHBOR', bgp_neigh_ip
+        )
         if bgp_sessions:
             return True
 

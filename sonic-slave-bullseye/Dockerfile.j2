@@ -1,9 +1,9 @@
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
+FROM multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:armhf-bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-aarch64-5.2.0-2 as qemu
+FROM multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:arm64-bullseye
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
@@ -62,7 +62,6 @@ RUN apt-get update && apt-get install -y \
         dh-exec \
         kmod \
         libtinyxml2-dev \
-        python \
         python3 \
         python3-pip \
         libncurses5-dev \
@@ -311,7 +310,6 @@ RUN apt-get update && apt-get install -y \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libpython2.7-dev     \
         libssl-dev           \
         dbus                 \
         libdbus-1-dev        \
@@ -349,7 +347,10 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config
+        pkg-config \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
 
 RUN apt-get -y build-dep openssh
 
@@ -378,6 +379,7 @@ RUN apt upgrade -y base-files
        RUN apt-get install --reinstall -y aspell-en
 
        # workaround because of https://bugs.launchpad.net/qemu/+bug/1805913, just disable aspell
+       # Issue now being tracked here - https://gitlab.com/qemu-project/qemu/-/issues/263
        RUN cp /bin/true /usr/bin/aspell
 {%- endif %}
 
@@ -513,4 +515,14 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
+# Bazel requires "python"
+# TODO(PINS): remove when Bazel is okay with "python3" binary name
+RUN apt install -y python-is-python3
 {% endif -%}
