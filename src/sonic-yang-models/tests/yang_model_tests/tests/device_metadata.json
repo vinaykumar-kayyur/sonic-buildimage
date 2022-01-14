@@ -33,6 +33,18 @@
 	"desc": "DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.",
 	"eStrKey" : "Pattern"
     },
+    "DEVICE_METADATA_TYPE_CORRECT_PATTERN": {
+        "desc": "DEVICE_METADATA correct value for Type field"
+    },
+	"DEVICE_METADATA_DEFAULT_SYNCHRONOUS_MODE": {
+	"desc": "DEVICE_METADATA DEFAULT VALUE FOR SYNCHRONOUS MODE.",
+	"eStrKey" : "Verify",
+	"verify": {
+	    "xpath": "/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname",
+	    "key": "sonic-device_metadata:synchronous_mode",
+	    "value": "enable"
+	}
+    },
     "DEVICE_METADATA_CORRECT_BUFFER_MODEL_PATTERN": {
         "desc": "DEVICE_METADATA correct value for BUFFER_MODEL field"
     },
@@ -45,6 +57,30 @@
     },
     "DEVICE_METADATA_FRR_MGMT_FWK_CONFIG": {
         "desc": "Verifying FRR MGMT framework configuration."
-    }
+    },
+    "DEVICE_METADATA_CORRECT_CLOUDTYPE_REGION_CONFIG": {
+        "desc": "Verifying cloudtype and region configuration."
+    },
+	"DEVICE_METADATA_VALID_SUBTYPE": {
+		"desc": "Verifying valid subtype value"
+	},
+	"DEVICE_METADATA_INVALID_SUBTYPE": {
+		"desc": "Verifying invalid subtype value",
+		"eStrKey": "Pattern"
+	},
+	"DEVICE_METADATA_VALID_PEER_SWITCH": {
+		"desc": "Verifying valid peer switch hostname"
+	},
+	"DEVICE_METADATA_INVALID_PEER_SWITCH": {
+		"desc": "Verifying test fails with hostname that is too long",
+		"eStrKey": "Range"
+	},
+	"DEVICE_METADATA_VALID_STORAGE_DEVICE": {
+		"desc": "Verifying valid storage device value"
+	},
+	"DEVICE_METADATA_INVALID_STORAGE_DEVICE": {
+		"desc": "Verifying invalid storage device value",
+		"eStrKey": "InvalidValue"
+	}
 
 }

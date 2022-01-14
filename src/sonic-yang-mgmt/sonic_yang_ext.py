@@ -4,10 +4,21 @@
 from __future__ import print_function
 import yang as ly
 import syslog
-
 from json import dump, dumps, loads
 from xmltodict import parse
 from glob import glob
+
+Type_1_list_maps_model = [
+    'DSCP_TO_TC_MAP_LIST',
+    'DOT1P_TO_TC_MAP_LIST',
+    'TC_TO_PRIORITY_GROUP_MAP_LIST',
+    'TC_TO_QUEUE_MAP_LIST',
+    'MAP_PFC_PRIORITY_TO_QUEUE_LIST',
+    'PFC_PRIORITY_TO_PRIORITY_GROUP_MAP_LIST',
+    'DSCP_TO_FC_MAP_LIST',
+    'EXP_TO_FC_MAP_LIST',
+    'CABLE_LENGTH_LIST'
+]
 
 """
 This is the Exception thrown out of all public function of this class.
@@ -208,10 +219,7 @@ class SonicYangExtMixin:
                 del self.jIn[table]
 
         if len(self.tablesWithOutYang):
-            print("Note: Below table(s) have no YANG models:")
-            for table in self.tablesWithOutYang.keys():
-                print(str(table), end=", ")
-            print()
+            self.sysLog(msg=f"Note: Below table(s) have no YANG models: {', '.join(self.tablesWithOutYang)}", doPrint=True)
 
         if croppedFile:
             with open(croppedFile, 'w') as f:
@@ -407,6 +415,108 @@ class SonicYangExtMixin:
         return vValue
 
     """
+    Xlate a Type 1 map list
+    This function will xlate from a dict in config DB to a Yang JSON list
+    using yang model. Output will be go in self.xlateJson
+
+    Note: Exceptions from this function are collected in exceptionList and
+    are displayed only when an entry is not xlated properly from ConfigDB
+    to sonic_yang.json.
+
+    Type 1 Lists have inner list, which is diffrent from config DB.
+    Each field value in config db should be converted to inner list with
+    key and value.
+    Example:
+
+    Config DB:
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": {
+          "1": "1",
+          "2": "2"
+       }
+    }
+
+    YANG Model:
+    module: sonic-dscp-tc-map
+     +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+        "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+             "DSCP_TO_TC_MAP_LIST": [
+                   {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+    }
+    """
+    def _xlateType1MapList(self, model, yang, config, table, exceptionList):
+
+        #create a dict to map each key under primary key with a dict yang model.
+        #This is done to improve performance of mapping from values of TABLEs in
+        #config DB to leaf in YANG LIST.
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
+
+        # get keys from YANG model list itself
+        listKeys = model['key']['@value']
+        self.sysLog(msg="xlateList keyList:{}".format(listKeys))
+        primaryKeys = list(config.keys())
+        for pkey in primaryKeys:
+            try:
+                vKey = None
+                self.sysLog(syslog.LOG_DEBUG, "xlateList Extract pkey:{}".\
+                    format(pkey))
+                # Find and extracts key from each dict in config
+                keyDict = self._extractKey(pkey, listKeys)
+
+                if inner_clist:
+                   inner_yang_list = list()
+                   for vKey in config[pkey]:
+                      inner_keyDict = dict()
+                      self.sysLog(syslog.LOG_DEBUG, "xlateList Key {} vkey {} Val {} vval {}".\
+                          format(inner_listKey, str(vKey), inner_listVal, str(config[pkey][vKey])))
+                      inner_keyDict[inner_listKey] = str(vKey)
+                      inner_keyDict[inner_listVal] = str(config[pkey][vKey])
+                      inner_yang_list.append(inner_keyDict)
+
+                keyDict[inner_clist['@name']] = inner_yang_list
+                yang.append(keyDict)
+                # delete pkey from config, done to match one key with one list
+                del config[pkey]
+
+            except Exception as e:
+                # log debug, because this exception may occur with multilists
+                self.sysLog(msg="xlateList Exception:{}".format(str(e)), \
+                    debug=syslog.LOG_DEBUG, doPrint=True)
+                exceptionList.append(str(e))
+                # with multilist, we continue matching other keys.
+                continue
+        return
+
+    """
     Xlate a list
     This function will xlate from a dict in config DB to a Yang JSON list
     using yang model. Output will be go in self.xlateJson
@@ -417,15 +527,21 @@ class SonicYangExtMixin:
     """
     def _xlateList(self, model, yang, config, table, exceptionList):
 
+        # Type 1 lists need special handling because of inner yang list and
+        # config db format.
+        if model['@name'] in Type_1_list_maps_model:
+            self.sysLog(msg="_xlateType1MapList: {}".format(model['@name']))
+            self._xlateType1MapList(model, yang, config, table, exceptionList)
+            return
+
         #create a dict to map each key under primary key with a dict yang model.
         #This is done to improve performance of mapping from values of TABLEs in
         #config DB to leaf in YANG LIST.
-        leafDict = self._createLeafDict(model, table)
 
+        leafDict = self._createLeafDict(model, table)
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
         self.sysLog(msg="xlateList keyList:{}".format(listKeys))
-
         primaryKeys = list(config.keys())
         for pkey in primaryKeys:
             try:
@@ -459,7 +575,6 @@ class SonicYangExtMixin:
     """
     def _xlateListInContainer(self, model, yang, configC, table, exceptionList):
         clist = model
-        #print(clist['@name'])
         yang[clist['@name']] = list()
         self.sysLog(msg="xlateProcessListOfContainer: {}".format(clist['@name']))
         self._xlateList(clist, yang[clist['@name']], configC, table, exceptionList)
@@ -631,8 +746,91 @@ class SonicYangExtMixin:
 
     """
     Rev xlate from <TABLE>_LIST to table in config DB
+    Type 1 Lists have inner list, each inner list key:val should
+    be mapped to field:value in Config DB.
+    Example:
+
+    YANG:
+    module: sonic-dscp-tc-map
+    +--rw sonic-dscp-tc-map
+     +--rw DSCP_TO_TC_MAP
+        +--rw DSCP_TO_TC_MAP_LIST* [name]
+           +--rw name              string
+           +--rw DSCP_TO_TC_MAP* [dscp]
+              +--rw dscp    string
+              +--rw tc?     string
+
+    YANG JSON:
+    "sonic-dscp-tc-map:sonic-dscp-tc-map": {
+            "sonic-dscp-tc-map:DSCP_TO_TC_MAP": {
+                "DSCP_TO_TC_MAP_LIST": [
+                    {
+                        "name": "map3",
+                        "DSCP_TO_TC_MAP": [
+                            {
+                                "dscp": "64",
+                                "tc": "1"
+                            },
+                            {
+                                "dscp":"2",
+                                "tc":"2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+    Config DB:
+    "DSCP_TO_TC_MAP": {
+       "Dscp_to_tc_map1": {
+          "1": "1",
+          "2": "2"
+       }
+    }
+    """
+
+    def _revXlateType1MapList(self, model, yang, config, table):
+        # get keys from YANG model list itself
+        listKeys = model['key']['@value']
+        # create a dict to map each key under primary key with a dict yang model.
+        # This is done to improve performance of mapping from values of TABLEs in
+        # config DB to leaf in YANG LIST.
+
+        # Gather inner list key and value from model
+        inner_clist = model.get('list')
+        if inner_clist:
+            inner_listKey = inner_clist['key']['@value']
+            inner_leafDict = self._createLeafDict(inner_clist, table)
+            for lkey in inner_leafDict:
+                if inner_listKey != lkey:
+                    inner_listVal = lkey
+
+        # list with name <NAME>_LIST should be removed,
+        if "_LIST" in model['@name']:
+            for entry in yang:
+                # create key of config DB table
+                pkey, pkeydict = self._createKey(entry, listKeys)
+                self.sysLog(syslog.LOG_DEBUG, "revXlateList pkey:{}".format(pkey))
+                config[pkey]= dict()
+                # fill rest of the entries
+                inner_list = entry[inner_clist['@name']]
+                for index in range(len(inner_list)):
+                    self.sysLog(syslog.LOG_DEBUG, "revXlateList fkey:{} fval {}".\
+                         format(str(inner_list[index][inner_listKey]),\
+                             str(inner_list[index][inner_listVal])))
+                    config[pkey][str(inner_list[index][inner_listKey])] = str(inner_list[index][inner_listVal])
+        return
+
+    """
+    Rev xlate from <TABLE>_LIST to table in config DB
     """
     def _revXlateList(self, model, yang, config, table):
+
+        # special processing for Type 1 Map tables.
+        if model['@name'] in Type_1_list_maps_model:
+           self._revXlateType1MapList(model, yang, config, table)
+           return
 
         # get keys from YANG model list itself
         listKeys = model['key']['@value']
