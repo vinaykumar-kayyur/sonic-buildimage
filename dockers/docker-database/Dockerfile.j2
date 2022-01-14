@@ -12,20 +12,26 @@ RUN apt-get update
 
 # Install redis-server
 {% if CONFIGURED_ARCH == "armhf" %}
-RUN curl -o redis-tools_6.2.6-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_armhf.deb"    && \
-    curl -o redis-server_6.2.6-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_armhf.deb"  && \
-    dpkg -i redis-tools_6.2.6-1_armhf.deb redis-server_6.2.6-1_armhf.deb || apt-get install -f                              && \
-    rm redis-tools_6.2.6-1_armhf.deb redis-server_6.2.6-1_armhf.deb
+RUN curl -sS -o liblzf1_3.6-3_armhf.deb "http://ftp.debian.org/debian/pool/main/libl/liblzf/liblzf1_3.6-3_armhf.deb"                             && \
+    curl -sS -o libc6_2.33-2_armhf.deb "http://ftp.debian.org/debian/pool/main/g/glibc/libc6_2.33-2_armhf.deb"                                   && \
+    curl -sS -o redis-tools_6.2.6-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_armhf.deb"                     && \
+    curl -sS -o redis-server_6.2.6-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_armhf.deb"                   && \
+    dpkg -i liblzf1_3.6-3_armhf.deb libc6_2.33-2_armhf.deb redis-tools_6.2.6-1_armhf.deb redis-server_6.2.6-1_armhf.deb || apt-get install -f   && \
+    rm liblzf1_3.6-3_armhf.deb libc6_2.33-2_armhf.deb redis-tools_6.2.6-1_armhf.deb redis-server_6.2.6-1_armhf.deb
 {% elif CONFIGURED_ARCH == "arm64" %}
-RUN curl -o redis-tools_6.2.6-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_arm64.deb"    && \
-    curl -o redis-server_6.2.6-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_arm64.deb"  && \
-    dpkg -i redis-tools_6.2.6-1_arm64.deb redis-server_6.2.6-1_arm64.deb || apt-get install -f                              && \
-    rm redis-tools_6.2.6-1_arm64.deb redis-server_6.2.6-1_arm64.deb
+RUN curl -sS -o liblzf1_3.6-3_arm64.deb "http://ftp.debian.org/debian/pool/main/libl/liblzf/liblzf1_3.6-3_arm64.deb"                             && \
+    curl -sS -o libc6_2.33-2_arm64.deb "http://ftp.debian.org/debian/pool/main/g/glibc/libc6_2.33-2_arm64.deb"                                   && \
+    curl -sS -o redis-tools_6.2.6-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_arm64.deb"                     && \
+    curl -sS -o redis-server_6.2.6-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_arm64.deb"                   && \
+    dpkg -i liblzf1_3.6-3_arm64.deb libc6_2.33-2_arm64.deb redis-tools_6.2.6-1_arm64.deb redis-server_6.2.6-1_arm64.deb || apt-get install -f   && \
+    rm liblzf1_3.6-3_arm64.deb libc6_2.33-2_arm64.deb redis-tools_6.2.6-1_arm64.deb redis-server_6.2.6-1_arm64.deb
 {% else %}
-RUN curl -o redis-tools_6.2.6-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_amd64.deb"    && \
-    curl -o redis-server_6.2.6-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_amd64.deb"  && \
-    dpkg -i redis-tools_6.2.6-1_amd64.deb redis-server_6.2.6-1_amd64.deb || apt-get install -f                              && \
-    rm redis-tools_6.2.6-1_amd64.deb redis-server_6.2.6-1_amd64.deb
+RUN curl -sS -o liblzf1_3.6-3_amd64.deb "http://ftp.debian.org/debian/pool/main/libl/liblzf/liblzf1_3.6-3_amd64.deb"                             && \
+    curl -sS -o libc6_2.33-2_amd64.deb "http://ftp.debian.org/debian/pool/main/g/glibc/libc6_2.33-2_amd64.deb"                                   && \
+    curl -sS -o redis-tools_6.2.6-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.2.6-1_amd64.deb"                     && \
+    curl -sS -o redis-server_6.2.6-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.2.6-1_amd64.deb"                   && \
+    dpkg -i liblzf1_3.6-3_amd64.deb libc6_2.33-2_amd64.deb redis-tools_6.2.6-1_amd64.deb redis-server_6.2.6-1_amd64.deb || apt-get install -f   && \
+    rm liblzf1_3.6-3_amd64.deb libc6_2.33-2_amd64.deb redis-tools_6.2.6-1_amd64.deb redis-server_6.2.6-1_amd64.deb
 {% endif %}
 
 {% if docker_database_debs.strip() -%}
