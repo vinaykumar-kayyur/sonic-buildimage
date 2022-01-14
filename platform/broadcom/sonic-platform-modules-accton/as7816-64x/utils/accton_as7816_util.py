@@ -315,10 +315,10 @@ def do_sonic_platform_install():
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
-                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
+                print ("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
                 return status
             else:
-                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3)
+                print ("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
             print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
     else:
