@@ -6,11 +6,9 @@
 #
 #############################################################################
 
-
-import logging
-import subprocess
 try:
     from sonic_platform_base.psu_base import PsuBase
+    from sonic_platform.thermal import Thermal
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -20,7 +18,6 @@ I2C_PATH ="/sys/bus/i2c/devices/{0}-00{1}/"
 
 PSU_NAME_LIST = ["PSU-1", "PSU-2"]
 PSU_NUM_FAN = [1, 1]
-
 PSU_CPLD_I2C_MAPPING = {
     0: {
         "num": 10,
@@ -43,17 +40,7 @@ PSU_HWMON_I2C_MAPPING = {
     },
 }
 
-def log_os_system(cmd):
-    #logging.info('Run :'+cmd)
-    status = 1
-    output = ""
-    status, output = subprocess.getstatusoutput(cmd)
-    if status:
-        logging.info('Failed :'+cmd)
-    return  status, output
-
-
-
+NUM_FAN_TRAY = 4
 
 class Psu(PsuBase):
     """Platform-specific Psu class"""
@@ -61,7 +48,7 @@ class Psu(PsuBase):
         PsuBase.__init__(self)
         self.index = psu_index
         self._api_helper = APIHelper()
-        
+
         self.i2c_num = PSU_HWMON_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_HWMON_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
@@ -72,13 +59,21 @@ class Psu(PsuBase):
         
         self.__initialize_fan()
         
-        logging.basicConfig(level=logging.DEBUG)
-
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
-        for fan_index in range(0, PSU_NUM_FAN[self.index]):
-            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
-            self._fan_list.append(fan)
+        self._fan_list.append(
+            Fan(NUM_FAN_TRAY + self.index,
+                is_psu_fan=True,
+                psu_index=self.index))
+        self._thermal_list.append(Thermal(is_psu=True, psu_index=self.index))
+
+    def __read_txt_file(self, file_path):
+        try:
+            with open(file_path, 'r') as fd:
+                return fd.read().strip()
+        except IOError:
+            pass
+        return None
 
     def get_voltage(self):
         """
@@ -139,7 +134,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        
+
         return False  #Controlled by HW
 
     def get_status_led(self):
@@ -250,9 +245,10 @@ class Psu(PsuBase):
         """
         model_path="{}{}".format(self.hwmon_path, 'psu_mfr_model')
         val=self._api_helper.read_txt_file(model_path)
-        model=val[1:]
-        if not model:
+        if val is None:
             return "N/A"
+        model=val[1:]
+        
         return model
 
     def get_serial(self):
@@ -261,9 +257,27 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial_path="{}{}".format(self.hwmon_path, 'psu_serial_num')
+        serial_path="{}{}".format(self.hwmon_path, 'psu_mfr_serial')
         val=self._api_helper.read_txt_file(serial_path)
-        serial=val[1:]
-        if not serial:
+        if val is None:
             return "N/A"
+        serial=val[1:]
+        
         return serial
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return self.index+1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

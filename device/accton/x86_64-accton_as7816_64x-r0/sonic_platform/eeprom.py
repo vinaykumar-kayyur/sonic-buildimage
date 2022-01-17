@@ -41,7 +41,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
                 _eeprom_info_dict[idx] = value
             except Exception:
                 pass
-               
+
         return _eeprom_info_dict
 
     def _load_eeprom(self):
@@ -91,7 +91,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
             return False
 
         return self.__parse_output(decode_output)
-    
+
     def _valid_tlv(self, eeprom_data):
         tlvinfo_type_codes_list = [
             self._TLV_CODE_PRODUCT_NAME,
@@ -129,3 +129,6 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_mac(self):
         return self._eeprom.get('0x24', NULL)
+    
+    def get_product_name(self):
+        return self._eeprom.get('0x21', NULL)

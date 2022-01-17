@@ -1,5 +1,5 @@
 #############################################################################
-# Celestica
+# Edgecore
 #
 # Component contains an implementation of SONiC Platform Base API and
 # provides the components firmware management function
@@ -8,7 +8,6 @@
 
 import shlex
 import subprocess
-import logging
 
 try:
     from sonic_platform_base.component_base import ComponentBase
@@ -43,7 +42,6 @@ class Component(ComponentBase):
         ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.get_name()
-        logging.basicConfig(level=logging.DEBUG)
 
     def __run_command(self, command):
         # Run bash command and print output to stdout
@@ -69,7 +67,7 @@ class Component(ComponentBase):
                 return bios_version.strip()
         except Exception as e:
             return None
-   
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
@@ -125,3 +123,55 @@ class Component(ComponentBase):
             A boolean, True if install successfully, False if not
         """
         raise NotImplementedError
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the device
+        Returns:
+            bool: True if device is present, False if not
+        """
+        return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return 'N/A'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return 'N/A'
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
