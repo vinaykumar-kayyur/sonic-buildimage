@@ -108,7 +108,7 @@ stages:
         pipeline: 9
         artifact: sonic-swss-common.amd64.ubuntu20_04
         runVersion: 'latestFromBranch'
-        runBranch: $(sourceBranch)
+        runBranch: refs/heads/$(sourceBranch)
         path: $(Build.SourcesDirectory)/sonic-swss-common.amd64.ubuntu20_04
       displayName: "Download sonic swss common deb packages"
 
