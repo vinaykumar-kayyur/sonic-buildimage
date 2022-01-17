@@ -19,7 +19,6 @@ try:
     from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
     from sonic_platform.watchdog import Watchdog
-    from sonic_platform.fan import Fan
     from sonic_platform.fan_drawer import FanDrawer
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")

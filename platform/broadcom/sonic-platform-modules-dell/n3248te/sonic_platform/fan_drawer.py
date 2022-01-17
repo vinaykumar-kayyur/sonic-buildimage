@@ -48,7 +48,6 @@ class FanDrawer(FanDrawerBase):
     def _set_cpld_register(self, reg_name, value):
         # On successful write, returns the value will be written on
         # reg_name and on failure returns 'ERR'
-        rv = 'ERR'
         cpld_dir = "/sys/devices/platform/dell-n3248te-cpld.0/"
         cpld_reg_file = cpld_dir + '/' + reg_name
 
