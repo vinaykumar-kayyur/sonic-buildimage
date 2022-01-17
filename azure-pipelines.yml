@@ -24,13 +24,6 @@ pr:
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
-resources:
-  repositories:
-  - repository: sonic-mgmt
-    type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
-
 stages:
 - stage: Build
   pool: sonicbld
@@ -48,14 +41,49 @@ stages:
         variables:
           swi_image: yes
       - name: mellanox
+  - job: DockerMgmt
+    displayName: 'Build sonic-mgmt docker'
+    timeoutInMinutes: 360
+    pool: sonicbld
+    steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+    - script: |
+        set -e
+        if [[ "$(Build.Reason)" == "PullRequest" ]];then
+          diff_string=$(git diff origin/$(System.PullRequest.TargetBranch) dockers/docker-sonic-mgmt/)
+        else
+          diff_string=$(git diff origin/$(Build.SourceBranchName) dockers/docker-sonic-mgmt/)
+        fi
+        echo "diff: "$diff_string
+        if [[ "$diff_string" == "" ]];then
+          # Output=true can insure cross stage usage. But the same stage can't use it
+          echo "##vso[task.setvariable variable=SKIP_MGMT;isOutput=true]1"
+          echo "##vso[task.setvariable variable=SKIP_MGMT]1"
+        else
+          echo "##vso[task.setvariable variable=SKIP_MGMT;isOutput=true]0"
+          echo "##vso[task.setvariable variable=SKIP_MGMT]0"
+          make configure PLATFORM=generic
+          make target/docker-sonic-mgmt.gz
+          cp target -r $(Build.ArtifactStagingDirectory)/target
+        fi
+      name: dockerMgmt
+    - publish: $(Build.ArtifactStagingDirectory)
+      condition: eq(variables['SKIP_MGMT'], 0)
+      artifact: 'docker-sonic-mgmt.pull'
+      displayName: 'Archive docker image sonic-mgmt'
+
 
 - stage: Test
+  dependsOn: Build
   variables:
   - name: inventory
     value: veos_vtb
   - name: testbed_file
     value: vtestbed.csv
-
+  - name: SKIP_MGMT
+    value: $[ stagedependencies.Build.DockerMgmt.outputs['dockerMgmt.SKIP_MGMT'] ]
   jobs:
   - job:
     pool: sonictest
@@ -66,7 +94,13 @@ stages:
       clean: true
       submodules: recursive
       displayName: 'Checkout code'
-
+    - script: |
+        if [[ "$(Build.Reason)" == "PullRequest" ]];then
+          sourceBranch=$(System.PullRequest.TargetBranch)
+        else
+          sourceBranch=$(Build.SourceBranchName)
+        fi
+        echo "##vso[task.setvariable variable=sourceBranch]$sourceBranch"
     - task: DownloadPipelineArtifact@2
       inputs:
         source: specific
@@ -74,19 +108,38 @@ stages:
         pipeline: 9
         artifact: sonic-swss-common.amd64.ubuntu20_04
         runVersion: 'latestFromBranch'
-        runBranch: 'refs/heads/master'
+        runBranch: $(sourceBranch)
+        path: $(Build.SourcesDirectory)/sonic-swss-common.amd64.ubuntu20_04
       displayName: "Download sonic swss common deb packages"
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: sonic-buildimage.vs
+        path: $(Build.SourcesDirectory)/sonic-buildimage.vs
       displayName: "Download sonic-buildimage.vs artifact"
+
+    - task: DownloadPipelineArtifact@2
+      condition: eq(variables['SKIP_MGMT'], 0)
+      inputs:
+        artifact: docker-sonic-mgmt.pull
+        path: $(Build.SourcesDirectory)/docker-sonic-mgmt.pull
+      displayName: 'Download sonic-mgmt image'
+
+    - script: |
+        set -e
+        docker rmi sonic-mgmt || true
+        docker load -i docker-sonic-mgmt.pull/target/docker-sonic-mgmt.gz
+        /data/sonic-mgmt/setup-container.sh -n sonic-mgmt -d /data -f yes
+      displayName: 'setup sonic-mgmt container'
+      condition: eq(variables['SKIP_MGMT'], 0)
 
     - script: |
         set -x
-        sudo dpkg -i --force-confask,confnew ../libswsscommon_1.0.0_amd64.deb
-        sudo dpkg -i ../python3-swsscommon_1.0.0_amd64.deb
-        sudo docker load -i ../target/docker-sonic-vs.gz
+        cd $(Build.SourcesDirectory)/sonic-swss-common.amd64.ubuntu20_04
+        sudo dpkg -i --force-confask,confnew libswsscommon_1.0.0_amd64.deb
+        sudo dpkg -i python3-swsscommon_1.0.0_amd64.deb
+        cd $(Build.SourcesDirectory)/docker-sonic-mgmt.pull
+        sudo docker load -i target/docker-sonic-vs.gz
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
         username=$(id -un)
 

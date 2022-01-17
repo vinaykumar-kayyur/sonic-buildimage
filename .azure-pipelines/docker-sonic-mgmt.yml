@@ -12,13 +12,7 @@ schedules:
   always: true
 
 trigger: none
-pr:
-  branches:
-    include:
-    - master
-  paths:
-    include:
-    - dockers/docker-sonic-mgmt
+pr: none
 
 parameters:
 - name: registry_url

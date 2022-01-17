@@ -18,17 +18,33 @@ parameters:
 steps:
 - checkout: self
   clean: true
-  displayName: 'checkout sonic-mgmt repo'
+  displayName: 'checkout sonic-buildimage repo'
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifact: sonic-buildimage.vs
+    path: $(Build.SourcesDirectory)/sonic-buildimage.vs
   displayName: "Download sonic-buildimage.vs artifact"
+
+- task: DownloadPipelineArtifact@2
+  condition: eq(variables['SKIP_MGMT'], 0)
+  inputs:
+    artifact: docker-sonic-mgmt.pull
+    path: $(Build.SourcesDirectory)/docker-sonic-mgmt.pull
+  displayName: 'Download sonic-mgmt image'
+
+- script: |
+    set -e
+    docker rmi sonic-mgmt || true
+    docker load -i docker-sonic-mgmt.pull/target/docker-sonic-mgmt.gz
+    /data/sonic-mgmt/setup-container.sh -n sonic-mgmt -d /data -f yes
+  displayName: 'setup sonic-mgmt container'
+  condition: eq(variables['SKIP_MGMT'], 0)
 
 - script: |
     set -x
     sudo mkdir -p /data/sonic-vm/images
-    sudo cp -v ../target/${{ parameters.image}} /data/sonic-vm/images/sonic-vs.img.gz
+    sudo cp -v sonic-buildimage.vs/target/${{ parameters.image}} /data/sonic-vm/images/sonic-vs.img.gz
     sudo gzip -fd /data/sonic-vm/images/sonic-vs.img.gz
     username=$(id -un)
     sudo chown -R $username.$username /data/sonic-vm
