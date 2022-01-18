@@ -139,6 +139,9 @@ def check_certificate_rotated(certificate_file_name):
                 and ("IN_CREATE" in event_type or "IN_MOVED_TO" in event_type)):
             certificate_file_rotated = True
 
+        if (file_name == certificate_file_name and "IN_DELETE" in event_type):
+            syslog.syslog(syslog.LOG_ERR, "Certificate file on device was deleted!")
+
         if certificate_file_rotated:
             certificate_file_rotated = False
             syslog.syslog(syslog.LOG_INFO,
@@ -159,6 +162,7 @@ def certificate_rotated_checker():
         None
     """
     certificate_file_path = ""
+    private_key_file_path = ""
     certificate_file_name = ""
 
     config_db = swsscommon.DBConnector("CONFIG_DB", 0)
@@ -166,9 +170,11 @@ def certificate_rotated_checker():
     telemetry_table_keys = telemetry_table.getKeys()
     if "certs" in telemetry_table_keys:
         certs_info = dict(telemetry_table.get("certs")[1])
-        if "server_crt" in certs_info:
+        if "server_crt" in certs_info and "server_key" in certs_info:
             certificate_file_path = certs_info["server_crt"]
+            private_key_file_path = certs_info["server_key"]
             syslog.syslog(syslog.LOG_INFO, "Path of certificate file is '{}'".format(certificate_file_path))
+            syslog.syslog(syslog.LOG_INFO, "Path of private key file is '{}'".format(private_key_file_path))
         else:
             syslog.syslog(syslog.LOG_ERR,
                           "Failed to retrieve the path of certificate file from 'TELEMETRY' table!")
@@ -179,9 +185,9 @@ def certificate_rotated_checker():
         sys.exit(4)
 
     while True:
-        if not os.path.exists(certificate_file_path):
+        if not os.path.exists(certificate_file_path) or not os.path.exists(private_key_file_path):
             syslog.syslog(syslog.LOG_ERR,
-                          "Certificate file did not exist on device and sleep '{}' seconds to check again ..."
+                          "Certificate or private key file did not exist on device and sleep '{}' seconds to check again ..."
                           .format(CERTIFICATE_CHECKING_INTERVAL_SECS))
             time.sleep(CERTIFICATE_CHECKING_INTERVAL_SECS)
         else:
