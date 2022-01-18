@@ -18,8 +18,6 @@
 
 import os
 
-from collections import namedtuple
-
 from fwutil.lib import ComponentStatusProvider, PlatformComponentsParser
 from sonic_platform.component import ComponentCPLD, MPFAManager
 
