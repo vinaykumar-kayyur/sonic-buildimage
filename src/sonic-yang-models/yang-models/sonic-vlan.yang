@@ -9,14 +9,16 @@ module sonic-vlan {
 		prefix inet;
 	}
 
+	import ietf-yang-types {
+		prefix yang;
+	}
+
 	import sonic-types {
 		prefix stypes;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-extension {
 		prefix ext;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-port {
@@ -85,6 +87,18 @@ module sonic-vlan {
 					type enumeration {
 						enum enable;
 						enum disable;
+					}
+				}
+
+				leaf grat_arp {
+					type string {
+						pattern "enabled|disabled";
+					}
+				}
+
+				leaf proxy_arp {
+					type string {
+						pattern "enabled|disabled";
 					}
 				}
 			}
@@ -157,6 +171,10 @@ module sonic-vlan {
 					}
 				}
 
+				leaf alias {
+					type string;
+				}
+
 				leaf description {
 					type string {
 						length 1..255;
@@ -181,6 +199,10 @@ module sonic-vlan {
 
 				leaf admin_status {
 					type stypes:admin_status;
+				}
+
+				leaf mac {
+					type yang:mac-address;
 				}
 			}
 			/* end of VLAN_LIST */

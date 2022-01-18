@@ -43,6 +43,7 @@ try:
                                                     FW_AUTO_ERR_BOOT_TYPE,  \
                                                     FW_AUTO_ERR_IMAGE,      \
                                                     FW_AUTO_ERR_UNKNOWN
+
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -155,9 +156,9 @@ class ONIEUpdater(object):
             self.__umount_onie_fs()
 
         cmd = "fdisk -l | grep 'ONIE boot' | awk '{print $1}'"
-        fs_path = subprocess.check_output(cmd, 
-                                          stderr=subprocess.STDOUT, 
-                                          shell=True, 
+        fs_path = subprocess.check_output(cmd,
+                                          stderr=subprocess.STDOUT,
+                                          shell=True,
                                           universal_newlines=True).rstrip('\n')
 
         os.mkdir(fs_mountpoint)
@@ -218,8 +219,8 @@ class ONIEUpdater(object):
         cmd = self.ONIE_FW_UPDATE_CMD_SHOW_PENDING
 
         try:
-            output = subprocess.check_output(cmd.split(), 
-                                             stderr=subprocess.STDOUT, 
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
                                              universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get pending firmware updates: {}".format(str(e)))
@@ -306,8 +307,8 @@ class ONIEUpdater(object):
             cmd = self.ONIE_IMAGE_INFO_COMMAND.format(image_path)
 
             try:
-                output = subprocess.check_output(cmd.split(), 
-                                                 stderr=subprocess.STDOUT, 
+                output = subprocess.check_output(cmd.split(),
+                                                 stderr=subprocess.STDOUT,
                                                  universal_newlines=True).rstrip('\n')
             except subprocess.CalledProcessError as e:
                 raise RuntimeError("Failed to get ONIE firmware info: {}".format(str(e)))
@@ -325,6 +326,7 @@ class ONIEUpdater(object):
         return firmware_info
 
     def update_firmware(self, image_path, allow_reboot=True):
+
         try:
             self.__stage_update(image_path)
             self.__trigger_update(allow_reboot)
@@ -400,10 +402,10 @@ class Component(ComponentBase):
     @staticmethod
     def _get_command_result(cmdline):
         try:
-            proc = subprocess.Popen(cmdline, 
-                                    stdout=subprocess.PIPE, 
-                                    shell=True, 
-                                    stderr=subprocess.STDOUT, 
+            proc = subprocess.Popen(cmdline,
+                                    stdout=subprocess.PIPE,
+                                    shell=True,
+                                    stderr=subprocess.STDOUT,
                                     universal_newlines=True)
             stdout = proc.communicate()[0]
             rc = proc.wait()
@@ -519,7 +521,7 @@ class ComponentSSD(Component):
     def auto_update_firmware(self, image_path, boot_action):
         """
         Handling of attempted automatic update for a SSD of a Mellanox switch.
-        Will first check the image_path to determine if a post-install reboot is required, 
+        Will first check the image_path to determine if a post-install reboot is required,
         then compares it against boot_action to determine whether to proceed with install.
         """
 
@@ -550,8 +552,8 @@ class ComponentSSD(Component):
         cmd = self.SSD_INFO_COMMAND
 
         try:
-            output = subprocess.check_output(cmd.split(), 
-                                             stderr=subprocess.STDOUT, 
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
                                              universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} info: {}".format(self.name, str(e)))
@@ -566,8 +568,8 @@ class ComponentSSD(Component):
         cmd = self.SSD_FIRMWARE_INFO_COMMAND.format(image_path)
 
         try:
-            output = subprocess.check_output(cmd.split(), 
-                                             stderr=subprocess.STDOUT, 
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
                                              universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} firmware info: {}".format(self.name, str(e)))
@@ -601,8 +603,8 @@ class ComponentSSD(Component):
         cmd = self.SSD_FIRMWARE_INFO_COMMAND.format(image_path)
 
         try:
-            output = subprocess.check_output(cmd.split(), 
-                                             stderr=subprocess.STDOUT, 
+            output = subprocess.check_output(cmd.split(),
+                                             stderr=subprocess.STDOUT,
                                              universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} firmware info: {}".format(self.name, str(e)))
@@ -675,8 +677,8 @@ class ComponentBIOS(Component):
         cmd = self.BIOS_VERSION_COMMAND
 
         try:
-            version = subprocess.check_output(cmd.split(), 
-                                              stderr=subprocess.STDOUT, 
+            version = subprocess.check_output(cmd.split(),
+                                              stderr=subprocess.STDOUT,
                                               universal_newlines=True).rstrip('\n')
         except subprocess.CalledProcessError as e:
             raise RuntimeError("Failed to get {} version: {}".format(self.name, str(e)))

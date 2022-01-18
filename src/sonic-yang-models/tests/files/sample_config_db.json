@@ -280,7 +280,9 @@
                 "hostname": "asw.dc",
                 "bgp_asn": "64850",
                 "hwsku": "Stone",
-                "buffer_model": "dynamic"
+                "buffer_model": "dynamic",
+                "cloudtype": "Public",
+                "region": "usfoo"
             }
         },
         "VLAN": {
@@ -369,6 +371,17 @@
             "0.debian.pool.ntp.org": {},
             "23.92.29.245": {},
             "2001:aa:aa::aa": {}
+        },
+        "SYSLOG_SERVER" : {
+            "10.13.14.17": {},
+            "20.1.1.1": {},
+            "2001:aa:aa::aa": {}
+        },
+        "CABLE_LENGTH": {
+            "AZURE": {
+                "Ethernet0": "5m",
+                "Ethernet1": "5m"
+            }
         },
         "PORT": {
             "Ethernet0": {
@@ -675,6 +688,15 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up"
+            },
+            "Ethernet120": {
+                "alias": "Eth31/1",
+                "lanes": "121,122",
+                "description": "",
+                "fec": "fc",
+                "speed": "11100",
+                "tpid": "0x8100",
+                "admin_status": "up"
             }
         },
         "ACL_TABLE": {
@@ -832,6 +854,13 @@
                 "family": "IPv4"
             }
         },
+        "VLAN_SUB_INTERFACE": {
+            "Ethernet120.10": {
+                "admin_status": "up"
+            },
+            "Ethernet120.10|10.0.1.56/31": {},
+            "Ethernet120.10|fc00::1:71/126": {}
+        },
         "VLAN_MEMBER": {
             "Vlan111|Ethernet0": {
                 "tagging_mode": "untagged"
@@ -916,25 +945,31 @@
                 "FLEX_COUNTER_STATUS": "enable"
             },
             "PG_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "PORT": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "1000"
             },
             "PORT_RATES": {
                 "FLEX_COUNTER_STATUS": "enable"
             },
             "PORT_BUFFER_DROP": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "60000"
             },
             "BUFFER_POOL_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "QUEUE": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "QUEUE_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "DEBUG_COUNTER": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -954,13 +989,22 @@
                 "polling_interval": "0"
             }
         },
-
         "WARM_RESTART": {
             "bgp": {
                 "bgp_timer": "500"
             }
         },
-
+        "PORT_STORM_CONTROL": {
+            "Ethernet0|broadcast": {
+                "kbps": "10000"
+            },
+            "Ethernet0|unknown-multicast": {
+                "kbps": "30000"
+            },
+            "Ethernet0|unknown-unicast": {
+                "kbps": "20000"
+            }
+        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
@@ -1003,13 +1047,13 @@
         },
         "AAA": {
             "authentication": {
-                "login": "local" 
+                "login": "local"
             },
             "authorization": {
-                "login": "local" 
+                "login": "local"
             },
             "accounting": {
-                "login": "local" 
+                "login": "local"
             }
         },
         "TACPLUS": {
@@ -1087,7 +1131,8 @@
                 "local_addr": "10.0.0.2",
                 "name":"PEER1",
                 "nhopself":"0",
-                "rrclient":"0"
+                "rrclient":"0",
+                "admin_status":"up"
             },
             "default|192.168.1.1": {
                 "local_asn": "65200",
@@ -1152,6 +1197,33 @@
                 "trap_group": "queue1_group1"
             }
         },
+        "AUTO_TECHSUPPORT": {
+            "GLOBAL": {
+                "state" : "enabled",
+                "rate_limit_interval" : "180",
+                "max_techsupport_limit" : "10.0",
+                "max_core_limit" : "0.0",
+                "since" : "2 days ago"
+            }
+        },
+        "AUTO_TECHSUPPORT_FEATURE": {
+            "bgp" :{
+                "state" : "disabled",
+                "rate_limit_interval" : "600"
+            },
+            "swss" : {
+                "state" : "enabled",
+                "rate_limit_interval" : "600"
+            },
+            "snmp" : {
+                "state" : "enabled",
+                "rate_limit_interval" : "500"
+            },
+            "dhcp_relay" : {
+                "state" : "disabled",
+                "rate_limit_interval" : "1000"
+            }
+        },
         "LLDP": {
             "GLOBAL": {
                 "mode": "TRANSMIT",
@@ -1173,11 +1245,12 @@
         "FEATURE": {
             "bgp": {
                 "auto_restart": "enabled",
-                "has_global_scope": "false",
-                "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "has_global_scope": "False",
+                "has_per_asic_scope": "True",
+                "has_timer": "False",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "database": {
                 "auto_restart": "always_enabled",
@@ -1185,7 +1258,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "always_enabled"
+                "state": "always_enabled",
+                "set_owner": "local"
             },
             "snmp": {
                 "auto_restart": "enabled",
@@ -1193,7 +1267,8 @@
                 "has_per_asic_scope": "false",
                 "has_timer": "true",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
             },
             "swss": {
                 "auto_restart": "enabled",
@@ -1201,7 +1276,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "syncd": {
                 "auto_restart": "enabled",
@@ -1209,7 +1285,8 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "local"
             },
             "lldp": {
                 "auto_restart": "enabled",
@@ -1217,7 +1294,17 @@
                 "has_per_asic_scope": "true",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
-                "state": "enabled"
+                "state": "enabled",
+                "set_owner": "kube"
+            },
+            "dhcp_relay": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
+                "set_owner": "kube"
             }
         },
         "DHCP_RELAY": {
@@ -1282,76 +1369,98 @@
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
             }
-         },		
+        },
+
+        "DSCP_TO_FC_MAP": {
+            "Dscp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Dscp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
+
+        "EXP_TO_FC_MAP": {
+            "Exp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Exp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
 
         "DSCP_TO_TC_MAP": {
-           "Dscp_to_tc_map1": { 
+           "Dscp_to_tc_map1": {
               "1": "1",
               "2": "2"
-            }, 
-           "Dscp_to_tc_map2": { 
+            },
+           "Dscp_to_tc_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "DOT1P_TO_TC_MAP": {
-           "Dot1p_to_tc_map1": { 
+           "Dot1p_to_tc_map1": {
               "1": "1",
               "2": "2"
-            }, 
-           "Dot1p_to_tc_map2": { 
+            },
+           "Dot1p_to_tc_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "TC_TO_PRIORITY_GROUP_MAP": {
-           "tc_to_pg_map1": { 
+           "tc_to_pg_map1": {
               "1": "1",
               "2": "2"
-            }, 
-           "tc_to_pg_map2": { 
+            },
+           "tc_to_pg_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "TC_TO_QUEUE_MAP": {
-           "tc_to_q_map1": { 
+           "tc_to_q_map1": {
               "1": "1",
               "2": "2"
-            }, 
-           "tc_to_q_map2": { 
+            },
+           "tc_to_q_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "MAP_PFC_PRIORITY_TO_QUEUE": {
-           "pfc_prio_to_q_map1": { 
+           "pfc_prio_to_q_map1": {
               "1": "1",
               "2": "2"
-           }, 
-           "pfc_prio_to_q_map2": { 
+           },
+           "pfc_prio_to_q_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "PFC_PRIORITY_TO_PRIORITY_GROUP_MAP": {
-           "pfc_prio_to_pg_map1": { 
+           "pfc_prio_to_pg_map1": {
               "1": "1",
               "2": "2"
-            }, 
-            "pfc_prio_to_pg_map2": { 
+            },
+            "pfc_prio_to_pg_map2": {
               "3": "3",
               "4": "4"
             }
         },
 
         "PORT_QOS_MAP": {
-           "Ethernet0": { 
+           "Ethernet0": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
               "dscp_to_tc_map": "Dscp_to_tc_map1",
 	          "tc_to_queue_map": "tc_to_q_map1",
@@ -1359,8 +1468,8 @@
 	          "pfc_to_queue_map": "pfc_prio_to_q_map1",
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map1",
 	          "pfc_enable"      : "3,4"
-            }, 
-            "Ethernet4": { 
+            },
+            "Ethernet4": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map2",
               "dscp_to_tc_map": "Dscp_to_tc_map2",
 	          "tc_to_queue_map": "tc_to_q_map2",
@@ -1369,9 +1478,29 @@
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map2",
 	          "pfc_enable"      : "3,4"
             }
+        },
+
+        "MIRROR_SESSION": {
+            "erspan": {
+                "dscp": "10",
+                "dst_ip": "11.1.1.1",
+                "gre_type": "0x1234",
+                "queue": "0",
+                "src_ip": "10.1.1.1",
+                "ttl": "10",
+                "type": "ERSPAN"
+            },
+            "span": {
+                "direction": "RX",
+                "type": "SPAN",
+                "dst_port": "Ethernet2",
+                "src_port": [
+                    "Ethernet3",
+                    "Ethernet4"
+                ]
+            }
         }
     },
-
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."

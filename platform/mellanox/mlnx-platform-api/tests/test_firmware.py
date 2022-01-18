@@ -34,6 +34,7 @@ from sonic_platform_base.component_base import ComponentBase,           \
                                                 FW_AUTO_ERR_IMAGE,      \
                                                 FW_AUTO_ERR_UNKNOWN
 
+
 def mock_update_firmware_success(image_path, allow_reboot=False):
     return True
 
