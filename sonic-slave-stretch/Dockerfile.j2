@@ -300,6 +300,9 @@ RUN apt-get update && apt-get install -y \
         libauparse-dev \
         auditd
 
+# For gmock
+RUN apt-get install -y libgmock-dev -t stretch-backports
+
 # Install dependencies for dhcp relay test 
 RUN pip3 install parameterized==0.8.1
 RUN pip3 install pyfakefs
@@ -368,7 +371,7 @@ RUN pip3 install "lxml==4.6.5"
 
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0
