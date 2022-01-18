@@ -148,7 +148,7 @@ stages:
               ip netns list | grep -E [-]srv[0-9]+ | awk '{print $1}' | xargs -I {} sudo ip netns delete {}; \
               sudo chown -R ${username}.${username} .; \
               sudo chown -R ${username}.${username} $(System.DefaultWorkingDirectory)" EXIT
-        pushd platform/vs/tests
+        pushd ../platform/vs/tests
         sudo py.test -v --junitxml=tr.xml --imgname=docker-sonic-vs:$(Build.BuildNumber)
       displayName: "Run vs tests"
 
