@@ -1,5 +1,5 @@
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.2.0-2 as qemu
+FROM multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:armhf-bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
@@ -62,7 +62,6 @@ RUN apt-get update && apt-get install -y \
         dh-exec \
         kmod \
         libtinyxml2-dev \
-        python \
         python3 \
         python3-pip \
         libncurses5-dev \
@@ -311,7 +310,6 @@ RUN apt-get update && apt-get install -y \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libpython2.7-dev     \
         libssl-dev           \
         dbus                 \
         libdbus-1-dev        \
@@ -447,7 +445,7 @@ RUN pip3 install "PyYAML==5.4.1"
 RUN pip3 install "lxml==4.6.2"
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip3 install pexpect==4.8.0
