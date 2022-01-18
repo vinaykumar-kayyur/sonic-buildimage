@@ -463,7 +463,6 @@ static int read_devfile_temp1_input(
     char devfile[96];
     int     rc, status;
     int     rdlen, value;
-    mm_segment_t old_fs;
 
     rc = 0;
     get_temp_file_path(bus_nr, addr, hwmon_dev, devfile, sizeof(devfile));
