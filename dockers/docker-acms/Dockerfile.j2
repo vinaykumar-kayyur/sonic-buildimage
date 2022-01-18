@@ -21,7 +21,7 @@ RUN rm -rf               \
     /usr/share/locale/*
 
 # Update apt's cache of available packages
-RUN apt-get update &&               \   
+RUN apt-get update &&               \
     apt-get install -f -y           \
         rsyslog                     \
         gnupg                       \
@@ -32,8 +32,11 @@ RUN apt-get update &&               \
         libacl1                     \
         libuuid1                    \
         libxml2                     \
+        python-dev                  \
         python-pip                  \
         python-setuptools
+
+RUN pip install wheel
 
 {% if docker_acms_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -70,15 +73,13 @@ COPY ["install_acms.sh", "/acms"]
 RUN cd /acms && sh install_acms.sh
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
-RUN pip install supervisor==4.1.0
-RUN pip install redis==3.5.3
 
-RUN apt-mark manual python python-setuptools
-
-RUN apt-get autoremove -y python-pip
+RUN apt-get autoremove -y   \
+    python-pip              \
+    python-setuptools
 
 RUN apt-get clean -y      && \
-    apt-get autoclean -   && \
+    apt-get autoclean -y  && \
     apt-get autoremove -y && \
     rm -rf /debs
 RUN rm -rf /var/lib/apt/lists/*
