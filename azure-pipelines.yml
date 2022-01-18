@@ -108,7 +108,7 @@ stages:
         pipeline: 9
         artifact: sonic-swss-common.amd64.ubuntu20_04
         runVersion: 'latestFromBranch'
-        runBranch: $(sourceBranch)
+        runBranch: refs/heads/$(sourceBranch)
         path: $(Build.SourcesDirectory)/sonic-swss-common.amd64.ubuntu20_04
       displayName: "Download sonic swss common deb packages"
 
@@ -138,7 +138,7 @@ stages:
         cd $(Build.SourcesDirectory)/sonic-swss-common.amd64.ubuntu20_04
         sudo dpkg -i --force-confask,confnew libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i python3-swsscommon_1.0.0_amd64.deb
-        cd $(Build.SourcesDirectory)/docker-sonic-mgmt.pull
+        cd $(Build.SourcesDirectory)/sonic-buildimage.vs
         sudo docker load -i target/docker-sonic-vs.gz
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
         username=$(id -un)
