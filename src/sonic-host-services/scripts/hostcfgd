@@ -167,6 +167,11 @@ class FeatureHandler(object):
     SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
     SYSTEMD_SERVICE_CONF_DIR = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
 
+    # Feature state constants
+    FEATURE_STATE_ENABLED = "enabled"
+    FEATURE_STATE_DISABLED = "disabled"
+    FEATURE_STATE_FAILED = "failed"
+
     def __init__(self, config_db, feature_state_table, device_config):
         self._config_db = config_db
         self._feature_state_table = feature_state_table
@@ -256,7 +261,6 @@ class FeatureHandler(object):
         return True
 
     def update_feature_auto_restart(self, feature, feature_name):
-
         dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
         auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
 
@@ -344,10 +348,10 @@ class FeatureHandler(object):
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
                                     .format(feature.name, feature_suffixes[-1]))
-                    self.set_feature_state(feature, "failed")
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
 
-        self.set_feature_state(feature, "enabled")
+        self.set_feature_state(feature, self.FEATURE_STATE_ENABLED)
 
     def disable_feature(self, feature):
         cmds = []
@@ -369,10 +373,10 @@ class FeatureHandler(object):
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
                                     .format(feature.name, feature_suffixes[-1]))
-                    self.set_feature_state(feature, "failed")
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
 
-        self.set_feature_state(feature, "disabled")
+        self.set_feature_state(feature, self.FEATURE_STATE_DISABLED)
 
     def resync_feature_state(self, feature):
         self._config_db.mod_entry('FEATURE', feature.name, {'state': feature.state})
