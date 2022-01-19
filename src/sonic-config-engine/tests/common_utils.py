@@ -54,6 +54,7 @@ class YangWrapper(object):
         Raise exception when yang validation failed
         """
         if PY3x and "-m" in argument:
+            import sonic_yang
             parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
             parser.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
             parser.add_argument("-k", "--hwsku", help="HwSKU")
