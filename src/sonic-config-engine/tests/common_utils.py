@@ -74,8 +74,8 @@ class YangWrapper(object):
                 cmd += ' -n ' + args.namespace
             cmd += ' --print-data'
             output = subprocess.check_output(cmd, shell=True).decode()
-            self.yang_parser.loadData(configdbJson=json.loads(output))
             try:
+                self.yang_parser.loadData(configdbJson=json.loads(output))
                 self.yang_parser.validate_data_tree()
             except sonic_yang.SonicYangException as e:
                 print("yang data generated from %s is not valid"%(args.minigraph))
