@@ -1,0 +1,9 @@
+bind-interfaces
+dhcp-hostsfile=/etc/dnsmasq.hosts
+
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %}
+interface={{ name }}
+dhcp-range={{ prefix | ip }},static
+{% endif %}
+{% endfor %}
