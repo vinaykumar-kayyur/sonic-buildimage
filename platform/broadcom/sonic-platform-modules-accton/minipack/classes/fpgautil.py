@@ -167,7 +167,6 @@ def show_qsfp_present_status(pim_num):
      print("    0x%08X  0x%08X  0x%08X" %(status, interrupt, mask))
      print("    Status      Interrupt   Mask")
      for row in range(8):
-         output_str = str()
          status_left = bool(status & (0x1 << row*2))
          status_right = bool(status & (0x2 << row*2))
          interrupt_left = bool(interrupt & (0x1 << row*2))
@@ -278,7 +277,7 @@ class FpgaUtil(object):
         pim_io(pim_num+1, dom["mdio"]["source_sel"], status)
         return True
     #retrun code=0, path is TH3. retrun code=1, path is FPGA
-    def get_pim_mdio_source_sel(sefl, pim_num):
+    def get_pim_mdio_source_sel(self, pim_num):
         if pim_num < self.PIM_START or pim_num > self.PIM_END:
             return False
         path= pim_io(pim_num+1, dom["mdio"]["source_sel"])
@@ -293,6 +292,7 @@ class FpgaUtil(object):
         if pim_num < self.PIM_START or pim_num > self.PIM_END:
             return False
         status=self.set_pim_mdio_source_sel(pim_num, 0)
+        return status
         #put init phy cmd here
     
     
@@ -317,14 +317,14 @@ class FpgaUtil(object):
 
             return False, {} # Time wrap or possibly incorrect timeout
 
-        pim_mask_status = fpga_io(iob["pim_present_intr_mask"], 0xffff00000)
+        fpga_io(iob["pim_present_intr_mask"], 0xffff00000)
         
         while timeout >= 0: 
             new_pim_status=0           
             pim_status = fpga_io(iob["pim_status"])
             present_status= pim_status & 0xff0000
             change_status=pim_status & 0xff 
-            interrupt_status = fpga_io(iob["interrupt_status"])
+            fpga_io(iob["interrupt_status"])
             
             for pim_num in range(0,8):
                 if change_status & (0x1 << pim_num) :

@@ -25,7 +25,6 @@ try:
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from .helper import APIHelper
     from minipack.fpgautil import FpgaUtil
-    import fbfpgaio
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

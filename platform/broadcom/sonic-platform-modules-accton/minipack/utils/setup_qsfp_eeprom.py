@@ -21,11 +21,9 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import getopt
     import sys
     import subprocess
-    import imp
     import logging
     import logging.config
     import logging.handlers
