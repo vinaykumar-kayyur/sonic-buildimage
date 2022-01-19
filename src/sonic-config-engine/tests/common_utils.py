@@ -79,5 +79,6 @@ class YangWrapper(object):
                 self.yang_parser.loadData(configdbJson=json.loads(output))
                 self.yang_parser.validate_data_tree()
             except sonic_yang.SonicYangException as e:
-                print("yang data generated from %s is not valid"%(args.minigraph))
-                raise
+                print("yang data generated from %s is not valid: %s"%(args.minigraph, str(e)))
+                return False
+        return True
