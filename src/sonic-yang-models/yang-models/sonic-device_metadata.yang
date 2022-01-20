@@ -135,6 +135,10 @@ module sonic-device_metadata {
                     type string;
                 }
 
+                leaf cluster {
+                    type string;
+                }
+
                 leaf subtype {
                     type string {
                         pattern "DualToR";
