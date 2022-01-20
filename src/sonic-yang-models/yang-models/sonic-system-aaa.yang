@@ -35,7 +35,7 @@ module sonic-system-aaa {
                             error-message "Invalid login choice";
                         }
                     }
-                    description "AAA authentication/authorization/accounting methods - radius|tacacs+|local|default";
+                    description "AAA authentication/authorization/accounting methods - radius/tacacs+/local/default";
                     default "local";
                 }
 
