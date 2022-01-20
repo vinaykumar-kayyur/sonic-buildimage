@@ -9,7 +9,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include "../../../../pddf/i2c/modules/include/pddf_psu_defs.h"
+#include "pddf_psu_defs.h"
 
 ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *da, char *buf);
 extern PSU_SYSFS_ATTR_DATA access_psu_v_out;

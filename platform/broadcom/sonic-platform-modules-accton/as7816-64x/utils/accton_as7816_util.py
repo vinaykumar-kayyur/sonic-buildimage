@@ -118,6 +118,43 @@ def ir3570_check():
         return -1
     return ret
 
+def psu_index_check():
+    version = 0
+    CPLD1_VERSION="/sys/bus/i2c/devices/19-0060/version"
+    try:
+        with open(CPLD1_VERSION, 'r') as cpld_version:
+            version = int(cpld_version.read())
+    except IOError:
+        return False
+
+    cpld_id = "NULL"
+    CPLD1_ID="/sys/bus/i2c/devices/10-0053/cpld_id"
+    if os.path.exists(CPLD1_ID):
+        try:
+            with open(CPLD1_ID, 'r') as cpld_id_fd:
+                cpld_id = cpld_id_fd.read()
+        except IOError:
+            return False
+
+    at_found = 0
+    if cpld_id.find("AT") != -1:
+        at_found = 1
+    elif (version == 5) and (cpld_id.find("NULL") != -1):
+        at_found = 1
+
+    if (at_found):
+        log_os_system('echo 0x53 > /sys/bus/i2c/devices/i2c-10/delete_device', 1)
+        log_os_system('echo 0x50 > /sys/bus/i2c/devices/i2c-9/delete_device', 1)
+        log_os_system('echo as7816_64x_psu1 0x50 > /sys/bus/i2c/devices/i2c-9/new_device', 1)
+        log_os_system('echo as7816_64x_psu2 0x53 > /sys/bus/i2c/devices/i2c-10/new_device', 1)
+
+    return True
+
+def  show_eeprom_help():
+    cmd =  sys.argv[0].split("/")[-1]+ " "  + args[0]
+    print  "    use \""+ cmd + " 1-64 \" to dump sfp# eeprom"
+    sys.exit(0)           
+            
 def my_log(txt):
     if DEBUG == True:
         print(("[ROY]"+txt))
@@ -251,6 +288,8 @@ def device_install():
             print(output)
             if FORCE == 0:                
                 return status  
+
+    psu_index_check()
 
     for i in range(0,len(sfp_map)):
         path = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device"

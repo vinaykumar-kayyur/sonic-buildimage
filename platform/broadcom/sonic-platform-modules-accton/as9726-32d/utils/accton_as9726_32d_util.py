@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2016 Accton Networks, Inc.
 #
@@ -24,16 +24,11 @@ options:
 command:
     install     : install drivers and generate related sysfs nodes
     clean       : uninstall drivers and remove related sysfs nodes
-    show        : show all systen status
-    sfp         : dump SFP eeprom
-    set         : change board setting with fan|sfp
 """
-
 import subprocess
 import getopt
 import sys
 import logging
-import re
 import time
 import os
 
@@ -43,81 +38,8 @@ verbose = False
 DEBUG = False
 args = []
 ALL_DEVICE = {}
-DEVICE_NO = {
-    'fan1': 3,
-    'fan2': 3,
-    'fan3': 3,
-    'fan4': 3,
-    'fan5': 3,
-    'fan6': 3,
-    'thermal': 6,
-    'psu': 2,
-    'sfp': 34}
-
-fan_prefix = '/sys/devices/platform/as9726_32d_'
-hwmon_types = {'fan1': ['fan'],
-               'fan2': ['fan'],
-               'fan3': ['fan'],
-               'fan4': ['fan'],
-               'fan5': ['fan'],
-               'fan6': ['fan'],
-               }
-hwmon_nodes = {
-    'fan1': [
-        'fan_duty_cycle_percentage',
-        'fan1_fault',
-        'fan1_front_speed_rpm',
-        'fan1_direction',
-        'fan1_rear_speed_rpm'],
-    'fan2': [
-        'fan_duty_cycle_percentage',
-        'fan2_fault',
-        'fan2_front_speed_rpm',
-        'fan2_direction',
-        'fan2_rear_speed_rpm'],
-    'fan3': [
-        'fan_duty_cycle_percentage',
-        'fan3_fault',
-        'fan3_front_speed_rpm',
-        'fan3_direction',
-        'fan3_rear_speed_rpm'],
-    'fan4': [
-        'fan4_duty_cycle_percentage',
-        'fan4_fault',
-        'fan4_front_speed_rpm',
-        'fan4_direction',
-        'fan4_rear_speed_rpm'],
-    'fan5': [
-        'fan_duty_cycle_percentage',
-        'fan5_fault',
-        'fan5_front_speed_rpm',
-        'fan5_direction',
-        'fan5_rear_speed_rpm'],
-    'fan6': [
-        'fan_duty_cycle_percentage',
-        'fan6_fault',
-        'fan6_front_speed_rpm',
-        'fan6_direction',
-        'fan6_rear_speed_rpm'],
-}
-hwmon_prefix = {'fan1': fan_prefix,
-                'fan2': fan_prefix,
-                'fan3': fan_prefix,
-                'fan4': fan_prefix,
-                'fan5': fan_prefix,
-                'fan6': fan_prefix,
-                }
 
 i2c_prefix = '/sys/bus/i2c/devices/'
-i2c_bus = {'fan': ['14-0066'],
-           'thermal': ['15-0048', '15-0049', '15-004a', '15-004b', '15-004c', '15-004f'],
-           'psu': ['9-0050', '9-0051'],
-           'sfp': ['10-0061', '10-0062']}
-i2c_nodes = {'fan': ['present', 'front_speed_rpm', 'rear_speed_rpm'],
-             'thermal': ['hwmon/hwmon*/temp1_input'],
-             'psu': ['psu_present ', 'psu_power_good'],
-             'sfp': ['module_present_', 'module_tx_disable_']}
-
 sfp_map = [17, 18, 19, 20, 21, 22, 23, 24,
            25, 26, 27, 28, 29, 30, 31, 32,
            33, 34, 35, 36, 37, 38, 39, 40,
@@ -193,7 +115,6 @@ def main():
         elif opt in ('-f', '--force'):
             FORCE = 1
         else:
-            print("TEST")
             logging.info('no option')
     for arg in args:
         if arg == 'install':
@@ -202,24 +123,8 @@ def main():
             do_uninstall()
         elif arg == 'api':
             do_sonic_platform_install()
-        elif arg == 'api_clean':   
+        elif arg == 'api_clean':
            do_sonic_platform_clean()
-        elif arg == 'show':
-            device_traversal()
-        elif arg == 'sff':
-            if len(args) != 2:
-                show_eeprom_help()
-            elif int(args[1]) == 0 or int(args[1]) > DEVICE_NO['sfp']:
-                show_eeprom_help()
-            else:
-                show_eeprom(args[1])
-            return
-        elif arg == 'set':
-            if len(args) < 3:
-                show_set_help()
-            else:
-                set_device(args[1:])
-            return
         else:
             show_help()
 
@@ -229,21 +134,6 @@ def main():
 def show_help():
     print(__doc__ % {'scriptName': sys.argv[0].split("/")[-1]})
     sys.exit(0)
-
-
-def show_set_help():
-    cmd = sys.argv[0].split("/")[-1] + " " + args[0]
-    print(cmd + " [sfp|fan]")
-    print("    use \"" + cmd + " fan 0-100\" to set fan duty percetage")
-    print("    use \"" + cmd + " sfp 33-34 {0|1}\" to set sfp# tx_disable")
-    sys.exit(0)
-
-
-def show_eeprom_help():
-    cmd = sys.argv[0].split("/")[-1] + " " + args[0]
-    print("    use \"" + cmd + " 1-32 \" to dump sfp# eeprom")
-    sys.exit(0)
-
 
 def my_log(txt):
     if DEBUG:
@@ -302,7 +192,6 @@ def driver_uninstall():
     for i in range(0, len(kos)):
         rm = kos[-(i + 1)].replace("modprobe", "modprobe -rq")
         lst = rm.split(" ")
-        print("lst=%s" % lst)
         if len(lst) > 3:
             del(lst[3])
         rm = " ".join(lst)
@@ -409,7 +298,7 @@ def do_sonic_platform_install():
     #Check API2.0 on py whl file
     status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
-        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
                 print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
@@ -418,17 +307,17 @@ def do_sonic_platform_install():
                 print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
             print(('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3)))
-    else:        
+    else:
         print(('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3)))
 
-    return 
+    return
 
 def do_sonic_platform_clean():
-    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         print(('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3)))
 
-    else:        
+    else:
         status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print(('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3)))
@@ -454,12 +343,6 @@ def do_install():
                 return status
     else:
         print(PROJECT_NAME.upper() + " devices detected....")
-
-#    for i in range(len(cpld_set)):
-#        status, output = log_os_system(cpld_set[i], 1)
-#        if status:
-#            if FORCE == 0:
-#                return status
 
     do_sonic_platform_install()
 
@@ -488,196 +371,6 @@ def do_uninstall():
     do_sonic_platform_clean()
 
     return
-
-
-def devices_info():
-    global DEVICE_NO
-    global ALL_DEVICE
-    global i2c_bus, hwmon_types
-    for key in DEVICE_NO:
-        ALL_DEVICE[key] = {}
-        for i in range(0, DEVICE_NO[key]):
-            ALL_DEVICE[key][key + str(i + 1)] = []
-
-    for key in i2c_bus:
-        buses = i2c_bus[key]
-        nodes = i2c_nodes[key]
-        for i in range(0, len(buses)):
-            for j in range(0, len(nodes)):
-                if 'fan' == key:
-                    for k in range(0, 6):
-                        node = key + str(k + 1)
-                        path = i2c_prefix + \
-                            buses[i] + "/fan" + str(k + 1) + "_" + nodes[j]
-                        my_log(node + ": " + path)
-                        ALL_DEVICE[key + str(k + 1)][node + str(j + 1)].append(path)
-                elif 'sfp' == key:
-                    for k in range(0, DEVICE_NO[key]):
-                        node = key + str(k + 1)
-                        if k < 16 and i==0 and j==0:
-                            path = i2c_prefix + \
-                            str(buses[0] + "/" + nodes[j] + str(k+1))
-                            my_log(node + ": " + path)
-                            ALL_DEVICE[key][node].append(path)
-                        if k >= 16 and i==1 and j==0:
-                            path = i2c_prefix + \
-                            str(buses[1] + "/" + nodes[j] + str(k+1))
-                            my_log(node + ": " + path)
-                            ALL_DEVICE[key][node].append(path)
-                        if k >= 32 and i==1 and j==1:
-                            path = i2c_prefix + \
-                            str(buses[1] + "/" + nodes[j] + str(k+1))
-                            my_log(node + ": " + path)
-                            ALL_DEVICE[key][node].append(path)
-                else:
-                    node = key + str(i + 1)
-                    path = i2c_prefix + buses[i] + "/" + nodes[j]
-                    my_log(node + ": " + path)
-                    ALL_DEVICE[key][node].append(path)
-
-    #for key in hwmon_types:
-    #    itypes = hwmon_types[key]
-    #    nodes = hwmon_nodes[key]
-    #    for i in range(0, len(itypes)):
-    #        for j in range(0, len(nodes)):
-    #            node = key + "_" + itypes[i]
-    #            path = hwmon_prefix[key] + itypes[i] + "/" + nodes[j]
-    #            my_log(node + ": " + path)
-    #            ALL_DEVICE[key][key + str(i + 1)].append(path)
-
-    # show dict all in the order
-    if DEBUG:
-        for i in sorted(ALL_DEVICE.keys()):
-            print((i + ": "))
-            for j in sorted(ALL_DEVICE[i].keys()):
-                print(("   " + j))
-                for k in (ALL_DEVICE[i][j]):
-                    print(("   " + "   " + k))
-    return
-
-
-def show_eeprom(index):
-    if system_ready() == False:
-        print("System's not ready.")
-        print("Please install first!")
-        return
-
-    if len(ALL_DEVICE) == 0:
-        devices_info()
-    node = ALL_DEVICE['sfp']['sfp' + str(index)][0]
-    node = node.replace(node.split("/")[-1], 'eeprom')
-    sfp_node = str(sfp_map[int(index)-1]) + '-0050'
-    node = node.replace(node.split("/")[-2], sfp_node)
-    # check if got hexdump command in current environment
-    ret, log = log_os_system("which hexdump", 0)
-    ret, log2 = log_os_system("which busybox hexdump", 0)
-    if len(log):
-        hex_cmd = 'hexdump'
-    elif len(log2):
-        hex_cmd = ' busybox hexdump'
-    else:
-        log = 'Failed : no hexdump cmd!!'
-        logging.info(log)
-        print(log)
-        return 1
-    print("node=%s" % node)
-    print(node + ":")
-    ret, log = log_os_system("cat " + node + "| " + hex_cmd + " -C", 1)
-    if ret == 0:
-        print(log)
-    else:
-        print("**********device no found**********")
-    return
-
-
-def set_device(args):
-    global DEVICE_NO
-    global ALL_DEVICE
-    if system_ready() == False:
-        print("System's not ready.")
-        print("Please install first!")
-        return
-
-    if len(ALL_DEVICE) == 0:
-        devices_info()
-
-    if args[0] == 'fan':
-        if int(args[1]) > 100:
-            show_set_help()
-            return
-        #print  ALL_DEVICE['fan']
-        # fan1~6 is all fine, all fan share same setting
-        node = ALL_DEVICE['fan1']['fan11'][0]
-        node = node.replace(node.split("/")[-1], 'fan_duty_cycle_percentage')
-        ret, log = log_os_system("cat " + node, 1)
-        if ret == 0:
-            print(("Previous fan duty: " + log.strip() + "%"))
-        ret, log = log_os_system("echo " + args[1] + " >" + node, 1)
-        if ret == 0:
-            print(("Current fan duty: " + args[1] + "%"))
-        return ret
-    elif args[0] == 'sfp':
-        if int(args[1]) > DEVICE_NO[args[0]] or int(args[1]) < DEVICE_NO[args[0]]-1: #33-34
-            show_set_help()
-            return
-        if len(args)<3 or len(args)>4: #len(args)=3
-            show_set_help()
-            return
-        if int(args[2])>1 or int(args[2])<0: #0|1
-            show_set_help()
-            return
-
-        #print  ALL_DEVICE[args[0]]
-        for i in range(0, len(ALL_DEVICE[args[0]])):
-            for j in ALL_DEVICE[args[0]][args[0] + str(args[1])]:
-                if j.find('tx_disable') != -1:
-                    ret, log = log_os_system("echo " + args[2] + " >" + j, 1)
-                    if ret:
-                        return ret
-    else:
-        show_set_help()
-
-    return
-
-# get digits inside a string.
-# Ex: 31 for "sfp31"
-
-
-def get_value(input):
-    digit = re.findall(r'\d+', input)
-    return int(digit[0])
-
-
-def device_traversal():
-    if system_ready() == False:
-        print("System's not ready.")
-        print("Please install first!")
-        return
-
-    if len(ALL_DEVICE) == 0:
-        devices_info()
-    for i in sorted(ALL_DEVICE.keys()):
-        print("============================================")
-        print((i.upper() + ": "))
-        print("============================================")
-
-        for j in sorted(list(ALL_DEVICE[i].keys()), key=get_value):
-            print("   " + j + ":", end=' ')
-            for k in (ALL_DEVICE[i][j]):
-                ret, log = log_os_system("cat " + k, 0)
-                func = k.split("/")[-1].strip()
-                func = re.sub(j + '_', '', func, 1)
-                func = re.sub(i.lower() + '_', '', func, 1)
-                if ret == 0:
-                    print(func + "=" + log + " ", end=' ')
-                else:
-                    print(func + "=" + "X" + " ", end=' ')
-            print()
-            print("----------------------------------------------------------------")
-
-        print()
-    return
-
 
 def device_exist():
     ret1, log = log_os_system("ls " + i2c_prefix + "*0077", 0)

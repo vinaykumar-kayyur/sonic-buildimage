@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 obj-m:= accton_as5835_54t_cpld.o accton_as5835_54t_psu.o  \
         accton_as5835_54t_fan.o accton_as5835_54t_leds.o \
-        ym2651y.o
+        ym2651y.o pddf_custom_psu.o
          
 else
 ifeq (,$(KERNEL_SRC))
