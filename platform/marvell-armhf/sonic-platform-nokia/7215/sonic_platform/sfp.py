@@ -5,7 +5,6 @@
 
 import os
 import sys
-import time
 
 try:
     from sonic_platform_base.sfp_base import SfpBase
@@ -139,7 +138,7 @@ class Sfp(SfpBase):
 
         self.port_to_eeprom_mapping[index] = eeprom_path
 
-        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer',
+        self.info_dict_keys = ['type', 'vendor_rev', 'serial', 'manufacturer',
                                'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length',
                                'nominal_bit_rate', 'specification_compliance',
@@ -263,7 +262,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardware_rev               |1*255VCHAR     |hardware version of SFP
+        vendor_rev                 |1*255VCHAR     |vendor revision of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -346,7 +345,7 @@ class Sfp(SfpBase):
                 ['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data \
                 ['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data \
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data \
                 ['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data \
                 ['data']['Vendor SN']['value']
@@ -795,28 +794,22 @@ class Sfp(SfpBase):
         Reset SFP.
         Returns:
             A boolean, True if successful, False if not
-        """        
-        if self.sfp_type == COPPER_TYPE:
-            return False
-
-        self.tx_disable(True)
-        time.sleep(1)
-        self.tx_disable(False)
-        
-        return True
+        """
+        # RJ45 and SFP ports not resettable
+        return False
 
     def tx_disable(self, tx_disable):
         """
-        Disable SFP TX 
+        Disable SFP TX
         Args:
             tx_disable : A Boolean, True to enable tx_disable mode, False to disable
                          tx_disable mode.
-        Returns: 
+        Returns:
             A boolean, True if tx_disable is set successfully, False if not
         """
         if self.sfp_type == COPPER_TYPE:
             return False
-        
+
         if smbus_present == 0:  # if called from sfputil outside of pmon
             cmdstatus, register = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
             if cmdstatus:
@@ -834,8 +827,8 @@ class Sfp(SfpBase):
         if tx_disable == True:
             setbits = register | mask
         else:
-            setbits = register & ~mask   
-  
+            setbits = register & ~mask
+
         if smbus_present == 0:  # if called from sfputil outside of pmon
             cmdstatus, output = cmd.getstatusoutput('sudo i2cset -y -m 0x0f 0 0x41 0x5 %d' % setbits)
             if cmdstatus:
@@ -846,7 +839,7 @@ class Sfp(SfpBase):
             DEVICE_ADDRESS = 0x41
             DEVICE_REG = 0x5
             bus.write_byte_data(DEVICE_ADDRESS, DEVICE_REG, setbits)
-                        
+
         return True
 
     def tx_disable_channel(self, channel, disable):

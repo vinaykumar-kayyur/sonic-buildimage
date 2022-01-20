@@ -1,9 +1,11 @@
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
+FROM multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:armhf-bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+FROM multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:arm64-bullseye
+COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
 FROM debian:bullseye
 {%- endif %}
@@ -15,6 +17,8 @@ COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
 ## TODO: Re-add in any necessary mirror URLs here as they become available
 RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian bullseye-backports main" >> /etc/apt/sources.list
 
 {%- if CONFIGURED_ARCH == "armhf" %}
@@ -22,8 +26,8 @@ RUN echo "deb [arch=armhf] http://deb.debian.org/debian bullseye main contrib no
         echo "deb-src [arch=armhf] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=armhf] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=armhf] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src [arch=armhf] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=armhf] http://ftp.debian.org/debian bullseye-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
@@ -32,8 +36,8 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian bullseye main contrib no
         echo "deb-src [arch=arm64] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=arm64] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=arm64] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src [arch=arm64] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=arm64] http://ftp.debian.org/debian bullseye-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
@@ -58,7 +62,6 @@ RUN apt-get update && apt-get install -y \
         dh-exec \
         kmod \
         libtinyxml2-dev \
-        python \
         python3 \
         python3-pip \
         libncurses5-dev \
@@ -193,7 +196,7 @@ RUN apt-get update && apt-get install -y \
         clang \
         pylint \
         python3-pytest \
-        python3-pytest \
+        python3-venv \
         gcovr \
         python3-pytest-cov \
         python3-pytest-cov \
@@ -235,6 +238,8 @@ RUN apt-get update && apt-get install -y \
 # For gtest
         libgtest-dev \
         cmake \
+# For gmock
+        libgmock-dev \
 # For pam_tacplus build
         autoconf-archive \
 # For iproute2
@@ -305,7 +310,6 @@ RUN apt-get update && apt-get install -y \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libpython2.7-dev     \
         libssl-dev           \
         dbus                 \
         libdbus-1-dev        \
@@ -319,22 +323,22 @@ RUN apt-get update && apt-get install -y \
 # For kdump-tools
         libbz2-dev \
 # For linkmgrd
-        libboost1.74-dev \
-        libboost-program-options1.74-dev \
-        libboost-system1.74-dev \
-        libboost-thread1.74-dev \
-        libboost-atomic1.74-dev \
-        libboost-chrono1.74-dev \
-        libboost-container1.74-dev \
-        libboost-context1.74-dev \
-        libboost-contract1.74-dev \
-        libboost-coroutine1.74-dev \
-        libboost-date-time1.74-dev \
-        libboost-fiber1.74-dev \
-        libboost-filesystem1.74-dev \
-        libboost-graph-parallel1.74-dev \
-        libboost-log1.74-dev \
-        libboost-regex1.74-dev \
+        libboost-dev \
+        libboost-program-options-dev \
+        libboost-system-dev \
+        libboost-thread-dev \
+        libboost-atomic-dev \
+        libboost-chrono-dev \
+        libboost-container-dev \
+        libboost-context-dev \
+        libboost-contract-dev \
+        libboost-coroutine-dev \
+        libboost-date-time-dev \
+        libboost-fiber-dev \
+        libboost-filesystem-dev \
+        libboost-graph-parallel-dev \
+        libboost-log-dev \
+        libboost-regex-dev \
         googletest \
         libgtest-dev \
         libgcc-10-dev \
@@ -343,23 +347,31 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config
+        pkg-config \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
 
 RUN apt-get -y build-dep openssh
+
+# Build fix for ARM64 and ARMHF /etc/debian_version
+{%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
+RUN apt upgrade -y base-files
+{%- endif %}
 
 # Build fix for ARMHF bullseye libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
        # Install doxygen build dependency packages
-       RUN apt install -y libxapian-dev yui-compressor libclang-3.9-dev texlive-extra-utils \
-           texlive-font-utils  rdfind llvm-6.0-dev libclang-6.0-dev sassc
+       RUN apt install -y libxapian-dev yui-compressor texlive-extra-utils \
+           texlive-font-utils rdfind llvm-11-dev libclang-11-dev sassc faketime mat2
 
        # Update doxygen with 64bit file offset patch
-       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.8.13-10.dsc && \
-           cd doxygen-1.8.13 && \
+       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.9.1-2.dsc && \
+           cd doxygen-1.9.1 && \
            sed -i '56 a add_definitions(-D_FILE_OFFSET_BITS=64)' CMakeLists.txt && \
            DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b && \
            cd .. && \
-           dpkg -i ./doxygen_1.8.13-10_armhf.deb && \
+           dpkg -i ./doxygen_1.9.1-2_armhf.deb && \
            rm -fr doxygen*
 
        # Aspell is unable to locate the language dictionaries.
@@ -367,6 +379,7 @@ RUN apt-get -y build-dep openssh
        RUN apt-get install --reinstall -y aspell-en
 
        # workaround because of https://bugs.launchpad.net/qemu/+bug/1805913, just disable aspell
+       # Issue now being tracked here - https://gitlab.com/qemu-project/qemu/-/issues/263
        RUN cp /bin/true /usr/bin/aspell
 {%- endif %}
 
@@ -468,6 +481,10 @@ EXPOSE 22
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
 
+# Install dependencies for dhcp relay test
+RUN pip3 install parameterized==0.8.1
+RUN pip3 install pyfakefs
+
 # Install docker engine 20.10 inside docker and enable experimental feature
 RUN apt-get update
 RUN apt-get install -y \
@@ -502,4 +519,14 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
+# Bazel requires "python"
+# TODO(PINS): remove when Bazel is okay with "python3" binary name
+RUN apt install -y python-is-python3
 {% endif -%}

@@ -8,6 +8,8 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+LEAF_ROUTER = 'LeafRouter'
+BACKEND_LEAF_ROUTER = 'BackEndLeafRouter'
 
 class TestCfgGen(TestCase):
 
@@ -45,7 +47,7 @@ class TestCfgGen(TestCase):
         except OSError:
             pass
 
-    def run_script(self, argument, check_stderr=False):
+    def run_script(self, argument, check_stderr=False, verbose=False):
         print('\n    Running sonic-cfggen ' + argument)
         if check_stderr:
             output = subprocess.check_output(self.script_file + ' ' + argument, stderr=subprocess.STDOUT, shell=True)
@@ -60,6 +62,8 @@ class TestCfgGen(TestCase):
             print('    Output: ' + output.strip())
         else:
             print('    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output)))
+            if verbose == True:
+                print('    Output: ' + output.strip())
         return output
 
     def test_dummy_run(self):
@@ -136,17 +140,29 @@ class TestCfgGen(TestCase):
 
     def test_var_json_data(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
+        tag_mode = kwargs.get('tag_mode', 'untagged')
         argument = '-m "' + graph_file + '" -p "' + self.port_config + '" --var-json VLAN_MEMBER'
         output = self.run_script(argument)
-        self.assertEqual(
-            utils.to_dict(output.strip()),
-            utils.to_dict(
-                '{\n    "Vlan1000|Ethernet8": {\n        "tagging_mode": "untagged"\n    },'
-                ' \n    "Vlan2000|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
-                ' \n    "Vlan2001|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
-                ' \n    "Vlan2020|Ethernet12": {\n        "tagging_mode": "tagged"\n    }\n}'
+        if tag_mode == "tagged":
+            self.assertEqual(
+                utils.to_dict(output.strip()),
+                utils.to_dict(
+                    '{\n    "Vlan1000|Ethernet8": {\n        "tagging_mode": "tagged"\n    },'
+                    ' \n    "Vlan2000|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
+                    ' \n    "Vlan2001|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
+                    ' \n    "Vlan2020|Ethernet12": {\n        "tagging_mode": "tagged"\n    }\n}'
+                )
             )
-        )
+        else:
+            self.assertEqual(
+                utils.to_dict(output.strip()),
+                utils.to_dict(
+                    '{\n    "Vlan1000|Ethernet8": {\n        "tagging_mode": "untagged"\n    },'
+                    ' \n    "Vlan2000|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
+                    ' \n    "Vlan2001|Ethernet12": {\n        "tagging_mode": "tagged"\n    },'
+                    ' \n    "Vlan2020|Ethernet12": {\n        "tagging_mode": "tagged"\n    }\n}'
+                )
+            )
 
     def test_read_yaml(self):
         argument = '-v yml_item -y ' + os.path.join(self.test_dir, 'test.yml')
@@ -187,7 +203,7 @@ class TestCfgGen(TestCase):
     # more robust by adding better parsing logic.
     def test_minigraph_acl(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
-        output = self.run_script(argument, True)
+        output = self.run_script(argument, True, True)
         self.assertEqual(
             utils.to_dict(output.strip().replace("Warning: Ignoring Control Plane ACL NTP_ACL without type\n", '')),
             utils.to_dict(
@@ -229,26 +245,38 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'members': ['Ethernet8']}, "
-                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001', 'members': ['Ethernet12']},"
-                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000', 'members': ['Ethernet12']},"
-                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020', 'members': ['Ethernet12']}}"
+                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000'}, "
+                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001'},"
+                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000'},"
+                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020'}}"
             )
         )
 
     def test_minigraph_vlan_members(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
+        tag_mode = kwargs.get('tag_mode', 'untagged')
         argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v VLAN_MEMBER'
         output = self.run_script(argument)
-        self.assertEqual(
-            utils.to_dict(output.strip()),
-            utils.to_dict(
-                "{('Vlan2000', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
-                "('Vlan1000', 'Ethernet8'): {'tagging_mode': 'untagged'}, "
-                "('Vlan2020', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
-                "('Vlan2001', 'Ethernet12'): {'tagging_mode': 'tagged'}}"
+        if tag_mode == "tagged":
+            self.assertEqual(
+                utils.to_dict(output.strip()),
+                utils.to_dict(
+                    "{('Vlan2000', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
+                    "('Vlan1000', 'Ethernet8'): {'tagging_mode': 'tagged'}, "
+                    "('Vlan2020', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
+                    "('Vlan2001', 'Ethernet12'): {'tagging_mode': 'tagged'}}"
+                )
             )
-        )
+        else:
+            self.assertEqual(
+                utils.to_dict(output.strip()),
+                utils.to_dict(
+                    "{('Vlan2000', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
+                    "('Vlan1000', 'Ethernet8'): {'tagging_mode': 'untagged'}, "
+                    "('Vlan2020', 'Ethernet12'): {'tagging_mode': 'tagged'}, "
+                    "('Vlan2001', 'Ethernet12'): {'tagging_mode': 'tagged'}}"
+                )
+            )
 
     def test_minigraph_vlan_interfaces(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
@@ -674,6 +702,33 @@ class TestCfgGen(TestCase):
     def test_minigraph_sub_port_intf_sub(self, check_stderr=True):
         self.verify_sub_intf(graph_file=self.sample_subintf_graph, check_stderr=check_stderr)
 
+    def test_minigraph_no_vlan_member(self, check_stderr=True):
+        self.verify_no_vlan_member()
+
+    def test_minigraph_sub_port_no_vlan_member(self, check_stderr=True):
+        try:
+            print('\n    Change device type to %s' % (BACKEND_LEAF_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (LEAF_ROUTER, BACKEND_LEAF_ROUTER, self.sample_graph), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (LEAF_ROUTER, BACKEND_LEAF_ROUTER, self.sample_graph), shell=True)
+
+            self.test_jinja_expression(self.sample_graph, BACKEND_LEAF_ROUTER)
+            self.verify_no_vlan_member()
+        finally:
+            print('\n    Change device type back to %s' % (LEAF_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_LEAF_ROUTER, LEAF_ROUTER, self.sample_graph), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_LEAF_ROUTER, LEAF_ROUTER, self.sample_graph), shell=True)
+
+            self.test_jinja_expression(self.sample_graph, LEAF_ROUTER)
+
+    def verify_no_vlan_member(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VLAN_MEMBER"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{}")
+
     def verify_sub_intf(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         check_stderr = kwargs.get('check_stderr', True)
@@ -698,9 +753,7 @@ class TestCfgGen(TestCase):
             self.assertEqual(output.strip(), "")
 
             # All the other tables stay unchanged
-            self.test_var_json_data(graph_file=graph_file)
             self.test_minigraph_vlans(graph_file=graph_file)
-            self.test_minigraph_vlan_members(graph_file=graph_file)
             self.test_minigraph_vlan_interfaces(graph_file=graph_file)
             self.test_minigraph_portchannels(graph_file=graph_file)
             self.test_minigraph_ethernet_interfaces(graph_file=graph_file)
@@ -734,6 +787,10 @@ class TestCfgGen(TestCase):
                         "('Ethernet0.10', 'FC00::75/126'): {}}"
                     )
                 )
+
+            # VLAN_MEMBER table should have all tagged members
+            self.test_var_json_data(graph_file=graph_file, tag_mode='tagged')
+            self.test_minigraph_vlan_members(graph_file=graph_file, tag_mode='tagged')
 
         finally:
             print('\n    Change device type back to %s' % (TOR_ROUTER))
@@ -843,11 +900,18 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_bgp_packet_chassis_static_route(self):
+        argument = '-m "' + self.packet_chassis_graph + '" -p "' + self.packet_chassis_port_ini + '" -v "STATIC_ROUTE"'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'ifname': 'PortChannel40,PortChannel50', 'advertise':'false'}}")
+        )
+
         argument = '-m "' + self.packet_chassis_graph + '" -p "' + self.packet_chassis_port_ini + '" -n "' + "asic1" + '" -v "STATIC_ROUTE"'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2'}}")
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'ifname': 'PortChannel40,PortChannel50', 'advertise':'false'}}")
         )
 
     def test_minigraph_bgp_packet_chassis_vlan_subintf(self):
