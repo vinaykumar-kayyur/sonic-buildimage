@@ -327,6 +327,8 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/memory_checker
 sudo cp $IMAGE_CONFIGS/monit/restart_service $FILESYSTEM_ROOT/usr/bin/
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/restart_service
 
+# Install custom-built smartmontools
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/smartmontools_*.deb
 
 # Install custom-built openssh sshd
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_*.deb
@@ -377,6 +379,10 @@ echo "system-health.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
 # Copy logrotate.d configuration files
 sudo cp -f $IMAGE_CONFIGS/logrotate/logrotate.d/* $FILESYSTEM_ROOT/etc/logrotate.d/
+sudo cp $IMAGE_CONFIGS/logrotate/rsyslog.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+sudo cp $IMAGE_CONFIGS/logrotate/logrotate-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo cp $IMAGE_CONFIGS/logrotate/logrotate-config.sh $FILESYSTEM_ROOT/usr/bin/
+echo "logrotate-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
 # Copy systemd-journald configuration files
 sudo cp -f $IMAGE_CONFIGS/systemd/journald.conf $FILESYSTEM_ROOT/etc/systemd/
