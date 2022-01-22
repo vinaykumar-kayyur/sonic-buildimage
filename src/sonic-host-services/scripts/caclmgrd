@@ -198,9 +198,10 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         return tcp_flags_str
 
     def generate_block_ip2me_traffic_iptables_commands(self, namespace):
+        # We do not block MGMT_INTERFACE IPs by default to allow users
+        # to manage the box with default configuration.
         INTERFACE_TABLE_NAME_LIST = [
             "LOOPBACK_INTERFACE",
-            "MGMT_INTERFACE",
             "VLAN_INTERFACE",
             "PORTCHANNEL_INTERFACE",
             "INTERFACE"
