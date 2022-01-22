@@ -6,7 +6,8 @@
                     {
                         "name": "collector1",
                         "collector_ip": "10.100.12.13",
-                        "collector_port": "6343"
+                        "collector_port": "6343",
+                        "collector_vrf": "default"
                     }
                 ]
             }
@@ -46,11 +47,11 @@
                         "name": "collector1",
                         "collector_ip": "10.100.12.13"
                     },
-		    {
+                    {
                         "name": "collector2",
                         "collector_ip": "10.144.1.2"
                     },
-		    {
+                    {
                         "name": "collector3",
                         "collector_ip": "10.100.12.15"
                     }
@@ -60,7 +61,7 @@
     },
 
     "SFLOW_SESSION_TEST": {
-	"sonic-port:sonic-port": {
+        "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
                     {
