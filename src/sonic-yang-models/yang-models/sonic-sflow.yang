@@ -56,9 +56,9 @@ module sonic-sflow{
                     default 6343;
                 }
 
-        leaf collector_vrf {
-            type string; //TODO
-        }
+                leaf collector_vrf {
+                    type string; //TODO
+                }
 
             } /* end of list SFLOW_COLLECTOR_LIST */
         } /* end of container SFLOW_COLLECTOR */
