@@ -21,20 +21,20 @@ RUN rm -rf               \
     /usr/share/locale/*
 
 # Update apt's cache of available packages
-RUN apt-get update &&               \
-    apt-get install -f -y           \
-        rsyslog                     \
-        gnupg                       \
-        gnupg1                      \
-        gnupg2                      \
-        libcurl4=7.74.0-1.2~bpo10+1 \
-        curl=7.74.0-1.2~bpo10+1     \
-        libacl1                     \
-        libuuid1                    \
-        libxml2                     \
-        python-dev                  \
-        python-pip                  \
+RUN apt-get update &&       \
+    apt-get install -f -y   \
+        rsyslog             \
+        gnupg               \
+        gnupg1              \
+        gnupg2              \
+        libacl1             \
+        libuuid1            \
+        libxml2             \
+        python-dev          \
+        python-pip          \
         python-setuptools
+
+RUN apt-get install -y -t buster-backports curl
 
 RUN pip install wheel
 
