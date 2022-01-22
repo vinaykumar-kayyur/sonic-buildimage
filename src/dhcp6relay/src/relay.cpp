@@ -226,9 +226,11 @@ void send_udp(int sock, uint8_t *buffer, struct sockaddr_in6 target, uint32_t n,
     std::string counterVlan = counter_table;
     if(sendto(sock, buffer, n, 0, (const struct sockaddr *)&target, sizeof(target)) == -1)
         syslog(LOG_ERR, "sendto: Failed to send to target address\n");
-    else {
+    else if (counterMap.find(msg_type) != counterMap.end()) {
         counters[msg_type]++;
         update_counter(config->db, counterVlan.append(config->interface), msg_type);
+    } else {
+        syslog(LOG_WARNING, "unexpected message type %d(0x%x)\n", msg_type, msg_type);
     }
 }
 
