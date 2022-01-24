@@ -114,7 +114,7 @@ dependent_startup_wait_for=rsyslogd:running
 {% if not skip_ycabled %}
 [program:ycabled]
 {% if delay_ycabled %}
-command=bash -c "sleep 30 nice -n -20 python3 /usr/local/bin/ycabled"
+command=bash -c "sleep 30 && nice -n -20 python3 /usr/local/bin/ycabled"
 {% else %}
 command=nice -n -20 python3 /usr/local/bin/ycabled
 {% endif %}
