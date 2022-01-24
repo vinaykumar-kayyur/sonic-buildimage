@@ -84,7 +84,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         }
     }
 
-    UPDATE_DELAY_SECS = 0.5
+    UPDATE_DELAY_SECS = 1
 
     DualToR = False
 
@@ -288,6 +288,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         for acl_service in self.ACL_SERVICES:
             if self.ACL_SERVICES[acl_service]["multi_asic_ns_to_host_fwd"]:
                 # Get the Source IP Set if exists else use default source ip prefix
+                if acl_service not in acl_source_ip_map:
+                    continue
                 nat_source_ipv4_set = acl_source_ip_map[acl_service]["ipv4"] if acl_source_ip_map and acl_source_ip_map[acl_service]["ipv4"] else { "0.0.0.0/0" }
                 nat_source_ipv6_set = acl_source_ip_map[acl_service]["ipv6"] if acl_source_ip_map and acl_source_ip_map[acl_service]["ipv6"] else { "::/0" }
 
