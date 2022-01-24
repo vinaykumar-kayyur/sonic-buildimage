@@ -241,10 +241,7 @@ module sonic-flex_counter {
                 }
 
                 leaf ip_prefix {
-                    type union {
-                        type stypes:sonic-ip4-prefix;
-                        type stypes:sonic-ip6-prefix;
-                    }
+                    type stypes:sonic-ip-prefix;
                 }
 
                 leaf max_match_count {
