@@ -9,15 +9,11 @@
 import os
 import os.path
 import glob
-from collections import namedtuple
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-Threshold = namedtuple('Threshold', ['high_crit', 'high_err', 'high_warn',
-                       'low_warn', 'low_err', 'low_crit'], defaults=[0]*6)
 
 PSU_I2C_PATH = "/sys/bus/i2c/devices/{}-00{}/"
 PSU_HWMON_I2C_MAPPING = {
@@ -42,44 +38,20 @@ PSU_CPLD_I2C_MAPPING = {
     },
 }
 
-THERMAL_NAME_LIST = ("CPU Board 0x4B", "Main Board 0x4C",
-                     "Main Board 0x49", "Main Board 0x4A")
-CPU_THERMAL_NAME = "CPU Core temp"
-PSU_THERMAL_NAME_LIST = ("PSU-1 temp sensor 1", "PSU-2 temp sensor 1")
+THERMAL_NAME_LIST = ["CPU Board 0x4B", "Main Board 0x4C",
+                     "Main Board 0x49", "Main Board 0x4A"]
+
+PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 1"]
 
 SYSFS_PATH = "/sys/bus/i2c/devices"
 
-def is_fan_dir_F2B():
-    from sonic_platform.platform import Platform
-    fan = Platform().get_chassis().get_fan(0)
-    return fan.get_direction().lower() == fan.FAN_DIRECTION_EXHAUST
-
-
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
-    THRESHOLDS_F2B = {
-        0: Threshold(70.0, 65.0, 65.0),
-        1: Threshold(67.0, 62.0, 62.0),
-        2: Threshold(58.0, 53.0, 53.0),
-        3: Threshold(61.0, 56.0, 56.0),
-    }
-    THRESHOLDS_B2F = {
-        0: Threshold(57.0, 52.0, 52.0),
-        1: Threshold(66.0, 61.0, 61.0),
-        2: Threshold(60.0, 55.0, 55.0),
-        3: Threshold(59.0, 54.0, 54.0),
-    }
-    THRESHOLDS = None
 
-    def __init__(self, thermal_index=0, is_psu=False, psu_index=0, is_cpu=False):
+    def __init__(self, thermal_index=0, is_psu=False, psu_index=0):
         self.index = thermal_index
         self.is_psu = is_psu
         self.psu_index = psu_index
-        self.is_cpu = is_cpu
-
-        if self.is_cpu:
-            self.cpu_paths = glob.glob('/sys/devices/platform/coretemp.0/hwmon/hwmon*/temp*_input')
-            self.cpu_path_idx = 0
 
         if self.is_psu:
             psu_i2c_bus = PSU_HWMON_I2C_MAPPING[psu_index]["num"]
@@ -125,39 +97,21 @@ class Thermal(ThermalBase):
         else:
             return 0
 
-    def __get_max_temp(self, paths):
-        max_temp = -1.0
-        max_idx = 0
-        for i, path in enumerate(paths):
-            read_temp = self.__get_temp(path)
-            if(read_temp > max_temp):
-                max_temp = read_temp
-                max_idx = i
-        return max_temp, max_idx
 
-    def __get_cpu_threshold(self, type):
-        path = self.cpu_paths[self.cpu_path_idx]
-        high_warn = self.__get_temp(path.replace('_input', '_max'))
-        if type == 'high_warn':
-            return high_warn
-        high_crit = self.__get_temp(path.replace('_input', '_crit'))
-        if type == 'high_crit':
-            return high_crit
-        if type == 'high_err':
-            return (high_crit + high_warn) / 2
-        return 0
+    def __set_threshold(self, file_name, temperature):
+        if self.is_psu:
+            return True
+        temp_file_path = os.path.join(self.hwmon_path, file_name)
+        for filename in glob.glob(temp_file_path):
+            try:
+                with open(filename, 'w') as fd:
+                    fd.write(str(temperature))
+                    fd.flush()
+                return True
+            except IOError as e:
+                print("IOError")
+                return False
 
-    def __try_get_threshold(self, type):
-        if self.THRESHOLDS is None:
-            self.THRESHOLDS = self.THRESHOLDS_F2B if is_fan_dir_F2B() else self.THRESHOLDS_B2F
-
-        if self.is_cpu:
-            return self.__get_cpu_threshold(type)
-
-        if self.is_psu==False and self.index in self.THRESHOLDS:
-            return getattr(self.THRESHOLDS[self.index], type)
-        else:
-            return None
 
     def get_temperature(self):
         """
@@ -166,16 +120,39 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
-        if self.is_cpu:
-            cpu_temp, self.cpu_path_idx = self.__get_max_temp(self.cpu_paths)
-            return cpu_temp
-
         if not self.is_psu:
             temp_file = "temp{}_input".format(self.ss_index)
         else:
             temp_file = self.psu_hwmon_path + "psu_temp1_input"
-
         return self.__get_temp(temp_file)
+
+    def get_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of thermal
+        Returns:
+            A float number, the high threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.is_psu:
+            return 80
+
+        temp_file = "temp{}_max".format(self.ss_index)
+        return self.__get_temp(temp_file)
+
+    def set_high_threshold(self, temperature):
+        """
+        Sets the high threshold temperature of thermal
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
+            e.g. 30.125
+        Returns:
+            A boolean, True if threshold is set successfully, False if not
+        """
+        temp_file = "temp{}_max".format(self.ss_index)
+        temperature = temperature *1000
+        self.__set_threshold(temp_file, temperature)
+
+        return True
 
     def get_name(self):
         """
@@ -183,8 +160,6 @@ class Thermal(ThermalBase):
             Returns:
             string: The name of the thermal device
         """
-        if self.is_cpu:
-            return CPU_THERMAL_NAME
         if self.is_psu:
             return PSU_THERMAL_NAME_LIST[self.psu_index]
         else:
@@ -196,8 +171,6 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if Thermal is present, False if not
         """
-        if self.is_cpu:
-            return True
         if self.is_psu:
             val = self.__read_txt_file(self.cpld_path + "psu_present")
             return int(val, 10) == 1
@@ -215,8 +188,6 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        if self.is_cpu:
-            return True
         if self.is_psu:
             temp_file = self.psu_hwmon_path + "psu_temp_fault"
             return self.get_presence() and (not int(
@@ -264,20 +235,3 @@ class Thermal(ThermalBase):
         """
         return False
 
-    def get_high_critical_threshold(self):
-        return self.__try_get_threshold('high_crit')
-
-    def get_low_critical_threshold(self):
-        return self.__try_get_threshold('low_crit')
-
-    def get_high_threshold(self):
-        return self.__try_get_threshold('high_err')
-
-    def get_low_threshold(self):
-        return self.__try_get_threshold('low_err')
-
-    def get_high_warning_threshold(self):
-        return self.__try_get_threshold('high_warn')
-
-    def get_low_warning_threshold(self):
-        return self.__try_get_threshold('low_warn')
