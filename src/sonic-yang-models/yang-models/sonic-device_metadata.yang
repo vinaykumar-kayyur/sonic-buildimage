@@ -137,6 +137,7 @@ module sonic-device_metadata {
 
                 leaf cluster {
                     type string;
+                    description "The switch is a member of this cluster.";
                 }
 
                 leaf subtype {
