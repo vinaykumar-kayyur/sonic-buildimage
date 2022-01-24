@@ -49,7 +49,7 @@ class SonicYangExtMixin:
             self.yangFiles = [f.split('/')[-1] for f in self.yangFiles]
             self.yangFiles = [f.split('.')[0] for f in self.yangFiles]
             self.sysLog(syslog.LOG_DEBUG,'Loaded below Yang Models')
-            self.sysLog(syslog.LOG_DEBUG,self.yangFiles)
+            self.sysLog(syslog.LOG_DEBUG,str(self.yangFiles))
 
             # load json for each yang model
             self._loadJsonYangModel()
@@ -219,10 +219,7 @@ class SonicYangExtMixin:
                 del self.jIn[table]
 
         if len(self.tablesWithOutYang):
-            print("Note: Below table(s) have no YANG models:")
-            for table in self.tablesWithOutYang.keys():
-                print(str(table), end=", ")
-            print()
+            self.sysLog(msg=f"Note: Below table(s) have no YANG models: {', '.join(self.tablesWithOutYang)}", doPrint=True)
 
         if croppedFile:
             with open(croppedFile, 'w') as f:

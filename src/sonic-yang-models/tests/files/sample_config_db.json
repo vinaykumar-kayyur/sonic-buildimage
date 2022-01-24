@@ -688,6 +688,15 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up"
+            },
+            "Ethernet120": {
+                "alias": "Eth31/1",
+                "lanes": "121,122",
+                "description": "",
+                "fec": "fc",
+                "speed": "11100",
+                "tpid": "0x8100",
+                "admin_status": "up"
             }
         },
         "ACL_TABLE": {
@@ -845,6 +854,13 @@
                 "family": "IPv4"
             }
         },
+        "VLAN_SUB_INTERFACE": {
+            "Ethernet120.10": {
+                "admin_status": "up"
+            },
+            "Ethernet120.10|10.0.1.56/31": {},
+            "Ethernet120.10|fc00::1:71/126": {}
+        },
         "VLAN_MEMBER": {
             "Vlan111|Ethernet0": {
                 "tagging_mode": "untagged"
@@ -973,13 +989,22 @@
                 "polling_interval": "0"
             }
         },
-
         "WARM_RESTART": {
             "bgp": {
                 "bgp_timer": "500"
             }
         },
-
+        "PORT_STORM_CONTROL": {
+            "Ethernet0|broadcast": {
+                "kbps": "10000"
+            },
+            "Ethernet0|unknown-multicast": {
+                "kbps": "30000"
+            },
+            "Ethernet0|unknown-unicast": {
+                "kbps": "20000"
+            }
+        },
         "PFC_WD": {
             "Ethernet9": {
                "action": "drop",
@@ -1270,6 +1295,15 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
+                "set_owner": "kube"
+            },
+            "dhcp_relay": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
                 "set_owner": "kube"
             }
         },
