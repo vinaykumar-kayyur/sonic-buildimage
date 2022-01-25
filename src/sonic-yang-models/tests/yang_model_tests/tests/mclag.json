@@ -29,10 +29,4 @@
         "desc": "mclag unique ip configured without domain",
         "eStr" : "mclag not configured"
     }
-    /*
-    "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
-        "desc": "mclag unique ip configured with ip address present",
-        "eStr" : "remove configured ip/v6 address and reconfigure after separate ip configuration"
-    }
-    */
 }
