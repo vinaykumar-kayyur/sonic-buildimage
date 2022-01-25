@@ -352,7 +352,9 @@
                 ]
             }
         }
-    },
+    }
+
+    /*
     "MCLAG_UNIQUE_IP_ADDR_PRESENT_MUST_TEST": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
@@ -464,5 +466,6 @@
             }
         }
     }
+    */
 
 }
