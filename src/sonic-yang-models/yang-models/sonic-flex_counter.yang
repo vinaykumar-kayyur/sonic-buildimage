@@ -235,6 +235,11 @@ module sonic-flex_counter {
                 key "vrf_name ip_prefix";
 
                 leaf vrf_name {
+                    /*
+                    We don't use vrf_name reference here because:
+                    1. User is allowed to configure a VRF that does not exist yet here, orchagent is designed to resolve the VRF name once the VRF is created.
+                    2. The field vrf_name accept both VRF name and VNET name.
+                    */
                     type string {
                         length 0..16;
                     }
