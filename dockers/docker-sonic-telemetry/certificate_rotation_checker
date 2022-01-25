@@ -3,12 +3,13 @@
 """
 certificate_rotation_checker
 
-This script will be leveraged to periodically check whether the certificate file 
-of streaming telemetry was rotated or not. The streaming telemetry server process
-will be restarted if the certificate file was rotated.
+This script will be leveraged to periodically check whether the certificate file
+of streaming telemetry was rotated or not. The configuration of streaming telemetry
+server process will be reloaded if the certificate file was rotated.
 """
 
 import os
+import signal
 import subprocess
 import sys
 import syslog
@@ -49,78 +50,78 @@ def get_command_result(command):
     return proc_instance.returncode, command_stdout.strip()
 
 
-def check_telemetry_server_running():
-    """Checkes whether telemetry server process is running.
+def get_telemetry_server_info():
+    """Gets telemetry server process information.
 
     Args:
         None.
 
     Returns:
-        None.
+        If telemetry server process is running, returns True and process id;
+        Otherwise returns False and -1.
     """
     processes_status_cmd = "supervisorctl status"
     retry_times = 0
-    is_running = False
 
     while retry_times <= MAX_RETRY_TIMES:
         retry_times += 1
         exit_code, command_stdout = get_command_result(processes_status_cmd)
         if exit_code != 3:
             syslog.syslog(syslog.LOG_INFO,
-                          "Failed to get the processes running status in telemetry container and retry after 60 seconds ...")
+                          "Failed to get the telemetry server process information and retry after 60 seconds ...")
             time.sleep(60)
         else:
             for line in command_stdout.splitlines():
                 if "telemetry" in line and "RUNNING" in line:
-                    is_running = True
-                    break
-            if is_running:
-                syslog.syslog(syslog.LOG_INFO,
-                              "Telemetry server process is running after certificate and private key were rotated!")
-                break
+                    return True, line.split()[3].strip(",")
 
-    if not is_running:
-        syslog.syslog(syslog.LOG_ERR,
-                      "Telemetry server process is not running after certificate and private key were rotated and exiting ...")
-        sys.exit(1)
+    return False, -1
 
 
-def restart_telemetry_server():
-    """Restarts the telemetry server process by Supervisord and then checks
-    it is actually running.
+def reload_telemetry_server_configuration():
+    """Reloads the telemetry server configuration by sending signal 'SIGHUP'
+    to telemetry server process and checks it is actually running after doing the reload.
 
     Args:
         None
 
     Returns:
-        None
+        Returns True if the configuration was reloaded successfully; Otherwise, return False.
     """
-    restart_telemetry_server_cmd = "supervisorctl restart telemetry"
-    retry_times = 0
+    telemetry_server_pid = -1
+    is_running = False
 
-    while retry_times <= MAX_RETRY_TIMES:
-        retry_times += 1
-        exit_code, command_stdout = get_command_result(restart_telemetry_server_cmd)
-        if exit_code != 0:
-            syslog.syslog(syslog.LOG_INFO,
-                          "Failed to restart telemetry server process and retry after 60 seconds ...")
-            time.sleep(60)
-        else:
-            break
-
-    if retry_times > MAX_RETRY_TIMES:
+    is_running, telemetry_server_pid = get_telemetry_server_info()
+    if not is_running:
         syslog.syslog(syslog.LOG_ERR,
-                      "Failed to restart telemetry server process after trying '{}' times and exiting ..."
-                      .format(MAX_RETRY_TIMES))
-        sys.exit(2)
+                      "Telemetry server process is not running before reloading configuration!")
+        return False
 
-    check_telemetry_server_running()
+    syslog.syslog(syslog.LOG_INFO,
+                  "Telemetry server process is running with PID: {}".format(telemetry_server_pid))
+    syslog.syslog(syslog.LOG_INFO, "Sending 'SIGHUP' signal to telemetry server process ...")
+
+    os.kill(int(telemetry_server_pid), signal.SIGHUP)
+
+    syslog.syslog(syslog.LOG_INFO, "'SIGHUP' signal was sent out.")
+
+    # Wait for 120 seconds to check whether telemetry server process comes back
+    time.sleep(120)
+
+    is_running, telemetry_server_pid = get_telemetry_server_info()
+    if not is_running:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Telemetry server process is not running after reloading configuration!")
+        return False
+
+    syslog.syslog(syslog.LOG_INFO, "Telemetry server process is running after reloading configuration!")
+    return True
 
 
 def check_certificate_rotated(certificate_file_name):
     """Leverages the 'inotify' module to monitor the file system events under the
-    directory which stores the SONiC credentials and restarts telemetry server
-    process if its certificate was rotated.
+    directory which stores the SONiC credentials and reloads telemetry server
+    configuration if its certificate was rotated.
 
 
     Args:
@@ -139,21 +140,23 @@ def check_certificate_rotated(certificate_file_name):
                 and ("IN_CREATE" in event_type or "IN_MOVED_TO" in event_type)):
             certificate_file_rotated = True
 
-        if (file_name == certificate_file_name and "IN_DELETE" in event_type):
-            syslog.syslog(syslog.LOG_ERR, "Certificate file on device was deleted!")
-
         if certificate_file_rotated:
             certificate_file_rotated = False
             syslog.syslog(syslog.LOG_INFO,
-                          "Certificate was rotated and restarting telemetry server process ...")
-            restart_telemetry_server()
+                          "Certificate was rotated and reloading telemetry server configuration ...")
+
+            if not reload_telemetry_server_configuration():
+                syslog.syslog(syslog.LOG_ERR,
+                              "Failed to reload the telemetry server configuration!")
+
+            syslog.syslog(syslog.LOG_INFO, "Telemetry server configuration was reloaded successfully!")
 
 
 def certificate_rotated_checker():
-    """Checks rotation of certificate file and restart streaming telemetry server if necessary.
+    """Checks rotation of certificate file and then reloads streaming telemetry server configuration.
 
     Leverages 'inotify' module to check whether the certificate file of streaming telemetry was
-    already rotated or not. The streaming telemetry server process will be restarted if it was rotated.
+    rotated or not. The configuration of telemetry server process will be reloaded if it was rotated.
 
     Args:
         None
@@ -177,17 +180,17 @@ def certificate_rotated_checker():
             syslog.syslog(syslog.LOG_INFO, "Path of private key file is '{}'".format(private_key_file_path))
         else:
             syslog.syslog(syslog.LOG_ERR,
-                          "Failed to retrieve the path of certificate file from 'TELEMETRY' table!")
-            sys.exit(3)
+                          "Failed to retrieve the path of certificate or private key file from 'TELEMETRY' table!")
+            sys.exit(1)
     else:
         syslog.syslog(syslog.LOG_ERR,
                       "Failed to retrieve the certificate information from 'TELEMETRY' table!")
-        sys.exit(4)
+        sys.exit(2)
 
     while True:
         if not os.path.exists(certificate_file_path) or not os.path.exists(private_key_file_path):
             syslog.syslog(syslog.LOG_ERR,
-                          "Certificate or private key file did not exist on device and sleep '{}' seconds to check again ..."
+                          "Certificate or private key file did not exist on device and checks again after '{}' seconds ..."
                           .format(CERTIFICATE_CHECKING_INTERVAL_SECS))
             time.sleep(CERTIFICATE_CHECKING_INTERVAL_SECS)
         else:
@@ -197,7 +200,7 @@ def certificate_rotated_checker():
     if not certificate_file_name:
         syslog.syslog(syslog.LOG_ERR,
                       "Failed to retrieve the file name of certificate!")
-        sys.exit(5)
+        sys.exit(3)
 
     check_certificate_rotated(certificate_file_name)
 
