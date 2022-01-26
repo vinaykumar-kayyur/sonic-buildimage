@@ -43,7 +43,7 @@ do
         SERVER_KEY=$(echo $X509 | jq -r '.server_key')
         CA_CRT=$(echo $X509 | jq -r '.ca_crt')
 
-	    logger "Trying to retrieve server certificate, key and Root CA certificate ..."
+        logger "Trying to retrieve server certificate, key and Root CA certificate ..."
         logger "The file path of server certificate in CONFIG_DB is: $SERVER_CRT"
         logger "The file path of server provate key in CONFIG_DB is: $SERVER_KEY"
         logger "The file path of Root CA certificate in CONFIG_DB is: $CA_CRT"
