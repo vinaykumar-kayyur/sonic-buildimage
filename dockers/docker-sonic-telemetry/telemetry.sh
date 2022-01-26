@@ -41,17 +41,20 @@ do
     elif [ -n "$X509" ]; then
         SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
         SERVER_KEY=$(echo $X509 | jq -r '.server_key')
-        if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
-            TELEMETRY_ARGS+=" --insecure"
-        else
-            TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
-        fi
-
         CA_CRT=$(echo $X509 | jq -r '.ca_crt')
-        if [ ! -z $CA_CRT ]; then
-            TELEMETRY_ARGS+=" --ca_crt $CA_CRT"
+
+	    logger "Trying to retrieve server certificate, key and Root CA certificate ..."
+        logger "The file path of server certificate in CONFIG_DB is: $SERVER_CRT"
+        logger "The file path of server provate key in CONFIG_DB is: $SERVER_KEY"
+        logger "The file path of Root CA certificate in CONFIG_DB is: $CA_CRT"
+
+        if [[ -f $SERVER_CRT && -f $SERVER_KEY && -f $CA_CRT ]]; then
+            logger "Succeeded in retrieving server certificate, key and Root CA certificate."
+            TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY --ca_crt $CA_CRT"
+            break
+        else
+            logger "Failed to retrieve server certificate, key or Root CA certificate!"
         fi
-        break
     else
         TELEMETRY_ARGS+=" --noTLS"
         break
@@ -61,24 +64,25 @@ do
     sleep 3600
 done
 
-# If no configuration entry exists for TELEMETRY, create one default port
-if [ -z "$GNMI" ]; then
-    PORT=8080
-else
+if [ -n "$GNMI" ]; then
     PORT=$(echo $GNMI | jq -r '.port')
-fi
-TELEMETRY_ARGS+=" --port $PORT"
+	if [ ! -z $PORT ] || [ $PORT != "null" ]; then
+		TELEMETRY_ARGS+=" --port $PORT"
+	else
+		TELEMETRY_ARGS+=" --port 8080"
+	fi
 
-CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
-if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "false" ]; then
-    TELEMETRY_ARGS+=" --allow_no_client_auth"
-fi
+	LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
+	if [ ! -z $LOG_LEVEL ] || [ $LOG_LEVEL != "null" ]; then
+    	TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
+	else
+		TELEMETRY_ARGS+=" -v=2"
+	fi
 
-LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [ ! -z $LOG_LEVEL ]; then
-    TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
-else
-    TELEMETRY_ARGS+=" -v=2"
+	CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
+	if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "null" ] || [ $CLIENT_AUTH == "false" ]; then
+    	TELEMETRY_ARGS+=" --allow_no_client_auth"
+	fi
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
