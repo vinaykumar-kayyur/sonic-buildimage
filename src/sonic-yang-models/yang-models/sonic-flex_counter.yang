@@ -227,7 +227,7 @@ module sonic-flex_counter {
         }
         /* end of container FLEX_COUNTER_TABLE */
 
-        container FLOW_COUNTER_ROUTE_PATTERN_TABLE {
+        container FLOW_COUNTER_ROUTE_PATTERN {
             description "Flow counter route pattern of config_db.json";
 
             list PATTERN_LIST {
