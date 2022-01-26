@@ -48,13 +48,13 @@ if [ "$src" = "dhcp" ]; then
     done
 
     if [ "`cat /tmp/dhcp_graph_url`" = "N/A" ]; then
-        echo "No graph_url option in DHCP response. Skipping graph update and generating an empty configuration."
+        echo "No graph_url option in DHCP response. Skipping graph update and generating an factory default configuration."
         PLATFORM=${PLATFORM:-`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`}
         if [ -f /etc/sonic/minigraph.xml ]; then
             sonic-cfggen -H -m /etc/sonic/minigraph.xml --preset empty > /tmp/device_meta.json
         else
             PRESET=(`head -n 1 /usr/share/sonic/device/$PLATFORM/default_sku`)
-            sonic-cfggen -H -k ${PRESET[0]} --preset empty > /tmp/device_meta.json
+            sonic-cfggen -H -k ${PRESET[0]} --preset ${PRESET[1]} > /tmp/device_meta.json
         fi
         if [ -f /etc/sonic/init_cfg.json ]; then
             sonic-cfggen -j /tmp/device_meta.json -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
