@@ -65,24 +65,24 @@ do
 done
 
 if [ -n "$GNMI" ]; then
-    PORT=$(echo $GNMI | jq -r '.port')
-	if [ ! -z $PORT ] || [ $PORT != "null" ]; then
-		TELEMETRY_ARGS+=" --port $PORT"
-	else
-		TELEMETRY_ARGS+=" --port 8080"
-	fi
+	PORT=$(echo $GNMI | jq -r '.port')
+    if [ ! -z $PORT ] || [ $PORT != "null" ]; then
+        TELEMETRY_ARGS+=" --port $PORT"
+    else
+        TELEMETRY_ARGS+=" --port 8080"
+    fi
 
-	LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-	if [ ! -z $LOG_LEVEL ] || [ $LOG_LEVEL != "null" ]; then
-    	TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
-	else
-		TELEMETRY_ARGS+=" -v=2"
-	fi
+    LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
+    if [ ! -z $LOG_LEVEL ] || [ $LOG_LEVEL != "null" ]; then
+        TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
+    else
+        TELEMETRY_ARGS+=" -v=2"
+    fi
 
-	CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
-	if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "null" ] || [ $CLIENT_AUTH == "false" ]; then
-    	TELEMETRY_ARGS+=" --allow_no_client_auth"
-	fi
+    CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
+    if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "null" ] || [ $CLIENT_AUTH == "false" ]; then
+        TELEMETRY_ARGS+=" --allow_no_client_auth"
+    fi
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
