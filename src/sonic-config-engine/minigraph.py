@@ -487,7 +487,7 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
-                pc_members[(pcintfname, pcmbr_list[i])] = {'NULL': 'NULL'}
+                pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
@@ -510,10 +510,11 @@ def parse_dpg(dpg, hname):
                     elif ":" in ipnhaddr:
                         port_nhipv6_map[ipnhfmbr] = ipnhaddr
                 elif ipnh.find(str(QName(ns, "Type"))).text == 'StaticRoute':
-                    prefix = ipnh.find(str(QName(ns, "AttachTo"))).text
+                    prefix = ipnh.find(str(QName(ns, "AssociatedTo"))).text
+                    ifname = ipnh.find(str(QName(ns, "AttachTo"))).text
                     nexthop = ipnh.find(str(QName(ns, "Address"))).text
                     advertise = ipnh.find(str(QName(ns, "Advertise"))).text
-                    static_routes[prefix] = {'nexthop': nexthop, 'advertise': advertise}
+                    static_routes[prefix] = {'nexthop': nexthop, 'ifname': ifname, 'advertise': advertise}
 
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
@@ -1623,7 +1624,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
     results['FEATURE'] = {
         'telemetry': {
-            'status': 'enabled'
+            'state': 'enabled'
         }
     }
     results['TELEMETRY'] = {
