@@ -480,7 +480,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
  *
  * @return              none
  */
- void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs) {
+ void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *config) {
     static uint8_t buffer[4096];
     uint8_t type = 0;
     struct sockaddr_in6 target_addr;
@@ -513,7 +513,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     target_addr.sin6_port = htons(CLIENT_PORT);
     target_addr.sin6_scope_id = if_nametoindex(config->interface.c_str());
 
-    send_udp(sock, buffer, target_addr, current_buffer_position - buffer, configs, type);
+    send_udp(sock, buffer, target_addr, current_buffer_position - buffer, config, type);
 } 
 
 
