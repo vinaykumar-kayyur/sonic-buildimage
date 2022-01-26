@@ -483,7 +483,6 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
  void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *configs) {
     static uint8_t buffer[4096];
     uint8_t type = 0;
-    char ifname[configs->interface.size()];
     struct sockaddr_in6 target_addr;
     auto current_buffer_position = buffer;
     auto current_position = msg;
@@ -508,12 +507,11 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
         }
     }
 
-    strcpy(ifname, configs->interface.c_str());
     memcpy(&target_addr.sin6_addr, &dhcp_relay_header->peer_address, sizeof(struct in6_addr));
     target_addr.sin6_family = AF_INET6;
     target_addr.sin6_flowinfo = 0;
     target_addr.sin6_port = htons(CLIENT_PORT);
-    target_addr.sin6_scope_id = if_nametoindex(ifname);
+    target_addr.sin6_scope_id = if_nametoindex(config->interface.c_str());
 
     send_udp(sock, buffer, target_addr, current_buffer_position - buffer, configs, type);
 } 
@@ -709,8 +707,7 @@ void loop_relay(std::vector<relay_config> *vlans, swss::DBConnector *db) {
         int filter = 0;
         int local_sock = 0; 
         int server_sock = 0;
-        const char *ifname = config->interface.c_str();
-        int index = if_nametoindex(ifname);
+        int index = if_nametoindex(config->interface.c_str());
         config->db = db;
 
         std::string counterVlan = counter_table;
