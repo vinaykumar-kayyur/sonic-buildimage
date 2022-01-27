@@ -493,10 +493,10 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     auto position = current_position + sizeof(struct dhcpv6_option);
     auto dhcpv6msg = parse_dhcpv6_hdr(position);
 
-    while ((current_position - msg) <= len-4)  {
+    while ((current_position - msg) != len)  {
         auto option = parse_dhcpv6_opt(current_position, &tmp);
         current_position = tmp;
-        if(current_position - msg > len) {
+        if (current_position - msg > len) {
             break;
         }
         switch (ntohs(option->option_code)) {
