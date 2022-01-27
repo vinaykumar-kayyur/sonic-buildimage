@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-config-engine-buster
+FROM docker-config-engine-bullseye
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -13,19 +13,19 @@ RUN apt-get update
 # Install redis-server
 # TODO: Require direct bullseye-security installation after the OS release version upgraded
 {% if CONFIGURED_ARCH == "armhf" %}
-RUN curl -o redis-tools_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_armhf.deb"    && \
-    curl -o redis-server_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_armhf.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_armhf.deb redis-server_6.0.15-1_armhf.deb || apt-get install -f                              && \
+RUN curl -sS -o redis-tools_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_armhf.deb"    && \
+    curl -sS -o redis-server_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_armhf.deb"  && \
+    dpkg -i redis-tools_6.0.15-1_armhf.deb redis-server_6.0.15-1_armhf.deb || apt-get install -f                                  && \
     rm redis-tools_6.0.15-1_armhf.deb redis-server_6.0.15-1_armhf.deb
 {% elif CONFIGURED_ARCH == "arm64" %}
-RUN curl -o redis-tools_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_arm64.deb"    && \
-    curl -o redis-server_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_arm64.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_arm64.deb redis-server_6.0.15-1_arm64.deb || apt-get install -f                              && \
+RUN curl -sS -o redis-tools_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_arm64.deb"    && \
+    curl -sS -o redis-server_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_arm64.deb"  && \
+    dpkg -i redis-tools_6.0.15-1_arm64.deb redis-server_6.0.15-1_arm64.deb || apt-get install -f                                  && \
     rm redis-tools_6.0.15-1_arm64.deb redis-server_6.0.15-1_arm64.deb
 {% else %}
-RUN curl -o redis-tools_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_amd64.deb"    && \
-    curl -o redis-server_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_amd64.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_amd64.deb redis-server_6.0.15-1_amd64.deb || apt-get install -f                              && \
+RUN curl -sS -o redis-tools_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_amd64.deb"    && \
+    curl -sS -o redis-server_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_amd64.deb"  && \
+    dpkg -i redis-tools_6.0.15-1_amd64.deb redis-server_6.0.15-1_amd64.deb || apt-get install -f                                  && \
     rm redis-tools_6.0.15-1_amd64.deb redis-server_6.0.15-1_amd64.deb
 {% endif %}
 
