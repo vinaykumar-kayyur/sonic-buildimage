@@ -481,7 +481,8 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
  * @return              none
  */
  void relay_relay_reply(int sock, const uint8_t *msg, int32_t len, relay_config *config) {
-    static uint8_t buffer[4096];
+    const int BUFF_SIZE = 4096;
+    static uint8_t buffer[BUFF_SIZE];
     uint8_t type = 0;
     struct sockaddr_in6 target_addr;
     auto current_buffer_position = buffer;
@@ -493,7 +494,7 @@ void relay_client(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *ip_h
     auto position = current_position + sizeof(struct dhcpv6_option);
     auto dhcpv6msg = parse_dhcpv6_hdr(position);
 
-    while ((current_position - msg) < len) {
+    while ((current_position - msg) < len && len < BUFF_SIZE) {
         auto option = parse_dhcpv6_opt(current_position, &tmp);
         current_position = tmp;
         if (current_position - msg > len) {
