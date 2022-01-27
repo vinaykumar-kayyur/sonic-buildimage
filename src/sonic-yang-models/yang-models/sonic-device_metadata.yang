@@ -127,6 +127,19 @@ module sonic-device_metadata {
                     type string;
                 }
 
+                leaf downstream_subrole {
+                    type string;
+                }
+
+                leaf resource_type {
+                    type string;
+                }
+
+                leaf cluster {
+                    type string;
+                    description "The switch is a member of this cluster.";
+                }
+
                 leaf subtype {
                     type string {
                         pattern "DualToR";
