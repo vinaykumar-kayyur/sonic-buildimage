@@ -20,7 +20,7 @@ else
 fi
 
 if [ $NUM_THREAD -gt "1" ]; then
-    sed -ri "s/^# io-threads [0-9]+/io-threads $NUM_THREAD/g" /etc/redis/redis.conf
+    sed -ri "s/^io-threads [0-9]+/io-threads $NUM_THREAD/g" /etc/redis/redis.conf
 fi
 
 # For linux host namespace, in both single and multi ASIC platform use the loopback interface
