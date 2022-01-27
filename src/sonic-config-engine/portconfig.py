@@ -116,7 +116,7 @@ def get_port_info_from_config_db(asic_name=None):
                 if "index" in ports[intf_name]:
                     port_name_to_index_map[intf_name] = int(ports[intf_name]["index"])
 
-    return port_alias_to_name_map, port_asic_alias_to_name_map port_name_to_index_map
+    return port_alias_to_name_map, port_asic_alias_to_name_map, port_name_to_index_map
 
 
 def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_config_file=None, asic_name=None):
