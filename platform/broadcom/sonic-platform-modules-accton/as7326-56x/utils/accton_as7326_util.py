@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2016 Accton Networks, Inc.
 #
@@ -302,7 +302,7 @@ def i2c_order_check():
 
 def eeprom_check():
     cmd = "i2cget -y -f 0 0x56"
-    status, output = commands.getstatusoutput(cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     return status
 
 def device_install():
@@ -405,7 +405,7 @@ def device_uninstall():
     temp[-1] = temp[-1].replace('new_device', 'delete_device')
     status, output = log_os_system(" ".join(temp), 1)
     if status:
-        print output
+        print (output)
         if FORCE == 0:
            return status
 
@@ -436,10 +436,10 @@ def do_sonic_platform_install():
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
-                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
+                print ("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
                 return status
             else:
-                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3)
+                print ("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
             print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
     else:
@@ -563,9 +563,9 @@ def devices_info():
         for i in sorted(ALL_DEVICE.keys()):
             print((i+": "))
             for j in sorted(ALL_DEVICE[i].keys()):
-                print(("   "+j))
+                print("   "+j)
                 for k in (ALL_DEVICE[i][j]):
-                    print(("   "+"   "+k))
+                    print("   "+"   "+k)
     return
 
 def show_eeprom(index):
@@ -614,7 +614,7 @@ def set_device(args):
         if int(args[1])>4:
             show_set_help()
             return
-        #print  ALL_DEVICE['led']
+        #print(ALL_DEVICE['led'])
         for i in range(0,len(ALL_DEVICE['led'])):
             for k in (ALL_DEVICE['led']['led'+str(i+1)]):
                 ret, log = log_os_system("echo "+args[1]+" >"+k, 1)
@@ -624,16 +624,16 @@ def set_device(args):
         if int(args[1])>100:
             show_set_help()
             return
-        #print  ALL_DEVICE['fan']
+        #print(ALL_DEVICE['fan'])
         #fan1~6 is all fine, all fan share same setting
         node = ALL_DEVICE['fan'] ['fan1'][0]
         node = node.replace(node.split("/")[-1], 'fan_duty_cycle_percentage')
         ret, log = log_os_system("cat "+ node, 1)
         if ret==0:
-            print(("Previous fan duty: " + log.strip() +"%"))
+            print("Previous fan duty: " + log.strip() +"%")
         ret, log = log_os_system("echo "+args[1]+" >"+node, 1)
         if ret==0:
-            print(("Current fan duty: " + args[1] +"%"))
+            print("Current fan duty: " + args[1] +"%")
         return ret
     elif args[0]=='sfp':
         if int(args[1])> DEVICE_NO[args[0]] or int(args[1])==0:
@@ -647,7 +647,7 @@ def set_device(args):
             show_set_help()
             return
 
-        #print  ALL_DEVICE[args[0]]
+        #print(ALL_DEVICE[args[0]])
         for i in range(0,len(ALL_DEVICE[args[0]])):
             for j in ALL_DEVICE[args[0]][args[0]+str(args[1])]:
                 if j.find('tx_disable')!= -1:
@@ -672,7 +672,7 @@ def device_traversal():
         devices_info()
     for i in sorted(ALL_DEVICE.keys()):
         print("============================================")
-        print((i.upper()+": "))
+        print(i.upper()+": ")
         print("============================================")
 
         for j in sorted(list(ALL_DEVICE[i].keys()), key=get_value):
