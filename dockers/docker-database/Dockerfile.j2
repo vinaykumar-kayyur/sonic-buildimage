@@ -11,23 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 # Install redis-server
-# TODO: Require direct bullseye-security installation after the OS release version upgraded
-{% if CONFIGURED_ARCH == "armhf" %}
-RUN curl -sS -o redis-tools_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_armhf.deb"    && \
-    curl -sS -o redis-server_6.0.15-1_armhf.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_armhf.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_armhf.deb redis-server_6.0.15-1_armhf.deb || apt-get install -f                                  && \
-    rm redis-tools_6.0.15-1_armhf.deb redis-server_6.0.15-1_armhf.deb
-{% elif CONFIGURED_ARCH == "arm64" %}
-RUN curl -sS -o redis-tools_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_arm64.deb"    && \
-    curl -sS -o redis-server_6.0.15-1_arm64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_arm64.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_arm64.deb redis-server_6.0.15-1_arm64.deb || apt-get install -f                                  && \
-    rm redis-tools_6.0.15-1_arm64.deb redis-server_6.0.15-1_arm64.deb
-{% else %}
-RUN curl -sS -o redis-tools_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-tools_6.0.15-1_amd64.deb"    && \
-    curl -sS -o redis-server_6.0.15-1_amd64.deb "http://ftp.debian.org/debian/pool/main/r/redis/redis-server_6.0.15-1_amd64.deb"  && \
-    dpkg -i redis-tools_6.0.15-1_amd64.deb redis-server_6.0.15-1_amd64.deb || apt-get install -f                                  && \
-    rm redis-tools_6.0.15-1_amd64.deb redis-server_6.0.15-1_amd64.deb
-{% endif %}
+RUN apt-get install -y redis-tools redis-server
 
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies
