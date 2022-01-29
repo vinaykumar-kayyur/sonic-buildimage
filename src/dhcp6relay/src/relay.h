@@ -15,7 +15,7 @@
 
 #define RELAY_PORT 547
 #define CLIENT_PORT 546
-#define HOP_LIMIT 32
+#define HOP_LIMIT 8
 
 #define lengthof(A) (sizeof (A) / sizeof (A)[0])
 
