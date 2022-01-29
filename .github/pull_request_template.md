@@ -37,6 +37,11 @@ Write a short (one line) summary that describes the changes in this
 pull request for inclusion in the changelog:
 -->
 
+#### Link to config_db schema for YANG module changes
+<!--
+Provide a link to config_db schema for the table for which YANG model
+is defined
+-->
 
 #### A picture of a cute animal (not mandatory but encouraged)
 
