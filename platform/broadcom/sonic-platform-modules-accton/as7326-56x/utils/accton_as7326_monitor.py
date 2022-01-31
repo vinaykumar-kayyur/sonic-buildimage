@@ -168,9 +168,9 @@ class device_monitor(object):
         fan = FanUtil()
         fan_dir=fan.get_fan_dir(1)            
         if fan_dir > 1:
-            fan_dri=1 #something wrong, set fan_dir to default val
+            fan_dir=1 #something wrong, set fan_dir to default val
         if fan_dir < 0:
-            fan_dri=1 #something wrong, set fan_dir to default val
+            fan_dir=1 #something wrong, set fan_dir to default val
         ori_pwm=fan.get_fan_duty_cycle()
         new_pwm=0  
         logging.debug('fan_dir=%d, ori_pwm=%d', fan_dir, ori_pwm)
@@ -317,4 +317,4 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-    
+
