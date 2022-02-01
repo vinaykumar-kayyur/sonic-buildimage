@@ -616,7 +616,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     switch (msg->msg_type) {
         case DHCPv6_MESSAGE_TYPE_RELAY_FORW:
         {
-            relay_relay_forw(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
+            relay_relay_forw(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, config);
             break;
         }
         default:
