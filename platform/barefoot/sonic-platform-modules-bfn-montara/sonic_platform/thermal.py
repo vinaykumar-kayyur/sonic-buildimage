@@ -91,8 +91,11 @@ class Thermal(ThermalBase):
             "psu_driver-i2c-7-59:psu2-temp1":    Threshold(50.0, 47.5, 0.2, 0.1),
             "psu_driver-i2c-7-59:psu2-temp2":    Threshold(90.0, 85.5, 0.2, 0.1),
             "tmp75-i2c-8-48:outlet-right-temp":  Threshold(60.0, 57.0, 0.2, 0.1),
-            "tmp75-i2c-8-49:outlet-left-temp":   Threshold(60.0, 57.0, 0.2, 0.1)
+            "tmp75-i2c-8-49:outlet-left-temp":   Threshold(60.0, 57.0, 0.2, 0.1),
+            "pch_haswell-virtual-0:temp1":       Threshold(60.0, 57.0, 0.2, 0.1)
     }
+    _max_temperature = 100.0
+    _min_temperature = 0.0
 
     def __init__(self, chip, label, index = 0):
         self.__chip = chip
@@ -103,10 +106,18 @@ class Thermal(ThermalBase):
         self.__high_threshold = None
         self.__low_threshold = None
 
+    def check_in_range(self, temperature):
+        temp_f = float(temperature)
+        if temp_f > self._max_temperature or temp_f <= self._min_temperature:
+            print("The temperature is out of range (0.0 < and <= 100.0)")
+            return False
+        else:
+            return True 
+
     def __get(self, attr_prefix, attr_suffix):
         sensor_data = _sensors_get().get(self.__chip, {}).get(self.__label, {})
         value = _value_get(sensor_data, attr_prefix, attr_suffix)
-        if value is not None:
+        if value is not None and self.check_in_range(value):
             return value
         elif attr_prefix == 'temp':
             if attr_suffix == 'crit':
@@ -138,7 +149,10 @@ class Thermal(ThermalBase):
         return float(temp)
 
     def get_high_threshold(self) -> float:
-        return float(self.__get('temp', 'max'))
+        if self.__high_threshold is None:
+            return float(self.__get('temp', 'max'))
+        else:
+            return float(self.__high_threshold)
 
     def get_high_critical_threshold(self) -> float:
         return float(self.__get('temp', 'crit'))
@@ -163,7 +177,10 @@ class Thermal(ThermalBase):
         return False
 
     def get_low_threshold(self) -> float:
-        return float(self.__get('temp', 'min'))
+        if self.__low_threshold is None:
+            return float(self.__get('temp', 'min'))
+        else:
+            return float(self.__low_threshold)
 
     def get_serial(self):
         return 'N/A'
@@ -184,12 +201,18 @@ class Thermal(ThermalBase):
         return self.__index
 
     def set_high_threshold(self, temperature):
-        self.__high_threshold = temperature
-        return True
+        if self.check_in_range(temperature):
+            self.__high_threshold = temperature
+            return True
+        else:
+            return False
 
     def set_low_threshold(self, temperature):
-        self.__low_threshold = temperature
-        return True
+        if self.check_in_range(temperature):
+            self.__low_threshold = temperature
+            return True
+        else:
+            return False
 
 def thermal_list_get():
     l = []
