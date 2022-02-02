@@ -21,7 +21,7 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
-    from common import Common
+    from sonic_platform.common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -285,7 +285,7 @@ class Sfp(SfpBase):
         sysfsfile_eeprom = None
         eeprom_raw = []
         for i in range(0, num_bytes):
-            eeprom_raw.append("0x00")
+            eeprom_raw.append("00")
 
         sysfs_sfp_i2c_client_eeprom_path = self._get_eeprom_path()
         try:
@@ -294,7 +294,7 @@ class Sfp(SfpBase):
             sysfsfile_eeprom.seek(offset)
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+                eeprom_raw[n] = raw[n:n+1].hex()
         except Exception:
             pass
         finally:
