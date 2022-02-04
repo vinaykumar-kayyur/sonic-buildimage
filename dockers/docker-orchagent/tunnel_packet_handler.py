@@ -82,7 +82,7 @@ class TunnelPacketHandler(object):
             (str) The interface name, or the empty string if no interface
                   name was found
         """
-        attr_list = msg['attrs']
+        attr_list = msg.get('attrs', list())
 
         for attribute, val in attr_list:
             if attribute == 'IFLA_IFNAME':
