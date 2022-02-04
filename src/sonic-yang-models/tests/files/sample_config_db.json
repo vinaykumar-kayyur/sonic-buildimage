@@ -1546,6 +1546,7 @@
                 "queue": "0",
                 "src_ip": "10.1.1.1",
                 "ttl": "10",
+                "policer": "everflow_static_policer",
                 "type": "ERSPAN"
             },
             "span": {
@@ -1564,5 +1565,15 @@
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."
         }
+    },
+    "POLICER": {
+        "everflow_static_policer": {
+            "meter_type": "bytes",
+            "mode": "sr_tcm",
+            "cir": "12500000",
+            "cbs": "12500000",
+            "color": "aware",
+            "red_packet_action": "drop"
+       }
     }
 }
