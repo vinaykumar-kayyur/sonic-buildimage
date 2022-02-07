@@ -1147,6 +1147,18 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_MONITORS": {
+            "5.6.7.8": {
+                "admin_status": "up",
+                "asn": "65000",
+                "holdtime": "180",
+                "keepalive": "60",
+                "local_addr": "10.0.0.11",
+                "name": "BGPMonitor",
+                "nhopself": "0",
+                "rrclient": "0"
+            }
+        },
         "BGP_NEIGHBOR": {
             "10.0.0.1": {
                 "asn": "65200",
@@ -1363,6 +1375,24 @@
                 "pbs": "2048",
                 "pir": "2560000",
                 "type": "STRICT"
+            },
+            "scheduler.0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+
+            "scheduler.1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
             }
         },
 
@@ -1392,6 +1422,12 @@
             "Ethernet0|1": {
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
+            },
+            "Ethernet0|2": {
+                "scheduler": "scheduler.0"
+            },
+            "Ethernet0|3": {
+                "scheduler": "scheduler.1"
             }
         },
 
