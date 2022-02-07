@@ -132,13 +132,11 @@ class Watchdog(WatchdogBase):
             else:
                 self._enable()
                 self.armed = True
-                print("read armed")
 
             ret = self.timeout
             self.arm_timestamp = time.time()
         except IOError as e:
             print(e)
-            pass
 
         return ret
 
@@ -155,7 +153,7 @@ class Watchdog(WatchdogBase):
                 self.armed = False
                 disarmed = True
             except IOError:
-                pass
+                print(e)
 
         return disarmed
 

@@ -7,7 +7,6 @@
 #############################################################################
 
 try:
-    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_py_common import device_info
@@ -186,7 +185,6 @@ class Chassis(ChassisBase):
         status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
         return status, sfp_event
 
-
     ##############################################################
     ######################## SFP methods #########################
     ##############################################################
@@ -277,14 +275,6 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self._eeprom.get_pn()
-
-    def get_serial(self):
-        """
-        Retrieves the serial number of the device
-        Returns:
-            string: Serial number of device
-        """
-        return self._eeprom.get_serial()
 
     def get_status(self):
         """
