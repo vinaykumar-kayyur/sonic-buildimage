@@ -5,7 +5,7 @@ MKDIR := mkdir
 CC := g++
 MV := mv
 LIBS := -levent -lhiredis -lswsscommon -pthread -lboost_thread -lboost_system
-CFLAGS += -Wall -std=c++17 -fPIE -I$(PWD)/../sonic-swss-common/common
+CFLAGS += -Wall -std=c++14 -fPIE -I$(PWD)/../sonic-swss-common/common
 PWD := $(shell pwd)
 
 ifneq ($(MAKECMDGOALS),clean)
