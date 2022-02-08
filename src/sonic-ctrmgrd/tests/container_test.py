@@ -169,7 +169,8 @@ stop_test_data = {
             common_test.CONFIG_DB_NO: {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
-                        "set_owner": "local"
+                        "set_owner": "local",
+                        "state": "enabled"
                     }
                 }
             },
@@ -254,6 +255,28 @@ stop_test_data = {
 }
 
 
+# container_stop test cases
+# test case 0 -- container stop local for disabled container
+#
+invalid_stop_test_data = {
+    0: {
+        common_test.DESCR: "container stop for local disabled container",
+        common_test.PRE: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "sflow": {
+                        "set_owner": "local"
+                    }
+                }
+            }
+        },
+        common_test.POST: {
+        },
+        common_test.ACTIONS: {
+        }
+    }
+}
+
 # container_kill test cases
 # test case 0 -- container kill local 
 #   -- no change in state-db 
@@ -269,7 +292,8 @@ kill_test_data = {
             common_test.CONFIG_DB_NO: {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
-                        "set_owner": "local"
+                        "set_owner": "local",
+                        "state": "enabled"
                     }
                 }
             },
@@ -344,6 +368,30 @@ kill_test_data = {
         },
         common_test.ACTIONS: {
             "xxx": [ "kill" ]
+        }
+    }
+}
+
+# container_kill test cases
+# test case 0 -- container kill local disabled container
+#   -- no change in state-db 
+#   -- no label update
+#
+invalid_kill_test_data = {
+    0: {
+        common_test.DESCR: "container kill for local disabled container",
+        common_test.PRE: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "sflow": {
+                        "set_owner": "local"
+                    }
+                }
+            }
+        },
+        common_test.POST: {
+        },
+        common_test.ACTIONS: {
         }
     }
 }
@@ -483,6 +531,25 @@ class TestContainer(object):
     @patch("container.swsscommon.DBConnector")
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
+    def test_invalid_stop_ct(self, mock_docker, mock_table, mock_conn):
+        self.init()
+        common_test.set_mock(mock_table, mock_conn, mock_docker)
+
+        for (i, ct_data) in invalid_stop_test_data.items():
+            common_test.do_start_test("container_test:container_stop", i, ct_data)
+
+            ret = container.container_stop("sflow")
+            assert ret != 0
+
+            ret = common_test.check_tables_returned()
+            assert ret == 0
+
+            ret = common_test.check_mock_containers()
+            assert ret == 0
+
+    @patch("container.swsscommon.DBConnector")
+    @patch("container.swsscommon.Table")
+    @patch("container.docker.from_env")
     def test_kill(self, mock_docker, mock_table, mock_conn):
         self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
@@ -498,6 +565,24 @@ class TestContainer(object):
             ret = common_test.check_mock_containers()
             assert ret == 0
 
+    @patch("container.swsscommon.DBConnector")
+    @patch("container.swsscommon.Table")
+    @patch("container.docker.from_env")
+    def test_invalid_kill(self, mock_docker, mock_table, mock_conn):
+        self.init()
+        common_test.set_mock(mock_table, mock_conn, mock_docker)
+
+        for (i, ct_data) in invalid_kill_test_data.items():
+            common_test.do_start_test("container_test:container_kill", i, ct_data)
+
+            ret = container.container_kill("sflow")
+
+            assert ret != 0
+            ret = common_test.check_tables_returned()
+            assert ret == 0
+
+            ret = common_test.check_mock_containers()
+            assert ret == 0
 
     @patch("container.swsscommon.DBConnector")
     @patch("container.swsscommon.Table")
