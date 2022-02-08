@@ -6,9 +6,6 @@ try:
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_py_common import device_info
     import logging
-    import sys
-    sys.path.insert(0, '../sonic_py_common')
-    import device_info as common_part 
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -90,8 +87,10 @@ class Thermal(ThermalBase):
         self.__low_threshold = None
         f = None
         try:
-            path = common_part.get_path_to_platform_dir() + '/' + 'thermal_thresholds.json'
-            f = open(path)
+            if device_info.get_platform() == "x86_64-accton_as9516_32d-r0":
+                f = open('def_thresholds/def_thresholds_x86_64-accton_as9516_32d-r0.json')
+            elif device_info.get_platform() == "x86_64-accton_wedge100bf_32x-r0":
+                f = open('def_thresholds/def_thresholds_x86_64-accton_wedge100bf_32x-r0.json')
         except:
             logging.warning('can not open the file')
         if f is not None:
