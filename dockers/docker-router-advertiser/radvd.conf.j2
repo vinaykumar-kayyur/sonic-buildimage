@@ -10,9 +10,20 @@
 
 {# If our configuration has VLAN interfaces... #}
 {% if VLAN_INTERFACE %}
+{% set vlan_list = dict() %}
+{% for vlan_name in VLAN %}
+{% set prefix_list = [] %}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {# If this VLAN has an IPv6 address... #}
-{% if prefix | ipv6 %}
+{% if name == vlan_name and prefix | ipv6 %}
+{% set _ = prefix_list.append(prefix) %}
+{% set _ = vlan_list.update({name: prefix_list}) %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% for name, prefixes in vlan_list.items() %}
 interface {{ name }}
 {
     IgnoreIfMissing on;
@@ -23,6 +34,7 @@ interface {{ name }}
     AdvOtherConfigFlag off;
     AdvLinkMTU 9100;
     AdvHomeAgentFlag off;
+{% for prefix in prefixes %}
     prefix {{ prefix | network }}/{{ prefix | prefixlen }} {
         AdvOnLink on;
         AdvAutonomous off;
@@ -30,8 +42,7 @@ interface {{ name }}
         AdvValidLifetime infinity;
         AdvPreferredLifetime infinity;
     };
+{% endfor %}
 };
 
-{% endif %}
 {% endfor %}
-{% endif %}
