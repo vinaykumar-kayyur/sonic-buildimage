@@ -1,8 +1,11 @@
 try:
     import subprocess
     from collections import namedtuple
+    import json
     from bfn_extensions.platform_sensors import platform_sensors_get
     from sonic_platform_base.thermal_base import ThermalBase
+    from sonic_py_common import device_info
+    import logging
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -70,30 +73,7 @@ def _value_get(d: dict, key_prefix, key_suffix=''):
 
 # Thermal -> ThermalBase -> DeviceBase
 class Thermal(ThermalBase):
-    _thresholds = {
-            "com_e_driver-i2c-4-33:memory-temp": Threshold(85.0, 80.75, 0.2, 0.1),
-            "com_e_driver-i2c-4-33:cpu-temp":    Threshold(99.9, 99.75, 0.2, 0.1),
-            "psu_driver-i2c-7-5a:psu1-temp1":    Threshold(50.0, 47.5, 0.2, 0.1),
-            "psu_driver-i2c-7-5a:psu1-temp2":    Threshold(90.0, 85.5, 0.2, 0.1),
-            "psu_driver-i2c-7-5a:psu1-temp3":    Threshold(50.0, 47.5, 0.2, 0.1),
-            "tmp75-i2c-3-48:chip-temp":          Threshold(90.0, 85.5, 0.2, 0.1),
-            "tmp75-i2c-3-49:exhaust2-temp":      Threshold(80.0, 76.0, 0.2, 0.1),
-            "tmp75-i2c-3-4a:exhaust-temp":       Threshold(60.0, 57.0, 0.2, 0.1),
-            "tmp75-i2c-3-4b:intake-temp":        Threshold(60.0, 57.0, 0.2, 0.1),
-            "tmp75-i2c-3-4c:tofino-temp":        Threshold(99.9, 99.75, 0.2, 0.1),
-            "tmp75-i2c-3-4d:intake2-temp":       Threshold(60.0, 57.0, 0.2, 0.1),
-            "coretemp-isa-0000:package-id-0":    Threshold(80.0, 76.0, 0.2, 0.1),
-            "coretemp-isa-0000:core-0":          Threshold(99.9, 82.0, 0.2, 0.1),
-            "coretemp-isa-0000:core-1":          Threshold(99.9, 82.0, 0.2, 0.1),
-            "coretemp-isa-0000:core-2":          Threshold(99.9, 82.0, 0.2, 0.1),
-            "coretemp-isa-0000:core-3":          Threshold(99.9, 82.0, 0.2, 0.1),
-            # add from Montara"
-            "psu_driver-i2c-7-59:psu2-temp1":    Threshold(50.0, 47.5, 0.2, 0.1),
-            "psu_driver-i2c-7-59:psu2-temp2":    Threshold(90.0, 85.5, 0.2, 0.1),
-            "tmp75-i2c-8-48:outlet-right-temp":  Threshold(60.0, 57.0, 0.2, 0.1),
-            "tmp75-i2c-8-49:outlet-left-temp":   Threshold(60.0, 57.0, 0.2, 0.1),
-            "pch_haswell-virtual-0:temp1":       Threshold(60.0, 57.0, 0.2, 0.1)
-    }
+    _thresholds = dict()
     _max_temperature = 100.0
     _min_temperature = 0.0
 
@@ -105,6 +85,23 @@ class Thermal(ThermalBase):
         self.__index = index
         self.__high_threshold = None
         self.__low_threshold = None
+        f = None
+        try:
+            if device_info.get_platform() == "x86_64-accton_as9516_32d-r0":
+                f = open('def_thresholds/def_thresholds_x86_64-accton_as9516_32d-r0.json')
+            elif device_info.get_platform() == "x86_64-accton_wedge100bf_32x-r0":
+                f = open('def_thresholds/def_thresholds_x86_64-accton_wedge100bf_32x-r0.json')
+        except:
+            logging.warning('can not open the file')
+        if f is not None:
+            self.__get_thresholds(f)
+
+    def __get_thresholds(self, f):
+        def_threshold_json = json.load(f)
+        all_data = def_threshold_json["thermals"]
+        for i in all_data:
+            for key, value in i.items():
+                self._thresholds[key] = Threshold(*value)
 
     def check_in_range(self, temperature):
         temp_f = float(temperature)
@@ -119,7 +116,7 @@ class Thermal(ThermalBase):
         value = _value_get(sensor_data, attr_prefix, attr_suffix)
         if value is not None and self.check_in_range(value):
             return value
-        elif attr_prefix == 'temp':
+        elif self.__name in self._thresholds and attr_prefix == 'temp':
             if attr_suffix == 'crit':
                 return self._thresholds[self.__name].crit
             elif attr_suffix == 'max':
@@ -137,7 +134,7 @@ class Thermal(ThermalBase):
             else:
                 return 1.0
         else:
-            return 0.1
+            return 0.05
 
     # ThermalBase interface methods:
     def get_temperature(self) -> float:
