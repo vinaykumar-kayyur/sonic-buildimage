@@ -42,6 +42,7 @@ pull request for inclusion in the changelog:
 <!--
 Provide a link to config_db schema for the table for which YANG model
 is defined
+Link should point to correct section on https://github.com/Azure/SONiC/wiki/Configuration.
 -->
 
 #### A picture of a cute animal (not mandatory but encouraged)
