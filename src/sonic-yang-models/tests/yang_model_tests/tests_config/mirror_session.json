@@ -456,7 +456,7 @@
                         "cbs":"5000",
                         "pir":"15000",
                         "pbs":"15000",
-                        "red_action":"drop"
+                        "red_packet_action":"drop"
                     }
                 ]
             }

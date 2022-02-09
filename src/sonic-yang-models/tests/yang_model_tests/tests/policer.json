@@ -23,7 +23,7 @@
     "POLICER_UNKNOWN_ACTION": {
     "desc": "Configure policer with unknown action.",
     "eStrKey" : "InvalidValue",
-    "eStr" : ["red_action"]
+    "eStr" : ["red_packet_action"]
     },
     "POLICER_UNKNOWN_COLOR": {
     "desc": "Configure policer with unknown color awareness.",

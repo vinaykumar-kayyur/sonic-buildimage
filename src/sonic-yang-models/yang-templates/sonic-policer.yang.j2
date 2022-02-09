@@ -98,20 +98,20 @@ module sonic-policer {
 						This value represents the depth of the secondary bucket.";
 				}
 
-				leaf green_action {
+				leaf green_packet_action {
 					type stypes:policer_packet_action;
 					default "forward";
 					description "Green action";
 				}
 
-				leaf yellow_action {
+				leaf yellow_packet_action {
 					when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
 					type stypes:policer_packet_action;
 					default "forward";
 					description "Yellow action";
 				}
 
-				leaf red_action {
+				leaf red_packet_action {
 					type stypes:policer_packet_action;
 					default "forward";
 					description "Red action";
