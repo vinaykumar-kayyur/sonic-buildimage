@@ -13,7 +13,7 @@ class fan_tlv(object):
     FLAG = 0x7E                       #new version E2PROM mark as 0x7E
     HW_VER = 0X01                       # consists of master version and revised version
     TYPE = 0xf1                       # hardware type define
-    TLV_LEN = 00                        # vaild data length(16bit)
+    TLV_LEN = 00                        # vaild data length（16bit）
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
 
