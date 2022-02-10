@@ -6,9 +6,6 @@ try:
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_py_common import device_info
     import logging
-    import sys
-    sys.path.insert(0, '../sonic_py_common')
-    import device_info as common_part
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -90,7 +87,7 @@ class Thermal(ThermalBase):
         self.__low_threshold = None
         f = None
         try:
-            path = common_part.get_path_to_platform_dir() + '/' + 'thermal_thresholds.json'
+            path = device_info.get_path_to_platform_dir() + '/' + 'thermal_thresholds.json'
             f = open(path)
         except:
             logging.warning('can not open the file')
@@ -107,7 +104,6 @@ class Thermal(ThermalBase):
     def check_in_range(self, temperature):
         temp_f = float(temperature)
         if temp_f > self._max_temperature or temp_f <= self._min_temperature:
-            print("The temperature is out of range (0.0 < and <= 100.0)")
             return False
         else:
             return True 
