@@ -1,5 +1,19 @@
-#!/usr/bin/env python
-
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #############################################################################
 # Mellanox
 #
@@ -9,12 +23,12 @@
 #############################################################################
 
 try:
-    import os.path
+    import os
     from sonic_platform_base.psu_base import PsuBase
     from sonic_py_common.logger import Logger
-    from sonic_platform.fan import Fan
     from .led import PsuLed, SharedLed, ComponentFaultyIndicator
-    from .device_data import DEVICE_DATA
+    from . import utils
+    from .vpd_parser import VpdParser
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -22,120 +36,28 @@ except ImportError as e:
 # Global logger class instance
 logger = Logger()
 
-psu_list = []
+PSU_PATH = '/var/run/hw-management/'
 
-PSU_CURRENT = "current"
-PSU_VOLTAGE = "voltage"
-PSU_POWER = "power"
 
-# in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
-# but there are exceptions which will be handled by the following dictionary
-
-platform_dict_psu = {'x86_64-mlnx_msn3420-r0': 1, 'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1,
-                     'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4600-r0': 1, 'x86_64-mlnx_msn4600c-r0': 1,
-                     'x86_64-mlnx_msn4700-r0': 1, 'x86_64-mlnx_msn4410-r0': 1}
-
-psu_profile_list = [
-    # default filename convention
-    {
-        PSU_CURRENT : "power/psu{}_curr",
-        PSU_VOLTAGE : "power/psu{}_volt",
-        PSU_POWER : "power/psu{}_power"
-    },
-    # for 3420, 3700, 3700c, 3800, 4600c, 4700
-    {
-        PSU_CURRENT : "power/psu{}_curr",
-        PSU_VOLTAGE : "power/psu{}_volt_out2",
-        PSU_POWER : "power/psu{}_power"
-    }
-]
-
-class Psu(PsuBase):
-    """Platform-specific Psu class"""
-
-    shared_led = None
-
-    def __init__(self, psu_index, platform):
-        global psu_list
-        PsuBase.__init__(self)
-        # PSU is 1-based on Mellanox platform
+class FixedPsu(PsuBase):
+    def __init__(self, psu_index):
+        super(FixedPsu, self).__init__()
         self.index = psu_index + 1
-        psu_list.append(self.index)
-        self.psu_path = "/var/run/hw-management/"
-        psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
-        #psu_oper_status should always be present for all platforms
-        self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
-        self._name = "PSU{}".format(psu_index + 1)
-
-        if platform in platform_dict_psu:
-            filemap = psu_profile_list[platform_dict_psu[platform]]
-        else:
-            filemap = psu_profile_list[0]
-
-        self.psu_data = DEVICE_DATA[platform]['psus']
-
-        if not self.psu_data['hot_swappable']:
-            self.always_present = True
-            self.psu_voltage = None
-            self.psu_current = None
-            self.psu_power = None
-            self.psu_presence = None
-            self.psu_temp = None
-            self.psu_temp_threshold = None
-        else:
-            self.always_present = False
-            psu_voltage = filemap[PSU_VOLTAGE].format(self.index)
-            psu_voltage = os.path.join(self.psu_path, psu_voltage)
-            self.psu_voltage = psu_voltage
-
-            psu_current = filemap[PSU_CURRENT].format(self.index)
-            psu_current = os.path.join(self.psu_path, psu_current)
-            self.psu_current = psu_current
-
-            psu_power = filemap[PSU_POWER].format(self.index)
-            psu_power = os.path.join(self.psu_path, psu_power)
-            self.psu_power = psu_power
-
-            psu_presence = "thermal/psu{}_status".format(self.index)
-            psu_presence = os.path.join(self.psu_path, psu_presence)
-            self.psu_presence = psu_presence
-
-            self.psu_temp = os.path.join(self.psu_path, 'thermal/psu{}_temp'.format(self.index))
-            self.psu_temp_threshold = os.path.join(self.psu_path, 'thermal/psu{}_temp_max'.format(self.index))
-
-        # unplugable PSU has no FAN
-        if self.psu_data['hot_swappable']:
-            fan = Fan(psu_index, None, 1, True, self)
-            self._fan_list.append(fan)
-
-        if self.psu_data['led_num'] == 1:
-            self.led = ComponentFaultyIndicator(Psu.get_shared_led())
-        else: # 2010/2100
-            self.led = PsuLed(self.index)
-
-        # initialize thermal for PSU
-        from .thermal import initialize_psu_thermals
-        initialize_psu_thermals(platform, self._thermal_list, self.index, self.get_power_available_status)
-
+        self._name = "PSU {}".format(self.index)
+        self.psu_oper_status = os.path.join(PSU_PATH, "thermal/psu{}_pwr_status".format(self.index))
+        self._led = None
 
     def get_name(self):
         return self._name
 
+    def get_model(self):
+        return 'N/A'
 
-    def _read_generic_file(self, filename, len):
-        """
-        Read a generic file, returns the contents of the file
-        """
-        result = 0
-        try:
-            if not os.path.exists(filename):
-                return result
-            with open(filename, 'r') as fileobj:
-                result = int(fileobj.read().strip())
-        except Exception as e:
-            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
-        return result
+    def get_serial(self):
+        return 'N/A'
 
+    def get_revision(self):
+        return 'N/A'
 
     def get_powergood_status(self):
         """
@@ -144,10 +66,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is operating properly, False if not
         """
-        status = self._read_generic_file(os.path.join(self.psu_path, self.psu_oper_status), 0)
-
-        return status == 1
-
+        return utils.read_int_from_file(self.psu_oper_status) == 1
 
     def get_presence(self):
         """
@@ -156,12 +75,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        if self.always_present:
-            return self.always_present
-        else:
-            status = self._read_generic_file(self.psu_presence, 0)
-            return status == 1
-
+        return True
 
     def get_voltage(self):
         """
@@ -171,12 +85,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts, 
             e.g. 12.1 
         """
-        if self.psu_voltage is not None and self.get_powergood_status():
-            voltage = self._read_generic_file(self.psu_voltage, 0)
-            return float(voltage) / 1000
-        else:
-            return None
-
+        return None
 
     def get_current(self):
         """
@@ -185,11 +94,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        if self.psu_current is not None and self.get_powergood_status():
-            amperes = self._read_generic_file(self.psu_current, 0)
-            return float(amperes) / 1000
-        else:
-            return None
+        return None
 
     def get_power(self):
         """
@@ -198,11 +103,13 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        if self.psu_power is not None and self.get_powergood_status():
-            power = self._read_generic_file(self.psu_power, 0)
-            return float(power) / 1000000
-        else:
-            return None
+        return None
+
+    @property
+    def led(self):
+        if not self._led:
+            self._led = PsuLed(self.index)
+        return self._led
 
     def set_status_led(self, color):
         """
@@ -220,7 +127,6 @@ class Psu(PsuBase):
         """
         return self.led.set_status(color)
 
-
     def get_status_led(self):
         """
         Gets the state of the PSU status LED
@@ -228,11 +134,7 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        if self.psu_data['led_num'] == 1:
-            return Psu.get_shared_led().get_status()
-        else:
-            return self.led.get_status()
-
+        return self.led.get_status()
 
     def get_power_available_status(self):
         """
@@ -264,13 +166,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if it is replaceable.
         """
-        return self.psu_data['hot_swappable']
-
-    @classmethod
-    def get_shared_led(cls):
-        if not cls.shared_led:
-            cls.shared_led = SharedLed(PsuLed(None))
-        return cls.shared_led
+        return False
 
     def get_temperature(self):
         """
@@ -280,13 +176,6 @@ class Psu(PsuBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125 
         """
-        if self.psu_temp is not None and self.get_powergood_status():
-            try:
-                temp = self._read_generic_file(self.psu_temp, 0)
-                return float(temp) / 1000
-            except Exception as e:
-                logger.log_info("Fail to get temperature for PSU {} due to - {}".format(self._name, repr(e)))
-        
         return None
 
     def get_temperature_high_threshold(self):
@@ -297,13 +186,178 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        if self.psu_temp_threshold is not None and self.get_powergood_status():
-            try:
-                temp_threshold = self._read_generic_file(self.psu_temp_threshold, 0)
-                return float(temp_threshold) / 1000
-            except Exception as e:
-                logger.log_info("Fail to get temperature threshold for PSU {} due to - {}".format(self._name, repr(e)))
-        
+        return None
+
+     
+class Psu(FixedPsu):
+    """Platform-specific Psu class"""
+    PSU_CURRENT = "power/psu{}_curr"
+    PSU_POWER = "power/psu{}_power"
+    PSU_VPD = "eeprom/psu{}_vpd"
+
+    shared_led = None
+
+    def __init__(self, psu_index):
+        super(Psu, self).__init__(psu_index)
+
+        psu_voltage_out2 = os.path.join(PSU_PATH, "power/psu{}_volt_out2".format(self.index))
+        psu_voltage = os.path.join(PSU_PATH, "power/psu{}_volt".format(self.index))
+        # Workaround for psu voltage sysfs file as the file name differs among platforms
+        if os.path.exists(psu_voltage_out2):
+            self.psu_voltage = psu_voltage_out2
+        else:
+            self.psu_voltage = psu_voltage
+        self.psu_voltage_min = self.psu_voltage + "_min"
+        self.psu_voltage_max = self.psu_voltage + "_max"
+        self.psu_voltage_capability = self.psu_voltage + "_capability"
+
+        self.psu_current = os.path.join(PSU_PATH, self.PSU_CURRENT.format(self.index))
+        self.psu_power = os.path.join(PSU_PATH, self.PSU_POWER.format(self.index))
+        self.psu_power_max = self.psu_power + "_max"
+        self.psu_presence = os.path.join(PSU_PATH, "thermal/psu{}_status".format(self.index))
+
+        self.psu_temp = os.path.join(PSU_PATH, 'thermal/psu{}_temp'.format(self.index))
+        self.psu_temp_threshold = os.path.join(PSU_PATH, 'thermal/psu{}_temp_max'.format(self.index))
+
+        from .fan import PsuFan
+        self._fan_list.append(PsuFan(psu_index, 1, self))
+
+        self.vpd_parser = VpdParser(os.path.join(PSU_PATH, self.PSU_VPD.format(self.index)))
+
+        # initialize thermal for PSU
+        from .thermal import initialize_psu_thermal
+        self._thermal_list = initialize_psu_thermal(psu_index, self.get_power_available_status)
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of device
+        """
+        return self.vpd_parser.get_model()
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+
+        Returns:
+            string: Serial number of device
+        """
+        return self.vpd_parser.get_serial()
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self.vpd_parser.get_revision()
+
+    def get_presence(self):
+        """
+        Retrieves the presence status of power supply unit (PSU) defined
+
+        Returns:
+            bool: True if PSU is present, False if not
+        """
+        return utils.read_int_from_file(self.psu_presence) == 1
+
+    def get_voltage(self):
+        """
+        Retrieves current PSU voltage output
+
+        Returns:
+            A float number, the output voltage in volts, 
+            e.g. 12.1 
+        """
+        if self.get_powergood_status():
+            # TODO: should we put log_func=None here? If not do this, when a PSU is back to power, some PSU related
+            # sysfs may not ready, read_int_from_file would encounter exception and log an error.
+            voltage = utils.read_int_from_file(self.psu_voltage, log_func=logger.log_info)
+            return float(voltage) / 1000
+        return None
+
+    def get_current(self):
+        """
+        Retrieves present electric current supplied by PSU
+
+        Returns:
+            A float number, the electric current in amperes, e.g 15.4
+        """
+        if self.get_powergood_status():
+            amperes = utils.read_int_from_file(self.psu_current, log_func=logger.log_info)
+            return float(amperes) / 1000
+        return None
+
+    def get_power(self):
+        """
+        Retrieves current energy supplied by PSU
+
+        Returns:
+            A float number, the power in watts, e.g. 302.6
+        """
+        if self.get_powergood_status():
+            power = utils.read_int_from_file(self.psu_power, log_func=logger.log_info)
+            return float(power) / 1000000
+        return None
+
+    @classmethod
+    def get_shared_led(cls):
+        if not cls.shared_led:
+            cls.shared_led = SharedLed(PsuLed(None))
+        return cls.shared_led
+
+    @property
+    def led(self):
+        if not self._led:
+            self._led = ComponentFaultyIndicator(Psu.get_shared_led())
+        return self._led
+
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        return Psu.get_shared_led().get_status()
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125 
+        """
+        if self.get_powergood_status():
+            temp = utils.read_int_from_file(self.psu_temp, log_func=logger.log_info)
+            return float(temp) / 1000
+
+        return None
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.get_powergood_status():
+            temp_threshold = utils.read_int_from_file(self.psu_temp_threshold, log_func=logger.log_info)
+            return float(temp_threshold) / 1000
+
         return None
 
     def get_voltage_high_threshold(self):
@@ -311,19 +365,51 @@ class Psu(PsuBase):
         Retrieves the high threshold PSU voltage output
 
         Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
+
+        Notes:
+            The thresholds of voltage are not supported on all platforms.
+            So we have to check capability first.
         """
-        # hw-management doesn't expose those sysfs for now
-        raise NotImplementedError
+        if self.psu_voltage_capability and self.psu_voltage_max and self.get_powergood_status():
+            capability = utils.read_str_from_file(self.psu_voltage_capability)
+            if 'max' in capability:
+                max_voltage = utils.read_int_from_file(self.psu_voltage_max, log_func=logger.log_info)
+                return float(max_voltage) / 1000
+
+        return None
 
     def get_voltage_low_threshold(self):
         """
         Retrieves the low threshold PSU voltage output
 
         Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
+
+        Notes:
+            The thresholds of voltage are not supported on all platforms.
+            So we have to check capability first.
         """
-        # hw-management doesn't expose those sysfs for now
-        raise NotImplementedError
+        if self.psu_voltage_capability and self.psu_voltage_min and self.get_powergood_status():
+            capability = utils.read_str_from_file(self.psu_voltage_capability)
+            if 'min' in capability:
+                min_voltage = utils.read_int_from_file(self.psu_voltage_min, log_func=logger.log_info)
+                return float(min_voltage) / 1000
+
+        return None
+
+    def get_maximum_supplied_power(self):
+        """
+        Retrieves the maximum supplied power by PSU
+
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        if self.psu_power_max and self.get_powergood_status():
+            power_max = utils.read_int_from_file(self.psu_power_max, log_func=logger.log_info)
+            return float(power_max) / 1000000
+        else:
+            return None
