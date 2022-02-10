@@ -1,6 +1,6 @@
 {
     "chassis": {
-        "name": "Wedge100BF-32X-O-AC-F-BF",
+        "name": "Wedge100BF-32QS-O-AC-F-BF",
         "fans": [
             {
                 "name": "counter-rotating-fan-1"
