@@ -10,10 +10,11 @@
 #  * ENABLE_ZTP: Enables zero touch provisioning.
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
 #  * INCLUDE_KUBERNETES: Allows including Kubernetes
+#  * INCLUDE_MUX: Include MUX feature/services for TOR switch.
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
 #  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
-#  * INSTALL_DEBUG_TOOLS: Install debug tools and debug symbol packeages.
+#  * INSTALL_DEBUG_TOOLS: Install debug tools and debug symbol packages.
 #  * USERNAME: Desired username -- default at rules/config
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up and active after building process concludes.
@@ -38,6 +39,10 @@
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
+#  * DOCKER_EXTRA_OPTS: Extra command line arguments for dockerd running in slave container.
+#  * ENABLE_AUTO_TECH_SUPPORT: Enable the configuration for event-driven techsupport & coredump mgmt feature
+#  *                 Default: y
+#  *                 Values: y,n
 #
 ###############################################################################
 
@@ -46,8 +51,18 @@ SHELL = /bin/bash
 USER := $(shell id -un)
 PWD := $(shell pwd)
 USER_LC := $(shell echo $(USER) | tr A-Z a-z)
+DOCKER_MACHINE := $(shell docker run --rm debian:buster uname -m)
 
 comma := ,
+
+ifeq ($(DOCKER_MACHINE), aarch64)
+COMPILE_HOST_ARCH := arm64
+else ifeq ($(shell echo $(DOCKER_MACHINE) | grep -qE "armv7l|armv8l" && echo y),y)
+COMPILE_HOST_ARCH := armhf
+else
+COMPILE_HOST_ARCH := amd64
+endif
+
 
 ifeq ($(USER), root)
 $(error Add your user account to docker group and use your user account to make. root or sudo are not supported!)
@@ -82,7 +97,9 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
-ifeq ($(BLDENV), buster)
+ifeq ($(BLDENV), bullseye)
+SLAVE_DIR = sonic-slave-bullseye
+else ifeq ($(BLDENV), buster)
 SLAVE_DIR = sonic-slave-buster
 else ifeq ($(BLDENV), stretch)
 SLAVE_DIR = sonic-slave-stretch
@@ -90,7 +107,13 @@ else
 SLAVE_DIR = sonic-slave-jessie
 endif
 
+# Define a do-nothing target for rules/config.user so that when
+# the file is missing, make won't try to rebuld everything.
+rules/config.user:
+	@echo -n ""
+
 include rules/config
+-include rules/config.user
 
 ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
@@ -98,8 +121,15 @@ endif
 
 ifeq ($(CONFIGURED_ARCH),amd64)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
+MULTIARCH_QEMU_ENVIRON = n
 else
-SLAVE_BASE_IMAGE = $(SLAVE_DIR)-$(CONFIGURED_ARCH)
+ifeq ($(CONFIGURED_ARCH), $(COMPILE_HOST_ARCH))
+SLAVE_BASE_IMAGE = $(SLAVE_DIR)
+MULTIARCH_QEMU_ENVIRON = n
+else ifneq ($(CONFIGURED_ARCH),)
+SLAVE_BASE_IMAGE = $(SLAVE_DIR)-march-$(CONFIGURED_ARCH)
+MULTIARCH_QEMU_ENVIRON = y
+endif
 endif
 SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
 
@@ -109,12 +139,12 @@ $(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
     scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 $(shell BUILD_SLAVE=y scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
 
 # Add the versions in the tag, if the version change, need to rebuild the slave
-SLAVE_BASE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
+SLAVE_BASE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* src/sonic-build-hooks/hooks/* | sha1sum | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
 
 OVERLAY_MODULE_CHECK := \
@@ -138,6 +168,7 @@ DOCKER_RUN := docker run --rm=true --privileged --init \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
+    -e "no_proxy=$(no_proxy)" \
     -i$(shell { if [ -t 0 ]; then echo t; fi }) \
     $(SONIC_BUILDER_EXTRA_CMDLINE)
 
@@ -154,10 +185,12 @@ ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 endif
 
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
+ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
     DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
 endif
+endif
 
-ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
 ifeq ($(DOCKER_DATA_ROOT_FOR_MULTIARCH),)
 	DOCKER_DATA_ROOT_FOR_MULTIARCH := /var/lib/march/docker
 endif
@@ -166,6 +199,11 @@ endif
     SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH := dockerd  --experimental=true --storage-driver=vfs \
         --data-root=$(DOCKER_DATA_ROOT_FOR_MULTIARCH) --exec-root=/var/run/march/docker/ \
         -H unix:///var/run/march/docker.sock -p /var/run/march/docker.pid
+
+ifneq ($(DOCKER_CONFIG_FILE_FOR_MULTIARCH),)
+    SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH += --config-file=$(DOCKER_CONFIG_FILE_FOR_MULTIARCH)
+endif
+
     DOCKER_RUN += -v /var/run/march/docker.sock:/var/run/docker.sock
     DOCKER_RUN += -v /var/run/march/docker.pid:/var/run/docker.pid
     DOCKER_RUN += -v /var/run/march/docker:/var/run/docker
@@ -175,7 +213,7 @@ endif
     #Override Native config to prevent docker service
     SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=y
 
-    DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
+    DOCKER_MULTIARCH_CHECK := docker run --rm --privileged multiarch/qemu-user-static --reset -p yes --credential yes
 
     DOCKER_SERVICE_SAFE_KILLER :=  (MARCH_PID=`ps -eo pid,cmd | grep "[0-9] dockerd.*march" | awk '{print $$1}'`; echo "Killing march docker $$MARCH_PID"; [ -z "$$MARCH_PID" ] || sudo kill -9 "$$MARCH_PID";)
     DOCKER_SERVICE_MULTIARCH_CHECK := ($(DOCKER_SERVICE_SAFE_KILLER); sudo rm -fr /var/run/march/; (echo "Starting docker march service..."; sudo $(SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH) &) &>/dev/null ; sleep 2; sudo $(SONIC_USERFACL_DOCKERD_FOR_MUTLIARCH);)
@@ -197,6 +235,7 @@ DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
+		    --build-arg no_proxy=$(no_proxy) \
 		    $(SLAVE_DIR)
 
 DOCKER_BASE_PULL = docker pull \
@@ -216,11 +255,13 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
                            PLATFORM=$(PLATFORM) \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
+                           MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON)  \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
+                           INCLUDE_PDE=$(INCLUDE_PDE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            INCLUDE_KUBERNETES=$(INCLUDE_KUBERNETES) \
                            KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
@@ -229,6 +270,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \
+                           SONIC_SAITHRIFT_V2=$(SAITHRIFT_V2) \
                            MDEBUG=$(MDEBUG) \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
@@ -240,13 +282,20 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_DPKG_CACHE_SOURCE=$(SONIC_DPKG_CACHE_SOURCE) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
+                           NO_PROXY=$(no_proxy) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
+                           INCLUDE_DHCP_RELAY=$(INCLUDE_DHCP_RELAY) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
+                           SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
                            TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
+                           ENABLE_HOST_SERVICE_ON_START=$(ENABLE_HOST_SERVICE_ON_START) \
                            SLAVE_DIR=$(SLAVE_DIR) \
+                           ENABLE_AUTO_TECH_SUPPORT=$(ENABLE_AUTO_TECH_SUPPORT) \
+                           BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM) \
+                           ENABLE_ASAN=$(ENABLE_ASAN) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -254,7 +303,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 .DEFAULT_GOAL :=  all
 
 %::
-ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
 	@$(DOCKER_MULTIARCH_CHECK)
 ifneq ($(BLDENV), )
 	@$(DOCKER_SERVICE_MULTIARCH_CHECK)
@@ -291,6 +340,9 @@ sonic-build-hooks:
 	@cp src/sonic-build-hooks/buildinfo/sonic-build-hooks* $(SLAVE_DIR)/buildinfo
 
 sonic-slave-base-build : sonic-build-hooks
+ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+	@$(DOCKER_MULTIARCH_CHECK)
+endif
 	@$(OVERLAY_MODULE_CHECK)
 	@echo Checking sonic-slave-base image: $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
@@ -329,7 +381,7 @@ reset :
 	    if [ $$ans == y ]; then
 	        echo "Resetting local repository. Please wait...";
 	        $(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) sudo rm -rf fsroot;
-	        if [[ "$(CONFIGURED_ARCH)" == "armhf" || "$(CONFIGURED_ARCH)" ==  "arm64" ]]; then
+	        if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ] && [[ "$(CONFIGURED_ARCH)" == "armhf" || "$(CONFIGURED_ARCH)" ==  "arm64" ]]; then
 	            echo "Stopping march $(CONFIGURED_ARCH) docker"
 	            sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
 	            sudo rm -f /var/run/march/docker.pid || true

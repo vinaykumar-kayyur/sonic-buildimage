@@ -1,5 +1,5 @@
 ########################################################################
-# Nokia 7215
+# Nokia IXS7215
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Fans' information which are available in the platform
@@ -9,7 +9,9 @@
 
 try:
     import os
+    import time
     from sonic_platform_base.fan_base import FanBase
+    from sonic_platform.eeprom import Eeprom
     from sonic_py_common import logger
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -41,6 +43,9 @@ class Fan(FanBase):
             self.get_fan_speed_reg = ADT7473_DIR+"fan{}_input".format(self.index)
             self.max_fan_speed = MAX_IXS7215_FAN_SPEED
             self.supported_led_color = ['off', 'green', 'red']
+
+            # Fan eeprom
+            self.eeprom = Eeprom(is_fan=True, fan_index=self.index)
         else:
             # this is a PSU Fan
             self.index = fan_index
@@ -77,6 +82,12 @@ class Fan(FanBase):
                 rv = fd.write(str(value))
         except Exception as e:
             rv = 'ERR'
+
+        # Ensure that the write operation has succeeded
+        if (int(self._get_i2c_register(reg_file)) != value ):
+            time.sleep(3)
+            if (int(self._get_i2c_register(reg_file)) != value ):
+                rv = 'ERR'
 
         return rv
 
@@ -123,10 +134,9 @@ class Fan(FanBase):
         Retrieves the model number of the Fan
 
         Returns:
-            string: Part number of Fan
+            string: Model number of Fan. Use part number for this.
         """
-
-        return 'NA'
+        return self.eeprom.part_number_str()
 
     def get_serial(self):
         """
@@ -135,8 +145,25 @@ class Fan(FanBase):
         Returns:
             string: Serial number of Fan
         """
+        return self.eeprom.serial_number_str()
 
-        return 'NA'
+    def get_part_number(self):
+        """
+        Retrieves the part number of the Fan
+
+        Returns:
+            string: Part number of Fan
+        """
+        return self.eeprom.part_number_str()
+
+    def get_service_tag(self):
+        """
+        Retrieves the service tag of the Fan
+
+        Returns:
+            string: Service Tag of Fan
+        """
+        return self.eeprom.service_tag_str()
 
     def get_status(self):
         """
@@ -163,7 +190,24 @@ class Fan(FanBase):
             FAN_DIRECTION_EXHAUST depending on fan direction
         """
 
-        return 'FAN_DIRECTION_INTAKE'
+        return 'intake'
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
 
     def get_speed(self):
         """
@@ -176,9 +220,13 @@ class Fan(FanBase):
 
         fan_speed = self._get_i2c_register(self.get_fan_speed_reg)
         if (fan_speed != 'ERR'):
-            speed = int(fan_speed)
+            speed_in_rpm = int(fan_speed)
         else:
-            speed = 0
+            speed_in_rpm = 0
+
+        speed = 100*speed_in_rpm//MAX_IXS7215_FAN_SPEED
+        if speed > 100:
+            speed = 100
 
         return speed
 
@@ -288,10 +336,10 @@ class Fan(FanBase):
         """
 
         if self.is_psu_fan:
-            return False
+            return None
 
         if smbus_present == 0:
-            return False
+            return None
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
@@ -321,10 +369,16 @@ class Fan(FanBase):
         """
         speed = 0
 
-        fan_speed = self._get_i2c_register(self.get_fan_speed_reg)
-        if (fan_speed != 'ERR'):
-            speed = int(fan_speed)
-        else:
-            speed = 0
+        fan_duty = self._get_i2c_register(self.set_fan_speed_reg)
+        if (fan_duty != 'ERR'):
+            dutyspeed = int(fan_duty)
+            if dutyspeed == 0:
+                speed = 0
+            elif dutyspeed == 64:
+                speed = 25
+            elif dutyspeed == 128:
+                speed = 50
+            elif dutyspeed == 255:
+                speed = 100
 
         return speed

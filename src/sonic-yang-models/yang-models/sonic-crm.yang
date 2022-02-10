@@ -7,7 +7,6 @@ module sonic-crm {
 
     import sonic-types {
         prefix stypes;
-        revision-date 2019-07-01;
     }
 
     description "CRM YANG Module for SONiC OS";
@@ -60,7 +59,7 @@ module sonic-crm {
                 leaf acl_group_high_threshold {
                     must "(current() > ../acl_group_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -80,7 +79,7 @@ module sonic-crm {
                 leaf acl_entry_high_threshold {
                     must "(current() > ../acl_entry_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -100,7 +99,7 @@ module sonic-crm {
                 leaf acl_table_high_threshold {
                     must "(current() > ../acl_table_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -120,7 +119,7 @@ module sonic-crm {
                 leaf fdb_entry_high_threshold {
                     must "(current() > ../fdb_entry_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -140,7 +139,7 @@ module sonic-crm {
                 leaf ipv4_neighbor_high_threshold {
                     must "(current() > ../ipv4_neighbor_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -160,7 +159,7 @@ module sonic-crm {
                 leaf ipv4_nexthop_high_threshold {
                     must "(current() > ../ipv4_nexthop_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -180,7 +179,7 @@ module sonic-crm {
                 leaf ipv4_route_high_threshold {
                     must "(current() > ../ipv4_route_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -200,7 +199,7 @@ module sonic-crm {
                 leaf ipv6_neighbor_high_threshold {
                     must "(current() > ../ipv6_neighbor_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -220,7 +219,7 @@ module sonic-crm {
                 leaf ipv6_nexthop_high_threshold {
                     must "(current() > ../ipv6_nexthop_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -240,7 +239,7 @@ module sonic-crm {
                 leaf ipv6_route_high_threshold {
                     must "(current() > ../ipv6_route_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -260,7 +259,7 @@ module sonic-crm {
                 leaf nexthop_group_high_threshold {
                     must "(current() > ../nexthop_group_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -280,7 +279,7 @@ module sonic-crm {
                 leaf nexthop_group_member_high_threshold {
                     must "(current() > ../nexthop_group_member_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }
@@ -290,6 +289,118 @@ module sonic-crm {
                 }
 
                 leaf polling_interval {
+                    type threshold;
+                }
+
+                leaf dnat_entry_threshold_type {
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../dnat_entry_high_threshold<100 and
+                        ../dnat_entry_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
+                }
+
+                leaf dnat_entry_high_threshold {
+                    must "(current() > ../dnat_entry_low_threshold)"
+                    {
+                        error-message "high_threshold should be more than low_threshold";
+                    }
+                    type threshold;
+                }
+
+                leaf dnat_entry_low_threshold {
+                    type threshold;
+                }
+
+                leaf snat_entry_threshold_type {
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../snat_entry_high_threshold<100 and
+                        ../snat_entry_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
+                }
+
+                leaf snat_entry_high_threshold {
+                    must "(current() > ../snat_entry_low_threshold)"
+                    {
+                        error-message "high_threshold should be more than low_threshold";
+                    }
+                    type threshold;
+                }
+
+                leaf snat_entry_low_threshold {
+                    type threshold;
+                }
+
+                leaf ipmc_entry_threshold_type {
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../ipmc_entry_high_threshold<100 and
+                        ../ipmc_entry_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
+                }
+
+                leaf ipmc_entry_high_threshold {
+                    must "(current() > ../ipmc_entry_low_threshold)"
+                    {
+                        error-message "high_threshold should be more than low_threshold";
+                    }
+                    type threshold;
+                }
+
+                leaf ipmc_entry_low_threshold {
+                    type threshold;
+                }
+
+                leaf mpls_inseg_threshold_type {
+                    description "CRM threshold support for MPLS in-segment entries";
+
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../mpls_inseg_high_threshold<100 and
+                        ../mpls_inseg_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
+                }
+
+                leaf mpls_inseg_high_threshold {
+                    description "CRM threshold support for MPLS in-segment entries";
+
+                    must "(current() > ../mpls_inseg_low_threshold)"
+                    {
+                        error-message "high_threshold should be more than low_threshold";
+                    }
+                    type threshold;
+                }
+
+                leaf mpls_inseg_low_threshold {
+                    description "CRM threshold support for MPLS in-segment entries";
+
+                    type threshold;
+                }
+
+                leaf mpls_nexthop_threshold_type {
+                    description "CRM threshold support for MPLS next-hops";
+
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../mpls_nexthop_high_threshold<100 and
+                        ../mpls_nexthop_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
+                }
+
+                leaf mpls_nexthop_high_threshold {
+                    description "CRM threshold support for MPLS next-hops";
+
+                    must "(current() > ../mpls_nexthop_low_threshold)"
+                    {
+                        error-message "high_threshold should be more than low_threshold";
+                    }
+                    type threshold;
+                }
+
+                leaf mpls_nexthop_low_threshold {
+                    description "CRM threshold support for MPLS next-hops";
+
                     type threshold;
                 }
 

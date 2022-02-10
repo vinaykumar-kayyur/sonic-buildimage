@@ -19,6 +19,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.watchdog import Watchdog
+    import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -27,7 +28,7 @@ MAX_Z9332F_FANTRAY = 7
 MAX_Z9332F_FAN = 2
 MAX_Z9332F_PSU = 2
 MAX_Z9332F_THERMAL = 14
-MAX_Z9332F_COMPONENT = 6 # BIOS,FPGA,BMC,BB CPLD and 2 Switch CPLDs
+MAX_Z9332F_COMPONENT = 8 # BIOS,FPGA,BMC,BB CPLD,2 Switch CPLDs,SSD and PCIe
 
 media_part_num_list = set([ \
 "8T47V","XTY28","MHVPK","GF76J","J6FGD","F1KMV","9DN5J","H4DHD","6MCNV","0WRX0","X7F70","5R2PT","WTRD1","WTRD1","WTRD1","WTRD1","5250G","WTRD1","C5RNH","C5RNH","FTLX8571D3BCL-FC",
@@ -53,45 +54,69 @@ class Chassis(ChassisBase):
     REBOOT_CAUSE_PATH = "/host/reboot-cause/platform/reboot_reason"
     oir_fd = -1
     epoll = -1
+    io_res = "/dev/port"
+    sysled_offset = 0xA162
+    SYSLED_COLOR_TO_REG = {
+       "green": 0xd0,
+       "yellow": 0xe0,
+       "flashing green": 0xd2,
+       "flashing yellow": 0xe2
+       }
+
+    REG_TO_SYSLED_COLOR = {
+        0xd0 : "green",
+        0xe0 : "yellow",
+        0xd2 : "flashing green",
+        0xd1 : "flashing green",
+        0xe2 : "flashing yellow",
+        0xe1 : "flashing yellow"
+        }
 
     _global_port_pres_dict = {}
-
     _port_to_i2c_mapping = {
-            1:  10,
-            2:  11,
-            3:  12,
-            4:  13,
-            5:  14,
-            6:  15,
-            7:  16,
-            8:  17,
-            9:  18,
-            10: 19,
-            11: 20,
-            12: 21,
-            13: 22,
-            14: 23,
-            15: 24,
-            16: 25,
-            17: 26,
-            18: 27,
-            19: 28,
-            20: 29,
-            21: 30,
-            22: 31,
-            23: 32,
-            24: 33,
-            25: 34,
-            26: 35,
-            27: 36,
-            28: 37,
-            29: 38,
-            30: 39,
-            31: 40,
-            32: 41,
-            33: 1,
-            34: 2,
-            }
+        1:  10,
+        2:  11,
+        3:  12,
+        4:  13,
+        5:  14,
+        6:  15,
+        7:  16,
+        8:  17,
+        9:  18,
+        10: 19,
+        11: 20,
+        12: 21,
+        13: 22,
+        14: 23,
+        15: 24,
+        16: 25,
+        17: 26,
+        18: 27,
+        19: 28,
+        20: 29,
+        21: 30,
+        22: 31,
+        23: 32,
+        24: 33,
+        25: 34,
+        26: 35,
+        27: 36,
+        28: 37,
+        29: 38,
+        30: 39,
+        31: 40,
+        32: 41,
+        33: 1,
+        34: 2
+    }
+
+    reboot_reason_dict = { 0x11: (ChassisBase.REBOOT_CAUSE_POWER_LOSS, "Power on reset"),
+                           0x22: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU warm reset"),
+                           0x33: (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Soft-set CPU cold reset"),
+                           0x66: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "GPIO watchdog reset"),
+                           0x77: (ChassisBase.REBOOT_CAUSE_POWER_LOSS, "Power cycle reset"),
+                           0x88: (ChassisBase.REBOOT_CAUSE_WATCHDOG, "CPLD watchdog reset")
+                        }
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -104,7 +129,7 @@ class Chassis(ChassisBase):
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
         for index in range(self.PORT_START, self.PORTS_IN_BLOCK):
             eeprom_path = eeprom_base.format(self._port_to_i2c_mapping[index])
-            port_type = 'SFP' if index in _sfp_port else 'QSFP'
+            port_type = 'SFP' if index in _sfp_port else 'QSFP_DD'
             sfp_node = Sfp(index, port_type, eeprom_path)
             self._sfp_list.append(sfp_node)
 
@@ -150,6 +175,7 @@ class Chassis(ChassisBase):
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
+                    self.get_sfp(port_num)._initialize_media(delay=True)
                 elif(not presence and
                         self._global_port_pres_dict[port_num] == '1'):
                     self._global_port_pres_dict[port_num] = '0'
@@ -183,7 +209,7 @@ class Chassis(ChassisBase):
             # The index will start from 0
             sfp = self._sfp_list[index-1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
 
@@ -245,6 +271,15 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.serial_number_str()
 
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()
+
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -295,25 +330,59 @@ class Chassis(ChassisBase):
         except EnvironmentError:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
-        if reboot_cause & 0x1:
-            return (self.REBOOT_CAUSE_POWER_LOSS, None)
-        elif reboot_cause & 0x2:
-            return (self.REBOOT_CAUSE_NON_HARDWARE, None)
-        elif reboot_cause & 0x44:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "CPU warm reset")
-        elif reboot_cause & 0x8:
-            return (self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU, None)
-        elif reboot_cause & 0x66:
-            return (self.REBOOT_CAUSE_WATCHDOG, None)
-        elif reboot_cause & 0x55:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "CPU cold reset")
-        elif reboot_cause & 0x11:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Power on reset")
-        elif reboot_cause & 0x77:
-            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Power Cycle reset")
+        if reboot_cause in self.reboot_reason_dict.keys():
+            return self.reboot_reason_dict.get(reboot_cause)
         else:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
 
     def get_qualified_media_list(self):
         return media_part_num_list
+
+    def initizalize_system_led(self):
+        self.sys_ledcolor = "green"
+
+    def get_status_led(self):
+        """
+        Gets the current system LED color
+
+        Returns:
+            A string that represents the supported color
+        """
+        val = hwaccess.io_reg_read(self.io_res, self.sysled_offset)
+        if val != -1:
+            return self.REG_TO_SYSLED_COLOR.get(val)
+        return self.sys_ledcolor
+
+    def set_status_led(self, color):
+        """ 
+        Set system LED status based on the color type passed in the argument.
+        Argument: Color to be set
+        Returns:
+          bool: True is specified color is set, Otherwise return False
+        """
+
+        if color not in list(self.SYSLED_COLOR_TO_REG.keys()):
+            return False
+
+        if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSLED_COLOR_TO_REG[color])):
+            return False
+        self.sys_ledcolor = color
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

@@ -22,9 +22,8 @@ KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
 KUBELET_YAML = "/var/lib/kubelet/config.yaml"
 SERVER_ADMIN_URL = "https://{}/admin.conf"
 LOCK_FILE = "/var/lock/kube_join.lock"
-
-# kubectl --kubeconfig <KUBE_ADMIN_CONF> label nodes
-#       <device_info.get_hostname()> <label to be added>
+FLANNEL_CONF_FILE = "/usr/share/sonic/templates/kube_cni.10-flannel.conflist"
+CNI_DIR = "/etc/cni/net.d"
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -47,6 +46,9 @@ def to_str(s):
 
     return str(s)
 
+def get_device_name():
+    return str(device_info.get_hostname()).lower()
+
 
 def _run_command(cmd, timeout=5):
     """ Run shell command and return exit code, along with stdout. """
@@ -57,10 +59,7 @@ def _run_command(cmd, timeout=5):
         (o, e) = proc.communicate(timeout)
         output = to_str(o)
         err = to_str(e)
-        if err:
-            ret = -1
-        else:
-            ret = proc.returncode
+        ret = proc.returncode
     except subprocess.TimeoutExpired as error:
         proc.kill()
         output = ""
@@ -83,7 +82,7 @@ def kube_read_labels():
 
     labels = {}
     ret, out, _ = _run_command(KUBECTL_GET_CMD.format(
-        KUBE_ADMIN_CONF, device_info.get_hostname()))
+        KUBE_ADMIN_CONF, get_device_name()))
 
     if ret == 0:
         lst = out.split(",")
@@ -131,9 +130,9 @@ def kube_write_labels(set_labels):
         # First remove if any
         if del_label_str:
             (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname(), del_label_str.strip()))
+            KUBE_ADMIN_CONF, get_device_name(), del_label_str.strip()))
         (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname(), add_label_str.strip()))
+            KUBE_ADMIN_CONF, get_device_name(), add_label_str.strip()))
 
         log_debug("{} kube labels {} ret={}".format(
             "Applied" if ret == 0 else "Failed to apply", add_label_str, ret))
@@ -150,7 +149,7 @@ def func_get_labels(args):
         log_debug("Labels read failed.")
         return ret
 
-    print(json.dumps(node_labels, indent=4))
+    log_debug(json.dumps(node_labels, indent=4))
     return 0
     
 
@@ -174,7 +173,7 @@ def is_connected(server=""):
 def func_is_connected(args):
     """ Get connected state """
     connected = is_connected()
-    print("Currently {} to Kube master".format(
+    log_debug("Currently {} to Kube master".format(
         "connected" if connected else "not connected"))
     return 0 if connected else 1
 
@@ -205,25 +204,11 @@ def _download_file(server, port, insecure):
     data = r.read()
     os.write(h, data)
     os.close(h)
+    log_debug("Downloaded = {}".format(fname))
 
-    # Ensure the admin.conf has given VIP as server-IP.
-    update_file = "{}.upd".format(fname)
-    cmd = r'sed "s/server:.*:{}/server: https:\/\/{}:{}/" {} > {}'.format(
-            str(port), server, str(port), fname, update_file)
-    (ret, _, err) = _run_command(cmd)
+    shutil.copyfile(fname, KUBE_ADMIN_CONF)
 
-    print("sed command: ret={}".format(ret))
-    if ret != 0:
-        log_error("sed update of downloaded file failed with ret={}".
-                format(ret))
-        print("sed command failed: ret={}".format(ret))
-        return ret
-
-    shutil.copyfile(update_file, KUBE_ADMIN_CONF)
-
-    _run_command("rm -f {} {}".format(fname, update_file))
     log_debug("{} downloaded".format(KUBE_ADMIN_CONF))
-    return ret
 
 
 def _troubleshoot_tips():
@@ -266,13 +251,13 @@ def _do_reset(pending_join = False):
     if os.path.exists(KUBE_ADMIN_CONF):
         _run_command(
                 "kubectl --kubeconfig {} --request-timeout 20s drain {} --ignore-daemonsets".
-                format(KUBE_ADMIN_CONF, device_info.get_hostname()))
+                format(KUBE_ADMIN_CONF, get_device_name()))
 
         _run_command("kubectl --kubeconfig {} --request-timeout 20s delete node {}".
-                format(KUBE_ADMIN_CONF, device_info.get_hostname()))
+                format(KUBE_ADMIN_CONF, get_device_name()))
 
     _run_command("kubeadm reset -f", 10)
-    _run_command("rm -rf /etc/cni/net.d")
+    _run_command("rm -rf {}".format(CNI_DIR))
     if not pending_join:
         _run_command("rm -f {}".format(KUBE_ADMIN_CONF))
     _run_command("systemctl stop kubelet")
@@ -282,18 +267,20 @@ def _do_join(server, port, insecure):
     KUBEADM_JOIN_CMD = "kubeadm join --discovery-file {} --node-name {}"
     err = ""
     out = ""
+    ret = 0
     try:
-        ret = _download_file(server, port, insecure)
-        print("_download ret={}".format(ret))
-        if ret == 0:
-            _do_reset(True)
-            _run_command("modprobe br_netfilter")
-            (ret, _, _) = _run_command("systemctl start kubelet")
+        _download_file(server, port, insecure)
+        _do_reset(True)
+        _run_command("modprobe br_netfilter")
+        # Copy flannel.conf
+        _run_command("mkdir -p {}".format(CNI_DIR))
+        _run_command("cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR))
+        (ret, _, _) = _run_command("systemctl start kubelet")
 
         if ret == 0:
             (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
-                KUBE_ADMIN_CONF, device_info.get_hostname()), timeout=60)
-            print("ret = {}".format(ret))
+                KUBE_ADMIN_CONF, get_device_name()), timeout=60)
+            log_debug("ret = {}".format(ret))
 
     except IOError as e:
         err = "Download failed: {}".format(str(e))

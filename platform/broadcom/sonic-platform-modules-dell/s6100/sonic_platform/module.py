@@ -63,7 +63,7 @@ class Module(ModuleBase):
         self.iom_presence_reg = "iom_presence"
 
         component = Component(is_module=True, iom_index=self.index,
-                              i2c_line=self.port_i2c_line)
+                              i2c_line=self.port_i2c_line, dependency=self)
         self._component_list.append(component)
 
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/i2c-{1}/{1}-0050/eeprom"
@@ -157,6 +157,23 @@ class Module(ModuleBase):
 
         return status
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether Module is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the module
@@ -181,3 +198,48 @@ class Module(ModuleBase):
                   ‘0x26’:’01’, ‘0x27’:’REV01’, ‘0x28’:’AG9064-C2358-16G’}
         """
         return self._eeprom.system_eeprom_info()
+
+    def get_description(self):
+        """
+        Retrieves the platform vendor's product description of the module
+
+        Returns:
+            A string, providing the vendor's product description of the module.
+        """
+        return self._eeprom.modelstr()
+
+    def get_slot(self):
+        """
+        Retrieves the platform vendor's slot number of the module
+
+        Returns:
+            An integer, indicating the slot number in the chassis
+        """
+        return self.index
+
+    def get_oper_status(self):
+        """
+        Retrieves the operational status of the module
+
+        Returns:
+            A string, the operational status of the module from one of the
+            predefined status values: MODULE_STATUS_EMPTY, MODULE_STATUS_OFFLINE,
+            MODULE_STATUS_FAULT, MODULE_STATUS_PRESENT or MODULE_STATUS_ONLINE
+        """
+        if self.get_presence():
+            if self.get_status():
+                return self.MODULE_STATUS_ONLINE
+            else:
+                return self.MODULE_STATUS_PRESENT
+        else:
+            return self.MODULE_STATUS_EMPTY
+
+    def get_maximum_consumed_power(self):
+        """
+        Retrives the maximum power drawn by this module
+
+        Returns:
+            A float, with value of the maximum consumable power of the
+            module.
+        """
+        return 97.23

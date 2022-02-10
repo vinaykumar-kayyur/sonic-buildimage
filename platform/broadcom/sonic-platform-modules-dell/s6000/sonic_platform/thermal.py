@@ -13,7 +13,6 @@ try:
     import os
     import glob
     from sonic_platform_base.thermal_base import ThermalBase
-    from sonic_platform.psu import Psu
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -34,11 +33,21 @@ class Thermal(ThermalBase):
                     'PSU1-Sensor 1', 'PSU1-Sensor 2', 'PSU2-Sensor 1',
                     'PSU2-Sensor 2', 'CPU Core 0', 'CPU Core 1')
 
-    def __init__(self, thermal_index):
-        self.index = thermal_index + 1
-        self.is_psu_thermal = False
+    def __init__(self, thermal_index,
+                 psu_index=1, psu_thermal=False, dependency=None):
+        ThermalBase.__init__(self)
+        self.is_psu_thermal = psu_thermal
+        self.dependency = dependency
         self.is_driver_initialized = True
-        self.dependency = None
+
+        if self.is_psu_thermal:
+            self.index = (2 * psu_index) + thermal_index + 2
+        else:
+            # CPU thermal
+            if thermal_index > 3:
+                self.index = thermal_index + 5
+            else:
+                self.index = thermal_index + 1
 
         if self.index < 9:
             i2c_path = self.I2C_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
@@ -54,10 +63,6 @@ class Thermal(ThermalBase):
 
             if self.index == 4:
                 hwmon_temp_suffix = "crit"
-
-            if self.index > 4:
-                self.is_psu_thermal = True
-                self.dependency = Psu(self.index / 7)
         else:
             dev_path = "/sys/devices/platform/coretemp.0/hwmon/"
             hwmon_temp_index = self.index - 7
@@ -96,11 +101,25 @@ class Thermal(ThermalBase):
         try:
             with open(sysfs_file, 'r') as fd:
                 rv = fd.read()
-        except:
+        except Exception:
             rv = 'ERR'
 
         rv = rv.rstrip('\r\n')
         rv = rv.lstrip(" ")
+        return rv
+
+    def _write_sysfs_file(self, sysfs_file, value):
+        rv = 'ERR'
+
+        if (not os.path.isfile(sysfs_file)):
+            return rv
+
+        try:
+            with open(sysfs_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except Exception as e:
+            rv = 'ERR'
+
         return rv
 
     def _get_sysfs_path(self):
@@ -168,6 +187,23 @@ class Thermal(ThermalBase):
         else:
             return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether Thermal is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_temperature(self):
         """
         Retrieves current temperature reading from thermal
@@ -221,18 +257,28 @@ class Thermal(ThermalBase):
 
         return thermal_low_threshold / 1000.0
 
-    def set_high_threshold(self, temperature):
+    def set_high_threshold(self, temperature, force=False):
         """
         Sets the high threshold temperature of thermal
 
         Args :
             temperature: A float number up to nearest thousandth of one
             degree Celsius, e.g. 30.125
+            force (optional): A boolean, True if set threshold. Only to
+            be used via thermal Manager.
         Returns:
             A boolean, True if threshold is set successfully, False if
             not
         """
         # Thermal threshold values are pre-defined based on HW.
+        # Only to be used by Thermal Manager
+        if force and self.index <= 3 and (80 <= temperature <=85):
+            high_threshold = temperature * 1000
+            result = self._write_sysfs_file(self.thermal_high_threshold_file,
+                                            high_threshold)
+            if result != 'ERR':
+                return True
+
         return False
 
     def set_low_threshold(self, temperature):

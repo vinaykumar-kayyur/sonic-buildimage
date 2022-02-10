@@ -1,8 +1,8 @@
-import imp
 import signal
 import sys
 
 from . import device_info
+from .general import load_module_from_source
 from .logger import Logger
 
 #
@@ -25,9 +25,11 @@ def db_connect(db_name, namespace=EMPTY_NAMESPACE):
     from swsscommon import swsscommon
     return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True, namespace)
 
+
 #
 # DaemonBase ===================================================================
 #
+
 
 class DaemonBase(Logger):
     def __init__(self, log_identifier):
@@ -68,7 +70,7 @@ class DaemonBase(Logger):
 
         try:
             module_file = "/".join([platform_path, "plugins", module_name + ".py"])
-            module = imp.load_source(module_name, module_file)
+            module = load_module_from_source(module_name, module_file)
         except IOError as e:
             raise IOError("Failed to load platform module '%s': %s" % (module_name, str(e)))
 

@@ -268,8 +268,8 @@ class Test_SonicYang(object):
     """
     @pytest.fixture(autouse=True, scope='class')
     def sonic_yang_data(self):
-        sonic_yang_dir = "../sonic-yang-models/yang-models/"
-        sonic_yang_test_file = "../sonic-yang-models/tests/yang_model_tests/yangTest.json"
+        sonic_yang_dir = "/usr/local/yang-models/"
+        sonic_yang_test_file = "../sonic-yang-models/tests/files/sample_config_db.json"
 
         syc = sy.SonicYang(sonic_yang_dir)
         syc.loadYangModel()
@@ -280,6 +280,44 @@ class Test_SonicYang(object):
         sonic_yang_data['syc'] = syc
 
         return sonic_yang_data
+
+    def test_validate_yang_models(self, sonic_yang_data):
+        '''
+        In this test, we validate yang models
+        a.) by converting the config as per RFC 7951 using YANG Models,
+        b.) by creating data tree using new YANG models and
+        c.) by validating config against YANG models.
+        Successful execution of these steps can be treated as
+        validation of new Yang models.
+        '''
+        test_file = sonic_yang_data['test_file']
+        syc = sonic_yang_data['syc']
+        # Currently only 3 YANG files are not directly related to config
+        # which are: sonic-extension.yang, sonic-types.yang and sonic-bgp-common.yang. Hard coding
+        # it right now.
+        # If any more such helper yang files are added, we need to update here.
+        NON_CONFIG_YANG_FILES = 3
+        # read config
+        jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON')
+        jIn = json.loads(jIn)
+        numTables = len(jIn)
+        # load config and create Data tree
+        syc.loadData(jIn)
+        # check all tables are loaded and config related to all Yang Models is
+        # loaded in Data tree.
+        assert len(syc.jIn) == numTables
+        print("{}:{}".format(len(syc.xlateJson), len(syc.yangFiles)))
+        assert len(syc.xlateJson) == len(syc.yangFiles) - NON_CONFIG_YANG_FILES
+        # Validate data tree
+        validTree = False
+        try:
+            syc.validate_data_tree()
+            validTree = True
+        except Exception as e:
+            pass
+        assert validTree == True
+
+        return
 
     def test_xlate_rev_xlate(self, sonic_yang_data):
         # In this test, xlation and revXlation is tested with latest Sonic
@@ -302,6 +340,9 @@ class Test_SonicYang(object):
             print("Xlate and Rev Xlate Passed")
         else:
             print("Xlate and Rev Xlate failed")
+            # print for better debugging, in case of failure.
+            from jsondiff import diff
+            print(diff(syc.jIn, syc.revXlateJson, syntax='symmetric'))
             # make it fail
             assert False == True
 
@@ -313,7 +354,7 @@ class Test_SonicYang(object):
         test_file = sonic_yang_data['test_file']
         syc = sonic_yang_data['syc']
 
-        jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON_1')
+        jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_UNKNOWN')
 
         syc.loadData(json.loads(jIn))
 

@@ -1,6 +1,6 @@
 [Unit]
 Description=Delays snmp container until SONiC has started
-Conflicts=snmp.service
+PartOf=snmp.service
 After=swss.service
 
 [Timer]
@@ -9,4 +9,4 @@ OnBootSec=3min 30 sec
 Unit=snmp.service
 
 [Install]
-WantedBy=timers.target swss.service
+WantedBy=timers.target swss.service sonic-delayed.target

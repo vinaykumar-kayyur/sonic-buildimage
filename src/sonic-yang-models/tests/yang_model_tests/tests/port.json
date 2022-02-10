@@ -1,0 +1,77 @@
+{
+    "PORT_TEST": {
+        "desc": "LOAD PORT TABLE WITH FEC AND PFC_ASYM SUCCESSFULLY. VERIFY PFC_ASYM.",
+        "eStrKey" : "Verify",
+        "verify": {
+            "xpath": "/sonic-port:sonic-port/PORT/PORT_LIST[name='Ethernet8']/name",
+            "key": "sonic-port:pfc_asym",
+            "value": "on"
+        }
+    },
+    "PORT_NEG_TEST": {
+        "desc": "LOAD PORT TABLE FEC PATTERN FAILURE",
+        "eStrKey" : "Pattern",
+        "eStr": ["rc"]
+    },
+    "PORT_VALID_AUTONEG_TEST_1": {
+        "desc": "PORT_VALID_AUTONEG_TEST_1 no failure."
+    },
+    "PORT_VALID_AUTONEG_TEST_2": {
+        "desc": "PORT_VALID_AUTONEG_TEST_2 no failure."
+    },
+    "PORT_INVALID_AUTONEG_TEST": {
+        "desc": "PORT_INVALID_AUTONEG_TEST must condition failure.",
+        "eStrKey" : "Pattern",
+        "eStr": ["on|off"]
+    },
+    "PORT_VALID_ADVSPEEDS_TEST_1": {
+        "desc": "PORT_VALID_ADVSPEEDS_TEST_1 no failure."
+    },
+    "PORT_VALID_ADVSPEEDS_TEST_2": {
+        "desc": "PORT_VALID_ADVSPEEDS_TEST_2 no failure."
+    },
+    "PORT_INVALID_ADVSPEEDS_TEST_1": {
+        "desc": "PORT_INVALID_ADVSPEEDS_TEST_1 InvalidValue condition failure.",
+        "eStrKey" : "InvalidValue",
+        "eStr": ["adv_speeds"]
+    },
+    "PORT_INVALID_ADVSPEEDS_TEST_2": {
+        "desc": "PORT_INVALID_ADVSPEEDS_TEST_2 must condition failure.",
+        "eStrKey" : "Must"
+    },
+    "PORT_VALID_TYPE_TEST": {
+        "desc": "PORT_VALID_TYPE_TEST no failure."
+    },
+    "PORT_INVALID_TYPE_TEST": {
+        "desc": "PORT_INVALID_TYPE_TEST InvalidValue condition failure.",
+        "eStrKey" : "InvalidValue",
+        "eStr": ["interface_type"]
+    },
+    "PORT_VALID_ADVTYPES_TEST_1": {
+        "desc": "PORT_VALID_ADVTYPES_TEST_1 no failure."
+    },
+    "PORT_VALID_ADVTYPES_TEST_2": {
+        "desc": "PORT_VALID_ADVTYPES_TEST_2 no failure."
+    },
+    "PORT_INVALID_ADVTYPES_TEST_1": {
+        "desc": "PORT_INVALID_ADVTYPES_TEST_1 InvalidValue condition failure.",
+        "eStrKey" : "InvalidValue",
+        "eStr": ["adv_interface_types"]
+    },
+    "PORT_INVALID_ADVTYPES_TEST_2": {
+        "desc": "PORT_INVALID_ADVTYPES_TEST_2 must condition failure.",
+        "eStrKey" : "Must"
+    },
+    "PORT_INVALID_TPID_TEST": {
+        "desc": "PORT_INVALID_TPID_TEST invalid tpid value failure.",
+        "eStrKey" : "Pattern",
+        "eStr": ["0x8100|0x9100|0x9200|0x88a8|0x88A8"]
+     },
+     "PORT_VALID_MUX_CABLE_TEST": {
+         "desc": "PORT_VALID_MUX_CABLE_TEST no failure."
+     },
+     "PORT_INVALID_MUX_CABLE_TEST": {
+         "desc": "PORT_INVALID_MUX_CABLE_TEST non-boolean values, expect fail",
+         "eStrKey": "InvalidValue"
+     }
+}

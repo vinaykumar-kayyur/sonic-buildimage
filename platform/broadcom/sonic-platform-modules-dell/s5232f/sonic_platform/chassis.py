@@ -21,6 +21,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.watchdog import Watchdog
+    import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -38,6 +39,22 @@ class Chassis(ChassisBase):
 
     oir_fd = -1
     epoll = -1
+    REBOOT_CAUSE_PATH = "/host/reboot-cause/platform/reboot_reason"
+    pci_res = "/sys/bus/pci/devices/0000:04:00.0/resource0"
+    sysled_offset = 0x0024
+    SYSLED_COLOR_TO_REG = {
+        "blinking_green": 0x0,
+        "green"         : 0x10,
+        "amber"         : 0x20,
+        "blinking_amber": 0x30
+        }
+
+    REG_TO_SYSLED_COLOR = {
+        0x0  : "blinking_green",
+        0x10 : "green",
+        0x20 : "amber",
+        0x30 : "blinking_amber"
+        }
 
     _global_port_pres_dict = {}
 
@@ -87,7 +104,6 @@ class Chassis(ChassisBase):
 # check for this event change for sfp / do we need to handle timeout/sleep
 
     def get_change_event(self, timeout=0):
-        from time import sleep
         """
         Returns a nested dictionary containing all devices which have
         experienced a change at chassis level
@@ -103,6 +119,7 @@ class Chassis(ChassisBase):
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
+                    self.get_sfp(port_num)._initialize_media(delay=True)
                 elif(not presence and
                         self._global_port_pres_dict[port_num] == '1'):
                     self._global_port_pres_dict[port_num] = '0'
@@ -115,7 +132,6 @@ class Chassis(ChassisBase):
                 now_ms = time.time() * 1000
                 if (now_ms - start_ms >= timeout):
                     return True, change_dict
-
 
     def get_sfp(self, index):
         """
@@ -136,7 +152,7 @@ class Chassis(ChassisBase):
             # The index will start from 0
             sfp = self._sfp_list[index-1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
 
@@ -223,6 +239,41 @@ class Chassis(ChassisBase):
             An integer represences the number of SFPs on the chassis.
         """
         return self._num_sfps
+
+    def initizalize_system_led(self):
+        self.sys_ledcolor = "green"
+
+    def get_status_led(self):
+        """
+        Gets the current system LED color
+
+        Returns:
+            A string that represents the supported color
+        """
+        val = hwaccess.pci_get_value(self.pci_res, self.sysled_offset)
+        if val != -1:
+            val = val & 0x30
+            return self.REG_TO_SYSLED_COLOR.get(val)
+        return self.sys_ledcolor
+
+    def set_status_led(self, color):
+        """
+        Set system LED status based on the color type passed in the argument.
+        Argument: Color to be set
+        Returns:
+          bool: True is specified color is set, Otherwise return False
+        """
+
+        if color not in list(self.SYSLED_COLOR_TO_REG.keys()):
+            return False
+
+        val = hwaccess.pci_get_value(self.pci_res, self.sysled_offset)
+        val = (val & 0xFFCF) | self.SYSLED_COLOR_TO_REG[color]
+
+        hwaccess.pci_set_value(self.pci_res, val, self.sysled_offset)
+        self.sys_ledcolor = color
+        return True
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
@@ -240,15 +291,15 @@ class Chassis(ChassisBase):
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
         if reboot_cause & 0x1:
-            return (self.REBOOT_CAUSE_POWER_LOSS, None)
+            return (self.REBOOT_CAUSE_POWER_LOSS, "Power on reset")
         elif reboot_cause & 0x2:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
         elif reboot_cause & 0x4:
             return (self.REBOOT_CAUSE_HARDWARE_OTHER, "PSU Shutdown")
         elif reboot_cause & 0x8:
-            return (self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU, None)
+            return (self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU, "Thermal overload")
         elif reboot_cause & 0x10:
-            return (self.REBOOT_CAUSE_WATCHDOG, None)
+            return (self.REBOOT_CAUSE_WATCHDOG, "Watchdog reset")
         elif reboot_cause & 0x20:
             return (self.REBOOT_CAUSE_HARDWARE_OTHER, "BMC Shutdown")
         elif reboot_cause & 0x40:
@@ -259,4 +310,3 @@ class Chassis(ChassisBase):
             return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Reset Button Cold Reboot")
         else:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
-

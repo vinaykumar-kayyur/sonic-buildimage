@@ -1,21 +1,22 @@
-import imp
 import sys
 import os
 import pytest
 
-import swsssdk
+from swsscommon import swsscommon
+from sonic_py_common.general import load_module_from_source
 
 from .mock_connector import MockConnector
 
-swsssdk.SonicV2Connector = MockConnector
+swsscommon.SonicV2Connector = MockConnector
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 scripts_path = os.path.join(modules_path, "scripts")
 sys.path.insert(0, modules_path)
 
-imp.load_source('procdockerstatsd', scripts_path + '/procdockerstatsd')
-from procdockerstatsd import *
+# Load the file under test
+procdockerstatsd_path = os.path.join(scripts_path, 'procdockerstatsd')
+procdockerstatsd = load_module_from_source('procdockerstatsd', procdockerstatsd_path)
 
 class TestProcDockerStatsDaemon(object):
     def test_convert_to_bytes(self):
@@ -35,7 +36,7 @@ class TestProcDockerStatsDaemon(object):
             ('7.751GiB', 8322572878)
         ]
 
-        pdstatsd = ProcDockerStats(SYSLOG_IDENTIFIER)
+        pdstatsd = procdockerstatsd.ProcDockerStats(procdockerstatsd.SYSLOG_IDENTIFIER)
 
         for test_input, expected_output in test_data:
             res = pdstatsd.convert_to_bytes(test_input)

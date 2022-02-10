@@ -5,7 +5,6 @@
 
 import os
 import sys
-import time
 
 try:
     from sonic_platform_base.sfp_base import SfpBase
@@ -139,11 +138,11 @@ class Sfp(SfpBase):
 
         self.port_to_eeprom_mapping[index] = eeprom_path
 
-        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer',
+        self.info_dict_keys = ['type', 'vendor_rev', 'serial', 'manufacturer',
                                'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length',
                                'nominal_bit_rate', 'specification_compliance',
-                               'vendor_date', 'vendor_oui']
+                               'type_abbrv_name', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode',
                               'tx_disable', 'tx_disable_channel', 'temperature',
@@ -263,7 +262,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardware_rev               |1*255VCHAR     |hardware version of SFP
+        vendor_rev                 |1*255VCHAR     |vendor revision of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -274,8 +273,10 @@ class Sfp(SfpBase):
         cable_length               |INT            |cable length in m
         nominal_bit_rate           |INT            |nominal bit rate by 100Mbs
         specification_compliance   |1*255VCHAR     |specification compliance
+        type_abbrv_name            |1*255VCHAR     |type of SFP (abbreviated)
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement
         ========================================================================
          """
 
@@ -337,33 +338,48 @@ class Sfp(SfpBase):
             end = start + XCVR_VENDOR_DATE_WIDTH
             sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
                 sfp_interface_bulk_raw[start: end], 0)
-            transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
-            transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
-            transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
-            transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
-            transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
-                'data']['VendorDataCode(YYYY-MM-DD Lot)']['value']
-            transceiver_info_dict['connector'] = sfp_interface_bulk_data['data']['Connector']['value']
-            transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
-            transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
-            transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
+
+            transceiver_info_dict['type'] = sfp_interface_bulk_data \
+                ['data']['type']['value']
+            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data \
+                ['data']['Vendor Name']['value']
+            transceiver_info_dict['model'] = sfp_vendor_pn_data \
+                ['data']['Vendor PN']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data \
+                ['data']['Vendor Rev']['value']
+            transceiver_info_dict['serial'] = sfp_vendor_sn_data \
+                ['data']['Vendor SN']['value']
+            transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data \
+                ['data']['Vendor OUI']['value']
+            transceiver_info_dict['vendor_date'] = sfp_vendor_date_data \
+                ['data']['VendorDataCode(YYYY-MM-DD Lot)']['value']
+            transceiver_info_dict['connector'] = sfp_interface_bulk_data \
+                ['data']['Connector']['value']
+            transceiver_info_dict['encoding'] = sfp_interface_bulk_data \
+                ['data']['EncodingCodes']['value']
+            transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data \
+                ['data']['Extended Identifier']['value']
+            transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data \
+                ['data']['RateIdentifier']['value']
+            transceiver_info_dict['type_abbrv_name'] = sfp_interface_bulk_data \
+                ['data']['type_abbrv_name']['value']
 
             for key in sfp_cable_length_tup:
                 if key in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['cable_type'] = key
-                    transceiver_info_dict['cable_length'] = str(
-                        sfp_interface_bulk_data['data'][key]['value'])
+                    transceiver_info_dict['cable_length'] = \
+                        str(sfp_interface_bulk_data['data'][key]['value'])
 
             for key in sfp_compliance_code_tup:
                 if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
-                    compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
-            transceiver_info_dict['specification_compliance'] = str(
-                compliance_code_dict)
+                    compliance_code_dict[key] = sfp_interface_bulk_data \
+                        ['data']['Specification compliance']['value'][key]['value']
 
-            transceiver_info_dict['nominal_bit_rate'] = str(
-                sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
+            transceiver_info_dict['specification_compliance'] = \
+                str(compliance_code_dict)
+            transceiver_info_dict['nominal_bit_rate'] = \
+                str(sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
+            transceiver_info_dict['application_advertisement'] = 'N/A'
 
         return transceiver_info_dict
 
@@ -557,26 +573,20 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has RX LOS, False if not.
         """
         if self.sfp_type == COPPER_TYPE:
-            return False
+            return None
+        if not self.dom_supported:
+            return None
+        rx_los_list = []
 
-        if smbus_present == 0:
-            sonic_logger.log_info("  PMON - smbus ERROR -    ")
-            cmdstatus, rxlosstatus = cmd.getstatusoutput('i2cget -y 0 0x41 0x4')
-            rxlosstatus = int(rxlosstatus, 16)
+        offset = 256
+        dom_channel_monitor_raw = self.__read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
+        if dom_channel_monitor_raw is not None:
+            rx_los_data = int(dom_channel_monitor_raw[0], 16)
+            rx_los_list.append(rx_los_data & 0x02 != 0)
         else:
-            bus = smbus.SMBus(0)
-            DEVICE_ADDRESS = 0x41
-            DEVICE_REG = 0x4
-            rxlosstatus = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
+            return None
 
-        pos = [1, 2, 4, 8]
-        bit_pos = pos[self.index-SFP_PORT_START]
-        rxlosstatus = rxlosstatus & (bit_pos)
-
-        if rxlosstatus == 0:
-            return True
-
-        return False
+        return rx_los_list
 
     def get_tx_fault(self):
         """
@@ -585,8 +595,21 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
+        if self.sfp_type == COPPER_TYPE:
+            return None
+        if not self.dom_supported:
+            return None
+        tx_fault_list = []
 
-        return False
+        offset = 256
+        dom_channel_monitor_raw = self.__read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
+        if dom_channel_monitor_raw is not None:
+            tx_fault_data = int(dom_channel_monitor_raw[0], 16)
+            tx_fault_list.append(tx_fault_data & 0x04 != 0)
+        else:
+            return None
+        return tx_fault_list
+
 
     def get_tx_disable(self):
         """
@@ -596,26 +619,20 @@ class Sfp(SfpBase):
         """
 
         if self.sfp_type == COPPER_TYPE:
-            return False
+            return None
+        if not self.dom_supported:
+            return None
 
-        # Enable optical SFP Tx
-        if smbus_present == 0:
-            cmdstatus, disstatus = cmd.getstatusoutput('i2cget -y 0 0x41 0x5')
-            sonic_logger.log_info(" PMON - smbus ERROR  tx- DEBUG    ")
+        tx_disable_list = []
+        offset = 256
+        dom_channel_monitor_raw = self.__read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
+        if dom_channel_monitor_raw is not None:
+            tx_disable_data = int(dom_channel_monitor_raw[0], 16)
+            tx_disable_list.append(tx_disable_data & 0xC0 != 0)
         else:
-            bus = smbus.SMBus(0)
-            DEVICE_ADDRESS = 0x41
-            DEVICE_REG = 0x5
-            disstatus = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
+            return None
 
-        pos = [1, 2, 4, 8]
-        bit_pos = pos[self.index-SFP_PORT_START]
-        disstatus = disstatus & (bit_pos)
-
-        if disstatus == 0:
-            return True
-
-        return False
+        return tx_disable_list
 
     def get_tx_disable_channel(self):
         """
@@ -663,6 +680,9 @@ class Sfp(SfpBase):
         Returns:
             An integer number of current temperature in Celsius
         """
+        if self.sfp_type == COPPER_TYPE:
+            return None
+
         transceiver_bulk_status = self.get_transceiver_bulk_status()
         return transceiver_bulk_status.get("temperature", "N/A")
 
@@ -672,6 +692,9 @@ class Sfp(SfpBase):
         Returns:
             An integer number of supply voltage in mV
         """
+        if self.sfp_type == COPPER_TYPE:
+            return None
+
         transceiver_bulk_status = self.get_transceiver_bulk_status()
         return transceiver_bulk_status.get("voltage", "N/A")
 
@@ -679,17 +702,17 @@ class Sfp(SfpBase):
         """
         Retrieves the TX bias current of this SFP
         Returns:
-            A list of four integer numbers, representing TX bias in mA
-            for channel 0 to channel 4.
-            Ex. ['110.09', '111.12', '108.21', '112.09']
+
         """
+        if self.sfp_type == COPPER_TYPE:
+            return None
+
+        tx_bias_list = []
         transceiver_bulk_status = self.get_transceiver_bulk_status()
-        tx1_bs = transceiver_bulk_status.get("tx1bias", "N/A")
-        tx2_bs = transceiver_bulk_status.get("tx2bias", "N/A")
-        tx3_bs = transceiver_bulk_status.get("tx3bias", "N/A")
-        tx4_bs = transceiver_bulk_status.get("tx4bias", "N/A")
-        tx_bias_list = [tx1_bs, tx2_bs, tx3_bs, tx4_bs]
+        tx_bias_list.append(transceiver_bulk_status.get("tx1bias", "N/A"))
+
         return tx_bias_list
+
 
     def get_rx_power(self):
         """
@@ -768,42 +791,56 @@ class Sfp(SfpBase):
 
     def reset(self):
         """
-        Reset SFP and return all user module settings to their default srate.
+        Reset SFP.
         Returns:
             A boolean, True if successful, False if not
         """
-        if self.sfp_type == COPPER_TYPE:
-            return False
-
-        path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/sfp_port_reset"
-        port_ps = path.format(self.port_to_i2c_mapping)
-
-        try:
-            reg_file = open(port_ps, 'w')
-        except IOError as e:
-            # print "Error: unable to open file: %s" % str(e)
-            return False
-
-        # toggle reset
-        reg_file.seek(0)
-        reg_file.write('1')
-        time.sleep(1)
-        reg_file.seek(0)
-        reg_file.write('0')
-        reg_file.close()
-        return True
+        # RJ45 and SFP ports not resettable
+        return False
 
     def tx_disable(self, tx_disable):
         """
-        Disable SFP TX for all channels
+        Disable SFP TX
         Args:
             tx_disable : A Boolean, True to enable tx_disable mode, False to disable
                          tx_disable mode.
         Returns:
             A boolean, True if tx_disable is set successfully, False if not
         """
+        if self.sfp_type == COPPER_TYPE:
+            return False
 
-        return False
+        if smbus_present == 0:  # if called from sfputil outside of pmon
+            cmdstatus, register = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
+            if cmdstatus:
+                sonic_logger.log_warning("sfp cmdstatus i2c get failed %s" % register )
+                return False
+            register = int(register, 16)
+        else:
+            bus = smbus.SMBus(0)
+            DEVICE_ADDRESS = 0x41
+            DEVICE_REG = 0x5
+            register = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
+
+        pos = [1, 2, 4, 8]
+        mask = pos[self.index-SFP_PORT_START]
+        if tx_disable == True:
+            setbits = register | mask
+        else:
+            setbits = register & ~mask
+
+        if smbus_present == 0:  # if called from sfputil outside of pmon
+            cmdstatus, output = cmd.getstatusoutput('sudo i2cset -y -m 0x0f 0 0x41 0x5 %d' % setbits)
+            if cmdstatus:
+                sonic_logger.log_warning("sfp cmdstatus i2c write failed %s" % output )
+                return False
+        else:
+            bus = smbus.SMBus(0)
+            DEVICE_ADDRESS = 0x41
+            DEVICE_REG = 0x5
+            bus.write_byte_data(DEVICE_ADDRESS, DEVICE_REG, setbits)
+
+        return True
 
     def tx_disable_channel(self, channel, disable):
         """
@@ -817,7 +854,7 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
 
-        return False
+        return NotImplementedError
 
     def set_lpmode(self, lpmode):
         """
@@ -851,7 +888,7 @@ class Sfp(SfpBase):
             False if not
         """
 
-        return False
+        return NotImplementedError
 
     def get_name(self):
         """
@@ -862,7 +899,7 @@ class Sfp(SfpBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        name = sfputil_helper.logical[self.index-1] or "Unknown"
         return name
 
     def get_presence(self):
@@ -875,7 +912,7 @@ class Sfp(SfpBase):
             return False
 
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, sfpstatus = cmd.getstatusoutput('i2cget -y 0 0x41 0x3')
+            cmdstatus, sfpstatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x3')
             sfpstatus = int(sfpstatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -917,3 +954,23 @@ class Sfp(SfpBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence()
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+
+        if self.sfp_type == "SFP":
+            return True
+        else:
+            return False
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.index

@@ -1,13 +1,16 @@
-#!/usr/bin/env python
-
-# All the supported FAN SysFS aattributes are
-#- fan<idx>_present
-#- fan<idx>_direction
-#- fan<idx>_input
-#- fan<idx>_pwm
-#- fan<idx>_fault
-# where idx is in the range [1-32]
+#############################################################################
+# PDDF
 #
+# PDDF fan base class inherited from the base class
+#
+# All the supported FAN SysFS aattributes are
+# - fan<idx>_present
+# - fan<idx>_direction
+# - fan<idx>_input
+# - fan<idx>_pwm
+# - fan<idx>_fault
+# where idx is in the range [1-32]
+#############################################################################
 
 try:
     from sonic_platform_base.fan_base import FanBase
@@ -221,7 +224,7 @@ class PddfFan(FanBase):
         target_speed = 0
         if self.is_psu_fan:
             # Target speed not usually supported for PSU fans
-            target_speed = 0
+            raise NotImplementedError
         else:
             idx = (self.fantray_index-1)*self.platform['num_fans_pertray'] + self.fan_index
             attr = "fan" + str(idx) + "_pwm"

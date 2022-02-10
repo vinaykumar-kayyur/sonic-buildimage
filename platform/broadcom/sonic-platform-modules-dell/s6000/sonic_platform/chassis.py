@@ -10,6 +10,7 @@
 try:
     import os
     import time
+    import subprocess
     import struct
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
@@ -24,8 +25,16 @@ except ImportError as e:
 
 MAX_S6000_FANTRAY = 3
 MAX_S6000_PSU = 2
-MAX_S6000_THERMAL = 10
+MAX_S6000_THERMAL = 6
 MAX_S6000_COMPONENT = 4
+
+HYST_RANGE = 5
+LEVEL0_THRESHOLD = 25
+LEVEL1_THRESHOLD = 30
+LEVEL2_THRESHOLD = 45
+LEVEL3_THRESHOLD = 60
+LEVEL4_THRESHOLD = 80
+LEVEL5_THRESHOLD = 85
 
 
 class Chassis(ChassisBase):
@@ -42,8 +51,15 @@ class Chassis(ChassisBase):
     reset_reason_dict[0x6] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
     reset_reason_dict[0x7] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER
 
+    _num_monitor_thermals = 3
+    _monitor_thermal_list = []
+    _is_fan_control_enabled = False
+    _fan_control_initialised = False
+
     def __init__(self):
         ChassisBase.__init__(self)
+        self.status_led_reg = "system_led"
+        self.supported_led_color = ['green', 'blinking green', 'amber', 'blinking amber']
         # Initialize SFP list
         self.PORT_START = 0
         self.PORT_END = 31
@@ -101,11 +117,28 @@ class Chassis(ChassisBase):
         try:
             with open(mb_reg_file, 'r') as fd:
                 rv = fd.read()
-        except Exception as error:
+        except IOError:
             rv = 'ERR'
 
         rv = rv.rstrip('\r\n')
         rv = rv.lstrip(" ")
+        return rv
+
+    def _set_cpld_register(self, reg_name, value):
+        # On successful write, returns the value will be written on
+        # reg_name and on failure returns 'ERR'
+        rv = 'ERR'
+        cpld_reg_file = self.CPLD_DIR+'/'+reg_name
+
+        if (not os.path.isfile(cpld_reg_file)):
+            return rv
+
+        try:
+            with open(cpld_reg_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except IOError:
+            rv = 'ERR'
+
         return rv
 
     def _nvram_write(self, offset, val):
@@ -123,20 +156,12 @@ class Chassis(ChassisBase):
             return
         os.close(fd)
 
-    def _get_thermal_reset(self):
-        reset_file = "/host/reboot-cause/reboot-cause.txt"
-        if (not os.path.isfile(reset_file)):
-            return False
-        try:
-            with open(reset_file, 'r') as fd:
-                rv = fd.read()
-        except Exception as error:
-            return False
+    def _init_fan_control(self):
 
-        if "Thermal Overload" in rv:
-            return True
-
-        return False
+        if not self._fan_control_initialised:
+            for i in range(self._num_monitor_thermals):
+                self._monitor_thermal_list.append(Thermal(i))
+            self._fan_control_initialised = True
 
     def get_name(self):
         """
@@ -179,6 +204,23 @@ class Chassis(ChassisBase):
         """
         return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -188,6 +230,15 @@ class Chassis(ChassisBase):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._eeprom.get_base_mac()
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.get_revision()
 
     def get_system_eeprom_info(self):
         """
@@ -209,9 +260,6 @@ class Chassis(ChassisBase):
         # NVRAM. Only Warmboot and Coldboot reason are supported here.
         # Since it does not support any hardware reason, we return
         # non_hardware as default
-        if self._get_thermal_reset() == True:
-            self._nvram_write(0x49, 0x7)
-
         lrr = self._get_cpld_register('last_reboot_reason')
         if (lrr != 'ERR'):
             reset_reason = int(lrr, base=16)
@@ -305,4 +353,118 @@ class Chassis(ChassisBase):
                     return True, ret_dict
         return False, ret_dict
 
+    def initizalize_system_led(self):
+        return True
 
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        if color not in self.supported_led_color:
+            return False
+
+        # Change color string format to the one used by driver
+        color = color.replace('amber', 'yellow')
+        color = color.replace('blinking ', 'blink_')
+        rv = self._set_cpld_register(self.status_led_reg, color)
+        if (rv != 'ERR'):
+            return True
+        else:
+            return False
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        status_led = self._get_cpld_register(self.status_led_reg)
+        if (status_led != 'ERR'):
+            status_led = status_led.replace('yellow', 'amber')
+            status_led = status_led.replace('blink_', 'blinking ')
+            return status_led
+        else:
+            return None
+
+    def get_thermal_manager(self):
+        """
+        Retrieves thermal manager class on this chassis
+
+        Returns:
+            A class derived from ThermalManagerBase representing the
+            specified thermal manager
+        """
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
+    def set_fan_control_status(self, enable):
+
+        if enable and not self._is_fan_control_enabled:
+            self._init_fan_control()
+            for thermal in self._monitor_thermal_list:
+                thermal.set_high_threshold(LEVEL5_THRESHOLD, force=True)
+            self._is_fan_control_enabled = True
+        elif not enable and self._is_fan_control_enabled:
+            for thermal in self._monitor_thermal_list:
+                thermal.set_high_threshold(LEVEL4_THRESHOLD, force=True)
+            self._is_fan_control_enabled = False
+
+    def get_monitor_thermals(self):
+        return self._monitor_thermal_list
+
+    def thermal_shutdown(self):
+        # Update reboot cause
+        self._nvram_write(0x49, 0x7)
+
+        subprocess.call('sync')
+        time.sleep(1)
+        for thermal in self._monitor_thermal_list:
+            thermal.set_high_threshold(LEVEL4_THRESHOLD, force=True)
+
+    @staticmethod
+    def get_system_thermal_level(curr_thermal_level, system_temperature):
+
+        def get_level_in_hystersis(curr_level, level1, level2):
+            if curr_level != level1 and curr_level != level2:
+                return level1 if abs(curr_level - level1) < abs(curr_level - level2) else level2
+            else:
+                return curr_level
+
+        if system_temperature < LEVEL0_THRESHOLD:
+            curr_thermal_level = 0
+        elif LEVEL0_THRESHOLD <= system_temperature < LEVEL1_THRESHOLD:
+            curr_thermal_level = get_level_in_hystersis(curr_thermal_level, 0, 1)
+        elif LEVEL1_THRESHOLD <= system_temperature <= (LEVEL2_THRESHOLD - HYST_RANGE):
+            curr_thermal_level = 1
+        elif (LEVEL2_THRESHOLD - HYST_RANGE) < system_temperature < LEVEL2_THRESHOLD:
+            curr_thermal_level = get_level_in_hystersis(curr_thermal_level, 1, 2)
+        elif LEVEL2_THRESHOLD <= system_temperature <= (LEVEL3_THRESHOLD - HYST_RANGE):
+            curr_thermal_level = 2
+        elif (LEVEL3_THRESHOLD - HYST_RANGE) < system_temperature < LEVEL3_THRESHOLD:
+            curr_thermal_level = get_level_in_hystersis(curr_thermal_level, 2, 3)
+        elif LEVEL3_THRESHOLD <= system_temperature < LEVEL4_THRESHOLD:
+            curr_thermal_level = 3
+        else:
+            curr_thermal_level = 4
+
+        return curr_thermal_level
+
+    @staticmethod
+    def is_over_temperature(temperature_list):
+
+        over_temperature = False
+        for temperature in temperature_list:
+            if temperature > LEVEL4_THRESHOLD:
+                over_temperature = True
+                break
+
+        return over_temperature

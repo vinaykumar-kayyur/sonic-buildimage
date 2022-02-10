@@ -23,9 +23,14 @@ function wait_until_iface_ready
 
 
 # Wait for all interfaces with IPv4 addresses to be up and ready
+wait_until_iface_ready Vlan2000 192.168.200.1/27
 wait_until_iface_ready Vlan1000 192.168.0.1/27
 wait_until_iface_ready PortChannel02 10.0.0.58/31
 wait_until_iface_ready PortChannel03 10.0.0.60/31
 wait_until_iface_ready PortChannel04 10.0.0.62/31
 wait_until_iface_ready PortChannel01 10.0.0.56/31
 
+# Wait 10 seconds for the rest of interfaces to get added/populated.
+# dhcrelay listens on each of the interfaces (in addition to the port
+# channels and vlan interfaces)
+sleep 10

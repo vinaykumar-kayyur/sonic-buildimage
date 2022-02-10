@@ -151,16 +151,10 @@ install_python_api_package() {
     device="/usr/share/sonic/device"
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 
-    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
     rv=$(pip3 install $device/$platform/sonic_platform-1.0-py3-none-any.whl)
 }
 
 remove_python_api_package() {
-    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
-    if [ $? -eq 0 ]; then
-        rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
-    fi
-
     rv=$(pip3 show sonic-platform > /dev/null 2>/dev/null)
     if [ $? -eq 0 ]; then
         rv=$(pip3 uninstall -y sonic-platform > /dev/null 2>/dev/null)
@@ -185,7 +179,7 @@ init_devnum
 
 if [ "$1" == "init" ]; then
     modprobe i2c-dev
-    modprobe i2c-mux-pca954x force_deselect_on_exit=1
+    modprobe cls-i2c-mux-pca954x
     modprobe ipmi_devintf
     modprobe ipmi_si kipmid_max_busy_us=1000
     modprobe cls-i2c-ocore
@@ -201,18 +195,25 @@ if [ "$1" == "init" ]; then
     platform_firmware_versions
     get_reboot_cause
     echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us
+    # Set the PCA9548 mux behavior
+    echo -2 > /sys/bus/i2c/drivers/cls_pca954x/3-0070/idle_state
+    echo -2 > /sys/bus/i2c/drivers/cls_pca954x/3-0071/idle_state
+    echo -2 > /sys/bus/i2c/drivers/cls_pca954x/3-0072/idle_state
+    echo -2 > /sys/bus/i2c/drivers/cls_pca954x/3-0073/idle_state
 
 elif [ "$1" == "deinit" ]; then
     sys_eeprom "delete_device"
     switch_board_qsfp "delete_device"
     switch_board_sfp "delete_device"
-    modprobe -r i2c-mux-pca954x
-    modprobe -r i2c-dev
-    modprobe -r ipmi_devintf
-    modprobe -r ipmi_si
+
+    modprobe -r mc24lc64t
+    modprobe -r cls-switchboard
     modprobe -r cls-i2c-ocore
-    modprobe -r cls-switchboard 
-    modprobe -r mc24lc64t 
+    modprobe -r acpi_ipmi
+    modprobe -r ipmi_si
+    modprobe -r ipmi_devintf
+    modprobe -r cls-i2c-mux-pca954x
+    modprobe -r i2c-dev
     remove_python_api_package
 else
      echo "z9332f_platform : Invalid option !"

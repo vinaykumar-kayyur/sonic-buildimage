@@ -13,7 +13,7 @@ try:
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.fan import Fan
-    from .fan_drawer import VirtualDrawer
+    from .fan_drawer import RealDrawer
     from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
@@ -27,6 +27,11 @@ try:
 except ImportError as e:
     smbus_present = 0
 
+if sys.version_info[0] < 3:
+    import commands as cmd
+else:
+    import subprocess as cmd
+
 MAX_SELECT_DELAY = 3600
 COPPER_PORT_START = 1
 COPPER_PORT_END = 48
@@ -35,8 +40,8 @@ SFP_PORT_END = 52
 PORT_END = 52
 
 # Device counts
-MAX_7215_FAN_DRAWER = 1
-MAX_7215_FAN = 2
+MAX_7215_FAN_DRAWERS = 2
+MAX_7215_FANS_PER_DRAWER = 1
 MAX_7215_PSU = 2
 MAX_7215_THERMAL = 6
 
@@ -89,9 +94,9 @@ class Chassis(ChassisBase):
         self._eeprom = Eeprom()
 
         # Construct lists fans, power supplies, thermals & components
-        drawer_num = MAX_7215_FAN_DRAWER
-        fan_num_per_drawer = MAX_7215_FAN
-        drawer_ctor = VirtualDrawer
+        drawer_num = MAX_7215_FAN_DRAWERS
+        fan_num_per_drawer = MAX_7215_FANS_PER_DRAWER
+        drawer_ctor = RealDrawer
         fan_index = 0
         for drawer_index in range(drawer_num):
             drawer = drawer_ctor(drawer_index)
@@ -159,13 +164,13 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.part_number_str()
 
-    def get_serial(self):
+    def get_service_tag(self):
         """
-        Retrieves the serial number of the chassis (Service tag)
+        Retrieves the Service Tag of the chassis
         Returns:
-            string: Serial number of chassis
+            string: Service Tag of chassis
         """
-        return self._eeprom.serial_str()
+        return self._eeprom.service_tag_str()
 
     def get_status(self):
         """
@@ -186,7 +191,7 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
-    def get_serial_number(self):
+    def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
 
@@ -278,6 +283,9 @@ class Chassis(ChassisBase):
         from .thermal_manager import ThermalManager
         return ThermalManager
 
+    def initizalize_system_led(self):
+        return True
+
     def set_status_led(self, color):
         """
         Sets the state of the system LED
@@ -306,17 +314,18 @@ class Chassis(ChassisBase):
             return False
 
         # Write sys led
-        if smbus_present == 0:
-            sonic_logger.log_info("PMON LED SET ERROR-> smbus present = 0")
+        if smbus_present == 0:  # called from host (e.g. 'show system-health')
+            cmdstatus, value = cmd.getstatusoutput('sudo i2cset -y 0 0x41 0x7 %d' % value)
+            if cmdstatus:
+                sonic_logger.log_warning("  System LED set %s failed" % value)
+                return False
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
             DEVICEREG = 0x7
             bus.write_byte_data(DEVICE_ADDRESS, DEVICEREG, value)
-            sonic_logger.log_info("  System LED set O.K.  ")
-            return True
 
-        return False
+        return True
 
     def get_status_led(self):
         """
@@ -327,29 +336,29 @@ class Chassis(ChassisBase):
             specified.
         """
         # Read sys led
-        if smbus_present == 0:
-            sonic_logger.log_info("PMON LED GET ERROR-> smbus present = 0")
-            return False
+        if smbus_present == 0:  # called from host
+            cmdstatus, value = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x7')
+            value = int(value, 16)
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
             DEVICE_REG = 0x7
             value = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
 
-            if value == 0x00:
-                color = 'off'
-            elif value == 0x01:
-                color = 'amber'
-            elif value == 0x02:
-                color = 'green'
-            elif value == 0x03:
-                color = 'amber_blink'
-            elif value == 0x04:
-                color = 'green_blink'
-            else:
-                return False
+        if value == 0x00:
+            color = 'off'
+        elif value == 0x01:
+            color = 'amber'
+        elif value == 0x02:
+            color = 'green'
+        elif value == 0x03:
+            color = 'amber_blink'
+        elif value == 0x04:
+            color = 'green_blink'
+        else:
+            return None
 
-            return color
+        return color
 
     def get_watchdog(self):
         """
@@ -372,6 +381,23 @@ class Chassis(ChassisBase):
                 watchdog_device_path = "/dev/watchdog0"
                 self._watchdog = WatchdogImplBase(watchdog_device_path)
         except Exception as e:
-            sonic_logger.log_info("Fail to load watchdog {}".format(repr(e)))
+            sonic_logger.log_warning(" Fail to load watchdog {}".format(repr(e)))
 
         return self._watchdog
+
+    def get_position_in_parent(self):
+        """
+		Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+		Returns:
+		    integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+		"""
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

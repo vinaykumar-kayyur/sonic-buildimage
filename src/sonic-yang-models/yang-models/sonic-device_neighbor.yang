@@ -11,7 +11,6 @@ module sonic-device_neighbor {
 
     import sonic-extension {
         prefix ext;
-        revision-date 2019-07-01;
     }
 
     import sonic-port {
@@ -35,10 +34,6 @@ module sonic-device_neighbor {
 
                 key "peer_name";
 
-                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)$";
-
-                ext:key-regex-yang-to-configdb "<peer_name>";
-
                 leaf peer_name {
                     type string {
                         length 1..255;
@@ -57,7 +52,7 @@ module sonic-device_neighbor {
 
                 leaf local_port {
                     type leafref {
-                        path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+                        path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
                     }
                 }
 

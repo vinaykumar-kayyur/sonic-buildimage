@@ -10,16 +10,16 @@
 
 try:
     import os
+    import re
+    import time
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.psu import Psu
+    from sonic_platform.component import Component
+    from sonic_platform.eeprom import Eeprom
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.module import Module
+    from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
-    from sonic_platform.component import Component
-    from sonic_platform.watchdog import Watchdog
-    from sonic_platform.eeprom import Eeprom
-    import time
+    from sonic_platform.watchdog import Watchdog, WatchdogTCO
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -27,7 +27,7 @@ MAX_S6100_MODULE = 4
 MAX_S6100_FANTRAY = 4
 MAX_S6100_PSU = 2
 MAX_S6100_THERMAL = 10
-MAX_S6100_COMPONENT = 3
+MAX_S6100_COMPONENT = 4
 
 
 class Chassis(ChassisBase):
@@ -54,9 +54,21 @@ class Chassis(ChassisBase):
     power_reason_dict[33] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
     power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN_SPEED
 
+    status_led_reg_to_color = {
+        0x00: 'green', 0x01: 'blinking green', 0x02: 'amber',
+        0x04: 'amber', 0x08: 'blinking amber', 0x10: 'blinking amber'
+    }
+
+    color_to_status_led_reg = {
+        'green': 0x00, 'blinking green': 0x01,
+        'amber': 0x02, 'blinking amber': 0x08
+    }
+
     def __init__(self):
 
         ChassisBase.__init__(self)
+        self.status_led_reg = "sys_status_led"
+        self.supported_led_color = ['green', 'blinking green', 'amber', 'blinking amber']
         # Initialize EEPROM
         self._eeprom = Eeprom()
         for i in range(MAX_S6100_MODULE):
@@ -81,12 +93,19 @@ class Chassis(ChassisBase):
             component = Component(i)
             self._component_list.append(component)
 
-        self._watchdog = Watchdog()
+        bios_ver = self.get_component(0).get_firmware_version()
+        bios_minor_ver = bios_ver.split("-")[-1]
+        if bios_minor_ver.isdigit() and (int(bios_minor_ver) >= 9):
+            self._watchdog = WatchdogTCO()
+        else:
+            self._watchdog = Watchdog()
+
         self._transceiver_presence = self._get_transceiver_presence()
 
     def _get_reboot_reason_smf_register(self):
         # In S6100, mb_poweron_reason register will
         # Returns 0xaa or 0xcc on software reload
+        # Returns 0x88 on cold-reboot happened during software reload
         # Returns 0xff or 0xbb on power-cycle
         # Returns 0xdd on Watchdog
         # Returns 0xee on Thermal Shutdown
@@ -111,6 +130,23 @@ class Chassis(ChassisBase):
 
         rv = rv.rstrip('\r\n')
         rv = rv.lstrip(" ")
+        return rv
+
+    def _set_pmc_register(self, reg_name, value):
+        # On successful write, returns the length of value written on
+        # reg_name and on failure returns 'ERR'
+        rv = 'ERR'
+        mb_reg_file = self.MAILBOX_DIR + '/' + reg_name
+
+        if (not os.path.isfile(mb_reg_file)):
+            return rv
+
+        try:
+            with open(mb_reg_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except IOError:
+            rv = 'ERR'
+
         return rv
 
     def _get_register(self, reg_file):
@@ -172,6 +208,23 @@ class Chassis(ChassisBase):
         """
         return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -182,6 +235,15 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()
+
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -191,6 +253,19 @@ class Chassis(ChassisBase):
             values.
         """
         return self._eeprom.system_eeprom_info()
+
+    def get_module_index(self, module_name):
+        """
+        Retrieves module index from the module name
+
+        Args:
+            module_name: A string, prefixed by SUPERVISOR, LINE-CARD or FABRIC-CARD
+            Ex. SUPERVISOR0, LINE-CARD1, FABRIC-CARD5
+        Returns:
+            An integer, the index of the ModuleBase object in the module_list
+        """
+        module_index = re.match(r'IOM([1-4])', module_name).group(1)
+        return int(module_index) - 1
 
     def get_reboot_cause(self):
         """
@@ -211,6 +286,8 @@ class Chassis(ChassisBase):
             return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
         elif ((smf_mb_reg_reason == 0xaa) or (smf_mb_reg_reason == 0xcc)):
             return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
+        elif (smf_mb_reg_reason == 0x88):
+            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "CPU Reset")
         elif (smf_mb_reg_reason == 0xdd):
             return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
         elif (smf_mb_reg_reason == 0xee):
@@ -325,3 +402,41 @@ class Chassis(ChassisBase):
                     break
 
         return True, ret_dict
+
+    def initizalize_system_led(self):
+        return True
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        if color not in self.supported_led_color:
+            return False
+
+        value = self.color_to_status_led_reg[color]
+        rv = self._set_pmc_register(self.status_led_reg, value)
+        if (rv != 'ERR'):
+            return True
+        else:
+            return False
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be
+            vendor specified.
+        """
+        reg_val = self._get_pmc_register(self.status_led_reg)
+        if (reg_val != 'ERR'):
+            return self.status_led_reg_to_color.get(int(reg_val, 16), None)
+        else:
+            return None

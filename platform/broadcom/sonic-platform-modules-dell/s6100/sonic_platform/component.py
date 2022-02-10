@@ -10,13 +10,19 @@
 ########################################################################
 
 try:
+    import json
     import os
+    import re
     import subprocess
+    import tarfile
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 BIOS_QUERY_VERSION_COMMAND = "dmidecode -s system-version"
+SSD_VERSION_COMMAND = "ssdutil -v"
+SSD_UPGRADE_SCHEDULE = "/usr/local/bin/ssd_upgrade_schedule"
+PCI_VERSION_COMMAND = "lspci -s 0:0.0"
 
 
 class Component(ComponentBase):
@@ -29,9 +35,10 @@ class Component(ComponentBase):
     CHASSIS_COMPONENTS = [
         ["BIOS", ("Performs initialization of hardware components during "
                   "booting")],
-        ["CPLD", "Used for managing IO modules, SFP+ modules and system LEDs"],
         ["FPGA", ("Platform management controller for on-board temperature "
-                  "monitoring, in-chassis power, Fan and LED control")]
+                  "monitoring, in-chassis power, Fan and LED control")],
+        ["CPLD", "Used for managing IO modules, SFP+ modules and system LEDs"],
+        ["SSD", "Solid State Drive that stores data persistently"]
     ]
     MODULE_COMPONENT = [
         "IOM{}-CPLD",
@@ -39,9 +46,11 @@ class Component(ComponentBase):
     ]
 
     def __init__(self, component_index=0,
-                 is_module=False, iom_index=0, i2c_line=0):
+                 is_module=False, iom_index=0, i2c_line=0, dependency=None):
 
+        ComponentBase.__init__(self)
         self.is_module_component = is_module
+        self.dependency = dependency
 
         if self.is_module_component:
             self.index = iom_index
@@ -123,6 +132,38 @@ class Component(ComponentBase):
         else:
             return 'NA'
 
+    def _get_ssd_version(self):
+        rv = 'NA'
+        ssd_ver = self._get_command_result(SSD_VERSION_COMMAND)
+        if not ssd_ver:
+            return rv
+        else:
+            version = re.search(r'Firmware\s*:(.*)',ssd_ver)
+            if version:
+                rv = version.group(1).strip()
+        return rv
+
+    def _get_available_firmware_version(self, image_path):
+        if not os.path.isfile(image_path):
+            return False, "ERROR: File not found"
+
+        try:
+            updater = tarfile.open(image_path, "r")
+        except tarfile.ReadError:
+            return False, "ERROR: Unable to extract firmware updater"
+
+        try:
+            ver_info_fd = updater.extractfile("fw-component-version")
+        except KeyError:
+            updater.close()
+            return False, "ERROR: Version info not available"
+
+        ver_info = json.load(ver_info_fd)
+        ver_info_fd.close()
+        updater.close()
+
+        return True, ver_info
+
     def get_name(self):
         """
         Retrieves the name of the component
@@ -131,6 +172,61 @@ class Component(ComponentBase):
             A string containing the name of the component
         """
         return self.name
+
+    def get_model(self):
+        """
+        Retrieves the part number of the component
+        Returns:
+            string: Part number of component
+        """
+        return 'NA'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the component
+        Returns:
+            string: Serial number of component
+        """
+        return 'NA'
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the component
+        Returns:
+            bool: True if  present, False if not
+        """
+        if self.is_module_component:
+            return self.dependency.get_presence()
+        else:
+            return True
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the component
+        Returns:
+            bool: True if component is operating properly, False if not
+        """
+        if self.is_module_component:
+            return self.dependency.get_status()
+        else:
+            return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether component is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
 
     def get_description(self):
         """
@@ -159,10 +255,53 @@ class Component(ComponentBase):
                 else:
                     return bios_ver
 
-            elif self.index == 1:       # SwitchCard CPLD
-                return self._get_cpld_version()
-            elif self.index == 2:       # FPGA
+            elif self.index == 1:       # FPGA
                 return self._get_fpga_version()
+            elif self.index == 2:       # SwitchCard CPLD
+                return self._get_cpld_version()
+            elif self.index == 3:       #SSD
+                return self._get_ssd_version()
+
+    def get_available_firmware_version(self, image_path):
+        """
+        Retrieves the available firmware version of the component
+
+        Note: the firmware version will be read from image
+
+        Args:
+            image_path: A string, path to firmware image
+
+        Returns:
+            A string containing the available firmware version of the component
+        """
+        avail_ver = None
+        if self.index == 2:         # SwitchCard CPLD
+            valid, version = self._get_available_firmware_version(image_path)
+            pci_ver = self._get_command_result(PCI_VERSION_COMMAND)
+            if valid:
+                if pci_ver:
+                    board_ver = re.search(r"\(rev ([0-9]{2})\)$", pci_ver)
+                    if board_ver:
+                        board_ver = board_ver.group(1).strip()
+                        board_type = 'B0' if board_ver == '02' else 'C0'
+                        cpld_ver = self._get_cpld_version()
+                        avail_ver = version.get(board_type) if board_type == 'B0' else cpld_ver
+            else:
+                print(version)
+
+        elif self.index == 3:       # SSD
+            valid, version = self._get_available_firmware_version(image_path)
+            ssd_ver = self._get_command_result(SSD_VERSION_COMMAND)
+            if valid:
+                if ssd_ver:
+                    ssd_model = re.search(r'Device Model\s*:.*(3IE[3]{0,1})', ssd_ver)
+                    if ssd_model:
+                        ssd_model = ssd_model.group(1).strip()
+                        avail_ver = version.get(ssd_model)
+            else:
+                print(version)
+
+        return avail_ver if avail_ver else "NA"
 
     def install_firmware(self, image_path):
         """

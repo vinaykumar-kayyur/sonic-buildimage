@@ -16,6 +16,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+smbus_present = 1
 try:
     import smbus
 except ImportError as e:
@@ -34,6 +35,7 @@ class Component(ComponentBase):
         ["System-CPLD", "Used for managing SFPs, LEDs, PSUs and FANs "],
         ["U-Boot", "Performs initialization during booting"],
     ]
+    CPLD_UPDATE_COMMAND = 'cp /usr/sbin/vme /tmp; cp {} /tmp; cd /tmp; ./vme {};'
 
     def __init__(self, component_index):
         self.index = component_index
@@ -55,12 +57,12 @@ class Component(ComponentBase):
     def _get_cpld_version(self, cpld_number):
 
         if smbus_present == 0:
-            cmdstatus, cpld_version = cmd.getstatusoutput('i2cget -y 0 0x41 0x2')
+            cmdstatus, cpld_version = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x2')
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
             DEVICE_REG = 0x2
-            cpld_version = bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG)
+            cpld_version = str(bus.read_byte_data(DEVICE_ADDRESS, DEVICE_REG))
 
         return str(int(cpld_version, 16))
 
@@ -72,6 +74,55 @@ class Component(ComponentBase):
             A string containing the name of the component
         """
         return self.name
+
+    def get_model(self):
+        """
+        Retrieves the part number of the component
+        Returns:
+            string: Part number of component
+        """
+        return 'NA'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the component
+        Returns:
+            string: Serial number of component
+        """
+        return 'NA'
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the component
+        Returns:
+            bool: True if  present, False if not
+        """
+        return True
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the component
+        Returns:
+            bool: True if component is operating properly, False if not
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether component is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
 
     def get_description(self):
         """
@@ -93,7 +144,7 @@ class Component(ComponentBase):
             return self._get_cpld_version(self.index)
 
         if self.index == 1:
-            cmdstatus, uboot_version = cmd.getstatusoutput('grep --null-data U-Boot /dev/mtd0ro|head -1 | cut -c 1-30')
+            cmdstatus, uboot_version = cmd.getstatusoutput('grep --null-data U-Boot /dev/mtd0ro|head -1 | cut -d" " -f2-4')
             return uboot_version
 
     def install_firmware(self, image_path):
@@ -114,6 +165,18 @@ class Component(ComponentBase):
             print("ERROR: the cpld image {} doesn't exist ".format(image_path))
             return False
 
+        cmdline = self.CPLD_UPDATE_COMMAND.format(image_path, image_name)
+
         success_flag = False
 
+        try:
+            subprocess.check_call(cmdline, stderr=subprocess.STDOUT, shell=True)
+            success_flag = True
+        except subprocess.CalledProcessError as e:
+            print("ERROR: Failed to upgrade CPLD: rc={}".format(e.returncode))
+
+        if success_flag:
+            print("INFO: Refresh or power cycle is required to finish CPLD installation")
+
         return success_flag
+

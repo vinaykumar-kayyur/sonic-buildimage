@@ -31,6 +31,8 @@ WDT_COMMON_ERROR = -1
 class Watchdog(WatchdogBase):
 
     def __init__(self):
+        WatchdogBase.__init__(self)
+
         # Init helper
         self._api_helper = APIHelper()
 
@@ -133,6 +135,9 @@ class Watchdog(WatchdogBase):
         ret = WDT_COMMON_ERROR
         if seconds < 0:
             return ret
+        if seconds > 16779:
+            return ret
+
 
         try:
             if self.timeout != seconds:

@@ -7,12 +7,10 @@ module sonic-interface {
 
 	import sonic-types {
 		prefix stypes;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-extension {
 		prefix ext;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-port {
@@ -20,7 +18,15 @@ module sonic-interface {
 		revision-date 2019-07-01;
 	}
 
+	import sonic-vrf {
+		prefix vrf;
+	}
+
 	description "INTERFACE yang Module for SONiC OS";
+
+	revision 2021-03-30 {
+		description "Modify the type of vrf name";
+	}
 
 	revision 2019-07-01 {
 		description "First Revision";
@@ -36,22 +42,35 @@ module sonic-interface {
 
 				description "INTERFACE part of config_db.json with vrf";
 
-				key "port_name";
+				key "name";
 
-				ext:key-regex-configdb-to-yang "^(Ethernet[0-9]+)$";
-
-				ext:key-regex-yang-to-configdb "<port_name>";
-
-				leaf port_name {
+				leaf name {
 					type leafref {
-						path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+						path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 					}
 				}
 
 				leaf vrf_name {
-					type string {
-						pattern "Vrf[a-zA-Z0-9_-]+";
-						length 3..255;
+					type leafref {
+						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
+					}
+				}
+
+				leaf nat_zone {
+					description "NAT Zone for the interface";
+					type uint8 {
+						range "0..3" {
+							error-message "Invalid nat zone for the interface.";
+							error-app-tag nat-zone-invalid;
+						}
+					}
+                                        default "0";
+				}
+				leaf mpls {
+					description "Enable/disable MPLS routing for the interface";
+					type enumeration {
+						enum enable;
+						enum disable;
 					}
 				}
 			}
@@ -61,21 +80,17 @@ module sonic-interface {
 
 				description "INTERFACE part of config_db.json with ip-prefix";
 
-				key "port_name ip-prefix";
+				key "name ip-prefix";
 
-				ext:key-regex-configdb-to-yang "^(Ethernet[0-9]+)|([a-fA-F0-9:./]+)$";
-
-				ext:key-regex-yang-to-configdb "<port_name>|<ip-prefix>";
-
-				leaf port_name {
+				leaf name {
 					/* This node must be present in INTERFACE_LIST */
-					must "(current() = ../../INTERFACE_LIST[port_name=current()]/port_name)"
+					must "(current() = ../../INTERFACE_LIST[name=current()]/name)"
 					{
 						error-message "Must condition not satisfied, Try adding PORT: {}, Example: 'Ethernet0': {}";
 					}
 
 					type leafref {
-						path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+						path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 					}
 				}
 

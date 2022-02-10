@@ -374,7 +374,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_info_dict['type_abbrv_name'] = sfp_type_data['data']['type_abbrv_name']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             # Below part is added to avoid fail the xcvrd, shall be implemented later
             transceiver_info_dict['vendor_oui'] = 'N/A'
@@ -483,7 +483,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_info_dict['type_abbrv_name'] = sfp_interface_bulk_data['data']['type_abbrv_name']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
             transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
@@ -583,7 +583,7 @@ class SfpUtil(SfpUtilBase):
             qsfp_dom_capability_raw = self._read_eeprom_specific_bytes(
                 sysfsfile_eeprom, (offset_xcvr + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
             if qsfp_dom_capability_raw is not None:
-                qspf_dom_capability_data = sfpi_obj.parse_qsfp_dom_capability(qsfp_dom_capability_raw, 0)
+                qspf_dom_capability_data = sfpi_obj.parse_dom_capability(qsfp_dom_capability_raw, 0)
             else:
                 return None
 

@@ -7,16 +7,22 @@ module sonic-loopback-interface {
 
     import sonic-types {
         prefix stypes;
-        revision-date 2019-07-01;
     }
 
     import sonic-extension {
         prefix ext;
-        revision-date 2019-07-01;
+    }
+
+    import sonic-vrf {
+        prefix vrf;
     }
 
     description
         "SONIC LOOPBACK INTERFACE";
+
+    revision 2021-04-05 {
+        description "Modify the type of vrf name";
+    }
 
     revision 2020-02-05 {
         description "First Revision";
@@ -27,40 +33,41 @@ module sonic-loopback-interface {
         container LOOPBACK_INTERFACE {
 
             list LOOPBACK_INTERFACE_LIST {
-                key "loopback_interface_name";
+                key "name";
 
-                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9-_]+)$";
-
-                ext:key-regex-yang-to-configdb "<loopback_interface_name>";
-
-                leaf loopback_interface_name{
+                leaf name{
                     type string;
                 }
 
                 leaf vrf_name {
-                    type string {
-                        pattern "Vrf[a-zA-Z0-9_-]+";
-                        length 3..255;
+                    type leafref {
+                        path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                     }
+                }
+
+                leaf nat_zone {
+                    description "NAT Zone for the loopback interface";
+                    type uint8 {
+                        range "0..3" {
+                            error-message "Invalid nat zone for the loopback interface.";
+                            error-app-tag nat-zone-invalid;
+                        }
+                    }
+                    default "0";
                 }
             }
             /* end of LOOPBACK_INTERFACE_LIST */
 
             list LOOPBACK_INTERFACE_IPPREFIX_LIST {
 
-                key "loopback_interface_name ip-prefix";
+                key "name ip-prefix";
 
-                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9-_]+)|([a-fA-F0-9:./]+$)";
+                leaf name{
+                    description "Loopback interface name";
 
-                ext:key-regex-yang-to-configdb "<loopback_interface_name>|<ip-prefix>";
-
-                leaf loopback_interface_name{
-                    /* This node must be present in LOOPBACK_INTERFACE_LIST */
-                    must "(current() = ../../LOOPBACK_INTERFACE_LIST[loopback_interface_name=current()]/loopback_interface_name)"
-                    {
-                        error-message "Must condition not satisfied, Try adding lo<>: {}, Example: 'lo1': {}";
+                    type leafref {
+                        path "../../LOOPBACK_INTERFACE_LIST/name";
                     }
-                    type string;
                 }
 
                 leaf ip-prefix {

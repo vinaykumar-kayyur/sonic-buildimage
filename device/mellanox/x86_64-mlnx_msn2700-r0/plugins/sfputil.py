@@ -1,10 +1,25 @@
+#
+# Copyright (c) 2017-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # sfputil.py
 #
 # Platform-specific SFP transceiver interface for SONiC
 #
 
 try:
-    import time
     import subprocess
     from sonic_sfp.sfputilbase import *
     import syslog
@@ -41,10 +56,13 @@ SFP_PORT_NAME_CONVENTION = "sfp{}"
 
 # magic code defnition for port number, qsfp port position of each platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-platform_dict = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 3,
-                 'x86_64-mlnx_msn3420-r0': 5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c': 4, 'x86_64-mlnx_msn4700-r0': 0}
+platform_dict = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn2100-r0': 1,
+                 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn3420-r0': 5,
+                 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4,
+                 'x86_64-mlnx_msn4410-r0': 0, 'x86_64-mlnx_msn4600-r0': 4, 'x86_64-mlnx_msn4600c-r0': 4, 
+                 'x86_64-mlnx_msn4700-r0': 0, 'x86_64-nvidia_sn2201-r0': 6, 'x86_64-nvidia_sn5600-r0': 4}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),
-                            (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
+                            (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1), (0, 48, 51, 52, 1)]
 
 
 def log_info(msg, also_print_to_console=False):
@@ -185,8 +203,7 @@ class SfpUtil(SfpUtilBase):
             print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
 
-        return False
-
+ 
     def get_transceiver_change_event(self, timeout=0):
         phy_port_dict = {}
         status = True
@@ -332,7 +349,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_info_dict['type'] = sfp_type_data['data']['type']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             # Below part is added to avoid fail the xcvrd, shall be implemented later
             transceiver_info_dict['vendor_oui'] = 'N/A'
@@ -350,7 +367,6 @@ class SfpUtil(SfpUtilBase):
             if port_num in self.qsfp_ports:
                 offset = 128
                 vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
                 sfp_type = 'QSFP'
 
@@ -362,7 +378,6 @@ class SfpUtil(SfpUtilBase):
             else:
                 offset = 0
                 vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
                 sfp_type = 'SFP'
 
@@ -423,7 +438,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
             transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
@@ -513,7 +528,7 @@ class SfpUtil(SfpUtilBase):
             qsfp_dom_capability_raw = self._read_eeprom_specific_bytes_via_ethtool(
                 port_num, (offset_xcvr + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
             if qsfp_dom_capability_raw is not None:
-                qspf_dom_capability_data = sfpi_obj.parse_qsfp_dom_capability(qsfp_dom_capability_raw, 0)
+                qspf_dom_capability_data = sfpi_obj.parse_dom_capability(qsfp_dom_capability_raw, 0)
             else:
                 return transceiver_dom_info_dict
 

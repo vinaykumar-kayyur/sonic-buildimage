@@ -1,4 +1,19 @@
-#!/usr/bin/env python
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 '''
 listen to the SDK for the SFP change event and return to chassis.
 '''
@@ -8,8 +23,21 @@ import sys, errno
 import os
 import time
 import select
-from python_sdk_api.sx_api import *
+
+from .device_data import DeviceDataManager
+try:
+    if 'PLATFORM_API_UNIT_TESTING' not in os.environ:
+        from python_sdk_api.sx_api import *
+    else:
+        from mock import MagicMock
+        class MockSxFd(object):
+            fd = 99
+        new_sx_fd_t_p = MagicMock(return_value=MockSxFd())
+        new_sx_user_channel_t_p = MagicMock()
+except KeyError:
+    pass
 from sonic_py_common.logger import Logger
+from .sfp import SFP
 
 # SFP status from PMAOS register
 # 0x1 plug in
@@ -22,15 +50,6 @@ SDK_SFP_STATE_IN  = 0x1
 SDK_SFP_STATE_OUT = 0x2
 SDK_SFP_STATE_ERR = 0x3
 SDK_SFP_STATE_DIS = 0x4
-
-# SFP status that will be handled by XCVRD 
-STATUS_PLUGIN = '1'
-STATUS_PLUGOUT = '0'
-STATUS_ERR_I2C_STUCK = '2'
-STATUS_ERR_BAD_EEPROM = '3'
-STATUS_ERR_UNSUPPORTED_CABLE = '4'
-STATUS_ERR_HIGH_TEMP = '5'
-STATUS_ERR_BAD_CABLE = '6'
 
 # SFP status used in this file only, will not expose to XCVRD
 # STATUS_ERROR will be mapped to different status according to the error code
@@ -61,19 +80,39 @@ STATUS_ERROR   = '-2'
 '''
 
 # SFP errors that will block eeprom accessing
-sdk_sfp_err_type_dict = {
-    0x2: STATUS_ERR_I2C_STUCK,
-    0x3: STATUS_ERR_BAD_EEPROM,
-    0x5: STATUS_ERR_UNSUPPORTED_CABLE,
-    0x6: STATUS_ERR_HIGH_TEMP,
-    0x7: STATUS_ERR_BAD_CABLE
+SDK_SFP_BLOCKING_ERRORS = [
+    0x2, # SFP.SFP_ERROR_BIT_I2C_STUCK,
+    0x3, # SFP.SFP_ERROR_BIT_BAD_EEPROM,
+    0x5, # SFP.SFP_ERROR_BIT_UNSUPPORTED_CABLE,
+    0x6, # SFP.SFP_ERROR_BIT_HIGH_TEMP,
+    0x7, # SFP.SFP_ERROR_BIT_BAD_CABLE
+]
+
+SDK_ERRORS_TO_ERROR_BITS = {
+    0x0: SFP.SFP_ERROR_BIT_POWER_BUDGET_EXCEEDED,
+    0x1: SFP.SFP_MLNX_ERROR_BIT_LONGRANGE_NON_MLNX_CABLE,
+    0x2: SFP.SFP_ERROR_BIT_I2C_STUCK,
+    0x3: SFP.SFP_ERROR_BIT_BAD_EEPROM,
+    0x4: SFP.SFP_MLNX_ERROR_BIT_ENFORCE_PART_NUMBER_LIST,
+    0x5: SFP.SFP_ERROR_BIT_UNSUPPORTED_CABLE,
+    0x6: SFP.SFP_ERROR_BIT_HIGH_TEMP,
+    0x7: SFP.SFP_ERROR_BIT_BAD_CABLE,
+    0x8: SFP.SFP_MLNX_ERROR_BIT_PMD_TYPE_NOT_ENABLED,
+    0xc: SFP.SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED
+}
+
+SDK_ERRORS_TO_DESCRIPTION = {
+    0x1: SFP.SFP_MLNX_ERROR_DESCRIPTION_LONGRANGE_NON_MLNX_CABLE,
+    0x4: SFP.SFP_MLNX_ERROR_DESCRIPTION_ENFORCE_PART_NUMBER_LIST,
+    0x8: SFP.SFP_MLNX_ERROR_DESCRIPTION_PMD_TYPE_NOT_ENABLED,
+    0xc: SFP.SFP_MLNX_ERROR_DESCRIPTION_PCIE_POWER_SLOT_EXCEEDED
 }
 
 sfp_value_status_dict = {
-    SDK_SFP_STATE_IN:  STATUS_PLUGIN,
-    SDK_SFP_STATE_OUT: STATUS_PLUGOUT,
+    SDK_SFP_STATE_IN:  str(SFP.SFP_STATUS_BIT_INSERTED),
+    SDK_SFP_STATE_OUT: str(SFP.SFP_STATUS_BIT_REMOVED),
     SDK_SFP_STATE_ERR: STATUS_ERROR,
-    SDK_SFP_STATE_DIS: STATUS_PLUGOUT,
+    SDK_SFP_STATE_DIS: str(SFP.SFP_STATUS_BIT_REMOVED),
 }
 
 # system level event/error
@@ -196,7 +235,7 @@ class sfp_event:
         delete_sx_fd_t_p(self.rx_fd_p)
         delete_sx_user_channel_t_p(self.user_channel_p)
 
-    def check_sfp_status(self, port_change, timeout):
+    def check_sfp_status(self, port_change, error_dict, timeout):
         """
         the meaning of timeout is aligned with select.select, which has the following meaning:
             0: poll, returns without blocked
@@ -218,7 +257,8 @@ class sfp_event:
         found = 0
 
         try:
-            read, _, _ = select.select([self.rx_fd_p.fd], [], [], timeout)
+            read, _, _ = select.select([self.rx_fd_p.fd], [], [], float(timeout) / 1000)
+            print(read)
         except select.error as err:
             rc, msg = err
             if rc == errno.EAGAIN or rc == errno.EINTR:
@@ -229,11 +269,13 @@ class sfp_event:
         for fd in read:
             if fd == self.rx_fd_p.fd:
                 success, port_list, module_state, error_type = self.on_pmpe(self.rx_fd_p)
+                print('success = ', success)
                 if not success:
                     logger.log_error("failed to read from {}".format(fd))
                     break
 
                 sfp_state = sfp_value_status_dict.get(module_state, STATUS_UNKNOWN)
+                error_description = None
                 if sfp_state == STATUS_UNKNOWN:
                     # in the following sequence, STATUS_UNKNOWN can be returned.
                     # so we shouldn't raise exception here.
@@ -248,18 +290,29 @@ class sfp_event:
 
                 # If get SFP status error(0x3) from SDK, then need to read the error_type to get the detailed error
                 if sfp_state == STATUS_ERROR:
-                    if error_type in sdk_sfp_err_type_dict.keys():
-                        # In SFP at error status case, need to overwrite the sfp_state with the exact error code
-                        sfp_state = sdk_sfp_err_type_dict[error_type]
-                    else:
-                        # For errors don't block the eeprom accessing, we don't report it to XCVRD
-                        logger.log_info("SFP error on port but not blocking eeprom read, error_type {}".format(error_type))
-                        found +=1
+                    sfp_state_bits = SDK_ERRORS_TO_ERROR_BITS.get(error_type)
+                    if sfp_state_bits is None:
+                        logger.log_error("Unrecognized error {} detected on ports {}".format(error_type, port_list))
+                        found += 1
                         continue
+
+                    if error_type in SDK_SFP_BLOCKING_ERRORS:
+                        # In SFP at error status case, need to overwrite the sfp_state with the exact error code
+                        sfp_state_bits |= SFP.SFP_ERROR_BIT_BLOCKING
+
+                    # An error should be always set along with 'INSERTED'
+                    sfp_state_bits |= SFP.SFP_STATUS_BIT_INSERTED
+
+                    # For vendor specific errors, the description should be returned as well
+                    error_description = SDK_ERRORS_TO_DESCRIPTION.get(error_type)
+
+                    sfp_state = str(sfp_state_bits)
 
                 for port in port_list:
                     logger.log_info("SFP on port {} state {}".format(port, sfp_state))
                     port_change[port+1] = sfp_state
+                    if error_description:
+                        error_dict[port+1] = error_description
                     found += 1
 
         return found != 0
@@ -293,6 +346,7 @@ class sfp_event:
             module_state = pmpe_t.module_state
             error_type = pmpe_t.error_type
             module_id = pmpe_t.module_id
+            slot_id = pmpe_t.slot_id # For non-modular chassis, it should return 0
 
             if module_state == SDK_SFP_STATE_ERR:
                 logger.log_error("Receive PMPE error event on module {}: status {} error type {}".format(module_id, module_state, error_type))
@@ -306,12 +360,15 @@ class sfp_event:
                 logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
                 rc = sx_api_port_device_get(self.handle, 1 , 0, port_attributes_list,  port_cnt_p)
                 port_cnt = uint32_t_p_value(port_cnt_p)
-
+                x = 0 # x is the port index within a LC
                 for i in range(port_cnt):
                     port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,i)
                     if port_attributes.log_port == logical_port:
-                        label_port = port_attributes.port_mapping.module_port
+                        label_port = slot_id * DeviceDataManager.get_linecard_max_port_count() + x + 1
                         break
+
+                    if port_attributes.port_mapping.slot == slot_id:
+                        x += 1
 
                 if label_port is not None:
                     label_port_list.append(label_port)

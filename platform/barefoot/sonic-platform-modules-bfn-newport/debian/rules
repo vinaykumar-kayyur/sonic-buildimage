@@ -10,18 +10,16 @@ SCRIPT_SRC := $(shell pwd)/scripts
 CONFIGS_SRC := $(shell pwd)/configs
 BUILD_DIR := $(shell pwd)/build
 WHEEL_BUILD_DIR := $(BUILD_DIR)/wheel
-PLUGINS_DIR := $(shell pwd)/plugins
 MODULE_NAMES := as9516 as9516bf
 
 %:
-	dh $@
+	dh $@ --with python3 --buildsystem=pybuild
 
 override_dh_auto_build:
 	make -C $(KERNEL_SRC)/build M=$(MODULE_SRC)
 	set -e
-	python2.7 setup.py bdist_wheel -d $(WHEEL_BUILD_DIR)
 	python3 setup.py bdist_wheel -d $(WHEEL_BUILD_DIR)
-	set +e 
+	set +e
 
 override_dh_auto_install:
 	(for mod in $(MODULE_NAMES); do \
@@ -33,8 +31,6 @@ override_dh_auto_install:
 		cp -r $(CONFIGS_SRC)/network/interfaces.d/* debian/$(PACKAGE_PRE_NAME)-$${mod}/etc/network/interfaces.d/; \
 		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} usr/share/sonic/device/x86_64-accton_$${mod}_32d-r0/; \
 		cp -r $(WHEEL_BUILD_DIR)/*  debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/share/sonic/device/x86_64-accton_$${mod}_32d-r0/; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} usr/share/sonic/device/x86_64-accton_$${mod}_32d-r0/plugins; \
-		cp -r $(PLUGINS_DIR)/*  debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/share/sonic/device/x86_64-accton_$${mod}_32d-r0/plugins/; \
 	done)
 
 override_dh_usrlocal:
@@ -43,8 +39,8 @@ override_dh_pysupport:
 
 override_dh_clean:
 	dh_clean
-	rm -fr $(WHEEL_BUILD_DIR) 
-	rm -fr *.egg-info 
+	rm -fr $(WHEEL_BUILD_DIR)
+	rm -fr *.egg-info
 	rm -fr $(BUILD)
 	rm -f $(MODULE_SRC)/*.o $(MODULE_SRC)/*.ko $(MODULE_SRC)/*.mod.c $(MODULE_SRC)/.*.cmd
 	rm -f $(MODULE_SRC)/Module.markers $(MODULE_SRC)/Module.symvers $(MODULE_SRC)/modules.order
