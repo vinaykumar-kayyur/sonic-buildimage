@@ -54,7 +54,8 @@ module sonic-policer {
 					description
 						"Committed information rate for the dual-rate token
 						bucket policer.  This value represents the rate at which
-						tokens are added to the primary bucket.";
+						tokens are added to the primary bucket. Unit is bytes/sec
+						or packets/sec based on meter_type";
 				}
 
 				leaf cbs {
@@ -69,7 +70,7 @@ module sonic-policer {
 					description
 						"Committed burst size for the dual-rate token bucket
 						policer.  This value represents the depth of the token
-						bucket.";
+						bucket. Unit is bytes or packets based on meter_type";
 				}
 
 				leaf pir {
@@ -84,7 +85,8 @@ module sonic-policer {
 					description
 						"Peak information rate for the dual-rate token bucket
 						policer.  This value represents the rate at which tokens
-						are added to the secondary bucket.";
+						are added to the secondary bucket. Unit is bytes/sec or
+						packets/sec based on meter_type";
 				}
 
 				leaf pbs {
@@ -95,7 +97,8 @@ module sonic-policer {
 					type uint64;
 					description
 						"Excess burst size for the dual-rate token bucket policer.
-						This value represents the depth of the secondary bucket.";
+						This value represents the depth of the secondary bucket. Unit
+						is bytes or packets based on meter_type";
 				}
 
 				leaf green_packet_action {
