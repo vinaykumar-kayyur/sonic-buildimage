@@ -24,8 +24,6 @@ l3_mem_entries=40960
 
 bcm_tunnel_term_compatible_mode.0=1
 
-pcie_hot_swap_timeout_usec=300
-
 # PIPE-1
 portmap_20=33:200:4
 portmap_22=37:200:4
