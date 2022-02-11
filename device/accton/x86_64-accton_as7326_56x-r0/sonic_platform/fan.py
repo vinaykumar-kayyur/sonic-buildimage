@@ -13,6 +13,7 @@ except ImportError as e:
 
 FAN_MAX_RPM = 25500
 PSU_FAN_MAX_RPM = 25500
+SPEED_TOLERANCE = 15
 CPLD_I2C_PATH = "/sys/bus/i2c/devices/11-0066/fan"
 PSU_I2C_PATH = "/sys/bus/i2c/devices/{}-00{}/"
 PSU_HWMON_I2C_MAPPING = {
@@ -37,6 +38,9 @@ PSU_CPLD_I2C_MAPPING = {
     },
 }
 
+FAN_NAME_LIST = ["FAN-1F", "FAN-1R", "FAN-2F", "FAN-2R",
+                 "FAN-3F", "FAN-3R", "FAN-4F", "FAN-4R", 
+                 "FAN-5F", "FAN-5R", "FAN-6F", "FAN-6R"]
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
@@ -87,7 +91,7 @@ class Fan(FanBase):
         """
         if not self.is_psu_fan:
             val = self.__read_txt_file(
-                CPLD_I2C_PATH + str(self.fan_tray_index) + "_direction")
+                CPLD_I2C_PATH + str(self.fan_tray_index+1) + "_direction")
             direction = self.FAN_DIRECTION_EXHAUST if (
                 val == "0") else self.FAN_DIRECTION_INTAKE
         else:
@@ -102,7 +106,6 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-
         """
         speed = 0
         if self.is_psu_fan:
@@ -123,14 +126,12 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-
         Note:
             speed_pc = pwm_target/255*100
-
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        return False  #Not supported
+        return self.get_speed()
 
     def get_speed_tolerance(self):
         """
@@ -139,7 +140,7 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        return False  #Not supported
+        return SPEED_TOLERANCE
 
     def set_speed(self, speed):
         """
@@ -149,7 +150,6 @@ class Fan(FanBase):
                    in the range 0 (off) to 100 (full speed)
         Returns:
             A boolean, True if speed is set successfully, False if not
-
         """
 
         if not self.is_psu_fan and self.get_presence():
@@ -169,6 +169,33 @@ class Fan(FanBase):
         """
         return False  #Not supported
 
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        status=self.get_presence()
+        if status is None:
+            return  self.STATUS_LED_COLOR_OFF
+
+        return {
+            1: self.STATUS_LED_COLOR_GREEN,
+            0: self.STATUS_LED_COLOR_RED            
+        }.get(status, self.STATUS_LED_COLOR_OFF)
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+            Returns:
+            string: The name of the device
+        """
+        fan_name = FAN_NAME_LIST[self.fan_tray_index*2 + self.fan_index] \
+            if not self.is_psu_fan \
+            else "PSU-{} FAN-{}".format(self.psu_index+1, self.fan_index+1)
+
+        return fan_name
+
     def get_presence(self):
         """
         Retrieves the presence of the PSU
@@ -181,4 +208,63 @@ class Fan(FanBase):
 
         val = self.__read_txt_file(
             CPLD_I2C_PATH + str(self.fan_tray_index + 1) + "_present")
-        return int(val, 10)
+        return int(val, 10)==1
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        if self.is_psu_fan:
+            psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_fault')
+            val=self.__read_txt_file(psu_fan_path)
+            if val is not None:
+                return int(val, 10)==0
+            else:
+                return False
+        else:    
+            path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_fault')
+            val=self.__read_txt_file(path)
+            if val is not None:
+                return int(val, 10)==0
+            else:
+                return False
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+               
+        return "N/A"
+    
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return "N/A"
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return (self.fan_index+1) \
+            if not self.is_psu_fan else (self.psu_index+1)
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True if not self.is_psu_fan else False

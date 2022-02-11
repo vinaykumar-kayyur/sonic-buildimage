@@ -58,7 +58,7 @@ class Psu(PsuBase):
         addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(bus, addr)
         self.__initialize_fan()
-        
+
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
         self._fan_list.append(
@@ -73,7 +73,7 @@ class Psu(PsuBase):
                 return fd.read().strip()
         except IOError:
             pass
-        return ""
+        return None
 
     def get_voltage(self):
         """
@@ -111,7 +111,7 @@ class Psu(PsuBase):
             return float(val)/1000
         else:
             return 0
-        
+
     def get_powergood_status(self):
         """
         Retrieves the powergood status of PSU
@@ -140,14 +140,13 @@ class Psu(PsuBase):
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
         status=self.get_status()
-        if not status:
-            return  self.STATUS_LED_COLOR_RED
-        
-        if status==1:
-            return self.STATUS_LED_COLOR_GREEN
-        else:
-            return self.STATUS_LED_COLOR_RED
-        
+        if status is None:
+            return  self.STATUS_LED_COLOR_OFF
+
+        return {
+            1: self.STATUS_LED_COLOR_GREEN,
+            0: self.STATUS_LED_COLOR_RED            
+        }.get(status, self.STATUS_LED_COLOR_OFF)
 
     def get_temperature(self):
         """
@@ -232,7 +231,7 @@ class Psu(PsuBase):
             string: Model/part number of device
         """
         model = self.__read_txt_file(self.cpld_path + "psu_model_name")
-        if not model:
+        if model is None:
             return "N/A"
         return model
 
@@ -242,7 +241,24 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial = self.__read_txt_file(self.cpld_path + "psu_serial_numer")
-        if not serial:
+        serial = self.__read_txt_file(self.cpld_path + "psu_serial_number")
+        if serial is None:
             return "N/A"
         return serial
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return self.index+1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

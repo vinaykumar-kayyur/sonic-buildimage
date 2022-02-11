@@ -16,7 +16,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 PSU_I2C_PATH = "/sys/bus/i2c/devices/{}-00{}/"
-PSU_I2C_MAPPING = {
+PSU_HWMON_I2C_MAPPING = {
     0: {
         "bus": 17,
         "addr": "59"
@@ -52,8 +52,8 @@ class Thermal(ThermalBase):
         self.psu_index = psu_index
 
         if self.is_psu:
-            psu_i2c_bus = PSU_I2C_MAPPING[psu_index]["bus"]
-            psu_i2c_addr = PSU_I2C_MAPPING[psu_index]["addr"]
+            psu_i2c_bus = PSU_HWMON_I2C_MAPPING[psu_index]["bus"]
+            psu_i2c_addr = PSU_HWMON_I2C_MAPPING[psu_index]["addr"]
             self.psu_hwmon_path = PSU_I2C_PATH.format(psu_i2c_bus,
                                                       psu_i2c_addr)
             psu_i2c_bus = PSU_CPLD_I2C_MAPPING[psu_index]["bus"]
@@ -145,8 +145,11 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        #Not supported
-        return False
+        temp_file = "temp{}_max".format(self.ss_index)
+        temperature = temperature *1000
+        self.__set_threshold(temp_file, temperature)
+
+        return True
 
     def get_name(self):
         """
@@ -193,3 +196,37 @@ class Thermal(ThermalBase):
             return False
         else:
             return int(raw_txt) != 0
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+
+        return "N/A"
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return "N/A"
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return self.index+1
+
+    def is_replaceable(self):
+        """
+        Retrieves whether thermal module is replaceable
+        Returns:
+            A boolean value, True if replaceable, False if not
+        """
+        return False

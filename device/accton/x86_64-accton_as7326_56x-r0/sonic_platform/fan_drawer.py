@@ -22,7 +22,7 @@ class FanDrawer(FanDrawerBase):
         # FanTray is 0-based in platforms
         self.fantrayindex = fantray_index
         self.__initialize_fan_drawer()
-        
+
 
     def __initialize_fan_drawer(self):
         from sonic_platform.fan import Fan
@@ -35,7 +35,51 @@ class FanDrawer(FanDrawerBase):
         Returns:
             string: The name of the device
         """
-        return "FanTray{}".format(self.fantrayindex)
+        return "FanTray{}".format(self.fantrayindex+1)
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the device
+        Returns:
+            bool: True if device is present, False if not
+        """
+        return self._fan_list[0].get_presence()
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._fan_list[0].get_model()
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return self._fan_list[0].get_serial()
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return self._fan_list[0].get_status()
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return (self.fantrayindex+1)
 
     def is_replaceable(self):
         """
