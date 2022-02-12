@@ -74,6 +74,7 @@ RUN pip install cffi==1.10.0 \
                 virtualenv \
                 retry \
                 thrift==0.11.0 \
+                pytest-ordering==0.6 \
     && git clone https://github.com/p4lang/scapy-vxlan.git \
     && cd scapy-vxlan \
     && python setup.py install \
