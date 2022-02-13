@@ -23,5 +23,12 @@
     },
     "AUTO_TECHSUPPORT_RATE_LIMIT_INTERVAL_TEST": {
             "desc" : "Configure and test the valid configuration"
+    },
+    "AUTO_TECHSUPPORT_AVAILABLE_MEM_THRESHOLD": {
+            "desc" : "Configure and test the valid configuration"
+    },
+    "AUTO_TECHSUPPORT_INVALID_AVAILABLE_MEM_THRESHOLD": {
+            "desc" : "Configure a value for available_mem_threshold inside the range [0, 100) but with 3 fractional digits",
+            "eStrKey": "InvalidValue" 
     }
 }

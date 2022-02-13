@@ -81,5 +81,41 @@
                 ]
             }
         }
+    },
+    "AUTO_TECHSUPPORT_AVAILABLE_MEM_THRESHOLD": {
+        "sonic-auto_techsupport:sonic-auto_techsupport": {
+            "sonic-auto_techsupport:AUTO_TECHSUPPORT_FEATURE": {
+                "AUTO_TECHSUPPORT_FEATURE_LIST": [
+                    {
+                        "feature_name" : "bgp",
+                        "state" : "enabled",
+                        "available_mem_threshold": "10.0"
+                    },
+                    {
+                        "feature_name" : "swss",
+                        "state" : "disabled",
+                        "available_mem_threshold": "10.0"
+                    }
+                ]
+            }
+        }
+    },
+    "AUTO_TECHSUPPORT_INVALID_AVAILABLE_MEM_THRESHOLD": {
+        "sonic-auto_techsupport:sonic-auto_techsupport": {
+            "sonic-auto_techsupport:AUTO_TECHSUPPORT_FEATURE": {
+                "AUTO_TECHSUPPORT_FEATURE_LIST": [
+                    {
+                        "feature_name" : "bgp",
+                        "state" : "enabled",
+                        "available_mem_threshold": "11.111"
+                    },
+                    {
+                        "feature_name" : "swss",
+                        "state" : "disabled",
+                        "available_mem_threshold": "10.0"
+                    }
+                ]
+            }
+        }
     }
 }
