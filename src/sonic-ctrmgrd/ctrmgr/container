@@ -317,15 +317,13 @@ def container_kill(feature, **kwargs):
     docker_id = container_id(feature)
     remove_label = (set_owner != "local") or (current_owner != "local")
 
-    print("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{} state:{}".format(
+    debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{} state:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id, state))
 
-    print(remove_label)
     if remove_label:
         set_label(feature, False)
 
     if set_owner == "local":
-        print("returning failure")
         if state not in ["enabled", "always_enabled"]:
             debug_msg("{} is not enabled".format(feature))
             return FAILURE
