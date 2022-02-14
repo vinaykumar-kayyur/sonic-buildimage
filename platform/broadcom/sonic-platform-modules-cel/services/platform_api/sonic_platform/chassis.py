@@ -298,7 +298,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of device
         """
-        return self._eeprom.get_pn()
+        return self._eeprom.get_part_number()
 
     def get_serial(self):
         """
