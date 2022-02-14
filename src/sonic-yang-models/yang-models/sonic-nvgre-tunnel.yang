@@ -13,7 +13,15 @@ module sonic-nvgre-tunnel {
         prefix vlan;
     }
 
-    description "NVGRE Tunnel YANG Module for SONiC OS";
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "NVGRE Tunnel YANG Module for SONiC OS";
 
     revision 2021-10-31 {
         description

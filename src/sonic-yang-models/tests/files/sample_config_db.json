@@ -1539,6 +1539,8 @@
 	          "pfc_enable"      : "3,4"
             }
         },
+
+
         "MCLAG_DOMAIN": {
             "123": {
                 "source_ip": "12.1.1.1",
@@ -1558,6 +1560,8 @@
                 "unique_ip": "enable"
             }
         },
+
+
         "MIRROR_SESSION": {
             "erspan": {
                 "dscp": "10",

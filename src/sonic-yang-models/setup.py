@@ -166,6 +166,7 @@ setup(
                          './cvlyang-models/sonic-mgmt_vrf.yang',
                          './cvlyang-models/sonic-ntp.yang',
                          './cvlyang-models/sonic-nat.yang',
+                         './cvlyang-models/sonic-nvgre-tunnel.yang',
                          './cvlyang-models/sonic-pbh.yang',
                          './cvlyang-models/sonic-policer.yang',
                          './cvlyang-models/sonic-port.yang',
