@@ -76,6 +76,7 @@ class Thermal(ThermalBase):
     _thresholds = dict()
     _max_temperature = 100.0
     _min_temperature = 0.0
+    _min_high_threshold_temperature = 35.0
 
     def __init__(self, chip, label, index = 0):
         self.__chip = chip
@@ -107,11 +108,23 @@ class Thermal(ThermalBase):
             return False
         else:
             return True 
+    
+    def check_high_threshold(self, temperature, attr_suffix):
+        temp_f = float(temperature)
+        if attr_suffix == 'max':
+            if temp_f < self._min_high_threshold_temperature:
+                if self.__name in self._thresholds:
+                    temp = self._thresholds[self.__name].max
+                    self.set_high_threshold(temp)
+                return False
+            return True
+        else:
+            return True
 
     def __get(self, attr_prefix, attr_suffix):
         sensor_data = _sensors_get().get(self.__chip, {}).get(self.__label, {})
         value = _value_get(sensor_data, attr_prefix, attr_suffix)
-        if value is not None and self.check_in_range(value):
+        if value is not None and self.check_in_range(value) and self.check_high_threshold(value, attr_suffix):
             return value
         elif self.__name in self._thresholds and attr_prefix == 'temp':
             if attr_suffix == 'crit':
