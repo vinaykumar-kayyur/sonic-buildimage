@@ -104,22 +104,18 @@ class Thermal(ThermalBase):
 
     def check_in_range(self, temperature):
         temp_f = float(temperature)
-        if temp_f > self._max_temperature or temp_f <= self._min_temperature:
-            return False
-        else:
-            return True 
+        return temp_f > self._min_temperature and temp_f <= self._max_temperature
     
     def check_high_threshold(self, temperature, attr_suffix):
         temp_f = float(temperature)
+        check_range = True
         if attr_suffix == 'max':
             if temp_f < self._min_high_threshold_temperature:
                 if self.__name in self._thresholds:
                     temp = self._thresholds[self.__name].max
                     self.set_high_threshold(temp)
-                return False
-            return True
-        else:
-            return True
+                check_range = False
+        return check_range
 
     def __get(self, attr_prefix, attr_suffix):
         sensor_data = _sensors_get().get(self.__chip, {}).get(self.__label, {})
@@ -211,15 +207,13 @@ class Thermal(ThermalBase):
         if self.check_in_range(temperature):
             self.__high_threshold = temperature
             return True
-        else:
-            return False
+        return False
 
     def set_low_threshold(self, temperature):
         if self.check_in_range(temperature):
             self.__low_threshold = temperature
             return True
-        else:
-            return False
+        return False
 
 def thermal_list_get():
     l = []
