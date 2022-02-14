@@ -154,8 +154,7 @@ class Thermal(ThermalBase):
     def get_high_threshold(self) -> float:
         if self.__high_threshold is None:
             return float(self.__get('temp', 'max'))
-        else:
-            return float(self.__high_threshold)
+        return float(self.__high_threshold)
 
     def get_high_critical_threshold(self) -> float:
         return float(self.__get('temp', 'crit'))
@@ -182,8 +181,7 @@ class Thermal(ThermalBase):
     def get_low_threshold(self) -> float:
         if self.__low_threshold is None:
             return float(self.__get('temp', 'min'))
-        else:
-            return float(self.__low_threshold)
+        return float(self.__low_threshold)
 
     def get_serial(self):
         return 'N/A'
