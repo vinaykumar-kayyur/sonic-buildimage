@@ -187,13 +187,13 @@ class Thermal(ThermalBase):
         return 'N/A'
 
     def get_minimum_recorded(self) -> float:
-        temp = self.__collect_temp[0] if len(self.__collect_temp) > 0 else 36.6
+        temp = self.__collect_temp[0] if len(self.__collect_temp) > 0 else self.get_temperature()
         temp = temp if temp <= 100.0 else 100.0
         temp = temp if temp > 0.0 else 0.1
         return float(temp)
 
     def get_maximum_recorded(self) -> float:
-        temp = self.__collect_temp[-1] if len(self.__collect_temp) > 0 else 36.6
+        temp = self.__collect_temp[-1] if len(self.__collect_temp) > 0 else self.get_temperature()
         temp = temp if temp <= 100.0 else 100.0
         temp = temp if temp > 0.0 else 0.1
         return float(temp)
