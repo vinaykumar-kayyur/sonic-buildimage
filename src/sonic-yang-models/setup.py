@@ -108,6 +108,7 @@ setup(
                          './yang-models/sonic-mirror-session.yang',
                          './yang-models/sonic-ntp.yang',
                          './yang-models/sonic-nat.yang',
+                         './yang-models/sonic-nvgre-tunnel.yang',
                          './yang-models/sonic-pbh.yang',
                          './yang-models/sonic-port.yang',
                          './yang-models/sonic-policer.yang',
