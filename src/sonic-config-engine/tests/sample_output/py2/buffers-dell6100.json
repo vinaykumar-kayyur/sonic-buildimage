@@ -58,6 +58,8 @@
             "Ethernet60": "5m",
             "Ethernet63": "5m",
             "Ethernet62": "5m",
+	    "Ethernet64": "5m",
+	    "Ethernet65": "5m",
             "Ethernet21": "5m",
             "Ethernet20": "5m",
             "Ethernet23": "5m",
