@@ -1,7 +1,7 @@
 #############################################################################
-# 
-# Component contains an implementation of SONiC Platform Base API and
-# provides the components firmware management function
+#
+# Module contains an implementation of SONiC Platform Base API and
+# provides the component information (such as CPLD, FPGA, BIOS etc) which are available in the platform
 #
 #############################################################################
 
@@ -35,22 +35,6 @@ class Component(ComponentBase):
         self.index = component_index
         self.name = self.get_name()
 
-    def __run_command(self, command):
-        # Run bash command and print output to stdout
-        try:
-            process = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE)
-            while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
-                    break
-            rc = process.poll()
-            if rc != 0:
-                return False
-        except Exception:
-            return False
-        return True
-
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
         try:
@@ -71,6 +55,7 @@ class Component(ComponentBase):
                 cpld_version[cpld_name] = "{}".format(int(cpld_version_raw,16))
 
         return cpld_version
+
 
     def get_name(self):
         """
