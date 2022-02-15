@@ -11,15 +11,17 @@
 {# If our configuration has VLAN interfaces... #}
 {% if VLAN_INTERFACE %}
 {% set vlan_list = dict() %}
-{% for (vlan_name, vlan_prefix) in VLAN_INTERFACE|pfx_filter %}
+{% for (name,prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if name is not in vlan_list %}
 {% set prefix_list = [] %}
-{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
-{# If this VLAN has an IPv6 address... #}
-{% if name == vlan_name and prefix | ipv6 %}
-{% set _ = prefix_list.append(prefix) %}
+{% set _ = vlan_list.update({name: prefix_list}) %}
 {% endif %}
-{% endfor %}
-{% set _ = vlan_list.update({vlan_name: prefix_list}) %}
+{% if prefix | ipv6 %}
+{# If our configuration has VLAN interfaces... #}
+{% set prefix_list = vlan_list.get(name) %}
+{% set _ = prefix_list.append(prefix) %}
+{% set _ = vlan_list.update({name: prefix_list}) %}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% for name, prefixes in vlan_list.items() %}
