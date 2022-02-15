@@ -11,7 +11,7 @@
 {# If our configuration has VLAN interfaces... #}
 {% if VLAN_INTERFACE %}
 {% set vlan_list = dict() %}
-{% for vlan_name in VLAN %}
+{% for vlan_name in VLAN_INTERFACE %}
 {% set prefix_list = [] %}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {# If this VLAN has an IPv6 address... #}
