@@ -17,9 +17,9 @@
 {# If this VLAN has an IPv6 address... #}
 {% if name == vlan_name and prefix | ipv6 %}
 {% set _ = prefix_list.append(prefix) %}
-{% set _ = vlan_list.update({name: prefix_list}) %}
 {% endif %}
 {% endfor %}
+{% set _ = vlan_list.update({vlan_name: prefix_list}) %}
 {% endfor %}
 {% endif %}
 {% for name, prefixes in vlan_list.items() %}
