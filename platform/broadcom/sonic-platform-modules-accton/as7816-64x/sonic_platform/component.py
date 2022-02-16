@@ -23,7 +23,7 @@ COMPONENT_LIST= [
    ("CPLD1", "CPLD 1"),
    ("CPLD2", "CPLD 2"),
    ("CPLD3", "CPLD 3"),
-   ("CPLD3", "CPLD 4"),
+   ("CPLD4", "CPLD 4"),
    ("BIOS", "Basic Input/Output System")
    
 ]
