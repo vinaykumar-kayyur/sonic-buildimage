@@ -86,20 +86,16 @@ stages:
             done
           displayName: "Copy installers"
         - script: |
-            mkdir -p azcopy
-            pushd azcopy
-            wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
-            popd
             export AZCOPY_LOG_LOCATION=$(pwd)/azcopy
             PUBLISH_PLATFORM_URL="https://$(SONIC_STORAGE_ACCOUNT).blob.core.windows.net/images/$(PUBLISH_BLOB_PREFIX)/$(GROUP_NAME)"
             PUBLISH_URL="$PUBLISH_PLATFORM_URL/$(Build.BuildId)$StorageSASKey"
-            azcopy/azcopy copy target "$PUBLISH_PLATFORM_URL/$(Build.BuildId)$StorageSASKey" --recursive=true --put-md5
+            azcopy copy target "$PUBLISH_PLATFORM_URL/$(Build.BuildId)$StorageSASKey" --recursive=true --put-md5
             touch prev_build
-            azcopy/azcopy copy "$PUBLISH_PLATFORM_URL/latest_build$StorageSASKey" latest_build || true
+            azcopy copy "$PUBLISH_PLATFORM_URL/latest_build$StorageSASKey" latest_build || true
             [ -f latest_build ] && mv latest_build prev_build
             echo $(Build.BuildId) > latest_build
-            azcopy/azcopy copy latest_build "$PUBLISH_PLATFORM_URL/latest_build$StorageSASKey"  --put-md5
-            azcopy/azcopy copy prev_build "$PUBLISH_PLATFORM_URL/prev_build$StorageSASKey"  --put-md5
+            azcopy copy latest_build "$PUBLISH_PLATFORM_URL/latest_build$StorageSASKey"  --put-md5
+            azcopy copy prev_build "$PUBLISH_PLATFORM_URL/prev_build$StorageSASKey"  --put-md5
           env:
             StorageSASKey: $(SONIC_STORAGE_SASKEY)
           displayName: "Publish to Azure Storage"
@@ -219,6 +215,7 @@ stages:
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-barefoot.bin target/sonic-aboot-barefoot.swi && make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-bfn-rpc.gz
         - name: marvell-armhf
+          pool: sonic-armhf
           timeoutInMinutes: 2160
           variables:
             PLATFORM_ARCH: armhf

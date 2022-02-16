@@ -1,4 +1,5 @@
 steps:
+  - template: init-agent.yml
   - script: |
       set -ex
       if [[ $(GROUP_NAME) == 'marvell-armhf' ]];then
