@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export INSTALL_MOD_DIR:=extra
+export KBUILD_EXTRA_SYMBOLS := /sonic/platform/pddf/i2c/Module.symvers.PDDF 
 
 KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
