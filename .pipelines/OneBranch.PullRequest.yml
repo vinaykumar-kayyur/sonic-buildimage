@@ -28,4 +28,4 @@ stages:
           swi_image: yes
       - name: mellanox
       preSteps:
-        - template: disk_nfs.yml
+        - template: prepare_agent.yml

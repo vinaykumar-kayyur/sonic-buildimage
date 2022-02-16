@@ -42,7 +42,7 @@ stages:
     BUILD_NUMBER: $(Build.BuildId)
     PLATFORM_ARCH: amd64
     PASSWORD: $(SONIC_PASSWORD)
-    BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y'
+    BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y CACHE_SOURCE=/nfs/dpkg_cache/$(GROUP_NAME)'
     VERSION_PATH: target/sonic.version
     DOCKER_DATA_ROOT_FOR_MULTIARCCH: /data/march/docker
   jobs:
@@ -52,7 +52,7 @@ stages:
         PASSWORD: '$(PASSWORD)'
       jobFilters: ${{ parameters.jobFilters }}
       preSteps:
-        - template: disk_nfs.yml
+        - template: prepare_agent.yml
         - template: ../.azure-pipelines/cleanup.yml
         - checkout: self
           clean: true
@@ -174,14 +174,14 @@ stages:
       jobGroups:
         - name: vs
           script: |
-            OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
+            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         - name: generic
           script: |
             make all
         - name: broadcom
           script: |
-            OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
+            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             echo "==== Building slim images"
             echo "INCLUDE_ACMS = n" > rules/config.user
             echo "INCLUDE_MUX = n" >> rules/config.user
@@ -210,7 +210,7 @@ stages:
             mv target/release/* target/
         - name: mellanox
           script: |
-            OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
+            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-mellanox.bin && make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-mlnx-rpc.gz
             cp target/debs/buster/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
         - name: barefoot
