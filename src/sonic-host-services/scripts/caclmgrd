@@ -218,12 +218,28 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                         continue
                     iface_name, iface_cidr = key
                     ip_iface = ipaddress.ip_interface(iface_cidr)
+                    ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+                    ip_first_addr = next(iter(ip_ntwrk.hosts()), None)
+
                     if isinstance(ip_iface, ipaddress.IPv4Interface):
                         block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {} -j DROP -m comment --comment 'Block IP2ME on interface {}'".format(ip_iface.ip, iface_name))
                     elif isinstance(ip_iface, ipaddress.IPv6Interface):
                         block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {} -j DROP -m comment --comment 'Block IP2ME on interface {}'".format(ip_iface.ip, iface_name))
                     else:
-                        self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
+                        self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_iface))
+
+                    # For more information about this part, see
+                    # https://github.com/Azure/sonic-buildimage/pull/9826
+                    # For VLAN interfaces, we additionally block the first IP
+                    # in the subnet.
+                    if (iface_table_name == "VLAN_INTERFACE" and
+                        ip_first_addr is not None and ip_first_addr != ip_iface.ip):
+                        if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                            block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {} -j DROP -m comment --comment 'Block IP2ME (first IP) on interface {}'".format(ip_first_addr, iface_name))
+                        elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                            block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {} -j DROP -m comment --comment 'Block IP2ME (first IP) on interface {}'".format(ip_first_addr, iface_name))
+                        else:
+                            self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
 

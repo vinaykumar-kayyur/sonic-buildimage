@@ -26,6 +26,7 @@ class TestCaclmgrdIP2Me(TestCase):
         sys.path.insert(0, modules_path)
         caclmgrd_path = os.path.join(scripts_path, 'caclmgrd')
         self.caclmgrd = load_module_from_source('caclmgrd', caclmgrd_path)
+        self.maxDiff = None
 
     @parameterized.expand(CACLMGRD_IP2ME_TEST_VECTOR)
     @patchfs
@@ -38,4 +39,4 @@ class TestCaclmgrdIP2Me(TestCase):
         self.caclmgrd.ControlPlaneAclManager.get_namespace_mgmt_ipv6 = mock.MagicMock()
         caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
         ret = caclmgrd_daemon.generate_block_ip2me_traffic_iptables_commands('')
-        self.assertEqual(ret, test_data["return"])
+        self.assertListEqual(test_data["return"], ret)
