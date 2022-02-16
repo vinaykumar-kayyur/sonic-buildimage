@@ -12,7 +12,7 @@
 {% if VLAN_INTERFACE %}
 {% set vlan_list = dict() %}
 {% for (name,prefix) in VLAN_INTERFACE|pfx_filter %}
-{% if name is not in vlan_list %}
+{% if name is not in vlan_list and prefix | ipv6 %}
 {% set prefix_list = [] %}
 {% set _ = vlan_list.update({name: prefix_list}) %}
 {% endif %}
@@ -24,7 +24,6 @@
 {% endif %}
 {% endfor %}
 {% endif %}
-
 {% for name, prefixes in vlan_list.items() %}
 interface {{ name }}
 {
