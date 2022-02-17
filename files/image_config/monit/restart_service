@@ -18,9 +18,13 @@ check program container_memory_<container_name> with path "/usr/bin/memory_check
 """
 
 import argparse
+import os
 import sys
 import syslog
 import subprocess
+
+
+CGROUP_DOCKER_MEMORY_DIR = "/sys/fs/cgroup/memory/docker/"
 
 
 def get_command_result(command):
@@ -81,52 +85,57 @@ def get_container_id(service_name):
     """
     container_id = ""
 
-    get_container_info_cmd = "docker ps --no-trunc | grep -i {}".format(service_name)
+    get_container_info_cmd = "docker ps --no-trunc"
     command_stdout = get_command_result(get_container_info_cmd)
 
     for line in command_stdout.splitlines():
         if service_name in line:
-            container_id = line.split()[0]
+            container_id = line.split()[0].strip()
             break
 
     if not container_id:
-        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to get contianer ID of '{}'!"
+        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to get contianer ID of '{}'! Exiting ..."
                       .format(service_name))
         sys.exit(3)
 
     return container_id
 
 
-def get_containerd_shim_pid(container_id):
-    """Gets PID of process 'containerd-shim-runc' which is parent process of the
-    specified container.
+def get_root_process_id(container_id):
+    """Gets root process id of a container by retrieving the first field of file
+    '/sys/fs/cgroup/memory/docker/<container_id>/cgroup.procs'.
 
     Args:
         container_id: A string indicates full ID of specified container.
 
     Returns:
-        containerd_shim_pid: A string indicates PID of process 'containerd-shim-runc'.
+        root_process_id: A string indicates root process id of specified container.
     """
-    containerd_shim_pid = ""
+    root_process_id = ""
 
-    get_containerd_shim_info_cmd = "ps -aux | grep {} | grep -v grep".format(container_id)
-    command_stdout = get_command_result(get_containerd_shim_info_cmd)
-
-    for line in command_stdout.splitlines():
-        if container_id in line and "containerd-shim-runc" in line:
-            containerd_shim_pid = line.split()[1]
-            break
-
-    if not containerd_shim_pid:
-        syslog.syslog(syslog.LOG_ERR, "[restat_service] Failed to get PID of process 'containerd-shim-runc'!")
+    docker_process_file_path = CGROUP_DOCKER_MEMORY_DIR + container_id + "/cgroup.procs"
+    if not os.path.exists(docker_process_file_path):
+        syslog.syslog(syslog.LOG_ERR, "[restart_service] cgroup process file path '{}' does not exist on device! Exiting ..."
+                      .format(docker_process_file_path))
         sys.exit(4)
 
-    return containerd_shim_pid
+    get_process_list_cmd = "sudo cat {}".format(docker_process_file_path)
+    command_stdout = get_command_result(get_process_list_cmd)
+
+    process_list = command_stdout.splitlines()
+    if process_list:
+        root_process_id = process_list[0].strip()
+
+    if not root_process_id:
+        syslog.syslog(syslog.LOG_ERR, "[restat_service] Failed to get root process id of container '{}'! Exiting ..."
+                      .format(container_id))
+        sys.exit(5)
+
+    return root_process_id
 
 
 def restart_service(service_name):
-    """Terminates the 'containerd-shim-runc' which is parent process of this service, reset the
-    failed status of service and then does restart.
+    """Resets the failed status of service and terminates root process of container to do restart.
 
     Args:
         service_name: A string indicates the name of specified service.
@@ -138,23 +147,18 @@ def restart_service(service_name):
     syslog.syslog(syslog.LOG_INFO, "[restart_service] Container ID of '{}' is: '{}'."
                   .format(service_name, container_id))
 
-    containerd_shim_pid = get_containerd_shim_pid(container_id)
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] PID of 'containerd-shim-runc' process is: '{}'"
-                  .format(containerd_shim_pid))
-
-    kill_containerd_shim_cmd = "sudo kill -SIGKILL {}".format(containerd_shim_pid)
-    command_stdout = get_command_result(kill_containerd_shim_cmd)
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Process 'containerd-shim' with PID '{}' was terminated!"
-                  .format(containerd_shim_pid))
+    root_process_id = get_root_process_id(container_id)
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Root process id of container '{}' is: '{}'"
+                  .format(service_name, root_process_id))
 
     reset_failed_flag(service_name)
 
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Restarting service '{}' ...".format(service_name))
+    kill_root_process_cmd = "sudo kill -SIGKILL {}".format(root_process_id)
+    command_stdout = get_command_result(kill_root_process_cmd)
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Root process with PID '{}' in container '{}' was terminated!"
+                  .format(root_process_id, service_name))
 
-    restart_command = "sudo systemctl restart {}.service".format(service_name)
-    command_stdout = get_command_result(restart_command)
-
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Service '{}' was restarted.".format(service_name))
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Service '{}' is being restarted ...".format(service_name))
 
 
 def main():

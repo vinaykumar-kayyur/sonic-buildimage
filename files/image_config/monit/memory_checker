@@ -20,10 +20,10 @@ check program container_memory_<container_name> with path "/usr/bin/memory_check
 """
 
 import argparse
+import os
 import subprocess
 import sys
 import syslog
-import re
 
 CGROUP_DOCKER_MEMORY_DIR = "/sys/fs/cgroup/memory/docker/"
 
@@ -35,7 +35,7 @@ def get_command_result(command):
         command: A string contains the command to be executed.
 
     Returns:
-        A string contains command's stdout.
+        command_stdout: A string contains command's stdout.
     """
     command_stdout = ""
 
@@ -66,16 +66,16 @@ def get_container_id(container_name):
     """
     container_id = ""
 
-    get_container_info_cmd = "docker ps --no-trunc | grep -i {}".format(container_name)
+    get_container_info_cmd = "docker ps --no-trunc"
     command_stdout = get_command_result(get_container_info_cmd)
 
     for line in command_stdout.splitlines():
         if container_name in line:
-            container_id = line.split()[0]
+            container_id = line.split()[0].strip()
             break
 
     if not container_id:
-        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get contianer ID of '{}'!"
+        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get contianer ID of '{}'! Exiting ..."
                       .format(container_name))
         sys.exit(4)
 
@@ -95,12 +95,18 @@ def get_memory_usage(container_id):
     memory_usage_in_bytes = ""
 
     docker_memory_usage_file_path = CGROUP_DOCKER_MEMORY_DIR + container_id + "/memory.usage_in_bytes"
+    if not os.path.exists(docker_memory_usage_file_path):
+        syslog.syslog(syslog.LOG_ERR,
+                      "[memory_checker] cgroup memory usage file '{}' of container '{}' does not exist on device! Exiting ..."
+                      .format(docker_memory_usage_file_path, container_id))
+        sys.exit(5)
+
     get_memory_usage_cmd = "sudo cat {}".format(docker_memory_usage_file_path)
     memory_usage_in_bytes = get_command_result(get_memory_usage_cmd)
     if not memory_usage_in_bytes:
-        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get the memory usage of container '{}'!"
+        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get the memory usage of container '{}'! Exiting ..."
                       .format(container_id))
-        sys.exit(5)
+        sys.exit(6)
 
     return memory_usage_in_bytes
 
@@ -118,18 +124,24 @@ def get_cache_usage(container_id):
     cache_usage_in_bytes = ""
 
     docker_memory_stat_file_path = CGROUP_DOCKER_MEMORY_DIR + container_id + "/memory.stat"
-    get_cache_usage_cmd = "sudo cat {} | grep -i 'total_inactive_file'".format(docker_memory_stat_file_path)
+    if not os.path.exists(docker_memory_stat_file_path):
+        syslog.syslog(syslog.LOG_ERR,
+                      "[memory_checker] cgroup memory statistics file '{}' of container '{}' does not exist on device! Exiting ..."
+                      .format(docker_memory_stat_file_path, container_id))
+        sys.exit(7)
+
+    get_cache_usage_cmd = "sudo cat {}".format(docker_memory_stat_file_path)
     command_stdout = get_command_result(get_cache_usage_cmd)
 
     for line in command_stdout.splitlines():
         if "total_inactive_file" in line:
-            cache_usage_in_bytes = line.split()[1]
+            cache_usage_in_bytes = line.split()[1].strip()
             break
 
     if not cache_usage_in_bytes:
-        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get the cache usage of container '{}'!"
+        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to get the cache usage of container '{}'! Exiting ..."
                       .format(container_id))
-        sys.exit(6)
+        sys.exit(8)
 
     return cache_usage_in_bytes
 
@@ -161,8 +173,8 @@ def check_memory_usage(container_name, threshold_value):
         memory_usage = int(memory_usage_in_bytes)
         cache_usage = int(cache_usage_in_bytes)
     except ValueError as err:
-        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to convert the memory or cache usage in string to integer!")
-        sys.exit(7)
+        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to convert the memory or cache usage in string to integer! Exiting ...")
+        sys.exit(9)
 
     total_memory_usage = memory_usage - cache_usage
     syslog.syslog(syslog.LOG_INFO, "[memory_checker] Total memory usage of container '{}' is '{}' Bytes!"
