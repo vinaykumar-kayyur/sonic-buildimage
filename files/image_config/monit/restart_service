@@ -24,72 +24,137 @@ import subprocess
 
 
 def get_command_result(command):
-    """Executes command and return the exit code, stdout and stderr.
+    """Executes command and return command's stdout.
 
     Args:
         command: A string contains the command to be executed.
 
     Returns:
-        An integer contains the exit code.
-        A string contains the output of stdout.
-        A string contains the output of stderr.
+        A string contains the command's stdout.
     """
     command_stdout = ""
-    command_stderr = ""
 
     try:
         proc_instance = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          shell=True, universal_newlines=True)
         command_stdout, command_stderr = proc_instance.communicate()
         if proc_instance.returncode != 0:
-            return 1, command_stdout.strip(), command_stderr.strip()
+            syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to execute the command '{}'. Return code: '{}'"
+                          .format(command, proc_instance.returncode))
+            sys.exit(1)
     except (OSError, ValueError) as err:
-        return 2, command_stdout.strip(), err
+        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to execute the command '{}'. Error: '{}'"
+                      .format(command, err))
+        sys.exit(2)
 
-    return 0, command_stdout.strip(), command_stderr.strip()
+    return command_stdout.strip()
 
 
 def reset_failed_flag(service_name):
-    """Reset the failed status of a service.
+    """Reset the systemd failed status of a service.
 
     Args:
-        service_name: Name of the service.
+        service_name: A string indicates name of the service.
 
     Returns:
         None
     """
     reset_failed_command = "sudo systemctl reset-failed {}.service".format(service_name)
 
-    syslog.syslog(syslog.LOG_INFO, "Resetting failed status of service '{}' ..."
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Resetting failed status of service '{}' ..."
                   .format(service_name))
 
-    exit_code, command_stdout, command_stderr = get_command_result(reset_failed_command)
-    if exit_code == 0:
-        syslog.syslog(syslog.LOG_INFO, "Succeeded to reset failed status of service '{}.service'."
+    command_stdout = get_command_result(reset_failed_command)
+
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Succeeded in resetting failed status of service '{}.service'."
+                  .format(service_name))
+
+
+def get_container_id(service_name):
+    """Gets full container ID of the specified service.
+
+    Args:
+        service_name: A string indicates the name of specified container.
+
+    Returns:
+        container_id: A string indicates the full ID of specified container.
+    """
+    container_id = ""
+
+    get_container_info_cmd = "docker ps --no-trunc | grep -i {}".format(service_name)
+    command_stdout = get_command_result(get_container_info_cmd)
+
+    for line in command_stdout.splitlines():
+        if service_name in line:
+            container_id = line.split()[0]
+            break
+
+    if not container_id:
+        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to get contianer ID of '{}'!"
                       .format(service_name))
-    else:
-        syslog.syslog(syslog.LOG_ERR, "Failed to reset failed status of service '{}'. Error: {}"
-                      .format(service_name, command_stderr))
+        sys.exit(3)
+
+    return container_id
+
+
+def get_containerd_shim_pid(container_id):
+    """Gets PID of process 'containerd-shim-runc' which is parent process of the
+    specified container.
+
+    Args:
+        container_id: A string indicates full ID of specified container.
+
+    Returns:
+        containerd_shim_pid: A string indicates PID of process 'containerd-shim-runc'.
+    """
+    containerd_shim_pid = ""
+
+    get_containerd_shim_info_cmd = "ps -aux | grep {} | grep -v grep".format(container_id)
+    command_stdout = get_command_result(get_containerd_shim_info_cmd)
+
+    for line in command_stdout.splitlines():
+        if container_id in line and "containerd-shim-runc" in line:
+            containerd_shim_pid = line.split()[1]
+            break
+
+    if not containerd_shim_pid:
+        syslog.syslog(syslog.LOG_ERR, "[restat_service] Failed to get PID of process 'containerd-shim-runc'!")
+        sys.exit(4)
+
+    return containerd_shim_pid
 
 
 def restart_service(service_name):
-    """Reset the failed status of a service and then restart it.
+    """Terminates the 'containerd-shim-runc' which is parent process of this service, reset the
+    failed status of service and then does restart.
 
     Args:
-        service_name: Name of specified service.
+        service_name: A string indicates the name of specified service.
 
     Returns:
         None.
     """
-    restart_command = "sudo systemctl restart {}.service".format(service_name)
+    container_id = get_container_id(service_name)
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Container ID of '{}' is: '{}'."
+                  .format(service_name, container_id))
+
+    containerd_shim_pid = get_containerd_shim_pid(container_id)
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] PID of 'containerd-shim-runc' process is: '{}'"
+                  .format(containerd_shim_pid))
+
+    kill_containerd_shim_cmd = "sudo kill -SIGKILL {}".format(containerd_shim_pid)
+    command_stdout = get_command_result(kill_containerd_shim_cmd)
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Process 'containerd-shim' with PID '{}' was terminated!"
+                  .format(containerd_shim_pid))
 
     reset_failed_flag(service_name)
 
-    syslog.syslog(syslog.LOG_INFO, "Restarting service '{}' ...".format(service_name))
-    exit_code, command_stdout, command_stderr = get_command_result(restart_command)
-    if exit_code != 0:
-        syslog.syslog(syslog.LOG_ERR, "Failed to restart the service '{}'. Error: {}"
-                      .format(service_name, command_stderr))
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Restarting service '{}' ...".format(service_name))
+
+    restart_command = "sudo systemctl restart {}.service".format(service_name)
+    command_stdout = get_command_result(restart_command)
+
+    syslog.syslog(syslog.LOG_INFO, "[restart_service] Service '{}' was restarted.".format(service_name))
 
 
 def main():
