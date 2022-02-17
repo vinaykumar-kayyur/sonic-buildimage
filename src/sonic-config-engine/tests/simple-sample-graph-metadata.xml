@@ -245,7 +245,7 @@
     <a:DeviceProperty>
      <a:Name>SyslogResources</a:Name>
      <a:Value>
-      10.0.10.5;10.0.10.6;
+      10.0.10.5;10.0.10.6
      </a:Value>
     </a:DeviceProperty>
     <a:DeviceProperty>
@@ -257,6 +257,11 @@
      <a:Name>ResourceType</a:Name>
      <a:Reference i:nil="true"/>
      <a:Value>resource_type_x</a:Value>
+    </a:DeviceProperty>
+    <a:DeviceProperty>
+     <a:Name>DownStreamSubRole</a:Name>
+     <a:Reference i:nil="true"/>
+     <a:Value>downstream_subrole_y</a:Value>
     </a:DeviceProperty>
   </a:Properties>
   </a:DeviceMetadata>

@@ -3,13 +3,13 @@ import os
 import subprocess
 
 from natsort import natsorted
-from swsssdk import ConfigDBConnector
-from swsssdk import SonicDBConfig
-from swsssdk import SonicV2Connector
+from swsscommon import swsscommon
 
 from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
 from .device_info import get_platform
+from .device_info import is_supervisor
+from .device_info import is_chassis
 
 ASIC_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
@@ -27,6 +27,10 @@ DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 
 
+# Dictionary to cache config_db connection handle per namespace
+# to prevent duplicate connections from being opened
+config_db_handle = {}
+
 def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     """
     The function connects to the config DB for a given namespace and
@@ -39,8 +43,7 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
       handle to the config_db for a namespace
     """
-    SonicDBConfig.load_sonic_global_db_config()
-    config_db = ConfigDBConnector(namespace=namespace)
+    config_db = swsscommon.ConfigDBConnector(namespace=namespace)
     config_db.connect()
     return config_db
 
@@ -48,7 +51,11 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
 def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     """
     The function connects to the DBs for a given namespace and
-    returns the handle
+    returns the handle 
+    
+    For voq chassis systems, the db list includes databases from 
+    supervisor card. Avoid connecting to these databases from linecards
+
     If no namespace is provided, it will connect to the db in the
     default namespace.
     In case of multi ASIC, the default namespace is the
@@ -58,9 +65,16 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
         handle to all the dbs for a namespaces
     """
-    SonicDBConfig.load_sonic_global_db_config()
-    db = SonicV2Connector(namespace=namespace)
-    for db_id in db.get_db_list():
+    db = swsscommon.SonicV2Connector(namespace=namespace)
+    db_list = list(db.get_db_list())
+    if not is_supervisor():
+        try:
+            db_list.remove('CHASSIS_APP_DB')
+            db_list.remove('CHASSIS_STATE_DB')
+        except Exception:
+            pass
+
+    for db_id in db_list:
         db.connect(db_id)
     return db
 
@@ -137,6 +151,29 @@ def get_asic_id_from_name(asic_name):
     else:
         raise ValueError('Unknown asic namespace name {}'.format(asic_name))
 
+def get_asic_device_id(asic_id):
+    # Get asic.conf file
+    asic_conf_file_path = get_asic_conf_file_path()
+
+    if asic_conf_file_path is None:
+        return None
+
+    # In a multi-asic device we need to have the file "asic.conf" updated with the asic instance
+    # and the corresponding device id which could be pci_id. Below is an eg: for a 2 ASIC platform/sku.
+    # DEV_ID_ASIC_0=03:00.0
+    # DEV_ID_ASIC_1=04:00.0
+    device_str = "DEV_ID_ASIC_{}".format(asic_id)
+
+    with open(asic_conf_file_path) as asic_conf_file:
+        for line in asic_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0] == device_str:
+                device_id = tokens[1].strip()
+                return device_id
+
+    return None
 
 def get_current_namespace(pid=None):
     """
@@ -204,7 +241,9 @@ def get_all_namespaces():
     if is_multi_asic():
         for asic in range(num_asics):
             namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
-            config_db = connect_config_db_for_ns(namespace)
+            if namespace not in config_db_handle:
+                config_db_handle[namespace] =  connect_config_db_for_ns(namespace)
+            config_db = config_db_handle[namespace]
 
             metadata = config_db.get_table('DEVICE_METADATA')
             if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
@@ -378,7 +417,7 @@ def get_back_end_interface_set(namespace=None):
 
 def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
 
-    if not is_multi_asic():
+    if not is_multi_asic() and not is_chassis():
         return False
 
     ns_list = get_namespace_list(namespace)
@@ -386,7 +425,15 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
     for ns in ns_list:
 
         config_db = connect_config_db_for_ns(ns)
-        bgp_sessions = config_db.get_entry(BGP_INTERNAL_NEIGH_CFG_DB_TABLE, bgp_neigh_ip)
+        bgp_sessions = config_db.get_entry(
+            BGP_INTERNAL_NEIGH_CFG_DB_TABLE, bgp_neigh_ip
+        )
+        if bgp_sessions:
+            return True
+
+        bgp_sessions = config_db.get_entry(
+            'BGP_VOQ_CHASSIS_NEIGHBOR', bgp_neigh_ip
+        )
         if bgp_sessions:
             return True
 

@@ -1,6 +1,6 @@
-{%- if CONFIGURED_ARCH == "armhf" %}
+{%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM multiarch/debian-debootstrap:armhf-stretch
-{%- elif CONFIGURED_ARCH == "arm64" %}
+{%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM multiarch/debian-debootstrap:arm64-stretch
 {%- else -%}
 FROM debian:stretch
@@ -76,6 +76,7 @@ RUN apt-get update && apt-get install -y \
         dh-systemd \
         libzmq5 \
         libzmq3-dev \
+        jq \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -253,6 +254,12 @@ RUN apt-get update && apt-get install -y \
         iproute2 \
 # For bash
         texi2html \
+        sharutils \
+        locales \
+        time \
+        man2html-base \
+        libcunit1 \
+        libcunit1-dev \
 # For initramfs
         bash-completion \
 {%- if CONFIGURED_ARCH == "amd64" %}
@@ -288,7 +295,17 @@ RUN apt-get update && apt-get install -y \
         libxml2-utils \
         xsltproc \
         python-lxml \
-        libexpat1-dev
+        libexpat1-dev \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
+
+# For gmock
+RUN apt-get install -y libgmock-dev -t stretch-backports
+
+# Install dependencies for dhcp relay test 
+RUN pip3 install parameterized==0.8.1
+RUN pip3 install pyfakefs
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
@@ -349,8 +366,8 @@ RUN pip3 install mockredispy==2.9.3
 # For sonic-mgmt-framework
 RUN pip2 install "PyYAML==5.3.1"
 RUN pip3 install "PyYAML==5.3.1"
-RUN pip2 install "lxml==4.6.2"
-RUN pip3 install "lxml==4.6.2"
+RUN pip2 install "lxml==4.6.5"
+RUN pip3 install "lxml==4.6.5"
 
 
 # For sonic-platform-common testing
@@ -369,7 +386,7 @@ RUN pip2 install setuptools==40.8.0
 RUN pip2 install Pympler==0.8
 
 # For sonic_yang_model build
-RUN pip2 install pyang==2.1.1
+RUN pip3 install pyang==2.4.0
 
 # For mgmt-framework build
 RUN pip2 install mmh3
@@ -428,7 +445,7 @@ RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-stretch docker-ce-cli=5:18
 {%- else %}
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 {%- endif %}
-RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 
 # Install m2crypto package, needed by SWI tools
 RUN pip install m2crypto==0.36.0
@@ -443,4 +460,11 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
 {% endif -%}

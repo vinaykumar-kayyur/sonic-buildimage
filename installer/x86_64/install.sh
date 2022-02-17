@@ -92,6 +92,29 @@ VAR_LOG_SIZE=4096
 
 [ -r platforms/$onie_platform ] && . platforms/$onie_platform
 
+# Verify image platform is inside devices list
+if [ "$install_env" = "onie" ]; then
+    if ! grep -Fxq "$onie_platform" platforms_asic; then
+        echo "The image you're trying to install is of a different ASIC type as the running platform's ASIC"
+        while true; do
+            read -r -p "Do you still wish to install this image? [y/n]: " input
+            case $input in
+                [Yy])
+                    echo "Force installing..."
+                    break
+                    ;;
+                [Nn])
+                    echo "Exited installation!"
+                    exit 1
+                    ;;
+                *)
+                    echo "Error: Invalid input"
+                    ;;
+            esac
+        done
+    fi
+fi
+
 # Pick up console port and speed from install enviroment if not defined yet.
 # Console port and speed setting in cmdline is like "console=ttyS0,9600n",
 # so we can use pattern 'console=ttyS[0-9]+,[0-9]+' to match it.
@@ -467,7 +490,13 @@ if [ "$install_env" = "onie" ]; then
 
 elif [ "$install_env" = "sonic" ]; then
     demo_mnt="/host"
-    eval running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+    # Get current SONiC image (grub/aboot/uboot)
+    eval running_sonic_revision="$(cat /proc/cmdline | sed -n 's/^.*loop=\/*image-\(\S\+\)\/.*$/\1/p')"
+    # Verify SONiC image exists
+    if [ ! -d "$demo_mnt/image-$running_sonic_revision" ]; then
+        echo "ERROR: SONiC installation is corrupted: path $demo_mnt/image-$running_sonic_revision doesn't exist"
+        exit 1
+    fi
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
         echo "Not installing SONiC version $running_sonic_revision, as current running SONiC has the same version"
@@ -623,7 +652,7 @@ fi
 # Note: assume that apparmor is supported in the kernel
 demo_grub_entry="$demo_volume_revision_label"
 if [ "$install_env" = "sonic" ]; then
-    old_sonic_menuentry=$(cat /host/grub/grub.cfg | sed "/$running_sonic_revision/,/}/!d")
+    old_sonic_menuentry=$(cat /host/grub/grub.cfg | sed "/^menuentry '${demo_volume_label}-${running_sonic_revision}'/,/}/!d")
     grub_cfg_root=$(echo $old_sonic_menuentry | sed -e "s/.*root\=\(.*\)rw.*/\1/")
     onie_menuentry=$(cat /host/grub/grub.cfg | sed "/menuentry ONIE/,/}/!d")
 elif [ "$install_env" = "build" ]; then
@@ -645,13 +674,13 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-4.19.0-12-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-5.10.0-8-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 systemd.unified_cgroup_hierarchy=0 \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-4.19.0-12-2-amd64
+        initrd  /$image_dir/boot/initrd.img-5.10.0-8-2-amd64
 }
 EOF
 

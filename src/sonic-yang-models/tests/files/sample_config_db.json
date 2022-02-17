@@ -1,5 +1,78 @@
 {
     "SAMPLE_CONFIG_DB_JSON": {
+        "VRF": {
+                "Vrf_blue": {
+                }
+        },
+        "BUFFER_POOL": {
+            "ingress_lossy_pool": {
+               "mode": "static",
+               "size": "33004032",
+               "type": "ingress"
+            },
+            "ingress_lossless_pool": {
+               "mode": "static",
+               "size": "33004032",
+               "xoff": "196608",
+               "type": "ingress"
+            },
+            "egress_lossless_pool": {
+               "mode": "static",
+               "size": "33004032",
+               "xoff": "196608",
+               "type": "egress"
+            },
+            "egress_lossy_pool": {
+                "size": "12766208",
+                "type": "egress",
+                "mode": "dynamic"
+            }
+        },
+        "BUFFER_PROFILE": {
+            "pg_lossless_100000_300m_profile": {
+                "dynamic_th": "1",
+                "pool": "ingress_lossless_pool",
+                "size": "9427",
+                "xoff": "50176",
+                "xon": "0",
+                "xon_offset": "3584"
+            },
+            "ingress_lossy_profile": {
+                "pool":"ingress_lossy_pool",
+                "size":"1518",
+                "dynamic_th":"3"
+            },
+            "egress_lossless_profile": {
+                "pool":"egress_lossless_pool",
+                "size":"1518",
+                "dynamic_th":"3"
+            },
+            "egress_lossy_profile": {
+                "pool":"egress_lossy_pool",
+                "size":"1518",
+                "dynamic_th":"3"
+            }
+        },
+        "BUFFER_PG": {
+            "Ethernet9|3-4": {
+                "profile": "pg_lossless_100000_300m_profile"
+            }
+        },
+        "BUFFER_QUEUE": {
+            "Ethernet10|4": {
+                "profile": "egress_lossy_profile"
+            }
+        },
+        "BUFFER_PORT_INGRESS_PROFILE_LIST": {
+            "Ethernet9": {
+                "profile_list": ["ingress_lossy_profile"]
+            }
+        },
+        "BUFFER_PORT_EGRESS_PROFILE_LIST": {
+            "Ethernet9": {
+                "profile_list": ["egress_lossless_profile", "egress_lossy_profile"]
+            }
+        },
         "PORTCHANNEL": {
             "PortChannel0003": {
                 "admin_status": "up",
@@ -7,7 +80,9 @@
                 "members": [
                     "Ethernet1"
                 ],
-                "mtu": "9100"
+                "tpid": "0x8100",
+                "mtu": "9100",
+                "lacp_key": "auto"
             },
             "PortChannel0004": {
                 "admin_status": "up",
@@ -15,15 +90,36 @@
                 "members": [
                     "Ethernet2"
                 ],
-                "mtu": "9100"
+                "tpid": "0x9200",
+                "mtu": "9100",
+                "lacp_key": "auto"
+            },
+            "PortChannel2": {
+                "admin_status": "up",
+                "min_links": "1",
+                "members": [
+                    "Ethernet12"
+                ],
+                "tpid": "0x9200",
+                "mtu": "9100",
+                "lacp_key": "auto"
             }
+        },
+        "PORTCHANNEL_INTERFACE": {
+                "PortChannel0003": {
+                    "nat_zone": "1"
+                },
+                "PortChannel0004": {"vrf_name": "Vrf_blue"}
         },
         "PORTCHANNEL_MEMBER": {
             "PortChannel0003|Ethernet1": {},
-            "PortChannel0004|Ethernet2": {}
+            "PortChannel0004|Ethernet2": {},
+            "PortChannel2|Ethernet12": {}
         },
         "VLAN_INTERFACE": {
-            "Vlan111": {},
+            "Vlan111": {
+                "nat_zone": "0"
+            },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
                 "scope": "global",
@@ -194,7 +290,10 @@
                 "mac": "00:11:22:33:dd:5a",
                 "hostname": "asw.dc",
                 "bgp_asn": "64850",
-                "hwsku": "Stone"
+                "hwsku": "Stone",
+                "buffer_model": "dynamic",
+                "cloudtype": "Public",
+                "region": "usfoo"
             }
         },
         "VLAN": {
@@ -202,6 +301,9 @@
                 "description": "svlan",
                 "dhcp_servers": [
                     "10.222.72.116"
+                ],
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
                 ],
                 "vlanid": "111",
                 "mtu": "9216",
@@ -212,10 +314,23 @@
                 "dhcp_servers": [
                     "10.222.72.116"
                 ],
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
+                ],
                 "vlanid": "777",
                 "mtu": "9216",
                 "admin_status": "up"
+            },
+            "Vlan12": {
+                "description": "mclag session ve",
+                "dhcp_servers": [
+                    "12.1.1.1"
+                ],
+                "vlanid": "12",
+                "mtu": "9216",
+                "admin_status": "up"
             }
+
         },
         "DEVICE_NEIGHBOR": {
             "Ethernet112": {
@@ -235,12 +350,67 @@
                 "port": "Eth18"
             }
         },
+        "MGMT_PORT": {
+            "eth0": {
+                "alias": "eth0",
+                "admin_status": "up",
+                "speed": "1000",
+                "autoneg": "off",
+                "description": "Management port",
+                "mtu": "3500"
+            }
+        },
+        "MGMT_INTERFACE": {
+            "eth0|10.11.150.11/16": {
+                "gwaddr": "10.11.0.1"
+            },
+            "eth0|fc00:2::32/64": {
+                "forced_mgmt_routes": [
+                    "10.3.145.14",
+                    "2001:aa:aa::aa",
+                    "10.0.0.100/31",
+                    "10.255.0.0/28"
+                ],
+                "gwaddr": "fc00:2::1"
+            }
+        },
+        "MGMT_VRF_CONFIG": {
+            "vrf_global": {
+                "mgmtVrfEnabled": "true"
+            }
+        },
+        "NTP": {
+            "global": {
+                "vrf": "mgmt",
+                "src_intf": [
+                    "eth0",
+                    "Loopback0"
+                ]
+            }
+        },
+        "NTP_SERVER": {
+            "0.debian.pool.ntp.org": {},
+            "23.92.29.245": {},
+            "2001:aa:aa::aa": {}
+        },
+        "SYSLOG_SERVER" : {
+            "10.13.14.17": {},
+            "20.1.1.1": {},
+            "2001:aa:aa::aa": {}
+        },
+        "CABLE_LENGTH": {
+            "AZURE": {
+                "Ethernet0": "5m",
+                "Ethernet1": "5m"
+            }
+        },
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",
                 "lanes": "65",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet1": {
@@ -248,6 +418,7 @@
                 "lanes": "66",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet2": {
@@ -255,6 +426,7 @@
                 "lanes": "67",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet3": {
@@ -262,6 +434,7 @@
                 "lanes": "68",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x88A8",
                 "admin_status": "up"
             },
             "Ethernet4": {
@@ -269,6 +442,7 @@
                 "lanes": "69",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x9100",
                 "admin_status": "up"
             },
             "Ethernet5": {
@@ -276,6 +450,7 @@
                 "lanes": "70",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x9200",
                 "admin_status": "up"
             },
             "Ethernet6": {
@@ -283,6 +458,7 @@
                 "lanes": "71",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet7": {
@@ -290,6 +466,7 @@
                 "lanes": "72",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet8": {
@@ -297,6 +474,7 @@
                 "lanes": "73",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet9": {
@@ -304,6 +482,7 @@
                 "lanes": "74",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet10": {
@@ -311,6 +490,7 @@
                 "lanes": "75",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet11": {
@@ -318,6 +498,7 @@
                 "lanes": "76",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet12": {
@@ -325,6 +506,7 @@
                 "lanes": "77",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet13": {
@@ -332,6 +514,7 @@
                 "lanes": "78",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet14": {
@@ -339,6 +522,7 @@
                 "lanes": "79",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet15": {
@@ -346,6 +530,7 @@
                 "lanes": "80",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet16": {
@@ -353,6 +538,7 @@
                 "lanes": "33",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet17": {
@@ -360,6 +546,7 @@
                 "lanes": "34",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet18": {
@@ -367,6 +554,7 @@
                 "lanes": "35",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet19": {
@@ -374,6 +562,7 @@
                 "lanes": "36",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet20": {
@@ -381,6 +570,7 @@
                 "lanes": "37",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet21": {
@@ -388,6 +578,7 @@
                 "lanes": "38",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet22": {
@@ -395,6 +586,7 @@
                 "lanes": "39",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet23": {
@@ -402,6 +594,7 @@
                 "lanes": "40",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet24": {
@@ -409,6 +602,7 @@
                 "lanes": "41",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet25": {
@@ -416,6 +610,7 @@
                 "lanes": "42",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet26": {
@@ -423,6 +618,7 @@
                 "lanes": "43",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet27": {
@@ -430,6 +626,7 @@
                 "lanes": "44",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet28": {
@@ -437,6 +634,7 @@
                 "lanes": "45",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet29": {
@@ -444,6 +642,7 @@
                 "lanes": "46",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet30": {
@@ -451,6 +650,7 @@
                 "lanes": "47",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet31": {
@@ -458,6 +658,7 @@
                 "lanes": "48",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet32": {
@@ -465,6 +666,7 @@
                 "lanes": "49",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet33": {
@@ -472,6 +674,7 @@
                 "lanes": "50",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet34": {
@@ -479,6 +682,7 @@
                 "lanes": "51",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet35": {
@@ -486,6 +690,7 @@
                 "lanes": "52",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet36": {
@@ -493,6 +698,7 @@
                 "lanes": "53",
                 "description": "",
                 "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             },
             "Ethernet112": {
@@ -501,6 +707,16 @@
                 "description": "50G|dccsw01.nw|Eth18",
                 "fec": "fc",
                 "speed": "11100",
+                "tpid": "0x8100",
+                "admin_status": "up"
+            },
+            "Ethernet120": {
+                "alias": "Eth31/1",
+                "lanes": "121,122",
+                "description": "",
+                "fec": "fc",
+                "speed": "11100",
+                "tpid": "0x8100",
                 "admin_status": "up"
             }
         },
@@ -532,11 +748,100 @@
                 ]
             }
         },
+        "PBH_HASH_FIELD": {
+            "inner_ip_proto": {
+                "hash_field": "INNER_IP_PROTOCOL",
+                "sequence_id": "1"
+            },
+            "inner_l4_dst_port": {
+                "hash_field": "INNER_L4_DST_PORT",
+                "sequence_id": "2"
+            },
+            "inner_l4_src_port": {
+                "hash_field": "INNER_L4_SRC_PORT",
+                "sequence_id": "2"
+            },
+            "inner_dst_ipv4": {
+                "hash_field": "INNER_DST_IPV4",
+                "ip_mask": "255.0.0.0",
+                "sequence_id": "3"
+            },
+            "inner_src_ipv4": {
+                "hash_field": "INNER_SRC_IPV4",
+                "ip_mask": "0.0.0.255",
+                "sequence_id": "3"
+            },
+            "inner_dst_ipv6": {
+                "hash_field": "INNER_DST_IPV6",
+                "ip_mask": "ffff::",
+                "sequence_id": "4"
+            },
+            "inner_src_ipv6": {
+                "hash_field": "INNER_SRC_IPV6",
+                "ip_mask": "::ffff",
+                "sequence_id": "4"
+            }
+        },
+        "PBH_HASH": {
+            "inner_v4_hash": {
+                "hash_field_list": [
+                    "inner_ip_proto",
+                    "inner_l4_dst_port",
+                    "inner_l4_src_port",
+                    "inner_dst_ipv4",
+                    "inner_src_ipv4"
+                ]
+            },
+            "inner_v6_hash": {
+                "hash_field_list": [
+                    "inner_ip_proto",
+                    "inner_l4_dst_port",
+                    "inner_l4_src_port",
+                    "inner_dst_ipv6",
+                    "inner_src_ipv6"
+                ]
+            }
+        },
+        "PBH_RULE": {
+            "pbh_table|nvgre": {
+                "priority": "1",
+                "ether_type": "0x0800",
+                "ip_protocol": "0x2f",
+                "gre_key": "0x2500/0xffffff00",
+                "inner_ether_type": "0x86dd",
+                "hash": "inner_v6_hash",
+                "packet_action": "SET_ECMP_HASH",
+                "flow_counter": "DISABLED"
+            },
+            "pbh_table|vxlan": {
+                "priority": "2",
+                "ether_type": "0x0800",
+                "ip_protocol": "0x11",
+                "l4_dst_port": "0x12b5",
+                "inner_ether_type": "0x0800",
+                "hash": "inner_v4_hash",
+                "packet_action": "SET_LAG_HASH",
+                "flow_counter": "ENABLED"
+            }
+        },
+        "PBH_TABLE": {
+            "pbh_table": {
+                "interface_list": [
+                    "Ethernet0",
+                    "Ethernet4",
+                    "PortChannel0003",
+                    "PortChannel0004"
+                ],
+                "description": "NVGRE and VxLAN"
+            }
+        },
         "INTERFACE": {
             "Ethernet112": {},
             "Ethernet14": {},
             "Ethernet16": {},
-            "Ethernet18": {},
+            "Ethernet18": {
+                "nat_zone": "1"
+            },
             "Ethernet112|2a04:5555:40:a709::2/126": {
                 "scope": "global",
                 "family": "IPv6"
@@ -569,6 +874,13 @@
                 "scope": "global",
                 "family": "IPv4"
             }
+        },
+        "VLAN_SUB_INTERFACE": {
+            "Ethernet120.10": {
+                "admin_status": "up"
+            },
+            "Ethernet120.10|10.0.1.56/31": {},
+            "Ethernet120.10|fc00::1:71/126": {}
         },
         "VLAN_MEMBER": {
             "Vlan111|Ethernet0": {
@@ -615,10 +927,18 @@
             },
             "Vlan111|Ethernet36": {
                 "tagging_mode": "untagged"
+            },
+            "Vlan111|PortChannel0003": {
+                "tagging_mode": "untagged"
+            },
+            "Vlan12|PortChannel2": {
+                "tagging_mode": "tagged"
             }
         },
         "LOOPBACK_INTERFACE": {
-            "Loopback0": {},
+            "Loopback0": {
+               "nat_zone": "2"
+            },
             "Loopback0|2a04:5555:40:4::4e9/128": {
                 "scope": "global",
                 "family": "IPv6"
@@ -649,25 +969,31 @@
                 "FLEX_COUNTER_STATUS": "enable"
             },
             "PG_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "PORT": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "1000"
             },
             "PORT_RATES": {
                 "FLEX_COUNTER_STATUS": "enable"
             },
             "PORT_BUFFER_DROP": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "60000"
             },
             "BUFFER_POOL_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "QUEUE": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "QUEUE_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             },
             "DEBUG_COUNTER": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -686,9 +1012,589 @@
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
             }
+        },
+        "WARM_RESTART": {
+            "bgp": {
+                "bgp_timer": "500"
+            }
+        },
+        "PORT_STORM_CONTROL": {
+            "Ethernet0|broadcast": {
+                "kbps": "10000"
+            },
+            "Ethernet0|unknown-multicast": {
+                "kbps": "30000"
+            },
+            "Ethernet0|unknown-unicast": {
+                "kbps": "20000"
+            }
+        },
+        "PFC_WD": {
+            "Ethernet9": {
+               "action": "drop",
+               "detection_time": "100",
+               "restoration_time": "400"
+            }
+        },
+        "PFC_WD": {
+            "GLOBAL": {
+                "POLL_INTERVAL": "100"
+            }
+        },
+        "SFLOW_COLLECTOR": {
+            "collector1": {
+                "collector_ip": "10.100.12.13",
+                "collector_port": "6343"
+            },
+            "collector2": {
+                "collector_ip": "10.144.1.2"
+            }
+        },
+
+        "SFLOW_SESSION": {
+            "Ethernet0": {
+                "admin_state": "down",
+                "sample_rate": "40000"
+            },
+            "Ethernet16": {
+                "admin_state": "up",
+                "sample_rate": "32768"
+            }
+        },
+
+        "SFLOW" : {
+            "global": {
+                "admin_state": "up",
+                "polling_interval": "20",
+                "agent_id": "Ethernet0"
+            }
+        },
+        "AAA": {
+            "authentication": {
+                "login": "local"
+            },
+            "authorization": {
+                "login": "local"
+            },
+            "accounting": {
+                "login": "local"
+            }
+        },
+        "TACPLUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "TACPLUS_SERVER": {
+            "192.168.1.1": {
+                "timeout": "10"
+            }
+        },
+        "NAT_BINDINGS": {
+            "bind1": {
+                "nat_pool": "pool1",
+                "nat_type": "snat",
+                "twice_nat_id": "1"
+            }
+        },
+        "NAT_GLOBAL": {
+            "Values": {
+                "admin_mode": "enabled",
+                "nat_tcp_timeout": "86400",
+                "nat_timeout": "600",
+                "nat_udp_timeout": "300"
+            }
+        },
+        "NAT_POOL": {
+            "pool1": {
+                "nat_ip": "125.56.90.50-125.56.90.100",
+                "nat_port": "50-100"
+            }
+        },
+        "STATIC_NAPT": {
+            "125.56.90.10|UDP|100": {
+                "local_ip": "12.12.0.2",
+                "local_port": "251"
+            }
+        },
+        "STATIC_NAT": {
+            "125.56.90.8": {
+                "local_ip": "12.12.0.2"
+            }
+        },
+        "BGP_GLOBALS": {
+            "default": {
+                "router_id": "5.5.5.5",
+                "local_asn": "65001"
+            }
+        },
+        "BGP_GLOBALS_AF": {
+            "default|ipv4_unicast": {
+                "max_ebgp_paths": "2",
+                "max_ibgp_paths": "2"
+            },
+            "default|ipv6_unicast": {
+                "max_ebgp_paths": "2",
+                "max_ibgp_paths": "2"
+            }
+        },
+        "BGP_GLOBALS_AF_AGGREGATE_ADDR": {
+            "default|ipv4_unicast|21.0.0.0/8": {
+            }
+        },
+        "BGP_GLOBALS_AF_NETWORK": {
+            "default|ipv4_unicast|21.0.0.0/8": {
+            }
+        },
+        "BGP_MONITORS": {
+            "5.6.7.8": {
+                "admin_status": "up",
+                "asn": "65000",
+                "holdtime": "180",
+                "keepalive": "60",
+                "local_addr": "10.0.0.11",
+                "name": "BGPMonitor",
+                "nhopself": "0",
+                "rrclient": "0"
+            }
+        },
+        "BGP_NEIGHBOR": {
+            "10.0.0.1": {
+                "asn": "65200",
+                "holdtime": "180",
+                "keepalive": "60",
+                "local_addr": "10.0.0.2",
+                "name":"PEER1",
+                "nhopself":"0",
+                "rrclient":"0",
+                "admin_status":"up"
+            },
+            "default|192.168.1.1": {
+                "local_asn": "65200",
+                "asn": "65100",
+                "name": "bgp peer 65100",
+                "ebgp_multihop_ttl": "3"
+            }
+        },
+        "BGP_NEIGHBOR_AF": {
+            "default|192.168.1.1|ipv4_unicast": {
+            }
+        },
+        "BGP_PEER_GROUP": {
+            "default|PG1": {
+            }
+        },
+        "BGP_PEER_GROUP_AF": {
+            "default|PG1|ipv4_unicast": {
+            }
+        },
+        "BGP_GLOBALS_LISTEN_PREFIX": {
+            "default|30.0.0.0/8": {
+                "peer_group": "PG1"
+            }
+        },
+        "ROUTE_MAP_SET": {
+            "map1": {
+            }
+        },
+        "ROUTE_MAP": {
+            "map1|1": {
+                "match_med" : "100"
+            }
+        },
+        "ROUTE_REDISTRIBUTE": {
+            "default|connected|bgp|ipv4": {
+            }
+        },
+        "PREFIX_SET": {
+            "prefix1": {
+            }
+        },
+        "PREFIX": {
+            "prefix1|1|10.0.0.0/8|8..16": {
+            }
+        },
+        "COPP_GROUP": {
+            "queue1_group1": {
+                "queue": "1",
+                "trap_priority":"1",
+                "trap_action":"trap",
+                "meter_type":"packets",
+                "mode":"sr_tcm",
+                "cir":"6000",
+                "cbs":"6000",
+                "red_action":"drop"
+            }
+        },
+        "COPP_TRAP": {
+            "ip2me": {
+                "trap_ids": "ip2me",
+                "trap_group": "queue1_group1"
+            }
+        },
+
+        "AUTO_TECHSUPPORT": {
+            "GLOBAL": {
+                "state" : "enabled",
+                "rate_limit_interval" : "180",
+                "max_techsupport_limit" : "10.0",
+                "max_core_limit" : "0.0",
+                "since" : "2 days ago"
+            }
+        },
+        "AUTO_TECHSUPPORT_FEATURE": {
+            "bgp" :{
+                "state" : "disabled",
+                "rate_limit_interval" : "600"
+            },
+            "swss" : {
+                "state" : "enabled",
+                "rate_limit_interval" : "600"
+            },
+            "snmp" : {
+                "state" : "enabled",
+                "rate_limit_interval" : "500"
+            },
+            "dhcp_relay" : {
+                "state" : "disabled",
+                "rate_limit_interval" : "1000"
+            }
+        },
+        "LLDP": {
+            "GLOBAL": {
+                "mode": "TRANSMIT",
+                "enabled": "true",
+                "hello_time": "12",
+                "multiplier": "5",
+                "supp_mgmt_address_tlv": "true",
+                "supp_system_capabilities_tlv": "false",
+                "system_name": "sonic",
+                "system_description": "sonic-system"
+            }
+        },
+        "LLDP_PORT": {
+            "Ethernet0": {
+                "mode": "TRANSMIT",
+                "enabled": "true"
+            }
+        },
+        "FEATURE": {
+            "bgp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "False",
+                "has_per_asic_scope": "True",
+                "has_timer": "False",
+                "high_mem_alert": "disabled",
+                "state": "enabled",
+                "set_owner": "local"
+            },
+            "database": {
+                "auto_restart": "always_enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "always_enabled",
+                "set_owner": "local"
+            },
+            "snmp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "true",
+                "has_per_asic_scope": "false",
+                "has_timer": "true",
+                "high_mem_alert": "disabled",
+                "state": "enabled",
+                "set_owner": "kube"
+            },
+            "swss": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled",
+                "set_owner": "local"
+            },
+            "syncd": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled",
+                "set_owner": "local"
+            },
+            "lldp": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "enabled",
+                "set_owner": "kube"
+            },
+            "dhcp_relay": {
+                "auto_restart": "enabled",
+                "has_global_scope": "false",
+                "has_per_asic_scope": "true",
+                "has_timer": "false",
+                "high_mem_alert": "disabled",
+                "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
+                "set_owner": "kube"
+            }
+        },
+        "DHCP_RELAY": {
+            "Vlan111": {
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
+                ],
+                "rfc6939_support": "true"
+            },
+            "Vlan777": {
+                "dhcpv6_servers": [
+                    "2a04:5555:41::11"
+                ],
+                "rfc6939_support": "true"
+            }
+        },
+        "SCHEDULER": {
+            "TEST@0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+            "TEST@1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
+            },
+            "scheduler.0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+
+            "scheduler.1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
+            }
+        },
+
+        "WRED_PROFILE": {
+            "Wred1": {
+                "ecn": "ecn_all",
+                "green_drop_probability": "50",
+                "green_max_threshold": "2048000",
+                "green_min_threshold": "1024000",
+                "wred_green_enable": "true",
+                "yellow_drop_probability": "50",
+                "yellow_max_threshold": "2048000",
+                "yellow_min_threshold": "1024000",
+                "wred_yellow_enable": "true",
+                "red_drop_probability": "50",
+                "red_max_threshold": "2048000",
+                "red_min_threshold": "1024000",
+                "wred_red_enable": "true"
+            }
+        },
+
+        "QUEUE": {
+            "Ethernet0|0": {
+                "scheduler": "TEST@0",
+                "wred_profile": "Wred1"
+            },
+            "Ethernet0|1": {
+                "scheduler": "TEST@1",
+                "wred_profile": "Wred1"
+            },
+            "Ethernet0|2": {
+                "scheduler": "scheduler.0"
+            },
+            "Ethernet0|3": {
+                "scheduler": "scheduler.1"
+            }
+        },
+
+        "DSCP_TO_FC_MAP": {
+            "Dscp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Dscp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
+
+        "EXP_TO_FC_MAP": {
+            "Exp_to_fc_map1": {
+               "1": "1",
+               "2": "2"
+            },
+            "Exp_to_fc_map2": {
+               "3": "3",
+               "4": "4"
+             }
+        },
+
+        "DSCP_TO_TC_MAP": {
+           "Dscp_to_tc_map1": {
+              "1": "1",
+              "2": "2"
+            },
+           "Dscp_to_tc_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "DOT1P_TO_TC_MAP": {
+           "Dot1p_to_tc_map1": {
+              "1": "1",
+              "2": "2"
+            },
+           "Dot1p_to_tc_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "TC_TO_PRIORITY_GROUP_MAP": {
+           "tc_to_pg_map1": {
+              "1": "1",
+              "2": "2"
+            },
+           "tc_to_pg_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "TC_TO_QUEUE_MAP": {
+           "tc_to_q_map1": {
+              "1": "1",
+              "2": "2"
+            },
+           "tc_to_q_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "MAP_PFC_PRIORITY_TO_QUEUE": {
+           "pfc_prio_to_q_map1": {
+              "1": "1",
+              "2": "2"
+           },
+           "pfc_prio_to_q_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "PFC_PRIORITY_TO_PRIORITY_GROUP_MAP": {
+           "pfc_prio_to_pg_map1": {
+              "1": "1",
+              "2": "2"
+            },
+            "pfc_prio_to_pg_map2": {
+              "3": "3",
+              "4": "4"
+            }
+        },
+
+        "PORT_QOS_MAP": {
+           "Ethernet0": {
+              "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
+              "dscp_to_tc_map": "Dscp_to_tc_map1",
+	          "tc_to_queue_map": "tc_to_q_map1",
+	          "tc_to_pg_map": "tc_to_pg_map1",
+	          "pfc_to_queue_map": "pfc_prio_to_q_map1",
+	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map1",
+	          "pfc_enable"      : "3,4"
+            },
+            "Ethernet4": {
+              "dot1p_to_tc_map" : "Dot1p_to_tc_map2",
+              "dscp_to_tc_map": "Dscp_to_tc_map2",
+	          "tc_to_queue_map": "tc_to_q_map2",
+	          "tc_to_pg_map": "tc_to_pg_map2",
+	          "pfc_to_queue_map": "pfc_prio_to_q_map2",
+	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map2",
+	          "pfc_enable"      : "3,4"
+            }
+        },
+
+        
+        "MCLAG_DOMAIN": {
+            "123": {
+                "source_ip": "12.1.1.1",
+                "peer_ip": "12.1.1.2",
+                "peer_link": "PortChannel2",
+                "keepalive_interval": "1",
+                "session_timeout": "30"
+            }
+        },
+        "MCLAG_INTERFACE": {
+            "123|PortChannel0004": {
+                "if_type": "PortChannel"
+            }
+        },
+        "MCLAG_UNIQUE_IP": {
+            "Vlan12": {
+                "unique_ip": "enable"
+            }
+        },
+
+
+        "MIRROR_SESSION": {
+            "erspan": {
+                "dscp": "10",
+                "dst_ip": "11.1.1.1",
+                "gre_type": "0x1234",
+                "queue": "0",
+                "src_ip": "10.1.1.1",
+                "ttl": "10",
+                "policer": "everflow_static_policer",
+                "type": "ERSPAN"
+            },
+            "span": {
+                "direction": "RX",
+                "type": "SPAN",
+                "dst_port": "Ethernet2",
+                "src_port": [
+                    "Ethernet3",
+                    "Ethernet4"
+                ]
+
+            }
+        },
+        "POLICER": {
+            "everflow_static_policer": {
+                "meter_type": "bytes",
+                "mode": "sr_tcm",
+                "cir": "12500000",
+                "cbs": "12500000",
+                "color": "aware",
+                "red_packet_action": "drop"
+           }
         }
     },
-
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."
