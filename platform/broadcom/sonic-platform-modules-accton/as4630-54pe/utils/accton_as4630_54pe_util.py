@@ -118,7 +118,6 @@ def main():
         elif opt in ('-f', '--force'):
             FORCE = 1
         else:
-            print("TEST")
             logging.info('no option')
     for arg in args:
         if arg == 'install':
@@ -169,7 +168,7 @@ kos = [
 'modprobe i2c_dev',
 'modprobe i2c_i801',
 'modprobe i2c_ismt',
-'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
+'modprobe i2c_mux_pca954x',
 'modprobe ym2651y',
 'modprobe x86_64_accton_as4630_54pe_cpld',
 'modprobe x86_64_accton_as4630_54pe_leds',
@@ -218,6 +217,13 @@ def device_install():
             if FORCE == 0:
                 return status
 
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status
     for i in range(0,len(sfp_map)):
         if(i < 4):
             opt='optoe2'
