@@ -7,7 +7,7 @@ from setuptools import setup
 dependencies = [
     'bitarray==1.5.3',
     'ipaddress==1.0.23',
-    'lxml==4.6.3',
+    'lxml==4.6.5',
     'netaddr==0.8.0',
     'pyyaml==5.4.1',
     'sonic-py-common',
@@ -40,7 +40,6 @@ else:
 # Common modules for python2 and python3
 py_modules = [
     'config_samples',
-    'lazy_re',
     'minigraph',
     'openconfig_acl',
     'portconfig',
