@@ -7,15 +7,6 @@
             "com_e_driver-i2c-4-33:memory-temp" : [85.0, 80.75, 0.2, 0.1]
         },
         {
-            "psu_driver-i2c-7-5a:psu1-temp1" : [50.0, 47.5, 0.2, 0.1]
-        },
-        {
-            "psu_driver-i2c-7-5a:psu1-temp2" : [90.0, 85.5, 0.2, 0.1]
-        },
-        {
-            "psu_driver-i2c-7-5a:psu1-temp3" : [50.0, 47.5, 0.2, 0.1]
-        },
-        {
             "tmp75-i2c-3-48:chip-temp" : [90.0, 85.5, 0.2, 0.1]
         },
         {
