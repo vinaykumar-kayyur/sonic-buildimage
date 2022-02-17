@@ -408,6 +408,8 @@ class SFP(SfpBase):
         self.slot_id = slot_id
         self._sfp_type = None
         self._sfp_capability = None
+        self.mst_pci_device = subprocess.check_output("ls /dev/mst/ | grep pciconf", universal_newlines=True, shell=True).strip()
+        print(self.mst_pci_device)
         
     @property
     def sdk_handle(self):
@@ -694,6 +696,94 @@ class SFP(SfpBase):
             return float(t_str)
         else:
             return 'N/A'
+
+    def write_eeprom(self, offset, num_bytes, write_buffer):
+        # recalculate offset and page
+        if offset < 256:
+            page = 0
+            device_address = offset
+        else:
+            page  = (offset-256) // 128 + 1
+            device_address = (offset-256) % 128
+
+        word_r = len(write_buffer) % 4
+
+        res = ""
+        i=0
+
+        for x in write_buffer :
+            word = hex(x)[2:]
+            if i == 0:
+                res = "dword[0]=0x"
+            elif i % 4 == 0:
+                res+= "dword[" + str((i+1)//4) + "]=0x"
+
+            if len(word) == 1:
+                word = "0" + word
+
+            print(word)
+            res += word
+
+            i+=1
+            if i % 4 == 0:
+                res += ","
+
+        if word_r % 4 !=0:
+            res += (4 - word_r) * "00"
+
+        try:
+            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
+                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
+                    --set {}".format(self.mst_pci_device, self.slot_id, self.sdk_index, device_address, page, num_bytes, res)
+
+            print("====", cmd)
+            result = subprocess.check_output(cmd, universal_newlines=True, shell=True)
+
+        except subprocess.CalledProcessError as e:
+            print("Error! Unable to write data for {} port, page {} offset {}, rc = {}, err msg: {}".format(self.sdk_index, page, device_address, e.returncode, e.output))
+            return False
+        return True
+
+    def read_eeprom(self, offset, num_bytes):
+        # recalculate offset and page
+        if offset < 256:
+            page = 0
+            device_address = offset
+        else:
+            page  = (offset-256) // 128 + 1
+            device_address = (offset-256) % 128
+
+        try:
+            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
+                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
+                    --get | grep dword".format(self.mst_pci_device, self.slot_id, self.sdk_index, device_address, page, num_bytes)
+            print("====", cmd)
+            result = subprocess.check_output(cmd, universal_newlines=True, shell=True)
+
+        except subprocess.CalledProcessError as e:
+            print("Error! Unable to write data for {} port, page {} offset {}, rc = {}, err msg: {}".format(self.sdk_index, page, device_address, e.returncode, e.output))
+            return None
+
+        arr = result.split('\n')
+        word_n = num_bytes // 4
+        byte =  num_bytes % 4
+
+        res = ""
+        i = 0
+
+        for line in arr:
+            dword = line.split()[2]
+
+            i+=1
+            if i <= word_n:
+                res += dword[2:]
+                continue
+
+            res += dword[2:2+byte*2]
+            if i > word_n:
+                break
+
+        return bytearray.fromhex(res)
 
     def get_transceiver_info(self):
         """
