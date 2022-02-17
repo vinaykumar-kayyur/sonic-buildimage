@@ -15,6 +15,7 @@ steps:
       fi
 
       if [[ $PLATFORM_ARCH != arm* ]];then
+        echo "Skipped, platform arch = $PLATFORM_ARCH"
         exit 0
       fi
       
@@ -96,7 +97,7 @@ steps:
 
       # Mount nfs
       sudo mkdir /nfs
-      sudo mount -t nfs -o sec=sys,vers=4.1 10.0.5.4:/jenkins-vol-1 /nfs
+      sudo mount -t nfs -o sec=sys,vers=4.1 172.16.131.132:/vol1 /nfs
       sudo chown nobody /nfs
       sudo chmod u=rwx,g=rwx,o=r /nfs
       df -h
