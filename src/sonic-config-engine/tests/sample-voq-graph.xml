@@ -1,7 +1,14 @@
 <DeviceMiniGraph xmlns="Microsoft.Search.Autopilot.Evolution" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
   <CpgDec>
     <PeeringSessions/>
-    <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
+    <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
+      <a:BGPRouterDeclaration>
+        <a:ASN>65100</a:ASN>
+          <a:Hostname>linecard-1</a:Hostname>
+          <a:Peers/>
+        <a:RouteMaps/>
+      </a:BGPRouterDeclaration>
+    </Routers>
   </CpgDec>
   <DpgDec>
     <DeviceDataPlaneInfo>
@@ -47,6 +54,11 @@
           <Name>Vlan3094</Name>
           <Type>Vlan</Type>
           <a:PrefixStr>1.1.1.1/24</a:PrefixStr>
+        </a:VoqInbandInterface>
+        <a:VoqInbandInterface>
+          <Name>Ethernet-IB0</Name>
+          <Type>port</Type>
+          <a:PrefixStr>2.2.2.2/32</a:PrefixStr>
         </a:VoqInbandInterface>
       </VoqInbandInterfaces>
       <DataAcls/>
@@ -104,7 +116,7 @@
     <a:DeviceProperty>
      <a:Name>SyslogResources</a:Name>
      <a:Value>
-      10.0.10.5;10.0.10.6;
+      10.0.10.5;10.0.10.6
      </a:Value>
     </a:DeviceProperty>
     <a:DeviceProperty>

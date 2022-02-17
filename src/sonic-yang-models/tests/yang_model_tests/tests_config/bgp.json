@@ -133,6 +133,19 @@
         },
         "sonic-bgp-neighbor:sonic-bgp-neighbor": {
             "sonic-bgp-neighbor:BGP_NEIGHBOR": {
+                "BGP_NEIGHBOR_TEMPLATE_LIST": [
+                {
+                    "neighbor": "10.0.0.1",
+                    "asn": "65200",
+                    "holdtime": "180",
+                    "keepalive": "60",
+                    "local_addr": "10.0.0.2",
+                    "name":"PEER1",
+                    "nhopself":"0",
+                    "rrclient":"0",
+                    "admin_status":"up"
+                }
+                ],
                 "BGP_NEIGHBOR_LIST": [
                 {
                     "vrf_name": "default",
@@ -164,7 +177,7 @@
                     "peer_port": 0,
                     "shutdown_message": "BGP PeerGroup Shutdown Message",
                     "strict_capability_match": false,
-                    "admin_status": false,
+                    "admin_status": "down",
                     "local_as_no_prepend": false,
                     "local_as_replace_as": false
                 },
@@ -198,7 +211,7 @@
                     "peer_port": 0,
                     "shutdown_message": "BGP PeerGroup Shutdown Message",
                     "strict_capability_match": false,
-                    "admin_status": false,
+                    "admin_status": "down",
                     "local_as_no_prepend": false,
                     "local_as_replace_as": false
                 }
@@ -210,14 +223,14 @@
                     "vrf_name": "default",
                     "neighbor": "20.0.0.1",
                     "afi_safi": "ipv4_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 },
                 {
                     "vrf_name": "Vrf1",
                     "neighbor": "20.0.0.2",
                     "afi_safi": "ipv6_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 }
 
@@ -308,7 +321,7 @@
                     "peer_port": 0,
                     "shutdown_message": "BGP PeerGroup Shutdown Message",
                     "strict_capability_match": false,
-                    "admin_status": false,
+                    "admin_status": "down",
                     "local_as_no_prepend": false,
                     "local_as_replace_as": false
                 },
@@ -342,7 +355,7 @@
                     "peer_port": 0,
                     "shutdown_message": "BGP PeerGroup Shutdown Message",
                     "strict_capability_match": false,
-                    "admin_status": false,
+                    "admin_status": "down",
                     "local_as_no_prepend": false,
                     "local_as_replace_as": false
                 }
@@ -354,14 +367,14 @@
                     "vrf_name": "default",
                     "peer_group_name": "PG1",
                     "afi_safi": "ipv4_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 },
                 {
                     "vrf_name": "Vrf1",
                     "peer_group_name": "PG2",
                     "afi_safi": "ipv6_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 }
 
@@ -428,9 +441,32 @@
                     "vrf_name": "default",
                     "neighbor": "20.0.0.1",
                     "afi_safi": "ipv4_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 }]}
+        }
+    },
+
+    "BGP_NEIGHBOR_NEG_INVALID_ADMIN_STATUS": {
+        "sonic-bgp-global:sonic-bgp-global": {
+            "sonic-bgp-global:BGP_GLOBALS": {
+                "BGP_GLOBALS_LIST": [
+                    {
+                        "vrf_name": "default",
+                        "local_asn": 65001
+                    }
+                ]
+            }
+        },
+        "sonic-bgp-neighbor:sonic-bgp-neighbor": {
+            "sonic-bgp-neighbor:BGP_NEIGHBOR": {
+                "BGP_NEIGHBOR_TEMPLATE_LIST": [
+                    {
+                        "neighbor": "11.12.13.14",
+                        "admin_status": "right"
+                    }
+                ]
+            }
         }
     },
 
@@ -630,7 +666,7 @@
                         "vrf_name": "default",
                         "neighbor": "11.12.14.921",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true
+                        "admin_status": "up"
                     }
                 ]
             }
@@ -666,7 +702,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "max_prefix_warning_threshold": 102
                     }
                 ]
@@ -703,7 +739,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "soft_reconfiguration_in": "not_true"
                     }
                 ]
@@ -740,7 +776,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "send_community": "foobar"
                     }
                 ]
@@ -777,7 +813,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_in": [
                             "rtmap05"
                         ]
@@ -828,7 +864,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_in": [
                             "rtmap01",
                             "rtmap02"
@@ -880,7 +916,7 @@
                         "vrf_name": "default",
                         "neighbor": "20.0.0.1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_out": [
                             "rtmap01",
                             "rtmap02"
@@ -923,7 +959,7 @@
                     "vrf_name": "default",
                     "peer_group_name": "PG1",
                     "afi_safi": "ipv4_unicast",
-                    "admin_status": true,
+                    "admin_status": "up",
                     "send_default_route": true
                 }]}
         }
@@ -1063,7 +1099,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "max_prefix_warning_threshold": 102
                     }
                 ]
@@ -1100,7 +1136,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "soft_reconfiguration_in": "not_true"
                     }
                 ]
@@ -1137,7 +1173,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "send_community": "foobar"
                     }
                 ]
@@ -1174,7 +1210,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_in": [
                             "rtmap05"
                         ]
@@ -1225,7 +1261,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_in": [
                             "rtmap01",
                             "rtmap02"
@@ -1277,7 +1313,7 @@
                         "vrf_name": "default",
                         "peer_group_name": "PG1",
                         "afi_safi": "ipv4_unicast",
-                        "admin_status": true,
+                        "admin_status": "up",
                         "route_map_out": [
                             "rtmap01",
                             "rtmap02"
@@ -1286,8 +1322,87 @@
                 ]
             }
         }
-    }
+    },
 
+    "BGP_MONITORS_ALL_VALID": {
+        "sonic-bgp-monitor:sonic-bgp-monitor": {
+            "sonic-bgp-monitor:BGP_MONITORS": {
+                "BGP_MONITORS_LIST": [
+                    {
+                        "addr": "10.0.0.1",
+                        "asn": "65200",
+                        "holdtime": "180",
+                        "keepalive": "60",
+                        "local_addr": "10.0.0.2",
+                        "name":"BGPMonitor",
+                        "nhopself":"0",
+                        "rrclient":"0",
+                        "admin_status":"up"
+                    }
+                ]
+            }
+        }
+    },
+
+    "BGP_MONITORS_NEG_INVALID_ADMIN_STATUS": {
+        "sonic-bgp-monitor:sonic-bgp-monitor": {
+            "sonic-bgp-monitor:BGP_MONITORS": {
+                "BGP_MONITORS_LIST": [
+                    {
+                        "addr": "10.0.0.1",
+                        "asn": "65200",
+                        "holdtime": "180",
+                        "keepalive": "60",
+                        "local_addr": "10.0.0.2",
+                        "name":"BGPMonitor",
+                        "nhopself":"0",
+                        "rrclient":"0",
+                        "admin_status":"left"
+                    }
+                ]
+            }
+        }
+    },
+
+    "BGP_MONITORS_NEG_INVALID_NAME": {
+        "sonic-bgp-monitor:sonic-bgp-monitor": {
+            "sonic-bgp-monitor:BGP_MONITORS": {
+                "BGP_MONITORS_LIST": [
+                    {
+                        "addr": "10.0.0.1",
+                        "asn": "65200",
+                        "holdtime": "180",
+                        "keepalive": "60",
+                        "local_addr": "10.0.0.2",
+                        "name":"BGPMonitor123",
+                        "nhopself":"0",
+                        "rrclient":"0",
+                        "admin_status":"up"
+                    }
+                ]
+            }
+        }
+    },
+
+    "BGP_MONITORS_NEG_INVALID_ASN": {
+        "sonic-bgp-monitor:sonic-bgp-monitor": {
+            "sonic-bgp-monitor:BGP_MONITORS": {
+                "BGP_MONITORS_LIST": [
+                    {
+                        "addr": "10.0.0.1",
+                        "asn": "asda",
+                        "holdtime": "180",
+                        "keepalive": "60",
+                        "local_addr": "10.0.0.2",
+                        "name":"BGPMonitor",
+                        "nhopself":"0",
+                        "rrclient":"0",
+                        "admin_status":"up"
+                    }
+                ]
+            }
+        }
+    }
 }
 
 

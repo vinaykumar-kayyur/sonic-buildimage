@@ -1,4 +1,5 @@
-sai_load_hw_config=/etc/bcm/flex/bcm56870_a0_issu/b870.6.4.1/
+sai_load_hw_config=/etc/bcm/flex/bcm56870_a0_premium_issu/b870.6.4.1/
+l3_alpm_hit_skip=1
 sai_adjust_acl_drop_in_rx_drop=1
 host_as_route_disable=1
 use_all_splithorizon_groups=1
@@ -11,7 +12,7 @@ riot_overlay_ecmp_resilient_hash_size=16384
 flow_init_mode=1
 arl_clean_timeout_usec=15000000
 asf_mem_profile=2
-bcm_num_cos=8
+bcm_num_cos=10
 bcm_stat_flags=1
 bcm_stat_jumbo=9236
 bcm_tunnel_term_compatible_mode=1

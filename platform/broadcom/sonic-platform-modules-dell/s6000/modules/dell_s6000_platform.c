@@ -10,6 +10,8 @@
 #include <linux/i2c/sff-8436.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
+#include <linux/gpio/machine.h>
+#include <linux/gpio_keys.h>
 #include <linux/nvram.h>
 
 #define S6000_MUX_BASE_NR   10
@@ -47,15 +49,23 @@ static struct i2c_mux_gpio_platform_data s6000_mux_platform_data = {
     .base_nr            = S6000_MUX_BASE_NR,
     .values             = s6000_mux_values,
     .n_values           = ARRAY_SIZE(s6000_mux_values),
-    .gpios              = s6000_mux_gpios,
-    .n_gpios            = ARRAY_SIZE(s6000_mux_gpios),
     .idle               = 0,
+};
+
+static struct gpiod_lookup_table dell_gpio_desc = {
+	.dev_id = "i2c-mux-gpio",
+	.table = {
+                GPIO_LOOKUP_IDX("sch_gpio.3168", 1, "mux", 0, GPIO_ACTIVE_HIGH ),
+                GPIO_LOOKUP_IDX("sch_gpio.3168", 2, "mux", 1, GPIO_ACTIVE_HIGH ),
+		{ },
+	},
 };
 
 static struct platform_device s6000_mux = {
     .name               = "i2c-mux-gpio",
     .id                 = 0,
     .dev                = {
+                .init_name = "i2c-mux-gpio",
                 .platform_data   = &s6000_mux_platform_data,
                 .release          = device_release
     },
@@ -310,6 +320,25 @@ static ssize_t get_modsel(struct device *dev, struct device_attribute *devattr, 
     data |= (u32)(ret & 0xff) << 24;
 
     return sprintf(buf, "0x%08x\n", data);
+}
+
+static ssize_t set_modsel(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
+{
+    int err;
+    unsigned long data = 0;
+    struct cpld_platform_data *pdata = dev->platform_data;
+
+    err = kstrtoul(buf, 16, &data);
+    if (err)
+	return err;
+
+    dell_i2c_smbus_write_byte_data(pdata[slave_cpld].client, 0x0, (u8)(data & 0xff));
+    dell_i2c_smbus_write_byte_data(pdata[slave_cpld].client, 0x1, (u8)((data >> 8) & 0xff));
+    dell_i2c_smbus_write_byte_data(pdata[master_cpld].client, 0xa, (u8)((data >> 16) & 0xff));
+    dell_i2c_smbus_write_byte_data(pdata[master_cpld].client, 0xb, (u8)((data >> 24) & 0xff));
+
+    msleep(2); // As per HW spec
+    return count;
 }
 
 static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf)
@@ -1128,7 +1157,7 @@ static ssize_t get_reboot_reason(struct device *dev,
     return sprintf(buf, "0x%x\n", data);
 }
 
-static DEVICE_ATTR(qsfp_modsel, S_IRUGO, get_modsel, NULL);
+static DEVICE_ATTR(qsfp_modsel, S_IRUGO | S_IWUSR, get_modsel, set_modsel);
 static DEVICE_ATTR(qsfp_modprs, S_IRUGO, get_modprs, NULL);
 static DEVICE_ATTR(qsfp_lpmode, S_IRUGO | S_IWUSR, get_lpmode, set_lpmode);
 static DEVICE_ATTR(qsfp_reset,  S_IRUGO | S_IWUSR, get_reset, set_reset);
@@ -1204,7 +1233,7 @@ static int __init cpld_probe(struct platform_device *pdev)
     }
 
     for (i = 0; i < CPLD_DEVICE_NUM; i++) {
-        pdata[i].client = i2c_new_dummy(parent, pdata[i].reg_addr);
+        pdata[i].client = i2c_new_dummy_device(parent, pdata[i].reg_addr);
         if (!pdata[i].client) {
             printk(KERN_WARNING "Fail to create dummy i2c client for addr %d\n", pdata[i].reg_addr);
             goto error;
@@ -1274,7 +1303,6 @@ static int __init dell_s6000_platform_init(void)
     bool gpio_allocated = false;
 
     printk("dell_s6000_platform module initialization\n");
-
     ret = gpio_request(GPIO_I2C_MUX_PIN, "gpio10");
     if(ret < 0) {
         printk(KERN_WARNING "Failed to request gpio 10");
@@ -1294,6 +1322,7 @@ static int __init dell_s6000_platform_init(void)
         goto error_gpio_init;
     }
 
+    gpiod_add_lookup_table(&dell_gpio_desc);
     ret = platform_driver_register(&cpld_driver);
     if (ret) {
         printk(KERN_WARNING "Fail to register cpld driver\n");
@@ -1361,7 +1390,7 @@ error_gpio_init:
 static void __exit dell_s6000_platform_exit(void)
 {
     int i;
-
+    gpiod_remove_lookup_table(&dell_gpio_desc);
     for (i = 0; i < MUX_CHANNEL_NUM; i++)
         platform_device_unregister(&s6000_qsfp_mux[i]);
     platform_device_unregister(&s6000_cpld);

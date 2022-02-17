@@ -105,8 +105,7 @@ logging.basicConfig(level=logging.INFO)
 
 if DEBUG == True:
     print(sys.argv[0])
-    print('ARGV      :', sys.argv[1:])
-
+    print('ARGV      :', sys.argv[1:])   
 
 def main():
     global DEBUG
@@ -120,11 +119,11 @@ def main():
                                                        'debug',
                                                        'force',
                                                           ])
-    if DEBUG == True:
+    if DEBUG == True:                                                           
         print(options)
         print(args)
         print(len(sys.argv))
-
+            
     for opt, arg in options:
         if opt in ('-h', '--help'):
             show_help()
@@ -149,9 +148,12 @@ def show_help():
     print(__doc__ % {'scriptName' : sys.argv[0].split("/")[-1]})
     sys.exit(0)
 
+        
+            
 def my_log(txt):
     if DEBUG == True:
-         print("[ACCTON DBG]: ",txt)
+        print("[ROY]"+txt)    
+
     return
     
 def log_os_system(cmd, show):
@@ -162,7 +164,7 @@ def log_os_system(cmd, show):
     if status:
         logging.info('Failed :'+cmd)
         if show:
-            print('Failed :'+cmd)
+            print(('Failed :'+cmd))
     return  status, output
             
 def driver_check():
@@ -329,7 +331,7 @@ def do_install():
     else:
         print(PROJECT_NAME.upper()+" drivers detected....")                      
     if not device_exist():
-        print("No device, installing....")
+        print("No device, installing....")     
         status = device_install() 
         if status:
             if FORCE == 0:        
@@ -341,9 +343,9 @@ def do_install():
 def do_uninstall():
     print("Checking system....")
     if not device_exist():
-        print(PROJECT_NAME.upper() +" has no device installed....")
+        print(PROJECT_NAME.upper() +" has no device installed....")         
     else:
-        print ("Removing device....")
+        print("Removing device....")     
         status = device_uninstall() 
         if status:
             if FORCE == 0:            
@@ -359,7 +361,6 @@ def do_uninstall():
                 return  status                          
                     
     return       
-
 
 def device_exist():
     ret1, log = log_os_system("ls "+i2c_prefix+"*0076", 0)

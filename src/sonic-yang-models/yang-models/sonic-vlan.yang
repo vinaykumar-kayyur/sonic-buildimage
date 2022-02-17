@@ -9,14 +9,16 @@ module sonic-vlan {
 		prefix inet;
 	}
 
+	import ietf-yang-types {
+		prefix yang;
+	}
+
 	import sonic-types {
 		prefix stypes;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-extension {
 		prefix ext;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-port {
@@ -79,6 +81,25 @@ module sonic-vlan {
 						}
 					}
                                         default "0";
+				}
+				leaf mpls {
+					description "Enable/disable MPLS routing for the vlan interface";
+					type enumeration {
+						enum enable;
+						enum disable;
+					}
+				}
+
+				leaf grat_arp {
+					type string {
+						pattern "enabled|disabled";
+					}
+				}
+
+				leaf proxy_arp {
+					type string {
+						pattern "enabled|disabled";
+					}
 				}
 			}
 			/* end of VLAN_INTERFACE_LIST */
@@ -150,6 +171,10 @@ module sonic-vlan {
 					}
 				}
 
+				leaf alias {
+					type string;
+				}
+
 				leaf description {
 					type string {
 						length 1..255;
@@ -157,7 +182,13 @@ module sonic-vlan {
 				}
 
 				leaf-list dhcp_servers {
+					description "Configure the dhcp v4 servers";
 					type inet:ip-address;
+				}
+
+				leaf-list dhcpv6_servers {
+					description "Configure the dhcp v6 servers";
+					type inet:ipv6-address;
 				}
 
 				leaf mtu {
@@ -168,6 +199,10 @@ module sonic-vlan {
 
 				leaf admin_status {
 					type stypes:admin_status;
+				}
+
+				leaf mac {
+					type yang:mac-address;
 				}
 			}
 			/* end of VLAN_LIST */
