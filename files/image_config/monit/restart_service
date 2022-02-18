@@ -18,147 +18,78 @@ check program container_memory_<container_name> with path "/usr/bin/memory_check
 """
 
 import argparse
-import os
 import sys
 import syslog
 import subprocess
 
 
-CGROUP_DOCKER_MEMORY_DIR = "/sys/fs/cgroup/memory/docker/"
-
-
 def get_command_result(command):
-    """Executes command and return command's stdout.
+    """Executes command and return the exit code, stdout and stderr.
 
     Args:
         command: A string contains the command to be executed.
 
     Returns:
-        A string contains the command's stdout.
+        An integer contains the exit code.
+        A string contains the output of stdout.
+        A string contains the output of stderr.
     """
     command_stdout = ""
+    command_stderr = ""
 
     try:
         proc_instance = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          shell=True, universal_newlines=True)
         command_stdout, command_stderr = proc_instance.communicate()
         if proc_instance.returncode != 0:
-            syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to execute the command '{}'. Return code: '{}'"
-                          .format(command, proc_instance.returncode))
-            sys.exit(1)
+            return 1, command_stdout.strip(), command_stderr.strip()
     except (OSError, ValueError) as err:
-        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to execute the command '{}'. Error: '{}'"
-                      .format(command, err))
-        sys.exit(2)
+        return 2, command_stdout.strip(), err
 
-    return command_stdout.strip()
+    return 0, command_stdout.strip(), command_stderr.strip()
 
 
 def reset_failed_flag(service_name):
-    """Reset the systemd failed status of a service.
+    """Reset the failed status of a service.
 
     Args:
-        service_name: A string indicates name of the service.
+        service_name: Name of the service.
 
     Returns:
         None
     """
     reset_failed_command = "sudo systemctl reset-failed {}.service".format(service_name)
 
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Resetting failed status of service '{}' ..."
+    syslog.syslog(syslog.LOG_INFO, "Resetting failed status of service '{}' ..."
                   .format(service_name))
 
-    command_stdout = get_command_result(reset_failed_command)
-
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Succeeded in resetting failed status of service '{}.service'."
-                  .format(service_name))
-
-
-def get_container_id(service_name):
-    """Gets full container ID of the specified service.
-
-    Args:
-        service_name: A string indicates the name of specified container.
-
-    Returns:
-        container_id: A string indicates the full ID of specified container.
-    """
-    container_id = ""
-
-    get_container_info_cmd = "docker ps --no-trunc"
-    command_stdout = get_command_result(get_container_info_cmd)
-
-    for line in command_stdout.splitlines():
-        if service_name in line:
-            container_id = line.split()[0].strip()
-            break
-
-    if not container_id:
-        syslog.syslog(syslog.LOG_ERR, "[restart_service] Failed to get contianer ID of '{}'! Exiting ..."
+    exit_code, command_stdout, command_stderr = get_command_result(reset_failed_command)
+    if exit_code == 0:
+        syslog.syslog(syslog.LOG_INFO, "Succeeded to reset failed status of service '{}.service'."
                       .format(service_name))
-        sys.exit(3)
-
-    return container_id
-
-
-def get_root_process_id(container_id):
-    """Gets root process id of a container by retrieving the first field of file
-    '/sys/fs/cgroup/memory/docker/<container_id>/cgroup.procs'.
-
-    Args:
-        container_id: A string indicates full ID of specified container.
-
-    Returns:
-        root_process_id: A string indicates root process id of specified container.
-    """
-    root_process_id = ""
-
-    docker_process_file_path = CGROUP_DOCKER_MEMORY_DIR + container_id + "/cgroup.procs"
-    if not os.path.exists(docker_process_file_path):
-        syslog.syslog(syslog.LOG_ERR, "[restart_service] cgroup process file path '{}' does not exist on device! Exiting ..."
-                      .format(docker_process_file_path))
-        sys.exit(4)
-
-    get_process_list_cmd = "sudo cat {}".format(docker_process_file_path)
-    command_stdout = get_command_result(get_process_list_cmd)
-
-    process_list = command_stdout.splitlines()
-    if process_list:
-        root_process_id = process_list[0].strip()
-
-    if not root_process_id:
-        syslog.syslog(syslog.LOG_ERR, "[restat_service] Failed to get root process id of container '{}'! Exiting ..."
-                      .format(container_id))
-        sys.exit(5)
-
-    return root_process_id
+    else:
+        syslog.syslog(syslog.LOG_ERR, "Failed to reset failed status of service '{}'. Error: {}"
+                      .format(service_name, command_stderr))
 
 
 def restart_service(service_name):
-    """Resets the failed status of service and terminates root process of container to do restart.
+    """Reset the failed status of a service and then restart it.
 
     Args:
-        service_name: A string indicates the name of specified service.
+        service_name: Name of specified service.
 
     Returns:
         None.
     """
-    container_id = get_container_id(service_name)
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Container ID of '{}' is: '{}'."
-                  .format(service_name, container_id))
-
-    root_process_id = get_root_process_id(container_id)
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Root process id of container '{}' is: '{}'"
-                  .format(service_name, root_process_id))
+    restart_command = "sudo systemctl restart {}.service".format(service_name)
 
     reset_failed_flag(service_name)
 
-    kill_root_process_cmd = "sudo kill -SIGKILL {}".format(root_process_id)
-    command_stdout = get_command_result(kill_root_process_cmd)
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Root process with PID '{}' in container '{}' was terminated!"
-                  .format(root_process_id, service_name))
-
-    syslog.syslog(syslog.LOG_INFO, "[restart_service] Service '{}' is being restarted ...".format(service_name))
+    syslog.syslog(syslog.LOG_INFO, "Restarting service '{}' ...".format(service_name))
+    exit_code, command_stdout, command_stderr = get_command_result(restart_command)
+    if exit_code != 0:
+        syslog.syslog(syslog.LOG_ERR, "Failed to restart the service '{}'. Error: {}"
+                      .format(service_name, command_stderr))
 
 
 def main():
