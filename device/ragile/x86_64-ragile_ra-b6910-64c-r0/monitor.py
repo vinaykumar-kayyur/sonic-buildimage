@@ -5,6 +5,7 @@
 #   * PSU
 #
 import os
+import commands
 import xml.etree.ElementTree as ET
 import glob
 
