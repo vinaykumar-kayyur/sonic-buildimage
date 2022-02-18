@@ -23,7 +23,8 @@ class Eeprom(PddfEeprom):
         if self.eeprom_path is None:
             return
 
-        super(PddfEeprom, self).__init__(self.eeprom_path, 0, '', True)
+        #super(PddfEeprom, self).__init__(self.eeprom_path, 0, '', True)
+        super().__init__(self.eeprom_path, 0, '', True)
         self.eeprom_tlv_dict = dict()
         try:
             self.eeprom_data = self.read_eeprom()
@@ -49,7 +50,7 @@ class Eeprom(PddfEeprom):
                 code = "0x%02X" % ((tlv[0]))
 
                 if (tlv[0]) == self._TLV_CODE_VENDOR_EXT:
-                    name = "Vendor Extension"
+                    name = "Vendor Extension" #lgtm [py/multiple-definition]
                     value = ""
                     if self._TLV_DISPLAY_VENDOR_EXT:
                        for c in tlv[2:2 + tlv[1]]:

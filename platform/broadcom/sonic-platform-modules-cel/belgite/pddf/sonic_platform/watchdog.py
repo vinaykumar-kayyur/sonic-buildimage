@@ -5,13 +5,9 @@
 # Watchdog contains an implementation of SONiC Platform Base Watchdog API
 #
 #############################################################################
-import ctypes
 import fcntl
 import os
-import subprocess
-import time
 import array
-import syslog
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase

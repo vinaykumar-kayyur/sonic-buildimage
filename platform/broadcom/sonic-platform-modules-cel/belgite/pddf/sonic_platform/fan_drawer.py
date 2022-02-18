@@ -34,7 +34,7 @@ class PddfFanDrawer(FanDrawerBase):
         self.fantray_index = tray_idx+1
         for j in range(self.platform['num_fans_pertray']):
             # Fan index is 0-based for the init call
-            self._fan_list.append(Fan(tray_idx, j, self.pddf_obj, self.plugin_data))
+            self._fan_list.append(Fan(tray_idx, j, self.pddf_obj, self.plugin_data)) #lgtm [py/call/wrong-number-class-arguments]
 
     def get_name(self):
         """

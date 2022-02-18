@@ -25,7 +25,7 @@ class Chassis(PddfChassis):
         with open(FAN_DIRECTION_FILE_PATH, "w+") as f:
             f.write(vendor_ext)
         for i in range(self.platform_inventory['num_fantrays']):
-            fandrawer = FanDrawer(i, self.pddf_obj, self.plugin_data)
+            fandrawer = FanDrawer(i, self.pddf_obj, self.plugin_data) #lgtm [py/call/wrong-number-class-arguments]
             self._fan_drawer_list.append(fandrawer)
             self._fan_list.extend(fandrawer._fan_list)
 

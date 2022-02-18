@@ -28,6 +28,7 @@ try:
     import logging.config
     import time  # this is only being used as part of the example
     import signal
+    import math
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
@@ -121,21 +122,21 @@ class cel_belgite_monitor(object):
 
         # U4 U7
         if not update_temp_sensor:  # temperature down
-            b = 1400/13
+            b = math.trunc(1400/13)
             if sensor_temp <= 32000:
                 sensor_temp_speed = 40
             elif sensor_temp >= 45000:
                 sensor_temp_speed = 100
             else:
-                sensor_temp_speed = int((60 / 13) * int(sensor_temp / 1000) - b)
+                sensor_temp_speed = int(math.trunc(60 / 13) * math.trunc(sensor_temp / 1000) - b)
         else:   # temperature up
-            b = 1580 / 13
+            b = math.trunc(1580 / 13)
             if sensor_temp <= 35000:
                 sensor_temp_speed = 40
             elif sensor_temp >= 48000:
                 sensor_temp_speed = 100
             else:
-                sensor_temp_speed = int((60/13) * int(sensor_temp/1000) - b)
+                sensor_temp_speed = int(math.trunc(60/13) * math.trunc(sensor_temp/1000) - b)
 
         # CPU
         if not update_temp_cpu:  # temperature down
