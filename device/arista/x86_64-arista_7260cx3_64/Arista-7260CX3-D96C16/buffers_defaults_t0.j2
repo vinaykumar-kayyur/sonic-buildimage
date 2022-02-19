@@ -6,12 +6,19 @@
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
     {%- endfor %}
-    {%- for port_idx in range(20,64) %}
+    {%- for port_idx in range(12,20) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+    {%- endfor %}
+    {%- for port_idx in range(20,44) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
     {%- endfor %}
-    {%- for port_idx in range(12,20) %}
+    {%- for port_idx in range(44,52) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+    {%- endfor %}
+    {%- for port_idx in range(52,64) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
     {%- endfor %}
 {%- endmacro %}
 
