@@ -467,6 +467,12 @@
             {
                 "name": "QSFP+ or later"
             }
+            {
+                "name": "QSFP+ or later"
+            }
+            {
+                "name": "QSFP+ or later"
+            }
         ]
     },
     "interfaces": {}
