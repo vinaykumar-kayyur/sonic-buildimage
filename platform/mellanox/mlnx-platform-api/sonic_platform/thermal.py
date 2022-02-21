@@ -519,6 +519,15 @@ class Thermal(ThermalBase):
         else:
             cls.expect_cooling_state = None
 
+    @classmethod
+    def start_cpu_thermal_control(cls, chassis):
+        platform_name = DeviceDataManager.get_platform_name()
+        if platform_name != 'x86_64-nvidia_sn4800-r0':
+            return
+        
+        
+
+
 
 class RemovableThermal(Thermal):
     def __init__(self, name, temp_file, high_th_file, high_crit_th_file, position, presence_cb):
