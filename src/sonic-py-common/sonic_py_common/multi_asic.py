@@ -43,7 +43,7 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
       handle to the config_db for a namespace
     """
-    config_db = swsscommon.ConfigDBConnector(namespace=namespace)
+    config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
     config_db.connect()
     return config_db
 
@@ -65,7 +65,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
         handle to all the dbs for a namespaces
     """
-    db = swsscommon.SonicV2Connector(namespace=namespace)
+    db = swsscommon.SonicV2Connector(use_unix_socket_path=True, namespace=namespace)
     db_list = list(db.get_db_list())
     if not is_supervisor():
         try:
