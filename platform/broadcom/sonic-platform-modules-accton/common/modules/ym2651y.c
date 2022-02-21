@@ -656,6 +656,7 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
 
         /* Read mfr_model */
+        command = 0x9a;
         length  = 1;
         /* Read first byte to determine the length of data */
         status = ym2651y_read_block(client, command, &buf, length);
