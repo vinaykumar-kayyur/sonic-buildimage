@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ########################################################################
 # BAREFOOT MONTARA
 #
@@ -28,7 +26,7 @@ def get_bios_version():
 def get_bmc_version():
     ver="N/A"
     def bmc_get(client):
-        return client.pltfm_mgr.pltfm_mgr_chss_mgmt_bmc_get()
+        return client.pltfm_mgr.pltfm_mgr_chss_mgmt_bmc_ver_get()
     try:    
         ver = thrift_try(bmc_get)
     except Exception:
@@ -39,8 +37,6 @@ def get_platform():
     import os
     stream = os.popen('show version  | grep Platform | awk \'{print $2}\'')
     return stream.read()
-    #return subprocess.check_output(['show', 'version', '|', 'grep', 'Platform', '|', 'awk', '\'{print $2}\'']).strip()
-
 
 class BFPlatformComponentsParser(object):
     """
@@ -65,18 +61,6 @@ class BFPlatformComponentsParser(object):
         self.__module_component_map = OrderedDict()
         self.__component_list = []
         self.__bf_model = bf_model
-    """
-    def __get_platform_components_path(self, root_path):
-        if "{}".format(root_path).startswith(FWUPDATE_FWPACKAGE_DIR):
-            self.PLATFORM_COMPONENTS_FILE_PATH = os.path.join(root_path, PLATFORM_COMPONENTS_FILE)
-        else:
-            self.PLATFORM_COMPONENTS_FILE_PATH = self.PLATFORM_COMPONENTS_PATH_TEMPLATE.format(
-                root_path,
-                device_info.get_platform(),
-                PLATFORM_COMPONENTS_FILE
-            )
-        return self.PLATFORM_COMPONENTS_FILE_PATH
-    """
 
     def __is_str(self, obj):
         return isinstance(obj, str)
@@ -237,9 +221,8 @@ class BFPlatformComponentsParser(object):
 class Components(ComponentBase):
     """BFN Montara Platform-specific Component class"""
 
-    #bf_model = get_model()
     bpcp = BFPlatformComponentsParser(is_modular_chassis=False,  bf_model="Wedge100BF-32X-O-AC-F-BF")
-    #bf_platform = get_platform()
+    #bf_platform = device_info.get_platform()
     bf_platform = "x86_64-accton_wedge100bf_32x-r0"
     bf_platform_json =  "/usr/share/sonic/device/{}/platform_components.json".format(bf_platform.strip())
 
@@ -252,10 +235,10 @@ class Components(ComponentBase):
         except IndexError as e:
             raise IndexError(str(e) + " - Error: No components found in plaform_components.json")
         
-        if(self.name=="BMC"):
+        if (self.name=="BMC"):
             self.version = get_bmc_version()
             self.description = "Chassis BMC"
-        elif(self.name=="BIOS"):
+        elif (self.name=="BIOS"):
             self.version = get_bios_version()
             self.description = "Chassis BIOS"
         else:
@@ -299,7 +282,7 @@ class Components(ComponentBase):
 
     def get_presence(self):
         """
-        Retrieves the presence of the FAN
+        Retrieves the presence of the component
         Returns:
             bool: True if FAN is present, False if not
         """
@@ -350,7 +333,7 @@ class Components(ComponentBase):
         return False
     
     def get_available_firmware_version(self, image_path):
-            return 'N/A'
+        return 'N/A'
 
     def get_firmware_update_notification(self, image_path):
         """
@@ -364,7 +347,7 @@ class Components(ComponentBase):
             A string containing the component firmware update notification if required.
             By default 'None' value will be used, which indicates that no actions are required
         """
-        return 'N/A'
+        return 'None'
 
     def install_firmware(self, image_path):
         """
@@ -390,5 +373,6 @@ class Components(ComponentBase):
         Raises:
             RuntimeError: update failed
         """
-        return None
+        firmware_update_result = 'update failed'
+        raise RuntimeError(firmware_update_result)
 

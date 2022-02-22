@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 
-
 try:
     import time
     import syslog
@@ -301,9 +300,6 @@ class Chassis(ChassisBase):
         """
         return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
-    def get_all_components(self):
-        return self._component_list
-
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
@@ -348,15 +344,4 @@ class Chassis(ChassisBase):
             specified.
         """
         return self.system_led
-
-    def get_num_components(self):
-        """
-        Retrieves the number of components available on this chassis
-
-        Returns:
-            An integer, the number of components available on this chassis
-        """
-        #self.initialize_components()
-        return len(self._component_list)
-        #return 1
 
