@@ -53,6 +53,7 @@ class BBRMgr(Manager):
                 and self.constants['bgp']['bbr']['enabled']:
             self.bbr_enabled_pgs = self.__read_pgs()
             if self.bbr_enabled_pgs:
+                msg = ""
                 self.enabled = True
                 if 'default_state' in self.constants['bgp']['bbr'] \
                         and self.constants['bgp']['bbr']['default_state'] == 'enabled':
@@ -60,7 +61,11 @@ class BBRMgr(Manager):
                 else:
                     default_status = "disabled"
                 self.directory.put(self.db_name, self.table_name, 'status', default_status)
-                log_info("BBRMgr::Initialized and enabled. Default state: '%s'" % default_status)
+                if 'storage_backend_state' in self.constants['bgp']['bbr']:
+                    storage_backend_status = self.constants['bgp']['bbr']['storage_backend_state']
+                    self.directory.put(self.db_name, self.table_name, 'storage_backend_status', storage_backend_status)
+                    msg = ". Storage backend status: '%s'" % storage_backend_status
+                log_info("BBRMgr::Initialized and enabled. Default state: '%s'%s" % (default_status, msg))
             else:
                 log_info("BBRMgr::Disabled: no BBR enabled peers")
         else:
