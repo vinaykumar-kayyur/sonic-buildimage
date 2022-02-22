@@ -8,7 +8,6 @@
 
 try:
     import sys
-    import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from .event import SfpEvent
 except ImportError as e:
