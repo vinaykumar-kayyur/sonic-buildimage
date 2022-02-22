@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+
+
 try:
     import time
     import syslog
@@ -16,8 +18,11 @@ try:
 
     from sonic_py_common import device_info
 
+
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+NUM_COMPONENT = 2
 
 class Chassis(ChassisBase):
     """
@@ -44,6 +49,7 @@ class Chassis(ChassisBase):
         self.ready = False
         self.phy_port_cur_state = {}
         self.qsfp_interval = self.QSFP_CHECK_INTERVAL
+        self.__initialize_components()
 
     @property
     def _eeprom(self):
@@ -127,6 +133,12 @@ class Chassis(ChassisBase):
                 self.QSFP_PORT_END -= 1
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
+
+    def __initialize_components(self):
+        from sonic_platform.component import Components
+        for index in range(0, NUM_COMPONENT):
+            component = Components(index)
+            self._component_list.append(component)
 
     def get_name(self):
         """
@@ -289,6 +301,9 @@ class Chassis(ChassisBase):
         """
         return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
+    def get_all_components(self):
+        return self._component_list
+
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
@@ -333,3 +348,15 @@ class Chassis(ChassisBase):
             specified.
         """
         return self.system_led
+
+    def get_num_components(self):
+        """
+        Retrieves the number of components available on this chassis
+
+        Returns:
+            An integer, the number of components available on this chassis
+        """
+        #self.initialize_components()
+        return len(self._component_list)
+        #return 1
+
