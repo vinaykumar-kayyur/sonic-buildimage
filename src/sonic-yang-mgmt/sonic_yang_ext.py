@@ -49,7 +49,7 @@ class SonicYangExtMixin:
             self.yangFiles = [f.split('/')[-1] for f in self.yangFiles]
             self.yangFiles = [f.split('.')[0] for f in self.yangFiles]
             self.sysLog(syslog.LOG_DEBUG,'Loaded below Yang Models')
-            self.sysLog(syslog.LOG_DEBUG,self.yangFiles)
+            self.sysLog(syslog.LOG_DEBUG,str(self.yangFiles))
 
             # load json for each yang model
             self._loadJsonYangModel()
@@ -219,10 +219,7 @@ class SonicYangExtMixin:
                 del self.jIn[table]
 
         if len(self.tablesWithOutYang):
-            print("Note: Below table(s) have no YANG models:")
-            for table in self.tablesWithOutYang.keys():
-                print(str(table), end=", ")
-            print()
+            self.sysLog(msg=f"Note: Below table(s) have no YANG models: {', '.join(self.tablesWithOutYang)}", doPrint=True)
 
         if croppedFile:
             with open(croppedFile, 'w') as f:
@@ -333,11 +330,11 @@ class SonicYangExtMixin:
                 # Assume ':'  means reference to another module
                 if ':' in uses['@name']:
                     prefix = uses['@name'].split(':')[0].strip()
-                    uses_module = self._findYangModuleFromPrefix(prefix, table_module)
+                    uses_module_name = self._findYangModuleFromPrefix(prefix, table_module)
                 else:
-                    uses_module = table_module
+                    uses_module_name = table_module['@name']
                 grouping = uses['@name'].split(':')[-1].strip()
-                leafs = self.preProcessedYang['grouping'][uses_module][grouping]
+                leafs = self.preProcessedYang['grouping'][uses_module_name][grouping]
                 self._fillLeafDict(leafs, leafDict)
         except Exception as e:
             self.sysLog(msg="_fillLeafDictUses failed:{}".format(str(e)), \
