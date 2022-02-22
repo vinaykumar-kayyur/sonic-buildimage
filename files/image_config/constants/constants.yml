@@ -32,6 +32,7 @@ constants:
     bbr:
       enabled: true
       default_state: "disabled"
+      storage_backend_state: "disabled"
     peers:
       general: # peer_type
         db_table: "BGP_NEIGHBOR"
