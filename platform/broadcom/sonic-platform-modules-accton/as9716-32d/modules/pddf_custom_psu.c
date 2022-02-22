@@ -22,13 +22,9 @@ extern PSU_SYSFS_ATTR_DATA access_psu_serial_num;
 #define MAX_SERIAL_NUMBER       19
 
 enum psu_type {
-    PSU_TYPE_AC_110V,
-    PSU_TYPE_DC_48V,
-    PSU_TYPE_DC_12V,
     PSU_TYPE_AC_ACBEL_FSF019,
     PSU_TYPE_AC_ACBEL_FSH082,
     PSU_TYPE_YESM1300
-    
 };
 
 struct model_name_info {
@@ -48,9 +44,6 @@ struct serial_number_info {
 };
 
 struct model_name_info models[] = {
-{PSU_TYPE_AC_110V, 0x20, 8, 8,  "YM-2651Y"},
-{PSU_TYPE_DC_48V,  0x20, 8, 8,  "YM-2651V"},
-{PSU_TYPE_DC_12V,  0x00, 11, 11, "PSU-12V-750"},
 {PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"},
 {PSU_TYPE_AC_ACBEL_FSH082, 0x20, 10, 7, "FSH082-"},
 {PSU_TYPE_YESM1300, 0x20, 11, 8, "YESM1300"},
@@ -58,9 +51,6 @@ struct model_name_info models[] = {
 };
 
 struct serial_number_info serials[] = {
-{PSU_TYPE_AC_110V, 0x2e, 18, 18,  "YM-2651Y"},
-{PSU_TYPE_DC_48V,  0x2e, 18, 18,  "YM-2651V"},
-{PSU_TYPE_DC_12V,  0x2e, 18, 18,  "PSU-12V-750"},
 {PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF019-"},
 {PSU_TYPE_AC_ACBEL_FSH082, 0x35, 18, 18, "FSH082-"},
 {PSU_TYPE_YESM1300,   0x35, 20, 19, "YESM1300"},
