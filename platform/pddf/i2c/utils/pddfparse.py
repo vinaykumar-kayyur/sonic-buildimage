@@ -360,6 +360,7 @@ class PddfParse():
         if ret != 0:
             return create_ret.append(ret)
         cmd = "echo %s > /sys/kernel/pddf/devices/mux/virt_bus" % (dev['i2c']['dev_attr']['virt_bus'])
+        ret = self.runcmd(cmd)
         if ret != 0:
             return create_ret.append(ret)
         cmd = "echo 'add' > /sys/kernel/pddf/devices/mux/dev_ops"
