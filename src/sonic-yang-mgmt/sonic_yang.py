@@ -348,6 +348,9 @@ class SonicYang(SonicYangExtMixin):
     def _find_schema_node(self, schema_xpath):
         try:
             schema_set = self.ctx.find_path(schema_xpath)
+            if schema_set is None:
+                return None
+
             for schema_node in schema_set.schema():
                 if (schema_xpath == schema_node.path()):
                     return schema_node
@@ -497,21 +500,45 @@ class SonicYang(SonicYangExtMixin):
               - Exception if schema node not found
     """
     def _find_schema_dependencies(self, schema_xpath):
-        ref_list = []
-        try:
-            schema_node = self._find_schema_node(schema_xpath)
-        except Exception as e:
-            self.sysLog(msg="Cound not find the schema node from xpath: " + str(schema_xpath), debug=syslog.LOG_ERR, doPrint=True)
-            self.fail(e)
-            return ref_list
+        backlinks = []
 
-        schema_node = ly.Schema_Node_Leaf(schema_node)
-        backlinks = schema_node.backlinks()
-        if backlinks.number() > 0:
-            for link in backlinks.schema():
-                self.sysLog(msg="backlink schema: {}".format(link.path()), doPrint=True)
-                ref_list.append(link.path())
-        return ref_list
+        modules = self.ctx.get_module_iter()
+        for module in modules:
+            instantiables = module.data_instantiables(0)
+            if len(instantiables) < 1:
+                continue
+
+            schema = instantiables[0]
+            # find all backlinks for this schema node
+            schema_list = schema.tree_dfs()
+            for elem in schema_list:
+                if ly.LYS_LEAF == elem.nodetype() or ly.LYS_LEAFLIST == elem.nodetype():
+                    subtype = elem.subtype()
+                    if subtype is None:
+                        continue
+
+                    base_type = subtype.type().base()
+                    #union of leafref
+                    if base_type == ly.LY_TYPE_UNION:
+                        count = subtype.type().info().uni().count()
+                        types = subtype.type().info().uni().types()
+                        for i in range(count):
+                            dertype = types[i]
+                            if dertype.base() == ly.LY_TYPE_LEAFREF:
+                                leafref_path = dertype.info().lref().path()
+
+                                if leafref_path == schema_xpath:
+                                   backlinks.append(elem.path())
+                        continue
+
+                    if base_type != ly.LY_TYPE_LEAFREF:
+                        continue
+
+                    leafref_path = self._get_leafref_path(elem.path())
+
+                    if leafref_path == schema_xpath:
+                        backlinks.append(elem.path())
+        return backlinks
 
     """
     find_data_dependencies():   find the data dependencies from data xpath
@@ -530,13 +557,13 @@ class SonicYang(SonicYangExtMixin):
 
         try:
             value = str(self._find_data_node_value(data_xpath))
-
             schema_node = ly.Schema_Node_Leaf(data_node.schema())
-            backlinks = schema_node.backlinks()
-            if backlinks is not None and backlinks.number() > 0:
-                for link in backlinks.schema():
-                     node_set = node.find_path(link.path())
-                     for data_set in node_set.data():
+            #backlinks of this scheme node
+            backlinks = self._find_schema_dependencies(schema_node.path())
+            #data dependencies for this data node
+            for link in backlinks:
+                    node_set = node.find_path(link)
+                    for data_set in node_set.data():
                           data_set.schema()
                           casted = data_set.subtype()
                           if value == casted.value_str():
@@ -607,7 +634,8 @@ class SonicYang(SonicYangExtMixin):
             return None
 
         if (schema_node is not None):
-           return schema_node.subtype().type().base()
+            if schema_node.subtype() != None:
+                return schema_node.subtype().type().base()
 
         return ly.LY_TYPE_UNKNOWN
 
@@ -617,15 +645,15 @@ class SonicYang(SonicYangExtMixin):
     output:   type of the node this leafref references to
     """
     def _get_leafref_type(self, data_xpath):
-        data_node = self._find_data_node(data_xpath)
-        if (data_node is not None):
-            subtype = data_node.subtype()
-            if (subtype is not None):
-                if data_node.schema().subtype().type().base() != ly.LY_TYPE_LEAFREF:
-                    self.sysLog(msg="get_leafref_type() node type for data xpath: {} is not LEAFREF".format(data_xpath), debug=syslog.LOG_ERR, doPrint=True)
-                    return ly.LY_TYPE_UNKNOWN
-                else:
-                    return subtype.value_type()
+        #get leafref's reference schema path
+        try:
+            data_node = self._find_data_node(data_xpath)
+        except Exception as e:
+            print("_get_leafref_type(): Failed to find data node from xpath: {}".format(data_xapth))
+            return ly.LY_TYPE_UNKNOWN
+
+        if data_node != None:
+            return self._get_leafref_type_schema(data_node.schema().path())
 
         return ly.LY_TYPE_UNKNOWN
 
@@ -639,6 +667,15 @@ class SonicYang(SonicYangExtMixin):
         if (schema_node is not None):
             subtype = schema_node.subtype()
             if (subtype is not None):
+                base_type = subtype.type().base()
+                if base_type == ly.LY_TYPE_UNION:
+                        count = subtype.type().info().uni().count()
+                        types = subtype.type().info().uni().types()
+                        for i in range(count):
+                            dertype = types[i]
+                            if dertype.base() == ly.LY_TYPE_LEAFREF:
+                                return dertype.info().lref().path()
+
                 if subtype.type().base() != ly.LY_TYPE_LEAFREF:
                     return None
                 else:
@@ -656,10 +693,22 @@ class SonicYang(SonicYangExtMixin):
         if (schema_node is not None):
             subtype = schema_node.subtype()
             if (subtype is not None):
+                base_type = subtype.type().base()
+                #union of leafref
+                if base_type == ly.LY_TYPE_UNION:
+                        count = subtype.type().info().uni().count()
+                        types = subtype.type().info().uni().types()
+                        for i in range(count):
+                            dertype = types[i]
+                            if dertype.base() == ly.LY_TYPE_LEAFREF:
+                                target = dertype.info().lref().target()
+                                target_path = target.path()
+                                target_type = self._get_data_type(target_path)
+                                return target_type
+
                 if subtype.type().base() != ly.LY_TYPE_LEAFREF:
                     return None
                 else:
-                    subtype.type().info().lref().path()
                     target = subtype.type().info().lref().target()
                     target_path = target.path()
                     target_type = self._get_data_type(target_path)

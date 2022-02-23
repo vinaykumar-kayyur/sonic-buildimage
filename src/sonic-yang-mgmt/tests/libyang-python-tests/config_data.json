@@ -97,7 +97,12 @@
 					"vlanid": 111,
 					"port": "Ethernet6",
 					"tagging_mode": "tagged"
-				}
+				},
+                                {
+                                        "vlanid": 111,
+                                        "port": "Ethernet8",
+                                        "tagging_mode": "tagged"
+                                }
 			]
 		}
 	},

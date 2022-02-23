@@ -1,5 +1,7 @@
 module test-vlan {
 
+        yang-version 1.1;
+
 	namespace "http://github.com/Azure/vlan";
 	prefix vlan;
 
@@ -20,6 +22,11 @@ module test-vlan {
 		prefix port;
 		revision-date 2019-07-01;
 	}
+
+        import test-portchannel {
+                prefix lag;
+                revision-date 2019-07-01;
+        }
 
 	revision 2019-07-01 {
 		description "First Revision";
@@ -125,9 +132,14 @@ module test-vlan {
 				leaf port {
 					/* key elements are mandatory by default */
 					mandatory true;
-					type leafref {
-						path /port:port/port:PORT/port:PORT_LIST/port:port_name;
-					}
+                                        type union {
+                                                type leafref {
+                                                        path /port:port/port:PORT/port:PORT_LIST/port:port_name;
+                                                }
+                                                type leafref {
+                                                        path /lag:portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name;
+                                                }
+                                        }
 				}
 
 				leaf tagging_mode {
