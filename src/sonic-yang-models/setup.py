@@ -81,6 +81,7 @@ setup(
                          './yang-models/sonic-auto_techsupport.yang',
                          './yang-models/sonic-bgp-common.yang',
                          './yang-models/sonic-bgp-global.yang',
+                         './yang-models/sonic-bgp-monitor.yang',
                          './yang-models/sonic-bgp-neighbor.yang',
                          './yang-models/sonic-bgp-peergroup.yang',
                          './yang-models/sonic-breakout_cfg.yang',
@@ -109,6 +110,7 @@ setup(
                          './yang-models/sonic-nat.yang',
                          './yang-models/sonic-pbh.yang',
                          './yang-models/sonic-port.yang',
+                         './yang-models/sonic-policer.yang',
                          './yang-models/sonic-portchannel.yang',
                          './yang-models/sonic-pfcwd.yang',
                          './yang-models/sonic-route-common.yang',
@@ -122,7 +124,11 @@ setup(
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',
                          './yang-models/sonic-vrf.yang',
+
+                         './yang-models/sonic-mclag.yang',
+
                          './yang-models/sonic-vlan-sub-interface.yang',
+
                          './yang-models/sonic-warm-restart.yang',
                          './yang-models/sonic-lldp.yang',
                          './yang-models/sonic-scheduler.yang',
@@ -141,6 +147,7 @@ setup(
         ('cvlyang-models', ['./cvlyang-models/sonic-acl.yang',
                          './cvlyang-models/sonic-bgp-common.yang',
                          './cvlyang-models/sonic-bgp-global.yang',
+                         './cvlyang-models/sonic-bgp-monitor.yang',
                          './cvlyang-models/sonic-bgp-neighbor.yang',
                          './cvlyang-models/sonic-bgp-peergroup.yang',
                          './cvlyang-models/sonic-breakout_cfg.yang',
@@ -159,6 +166,7 @@ setup(
                          './cvlyang-models/sonic-ntp.yang',
                          './cvlyang-models/sonic-nat.yang',
                          './cvlyang-models/sonic-pbh.yang',
+                         './cvlyang-models/sonic-policer.yang',
                          './cvlyang-models/sonic-port.yang',
                          './cvlyang-models/sonic-portchannel.yang',
                          './cvlyang-models/sonic-pfcwd.yang',
