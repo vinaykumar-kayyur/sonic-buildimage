@@ -43,7 +43,7 @@ def get_expected_running_containers():
     always_running_containers = set()
     
     for container_name in feature_table.keys():
-       if feature_table[container_name]["state"] not in ["disabled", "always_disabled"]:
+        if feature_table[container_name]["state"] not in ["disabled", "always_disabled"]:
             if multi_asic.is_multi_asic():
                 if feature_table[container_name]["has_global_scope"] == "True":
                     expected_running_containers.add(container_name)
