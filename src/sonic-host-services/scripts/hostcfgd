@@ -987,6 +987,9 @@ class HostConfigDaemon:
         # Initialize AAACfg
         self.hostname_cache=""
         self.aaacfg = AaaCfg()
+
+        # Initialize cache
+        self.cache = {}
         
 
     def load(self):
@@ -995,6 +998,8 @@ class HostConfigDaemon:
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         radius_global = self.config_db.get_table('RADIUS')
         radius_server = self.config_db.get_table('RADIUS_SERVER')
+        self.cache = {'AAA': aaa, 'TACPLUS': tacacs_global, 'TACPLUS_SERVER': tacacs_server,
+                        'RADIUS': radius_global, 'RADIUS_SERVER': radius_server}
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
 
         try:
@@ -1097,39 +1102,39 @@ class HostConfigDaemon:
         systemctl_cmd = "sudo systemctl is-system-running --wait --quiet"
         subprocess.call(systemctl_cmd, shell=True)
 
-    def subscribe(self, table, callback, pri):
-        try:
-            if table not in self.callbacks:
-                self.callbacks[table] = []
-                subscriber = SubscriberStateTable(self.dbconn, table, TableConsumable.DEFAULT_POP_BATCH_SIZE, pri)
-                self.selector.addSelectable(subscriber) # Add to the Selector
-                self.subscriber_map[subscriber.getFd()] = (subscriber, table) # Maintain a mapping b/w subscriber & fd
-
-            self.callbacks[table].append(callback)
-        except Exception as err:
-            syslog.syslog(syslog.LOG_ERR, "Subscribe to table {} failed with error {}".format(table, err))
-
     def register_callbacks(self):
-        self.subscribe('KDUMP', lambda table, key, op, data: self.kdump_handler(key, op, data), HOSTCFGD_MAX_PRI)
+
+        def make_callback(func):
+            if data is None:
+                op = "DEL"
+            else:
+                op = "SET"
+
+            def callback(table, key, data):
+                return func(key, op, data)
+
+            return callback
+
+        self.config_db.subscribe('KDUMP', make_callback(self.config_db.kdump_handler), init=True)
         # Handle FEATURE updates before other tables
-        self.subscribe('FEATURE', lambda table, key, op, data: self.feature_handler.handle(key, op, data), HOSTCFGD_MAX_PRI-1)
+        self.config_db.subscribe('FEATURE', make_callback(self.config_db.feature_handler.handle), init=True)
         # Handle AAA, TACACS and RADIUS related tables
-        self.subscribe('AAA', lambda table, key, op, data: self.aaa_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('TACPLUS', lambda table, key, op, data: self.tacacs_global_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('TACPLUS_SERVER', lambda table, key, op, data: self.tacacs_server_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('RADIUS', lambda table, key, op, data: self.radius_global_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('RADIUS_SERVER', lambda table, key, op, data: self.radius_server_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
+        self.config_db.subscribe('AAA', make_callback(self.config_db.aaa_handler), init=True)
+        self.config_db.subscribe('TACPLUS', make_callback(self.config_db.tacacs_global_handler), init=True)
+        self.config_db.subscribe('TACPLUS_SERVER', make_callback(self.config_db.tacacs_server_handler, init=True)
+        self.config_db.subscribe('RADIUS', make_callback(self.config_db.radius_global_handler), init=True)
+        self.config_db.subscribe('RADIUS_SERVER', make_callback(self.config_db.radius_server_handler), init=True)
         # Handle IPTables configuration
-        self.subscribe('LOOPBACK_INTERFACE', lambda table, key, op, data: self.lpbk_handler(key, op, data), HOSTCFGD_MAX_PRI-3)
+        self.config_db.subscribe('LOOPBACK_INTERFACE', make_callback(self.config_db.lpbk_handler), init=True)
         # Handle NTP & NTP_SERVER updates
-        self.subscribe('NTP', lambda table, key, op, data: self.ntp_global_handler(key, op, data), HOSTCFGD_MAX_PRI-4)
-        self.subscribe('NTP_SERVER', lambda table, key, op, data: self.ntp_server_handler(key, op, data), HOSTCFGD_MAX_PRI-4)
+        self.config_db.subscribe('NTP', make_callback(self.config_db.ntp_global_handler), init=True)
+        self.config_db.subscribe('NTP_SERVER', make_callback(self.config_db.ntp_server_handler), init=True)
         # Handle updates to src intf changes in radius
-        self.subscribe('MGMT_INTERFACE', lambda table, key, op, data: self.mgmt_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('VLAN_INTERFACE', lambda table, key, op, data: self.vlan_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('VLAN_SUB_INTERFACE', lambda table, key, op, data: self.vlan_sub_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('PORTCHANNEL_INTERFACE', lambda table, key, op, data: self.portchannel_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('INTERFACE', lambda table, key, op, data: self.phy_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
+        self.config_db.subscribe('MGMT_INTERFACE', make_callback(self.config_db.mgmt_intf_handler), init=True)
+        self.config_db.subscribe('VLAN_INTERFACE', make_callback(self.config_db.vlan_intf_handler), init=True)
+        self.config_db.subscribe('VLAN_SUB_INTERFACE', make_callback(self.config_db.vlan_sub_intf_handler), init=True)
+        self.config_db.subscribe('PORTCHANNEL_INTERFACE', make_callback(self.config_db.portchannel_intf_handler), init=True)
+        self.config_db.subscribe('INTERFACE', make_callback(self.config_db.phy_intf_handler), init=True)
         
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
@@ -1137,28 +1142,10 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO,
                       "systemctl has finished initialization -- proceeding ...")
 
-    def start(self):
-        while True:
-            state, selectable_ = self.selector.select(DEFAULT_SELECT_TIMEOUT)
-            if state == self.selector.TIMEOUT:
-                continue
-            elif state == self.selector.ERROR:
-                syslog.syslog(syslog.LOG_ERR,
-                        "error returned by select")
-                continue
+        self.config_db.listen(start=False)
 
-            fd = selectable_.getFd()
-            # Get the Corresponding subscriber & table
-            subscriber, table = self.subscriber_map.get(fd, (None, ""))
-            if not subscriber:
-                syslog.syslog(syslog.LOG_ERR,
-                        "No Subscriber object found for fd: {}, subscriber map: {}".format(fd, subscriber_map))
-                continue
-            key, op, fvs = subscriber.pop()
-            # Get the registered callback
-            cbs = self.callbacks.get(table, None)
-            for callback in cbs:
-                callback(table, key, op, dict(fvs))
+    def start(self):
+        self.config_db.process(cache=self.cache)
 
 
 def main():
