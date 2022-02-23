@@ -10,6 +10,7 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
+    from sonic_platform.thermal import Thermal
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -63,6 +64,8 @@ class Psu(PsuBase):
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
             fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
             self._fan_list.append(fan)
+
+        self._thermal_list.append(Thermal(is_psu=True, psu_index=self.index))
 
     def get_voltage(self):
         """

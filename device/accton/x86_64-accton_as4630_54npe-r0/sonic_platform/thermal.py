@@ -135,7 +135,7 @@ class Thermal(ThermalBase):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         if self.is_psu:
-            return 0
+            return 80
 
         temp_file = "temp{}_max".format(self.ss_index)
         return self.__get_temp(temp_file)
