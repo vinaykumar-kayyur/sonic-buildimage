@@ -79,15 +79,6 @@ class Module(ModuleBase):
             sfp_node = Sfp(index, 'QSFP', eeprom_path, sfp_control, index)
             self._sfp_list.append(sfp_node)
 
-        if module_index == 3:
-            sfp_port = 11
-            for index in range(64,66):
-                eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom".format(sfp_port)
-                sfp_control = ""
-                sfp_node = Sfp(index, 'SFP', eeprom_path, sfp_control, index)
-                self._sfp_list.append(sfp_node)
-                sfp_port = sfp_port + 1
-
     def _get_pmc_register(self, reg_name):
         # On successful read, returns the value read from given
         # reg_name and on failure returns 'ERR'
