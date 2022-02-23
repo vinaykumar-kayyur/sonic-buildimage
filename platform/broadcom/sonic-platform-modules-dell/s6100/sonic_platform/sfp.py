@@ -43,7 +43,7 @@ class Sfp(SfpOptoeBase):
         """
         Retrieves the presence of the sfp
         """
-        if self.index > 63:
+        if self.index > 64:
            return False
 
         presence_ctrl = self.sfp_control + 'qsfp_modprs'
@@ -73,7 +73,7 @@ class Sfp(SfpOptoeBase):
         """
         Retrieves the reset status of SFP
         """
-        if self.index > 63:
+        if self.index > 64:
            return False
 
         reset_status = None
@@ -107,7 +107,7 @@ class Sfp(SfpOptoeBase):
         """
         Retrieves the lpmode (low power mode) status of this SFP
         """
-        if self.index > 63:
+        if self.index > 64:
            return False
 
         lpmode_ctrl = self.sfp_control + 'qsfp_lpmode'
@@ -143,7 +143,7 @@ class Sfp(SfpOptoeBase):
         """
         Reset SFP and return all user module settings to their default srate.
         """
-        if self.index > 63:
+        if self.index > 64:
            return False
 
         reset_ctrl = self.sfp_control + 'qsfp_reset'
@@ -191,7 +191,7 @@ class Sfp(SfpOptoeBase):
         """
         Sets the lpmode (low power mode) of SFP
         """
-        if self.index > 63:
+        if self.index > 64:
            return False
 
         lpmode_ctrl = self.sfp_control + 'qsfp_lpmode'
