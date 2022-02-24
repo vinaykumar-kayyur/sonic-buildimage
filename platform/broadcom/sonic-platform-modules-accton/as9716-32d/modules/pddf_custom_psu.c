@@ -47,14 +47,12 @@ struct model_name_info models[] = {
 {PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"},
 {PSU_TYPE_AC_ACBEL_FSH082, 0x20, 10, 7, "FSH082-"},
 {PSU_TYPE_YESM1300, 0x20, 11, 8, "YESM1300"},
-
 };
 
 struct serial_number_info serials[] = {
 {PSU_TYPE_AC_ACBEL_FSF019, 0x2e, 16, 16, "FSF019-"},
 {PSU_TYPE_AC_ACBEL_FSH082, 0x35, 18, 18, "FSH082-"},
 {PSU_TYPE_YESM1300,   0x35, 20, 19, "YESM1300"},
-
 };
 
 struct pddf_psu_data {    

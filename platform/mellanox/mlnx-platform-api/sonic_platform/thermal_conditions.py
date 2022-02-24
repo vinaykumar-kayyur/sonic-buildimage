@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 from sonic_platform_base.sonic_thermal_control.thermal_condition_base import ThermalPolicyConditionBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
@@ -74,53 +90,3 @@ class AllPsuPresenceCondition(PsuCondition):
     def is_match(self, thermal_info_dict):
         psu_info_obj = self.get_psu_info(thermal_info_dict)
         return len(psu_info_obj.get_absence_psus()) == 0 if psu_info_obj else False
-
-
-class MinCoolingLevelChangeCondition(ThermalPolicyConditionBase):
-    trust_state = None
-    temperature = None
-    
-    def is_match(self, thermal_info_dict):
-        from .thermal import Thermal
-
-        trust_state = Thermal.check_module_temperature_trustable()
-        temperature = Thermal.get_min_amb_temperature()
-        temperature = int(temperature / 1000)
-
-        change_cooling_level = False
-        if trust_state != MinCoolingLevelChangeCondition.trust_state:
-            MinCoolingLevelChangeCondition.trust_state = trust_state
-            change_cooling_level = True
-        
-        if temperature != MinCoolingLevelChangeCondition.temperature:
-            MinCoolingLevelChangeCondition.temperature = temperature
-            change_cooling_level = True
-
-        return change_cooling_level
-
-
-class CoolingLevelChangeCondition(ThermalPolicyConditionBase):
-    cooling_level = None
-
-    def is_match(self, thermal_info_dict):
-        from .fan import Fan
-        current_cooling_level = Fan.get_cooling_level()
-        if current_cooling_level != CoolingLevelChangeCondition.cooling_level:
-            CoolingLevelChangeCondition.cooling_level = current_cooling_level
-            return True
-        else:
-            return False
-
-
-class UpdateCoolingLevelToMinCondition(ThermalPolicyConditionBase):
-    enable = False
-    def is_match(self, thermal_info_dict):
-        if not UpdateCoolingLevelToMinCondition.enable:
-            return False
-
-        from .fan import Fan
-        current_cooling_level = Fan.get_cooling_level()
-        if current_cooling_level == Fan.min_cooling_level:
-            UpdateCoolingLevelToMinCondition.enable = False
-            return False
-        return True

@@ -17,15 +17,6 @@ See usage string for detail description for arguments.
 
 from __future__ import print_function
 
-# monkey patch re.compile to do lazy regular expression compilation.
-# This is done to improve import time of jinja2, yaml, natsort modules, because they
-# do many regexp compilation at import time, so it will speed up sonic-cfggen invocations
-# that do not require template generation or yaml loading. sonic-cfggen is used in so many places
-# during system boot up that importing jinja2, yaml, natsort every time
-# without lazy regular expression compilation affect boot up time.
-# FIXME: remove this once sonic-cfggen and templates dependencies are replaced with a faster approach
-import lazy_re
-
 import argparse
 import contextlib
 import jinja2
@@ -38,7 +29,7 @@ import yaml
 from collections import OrderedDict
 from config_samples import generate_sample_config, get_available_config
 from functools import partial
-from minigraph import minigraph_encoder, parse_xml, parse_device_desc_xml, parse_asic_sub_role
+from minigraph import minigraph_encoder, parse_xml, parse_device_desc_xml, parse_asic_sub_role, parse_asic_switch_type
 from portconfig import get_port_config, get_breakout_mode
 from redis_bcc import RedisBytecodeCache
 from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id
@@ -48,9 +39,11 @@ from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBCo
 
 PY3x = sys.version_info >= (3, 0)
 
-#TODO: Remove STR_TYPE, FILE_TYPE once SONiC moves to Python 3.x
+# TODO: Remove STR_TYPE, FILE_TYPE once SONiC moves to Python 3.x
+# TODO: Remove the import SonicYangCfgDbGenerator once SONiC moves to python3.x
 if PY3x:
     from io import IOBase
+    from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
     STR_TYPE = str
     FILE_TYPE = IOBase
 else:
@@ -258,6 +251,7 @@ def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
+    group.add_argument("-Y", "--yang", help="yang data json file", nargs='?', const='/etc/sonic/config_yang.json')
     group.add_argument("-M", "--device-description", help="device description xml file")
     group.add_argument("-k", "--hwsku", help="HwSKU")
     parser.add_argument("-n", "--namespace", help="namespace name", nargs='?', const=None, default=None)
@@ -302,10 +296,6 @@ def main():
                                 'localhost': {'namespace_id': namespace_id}
                              }
                           })
-    # Load the database config for the namespace from global database json
-    if args.namespace is not None:
-        SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
-
     if hwsku is not None:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'hwsku': hwsku
@@ -314,7 +304,7 @@ def main():
         if args.port_config is None:
             args.port_config = device_info.get_path_to_port_config_file(hwsku)
         (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
-        if not ports:
+        if ports is None:
             print('Failed to get port config', file=sys.stderr)
             sys.exit(1)
         deep_update(data, {'PORT': ports})
@@ -324,6 +314,17 @@ def main():
             deep_update(data, {'BREAKOUT_CFG': brkout_table})
 
     _process_json(args, data)
+
+    if args.yang is not None:
+        #TODO: Remove this check onces SONiC moves to python3.x
+        if PY3x:
+            yang_file = args.yang
+            config_db_json = SonicYangCfgDbGenerator().generate_config(
+                yang_data_file=yang_file)
+            deep_update(data, config_db_json)
+        else:
+            print('-Y/--yang option is not available in Python2', file=sys.stderr)
+            sys.exit(1)
 
     if args.minigraph is not None:
         minigraph = args.minigraph
@@ -354,6 +355,7 @@ def main():
         if args.namespace is None:
             configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, **db_kwargs)
         else:
+            SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, namespace=args.namespace, **db_kwargs)
 
         configdb.connect()
@@ -361,13 +363,17 @@ def main():
 
 
     # the minigraph file must be provided to get the mac address for backend asics
+    # or switch_type chassis_packet
     if args.platform_info:
         asic_role = None
+        switch_type = None
         if asic_name is not None:
             if args.minigraph is not None:
                 asic_role = parse_asic_sub_role(args.minigraph, asic_name)
+                switch_type = parse_asic_switch_type(args.minigraph, asic_name)
 
-            if asic_role is not None and asic_role.lower() == "backend":
+            if ((switch_type is not None and switch_type.lower() == "chassis-packet") or
+                (asic_role is not None and asic_role.lower() == "backend")):
                 mac = device_info.get_system_mac(namespace=asic_name)
             else:
                 mac = device_info.get_system_mac()
@@ -378,14 +384,16 @@ def main():
             'platform': platform,
             'mac': mac,
             }}}
+
         # The ID needs to be passed to the SAI to identify the asic.
         if asic_name is not None:
             device_id = get_asic_device_id(asic_id)
             # if the device_id obtained is None, exit with error
             if device_id is None:
-                print('Failed to get device ID for', asic_name, file=sys.stderr)
-                sys.exit(1)
-            hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=device_id)
+                print('Warning: Failed to get device ID from asic.conf file for', asic_name, file=sys.stderr)
+            else:
+                hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=device_id)
+
         deep_update(data, hardware_data)
 
     paths = ['/', '/usr/share/sonic/templates']
@@ -419,6 +427,7 @@ def main():
         if args.namespace is None:
             configdb = ConfigDBPipeConnector(use_unix_socket_path=True, **db_kwargs)
         else:
+            SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
 
         configdb.connect(False)
