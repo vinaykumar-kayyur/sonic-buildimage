@@ -93,6 +93,16 @@
                 "tpid": "0x9200",
                 "mtu": "9100",
                 "lacp_key": "auto"
+            },
+            "PortChannel2": {
+                "admin_status": "up",
+                "min_links": "1",
+                "members": [
+                    "Ethernet12"
+                ],
+                "tpid": "0x9200",
+                "mtu": "9100",
+                "lacp_key": "auto"
             }
         },
         "PORTCHANNEL_INTERFACE": {
@@ -103,7 +113,8 @@
         },
         "PORTCHANNEL_MEMBER": {
             "PortChannel0003|Ethernet1": {},
-            "PortChannel0004|Ethernet2": {}
+            "PortChannel0004|Ethernet2": {},
+            "PortChannel2|Ethernet12": {}
         },
         "VLAN_INTERFACE": {
             "Vlan111": {
@@ -309,7 +320,17 @@
                 "vlanid": "777",
                 "mtu": "9216",
                 "admin_status": "up"
+            },
+            "Vlan12": {
+                "description": "mclag session ve",
+                "dhcp_servers": [
+                    "12.1.1.1"
+                ],
+                "vlanid": "12",
+                "mtu": "9216",
+                "admin_status": "up"
             }
+
         },
         "DEVICE_NEIGHBOR": {
             "Ethernet112": {
@@ -909,6 +930,9 @@
             },
             "Vlan111|PortChannel0003": {
                 "tagging_mode": "untagged"
+            },
+            "Vlan12|PortChannel2": {
+                "tagging_mode": "tagged"
             }
         },
         "LOOPBACK_INTERFACE": {
@@ -1123,6 +1147,18 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_MONITORS": {
+            "5.6.7.8": {
+                "admin_status": "up",
+                "asn": "65000",
+                "holdtime": "180",
+                "keepalive": "60",
+                "local_addr": "10.0.0.11",
+                "name": "BGPMonitor",
+                "nhopself": "0",
+                "rrclient": "0"
+            }
+        },
         "BGP_NEIGHBOR": {
             "10.0.0.1": {
                 "asn": "65200",
@@ -1197,6 +1233,7 @@
                 "trap_group": "queue1_group1"
             }
         },
+
         "AUTO_TECHSUPPORT": {
             "GLOBAL": {
                 "state" : "enabled",
@@ -1331,8 +1368,25 @@
                 "type": "DWRR",
                 "weight": "20"
             },
-
             "TEST@1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
+            },
+            "scheduler.0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+
+            "scheduler.1": {
                 "cbs": "1024",
                 "cir": "1280000",
                 "meter_type": "bytes",
@@ -1368,6 +1422,12 @@
             "Ethernet0|1": {
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
+            },
+            "Ethernet0|2": {
+                "scheduler": "scheduler.0"
+            },
+            "Ethernet0|3": {
+                "scheduler": "scheduler.1"
             }
         },
 
@@ -1480,6 +1540,28 @@
             }
         },
 
+        
+        "MCLAG_DOMAIN": {
+            "123": {
+                "source_ip": "12.1.1.1",
+                "peer_ip": "12.1.1.2",
+                "peer_link": "PortChannel2",
+                "keepalive_interval": "1",
+                "session_timeout": "30"
+            }
+        },
+        "MCLAG_INTERFACE": {
+            "123|PortChannel0004": {
+                "if_type": "PortChannel"
+            }
+        },
+        "MCLAG_UNIQUE_IP": {
+            "Vlan12": {
+                "unique_ip": "enable"
+            }
+        },
+
+
         "MIRROR_SESSION": {
             "erspan": {
                 "dscp": "10",
@@ -1488,6 +1570,7 @@
                 "queue": "0",
                 "src_ip": "10.1.1.1",
                 "ttl": "10",
+                "policer": "everflow_static_policer",
                 "type": "ERSPAN"
             },
             "span": {
@@ -1498,7 +1581,18 @@
                     "Ethernet3",
                     "Ethernet4"
                 ]
+
             }
+        },
+        "POLICER": {
+            "everflow_static_policer": {
+                "meter_type": "bytes",
+                "mode": "sr_tcm",
+                "cir": "12500000",
+                "cbs": "12500000",
+                "color": "aware",
+                "red_packet_action": "drop"
+           }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
