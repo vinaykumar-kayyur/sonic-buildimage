@@ -78,6 +78,7 @@ class Chassis(ChassisBase):
             self._sfp_list.extend(module._sfp_list)
 
         #SFP ports
+        sfp_port = 11
         for index in range(64,66):
              eeprom_path = "/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom".format(sfp_port)
              sfp_control = ""
