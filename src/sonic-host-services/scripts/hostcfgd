@@ -11,7 +11,6 @@ import signal
 
 import jinja2
 from sonic_py_common import device_info
-from swsscommon.swsscommon import SubscriberStateTable, DBConnector, Select
 from swsscommon.swsscommon import ConfigDBConnector, TableConsumable
 
 # FILE
@@ -194,6 +193,20 @@ class FeatureHandler(object):
                 self._cached_config[feature_name].state = feature.state
             else:
                 self.resync_feature_state(self._cached_config[feature_name])
+
+    def update_all_features_config(self, feature_table):
+        for feature_name in feature_table.keys():
+            if not feature_name:
+                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
+                continue
+
+            feature = Feature(feature_name, feature_table[feature_name], self._device_config)
+            self._cached_config.setdefault(feature_name, feature)
+
+            self.update_feature_auto_restart(feature)
+
+            self.update_feature_state(feature)
+            self.resync_feature_state(feature)
 
     def sync_state_field(self):
         """
@@ -956,13 +969,7 @@ class HostConfigDaemon:
         # before moving forward
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
-        self.dbconn = DBConnector(CFG_DB, 0)
-        self.selector = Select()
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
-
-        self.select = Select()
-        self.callbacks = dict()
-        self.subscriber_map = dict()
 
         # Load DEVICE metadata configurations
         self.device_config = {}
@@ -993,6 +1000,9 @@ class HostConfigDaemon:
         
 
     def load(self):
+        features = self.config_db.get_table('FEATURE')
+        self.feature_handler.update_all_features_config(features)
+
         aaa = self.config_db.get_table('AAA')
         tacacs_global = self.config_db.get_table('TACPLUS')
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
@@ -1001,6 +1011,14 @@ class HostConfigDaemon:
         self.cache = {'AAA': aaa, 'TACPLUS': tacacs_global, 'TACPLUS_SERVER': tacacs_server,
                         'RADIUS': radius_global, 'RADIUS_SERVER': radius_server}
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
+
+        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
+        self.iptables.load(lpbk_table)
+
+        # Load NTP configurations
+        ntp_server = self.config_db.get_table('NTP_SERVER')
+        ntp_global = self.config_db.get_table('NTP')
+        self.ntpcfg.load(ntp_global, ntp_server)
 
         try:
             dev_meta = self.config_db.get_table('DEVICE_METADATA')
@@ -1105,36 +1123,34 @@ class HostConfigDaemon:
     def register_callbacks(self):
 
         def make_callback(func):
-            if data is None:
-                op = "DEL"
-            else:
-                op = "SET"
-
             def callback(table, key, data):
+                if data is None:
+                    op = "DEL"
+                else:
+                    op = "SET"
                 return func(key, op, data)
-
             return callback
 
-        self.config_db.subscribe('KDUMP', make_callback(self.config_db.kdump_handler), init=True)
+        self.config_db.subscribe('KDUMP', make_callback(self.kdump_handler))
         # Handle FEATURE updates before other tables
-        self.config_db.subscribe('FEATURE', make_callback(self.config_db.feature_handler.handle), init=True)
+        self.config_db.subscribe('FEATURE', make_callback(self.feature_handler.handle))
         # Handle AAA, TACACS and RADIUS related tables
-        self.config_db.subscribe('AAA', make_callback(self.config_db.aaa_handler), init=True)
-        self.config_db.subscribe('TACPLUS', make_callback(self.config_db.tacacs_global_handler), init=True)
-        self.config_db.subscribe('TACPLUS_SERVER', make_callback(self.config_db.tacacs_server_handler, init=True)
-        self.config_db.subscribe('RADIUS', make_callback(self.config_db.radius_global_handler), init=True)
-        self.config_db.subscribe('RADIUS_SERVER', make_callback(self.config_db.radius_server_handler), init=True)
+        self.config_db.subscribe('AAA', make_callback(self.aaa_handler))
+        self.config_db.subscribe('TACPLUS', make_callback(self.tacacs_global_handler))
+        self.config_db.subscribe('TACPLUS_SERVER', make_callback(self.tacacs_server_handler))
+        self.config_db.subscribe('RADIUS', make_callback(self.radius_global_handler))
+        self.config_db.subscribe('RADIUS_SERVER', make_callback(self.radius_server_handler))
         # Handle IPTables configuration
-        self.config_db.subscribe('LOOPBACK_INTERFACE', make_callback(self.config_db.lpbk_handler), init=True)
+        self.config_db.subscribe('LOOPBACK_INTERFACE', make_callback(self.lpbk_handler))
         # Handle NTP & NTP_SERVER updates
-        self.config_db.subscribe('NTP', make_callback(self.config_db.ntp_global_handler), init=True)
-        self.config_db.subscribe('NTP_SERVER', make_callback(self.config_db.ntp_server_handler), init=True)
+        self.config_db.subscribe('NTP', make_callback(self.ntp_global_handler))
+        self.config_db.subscribe('NTP_SERVER', make_callback(self.ntp_server_handler))
         # Handle updates to src intf changes in radius
-        self.config_db.subscribe('MGMT_INTERFACE', make_callback(self.config_db.mgmt_intf_handler), init=True)
-        self.config_db.subscribe('VLAN_INTERFACE', make_callback(self.config_db.vlan_intf_handler), init=True)
-        self.config_db.subscribe('VLAN_SUB_INTERFACE', make_callback(self.config_db.vlan_sub_intf_handler), init=True)
-        self.config_db.subscribe('PORTCHANNEL_INTERFACE', make_callback(self.config_db.portchannel_intf_handler), init=True)
-        self.config_db.subscribe('INTERFACE', make_callback(self.config_db.phy_intf_handler), init=True)
+        self.config_db.subscribe('MGMT_INTERFACE', make_callback(self.mgmt_intf_handler))
+        self.config_db.subscribe('VLAN_INTERFACE', make_callback(self.vlan_intf_handler))
+        self.config_db.subscribe('VLAN_SUB_INTERFACE', make_callback(self.vlan_sub_intf_handler))
+        self.config_db.subscribe('PORTCHANNEL_INTERFACE', make_callback(self.portchannel_intf_handler))
+        self.config_db.subscribe('INTERFACE', make_callback(self.phy_intf_handler))
         
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
