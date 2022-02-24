@@ -119,6 +119,7 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
 elif [ "$IMAGE_TYPE" = "raw" ]; then
 
     echo "Build RAW image"
+    OUTPUT_ONIE_IMAGE=${OUTPUT_ONIE_IMAGE}.tmp
     mkdir -p `dirname $OUTPUT_RAW_IMAGE`
     sudo rm -f $OUTPUT_RAW_IMAGE
 
@@ -137,6 +138,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     ## The 'build' install mode of the installer is used to generate this dump.
     sudo chmod a+x $OUTPUT_ONIE_IMAGE
     sudo ./$OUTPUT_ONIE_IMAGE
+    rm $OUTPUT_ONIE_IMAGE
 
     [ -r $OUTPUT_RAW_IMAGE ] || {
         echo "Error : $OUTPUT_RAW_IMAGE not generated!"
