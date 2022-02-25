@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import ast
 import copy
@@ -203,7 +203,7 @@ class FeatureHandler(object):
             feature = Feature(feature_name, feature_table[feature_name], self._device_config)
             self._cached_config.setdefault(feature_name, feature)
 
-            self.update_feature_auto_restart(feature)
+            self.update_feature_auto_restart(feature, feature_name)
 
             self.update_feature_state(feature)
             self.resync_feature_state(feature)
@@ -398,6 +398,10 @@ class Iptables(object):
         be string
         '''
         return (isinstance(key, tuple))
+
+    def load(self, lpbk_table):
+        for row in lpbk_table:
+            self.iptables_handler(row, lpbk_table[row])
 
     def command(self, chain, ip, ver, op):
         cmd = 'iptables' if ver == '4' else 'ip6tables'
@@ -905,6 +909,15 @@ class NtpCfg(object):
         self.ntp_global = {}
         self.ntp_servers = set()
 
+    def load(self, ntp_global_conf, ntp_server_conf):
+        syslog.syslog(syslog.LOG_INFO, "NtpCfg load ...")
+
+        for row in ntp_global_conf:
+            self.ntp_global_update(row, ntp_global_conf[row], True)
+
+        # Force reload on init
+        self.ntp_server_update(0, None, load=True)
+
     def handle_ntp_source_intf_chg(self, intf_name):
         # if no ntp server configured, do nothing
         if not self.ntp_servers:
@@ -947,16 +960,19 @@ class NtpCfg(object):
             cmd = 'service ntp restart'
             run_cmd(cmd)
 
-    def ntp_server_update(self, key, op):
+    def ntp_server_update(self, key, op, load=False):
         syslog.syslog(syslog.LOG_INFO, 'ntp server update key {}'.format(key))
 
         restart_config = False
-        if op == "SET" and key not in self.ntp_servers:
+        if not load:
+            if op == "SET" and key not in self.ntp_servers:
+                restart_config = True
+                self.ntp_servers.add(key)
+            elif op == "DEL" and key in self.ntp_servers:
+                restart_config = True
+                self.ntp_servers.remove(key)
+        else:
             restart_config = True
-            self.ntp_servers.add(key)
-        elif op == "DEL" and key in self.ntp_servers:
-            restart_config = True
-            self.ntp_servers.remove(key)
 
         if restart_config:
             cmd = 'systemctl restart ntp-config'
@@ -1001,23 +1017,22 @@ class HostConfigDaemon:
 
     def load(self):
         features = self.config_db.get_table('FEATURE')
-        self.feature_handler.update_all_features_config(features)
-
         aaa = self.config_db.get_table('AAA')
         tacacs_global = self.config_db.get_table('TACPLUS')
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         radius_global = self.config_db.get_table('RADIUS')
         radius_server = self.config_db.get_table('RADIUS_SERVER')
-        self.cache = {'AAA': aaa, 'TACPLUS': tacacs_global, 'TACPLUS_SERVER': tacacs_server,
-                        'RADIUS': radius_global, 'RADIUS_SERVER': radius_server}
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
-
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
-        self.iptables.load(lpbk_table)
-
-        # Load NTP configurations
         ntp_server = self.config_db.get_table('NTP_SERVER')
         ntp_global = self.config_db.get_table('NTP')
+
+        self.cache = {'FEATURES': features, 'AAA': aaa, 'TACPLUS': tacacs_global, 'TACPLUS_SERVER': tacacs_server,
+                'RADIUS': radius_global, 'RADIUS_SERVER': radius_server, 'LOOPBACK_INTERFACE': lpbk_table, 'NTP_SERVER': ntp_server,
+                'NTP': ntp_global}
+
+        self.feature_handler.update_all_features_config(features)
+        self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
+        self.iptables.load(lpbk_table)
         self.ntpcfg.load(ntp_global, ntp_server)
 
         try:
