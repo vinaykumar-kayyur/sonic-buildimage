@@ -534,8 +534,8 @@ class TestContainer(object):
             common_test.do_start_test("container_test:container_kill", i, ct_data)
 
             ret = container.container_kill("sflow")
-
             assert ret != 0
+
             ret = common_test.check_tables_returned()
             assert ret == 0
 
