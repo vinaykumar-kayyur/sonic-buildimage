@@ -9,11 +9,6 @@ module sonic-nvgre-tunnel {
         prefix inet;
     }
 
-    import sonic-vlan {
-        prefix vlan;
-    }
-
-
     organization
         "SONiC";
 
