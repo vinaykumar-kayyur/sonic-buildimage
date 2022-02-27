@@ -238,7 +238,8 @@ class BreakoutCfg(object):
             return hash((self.num_ports, tuple(self.supported_speed), self.num_assigned_lanes))
 
     def __init__(self, name, bmode, properties):
-        self._interface_base_id = int(name.replace(PORT_STR, ''))
+        self._name = name
+        self._front_panel_prefix, self._interface_base_id = self._parse_name_to_prefix_and_id()
         self._properties = properties
         self._lanes = properties ['lanes'].split(',')
         self._indexes = properties ['index'].split(',')
@@ -253,6 +254,12 @@ class BreakoutCfg(object):
 
         if not self._breakout_capabilities:
             raise RuntimeError("Unsupported breakout mode {}!".format(bmode))
+
+    def _parse_name_to_prefix_and_id(self):
+        match = re.match(swsscommon.FRONT_PANEL_PORT_REGEX, self._name)
+        if not match:
+            raise RuntimeError("Failed to parse front panel prefix of {}!", self._name)
+        return match.group(1), int(match.group(2))
 
     def _re_group_to_entry(self, group):
         if len(group) != BRKOUT_PATTERN_GROUPS:
@@ -300,7 +307,7 @@ class BreakoutCfg(object):
             lanes_per_port = entry.num_assigned_lanes // entry.num_ports
 
             for port in range(entry.num_ports):
-                interface_name = PORT_STR + str(self._interface_base_id + lane_id)
+                interface_name = self._front_panel_prefix + str(self._interface_base_id + lane_id)
 
                 lanes = self._lanes[lane_id:lane_id + lanes_per_port]
 
