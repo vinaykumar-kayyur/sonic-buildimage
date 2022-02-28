@@ -68,13 +68,16 @@
 # Run the 'touch cache.skip.common' command in the base directory to exclude the common files from caching
 SONIC_COMMON_FILES_LIST :=  $(if $(wildcard cache.skip.common),, .platform slave.mk rules/functions Makefile.cache)
 SONIC_COMMON_FLAGS_LIST :=  $(CONFIGURED_PLATFORM) \
+                            $(CONFIGURED_ARCH) \
+                            $(BLDENV) \
                             $(SONIC_DEBUGGING_ON) \
                             $(SONIC_PROFILING_ON) $(SONIC_ENABLE_SYNCD_RPC)
 SONIC_COMMON_DPKG_LIST  :=  debian/control debian/changelog debian/rules \
                             debian/compat debian/install debian/copyright
 SONIC_COMMON_BASE_FILES_LIST  := sonic-slave-jessie/Dockerfile.j2 sonic-slave-jessie/Dockerfile.user.j2 \
                                  sonic-slave-stretch/Dockerfile.j2 sonic-slave-stretch/Dockerfile.user.j2 \
-                                 sonic-slave-buster/Dockerfile.j2 sonic-slave-buster/Dockerfile.user.j2
+                                 sonic-slave-buster/Dockerfile.j2 sonic-slave-buster/Dockerfile.user.j2 \
+                                 sonic-slave-bullseye/Dockerfile.j2 sonic-slave-bullseye/Dockerfile.user.j2
 
 
 
@@ -182,7 +185,10 @@ define GET_MOD_DEP_SHA
 	$(eval $(1)_DEP_FILES_MISSING := $(filter-out $(wildcard $($(1)_DEP_MOD_SHA_FILES)),$($(1)_DEP_MOD_SHA_FILES)) )
 	$(if $($(1)_DEP_FILES_MISSING), $(warning "[ DPKG ] Dependecy file(s) are not found for $(1) : $($(1)_DEP_FILES_MISSING)))
 
-	$(eval $(1)_DEP_MOD_SHA := $(shell git hash-object  $($(1)_DEP_MOD_SHA_FILES) \
+	# Include package dependencies hash values into package hash calculation
+	$(eval $(1)_DEP_PKGS_SHA := $(foreach dfile,$(1)_MOD_DEP_PKGS,$(dfile)_DEP_MOD_SHA $(dfile)_MOD_HASH))
+
+	$(eval $(1)_DEP_MOD_SHA := $(shell bash -c "git hash-object  $($(1)_DEP_MOD_SHA_FILES) && echo $($(1)_DEP_PKGS_SHA)" \
                             | sha1sum | awk '{print substr($$1,0,23);}'))
 endef
 

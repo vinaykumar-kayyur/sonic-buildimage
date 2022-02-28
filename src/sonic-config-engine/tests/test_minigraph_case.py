@@ -7,6 +7,9 @@ import minigraph
 
 from unittest import TestCase
 
+TOR_ROUTER = 'ToRRouter'
+BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
@@ -14,6 +17,9 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
+        self.sample_simple_graph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
+        self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
+        self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
@@ -97,14 +103,14 @@ class TestCfgGenCaseInsensitive(TestCase):
                    'Vlan1000': {
                        'alias': 'ab1',
                        'dhcp_servers': ['192.0.0.1', '192.0.0.2'],
+                       'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'],
                        'vlanid': '1000',
                        'mac': '00:aa:bb:cc:dd:ee',
-                       'members': ['Ethernet8']
                        },
                    'Vlan2000': {
                        'alias': 'ab2',
                        'dhcp_servers': ['192.0.0.1'],
-                       'members': ['Ethernet4'],
+                       'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4'],
                        'vlanid': '2000'
                        }
                    }
@@ -163,6 +169,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'1': {'baud_rate': '9600', 'remote_device': 'managed_device', 'flow_control': 1}}"))
+
+    def test_minigraph_dhcp_server_feature(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'dhcp_server\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '')
+
+        try:
+            # For DHCP server enabled device type
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BMC_MGMT_TOR_ROUTER, self.sample_graph), shell=True)
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), 'enabled')
+        finally:
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BMC_MGMT_TOR_ROUTER, TOR_ROUTER, self.sample_graph), shell=True)
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'
@@ -284,7 +303,35 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'storage_device\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "true")
-        
+
+    def test_minigraph_storage_backend_no_resource_type(self):
+        self.verify_storage_device_set(self.sample_simple_graph)
+
+    def test_minigraph_storage_backend_resource_type(self):
+        self.verify_storage_device_set(self.sample_resource_graph)
+
+    def test_minigraph_storage_backend_subintf(self):
+        self.verify_storage_device_set(self.sample_subintf_graph)
+
+    def verify_storage_device_set(self, graph_file, check_stderr=False):
+        try:
+            print('\n    Change device type to %s' % (BACKEND_TOR_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_TOR_ROUTER, graph_file), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_TOR_ROUTER, graph_file), shell=True)
+
+            argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'storage_device\']"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), "true")
+
+        finally:
+            print('\n    Change device type back to %s' % (TOR_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, graph_file), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, graph_file), shell=True)
+  
     def test_minigraph_tunnel_table(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TUNNEL"'
         expected_tunnel = {
@@ -324,3 +371,41 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_table
         )
+    
+    def test_dhcp_table(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP_RELAY"'
+        expected = {
+                   'Vlan1000': {
+                       'dhcpv6_servers': [
+                           "fc02:2000::1",
+                           "fc02:2000::2"
+                       ]
+                    },
+                    'Vlan2000': {
+                       'dhcpv6_servers': [
+                           "fc02:2000::3",
+                           "fc02:2000::4"
+                       ]
+                    }
+        }
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected
+        )
+    
+    def test_minigraph_mirror_dscp(self):
+        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
+        self.assertTrue('EVERFLOW_DSCP' in result['ACL_TABLE'])
+        everflow_dscp_entry = result['ACL_TABLE']['EVERFLOW_DSCP']
+        
+        self.assertEqual(everflow_dscp_entry['type'], 'MIRROR_DSCP')
+        self.assertEqual(everflow_dscp_entry['stage'], 'ingress')
+        expected_ports = ['PortChannel01', 'Ethernet12', 'Ethernet8', 'Ethernet0']
+        self.assertEqual(
+            everflow_dscp_entry['ports'].sort(),
+            expected_ports.sort()
+        )
+
+
+    
