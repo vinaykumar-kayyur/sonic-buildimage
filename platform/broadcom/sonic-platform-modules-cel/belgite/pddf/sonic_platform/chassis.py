@@ -21,7 +21,7 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-        vendor_ext = self.sys_eeprom.vendor_ext_str()
+        vendor_ext = self._eeprom.vendor_ext_str()
         with open(FAN_DIRECTION_FILE_PATH, "w+") as f:
             f.write(vendor_ext)
         for i in range(self.platform_inventory['num_fantrays']):

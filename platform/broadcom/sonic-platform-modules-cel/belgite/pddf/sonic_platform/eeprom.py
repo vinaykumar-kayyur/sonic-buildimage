@@ -23,8 +23,8 @@ class Eeprom(PddfEeprom):
         if self.eeprom_path is None:
             return
 
-        #super(PddfEeprom, self).__init__(self.eeprom_path, 0, '', True)
-        super().__init__(self.eeprom_path, 0, '', True)
+        super(PddfEeprom, self).__init__(self.eeprom_path, 0, '', True)
+        #super().__init__(self.pddf_obj, self.plugin_data)
         self.eeprom_tlv_dict = dict()
         try:
             self.eeprom_data = self.read_eeprom()
