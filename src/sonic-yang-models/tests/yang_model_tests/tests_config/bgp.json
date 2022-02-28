@@ -1402,6 +1402,66 @@
                 ]
             }
         }
+    },
+    "BGP_ALLOWED_PREFIX_LIST_ALL_VALID": {
+        "sonic-bgp-allowed-prefix:sonic-bgp-allowed-prefix": {
+            "sonic-bgp-allowed-prefix:DEPLOYMENT_ID": {
+                "deployment_list": [
+                    {
+                        "id": "4",
+                        "community": "123:123",
+                        "default_action": "permit",
+                        "prefixs_p4": ["10.0.0.0/24"],
+                        "prefixs_p6": ["fc00:f0::/64"]
+                    }
+                ]
+            }
+        }
+    },
+    "BGP_ALLOWED_PREFIX_LIST_INVALID_DEFAULT_ACTION": {
+        "sonic-bgp-allowed-prefix:sonic-bgp-allowed-prefix": {
+            "sonic-bgp-allowed-prefix:DEPLOYMENT_ID": {
+                "deployment_list": [
+                    {
+                        "id": "4",
+                        "community": "123:123",
+                        "default_action": "permitall",
+                        "prefixs_p4": ["10.0.0.0/24"],
+                        "prefixs_p6": ["fc00:f0::/64"]
+                    }
+                ]
+            }
+        }
+    },
+    "BGP_ALLOWED_PREFIX_LIST_INVALID_PREFIXES_IPV4": {
+        "sonic-bgp-allowed-prefix:sonic-bgp-allowed-prefix": {
+            "sonic-bgp-allowed-prefix:DEPLOYMENT_ID": {
+                "deployment_list": [
+                    {
+                        "id": "4",
+                        "community": "123:123",
+                        "default_action": "permit",
+                        "prefixs_p4": ["10.0.0.0/48"],
+                        "prefixs_p6": ["fc00:f0::/64"]
+                    }
+                ]
+            }
+        }
+    },
+    "BGP_ALLOWED_PREFIX_LIST_INVALID_PREFIXES_IPV6": {
+        "sonic-bgp-allowed-prefix:sonic-bgp-allowed-prefix": {
+            "sonic-bgp-allowed-prefix:DEPLOYMENT_ID": {
+                "deployment_list": [
+                    {
+                        "id": "4",
+                        "community": "123:123",
+                        "default_action": "permit",
+                        "prefixs_p4": ["10.0.0.0/48"],
+                        "prefixs_p6": ["fc00:f0::/129"]
+                    }
+                ]
+            }
+        }
     }
 }
 
