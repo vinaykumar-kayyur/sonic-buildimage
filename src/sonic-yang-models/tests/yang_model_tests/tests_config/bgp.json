@@ -1430,8 +1430,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64"]
+                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1445,8 +1445,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permitall",
-                        "prefixs_p4": ["10.0.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64"]
+                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1460,8 +1460,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/48"],
-                        "prefixs_p6": ["fc00:f0::/64"]
+                        "prefixs_p4": ["10.0.0.0/48", "10.1.0.0/24"],
+                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1475,8 +1475,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/48"],
-                        "prefixs_p6": ["fc00:f0::/129"]
+                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0./24"],
+                        "prefixs_p6": ["fc00:f0::/129", "fc00:a0::/64"]
                     }
                 ]
             }

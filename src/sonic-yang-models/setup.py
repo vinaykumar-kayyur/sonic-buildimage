@@ -85,6 +85,7 @@ setup(
                          './yang-models/sonic-bgp-neighbor.yang',
                          './yang-models/sonic-bgp-peergroup.yang',
                          './yang-models/sonic-bgp-peerrange.yang',
+                         './yang-models/sonic-bgp-allowed-prefix.yang',
                          './yang-models/sonic-breakout_cfg.yang',
                          './yang-models/sonic-buffer-pg.yang',
                          './yang-models/sonic-buffer-pool.yang',
@@ -125,11 +126,8 @@ setup(
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',
                          './yang-models/sonic-vrf.yang',
-
                          './yang-models/sonic-mclag.yang',
-
                          './yang-models/sonic-vlan-sub-interface.yang',
-
                          './yang-models/sonic-warm-restart.yang',
                          './yang-models/sonic-lldp.yang',
                          './yang-models/sonic-scheduler.yang',
@@ -151,7 +149,11 @@ setup(
                          './cvlyang-models/sonic-bgp-monitor.yang',
                          './cvlyang-models/sonic-bgp-neighbor.yang',
                          './cvlyang-models/sonic-bgp-peergroup.yang',
+<<<<<<< HEAD
                          './cvlyang-models/sonic-bgp-peerrange.yang',
+=======
+                         './cvlyang-models/sonic-bgp-allowed-prefix.yang',
+>>>>>>> fix unit test issues
                          './cvlyang-models/sonic-breakout_cfg.yang',
                          './cvlyang-models/sonic-copp.yang',
                          './cvlyang-models/sonic-crm.yang',
