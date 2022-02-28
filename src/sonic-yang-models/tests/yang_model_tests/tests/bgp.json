@@ -165,13 +165,11 @@
     },
     "BGP_ALLOWED_PREFIX_LIST_INVALID_PREFIXES_IPV4": {
         "desc": "Invalid IPv4 prefix.",
-        "eStrKey" : "InvalidValue",
-        "eStr" : ["prefixs_p4"]
+        "eStrKey" : "Pattern"
     },
     "BGP_ALLOWED_PREFIX_LIST_INVALID_PREFIXES_IPV6": {
         "desc": "Invalid IPv6 prefix.",
-        "eStrKey" : "InvalidValue",
-        "eStr" : ["prefixs_p6"]
+        "eStrKey" : "Pattern"
     }
 }
 
