@@ -10,16 +10,17 @@
 
 try:
     import os
+    import re
+    import time
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.psu import Psu
+    from sonic_platform.component import Component
+    from sonic_platform.eeprom import Eeprom
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.module import Module
+    from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
-    from sonic_platform.component import Component
-    from sonic_platform.watchdog import Watchdog
-    from sonic_platform.eeprom import Eeprom
-    import time
+    from sonic_platform.watchdog import Watchdog, WatchdogTCO
+    from sonic_platform.sfp import Sfp
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -27,7 +28,7 @@ MAX_S6100_MODULE = 4
 MAX_S6100_FANTRAY = 4
 MAX_S6100_PSU = 2
 MAX_S6100_THERMAL = 10
-MAX_S6100_COMPONENT = 3
+MAX_S6100_COMPONENT = 4
 
 
 class Chassis(ChassisBase):
@@ -76,6 +77,15 @@ class Chassis(ChassisBase):
             self._module_list.append(module)
             self._sfp_list.extend(module._sfp_list)
 
+        #SFP ports
+        sfp_port = 11
+        for index in range(64,66):
+             eeprom_path = "/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom".format(sfp_port)
+             sfp_control = ""
+             sfp_node = Sfp(index, 'SFP', eeprom_path, sfp_control, index)
+             self._sfp_list.append(sfp_node)
+             sfp_port = sfp_port + 1
+
         for i in range(MAX_S6100_FANTRAY):
             fandrawer = FanDrawer(i)
             self._fan_drawer_list.append(fandrawer)
@@ -93,12 +103,19 @@ class Chassis(ChassisBase):
             component = Component(i)
             self._component_list.append(component)
 
-        self._watchdog = Watchdog()
+        bios_ver = self.get_component(0).get_firmware_version()
+        bios_minor_ver = bios_ver.split("-")[-1]
+        if bios_minor_ver.isdigit() and (int(bios_minor_ver) >= 9):
+            self._watchdog = WatchdogTCO()
+        else:
+            self._watchdog = Watchdog()
+
         self._transceiver_presence = self._get_transceiver_presence()
 
     def _get_reboot_reason_smf_register(self):
         # In S6100, mb_poweron_reason register will
         # Returns 0xaa or 0xcc on software reload
+        # Returns 0x88 on cold-reboot happened during software reload
         # Returns 0xff or 0xbb on power-cycle
         # Returns 0xdd on Watchdog
         # Returns 0xee on Thermal Shutdown
@@ -228,6 +245,15 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.revision_str()
+
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -237,6 +263,19 @@ class Chassis(ChassisBase):
             values.
         """
         return self._eeprom.system_eeprom_info()
+
+    def get_module_index(self, module_name):
+        """
+        Retrieves module index from the module name
+
+        Args:
+            module_name: A string, prefixed by SUPERVISOR, LINE-CARD or FABRIC-CARD
+            Ex. SUPERVISOR0, LINE-CARD1, FABRIC-CARD5
+        Returns:
+            An integer, the index of the ModuleBase object in the module_list
+        """
+        module_index = re.match(r'IOM([1-4])', module_name).group(1)
+        return int(module_index) - 1
 
     def get_reboot_cause(self):
         """
@@ -257,6 +296,8 @@ class Chassis(ChassisBase):
             return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
         elif ((smf_mb_reg_reason == 0xaa) or (smf_mb_reg_reason == 0xcc)):
             return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
+        elif (smf_mb_reg_reason == 0x88):
+            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "CPU Reset")
         elif (smf_mb_reg_reason == 0xdd):
             return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
         elif (smf_mb_reg_reason == 0xee):

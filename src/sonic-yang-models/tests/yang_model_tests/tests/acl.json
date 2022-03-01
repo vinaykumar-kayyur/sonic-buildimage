@@ -44,6 +44,11 @@
         "eStrKey" : "Mandatory",
         "eStr": ["ACL_TABLE"]
     },
+    "ACL_TABLE_CTRLPLANE_REQUIRES_SERVICES": {
+        "desc": "ACL_TABLE CTRLPLANE type requires services presence.",
+        "eStrKey" : "Must",
+        "eStr": ["CTRLPLANE", "services"]
+    },
     "ACL_TABLE_DEFAULT_VALUE_STAGE": {
         "desc": "ACL_TABLE DEFAULT VALUE FOR STAGE FIELD.",
         "eStrKey" : "Verify",
@@ -61,5 +66,44 @@
             "key": "sonic-acl:services",
             "value": ["SNMP"]
         }
+    },
+    "ACL_TABLE_CUSTOM_TABLE_TYPE": {
+        "desc": "ACL_TABLE LOAD TABLE TYPE SUCCESSFULLY."
+    },
+    "ACL_TABLE_CUSTOM_TABLE_TYPE_NO_MATCHES": {
+        "desc": "ACL_TABLE LOAD TABLE TYPE WITH NO MATCHES.",
+        "eStrKey": "MinElements"
+    },
+    "ACL_TABLE_CUSTOM_TABLE_TYPE_NO_BIND_POINT_TYPES": {
+        "desc": "ACL_TABLE LOAD TABLE TYPE WITH NO BIND POINT TYPES.",
+        "eStrKey": "MinElements"
+    },
+    "ACL_TABLE_CUSTOM_TABLE_TYPE_NO_ACTIONS": {
+        "desc": "ACL_TABLE LOAD TABLE TYPE SUCCESSFULLY WITH NO ACTIONS.",
+        "eStrKey" : "Verify",
+        "verify": {
+            "xpath": "/sonic-acl:sonic-acl/ACL_TABLE_TYPE/ACL_TABLE_TYPE_LIST[ACL_TABLE_TYPE_NAME='CUSTOM_L3']/ACL_TABLE_TYPE_NAME",
+            "key": "sonic-acl:actions",
+            "value": [""]
+        }
+    },
+    "ACL_TABLE_L2_ACL_FIELDS": {
+        "desc": "Configure L2 ACL with proper rule fields"
+    },
+    "ACL_TABLE_L3_RULE_WITH_L2_FIELDS": {
+        "desc": "Configure L2 Address in L3 ACL.",
+        "eStrKey" : "When",
+        "eStr": ["type"]
+    },
+    "ACL_RULE_L2_INVALID_MAC": {
+        "desc": "Configure invalid MAC address format.",
+        "eStrKey" : "Pattern"
+    },
+    "ACL_RULE_L2_INVALID_ETHER": {
+        "desc": "Configure invalid MAC address format.",
+        "eStrKey" : "Pattern"
+    },
+    "ACL_PACKET_ACTION_VALIDATE_VALUE_ACCEPT": {
+        "desc": "Configure CTRLPLANE with proper action ACCEPT."
     }
 }

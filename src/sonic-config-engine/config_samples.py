@@ -10,6 +10,41 @@ if sys.version_info.major == 3:
 else:
     UNICODE_TYPE = unicode
 
+def generate_common_config(data):
+    data['FLEX_COUNTER_TABLE'] = {
+        'ACL': {
+            'FLEX_COUNTER_STATUS': 'disable',
+            'FLEX_COUNTER_DELAY_STATUS': 'true',
+            'POLL_INTERVAL': '10000'
+        }
+    }
+    return data
+
+# The following config generation methods exits:
+#    't1': generate_t1_sample_config,
+#    'l2': generate_l2_config,
+#    'empty': generate_empty_config,
+#    'l1': generate_l1_config,
+#    'l3': generate_l3_config
+
+def generate_l1_config(data):
+    for port in natsorted(data['PORT']):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+    return data;
+
+def generate_l3_config(data):
+    data['LOOPBACK_INTERFACE'] = {"Loopback0": {},
+                                  "Loopback0|10.1.0.1/32": {}}
+    data['BGP_NEIGHBOR'] = {}
+    data['DEVICE_NEIGHBOR'] = {}
+    data['INTERFACE'] = {}
+    for port in natsorted(data['PORT']):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+        data['INTERFACE']['{}'.format(port)] = {}
+    return data;
+
 def generate_t1_sample_config(data):
     data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
     data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
@@ -126,12 +161,15 @@ def generate_l2_config(data):
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
-        'empty': generate_empty_config
+        'empty': generate_empty_config,
+        'l1': generate_l1_config,
+        'l3': generate_l3_config
         }
 
 def get_available_config():
     return list(_sample_generators.keys())
 
 def generate_sample_config(data, setting_name):
+    data = generate_common_config(data)
     return _sample_generators[setting_name.lower()](data)
 

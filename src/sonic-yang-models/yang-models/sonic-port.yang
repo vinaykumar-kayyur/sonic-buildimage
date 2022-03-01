@@ -7,12 +7,10 @@ module sonic-port{
 
 	import sonic-types {
 		prefix stypes;
-		revision-date 2019-07-01;
 	}
 
 	import sonic-extension {
 		prefix ext;
-		revision-date 2019-07-01;
 	}
 
 	description "PORT yang Module for SONiC OS";
@@ -138,6 +136,10 @@ module sonic-port{
 					            to the specified port if the HW supports TPID configuration. The possible
 					            values are 0x8100, 0x9100, 0x9200, 0x88a8, and 0x88A8";
 					type stypes:tpid_type;
+				}
+
+				leaf mux_cable {
+					type boolean;
 				}
 
 			} /* end of list PORT_LIST */
