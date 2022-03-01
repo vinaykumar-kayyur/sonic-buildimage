@@ -17,6 +17,9 @@ def enable_counter_group(db, name):
         info = {}
         info['FLEX_COUNTER_STATUS'] = 'enable'
         db.mod_entry("FLEX_COUNTER_TABLE", name, info)
+    else:
+        entry_info.update({"FLEX_COUNTER_DELAY_STATUS":"false"})
+        db.mod_entry("FLEX_COUNTER_TABLE", name, entry_info)
 
 def enable_rates():
     # set the default interval for rates
@@ -26,6 +29,10 @@ def enable_rates():
     counters_db.set('COUNTERS_DB', 'RATES:PORT', 'PORT_ALPHA', DEFAULT_ALPHA)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_ALPHA', DEFAULT_ALPHA)
+    counters_db.set('COUNTERS_DB', 'RATES:TRAP', 'TRAP_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
+    counters_db.set('COUNTERS_DB', 'RATES:TRAP', 'TRAP_ALPHA', DEFAULT_ALPHA)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_ALPHA', DEFAULT_ALPHA)
 
 
 def enable_counters():
@@ -40,6 +47,7 @@ def enable_counters():
     enable_counter_group(db, 'QUEUE_WATERMARK')
     enable_counter_group(db, 'BUFFER_POOL_WATERMARK')
     enable_counter_group(db, 'PORT_BUFFER_DROP')
+    enable_counter_group(db, 'ACL')
     enable_rates()
 
 

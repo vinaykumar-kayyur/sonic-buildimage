@@ -280,11 +280,11 @@ class VersionModule:
             arch = ''
             if len(items) > 2:
                 dist = items[2]
-            if filter_dist and dist and filter_dist != dist:
+            if filter_dist and dist and filter_dist != dist and dist != ALL_DIST:
                 continue
             if len(items) > 3:
                 arch = items[3]
-            if filter_arch and arch and filter_arch != arch:
+            if filter_arch and arch and filter_arch != arch and arch != ALL_ARCH:
                 continue
             versions = Component.get_versions(file_path)
             component = Component(versions, ctype, dist, arch)
@@ -374,10 +374,12 @@ class VersionBuild:
     def load_from_target(self):
         dockers_path = os.path.join(self.target_path, 'versions/dockers')
         build_path = os.path.join(self.target_path, 'versions/build')
+        default_path = os.path.join(self.target_path, 'versions/default')
         modules = {}
         self.modules = modules
         file_paths = glob.glob(dockers_path + '/*')
         file_paths += glob.glob(build_path + '/build-*')
+        file_paths += glob.glob(default_path)
         file_paths.append(os.path.join(self.target_path, 'versions/host-image'))
         file_paths.append(os.path.join(self.target_path, 'versions/host-base-image'))
         for file_path in file_paths:
