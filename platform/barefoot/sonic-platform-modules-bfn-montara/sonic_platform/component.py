@@ -8,11 +8,13 @@
 ########################################################################
 
 try:
+    import os
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
     from platform_thrift_client import thrift_try
     import json
     from collections import OrderedDict
+    from sonic_py_common import device_info
 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -33,11 +35,6 @@ def get_bmc_version():
         raise RuntimeError("bmc.py: Initialization failed")
     return ver
 
-def get_platform():
-    import os
-    stream = os.popen('show version  | grep Platform | awk \'{print $2}\'')
-    return stream.read()
-
 class BFPlatformComponentsParser(object):
     """
     BFPlatformComponentsParser
@@ -55,12 +52,11 @@ class BFPlatformComponentsParser(object):
 
     UTF8_ENCODING = "utf-8"
 
-    def __init__(self, is_modular_chassis, bf_model="Wedge100BF-32X-O-AC-F-BF"):
-        self.__is_modular_chassis = is_modular_chassis
+    def __init__(self, platform_components_path):
         self.__chassis_component_map = OrderedDict()
-        self.__module_component_map = OrderedDict()
         self.__component_list = []
-        self.__bf_model = bf_model
+        self.__bf_model = ""
+        self.__parse_platform_components(platform_components_path)
 
     def __is_str(self, obj):
         return isinstance(obj, str)
@@ -76,9 +72,6 @@ class BFPlatformComponentsParser(object):
 
     def __parser_chassis_fail(self, msg):
         self.__parser_fail("invalid chassis schema: {}".format(msg))
-
-    def __parser_module_fail(self, msg):
-        self.__parser_fail("invalid module schema: {}".format(msg))
 
     def __parser_component_fail(self, msg):
         self.__parser_fail("invalid component schema: {}".format(msg))
@@ -96,10 +89,7 @@ class BFPlatformComponentsParser(object):
             if not self.__is_dict(value1):
                 self.__parser_component_fail("dictionary is expected: key={}".format(key1))
 
-            if not is_module_component:
-                self.__chassis_component_map[section][key1] = OrderedDict()
-            else:
-                self.__module_component_map[section][key1] = OrderedDict()
+            self.__chassis_component_map[section][key1] = OrderedDict()
 
             if value1:
                 if len(value1) < 1 or len(value1) > 3:
@@ -112,11 +102,9 @@ class BFPlatformComponentsParser(object):
                 for key2, value2 in value1.items():
                     if not self.__is_str(value2):
                         self.__parser_component_fail("string is expected: key={}".format(key2))
+                
+                self.__chassis_component_map[section][key1] = value1
 
-                if not is_module_component:
-                    self.__chassis_component_map[section][key1] = value1
-                else:
-                    self.__module_component_map[section][key1] = value1
 
         if missing_key is not None:
             self.__parser_component_fail("\"{}\" key hasn't been found".format(missing_key))
@@ -149,31 +137,6 @@ class BFPlatformComponentsParser(object):
             self.__chassis_component_map[key] = OrderedDict()
             self.__parse_component_section(key, value[self.COMPONENT_KEY])
 
-    def __parse_module_section(self, module):
-        self.__module_component_map = OrderedDict()
-
-        if not self.__is_dict(module):
-            self.__parser_module_fail("dictionary is expected: key={}".format(self.MODULE_KEY))
-
-        if not module:
-            self.__parser_module_fail("dictionary is empty: key={}".format(self.MODULE_KEY))
-
-        for key, value in module.items():
-            if not self.__is_dict(value):
-                self.__parser_module_fail("dictionary is expected: key={}".format(key))
-
-            if not value:
-                self.__parser_module_fail("dictionary is empty: key={}".format(key))
-
-            if self.COMPONENT_KEY not in value:
-                self.__parser_module_fail("\"{}\" key hasn't been found".format(self.COMPONENT_KEY))
-
-            if len(value) != 1:
-                self.__parser_module_fail("unexpected number of records: key={}".format(key))
-
-            self.__module_component_map[key] = OrderedDict()
-            self.__parse_component_section(key, value[self.COMPONENT_KEY], True)
-
     def get_components_list(self):
         self.__component_list = []
         for key, value in self.__chassis_component_map[self.__bf_model].items():
@@ -184,13 +147,12 @@ class BFPlatformComponentsParser(object):
     def get_chassis_component_map(self):
         return self.__chassis_component_map
 
-    def get_module_component_map(self):
-        return self.__module_component_map
-
-    def parse_platform_components(self,  platform_components_path):
+    def __parse_platform_components(self,  platform_components_path):
         with open(platform_components_path) as platform_components:
             data = json.load(platform_components)
-
+            kkey, val  = list(data[self.CHASSIS_KEY].items())[0]
+            self.__bf_model = kkey
+            
             if not self.__is_dict(data):
                 self.__parser_platform_fail("dictionary is expected: key=root")
 
@@ -200,34 +162,23 @@ class BFPlatformComponentsParser(object):
             if self.CHASSIS_KEY not in data:
                 self.__parser_platform_fail("\"{}\" key hasn't been found".format(self.CHASSIS_KEY))
 
-            if not self.__is_modular_chassis:
-                if len(data) != 1:
-                    self.__parser_platform_fail("unexpected number of records: key=root")
+            if len(data) != 1:
+                self.__parser_platform_fail("unexpected number of records: key=root")
 
             self.__parse_chassis_section(data[self.CHASSIS_KEY])
 
-            if self.__is_modular_chassis:
-                if self.MODULE_KEY not in data:
-                    self.__parser_platform_fail("\"{}\" key hasn't been found".format(self.MODULE_KEY))
-
-                if len(data) != 2:
-                    self.__parser_platform_fail("unexpected number of records: key=root")
-
-                self.__parse_module_section(data[self.MODULE_KEY])
 
     chassis_component_map = property(fget=get_chassis_component_map)
-    module_component_map = property(fget=get_module_component_map)
 
 class Components(ComponentBase):
     """BFN Montara Platform-specific Component class"""
 
-    bpcp = BFPlatformComponentsParser(is_modular_chassis=False,  bf_model="Wedge100BF-32X-O-AC-F-BF")
-    #bf_platform = device_info.get_platform()
-    bf_platform = "x86_64-accton_wedge100bf_32x-r0"
-    bf_platform_json =  "/usr/share/sonic/device/{}/platform_components.json".format(bf_platform.strip())
+    bf_platform = device_info.get_path_to_platform_dir()
+    bf_platform_json =  "{}/platform_components.json".format(bf_platform.strip())
+
+    bpcp = BFPlatformComponentsParser(bf_platform_json)
 
     def __init__(self, component_index=0):
-        self.bpcp.parse_platform_components(self.bf_platform_json)
         try:
             self.index = component_index
             self.name = self.bpcp.get_components_list()[self.index]
@@ -252,6 +203,8 @@ class Components(ComponentBase):
         Returns:
         A string containing the name of the component
         """
+        if not self.name:
+                return "N/A"
         return self.name
 
     def get_description(self):
@@ -376,3 +329,11 @@ class Components(ComponentBase):
         firmware_update_result = 'update failed'
         raise RuntimeError(firmware_update_result)
 
+    def auto_update_firmware(self, image_path, boot_action):
+        """
+        Default handling of attempted automatic update for a component
+        Will skip the installation if the boot_action is 'warm' or 'fast' and will call update_firmware()
+        if boot_action is fast.
+        """
+        print("INFO: Firmware version up-to-date")
+        return 1
