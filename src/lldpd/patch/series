@@ -6,3 +6,4 @@
 0005-Read-all-notifications-in-lldpctl_recv.patch
 0006-lib-fix-memory-leak.patch
 0007-lib-fix-memory-leak-when-handling-I-O.patch
+0008-lldp_none_mgmtIp.patch
