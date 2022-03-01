@@ -1,0 +1,10 @@
+# CRACKLIB packages
+
+PAM_CRACKLIB_VERSION = 1.4.0-9+deb11u1
+export PAM_CRACKLIB_VERSION
+
+LIBPAM_CRACKLIB = libpam-cracklib_$(PAM_CRACKLIB_VERSION)_$(CONFIGURED_ARCH).deb
+
+$(LIBPAM_CRACKLIB)_URL = "http://http.us.debian.org/debian/pool/main/p/pam/$(LIBPAM_CRACKLIB)"
+
+SONIC_ONLINE_DEBS += $(LIBPAM_CRACKLIB)
