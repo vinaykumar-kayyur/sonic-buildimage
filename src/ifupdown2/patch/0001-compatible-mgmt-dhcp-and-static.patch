@@ -1,0 +1,52 @@
+diff -Nuar a/ifupdown2/addons/address.py b/ifupdown2/addons/address.py
+--- a/ifupdown2/addons/address.py  2019-07-12 16:23:18.000000000 +0800
++++ b/ifupdown2/addons/address.py  2021-12-26 00:56:25.165297691 +0800
+@@ -832,6 +832,14 @@ class address(moduleBase):
+ 
+         addr_method = ifaceobj.addr_method
+         force_reapply = False
++        module_name = self.__class__.__name__
++        ifname = ifaceobj.name
++        ifaceobjlist = [ifaceobj]
++        (addr_supported, newaddrs, newaddr_attrs) = self._inet_address_convert_to_cidr(ifaceobjlist)
++        newaddrs = utils.get_ip_objs(module_name, ifname, newaddrs)
++        user_ip4, user_ip6, newaddrs = self.order_user_configured_addrs(newaddrs)
++        if user_ip4 or user_ip6:
++            addr_method = 'static'
+         try:
+             # release any stale dhcp addresses if present
+             if (addr_method not in ["dhcp", "ppp"] and not ifupdownflags.flags.PERFMODE and
+@@ -840,13 +848,15 @@ class address(moduleBase):
+                 # any sibling iface objects, kill any stale dhclient
+                 # processes
+                 dhclientcmd = dhclient()
+-                if dhclientcmd.is_running(ifaceobj.name):
+-                    # release any dhcp leases
+-                    dhclientcmd.release(ifaceobj.name)
+-                    force_reapply = True
+-                elif dhclientcmd.is_running6(ifaceobj.name):
+-                    dhclientcmd.release6(ifaceobj.name)
+-                    force_reapply = True
++                if user_ip4:
++                    if dhclientcmd.is_running(ifaceobj.name):
++                        # release any dhcp leases
++                        dhclientcmd.release(ifaceobj.name)
++                        force_reapply = True
++                if user_ip6:
++                    if dhclientcmd.is_running6(ifaceobj.name):
++                        dhclientcmd.release6(ifaceobj.name)
++                        force_reapply = True
+         except:
+             pass
+ 
+diff -Nuar a/ifupdown2/addons/dhcp.py b/ifupdown2/addons/dhcp.py
+--- a/ifupdown2/addons/dhcp.py  2021-12-26 00:51:52.898452194 +0800
++++ b/ifupdown2/addons/dhcp.py  2021-12-26 00:56:50.265559738 +0800
+@@ -275,6 +275,7 @@ class dhcp(moduleBase):
+                 as user required state in ifaceobj. error otherwise.
+         """
+         op_handler = self._run_ops.get(operation)
++        ifaceobj.addr_method = 'dhcp'
+         if not op_handler:
+             return
+         try:
