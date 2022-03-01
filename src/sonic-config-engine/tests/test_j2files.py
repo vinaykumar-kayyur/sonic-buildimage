@@ -231,7 +231,7 @@ class TestJ2Files(TestCase):
             self.run_script(argument)
 
             # cleanup
-            cfgg_file_new = os.path.join(arista_dir_path, cfg_file)
+            cfg_file_new = os.path.join(arista_dir_path, cfg_file)
             os.remove(cfg_file_new)
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output_file)
