@@ -581,7 +581,6 @@ module sonic-bgp-common {
 
     grouping sonic-bgp-cmn-allow-prefix {
         leaf default_action {
-            mandatory true;
             type rpolsets:routing-policy-action-type;
             description "Permit/Deny action for BGP allow prefix list";
         }
