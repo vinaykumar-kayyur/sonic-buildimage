@@ -314,5 +314,41 @@
                 ]
             }
         }
+    },
+    
+    "PORT_VALID_MULTIASIC_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 50000,
+                        "index": "0",
+                        "asic_port_name": "Eth8-ASIC1",
+                        "role": "Ext"
+                    }
+                ]
+            }
+        }
+    },
+
+    "PORT_INVALID_MULTIASIC_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 50000,
+                        "index": "0",
+                        "asic_port_name": "Eth8-ASIC1",
+                        "role": "Invalid"
+                    }
+                ]
+            }
+        }
     }
 }

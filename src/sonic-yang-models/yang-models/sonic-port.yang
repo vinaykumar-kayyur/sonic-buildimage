@@ -110,9 +110,19 @@ module sonic-port{
 				}
 
 				leaf index {
-					type uint16 {
-						range 0..256;
+					type uint16;
+				}
+
+				leaf asic_port_name {
+					type string;
+					description "port name in asic and asic name";
+				}
+
+				leaf role {
+					type string {
+						pattern "Ext|Int";
 					}
+					description "Internal port or External port for multi-asic platform";
 				}
 
 				leaf admin_status {
