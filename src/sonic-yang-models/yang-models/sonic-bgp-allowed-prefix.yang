@@ -26,36 +26,38 @@ module sonic-bgp-allowed-prefix {
     }
 
     container sonic-bgp-allowed-prefix {
-        container DEPLOYMENT_ID {
-            description "BGP allowed prefix list";
+        container BGP_ALLOWED_PREFIXES {
+            container DEPLOYMENT_ID {
+                description "BGP allowed prefix list";
 
-            list deployment_list {
-                key "id community";
+                list deployment_list {
+                    key "id community";
 
-                leaf id {
-                    type uint32;
-                    description "BGP allowed prefix list deployment id";
-                }
+                    leaf id {
+                        type uint32;
+                        description "BGP allowed prefix list deployment id";
+                    }
 
-                leaf community {
-                    type string;
-                    description "BGP allowed prefix list deployment community";
-                }
+                    leaf community {
+                        type string;
+                        description "BGP allowed prefix list deployment community";
+                    }
 
-                leaf default_action {
-                    mandatory true;
-                    type rtps:routing-policy-action-type;
-                    description "Permit/Deny action for BGP allow prefix list";
-                }
+                    leaf default_action {
+                        mandatory true;
+                        type rtps:routing-policy-action-type;
+                        description "Permit/Deny action for BGP allow prefix list";
+                    }
 
-                leaf-list prefixs_p4 {
-                    type inet:ipv4-prefix;
-                    description "BGP V4 allowed prefix list";
-                }
+                    leaf-list prefixs_p4 {
+                        type inet:ipv4-prefix;
+                        description "BGP V4 allowed prefix list";
+                    }
 
-                leaf-list prefixs_p6 {
-                    type inet:ipv6-prefix;
-                    description "BGP V6 allowed prefix list";
+                    leaf-list prefixs_p6 {
+                        type inet:ipv6-prefix;
+                        description "BGP V6 allowed prefix list";
+                    }
                 }
             }
         }
