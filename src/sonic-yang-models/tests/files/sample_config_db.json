@@ -1218,14 +1218,10 @@
         },
         "BGP_ALLOWED_PREFIXES" :{
             "DEPLOYMENT_ID|4|123:123": {
-                "default_action": "permit",
-                "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                "default_action": "permit"
             },
-            "DEPLOYMENT_ID|5|456:456": {
-                "default_action": "permit",
-                "prefixs_p4": ["10.10.0.0/24", "10.11.0.0/24"],
-                "prefixs_p6": ["fc00:f1::/64", "fc00:a1::/64"]
+            "DEPLOYMENT_ID|5": {
+                "default_action": "permit"
             }
         },
         "ROUTE_MAP_SET": {
