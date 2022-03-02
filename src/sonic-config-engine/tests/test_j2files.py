@@ -25,6 +25,8 @@ class TestJ2Files(TestCase):
         self.arista7050_t0_minigraph = os.path.join(self.test_dir, 'sample-arista-7050-t0-minigraph.xml')
         self.multi_asic_minigraph = os.path.join(self.test_dir, 'multi_npu_data', 'sample-minigraph.xml')
         self.multi_asic_port_config = os.path.join(self.test_dir, 'multi_npu_data', 'sample_port_config-0.ini')
+        self.dell9332_t1_minigraph = os.path.join(self.test_dir, 'sample-dell-9332-t1-minigraph.xml')
+        self.radv_test_minigraph = os.path.join(self.test_dir, 'radv-test-sample-graph.xml')
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
@@ -67,7 +69,14 @@ class TestJ2Files(TestCase):
         template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
         self.run_script(argument)
-        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay.supervisord.conf'), self.output_file))
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay.supervisord.conf'), self.output_file), self.output_file)
+
+    def test_radv(self):
+        # Test generation of radvd.conf with multiple ipv6 prefixes
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-router-advertiser', 'radvd.conf.j2')
+        argument = '-m ' + self.radv_test_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'radvd.conf'), self.output_file))
 
     def test_lldp(self):
         lldpd_conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-lldp', 'lldpd.conf.j2')
@@ -203,6 +212,25 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'qos-arista7050.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
 
+    def test_qos_dell9332_render_template(self):
+        dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dellemc_z9332f_d1508-r0', 'DellEMC-Z9332f-O32')
+        qos_file = os.path.join(dell_dir_path, 'qos.json.j2')
+        port_config_ini_file = os.path.join(dell_dir_path, 'port_config.ini')
+
+        # copy qos_config.j2 to the Dell Z9332 directory to have all templates in one directory
+        qos_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'qos_config.j2')
+        shutil.copy2(qos_config_file, dell_dir_path)
+
+        argument = '-m ' + self.dell9332_t1_minigraph + ' -p ' + port_config_ini_file + ' -t ' + qos_file + ' > ' + self.output_file
+        self.run_script(argument)
+
+        # cleanup
+        qos_config_file_new = os.path.join(dell_dir_path, 'qos_config.j2')
+        os.remove(qos_config_file_new)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'qos-dell9332.json')
+        assert filecmp.cmp(sample_output_file, self.output_file)
+   
     def test_qos_dell6100_render_template(self):
         dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100')
         qos_file = os.path.join(dell_dir_path, 'qos.json.j2')
