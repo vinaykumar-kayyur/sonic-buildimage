@@ -52,7 +52,6 @@ import os
 import socketserver
 import subprocess
 import syslog
-import yaml
 
 from pathlib import Path
 
