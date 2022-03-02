@@ -496,7 +496,6 @@ class AaaCfg(object):
         self.hostname = ""
 
     # Load conf from ConfigDb
-    # passw_policies_conf
     def load(self, aaa_conf, tac_global_conf, tacplus_conf, rad_global_conf, radius_conf, policies_conf):
         for row in aaa_conf:
             self.aaa_update(row, aaa_conf[row], modify_conf=False)
