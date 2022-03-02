@@ -87,6 +87,8 @@ typedef struct ibde_s {
 #define BDE_I2C_DEV_TYPE      SAL_I2C_DEV_TYPE    /* I2C device */
 #define BDE_AXI_DEV_TYPE      SAL_AXI_DEV_TYPE    /* AXI device */
 #define BDE_EMMI_DEV_TYPE     SAL_EMMI_DEV_TYPE   /* EMMI device */
+#define BDE_COMPOSITE_DEV_TYPE SAL_COMPOSITE_DEV_TYPE /* Composite device, composed of sub-devices with buses */
+#define BDE_USER_DEV_TYPE     SAL_USER_DEV_TYPE   /* The user implements his own method of access to the device */
 #define BDE_DEV_BUS_ALT       SAL_DEV_BUS_ALT     /* Alternate Access */
 #define BDE_DEV_BUS_MSI       SAL_DEV_BUS_MSI     /* Message-signaled interrupts */
 
@@ -103,6 +105,7 @@ typedef struct ibde_s {
 #define BDE_256K_REG_SPACE    0x20000000          /* Map 256K (v 64K) */
 #define BDE_128K_REG_SPACE    0x40000000          /* Map 128K (v 64K) */
 #define BDE_320K_REG_SPACE    0x80000000          /* Map 256K+64K */
+
 
 /* Bus supports only 16bit reads */
 #define BDE_DEV_BUS_RD_16BIT  SAL_DEV_BUS_RD_16BIT 
@@ -178,6 +181,10 @@ typedef struct ibde_s {
         int dev,       /* The device ID to access */
         uint32 addr,   /* The address to access in the internal device address space */
         uint32 value); /* the value to be written. */
+
+    /* 64 bit read/write */
+    uint64  (*read64)(int d, uint32 addr);
+    void    (*write64)(int d, uint32 addr, uint64 data);
 
 } ibde_t;
 
