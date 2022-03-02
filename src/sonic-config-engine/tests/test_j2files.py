@@ -248,7 +248,7 @@ class TestJ2Files(TestCase):
         os.remove(qos_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'qos-dell6100.json')
-        assert filecmp.cmp(sample_output_file, self.output_file)
+        assert filecmp.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
