@@ -20,37 +20,40 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 def get_bios_version():
+    """
+    Retrieves the firmware version of the BIOS
+    Returns:
+    A string containing the firmware version of the BIOS
+    """
     try:
         return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
     except:
-        print("Error: bios_version N/A, dmidecode not found")
+        raise RuntimeError("get BIOS version failed")
 
 def get_bmc_version():
+    """
+    Retrieves the firmware version of the BMC
+    Returns:
+    A string containing the firmware version of the BMC
+    """
     ver="N/A"
     def bmc_get(client):
         return client.pltfm_mgr.pltfm_mgr_chss_mgmt_bmc_ver_get()
     try:    
         ver = thrift_try(bmc_get)
     except Exception:
-        raise RuntimeError("bmc.py: Initialization failed")
+        raise RuntimeError("get BMC version failed")
+    
     return ver
 
 class BFPlatformComponentsParser(object):
     """
     BFPlatformComponentsParser
     """
-
-    PLATFORM_COMPONENTS_PATH_TEMPLATE = "{}/usr/share/sonic/device/{}/{}"
-    PLATFORM_COMPONENTS_FILE_PATH = None
-
     CHASSIS_KEY = "chassis"
     MODULE_KEY = "module"
     COMPONENT_KEY = "component"
     FIRMWARE_KEY = "firmware"
-    UTILITY_KEY = "utility"
-    VERSION_KEY = "version"
-
-    UTF8_ENCODING = "utf-8"
 
     def __init__(self, platform_components_path):
         self.__chassis_component_map = OrderedDict()
@@ -104,7 +107,6 @@ class BFPlatformComponentsParser(object):
                         self.__parser_component_fail("string is expected: key={}".format(key2))
                 
                 self.__chassis_component_map[section][key1] = value1
-
 
         if missing_key is not None:
             self.__parser_component_fail("\"{}\" key hasn't been found".format(missing_key))
@@ -167,7 +169,6 @@ class BFPlatformComponentsParser(object):
 
             self.__parse_chassis_section(data[self.CHASSIS_KEY])
 
-
     chassis_component_map = property(fget=get_chassis_component_map)
 
 class Components(ComponentBase):
@@ -186,10 +187,10 @@ class Components(ComponentBase):
         except IndexError as e:
             raise IndexError(str(e) + " - Error: No components found in plaform_components.json")
         
-        if (self.name=="BMC"):
+        if (self.name == "BMC"):
             self.version = get_bmc_version()
             self.description = "Chassis BMC"
-        elif (self.name=="BIOS"):
+        elif (self.name == "BIOS"):
             self.version = get_bios_version()
             self.description = "Chassis BIOS"
         else:
@@ -204,7 +205,7 @@ class Components(ComponentBase):
         A string containing the name of the component
         """
         if not self.name:
-                return "N/A"
+            return "N/A"
         return self.name
 
     def get_description(self):
@@ -237,31 +238,31 @@ class Components(ComponentBase):
         """
         Retrieves the presence of the component
         Returns:
-            bool: True if FAN is present, False if not
+            bool: True if component is present, False if not
         """
         return True
 
     def get_model(self):
         """
-        Retrieves the model number (or part number) of the device
+        Retrieves the model number (or part number) of the component
         Returns:
-            string: Model/part number of device
+            string: Model/part number of component
         """
         return 'N/A'
 
     def get_serial(self):
         """
-        Retrieves the serial number of the device
+        Retrieves the serial number of the component
         Returns:
-            string: Serial number of device
+            string: Serial number of component
         """
         return 'N/A'
 
     def get_status(self):
         """
-        Retrieves the operational status of the device
+        Retrieves the operational status of the component
         Returns:
-            A boolean value, True if device is operating properly, False if not
+            A boolean value, True if component is operating properly, False if not
         """
         return True
 
@@ -279,14 +280,14 @@ class Components(ComponentBase):
 
     def is_replaceable(self):
         """
-        Indicate whether this device is replaceable.
+        Indicate whether this component is replaceable.
         Returns:
             bool: True if it is replaceable.
         """
         return False
     
     def get_available_firmware_version(self, image_path):
-        return 'N/A'
+        return 'None'
 
     def get_firmware_update_notification(self, image_path):
         """
@@ -326,8 +327,7 @@ class Components(ComponentBase):
         Raises:
             RuntimeError: update failed
         """
-        firmware_update_result = 'update failed'
-        raise RuntimeError(firmware_update_result)
+        return False
 
     def auto_update_firmware(self, image_path, boot_action):
         """
@@ -335,5 +335,4 @@ class Components(ComponentBase):
         Will skip the installation if the boot_action is 'warm' or 'fast' and will call update_firmware()
         if boot_action is fast.
         """
-        print("INFO: Firmware version up-to-date")
         return 1
