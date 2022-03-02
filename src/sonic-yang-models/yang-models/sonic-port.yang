@@ -122,7 +122,8 @@ module sonic-port{
 					type string {
 						pattern "Ext|Int";
 					}
-					description "Internal port or External port for multi-asic platform";
+					description "Internal port or External port for multi-asic platform, e.g Eth0-ASIC1";
+					when "(current()/../asic_port_name)";
 				}
 
 				leaf admin_status {

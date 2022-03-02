@@ -334,7 +334,7 @@
         }
     },
 
-    "PORT_INVALID_MULTIASIC_TEST": {
+    "PORT_INVALID_MULTIASIC_TEST_1": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -346,6 +346,23 @@
                         "index": "0",
                         "asic_port_name": "Eth8-ASIC1",
                         "role": "Invalid"
+                    }
+                ]
+            }
+        }
+    },
+
+    "PORT_INVALID_MULTIASIC_TEST_2": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 50000,
+                        "index": "0",
+                        "role": "Int"
                     }
                 ]
             }
