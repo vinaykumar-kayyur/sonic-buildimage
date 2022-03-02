@@ -423,7 +423,7 @@
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0x0", "dev_addr":"0x73", "dev_type":"pca9548"},
-			"dev_attr": { "virt_bus":"0x1a", "idle_state":"-2},
+			"dev_attr": { "virt_bus":"0x1a", "idle_state":"-2"},
 			"channel":
 			[
 				{ "chn":"0", "dev":"PORT6" },
