@@ -19,7 +19,6 @@ try:
     from sonic_platform.component import Component
     from sonic_platform.watchdog import Watchdog
     from sonic_platform.eeprom import Eeprom
-    from sonic_platform.sfp import Sfp
     import time
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
