@@ -20,6 +20,7 @@ setup(
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
+        'scripts/http-server',
         'scripts/sonic-host-server'
     ],
     install_requires = [
