@@ -7,6 +7,14 @@ module sonic-bgp-allowed-prefix {
         prefix bgpcmn;
     }
 
+    import sonic-routing-policy-sets {
+        prefix rpolsets;
+    }
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
     organization
         "SONiC";
 
@@ -43,10 +51,23 @@ module sonic-bgp-allowed-prefix {
                     description "BGP allowed prefix list deployment community";
                 }
 
-                uses bgpcmn:sonic-bgp-cmn-allow-prefix;
+                leaf default_action {
+                    type rpolsets:routing-policy-action-type;
+                    description "Permit/Deny action for BGP allow prefix list";
+                }
+
+                leaf-list prefixes_v4 {
+                    type inet:ipv4-prefix;
+                    description "BGP V4 allowed prefix list";
+                }
+
+                leaf-list prefixes_v6 {
+                    type inet:ipv6-prefix;
+                    description "BGP V6 allowed prefix list";
+                }
             }
 
-            list BGP_ALLOWED_PREFIXES_LIST {
+            list BGP_ALLOWED_prefixes_LIST {
                 key "deployment id";
 
                 leaf deployment {
@@ -61,7 +82,20 @@ module sonic-bgp-allowed-prefix {
                     description "BGP allowed prefix list deployment id";
                 }
 
-                uses bgpcmn:sonic-bgp-cmn-allow-prefix;
+                leaf default_action {
+                    type rpolsets:routing-policy-action-type;
+                    description "Permit/Deny action for BGP allow prefix list";
+                }
+
+                leaf-list prefixes_v4 {
+                    type inet:ipv4-prefix;
+                    description "BGP V4 allowed prefix list";
+                }
+
+                leaf-list prefixes_v6 {
+                    type inet:ipv6-prefix;
+                    description "BGP V6 allowed prefix list";
+                }
             }
         }
     }

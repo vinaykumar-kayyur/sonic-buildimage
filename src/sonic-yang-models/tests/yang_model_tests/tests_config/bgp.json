@@ -1431,16 +1431,16 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     },
                     {
                         "deployment": "DEPLOYMENT_ID",
                         "id": "5",
                         "community": "456:456",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.10.0.0/24", "10.11.0.0/24"],
-                        "prefixs_p6": ["fc00:f1::/64", "fc00:a1::/64"]
+                        "prefixes_v4": ["10.10.0.0/24", "10.11.0.0/24"],
+                        "prefixes_v6": ["fc00:f1::/64", "fc00:a1::/64"]
                     }
                 ]
             }
@@ -1455,8 +1455,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permitall",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1471,8 +1471,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permitall",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1487,8 +1487,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/48", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/48", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1503,8 +1503,8 @@
                         "id": "4",
                         "community": "123:123",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0./24"],
-                        "prefixs_p6": ["fc00:f0::/129", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0./24"],
+                        "prefixes_v6": ["fc00:f0::/129", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1518,15 +1518,15 @@
                         "deployment": "DEPLOYMENT_ID",
                         "id": "4",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     },
                     {
                         "deployment": "DEPLOYMENT_ID",
                         "id": "5",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.10.0.0/24", "10.11.0.0/24"],
-                        "prefixs_p6": ["fc00:f1::/64", "fc00:a1::/64"]
+                        "prefixes_v4": ["10.10.0.0/24", "10.11.0.0/24"],
+                        "prefixes_v6": ["fc00:f1::/64", "fc00:a1::/64"]
                     }
                 ]
             }
@@ -1540,8 +1540,8 @@
                         "deployment": "DEPLOYMENTID",
                         "id": "4",
                         "default_action": "permitall",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1555,8 +1555,8 @@
                         "deployment": "DEPLOYMENT_ID",
                         "id": "4",
                         "default_action": "permitall",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1570,8 +1570,8 @@
                         "deployment": "DEPLOYMENT_ID",
                         "id": "4",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/48", "10.1.0.0/24"],
-                        "prefixs_p6": ["fc00:f0::/64", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/48", "10.1.0.0/24"],
+                        "prefixes_v6": ["fc00:f0::/64", "fc00:a0::/64"]
                     }
                 ]
             }
@@ -1585,8 +1585,8 @@
                         "deployment": "DEPLOYMENT_ID",
                         "id": "4",
                         "default_action": "permit",
-                        "prefixs_p4": ["10.0.0.0/24", "10.1.0.0./24"],
-                        "prefixs_p6": ["fc00:f0::/129", "fc00:a0::/64"]
+                        "prefixes_v4": ["10.0.0.0/24", "10.1.0.0./24"],
+                        "prefixes_v6": ["fc00:f0::/129", "fc00:a0::/64"]
                     }
                 ]
             }
