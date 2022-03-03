@@ -35,8 +35,6 @@ try:
     import commands
 except Exception as ex:
     import subprocess
-except:
-    pass
 import sys, getopt
 import logging
 import re
@@ -149,8 +147,6 @@ def log_os_system(cmd, show):
         status, output = commands.getstatusoutput(cmd)
     except Exception as ex:
         status, output = subprocess.getstatusoutput(cmd)
-    except:
-        pass
     my_log (cmd +"with result:" + str(status))
     my_log ("      output:"+output)
     if status:
