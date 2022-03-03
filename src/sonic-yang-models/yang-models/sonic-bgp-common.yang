@@ -585,12 +585,12 @@ module sonic-bgp-common {
             description "Permit/Deny action for BGP allow prefix list";
         }
 
-        leaf-list prefixs_p4 {
+        leaf-list prefixes_v4 {
             type inet:ipv4-prefix;
             description "BGP V4 allowed prefix list";
         }
 
-        leaf-list prefixs_p6 {
+        leaf-list prefixes_v6 {
             type inet:ipv6-prefix;
             description "BGP V6 allowed prefix list";
         }
