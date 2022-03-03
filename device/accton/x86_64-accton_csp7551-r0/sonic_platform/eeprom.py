@@ -1,5 +1,4 @@
 try:
-    import os
     import sys
     import re
     if sys.version_info[0] >= 3:

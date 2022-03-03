@@ -38,7 +38,6 @@ class Chassis(ChassisBase):
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
         self.config_data = {}
-        #self.__initialize_fan()
         self.__initialize_fan_drawers()
         self.__initialize_psu()
         self.__initialize_thermals()
@@ -58,13 +57,6 @@ class Chassis(ChassisBase):
         for fant_index in range(0, NUM_FAN_TRAY):
             fan_drawer = FanDrawer(fant_index)
             self._fan_drawer_list.append(fan_drawer)
-
-    def __initialize_fan(self):
-        from sonic_platform.fan import Fan
-        for fant_index in range(0, NUM_FAN_TRAY):
-            for fan_index in range(0, NUM_FAN):
-                fan = Fan(fant_index, fan_index)
-                self._fan_list.append(fan)
 
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
