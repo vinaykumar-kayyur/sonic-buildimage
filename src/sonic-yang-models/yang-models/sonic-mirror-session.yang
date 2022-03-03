@@ -99,7 +99,7 @@ module sonic-mirror-session {
                 leaf gre_type {
                     when "current()/../type = 'ERSPAN'";
                     type string {
-                        pattern "0[xX][0-9a-fA-F]*";
+                        pattern "0[xX][0-9a-fA-F]*|[1-9][0-9]*";
                         length 1..6 {
                             error-message "Invalid GRE type";
                             error-app-tag gre-type-invalid;
