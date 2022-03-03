@@ -33,13 +33,15 @@ command:
 import os
 try:
     import commands
-except:
+except Exception as ex:
     import subprocess
+except:
+    pass
 import sys, getopt
 import logging
 import re
 import time
-from collections import namedtuple
+
 
 PROJECT_NAME = 'csp7551'
 version = '0.1.0'
@@ -115,10 +117,7 @@ def main():
             show_help()
 
     if status:
-        if status == 0:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        sys.exit(1)
     else:
         sys.exit(0)
 
@@ -148,8 +147,10 @@ def log_os_system(cmd, show):
     logging.info('Run :'+cmd)
     try:
         status, output = commands.getstatusoutput(cmd)
-    except:
+    except Exception as ex:
         status, output = subprocess.getstatusoutput(cmd)
+    except:
+        pass
     my_log (cmd +"with result:" + str(status))
     my_log ("      output:"+output)
     if status:
@@ -213,10 +214,7 @@ def driver_install():
         os.system("cp /usr/lib/modules/{}/updates/drivers/net/ethernet/intel/ice/ice.ko /usr/lib/modules/{}/kernel/drivers/net/ethernet/intel/ice/ice.ko".format(kervel_version,kervel_version))
         os.system("update-initramfs -u")
     for i in range(0,len(kos)):
-        status, output = log_os_system(kos[i], 1)
-        #if status:
-        #    if FORCE == 0:
-        #        return status
+        log_os_system(kos[i], 1)
 
     os.system("depmod")
 
@@ -225,10 +223,7 @@ def driver_install():
 def driver_uninstall():
     global FORCE
     for i in range(0,len(rm_kos)):
-        status, output = log_os_system(rm_kos[i], 1)
-        #if status:
-        #    if FORCE == 0:
-        #        return status
+        log_os_system(rm_kos[i], 1)
     return 0
 
 led_prefix ='/sys/class/leds/'+PROJECT_NAME+'_led::'
@@ -311,7 +306,7 @@ def device_uninstall():
             if FORCE == 0:
                 return status
 
-    status, output =log_os_system("echo 1 > /tmp/device_init_first_time", 1)
+    log_os_system("echo 1 > /tmp/device_init_first_time", 1)
 
     return
 

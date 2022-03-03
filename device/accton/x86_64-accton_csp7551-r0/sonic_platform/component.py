@@ -6,15 +6,16 @@
 #
 #############################################################################
 
-import shlex
 import subprocess
 import sys
 import os
 try:
     import pexpect
-except:
+except Exception as ex:
     print('no pexpect module')
-import re
+except:
+    pass
+
 
 try:
     from sonic_platform_base.component_base import ComponentBase
@@ -84,7 +85,7 @@ class Component(ComponentBase):
             bmc_pwd = "0penBmc"
             if i == 2 and bmc_pwd != None:
                 child.sendline(bmc_pwd)
-                data = child.read()
+                child.read()
                 child.close()
                 return os.path.isfile(fw_path)
             elif i == 0:
@@ -113,7 +114,7 @@ class Component(ComponentBase):
         if (exitCode == 0):
             return exitCode
         else:
-            print("\"{}\" return {}!".format(command, exitCode))
+            print("\"{}\" return {}! output:{}".format(command, exitCode, output))
             return exitCode
 
     def __update_refresh_file(self,type):
@@ -243,11 +244,12 @@ class Component(ComponentBase):
             return False
 
     def __fpga_upd(self, image_path):
+        retcode1 = 0xff
         retcode = 0xff
         if self.name == "FPGA":
             print("Erasing the SPI flash, this takes about a minute...")
             fpga_upd_cmd = "fpga_upd -E"
-            retcode = self.__execute_cmd(fpga_upd_cmd)
+            retcode1 = self.__execute_cmd(fpga_upd_cmd)
             print("Programing the SPI flash...")
             fpga_upd_cmd = "fpga_upd -W -F {}".format(image_path)
             retcode = self.__execute_cmd(fpga_upd_cmd)
@@ -260,7 +262,7 @@ class Component(ComponentBase):
             cpld_upd_cmd = "cpld_jtag.sh port {}".format(image_path)
             retcode = self.__execute_cmd(cpld_upd_cmd)
         '''
-        if retcode == 0:
+        if retcode == 0 and retcode1 == 0:
             self.__update_refresh_file(0)
             return True
         else:

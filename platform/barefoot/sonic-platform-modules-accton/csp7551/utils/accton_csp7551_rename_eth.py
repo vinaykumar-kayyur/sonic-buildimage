@@ -76,7 +76,7 @@ def diag_item_rename_eth():
     target_bus_major = ''
     target_bus_minor = ''
     compare_driver_name = ''
-    compare_bus_name = ''
+    #compare_bus_name = ''
     compare_bus_major = ''
     compare_bus_minor = ''
     for i in range(eth_num):

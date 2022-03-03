@@ -4,7 +4,6 @@ try:
     import os
     import time
     import re
-    import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -173,7 +172,7 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        reg_value = int(reg_file.readline().rstrip())
+        #reg_value = int(reg_file.readline().rstrip())
 
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:
@@ -245,7 +244,7 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        reg_value = int(reg_file.readline().rstrip())
+        #reg_value = int(reg_file.readline().rstrip())
 
         # tx_disable is active high; set or clear the bit accordingly
         if disable is True:
@@ -285,7 +284,7 @@ class SfpUtil(SfpUtilBase):
         for port in range(self.port_start, self.port_end+1):
             try:
                 sfp_resent = self.get_presence(port)
-            except:
+            except Exception as ex:
                 sfp_resent = False
             sfp_state = '1' if sfp_resent else '0'
 

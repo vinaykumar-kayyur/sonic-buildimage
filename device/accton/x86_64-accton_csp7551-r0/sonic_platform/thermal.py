@@ -6,9 +6,7 @@
 #
 #############################################################################
 
-import os
-import os.path
-import glob
+
 import subprocess
 import math
 try:
@@ -107,7 +105,7 @@ class Thermal(ThermalBase):
         command=IPMI_SENSOR_PARAM_CMD.format(THERMAL_SENSOR_INDEX[self.index]["index"])
         st1, log1 = self._syscmd(command)
         if st1 != 0:
-            raise 'error on syscmd'
+            print('error on syscmd')
         m1 = log1.split()[2].strip()
         m2 = log1.split()[3].strip()
         m2 = (int(m2,16)&0xc0) <<2
