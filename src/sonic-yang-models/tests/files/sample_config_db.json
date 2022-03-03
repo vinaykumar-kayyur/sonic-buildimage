@@ -293,7 +293,11 @@
                 "hwsku": "Stone",
                 "buffer_model": "dynamic",
                 "cloudtype": "Public",
-                "region": "usfoo"
+                "region": "usfoo",
+                "asic_name": "Asic0",
+                "switch_id": "2",
+                "switch_type": "voq",
+                "max_cores": "8"
             }
         },
         "VLAN": {
@@ -1147,6 +1151,24 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_PEER_RANGE": {
+            "BGPSLBPassive": {
+                "ip_range": [
+                    "10.255.0.0/25"
+                ],
+                "name": "BGPSLBPassive",
+                "src_address": "10.1.0.32"
+            },
+            "BGPVac": {
+                "ip_range": [
+                    "192.168.0.0/21",
+                    "192.169.0.0/21",
+                    "192.170.0.0/21"
+                ],
+                "name": "BGPVac",
+                "src_address": "10.1.0.32"
+            }
+        },
         "BGP_MONITORS": {
             "5.6.7.8": {
                 "admin_status": "up",
@@ -1192,6 +1214,14 @@
         "BGP_GLOBALS_LISTEN_PREFIX": {
             "default|30.0.0.0/8": {
                 "peer_group": "PG1"
+            }
+        },
+        "BGP_ALLOWED_PREFIXES" :{
+            "DEPLOYMENT_ID|4|123:123": {
+                "default_action": "permit"
+            },
+            "DEPLOYMENT_ID|5": {
+                "default_action": "permit"
             }
         },
         "ROUTE_MAP_SET": {
