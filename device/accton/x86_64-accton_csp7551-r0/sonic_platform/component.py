@@ -13,8 +13,6 @@ try:
     import pexpect
 except Exception as ex:
     print('no pexpect module')
-except:
-    pass
 
 
 try:
