@@ -123,7 +123,6 @@ module sonic-port{
 						pattern "Ext|Int";
 					}
 					description "Internal port or External port for multi-asic platform";
-					when "(current()/../asic_port_name)";
 				}
 
 				leaf admin_status {
