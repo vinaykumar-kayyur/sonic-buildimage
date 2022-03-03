@@ -149,15 +149,8 @@ setup(
                          './cvlyang-models/sonic-bgp-monitor.yang',
                          './cvlyang-models/sonic-bgp-neighbor.yang',
                          './cvlyang-models/sonic-bgp-peergroup.yang',
-<<<<<<< HEAD
-<<<<<<< HEAD
                          './cvlyang-models/sonic-bgp-peerrange.yang',
-=======
                          './cvlyang-models/sonic-bgp-allowed-prefix.yang',
->>>>>>> fix unit test issues
-=======
-                         './cvlyang-models/sonic-bgp-allowed-prefix.yang',
->>>>>>> cf70d7d23e6dbd70fa035313c38ac7f7e1a708f5
                          './cvlyang-models/sonic-breakout_cfg.yang',
                          './cvlyang-models/sonic-copp.yang',
                          './cvlyang-models/sonic-crm.yang',
