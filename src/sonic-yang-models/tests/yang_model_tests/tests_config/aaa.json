@@ -4,7 +4,7 @@
             "sonic-system-aaa:AAA": {
                 "AAA_LIST": [{
                         "type": "authentication",
-                        "login": "local",
+                        "login": "tacacs+,local",
                         "failthrough": "True",
                         "fallback": "True",
                         "trace": "True",

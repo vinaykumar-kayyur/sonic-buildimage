@@ -31,7 +31,7 @@ module sonic-system-aaa {
 
                 leaf login {
                     type string {
-                        pattern 'radius|tacacs\+|local|default' {
+                        pattern '((tacacs\+|local|radius|default),)*(tacacs\+|local|radius|default)' {
                             error-message "Invalid login choice";
                         }
                     }
