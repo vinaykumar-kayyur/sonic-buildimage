@@ -471,7 +471,6 @@ def get_all_namespaces():
     front_ns = []
     back_ns = []
     num_npus = get_num_npus()
-    SonicDBConfig.load_sonic_global_db_config()
 
     if is_multi_npu():
         for npu in range(num_npus):

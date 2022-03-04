@@ -1,7 +1,6 @@
 [submodule "sonic-swss-common"]
 	path = src/sonic-swss-common
-	url = https://github.com/liuh-80/sonic-swss-common
-	branch = dev/liuh/fix_initialize_issue
+	url = https://github.com/Azure/sonic-swss-common
 [submodule "sonic-linux-kernel"]
 	path = src/sonic-linux-kernel
 	url = https://github.com/Azure/sonic-linux-kernel
