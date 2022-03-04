@@ -293,7 +293,11 @@
                 "hwsku": "Stone",
                 "buffer_model": "dynamic",
                 "cloudtype": "Public",
-                "region": "usfoo"
+                "region": "usfoo",
+                "asic_name": "Asic0",
+                "switch_id": "2",
+                "switch_type": "voq",
+                "max_cores": "8"
             }
         },
         "VLAN": {
@@ -1147,6 +1151,24 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_PEER_RANGE": {
+            "BGPSLBPassive": {
+                "ip_range": [
+                    "10.255.0.0/25"
+                ],
+                "name": "BGPSLBPassive",
+                "src_address": "10.1.0.32"
+            },
+            "BGPVac": {
+                "ip_range": [
+                    "192.168.0.0/21",
+                    "192.169.0.0/21",
+                    "192.170.0.0/21"
+                ],
+                "name": "BGPVac",
+                "src_address": "10.1.0.32"
+            }
+        },
         "BGP_MONITORS": {
             "5.6.7.8": {
                 "admin_status": "up",
@@ -1540,7 +1562,7 @@
             }
         },
 
-        
+
         "MCLAG_DOMAIN": {
             "123": {
                 "source_ip": "12.1.1.1",
@@ -1570,6 +1592,7 @@
                 "queue": "0",
                 "src_ip": "10.1.1.1",
                 "ttl": "10",
+                "policer": "everflow_static_policer",
                 "type": "ERSPAN"
             },
             "span": {
@@ -1582,7 +1605,34 @@
                 ]
 
             }
+        },
+
+
+        "POLICER": {
+            "everflow_static_policer": {
+                "meter_type": "bytes",
+                "mode": "sr_tcm",
+                "cir": "12500000",
+                "cbs": "12500000",
+                "color": "aware",
+                "red_packet_action": "drop"
+            }
+        },
+
+
+        "NVGRE_TUNNEL": {
+            "tunnel_1": {
+                "src_ip": "10.0.0.1"
+            }
+        },
+        "NVGRE_TUNNEL_MAP": {
+            "tunnel_1|Vlan111": {
+                "vlan_id": "111",
+                "vsid": "5000"
+            }
         }
+
+
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
