@@ -235,11 +235,7 @@ class TestJ2Files(TestCase):
             os.remove(cfg_file_new)
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output_file)
-            if not filecmp.cmp(sample_output_file, self.output_file):
-               print('sample output file: ' + sample_output_file)
-               with open( self.output_file ) as f:
-                  print('actual output: ' + str(f.read()))
-               assert False
+            assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_qos_dell9332_render_template(self):
         dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dellemc_z9332f_d1508-r0', 'DellEMC-Z9332f-O32')
