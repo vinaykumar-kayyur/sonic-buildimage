@@ -23,9 +23,8 @@ if [ -z "$DISTRO" ]; then
 fi
 
 # add script for reproducible build. using sha256 instead of tag for docker base image.
-set -e
 scripts/docker_version_control.sh $@
-set +e
+
 DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
 COPY ["buildinfo", "/usr/local/share/buildinfo"]
 RUN dpkg -i /usr/local/share/buildinfo/sonic-build-hooks_1.0_all.deb
