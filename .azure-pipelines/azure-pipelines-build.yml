@@ -40,8 +40,6 @@ jobs:
     ${{ if eq(parameters.jobGroups, '') }}:
       jobGroups:
         - name: vs
-          variables:
-            dbg_image: yes
 
         - name: barefoot
           variables:

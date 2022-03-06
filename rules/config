@@ -211,3 +211,5 @@ INCLUDE_MUX = y
 
 # ENABLE_ASAN - enable address sanitizer
 ENABLE_ASAN ?= n
+
+SONIC_DEFAULT_CONTAINER_REGISTRY=soniccr1.azurecr.io/
