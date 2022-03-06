@@ -1,7 +1,9 @@
 """
 Implementation of "allow-list" feature
 """
+from locale import normalize
 import re
+import ipaddress
 
 from .log import log_debug, log_info, log_err, log_warn
 from .template import TemplateFabric
@@ -228,6 +230,12 @@ class BGPAllowListMgr(Manager):
         constant_list = self.__get_constant_list(af)
         allow_list = self.__to_prefix_list(af, allow_list)
         log_debug("BGPAllowListMgr::__update_prefix_list. af='%s' prefix-list name=%s" % (af, pl_name))
+        '''
+            Need to check exist and equality of the allowed prefix list.
+            A. If exist and equal, no operation needed. 
+            B. If exist but not equal, first delete then add prefix based on the data from condig db and constants. 
+            C. If non-exist, directly add prefix based on the data from condig db and constants.
+        '''
         exist, correct = self.__is_prefix_list_valid(af, pl_name, allow_list, constant_list)
         if correct:
             log_debug("BGPAllowListMgr::__update_prefix_list. the prefix-list '%s' exists and correct" % pl_name)
@@ -258,6 +266,24 @@ class BGPAllowListMgr(Manager):
         family = self.__af_to_family(af)
         return ["no %s prefix-list %s" % (family, pl_name)]
 
+    def __normalize_ipnetwork(self, af, allow_prefix_list):
+        '''
+            Normalize IPv6 addresses
+                for example:
+                    2001:cdba:0000:0000:0000:0000:3257:9652
+                    2001:cdba:0:0:0:0:3257:9652
+                    2001:cdba::3257:9652
+                after normalize, all would be normalized to 
+                    2001:cdba::3257:9652
+        '''
+        normalize_list = []
+        for allow_item in allow_prefix_list:
+            tmp_list = allow_item.split(' ')
+            if af == self.V6:
+                tmp_list[1] = str(ipaddress.IPv6Network(tmp_list[1]))
+            normalize_list.append(' '.join(tmp_list))
+        return normalize_list
+
     def __is_prefix_list_valid(self, af, pl_name, allow_list, constant_list):
         """
         Check that a prefix list exists and it has valid entries
@@ -266,7 +292,8 @@ class BGPAllowListMgr(Manager):
         :param allow_list: a prefix-list which must be a part of the valid prefix list
         :param constant_list: a constant list which must be on top of each "allow" prefix list on the device
         :return: a tuple. The first element of the tuple has True if the prefix-list exists, False otherwise,
-                 The second element of the tuple has True if the prefix-list contains correct entries, False if not
+                 The second element of the tuple has True if allow prefix list in running configuraiton is
+                 equal with ones in config db + constants, False if not
         """
         assert af == self.V4 or af == self.V6
         family = self.__af_to_family(af)
@@ -274,20 +301,15 @@ class BGPAllowListMgr(Manager):
         conf = self.cfg_mgr.get_text()
         if not any(line.strip().startswith(match_string) for line in conf):
             return False, False  # if the prefix list is not exists, it is not correct
-        constant_set = set(constant_list)
-        allow_set = set(allow_list)
+        expect_set = set(self.__normalize_ipnetwork(af, constant_list)).update(set(self.__normalize_ipnetwork(af, allow_list)))
+        config_list = []
         for line in conf:
             if line.startswith(match_string):
                 found = line[len(match_string):].strip().split(' ')
                 rule = " ".join(found[1:])
-                if rule in constant_set:
-                    constant_set.discard(rule)
-                elif rule in allow_set:
-                    if constant_set:
-                        return True, False  # Not everything from constant set is presented
-                    else:
-                        allow_set.discard(rule)
-        return True, len(allow_set) == 0  # allow_set should be presented all
+                config_list.append(rule)
+
+        return True, expect_set == set(self.__normalize_ipnetwork(af, config_list))  # Return double Ture, when running configuraiton is identical with config db + constants.
 
     def __update_community(self, community_name, community_value):
         """
