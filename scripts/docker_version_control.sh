@@ -30,10 +30,8 @@ echo "Input: $@" >> $new_version_file.log
 echo "Image: $image_tag" >> $new_version_file.log
 echo "hash in config: $hash_value" >> $new_version_file.log
 echo "Default ACR: $prefix" >> $new_version_file.log
-cat src/sonic-build-hooks/buildinfo/config/buildinfo.config 2>&1 >> $new_version_file.log
 echo "target/${image_tag}.gz-load.log: $(ls target/${image_tag}.gz-load.log 2>&1)" >> $new_version_file.log
 echo "-------------------------------------------------" >> $new_version_file.log
-exit 1
 
 if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,docker,* ]]; then
     # version control On
