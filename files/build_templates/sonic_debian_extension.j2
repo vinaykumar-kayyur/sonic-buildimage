@@ -601,6 +601,7 @@ for f in $(find $FILESYSTEM_ROOT/var/cache/apt/archives -name "*.deb"); do
 done
 
 sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
+ps -eo pid,cmd | grep python | grep "/etc/entropy.py" | awk '{print $1}' | xargs sudo kill -9 2>/dev/null || true
 
 {% endfor %}
 {% endif %}
