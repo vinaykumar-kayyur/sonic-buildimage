@@ -39,7 +39,7 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
     for image in $prefix$image_tag@$hash_value $image_tag@$hash_value $prefix$image_tag
     do
         ((i++))
-        if docker pull $image 1>/dev/null;then
+        if docker pull $image >> $new_version_file.log 2>&1;then
             echo "$i: success! pulled image from $image" >> $new_version_file.log
             newimage=$image
             break
@@ -55,7 +55,7 @@ else
     for image in $prefix$image_tag $image_tag
     do
         ((i++))
-        if docker pull $image 1>/dev/null;then
+        if docker pull $image >> $new_version_file.log 2>&1;then
             echo "$i: success! pulled image from $image" >> $new_version_file.log
             echo -e "${ARCH}:${image_tag}==$(docker pull $image | grep Digest | awk '{print$2}')" >> $new_version_file
             sort -u $new_version_file -o $new_version_file
