@@ -1,11 +1,11 @@
 [Unit]
-Description=Dell S6100 I2C MUX Enumeration
+Description=Dell S6100 Platform Startup Service
 Before=pmon.service
 DefaultDependencies=no
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/s6100_i2c_enumeration.sh init
+ExecStart=/usr/local/bin/s6100_platform_startup.sh init
 RemainAfterExit=no
 
 [Install]
