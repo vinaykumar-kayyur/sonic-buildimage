@@ -11,7 +11,7 @@ import signal
 
 import jinja2
 from sonic_py_common import device_info
-from swsscommon.swsscommon import ConfigDBConnector, TableConsumable
+from swsscommon.swsscommon import ConfigDBConnector
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -913,7 +913,7 @@ class NtpCfg(object):
         syslog.syslog(syslog.LOG_INFO, "NtpCfg load ...")
 
         for row in ntp_global_conf:
-            self.ntp_global_update(row, ntp_global_conf[row], True)
+            self.ntp_global_update(row, ntp_global_conf[row], load=True)
 
         # Force reload on init
         self.ntp_server_update(0, None, load=True)
@@ -931,7 +931,7 @@ class NtpCfg(object):
             cmd = 'systemctl restart ntp-config'
             run_cmd(cmd)
 
-    def ntp_global_update(self, key, data):
+    def ntp_global_update(self, key, data, load=False):
         syslog.syslog(syslog.LOG_INFO, 'NTP GLOBAL Update')
         orig_src = self.ntp_global.get('src_intf', '')
         orig_src_set = set(orig_src.split(";"))
@@ -943,6 +943,9 @@ class NtpCfg(object):
         
         # Update the Local Cache
         self.ntp_global = data
+
+        # If initial load don't restart daemon
+        if load: return
 
         # check if ntp server configured, if not, do nothing
         if not self.ntp_servers:
