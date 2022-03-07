@@ -1292,7 +1292,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         }
     }
 
-    if deployment_id:
+    if deployment_id is not None:
         results['DEVICE_METADATA']['localhost']['deployment_id'] = deployment_id
 
     cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
