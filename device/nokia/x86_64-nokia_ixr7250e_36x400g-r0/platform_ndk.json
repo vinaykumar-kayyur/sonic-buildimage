@@ -1,0 +1,36 @@
+{
+    "options": [
+    {
+        "key": "sfp_init_tx_en",
+        "stringval": "yes"
+    },
+    {
+        "key": "midplane_subnet",
+        "stringval": "10.6.0.0/16"
+    },
+    {
+        "key": "midplane_monitor",
+        "stringval": "yes"
+    },
+    {
+        "key": "monitor_action",
+        "stringval": "reboot"
+    },
+    {
+        "key": "grpc_thermal_monitor",
+        "stringval": "yes"
+    },
+    {
+        "key": "disable_vfio",
+        "intval": 1
+    },
+    {
+        "key": "sonic_bdb_mode",
+        "intval": 0
+    },
+    { 
+      "key": "update_asic_pvt",
+      "intval": 10
+    }
+    ]
+}

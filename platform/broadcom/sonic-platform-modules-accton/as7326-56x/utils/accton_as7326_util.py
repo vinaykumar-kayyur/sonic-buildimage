@@ -65,7 +65,8 @@ def main():
                                                        'debug',
                                                        'force',
                                                           ])
-    if DEBUG == True:
+
+    if DEBUG == True:                
         print(options)
         print(args)
         print(len(sys.argv))
@@ -92,8 +93,6 @@ def main():
 def show_help():
     print(__doc__ % {'scriptName' : sys.argv[0].split("/")[-1]})
     sys.exit(0)
-
-
 
 def dis_i2c_ir3570a(addr):
     cmd = "i2cset -y 0 0x%x 0xE5 0x01" % addr
@@ -132,7 +131,7 @@ def log_os_system(cmd, show):
     if status:
         logging.info('Failed :'+cmd)
         if show:
-            print('Failed :'+cmd)
+            print(('Failed :'+cmd))
     return  status, output
 
 def driver_check():
@@ -402,9 +401,6 @@ def do_install():
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
 
-
-    return
-
 def do_uninstall():
     print("Checking system....")
     if not device_exist():
@@ -424,10 +420,6 @@ def do_uninstall():
         if status:
             if FORCE == 0:
                 return  status
-
-
-    return
-
 
 def device_exist():
     ret1, log = log_os_system("ls "+i2c_prefix+"*0070", 0)

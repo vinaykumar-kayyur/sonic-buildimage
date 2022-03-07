@@ -42,7 +42,7 @@ RUN pip install cffi==1.10.0 \
                 ipython==5.4.1 \
                 ixnetwork-restpy==1.0.64 \
                 ixnetwork-open-traffic-generator==0.0.79 \
-                snappi[ixnetwork]==0.3.13 \
+                snappi[ixnetwork,convergence]==0.5.11 \
                 jinja2==2.7.2 \
                 jsonpatch \
                 lxml \
@@ -56,6 +56,7 @@ RUN pip install cffi==1.10.0 \
                 psutil \
                 pyasn1==0.1.9 \
                 pyfiglet \
+                lazy-object-proxy==1.6.0 \
                 pylint==1.8.1 \
                 pyro4 \
                 pysnmp==4.2.5 \
@@ -68,8 +69,11 @@ RUN pip install cffi==1.10.0 \
                 rpyc \
                 six \
                 tabulate \
+                statistics \
                 textfsm \
                 virtualenv \
+                retry \
+                thrift==0.11.0 \
     && git clone https://github.com/p4lang/scapy-vxlan.git \
     && cd scapy-vxlan \
     && python setup.py install \
@@ -87,7 +91,8 @@ RUN pip install cffi==1.10.0 \
     && rm -fr nanomsg-1.0.0 \
     && rm -f 1.0.0.tar.gz  \
     && pip install nnpy    \
-    && pip install dpkt
+    && pip install dpkt    \
+    && pip install scapy==2.4.5 --upgrade
 
 # Install docker-ce-cli
 RUN apt-get update                  \
