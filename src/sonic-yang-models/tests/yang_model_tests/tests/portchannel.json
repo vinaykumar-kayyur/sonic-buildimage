@@ -2,6 +2,13 @@
     "PORT_CHANNEL_TEST": {
         "desc": "Configure a member port in PORT_CHANNEL table."
     },
+    "PORT_CHANNEL_MAX_VALID_MIN_LINKS": {
+        "desc": "Configure PortChannel with maximum valid value of min-links."
+    },
+    "PORT_CHANNEL_OUT_OF_RANGE_MIN_LINKS": {
+        "desc": "Configure PortChannel with greater than maximum valid value of min-links.",
+        "eStr": ["Value", "does not satisfy the constraint"]
+    },
     "PORT_CHANNEL_WRONG_PATTERN": {
         "desc": "INCORRECT PORTCHANNEL_NAME IN PORT_CHANNEL TABLE.",
         "eStrKey" : "Pattern",
@@ -44,5 +51,12 @@
         "desc": "Configure a non existent Vrf in PORTCHANNEL_INTERFACE table.",
         "eStrKey": "LeafRef",
         "eStr": ["sonic-vrf:name"]
+    },
+    "PORTCHANNEL_INTERFACE_WRONG_NAT_ZONE_RANGE": {
+        "desc": "Configure wrong value for nat zone.",
+        "eStr" : "Invalid nat zone for the portchannel interface."
+    },
+    "PORTCHANNEL_INTERFACE_VALID_NAT_ZONE_RANGE": {
+        "desc": "Configure valid value for nat zone."
     }
 }

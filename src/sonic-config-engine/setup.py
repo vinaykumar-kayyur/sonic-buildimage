@@ -7,7 +7,7 @@ from setuptools import setup
 dependencies = [
     'bitarray==1.5.3',
     'ipaddress==1.0.23',
-    'lxml==4.6.3',
+    'lxml==4.6.5',
     'netaddr==0.8.0',
     'pyyaml==5.4.1',
     'sonic-py-common',
@@ -20,7 +20,9 @@ if sys.version_info.major == 3:
         # Python3 has enum module and so pyangbind should be installed outside
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
-        'Jinja2>=2.10'
+        'Jinja2>=2.10',
+        'sonic-yang-mgmt>=1.0',
+        'sonic-yang-models>=1.0'
     ]
 else:
     # Python 2-only dependencies
@@ -31,9 +33,23 @@ else:
         'Jinja2<3.0.0',
         'pyangbind==0.6.0',
         'zipp==1.2.0',  # importlib-resources needs zipp and seems to have a bug where it will try to install too new of a version for Python 2
-        'importlib-resources==3.3.1'  # importlib-resources v4.0.0 was released 2020-12-23 and drops support for Python 2
+        'importlib-resources==3.3.1',  # importlib-resources v4.0.0 was released 2020-12-23 and drops support for Python 2
+        'contextlib2==0.6.0.post1'
     ]
 
+# Common modules for python2 and python3
+py_modules = [
+    'config_samples',
+    'minigraph',
+    'openconfig_acl',
+    'portconfig',
+    'redis_bcc',
+]
+if sys.version_info.major == 3:
+    # Python 3-only modules
+    py_modules += [
+        'sonic_yang_cfg_generator'
+    ]
 
 setup(
     name = 'sonic-config-engine',
@@ -42,14 +58,7 @@ setup(
     author = 'Taoyu Li',
     author_email = 'taoyl@microsoft.com',
     url = 'https://github.com/Azure/sonic-buildimage',
-    py_modules = [
-        'config_samples',
-        'lazy_re',
-        'minigraph',
-        'openconfig_acl',
-        'portconfig',
-        'redis_bcc',
-    ],
+    py_modules = py_modules,
     scripts = [
         'sonic-cfggen',
     ],

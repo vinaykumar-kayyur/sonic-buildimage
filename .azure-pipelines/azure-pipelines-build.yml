@@ -32,7 +32,8 @@ jobs:
       dbg_image: no
       swi_image: no
       raw_image: no
-      sync_rpc_image: no
+      docker_syncd_rpc_image: no
+      syncd_rpc_image: no
       platform_rpc: no
     ${{ if ne(parameters.jobGroups, '') }}:
       jobGroups: ${{ parameters.jobGroups }}
@@ -44,7 +45,8 @@ jobs:
 
         - name: barefoot
           variables:
-            sync_rpc_image: yes
+            docker_syncd_rpc_image: yes
+            platform_rpc: bfn
             swi_image: yes
 
         - name: broadcom
@@ -52,18 +54,18 @@ jobs:
             dbg_image: yes
             swi_image: yes
             raw_image: yes
-            sync_rpc_image: yes
+            docker_syncd_rpc_image: yes
             platform_rpc: brcm
 
         - name: centec
           variables:
             dbg_image: yes
-            sync_rpc_image: yes
+            docker_syncd_rpc_image: yes
             platform_rpc: centec
 
         - name: centec-arm64
-          pool: sonicbld_8c
-          timeoutInMinutes: 2160
+          pool: sonicbld-arm64
+          timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
 
@@ -73,24 +75,25 @@ jobs:
 
         - name: innovium
           variables:
-            swi_image: yes
+            dbg_image: yes
 
         - name: marvell-armhf
-          pool: sonicbld_8c
-          timeoutInMinutes: 2160
+          pool: sonicbld-armhf
+          timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
 
         - name: mellanox
           variables:
             dbg_image: yes
-            sync_rpc_image: yes
+            docker_syncd_rpc_image: yes
+            syncd_rpc_image: yes
             platform_rpc: mlnx
 
         - name: nephos
           variables:
             dbg_image: yes
-            sync_rpc_image: yes
+            docker_syncd_rpc_image: yes
             platform_rpc: nephos
 
     buildSteps:
@@ -98,13 +101,19 @@ jobs:
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
-              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
+              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
+              mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
+            if [ $(Build.Reason) != 'PullRequest' ];then
+              gzip -kd target/sonic-vs.img.gz
+              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make sonic-slave-run
+              rm target/sonic-vs.img
+            fi
           else
             if [ $(dbg_image) == yes ]; then
-              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
-                mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
+              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
+              mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
             fi
             if [ $(swi_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
@@ -112,8 +121,12 @@ jobs:
             if [ $(raw_image) == yes ]; then
               make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).raw
             fi
-            if [ $(sync_rpc_image) == yes ]; then
+            if [ $(docker_syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
+            fi
+            if [ $(syncd_rpc_image) == yes ]; then
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
+              mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
             fi
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi

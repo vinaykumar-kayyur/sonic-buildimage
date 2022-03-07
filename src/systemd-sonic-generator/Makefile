@@ -3,8 +3,7 @@ CFLAGS=-std=gnu99 -D_GNU_SOURCE
 
 CPP=g++
 CPPFLAGS=-std=c++11 -D_GNU_SOURCE
-LFLAGS=-lpthread -lboost_filesystem -lboost_system
-GTEST=/usr/lib/x86_64-linux-gnu/libgtest.a
+LFLAGS=-lpthread -lboost_filesystem -lboost_system -lgtest
 
 BINARY = systemd-sonic-generator
 MAIN_TARGET = $(BINARY)_1.0.0_$(CONFIGURED_ARCH).deb
@@ -31,7 +30,7 @@ test: ssg_test
 	./ssg_test
 
 ssg_test: ssg-test.cc systemd-sonic-generator.o
-	$(CPP) $(CPPFLAGS) -o $@ $^ $(GTEST) $(LFLAGS)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LFLAGS)
 
 systemd-sonic-generator.o: systemd-sonic-generator.c
 	$(CC) $(CFLAGS) -D_SSG_UNITTEST -o $@ -c $^
