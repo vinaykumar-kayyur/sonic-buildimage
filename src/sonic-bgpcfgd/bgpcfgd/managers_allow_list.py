@@ -245,7 +245,7 @@ class BGPAllowListMgr(Manager):
         seq_no = 10
         if exist:
             cmds.append('no %s prefix-list %s' % (family, pl_name))
-        for entry in constant_list + allow_list:
+        for entry in self.__normalize_ipnetwork(af, constant_list + allow_list):
             cmds.append('%s prefix-list %s seq %d %s' % (family, pl_name, seq_no, entry))
             seq_no += 10
         return cmds
@@ -301,7 +301,9 @@ class BGPAllowListMgr(Manager):
         conf = self.cfg_mgr.get_text()
         if not any(line.strip().startswith(match_string) for line in conf):
             return False, False  # if the prefix list is not exists, it is not correct
-        expect_set = set(self.__normalize_ipnetwork(af, constant_list)).update(set(self.__normalize_ipnetwork(af, allow_list)))
+        expect_set = set(self.__normalize_ipnetwork(af, constant_list))
+        expect_set.update(set(self.__normalize_ipnetwork(af, allow_list)))
+
         config_list = []
         for line in conf:
             if line.startswith(match_string):
