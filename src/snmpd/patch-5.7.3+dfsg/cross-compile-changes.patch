@@ -1,0 +1,122 @@
+Index: net-snmp-5.7.3+dfsg/debian/rules
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/debian/rules
++++ net-snmp-5.7.3+dfsg/debian/rules
+@@ -59,11 +59,11 @@ override_dh_auto_configure:
+ 
+ override_dh_auto_build:
+ 	dh_auto_build
+-	cd python; python setup.py build --basedir=$(CURDIR)
++	cd python; CC=$(CROSS_CC) LDSHARED="$(CROSS_CC) -shared" python setup.py build --basedir=$(CURDIR)
+ 
+ override_dh_auto_install:
+ 	dh_auto_install
+-	cd python; python setup.py install --root=$(CURDIR)/debian/tmp \
++	cd python; CC=$(CROSS_CC) LDSHARED="$(CROSS_CC) -shared" python setup.py install --root=$(CURDIR)/debian/tmp \
+ 		--install-layout=deb --basedir=$(CURDIR) ; \
+ 		find $(CURDIR) -name *.pyc -delete
+ 
+Index: net-snmp-5.7.3+dfsg/perl/ASN/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/ASN/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/ASN/Makefile.PL
+@@ -72,6 +72,8 @@ sub InitMakeParams {
+     else
+     {
+       $opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+       $Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+       $Params{'LIBS'}    = `$opts->{'nsconfig'} --libs`;
+       chomp($Params{'LIBS'});
+Index: net-snmp-5.7.3+dfsg/perl/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/Makefile.PL
+@@ -14,6 +14,8 @@ sub InitMakeParams {
+ 
+     # bogus, but these options need to be passed to the lower levels
+     $opts = NetSNMPGetOpts("./");
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 
+     return(%Params);
+ }
+Index: net-snmp-5.7.3+dfsg/perl/OID/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/OID/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/OID/Makefile.PL
+@@ -70,6 +70,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+  	$Params{'LIBS'}    = `$opts->{'nsconfig'} --libs`;
+ 	chomp($Params{'LIBS'});
+Index: net-snmp-5.7.3+dfsg/perl/SNMP/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/SNMP/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/SNMP/Makefile.PL
+@@ -74,6 +74,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+ 	if (!$ENV{'NETSNMP_LIBS'}) {
+ 	    $Params{'LIBS'}    = `$opts->{'nsconfig'} --libs`;
+Index: net-snmp-5.7.3+dfsg/perl/TrapReceiver/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/TrapReceiver/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/TrapReceiver/Makefile.PL
+@@ -103,6 +103,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+ 	$Params{'LIBS'} = '-lnetsnmptrapd ' . `$opts->{'nsconfig'} --base-agent-libs`;
+ 	chomp($Params{'LIBS'});
+Index: net-snmp-5.7.3+dfsg/perl/agent/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/agent/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/agent/Makefile.PL
+@@ -75,6 +75,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+ 	$Params{'LIBS'}   = `$opts->{'nsconfig'} --base-agent-libs`;
+ 	chomp($Params{'LIBS'});
+Index: net-snmp-5.7.3+dfsg/perl/agent/default_store/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/agent/default_store/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/agent/default_store/Makefile.PL
+@@ -66,6 +66,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts("../../");
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LIBS'}    = `$opts->{'nsconfig'} --libs`;
+ 	chomp($Params{'LIBS'});
+ 	$Params{'CCFLAGS'} = `$opts->{'nsconfig'} --cflags`;
+Index: net-snmp-5.7.3+dfsg/perl/default_store/Makefile.PL
+===================================================================
+--- net-snmp-5.7.3+dfsg.orig/perl/default_store/Makefile.PL
++++ net-snmp-5.7.3+dfsg/perl/default_store/Makefile.PL
+@@ -64,6 +64,8 @@ sub InitMakeParams {
+     }
+     else {
+ 	$opts = NetSNMPGetOpts();
++$Params{'CC'} = "$ENV{'CROSS_CC'}";
++$Params{'LD'} = "$ENV{'CROSS_CC'}";
+ 	$Params{'LDDLFLAGS'} = "$Config{lddlflags} " . `$opts->{'nsconfig'} --ldflags`;
+ 	$Params{'LIBS'}    = `$opts->{'nsconfig'} --libs`;
+ 	chomp($Params{'LIBS'});

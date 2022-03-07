@@ -64,7 +64,6 @@ RUN dpkg --add-architecture $arch
 RUN apt-get update
 RUN apt-get install -y crossbuild-essential-$arch
 RUN apt-get install -y gcc-$gcc_arch
-ENV $(dpkg-architecture -a$arch
 
 RUN apt-mark hold g++-$gcc_arch
 RUN apt-mark hold g++-8-$gcc_arch
@@ -80,8 +79,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 RUN apt-get install -y python3 python3-pip
-RUN PYTHON3_DEPS="`apt-cache depends python3:$arch |grep Depends|awk {'print \$2;'}|tr "\n" " "`" && apt-get install -y \
-	python:$arch $PYTHON3_DEPS python3:$arch python-setuptools:$arch 
+RUN apt-get install -y python:$arch python3-minimal:$arch python3:$arch python-setuptools:$arch 
 RUN apt-get download python3-distutils && dpkg --force-all -i python3-distutils*
 RUN apt-get download python3-pip && dpkg --force-all -i python3-pip*
 RUN which pip3 && pip3 install enum34
@@ -488,7 +486,7 @@ RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confold"
 # For linux build
 RUN apt-get -y build-dep linux
 {%- else %}
-RUN apt-get source kernel-wedge && sudo apt-get build-dep -a$arch kernel-wedge && cd kernel-wedge-2.99/ && CONFIG_SITE=/etc/dpkg-cross/cross-config.$arch  DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -a$arch -Pcross,nocheck && cd .. && sudo dpkg -i kernel-wedge_2.99_all.deb
+RUN apt-get install -y kernel-wedge
 {%- endif %}
 
 # For gobgp and telemetry build
