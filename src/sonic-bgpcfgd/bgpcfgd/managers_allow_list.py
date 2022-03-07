@@ -1,7 +1,6 @@
 """
 Implementation of "allow-list" feature
 """
-from locale import normalize
 import re
 import ipaddress
 
@@ -21,6 +20,7 @@ class BGPAllowListMgr(Manager):
     ROUTE_MAP_ENTRY_WITH_COMMUNITY_END = 29990
     ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_START = 30000
     ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_END = 65530
+    PREFIX_LIST_POS = 1 # the position of the ip prefix in the permit string.
 
     V4 = "v4"  # constant for af enum: V4
     V6 = "v6"  # constant for af enum: V6
@@ -280,7 +280,7 @@ class BGPAllowListMgr(Manager):
         for allow_item in allow_prefix_list:
             tmp_list = allow_item.split(' ')
             if af == self.V6:
-                tmp_list[1] = str(ipaddress.IPv6Network(tmp_list[1]))
+                tmp_list[self.PREFIX_LIST_POS] = str(ipaddress.IPv6Network(tmp_list[self.PREFIX_LIST_POS]))
             normalize_list.append(' '.join(tmp_list))
         return normalize_list
 
@@ -309,7 +309,8 @@ class BGPAllowListMgr(Manager):
                 rule = " ".join(found[1:])
                 config_list.append(rule)
 
-        return True, expect_set == set(self.__normalize_ipnetwork(af, config_list))  # Return double Ture, when running configuraiton is identical with config db + constants.
+        # Return double Ture, when running configuraiton is identical with config db + constants.
+        return True, expect_set == set(self.__normalize_ipnetwork(af, config_list))  
 
     def __update_community(self, community_name, community_value):
         """
