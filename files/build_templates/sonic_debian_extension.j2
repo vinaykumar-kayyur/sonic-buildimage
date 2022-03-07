@@ -601,10 +601,14 @@ for f in $(find $FILESYSTEM_ROOT/var/cache/apt/archives -name "*.deb"); do
 done
 
 sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
-ps -eo pid,cmd | grep python | grep "/etc/entropy.py" | awk '{print $1}' | xargs sudo kill -9 2>/dev/null || true
 
 {% endfor %}
 {% endif %}
+
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+    # A workaround to fix the armhf build hung issue, caused by sonic-platform-nokia-7215_1.0_armhf.deb post installation script 
+    ps -eo pid,cmd | grep python | grep "/etc/entropy.py" | awk '{print $1}' | xargs sudo kill -9 2>/dev/null || true
+fi
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
