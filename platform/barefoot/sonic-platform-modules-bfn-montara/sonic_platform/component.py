@@ -36,7 +36,7 @@ def get_bmc_version():
     Returns:
     A string containing the firmware version of the BMC
     """
-    ver="N/A"
+    ver = "N/A"
     def bmc_get(client):
         return client.pltfm_mgr.pltfm_mgr_chss_mgmt_bmc_ver_get()
     try:    
