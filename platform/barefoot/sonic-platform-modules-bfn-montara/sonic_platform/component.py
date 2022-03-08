@@ -1,12 +1,3 @@
-########################################################################
-# BAREFOOT MONTARA
-#
-# Module contains an implementation of SONiC Platform Base API and
-# provides the Components' (e.g., BIOS, CPLD, FPGA, BMC etc.) available in
-# the platform
-#
-########################################################################
-
 try:
     import os
     import subprocess
