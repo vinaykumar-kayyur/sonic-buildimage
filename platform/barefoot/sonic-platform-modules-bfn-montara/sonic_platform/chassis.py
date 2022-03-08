@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 try:
     import time
     import syslog
@@ -16,8 +17,11 @@ try:
 
     from sonic_py_common import device_info
 
+
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+NUM_COMPONENT = 2
 
 class Chassis(ChassisBase):
     """
@@ -44,6 +48,7 @@ class Chassis(ChassisBase):
         self.ready = False
         self.phy_port_cur_state = {}
         self.qsfp_interval = self.QSFP_CHECK_INTERVAL
+        self.__initialize_components()
 
     @property
     def _eeprom(self):
@@ -128,6 +133,12 @@ class Chassis(ChassisBase):
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
 
+    def __initialize_components(self):
+        from sonic_platform.component import Components
+        for index in range(0, NUM_COMPONENT):
+            component = Components(index)
+            self._component_list.append(component)
+
     def get_name(self):
         """
         Retrieves the name of the chassis
@@ -135,6 +146,7 @@ class Chassis(ChassisBase):
             string: The name of the chassis
         """
         return self._eeprom.modelstr()
+
 
     def get_presence(self):
         """
@@ -333,3 +345,4 @@ class Chassis(ChassisBase):
             specified.
         """
         return self.system_led
+
