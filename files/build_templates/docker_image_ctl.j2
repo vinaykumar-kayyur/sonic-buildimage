@@ -36,11 +36,8 @@ function updateSyslogConf()
         TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
         CONTAINER_NAME="$DOCKERNAME"
         TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
-        {%- if docker_container_name == "database" %} 
-        python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
-        {%- else %}
+
         sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
-        {%- endif %}
         docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
         rm -rf $TMP_FILE
     fi
@@ -60,7 +57,7 @@ function ebtables_config()
 
 function getMountPoint()
 {
-    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print('' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source']))" 2>/dev/null
+    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source'])" 2>/dev/null
 }
 
 function getBootType()
@@ -199,7 +196,6 @@ function postStartAction()
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
         test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss$DEV:/
         test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss$DEV:/
-        test -e /host/fast-reboot/media_config.json && docker cp /host/fast-reboot/media_config.json swss$DEV:/
         rm -fr /host/fast-reboot
     fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go
@@ -298,9 +294,6 @@ start() {
     fi
     if [ ! -f /etc/sonic/peripheral_table.json ] && [ -f /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 ]; then
         sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 > /etc/sonic/peripheral_table.json
-    fi
-    if [ ! -f /etc/sonic/zero_profiles.json ] && [ -f /usr/share/sonic/templates/zero_profiles.j2 ]; then
-        sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/zero_profiles.j2 > /etc/sonic/zero_profiles.json
     fi
     {%- endif %}
 

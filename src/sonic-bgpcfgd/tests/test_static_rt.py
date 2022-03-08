@@ -62,14 +62,12 @@ def test_set():
         }),
         True,
         [
-            "ip route 10.1.0.0/24 10.0.0.57 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.0.0/24 10.0.0.57",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -83,14 +81,12 @@ def test_set_nhportchannel():
         }),
         True,
         [
-            "ip route 10.1.0.0/24 PortChannel0001 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.0.0/24 PortChannel0001",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -100,13 +96,12 @@ def test_set_nhportchannel():
         ("10.1.0.0/24",),
         True,
         [
-            "no ip route 10.1.0.0/24 PortChannel0001 tag 1",
+            "no ip route 10.1.0.0/24 PortChannel0001",
             "router bgp 65100",
             " address-family ipv4",
-            "  no redistribute static route-map STATIC_ROUTE_FILTER",
+            "  no redistribute static",
             " address-family ipv6",
-            "  no redistribute static route-map STATIC_ROUTE_FILTER",
-            "no route-map STATIC_ROUTE_FILTER"
+            "  no redistribute static"
         ]
     )
 
@@ -120,15 +115,13 @@ def test_set_several_nhportchannels():
         }),
         True,
         [
-            "ip route 10.1.0.0/24 PortChannel0003 tag 1",
-            "ip route 10.1.0.0/24 PortChannel0004 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.0.0/24 PortChannel0003",
+            "ip route 10.1.0.0/24 PortChannel0004",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -146,14 +139,12 @@ def test_set_nhvrf():
         }),
         True,
         [
-            "ip route 10.1.1.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.1.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -171,14 +162,12 @@ def test_set_blackhole():
         }),
         True,
         [
-            "ip route 10.1.2.0/24 blackhole 10 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.2.0/24 blackhole 10",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -196,14 +185,12 @@ def test_set_vrf():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -221,14 +208,12 @@ def test_set_ipv6():
         }),
         True,
         [
-            "ipv6 route fc00:10::/64 fc00::72 PortChannel0001 10 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ipv6 route fc00:10::/64 fc00::72 PortChannel0001 10",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -245,16 +230,14 @@ def test_set_nh_only():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -271,16 +254,14 @@ def test_set_ifname_only():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -298,16 +279,14 @@ def test_set_with_empty_ifname():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -325,16 +304,14 @@ def test_set_with_empty_nh():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -352,16 +329,14 @@ def test_set_del():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
     set_del_test(
@@ -370,15 +345,14 @@ def test_set_del():
         ("vrfRED|10.1.3.0/24",),
         True,
         [
-            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
+            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  no redistribute static route-map STATIC_ROUTE_FILTER",
+            "  no redistribute static",
             " address-family ipv6",
-            "  no redistribute static route-map STATIC_ROUTE_FILTER",
-            "no route-map STATIC_ROUTE_FILTER"
+            "  no redistribute static"
         ]
     )
     set_del_test(
@@ -393,16 +367,14 @@ def test_set_del():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -420,16 +392,14 @@ def test_set_same_route():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
     set_del_test(
@@ -444,12 +414,12 @@ def test_set_same_route():
         }),
         True,
         [
-            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 40 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 50 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 60 nexthop-vrf default vrf vrfRED tag 1"
+            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 40 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 50 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 60 nexthop-vrf default vrf vrfRED"
         ]
     )
 
@@ -467,16 +437,14 @@ def test_set_add_del_nh():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
             "router bgp 65100 vrf vrfRED",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
     set_del_test(
@@ -491,7 +459,7 @@ def test_set_add_del_nh():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED tag 1",
+            "ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED",
         ]
     )
     set_del_test(
@@ -506,8 +474,8 @@ def test_set_add_del_nh():
         }),
         True,
         [
-            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED tag 1",
+            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED",
         ]
     )
 
@@ -525,16 +493,14 @@ def test_set_add_del_nh_ethernet():
         }),
         True,
         [
-            "ip route 20.1.3.0/24 20.0.0.57 Ethernet4 10 nexthop-vrf default tag 1",
-            "ip route 20.1.3.0/24 20.0.0.59 Ethernet8 20 tag 1",
-            "ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 20.1.3.0/24 20.0.0.57 Ethernet4 10 nexthop-vrf default",
+            "ip route 20.1.3.0/24 20.0.0.59 Ethernet8 20",
+            "ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
     set_del_test(
@@ -549,7 +515,7 @@ def test_set_add_del_nh_ethernet():
         }),
         True,
         [
-            "ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30 tag 1",
+            "ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30",
         ]
     )
     set_del_test(
@@ -564,8 +530,8 @@ def test_set_add_del_nh_ethernet():
         }),
         True,
         [
-            "no ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default tag 1",
-            "no ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30 tag 1",
+            "no ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default",
+            "no ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30",
         ]
     )
 
@@ -582,14 +548,12 @@ def test_set_no_action(mocked_log_debug):
         }),
         True,
         [
-            "ip route 10.1.1.0/24 blackhole tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
+            "ip route 10.1.1.0/24 blackhole",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
 
@@ -644,13 +608,11 @@ def test_set_invalid_blackhole(mocked_log_err):
         }),
         True,
         [
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
             "router bgp 65100",
             " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            "  redistribute static",
             " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
+            "  redistribute static"
         ]
     )
     mocked_log_err.assert_called_with("Mandatory attribute not found for nexthop")
@@ -681,9 +643,9 @@ def test_set_del_no_bgp_asn():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
         ]
     )
     set_del_test(
@@ -692,9 +654,9 @@ def test_set_del_no_bgp_asn():
         ("vrfRED|10.1.3.0/24",),
         True,
         [
-            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
+            "no ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
         ]
     )
 
@@ -712,22 +674,20 @@ def test_set_del_bgp_asn_change():
         }),
         True,
         [
-            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED tag 1",
-            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED tag 1",
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
         ]
     )
 
     assert mgr.vrf_pending_redistribution == {"vrfRED"}
 
     expected_cmds = [
-        "route-map STATIC_ROUTE_FILTER permit 10",
-        " match tag 1",
         "router bgp 65100 vrf vrfRED",
         " address-family ipv4",
-        "  redistribute static route-map STATIC_ROUTE_FILTER",
+        "  redistribute static",
         " address-family ipv6",
-        "  redistribute static route-map STATIC_ROUTE_FILTER"
+        "  redistribute static"
     ]
     def push_list(cmds):
         set_del_test.push_list_called = True
@@ -745,79 +705,3 @@ def test_set_del_bgp_asn_change():
     mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
 
     assert not mgr.vrf_pending_redistribution
-
-def test_set_tag_enable():
-    mgr = constructor()
-    set_del_test(
-        mgr,
-        "SET",
-        ("10.1.0.0/24", {
-            "nexthop": "10.0.0.57","advertise":"true"
-        }),
-        True,
-        [
-            "ip route 10.1.0.0/24 10.0.0.57 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
-            "router bgp 65100",
-            " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
-            " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
-        ]
-    )
-
-def test_set_tag_disable():
-    mgr = constructor()
-    set_del_test(
-        mgr,
-        "SET",
-        ("10.1.0.0/24", {
-            "nexthop": "10.0.0.57","advertise":"false"
-        }),
-        True,
-        [
-            "ip route 10.1.0.0/24 10.0.0.57 tag 2",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
-            "router bgp 65100",
-            " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
-            " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
-        ]
-    )
-
-def test_set_tag_change():
-    mgr = constructor()
-    set_del_test(
-        mgr,
-        "SET",
-        ("10.1.0.0/24", {
-            "nexthop": "10.0.0.57","advertise":"true"
-        }),
-        True,
-        [
-            "ip route 10.1.0.0/24 10.0.0.57 tag 1",
-            "route-map STATIC_ROUTE_FILTER permit 10",
-            " match tag 1",
-            "router bgp 65100",
-            " address-family ipv4",
-            "  redistribute static route-map STATIC_ROUTE_FILTER",
-            " address-family ipv6",
-            "  redistribute static route-map STATIC_ROUTE_FILTER"
-        ]
-    )
-
-    set_del_test(
-        mgr,
-        "SET",
-        ("10.1.0.0/24", {
-            "nexthop": "10.0.0.57","advertise":"false"
-        }),
-        True,
-        [
-            "no ip route 10.1.0.0/24 10.0.0.57 tag 1",
-            "ip route 10.1.0.0/24 10.0.0.57 tag 2",
-        ]
-    )

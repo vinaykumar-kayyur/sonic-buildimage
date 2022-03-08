@@ -111,7 +111,7 @@ def get_platform():
     # container in SONiC, where the /host directory is not mounted. In this
     # case the value should already be populated in Config DB so we finally
     # try reading it from there.
-
+    
     return get_localhost_info('platform')
 
 
@@ -210,7 +210,6 @@ def get_path_to_platform_dir():
 
     return platform_path
 
-
 def get_path_to_hwsku_dir():
     """
     Retreives the path to the device's hardware SKU data directory
@@ -228,7 +227,6 @@ def get_path_to_hwsku_dir():
     hwsku_path = os.path.join(platform_path, hwsku)
 
     return hwsku_path
-
 
 def get_paths_to_platform_and_hwsku_dirs():
     """
@@ -250,7 +248,6 @@ def get_paths_to_platform_and_hwsku_dirs():
     hwsku_path = os.path.join(platform_path, hwsku)
 
     return (platform_path, hwsku_path)
-
 
 def get_path_to_port_config_file(hwsku=None, asic=None):
     """
@@ -351,20 +348,8 @@ def get_platform_info():
 
     hw_info_dict['platform'] = get_platform()
     hw_info_dict['hwsku'] = get_hwsku()
-    if version_info:
-        hw_info_dict['asic_type'] = version_info.get('asic_type')
+    hw_info_dict['asic_type'] = version_info['asic_type']
     hw_info_dict['asic_count'] = get_num_asics()
-
-    try:
-        config_db = ConfigDBConnector()
-        config_db.connect()
-
-        metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
-        switch_type = metadata.get('switch_type')
-        if switch_type:
-            hw_info_dict['switch_type'] = switch_type
-    except Exception:
-        pass
 
     return hw_info_dict
 
@@ -413,20 +398,6 @@ def is_multi_npu():
     return (num_npus > 1)
 
 
-def is_voq_chassis():
-    switch_type = get_platform_info().get('switch_type')
-    return True if switch_type and switch_type == 'voq' else False
-
-
-def is_packet_chassis():
-    switch_type = get_platform_info().get('switch_type')
-    return True if switch_type and switch_type == 'chassis-packet' else False
-
-
-def is_chassis():
-    return is_voq_chassis() or is_packet_chassis()
-
-
 def is_supervisor():
     platform_env_conf_file_path = get_platform_env_conf_file_path()
     if platform_env_conf_file_path is None:
@@ -441,7 +412,7 @@ def is_supervisor():
                 if val == '1':
                     return True
         return False
-
+ 
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
@@ -521,14 +492,6 @@ def get_system_mac(namespace=None):
         else:
             profile_cmd = "false"
         hw_mac_entry_cmds = ["sudo decode-syseeprom -m", profile_cmd, "ip link show eth0 | grep ether | awk '{print $2}'"]
-    elif (version_info['asic_type'] == 'cisco-8000'):
-        # Try to get valid MAC from profile.ini first, else fetch it from syseeprom or eth0
-        platform = get_platform()
-        if namespace is not None:
-            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/profile.ini | grep ' + namespace + 'switchMacAddress | cut -f2 -d='
-        else:
-            profile_cmd = "false"
-        hw_mac_entry_cmds = [profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'"]
     else:
         mac_address_cmd = "cat /sys/class/net/eth0/address"
         if namespace is not None:
@@ -579,7 +542,6 @@ def get_system_routing_stack():
 
     return result
 
-
 # Check if System warm reboot or Container warm restart is enabled.
 def is_warm_restart_enabled(container_name):
     state_db = SonicV2Connector(host='127.0.0.1')
@@ -600,7 +562,6 @@ def is_warm_restart_enabled(container_name):
 
     state_db.close(state_db.STATE_DB)
     return wr_enable_state
-
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():

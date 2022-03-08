@@ -1594,12 +1594,13 @@ bksync_proc_txts_write(struct file *file, const char *buf,
     return count;
 }
 
-struct proc_ops bksync_proc_txts_file_ops = {
-    proc_open:       bksync_proc_txts_open,
-    proc_read:       seq_read,
-    proc_lseek:      seq_lseek,
-    proc_write:      bksync_proc_txts_write,
-    proc_release:    seq_release,
+struct file_operations bksync_proc_txts_file_ops = {
+    owner:      THIS_MODULE,
+    open:       bksync_proc_txts_open,
+    read:       seq_read,
+    llseek:     seq_lseek,
+    write:      bksync_proc_txts_write,
+    release:    seq_release,
 };
 
 /*
@@ -1640,12 +1641,13 @@ static int bksync_proc_debug_open(struct inode * inode, struct file * file)
 }
 
 
-struct proc_ops bksync_proc_debug_file_ops = {
-    proc_open:       bksync_proc_debug_open,
-    proc_read:       seq_read,
-    proc_lseek:      seq_lseek,
-    proc_write:      bksync_proc_debug_write,
-    proc_release:    single_release,
+struct file_operations bksync_proc_debug_file_ops = {
+    owner:      THIS_MODULE,
+    open:       bksync_proc_debug_open,
+    read:       seq_read,
+    llseek:     seq_lseek,
+    write:      bksync_proc_debug_write,
+    release:    single_release,
 };
 
 

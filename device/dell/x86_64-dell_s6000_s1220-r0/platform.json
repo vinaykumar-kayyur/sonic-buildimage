@@ -1,10 +1,6 @@
 {
     "chassis": {
         "name": "S6000",
-        "status_led": {
-            "controllable": true,
-            "colors": ["amber", "blinking amber", "green", "blinking green"]
-        },
         "components": [
             {
                 "name": "BIOS"
@@ -21,115 +17,55 @@
         ],
         "fans": [
             {
-                "name": "FanTray1-Fan1",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray1-Fan1"
             },
             {
-                "name": "FanTray1-Fan2",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray1-Fan2"
             },
             {
-                "name": "FanTray2-Fan1",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray2-Fan1"
             },
             {
-                "name": "FanTray2-Fan2",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray2-Fan2"
             },
             {
-                "name": "FanTray3-Fan1",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray3-Fan1"
             },
             {
-                "name": "FanTray3-Fan2",
-                "speed": {
-                    "controllable": true,
-                    "minimum": 40
-                }
+                "name": "FanTray3-Fan2"
             }
         ],
         "fan_drawers":[
             {
                 "name": "FanTray1",
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["amber", "green", "off"]
-                },
                 "fans": [
                     {
-                        "name": "FanTray1-Fan1",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray1-Fan1"
                     },
                     {
-                        "name": "FanTray1-Fan2",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray1-Fan2"
                     }
                 ]
             },
             {
                 "name": "FanTray2",
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["amber", "green", "off"]
-                },
                 "fans": [
                     {
-                        "name": "FanTray2-Fan1",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray2-Fan1"
                     },
                     {
-                        "name": "FanTray2-Fan2",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray2-Fan2"
                     }
                 ]
             },
             {
                 "name": "FanTray3",
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["amber", "green", "off"]
-                },
                 "fans": [
                     {
-                        "name": "FanTray3-Fan1",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray3-Fan1"
                     },
                     {
-                        "name": "FanTray3-Fan2",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "FanTray3-Fan2"
                     }
                 ]
             }
@@ -137,79 +73,55 @@
         "psus": [
             {
                 "name": "PSU1",
-                "status_led": {
-                    "controllable": false
-                },
                 "fans": [
                     {
-                        "name": "PSU1 Fan",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "PSU1 Fan"
                     }
                 ],
                 "thermals": [
                     {
-                        "name": "PSU1-Sensor 1",
-                        "controllable": false
+                        "name": "PSU1-Sensor 1"
                     },
                     {
-                        "name": "PSU1-Sensor 2",
-                        "controllable": false
+                        "name": "PSU1-Sensor 2"
                     }
                 ]
             },
             {
                 "name": "PSU2",
-                "status_led": {
-                    "controllable": false
-                },
                 "fans": [
                     {
-                        "name": "PSU2 Fan",
-                        "speed": {
-                            "controllable": true,
-                            "minimum": 40
-                        }
+                        "name": "PSU2 Fan"
                     }
                 ],
                 "thermals": [
                     {
-                        "name": "PSU2-Sensor 1",
-                        "controllable": false
+                        "name": "PSU2-Sensor 1"
                     },
                     {
-                        "name": "PSU2-Sensor 2",
-                        "controllable": false
+                        "name": "PSU2-Sensor 2"
                     }
                 ]
             }
         ],
         "thermals": [
             {
-                "name": "ASIC On-board",
-                "controllable": false
+                "name": "ASIC On-board"
             },
             {
-                "name": "NIC",
-                "controllable": false
+                "name": "NIC"
             },
             {
-                "name": "System Front",
-                "controllable": false
+                "name": "System Front"
             },
             {
-                "name": "DIMM",
-                "controllable": false
+                "name": "DIMM"
             },
             {
-                "name": "CPU Core 0",
-                "controllable": false
+                "name": "CPU Core 0"
             },
             {
-                "name": "CPU Core 1",
-                "controllable": false
+                "name": "CPU Core 1"
             }
         ],
         "modules": [],

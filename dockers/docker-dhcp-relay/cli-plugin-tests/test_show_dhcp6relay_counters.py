@@ -20,7 +20,6 @@ except KeyError:
 expected_counts = """\
   Message Type     Vlan1000
 --------------  -----------
-       Unknown
        Solicit
      Advertise
        Request

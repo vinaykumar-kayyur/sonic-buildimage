@@ -354,16 +354,7 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config \
-# For audisp-tacplus
-        libauparse-dev \
-        auditd
-
-# For iproute2
-RUN apt-get install -y -t buster-backports \
-        libbpf-dev \
-        dwz \
-        debhelper
+        pkg-config
 
 RUN apt-get -y build-dep openssh
 
@@ -466,7 +457,7 @@ RUN pip2 install "lxml==4.6.2"
 RUN pip3 install "lxml==4.6.2"
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0

@@ -24,7 +24,7 @@ try:
     import time
     import logging
     import glob
-    import subprocess
+    import commands
     from collections import namedtuple
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))

@@ -1,11 +1,9 @@
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.2.0-2 as qemu
+FROM multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
 FROM multiarch/debian-debootstrap:armhf-bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM multiarch/debian-debootstrap:arm64-bullseye
-COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
 FROM debian:bullseye
 {%- endif %}
@@ -17,8 +15,6 @@ COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
 ## TODO: Re-add in any necessary mirror URLs here as they become available
 RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian bullseye-backports main" >> /etc/apt/sources.list
 
 {%- if CONFIGURED_ARCH == "armhf" %}
@@ -26,8 +22,8 @@ RUN echo "deb [arch=armhf] http://deb.debian.org/debian bullseye main contrib no
         echo "deb-src [arch=armhf] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=armhf] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=armhf] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src [arch=armhf] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=armhf] http://ftp.debian.org/debian bullseye-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
@@ -36,8 +32,8 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian bullseye main contrib no
         echo "deb-src [arch=arm64] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=arm64] http://security.debian.org bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=arm64] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src [arch=arm64] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=arm64] http://ftp.debian.org/debian bullseye-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
@@ -197,7 +193,7 @@ RUN apt-get update && apt-get install -y \
         clang \
         pylint \
         python3-pytest \
-        python3-venv \
+        python3-pytest \
         gcovr \
         python3-pytest-cov \
         python3-pytest-cov \
@@ -349,31 +345,23 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config \
-# For audisp-tacplus
-        libauparse-dev \
-        auditd
+        pkg-config
 
 RUN apt-get -y build-dep openssh
-
-# Build fix for ARM64 and ARMHF /etc/debian_version
-{%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
-RUN apt upgrade -y base-files
-{%- endif %}
 
 # Build fix for ARMHF bullseye libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
        # Install doxygen build dependency packages
-       RUN apt install -y libxapian-dev yui-compressor texlive-extra-utils \
-           texlive-font-utils rdfind llvm-11-dev libclang-11-dev sassc faketime mat2
+       RUN apt install -y libxapian-dev yui-compressor libclang-3.9-dev texlive-extra-utils \
+           texlive-font-utils  rdfind llvm-6.0-dev libclang-6.0-dev sassc
 
        # Update doxygen with 64bit file offset patch
-       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.9.1-2.dsc && \
-           cd doxygen-1.9.1 && \
+       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.8.13-10.dsc && \
+           cd doxygen-1.8.13 && \
            sed -i '56 a add_definitions(-D_FILE_OFFSET_BITS=64)' CMakeLists.txt && \
            DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b && \
            cd .. && \
-           dpkg -i ./doxygen_1.9.1-2_armhf.deb && \
+           dpkg -i ./doxygen_1.8.13-10_armhf.deb && \
            rm -fr doxygen*
 
        # Aspell is unable to locate the language dictionaries.
@@ -381,7 +369,6 @@ RUN apt upgrade -y base-files
        RUN apt-get install --reinstall -y aspell-en
 
        # workaround because of https://bugs.launchpad.net/qemu/+bug/1805913, just disable aspell
-       # Issue now being tracked here - https://gitlab.com/qemu-project/qemu/-/issues/263
        RUN cp /bin/true /usr/bin/aspell
 {%- endif %}
 
@@ -447,7 +434,7 @@ RUN pip3 install "PyYAML==5.4.1"
 RUN pip3 install "lxml==4.6.2"
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip3 install pexpect==4.8.0

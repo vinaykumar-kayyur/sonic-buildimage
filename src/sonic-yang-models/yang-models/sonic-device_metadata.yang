@@ -15,6 +15,7 @@ module sonic-device_metadata {
 
     import sonic-types {
         prefix stypes;
+        revision-date 2019-07-01;
     }
 
     description "DEVICE_METADATA YANG Module for SONiC OS";
@@ -111,14 +112,6 @@ module sonic-device_metadata {
                     description "FRR configurations are handled by sonic-frr-mgmt-framework module when set to true, 
                         otherwise, sonic-bgpcfgd handles the FRR configurations based on the predefined templates.";
                     default "false";
-                }
-
-                leaf synchronous_mode {
-                    type enumeration {
-                        enum enable;
-                        enum disable;
-                    }
-                    default enable;
                 }
             }
             /* end of container localhost */

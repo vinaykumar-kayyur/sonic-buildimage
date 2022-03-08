@@ -76,8 +76,6 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(RUIJIE_B6510_48VS8CQ_PLATFORM_MODULE) \
                                $(RAGILE_RA_B6510_48V8C_PLATFORM_MODULE) \
                                $(RAGILE_RA_B6910_64C_PLATFORM_MODULE) \
-                               $(RAGILE_RA_B6510_32C_PLATFORM_MODULE) \
-                               $(RAGILE_RA_B6920_4S_PLATFORM_MODULE) \
                                $(NOKIA_IXR7250_PLATFORM_MODULE)
 
 # seperate internal module and public module to avoid code conflict

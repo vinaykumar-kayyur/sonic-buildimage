@@ -8,6 +8,7 @@
  */
 
 #include <linux/init.h>
+#include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
 #include <linux/bitops.h>
@@ -23,7 +24,6 @@
 #include <linux/clk.h>
 #include <linux/regmap.h>
 #include <linux/mfd/syscon.h>
-#include <linux/module.h>
 #include "../include/sysctl.h"
 #include "pinctrl-ctc.h"
 #include "core.h"
@@ -87,13 +87,12 @@ static void ctc_pinctrl_child_count(struct ctc_pinctrl *info,
 }
 
 static struct ctc_pin_bank *ctc_bank_num_to_bank(struct ctc_pinctrl *info,
-						 unsigned num)
+						 unsigned int num)
 {
 	struct ctc_pin_bank *b = info->ctrl->pin_banks;
 
-	if (num < info->ctrl->nr_banks) {
+	if (num < info->ctrl->nr_banks)
 		return &b[num];
-	}
 
 	return ERR_PTR(-EINVAL);
 }
@@ -196,10 +195,8 @@ static int ctc_pinctrl_parse_dt(struct platform_device *pdev,
 	struct device_node *child;
 
 	info->ctrl = devm_kzalloc(dev, sizeof(struct ctc_pin_ctrl), GFP_KERNEL);
-	if (!info->ctrl) {
-		dev_err(dev, "failed to allocate memory for pin\n");
+	if (!info->ctrl)
 		return -EINVAL;
-	}
 
 	ret = of_property_read_u32(np, "ctc,pinctrl-bank0", &bank0_pins);
 	if (ret < 0) {
@@ -232,17 +229,13 @@ static int ctc_pinctrl_parse_dt(struct platform_device *pdev,
 
 	info->functions = devm_kzalloc(dev, info->nfunctions *
 				       sizeof(struct ctc_pmx_func), GFP_KERNEL);
-	if (!info->functions) {
-		dev_err(dev, "failed to allocate memory for function list\n");
+	if (!info->functions)
 		return -EINVAL;
-	}
 
 	info->groups = devm_kzalloc(dev, info->ngroups *
 				    sizeof(struct ctc_pin_group), GFP_KERNEL);
-	if (!info->groups) {
-		dev_err(dev, "failed allocate memory for ping group list\n");
+	if (!info->groups)
 		return -EINVAL;
-	}
 
 	i = 0;
 	for_each_child_of_node(np, child) {
@@ -265,7 +258,7 @@ static int ctc_get_groups_count(struct pinctrl_dev *pctldev)
 }
 
 static const char *ctc_get_group_name(struct pinctrl_dev *pctldev,
-				      unsigned selector)
+				      unsigned int selector)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 
@@ -273,8 +266,8 @@ static const char *ctc_get_group_name(struct pinctrl_dev *pctldev,
 }
 
 static int ctc_get_group_pins(struct pinctrl_dev *pctldev,
-			      unsigned selector, const unsigned **pins,
-			      unsigned *npins)
+			      unsigned int selector, const unsigned int **pins,
+			      unsigned int *npins)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 
@@ -305,7 +298,7 @@ static inline const struct ctc_pin_group *ctc_pinctrl_name_to_group(const struct
 
 static int ctc_dt_node_to_map(struct pinctrl_dev *pctldev,
 			      struct device_node *np,
-			      struct pinctrl_map **map, unsigned *num_maps)
+			      struct pinctrl_map **map, unsigned int *num_maps)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 	const struct ctc_pin_group *grp;
@@ -355,7 +348,7 @@ static int ctc_pmx_get_funcs_count(struct pinctrl_dev *pctldev)
 }
 
 static const char *ctc_pmx_get_func_name(struct pinctrl_dev *pctldev,
-					 unsigned selector)
+					 unsigned int selector)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 
@@ -363,8 +356,8 @@ static const char *ctc_pmx_get_func_name(struct pinctrl_dev *pctldev,
 }
 
 static int ctc_pmx_get_groups(struct pinctrl_dev *pctldev,
-			      unsigned selector, const char *const **groups,
-			      unsigned *const num_groups)
+			      unsigned int selector, const char *const **groups,
+			      unsigned int *const num_groups)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 
@@ -375,7 +368,7 @@ static int ctc_pmx_get_groups(struct pinctrl_dev *pctldev,
 }
 
 static struct ctc_pin_bank *ctc_pin_to_bank(struct ctc_pinctrl *info,
-					    unsigned pin)
+					    unsigned int pin)
 {
 	struct ctc_pin_bank *b = info->ctrl->pin_banks;
 
@@ -403,8 +396,8 @@ static int ctc_set_pin_mux(struct ctc_pinctrl *info, struct ctc_pin_bank *bank,
 	return 0;
 }
 
-static int ctc_pmx_set(struct pinctrl_dev *pctldev, unsigned selector,
-		       unsigned group)
+static int ctc_pmx_set(struct pinctrl_dev *pctldev, unsigned int selector,
+		       unsigned int group)
 {
 	struct ctc_pinctrl *info = pinctrl_dev_get_drvdata(pctldev);
 	const unsigned int *pins = info->groups[group].pins;
@@ -415,8 +408,7 @@ static int ctc_pmx_set(struct pinctrl_dev *pctldev, unsigned selector,
 	dev_dbg(info->dev, "enable function %s group %s\n",
 		info->functions[selector].name, info->groups[group].name);
 
-	/*
-	 * for each pin in the pin group selected, program the correspoding pin
+	/* for each pin in the pin group selected, program the corresponding pin
 	 * pin function number in the config register.
 	 */
 	for (cnt = 0; cnt < info->groups[group].npins; cnt++) {
@@ -431,7 +423,7 @@ static int ctc_pmx_set(struct pinctrl_dev *pctldev, unsigned selector,
 }
 
 static void ctc_dt_free_map(struct pinctrl_dev *pctldev,
-			    struct pinctrl_map *map, unsigned num_maps)
+			    struct pinctrl_map *map, unsigned int num_maps)
 {
 }
 
@@ -536,7 +528,7 @@ static struct platform_driver ctc_pinctrl_driver = {
 
 //static int __init ctc_pinctrl_drv_register(void)
 //{
-//      return platform_driver_register(&ctc_pinctrl_driver);
+//	return platform_driver_register(&ctc_pinctrl_driver);
 //}
 //
 //postcore_initcall(ctc_pinctrl_drv_register);

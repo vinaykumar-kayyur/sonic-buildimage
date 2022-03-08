@@ -295,10 +295,7 @@ RUN apt-get update && apt-get install -y \
         libxml2-utils \
         xsltproc \
         python-lxml \
-        libexpat1-dev \
-# For audisp-tacplus
-        libauparse-dev \
-        auditd
+        libexpat1-dev
 
 # Install dependencies for dhcp relay test 
 RUN pip3 install parameterized==0.8.1
@@ -368,7 +365,7 @@ RUN pip3 install "lxml==4.6.2"
 
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0
@@ -397,9 +394,7 @@ RUN apt-get install -y vim
 # Install rsyslog
 RUN apt-get install -y rsyslog
 
-RUN apt-get install -y googletest=1.8.0-10~bpo9+1
-RUN apt-get install -y libgtest-dev=1.8.0-10~bpo9+1
-RUN apt-get install -y libgmock-dev
+RUN apt-get install -y libgtest-dev
 RUN apt-get install -y libarchive13 librhash0
 RUN apt-get -t stretch-backports install -y libuv1
 # Install cmake/cmake-data 3.13.2-1_bpo9+1

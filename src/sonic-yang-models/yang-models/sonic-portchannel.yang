@@ -7,10 +7,12 @@ module sonic-portchannel {
 
     import sonic-types {
         prefix stypes;
+        revision-date 2019-07-01;
     }
 
     import sonic-extension {
         prefix ext;
+        revision-date 2019-07-01;
     }
 
     import sonic-port {
@@ -136,7 +138,7 @@ module sonic-portchannel {
                         path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                     }
                 }
-
+        
                 leaf port {
                     /* key elements are mandatory by default */
                     type leafref {

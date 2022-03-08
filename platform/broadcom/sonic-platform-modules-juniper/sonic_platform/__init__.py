@@ -1,1 +1,1 @@
-from . import platform
+import platform

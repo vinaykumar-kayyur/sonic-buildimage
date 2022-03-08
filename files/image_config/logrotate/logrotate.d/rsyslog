@@ -24,7 +24,6 @@
 }
 
 /var/log/auth.log
-/var/log/arista.log
 /var/log/cron.log
 /var/log/syslog
 /var/log/teamd.log
@@ -33,7 +32,6 @@
 /var/log/frr/zebra.log
 /var/log/swss/sairedis*.rec
 /var/log/swss/swss*.rec
-/var/log/swss/responsepublisher.rec
 {
     size 1M
     rotate 5000

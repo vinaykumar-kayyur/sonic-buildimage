@@ -3,7 +3,6 @@ from setuptools import setup
 dependencies = [
     'natsort',
     'sonic_py_common',
-    'docker'
 ]
 
 setup(

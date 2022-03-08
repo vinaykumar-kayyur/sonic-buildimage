@@ -1,6 +1,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
+#include <linux/platform_data/pca954x.h>
 #include <linux/device.h>
 #include <linux/kdev_t.h>
 #include <linux/leds.h>
@@ -194,7 +195,7 @@ static int e530_48t4x_p_init_i2c_gpio(void)
         return -1;
     }
 
-    i2c_client_gpio0 = i2c_new_client_device(i2c_adp_gpio0, &i2c_dev_gpio0);
+    i2c_client_gpio0 = i2c_new_device(i2c_adp_gpio0, &i2c_dev_gpio0);
     if(IS_INVALID_PTR(i2c_client_gpio0))
     {
         i2c_client_gpio0 = NULL;

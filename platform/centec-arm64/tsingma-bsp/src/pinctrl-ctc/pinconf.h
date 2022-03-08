@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Internal interface between the core pin control system and the
  * pin config portions
@@ -8,6 +7,8 @@
  * Based on bits of regulator core, gpio core and clk core
  *
  * Author: Linus Walleij <linus.walleij@linaro.org>
+ *
+ * License terms: GNU General Public License (GPL) version 2
  */
 
 #ifdef CONFIG_PINCONF
@@ -15,7 +16,7 @@
 int pinconf_check_ops(struct pinctrl_dev *pctldev);
 int pinconf_validate_map(const struct pinctrl_map *map, int i);
 int pinconf_map_to_setting(const struct pinctrl_map *map,
-			   struct pinctrl_setting *setting);
+			  struct pinctrl_setting *setting);
 void pinconf_free_setting(const struct pinctrl_setting *setting);
 int pinconf_apply_setting(const struct pinctrl_setting *setting);
 
@@ -44,7 +45,7 @@ static inline int pinconf_validate_map(const struct pinctrl_map *map, int i)
 }
 
 static inline int pinconf_map_to_setting(const struct pinctrl_map *map,
-					 struct pinctrl_setting *setting)
+			  struct pinctrl_setting *setting)
 {
 	return 0;
 }

@@ -4,7 +4,7 @@
 #
 #  SPDX-License-Identifier:     GPL-2.0
 
-MEM=4096
+MEM=3072
 DISK=$1
 ONIE_RECOVERY_ISO=$2
 INSTALLER=$3
@@ -59,11 +59,7 @@ free -m
 if [[ "$vs_build_prepare_mem" == "yes" ]]; then
     # Force o.s. to drop cache and compact memory so that KVM can get 2G memory
     bash -c 'echo 1 > /proc/sys/vm/drop_caches'
-    # Not all kernels support compact_memory
-    if [[ -w '/proc/sys/vm/compact_memory' ]]
-    then	    
-        bash -c 'echo 1 > /proc/sys/vm/compact_memory'
-    fi
+    bash -c 'echo 1 > /proc/sys/vm/compact_memory'
     free -m
 fi
 

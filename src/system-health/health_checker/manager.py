@@ -1,11 +1,3 @@
-from . import utils
-from .config import Config
-from .health_checker import HealthChecker
-from .service_checker import ServiceChecker
-from .hardware_checker import HardwareChecker
-from .user_defined_checker import UserDefinedChecker
-
-
 class HealthCheckerManager(object):
     """
     Manage all system health checkers and system health configuration.
@@ -18,6 +10,7 @@ class HealthCheckerManager(object):
         self._checkers = []
         self._state = self.STATE_BOOTING
 
+        from .config import Config
         self.config = Config()
         self.initialize()
 
@@ -26,6 +19,8 @@ class HealthCheckerManager(object):
         Initialize the manager. Create service checker and hardware checker by default.
         :return:
         """
+        from .service_checker import ServiceChecker
+        from .hardware_checker import HardwareChecker
         self._checkers.append(ServiceChecker())
         self._checkers.append(HardwareChecker())
 
@@ -36,6 +31,7 @@ class HealthCheckerManager(object):
         :return: A tuple. The first element indicate the status of the checker; the second element is a dictionary that
         contains the status for all objects that was checked.
         """
+        from .health_checker import HealthChecker
         HealthChecker.summary = HealthChecker.STATUS_OK
         stats = {}
         self.config.load_config()
@@ -49,6 +45,7 @@ class HealthCheckerManager(object):
             self._do_check(checker, stats)
 
         if self.config.user_defined_checkers:
+            from .user_defined_checker import UserDefinedChecker
             for udc in self.config.user_defined_checkers:
                 checker = UserDefinedChecker(udc)
                 self._do_check(checker, stats)
@@ -74,12 +71,11 @@ class HealthCheckerManager(object):
             else:
                 stats[category].update(info)
         except Exception as e:
-            HealthChecker.summary = HealthChecker.STATUS_NOT_OK
+            from .health_checker import HealthChecker
             error_msg = 'Failed to perform health check for {} due to exception - {}'.format(checker, repr(e))
             entry = {str(checker): {
                 HealthChecker.INFO_FIELD_OBJECT_STATUS: HealthChecker.STATUS_NOT_OK,
-                HealthChecker.INFO_FIELD_OBJECT_MSG: error_msg,
-                HealthChecker.INFO_FIELD_OBJECT_TYPE: "Internal"
+                HealthChecker.INFO_FIELD_OBJECT_MSG: error_msg
             }}
             if 'Internal' not in stats:
                 stats['Internal'] = entry
@@ -87,7 +83,8 @@ class HealthCheckerManager(object):
                 stats['Internal'].update(entry)
 
     def _is_system_booting(self):
-        uptime = utils.get_uptime()
+        from .utils import get_uptime
+        uptime = get_uptime()
         if not self.boot_timeout:
             self.boot_timeout = self.config.get_bootup_timeout()
         booting = uptime < self.boot_timeout

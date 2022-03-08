@@ -59,16 +59,13 @@ ifeq ($(CONFIGURED_ARCH),arm64)
 	override DOCKER_BASE_ARCH = arm64v8
 endif
 endif
+ifeq ($(BLDENV),bullseye)
 IMAGE_DISTRO := bullseye
+else
+IMAGE_DISTRO := buster
+endif
 IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
 IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
-
-# Python 2 packages will not be available in Bullseye
-ifeq ($(BLDENV),bullseye)
-ENABLE_PY2_MODULES = n
-else
-ENABLE_PY2_MODULES = y
-endif
 
 export BUILD_NUMBER
 export BUILD_TIMESTAMP
@@ -169,10 +166,6 @@ endif
 
 ifeq ($(SONIC_INCLUDE_MACSEC),y)
 INCLUDE_MACSEC = y
-endif
-
-ifeq ($(ENABLE_AUTO_TECH_SUPPORT),y)
-ENABLE_AUTO_TECH_SUPPORT = y
 endif
 
 ifeq ($(SONIC_INCLUDE_MUX),y)
@@ -304,7 +297,6 @@ $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
-$(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
@@ -662,7 +654,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi
 		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
-		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
+		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python setup.py --name`
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 		# clean up
@@ -743,10 +735,6 @@ $(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PAT
 $(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
 $(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(STRETCH_DEBS_PATH)))
 $(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
-$(foreach DOCKER_IMAGE,$(SONIC_BUSTER_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(BUSTER_DEBS_PATH)))
-$(foreach DOCKER_IMAGE,$(SONIC_BUSTER_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(BUSTER_FILES_PATH)))
-$(foreach DOCKER_IMAGE,$(SONIC_BUSTER_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(BUSTER_DEBS_PATH)))
-$(foreach DOCKER_IMAGE,$(SONIC_BUSTER_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(BUSTER_FILES_PATH)))
 
 ifeq ($(BLDENV),jessie)
 	DOCKER_IMAGES := $(SONIC_JESSIE_DOCKERS)
@@ -760,15 +748,8 @@ ifeq ($(BLDENV),stretch)
 	STRETCH_DOCKER_IMAGES = $(filter $(SONIC_STRETCH_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
 	STRETCH_DBG_DOCKER_IMAGES = $(filter $(SONIC_STRETCH_DBG_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
 else
-ifeq ($(BLDENV),buster)
-	DOCKER_IMAGES := $(SONIC_BUSTER_DOCKERS)
-	DOCKER_DBG_IMAGES := $(SONIC_BUSTER_DBG_DOCKERS)
-	BUSTER_DOCKER_IMAGES = $(filter $(SONIC_BUSTER_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS) $(SONIC_PACKAGES_LOCAL))
-	BUSTER_DBG_DOCKER_IMAGES = $(filter $(SONIC_BUSTER_DBG_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS) $(SONIC_PACKAGES_LOCAL))
-else
-	DOCKER_IMAGES = $(filter-out $(SONIC_JESSIE_DOCKERS) $(SONIC_STRETCH_DOCKERS) $(SONIC_BUSTER_DOCKERS),$(SONIC_DOCKER_IMAGES))
-	DOCKER_DBG_IMAGES = $(filter-out $(SONIC_JESSIE_DBG_DOCKERS) $(SONIC_STRETCH_DBG_DOCKERS) $(SONIC_BUSTER_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
-endif
+	DOCKER_IMAGES = $(filter-out $(SONIC_JESSIE_DOCKERS) $(SONIC_STRETCH_DOCKERS),$(SONIC_DOCKER_IMAGES))
+	DOCKER_DBG_IMAGES = $(filter-out $(SONIC_JESSIE_DBG_DOCKERS) $(SONIC_STRETCH_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
 endif
 endif
 
@@ -914,14 +895,6 @@ DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
 		      $(DOCKER_IMAGES) \
 		      $(DOCKER_DBG_IMAGES)))
 
-ifeq ($(BLDENV),bullseye)
-DOCKER_LOAD_TARGETS += $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
-		      $(SONIC_JESSIE_DOCKERS) \
-		      $(SONIC_STRETCH_DOCKERS) \
-		      $(SONIC_BUSTER_DOCKERS)))
-
-endif
-
 $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
 	$(HEADER)
 	docker load -i $(TARGET_PATH)/$*.gz $(LOG)
@@ -958,9 +931,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(PYTHON3_SWSSCOMMON) \
                 $(SONIC_UTILITIES_DATA) \
                 $(SONIC_HOST_SERVICES_DATA) \
-                $(BASH) \
-                $(BASH_TACPLUS) \
-                $(AUDISP_TACPLUS)) \
+                $(BASH)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(TARGET_PATH)/,$$(SONIC_PACKAGES_LOCAL)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
@@ -1003,7 +974,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export include_restapi="$(INCLUDE_RESTAPI)"
 	export include_nat="$(INCLUDE_NAT)"
 	export include_sflow="$(INCLUDE_SFLOW)"
-	export enable_auto_tech_support="$(ENABLE_AUTO_TECH_SUPPORT)"
 	export include_macsec="$(INCLUDE_MACSEC)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"
@@ -1020,10 +990,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(IMAGE_DISTRO_DEBS_PATH)/$(deb))))"
 	export lazy_build_installer_debs="$(foreach deb, $($*_LAZY_BUILD_INSTALLS), $(addprefix $($(deb)_MACHINE)|,$(deb)))"
 	export installer_images="$(foreach docker, $($*_DOCKERS),\
-				$(addprefix $($(docker:-dbg.gz=.gz)_PACKAGE_NAME)|,\
-				$(addprefix $($(docker:-dbg.gz=.gz)_PATH)|,\
-				$(addprefix $($(docker:-dbg.gz=.gz)_MACHINE)|,\
-				$(addprefix $(TARGET_PATH)/,$(addsuffix :$($(docker:-dbg.gz=.gz)_VERSION),$(docker)))))))"
+				$(addprefix $($(docker)_PACKAGE_NAME)|,\
+				$(addprefix $($(docker)_PATH)|,\
+				$(addprefix $($(docker)_MACHINE)|,\
+				$(addprefix $(TARGET_PATH)/,$(addsuffix :$($(docker)_VERSION),$(docker)))))))"
 	export sonic_packages="$(foreach package, $(SONIC_PACKAGES),\
 				$(addsuffix |$($(package)_DEFAULT_FEATURE_STATE_ENABLED),\
 				$(addsuffix |$($(package)_DEFAULT_FEATURE_OWNER),\
@@ -1232,9 +1202,6 @@ clean :: .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONI
 ###############################################################################
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
-
-buster : $$(addprefix $(TARGET_PATH)/,$$(BUSTER_DOCKER_IMAGES)) \
-          $$(addprefix $(TARGET_PATH)/,$$(BUSTER_DBG_DOCKER_IMAGES))
 
 stretch : $$(addprefix $(TARGET_PATH)/,$$(STRETCH_DOCKER_IMAGES)) \
           $$(addprefix $(TARGET_PATH)/,$$(STRETCH_DBG_DOCKER_IMAGES))

@@ -6,6 +6,6 @@
     "led_color": {
         "fault": "yellow",
         "normal": "green",
-        "booting": "flashing green"
+        "booting": "flash_green"
     }
 }
