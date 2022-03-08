@@ -207,13 +207,15 @@ class Fan(FanBase):
         """
         if not self.is_psu_fan:
             present_path = "{}{}{}".format(CPLD_FAN_I2C_PATH, self.fan_tray_index+1, '_present')
-            val=self._api_helper.read_txt_file(present_path)
-            if val is not None:
-                return int(val, 10)==1
-            else:
-                return False
+            
         else:
-            return True
+            present_path="{}{}".format(self.psu_cpld_path, 'psu_present')
+        
+        val=self._api_helper.read_txt_file(present_path)
+        if val is not None:
+            return int(val, 10)==1
+        else:
+            return False
 
     def get_status(self):
         """

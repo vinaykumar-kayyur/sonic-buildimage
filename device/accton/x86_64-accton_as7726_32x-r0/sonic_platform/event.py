@@ -1,9 +1,10 @@
 try:
-    import time    
+    import time
     from sonic_py_common.logger import Logger
 except ImportError as e:
     raise ImportError(repr(e) + " - required module not found")
 
+POLL_INTERVAL_IN_SEC = 1
 
 class SfpEvent:
     ''' Listen to insert/remove sfp events '''
