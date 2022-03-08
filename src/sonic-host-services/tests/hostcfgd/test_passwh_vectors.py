@@ -44,43 +44,6 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "num_dumps": "3",
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
                     }
-                },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
-                    }
                 }
             },
             "enable_feature":{
@@ -120,43 +83,6 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "num_dumps": "3",
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
                     }
-                },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
-                    }
                 }
             },
             "enable_digit_class":{
@@ -195,43 +121,6 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "enabled": "false",
                         "num_dumps": "3",
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
-                    }
-                },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
                     }
                 }
             },
@@ -273,43 +162,6 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
                     }
                 },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
-                    }
-                }
             },
             "enable_upper_class":{
                 "PASSW_HARDENING": {
@@ -347,43 +199,6 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "enabled": "false",
                         "num_dumps": "3",
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
-                    }
-                },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
                     }
                 }
             },
@@ -424,45 +239,8 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "num_dumps": "3",
                         "memory": "0M-2G:256M,2G-4G:320M,4G-8G:384M,8G-:448M"
                     }
-                },
-                "AAA": {
-                    "authentication": {
-                        "login": "local"
-                    },
-                    "authorization": {
-                        "login": "local"
-                    },
-                    "accounting": {
-                        "login": "local"
-                    }
-                },
-                "TACPLUS": {
-                    "global": {
-                            "auth_type": "chap",
-                            "timeout": 5,
-                            "passkey": "dellsonic",
-                            "src_intf": "Ethernet0"
-                    }
-                },
-                "TACPLUS_SERVER": {
-                    "192.168.1.1" : {
-                            "priority": 5,
-                            "tcp_port": 50,
-                            "timeout": 10,
-                            "auth_type": "chap",
-                            "passkey": "dellsonic",
-                            "vrf": "default"
-                    },
-                    "192.168.1.2" : {
-                            "priority": 2,
-                            "tcp_port": 51,
-                            "timeout": 15,
-                            "auth_type": "pap",
-                            "passkey": "dellsonic1",
-                            "vrf": "mgmt"
-                    }
                 }
-            },
+            }
         }
     ]
 ]

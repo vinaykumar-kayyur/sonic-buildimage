@@ -76,6 +76,7 @@ class TestHostcfgdPASSWH(TestCase):
         t_path = templates_path
         op_path = output_path + "/" + test_name + "_" + config_name
         sop_path = sample_output_path + "/" +  test_name + "_" + config_name
+        sop_path_common = sample_output_path + "/" +  test_name
 
         hostcfgd.PAM_PASSWORD_CONF_TEMPLATE = t_path + "/common-password.j2"
         hostcfgd.PAM_AUTH_CONF_TEMPLATE = t_path + "/common-auth-sonic.j2"
@@ -95,27 +96,20 @@ class TestHostcfgdPASSWH(TestCase):
         shutil.rmtree(op_path, ignore_errors=True)
         os.mkdir(op_path)
 
-
-        shutil.copyfile(sop_path + "/login.defs.old", op_path + "/login.defs")
+        shutil.copyfile(sop_path_common + "/login.defs.old", op_path + "/login.defs")
         MockConfigDb.set_config_db(test_data[config_name])
         host_config_daemon = hostcfgd.HostConfigDaemon()
 
-        aaa = host_config_daemon.config_db.get_table('AAA')
-
         try:
-            passwh_table = host_config_daemon.config_db.get_table('PASSWH')
-        except:
-            # TODO: raise an error?
+            passwh_table = host_config_daemon.config_db.get_table('PASSW_HARDENING')
+        except Exception as e:
+            syslog.syslog(syslog.LOG_ERR, "failed: get_table 'PASSW_HARDENING', exception={}".format(e))
             passwh_table = []
 
-        host_config_daemon.aaacfg.load(aaa,[],[],[],[],passwh_table)
+        host_config_daemon.aaacfg.load([],[],[],[],[],passwh_table)
 
-        # dcmp = filecmp.dircmp(sop_path, op_path)
-        # print(hostcfgd.PAM_PASSWORD_CONF)
-        # /sonic/src/sonic-host-services/tests/hostcfgd/output/PASSWORD_HARDENING_default_values/common-password
+
         diff_output = ""
-        # name = 'common-password'
-
         files_to_compare = ['common-password']
 
         # check output files exists
