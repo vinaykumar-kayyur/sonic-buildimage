@@ -89,4 +89,3 @@
 [submodule "src/linkmgrd"]
 	path = src/linkmgrd
 	url = https://github.com/Azure/sonic-linkmgrd.git
-	branch = 202012
