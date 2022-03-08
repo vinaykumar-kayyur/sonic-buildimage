@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 try:
     import time
     import syslog
@@ -22,7 +21,6 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_COMPONENT = 2
-
 class Chassis(ChassisBase):
     """
     Platform-specific Chassis class
@@ -146,7 +144,6 @@ class Chassis(ChassisBase):
             string: The name of the chassis
         """
         return self._eeprom.modelstr()
-
 
     def get_presence(self):
         """
@@ -345,4 +342,3 @@ class Chassis(ChassisBase):
             specified.
         """
         return self.system_led
-
