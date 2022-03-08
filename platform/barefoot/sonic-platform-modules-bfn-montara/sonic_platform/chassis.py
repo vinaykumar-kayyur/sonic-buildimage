@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 try:
     import time
     import syslog
