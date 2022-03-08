@@ -34,6 +34,9 @@ if [[ "$1" == "init" ]]; then
         *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
             TYPE='fast'
             ;;
+        *SONIC_BOOT_TYPE=soft*)
+            TYPE='soft'
+            ;;
         *)
             TYPE='cold'
     esac
