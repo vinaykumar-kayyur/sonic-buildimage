@@ -27,8 +27,8 @@ def get_bios_version():
     """
     try:
         return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
-    except:
-        raise RuntimeError("get BIOS version failed")
+    except:        
+        print("get BIOS version failed")
 
 def get_bmc_version():
     """
@@ -42,7 +42,7 @@ def get_bmc_version():
     try:    
         ver = thrift_try(bmc_get)
     except Exception:
-        raise RuntimeError("get BMC version failed")
+        print("get BMC version failed")
     
     return ver
 
@@ -173,19 +173,19 @@ class BFPlatformComponentsParser(object):
 
 class Components(ComponentBase):
     """BFN Montara Platform-specific Component class"""
-
     bf_platform = device_info.get_path_to_platform_dir()
     bf_platform_json =  "{}/platform_components.json".format(bf_platform.strip())
-
     bpcp = BFPlatformComponentsParser(bf_platform_json)
 
     def __init__(self, component_index=0):
         try:
             self.index = component_index
-            self.name = self.bpcp.get_components_list()[self.index]
+            self.name = "N/A"
+            self.version = "N/A"
             self.description = "N/A"
+            self.name = self.bpcp.get_components_list()[self.index]            
         except IndexError as e:
-            raise IndexError(str(e) + " - Error: No components found in plaform_components.json")
+            print("Error: No components found in plaform_components.json")
         
         if (self.name == "BMC"):
             self.version = get_bmc_version()
@@ -193,10 +193,6 @@ class Components(ComponentBase):
         elif (self.name == "BIOS"):
             self.version = get_bios_version()
             self.description = "Chassis BIOS"
-        else:
-            self.version =  "N/A"
-        
-        self.__bmc = None
 
     def get_name(self):
         """
@@ -302,16 +298,6 @@ class Components(ComponentBase):
             By default 'None' value will be used, which indicates that no actions are required
         """
         return 'None'
-
-    def install_firmware(self, image_path):
-        """
-        Installs firmware to the component
-        Args:
-        image_path: A string, path to firmware image
-        Returns:
-        A boolean, True if install was successful, False if not
-        """
-        return False
 
     def update_firmware(self, image_path):
         """
