@@ -92,6 +92,8 @@ RUN pip install cffi==1.10.0 \
     && rm -f 1.0.0.tar.gz  \
     && pip install nnpy    \
     && pip install dpkt    \
+    && pip install --upgrade setuptools \
+    && pip install allure-pytest==2.8.22 \
     && pip install scapy==2.4.5 --upgrade
 
 # Install docker-ce-cli
@@ -182,9 +184,6 @@ RUN python3 -m venv env-python3
 #       the end until we figure that out.
 RUN pip install pycryptodome==3.9.8
 
-# Install allure-pytest library
-RUN pip install --upgrade setuptools \
-    && pip install allure-pytest==2.8.22
 
 # Activating a virtualenv. The virtualenv automatically works for RUN, ENV and CMD.
 ENV VIRTUAL_ENV=env-python3
