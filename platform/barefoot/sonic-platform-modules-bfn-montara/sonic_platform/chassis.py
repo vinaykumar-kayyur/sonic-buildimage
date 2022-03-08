@@ -144,7 +144,6 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.modelstr()
 
-
     def get_presence(self):
         """
         Retrieves the presence of the chassis
