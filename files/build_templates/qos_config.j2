@@ -87,6 +87,8 @@
             "7": "7"
         }
     },
+{% elif clear_q_for_pcbb is defined %}
+    {{- clear_q_for_pcbb() }}
 {% else %}
     "DSCP_TO_TC_MAP": {
         "AZURE": {
