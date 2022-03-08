@@ -16,7 +16,6 @@ try:
 
     from sonic_py_common import device_info
 
-
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
