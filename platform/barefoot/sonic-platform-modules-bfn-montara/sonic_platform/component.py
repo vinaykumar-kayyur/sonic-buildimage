@@ -1,5 +1,4 @@
 try:
-    import os
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
     from platform_thrift_client import thrift_try
