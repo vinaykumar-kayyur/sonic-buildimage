@@ -327,3 +327,4 @@ class Components(ComponentBase):
         if boot_action is fast.
         """
         return 1
+    
