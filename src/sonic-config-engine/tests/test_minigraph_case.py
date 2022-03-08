@@ -9,6 +9,7 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
@@ -104,13 +105,11 @@ class TestCfgGenCaseInsensitive(TestCase):
                        'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'],
                        'vlanid': '1000',
                        'mac': '00:aa:bb:cc:dd:ee',
-                       'members': ['Ethernet8']
                        },
                    'Vlan2000': {
                        'alias': 'ab2',
                        'dhcp_servers': ['192.0.0.1'],
                        'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4'],
-                       'members': ['Ethernet4'],
                        'vlanid': '2000'
                        }
                    }
@@ -169,6 +168,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'1': {'baud_rate': '9600', 'remote_device': 'managed_device', 'flow_control': 1}}"))
+
+    def test_minigraph_dhcp_server_feature(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'dhcp_server\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '')
+
+        try:
+            # For DHCP server enabled device type
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BMC_MGMT_TOR_ROUTER, self.sample_graph), shell=True)
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), 'enabled')
+        finally:
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BMC_MGMT_TOR_ROUTER, TOR_ROUTER, self.sample_graph), shell=True)
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'

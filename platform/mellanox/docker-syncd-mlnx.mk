@@ -21,6 +21,8 @@ include $(PLATFORM_PATH)/../template/docker-syncd-base.mk
 
 $(DOCKER_SYNCD_BASE)_DEPENDS += $(SYNCD) $(PYTHON_SDK_API) $(MFT)
 
+$(DOCKER_SYNCD_BASE)_FILES += $(ISSU_VERSION_FILE)
+
 $(DOCKER_SYNCD_BASE)_DBG_DEPENDS += $(SYNCD_DBG) \
                                 $(LIBSWSSCOMMON_DBG) \
                                 $(LIBSAIMETADATA_DBG) \

@@ -56,6 +56,7 @@ RUN pip install cffi==1.10.0 \
                 psutil \
                 pyasn1==0.1.9 \
                 pyfiglet \
+                lazy-object-proxy==1.6.0 \
                 pylint==1.8.1 \
                 pyro4 \
                 pysnmp==4.2.5 \
@@ -68,6 +69,7 @@ RUN pip install cffi==1.10.0 \
                 rpyc \
                 six \
                 tabulate \
+                statistics \
                 textfsm \
                 virtualenv \
                 retry \
@@ -89,7 +91,8 @@ RUN pip install cffi==1.10.0 \
     && rm -fr nanomsg-1.0.0 \
     && rm -f 1.0.0.tar.gz  \
     && pip install nnpy    \
-    && pip install dpkt
+    && pip install dpkt    \
+    && pip install scapy==2.4.5 --upgrade
 
 # Install docker-ce-cli
 RUN apt-get update                  \
