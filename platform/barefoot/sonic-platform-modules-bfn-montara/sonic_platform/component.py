@@ -17,8 +17,8 @@ def get_bios_version():
     """
     try:
         return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
-    except:        
-        print("get BIOS version failed")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Failed to getget BIOS version")
 
 def get_bmc_version():
     """
@@ -32,8 +32,8 @@ def get_bmc_version():
     try:    
         ver = thrift_try(bmc_get)
     except Exception:
-        print("get BMC version failed")
-    
+        pass
+
     return ver
 
 class BFPlatformComponentsParser(object):
