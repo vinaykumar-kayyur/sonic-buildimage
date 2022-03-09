@@ -27,6 +27,13 @@
 {%- endfor %}
 {%- set port_names_active = port_names_list_active | join(',') -%}
 
+{%- set port_names_list_extra_queues = [] %}
+{%- for port in PORT_ACTIVE %}
+    {% if ('type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] == 'LeafRouter' and DEVICE_NEIGHBOR is defined and 'name' in DEVICE_NEIGHBOR[port] and 'T0' in DEVICE_NEIGHBOR[port]['name']) or
+            ('subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' and DEVICE_NEIGHBOR is defined and 'name' in DEVICE_NEIGHBOR[port] and 'T1' in DEVICE_NEIGHBOR[port]['name']) %}
+        {%- if port_names_list_extra_queues.append(port) %}{%- endif %}
+    {% endif %}
+{%- endfor %}
 
 {%- set pfc_to_pg_map_supported_asics = ['mellanox', 'barefoot', 'marvell'] -%}
 {%- set backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter'] -%}
@@ -36,7 +43,7 @@
 {
 {% if generate_tc_to_pg_map is defined %}
     {{- generate_tc_to_pg_map() }}
-{% else %}
+{% elif generate_dscp_to_tc_map is not defined %}
     "TC_TO_PRIORITY_GROUP_MAP": {
         "AZURE": {
             "0": "0",
@@ -87,8 +94,8 @@
             "7": "7"
         }
     },
-{% elif clear_q_for_pcbb is defined %}
-    {{- clear_q_for_pcbb() }}
+{% elif generate_dscp_to_tc_map is defined %}
+    {{- generate_dscp_to_tc_map() }}
 {% else %}
     "DSCP_TO_TC_MAP": {
         "AZURE": {
@@ -208,7 +215,13 @@
 {% if asic_type in pfc_to_pg_map_supported_asics %}
             "pfc_to_pg_map"   : "AZURE",
 {% endif %}
-            "pfc_enable"      : "3,4"
+{% if port in port_names_list_extra_queues %}
+            "pfc_enable"      : "2,3,4,6",
+            "pfcwd_sw_enable" : "3,4"
+{% else %}
+            "pfc_enable"      : "3,4",
+            "pfcwd_sw_enable" : "3,4"
+{% endif %}
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
@@ -268,7 +281,12 @@
 {% endfor %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|2": {
+        {% if port in port_names_list_extra_queues %}
+            "scheduler"   : "scheduler.1",
+                    "wred_profile": "AZURE_LOSSLESS"
+        {% else %}
             "scheduler": "scheduler.0"
+        {% endif %}
         },
 {% endfor %}
 {% for port in PORT_ACTIVE %}
@@ -278,7 +296,12 @@
 {% endfor %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|6": {
+        {% if port in port_names_list_extra_queues %}
+            "scheduler"   : "scheduler.1",
+                    "wred_profile": "AZURE_LOSSLESS"
+        {% else %}
             "scheduler": "scheduler.0"
+        {% endif %}
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
