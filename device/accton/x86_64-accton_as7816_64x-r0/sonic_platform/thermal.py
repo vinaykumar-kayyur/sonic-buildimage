@@ -42,7 +42,7 @@ PSU_CPLD_I2C_MAPPING = {
 THERMAL_NAME_LIST = ["Temp sensor 1", "Temp sensor 2", "Temp sensor 3", 
                      "Temp sensor 4", "Temp sensor 5", "Temp sensor 6"]
                      
-PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 2"]
+PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 1"]
 
 SYSFS_PATH = "/sys/bus/i2c/devices"
 
