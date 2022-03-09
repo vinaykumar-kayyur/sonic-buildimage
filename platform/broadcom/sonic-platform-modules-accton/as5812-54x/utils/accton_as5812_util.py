@@ -115,10 +115,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 if DEBUG == True:
-    print (sys.argv[0])
-    print('(ARGV      :', sys.argv[1:])
-
-
+    print(sys.argv[0])
+    print('ARGV      :', sys.argv[1:])
+    
+    
 def main():
     global DEBUG
     global args
@@ -165,7 +165,6 @@ def show_help():
     print(__doc__ % {'scriptName' : sys.argv[0].split("/")[-1]})
     sys.exit(0)
 
-
 def my_log(txt):
     if DEBUG == True:
         print("[ACCTON DBG]: "+txt)
@@ -182,7 +181,7 @@ def log_os_system(cmd, show):
     if status:
         logging.info('Failed :'+cmd)
         if show:
-            print('Failed :'+cmd)
+            print(('Failed :'+cmd))
     return  status, output
 
 def driver_inserted():
@@ -399,8 +398,9 @@ def do_install():
                 return  status
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
+
     do_sonic_platform_install()
-     
+
     return
 
 def do_uninstall():
