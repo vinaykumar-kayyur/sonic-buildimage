@@ -291,6 +291,7 @@ class TestJ2Files(TestCase):
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output)
             assert utils.cmp(sample_output_file, test_output)
+            os.remove(test_output)
 
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
