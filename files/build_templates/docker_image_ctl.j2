@@ -394,6 +394,7 @@ start() {
         --net=$NET \
         -e RUNTIME_OWNER=local \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
+        -v /usr/share/sonic/scripts:/usr/share/sonic/scripts:ro
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
 {%- endif %}

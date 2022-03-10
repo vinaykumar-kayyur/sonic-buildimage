@@ -1,0 +1,32 @@
+[
+    {
+        "key_params": [ "peer_ip" ],
+        "tag": "tag_wait_intf",
+        "regex": "Peer .([0-9a-f:.]*). with local address .([0-9a-f:.]*) wait for",
+        "params": [ "peer_ip", "local_ip" ]
+    },
+    {
+        "key_params": [ "peer_ip" ],
+        "tag": "admin_up",
+        "regex": "Peer ([0-9a-f:.]*) admin state is set to .up.",
+        "params": [ "peer_ip" ]
+    },
+    {
+        "key_params": [ "peer_ip" ],
+        "tag": "admin_down",
+        "regex": "Peer ([0-9a-f:.]*) admin state is set to .down.",
+        "params": [ "peer_ip" ]
+    },
+    {
+        "key_params": [ "peer_ip" ],
+        "tag": "admin_up",
+        "regex": "Peer .default.([0-9a-f:.]*). admin state is set to .up.",
+        "params": [ "peer_ip" ]
+    },
+    {
+        "key_params": [ "peer_ip" ],
+        "tag": "admin_down",
+        "regex": "Peer .default.([0-9a-f:.]*). admin state is set to .down.",
+        "params": [ "peer_ip" ]
+    }
+]
