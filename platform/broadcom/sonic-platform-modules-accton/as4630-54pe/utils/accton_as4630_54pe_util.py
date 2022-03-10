@@ -119,7 +119,6 @@ def main():
         elif opt in ('-f', '--force'):
             FORCE = 1
         else:
-            print("TEST")
             logging.info('no option')
     for arg in args:
         if arg == 'install':
@@ -183,7 +182,7 @@ kos = [
 
 def driver_install():
     global FORCE
-    
+
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
         if status:
@@ -223,6 +222,13 @@ def device_install():
             if FORCE == 0:
                 return status
 
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status
     for i in range(0,len(sfp_map)):
         if(i < 4):
             opt='optoe2'
