@@ -1571,7 +1571,6 @@ class Client(Iface):
             raise result.ouch
         raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_chss_mgmt_bmc_ver_get failed: unknown result")
 
-
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
         self._handler = handler
@@ -7612,10 +7611,7 @@ pltfm_mgr_sensor_info_get_result.thrift_spec = (
     (1, TType.STRUCT, 'ouch', [InvalidPltfmMgrOperation, None], None, ),  # 1
 )
 
-
 class pltfm_mgr_chss_mgmt_bmc_ver_get_args(object):
-
-
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
             iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
@@ -7654,7 +7650,6 @@ class pltfm_mgr_chss_mgmt_bmc_ver_get_args(object):
 all_structs.append(pltfm_mgr_chss_mgmt_bmc_ver_get_args)
 pltfm_mgr_chss_mgmt_bmc_ver_get_args.thrift_spec = (
 )
-
 
 class pltfm_mgr_chss_mgmt_bmc_ver_get_result(object):
     """
