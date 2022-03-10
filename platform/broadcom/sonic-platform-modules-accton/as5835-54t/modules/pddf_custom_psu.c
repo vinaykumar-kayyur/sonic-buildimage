@@ -9,7 +9,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include "../../../../pddf/i2c/modules/include/pddf_psu_defs.h"
+#include "pddf_psu_defs.h"
 
 ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *da, char *buf);
 extern PSU_SYSFS_ATTR_DATA access_psu_v_out;
@@ -86,13 +86,7 @@ ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *
 	u16 value = psu_get_v_out(client);
 	u8 vout_mode = psu_get_vout_mode(client);
 
-	if ((vout_mode >> 5) == 0)
-		exponent = two_complement_to_int(vout_mode & 0x1f, 5, 0x1f);
-	else
-	{
-		printk(KERN_ERR "%s: Only support linear mode for vout mode\n", __func__);
-		exponent = 0;
-	}
+	exponent = two_complement_to_int(vout_mode, 5, 0x1f);
 	mantissa = value;
 	if (exponent >= 0)
 		return sprintf(buf, "%d\n", (mantissa << exponent) * multiplier);
@@ -104,14 +98,14 @@ ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *
 
 static int __init pddf_custom_psu_init(void)
 {
-	access_psu_v_out.show = pddf_show_custom_psu_v_out;
-	access_psu_v_out.do_get = NULL;
-	return 0;
+    access_psu_v_out.show = pddf_show_custom_psu_v_out;
+    access_psu_v_out.do_get = NULL;
+    return 0;
 }
 
 static void __exit pddf_custom_psu_exit(void)
 {
-	return;
+    return;
 }
 
 MODULE_AUTHOR("Broadcom");
