@@ -21,7 +21,7 @@ Core 0:
   temp2_input: 37.000
   ...
 '''
-Threshold = namedtuple('Threshold', ['crit', 'max', 'min', 'alarm'], defaults=[0.1]*4)
+Threshold = namedtuple('Threshold', ['crit', 'max', 'min', 'alarm'])
 
 def _sensors_chip_parsed(data: str):
     def kv(line):
@@ -90,7 +90,7 @@ class Thermal(ThermalBase):
         try:
             path = device_info.get_path_to_platform_dir() + '/' + 'thermal_thresholds.json'
             f = open(path)
-        except:
+        except BaseException as e:
             logging.warning('can not open the file')
         if f is not None:
             self.__get_thresholds(f)
