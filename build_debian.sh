@@ -31,8 +31,8 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
-LINUX_KERNEL_VERSION=4.19.0-12-2
+DOCKER_VERSION=5:20.10.7~3-0~debian-$IMAGE_DISTRO
+LINUX_KERNEL_VERSION=5.10.0-8-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -237,7 +237,6 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
-    # kubeadm package auto install kubelet & kubectl
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
@@ -270,6 +269,7 @@ fi
 ## Note: parted is needed for partprobe in install.sh
 ## Note: ca-certificates is needed for easy_install
 ## Note: don't install python-apt by pip, older than Debian repo one
+## Note: fdisk and gpg are needed by fwutil
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
     ifmetric                \
@@ -282,8 +282,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     dbus                    \
     ntpstat                 \
     openssh-server          \
-    python                  \
-    python-apt              \
+    python3-apt             \
     traceroute              \
     iputils-ping            \
     net-tools               \
@@ -315,18 +314,31 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ndisc6                  \
     makedumpfile            \
     conntrack               \
-    python-pip              \
     python3                 \
     python3-distutils       \
     python3-pip             \
+    python-is-python3       \
     cron                    \
+    libprotobuf23           \
+    libgrpc++1              \
+    libgrpc10               \
     haveged                 \
-    jq
+    fdisk                   \
+    gpg                     \
+    jq                      \
+    auditd
+
+# Have systemd create the auditd log directory
+sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
+sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.conf >/dev/null <<EOF
+[Service]
+LogsDirectory=audit
+LogsDirectoryMode=0750
+EOF
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    flashrom                \
     rasdaemon
 fi
 
@@ -350,12 +362,11 @@ sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
 sudo LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT update-locale "LANG=en_US.UTF-8"
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -name 'en_US' -type f -exec rm -f {} +"
 
-# Install certain fundamental packages from $IMAGE_DISTRO-backports in order to get
-# more up-to-date (but potentially less stable) versions
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t $IMAGE_DISTRO-backports install \
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
     picocom \
     systemd \
-    systemd-sysv
+    systemd-sysv \
+    ntp
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
@@ -392,9 +403,9 @@ set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliv
 save
 quit
 EOF
-# Configure sshd to listen for v4 connections; disable listening for v6 connections
-sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+# Configure sshd to listen for v4 and v6 connections
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
 ## Config rsyslog
 sudo augtool -r $FILESYSTEM_ROOT --autosave "
@@ -425,13 +436,10 @@ done < files/image_config/sysctl/sysctl-net.conf
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 # Upgrade pip via PyPI and uninstall the Debian version
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install --upgrade 'pip<21'
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-pip python3-pip
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python3-pip
 
 # For building Python packages
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'setuptools==40.8.0'
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'wheel==0.35.1'
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setuptools==49.6.00'
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
@@ -474,16 +482,20 @@ fi
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
-sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
-build_version: '${SONIC_IMAGE_VERSION}'
-debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
-kernel_version: '$kversion'
-asic_type: $sonic_asic_platform
-commit_id: '$(git rev-parse --short HEAD)'
-build_date: $(date -u)
-build_number: ${BUILD_NUMBER:-0}
-built_by: $USER@$BUILD_HOSTNAME
-EOF
+if [ -f files/image_config/sonic_release ]; then
+    sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
+fi
+export build_version="${SONIC_IMAGE_VERSION}"
+export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
+export kernel_version="${kversion}"
+export asic_type="${sonic_asic_platform}"
+export commit_id="$(git rev-parse --short HEAD)"
+export branch="$(git rev-parse --abbrev-ref HEAD)"
+export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
+export build_date="$(date -u)"
+export build_number="${BUILD_NUMBER:-0}"
+export built_by="$USER@$BUILD_HOSTNAME"
+j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 ## Copy over clean-up script
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
@@ -578,9 +590,8 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
-
 scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
 gid_user=$(sudo LANG=C chroot $FILESYSTEM_ROOT id -g $USERNAME) || gid_user="none"
