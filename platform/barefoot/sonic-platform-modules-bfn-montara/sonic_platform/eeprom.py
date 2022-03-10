@@ -7,6 +7,7 @@ try:
     import logging.config
     import yaml
     import re
+    from io import BytesIO
 
     sys.path.append(os.path.dirname(__file__))
 
@@ -43,7 +44,7 @@ _product_dict = {
 _EEPROM_SYMLINK = "/var/run/platform/eeprom/syseeprom"
 _EEPROM_STATUS = "/var/run/platform/eeprom/status"
 
-class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
+class EepromBase(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
         with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
             config_dict = yaml.load(f, yaml.SafeLoader)
@@ -55,13 +56,47 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
+        self.__eeprom_tlv_dict = dict()
 
+    def set_eeprom_tlv_dict(self, tlv_dict):
+        self.__eeprom_tlv_dict = tlv_dict
+
+    def get_eeprom_tlv_dict(self):
+        return self.__eeprom_tlv_dict
+
+    def __tlv_get(self, code):
+        return self.__eeprom_tlv_dict.get("0x{:X}".format(code), 'N/A')
+
+    def system_eeprom_info(self):
+        return self.__eeprom_tlv_dict
+
+    def serial_number_str(self):
+        return self.__tlv_get(self._TLV_CODE_SERIAL_NUMBER)
+
+    def serial_str(self):
+        return self.serial_number_str()
+
+    def base_mac_addr(self):
+        return self.__tlv_get(self._TLV_CODE_MAC_BASE)
+
+    def part_number_str(self):
+        return self.__tlv_get(self._TLV_CODE_PART_NUMBER)
+
+    def modelstr(self):
+        return self.__tlv_get(self._TLV_CODE_PRODUCT_NAME)
+
+    def revision_str(self):
+        return self.__tlv_get(self._TLV_CODE_LABEL_REVISION)
+
+class BmcEeprom(EepromBase):
+    def __init__(self):
+        super(BmcEeprom, self).__init__()
         open(_EEPROM_SYMLINK, 'a').close()
         with open(_EEPROM_STATUS, 'w') as f:
             f.write("initializing..")
 
         self.eeprom_path = _EEPROM_SYMLINK
-        super(Eeprom, self).__init__(self.eeprom_path, 0, _EEPROM_STATUS, True)
+        super(EepromBase, self).__init__(self.eeprom_path, 0, _EEPROM_STATUS, True)
 
         def sys_eeprom_get(client):
             return client.pltfm_mgr.pltfm_mgr_sys_eeprom_get()
@@ -109,7 +144,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             sys.stdout = orig_stdout
 
         eeprom_base.EepromDecoder.write_eeprom(self, eeprom_data)
-        self.__eeprom_tlv_dict = self.__parse_output(decode_output)
+        self.set_eeprom_tlv_dict(self.__parse_output(decode_output))
 
     def __parse_output(self, decode_output):
         EEPROM_DECODE_HEADLINES = 6
@@ -129,26 +164,45 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                 pass
         return res
 
-    def __tlv_get(self, code):
-        return self.__eeprom_tlv_dict.get("0x{:X}".format(code), 'N/A')
+class OnieEeprom(EepromBase):
+    def __init__(self):
+        super(OnieEeprom, self).__init__()
+        super(EepromBase, self).__init__(_EEPROM_SYMLINK, 0, '', True)
 
-    def system_eeprom_info(self):
-        return self.__eeprom_tlv_dict
+        def newport_onie_sys_eeprom_get(client):
+            return client.pltfm_mgr.pltfm_mgr_newport_onie_sys_eeprom_get()
+        try:
+            onie_eeprom = thrift_try(newport_onie_sys_eeprom_get)
+        except Exception:
+            raise RuntimeError("eeprom.py: Initialization failed")
+        self._eeprom_raw = bytearray.fromhex(onie_eeprom.raw_content_hex)
+        try:
+            eeprom_bin = self.read_eeprom()
+        except Exception:
+            raise RuntimeError("eeprom.py: Initialization failed")
+        visitor = OnieEepromVisitor()
+        self.visit_eeprom(eeprom_bin, visitor)
+        self.set_eeprom_tlv_dict(visitor.get_tlv_dict())
 
-    def serial_number_str(self):
-        return self.__tlv_get(self._TLV_CODE_SERIAL_NUMBER)
+    def open_eeprom(self):
+        return BytesIO(self._eeprom_raw)
 
-    def serial_str(self):
-        return self.serial_number_str()
+class OnieEepromVisitor(eeprom_tlvinfo.EepromDefaultVisitor):
+    def __init__(self):
+        self._tlv_dict = dict()
 
-    def base_mac_addr(self):
-        return self.__tlv_get(self._TLV_CODE_MAC_BASE)
+    def visit_tlv(self, name, code, length, value):
+        if code != OnieEeprom._TLV_CODE_VENDOR_EXT:
+            self._tlv_dict["0x{:X}".format(code)] = value.rstrip('\0')
+        else:
+            if value:
+                value = value.rstrip('\0')
+                if value:
+                    code = "0x{:X}".format(code)
+                    if code not in self._tlv_dict:
+                        self._tlv_dict[code] = [value]
+                    else:
+                        self._tlv_dict[code].append(value)
 
-    def part_number_str(self):
-        return self.__tlv_get(self._TLV_CODE_PART_NUMBER)
-
-    def modelstr(self):
-        return self.__tlv_get(self._TLV_CODE_PRODUCT_NAME)
-
-    def revision_str(self):
-        return self.__tlv_get(self._TLV_CODE_LABEL_REVISION)
+    def get_tlv_dict(self):
+        return self._tlv_dict

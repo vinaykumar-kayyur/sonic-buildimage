@@ -9,7 +9,8 @@ try:
     from sonic_platform.psu import psu_list_get
     from sonic_platform.fan_drawer import fan_drawer_list_get
     from sonic_platform.thermal import thermal_list_get
-    from eeprom import Eeprom
+    from eeprom import BmcEeprom
+    from eeprom import OnieEeprom
 
     from sonic_platform.platform_thrift_client import pltfm_mgr_ready
     from sonic_platform.platform_thrift_client import thrift_try
@@ -18,6 +19,16 @@ try:
 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+try:
+    from thrift.Thrift import TApplicationException
+
+    def newport_onie_sys_eeprom_get(client):
+        return client.pltfm_mgr.pltfm_mgr_newport_onie_sys_eeprom_get()
+    thrift_try(newport_onie_sys_eeprom_get, 1)
+    NEWPORT_ONIE_SYS_EEPROM_API_SUPPORT = True
+except TApplicationException as e:
+    NEWPORT_ONIE_SYS_EEPROM_API_SUPPORT = False
 
 NUM_COMPONENT = 2
 class Chassis(ChassisBase):
@@ -50,7 +61,8 @@ class Chassis(ChassisBase):
     @property
     def _eeprom(self):
         if self.__eeprom is None:
-            self.__eeprom = Eeprom()
+            isNewport = device_info.get_platform() in ["x86_64-accton_as9516_32d-r0", "x86_64-accton_as9516bf_32d-r0"]
+            self.__eeprom = OnieEeprom() if isNewport and NEWPORT_ONIE_SYS_EEPROM_API_SUPPORT else BmcEeprom()
         return self.__eeprom
 
     @_eeprom.setter
