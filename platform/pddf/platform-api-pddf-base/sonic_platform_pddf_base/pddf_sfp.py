@@ -147,7 +147,7 @@ class PddfSfp(SfpOptoeBase):
             else:
                 tx_fault = False
         else:
-            # Use common SfpOptoeBase implementation for get_tx_dault
+            # Use common SfpOptoeBase implementation for get_tx_fault
             tx_fault = super().get_tx_fault()
 
         return tx_fault
