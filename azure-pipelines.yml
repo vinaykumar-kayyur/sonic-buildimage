@@ -17,6 +17,7 @@ pr:
     include:
       - master
       - 202012
+      - bullseye
   paths:
     exclude:
       - .github
@@ -34,9 +35,9 @@ stages:
 - stage: Build
   pool: sonicbld
   variables:
-    CACHE_MODE: rcache
-    ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
-      VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web'
+  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
+  - name: CACHE_MODE
+    value: rcache
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
@@ -44,6 +45,8 @@ stages:
       jobGroups:
       - name: vs
       - name: broadcom
+        variables:
+          swi_image: yes
       - name: mellanox
 
 - stage: Test
@@ -69,7 +72,7 @@ stages:
         source: specific
         project: build
         pipeline: 9
-        artifacts: sonic-swss-common.amd64.ubuntu20_04
+        artifact: sonic-swss-common.amd64.ubuntu20_04
         runVersion: 'latestFromBranch'
         runBranch: 'refs/heads/master'
       displayName: "Download sonic swss common deb packages"
@@ -81,8 +84,8 @@ stages:
 
     - script: |
         set -x
-        sudo dpkg -i --force-confask,confnew ../sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
-        sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
+        sudo dpkg -i --force-confask,confnew ../libswsscommon_1.0.0_amd64.deb
+        sudo dpkg -i ../python3-swsscommon_1.0.0_amd64.deb
         sudo docker load -i ../target/docker-sonic-vs.gz
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
         username=$(id -un)
@@ -101,10 +104,10 @@ stages:
         testResultsFiles: '**/tr.xml'
         testRunTitle: vstest
 
-  - job:
+  - job: t0_part1
     pool: sonictest
-    displayName: "kvmtest-t0"
-    timeoutInMinutes: 240
+    displayName: "kvmtest-t0-part1"
+    timeoutInMinutes: 360
 
     steps:
     - template: .azure-pipelines/run-test-template.yml
@@ -113,6 +116,43 @@ stages:
         tbname: vms-kvm-t0
         ptf_name: ptf_vms6-1
         tbtype: t0
+        section: part-1
+
+  - job: t0_part2
+    pool: sonictest
+    displayName: "kvmtest-t0-part2"
+    timeoutInMinutes: 360
+
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-01
+        tbname: vms-kvm-t0
+        ptf_name: ptf_vms6-1
+        tbtype: t0
+        section: part-2
+
+  - job:
+    pool: sonictest
+    displayName: "kvmtest-t0"
+    timeoutInMinutes: 360
+    dependsOn:
+    - t0_part1
+    - t0_part2
+    condition: always()
+    variables:
+      resultOfPart1: $[ dependencies.t0_part1.result ]
+      resultOfPart2: $[ dependencies.t0_part2.result ]
+
+    steps:
+    - script: |
+        if [ $(resultOfPart1) == "Succeeded" ] && [ $(resultOfPart2) == "Succeeded" ]; then
+          echo "Both job kvmtest-t0-part1 and kvmtest-t0-part2 are passed."
+          exit 0
+        else
+          echo "Either job kvmtest-t0-part1 or job kvmtest-t0-part2 failed! Please check the detailed information."
+          exit 1
+        fi
 
   - job:
     pool: sonictest-t1-lag
