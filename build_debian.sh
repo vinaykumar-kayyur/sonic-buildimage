@@ -559,7 +559,7 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     fi
 fi
 
-# Collect host image version files befort cleanup
+# Collect host image version files before cleanup
 scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
