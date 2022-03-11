@@ -1,12 +1,12 @@
 [
     {
         "tag": "bgp_admin_down",
-        "regex": " %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Down Admin",
+        "regex": "^ %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Down Admin",
         "params": [ "peer_ip" ]
     },
     {
         "tag": "bgp_admin_up",
-        "regex": " %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Up",
+        "regex": "^ %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Up",
         "params": [ "peer_ip" ]
     }
 ]
