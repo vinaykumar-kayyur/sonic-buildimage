@@ -66,7 +66,6 @@ init:
 #
 # Function to invoke target $@ in Makefile.work with proper BLDENV
 #
-export DEFAULT_CONTAINER_REGISTRY
 define make_work
 	@echo "+++ Making $@ +++"
 	$(if $(BUILD_JESSIE),make -f Makefile.work $@,)
