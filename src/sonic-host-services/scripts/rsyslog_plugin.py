@@ -26,19 +26,25 @@ limitations under the License.
 """
 
 import argparse
+import json
+import logging
+import os
+import re
 import socket
 import sys
-import os
-import logging
 
 
 TELEMETRY_SERVER_IP = "127.0.0.1"
 TELEMETRY_SERVER_PORT = 20001
 
+PARSER_CFG_FILE = "{}_parse.rc.json"
+
 # Global definitions specific to your plugin
 outfile = None
 logfile = "/tmp/{}_logfile"
 telemetry_client_h = None
+reglst = []
+pgm_name = ""
 
 server_port = TELEMETRY_SERVER_PORT
 
@@ -64,38 +70,78 @@ class RecoverableError(Exception):
     """
 
 
-def onInit(is_debug, port, pgm_name, rc_path, do_send):
-    """Do everything that is needed to initialize processing (e.g. open files,
-    create handles, connect to systems...).
-    """
-    # Apart from processing the logs received from rsyslog, you want your plugin
-    # to be able to report its own logs in some way. This will facilitate
-    # diagnosing problems and debugging your code. Here we set up the standard
+def load_reglist(rc_path, pgm_name):
+    global reglst
+
+    rcfile = os.path.join(rc_path, PARSER_CFG_FILE.format(pgm_name))
+    with open(rcfile) as s:
+        reglst = json.load(s)
+    logging.info("load_reglist: file:{} len={}".format(rcfile, len(reglst)))
+
+
+def do_regex_match(msg):
+    global reglst, pgm_name
+
+    to_log = {}
+    match = False
+
+    for entry in reglst:
+        res = re.search(entry["regex"], msg)
+        if res:
+            groups = res.groups()
+            params = entry["params"]
+            to_log = {
+                    "tag": entry["tag"],
+                    "program": pgm_name }
+            if len(params) != len(groups):
+                logging.error("{}:params mismatch: params:{} groups:{} msg:{}".format(
+                    pgm_name, params, groups, msg))
+                to_log["parsed"] = groups
+            else:
+                for i in range(len(params)):
+                    to_log[params[i]] = groups[i]
+            match = True
+            break
+    return match, to_log
+
+
+def onInit(is_debug, port, rc_path, do_send):
+    global pgm_name
+
+    # Set up plugin here. This is called once at the start of run.
+    # This plugin reports its own logs via rsyslog. This will facilitate
+    # diagnosing problems and debugging this plugin.Here we set up the standard
     # Python logging system to output the logs to stderr. In the rsyslog
-    # configuration, you can configure the 'omprog' action to capture the stderr
-    # of your plugin by specifying the action's "output" parameter.
+    # configuration, configure the 'omprog' action to capture the stderr
+    # of this plugin by specifying the action's "output" parameter.
+    #
+    #    action(type="omprog"
+    #       binary="/usr/share/sonic/scripts/rsyslog_plugin.py -p bgpcfgd -d -r /root/try -s"
+    #       output="/var/log/myplugin.log"
+    #       confirmMessages="on"
+    #       template="prog_msg")
+    #
     logging.basicConfig(stream=sys.stderr,
                         level=logging.DEBUG if is_debug else logging.WARNING,
                         format='%(asctime)s %(levelname)s %(message)s')
 
-    # This is an example of a debug log. (Note that for debug logs to be
-    # emitted you must set 'level' to logging.DEBUG above.)
     logging.debug("onInit called")
 
-    # For illustrative purposes, this plugin skeleton appends the received logs
-    # to a file. When implementing your plugin, remove the following code.
-    global outfile, logfile
-    outfile = open(logfile.format(pgm_name), "w")
+    # load regex list
+    load_reglist(rc_path, pgm_name)
 
-    # Open client socket, if enabled to send
-    global telemetry_client_h, server_port
+    if is_debug:
+        # For debug purposes, this plugin skeleton appends the received logs
+        # to a file.
+        global outfile, logfile
+        outfile = open(logfile.format(pgm_name), "w")
 
     if do_send:
+        # Open client socket, if enabled to send
+        global telemetry_client_h, server_port
+
         telemetry_client_h = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         server_port = port
-
-    logging.debug("rc path: {} yet to be used".format(rc_path))
-
 
 
 def onMessage(msg):
@@ -112,20 +158,22 @@ def onMessage(msg):
         Exception: If a non-recoverable error occurs. The plugin will be
             restarted before retrying the message.
     """
-    logging.debug("onMessage called")
 
-    # For illustrative purposes, this plugin skeleton appends the received logs
-    # to a file. When implementing your plugin, remove the following code.
+    # Do regex match
+    match, to_log = do_regex_match(msg)
+
     global outfile
-    outfile.write(msg)
-    outfile.write("\n")
-    outfile.flush()
+    if outfile:
+        # In debug mode, write all messages into a file.
+        outfile.write("match:{} to_log:{} msg:{}".format(match, to_log, msg))
+        outfile.write("\n")
+        outfile.flush()
 
     # Send msg to server
     global telemetry_client_h, server_port
 
-    if telemetry_client_h:
-        bytesToSend = str.encode(msg)
+    if match and telemetry_client_h:
+        bytesToSend = str.encode("match:{} to_log:{} msg:{}".format(match, to_log, msg))
         telemetry_client_h.sendto(bytesToSend, (TELEMETRY_SERVER_IP, server_port))
 
 
@@ -142,7 +190,8 @@ def onExit():
     # For illustrative purposes, this plugin skeleton appends the received logs
     # to a file. When implementing your plugin, remove the following code.
     global outfile
-    outfile.close()
+    if outfile:
+        outfile.close()
 
 
 def run():
@@ -198,6 +247,8 @@ def run():
 
 
 def main():
+    global pgm_name
+
     parser=argparse.ArgumentParser(description="rsyslog plugin for events")
     parser.add_argument("-d", "--debug", action="store_true", default=True,
             help="Run with debug log level")
@@ -211,9 +262,11 @@ def main():
             help="Send data to UDP listene")
     args = parser.parse_args()
 
+    pgm_name = args.pgm_name
+
     try:
-        onInit(is_debug=args.debug, port=args.port_number, pgm_name=args.pgm_name,
-                rc_path=args.rc_path, do_send = args.send)
+        onInit(is_debug=args.debug, port=args.port_number, rc_path=args.rc_path,
+                do_send = args.send)
         run()
     except Exception as e:
         # If an error occurs during initialization, log it and terminate. The

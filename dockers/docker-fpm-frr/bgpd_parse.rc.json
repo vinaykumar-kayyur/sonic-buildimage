@@ -1,30 +1,12 @@
 [
     {
-        "startswith": "[EC 33554454] ",
-        "key_params": [ "peer_ip" ],
-        "tag": "rd_pkt_err",
-        "regex": ".EC 33554454. ([0-9a-f:.]*) .Error. bgp_read_packet error: Connection reset by peer",
+        "tag": "bgp_admin_down",
+        "regex": " %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Down Admin",
         "params": [ "peer_ip" ]
     },
     {
-        "startswith": "[EC 100663299] ",
-        "key_params": [ "peer_ip" ],
-        "tag": "bind_err",
-        "regex": ".EC 100663299. can't bind socket for ([0-9a-f:.]*) ",
-        "params": [ "peer_ip" ]
-    },
-    {
-        "startswith": "[EC 33554451] ",
-        "key_params": [ "peer_ip" ],
-        "tag": "bind_err",
-        "regex": ".EC 33554451. bgp_process_packet: BGP OPEN receipt failed for peer: ([0-9a-f:.]*)",
-        "params": [ "peer_ip" ]
-    },
-    {
-        "startswith": "[EC 33554465] ",
-        "key_params": [ "peer_ip" ],
-        "tag": "bind_err",
-        "regex": ".EC 33554465. ([0-9a-f:.]*) .FSM. Failure handling event BGP_Start in state Idle",
+        "tag": "bgp_admin_up",
+        "regex": " %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Up",
         "params": [ "peer_ip" ]
     }
 ]
