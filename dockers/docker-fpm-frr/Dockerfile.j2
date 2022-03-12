@@ -57,7 +57,7 @@ COPY ["TS", "/usr/bin/TS"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["zsocket.sh", "/usr/bin/"]
 COPY ["00-rsyslog-plugin.conf", "/etc/rsyslog/conf.d"]
-COPY ["*_parse.rc.json", "/etc/rsyslog/conf.d"]
+COPY ["*_parse.rc.json", "/etc/rsyslog/conf.d/"]
 RUN chmod a+x /usr/bin/TSA && \
     chmod a+x /usr/bin/TSB && \
     chmod a+x /usr/bin/TSC && \
