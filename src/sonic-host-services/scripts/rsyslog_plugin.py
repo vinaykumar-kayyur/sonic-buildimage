@@ -173,7 +173,7 @@ def onMessage(msg):
     global telemetry_client_h, server_port
 
     if match and telemetry_client_h:
-        bytesToSend = str.encode("match:{} to_log:{} msg:{}".format(match, to_log, msg))
+        bytesToSend = str.encode(str(to_log))
         telemetry_client_h.sendto(bytesToSend, (TELEMETRY_SERVER_IP, server_port))
 
 
