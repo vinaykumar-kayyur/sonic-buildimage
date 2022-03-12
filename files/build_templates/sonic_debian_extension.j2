@@ -437,7 +437,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install watchd
 # Copy rsyslog plugin files.
 #
 sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
-sudo cp ${files_path}/rsyslog_plugin.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
+sudo LANG=C cp $FILESYSTEM_ROOT/usr/local/bin/rsyslog_plugin.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
 sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/rsyslog_plugin.py
 
 {% if include_kubernetes == "y" %}

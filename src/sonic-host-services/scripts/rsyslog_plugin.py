@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-"""The plugin is for rsylog output plugin with error handling.
-Requires Python 3.
+"""This is rsylog output plugin for streaming structured data from logs with error handling.
 
 This plugin parses the log messages on o/p to identify events for reporting.
-The &_parse.rc.json files provide the list of regex expressions to identify
-the events.
-Each identified event is reported with its tag (unique within a process), the
-name of the process sending the event and parsed dynamic data as expressed
-in the regex.
+The *_parse.rc.json files provide the list of regex expressions to identify
+the events. Each identified event is reported with its tag (unique within a
+process), the name of the process sending the event and parsed dynamic data
+as expressed in the regex.
 
 Sample:
         {
@@ -17,7 +15,7 @@ Sample:
         },
 
 The log message " Peer 'default|10.10.10.10' admin state is set to 'up'" will
-send following event
+send following event to an UDP listener.
 
     "{'tag': 'admin_up', 'program': 'bgpcfgd', 'peer_ip': '10.0.0.1'}"
 
@@ -36,14 +34,14 @@ TELEMETRY_SERVER_PORT = 20001
 
 PARSER_CFG_FILE = "{}_parse.rc.json"
 
-# Global definitions specific to your plugin
-outfile = None
-logfile = "/tmp/{}_logfile"
-telemetry_client_h = None
-reglst = []
-pgm_name = ""
+# Global values that are static for life of the plugin instance.
+outfile = None                  # Handle to o/p file for debug o/p 
+logfile = "/tmp/{}_logfile"     # Name of the log file for logs from this plugin
+telemetry_client_h = None       # UDP client socket handle
+reglst = []                     # List of regex
+pgm_name = ""                   # Name of the process that spawned this plugin instance.
 
-server_port = TELEMETRY_SERVER_PORT
+server_port = TELEMETRY_SERVER_PORT # Configurable via args
 
 
 class RecoverableError(Exception):
@@ -57,6 +55,8 @@ class RecoverableError(Exception):
     """
 
 
+# Loads the regex list, once upon init
+#
 def load_reglist(rc_path, pgm_name):
     global reglst
 
@@ -66,8 +66,9 @@ def load_reglist(rc_path, pgm_name):
     logging.info("load_reglist: file:{} len={}".format(rcfile, len(reglst)))
 
 
+# Matches msg against the list and return the match if found, else return false
+#
 def do_regex_match(msg):
-    # Match against regex, until first match. Drop in case of no match
     global reglst, pgm_name
 
     to_log = {}
