@@ -1,30 +1,27 @@
 #!/usr/bin/env python3
-"""A skeleton for a Python rsyslog output plugin with error handling.
+"""The plugin is for rsylog output plugin with error handling.
 Requires Python 3.
 
-To integrate a plugin based on this skeleton with rsyslog, configure an
-'omprog' action like the following:
-    action(type="omprog"
-        binary="/usr/bin/myplugin.py"
-        output="/var/log/myplugin.log"
-        confirmMessages="on"
-        ...)
+This plugin parses the log messages on o/p to identify events for reporting.
+The &_parse.rc.json files provide the list of regex expressions to identify
+the events.
+Each identified event is reported with its tag (unique within a process), the
+name of the process sending the event and parsed dynamic data as expressed
+in the regex.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Sample:
+        {
+            "tag": "bgp_admin_up",
+            "regex": "^ Peer 'default.([0-9a-f:.]*)' admin state is set to 'up'",
+            "params": [ "peer_ip" ]
+        },
 
-     http://www.apache.org/licenses/LICENSE-2.0
-     -or-
-     see COPYING.ASL20 in the source distribution
+The log message " Peer 'default|10.10.10.10' admin state is set to 'up'" will
+send following event
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    "{'tag': 'admin_up', 'program': 'bgpcfgd', 'peer_ip': '10.0.0.1'}"
+
 """
-
 import argparse
 import json
 import logging
@@ -53,16 +50,6 @@ class RecoverableError(Exception):
     """An error that has caused the processing of the current message to
     fail, but does not require restarting the plugin.
 
-    An example of such an error would be a temporary loss of connection to
-    a database or a server. If such an error occurs in the onMessage function,
-    your plugin should wrap it in a RecoverableError before raising it.
-    For example:
-
-        try:
-            # code that connects to a database
-        except DbConnectionError as e:
-            raise RecoverableError from e
-
     Recoverable errors will cause the 'omprog' action to be temporarily
     suspended by rsyslog, during a period that can be configured using the
     "action.resumeInterval" action parameter. When the action is resumed,
@@ -80,6 +67,7 @@ def load_reglist(rc_path, pgm_name):
 
 
 def do_regex_match(msg):
+    # Match against regex, until first match. Drop in case of no match
     global reglst, pgm_name
 
     to_log = {}
@@ -145,18 +133,12 @@ def onInit(is_debug, port, rc_path, do_send):
 
 
 def onMessage(msg):
-    """Process one log message received from rsyslog (e.g. send it to a
-    database). If this function raises an error, the message will be retried
-    by rsyslog.
+    """Process one log message received from rsyslog.
+    If matches an event, send the parsed data to UDP listener.
 
     Args:
         msg (str): the log message. Does NOT include a trailing newline.
 
-    Raises:
-        RecoverableError: If a recoverable error occurs. The message will be
-            retried without restarting the plugin.
-        Exception: If a non-recoverable error occurs. The plugin will be
-            restarted before retrying the message.
     """
 
     # Do regex match
@@ -196,12 +178,9 @@ def onExit():
 
 def run():
     """
-    -------------------------------------------------------
-    This is plumbing that DOES NOT need to be CHANGED
-    -------------------------------------------------------
     This is the main loop that receives messages from rsyslog via stdin,
     invokes the above entrypoints, and provides status codes to rsyslog
-    via stdout. In most cases, modifying this code should not be necessary.
+    via stdout.
     """
     # Tell rsyslog we are ready to start processing messages:
     print("OK", flush=True)
@@ -217,10 +196,11 @@ def run():
             except RecoverableError as e:
                 # Any line written to stdout that is not a status code will be
                 # treated as a recoverable error by 'omprog', and cause the action
-                # to be temporarily suspended. In this skeleton, we simply return
-                # a one-line representation of the Python exception. (If debugging
-                # is enabled in rsyslog, this line will appear in the debug logs.)
+                # to be temporarily suspended.  (If debugging is enabled in rsyslog,
+                # this line will appear in the debug logs.)
+                #
                 status = repr(e)
+
                 # We also log the complete exception to stderr (or to the logging
                 # handler(s) configured in doInit, if any).
                 logging.exception(e)
