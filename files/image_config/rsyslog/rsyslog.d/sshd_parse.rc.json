@@ -1,0 +1,7 @@
+[
+    {
+        "tag": "INCORRECT_PASSWD",
+        "regex": "^ auth fail: Password incorrect. user: (.*)",
+        "params": [ "user" ]
+    }
+]
