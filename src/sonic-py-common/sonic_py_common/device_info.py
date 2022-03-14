@@ -7,7 +7,7 @@ import subprocess
 import yaml
 from natsort import natsorted
 
-from swsscommon.swsscommon import ConfigDBConnector, SonicDBConfig, SonicV2Connector
+from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
