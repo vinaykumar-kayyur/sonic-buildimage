@@ -29,6 +29,7 @@ SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_SNMP_DBG)
 $(DOCKER_SNMP)_CONTAINER_NAME = snmp
 $(DOCKER_SNMP)_RUN_OPT += --privileged -t
 $(DOCKER_SNMP)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
+$(DOCKER_SNMP)_RUN_OPT += -v /usr/share/sonic/scripts:/usr/share/sonic/scripts:ro
 $(DOCKER_SNMP)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 
 SONIC_BUSTER_DOCKERS += $(DOCKER_SNMP)
