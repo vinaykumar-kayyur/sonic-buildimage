@@ -45,6 +45,10 @@ class SonicYang(SonicYangExtMixin):
         # all yang modules, such as grouping.
         self.preProcessedYang = dict()
 
+        self.processingPath = []
+
+        self.leaf_list_with_string_value_set = set()
+
         try:
             self.ctx = ly.Context(yang_dir)
         except Exception as e:
