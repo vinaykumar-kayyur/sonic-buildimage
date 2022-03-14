@@ -2,12 +2,12 @@
 #
 # This file generate by j2 template file: files/build_templates/limits.conf.j2
 #
-#Each line describes a limit for a user in the form:
+# Each line describes a limit for a user in the form:
 #
-#<domain>        <type>  <item>  <value>
+# <domain>        <type>  <item>  <value>
 #
-#Where:
-#<domain> can be:
+# Where:
+# <domain> can be:
 #        - a user name
 #        - a group name, with @group syntax
 #        - the wildcard *, for default entry
@@ -17,11 +17,11 @@
 #          To apply a limit to the root user, <domain> must be
 #          the literal username root.
 #
-#<type> can have the two values:
+# <type> can have the two values:
 #        - "soft" for enforcing the soft limits
 #        - "hard" for enforcing hard limits
 #
-#<item> can be one of the following:
+# <item> can be one of the following:
 #        - core - limits the core file size (KB)
 #        - data - max data size (KB)
 #        - fsize - maximum filesize (KB)
@@ -42,18 +42,29 @@
 #        - rtprio - max realtime priority
 #        - chroot - change root to directory (Debian-specific)
 #
-#<domain>      <type>  <item>         <value>
+#
+# <value> is related with <item>:
+#          All items support the values -1, unlimited or infinity indicating
+#          no limit, except for priority and nice.
+#
+#          If a hard limit or soft limit of a resource is set to a valid value,
+#          but outside of the supported range of the local system, the system
+#          may reject the new limit or unexpected behavior may occur. If the
+#          control value required is used, the module will reject the login if
+#          a limit could not be set.
+#
+# <domain>      <type>  <item>         <value>
 #
 
-#*               soft    core            0
-#root            hard    core            100000
-#*               hard    rss             10000
-#@student        hard    nproc           20
-#@faculty        soft    nproc           20
-#@faculty        hard    nproc           50
-#ftp             hard    nproc           0
-#ftp             -       chroot          /ftp
-#@student        -       maxlogins       4
+# *               soft    core            0
+# root            hard    core            100000
+# *               hard    rss             10000
+# @student        hard    nproc           20
+# @faculty        soft    nproc           20
+# @faculty        hard    nproc           50
+# ftp             hard    nproc           0
+# ftp             -       chroot          /ftp
+# @student        -       maxlogins       4
 
 {% for user in limitusers %}
 {{ user.username }}        hard    maxlogins       {{ user.maxlogin }}
