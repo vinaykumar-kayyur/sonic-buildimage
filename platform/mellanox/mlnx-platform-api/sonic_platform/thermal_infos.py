@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalPolicyInfoBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
@@ -45,7 +61,7 @@ class FanInfo(ThermalPolicyInfoBase):
                 elif status and fan in self._fault_fans:
                     self._fault_fans.remove(fan)
                     self._status_changed = True
-                    
+
 
     def get_absence_fans(self):
         """
@@ -96,12 +112,12 @@ class PsuInfo(ThermalPolicyInfoBase):
         """
         self._status_changed = False
         for psu in chassis.get_all_psus():
-            if psu.get_presence() and psu.get_powergood_status() and psu not in self._presence_psus:
+            if psu.get_presence() and psu not in self._presence_psus:
                 self._presence_psus.add(psu)
                 self._status_changed = True
                 if psu in self._absence_psus:
                     self._absence_psus.remove(psu)
-            elif (not psu.get_presence() or not psu.get_powergood_status()) and psu not in self._absence_psus:
+            elif (not psu.get_presence()) and psu not in self._absence_psus:
                 self._absence_psus.add(psu)
                 self._status_changed = True
                 if psu in self._presence_psus:

@@ -10,7 +10,7 @@
 # a pull request.
 *       @lguohan
 
-/device/ @jleveque
+/device/        @sujinmkang @prgeor @vdahiya12
 
 # build
 /rules/         @qiluo-msft @xumia @lguohan
@@ -33,3 +33,6 @@
 
 # src
 /src/initramfs-tools/                   @qiluo-msft
+
+# yang
+/src/sonic-yang-models/                 @praveen-li @dgsudharsan @rathnasabapathyv @venkatmahalingam @qiluo-msft
