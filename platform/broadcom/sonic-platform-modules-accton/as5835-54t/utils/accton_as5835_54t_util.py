@@ -31,12 +31,7 @@ import subprocess
 import getopt
 import sys
 import logging
-import re
 import time
-import os
-
-
-
 
 PROJECT_NAME = 'as5835_54t'
 version = '0.1.0'
@@ -52,7 +47,8 @@ FORCE = 0
 
 if DEBUG == True:
     print(sys.argv[0])
-    print('ARGV      :', sys.argv[1:])   
+    print('ARGV      :', sys.argv[1:])
+
 
 def main():
     global DEBUG
