@@ -42,8 +42,8 @@ if [ -e /usr/share/sonic/platform/platform_wait ]; then
 fi
 
 # If the Python 2 sonic-platform package is not installed, try to install it
-python2 -c "import sonic_platform" > /dev/null 2>&1 || pip2 show sonic-platform > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+PYTHON2_PLATFORM_PACKAGE=/usr/local/lib/python2.7/dist-packages/sonic_platform
+if [ ! -d "$PYTHON2_PLATFORM_PACKAGE" ]; then
     SONIC_PLATFORM_WHEEL="/usr/share/sonic/platform/sonic_platform-1.0-py2-none-any.whl"
     echo "sonic-platform package not installed, attempting to install..."
     if [ -e ${SONIC_PLATFORM_WHEEL} ]; then
@@ -59,8 +59,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # If the Python 3 sonic-platform package is not installed, try to install it
-python3 -c "import sonic_platform" > /dev/null 2>&1 || pip3 show sonic-platform > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+PYTHON3_PLATFORM_PACKAGE=/usr/local/lib/python3.7/dist-packages/sonic_platform
+if [ ! -d "$PYTHON3_PLATFORM_PACKAGE" ]; then
     SONIC_PLATFORM_WHEEL="/usr/share/sonic/platform/sonic_platform-1.0-py3-none-any.whl"
     echo "sonic-platform package not installed, attempting to install..."
     if [ -e ${SONIC_PLATFORM_WHEEL} ]; then
