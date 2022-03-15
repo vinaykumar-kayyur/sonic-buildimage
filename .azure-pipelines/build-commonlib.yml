@@ -6,7 +6,7 @@ schedules:
   branches:
     include:
     - master
-    - 20**
+    - refs/heads/202???
 resources:
   repositories:
   - repository: buildimage
