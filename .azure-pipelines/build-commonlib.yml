@@ -1,7 +1,7 @@
 pr: none
 trigger: none
 schedules:
-- cron: "0 0 * * *"
+- cron: "15 7 * * *"
   displayName: Daily build
   branches:
     include:
