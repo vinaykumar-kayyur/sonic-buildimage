@@ -16,9 +16,9 @@ def get_bios_version():
     A string containing the firmware version of the BIOS
     """
     try:
-        return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
+        return subprocess.check_output(['sudo', 'dmidecode', '-s', 'bios-version']).strip().decode()
     except subprocess.CalledProcessError as e:
-        raise RuntimeError("Failed to getget BIOS version")
+        raise RuntimeError("Failed to get BIOS version")
 
 def get_bmc_version():
     """
