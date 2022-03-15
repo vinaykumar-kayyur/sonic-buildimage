@@ -26,7 +26,7 @@ class SfpEvent:
         return bitmap
 
     def get_sfp_event(self, timeout=2000):
-        now = time.time()
+        #now = time.time()
         port_dict = {}
         change_dict = {}
         change_dict['sfp'] = port_dict

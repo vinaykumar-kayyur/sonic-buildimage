@@ -166,7 +166,7 @@ class device_monitor(object):
               
         thermal = ThermalUtil()
         fan = FanUtil()
-        fan_dir=fan.get_fan_dir(1)            
+        #fan_dir=fan.get_fan_dir(1)            
         #if fan_dir > 1:
         #    fan_dri=1 #something wrong, set fan_dir to default val
         #if fan_dir < 0:
