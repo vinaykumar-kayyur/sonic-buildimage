@@ -41,6 +41,9 @@ telemetry_client_h = None       # UDP client socket handle
 reglst = []                     # List of regex
 pgm_name = ""                   # Name of the process that spawned this plugin instance.
 
+err_reported_tags = set()       # Error reported on these tags.
+                                # Cache to avoid duplicates
+
 server_port = TELEMETRY_SERVER_PORT # Configurable via args
 
 
@@ -79,10 +82,13 @@ def do_regex_match(msg):
         if res:
             groups = res.groups()
             params = entry["params"]
+            tag = entry["tag"]
             to_log = {
-                    "tag": entry["tag"],
+                    "tag": tag,
                     "program": pgm_name }
-            if len(params) != len(groups):
+            if (len(params) != len(groups)) and (tag not in err_reported_tags):
+                # Report only once for each tag, as it is static error.
+                err_reported_tags.add(tag)
                 logging.error("{}:params mismatch: params:{} groups:{} msg:{}".format(
                     pgm_name, params, groups, msg))
                 to_log["parsed"] = groups
@@ -231,15 +237,15 @@ def main():
     global pgm_name
 
     parser=argparse.ArgumentParser(description="rsyslog plugin for events")
-    parser.add_argument("-d", "--debug", action="store_true", default=True,
+    parser.add_argument("-d", "--debug", action="store_true", default=False,
             help="Run with debug log level")
     parser.add_argument("-n", "--port-number", type=int,
             help="Listening port", default=TELEMETRY_SERVER_PORT)
     parser.add_argument("-p", "--pgm-name", required=True,
             help="Name of the program dumping the message")
-    parser.add_argument("-r", "--rc-path", required=True,
+    parser.add_argument("-r", "--rc-path", default="/etc/rsyslog.d",
             help="Dir of the rc file")
-    parser.add_argument("-s", "--send", action="store_true", default=False,
+    parser.add_argument("-s", "--skip-send", action="store_true", default=False,
             help="Send data to UDP listene")
     args = parser.parse_args()
 
@@ -247,7 +253,7 @@ def main():
 
     try:
         onInit(is_debug=args.debug, port=args.port_number, rc_path=args.rc_path,
-                do_send = args.send)
+                do_send = not args.skip_send)
         run()
     except Exception as e:
         # If an error occurs during initialization, log it and terminate. The
