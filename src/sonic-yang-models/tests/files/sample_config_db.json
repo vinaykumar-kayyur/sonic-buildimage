@@ -432,7 +432,10 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x8100",
-                "admin_status": "up"
+                "admin_status": "up",
+                "autoneg": "on",
+                "adv_speeds": "100000,50000",
+                "adv_interface_types": "CR,CR4"
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
@@ -440,7 +443,10 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x8100",
-                "admin_status": "up"
+                "admin_status": "up",
+                "autoneg": "on",
+                "adv_speeds": "all",
+                "adv_interface_types": "all"
             },
             "Ethernet3": {
                 "alias": "Eth1/4",

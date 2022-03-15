@@ -751,7 +751,7 @@ class SonicYangExtMixin:
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
             if tuple(self.processingPath) in self.leaf_list_with_string_value_set:
-                vValue = ','.join(value)
+                vValue = ','.join((_revYangConvert(x) for x in value))
             else:
                 vValue = list()
                 for v in value:
