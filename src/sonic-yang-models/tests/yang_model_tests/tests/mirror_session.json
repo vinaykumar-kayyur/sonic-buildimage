@@ -1,6 +1,9 @@
 {
-    "MIRROR_ERSPAN_ENTRY_WITH_VALID_VALUES": {
-        "desc": "Configuring ERSPAN entry with valid values."
+    "MIRROR_ERSPAN_ENTRY_WITH_VALID_HEX_VALUES": {
+        "desc": "Configuring ERSPAN entry with valid heximal values."
+    },
+    "MIRROR_ERSPAN_ENTRY_WITH_VALID_HEX_VALUES_1": {
+        "desc": "Configuring ERSPAN entry with valid heximal values."
     },
     "MIRROR_ERSPAN_ENTRY_WITH_VALID_DEC_VALUES": {
         "desc": "Configuring ERSPAN entry with valid decimal values."
@@ -9,9 +12,6 @@
         "desc": "Configuring ERSPAN entry with valid decimal values."
     },
     "MIRROR_ERSPAN_ENTRY_WITH_VALID_DEC_VALUES_2": {
-        "desc": "Configuring ERSPAN entry with valid decimal values."
-    },
-    "MIRROR_ERSPAN_ENTRY_WITH_VALID_DEC_VALUES_3": {
         "desc": "Configuring ERSPAN entry with valid decimal values."
     },
     "MIRROR_ERSPAN_ENTRY_WRONG_TYPE": {
