@@ -8,5 +8,10 @@
         "tag": "bgp_admin_up",
         "regex": "^ %ADJCHANGE: neighbor ([0-9a-f:.]*).*vrf default Up",
         "params": [ "peer_ip" ]
+    },
+    {
+        "tag": "bgp_timer",
+        "regex": "^ %NOTIFICATION: sent to neighbor ([0-9a-f:.]*) .{3} .Hold Timer Expired",
+        "params": [ "peer_ip" ]
     }
 ]

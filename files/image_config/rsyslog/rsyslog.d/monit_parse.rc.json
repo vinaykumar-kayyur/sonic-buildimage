@@ -1,0 +1,12 @@
+[
+    {
+        "tag": "kernel_write",
+        "regex": "[wW]rite (failed|protected)",
+        "params": []
+    },
+    {
+        "tag": "kernel_ro",
+        "regex": "Remounting filesystem read.only",
+        "params": []
+    }
+]

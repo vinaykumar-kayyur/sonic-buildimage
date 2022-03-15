@@ -1,0 +1,12 @@
+[
+    {
+        "tag": "redis_generic",
+        "regex": "^ :- internal_redis_generic_get: generic get failed to get response",
+        "params": []
+    },
+    {
+        "tag": "pfc_storm",
+        "regex": "^ :- startWdActionOnQueue: PFC Watchdog detected PFC storm on port (Ethernet[0-9]*)",
+        "params": []
+    }
+]

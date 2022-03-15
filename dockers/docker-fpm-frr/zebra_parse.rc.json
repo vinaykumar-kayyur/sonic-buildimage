@@ -1,0 +1,7 @@
+[
+    {
+        "tag": "no_space",
+        "regex": "^ netlink-listen recvmsg overrun: No buffer space available",
+        "params": [ "peer_ip" ]
+    }
+]

@@ -1,0 +1,17 @@
+[
+    {
+        "tag": "space_usage",
+        "regex": "'(.*)' space usage (.*)% matches resource limit \[space usage>(.*)%\]",
+        "params": [fs, usage, limit]
+    },
+    {
+        "tag": "mem_usage",
+        "regex": "mem usage of (.*)% matches resource limit \[mem usage>(.*)%\]",
+        "params": [usage, limit]
+    },
+    {
+        "tag": "read_lock",
+        "regex": "aufs_read_lock",
+        "params": []
+    }
+]
