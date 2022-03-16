@@ -72,7 +72,7 @@ new file mode 100644
 index 000000000..7a13c08d2
 --- /dev/null
 +++ b/drivers/hwmon/pmbus/cisco_n2200.c
-@@ -0,0 +1,296 @@
+@@ -0,0 +1,289 @@
 +/*
 + * Hardware monitoring driver for Cisco N2200 PMBus devices
 + * (driver is replicated from standard pmbus.c)
@@ -103,6 +103,8 @@ index 000000000..7a13c08d2
 +#include <linux/i2c.h>
 +#include <linux/hwmon-sysfs.h>
 +#include "pmbus.h"
++
++static const struct i2c_device_id cisco_n2200_id[];
 +
 +/* convert 'linear' data to readable form, replicated from pmbus_core */
 +static long _reg2data_linear(const struct pmbus_driver_info *info, s16 data)
@@ -199,7 +201,7 @@ index 000000000..7a13c08d2
 +}
 +
 +static int cisco_n2200_read_word_data(struct i2c_client *client,
-+				      int page, int reg)
++				      int page, int phase, int reg)
 +{
 +	int ldata;
 +	long rval;
@@ -216,7 +218,7 @@ index 000000000..7a13c08d2
 +		 */
 +	case PMBUS_IOUT_OC_WARN_LIMIT:
 +	case PMBUS_IOUT_OC_FAULT_LIMIT:
-+		ldata = pmbus_read_word_data(client, page, reg);
++		ldata = pmbus_read_word_data(client, page, phase, reg);
 +		if (ldata < 0)
 +			goto out;
 +		rval = _reg2data_linear(info, ldata);
@@ -233,7 +235,7 @@ index 000000000..7a13c08d2
 +/*
 + * Find sensor groups and status registers on each page.
 + */
-+static void pmbus_find_sensor_groups(struct i2c_client *client,
++static void cisco_n2200_pmbus_find_sensor_groups(struct i2c_client *client,
 +				     struct pmbus_driver_info *info)
 +{
 +	int page;
@@ -296,7 +298,7 @@ index 000000000..7a13c08d2
 +/*
 + * Identify chip parameters.
 + */
-+static int pmbus_identify(struct i2c_client *client,
++static int cisco_n2200_pmbus_identify(struct i2c_client *client,
 +			  struct pmbus_driver_info *info)
 +{
 +	int ret = 0;
@@ -316,12 +318,11 @@ index 000000000..7a13c08d2
 +	info->R[PSC_CURRENT_OUT] = 1;
 +
 +	/* Try to find sensor groups  */
-+	pmbus_find_sensor_groups(client, info);
++	cisco_n2200_pmbus_find_sensor_groups(client, info);
 +	return ret;
 +}
 +
-+static int cisco_n2200_pmbus_probe(struct i2c_client *client,
-+				   const struct i2c_device_id *id)
++static int cisco_n2200_pmbus_probe(struct i2c_client *client)
 +{
 +	struct pmbus_driver_info *info;
 +
@@ -330,18 +331,11 @@ index 000000000..7a13c08d2
 +	if (!info)
 +		return -ENOMEM;
 +
-+	info->pages = id->driver_data;
++	info->pages = i2c_match_id(cisco_n2200_id, client)->driver_data;
 +	info->read_word_data = cisco_n2200_read_word_data;
-+	info->identify = pmbus_identify;
++	info->identify = cisco_n2200_pmbus_identify;
 +
-+	return pmbus_do_probe(client, id, info);
-+}
-+
-+static int cisco_n2200_do_remove(struct i2c_client *client)
-+{
-+	/* do the generic pmbus remove */
-+	pmbus_do_remove(client);
-+	return 0;
++	return pmbus_do_probe(client, info);
 +}
 +
 +/*
@@ -359,8 +353,7 @@ index 000000000..7a13c08d2
 +	.driver = {
 +		   .name = "cisco_n2200",
 +		   },
-+	.probe = cisco_n2200_pmbus_probe,
-+	.remove = cisco_n2200_do_remove,
++	.probe_new = cisco_n2200_pmbus_probe,
 +	.id_table = cisco_n2200_id,
 +};
 +

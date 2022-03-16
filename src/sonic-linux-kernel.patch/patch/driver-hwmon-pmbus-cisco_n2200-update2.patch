@@ -20,7 +20,7 @@ index cc6c08f..748a77c 100644
  		 */
 -	case PMBUS_IOUT_OC_WARN_LIMIT:
  	case PMBUS_IOUT_OC_FAULT_LIMIT:
- 		ldata = pmbus_read_word_data(client, page, reg);
+ 		ldata = pmbus_read_word_data(client, page, phase, reg);
  		if (ldata < 0)
 @@ -155,6 +154,18 @@ static int cisco_n2200_read_word_data(struct i2c_client *client,
  	case PMBUS_OT_WARN_LIMIT:
