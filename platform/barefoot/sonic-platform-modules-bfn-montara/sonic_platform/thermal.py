@@ -92,6 +92,8 @@ class Thermal(ThermalBase):
             f = open(path)
         except BaseException as e:
             logging.warning('can not open the file')
+        except SystemExit:
+            pass
         if f is not None:
             self.__get_thresholds(f)
 
