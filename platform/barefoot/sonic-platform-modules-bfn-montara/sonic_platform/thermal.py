@@ -90,10 +90,9 @@ class Thermal(ThermalBase):
         try:
             path = device_info.get_path_to_platform_dir() + '/' + 'thermal_thresholds.json'
             f = open(path)
-        except BaseException as e:
+        except FileNotFoundError:
             logging.warning('can not open the file')
-        except SystemExit:
-            pass
+
         if f is not None:
             self.__get_thresholds(f)
 
