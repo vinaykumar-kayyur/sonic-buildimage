@@ -1014,24 +1014,16 @@ class HostConfigDaemon:
         self.hostname_cache=""
         self.aaacfg = AaaCfg()
 
-        # Initialize cache
-        self.cache = {}
-        
-
-    def load(self):
-        features = self.config_db.get_table('FEATURE')
-        aaa = self.config_db.get_table('AAA')
-        tacacs_global = self.config_db.get_table('TACPLUS')
-        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
-        radius_global = self.config_db.get_table('RADIUS')
-        radius_server = self.config_db.get_table('RADIUS_SERVER')
-        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
-        ntp_server = self.config_db.get_table('NTP_SERVER')
-        ntp_global = self.config_db.get_table('NTP')
-
-        self.cache = {'FEATURES': features, 'AAA': aaa, 'TACPLUS': tacacs_global, 'TACPLUS_SERVER': tacacs_server,
-                'RADIUS': radius_global, 'RADIUS_SERVER': radius_server, 'LOOPBACK_INTERFACE': lpbk_table, 'NTP_SERVER': ntp_server,
-                'NTP': ntp_global}
+    def load(self, init_data):
+        features = init_data['FEATURE']
+        aaa = init_data['AAA']
+        tacacs_global = init_data['TACPLUS']
+        tacacs_server = init_data['TACPLUS_SERVER']
+        radius_global = init_data['RADIUS']
+        radius_server = init_data['RADIUS_SERVER']
+        lpbk_table = init_data['LOOPBACK_INTERFACE']
+        ntp_server = init_data['NTP_SERVER']
+        ntp_global = init_data['NTP']
 
         self.feature_handler.update_all_features_config(features)
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
@@ -1039,7 +1031,7 @@ class HostConfigDaemon:
         self.ntpcfg.load(ntp_global, ntp_server)
 
         try:
-            dev_meta = self.config_db.get_table('DEVICE_METADATA')
+            dev_meta = init_data['DEVICE_METADATA']
             if 'localhost' in dev_meta:
                 if 'hostname' in dev_meta['localhost']:
                     self.hostname_cache = dev_meta['localhost']['hostname']
@@ -1176,10 +1168,8 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO,
                       "systemctl has finished initialization -- proceeding ...")
 
-        self.config_db.listen(start=False)
-
     def start(self):
-        self.config_db.process(cache=self.cache)
+        self.config_db.listen(init=self.load)
 
 
 def main():
@@ -1188,7 +1178,6 @@ def main():
     signal.signal(signal.SIGHUP, signal_handler)
     daemon = HostConfigDaemon()
     daemon.register_callbacks()
-    daemon.load()
     daemon.start()
 
 if __name__ == "__main__":
