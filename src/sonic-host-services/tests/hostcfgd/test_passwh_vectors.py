@@ -13,12 +13,12 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "state": "disabled",
                         "expiration": "180",
                         "expiration_warning": "15",
-                        "history_ctr": "10",
+                        "history_cnt": "10",
                         "len_min": "8",
                         "reject_user_passw_match": "True",
                         "lower_class": "True",
                         "upper_class": "True",
-                        "digit_class": "True",
+                        "digits_class": "True",
                         "special_class": "True"
                     }
                 },
@@ -52,12 +52,12 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "state": "enabled",
                         "expiration": "180",
                         "expiration_warning": "15",
-                        "history_ctr": "10",
+                        "history_cnt": "10",
                         "len_min": "8",
                         "reject_user_passw_match": "True",
                         "lower_class": "True",
                         "upper_class": "True",
-                        "digit_class": "True",
+                        "digits_class": "True",
                         "special_class": "True"
                     }
                 },
@@ -85,18 +85,18 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                     }
                 }
             },
-            "enable_digit_class":{
+            "enable_digits_class":{
                 "PASSW_HARDENING": {
                     "POLICIES":{
                         "state": "enabled",
                         "expiration": "0",
                         "expiration_warning": "0",
-                        "history_ctr": "0",
+                        "history_cnt": "0",
                         "len_min": "8",
                         "reject_user_passw_match": "False",
                         "lower_class": "False",
                         "upper_class": "False",
-                        "digit_class": "True",
+                        "digits_class": "True",
                         "special_class": "False"
                     }
                 },
@@ -130,12 +130,12 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "state": "enabled",
                         "expiration": "0",
                         "expiration_warning": "0",
-                        "history_ctr": "0",
+                        "history_cnt": "0",
                         "len_min": "8",
                         "reject_user_passw_match": "False",
                         "lower_class": "True",
                         "upper_class": "False",
-                        "digit_class": "False",
+                        "digits_class": "False",
                         "special_class": "False"
                     }
                 },
@@ -169,12 +169,12 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "state": "enabled",
                         "expiration": "0",
                         "expiration_warning": "0",
-                        "history_ctr": "0",
+                        "history_cnt": "0",
                         "len_min": "8",
                         "reject_user_passw_match": "False",
                         "lower_class": "False",
                         "upper_class": "True",
-                        "digit_class": "False",
+                        "digits_class": "False",
                         "special_class": "False"
                     }
                 },
@@ -208,12 +208,12 @@ HOSTCFGD_TEST_PASSWH_VECTOR = [
                         "state": "enabled",
                         "expiration": "0",
                         "expiration_warning": "0",
-                        "history_ctr": "0",
+                        "history_cnt": "0",
                         "len_min": "8",
                         "reject_user_passw_match": "False",
                         "lower_class": "False",
                         "upper_class": "False",
-                        "digit_class": "False",
+                        "digits_class": "False",
                         "special_class": "True"
                     }
                 },

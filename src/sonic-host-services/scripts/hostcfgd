@@ -540,8 +540,8 @@ class AaaCfg(object):
                 data['lower_class'] = is_true(data['lower_class'])
             if 'upper_class' in data:
                 data['upper_class'] = is_true(data['upper_class'])
-            if 'digit_class' in data:
-                data['digit_class'] = is_true(data['digit_class'])
+            if 'digits_class' in data:
+                data['digits_class'] = is_true(data['digits_class'])
             if 'special_class' in data:
                 data['special_class'] = is_true(data['special_class'])
 

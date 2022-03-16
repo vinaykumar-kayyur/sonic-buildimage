@@ -182,4 +182,4 @@ class TestHostcfgdPASSWH(TestCase):
                 None
         """
 
-        self.check_config(test_name, test_data, "enable_digit_class")
+        self.check_config(test_name, test_data, "enable_digits_class")
