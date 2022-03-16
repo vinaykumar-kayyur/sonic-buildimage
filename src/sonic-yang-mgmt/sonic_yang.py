@@ -45,7 +45,7 @@ class SonicYang(SonicYangExtMixin):
         # all yang modules, such as grouping.
         self.preProcessedYang = dict()
 
-        self.processingPath = []
+        self.elementPath = []
 
         self.leaf_list_with_string_value_set = set()
 
