@@ -19,12 +19,12 @@ libc6-dev==2.28-10
 libcc1-0==8.3.0-6
 libdouble-conversion1==3.1.0-3
 libdpkg-perl==1.19.7
-libexpat1-dev==2.2.6-2+deb10u1
+libexpat1-dev==2.2.6-2+deb10u3
 libffi-dev==3.2.1-9
 libgcc-8-dev==8.3.0-6
 libglib2.0-0==2.58.3-2+deb10u3
 libgomp1==8.3.0-6
-libicu63==63.1-6+deb10u1
+libicu63==63.1-6+deb10u2
 libisl19==0.20-2
 libitm1==8.3.0-6
 libjsoncpp1==1.7.4-3
@@ -54,7 +54,7 @@ libtsan0==8.3.0-6
 libubsan1==8.3.0-6
 libuv1==1.24.1-1+deb10u1
 libxml2==2.9.4+dfsg1-7+deb10u2
-linux-libc-dev==4.19.208-1
+linux-libc-dev==4.19.232-1
 make==4.2.1-1.2
 patch==2.7.6-3+deb10u1
 python==2.7.16-1
