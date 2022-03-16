@@ -24,7 +24,6 @@ debs/
 {{ install_debian_packages(docker_saiserver_bfn_debs.split(' ')) }}
 
 COPY ["start.sh", "/usr/bin/"]
-
 COPY ["start_saiserver.sh", "/usr/bin/"]
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
