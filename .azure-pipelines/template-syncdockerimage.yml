@@ -1,17 +1,17 @@
 parameters:
-- name: pipelines
+- name: platforms
   type: object
   default:
-  - Azure.sonic-buildimage.official.vs
-  - 139
-  - 140
-  - 141
-  - 142
-  - 143
-  - 146
-  - 147
-  - 148
-  - 149
+  - vs
+  - barefoot
+  - broadcom
+  - mellanox
+  - centec-arm64
+  - centec
+  - nephos
+  - innovium
+  - marvell-armhf
+  - generic
 
 jobs:
 - job: Build
@@ -20,14 +20,14 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - ${{ each pipe in parameters.pipelines }}:
+  - ${{ each platform in parameters.platforms }}:
     - task: DownloadPipelineArtifact@2
-      displayName: Download ${{ pipe }} versions-docker
+      displayName: Download ${{ platform }} versions-docker
       continueOnError: true 
       inputs:
         source: specific
         project: build
-        pipeline: ${{ pipe }}
+        pipeline: Azure.sonic-buildimage.official.${{ platform }}
         runVersion: 'latestFromBranch'
         runBranch: '$(Build.SourceBranch)'
         path: download
