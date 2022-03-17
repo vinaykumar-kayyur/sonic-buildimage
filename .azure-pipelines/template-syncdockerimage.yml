@@ -32,7 +32,7 @@ jobs:
         runBranch: '$(Build.SourceBranch)'
         path: '(Build.SourcesDirectory)/download'
         patterns: |
-          target/versions/default/versions-docker
+          **/target/versions/default/versions-docker
   - script: |
       set -ex
       ls -al
