@@ -19,7 +19,7 @@ resources:
   - repository: buildimage
     type: github
     name: liushilongbuaa/sonic-buildimage
-    ref: sync-docker-image-to-ACR
+    ref: master
     endpoint: liushilongbuaa
      
 jobs:

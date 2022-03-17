@@ -35,5 +35,16 @@ jobs:
           **/target/versions/default/versions-docker
   - script: |
       set -ex
-      ls -al
-      find download
+      docker login $URL -u $(USER) -p $(PASSWD)
+      images=$(find download -name versions-docker | xargs -i cat {} | sort -u | grep -v "==$" | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://" -e "s/==/@/")
+      for i in $images
+      do
+        docker pull $i
+        image_tag=$(echo $i | awk -F@ '{print$1}')
+        docker tag $i $URL/image_tag
+        docker push $URL/image_tag
+      done
+    env:
+      URL: $(url)
+      USER: $(user)
+      PASSWD: $(passwd)
