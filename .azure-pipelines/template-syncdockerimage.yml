@@ -22,7 +22,7 @@ jobs:
     clean: true
   - ${{ each pipe in parameters.pipelines }}:
     - task: DownloadPipelineArtifact@2
-      displayname: Download versions-docker from ${{ pipe }}
+      displayName: Download versions-docker from ${{ pipe }}
       continueOnError: true 
       inputs:
         source: specific
