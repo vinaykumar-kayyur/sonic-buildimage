@@ -144,7 +144,7 @@ DEVICE_DATA = {
             }
         }
     },
-    'x86_64-mlnx_msn4800-r0': {
+    'x86_64-nvidia_sn4800-r0': {
         'thermal': {
             "capability": {
                 "comex_amb": False
@@ -153,6 +153,17 @@ DEVICE_DATA = {
         'sfp': {
             'max_port_per_line_card': 16
         }
+    },
+    'x86_64-nvidia_sn2201-r0': {
+        'thermal': {
+            "capability": {
+                "comex_amb": False,
+                "cpu_amb": True,
+                "swb_amb": True
+            }
+        }
+    },
+    'x86_64-nvidia_sn5600-r0': {
     }
 }
 
@@ -216,7 +227,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -229,7 +240,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -247,7 +258,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return 0
-        
+
         sfp_data = platform_data.get('sfp', None)
         if not sfp_data:
             return 0

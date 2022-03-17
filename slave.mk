@@ -27,12 +27,12 @@ SRC_PATH = src
 RULES_PATH = rules
 TARGET_PATH = target
 DOCKERS_PATH = dockers
-BLDENV = $(shell lsb_release -cs)
+BLDENV := $(shell lsb_release -cs)
 DEBS_PATH = $(TARGET_PATH)/debs/$(BLDENV)
 FILES_PATH = $(TARGET_PATH)/files/$(BLDENV)
-PYTHON_DEBS_PATH = $(TARGET_PATH)/python-debs
-PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels
-PROJECT_ROOT = $(shell pwd)
+PYTHON_DEBS_PATH = $(TARGET_PATH)/python-debs/$(BLDENV)
+PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels/$(BLDENV)
+PROJECT_ROOT := $(shell pwd)
 JESSIE_DEBS_PATH = $(TARGET_PATH)/debs/jessie
 JESSIE_FILES_PATH = $(TARGET_PATH)/files/jessie
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
@@ -159,12 +159,30 @@ ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
 endif
 
+ifeq ($(SONIC_SAITHRIFT_V2),y)
+SAITHRIFT_V2 = y
+SAITHRIFT_VER = v2
+endif
+
 ifeq ($(SONIC_INCLUDE_SFLOW),y)
 INCLUDE_SFLOW = y
 endif
 
 ifeq ($(SONIC_INCLUDE_NAT),y)
 INCLUDE_NAT = y
+endif
+
+ifeq ($(SONIC_INCLUDE_P4RT),y)
+INCLUDE_P4RT = y
+endif
+
+# Pre-built Bazel is not available for armhf, so exclude P4RT
+# TODO(PINS): Remove when Bazel binaries are available for armhf
+ifeq ($(CONFIGURED_ARCH),armhf)
+	ifeq ($(INCLUDE_P4RT),y)
+		@echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+	endif
+	override INCLUDE_P4RT = n
 endif
 
 ifeq ($(SONIC_INCLUDE_MACSEC),y)
@@ -177,6 +195,13 @@ endif
 
 ifeq ($(SONIC_INCLUDE_MUX),y)
 INCLUDE_MUX = y
+endif
+
+ifeq ($(ENABLE_ASAN),y)
+	ifneq ($(CONFIGURED_ARCH),amd64)
+		@echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+		override ENABLE_ASAN = n
+	endif
 endif
 
 include $(RULES_PATH)/functions
@@ -238,7 +263,7 @@ MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
 ifeq ($(CONFIGURED_PLATFORM),vs)
-export BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM)
+export BUILD_MULTIASIC_KVM
 endif
 
 ###############################################################################
@@ -276,6 +301,7 @@ $(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
 $(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
 endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
+$(info "SAITHRIFT_V2"                    : "$(SAITHRIFT_V2)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
@@ -300,6 +326,7 @@ $(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
 $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_DHCP_RELAY"              : "$(INCLUDE_DHCP_RELAY)")
+$(info "INCLUDE_P4RT"                    : "$(INCLUDE_P4RT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
@@ -308,6 +335,7 @@ $(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
+$(info "ENABLE_ASAN"                     : "$(ENABLE_ASAN)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
 endif
@@ -503,6 +531,7 @@ SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS))
 #     SONIC_DPKG_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
 			$$(addprefix $(DEBS_PATH)/,$$($$*_AFTER)) \
+			$$(addprefix $(FILES_PATH)/,$$($$*_AFTER_FILES)) \
 			$(call dpkg_depend,$(DEBS_PATH)/%.dep )
 	$(HEADER)
 
@@ -591,6 +620,7 @@ $(SONIC_INSTALL_DEBS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install
 		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
 			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && sudo lsof /var/lib/dpkg/lock-frontend && ps aux && exit 1 ; }
 		fi
+		sleep 10
 	done
 	$(FOOTER)
 
@@ -974,6 +1004,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY3)) \
         $(if $(findstring y,$(PDDF_SUPPORT)),$(addprefix $(PYTHON_WHEELS_PATH)/,$(PDDF_PLATFORM_API_BASE_PY2))) \
         $(if $(findstring y,$(PDDF_SUPPORT)),$(addprefix $(PYTHON_WHEELS_PATH)/,$(PDDF_PLATFORM_API_BASE_PY3))) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3)) \
@@ -1002,8 +1033,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
 	export include_restapi="$(INCLUDE_RESTAPI)"
 	export include_nat="$(INCLUDE_NAT)"
+	export include_p4rt="$(INCLUDE_P4RT)"
 	export include_sflow="$(INCLUDE_SFLOW)"
 	export enable_auto_tech_support="$(ENABLE_AUTO_TECH_SUPPORT)"
+	export enable_asan="$(ENABLE_ASAN)"
 	export include_macsec="$(INCLUDE_MACSEC)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"

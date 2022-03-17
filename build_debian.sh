@@ -320,12 +320,21 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-is-python3       \
     cron                    \
     libprotobuf23           \
-    libgrpc++               \
+    libgrpc++1              \
+    libgrpc10               \
     haveged                 \
     fdisk                   \
     gpg                     \
     jq                      \
     auditd
+
+# Have systemd create the auditd log directory
+sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
+sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.conf >/dev/null <<EOF
+[Service]
+LogsDirectory=audit
+LogsDirectoryMode=0750
+EOF
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -602,7 +611,7 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
-sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
+sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
 gid_user=$(sudo LANG=C chroot $FILESYSTEM_ROOT id -g $USERNAME) || gid_user="none"

@@ -29,15 +29,6 @@ Index: sonic-utilities/scripts/fast-reboot
  }
  
  function clear_warm_boot()
-@@ -349,7 +352,7 @@ function reboot_pre_check()
-         error "Failed to verify next image. Exit code: $INSTALLER_VERIFY_RC"
-         exit ${EXIT_SONIC_INSTALLER_VERIFY_REBOOT}
-     fi
--    
-+
-     # Make sure ASIC configuration has not changed between images
-     ASIC_CONFIG_CHECK_SCRIPT="/usr/local/bin/asic_config_check"
-     ASIC_CONFIG_CHECK_SUCCESS=0
 @@ -420,6 +423,32 @@ function check_warm_restart_in_progress(
      done
  }

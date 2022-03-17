@@ -272,9 +272,6 @@ RUN apt-get update && apt-get install -y \
         librrd8 \
         librrd-dev \
         rrdtool \
-# For smartmontools 6.6-1
-        automake1.11 \
-        libselinux1-dev \
 # For kdump-tools
         liblzo2-dev \
 # For iptables
@@ -300,6 +297,9 @@ RUN apt-get update && apt-get install -y \
         libauparse-dev \
         auditd
 
+# For gmock
+RUN apt-get install -y libgmock-dev -t stretch-backports
+
 # Install dependencies for dhcp relay test 
 RUN pip3 install parameterized==0.8.1
 RUN pip3 install pyfakefs
@@ -311,9 +311,6 @@ RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confdef"
 ## do not modify the current configuration file, the new version is installed with a .dpkg-dist suffix
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confold"
-
-# For smartmontools 6.6-1
-RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
@@ -363,12 +360,12 @@ RUN pip3 install mockredispy==2.9.3
 # For sonic-mgmt-framework
 RUN pip2 install "PyYAML==5.3.1"
 RUN pip3 install "PyYAML==5.3.1"
-RUN pip2 install "lxml==4.6.2"
-RUN pip3 install "lxml==4.6.2"
+RUN pip2 install "lxml==4.6.5"
+RUN pip3 install "lxml==4.6.5"
 
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0
@@ -397,9 +394,7 @@ RUN apt-get install -y vim
 # Install rsyslog
 RUN apt-get install -y rsyslog
 
-RUN apt-get install -y googletest=1.8.0-10~bpo9+1
-RUN apt-get install -y libgtest-dev=1.8.0-10~bpo9+1
-RUN apt-get install -y libgmock-dev
+RUN apt-get install -y libgtest-dev
 RUN apt-get install -y libarchive13 librhash0
 RUN apt-get -t stretch-backports install -y libuv1
 # Install cmake/cmake-data 3.13.2-1_bpo9+1
@@ -459,4 +454,11 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
 {% endif -%}
