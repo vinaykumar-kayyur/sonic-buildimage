@@ -1,26 +1,26 @@
+parameters:
+- name: pipelines
+  type: object
+  default:
+  - 138
+  - 139
+  - 140
+  - 141
+  - 142
+  - 143
+  - 146
+  - 147
+  - 148
+  - 149
+
 jobs:
 - job: Build
   pool: sonicbld
   timeoutInMinutes: 120
-  variables:
-  - name: pipelines
-    type: object
-    value:
-    - 138
-    - 139
-    - 140
-    - 141
-    - 142
-    - 143
-    - 146
-    - 147
-    - 148
-    - 149
-
   steps:
   - checkout: self
     clean: true
-  - ${{ each pipe in variables.pipelines }}:
+  - ${{ each pipe in parameters.pipelines }}:
     - task: DownloadPipelineArtifact@2
       displayname: Download versions-docker from ${{ pipe }}
       continueOnError: true 
