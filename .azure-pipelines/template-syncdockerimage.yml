@@ -3,7 +3,19 @@ jobs:
   pool: sonicbld
   timeoutInMinutes: 120
   variables:
-    pipelines: [138, 139, 140, 141, 142, 143, 146, 147, 148, 149]
+  - name: pipelines
+    values:
+    - 138
+    - 139
+    - 140
+    - 141
+    - 142
+    - 143
+    - 146
+    - 147
+    - 148
+    - 149
+
   steps:
   - checkout: self
     clean: true
