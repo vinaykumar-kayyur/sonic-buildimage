@@ -20,7 +20,6 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - script: mkdir download
   - ${{ each pipe in parameters.pipelines }}:
     - task: DownloadPipelineArtifact@2
       displayName: Download ${{ pipe }} versions-docker
@@ -31,7 +30,7 @@ jobs:
         pipeline: ${{ pipe }}
         runVersion: 'latestFromBranch'
         runBranch: '$(Build.SourceBranch)'
-        path: (Build.SourcesDirectory)/download
+        path: download
         patterns: |
           **/target/versions/default/versions-docker
   - script: |
