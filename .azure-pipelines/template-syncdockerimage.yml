@@ -1,0 +1,26 @@
+jobs:
+- job: Build
+  pool: sonicbld
+  timeoutInMinutes: 120
+  variables:
+    pipelines: [138, 139, 140, 141, 142, 143, 146, 147, 148, 149]
+  steps:
+  - checkout: self
+    clean: true
+  - ${{ each pipe in variables.pipelines }}:
+    - task: DownloadPipelineArtifact@2
+      displayname: Download versions-docker from ${{ pipe }}
+      continueOnError: true 
+      inputs:
+        source: specific
+        project: build
+        pipeline: ${{ pipe }}
+        runVersion: 'latestFromBranch'
+        runBranch: '$(Build.SourceBranch)'
+        path: '(Build.SourcesDirectory)/download'
+        patterns: |
+          target/versions/default/versions-docker
+  - script: |
+      set -ex
+      ls -al
+      find download

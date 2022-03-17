@@ -1,0 +1,26 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+# Clean up the cache 30 days ago
+
+schedules:
+- cron: "0 0 * * *"
+  branches:
+    include:
+    - master
+    - 202???
+  always: true
+trigger: none
+pr: none
+
+resources:
+ repositories:
+  - repository: buildimage
+    type: github
+    name: liushilongbuaa/sonic-buildimage
+    ref: sync-docker-image-to-ACR
+    endpoint: liushilongbuaa
+     
+jobs:
+- template: .azure-pipelines/template-syncdockerimage.yml@buildimage
