@@ -2,7 +2,7 @@ parameters:
 - name: pipelines
   type: object
   default:
-  - 138
+  - Azure.sonic-buildimage.official.vs
   - 139
   - 140
   - 141
