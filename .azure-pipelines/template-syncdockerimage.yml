@@ -31,7 +31,7 @@ jobs:
         pipeline: ${{ pipe }}
         runVersion: 'latestFromBranch'
         runBranch: '$(Build.SourceBranch)'
-        path: '(Build.SourcesDirectory)/download'
+        path: (Build.SourcesDirectory)/download
         patterns: |
           **/target/versions/default/versions-docker
   - script: |
