@@ -282,6 +282,11 @@
                 "SRC_IPV6": "::/0",
                 "PRIORITY": "990000",
                 "DST_IPV6": "::/0"
+            },
+            "EVERFLOW_DSCP|RULE_1": {
+                "MIRROR_INGRESS_ACTION": "erspan",
+                "DSCP": "10",
+                "PRIORITY": "9999"
             }
         },
         "DEVICE_METADATA": {
@@ -293,7 +298,12 @@
                 "hwsku": "Stone",
                 "buffer_model": "dynamic",
                 "cloudtype": "Public",
-                "region": "usfoo"
+                "region": "usfoo",
+                "asic_name": "Asic0",
+                "switch_id": "2",
+                "switch_type": "voq",
+                "max_cores": "8",
+                "sub_role": "FrondEnd"
             }
         },
         "VLAN": {
@@ -411,7 +421,10 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x8100",
-                "admin_status": "up"
+                "admin_status": "up",
+                "index": "0",
+                "asic_port_name": "Eth0-ASIC1",
+                "role": "Ext"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -746,7 +759,17 @@
                     "Ethernet25",
                     "Ethernet24"
                 ]
+            },
+            "EVERFLOW_DSCP": {
+                "type": "MIRROR_DSCP",
+                "policy_desc": "EVERFLOW_DSCP",
+                "ports": [
+                    "Ethernet14",
+                    "Ethernet24"
+                ],
+                "stage": "ingress"
             }
+
         },
         "PBH_HASH_FIELD": {
             "inner_ip_proto": {
@@ -1147,6 +1170,24 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_PEER_RANGE": {
+            "BGPSLBPassive": {
+                "ip_range": [
+                    "10.255.0.0/25"
+                ],
+                "name": "BGPSLBPassive",
+                "src_address": "10.1.0.32"
+            },
+            "BGPVac": {
+                "ip_range": [
+                    "192.168.0.0/21",
+                    "192.169.0.0/21",
+                    "192.170.0.0/21"
+                ],
+                "name": "BGPVac",
+                "src_address": "10.1.0.32"
+            }
+        },
         "BGP_MONITORS": {
             "5.6.7.8": {
                 "admin_status": "up",
@@ -1192,6 +1233,14 @@
         "BGP_GLOBALS_LISTEN_PREFIX": {
             "default|30.0.0.0/8": {
                 "peer_group": "PG1"
+            }
+        },
+        "BGP_ALLOWED_PREFIXES" :{
+            "DEPLOYMENT_ID|4|123:123": {
+                "default_action": "permit"
+            },
+            "DEPLOYMENT_ID|5": {
+                "default_action": "permit"
             }
         },
         "ROUTE_MAP_SET": {
@@ -1375,6 +1424,24 @@
                 "pbs": "2048",
                 "pir": "2560000",
                 "type": "STRICT"
+            },
+            "scheduler.0": {
+                "cbs": "256",
+                "cir": "1250000",
+                "meter_type": "bytes",
+                "pbs": "1024",
+                "pir": "25000000",
+                "type": "DWRR",
+                "weight": "20"
+            },
+
+            "scheduler.1": {
+                "cbs": "1024",
+                "cir": "1280000",
+                "meter_type": "bytes",
+                "pbs": "2048",
+                "pir": "2560000",
+                "type": "STRICT"
             }
         },
 
@@ -1404,6 +1471,12 @@
             "Ethernet0|1": {
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
+            },
+            "Ethernet0|2": {
+                "scheduler": "scheduler.0"
+            },
+            "Ethernet0|3": {
+                "scheduler": "scheduler.1"
             }
         },
 
@@ -1516,7 +1589,7 @@
             }
         },
 
-        
+
         "MCLAG_DOMAIN": {
             "123": {
                 "source_ip": "12.1.1.1",
@@ -1546,6 +1619,7 @@
                 "queue": "0",
                 "src_ip": "10.1.1.1",
                 "ttl": "10",
+                "policer": "everflow_static_policer",
                 "type": "ERSPAN"
             },
             "span": {
@@ -1558,7 +1632,34 @@
                 ]
 
             }
+        },
+
+
+        "POLICER": {
+            "everflow_static_policer": {
+                "meter_type": "bytes",
+                "mode": "sr_tcm",
+                "cir": "12500000",
+                "cbs": "12500000",
+                "color": "aware",
+                "red_packet_action": "drop"
+            }
+        },
+
+
+        "NVGRE_TUNNEL": {
+            "tunnel_1": {
+                "src_ip": "10.0.0.1"
+            }
+        },
+        "NVGRE_TUNNEL_MAP": {
+            "tunnel_1|Vlan111": {
+                "vlan_id": "111",
+                "vsid": "5000"
+            }
         }
+
+
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {

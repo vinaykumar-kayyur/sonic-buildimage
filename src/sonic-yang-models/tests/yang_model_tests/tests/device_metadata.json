@@ -36,6 +36,9 @@
     "DEVICE_METADATA_TYPE_CORRECT_PATTERN": {
         "desc": "DEVICE_METADATA correct value for Type field"
     },
+    "DEVICE_METADATA_TYPE_NOT_PROVISIONED_PATTERN": {
+        "desc": "DEVICE_METADATA value as not-provisioned for Type field"
+    },
     "DEVICE_METADATA_DEFAULT_SYNCHRONOUS_MODE": {
         "desc": "DEVICE_METADATA DEFAULT VALUE FOR SYNCHRONOUS MODE.",
         "eStrKey" : "Verify",
@@ -90,6 +93,16 @@
     "DEVICE_METADATA_INVALID_STORAGE_DEVICE": {
         "desc": "Verifying invalid storage device value",
         "eStrKey": "InvalidValue"
+    },
+    "DEVICE_METADATA_INCORRECT_VOQ_CONFIG": {
+        "desc": "Verifying incorrect switch_type configuration.",
+	"eStrKey": "Pattern"
+    },
+    "DEVICE_METADATA_CORRECT_VOQ_CONFIG": {
+        "desc": "Verifying VOQ configuration."
+    },
+    "DEVICE_METADATA_VALID_SUB_ROLE_CONFIG": {
+        "desc": "Verifying valid sub_role configuration."
     }
 
 }
