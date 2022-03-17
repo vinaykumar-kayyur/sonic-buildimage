@@ -41,8 +41,8 @@ jobs:
       do
         docker pull $i
         image_tag=$(echo $i | awk -F@ '{print$1}')
-        docker tag $i $URL/image_tag
-        docker push $URL/image_tag
+        docker tag $i $URL/$image_tag
+        docker push $URL/$image_tag
       done
     env:
       URL: $(url)
