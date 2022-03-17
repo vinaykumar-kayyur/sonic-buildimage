@@ -1,0 +1,84 @@
+Index: frr/debian/frr-doc.info
+===================================================================
+--- frr.orig/debian/frr-doc.info
++++ frr/debian/frr-doc.info
+@@ -1 +1 @@
+-doc/user/_build/texinfo/frr.info
++build/doc/user/_build/texinfo/frr.info
+Index: frr/debian/frr.manpages
+===================================================================
+--- frr.orig/debian/frr.manpages
++++ frr/debian/frr.manpages
+@@ -1,16 +1,16 @@
+-doc/manpages/_build/man/frr-bgpd.8
+-doc/manpages/_build/man/frr-eigrpd.8
+-doc/manpages/_build/man/frr-fabricd.8
+-doc/manpages/_build/man/frr-isisd.8
+-doc/manpages/_build/man/frr-ldpd.8
+-doc/manpages/_build/man/frr-nhrpd.8
+-doc/manpages/_build/man/frr-ospf6d.8
+-doc/manpages/_build/man/frr-ospfd.8
+-doc/manpages/_build/man/frr-pimd.8
+-doc/manpages/_build/man/frr-ripd.8
+-doc/manpages/_build/man/frr-ripngd.8
+-doc/manpages/_build/man/frr-watchfrr.8
+-doc/manpages/_build/man/frr-zebra.8
+-doc/manpages/_build/man/frr.1
+-doc/manpages/_build/man/mtracebis.8
+-doc/manpages/_build/man/vtysh.1
++build/doc/manpages/_build/man/frr-bgpd.8
++build/doc/manpages/_build/man/frr-eigrpd.8
++build/doc/manpages/_build/man/frr-fabricd.8
++build/doc/manpages/_build/man/frr-isisd.8
++build/doc/manpages/_build/man/frr-ldpd.8
++build/doc/manpages/_build/man/frr-nhrpd.8
++build/doc/manpages/_build/man/frr-ospf6d.8
++build/doc/manpages/_build/man/frr-ospfd.8
++build/doc/manpages/_build/man/frr-pimd.8
++build/doc/manpages/_build/man/frr-ripd.8
++build/doc/manpages/_build/man/frr-ripngd.8
++build/doc/manpages/_build/man/frr-watchfrr.8
++build/doc/manpages/_build/man/frr-zebra.8
++build/doc/manpages/_build/man/frr.1
++build/doc/manpages/_build/man/mtracebis.8
++build/doc/manpages/_build/man/vtysh.1
+Index: frr/debian/rules
+===================================================================
+--- frr.orig/debian/rules
++++ frr/debian/rules
+@@ -36,7 +36,7 @@ export PYTHON=python3
+ 
+ override_dh_auto_configure:
+ 	$(shell dpkg-buildflags --export=sh); \
+-	dh_auto_configure -- \
++	mkdir -p build && dh_auto_configure --builddirectory=build -- \
+ 		--enable-exampledir=/usr/share/doc/frr/examples/ \
+ 		--localstatedir=/var/run/frr \
+ 		--sbindir=/usr/lib/frr \
+@@ -68,7 +68,7 @@ override_dh_auto_configure:
+ 		# end
+ 
+ override_dh_auto_install:
+-	dh_auto_install
++	cd build && dh_auto_install
+ 
+ 	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/frr-reload.py
+ 	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/generate_support_bundle.py
+@@ -77,7 +77,7 @@ override_dh_auto_install:
+ ifeq ($(filter pkg.frr.nosystemd,$(DEB_BUILD_PROFILES)),)
+ 	cp tools/frr.service debian/frr.service
+ endif
+-	cp tools/frrinit.sh debian/frr.init
++	cp build/tools/frrinit.sh debian/frr.init
+ 	-rm -f debian/tmp/usr/lib/frr/frr
+ 
+ # install config files
+@@ -99,7 +99,7 @@ endif
+ 	ln -s /usr/share/javascript/underscore/underscore.js debian/tmp/usr/share/doc/frr/html/_static/underscore.js
+ 
+ override_dh_auto_build:
+-	dh_auto_build -- $(MAKE_SILENT)
++	cd build && ln -s ../debian debian && dh_auto_build -- $(MAKE_SILENT)
+ 
+ override_dh_installinit:
+ 	dh_installinit -r

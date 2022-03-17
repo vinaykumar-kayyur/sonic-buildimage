@@ -39,11 +39,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	sed -i 's/\/usr\/sbin\/ntpd {/\/usr\/sbin\/ntpd flags=(attach_disconnected complain) {/' debian/apparmor-profile
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-	sed -i 's/dh_auto_configure \--/dh_auto_configure -- --with-yielding-select=yes /g' debian/rules 
-	# Remove nfp openssl variables = yes from cross-config.cache
-	sudo awk '!/openssl/{print}' /etc/dpkg-cross/cross-config.cache > ./cross-config.cache
-	sudo cp ./cross-config.cache /etc/dpkg-cross/cross-config.cache
-	rm ./cross-config.cache
+	sed -i 's/dh_auto_configure \--/dh_auto_configure -- --with-yielding-select=yes --with-openssl-incdir=no /g' debian/rules 
 endif
 
 	# Build source and Debian packages with the symbols

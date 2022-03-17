@@ -20,7 +20,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Build package
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-	sed -i "s#\-\-with-kerberos5=\/usr#--with-kerberos5-libdir=$$CROSS_PKGS_LIB_PATH#g" debian/rules
+	patch -p1 < ../patch/cross-compile-changes.patch
 	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 else
 	sudo http_proxy=$(http_proxy) apt-get -y build-dep openssh

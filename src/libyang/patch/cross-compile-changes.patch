@@ -1,0 +1,22 @@
+Index: libyang-1.0.73/CMakeLists.txt
+===================================================================
+--- libyang-1.0.73.orig/CMakeLists.txt
++++ libyang-1.0.73/CMakeLists.txt
+@@ -1,4 +1,5 @@
+ cmake_minimum_required(VERSION 2.8.12)
++set(CMAKE_OBJCOPY $(CROSS_BIN_PATH)/objcopy CACHE PATH "" FORCE)
+ 
+ # force out-of-source build
+ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+Index: libyang-1.0.73/packages/local-deb.sh.in
+===================================================================
+--- libyang-1.0.73.orig/packages/local-deb.sh.in
++++ libyang-1.0.73/packages/local-deb.sh.in
+@@ -22,6 +22,6 @@ cp "@PROJECT_SOURCE_DIR@/packages/debian
+ echo -e "@PACKAGE_NAME@ (@LIBYANG_VERSION@) stable; urgency=low\n" >debian/changelog
+ git log -10 --pretty=format:'  * %s (%aN)%n' 2>/dev/null >>debian/changelog || echo -e "  * unknown changes \n" >>debian/changelog
+ git log -1 --pretty=format:'%n -- %aN <%aE>  %aD%n' >>debian/changelog 2>/dev/null || echo " -- ${USER} <${USER}@`hostname`>  `date -R`" >>debian/changelog
+-debuild --no-lintian -i -b -us -uc
++debuild --no-lintian -i -b -us -uc -a ${CONFIGURED_ARCH}
+ mv ../*.deb debs
+ export LC_TIME=$LOCAL_LC_TIME

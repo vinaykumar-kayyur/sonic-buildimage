@@ -18,7 +18,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	patch -p1 < ../patch/0001-patch-macsec-xpn-support.patch
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-	sed -i 's/#include <string.h>/#include <string.h>\n#include <stdint.h>/' tc/tc_core.c
+	patch -p1 < ../patch/cross-compile-changes.patch
 	dpkg-buildpackage -us -uc -b -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 else
 	dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)

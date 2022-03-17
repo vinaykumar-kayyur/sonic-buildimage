@@ -24,8 +24,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg import -s ../patch/series
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-	# Add monit configure settings
-	sed -i "s/dh_auto_configure \-\-/dh_auto_configure -- libmonit_cv_setjmp_available=yes libmonit_cv_vsnprintf_c99_conformant=yes/g" debian/rules
+	patch -p1 < ../patch/cross-compile-changes.patch
 endif
 
 	# Build source and Debian packages
