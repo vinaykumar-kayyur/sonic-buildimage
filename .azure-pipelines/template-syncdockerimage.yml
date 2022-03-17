@@ -4,6 +4,7 @@ jobs:
   timeoutInMinutes: 120
   variables:
   - name: pipelines
+    type: object
     value:
     - 138
     - 139
