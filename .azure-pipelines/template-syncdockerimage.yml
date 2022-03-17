@@ -20,9 +20,10 @@ jobs:
   steps:
   - checkout: self
     clean: true
+  - script: mkdir download
   - ${{ each pipe in parameters.pipelines }}:
     - task: DownloadPipelineArtifact@2
-      displayName: Download versions-docker from ${{ pipe }}
+      displayName: Download ${{ pipe }} versions-docker
       continueOnError: true 
       inputs:
         source: specific
