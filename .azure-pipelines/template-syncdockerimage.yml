@@ -42,7 +42,7 @@ jobs:
       for i in $images
       do
         image_tag=$(echo $i | awk -F@ '{print$1}')
-        az acr import -n PublicMirror --source docker.io/library/$i  --image $image_tag
+        az acr import -n PublicMirror --source docker.io/$i --image $image_tag
       done
     env:
       ApplicationKey: '$(ApplicationKey)'
