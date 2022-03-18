@@ -1,6 +1,6 @@
 #THIS IS AN AUTO-GENERATED FILE
 #
-# This file generate by j2 template file: files/build_templates/pam_limits.j2
+# This file generate by j2 template file: src/sonic-host-services-data/templates/pam_limits.j2
 #
 # /etc/pam.d/pam-limits settings common to all services
 # This file is included from other service-specific PAM config files,
@@ -10,7 +10,3 @@
 # traditional Unix authentication mechanisms.
 #
 # here are the per-package modules (the "Primary" block)
-
-{% if sonic_enable_pam_limit == 'true' %}
-session    required   pam_limits.so
-{% endif %}

@@ -1,6 +1,6 @@
 # /etc/security/limits.conf
 #
-# This file generate by j2 template file: files/build_templates/limits.conf.j2
+# This file generate by j2 template file: src/sonic-host-services-data/templates/limits.conf.j2
 #
 # Each line describes a limit for a user in the form:
 #
@@ -65,9 +65,5 @@
 # ftp             hard    nproc           0
 # ftp             -       chroot          /ftp
 # @student        -       maxlogins       4
-
-{% for user in limitusers %}
-{{ user.username }}        hard    maxlogins       {{ user.maxlogin }}
-{% endfor %}
 
 # End of file

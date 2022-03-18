@@ -25,6 +25,10 @@ PAM_RADIUS_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_radius_auth.conf
 NSS_CONF = "/etc/nsswitch.conf"
 ETC_PAMD_SSHD = "/etc/pam.d/sshd"
 ETC_PAMD_LOGIN = "/etc/pam.d/login"
+PAM_LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_limits.j2"
+LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/limits.conf.j2"
+PAM_LIMITS_CONF = "/etc/pam.d/pam-limits-conf"
+LIMITS_CONF = "/etc/security/limits.conf"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
@@ -950,6 +954,67 @@ class NtpCfg(object):
             syslog.syslog(syslog.LOG_INFO, 'ntp server update, restarting ntp-config, ntp servers configured {}'.format(self.ntp_servers))
             run_cmd(cmd)
 
+class PamLimitsCfg(object):
+    """
+    PamLimit Config Daemon
+    1) The pam_limits PAM module sets limits on the system resources that can be obtained in a user-session.
+    2) Purpose of this daemon is to render pam_limits config file.
+    """
+    def __init__(self):
+        self.hwsku = ""
+        self.type = ""
+
+    # Load conf from ConfigDb
+    def load(self, config_db):
+        device_metadata = config_db.get_table('DEVICE_METADATA')
+        if "localhost" not in device_metadata:
+            return
+
+        self.read_localhost_config(device_metadata["localhost"])
+        self.modify_conf_file()
+
+    # Read localhost config
+    def read_localhost_config(self, localhost):
+        if "hwsku" not in localhost \
+            or "type" not in localhost:
+            return
+
+        self.hwsku = localhost["hwsku"]
+        self.type = localhost["type"]
+
+    # Render pam_limits config files
+    def modify_conf_file(self):
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
+        env.filters['sub'] = sub
+
+        try:
+            template_file = os.path.abspath(PAM_LIMITS_CONF_TEMPLATE)
+            template = env.get_template(template_file)
+            pam_limits_conf = template.render(
+                                        hwsku=self.hwsku,
+                                        type=self.type)
+            with open(PAM_LIMITS_CONF, 'w') as f:
+                f.write(pam_limits_conf)
+
+            template_file = os.path.abspath(LIMITS_CONF_TEMPLATE)
+            template = env.get_template(template_file)
+            limits_conf = template.render(
+                                        hwsku=self.hwsku,
+                                        type=self.type)
+            with open(LIMITS_CONF, 'w') as f:
+                f.write(limits_conf)
+
+            self.reload_pam_config()
+        except Exception as e:
+            syslog.syslog(syslog.LOG_ERR,
+                    "modify pam_limits config file failed with exception: {}"
+                    .format(e))
+
+    # Reload PAM config
+    def reload_pam_config(self):
+        reload_pam_config_cmd = "sudo /usr/sbin/pam-auth-update"
+        run_cmd(reload_pam_config_cmd)
+
 class HostConfigDaemon:
     def __init__(self):
         # Just a sanity check to verify if the CONFIG_DB has been initialized
@@ -988,6 +1053,8 @@ class HostConfigDaemon:
         self.hostname_cache=""
         self.aaacfg = AaaCfg()
         
+        # Initialize PamLimitsCfg
+        self.pamLimitsCfg = PamLimitsCfg()
 
     def load(self):
         aaa = self.config_db.get_table('AAA')
@@ -996,6 +1063,7 @@ class HostConfigDaemon:
         radius_global = self.config_db.get_table('RADIUS')
         radius_server = self.config_db.get_table('RADIUS_SERVER')
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
+        self.pamLimitsCfg.load(self.config_db)
 
         try:
             dev_meta = self.config_db.get_table('DEVICE_METADATA')
