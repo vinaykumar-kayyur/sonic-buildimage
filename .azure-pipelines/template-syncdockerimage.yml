@@ -35,6 +35,9 @@ jobs:
           **/target/versions/default/versions-docker
   - script: |
       set -ex
+      sudo apt-get update
+      sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+      sudo systemctl start docker
       az login -u $(ApplicationId) --service-principal --tenant $(AzureTenant) -p "$ApplicationKey"
       images=$(find download -name versions-docker | xargs -i grep -v "==$" {} | awk -F== '{print$1}' | sort -u | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://" | sort -u )
       for i in $images
