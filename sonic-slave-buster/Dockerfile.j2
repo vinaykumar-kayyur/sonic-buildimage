@@ -6,7 +6,7 @@ COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM {{ prefix }}multiarch/debian-debootstrap:arm64-buster
 {%- else -%}
-FROM {{ prefix }}debian:buster
+FROM {{ prefix }}{{DOCKER_BASE_ARCH}}/debian:buster
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com

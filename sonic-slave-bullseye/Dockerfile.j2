@@ -8,7 +8,7 @@ FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM {{ prefix }}multiarch/debian-debootstrap:arm64-bullseye
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
-FROM {{ prefix }}debian:bullseye
+FROM {{ prefix }}{{DOCKER_BASE_ARCH}}/debian:bullseye
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com
