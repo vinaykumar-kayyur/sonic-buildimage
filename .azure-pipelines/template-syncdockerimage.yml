@@ -36,10 +36,10 @@ jobs:
   - script: |
       set -ex
       az login -u $(ApplicationId) --service-principal --tenant $(AzureTenant) -p "$ApplicationKey"
-      images=$(find download -name versions-docker | xargs -i grep -v "==$" {} | awk -F== '{print$1}' | sort -u | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://")
-      echo $images
+      images=$(find download -name versions-docker | xargs -i grep -v "==$" {} | awk -F== '{print$1}' | sort -u | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://" | sort -u )
       for i in $images
       do
+        docker pull $i | grep Digest
         az acr import -n PublicMirror --source docker.io/$i --image $i --force
       done
     env:
