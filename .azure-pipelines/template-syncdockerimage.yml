@@ -12,13 +12,13 @@ parameters:
   - innovium
   - marvell-armhf
   - generic
-variables:
-- group: Debian-Mirror-Common
 
 jobs:
 - job: Build
   pool: sonicbld
   timeoutInMinutes: 120
+  variables:
+  - group: Debian-Mirror-Common
   steps:
   - checkout: self
     clean: true
