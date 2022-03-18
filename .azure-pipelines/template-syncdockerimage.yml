@@ -15,7 +15,7 @@ parameters:
 
 jobs:
 - job: Build
-  pool: sonicbld
+  pool: sonic-mirror-westus2-2
   timeoutInMinutes: 120
   variables:
   - group: Debian-Mirror-Common
