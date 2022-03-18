@@ -49,7 +49,7 @@ jobs:
       do
         sudo docker pull $i | grep Digest
         sudo docker rmi $i
-        az acr import -n PublicMirror --source docker.io/$i --image $i --force
+        az acr import -n PublicMirror --source docker.io/$i --image $i --force || az acr import -n PublicMirror --source docker.io/library/$i --image $i --force
       done
     env:
       ApplicationKey: '$(ApplicationKey)'
