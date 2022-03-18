@@ -116,7 +116,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
 
 echo '[INFO] Install and setup eatmydata'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
-sudo ln -s /usr/bin/eatmydata $FILESYSTEM_ROOT/usr/local/bin/dpkg
+sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
 echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
 
 echo '[INFO] Install packages for building image'
