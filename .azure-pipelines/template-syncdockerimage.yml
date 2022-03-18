@@ -8,8 +8,6 @@ parameters:
   - mellanox
   - centec-arm64
   - centec
-  - nephos
-  - innovium
   - marvell-armhf
   - generic
 
@@ -38,11 +36,11 @@ jobs:
   - script: |
       set -ex
       az login -u $(ApplicationId) --service-principal --tenant $(AzureTenant) -p "$ApplicationKey"
-      images=$(find download -name versions-docker | xargs -i cat {} | sort -u | grep -v "==$" | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://" -e "s/==/@/")
+      images=$(find download -name versions-docker | xargs -i grep -v "==$" {} | awk -F== '{print$1}' | sort -u | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://")
+      echo $images
       for i in $images
       do
-        image_tag=$(echo $i | awk -F@ '{print$1}')
-        az acr import -n PublicMirror --source docker.io/$i --image $image_tag
+        az acr import -n PublicMirror --source docker.io/$i --image $i --force
       done
     env:
       ApplicationKey: '$(ApplicationKey)'
