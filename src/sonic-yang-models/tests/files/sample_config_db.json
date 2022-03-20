@@ -1656,9 +1656,23 @@
                 "vlan_id": "111",
                 "vsid": "5000"
             }
+        },
+
+
+        "PASSWORD": {
+            "policies": {
+                "state": "enabled",
+                "expiration": "180",
+                "expiration_warning": "15",
+                "history_cnt": "10",
+                "len_min": "8",
+                "username_passw_match": "True",
+                "digits_class": "True",
+                "lower_class": "True",
+                "special_class": "True",
+                "upper_class": "True"
+            }
         }
-
-
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
