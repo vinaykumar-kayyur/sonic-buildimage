@@ -17,6 +17,10 @@ PAM_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/common-auth-sonic.j2"
 NSS_TACPLUS_CONF = "/etc/tacplus_nss.conf"
 NSS_TACPLUS_CONF_TEMPLATE = "/usr/share/sonic/templates/tacplus_nss.conf.j2"
 NSS_CONF = "/etc/nsswitch.conf"
+PAM_LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_limits.j2"
+LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/limits.conf.j2"
+PAM_LIMITS_CONF = "/etc/pam.d/pam-limits-conf"
+LIMITS_CONF = "/etc/security/limits.conf"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
