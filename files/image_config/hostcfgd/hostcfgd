@@ -307,7 +307,7 @@ class HostConfigDaemon:
         self.iptables = Iptables()
 
         # Initialize PamLimitsCfg
-        self.pamLimitsCfg = PamLimitsCfg()
+        self.pamLimitsCfg = PamLimitsCfg(self.config_db)
         self.pamLimitsCfg.update_config_file()
 
 
