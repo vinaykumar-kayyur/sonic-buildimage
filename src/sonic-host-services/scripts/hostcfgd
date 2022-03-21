@@ -976,30 +976,30 @@ class PamLimitsCfg(object):
     1) The pam_limits PAM module sets limits on the system resources that can be obtained in a user-session.
     2) Purpose of this daemon is to render pam_limits config file.
     """
-    def __init__(self):
+    def __init__(self, CfgDb):
+        self.config_db = CfgDb
         self.hwsku = ""
         self.type = ""
 
-    # Load conf from ConfigDb
-    def load(self, config_db):
-        device_metadata = config_db.get_table('DEVICE_METADATA')
+    # Load config from ConfigDb and render config file/
+    def update_config_file(self):
+        device_metadata = self.config_db.get_table('DEVICE_METADATA')
         if "localhost" not in device_metadata:
             return
 
         self.read_localhost_config(device_metadata["localhost"])
-        self.modify_conf_file()
+        self.render_conf_file()
 
     # Read localhost config
     def read_localhost_config(self, localhost):
-        if "hwsku" not in localhost \
-            or "type" not in localhost:
-            return
+        if "hwsku" in localhost:
+            self.hwsku = localhost["hwsku"]
 
-        self.hwsku = localhost["hwsku"]
-        self.type = localhost["type"]
+        if "type" in localhost:
+            self.type = localhost["type"]
 
     # Render pam_limits config files
-    def modify_conf_file(self):
+    def render_conf_file(self):
         env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
         env.filters['sub'] = sub
 
@@ -1073,7 +1073,8 @@ class HostConfigDaemon:
         self.aaacfg = AaaCfg()
 
         # Initialize PamLimitsCfg
-        self.pamLimitsCfg = PamLimitsCfg()
+        self.pamLimitsCfg = PamLimitsCfg(self.config_db)
+        self.pamLimitsCfg.update_config_file()
 
     def load(self):
         aaa = self.config_db.get_table('AAA')
@@ -1082,7 +1083,6 @@ class HostConfigDaemon:
         radius_global = self.config_db.get_table('RADIUS')
         radius_server = self.config_db.get_table('RADIUS_SERVER')
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
-        self.pamLimitsCfg.load(self.config_db)
 
         try:
             dev_meta = self.config_db.get_table('DEVICE_METADATA')
