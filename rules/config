@@ -128,6 +128,9 @@ INCLUDE_ICCPD = n
 # INCLUDE_SFLOW - build docker-sflow for sFlow support
 INCLUDE_SFLOW = y
 
+# INCLUDE_SFLOW_DROPMON - support of drop packets monitoring feature for sFlow daemon
+INCLUDE_SFLOW_DROPMON = n
+
 # INCLUDE_MGMT_FRAMEWORK - build docker-sonic-mgmt-framework for CLI and REST server support
 INCLUDE_MGMT_FRAMEWORK = y
 
