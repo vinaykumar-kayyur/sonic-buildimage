@@ -12,6 +12,6 @@
     "led_color": {
         "fault": "STATUS_LED_COLOR_AMBER",
         "normal": "STATUS_LED_COLOR_GREEN",
-        "booting": "STATUS_LED_COLOR_OFF"
+        "booting": "STATUS_LED_COLOR_GREEN"
     }
 }
