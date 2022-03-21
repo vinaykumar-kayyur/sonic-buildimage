@@ -14,7 +14,7 @@ parameters:
 jobs:
 - job: Build
   pool: sonic-mirror-westus2-2
-  timeoutInMinutes: 120
+  timeoutInMinutes: 20
   variables:
   - group: Debian-Mirror-Common
   steps:
@@ -35,6 +35,7 @@ jobs:
           **/target/versions/default/versions-docker
   - script: |
       set -ex
+      # install docker
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
       sudo add-apt-repository \
         "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -47,8 +48,10 @@ jobs:
       images=$(find download -name versions-docker | xargs -i grep -v "==$" {} | awk -F== '{print$1}' | sort -u | sed -e "s/amd64://" -e "s/arm64://" -e "s/armhf://" | sort -u )
       for i in $images
       do
+        # record docker image sha256
         sudo docker pull $i | grep Digest
         sudo docker rmi $i
+        # some image located in library folder.
         az acr import -n PublicMirror --source docker.io/$i --image $i --force || az acr import -n PublicMirror --source docker.io/library/$i --image $i --force
       done
     env:

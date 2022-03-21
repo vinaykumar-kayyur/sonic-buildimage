@@ -5,7 +5,7 @@
 # Clean up the cache 30 days ago
 
 schedules:
-- cron: "0 */6 * * *"
+- cron: "0 0 * * *"
   branches:
     include:
     - master
@@ -18,9 +18,9 @@ resources:
  repositories:
   - repository: buildimage
     type: github
-    name: liushilongbuaa/sonic-buildimage
+    name: Azure/sonic-buildimage
     ref: master
-    endpoint: liushilongbuaa
+    endpoint: build
      
 jobs:
 - template: .azure-pipelines/template-syncdockerimage.yml@buildimage
