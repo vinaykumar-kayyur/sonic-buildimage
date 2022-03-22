@@ -162,16 +162,6 @@ class Component(ComponentBase):
         """
         return False
 
-    def install_firmware(self, image_path):
-        """
-        Installs firmware to the component
-        Args:
-        image_path: A string, path to firmware image
-        Returns:
-        A boolean, True if install was successful, False if not
-        """
-        return False
-
     def get_available_firmware_version(self, image_path):
         """
         Retrieves the available firmware version of the component

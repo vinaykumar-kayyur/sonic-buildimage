@@ -104,16 +104,6 @@ class Component(ComponentBase):
         """
         return self.version
 
-    def install_firmware(self, image_path):
-        """
-        Installs firmware to the component
-        Args:
-        image_path: A string, path to firmware image
-        Returns:
-        A boolean, True if install was successful, False if not
-        """
-        return False
-
     def get_presence(self):
         """
         Retrieves the presence of the component
