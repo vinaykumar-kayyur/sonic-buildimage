@@ -1,4 +1,5 @@
 try:
+    import os
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
     from platform_thrift_client import thrift_try
@@ -16,7 +17,10 @@ def get_bios_version():
     A string containing the firmware version of the BIOS
     """
     try:
-        return subprocess.check_output(['sudo', 'dmidecode', '-s', 'bios-version']).strip().decode()
+        if os.geteuid() != 0:
+            return subprocess.check_output(['sudo', 'dmidecode', '-s', 'bios-version']).strip().decode()
+        else:
+            return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
     except subprocess.CalledProcessError as e:
         raise RuntimeError("Failed to get BIOS version")
 
