@@ -34,8 +34,8 @@ sname:=opennsl
 PACKAGE=opennsl-modules
 # modifieable for experiments or debugging m-a
 MA_DIR ?= /usr/share/modass
-KVERSION ?= 4.19.0-12-2-amd64
-KERNVERSION ?= 4.19.0-12-2
+KVERSION ?= 5.10.0-8-2-amd64
+KERNVERSION ?= 5.10.0-8-2
 
 # load generic variable handling
 -include $(MA_DIR)/include/generic.make
@@ -63,11 +63,11 @@ kdist_config: prep-deb-files
 kdist_clean: clean
 	dh_testdir
 	dh_clean
-	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 \
 	    KERNDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    KERNEL_SRC=/usr/src/linux-headers-$(KERNVERSION)-amd64 \
 	    $(MAKE) -C systems/linux/user/x86-smp_generic_64-2_6 clean
-	SDK=$(realpath .) BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) BUILD_KNET_CB=1 \
 	    KDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    $(MAKE) -C sdklt/ clean
 #	rm -f driver/*.o driver/*.ko
@@ -94,16 +94,17 @@ build-arch-stamp:
 	cd /; sudo ln -s /usr/src/linux-headers-$(KERNVERSION)-amd64/ /lib/modules/$(KERNVERSION)-amd64/build
 	cd /; sudo ln -s /usr/src/linux-headers-$(KERNVERSION)-amd64/include/generated/ /usr/src/linux-headers-$(KERNVERSION)-common/include/generated
 	cd /; sudo ln -s /usr/src/linux-headers-$(KERNVERSION)-amd64/arch/x86/include/generated/ /usr/src/linux-headers-$(KERNVERSION)-common/arch/x86/include/generated
+	cd /; sudo ln -s /usr/src/linux-headers-$(KERNVERSION)-amd64/arch/x86/module.lds /usr/src/linux-headers-$(KERNVERSION)-common/arch/x86/module.lds
 	cd /; sudo ln -s /usr/src/linux-headers-$(KERNVERSION)-amd64/include/config/ /usr/src/linux-headers-$(KERNVERSION)-common/include/config
 	cd /; sudo cp /usr/src/linux-headers-$(KERNVERSION)-amd64/Module.symvers /usr/src/linux-headers-$(KERNVERSION)-common/Module.symvers
 
 	# Add here command to compile/build the package.
-	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 \
 	    KERNDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    KERNEL_SRC=/usr/src/linux-headers-$(KERNVERSION)-amd64 \
 	    $(MAKE) -C systems/linux/user/x86-smp_generic_64-2_6
 
-	SDK=$(realpath .) BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) BUILD_KNET_CB=1 \
 	    KDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    $(MAKE) -C sdklt/ kmod
 
@@ -130,12 +131,12 @@ clean:
 	rm -f build-arch-stamp build-indep-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) LINUX_UAPI_SPLIT=1 DEBIAN_LINUX_HEADER=1 BUILD_KNET_CB=1 \
 	    KERNDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    KERNEL_SRC=/usr/src/linux-headers-$(KERNVERSION)-amd64 \
 	    $(MAKE) -C systems/linux/user/x86-smp_generic_64-2_6 clean
 
-	SDK=$(realpath .) BUILD_KNET_CB=1 BUILD_PSAMPLE=1 \
+	SDK=$(realpath .) BUILD_KNET_CB=1 \
 	    KDIR=/usr/src/linux-headers-$(KERNVERSION)-common \
 	    $(MAKE) -C sdklt/ clean
 
@@ -178,7 +179,7 @@ binary-indep: build install
 	dh_shlibdeps -i
 	dh_gencontrol -i
 	dh_md5sums -i
-	dh_builddeb -i
+	dh_builddeb -i --filename $(PKG_NAME)
 
 # Build architecture-dependent files here.
 binary-arch: build install
@@ -209,9 +210,9 @@ binary-arch: build install
 	dh_installdeb -s
 #	dh_perl -s
 	dh_shlibdeps -s
-	dh_gencontrol -s
+	dh_gencontrol -s -- -n"$(PKG_NAME)"
 	dh_md5sums -s
-	dh_builddeb -s
+	dh_builddeb -s --filename $(PKG_NAME)
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure binary-modules kdist kdist_configure kdist_image kdist_clean

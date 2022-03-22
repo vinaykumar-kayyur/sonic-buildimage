@@ -19,10 +19,30 @@ def pci_get_value(resource, offset):
         mm.close()
     return val
 
+def pci_mem_write(memmap, offset, data):
+    """ Write PCI device """
+    memmap.seek(offset)
+    memmap.write(struct.pack('I', data))
+
+def pci_set_value(resource, val, offset):
+    """ Set a value to PCI device """
+    with open(resource, 'w+b') as filed:
+        memmap = None
+        try:
+            memmap = mmap.mmap(filed.fileno(), 0)
+            pci_mem_write(memmap, offset, val)
+        except EnvironmentError:
+            pass
+        if memmap is not None:
+            memmap.close()
+
 # Read I2C device
 
 def i2c_get(bus, i2caddr, ofs):
-    return int(subprocess.check_output(['/usr/sbin/i2cget', '-y', str(bus), str(i2caddr), str(ofs)]), 16)
+    try:
+        return int(subprocess.check_output(['/usr/sbin/i2cget', '-y', str(bus), str(i2caddr), str(ofs)]), 16)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return -1
 
 def io_reg_read(io_resource, offset):
     fd = os.open(io_resource, os.O_RDONLY)

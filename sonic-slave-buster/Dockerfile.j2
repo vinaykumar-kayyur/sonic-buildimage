@@ -1,11 +1,12 @@
-{%- if CONFIGURED_ARCH == "armhf" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
-FROM multiarch/debian-debootstrap:armhf-buster
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
+{%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-buster
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
-{%- elif CONFIGURED_ARCH == "arm64" %}
-FROM multiarch/debian-debootstrap:arm64-buster
+{%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-buster
 {%- else -%}
-FROM debian:buster
+FROM {{ prefix }}debian:buster
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com
@@ -77,6 +78,7 @@ RUN apt-get update && apt-get install -y \
         dh-systemd \
         libzmq5 \
         libzmq3-dev \
+        jq \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -109,6 +111,13 @@ RUN apt-get update && apt-get install -y \
         libxml-simple-perl \
         graphviz \
         aspell \
+# For SAI meta rpc build - make rpc
+        libgetopt-long-descriptive-perl \
+        libconst-fast-perl \
+        libtemplate-perl \
+        libnamespace-autoclean-perl \
+        libmoose-perl \
+        libmoosex-aliases-perl \
 # For linux build
         bc \
         fakeroot \
@@ -242,6 +251,8 @@ RUN apt-get update && apt-get install -y \
 # For gtest
         libgtest-dev \
         cmake \
+# For gmock
+        libgmock-dev \
 # For pam_tacplus build
         autoconf-archive \
 # For iproute2
@@ -257,6 +268,12 @@ RUN apt-get update && apt-get install -y \
         iproute2 \
 # For bash
         texi2html \
+        sharutils \
+        locales \
+        time \
+        man2html-base \
+        libcunit1 \
+        libcunit1-dev \
 # For initramfs
         shellcheck \
         bash-completion \
@@ -275,9 +292,6 @@ RUN apt-get update && apt-get install -y \
         librrd8 \
         librrd-dev \
         rrdtool \
-# For smartmontools 6.6-1
-        automake1.11 \
-        libselinux1-dev \
 # For kdump-tools
         liblzo2-dev \
 # For iptables
@@ -301,11 +315,11 @@ RUN apt-get update && apt-get install -y \
         xsltproc \
         python-lxml \
         libexpat1-dev \
+        libcurl3-gnutls \
+        libcjson-dev \
 # For WPA supplication
         qtbase5-dev          \
         aspell-en            \
-        libhiredis-dev       \
-        libnl-3-dev          \
         swig3.0              \
         libpython2.7-dev     \
         libssl-dev           \
@@ -345,7 +359,18 @@ RUN apt-get update && apt-get install -y \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config
+        pkg-config \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
+
+# For iproute2
+RUN apt-get install -y -t buster-backports \
+        libbpf-dev \
+        dwz \
+        debhelper
+
+RUN apt-get -y build-dep openssh
 
 # Build fix for ARMHF buster libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
@@ -365,6 +390,9 @@ RUN apt-get update && apt-get install -y \
        # Aspell is unable to locate the language dictionaries.
        # Re-installing aspell-en dictionary to fix it.
        RUN apt-get install --reinstall -y aspell-en
+
+       # workaround because of https://bugs.launchpad.net/qemu/+bug/1805913, just disable aspell
+       RUN cp /bin/true /usr/bin/aspell
 {%- endif %}
 
 ## Config dpkg
@@ -411,6 +439,8 @@ RUN pip3 install fastentrypoints
 # For running Python unit tests
 RUN pip2 install pytest-runner==4.4
 RUN pip3 install pytest-runner==5.2
+RUN pip2 install nose==1.3.7
+RUN pip3 install nose==1.3.7
 RUN pip2 install mockredispy==2.9.3
 RUN pip3 install mockredispy==2.9.3
 
@@ -433,12 +463,17 @@ RUN pip3 uninstall -y enum34
 
 # For templating
 RUN pip2 install j2cli==0.3.10
+# Note: Jinja2 depends on MarkupSafe, however markupsafe 2.1.0 breaks Jinja2 2.10
+# Debian buster dist-packages include python3-markupsafe (1.1.0-1) and python3-jinja2 (2.10-2)
+# If not pinning the versions, any requirement like `MarkupSafe>=2.0` will pull latest into site-packages and mess up.
+RUN pip3 install MarkupSafe==2.0.1
+RUN pip3 install Jinja2==3.0.3
 
 # For sonic-mgmt-framework
 RUN pip2 install "PyYAML==5.4.1"
 RUN pip3 install "PyYAML==5.4.1"
-RUN pip2 install "lxml==4.6.2"
-RUN pip3 install "lxml==4.6.2"
+RUN pip2 install "lxml==4.6.5"
+RUN pip3 install "lxml==4.6.5"
 
 # For sonic-platform-common testing
 RUN pip3 install redis
@@ -452,8 +487,7 @@ RUN pip2 install Pympler==0.8
 RUN pip3 install Pympler==0.8
 
 # For sonic_yang_model build
-RUN pip2 install pyang==2.1.1
-RUN pip3 install pyang==2.1.1
+RUN pip3 install pyang==2.4.0
 
 # For mgmt-framework build
 RUN pip2 install mmh3==2.5.1
@@ -479,6 +513,10 @@ EXPOSE 22
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
 
+# Install dependencies for dhcp relay test 
+RUN pip3 install parameterized==0.8.1
+RUN pip3 install pyfakefs
+
 # Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
 RUN apt-get update
 RUN apt-get install -y \
@@ -497,7 +535,7 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-buster docker-ce-cli=5:18.09.5~3-0~debian-buster
-RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
 # Install m2crypto package, needed by SWI tools
@@ -513,4 +551,11 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
 {% endif -%}

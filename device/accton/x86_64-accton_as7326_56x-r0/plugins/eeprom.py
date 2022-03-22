@@ -19,5 +19,5 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
             self.eeprom_path = "/sys/bus/i2c/devices/0-0056/eeprom"
         else:
             self.eeprom_path = "/sys/bus/i2c/devices/0-0057/eeprom"
-           
+
         super(board, self).__init__(self.eeprom_path, 0, '', True)

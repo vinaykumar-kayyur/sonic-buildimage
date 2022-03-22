@@ -4,12 +4,12 @@ PREV_REBOOT_CAUSE="/host/reboot-cause/"
 DEVICE="/usr/share/sonic/device"
 PLATFORM=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 FILES=$DEVICE/$PLATFORM/api_files
+PY3_PACK=$DEVICE/$PLATFORM/sonic_platform-1.0-py3-none-any.whl
 
 install() {
-    # Install sonic-platform package
-    if [ -e $DEVICE/$PLATFORM/sonic_platform-1.0-py2-none-any.whl ]; then
-        pip install $DEVICE/$PLATFORM/sonic_platform-1.0-py2-none-any.whl
-        pip3 install $device/$platform/sonic_platform-1.0-py3-none-any.whl
+    # Install python3 sonic-platform package
+    if [ -e $PY3_PACK ]; then
+        pip3 install $PY3_PACK
     fi
 }
 

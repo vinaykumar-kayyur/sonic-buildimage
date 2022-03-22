@@ -11,17 +11,41 @@ schedules:
   displayName: Daily Build
   branches:
     include:
-    - 202012
+    - 20*
+    exclude:
+    - 200*
+    - 201*
+    - 202006
   always: true
 
 pool: sonicbld
 
+parameters:
+- name: 'jobFilters'
+  type: object
+  default:
+  - vs
+  - barefoot
+  - broadcom
+  - centec
+  - centec-arm64
+  - generic
+  - innovium
+  - marvell-armhf
+  - mellanox
+
 stages:
 - stage: Build
+  variables:
+    CACHE_MODE: none
+    VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS='
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
-      buildSlave: y
+      jobFilters: ${{ parameters.jobFilters }}
+      buildOptions: '${{ variables.VERSION_CONTROL_OPTIONS }} SONIC_BUILD_JOBS=$(nproc) ENABLE_IMAGE_SIGNATURE=y'
+      preSteps:
+      - template: template-clean-sonic-slave.yml
 - stage: UpgradeVersions
   jobs:
   - job: UpgradeVersions
@@ -48,11 +72,14 @@ stages:
         cp -r $(Pipeline.Workspace)/sonic-buildimage.${default_platform}/versions target/
         make freeze FREEZE_VERSION_OPTIONS=-r
         find files/build/versions 
-        for artifact in $artifacts
+        ordered_artifacts=$(echo "$artifacts" | grep -v -E "arm64|armhf" && echo "$artifacts" | grep -E "arm64|armhf")
+        for artifact in $ordered_artifacts
         do
           rm -rf target/versions
           cp -r $artifact/versions target/
-          make freeze FREEZE_VERSION_OPTIONS="-a -d"
+          OPTIONS="-a -d"
+          [[ "$artifact" == *arm64* || "$artifact" == *armhf* ]] && OPTIONS="-d"
+          make freeze FREEZE_VERSION_OPTIONS="$OPTIONS"
         done
         git diff files/build/versions
       displayName: 'Freeze Versions'

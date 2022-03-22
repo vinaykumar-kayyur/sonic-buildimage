@@ -2,12 +2,14 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sonic_py_common.general import load_module_from_source
 
 from . import common_test
 
-common_test.load_mod_from_file("docker",
+
+load_module_from_source("docker",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
-container = common_test.load_mod_from_file("container",
+container = load_module_from_source("container",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "../ctrmgr/container"))
 
 
@@ -177,7 +179,8 @@ stop_test_data = {
                         "remote_state": "none",
                         "system_state": "up",
                         "current_owner": "local",
-                        "container_id": "snmp"
+                        "container_id": "snmp",
+                        "container_version": "20201230.0.15"
                     }
                 }
             }
@@ -190,7 +193,7 @@ stop_test_data = {
                         "system_state": "down",
                         "current_owner": "none",
                         "container_id": "",
-                        "container_version": ""
+                        "container_version": "20201230.0.15"
                     }
                 },
                 common_test.KUBE_LABEL_TABLE: {
@@ -220,7 +223,8 @@ stop_test_data = {
                         "container_id": "xxx",
                         "system_state": "up",
                         "current_owner": "kube",
-                        "remote_state": "running"
+                        "remote_state": "running",
+                        "container_version": "20201230.1.15"
                     }
                 }
             }
@@ -233,7 +237,7 @@ stop_test_data = {
                         "system_state": "down",
                         "current_owner": "none",
                         "container_id": "",
-                        "container_version": ""
+                        "container_version": "20201230.1.15"
                     }
                 },
                 common_test.KUBE_LABEL_TABLE: {
@@ -265,7 +269,8 @@ kill_test_data = {
             common_test.CONFIG_DB_NO: {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
-                        "set_owner": "local"
+                        "set_owner": "local",
+                        "state": "enabled"
                     }
                 }
             },
@@ -340,6 +345,30 @@ kill_test_data = {
         },
         common_test.ACTIONS: {
             "xxx": [ "kill" ]
+        }
+    }
+}
+
+# container_kill test cases
+# test case 0 -- container kill local disabled container
+#   -- no change in state-db 
+#   -- no label update
+#
+invalid_kill_test_data = {
+    0: {
+        common_test.DESCR: "container kill for local disabled container",
+        common_test.PRE: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "sflow": {
+                        "set_owner": "local"
+                    }
+                }
+            }
+        },
+        common_test.POST: {
+        },
+        common_test.ACTIONS: {
         }
     }
 }
@@ -494,6 +523,24 @@ class TestContainer(object):
             ret = common_test.check_mock_containers()
             assert ret == 0
 
+    @patch("container.swsscommon.DBConnector")
+    @patch("container.swsscommon.Table")
+    @patch("container.docker.from_env")
+    def test_invalid_kill(self, mock_docker, mock_table, mock_conn):
+        self.init()
+        common_test.set_mock(mock_table, mock_conn, mock_docker)
+
+        for (i, ct_data) in invalid_kill_test_data.items():
+            common_test.do_start_test("container_test:container_kill", i, ct_data)
+
+            ret = container.container_kill("sflow")
+            assert ret != 0
+
+            ret = common_test.check_tables_returned()
+            assert ret == 0
+
+            ret = common_test.check_mock_containers()
+            assert ret == 0
 
     @patch("container.swsscommon.DBConnector")
     @patch("container.swsscommon.Table")
