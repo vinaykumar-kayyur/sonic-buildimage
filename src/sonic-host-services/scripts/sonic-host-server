@@ -6,6 +6,7 @@ import os.path
 import glob
 import importlib
 import sys
+import site
 
 import dbus
 import dbus.service
@@ -15,7 +16,13 @@ from gi.repository import GObject
 
 def register_modules():
     """Register all host modules"""
-    mod_path = '/usr/local/lib/python3.7/dist-packages/host_modules'
+    mod_path = ""
+    for package_path in site.getsitepackages():
+        candidate = os.path.join(package_path, 'host_modules')
+        if os.path.isdir(candidate):
+            mod_path = candidate
+            print("host modules path:", mod_path)
+            break
     sys.path.append(mod_path)
     for mod_file in glob.glob(os.path.join(mod_path, '*.py')):
         if os.path.isfile(mod_file) and not mod_file.endswith('__init__.py'):
