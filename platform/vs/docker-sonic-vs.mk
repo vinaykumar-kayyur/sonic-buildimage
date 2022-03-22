@@ -11,10 +11,10 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS) \
                               $(SONIC_DEVICE_DATA) \
                               $(LIBYANG) \
                               $(LIBYANG_CPP) \
-                              $(LIBYANG_PY2) \
                               $(LIBYANG_PY3) \
                               $(SONIC_UTILITIES_DATA) \
-                              $(SONIC_HOST_SERVICES_DATA)
+                              $(SONIC_HOST_SERVICES_DATA) \
+                              $(IPROUTE2)
 
 # swsssdk is a dependency of sonic-py-common
 # TODO: sonic-py-common should depend on swsscommon instead
@@ -51,3 +51,5 @@ $(DOCKER_SONIC_VS)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
 
 $(DOCKER_SONIC_VS)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE_BUSTER)
 SONIC_DOCKER_IMAGES += $(DOCKER_SONIC_VS)
+
+SONIC_BUSTER_DOCKERS += $(DOCKER_SONIC_VS)
