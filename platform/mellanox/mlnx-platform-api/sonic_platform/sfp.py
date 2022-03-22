@@ -25,15 +25,7 @@
 try:
     import subprocess
     import os
-    from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_eeprom import eeprom_dts
-    from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
-    from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
-    from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
-    from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
-    from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
-    from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
-    from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_py_common.logger import Logger
     from . import utils
     from .device_data import DeviceDataManager
