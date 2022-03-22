@@ -16,7 +16,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg init
 	stg import -s ../patch/series
 
-	if [[ $(enable_sflow_dropmon) == "y" ]]; then
+	if [[ $(ENABLE_SFLOW_DROPMON) == y ]]; then
 		$(warning hsflowd apply dropmon patches)
 		stg repair
 		stg import -s ../patch/dropmon/series
