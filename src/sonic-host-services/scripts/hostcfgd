@@ -976,8 +976,8 @@ class PamLimitsCfg(object):
     1) The pam_limits PAM module sets limits on the system resources that can be obtained in a user-session.
     2) Purpose of this daemon is to render pam_limits config file.
     """
-    def __init__(self, CfgDb):
-        self.config_db = CfgDb
+    def __init__(self, config_db):
+        self.config_db = config_db
         self.hwsku = ""
         self.type = ""
 
@@ -994,9 +994,13 @@ class PamLimitsCfg(object):
     def read_localhost_config(self, localhost):
         if "hwsku" in localhost:
             self.hwsku = localhost["hwsku"]
+        else:
+            self.hwsku = ""
 
         if "type" in localhost:
             self.type = localhost["type"]
+        else:
+            self.type = ""
 
     # Render pam_limits config files
     def render_conf_file(self):
