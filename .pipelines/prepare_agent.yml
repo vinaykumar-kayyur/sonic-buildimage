@@ -2,6 +2,13 @@ steps:
   - template: init-agent.yml
   - script: |
       set -ex
+      # 1ES agent has issues in /etc/apt/sources.list
+      . /etc/os-release
+      sudo sed -i "s#{{mirror}}#http://azure.archive.ubuntu.com/ubuntu#" /etc/apt/sources.list
+      sudo sed -i "s#{{security}}#http://security.ubuntu.com/ubuntu#" /etc/apt/sources.list
+      sudo sed -i "s#{{codename}}#$UBUNTU_CODENAME#" /etc/apt/sources.list
+      sudo apt update
+
       if [[ $PLATFORM_ARCH == arm* ]];then
         echo arm agent, skip.
         exit 0

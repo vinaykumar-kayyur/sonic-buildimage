@@ -10,6 +10,12 @@ schedules:
   always: false
 trigger: none
 pr: none
+resources:
+  repositories:
+  - repository: acs-buildimage
+    type: git
+    name: One/Networking-acs-buildimage
+    ref: internal
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -46,14 +52,14 @@ stages:
     VERSION_PATH: target/sonic.version
     DOCKER_DATA_ROOT_FOR_MULTIARCCH: /data/march/docker
   jobs:
-  - template: ../.azure-pipelines/azure-pipelines-job-groups.yml
+  - template: .azure-pipelines/azure-pipelines-job-groups.yml@acs-buildimage
     parameters:
       scriptEnv:
         PASSWORD: '$(PASSWORD)'
       jobFilters: ${{ parameters.jobFilters }}
       preSteps:
-        - template: prepare_agent.yml
-        - template: ../.azure-pipelines/cleanup.yml
+        - template: .pipelines/prepare_agent.yml@acs-buildimage
+        - template: .azure-pipelines/cleanup.yml@acs-buildimage
         - checkout: self
           clean: true
           submodules: recursive
