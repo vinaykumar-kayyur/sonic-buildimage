@@ -17,10 +17,10 @@ def get_bios_version():
     A string containing the firmware version of the BIOS
     """
     try:
+        cmd = ['dmidecode', '-s', 'bios-version']
         if os.geteuid() != 0:
-            return subprocess.check_output(['sudo', 'dmidecode', '-s', 'bios-version']).strip().decode()
-        else:
-            return subprocess.check_output(['dmidecode', '-s', 'bios-version']).strip().decode()
+            cmd.insert(0, 'sudo')
+        return subprocess.check_output(cmd).strip().decode()
     except subprocess.CalledProcessError as e:
         raise RuntimeError("Failed to get BIOS version")
 
