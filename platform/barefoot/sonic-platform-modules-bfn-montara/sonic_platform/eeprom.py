@@ -7,6 +7,7 @@ try:
     import logging.config
     import yaml
     import re
+    import subprocess
 
     sys.path.append(os.path.dirname(__file__))
 
@@ -45,6 +46,11 @@ _EEPROM_STATUS = "/var/run/platform/eeprom/status"
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
+       if os.geteuid() != 0:
+            subprocess.check_output(['sudo', 'chmod', '646', '/var/log/platform.log'])
+            subprocess.check_output(['sudo', 'chmod', '646', '/var/run/platform/eeprom/syseeprom'])
+            subprocess.check_output(['sudo', 'chmod', '646', '/var/run/platform/eeprom/status'])
+
         with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
             config_dict = yaml.load(f, yaml.SafeLoader)
             logging.config.dictConfig(config_dict)
