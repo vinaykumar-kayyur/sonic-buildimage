@@ -3,60 +3,61 @@
 Table of Contents
 =================
 
-   * [Introduction](#introduction)  
-   * [Configuration](#configuration)  
-   * [<strong>Config Load and Save</strong>](#config-load-and-save)  
-         * [Incremental Configuration](#incremental-configuration)  
-   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
-         * [ACL and Mirroring](#acl-and-mirroring)  
-         * [BGP Sessions](#bgp-sessions)  
-         * [BUFFER_PG](#buffer_pg)  
-         * [Buffer pool](#buffer-pool)  
-         * [Buffer profile](#buffer-profile)  
-         * [Buffer queue](#buffer-queue)  
-         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
-         * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
-         * [Cable length](#cable-length)  
-         * [COPP_TABLE](#copp_table)  
-         * [CRM](#crm)  
-         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
-         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
-         * [Device Metadata](#device-metadata)  
-         * [Device neighbor metada](#device-neighbor-metada)  
-         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
-         * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [L2 Neighbors](#l2-neighbors)  
-         * [Loopback Interface](#loopback-interface)  
-         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
-         * [Management Interface](#management-interface)  
-         * [Management port](#management-port)  
-         * [Management VRF](#management-vrf)  
-         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [NTP Global Configuration](#ntp-global-configuration)  
-         * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
-         * [Policer](#policer)   
-         * [Port](#port)   
-         * [Port Channel](#port-channel)  
-         * [Portchannel member](#portchannel-member)  
-         * [Scheduler](#scheduler)  
-         * [Port QoS Map](#port-qos-map)  
-         * [Queue](#queue)  
-         * [Tacplus Server](#tacplus-server)    
-         * [TC to Priority group map](#tc-to-priority-group-map)  
-         * [TC to Queue map](#tc-to-queue-map)  
-         * [Versions](#versions)  
-         * [VLAN](#vlan)   
-         * [VLAN_MEMBER](#vlan_member)  
-         * [Virtual router](#virtual-router)  
-         * [WRED_PROFILE](#wred_profile)  
-   * [For Developers](#for-developers)  
+   * [Introduction](#introduction)
+   * [Configuration](#configuration)
+   * [<strong>Config Load and Save</strong>](#config-load-and-save)
+         * [Incremental Configuration](#incremental-configuration)
+   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)
+         * [ACL and Mirroring](#acl-and-mirroring)
+         * [BGP Sessions](#bgp-sessions)
+         * [BUFFER_PG](#buffer_pg)
+         * [Buffer pool](#buffer-pool)
+         * [Buffer profile](#buffer-profile)
+         * [Buffer queue](#buffer-queue)
+         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)
+         * [Buffer port egress profile list](#buffer-port-egress-profile-list)
+         * [Cable length](#cable-length)
+         * [COPP_TABLE](#copp_table)
+         * [CRM](#crm)
+         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)
+         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)
+         * [Device Metadata](#device-metadata)
+         * [Device neighbor metada](#device-neighbor-metada)
+         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
+         * [FLEX_COUNTER_TABLE](#flex_counter_table)
+         * [L2 Neighbors](#l2-neighbors)
+         * [Loopback Interface](#loopback-interface)
+         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)
+         * [Management Interface](#management-interface)
+         * [Management port](#management-port)
+         * [Management VRF](#management-vrf)
+         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)
+         * [NTP Global Configuration](#ntp-global-configuration)
+         * [NTP and SYSLOG servers](#ntp-and-syslog-servers)
+         * [Policer](#policer)
+         * [Port](#port)
+         * [Port Channel](#port-channel)
+         * [Portchannel member](#portchannel-member)
+         * [Scheduler](#scheduler)
+         * [Port QoS Map](#port-qos-map)
+         * [Queue](#queue)
+         * [Tacplus Server](#tacplus-server)
+         * [TC to Priority group map](#tc-to-priority-group-map)
+         * [TC to Queue map](#tc-to-queue-map)
+         * [Versions](#versions)
+         * [VLAN](#vlan)
+         * [VLAN_MEMBER](#vlan_member)
+         * [Virtual router](#virtual-router)
+         * [WRED_PROFILE](#wred_profile)
+         * [PASSWORD_HARDENING](#password_hardening)
+   * [For Developers](#for-developers)
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
 
 
 
-# Introduction																																									
-This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
+# Introduction
+This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.
 
 # Configuration
 
@@ -94,7 +95,7 @@ However, this feature is not implemented by all applications yet. By Sep
 is BGP (docker-fpm-quagga). For other applications, a manual restart is
 required after configuration changes in ConfigDB.
 
-# **Redis and Json Schema** 
+# **Redis and Json Schema**
 
 ConfigDB uses a table-object schema that is similar with
 [AppDB](https://github.com/Azure/sonic-swss/blob/4c56d23b9ff4940bdf576cf7c9e5aa77adcbbdcc/doc/swss-schema.md),
@@ -130,21 +131,21 @@ redis and json, correspondingly:
 ```
 "BGP_NEIGHBOR": {
 	"10.0.0.57": {
-		"rrclient": "0", 
-		"name": "ARISTA01T1", 
-		"local_addr": "10.0.0.56", 
-		"nhopself": "0", 
-		"holdtime": "10", 
-		"asn": "64600", 
+		"rrclient": "0",
+		"name": "ARISTA01T1",
+		"local_addr": "10.0.0.56",
+		"nhopself": "0",
+		"holdtime": "10",
+		"asn": "64600",
 		"keepalive": "3"
-	}, 
+	},
     "10.0.0.59": {
-        "rrclient": "0", 
-        "name": "ARISTA02T1", 
-        "local_addr": "10.0.0.58", 
-        "nhopself": "0", 
-        "holdtime": "10", 
-        "asn": "64600", 
+        "rrclient": "0",
+        "name": "ARISTA02T1",
+        "local_addr": "10.0.0.58",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
         "keepalive": "3"
 	},
 }
@@ -350,17 +351,17 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
                 "asn": 64009,
                 "name": "ARISTA09T0"
         },
- 
+
         "10.0.0.63": {
-                "rrclient": "0", 
-				"name": "ARISTA04T1", 
-				"local_addr": "10.0.0.62", 
-				"nhopself": "0", 
-				"holdtime": "10", 
-				"asn": "64600", 
+                "rrclient": "0",
+				"name": "ARISTA04T1",
+				"local_addr": "10.0.0.62",
+				"nhopself": "0",
+				"holdtime": "10",
+				"asn": "64600",
 				"keepalive": "3"
         }
-		
+
 "BGP_PEER_RANGE": {
     "BGPSLBPassive": {
         "name": "BGPSLBPassive",
@@ -544,7 +545,7 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
     }
   }
 }
- 
+
 ```
 
 ### Buffer port ingress profile list
@@ -622,7 +623,7 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 	 "queue": "0",
 	 "red_action": "drop"
      },
-   
+
      "trap.group.arp": {
          "cbs": "600",
          "cir": "600",
@@ -634,21 +635,21 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 	 "trap_ids": "arp_req,arp_resp,neigh_discovery",
 	 "trap_priority": "4"
       },
-    
+
      "trap.group.lldp.dhcp.udld": {
          "queue": "4",
          "trap_action": "trap",
 	 "trap_ids": "lldp,dhcp,udld",
 	 "trap_priority": "4"
       },
-    
+
      "trap.group.bgp.lacp": {
          "queue": "4",
          "trap_action": "trap",
 	 "trap_ids": "bgp,bgpv6,lacp",
 	 "trap_priority": "4"
       },
-   
+
      "trap.group.ip2me": {
          "cbs": "600",
          "cir": "600",
@@ -717,7 +718,7 @@ attributes.
         "Ethernet8|10.0.0.4/31": {}
 		...
     },
-	
+
 "PORTCHANNEL_INTERFACE": {
         "PortChannel01|10.0.0.56/31": {},
         "PortChannel01|FC00::71/126": {},
@@ -982,7 +983,7 @@ instead of data network.
     }
   }
 }
- 
+
 ```
 
 
@@ -1043,7 +1044,7 @@ This option **has no effect** if the mgmt vrf is not enabled.
 
 ***NTP Source Port***
 
-This option sets the port which ntp will choose to send time update requests from by.  
+This option sets the port which ntp will choose to send time update requests from by.
 
 NOTE: If a Loopback interface is defined on the switch ntp will choose this by default, so this setting
 is **required** if the switch has a Loopback interface and the ntp peer does not have defined routes
@@ -1210,9 +1211,9 @@ name as object key and member list as attribute.
 ```
 {
 "PORTCHANNEL_MEMBER": {
-    "PortChannel0001|Ethernet50": {}, 
-    "PortChannel0002|Ethernet52": {}, 
-    "PortChannel0003|Ethernet54": {}, 
+    "PortChannel0001|Ethernet50": {},
+    "PortChannel0002|Ethernet52": {},
+    "PortChannel0003|Ethernet54": {},
     "PortChannel0004|Ethernet56": {}
   }
 }
@@ -1248,17 +1249,17 @@ name as object key and member list as attribute.
 {
 "PORT_QOS_MAP": {
     "Ethernet50,Ethernet52,Ethernet54,Ethernet56": {
-        "tc_to_pg_map": "AZURE", 
-        "tc_to_queue_map": "AZURE", 
-        "pfc_enable": "3,4", 
-        "pfc_to_queue_map": "AZURE", 
+        "tc_to_pg_map": "AZURE",
+        "tc_to_queue_map": "AZURE",
+        "pfc_enable": "3,4",
+        "pfc_to_queue_map": "AZURE",
         "dscp_to_tc_map": "AZURE",
         "dscp_to_fc_map": "AZURE",
         "exp_to_fc_map": "AZURE",
         "scheduler": "scheduler.port"
     }
   }
-}  
+}
 ```
 
 ### Queue
@@ -1266,12 +1267,12 @@ name as object key and member list as attribute.
 {
 "QUEUE": {
 	"Ethernet56|4": {
-        "wred_profile": "AZURE_LOSSLESS", 
+        "wred_profile": "AZURE_LOSSLESS",
         "scheduler": "scheduler.1"
-    }, 
+    },
     "Ethernet56|5": {
         "scheduler": "scheduler.0"
-    }, 
+    },
     "Ethernet56|6": {
         "scheduler": "scheduler.0"
     }
@@ -1286,11 +1287,11 @@ name as object key and member list as attribute.
 {
 "TACPLUS_SERVER": {
     "10.0.0.8": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
-    }, 
+    },
     "10.0.0.9": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
     }
   }
@@ -1304,17 +1305,17 @@ name as object key and member list as attribute.
 {
 "TC_TO_PRIORITY_GROUP_MAP": {
     "AZURE": {
-        "1": "1", 
-        "0": "0", 
-        "3": "3", 
-        "2": "2", 
-        "5": "5", 
-        "4": "4", 
-        "7": "7", 
+        "1": "1",
+        "0": "0",
+        "3": "3",
+        "2": "2",
+        "5": "5",
+        "4": "4",
+        "7": "7",
         "6": "6"
     }
   }
-}  
+}
 ```
 
 ### TC to Queue map
@@ -1323,17 +1324,17 @@ name as object key and member list as attribute.
 {
 "TC_TO_QUEUE_MAP": {
     "AZURE": {
-        "1": "1", 
-        "0": "0", 
-        "3": "3", 
-        "2": "2", 
-        "5": "5", 
-        "4": "4", 
-        "7": "7", 
+        "1": "1",
+        "0": "0",
+        "3": "3",
+        "2": "2",
+        "5": "5",
+        "4": "4",
+        "7": "7",
         "6": "6"
     }
   }
-}  
+}
 ```
 
 ### Versions
@@ -1450,19 +1451,53 @@ The packet action could be:
 {
 "WRED_PROFILE": {
     "AZURE_LOSSLESS": {
-        "red_max_threshold": "2097152", 
-        "wred_green_enable": "true", 
-        "ecn": "ecn_all", 
-        "green_min_threshold": "1048576", 
-        "red_min_threshold": "1048576", 
-        "wred_yellow_enable": "true", 
-        "yellow_min_threshold": "1048576", 
-        "green_max_threshold": "2097152", 
-        "green_drop_probability": "5", 
-        "yellow_max_threshold": "2097152", 
-        "wred_red_enable": "true", 
-        "yellow_drop_probability": "5", 
+        "red_max_threshold": "2097152",
+        "wred_green_enable": "true",
+        "ecn": "ecn_all",
+        "green_min_threshold": "1048576",
+        "red_min_threshold": "1048576",
+        "wred_yellow_enable": "true",
+        "yellow_min_threshold": "1048576",
+        "green_max_threshold": "2097152",
+        "green_drop_probability": "5",
+        "yellow_max_threshold": "2097152",
+        "wred_red_enable": "true",
+        "yellow_drop_probability": "5",
         "red_drop_probability": "5"
+    }
+  }
+}
+```
+### PASSWORD_HARDENING
+
+Password Hardening, a user password is the key credential used in order to verify the user accessing the switch and acts as the first line of defense in regards to securing the switch. PASSWORD_HARDENING - support the enforce strong policies.
+
+-   state - Enable/Disable password hardening feature
+-   len_min - The minimum length of the PW should be subject to a user change.
+-   expiration - PW Age Change Once a PW change takes place - the DB record for said PW is updated with the new PW value and a fresh new age (=0).
+-   expiration_warning - The switch will provide a warning for PW change before and (this is to allow a sufficient warning for upgrading the PW which might be relevant to numerous switches).
+-   history_cnt - remember last passwords, and reject to use the old passw
+-   reject_user_passw_match - reject to set same username and passw
+-   PW classes -  are the type of characters the user is required to enter when setting/updating a PW.
+There are 4 classes
+    -   lower_class - Small characters - a-z
+    -   upper_class - Big characters - A-Z
+    -   digits_class -Numbers - 0-9
+    -   special_class - Special Characters `~!@#$%^&*()-_+=|[{}];:',<.>/? and white space
+```
+{
+"PASSWORD": {
+    "POLICIES": {
+        "state": "disabled",
+        "expiration": "180",
+        "expiration_warning": "15",
+        "history_cnt": "10",
+        "len_min": "8",
+        "reject_user_passw_match": "True",
+        "lower_class": "True",
+        "upper_class": "True",
+        "digit_class": "True",
+        "special_class": "True"
     }
   }
 }
