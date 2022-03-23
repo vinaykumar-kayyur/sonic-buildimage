@@ -14,9 +14,11 @@
 {% endif %}
 {% set path_template = "bgpd/templates/msft.general/%s/" + template_name + ".conf.j2" %}
 {% if neighbor_addr | ipv4 %}
-{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS'] %}
+{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS', 'BmcMgmtToRRouter'] %}
 {%         if device_type in ['MgmtToRRouter', 'MgmtTsToR'] and neighbor_type == 'CoreTs' %}
 {%             include path_template % "v4.mgmttor.oob" %}
+{%         elif device_type in ['BmcMgmtToRRouter'] %}
+{%             include path_template % "v4.mgmttor.mx" %}
 {%         else %}
 {%             include path_template % "v4.mgmttor" %}
 {%         endif %}
@@ -51,9 +53,11 @@
 {%     endif %}
 {% endif %}
 {% if neighbor_addr | ipv6 %}
-{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS'] %}
+{%     if device_type in ['MgmtToRRouter', 'MgmtTsToR', 'EPMS', 'BmcMgmtToRRouter'] %}
 {%         if device_type in ['MgmtToRRouter', 'MgmtTsToR'] and neighbor_type == 'CoreTs' %}
 {%             include path_template % "v6.mgmttor.oob" %}
+{%         elif device_type in ['BmcMgmtToRRouter'] %}
+{%             include path_template % "v6.mgmttor.mx" %}
 {%         else %}
 {%             include path_template % "v6.mgmttor" %}
 {%         endif %}

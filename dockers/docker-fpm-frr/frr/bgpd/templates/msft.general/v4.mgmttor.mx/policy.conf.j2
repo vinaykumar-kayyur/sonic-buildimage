@@ -1,0 +1,15 @@
+!
+! template: bgpd/templates/msft.general/v4.mgmttor.mx/policy.conf.j2
+!
+ip prefix-list BMC_PRIVATE_IPV4_OR_LONGER seq 10 permit 172.17.0.0/24 ge 26
+!
+route-map FROM_TIER0_V4 permit 100
+!
+route-map TO_TIER0_V4 permit 100
+  match ip address prefix-list BMC_PRIVATE_IPV4_OR_LONGER
+  set community no-advertise additive
+!
+route-map TO_TIER0_V4 permit 1000
+!
+! end of template: bgpd/templates/msft.general/v4.mgmttor.mx/policy.conf.j2
+!
