@@ -289,17 +289,10 @@ class PamLimitsCfg(object):
                                         type=self.type)
             with open(LIMITS_CONF, 'w') as f:
                 f.write(limits_conf)
-
-            self.reload_pam_config()
         except Exception as e:
             syslog.syslog(syslog.LOG_ERR,
                     "modify pam_limits config file failed with exception: {}"
                     .format(e))
-
-    # Reload PAM config
-    def reload_pam_config(self):
-        reload_pam_config_cmd = "sudo /usr/sbin/pam-auth-update"
-        run_cmd(reload_pam_config_cmd)
 
 class HostConfigDaemon:
     def __init__(self):
