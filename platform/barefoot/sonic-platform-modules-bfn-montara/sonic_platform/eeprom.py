@@ -1,7 +1,6 @@
 try:
     import os
     import sys
-    import errno
     import datetime
     import logging
     import logging.config
