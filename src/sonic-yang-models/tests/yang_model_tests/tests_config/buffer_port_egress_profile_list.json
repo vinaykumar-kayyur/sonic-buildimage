@@ -51,13 +51,13 @@
                 "BUFFER_PORT_EGRESS_PROFILE_LIST_LIST": [
                     {
                         "port": "Ethernet4",
-                        "profile_list": ["lossless_buffer_profile", "lossless_buffer_profile2"]
+                        "profile_list": "lossless_buffer_profile, lossless_buffer_profile2"
                     }
                 ]    
             }
         }
     },
-    "BUFFER_PORT_EGRESS_PROFILE_LIST_WRONG_PROFILE_VALUE": {
+    "BUFFER_PORT_EGRESS_PROFILE_LIST_MANDATORY_PROFILE_VALUE": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -100,8 +100,7 @@
             "sonic-buffer-port-egress-profile-list:BUFFER_PORT_EGRESS_PROFILE_LIST": {
                 "BUFFER_PORT_EGRESS_PROFILE_LIST_LIST": [
                 {
-                    "port": "Ethernet4",
-                    "profile_list": ["wrong"]
+                    "port": "Ethernet4"
                 }
                 ]
             }
@@ -151,7 +150,7 @@
                 "BUFFER_PORT_EGRESS_PROFILE_LIST_LIST": [
                 {
                     "port": "wrong",
-                    "profile_list": ["lossless_buffer_profile"]
+                    "profile_list": "lossless_buffer_profile"
                 }
                 ]
             }
