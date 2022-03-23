@@ -12,7 +12,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd ./host-sflow
 	git checkout -b sflow tags/v$(HSFLOWD_VERSION)-$(HSFLOWD_SUBVERSION)
 
-	# Apply patch series
+        # Apply patch series
 	stg init
 	stg import -s ../patch/series
 

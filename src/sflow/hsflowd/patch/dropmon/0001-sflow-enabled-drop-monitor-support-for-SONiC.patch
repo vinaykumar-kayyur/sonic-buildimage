@@ -32,7 +32,7 @@ index 5d94e79..25031d1 100644
      sp->psample.egress = NO;
      sp->psample.group = 1;
 +    // drop-monitor support
-+    myLog(LOG_INFO, "##### drop-monitor support for SONiC");
++    myLog(LOG_INFO, "drop-monitor support for SONiC");
 +    sp->dropmon.dropmon = YES;
 +    sp->dropmon.group = 1;
 +    sp->dropmon.start = NO;
