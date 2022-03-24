@@ -67,6 +67,9 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## ensure proc is mounted
+sudo mount proc /proc -t proc || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -190,7 +193,7 @@ if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
 fi
 
 ## Add mtd and uboot firmware tools package
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools libubootenv-tool mtd-utils device-tree-compiler
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -327,8 +330,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd
 
-# Change auditd log file path to fix auditd can't startup issue.
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/^\s*log_file\s*=.*/log_file = \/var\/log\/audit.log/g' /etc/audit/auditd.conf"
+# Have systemd create the auditd log directory
+sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
+sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.conf >/dev/null <<EOF
+[Service]
+LogsDirectory=audit
+LogsDirectoryMode=0750
+EOF
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
