@@ -13,7 +13,7 @@ import jinja2
 from datetime import datetime
 from sonic_py_common import device_info
 from swsscommon.swsscommon import SubscriberStateTable, DBConnector, Select
-from swsscommon.swsscommon import ConfigDBConnector, TableConsumable
+from swsscommon.swsscommon import ConfigDBConnector, TableConsumable, Table
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -54,6 +54,7 @@ RADIUS_PAM_AUTH_CONF_DIR = "/etc/pam_radius_auth.d/"
 
 # MISC Constants
 CFG_DB = "CONFIG_DB"
+STATE_DB = "STATE_DB"
 HOSTCFGD_MAX_PRI = 10  # Used to enforce ordering b/w daemons under Hostcfgd
 DEFAULT_SELECT_TIMEOUT = 1000
 
@@ -181,16 +182,23 @@ class FeatureHandler(object):
     SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
     SYSTEMD_SERVICE_CONF_DIR = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
 
-    def __init__(self, config_db, device_config):
+    # Feature state constants
+    FEATURE_STATE_ENABLED = "enabled"
+    FEATURE_STATE_DISABLED = "disabled"
+    FEATURE_STATE_FAILED = "failed"
+
+    def __init__(self, config_db, feature_state_table, device_config):
         self._config_db = config_db
+        self._feature_state_table = feature_state_table
         self._device_config = device_config
         self._cached_config = {}
         self.is_multi_npu = device_info.is_multi_npu()
 
     def handle(self, feature_name, op, feature_cfg):
         if not feature_cfg:
-            self._cached_config.pop(feature_name)
             syslog.syslog(syslog.LOG_INFO, "Deregistering feature {}".format(feature_name))
+            self._cached_config.pop(feature_name)
+            self._feature_state_table._del(feature_name)
             return
 
         feature = Feature(feature_name, feature_cfg, self._device_config)
@@ -268,7 +276,6 @@ class FeatureHandler(object):
         return True
 
     def update_feature_auto_restart(self, feature, feature_name):
-
         dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
         auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
 
@@ -356,7 +363,10 @@ class FeatureHandler(object):
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
                                     .format(feature.name, feature_suffixes[-1]))
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
+
+        self.set_feature_state(feature, self.FEATURE_STATE_ENABLED)
 
     def disable_feature(self, feature):
         cmds = []
@@ -378,10 +388,16 @@ class FeatureHandler(object):
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
                                     .format(feature.name, feature_suffixes[-1]))
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
+
+        self.set_feature_state(feature, self.FEATURE_STATE_DISABLED)
 
     def resync_feature_state(self, feature):
         self._config_db.mod_entry('FEATURE', feature.name, {'state': feature.state})
+
+    def set_feature_state(self, feature, state):
+        self._feature_state_table.set(feature.name, [('state', state)])
 
 
 class Iptables(object):
@@ -1142,12 +1158,15 @@ class HostConfigDaemon:
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
         self.dbconn = DBConnector(CFG_DB, 0)
+        self.state_db_conn = DBConnector(STATE_DB, 0)
         self.selector = Select()
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
 
         self.select = Select()
         self.callbacks = dict()
         self.subscriber_map = dict()
+
+        feature_state_table = Table(self.state_db_conn, 'FEATURE')
 
         # Load DEVICE metadata configurations
         self.device_config = {}
@@ -1161,7 +1180,7 @@ class HostConfigDaemon:
         self.iptables = Iptables()
 
         # Intialize Feature Handler
-        self.feature_handler = FeatureHandler(self.config_db, self.device_config)
+        self.feature_handler = FeatureHandler(self.config_db, feature_state_table, self.device_config)
         self.feature_handler.sync_state_field()
 
         # Initialize Ntp Config Handler
