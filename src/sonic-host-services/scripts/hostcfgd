@@ -194,27 +194,12 @@ class FeatureHandler(object):
             else:
                 self.resync_feature_state(self._cached_config[feature_name])
 
-    def update_all_features_config(self, feature_table):
-        for feature_name in feature_table.keys():
-            if not feature_name:
-                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
-                continue
-
-            feature = Feature(feature_name, feature_table[feature_name], self._device_config)
-            self._cached_config.setdefault(feature_name, feature)
-
-            self.update_feature_auto_restart(feature, feature_name)
-
-            self.update_feature_state(feature)
-            self.resync_feature_state(feature)
-
-    def sync_state_field(self):
+    def sync_state_field(self, feature_table):
         """
         Summary:
         Updates the state field in the FEATURE|* tables as the state field
         might have to be rendered based on DEVICE_METADATA table
         """
-        feature_table = self._config_db.get_table('FEATURE')
         for feature_name in feature_table.keys():
             if not feature_name:
                 syslog.syslog(syslog.LOG_WARNING, "Feature is None")
@@ -887,15 +872,13 @@ class KdumpCfg(object):
             memory = self.kdump_defaults["memory"]
             if data.get("memory") is not None:
                 memory = data.get("memory")
-            if data.get("memory") is not None:
-                run_cmd("sonic-kdump-config --memory " + memory)
+            run_cmd("sonic-kdump-config --memory " + memory)
 
             # Num dumps
             num_dumps = self.kdump_defaults["num_dumps"]
             if data.get("num_dumps") is not None:
                 num_dumps = data.get("num_dumps")
-            if data.get("num_dumps") is not None:
-                run_cmd("sonic-kdump-config --num_dumps " + num_dumps)
+            run_cmd("sonic-kdump-config --num_dumps " + num_dumps)
 
 class NtpCfg(object):
     """
@@ -913,10 +896,10 @@ class NtpCfg(object):
         syslog.syslog(syslog.LOG_INFO, "NtpCfg load ...")
 
         for row in ntp_global_conf:
-            self.ntp_global_update(row, ntp_global_conf[row], load=True)
+            self.ntp_global_update(row, ntp_global_conf[row], is_load=True)
 
         # Force reload on init
-        self.ntp_server_update(0, None, load=True)
+        self.ntp_server_update(0, None, is_load=True)
 
     def handle_ntp_source_intf_chg(self, intf_name):
         # if no ntp server configured, do nothing
@@ -931,7 +914,7 @@ class NtpCfg(object):
             cmd = 'systemctl restart ntp-config'
             run_cmd(cmd)
 
-    def ntp_global_update(self, key, data, load=False):
+    def ntp_global_update(self, key, data, is_load=False):
         syslog.syslog(syslog.LOG_INFO, 'NTP GLOBAL Update')
         orig_src = self.ntp_global.get('src_intf', '')
         orig_src_set = set(orig_src.split(";"))
@@ -945,7 +928,7 @@ class NtpCfg(object):
         self.ntp_global = data
 
         # If initial load don't restart daemon
-        if load: return
+        if is_load: return
 
         # check if ntp server configured, if not, do nothing
         if not self.ntp_servers:
@@ -963,11 +946,11 @@ class NtpCfg(object):
             cmd = 'service ntp restart'
             run_cmd(cmd)
 
-    def ntp_server_update(self, key, op, load=False):
+    def ntp_server_update(self, key, op, is_load=False):
         syslog.syslog(syslog.LOG_INFO, 'ntp server update key {}'.format(key))
 
         restart_config = False
-        if not load:
+        if not is_load:
             if op == "SET" and key not in self.ntp_servers:
                 restart_config = True
                 self.ntp_servers.add(key)
@@ -996,14 +979,12 @@ class HostConfigDaemon:
 
         # Initialize KDump Config and set the config to default if nothing is provided
         self.kdumpCfg = KdumpCfg(self.config_db)
-        self.kdumpCfg.load(self.config_db.get_table('KDUMP'))
 
         # Initialize IpTables
         self.iptables = Iptables()
 
         # Intialize Feature Handler
         self.feature_handler = FeatureHandler(self.config_db, self.device_config)
-        self.feature_handler.sync_state_field()
 
         # Initialize Ntp Config Handler
         self.ntpcfg = NtpCfg()
@@ -1024,14 +1005,16 @@ class HostConfigDaemon:
         lpbk_table = init_data['LOOPBACK_INTERFACE']
         ntp_server = init_data['NTP_SERVER']
         ntp_global = init_data['NTP']
+        kdump = init_data['KDUMP']
 
-        self.feature_handler.update_all_features_config(features)
+        self.feature_handler.sync_state_field(features)
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
         self.iptables.load(lpbk_table)
         self.ntpcfg.load(ntp_global, ntp_server)
+        self.kdumpCfg.load(kdump)
 
         try:
-            dev_meta = init_data['DEVICE_METADATA']
+            dev_meta = self.config_db.get_table('DEVICE_METADATA')
             if 'localhost' in dev_meta:
                 if 'hostname' in dev_meta['localhost']:
                     self.hostname_cache = dev_meta['localhost']['hostname']

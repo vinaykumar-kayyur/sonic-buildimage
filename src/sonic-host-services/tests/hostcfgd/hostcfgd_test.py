@@ -101,8 +101,8 @@ class TestHostcfgd(TestCase):
             feature_handler = hostcfgd.FeatureHandler(MockConfigDb(), device_config)
 
             # sync the state field and Handle Feature Updates
-            feature_handler.sync_state_field()
             features = MockConfigDb.CONFIG_DB['FEATURE']
+            feature_handler.sync_state_field(features)
             for key, fvs in features.items():
                 feature_handler.handle(key, 'SET', fvs)
 
@@ -274,7 +274,6 @@ class TestHostcfgdDaemon(TestCase):
         MockConfigDb.set_config_db(HOSTCFG_DAEMON_CFG_DB)
         daemon = hostcfgd.HostConfigDaemon()
         daemon.register_callbacks()
-        assert MockConfigDb.CONFIG_DB['KDUMP']['config']
         MockConfigDb.event_queue = [('KDUMP', 'config')]
         with mock.patch('hostcfgd.subprocess') as mocked_subprocess:
             popen_mock = mock.Mock()
