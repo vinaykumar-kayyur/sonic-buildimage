@@ -548,6 +548,7 @@ HOSTCFG_DAEMON_CFG_DB = {
         "localhost": {
             "subtype": "DualToR",
             "type": "ToRRouter",
+            "hostname": "SomeNewHostname"
         }
     }
 }
