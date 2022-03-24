@@ -2,9 +2,6 @@ try:
     import os
     import sys
     import datetime
-    import logging
-    import logging.config
-    import yaml
     import re
     import subprocess
 
@@ -42,21 +39,11 @@ _product_dict = {
 
 _EEPROM_SYMLINK = "/var/run/platform/eeprom/syseeprom"
 _EEPROM_STATUS = "/var/run/platform/eeprom/status"
-_EEPROM_EEPROM_PATH = "/var/run/platform/eeprom"
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
-        with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
-            config_dict = yaml.load(f, yaml.SafeLoader)
-            log_file = config_dict['handlers']['file']['filename']
-            self.file_check(log_file)
-            logging.config.dictConfig(config_dict)
-
-        self.path_check(_EEPROM_EEPROM_PATH)
-        self.file_check(_EEPROM_SYMLINK)
-        self.file_check(_EEPROM_STATUS)
-
-        open(_EEPROM_SYMLINK, 'a').close()
+        logfile_create(_EEPROM_SYMLINK)
+        logfile_create(_EEPROM_STATUS)
         with open(_EEPROM_STATUS, 'w') as f:
             f.write("initializing..")
 
@@ -153,21 +140,15 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def revision_str(self):
         return self.__tlv_get(self._TLV_CODE_LABEL_REVISION)
 
-    def file_check(self, file_name):
-        cmd_touch = ['touch', file_name]
-        cmd_chmod = ['chmod', '646', file_name]
-        if os.geteuid() != 0:
-            cmd_touch.insert(0, 'sudo')
-            cmd_chmod.insert(0, 'sudo')
-
-        if not os.path.isfile(file_name):
-            subprocess.check_output(cmd_touch)
-
-        if not os.access(file_name, os.W_OK):
-            subprocess.check_output(cmd_chmod)
-
-    def path_check(self, path):
-        cmd = ['mkdir', '-p', path]
+def logfile_create(path):
+    def run_cmd(cmd):
         if os.geteuid() != 0:
             cmd.insert(0, 'sudo')
         subprocess.check_output(cmd)
+
+    file_path = os.path.dirname(path)
+    if not os.path.exists(file_path):
+        run_cmd(['mkdir', '-p', file_path])
+    if not os.path.isfile(path):
+        run_cmd(['touch', path])
+    run_cmd(['chmod', '646', path])
