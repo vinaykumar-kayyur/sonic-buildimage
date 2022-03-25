@@ -2,9 +2,7 @@ module sonic-buffer-queue {
     namespace "http://github.com/Azure/sonic-buffer-queue";
     prefix bqueue;
 
-    import sonic-extension {
-        prefix sonic-ext;
-    }
+    yang-version 1.1;
 
     import sonic-port {
         prefix prt;
@@ -54,8 +52,13 @@ module sonic-buffer-queue {
 
                 leaf profile {
                     default 0;
-                    type leafref {
-                        path "/bpf:sonic-buffer-profile/bpf:BUFFER_PROFILE/bpf:BUFFER_PROFILE_LIST/bpf:name";
+                    type union {
+                        type leafref {
+                            path "/bpf:sonic-buffer-profile/bpf:BUFFER_PROFILE/bpf:BUFFER_PROFILE_LIST/bpf:name";
+                        }
+                        type string {
+                            pattern "NULL";
+                        }
                     }
                     description "Buffer Profile associated with Priority Queue for a port";
                 }
