@@ -275,7 +275,7 @@ class SFP(SfpOptoeBase):
         try:
             device_name = subprocess.check_output("ls /dev/mst/ | grep pciconf", universal_newlines=True, shell=True).strip()
         except subprocess.CalledProcessError as e:
-            logger.log_error('Failed to init mst PCI device')
+            logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
         return device_name
 
     @property
@@ -306,6 +306,10 @@ class SFP(SfpOptoeBase):
 
     # Read out any bytes from any offset
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
+        if offset + num_bytes > SFP_VENDOR_PAGE_START:
+            logger.log_error("Error mismatch between page size and bytes to read (offset: {} num_bytes: {}) ".format(offset, num_bytes))
+            return None
+
         eeprom_raw = []
         ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
         try:
@@ -324,6 +328,7 @@ class SFP(SfpOptoeBase):
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
         return bytearray(eeprom_raw)
 
+    # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
         """
         Read eeprom specfic bytes beginning from a random offset with size as num_bytes
@@ -331,26 +336,26 @@ class SFP(SfpOptoeBase):
             bytearray, if raw sequence of bytes are read correctly from the offset of size num_bytes
             None, if the read_eeprom fails
         Example:
-        mlxreg -d /dev/mst/mt52100_pciconf0 --reg_name MCIA --indexes slot_index=0,module=1,device_address=148,page_number=0,i2c_device_address=0x50,size=16,bank_number=0 -g
-        Sending access register...
-        Field Name            | Data
-        ===================================
-        status                | 0x00000000
-        slot_index            | 0x00000000
-        module                | 0x00000001
-        l                     | 0x00000000
-        device_address        | 0x00000094
-        page_number           | 0x00000000
-        i2c_device_address    | 0x00000050
-        size                  | 0x00000010
-        bank_number           | 0x00000000
-        dword[0]              | 0x43726564
-        dword[1]              | 0x6f202020
-        dword[2]              | 0x20202020
-        dword[3]              | 0x20202020
-        dword[4]              | 0x00000000
-        dword[5]              | 0x00000000
-        ....
+            mlxreg -d /dev/mst/mt52100_pciconf0 --reg_name MCIA --indexes slot_index=0,module=1,device_address=148,page_number=0,i2c_device_address=0x50,size=16,bank_number=0 -g
+            Sending access register...
+            Field Name            | Data
+            ===================================
+            status                | 0x00000000
+            slot_index            | 0x00000000
+            module                | 0x00000001
+            l                     | 0x00000000
+            device_address        | 0x00000094
+            page_number           | 0x00000000
+            i2c_device_address    | 0x00000050
+            size                  | 0x00000010
+            bank_number           | 0x00000000
+            dword[0]              | 0x43726564
+            dword[1]              | 0x6f202020
+            dword[2]              | 0x20202020
+            dword[3]              | 0x20202020
+            dword[4]              | 0x00000000
+            dword[5]              | 0x00000000
+            ....
         16 bytes to read from dword -> 0x437265646f2020202020202020202020 -> Credo
         """
         # recalculate offset and page. Use 'ethtool' if there is no need to read vendor pages
@@ -368,7 +373,7 @@ class SFP(SfpOptoeBase):
         read_output = mlxreg_mngr.read_mlxred_eeprom(device_address, page, num_bytes)
         return mlxreg_mngr.parse_mlxreg_read_output(read_output, num_bytes)
 
-    # Read out any bytes from any offset
+    # write eeprom specfic bytes beginning from offset with size as num_bytes
     def write_eeprom(self, offset, num_bytes, write_buffer):
         """
         write eeprom specfic bytes beginning from a random offset with size as num_bytes
@@ -376,7 +381,7 @@ class SFP(SfpOptoeBase):
         Returns:
             Boolean, true if the write succeeded and false if it did not succeed.
         Example:
-        mlxreg -d /dev/mst/mt52100_pciconf0 --reg_name MCIA --indexes slot_index=0,module=1,device_address=154,page_number=5,i2c_device_address=0x50,size=1,bank_number=0 --set dword[0]=0x01000000 -y
+            mlxreg -d /dev/mst/mt52100_pciconf0 --reg_name MCIA --indexes slot_index=0,module=1,device_address=154,page_number=5,i2c_device_address=0x50,size=1,bank_number=0 --set dword[0]=0x01000000 -y
         """
         if num_bytes != len(write_buffer):
             logger.log_error("Error mismatch between buffer length and number of bytes to be written")
