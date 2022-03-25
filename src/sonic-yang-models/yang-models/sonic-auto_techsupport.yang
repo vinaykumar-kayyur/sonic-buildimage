@@ -67,9 +67,9 @@ module sonic-auto_techsupport {
                     }
                     
                     leaf min_available_mem {
-                        description "Minimum free memory amount in Kb when techsupport will be executed";
+                        description "Minimum Free memory (in MB) that should be available for the techsupport execution to start";
                         type uint32;
-                        default 204800;
+                        default 200;
                     }
                     
                     leaf since {
