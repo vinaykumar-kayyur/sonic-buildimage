@@ -52,3 +52,7 @@ class MockConfigDb(object):
         for e in MockConfigDb.event_queue:
             self.handlers[e[0]](e[0], e[1], self.get_entry(e[0], e[1]))
 
+
+class MockDBConnector():
+    def __init__(self, db, val):
+        pass
