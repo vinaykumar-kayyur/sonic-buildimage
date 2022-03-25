@@ -233,6 +233,20 @@ start() {
         source $ASIC_CONF
     fi
 
+    {%- if docker_container_name == "gbsyncd" %}
+    GBSYNCD_CONF=/usr/share/sonic/device/$PLATFORM/gbsyncd.ini
+    GBSYNCD_PLATFORM=gbsyncd-vs
+    if [ -f "$GBSYNCD_CONF" ]; then
+        while IFS="=" read -r key value; do
+            case "$key" in
+                platform)
+                    GBSYNCD_PLATFORM="$value"
+                    ;;
+            esac
+        done < "$GBSYNCD_CONF"
+    fi
+    {%- endif %}
+
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
     HWSKU=""
@@ -457,7 +471,9 @@ start() {
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
         --env "NAMESPACE_COUNT"=$NUM_ASIC \
         --name=$DOCKERNAME \
-{%- if docker_image_name is defined %}
+{%- if docker_container_name == "gbsyncd" %}
+        "docker-$GBSYNCD_PLATFORM":latest \
+{%- elif docker_image_name is defined %}
         {{docker_image_name}}:latest \
 {%- else %}
         {{docker_image_id}} \
