@@ -13,7 +13,8 @@ try:
     from sonic_platform.psu import psu_list_get
     from sonic_platform.fan_drawer import fan_drawer_list_get
     from sonic_platform.thermal import thermal_list_get
-    from eeprom import Eeprom, logfile_create
+    from eeprom import Eeprom
+    from platform_utils import file_create
 
     from sonic_platform.platform_thrift_client import pltfm_mgr_ready
     from sonic_platform.platform_thrift_client import thrift_try
@@ -53,7 +54,7 @@ class Chassis(ChassisBase):
 
         with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
             config_dict = yaml.load(f, yaml.SafeLoader)
-            logfile_create(config_dict['handlers']['file']['filename'])
+            file_create(config_dict['handlers']['file']['filename'], '646')
             logging.config.dictConfig(config_dict)
 
     @property

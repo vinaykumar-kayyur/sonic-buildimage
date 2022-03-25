@@ -3,7 +3,6 @@ try:
     import sys
     import datetime
     import re
-    import subprocess
 
     sys.path.append(os.path.dirname(__file__))
 
@@ -14,6 +13,7 @@ try:
 
     from sonic_platform_base.sonic_eeprom import eeprom_base
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
+    from platform_utils import file_create
 
     from platform_thrift_client import thrift_try
 except ImportError as e:
@@ -42,8 +42,8 @@ _EEPROM_STATUS = "/var/run/platform/eeprom/status"
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
-        logfile_create(_EEPROM_SYMLINK)
-        logfile_create(_EEPROM_STATUS)
+        file_create(_EEPROM_SYMLINK, '646')
+        file_create(_EEPROM_STATUS, '646')
         with open(_EEPROM_STATUS, 'w') as f:
             f.write("initializing..")
 
@@ -140,15 +140,3 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def revision_str(self):
         return self.__tlv_get(self._TLV_CODE_LABEL_REVISION)
 
-def logfile_create(path):
-    def run_cmd(cmd):
-        if os.geteuid() != 0:
-            cmd.insert(0, 'sudo')
-        subprocess.check_output(cmd)
-
-    file_path = os.path.dirname(path)
-    if not os.path.exists(file_path):
-        run_cmd(['mkdir', '-p', file_path])
-    if not os.path.isfile(path):
-        run_cmd(['touch', path])
-    run_cmd(['chmod', '646', path])
