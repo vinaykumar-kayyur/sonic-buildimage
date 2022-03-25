@@ -1,0 +1,22 @@
+jobs:
+- job: Build
+  timeoutInMinutes: 20
+  pool: sonicbld
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+  - script: |
+      set -ex
+      BLDENV=bullseye make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
+    displayName: Make configure
+  - script: |
+      set -ex
+      LIBNL3_VERSION_BASE=$(grep "LIBNL3_VERSION_BASE =" rules/libnl3.mk | awk '{print$3}')
+      LIBNL3_VERSION=$(grep "LIBNL3_VERSION =" rules/libnl3.mk | awk '{print$3}' | sed -e "s/(//" -e "s/)//" -e "s/\\$//" -e "s/LIBNL3_VERSION_BASE/$LIBNL3_VERSION_BASE/")
+
+      BLDENV=bullseye make -f Makefile.work target/debs/bullseye/libnl-3-200_${LIBNL3_VERSION}_amd64.deb
+      cp -r target $(Build.ArtifactStagingDirectory)
+    displayName: Make libnl packages
+  - publish: $(Build.ArtifactStagingDirectory)
+    artifact: common-lib
