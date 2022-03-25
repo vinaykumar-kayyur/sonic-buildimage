@@ -110,6 +110,15 @@
             },
             {
                 "name": "psu_driver-i2c-7-59:psu2-temp3"
+            },
+            {
+                "name": "psu_driver-i2c-7-5a:psu1-temp1"
+            },
+            {
+                "name": "psu_driver-i2c-7-5a:psu1-temp2"
+            },
+            {
+                "name": "psu_driver-i2c-7-5a:psu1-temp3"
             }
         ],
         "sfps": [
