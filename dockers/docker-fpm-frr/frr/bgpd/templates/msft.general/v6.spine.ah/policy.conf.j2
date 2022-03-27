@@ -1,0 +1,55 @@
+!
+! template: bgpd/templates/msft.general/v6.spine.ah/policy.conf.j2
+!
+bgp community-list standard INREGION_LEAK_COMMUNITY permit 8075:54002
+bgp community-list standard FABRIC_INFRA_COMMUNITY permit 8075:316
+bgp community-list standard NO_EXPORT permit no-export
+!
+bgp as-path access-list WAN_ASNS permit _8075_
+bgp as-path access-list WAN_ASNS permit _8074_
+bgp as-path access-list WAN_ASNS permit _8072_
+bgp as-path access-list RNG_ASNS permit _64915_
+bgp as-path access-list RNG_ASNS permit _64945_
+!
+ipv6 prefix-list DEFAULT_IPV6 permit ::/0
+!
+route-map FROM_AH_V6 deny 100
+  match ip address prefix-list DEFAULT_IPV6
+!
+route-map FROM_AH_V6 deny 200
+  match as-path WAN_ASNS
+!
+route-map FROM_AH_V6 deny 300
+  match as-path RNG_ASNS
+!
+route-map FROM_RH_V6 permit 400
+ set ipv6 next-hop prefer-global
+ on-match next
+!
+route-map FROM_AH_V6 permit 500
+  match community FABRIC_INFRA_COMMUNITY
+!
+route-map FROM_AH_V6 permit 600
+  match community NO_EXPORT
+  set local-preference 80
+!
+route-map FROM_AH_V6 permit 1000
+  set local-preference 80
+  set community no-export additive
+!
+route-map TO_AH_V6 permit 100
+  match ip address prefix-list DEFAULT_IPV6
+!
+route-map TO_AH_V6 deny 200
+  match as-path WAN_ASNS
+!
+route-map TO_AH_V6 deny 300
+  match as-path RNG_ASNS
+!
+route-map TO_AH_V6 deny 400
+  match community INREGION_LEAK_COMMUNITY
+!
+route-map TO_AH_V6 permit 1000
+!
+! end of template: bgpd/templates/msft.general/v6.spine.ah/policy.conf.j2
+!

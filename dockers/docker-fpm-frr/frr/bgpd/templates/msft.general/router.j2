@@ -48,6 +48,14 @@
 {%         else %}
 {%                 include path_template % "v4.leaf.tor.all" %}
 {%         endif %}
+{%     elif device_type in ['SpineRouter'] %}
+{%         if neighbor_type == 'RegionalHub' %}
+{%                 include path_template % "v4.spine.rh" %}
+{%         elif neighbor_type == 'AZNGHub' %}
+{%                 include path_template % "v4.spine.ah" %}
+{%         elif neighbor_type == 'LeafRouter' %}
+{%                 include path_template % "v4.spine.leaf" %}
+{%         endif %}
 {%     endif %}
 {% endif %}
 {% if neighbor_addr | ipv6 %}
@@ -84,6 +92,14 @@
 {%             endif %}
 {%         else %}
 {%                 include path_template % "v6.leaf.tor.all" %}
+{%         endif %}
+{%     elif device_type in ['SpineRouter'] %}
+{%         if neighbor_type == 'RegionalHub' %}
+{%                 include path_template % "v6.spine.rh" %}
+{%         elif neighbor_type == 'AZNGHub' %}
+{%                 include path_template % "v6.spine.ah" %}
+{%         elif neighbor_type == 'LeafRouter' %}
+{%                 include path_template % "v6.spine.leaf" %}
 {%         endif %}
 {%     endif %}
 {% endif %}
