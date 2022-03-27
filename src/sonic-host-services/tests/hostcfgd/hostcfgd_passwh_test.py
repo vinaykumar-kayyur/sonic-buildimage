@@ -36,6 +36,7 @@ hostcfgd.ConfigDBConnector = MockConfigDb
 hostcfgd.SubscriberStateTable = MockSubscriberStateTable
 hostcfgd.Select = MockSelect
 hostcfgd.DBConnector = MockDBConnector
+hostcfgd.Table = mock.Mock()
 
 AGE_DICT = { 'MAX_DAYS': {'REGEX_DAYS': r'^PASS_MAX_DAYS[ \t]*(?P<max_days>\d*)', 'DAYS': 'max_days', 'CHAGE_FLAG': '-M '},
             'WARN_DAYS': {'REGEX_DAYS': r'^PASS_WARN_AGE[ \t]*(?P<warn_days>\d*)', 'DAYS': 'warn_days', 'CHAGE_FLAG': '-W '}
