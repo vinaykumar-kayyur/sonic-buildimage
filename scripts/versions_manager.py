@@ -174,6 +174,19 @@ class VersionModule:
                 self.components.append(tmp_component)
         self.adjust()
 
+    def get_config_module_from_source(self, source_path, dist, arch):
+        if self.is_individule_version():
+            return self
+        default_module_path = VersionModule.get_module_path_by_name(source_path, DEFAULT_MODULE)
+        default_module = VersionModule()
+        default_module.load(default_module_path, filter_dist=dist, filter_arch=arch)
+        if self.name == 'host-image':
+            base_module_path = VersionModule.get_module_path_by_name(source_path, 'host-base-image')
+            base_module = VersionModule()
+            base_module.load(base_module_path, filter_dist=args.distribution, filter_arch=args.architecture)
+            default_module.overwrite(base_module, True, True)
+        return self.get_config_module(default_module, dist, arch)
+
     def get_config_module(self, default_module, dist, arch):
         if self.is_individule_version():
             return self
@@ -661,10 +674,7 @@ class VersionManagerCommands:
             os.makedirs(args.target_path)
         module = VersionModule()
         module.load(module_path, filter_dist=args.distribution, filter_arch=args.architecture)
-        default_module_path = VersionModule.get_module_path_by_name(args.source_path, DEFAULT_MODULE)
-        default_module = VersionModule()
-        default_module.load(default_module_path, filter_dist=args.distribution, filter_arch=args.architecture)
-        config = module.get_config_module(default_module, args.distribution, args.architecture)
+        config = module.get_config_module_from_source(args.source_path, args.distribution, args.architecture)
         config.clean_info(force=True)
         config.dump(args.target_path, config=True, priority=args.priority)
 
