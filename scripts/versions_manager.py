@@ -183,7 +183,7 @@ class VersionModule:
         if self.name == 'host-image':
             base_module_path = VersionModule.get_module_path_by_name(source_path, 'host-base-image')
             base_module = VersionModule()
-            base_module.load(base_module_path, filter_dist=args.distribution, filter_arch=args.architecture)
+            base_module.load(base_module_path, filter_dist=dist, filter_arch=arch)
             default_module.overwrite(base_module, True, True)
         return self.get_config_module(default_module, dist, arch)
 
