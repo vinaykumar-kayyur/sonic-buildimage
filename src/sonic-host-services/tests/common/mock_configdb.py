@@ -48,7 +48,7 @@ class MockConfigDb(object):
     def subscribe(self, table_name, callback):
         self.handlers[table_name] = callback
 
-    def listen(self, init=None):
+    def listen(self, init_data_handler=None):
         for e in MockConfigDb.event_queue:
             self.handlers[e[0]](e[0], e[1], self.get_entry(e[0], e[1]))
 
