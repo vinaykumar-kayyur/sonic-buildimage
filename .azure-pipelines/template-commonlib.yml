@@ -1,0 +1,28 @@
+steps:
+- checkout: self
+  clean: true
+  submodules: recursive
+- script: |
+    set -ex
+    case $(Build.SourceBranchName) in
+      202012 | 202106)
+        bldenv=buster
+        ;;
+      *)
+        bldenv=bullseye
+        ;;
+    esac
+    echo "##vso[task.setvariable variable=bldenv;]$bldenv"
+- script: |
+    set -ex
+    BLDENV=$(bldenv) make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
+  displayName: Make configure
+- script: |
+    set -ex
+    LIBNL3_VERSION_BASE=$(grep "LIBNL3_VERSION_BASE =" rules/libnl3.mk | awk '{print$3}')
+    LIBNL3_VERSION=$(grep "LIBNL3_VERSION =" rules/libnl3.mk | awk '{print$3}' | sed -e "s/(//" -e "s/)//" -e "s/\\$//" -e "s/LIBNL3_VERSION_BASE/$LIBNL3_VERSION_BASE/")
+    BLDENV=$(bldenv) make -f Makefile.work target/debs/$(bldenv)/libnl-3-200_${LIBNL3_VERSION}_amd64.deb ENABLE_DOCKER_BASE_PULL=y
+    find target -name *.deb | xargs -i cp {} $(Build.ArtifactStagingDirectory)
+  displayName: Make common lib packages
+- publish: $(Build.ArtifactStagingDirectory)
+  artifact: common-lib
