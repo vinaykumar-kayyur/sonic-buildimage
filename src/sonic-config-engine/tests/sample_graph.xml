@@ -88,7 +88,7 @@
         </IPInterface>
         <IPInterface>
           <Name i:nil="true"/>
-          <AttachTo>Ethernet1</AttachTo>
+          <AttachTo>Ethernet4</AttachTo>
           <Prefix>10.10.2.13/30</Prefix>
         </IPInterface>
       </IPInterfaces>
