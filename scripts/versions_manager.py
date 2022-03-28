@@ -180,11 +180,12 @@ class VersionModule:
         default_module_path = VersionModule.get_module_path_by_name(source_path, DEFAULT_MODULE)
         default_module = VersionModule()
         default_module.load(default_module_path, filter_dist=dist, filter_arch=arch)
-        module = default_module.clone(exclude_ctypes=DEFAULT_OVERWRITE_COMPONENTS)
+        module = default_module
         if self.name == 'host-image':
             base_module_path = VersionModule.get_module_path_by_name(source_path, 'host-base-image')
             base_module = VersionModule()
             base_module.load(base_module_path, filter_dist=dist, filter_arch=arch)
+            module = default_module.clone(exclude_ctypes=DEFAULT_OVERWRITE_COMPONENTS)
             module.overwrite(base_module, True, True)
         elif not self.is_aggregatable_module(self.name):
             module = default_module.clone(exclude_ctypes=DEFAULT_OVERWRITE_COMPONENTS)
