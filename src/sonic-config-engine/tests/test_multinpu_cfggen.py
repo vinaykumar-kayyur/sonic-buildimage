@@ -25,6 +25,7 @@ class TestMultiNpuCfgGen(TestCase):
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_data_dir, 'sample-minigraph.xml')
         self.sample_graph1 = os.path.join(self.test_data_dir, 'sample-minigraph-noportchannel.xml')
+        self.sample_port_config = os.path.join(self.test_data_dir, 'sample_port_config.ini')
         self.port_config = []
         for asic in range(NUM_ASIC):
             self.port_config.append(os.path.join(self.test_data_dir, "sample_port_config-{}.ini".format(asic)))
@@ -80,7 +81,7 @@ class TestMultiNpuCfgGen(TestCase):
         self.assertEqual(output, '')
 
     def test_hwsku(self):
-        argument = "-v \"DEVICE_METADATA[\'localhost\'][\'hwsku\']\" -m \"{}\" -p \"{}\"".format(self.sample_graph, self.port_config[0])
+        argument = "-v \"DEVICE_METADATA[\'localhost\'][\'hwsku\']\" -m \"{}\" -p \"{}\"".format(self.sample_graph, self.sample_port_config)
         output = self.run_script(argument)
         self.assertEqual(output.strip(), SKU)
         argument = "-v \"DEVICE_METADATA[\'localhost\'][\'hwsku\']\" -m \"{}\"".format(self.sample_graph)
@@ -89,7 +90,7 @@ class TestMultiNpuCfgGen(TestCase):
             self.assertEqual(output.strip(), SKU)
 
     def test_print_data(self):
-        argument = "-m \"{}\" -p \"{}\" --print-data".format(self.sample_graph, self.port_config[0])
+        argument = "-m \"{}\" -p \"{}\" --print-data".format(self.sample_graph, self.sample_port_config)
         output = self.run_script(argument)
         self.assertGreater(len(output.strip()) , 0)
         argument = "-m \"{}\" --print-data".format(self.sample_graph)
@@ -122,7 +123,7 @@ class TestMultiNpuCfgGen(TestCase):
             self.assertEqual(output.strip(), 'value1\nvalue2')
 
     def test_metadata_tacacs(self):
-        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config[0] +  '" --var-json "TACPLUS_SERVER"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.sample_port_config +  '" --var-json "TACPLUS_SERVER"'
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {'123.46.98.21': {'priority': '1', 'tcp_port': '49'}})
         #TACPLUS_SERVER not present in the asic configuration.
@@ -132,7 +133,7 @@ class TestMultiNpuCfgGen(TestCase):
             self.assertDictEqual(output, {})
 
     def test_metadata_ntp(self):
-        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config[0]  + '" --var-json "NTP_SERVER"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.sample_port_config  + '" --var-json "NTP_SERVER"'
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {'17.39.1.130': {}, '17.39.1.129': {}})
         #NTP data is present only in the host config
@@ -143,7 +144,7 @@ class TestMultiNpuCfgGen(TestCase):
             self.assertDictEqual(output, {})
 
     def test_mgmt_port(self):
-        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config[0] +  '" --var-json "MGMT_PORT"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.sample_port_config +  '" --var-json "MGMT_PORT"'
         print(self.run_script(argument))
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {'eth0': {'alias': 'eth0', 'admin_status': 'up'}})
@@ -221,17 +222,17 @@ class TestMultiNpuCfgGen(TestCase):
              "Ethernet-BP12": { "admin_status": "up",  "alias": "Eth7-ASIC0",  "asic_port_name": "Eth7-ASIC0",  "description": "ASIC3:Eth1-ASIC3",  "index": "3",  "lanes": "25,26,27,28",  "mtu": "9100", "tpid": "0x8100", "pfc_asym": "off",  "role": "Int",  "speed": "40000" }})
 
     def test_frontend_asic_ports_config_db(self):
-        argument = "-m {} -n asic0 --var-json \"PORT\"".format(self.sample_graph)
+        argument = "-m {} -p {} -n asic0 --var-json \"PORT\"".format(self.sample_graph, self.port_config[0])
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output,
-                {"Ethernet0": { "admin_status": "up",  "alias": "Ethernet1/1",  "asic_port_name": "Eth0-ASIC0",  "description": "01T2:Ethernet1:config_db",  "index": "0",  "lanes": "33,34,35,36",   "mtu": "9100", "tpid": "0x8100",   "pfc_asym": "off",  "role": "Ext",  "speed": "40000", "autoneg": "on" },
-                "Ethernet4": { "admin_status": "up",  "alias": "Ethernet1/2",  "asic_port_name": "Eth1-ASIC0",  "description": "01T2:Ethernet2:config_db",  "index": "1",  "lanes": "29,30,31,32",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000", "autoneg": "on" },
-                "Ethernet8": { "admin_status": "up", "alias": "Ethernet1/3",  "asic_port_name": "Eth2-ASIC0",  "description": "Ethernet1/3:config_db",  "index": "2",  "lanes": "41,42,43,44",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" },
-                "Ethernet12": { "admin_status": "up", "alias": "Ethernet1/4",  "asic_port_name": "Eth3-ASIC0",  "description": "Ethernet1/4:config_db",  "index": "3",  "lanes": "37,38,39,40",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" },
-                "Ethernet-BP0": { "admin_status": "up",  "alias": "Eth4-ASIC0",  "asic_port_name": "Eth4-ASIC0",  "description": "ASIC2:Eth0-ASIC2:config_db",  "index": "0",  "lanes": "13,14,15,16",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" },
-                    "Ethernet-BP4": { "admin_status": "up",  "alias": "Eth5-ASIC0",  "asic_port_name": "Eth5-ASIC0",  "description": "ASIC2:Eth1-ASIC2:config_db",  "index": "1",  "lanes": "17,18,19,20",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" },
-                    "Ethernet-BP8": { "admin_status": "up",  "alias": "Eth6-ASIC0",  "asic_port_name": "Eth6-ASIC0",  "description": "ASIC3:Eth0-ASIC3:config_db",  "index": "2",  "lanes": "21,22,23,24",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" },
-                    "Ethernet-BP12": { "admin_status": "up",  "alias": "Eth7-ASIC0",  "asic_port_name": "Eth7-ASIC0",  "description": "ASIC3:Eth1-ASIC3:config_db",  "index": "3",  "lanes": "25,26,27,28",   "mtu": "9100", "tpid": "0x8100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" }})
+                {'Ethernet0': {'lanes': '33,34,35,36', 'speed': '40000', 'alias': 'Ethernet1/1', 'index': '0', 'asic_port_name': 'Eth0-ASIC0', 'role': 'Ext', 'autoneg': 'on', 'description': '01T2:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},
+                'Ethernet4': {'lanes': '29,30,31,32', 'speed': '40000', 'alias': 'Ethernet1/2', 'index': '1', 'asic_port_name': 'Eth1-ASIC0', 'role': 'Ext', 'autoneg': 'on', 'description': '01T2:Ethernet2', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},
+                'Ethernet8': {'lanes': '41,42,43,44', 'speed': '40000', 'alias': 'Ethernet1/3', 'index': '2', 'asic_port_name': 'Eth2-ASIC0', 'role': 'Ext', 'description': 'Ethernet1/3', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'},
+                'Ethernet12': {'lanes': '37,38,39,40', 'speed': '40000', 'alias': 'Ethernet1/4', 'index': '3', 'asic_port_name': 'Eth3-ASIC0', 'role': 'Ext', 'description': 'Ethernet1/4', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'},
+                'Ethernet-BP0': {'lanes': '13,14,15,16', 'speed': '40000', 'alias': 'Eth4-ASIC0', 'index': '0', 'asic_port_name': 'Eth4-ASIC0', 'role': 'Int', 'description': 'ASIC2:Eth0-ASIC2', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},
+                    'Ethernet-BP4': {'lanes': '17,18,19,20', 'speed': '40000', 'alias': 'Eth5-ASIC0', 'index': '1', 'asic_port_name': 'Eth5-ASIC0', 'role': 'Int', 'description': 'ASIC2:Eth1-ASIC2', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},
+                    'Ethernet-BP8': {'lanes': '21,22,23,24', 'speed': '40000', 'alias': 'Eth6-ASIC0', 'index': '2', 'asic_port_name': 'Eth6-ASIC0', 'role': 'Int', 'description': 'ASIC3:Eth0-ASIC3', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},
+                    'Ethernet-BP12': {'lanes': '25,26,27,28', 'speed': '40000', 'alias': 'Eth7-ASIC0', 'index': '3', 'asic_port_name': 'Eth7-ASIC0', 'role': 'Int', 'description': 'ASIC3:Eth1-ASIC3', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}})
 
     def test_frontend_asic_device_neigh(self):
         argument = "-m {} -p {} -n asic0 --var-json \"DEVICE_NEIGHBOR\"".format(self.sample_graph, self.port_config[0])
@@ -303,22 +304,22 @@ class TestMultiNpuCfgGen(TestCase):
                 self.assertEqual(output['localhost']['sub_role'], 'BackEnd')
 
     def test_global_asic_acl(self):
-        argument = "-m {} -p {}  --var-json \"ACL_TABLE\"".format(self.sample_graph, self.port_config[0])
+        argument = "-m {} -p {}  --var-json \"ACL_TABLE\"".format(self.sample_graph, self.sample_port_config)
         output = json.loads(self.run_script(argument))
         print(output)
         self.assertDictEqual(output, {\
                              'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']},
-                             'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['PortChannel0002', 'Ethernet8', 'Ethernet12'], 'type': 'MIRROR'},
-                             'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['PortChannel0002', 'Ethernet8', 'Ethernet12'], 'type': 'MIRRORV6'},
+                             'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008', 'Ethernet8', 'Ethernet12', 'Ethernet24', 'Ethernet28'], 'type': 'MIRROR'},
+                             'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008', 'Ethernet8', 'Ethernet12', 'Ethernet24', 'Ethernet28'], 'type': 'MIRRORV6'},
                              'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']},
                              'DATAACL': {'policy_desc': 'DATAACL', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008'], 'type': 'L3'}})
     def test_global_asic_acl1(self):
-        argument = "-m {} -p {} --var-json \"ACL_TABLE\"".format(self.sample_graph1, self.port_config[0])
+        argument = "-m {} -p {} --var-json \"ACL_TABLE\"".format(self.sample_graph1, self.sample_port_config)
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {\
                              'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']},
-                             'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12'], 'type': 'MIRROR'},
-                             'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12'], 'type': 'MIRRORV6'},
+                             'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12', 'Ethernet16', 'Ethernet20', 'Ethernet24', 'Ethernet28'], 'type': 'MIRROR'},
+                             'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12', 'Ethernet16', 'Ethernet20', 'Ethernet24', 'Ethernet28'], 'type': 'MIRRORV6'},
                              'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']}})
 
 
@@ -354,7 +355,7 @@ class TestMultiNpuCfgGen(TestCase):
 
 
     def test_loopback_intfs(self):
-        argument = "-m {} -p {} --var-json \"LOOPBACK_INTERFACE\"".format(self.sample_graph, self.port_config[0])
+        argument = "-m {} -p {} --var-json \"LOOPBACK_INTERFACE\"".format(self.sample_graph, self.sample_port_config)
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {\
                 "Loopback0": {},
