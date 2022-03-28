@@ -12,10 +12,7 @@ steps:
         bldenv=bullseye
         ;;
     esac
-    echo "##vso[task.setvariable variable=bldenv;]$bldenv"
-- script: |
-    set -ex
-    BLDENV=$(bldenv) make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
+    BLDENV=$bldenv make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
   displayName: Make configure
 - script: |
     set -ex
