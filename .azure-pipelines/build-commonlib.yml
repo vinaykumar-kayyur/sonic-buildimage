@@ -15,10 +15,5 @@ resources:
     ref: master
     endpoint: build
 
-pool: sonicbld
-
 jobs:
-- job: Build
-  timeoutInMinutes: 120
-  steps:
-  - template: .azure-pipelines/template-commonlib.yml@buildimage
+- template: .azure-pipelines/template-commonlib.yml@buildimage
