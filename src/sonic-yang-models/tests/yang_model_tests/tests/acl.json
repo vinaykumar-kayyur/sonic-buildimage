@@ -109,5 +109,8 @@
     "ACL_RULE_L2_INVALID_ETHER_IN_DECIMAL": {
         "desc": "Configure invalid ethertype in decimal format.",
         "eStrKey" : "Pattern"
+    },
+    "ACL_PACKET_ACTION_VALIDATE_VALUE_ACCEPT": {
+        "desc": "Configure CTRLPLANE with proper action ACCEPT."
     }
 }
