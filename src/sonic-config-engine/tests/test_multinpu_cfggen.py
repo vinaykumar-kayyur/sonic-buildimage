@@ -145,7 +145,6 @@ class TestMultiNpuCfgGen(TestCase):
 
     def test_mgmt_port(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.sample_port_config +  '" --var-json "MGMT_PORT"'
-        print(self.run_script(argument))
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {'eth0': {'alias': 'eth0', 'admin_status': 'up'}})
         argument = '-m "' + self.sample_graph +  '" --var-json "MGMT_PORT"'
@@ -306,7 +305,6 @@ class TestMultiNpuCfgGen(TestCase):
     def test_global_asic_acl(self):
         argument = "-m {} -p {}  --var-json \"ACL_TABLE\"".format(self.sample_graph, self.sample_port_config)
         output = json.loads(self.run_script(argument))
-        print(output)
         self.assertDictEqual(output, {\
                              'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']},
                              'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008', 'Ethernet8', 'Ethernet12', 'Ethernet24', 'Ethernet28'], 'type': 'MIRROR'},
