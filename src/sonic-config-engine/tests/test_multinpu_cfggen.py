@@ -316,10 +316,10 @@ class TestMultiNpuCfgGen(TestCase):
         argument = "-m {} -p {} --var-json \"ACL_TABLE\"".format(self.sample_graph1, self.sample_port_config)
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {\
-                             u'EVERFLOW': {u'policy_desc': u'EVERFLOW', u'type': u'MIRROR', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28'], u'stage': u'ingress'},
-                             u'SNMP_ACL': {u'services': [u'SNMP'], u'type': u'CTRLPLANE', u'policy_desc': u'SNMP_ACL', u'stage': u'ingress'},
-                             u'SSH_ONLY': {u'services': [u'SSH'], u'type': u'CTRLPLANE', u'policy_desc': u'SSH_ONLY', u'stage': u'ingress'},
-                             u'EVERFLOWV6': {u'policy_desc': u'EVERFLOWV6', u'type': u'MIRRORV6', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28'], u'stage': u'ingress'}})
+                             u'EVERFLOW': {u'stage': u'ingress', u'type': u'MIRROR', u'policy_desc': u'EVERFLOW', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28']},
+                             u'SNMP_ACL': {u'services': [u'SNMP'], u'stage': u'ingress', u'type': u'CTRLPLANE', u'policy_desc': u'SNMP_ACL'},
+                             u'SSH_ONLY': {u'services': [u'SSH'], u'stage': u'ingress', u'type': u'CTRLPLANE', u'policy_desc': u'SSH_ONLY'},
+                             u'EVERFLOWV6': {u'stage': u'ingress', u'type': u'MIRRORV6', u'policy_desc': u'EVERFLOWV6', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28']}})
 
     def test_front_end_asic_acl(self):
         argument = "-m {} -p {} -n asic0 --var-json \"ACL_TABLE\"".format(self.sample_graph, self.port_config[0])
