@@ -214,8 +214,11 @@ class FeatureHandler(object):
                 continue
 
             feature = Feature(feature_name, feature_table[feature_name], self._device_config)
-            if not feature.compare_state(feature_name, feature_table.get(feature_name, {})):
-                self.resync_feature_state(feature)
+
+            self._cached_config.setdefault(feature_name, feature)
+            self.update_feature_auto_restart(feature, feature_name)
+            self.update_feature_state(feature)
+            self.resync_feature_state(feature)
 
     def update_feature_state(self, feature):
         cached_feature = self._cached_config[feature.name]
@@ -1169,7 +1172,7 @@ class HostConfigDaemon:
                       "systemctl has finished initialization -- proceeding ...")
 
     def start(self):
-        self.config_db.listen(init=self.load)
+        self.config_db.listen(init_data_handler=self.load)
 
 
 def main():
