@@ -356,7 +356,7 @@ def get_platform_info():
     hw_info_dict['asic_count'] = get_num_asics()
 
     try:
-        config_db = ConfigDBConnector()
+        config_db = ConfigDBConnector(use_unix_socket_path=True)
         config_db.connect()
 
         metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
