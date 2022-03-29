@@ -17,6 +17,7 @@ jobs:
           ;;
       esac
       BLDENV=$bldenv make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
+      echo "##vso[task.setvariable variable=bldenv;]$bldenv"
     displayName: Make configure
   - script: |
       set -ex
