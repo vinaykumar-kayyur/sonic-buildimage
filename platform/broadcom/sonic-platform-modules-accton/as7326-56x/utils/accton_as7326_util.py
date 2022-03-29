@@ -100,9 +100,9 @@ def show_help():
 
 
 def dis_i2c_ir3570a(addr):
-    cmd = "i2cset -y 0 0x%x 0xE5 0x01" % addr
+    cmd = "i2cset -y -a 0 0x%x 0xE5 0x01" % addr
     status, output = subprocess.getstatusoutput(cmd)
-    cmd = "i2cset -y 0 0x%x 0x12 0x02" % addr
+    cmd = "i2cset -y -a 0 0x%x 0x12 0x02" % addr
     status, output = subprocess.getstatusoutput(cmd)
     return status
 
