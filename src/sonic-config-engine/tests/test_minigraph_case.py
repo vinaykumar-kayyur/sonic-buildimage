@@ -9,6 +9,8 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+MGMT_TS_TOR = 'MgmtTsToR'
+MGMT_TS_TOR_ROUTER = 'MgmtTsToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
@@ -185,7 +187,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_NEIGHBOR_METADATA"'
 
         expected_table = {
-            'switch-01t1': { 
+            'switch-01t1': {
                 'lo_addr': '10.1.0.186/32',
                 'mgmt_addr': '10.7.0.196/26',
                 'hwsku': 'Force10-S6000',
@@ -269,7 +271,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                 'address_ipv4': "25.1.1.10"
             }
         }
-        
+
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
@@ -278,7 +280,7 @@ class TestCfgGenCaseInsensitive(TestCase):
 
     def test_mux_cable_parsing(self):
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
-        
+
         expected_mux_cable_ports = ["Ethernet4", "Ethernet8"]
         port_table = result['PORT']
         for port_name, port in port_table.items():
@@ -319,7 +321,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, graph_file), stderr=subprocess.STDOUT, shell=True)
             else:
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, graph_file), shell=True)
-  
+
     def test_minigraph_tunnel_table(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TUNNEL"'
         expected_tunnel = {
@@ -359,7 +361,7 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_table
         )
-    
+
     def test_dhcp_table(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP_RELAY"'
         expected = {
@@ -381,12 +383,12 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected
         )
-    
+
     def test_minigraph_mirror_dscp(self):
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         self.assertTrue('EVERFLOW_DSCP' in result['ACL_TABLE'])
         everflow_dscp_entry = result['ACL_TABLE']['EVERFLOW_DSCP']
-        
+
         self.assertEqual(everflow_dscp_entry['type'], 'MIRROR_DSCP')
         self.assertEqual(everflow_dscp_entry['stage'], 'ingress')
         expected_ports = ['PortChannel01', 'Ethernet12', 'Ethernet8', 'Ethernet0']
@@ -395,5 +397,16 @@ class TestCfgGenCaseInsensitive(TestCase):
             expected_ports.sort()
         )
 
+    def test_change_mgmttstor(self):
+        try:
+            print('\n    Change device type to %s' % (MGMT_TS_TOR))
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, MGMT_TS_TOR, self.sample_simple_graph), shell=True)
 
-    
+            argument = '-m "' + self.sample_simple_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), MGMT_TS_TOR_ROUTER)
+
+        finally:
+            print('\n    Change device type back to %s' % (TOR_ROUTER))
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, self.sample_simple_graph), shell=True)
+
