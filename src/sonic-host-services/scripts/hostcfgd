@@ -10,7 +10,6 @@ import syslog
 import signal
 import re
 import jinja2
-from datetime import datetime
 from sonic_py_common import device_info
 from swsscommon.swsscommon import SubscriberStateTable, DBConnector, Select
 from swsscommon.swsscommon import ConfigDBConnector, TableConsumable, Table

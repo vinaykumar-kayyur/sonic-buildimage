@@ -6,7 +6,6 @@ import os
 import sys
 import subprocess
 import re
-from swsscommon import swsscommon
 
 from parameterized import parameterized
 from unittest import TestCase, mock

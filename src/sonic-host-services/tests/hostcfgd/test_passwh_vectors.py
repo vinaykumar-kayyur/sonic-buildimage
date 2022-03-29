@@ -1,5 +1,3 @@
-from unittest.mock import call
-
 """
     hostcfgd test password hardening vector
 """
