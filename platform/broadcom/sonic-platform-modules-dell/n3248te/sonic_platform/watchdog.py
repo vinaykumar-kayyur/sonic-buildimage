@@ -28,7 +28,7 @@ class Watchdog(WatchdogBase):
     Abstract base class for interfacing with a hardware watchdog module
     """
 
-    TIMERS = [15,20,30,40,50,60,65,70]
+    TIMERS = [15,20,30,40,50,60,65,70,80,100,120,140,160,180,210,240]
 
     armed_time = 0
     timeout = 0
@@ -47,7 +47,8 @@ class Watchdog(WatchdogBase):
         cpld_dir = "/sys/devices/platform/dell-n3248te-cpld.0/"
         cpld_reg_file = cpld_dir + '/' + reg_name
         try:
-            rv = open(cpld_reg_file, 'r').read()
+            with open(cpld_reg_file, 'r') as fd:
+                rv = fd.read()
         except IOError : return 'ERR'
         return rv.strip('\r\n').lstrip(' ')
 
@@ -73,8 +74,6 @@ class Watchdog(WatchdogBase):
         return int(value,16)
 
     def _set_reg_val(self,val):
-        # 0x31 = CPLD I2C Base Address
-        # 0x07 = Watchdog Function Register
         value = self._set_cpld_register(self.watchdog_reg, val)
         return value
 
@@ -111,23 +110,15 @@ class Watchdog(WatchdogBase):
         if timer_offset == -1:
             return -1
 
-        # Extracting 5th to 7th bits for WD timer values
-        # 000 - 15 sec
-        # 001 - 20 sec
-        # 010 - 30 sec
-        # 011 - 40 sec
-        # 100 - 50 sec
-        # 101 - 60 sec
-        # 110 - 65 sec
-        # 111 - 70 sec
+        # Extracting 5th to 8th bits for WD timer values
         reg_val = self._get_reg_val()
-        wd_timer_offset = (reg_val >> 4) & 0x7
+        wd_timer_offset = (reg_val >> 4) & 0xF
 
         if wd_timer_offset != timer_offset:
-            # Setting 5th to 7th bits
+            # Setting 5th to 8th bits
             # value from timer_offset
             self.disarm()
-            self._set_reg_val((reg_val & 0x8F) | (timer_offset << 4))
+            self._set_reg_val((reg_val & 0x0F) | (timer_offset << 4))
 
         if self.is_armed():
             # Setting last bit to WD Timer punch
