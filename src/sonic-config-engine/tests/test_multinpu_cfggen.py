@@ -305,22 +305,35 @@ class TestMultiNpuCfgGen(TestCase):
     def test_global_asic_acl(self):
         argument = "-m {} -p {}  --var-json \"ACL_TABLE\"".format(self.sample_graph, self.sample_port_config)
         output = json.loads(self.run_script(argument))
-        self.assertDictEqual(output, {\
-                             u'EVERFLOW': {u'policy_desc': u'EVERFLOW', u'type': u'MIRROR', u'ports': [u'PortChannel0002', u'PortChannel0008', u'Ethernet8', u'Ethernet12', u'Ethernet24', u'Ethernet28'], u'stage': u'ingress'},
-                             u'SNMP_ACL': {u'services': [u'SNMP'], u'type': u'CTRLPLANE', u'policy_desc': u'SNMP_ACL', u'stage': u'ingress'},
-                             u'SSH_ONLY': {u'services': [u'SSH'], u'type': u'CTRLPLANE', u'policy_desc': u'SSH_ONLY', u'stage': u'ingress'},
-                             u'DATAACL': {u'policy_desc': u'DATAACL', u'type': u'L3', u'ports': [u'PortChannel0002', u'PortChannel0008'], u'stage': u'ingress'},
-                             u'EVERFLOWV6': {u'policy_desc': u'EVERFLOWV6', u'type': u'MIRRORV6', u'ports': [u'PortChannel0002', u'PortChannel0008', u'Ethernet8', u'Ethernet12', u'Ethernet24', u'Ethernet28'], u'stage': u'ingress'}})
+        exp = {\
+                'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']},
+                'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008', 'Ethernet8', 'Ethernet12', 'Ethernet24', 'Ethernet28'], 'type': 'MIRROR'},
+                'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008', 'Ethernet8', 'Ethernet12', 'Ethernet24', 'Ethernet28'], 'type': 'MIRRORV6'},
+                'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']},
+                'DATAACL': {'policy_desc': 'DATAACL', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008'], 'type': 'L3'}}
+        for k, v in output.items():
+            if 'ports' in v and len(v['ports']):
+                v['ports'].sort()
+        for k, v in exp.items():
+            if 'ports' in v and len(v['ports']):
+                v['ports'].sort()
+        self.assertDictEqual(output, exp)
 
     def test_global_asic_acl1(self):
         argument = "-m {} -p {} --var-json \"ACL_TABLE\"".format(self.sample_graph1, self.sample_port_config)
         self.maxDiff = None
         output = json.loads(self.run_script(argument))
         exp = {\
-            u'EVERFLOW': {u'stage': u'ingress', u'type': u'MIRROR', u'policy_desc': u'EVERFLOW', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28']},
-            u'SNMP_ACL': {u'services': [u'SNMP'], u'stage': u'ingress', u'type': u'CTRLPLANE', u'policy_desc': u'SNMP_ACL'},
-            u'SSH_ONLY': {u'services': [u'SSH'], u'stage': u'ingress', u'type': u'CTRLPLANE', u'policy_desc': u'SSH_ONLY'},
-            u'EVERFLOWV6': {u'stage': u'ingress', u'type': u'MIRRORV6', u'policy_desc': u'EVERFLOWV6', u'ports': [u'Ethernet0', u'Ethernet4', u'Ethernet8', u'Ethernet12', u'Ethernet16', u'Ethernet20', u'Ethernet24', u'Ethernet28']}}
+                'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']},
+                'EVERFLOW': {'policy_desc': 'EVERFLOW', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12', 'Ethernet16', 'Ethernet20', 'Ethernet24', 'Ethernet28'], 'type': 'MIRROR'},
+                'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12', 'Ethernet16', 'Ethernet20', 'Ethernet24', 'Ethernet28'], 'type': 'MIRRORV6'},
+                'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']}}
+        for k, v in output.items():
+            if 'ports' in v and len(v['ports']):
+                v['ports'].sort()
+        for k, v in exp.items():
+            if 'ports' in v and len(v['ports']):
+                v['ports'].sort()
         self.assertDictEqual(output, exp)
 
     def test_front_end_asic_acl(self):
