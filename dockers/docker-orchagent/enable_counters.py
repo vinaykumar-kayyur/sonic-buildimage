@@ -10,10 +10,10 @@ DEFAULT_SMOOTH_INTERVAL = '10'
 DEFAULT_ALPHA = '0.18'
 
 
-def enable_counter_group(db, name):
+def enable_counter_group(db, name, enable_by_default=True):
     entry_info = db.get_entry("FLEX_COUNTER_TABLE", name)
 
-    if not entry_info:
+    if (not entry_info) and enable_by_default:
         info = {}
         info['FLEX_COUNTER_STATUS'] = 'enable'
         db.mod_entry("FLEX_COUNTER_TABLE", name, info)
@@ -38,16 +38,15 @@ def enable_rates():
 def enable_counters():
     db = swsssdk.ConfigDBConnector()
     db.connect()
-    enable_counter_group(db, 'PORT')
-    enable_counter_group(db, 'RIF')
-    enable_counter_group(db, 'QUEUE')
-    enable_counter_group(db, 'PFCWD')
-    enable_counter_group(db, 'PG_WATERMARK')
-    enable_counter_group(db, 'PG_DROP')
-    enable_counter_group(db, 'QUEUE_WATERMARK')
-    enable_counter_group(db, 'BUFFER_POOL_WATERMARK')
-    enable_counter_group(db, 'PORT_BUFFER_DROP')
-    enable_counter_group(db, 'ACL')
+    default_enabled_counters = ['PORT', 'RIF', 'QUEUE', 'PFCWD', 'PG_WATERMARK', 'PG_DROP', 
+                                'QUEUE_WATERMARK', 'BUFFER_POOL_WATERMARK', 'PORT_BUFFER_DROP', 'ACL']
+
+    keys = db.get_keys('FLEX_COUNTER_TABLE')
+    for key in keys:
+        if key in default_enabled_counters:
+            enable_counter_group(db, key)
+        else:
+            enable_counter_group(db, key, enable_by_default=False)
     enable_rates()
 
 
