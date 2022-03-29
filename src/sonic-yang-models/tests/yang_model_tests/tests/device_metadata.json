@@ -109,7 +109,7 @@
     },
     "DEVICE_METADATA_INVALID_DHCP_SERVER": {
         "desc": "Verifying invalid dhcp_server configuration.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     }
 
 }
