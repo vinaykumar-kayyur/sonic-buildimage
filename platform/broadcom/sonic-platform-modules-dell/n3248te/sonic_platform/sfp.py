@@ -126,7 +126,7 @@ class Sfp(SfpOptoeBase):
         """
         Reset the SFP and returns all user settings to their default state
         """
-        return True
+        return False
 
     def set_lpmode(self, lpmode):
         """
@@ -154,12 +154,6 @@ class Sfp(SfpOptoeBase):
             bool: True if it is replaceable.
         """
         return True
-
-    def reset(self):
-        """
-        Reset the SFP and returns all user settings to their default state
-        """
-        return False
 
     def get_error_description(self):
         """
