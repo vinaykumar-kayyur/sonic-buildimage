@@ -43,7 +43,7 @@
 {
 {% if generate_tc_to_pg_map is defined %}
     {{- generate_tc_to_pg_map() }}
-{% elif generate_dscp_to_tc_map is not defined %}
+{% else %}
     "TC_TO_PRIORITY_GROUP_MAP": {
         "AZURE": {
             "0": "0",
@@ -69,6 +69,9 @@
             "7": "7"
         }
     },
+{% if generate_tc_to_queue_map is defined %}
+    {{- generate_tc_to_queue_map() }}
+{% else %}
     "TC_TO_QUEUE_MAP": {
         "AZURE": {
             "0": "0",
@@ -81,6 +84,7 @@
             "7": "7"
         }
     },
+{% endif %}
 {% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] in backend_device_types and 'storage_device' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['storage_device'] == 'true' %}
     "DOT1P_TO_TC_MAP": {
         "AZURE": {
@@ -283,7 +287,7 @@
         "{{ port }}|2": {
         {% if port in port_names_list_extra_queues %}
             "scheduler"   : "scheduler.1",
-                    "wred_profile": "AZURE_LOSSLESS"
+            "wred_profile": "AZURE_LOSSLESS"
         {% else %}
             "scheduler": "scheduler.0"
         {% endif %}
