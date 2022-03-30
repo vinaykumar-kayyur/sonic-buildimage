@@ -37,7 +37,14 @@ generate_profile()
 rm -f /var/run/rsyslogd.pid
 
 supervisorctl start rsyslogd
-
+#skip the profile creation if it already exists.
+#In warm boot test, we need to add more configuration for warm restart.
+#This profile should not be reset when start the saiserver docker.
+if [ ! -f "/etc/sai.d/sai.profile" ]; then
+ generate_profile
+else
+ echo "Profile already exists, skip profile creation!"
+fi
 generate_profile
 start_bcm
 
