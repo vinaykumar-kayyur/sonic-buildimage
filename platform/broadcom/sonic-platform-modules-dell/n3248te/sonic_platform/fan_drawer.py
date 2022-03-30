@@ -41,7 +41,8 @@ class FanDrawer(FanDrawerBase):
         cpld_dir = "/sys/devices/platform/dell-n3248te-cpld.0/"
         cpld_reg_file = cpld_dir + '/' + reg_name
         try:
-            rv = open(cpld_reg_file, 'r').read()
+            with open(cpld_reg_file, 'r') as fd:
+                rv = fd.read()
         except IOError : return 'ERR'
         return rv.strip('\r\n').lstrip(' ')
 
