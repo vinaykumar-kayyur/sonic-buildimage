@@ -3,6 +3,15 @@
 DOCKER_SYNCD_BRCM_RPC = docker-syncd-brcm-rpc.gz
 $(DOCKER_SYNCD_BRCM_RPC)_PATH = $(PLATFORM_PATH)/docker-syncd-brcm-rpc
 $(DOCKER_SYNCD_BRCM_RPC)_DEPENDS += $(SYNCD_RPC) $(LIBTHRIFT) $(PTF)
+
+#Support two different versions of thrift
+ifeq ($(SAITHRIFT_V2),y)
+$(DOCKER_SYNCD_BRCM_RPC)_DEPENDS += $(SYNCD_RPC) $(LIBTHRIFT_0_13_0) $(LIBTHRIFT_DEV_0_13_0) $(PYTHON3_THRIFT_0_13_0) $(THRIFT_COMPILER_0_13_0) $(PTF)
+else
+$(DOCKER_SYNCD_BRCM_RPC)_DEPENDS += $(SYNCD_RPC) $(LIBTHRIFT) $(PTF)
+endif
+
+
 ifeq ($(INSTALL_DEBUG_TOOLS), y)
 $(DOCKER_SYNCD_BRCM_RPC)_DEPENDS += $(SYNCD_RPC_DBG) \
                                     $(LIBSWSSCOMMON_DBG) \
