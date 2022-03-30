@@ -5,6 +5,7 @@
             "controllable": true,
             "colors": ["green", "blink_green", "yellow", "blink_yellow"]
 	},
+	"thermal_manager" : false,
         "components": [
             {
                 "name": "BIOS"
@@ -19,20 +20,29 @@
         "fans": [
             {
                 "name": "FanTray1-Fan1",
+		"speed": {
+		    "controllable":false
+		},
                 "status_led": {
-                "controllable": false
+                    "available": false
 	        }
             },
             {
                 "name": "FanTray2-Fan1",
+		"speed": {
+		    "controllable":false
+		},
                 "status_led": {
-                "controllable": false
+                    "available": false
 	        }
             },
             {
                 "name": "FanTray3-Fan1",
+		"speed": {
+		    "controllable":false
+		},
                 "status_led": {
-                "controllable": false
+                    "available": false
 	        }
             }
         ],
@@ -45,7 +55,13 @@
 	        },
                 "fans": [
                     {
-                        "name": "FanTray1-Fan1"
+                        "name": "FanTray1-Fan1",
+			"speed": {
+			    "controllable":false
+			},
+                        "status_led": {
+                            "available": false
+                        }
                     }
                 ]
             },
@@ -57,8 +73,14 @@
 	        },
                 "fans": [
                     {
-                        "name": "FanTray2-Fan1"
-                    }
+                        "name": "FanTray2-Fan1",
+			"speed": {
+			    "controllable":false
+			},
+                        "status_led": {
+                            "available": false
+                        }
+		    }
                 ]
             },
             {
@@ -69,7 +91,13 @@
 	        },
                 "fans": [
                     {
-                        "name": "FanTray3-Fan1"
+                        "name": "FanTray3-Fan1",
+			"speed": {
+			    "controllable":false
+			},
+                        "status_led": {
+                            "available": false
+                        }
                     }
                 ]
             }
@@ -82,7 +110,13 @@
 	        },
                 "fans": [
                     {
-                        "name": "PSU1 Fan"
+                        "name": "PSU1 Fan",
+			"speed": {
+			    "controllable": false
+			},
+			"status_led": {
+		            "available": false
+			}
                     }
                 ]
             },
@@ -93,7 +127,13 @@
 	        },
                 "fans": [
                     {
-                        "name": "PSU2 Fan"
+                        "name": "PSU2 Fan",
+			"speed": {
+			    "controllable": false
+			},
+			"status_led": {
+		            "available": false
+			}
                     }
                 ]
             }
@@ -101,23 +141,43 @@
         "thermals": [
             {
                 "name": "Front Panel PHY Temperature",
-                "controllable": false
+                "controllable": false,
+                "low-crit-threshold": false,
+                "high-crit-threshold": false,
+                "minimum-recorded": false,
+                "maximum-recorded": false
             },
             {
                 "name": "Middle Fan Tray Temperature",
-                "controllable": false
+                "controllable": false,
+                "low-crit-threshold": false,
+                "high-crit-threshold": false,
+                "minimum-recorded": false,
+                "maximum-recorded": false
             },
             {
                 "name": "Near Front Panel Temperature",
-                "controllable": false
+                "controllable": false,
+                "low-crit-threshold": false,
+                "high-crit-threshold": false,
+                "minimum-recorded": false,
+                "maximum-recorded": false
             },
             {
                 "name": "Switch Near Temperature",
-                "controllable": false
+                "controllable": false,
+                "low-crit-threshold": false,
+                "high-crit-threshold": false,
+                "minimum-recorded": false,
+                "maximum-recorded": false
             },
             {
                 "name": "Switch Rear Temperature",
-                "controllable": false
+                "controllable": false,
+                "low-crit-threshold": false,
+                "high-crit-threshold": false,
+                "minimum-recorded": false,
+                "maximum-recorded": false
             }
         ],
         "modules": [],
@@ -267,22 +327,22 @@
                 "name": "1GSFPCu"
             },
             {
-                "name": "10GSFP+"
+                "name": "SFP/SFP+/SFP28"
             },
             {
-                "name": "10GSFP+"
+                "name": "SFP/SFP+/SFP28"
             },
             {
-                "name": "10GSFP+"
+                "name": "SFP/SFP+/SFP28"
             },
             {
-                "name": "10GSFP+"
+                "name": "SFP/SFP+/SFP28"
             },
             {
-                "name": "QSFP28"
+                "name": "QSFP+ or later"
             },
             {
-                "name": "QSFP28"
+                "name": "QSFP+ or later"
             }
         ]
     },
