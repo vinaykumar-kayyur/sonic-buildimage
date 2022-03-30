@@ -31,7 +31,7 @@ PORT_ROLE = 'role'
 # to prevent duplicate connections from being opened
 config_db_handle = {}
 
-def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
+def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE, use_unix_socket_path=False):
     """
     The function connects to the config DB for a given namespace and
     returns the handle
@@ -43,17 +43,17 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
       handle to the config_db for a namespace
     """
-    config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
+    config_db = swsscommon.ConfigDBConnector(namespace=namespace, use_unix_socket_path=use_unix_socket_path)
     config_db.connect()
     return config_db
 
 
-def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
+def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE, use_unix_socket_path=False):
     """
     The function connects to the DBs for a given namespace and
-    returns the handle 
-    
-    For voq chassis systems, the db list includes databases from 
+    returns the handle
+
+    For voq chassis systems, the db list includes databases from
     supervisor card. Avoid connecting to these databases from linecards
 
     If no namespace is provided, it will connect to the db in the
@@ -65,7 +65,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     Returns:
         handle to all the dbs for a namespaces
     """
-    db = swsscommon.SonicV2Connector(use_unix_socket_path=True, namespace=namespace)
+    db = swsscommon.SonicV2Connector(namespace=namespace, use_unix_socket_path=use_unix_socket_path)
     db_list = list(db.get_db_list())
     if not is_supervisor():
         try:
@@ -242,7 +242,7 @@ def get_all_namespaces():
         for asic in range(num_asics):
             namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
             if namespace not in config_db_handle:
-                config_db_handle[namespace] =  connect_config_db_for_ns(namespace)
+                config_db_handle[namespace] =  connect_config_db_for_ns(namespace, use_unix_socket_path=True)
             config_db = config_db_handle[namespace]
 
             metadata = config_db.get_table('DEVICE_METADATA')
@@ -312,7 +312,7 @@ def get_port_entry_for_asic(port, namespace):
 
 def get_port_table_for_asic(namespace):
 
-    config_db = connect_config_db_for_ns(namespace)
+    config_db = connect_config_db_for_ns(namespace, use_unix_socket_path=True)
     ports = config_db.get_table(PORT_CFG_DB_TABLE)
     return ports
 
