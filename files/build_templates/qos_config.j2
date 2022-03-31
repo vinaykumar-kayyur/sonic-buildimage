@@ -223,11 +223,10 @@
 {% endif %}
 {% if port in port_names_list_extra_queues %}
             "pfc_enable"      : "2,3,4,6",
-            "pfcwd_sw_enable" : "3,4"
 {% else %}
             "pfc_enable"      : "3,4",
-            "pfcwd_sw_enable" : "3,4"
 {% endif %}
+            "pfcwd_sw_enable" : "3,4"
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
