@@ -7,7 +7,7 @@ parameters:
 - name: 'platforms'
   type: object
   default:
-  - broadcom: sonic-aboot-broadcom.swi.log sonic-aboot-broadcom.swi sonic-broadcom.bin docker-syncd-brcm-rpc.gz debs/buster/python-saithrift_0.9.4_amd64.deb
+  - broadcom: sonic-aboot-broadcom.swi.log sonic-aboot-broadcom.swi sonic-broadcom.bin docker-syncd-brcm-rpc.gz debs/buster/python-saithrift_0.9.4_amd64.deb sonic-aboot-broadcom-dnx.swi
   - mellanox: sonic-mellanox.bin.log sonic-mellanox.bin
   - marvell-armhf: sonic-marvell-armhf.bin.log sonic-marvell-armhf.bin
 - name: 'branch'
