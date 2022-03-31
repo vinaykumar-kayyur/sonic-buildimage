@@ -31,7 +31,8 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:20.10.7~3-0~debian-$IMAGE_DISTRO
+DOCKER_VERSION=5:20.10.14~3-0~debian-$IMAGE_DISTRO
+CONTAINERD_IO_VERSION=1.5.11-1
 LINUX_KERNEL_VERSION=5.10.0-8-2
 
 ## Working directory to prepare the file system
@@ -239,11 +240,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
                                     "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-if dpkg --compare-versions ${DOCKER_VERSION} ge "18.09"; then
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION}
-else
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
-fi
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
 
 # Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
 # pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
