@@ -234,9 +234,8 @@ if [[ $CONFIGURED_ARCH == armhf ]]; then
     # update ssl ca certificates for secure pem
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
 fi
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
-sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
                                     "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
