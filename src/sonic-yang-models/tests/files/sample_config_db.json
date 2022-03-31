@@ -1327,6 +1327,11 @@
                 "rfc6939_support": "true"
             }
         },
+        "SAG": {
+            "GLOBAL": {
+                "gateway_mac": "00:11:22:33:44:55"
+            }
+        },
         "SCHEDULER": {
             "TEST@0": {
                 "cbs": "256",
@@ -1337,7 +1342,6 @@
                 "type": "DWRR",
                 "weight": "20"
             },
-
             "TEST@1": {
                 "cbs": "1024",
                 "cir": "1280000",
