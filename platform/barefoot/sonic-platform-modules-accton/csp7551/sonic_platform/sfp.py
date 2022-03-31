@@ -13,7 +13,7 @@ import sys
 from ctypes import create_string_buffer
 
 try:
-    from sonic_platform_base.sfp_base import SfpBase
+    from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase    
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
@@ -201,7 +201,7 @@ SFP_PORT_END = 0
 FPGA_PORT_START=33
 FPGA_PORT_END=56
 
-class Sfp(SfpBase):
+class Sfp(SfpOptoeBase):
     """Platform-specific Sfp class"""
 
     # Port number
@@ -276,7 +276,7 @@ class Sfp(SfpBase):
         self.threshold_dict_keys = ['temphighalarm', 'temphighwarning', 'templowalarm', 'templowwarning', 'vcchighalarm', 'vcchighwarning', 'vcclowalarm', 'vcclowwarning', 'rxpowerhighalarm', 'rxpowerhighwarning',
                                     'rxpowerlowalarm', 'rxpowerlowwarning', 'txpowerhighalarm', 'txpowerhighwarning', 'txpowerlowalarm', 'txpowerlowwarning', 'txbiashighalarm', 'txbiashighwarning', 'txbiaslowalarm', 'txbiaslowwarning']
 
-        SfpBase.__init__(self)
+        SfpOptoeBase.__init__(self)
         self._detect_sfp_type()
 
         self._dom_capability_detect()

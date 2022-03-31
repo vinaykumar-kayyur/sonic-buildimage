@@ -17,7 +17,7 @@ setup(
         'sonic_platform',
     ],
     package_dir={
-        'sonic_platform': '../../../../device/{}/{}/sonic_platform'.format(DEVICE_NAME, HW_SKU)},
+        'sonic_platform': 'sonic_platform'},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Plugins',
