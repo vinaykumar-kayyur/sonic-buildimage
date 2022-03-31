@@ -326,18 +326,18 @@ class TestJ2Files(TestCase):
         test_list = {
             "t1": {
                 "graph": self.t1_mlnx_minigraph,
-                "port": self.mlnx_port_config,
+                "port_config": self.mlnx_port_config,
                 "output": "t1-switch.json"
             },
             "t0": {
                 "graph": self.t0_minigraph,
-                "port": self.t0_port_config,
+                "port_config": self.t0_port_config,
                 "output": "t0-switch.json"
             },
         }
         for _, v in test_list.items():
             argument = " -m {} -p {} -y {} -t {} > {}".format(
-                v["graph"], v["port"], constants_yml, switch_template, self.output_file
+                v["graph"], v["port_config"], constants_yml, switch_template, self.output_file
             )
             sample_output_file = os.path.join(
                 self.test_dir, 'sample_output', v["output"]

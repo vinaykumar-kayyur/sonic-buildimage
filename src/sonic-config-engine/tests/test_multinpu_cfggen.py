@@ -312,10 +312,10 @@ class TestMultiNpuCfgGen(TestCase):
                 'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']},
                 'DATAACL': {'policy_desc': 'DATAACL', 'stage': 'ingress', 'ports': ['PortChannel0002', 'PortChannel0008'], 'type': 'L3'}}
         for k, v in output.items():
-            if 'ports' in v and len(v['ports']):
+            if 'ports' in v:
                 v['ports'].sort()
         for k, v in exp.items():
-            if 'ports' in v and len(v['ports']):
+            if 'ports' in v:
                 v['ports'].sort()
         self.assertDictEqual(output, exp)
 
@@ -329,10 +329,10 @@ class TestMultiNpuCfgGen(TestCase):
                 'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'stage': 'ingress', 'ports': ['Ethernet0', 'Ethernet4', 'Ethernet8', 'Ethernet12', 'Ethernet16', 'Ethernet20', 'Ethernet24', 'Ethernet28'], 'type': 'MIRRORV6'},
                 'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']}}
         for k, v in output.items():
-            if 'ports' in v and len(v['ports']):
+            if 'ports' in v:
                 v['ports'].sort()
         for k, v in exp.items():
-            if 'ports' in v and len(v['ports']):
+            if 'ports' in v:
                 v['ports'].sort()
         self.assertDictEqual(output, exp)
 
