@@ -284,6 +284,14 @@ def device_install():
                 print(output)
                 if FORCE == 0:
                     return status
+                    
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status                    
 
     for i in range(49, 55): #Set qsfp port to normal state
         log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)
