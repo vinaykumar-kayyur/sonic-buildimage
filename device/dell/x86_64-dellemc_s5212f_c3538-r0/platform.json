@@ -1,6 +1,10 @@
 {
     "chassis": {
         "name": "S5212F-ON",
+	"status_led": {
+            "controllable": true,
+            "colors": ["blinking_green", "green", "amber", "blinking_amber"]
+        },
 	"thermal_manager": false,
         "components": [
             {
