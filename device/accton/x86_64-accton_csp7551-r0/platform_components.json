@@ -25,15 +25,15 @@
                 "BIOS": {
                     "firmware": "/etc/accton/fw/csp7551/chassis/csp7551_purley-r-bios_v49.0b.00.01_me_v04.1.4.339_10gkr_v5p00.bin",
                     "version": "v49.0B.00.01"
-				},
+                },
                 "BMC": {
-				    "firmware": "/etc/accton/fw/csp7551/chassis/csp7551_ast2500_obmc_v00.01.05.bin",
+                    "firmware": "/etc/accton/fw/csp7551/chassis/csp7551_ast2500_obmc_v00.01.05.bin",
                     "version": "0.01.05"
-				},
+                },
                 "REFRESH": {
                     "firmware": "/etc/accton/fw/csp7551/chassis/refresh",
                     "version" : "1.1"
-				}
+                }
             }
         }
     }
