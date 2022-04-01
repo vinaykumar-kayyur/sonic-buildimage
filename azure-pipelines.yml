@@ -34,8 +34,12 @@ stages:
 - stage: BuildVS
   pool: sonicbld
   variables:
-    CACHE_MODE: rcache
-    VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web,git,docker'
+  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
+  - name: CACHE_MODE
+    value: rcache
+  - name: VERSION_CONTROL_OPTIONS
+    value: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web,git,docker'
+
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
