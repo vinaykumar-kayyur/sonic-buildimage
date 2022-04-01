@@ -37,7 +37,7 @@ jobs:
   pool: ${{ parameters.pool }}
   steps:
   - template: cleanup.yml
-  - ${{ if eq(variables['System.PullRequest.TargetBranch'], 'master') }}:
+  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
     - template: template-clean-sonic-slave.yml
   - ${{ else }}:
     - template: .azure-pipelines/template-variables.yml@buildimage
