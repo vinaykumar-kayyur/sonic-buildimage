@@ -38,7 +38,7 @@ resources:
 
 variables:
 - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
-- ${{ if eq(variables['System.PullRequest.TargetBranch'], 'master') }}:
+- ${{ if eq(variables['System.PullRequest.SourceBranch'], 'master') }}:
   - template: .azure-pipelines/template-variables.yml
 - ${{ else }}:
   - template: .azure-pipelines/template-variables.yml@buildimage
