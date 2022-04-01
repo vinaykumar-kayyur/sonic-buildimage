@@ -55,7 +55,6 @@ module sonic-port{
 				}
 
 				leaf speed {
-					mandatory true;
 					type uint32 {
 						range 1..400000;
 					}
