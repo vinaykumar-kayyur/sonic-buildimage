@@ -30,7 +30,7 @@ trigger: none
 pr: none
 
 variables:
-- template: .azure-pipelines/template-variables.yml
+- template: .azure-pipelines/template-variables.yml@buildimage
 
 stages:
 - stage: Build
