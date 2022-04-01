@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import time
+import psutil
 from datetime import datetime
 
 from sonic_py_common import daemon_base
@@ -129,40 +130,60 @@ class ProcDockerStats(daemon_base.DaemonBase):
             return False
         # wipe out all data from state_db before updating
         self.state_db.delete_all_by_pattern('STATE_DB', 'DOCKER_STATS|*')
-        for k1,v1 in dockerdata.items():
-            for k2,v2 in v1.items():
+        for k1, v1 in dockerdata.items():
+            for k2, v2 in v1.items():
                 self.update_state_db(k1, k2, v2)
         return True
 
+    def get_proc_data(self, proc):
+        result = {}
+        result['UID'] = proc.uids().real
+        result['PPID'] = proc.ppid()
+        result['%CPU'] = round(proc.cpu_percent(), 1)
+        result['%MEM'] = round(proc.memory_percent(), 1)
+        result['CREATE_TIME'] = proc.create_time() # seconds
+        stime = datetime.fromtimestamp(proc.create_time())
+        uptime = time.time() - proc.create_time()
+        stime_str = stime.strftime("%b%d") if uptime > (24 * 60 * 60) else stime.strftime("%H:%M")
+        result['STIME'] = stime_str # Mmmdd or HH:MM
+        result['ELAPSED'] = round(uptime, 2) # seconds
+        tty = proc.terminal()
+        result['TT'] = tty.lstrip('/dev/') if tty else "?"
+        result['TIME'] = self.get_time_str(int(sum(proc.cpu_times()[:2]))) # [DD-]hh:mm:ss
+        result['CPU_TIME_USER'] = proc.cpu_times().user
+        result['CPU_TIME_SYSTEM'] = proc.cpu_times().system
+        result['MEMORY_USAGE'] = proc.memory_info().rss # bytes
+        result['CMD'] = " ".join(proc.cmdline()).strip(" \n")
+
+        result = {key: str(result[key]) for key in result}
+        return result
+
     def update_processstats_command(self):
-        data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -1024")
-        processdata = self.format_process_cmd_output(data)
-        value = ""
         # wipe out all data before updating with new values
         self.state_db.delete_all_by_pattern('STATE_DB', 'PROCESS_STATS|*')
-        for row in processdata[0:]:
-            cid = row.get('PID')
-            if cid:
-                value = 'PROCESS_STATS|{}'.format(cid)
-                uid = row.get('UID')
-                self.update_state_db(value, 'UID', uid)
-                ppid = row.get('PPID')
-                self.update_state_db(value, 'PPID', ppid)
-                cpu = row.get('%CPU')
-                self.update_state_db(value, '%CPU', str(cpu))
-                mem = row.get('%MEM')
-                self.update_state_db(value, '%MEM', str(mem))
-                stime = row.get('STIME')
-                self.update_state_db(value, 'STIME', stime)
-                tty = row.get('TT')
-                self.update_state_db(value, 'TT', tty)
-                time = row.get('TIME')
-                self.update_state_db(value, 'TIME', time)
-                cmd = row.get('CMD')
-                self.update_state_db(value, 'CMD', cmd)
+        for proc in psutil.process_iter():
+            key = 'PROCESS_STATS|{}'.format(proc.pid)
+            field_value = self.get_proc_data(proc)
+            self.update_state_db_all(key,field_value)
+
+    def get_time_str(self, time_second):
+        days = int(time_second / (24 * 60 * 60))
+        hours = int((time_second % (24 * 60 * 60)) / (60 * 60))
+        minutes = int((time_second % (60 * 60)) / 60)
+        seconds = int(time_second % 60)
+        result = "{}{}{}{}".format(
+            str(days).zfill(2) + "-" if days > 0 else "",
+            str(hours).zfill(2) + ":",
+            str(minutes).zfill(2) + ":",
+            str(seconds).zfill(2)
+        )
+        return result
 
     def update_state_db(self, key1, key2, value2):
-        self.state_db.set('STATE_DB', key1, key2, value2)
+        self.state_db.set('STATE_DB', key1, key2, str(value2))
+
+    def update_state_db_all(self, key1, dict1):
+        self.state_db.hmset('STATE_DB', key1, dict1)
 
     def run(self):
         self.log_info("Starting up ...")
