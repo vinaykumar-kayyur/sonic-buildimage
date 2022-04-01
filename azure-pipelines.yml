@@ -29,12 +29,17 @@ resources:
     type: github
     name: Azure/sonic-mgmt
     endpoint: build
+  - repository: buildimage
+    type: github
+    name: liushilongbuaa/sonic-buildimage
+    ref: updateV
+    endpoint: liushilongbuaa
 
 stages:
 - stage: BuildVS
   pool: sonicbld
   variables:
-  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
+  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
   - name: CACHE_MODE
     value: rcache
   - name: VERSION_CONTROL_OPTIONS
