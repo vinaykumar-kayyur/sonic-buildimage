@@ -27,7 +27,7 @@ DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 
 
-def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
+def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE, use_unix_socket_path=False):
     """
     The function connects to the config DB for a given namespace and
     returns the handle
@@ -40,12 +40,12 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
       handle to the config_db for a namespace
     """
     SonicDBConfig.load_sonic_global_db_config()
-    config_db = ConfigDBConnector(namespace=namespace)
+    config_db = ConfigDBConnector(namespace=namespace, use_unix_socket_path=use_unix_socket_path)
     config_db.connect()
     return config_db
 
 
-def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
+def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE, use_unix_socket_path=False):
     """
     The function connects to the DBs for a given namespace and
     returns the handle
@@ -59,7 +59,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
         handle to all the dbs for a namespaces
     """
     SonicDBConfig.load_sonic_global_db_config()
-    db = SonicV2Connector(namespace=namespace)
+    db = SonicV2Connector(namespace=namespace, use_unix_socket_path=use_unix_socket_path)
     for db_id in db.get_db_list():
         db.connect(db_id)
     return db
@@ -227,7 +227,7 @@ def get_all_namespaces():
     if is_multi_asic():
         for asic in range(num_asics):
             namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
-            config_db = connect_config_db_for_ns(namespace)
+            config_db = connect_config_db_for_ns(namespace, use_unix_socket_path=True)
 
             metadata = config_db.get_table('DEVICE_METADATA')
             if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
@@ -296,7 +296,7 @@ def get_port_entry_for_asic(port, namespace):
 
 def get_port_table_for_asic(namespace):
 
-    config_db = connect_config_db_for_ns(namespace)
+    config_db = connect_config_db_for_ns(namespace, use_unix_socket_path=True)
     ports = config_db.get_table(PORT_CFG_DB_TABLE)
     return ports
 
