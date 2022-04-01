@@ -18,9 +18,9 @@ resources:
   repositories:
   - repository: buildimage
     type: github
-    name: Azure/sonic-buildimage
-    ref: master
-    endpoint: build
+    name: liushilongbuaa/sonic-buildimage
+    ref: updateV
+    endpoint: liushilongbuaa
 
 pool: sonicbld
 
