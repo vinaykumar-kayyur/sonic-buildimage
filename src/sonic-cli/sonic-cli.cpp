@@ -1,18 +1,17 @@
-#include <swss/sonicv2connector.h>
-#include <swss/dbconnector.h>
-#include <boost/program_options.hpp>
-
-#include <getopt.h>
-#include <unistd.h>
-
+#include <execution>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <execution>
 
-const char* emptyStr = "";
+#include <boost/program_options.hpp>
+#include <swss/dbconnector.h>
+#include <swss/sonicv2connector.h>
 
 namespace po = boost::program_options;
+
+static std::string nameSpace;
+static std::string dbOrOperation;
+const char* emptyStr = "";
 
 void printUsage(const po::options_description &description)
 {
