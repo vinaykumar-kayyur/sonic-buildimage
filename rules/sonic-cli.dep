@@ -1,0 +1,8 @@
+SPATH       := $($(SONIC_CLI)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/sonic-cli.mk rules/sonic-cli.dep   
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+DEP_FILES   += $(shell git ls-files $(SPATH))
+
+$(BASH)_CACHE_MODE  := GIT_CONTENT_SHA 
+$(BASH)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
+$(BASH)_DEP_FILES   := $(DEP_FILES)

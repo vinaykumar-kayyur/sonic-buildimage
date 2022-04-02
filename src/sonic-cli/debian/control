@@ -1,0 +1,12 @@
+Source: sonic-cli
+Section: admin
+Priority: extra
+Maintainer: Liu Hua <liuh@microsoft.com>
+Build-Depends: autoconf-archive
+Description: SONiC CLI for SONiC database.
+
+Package: sonic-cli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libswsscommon
+Description: SONiC CLI debian package
+    SONiC CLI for manage SONiC database.
