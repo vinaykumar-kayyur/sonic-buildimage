@@ -85,6 +85,8 @@ module sonic-port-qos-map {
                     type string {
                         pattern "[0-7](,[0-7])?";
                     }
+                    description
+                        "Specify the queue(s) on which software pfc watchdog are enabled.";
                 }
 
                 leaf pfc_to_queue_map {
