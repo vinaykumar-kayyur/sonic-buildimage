@@ -5,17 +5,17 @@
 ## Created:     2022/04/02
 ##
 ###########################################################################
-
+ACLOCAL_AMFLAGS = -I m4 --install
 ACLOCAL_AMFLAGS = -I config
 AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = sonic-cli
 sonic_cli_SOURCES = sonic-cli.h \
                     sonic-cli.cpp
-sonic_cli_CPPFLAGS = $(AM_CPPFLAGS)
-sonic_cli_LDFLAGS = -lswsscommon
+sonic_cli_CPPFLAGS = $(AM_CPPFLAGS) -std=c++17
+sonic_cli_LDFLAGS = -lswsscommon $(BOOST_PROGRAM_OPTIONS_LIB)
 
-EXTRA_DIST = sonic-cli.spec
+EXTRA_DIST = bootstrap sonic-cli.spec
 
 MAINTAINERCLEANFILES = Makefile.in config.h.in configure aclocal.m4 \
                        config/config.guess  config/config.sub  config/depcomp \

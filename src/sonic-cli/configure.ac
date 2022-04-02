@@ -20,6 +20,7 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([sonic-cli.cpp])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([config])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl --------------------------------------------------------------------
 dnl Checks for programs.
@@ -38,11 +39,14 @@ AM_PROG_LIBTOOL
 dnl --------------------------------------------------------------------
 dnl Checks for libraries.
 AC_CHECK_LIB(swsscommon, conn)
+dnl Check boost libs: https://www.gnu.org/software/autoconf-archive/The-Macros.html#The-Macros
+AX_BOOST_BASE(,, [AC_MSG_ERROR([boost lib missing])])
+AX_BOOST_PROGRAM_OPTIONS
 
 dnl --------------------------------------------------------------------
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADER([swss/sonicv2connector.h], [], [AC_MSG_ERROR([swsscommon libraries missing. ])] )
+AC_CHECK_HEADER([swss/sonicv2connector.h], [], [AC_MSG_ERROR([swsscommon lib missing. ])] )
 
 dnl --------------------------------------------------------------------
 dnl Checks for typedefs, structures, and compiler characteristics.
