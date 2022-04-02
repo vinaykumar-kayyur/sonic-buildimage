@@ -609,9 +609,22 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     current_position = tmp;
 
     auto msg = parse_dhcpv6_hdr(current_position);
+    auto option_position = current_position + sizeof(struct dhcpv6_msg);
+
     counters[msg->msg_type]++;
     std::string counterVlan = counter_table;
     update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
+
+    if(msg->msg_type != DHCPv6_MESSAGE_TYPE_RELAY_FORW) {
+        while (option_position - message_buffer < len) {
+            auto option = parse_dhcpv6_opt(option_position, &tmp);
+            option_position = tmp;
+            if(ntohs(option->option_code) > 56) {   // DHCPv6 option code greater than 56 are currently unassigned
+                syslog(LOG_INFO, "DHCPv6 option is invalid or contains malformed payload\n");
+                return;
+            }
+        }
+    }
 
     switch (msg->msg_type) {
         case DHCPv6_MESSAGE_TYPE_RELAY_FORW:
@@ -619,9 +632,19 @@ void callback(evutil_socket_t fd, short event, void *arg) {
             relay_relay_forw(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, config);
             break;
         }
-        default:
+        case DHCPv6_MESSAGE_TYPE_SOLICIT:
+        case DHCPv6_MESSAGE_TYPE_REQUEST: 
+        case DHCPv6_MESSAGE_TYPE_RENEW:
+        case DHCPv6_MESSAGE_TYPE_REBIND:
+        case DHCPv6_MESSAGE_TYPE_RELEASE:
+        case DHCPv6_MESSAGE_TYPE_DECLINE:
         {
             relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
+            break;
+        }
+        default:
+        {
+            syslog(LOG_INFO, "DHCPv6 client message received was not relayed\n");
             break;
         }
     }

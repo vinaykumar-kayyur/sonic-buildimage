@@ -58,6 +58,7 @@ struct relay_config {
 
 struct dhcpv6_msg {
     uint8_t msg_type;
+    uint8_t xid[3];
 };
 
 struct PACKED dhcpv6_relay_msg {
