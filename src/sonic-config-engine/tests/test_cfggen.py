@@ -568,7 +568,6 @@ class TestCfgGen(TestCase):
         argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v "PORT"'
         output = self.run_script(argument)
 
-        #self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
