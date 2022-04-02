@@ -12,6 +12,7 @@
 #include "dbconnector.h" 
 #include "configInterface.h"
 
+#include <iostream>
 
 struct event *listen_event;
 struct event *server_listen_event;
@@ -613,15 +614,34 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     std::string counterVlan = counter_table;
     update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
 
+    if(msg->xid != NULL) {
+        for (int i = 1; i<3; i++) {
+            if((msg->xid[i]) == 0) {
+                syslog(LOG_INFO, "DHCPv6 message received is missing transaction-id\n");
+                return;
+            }
+        }
+    }
+
     switch (msg->msg_type) {
         case DHCPv6_MESSAGE_TYPE_RELAY_FORW:
         {
             relay_relay_forw(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, config);
             break;
         }
-        default:
+        case DHCPv6_MESSAGE_TYPE_SOLICIT:
+        case DHCPv6_MESSAGE_TYPE_REQUEST: 
+        case DHCPv6_MESSAGE_TYPE_RENEW:
+        case DHCPv6_MESSAGE_TYPE_REBIND:
+        case DHCPv6_MESSAGE_TYPE_RELEASE:
+        case DHCPv6_MESSAGE_TYPE_DECLINE:
         {
             relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
+            break;
+        }
+        default:
+        {
+            syslog(LOG_INFO, "DHCPv6 client message received was not relayed\n");
             break;
         }
     }
