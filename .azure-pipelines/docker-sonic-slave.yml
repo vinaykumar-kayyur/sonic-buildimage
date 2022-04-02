@@ -66,7 +66,7 @@ stages:
               pool: sonicbld
               arch: ${{ arch }}
               dist: ${{ dist }}
-          ${{ else }}:
+        - ${{ else }}:
           - template: .azure-pipelines/docker-sonic-slave-template.yml@buildimage
             parameters:
               pool: sonicbld
