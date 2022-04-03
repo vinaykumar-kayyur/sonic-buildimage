@@ -879,7 +879,6 @@ class TestCfgGen(TestCase):
         self.assertDictEqual(
             output_dict['Ethernet-IB0'],
             {'lanes': '133', 
-
             'alias': 'Recycle0', 
             'description': 'Recycle0', 
             'mtu': '9100', 
