@@ -37,6 +37,7 @@ chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
+dhcp_server_enabled_device_types = ['BmcMgmtToRRouter']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -487,7 +488,7 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
-                pc_members[(pcintfname, pcmbr_list[i])] = {'NULL': 'NULL'}
+                pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
@@ -510,10 +511,11 @@ def parse_dpg(dpg, hname):
                     elif ":" in ipnhaddr:
                         port_nhipv6_map[ipnhfmbr] = ipnhaddr
                 elif ipnh.find(str(QName(ns, "Type"))).text == 'StaticRoute':
-                    prefix = ipnh.find(str(QName(ns, "AttachTo"))).text
+                    prefix = ipnh.find(str(QName(ns, "AssociatedTo"))).text
+                    ifname = ipnh.find(str(QName(ns, "AttachTo"))).text
                     nexthop = ipnh.find(str(QName(ns, "Address"))).text
                     advertise = ipnh.find(str(QName(ns, "Advertise"))).text
-                    static_routes[prefix] = {'nexthop': nexthop, 'advertise': advertise}
+                    static_routes[prefix] = {'nexthop': nexthop, 'ifname': ifname, 'advertise': advertise}
 
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
@@ -966,6 +968,7 @@ def parse_asic_meta(meta, hname):
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
+    sys_ports = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -980,7 +983,6 @@ def parse_deviceinfo(meta, hwsku):
                 port_speeds[port_alias_map.get(alias, alias)] = speed
 
             sysports = device_info.find(str(QName(ns, "SystemPorts")))
-            sys_ports = {}
             if sysports is not None:
                 for sysport in sysports.findall(str(QName(ns, "SystemPort"))):
                     portname = sysport.find(str(QName(ns, "Name"))).text
@@ -1280,7 +1282,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
-        'deployment_id': deployment_id,
         'region': region,
         'cloudtype': cloudtype,
         'docker_routing_config_mode': docker_routing_config_mode,
@@ -1290,6 +1291,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    if deployment_id is not None:
+        results['DEVICE_METADATA']['localhost']['deployment_id'] = deployment_id
 
     cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
     if cluster:
@@ -1623,7 +1627,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
     results['FEATURE'] = {
         'telemetry': {
-            'status': 'enabled'
+            'state': 'enabled'
         }
     }
     results['TELEMETRY'] = {
@@ -1682,6 +1686,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
         }
     }
+
+    # Enable DHCP Server feature for specific device type
+    if current_device['type'] in dhcp_server_enabled_device_types:
+        results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
 
     return results
 

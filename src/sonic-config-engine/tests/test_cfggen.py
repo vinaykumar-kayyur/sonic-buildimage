@@ -23,6 +23,7 @@ class TestCfgGen(TestCase):
         self.sample_graph_metadata = os.path.join(self.test_dir, 'simple-sample-graph-metadata.xml')
         self.sample_graph_pc_test = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
+        self.sample_graph_deployment_id = os.path.join(self.test_dir, 't0-sample-deployment-id.xml')
         self.sample_graph_voq = os.path.join(self.test_dir, 'sample-voq-graph.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
@@ -498,6 +499,11 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "1")
 
+    def test_minigraph_deployment_id_null(self):
+        argument = '-m "' + self.sample_graph_deployment_id + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\']"'
+        output = self.run_script(argument)
+        self.assertNotIn('deployment_id', output.strip())
+
     def test_minigraph_ethernet_interfaces(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet8\']"'
@@ -904,14 +910,14 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'advertise':'false'}}")
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'ifname': 'PortChannel40,PortChannel50', 'advertise':'false'}}")
         )
 
         argument = '-m "' + self.packet_chassis_graph + '" -p "' + self.packet_chassis_port_ini + '" -n "' + "asic1" + '" -v "STATIC_ROUTE"'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'advertise':'false'}}")
+            utils.to_dict("{'8.0.0.1/32': {'nexthop': '192.168.1.2,192.168.2.2', 'ifname': 'PortChannel40,PortChannel50', 'advertise':'false'}}")
         )
 
     def test_minigraph_bgp_packet_chassis_vlan_subintf(self):
