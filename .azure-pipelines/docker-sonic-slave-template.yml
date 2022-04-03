@@ -40,7 +40,7 @@ jobs:
   - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
     - template: template-clean-sonic-slave.yml
   - ${{ else }}:
-    - template: .azure-pipelines/template-variables.yml@buildimage
+    - template: .azure-pipelines/template-clean-sonic-slave.yml@buildimage
   - checkout: self
     clean: true
     submodules: recursive
