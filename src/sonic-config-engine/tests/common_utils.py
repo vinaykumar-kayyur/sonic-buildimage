@@ -3,7 +3,6 @@ import filecmp
 import os
 import re
 import sys
-import os
 import subprocess
 import argparse
 import shlex
