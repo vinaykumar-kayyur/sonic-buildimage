@@ -274,5 +274,32 @@
                 }
             }
         }
+    },
+    "DEVICE_METADATA_VALID_SUB_ROLE_CONFIG": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "sub_role": "FrontEnd"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_VALID_DHCP_SERVER": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "dhcp_server": "enabled"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_INVALID_DHCP_SERVER": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "dhcp_server": "invalid"
+                }
+            }
+        }
     }
 }
