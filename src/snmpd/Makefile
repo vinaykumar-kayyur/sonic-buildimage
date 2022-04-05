@@ -56,15 +56,11 @@ endif
 	stg init
 	stg import -s ../patch-$(SNMPD_VERSION)/series
 
-ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+ifneq ($(CROSS_BUILD_ENVIRON), y)
 	dpkg-buildpackage -rfakeroot -b -d -us -uc -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 else
-ifeq ($(CROSS_BUILD_ENVIRON), y)
 	patch -p1 < ../patch-$(SNMPD_VERSION)/cross-compile-changes.patch
-	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L$$CROSS_PKGS_LIB_PATH" dpkg-buildpackage -rfakeroot -b -d -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
-else
-	dpkg-buildpackage -rfakeroot -b -d -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
-endif
+	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L$$CROSS_PKGS_LIB_PATH" dpkg-buildpackage -rfakeroot -b -d -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 endif
 	popd
 
