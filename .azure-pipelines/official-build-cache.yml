@@ -18,7 +18,9 @@ stages:
 - stage: Build
   pool: sonicbld
   variables:
-    CACHE_MODE: cache
+  - name: CACHE_MODE
+    value: cache
+  - template: azure-pipelines-repd-build-variables.yml
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
@@ -35,3 +37,8 @@ stages:
           variables:
             docker_syncd_rpc_image: yes
             platform_rpc: mlnx
+        - name: marvell-armhf
+          pool: sonicbld-armhf
+          timeoutInMinutes: 1200
+          variables:
+            PLATFORM_ARCH: armhf

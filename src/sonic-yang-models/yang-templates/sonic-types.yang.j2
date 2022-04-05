@@ -61,6 +61,7 @@ module sonic-types {
     typedef packet_action{
         type enumeration {
             enum DROP;
+            enum ACCEPT;
             enum FORWARD;
             enum REDIRECT;
             enum DO_NOT_NAT;
@@ -204,7 +205,23 @@ module sonic-types {
         }
     }
 
-    typedef copp_packet_action {
+    typedef policer_mode {
+        type enumeration {
+            enum sr_tcm;
+            enum tr_tcm;
+            enum storm;
+        }
+    }
+
+    typedef policer_color_source {
+        type enumeration {
+	    enum aware;
+	    enum blind;
+        }
+    }
+
+
+    typedef policer_packet_action {
         type enumeration {
             enum drop;
             enum forward;
@@ -229,9 +246,14 @@ module sonic-types {
         }
     }
 
+    typedef hostname {
+        type string {
+            length 1..63;
+        }
+    }
 
-    /* Required for CVL */
     {% if yang_model_type == "cvl" %}
+    /* Required for CVL */
     container operation {
         description
             "This definition is used internally by CVL and
