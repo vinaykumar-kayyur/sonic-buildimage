@@ -20,13 +20,45 @@ N3248PXE_FANS_PER_FANTRAY = 1
 class FanDrawer(FanDrawerBase):
     """DellEMC Platform-specific Fan class"""
 
+    FANTRAY_LED_COLORS = {
+        "off",
+        "green",
+        "yellow"
+        }
+
     def __init__(self, fantray_index):
 
         FanDrawerBase.__init__(self)
         # FanTray is 1-based in DellEMC platforms
+        self.fantray_led_reg = "fan{}_led".format(fantray_index)
         self.fantrayindex = fantray_index + 1
         for i in range(N3248PXE_FANS_PER_FANTRAY):
             self._fan_list.append(Fan(fantray_index, i))
+
+    def _get_cpld_register(self, reg_name):
+        # On successful read, returns the value read from given
+        # reg name and on failure rethrns 'ERR'
+        cpld_dir = "/sys/devices/platform/dell-n3248pxe-cpld.0/"
+        cpld_reg_file = cpld_dir + '/' + reg_name
+        try:
+            with open(cpld_reg_file, 'r') as fd:
+                rv = fd.read()
+        except IOError : return 'ERR'
+        return rv.strip('\r\n').lstrip(' ')
+
+    def _set_cpld_register(self, reg_name, value):
+        # On successful write, returns the value will be written on
+        # reg_name and on failure returns 'ERR'
+        cpld_dir = "/sys/devices/platform/dell-n3248pxe-cpld.0/"
+        cpld_reg_file = cpld_dir + '/' + reg_name
+
+        try:
+           with open(cpld_reg_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except Exception:
+            rv = 'ERR'
+
+        return rv
 
     def get_name(self):
         """
@@ -35,6 +67,37 @@ class FanDrawer(FanDrawerBase):
             string: The name of the device
         """
         return "FanTray{}".format(self.fantrayindex)
+
+    def get_status_led(self):
+        """
+        Gets the current system LED color
+
+        Returns:
+            A string that represents the supported color
+        """
+
+        color = self._get_cpld_register(self.fantray_led_reg)
+
+        #if color not in list(self.FANTRAY_LED_COLORS):
+        #    return self.sys_ledcolor
+
+        return color
+
+    def set_status_led(self,color):
+        """
+        Set system LED status based on the color type passed in the argument.
+        Argument: Color to be set
+        Returns:
+          bool: True is specified color is set, Otherwise return False
+        """
+
+        if color not in list(self.FANTRAY_LED_COLORS):
+            return False
+
+        if(not self._set_cpld_register(self.fantray_led_reg, color)):
+            return False
+
+        return True
 
     def get_presence(self):
         """
@@ -83,19 +146,6 @@ class FanDrawer(FanDrawerBase):
         Returns:
             bool: True if it is replaceable, False if not
         """
-        return True
-
-    def set_status_led(self, color):
-        """
-        Set led to expected color
-        Args:
-            color: A string representing the color with which to set the
-            fan module status LED
-        Returns:
-            bool: True if set success, False if fail.
-        """
-        # Fan tray status LED controlled by BMC
-        # Return True to avoid thermalctld alarm
         return True
 
     def get_maximum_consumed_power(self):
