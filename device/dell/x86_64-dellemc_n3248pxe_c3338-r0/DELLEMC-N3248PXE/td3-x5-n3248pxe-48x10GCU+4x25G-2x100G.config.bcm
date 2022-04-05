@@ -349,6 +349,7 @@ l3_mem_entries=40960
 #Tunnels
 use_all_splithorizon_groups=1
 sai_tunnel_support=1
+sai_tunnel_underlay_route_mode=1
 bcm_tunnel_term_compatible_mode=1
 
 #RIOT Enable
