@@ -7,7 +7,7 @@ $(SONIC_CLI)_DEPENDS += $(LIBSWSSCOMMON_DEV)
 $(SONIC_CLI)_RDEPENDS += $(LIBSWSSCOMMON)
 $(SONIC_CLI)_SRC_PATH = $(SRC_PATH)/sonic-cli
 
-SONIC_MAKE_DEBS += $(SONIC_CLI)
+SONIC_DPKG_DEBS += $(SONIC_CLI)
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.

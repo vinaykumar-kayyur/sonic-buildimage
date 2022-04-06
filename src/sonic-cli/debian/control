@@ -1,12 +1,16 @@
 Source: sonic-cli
-Section: admin
-Priority: extra
-Maintainer: Liu Hua <liuh@microsoft.com>
-Build-Depends: autoconf-archive
-Description: SONiC CLI for SONiC database.
+Section: unknown
+Priority: optional
+Maintainer: unknown <azureuser@c993237ef6de>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Browser: https://salsa.debian.org/debian/sonic-cli
+#Vcs-Git: https://salsa.debian.org/debian/sonic-cli.git
+Rules-Requires-Root: no
 
 Package: sonic-cli
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libswsscommon
-Description: SONiC CLI debian package
-    SONiC CLI for manage SONiC database.
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
