@@ -7,7 +7,7 @@ if [ -z "$REAL_COMMAND" ]; then
     exit 1
 fi
 
-if [ "$SKIP_BUILD_HOOK" == y ]; then
+if [[ "$SKIP_BUILD_HOOK" == y || ${ENABLE_VERSION_CONTROL_WEB} != y ]]; then
     $REAL_COMMAND "$@"
     exit $?
 fi

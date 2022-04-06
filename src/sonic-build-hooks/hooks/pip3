@@ -8,5 +8,9 @@ if [ ! -x "$REAL_COMMAND" ]; then
     echo "The command pip3 not found" 1>&2
     exit 1
 fi
+if [[ "$SKIP_BUILD_HOOK" == y || ${ENABLE_VERSION_CONTROL_PIP} != y ]]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
 
 PIP_VERSION_FILE=$VERSION_FILE ENABLE_VERSION_CONTROL_PY=$ENABLE_VERSION_CONTROL_PY3 REAL_COMMAND=$REAL_COMMAND run_pip_command "$@"

@@ -63,6 +63,7 @@ endif
 IMAGE_DISTRO := bullseye
 IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
 IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
+export GO=/usr/local/go/bin/go
 
 # Python 2 packages will not be available in Bullseye
 ifeq ($(BLDENV),bullseye)
@@ -90,6 +91,10 @@ export BLDENV
 ## Define configuration, help etc.
 ###############################################################################
 
+# Install the updated build hooks if INSHOOKS flag is set
+export INSHOOKS=y
+$(if $(INSHOOKS),$(shell sudo dpkg -i /usr/local/share/buildinfo/sonic-build-hooks_1.0_all.deb &>/dev/null))
+
 .platform :
 ifneq ($(CONFIGURED_PLATFORM),generic)
 	@echo Build system is not configured, please run make configure
@@ -109,6 +114,7 @@ configure :
 	@mkdir -p $(PYTHON_DEBS_PATH)
 	@mkdir -p $(PYTHON_WHEELS_PATH)
 	@mkdir -p $(DPKG_ADMINDIR_PATH)
+	@mkdir -p $(TARGET_PATH)/vcache
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
@@ -369,6 +375,10 @@ $(info "INCLUDE_PDE"                     : "$(INCLUDE_PDE)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
+$(info "SONIC_VERSION_CACHE_METHOD"      : "$(SONIC_VERSION_CACHE)")
+ifneq ($(SONIC_VERSION_CACHE),)
+$(info "SONIC_VERSION_CACHE_SOURCE"      : "$(SONIC_VERSION_CACHE_SOURCE)")
+endif
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BUILD_LOG_TIMESTAMP"             : "$(BUILD_LOG_TIMESTAMP)")
 $(info "SONIC_IMAGE_VERSION"             : "$(SONIC_IMAGE_VERSION)")
@@ -407,8 +417,9 @@ $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
 endif
 
 # Overwrite the buildinfo in slave container
-$(shell sudo scripts/prepare_slave_container_buildinfo.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
-
+ifeq ($(filter clean,$(MAKECMDGOALS)),)
+$(shell DBGOPT='$(DBGOPT)' scripts/prepare_slave_container_buildinfo.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
+endif
 include Makefile.cache
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -529,7 +540,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform \
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		$(foreach deb,$* $($*_DERIVED_DEBS), \
-			{ curl -L -f -o $(DEBS_PATH)/$(deb) $($(deb)_CURL_OPTIONS) $($(deb)_URL) $(LOG) || { exit 1 ; } } ; )
+			{ SKIP_BUILD_HOOK=$($*_SKIP_VERSION) curl -L -f -o $(DEBS_PATH)/$(deb) $($(deb)_CURL_OPTIONS) $($(deb)_URL) $(LOG) || { exit 1 ; } } ; )
 
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
@@ -546,7 +557,7 @@ SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS))
 #     SONIC_ONLINE_FILES += $(SOME_NEW_FILE)
 $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES)) : $(FILES_PATH)/% : .platform
 	$(HEADER)
-	curl -L -f -o $@ $($*_CURL_OPTIONS) $($*_URL) $(LOG)
+	SKIP_BUILD_HOOK=$($*_SKIP_VERSION) curl -L -f -o $@ $($*_CURL_OPTIONS) $($*_URL) $(LOG)
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES))
@@ -854,7 +865,7 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 	while true; do
 	if mkdir $(PYTHON_WHEELS_PATH)/pip_lock &> /dev/null; then
 ifneq ($(CROSS_BUILD_ENVIRON),y)
-	{ sudo -E pip$($*_PYTHON_VERSION) install $(PYTHON_WHEELS_PATH)/$* $(LOG) && rm -d $(PYTHON_WHEELS_PATH)/pip_lock && break; } || { rm -d $(PYTHON_WHEELS_PATH)/pip_lock && exit 1 ; }
+	{ sudo -E SKIP_BUILD_HOOK=Y pip$($*_PYTHON_VERSION) install $(PYTHON_WHEELS_PATH)/$* $(LOG) && rm -d $(PYTHON_WHEELS_PATH)/pip_lock && break; } || { rm -d $(PYTHON_WHEELS_PATH)/pip_lock && exit 1 ; }
 else
 	# Link python script and data expected location to the cross python virtual env istallation locations
 	{ PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} sudo -E $(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION))/pip$($*_PYTHON_VERSION) install $(PYTHON_WHEELS_PATH)/$* $(LOG) && $(if $(findstring $(SONIC_CONFIG_ENGINE_PY3),$*),(sudo ln -s $(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION))/sonic-cfggen /usr/local/bin/sonic-cfggen 2>/dev/null || true), true ) && $(if $(findstring $(SONIC_YANG_MODELS_PY3),$*),(sudo ln -s $(VIRTENV_BASE_CROSS_PYTHON3)/yang-models /usr/local/yang-models 2>/dev/null || true), true ) && rm -d $(PYTHON_WHEELS_PATH)/pip_lock && break; } || { rm -d $(PYTHON_WHEELS_PATH)/pip_lock && exit 1 ; }
@@ -882,7 +893,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 	# Apply series of patches if exist
 	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi
 	# Prepare docker build info
-	scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(TARGET_DOCKERFILE)/Dockerfile.buildinfo
+	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+	SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
+	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	DBGOPT='$(DBGOPT)' scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(TARGET_DOCKERFILE)/Dockerfile.buildinfo $(LOG)
 	docker info $(LOG)
 	docker build --squash --no-cache \
 		--build-arg http_proxy=$(HTTP_PROXY) \
@@ -894,9 +909,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 		--label Tag=$(SONIC_IMAGE_VERSION) \
 		-f $(TARGET_DOCKERFILE)/Dockerfile.buildinfo \
-		-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
-	scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
+		-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) \
+		| awk '/^_VCSTART_$$/,/^_VCEND_$$/{if($$0 !~ /_VCSTART_|_VCEND_/)print >"$($*.gz_PATH)/vcache/cache.base64";next}{print }' $(LOG)
+	DBGOPT='$(DBGOPT)' SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH} \
+		   scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
 	$(call docker-image-save,$*,$@)
+
 	# Clean up
 	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
 	$(FOOTER)
@@ -973,6 +991,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		mkdir -p $($*.gz_PATH)/files $(LOG)
 		mkdir -p $($*.gz_PATH)/python-debs $(LOG)
 		mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
+		mkdir -p $(TARGET_PATH)/vcache/$* $($*.gz_PATH)/vcache $(LOG)
 		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
 		sudo mount --bind $($*.gz_FILES_PATH) $($*.gz_PATH)/files $(LOG)
 		sudo mount --bind $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
@@ -997,7 +1016,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
 		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
-		scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH)
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+		DBGOPT='$(DBGOPT)' scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
 		docker build --squash --no-cache \
 			--build-arg http_proxy=$(HTTP_PROXY) \
@@ -1009,13 +1029,19 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
+			--build-arg SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+			--build-arg SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
 			--build-arg image_version=$(SONIC_IMAGE_VERSION) \
 			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 		        $($(subst -,_,$(notdir $($*.gz_PATH)))_labels) \
-			-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
-		scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
+			-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) \
+			| awk '/^_VCSTART_$$/,/^_VCEND_$$/{if($$0 !~ /_VCSTART_|_VCEND_/)print >"$($*.gz_PATH)/vcache/cache.base64";next}{print }' $(LOG_SAVE)
+
+		DBGOPT='$(DBGOPT)' SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH}\
+			   scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $($*.gz_PATH)/Dockerfile $(LOG)
 		$(call docker-image-save,$*,$@)
+
 		# Clean up
 		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
 
@@ -1043,6 +1069,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 
 		mkdir -p $($*.gz_PATH)/debs $(LOG)
 		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+		mkdir -p $(TARGET_PATH)/vcache/$*-dbg $($*.gz_PATH)/vcache $(LOG)
 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
@@ -1054,7 +1081,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
 		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
-		scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile-dbg $(CONFIGURED_ARCH)
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+		DBGOPT='$(DBGOPT)' scripts/prepare_docker_buildinfo.sh $*-dbg $($*.gz_PATH)/Dockerfile-dbg $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
 		docker build \
 			$(if $($*.gz_DBG_DEPENDS), --squash --no-cache, --no-cache) \
@@ -1062,12 +1090,18 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			--build-arg https_proxy=$(HTTPS_PROXY) \
 			--build-arg no_proxy=$(NO_PROXY) \
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+			--build-arg SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+			--build-arg SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
 			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 			--file $($*.gz_PATH)/Dockerfile-dbg \
-			-t $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH) $(LOG)
-		scripts/collect_docker_version_files.sh $(DOCKER_DBG_IMAGE_REF) $(TARGET_PATH)
+			-t $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH) \
+			| awk '/^_VCSTART_$$/,/^_VCEND_$$/{if($$0 !~ /_VCSTART_|_VCEND_/)print >"$($*.gz_PATH)/vcache.base64";next}{print }' $(LOG_SAVE)
+
+		DBGOPT='$(DBGOPT)' SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH}\
+			   scripts/collect_docker_version_files.sh $*-dbg $(TARGET_PATH) $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH)  $($*.gz_PATH)/Dockerfile-dbg $(LOG)
 		$(call docker-image-save,$*-$(DBG_IMAGE_MARK),$@)
+
 		# Clean up
 		docker rmi -f $(DOCKER_IMAGE_REF) &> /dev/null || true
 		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
@@ -1356,6 +1390,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		SIGNING_KEY="$(SIGNING_KEY)" \
 		SIGNING_CERT="$(SIGNING_CERT)" \
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+		DBGOPT='$(DBGOPT)' \
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 		MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
 		CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
 			./build_debian.sh $(LOG)
@@ -1418,7 +1454,7 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
-	@rm -f $(TARGET_PATH)/$*
+	@rm -f $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
 
 SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
 		     $(SONIC_PYTHON_STDEB_DEBS)))
@@ -1433,7 +1469,13 @@ $(SONIC_CLEAN_WHEELS) :: $(PYTHON_WHEELS_PATH)/%-clean : .platform
 clean-logs :: .platform
 	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log $(FILES_PATH)/*.log $(PYTHON_DEBS_PATH)/*.log $(PYTHON_WHEELS_PATH)/*.log
 
-clean :: .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC_CLEAN_TARGETS) $$(SONIC_CLEAN_STDEB_DEBS) $$(SONIC_CLEAN_WHEELS)
+clean-versions :: .platform
+	@rm -rf target/versions/*
+
+vclean:: .platform
+	@sudo rm -rf target/vcache/* target/baseimage*
+
+clean :: .platform clean-logs clean-versions $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC_CLEAN_TARGETS) $$(SONIC_CLEAN_STDEB_DEBS) $$(SONIC_CLEAN_WHEELS)
 
 ###############################################################################
 ## all

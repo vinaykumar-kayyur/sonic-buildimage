@@ -30,6 +30,10 @@ RUN cd /python-wheels/ && pip3 install {{ packages | join(' ') }}
 {%- endif %}
 {%- endmacro %}
 
+{% macro install_python3_wheels(packages) -%}
+RUN cd /python-wheels/ && python3 -m pip install {{ packages | join(' ') }}
+{%- endmacro %}
+
 {% macro copy_files(prefix, files, dest) -%}
 COPY \
     {%- for file in files %}
