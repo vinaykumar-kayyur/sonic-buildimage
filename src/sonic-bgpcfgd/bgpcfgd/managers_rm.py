@@ -1,10 +1,7 @@
 from .manager import Manager
-from .template import TemplateFabric
-from swsscommon import swsscommon
 
-
-class AdvertiseRouteMgr(Manager):
-    """ This class Advertises routes when ADVERTISE_NETWORK_TABLE in STATE_DB is updated """
+class RouteMapMgr(Manager):
+    """ This class add route-map when ROUTE_MAP_TABLE in STATE_DB is updated """
     def __init__(self, common_objs, db, table):
         """
         Initialize the object
@@ -12,104 +9,58 @@ class AdvertiseRouteMgr(Manager):
         :param db: name of the db
         :param table: name of the table in the db
         """
-        super(AdvertiseRouteMgr, self).__init__(
+        super(RouteMapMgr, self).__init__(
             common_objs,
             [],
             db,
             table,
         )
-        
-        self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),], self.on_bgp_asn_change)
-        self.advertised_routes = dict()
 
-
-    OP_DELETE = 'DELETE'
-    OP_ADD = 'ADD'
-
+    VALID_RM = ['VXLAN_OV_ECMP_RM']
 
     def set_handler(self, key, data):
-        vrf, ip_prefix = self.split_key(key)
-        self.add_route_advertisement(vrf, ip_prefix, data)
-
+        '''Only need a name as the key, and community id as the data'''
+        if not self._set_handler_validate(key, data):
+            return True
+        
+        self._update_rm(key, data)
         return True
 
 
     def del_handler(self, key):
-        vrf, ip_prefix = self.split_key(key)
-        self.remove_route_advertisement(vrf, ip_prefix)
+        if not self._del_handler_validate(key):
+            return
+        self._remove_rm(key)
 
 
-    def add_route_advertisement(self, vrf, ip_prefix, data):
-        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
-            if not self.advertised_routes.get(vrf, dict()):
-                self.bgp_network_import_check_commands(vrf, self.OP_ADD)
-            self.advertise_route_commands(ip_prefix, vrf, self.OP_ADD, data)
-
-        self.advertised_routes.setdefault(vrf, dict()).update({ip_prefix:data})
+    def _remove_rm(self, rm):
+        cmds = ['no route-map %s permit 100' % rm]
+        self.cfg_mgr.push_list(cmds)
 
 
-    def remove_route_advertisement(self, vrf, ip_prefix):
-        self.advertised_routes.setdefault(vrf, dict()).pop(ip_prefix)
-        if not self.advertised_routes.get(vrf, dict()):
-            self.advertised_routes.pop(vrf, None)
+    def _set_handler_validate(self, key, data):
+        if key != self.VALID_RM:
+            return False
+        
+        if data:
+            community_ids = data.split(':')
+            if len(community_ids) == 2:
+                if community_ids[0] in range(0, 65535) \
+                and community_ids[1] in (0, 65535):
+                    return True
 
-        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
-            if not self.advertised_routes.get(vrf, dict()):
-                self.bgp_network_import_check_commands(vrf, self.OP_DELETE)
-            self.advertise_route_commands(ip_prefix, vrf, self.OP_DELETE)
-
-
-    def advertise_route_commands(self, ip_prefix, vrf, op, data = None):
-        is_ipv6 = TemplateFabric.is_ipv6(ip_prefix)
-        bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
-
-        cmd_list = []
-        if vrf == 'default':
-            cmd_list.append("router bgp %s" % bgp_asn)
-        else:
-            cmd_list.append("router bgp %s vrf %s" % (bgp_asn, vrf))
-
-        cmd_list.append(" address-family %s unicast" % ("ipv6" if is_ipv6 else "ipv4"))
-        '''
-            For set operation, need to check if data is same or not, 
-            need to check if it is ok by overwriting existing value or need to follow no/add sequence
-        '''
-        if data and 'route-map' in data:
-            cmd_list.append("  network %s route-map %s" % (ip_prefix, data['route-map']))
-        else:
-            cmd_list.append("  %snetwork %s" % ('no ' if op == self.OP_DELETE else '', ip_prefix))
-
-        self.cfg_mgr.push_list(cmd_list)
+        return False
 
 
-    def bgp_network_import_check_commands(self, vrf, op):
-        bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
-        cmd_list = []
-        if vrf == 'default':
-            cmd_list.append("router bgp %s" % bgp_asn)
-        else:
-            cmd_list.append("router bgp %s vrf %s" % (bgp_asn, vrf))
-        cmd_list.append(" %sbgp network import-check" % ('' if op == self.OP_DELETE else 'no '))
-
-        self.cfg_mgr.push_list(cmd_list)
+    def _del_handler_validate(self, key):
+        if key in self.VALID_RM:
+            return False
+        return True
 
 
-    def on_bgp_asn_change(self):
-        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"):
-            for vrf, ip_prefixes in self.advertised_routes.items():
-                self.bgp_network_import_check_commands(vrf, self.OP_ADD)
-                for ip_prefix in ip_prefixes:
-                    self.add_route_advertisement(vrf, ip_prefix, ip_prefixes[ip_prefix])
-
-
-    @staticmethod
-    def split_key(key):
-        """
-        Split key into vrf name and prefix.
-        :param key: key to split
-        :return: vrf name extracted from the key, ip prefix extracted from the key
-        """
-        if '|' not in key:
-            return 'default', key
-        else:
-            return tuple(key.split('|', 1))
+    def _update_rm(self, rm, community):
+        cmds = [
+            'route-map %s permit 100' % rm,
+            ' set community %s' % community
+        ]
+        self.cfg_mgr.push_list(cmds)
