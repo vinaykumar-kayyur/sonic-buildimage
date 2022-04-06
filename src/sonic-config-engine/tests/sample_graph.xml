@@ -112,7 +112,7 @@
         <Bandwidth>40000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH01040DDLF</EndDevice>
-        <EndPort>Ethernet1</EndPort>
+        <EndPort>Ethernet4</EndPort>
         <StartDevice>OCPSCH0104002MS</StartDevice>
         <StartPort>Ethernet12</StartPort>
       </DeviceLinkBase>
