@@ -1661,7 +1661,7 @@
         },
 
 
-        "PASSWORD": {
+        "PASSW_HARDENING": {
             "policies": {
                 "state": "enabled",
                 "expiration": "180",

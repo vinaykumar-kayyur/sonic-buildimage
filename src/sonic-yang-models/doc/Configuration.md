@@ -1486,7 +1486,7 @@ There are 4 classes
     -   special_class - Special Characters `~!@#$%^&*()-_+=|[{}];:',<.>/? and white space
 ```
 {
-"PASSWORD": {
+"PASSW_HARDENING": {
     "POLICIES": {
         "state": "disabled",
         "expiration": "180",
