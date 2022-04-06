@@ -1496,7 +1496,7 @@ There are 4 classes
         "reject_user_passw_match": "True",
         "lower_class": "True",
         "upper_class": "True",
-        "digit_class": "True",
+        "digits_class": "True",
         "special_class": "True"
     }
   }
