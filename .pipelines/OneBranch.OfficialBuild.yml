@@ -80,6 +80,10 @@ stages:
             ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(GROUP_NAME) PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
           displayName: 'Make configure'
       postSteps:
+        - task: ManifestGeneratorTask@0
+          displayName: "Manifest Generator"
+          inputs:
+            BuildDropPath: $(System.DefaultWorkingDirectory)/target
         - publish: $(System.DefaultWorkingDirectory)/target
           artifact: 'sonic-buildimage.$(GROUP_NAME)'
           displayName: "Archive sonic image"
