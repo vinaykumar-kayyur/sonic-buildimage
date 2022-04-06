@@ -106,7 +106,7 @@ jobs:
           $(VARIABLE_SLAVE_BASE_TAG)
           latest
       ${{ else }}:
-        tags:
+        tags: |
           $(VARIABLE_SLAVE_BASE_TAG)
   - ${{ if ne(parameters.arch, 'amd64') }}:
     - task: Docker@2
