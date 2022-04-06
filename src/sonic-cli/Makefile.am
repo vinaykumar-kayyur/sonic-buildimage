@@ -8,6 +8,7 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 ACLOCAL_AMFLAGS = -I config
 AUTOMAKE_OPTIONS = subdir-objects
+SUBDIRS = tests
 
 bin_PROGRAMS = sonic-cli
 sonic_cli_SOURCES = sonic-cli.h \

@@ -63,5 +63,8 @@ AC_CHECK_FUNCS([bzero gethostbyname gettimeofday inet_ntoa select socket logwtmp
 
 dnl --------------------------------------------------------------------
 dnl Generate made files
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+    Makefile
+    tests/Makefile
+])
 AC_OUTPUT
