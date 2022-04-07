@@ -1662,7 +1662,7 @@
 
 
         "PASSW_HARDENING": {
-            "policies": {
+            "POLICIES": {
                 "state": "enabled",
                 "expiration": "180",
                 "expiration_warning": "15",
