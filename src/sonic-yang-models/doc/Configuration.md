@@ -1493,11 +1493,11 @@ There are 4 classes
         "expiration_warning": "15",
         "history_cnt": "10",
         "len_min": "8",
-        "reject_user_passw_match": "True",
-        "lower_class": "True",
-        "upper_class": "True",
-        "digits_class": "True",
-        "special_class": "True"
+        "reject_user_passw_match": "true",
+        "lower_class": "true",
+        "upper_class": "true",
+        "digits_class": "true",
+        "special_class": "true"
     }
   }
 }
