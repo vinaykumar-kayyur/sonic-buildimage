@@ -97,6 +97,17 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
+ifeq ($(SECURE_BOOT),)
+    override SECURE_BOOT = no
+endif
+
+SBSIGN_CONF := $(shell [ -f .sbsign.conf ] && cat .sbsign.conf || echo $(SBSIGN_CONF))
+ifneq ($(SBSIGN_CONF),)
+SONIC_SECURE_BOOT = yes
+SONIC_SBSIGN_DIR = $(SBSIGN_CONF)
+SONIC_SBSIGN_MOUNT=$(shell echo $(SONIC_SBSIGN_DIR):$(SONIC_SBSIGN_DIR):ro)
+endif
+
 ifeq ($(BLDENV), bullseye)
 SLAVE_DIR = sonic-slave-bullseye
 else ifeq ($(BLDENV), buster)
@@ -188,6 +199,10 @@ ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
 endif
 
+ifneq ($(SONIC_SBSIGN_MOUNT),)
+	DOCKER_RUN += -v "$(SONIC_SBSIGN_MOUNT)"
+endif
+
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
 ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
     DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
@@ -263,6 +278,8 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
+                           SONIC_SECURE_BOOT=$(SONIC_SECURE_BOOT) \
+                           SONIC_SBSIGN_DIR=$(SONIC_SBSIGN_DIR) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
                            INCLUDE_PDE=$(INCLUDE_PDE) \
