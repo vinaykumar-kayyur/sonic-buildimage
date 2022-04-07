@@ -1,6 +1,30 @@
 #!/bin/bash
 
+function wait_networking_service_done() {
+    local -i _WDOG_CNT="1"
+    local -ir _WDOG_MAX="30"
+
+    local -r _TIMEOUT="1s"
+
+    while [[ "${_WDOG_CNT}" -le "${_WDOG_MAX}" ]]; do
+        networking_status="$(systemctl is-active networking 2>&1)"
+
+        if [[ "${networking_status}" == active ]]; then
+            return
+        fi
+
+        echo "interfaces-config: networking service is running, wait for it done"
+
+        let "_WDOG_CNT++"
+        sleep "${_TIMEOUT}"
+    done
+
+    echo "interfaces-config: networking service is still running after 30 seconds, killing it"
+    systemctl kill networking 2>&1
+}
+
 if [[ $(ifquery --running eth0) ]]; then
+    wait_networking_service_done
     ifdown --force eth0
 fi
 
