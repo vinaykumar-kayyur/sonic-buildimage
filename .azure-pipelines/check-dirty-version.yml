@@ -3,7 +3,7 @@ steps:
     . functions.sh
     SONIC_VERSION=$(sonic_get_version)
     echo "SONIC_VERSION=$SONIC_VERSION"
-    if [ "$SONIC_VERSION" == *dirty* ]; then
+    if [[ "$SONIC_VERSION" == *dirty* ]]; then
       # Print the detail dirty info
       git status --untracked-files=no -s --ignore-submodules
 
