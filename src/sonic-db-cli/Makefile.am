@@ -10,13 +10,12 @@ ACLOCAL_AMFLAGS = -I config
 AUTOMAKE_OPTIONS = subdir-objects
 SUBDIRS = tests
 
-bin_PROGRAMS = sonic-cli
-sonic_cli_SOURCES = sonic-cli.h \
-                    sonic-cli.cpp
-sonic_cli_CPPFLAGS = $(AM_CPPFLAGS) -std=c++17
-sonic_cli_LDFLAGS = -lswsscommon $(BOOST_PROGRAM_OPTIONS_LIB)
+bin_PROGRAMS = sonic-db-cli
+sonic_db_cli_SOURCES = sonic-db-cli.h sonic-db-cli.cpp
+sonic_db_cli_CPPFLAGS = $(AM_CPPFLAGS) -std=c++17
+sonic_db_cli_LDFLAGS = -lswsscommon $(BOOST_PROGRAM_OPTIONS_LIB)
 
-EXTRA_DIST = bootstrap sonic-cli.spec
+EXTRA_DIST = bootstrap sonic-db-cli.spec
 
 MAINTAINERCLEANFILES = Makefile.in config.h.in configure aclocal.m4 \
                        config/config.guess  config/config.sub  config/depcomp \
