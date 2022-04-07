@@ -1,12 +1,10 @@
 Source: sonic-cli
 Section: unknown
 Priority: optional
-Maintainer: unknown <azureuser@c993237ef6de>
+Maintainer: Liu Hua (liuh@microsoft.com)
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.5.1
 Homepage: <insert the upstream URL, if relevant>
-#Vcs-Browser: https://salsa.debian.org/debian/sonic-cli
-#Vcs-Git: https://salsa.debian.org/debian/sonic-cli.git
 Rules-Requires-Root: no
 
 Package: sonic-cli

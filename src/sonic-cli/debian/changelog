@@ -1,5 +1,5 @@
-sonic-cli (1.0.0-1) unstable; urgency=medium
+sonic-cli (1.0.0) unstable; urgency=medium
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- unknown <azureuser@c993237ef6de>  Wed, 06 Apr 2022 09:21:18 +0000
+ -- Liu Hua <liuh@microsoft.com>  Wed, 06 Apr 2022 09:21:18 +0000

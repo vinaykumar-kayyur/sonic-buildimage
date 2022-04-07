@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "common/dbconnector.h"
+#include <swss/dbconnector.h>
 #include <iostream>
 
 using namespace std;
