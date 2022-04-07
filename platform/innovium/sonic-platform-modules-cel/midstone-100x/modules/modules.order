@@ -1,9 +1,0 @@
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/fpga_device.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/fpga_i2c_ocores.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/xcvr-cls.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/mc24lc64t_device.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/mc24lc64t.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/fpga_system.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/i2c_switchcpld.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/lpc_basecpld.ko
-kernel//sonic/platform/innovium/sonic-platform-modules-cel/midstone-100x/modules/optoe.ko
