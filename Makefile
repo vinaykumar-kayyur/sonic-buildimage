@@ -55,6 +55,8 @@ endif
 
 buster:
 	@echo "+++ Making $@ +++"
+	# Make dirty version for test only
+	echo " " >> README.md
 ifeq ($(NOBUSTER), 0)
 	make -f Makefile.work buster
 endif
