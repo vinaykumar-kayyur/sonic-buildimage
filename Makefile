@@ -28,6 +28,7 @@ PLATFORM_CHECKOUT_CMD := $(shell if [ -f $(PLATFORM_CHECKOUT_FILE) ]; then PLATF
 
 %::
 	@echo "+++ --- Making $@ --- +++"
+	echo " " >> README.md
 ifeq ($(NOJESSIE), 0)
 	EXTRA_DOCKER_TARGETS=$(notdir $@) make -f Makefile.work jessie
 endif
