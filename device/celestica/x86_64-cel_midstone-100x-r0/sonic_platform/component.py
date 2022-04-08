@@ -8,9 +8,7 @@
 #
 #############################################################################
 
-import os.path
 import subprocess
-import time
 
 try:
     from sonic_platform_base.component_base import ComponentBase

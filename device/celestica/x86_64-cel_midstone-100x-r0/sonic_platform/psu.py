@@ -144,7 +144,7 @@ class Psu(PsuBase):
             self.STATUS_LED_COLOR_AMBER: PSU_LED_AMBER_CMD,
             self.STATUS_LED_COLOR_OFF: PSU_LED_OFF_CMD
         }.get(color)
-        status_manual,set_led_manual = self._api_helper.ipmi_raw("0x3a 0x42 0x02 0x00")
+        self._api_helper.ipmi_raw("0x3a 0x42 0x02 0x00")
         status, set_led = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_SET_PSU_LED_CMD.format(led_cmd))
         set_status_led = False if not status else True
