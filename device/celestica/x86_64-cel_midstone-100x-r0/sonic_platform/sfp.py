@@ -1175,7 +1175,6 @@ class Sfp(SfpBase):
             A boolean, True if tx_disable is set successfully, False if not
         """
         if self.sfp_type == QSFP_TYPE:
-            sysfsfile_eeprom = None
             try:
                 tx_disable_ctl = 0xf if tx_disable else 0x0
                 buffer = create_string_buffer(1)
@@ -1202,7 +1201,6 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
         if self.sfp_type == QSFP_TYPE:
-            sysfsfile_eeprom = None
             channel_state = self.get_tx_disable_channel()
             tx_disable_ctl = channel_state
             tx_enable_mask = [0xe, 0xd, 0xb, 0x7]

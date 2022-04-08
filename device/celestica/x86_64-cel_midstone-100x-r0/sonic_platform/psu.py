@@ -8,11 +8,9 @@
 #
 #############################################################################
 
-import os
 import subprocess
 import re
 import math
-import sonic_platform
 
 try:
     from sonic_platform_base.psu_base import PsuBase
@@ -82,7 +80,6 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        psu_voltage = 0.0
         psu_vout_key = globals()['PSU{}_VOUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_vout_key))
@@ -98,7 +95,6 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        psu_current = 0.0
         psu_cout_key = globals()['PSU{}_COUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_cout_key))
@@ -114,7 +110,6 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        psu_power = 0.0
         psu_pout_key = globals()['PSU{}_POUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_pout_key))
@@ -149,7 +144,7 @@ class Psu(PsuBase):
             self.STATUS_LED_COLOR_AMBER: PSU_LED_AMBER_CMD,
             self.STATUS_LED_COLOR_OFF: PSU_LED_OFF_CMD
         }.get(color)
-        status, set_led = self._api_helper.ipmi_raw("0x3a 0x42 0x02 0x00")
+        status_manual,set_led_manual = self._api_helper.ipmi_raw("0x3a 0x42 0x02 0x00")
         status, set_led = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_SET_PSU_LED_CMD.format(led_cmd))
         set_status_led = False if not status else True
