@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
+FROM {{ prefix }}ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -244,7 +245,8 @@ RUN python3 -m pip install setuptools-rust \
                             allure-pytest==2.8.22 \
                             retry \
                             thrift==0.11.0 \
-                            ptf
+                            ptf \
+                            scapy==2.4.5
 
 # Deactivating a virtualenv.
 ENV PATH="$BACKUP_OF_PATH"
