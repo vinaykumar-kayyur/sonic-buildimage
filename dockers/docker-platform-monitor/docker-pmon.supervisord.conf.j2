@@ -171,7 +171,7 @@ dependent_startup_wait_for=rsyslogd:running
 
 {% if not skip_pcied %}
 [program:pcied]
-command= python3 /usr/local/bin/pcied
+command=/usr/local/bin/pcied
 priority=11
 autostart=false
 autorestart=unexpected
