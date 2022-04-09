@@ -9,6 +9,7 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
@@ -44,27 +45,27 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(output, '')
 
     def test_minigraph_sku(self):
-        argument = '-v "DEVICE_METADATA[\'localhost\'][\'hwsku\']" -m "' + self.sample_graph + '"'
+        argument = '-v "DEVICE_METADATA[\'localhost\'][\'hwsku\']" -m "' + self.sample_graph + '" -p "' + self.port_config + '"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'Force10-S6000')
 
     def test_print_data(self):
-        argument = '-m "' + self.sample_graph + '" --print-data'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" --print-data'
         output = self.run_script(argument)
         self.assertTrue(len(output.strip()) > 0)
 
     def test_jinja_expression(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'ToRRouter')
 
     def test_minigraph_subtype(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'DualToR')
 
     def test_minigraph_peer_switch_hostname(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'peer_switch\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'peer_switch\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'switch2-t0')
 
@@ -105,13 +106,11 @@ class TestCfgGenCaseInsensitive(TestCase):
                        'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'],
                        'vlanid': '1000',
                        'mac': '00:aa:bb:cc:dd:ee',
-                       'members': ['Ethernet8']
                        },
                    'Vlan2000': {
                        'alias': 'ab2',
                        'dhcp_servers': ['192.0.0.1'],
                        'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4'],
-                       'members': ['Ethernet4'],
                        'vlanid': '2000'
                        }
                    }
@@ -158,7 +157,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         )
 
     def test_minigraph_console_mgmt_feature(self):
-        argument = '-m "' + self.sample_graph + '" -v CONSOLE_SWITCH'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v CONSOLE_SWITCH'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
@@ -170,6 +169,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'1': {'baud_rate': '9600', 'remote_device': 'managed_device', 'flow_control': 1}}"))
+
+    def test_minigraph_dhcp_server_feature(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'dhcp_server\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '')
+
+        try:
+            # For DHCP server enabled device type
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BMC_MGMT_TOR_ROUTER, self.sample_graph), shell=True)
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), 'enabled')
+        finally:
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BMC_MGMT_TOR_ROUTER, TOR_ROUTER, self.sample_graph), shell=True)
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'

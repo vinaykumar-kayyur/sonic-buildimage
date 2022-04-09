@@ -144,6 +144,12 @@ INCLUDE_NAT = y
 # INCLUDE_DHCP_RELAY - build and install dhcp-relay package
 INCLUDE_DHCP_RELAY = y
 
+# INCLUDE_P4RT - build docker-p4rt for P4RT support
+INCLUDE_P4RT = n
+
+# ENABLE_AUTO_TECH_SUPPORT - Enable the configuration for event-driven techsupport & coredump mgmt feature
+ENABLE_AUTO_TECH_SUPPORT = y
+
 # TELEMETRY_WRITABLE - Enable write/config operations via the gNMI interface.
 # Uncomment to enable:
 # TELEMETRY_WRITABLE = y
@@ -199,3 +205,12 @@ REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
 
 # BUILD_MULTIASIC_KVM - if set to y multi-asic KVM images will be generated.
 BUILD_MULTIASIC_KVM = n
+
+# INCLUDE_MUX - build docker-mux for dual ToR (Gemini)
+INCLUDE_MUX = y
+
+# ENABLE_ASAN - enable address sanitizer
+ENABLE_ASAN ?= n
+
+# reset default container registry from dockerhub to other
+DEFAULT_CONTAINER_REGISTRY ?=

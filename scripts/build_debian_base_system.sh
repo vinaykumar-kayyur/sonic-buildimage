@@ -13,6 +13,9 @@ TARGET=$TARGET_PATH
 TARGET_BASEIMAGE_PATH=$TARGET/versions/host-base-image
 mkdir -p $TARGET_BASEIMAGE_PATH
 
+alias urlencode='python3 -c "import sys, urllib.parse as ul; print (ul.quote_plus(sys.argv[1]))"'
+shopt -s expand_aliases
+
 generate_version_file()
 {
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "dpkg-query -W -f '\${Package}==\${Version}\n'" > $TARGET_BASEIMAGE_PATH/versions-deb-${IMAGE_DISTRO}-${CONFIGURED_ARCH}
@@ -20,12 +23,16 @@ generate_version_file()
 
 if [ "$ENABLE_VERSION_CONTROL_DEB" != "y" ]; then
     if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-        if [ $MULTIARCH_QEMU_ENVIRON == y ]; then
+        if [ $MULTIARCH_QEMU_ENVIRON == "y" ]; then
             # qemu arm bin executable for cross-building
             sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
             sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
         fi
-        sudo http_proxy=$HTTP_PROXY SKIP_BUILD_HOOK=y debootstrap --variant=minbase --arch $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT http://deb.debian.org/debian
+        sudo http_proxy=$HTTP_PROXY SKIP_BUILD_HOOK=y debootstrap --foreign --variant=minbase --arch $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT http://deb.debian.org/debian
+        sudo rm $FILESYSTEM_ROOT/proc -rf
+        sudo mkdir $FILESYSTEM_ROOT/proc
+        sudo mount -t proc proc $FILESYSTEM_ROOT/proc
+        sudo LANG=C chroot $FILESYSTEM_ROOT /debootstrap/debootstrap --second-stage
     else
         sudo http_proxy=$HTTP_PROXY SKIP_BUILD_HOOK=y debootstrap --variant=minbase --arch $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
     fi
@@ -54,7 +61,7 @@ rm -rf $BASEIMAGE_TARBALLPATH $BASEIMAGE_TARBALL
 ARCHIEVES=$BASEIMAGE_TARBALLPATH/var/cache/apt/archives
 APTLIST=$BASEIMAGE_TARBALLPATH/var/lib/apt/lists
 TARGET_DEBOOTSTRAP=$BASEIMAGE_TARBALLPATH/debootstrap
-APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_buster_main_binary-${CONFIGURED_ARCH}_Packages"
+APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_${DISTRO}_main_binary-${CONFIGURED_ARCH}_Packages"
 DEBPATHS=$TARGET_DEBOOTSTRAP/debpaths
 DEBOOTSTRAP_BASE=$TARGET_DEBOOTSTRAP/base
 DEBOOTSTRAP_REQUIRED=$TARGET_DEBOOTSTRAP/required
@@ -70,13 +77,14 @@ for ((i=0;i<LENGTH;i++))
 do
     package=${PACKAGE_ARR[$i]}
     packagename=$(echo $package | sed -E 's/=[^=]*$//')
-    url=$(echo "$URL_ARR" | grep "/${packagename}_")
+    encoded_packagename=$(urlencode $packagename)
+    url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encoded_packagename}_")
     if [ -z "$url" ] || [[ $(echo "$url" | wc -l) -gt 1 ]]; then
         echo "No found package or found multiple package for package $packagename, url: $url" 2>&1
         exit 1
     fi
     filename=$(basename "$url")
-    SKIP_BUILD_HOOK=y wget $url -P $ARCHIEVES
+    SKIP_BUILD_HOOK=y wget $url -O $ARCHIEVES/$filename
     echo $packagename >> $DEBOOTSTRAP_REQUIRED
     echo "$packagename /var/cache/apt/archives/$filename" >> $DEBPATHS
 done

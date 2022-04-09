@@ -68,6 +68,8 @@ generate_kvm_image()
 
 generate_onie_installer_image()
 {
+    output_file=$OUTPUT_ONIE_IMAGE
+    [ -n "$1" ] && output_file=$1
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
     rm -rf ./installer/x86_64/platforms/
     mkdir -p ./installer/x86_64/platforms/
@@ -83,14 +85,33 @@ generate_onie_installer_image()
     ## Generate an ONIE installer image
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
-          installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
+          installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
           $ONIE_INSTALLER_PAYLOAD
+}
+
+# Generate asic-specific device list
+generate_device_list()
+{
+    local platforms_asic=$1
+
+    # Create an empty function, and later append to it
+    echo -n > $platforms_asic
+
+    for d in `find -L ./device  -maxdepth 2 -mindepth 2 -type d`; do
+        if [ -f $d/platform_asic ]; then
+            if [ "$TARGET_MACHINE" = "generic" ] || grep -Fxq "$TARGET_MACHINE" $d/platform_asic; then
+                echo "${d##*/}" >> "$platforms_asic";
+            fi;
+        fi;
+    done
 }
 
 if [ "$IMAGE_TYPE" = "onie" ]; then
     echo "Build ONIE installer"
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
+
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
 
     generate_onie_installer_image
 
@@ -100,10 +121,13 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
 elif [ "$IMAGE_TYPE" = "raw" ]; then
 
     echo "Build RAW image"
+    tmp_output_onie_image=${OUTPUT_ONIE_IMAGE}.tmp
     mkdir -p `dirname $OUTPUT_RAW_IMAGE`
     sudo rm -f $OUTPUT_RAW_IMAGE
 
-    generate_onie_installer_image
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+
+    generate_onie_installer_image "$tmp_output_onie_image"
 
     echo "Creating SONiC raw partition : $OUTPUT_RAW_IMAGE of size $RAW_IMAGE_DISK_SIZE MB"
     fallocate -l "$RAW_IMAGE_DISK_SIZE"M $OUTPUT_RAW_IMAGE
@@ -114,8 +138,9 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     ## Generate a partition dump that can be used to 'dd' in-lieu of using the onie-nos-installer
     ## Run the installer
     ## The 'build' install mode of the installer is used to generate this dump.
-    sudo chmod a+x $OUTPUT_ONIE_IMAGE
-    sudo ./$OUTPUT_ONIE_IMAGE
+    sudo chmod a+x $tmp_output_onie_image
+    sudo ./$tmp_output_onie_image
+    rm $tmp_output_onie_image
 
     [ -r $OUTPUT_RAW_IMAGE ] || {
         echo "Error : $OUTPUT_RAW_IMAGE not generated!"
@@ -133,6 +158,8 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     echo "The compressed raw image is in $OUTPUT_RAW_IMAGE"
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
+
+    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
 
     generate_onie_installer_image
     # Generate single asic KVM image
@@ -169,6 +196,9 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $OUTPUT_ABOOT_IMAGE version
     zip -g $ABOOT_BOOT_IMAGE version
     rm version
+
+    generate_device_list ".platforms_asic"
+    zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
 
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE

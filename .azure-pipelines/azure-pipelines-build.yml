@@ -50,6 +50,7 @@ jobs:
             swi_image: yes
 
         - name: broadcom
+          timeoutInMinutes: 1440
           variables:
             dbg_image: yes
             swi_image: yes
@@ -64,7 +65,7 @@ jobs:
             platform_rpc: centec
 
         - name: centec-arm64
-          pool: sonicbld_8c
+          pool: sonicbld-arm64
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
@@ -78,7 +79,7 @@ jobs:
             dbg_image: yes
 
         - name: marvell-armhf
-          pool: sonicbld_8c
+          pool: sonicbld-armhf
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
@@ -101,7 +102,8 @@ jobs:
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
-              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
+              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
+              mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
             if [ $(Build.Reason) != 'PullRequest' ];then
@@ -111,8 +113,8 @@ jobs:
             fi
           else
             if [ $(dbg_image) == yes ]; then
-              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
-                mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
+              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
+              mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
             fi
             if [ $(swi_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
@@ -130,3 +132,4 @@ jobs:
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
+      - template: check-dirty-version.yml

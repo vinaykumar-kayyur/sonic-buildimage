@@ -268,7 +268,7 @@ class Test_SonicYang(object):
     """
     @pytest.fixture(autouse=True, scope='class')
     def sonic_yang_data(self):
-        sonic_yang_dir = "../sonic-yang-models/yang-models/"
+        sonic_yang_dir = "/usr/local/yang-models/"
         sonic_yang_test_file = "../sonic-yang-models/tests/files/sample_config_db.json"
 
         syc = sy.SonicYang(sonic_yang_dir)
@@ -361,6 +361,21 @@ class Test_SonicYang(object):
         ty = syc.tablesWithOutYang
 
         assert (len(ty) and "UNKNOWN_TABLE" in ty)
+
+        return
+
+    def test_special_json_with_yang(self, sonic_yang_data):
+        # in this test, we validate unusual json config and check if
+        # loadData works successfully
+        test_file = sonic_yang_data['test_file']
+        syc = sonic_yang_data['syc']
+
+        # read config
+        jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_SPECIAL_CASE')
+        jIn = json.loads(jIn)
+
+        # load config and create Data tree
+        syc.loadData(jIn)
 
         return
 
