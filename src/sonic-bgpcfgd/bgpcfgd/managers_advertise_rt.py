@@ -1,7 +1,9 @@
 from .manager import Manager
 from .template import TemplateFabric
 from swsscommon import swsscommon
-
+from .managers_rm import ROUTE_MAPS
+import ipaddress
+from .log import log_debug, log_info, log_err, log_warn
 
 class AdvertiseRouteMgr(Manager):
     """ This class Advertises routes when ADVERTISE_NETWORK_TABLE in STATE_DB is updated """
@@ -28,6 +30,8 @@ class AdvertiseRouteMgr(Manager):
 
 
     def set_handler(self, key, data):
+        if not self._set_handler_validate(key, data):
+            return True
         vrf, ip_prefix = self.split_key(key)
         self.add_route_advertisement(vrf, ip_prefix, data)
 
@@ -35,8 +39,35 @@ class AdvertiseRouteMgr(Manager):
 
 
     def del_handler(self, key):
+        if not self._del_handler_validate(key):
+            return True
         vrf, ip_prefix = self.split_key(key)
         self.remove_route_advertisement(vrf, ip_prefix)
+
+    def _ip_addr_validate(self, key):
+        if key:
+            try:
+                _, address = self.split_key(key)
+                ipaddress.ip_address(address)
+            except ValueError:
+                log_err("BGPAdvertiseRouteMgr:: No valid ip prefix for advertised route %s" % key)
+                return False
+        else:
+            return False
+        return True
+
+
+    def _set_handler_validate(self, key, data):
+        if data:
+            if 'rm_name' not in data or data['rm_name'] not in ROUTE_MAPS:
+                log_err("BGPAdvertiseRouteMgr:: No valid rm_name for advertised route %s" % data)
+                return False
+        
+        return self._ip_addr_validate(key)
+
+
+    def _del_handler_validate(self, key):
+        return self._ip_addr_validate(key)
 
 
     def add_route_advertisement(self, vrf, ip_prefix, data):
@@ -74,13 +105,17 @@ class AdvertiseRouteMgr(Manager):
             For set operation, need to check if data is same or not, 
             need to check if it is ok by overwriting existing value or need to follow no/add sequence
         '''
-        if data and 'route-map' in data:
-            cmd_list.append("  network %s route-map %s" % (ip_prefix, data['route-map']))
+        if data and 'rm_name' in data:
+            cmd_list.append("  network %s route-map %s" % (ip_prefix, data['rm_name']))
+            log_info("BGPAdvertiseRouteMgr:: update bgp %s network %s with route-map %" % 
+                     (bgp_asn, vrf + '|' + ip_prefix, data['rm_name']))
         else:
             cmd_list.append("  %snetwork %s" % ('no ' if op == self.OP_DELETE else '', ip_prefix))
+            log_info("BGPAdvertiseRouteMgr:: %sbgp %s network %s" % 
+                     ('Remove ' if op == self.OP_DELETE else 'Update ', bgp_asn, vrf + '|' + ip_prefix))
 
         self.cfg_mgr.push_list(cmd_list)
-
+        log_info("BGPAdvertiseRouteMgr::Done")
 
     def bgp_network_import_check_commands(self, vrf, op):
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
