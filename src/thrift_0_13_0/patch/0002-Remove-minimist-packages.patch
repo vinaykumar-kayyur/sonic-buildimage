@@ -1,3 +1,11 @@
+From b75e88a33d67ae05ef9b5fa001d2a63a2effe377 Oct 17, 2019
+From: richardyu-ms <richard.yu@microsoft.com>
+Date: Tue, 12 Apr 2022 15:46:16 +0000
+Subject: [PATCH] Fix security issue for package minimist
+
+---
+2 files changed, 6 insertions(+), 81 deletions(-)
+
 diff --git diff --git a/lib/js/package-lock.json b/lib/js/package-lock.json
 index 00bf05c92..2d84fb05a 100644
 --- a/lib/js/package-lock.json
