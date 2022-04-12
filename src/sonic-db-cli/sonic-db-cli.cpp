@@ -72,7 +72,8 @@ int executeCommands(
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Invalid database name input : " << db_name << std::endl;
+        std::cerr << "Invalid database name input: " << db_name << std::endl;
+        std::cerr << e.what() << std::endl;
         return 1;
     }
 
