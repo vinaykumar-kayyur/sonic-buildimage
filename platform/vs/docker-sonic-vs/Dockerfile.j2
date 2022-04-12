@@ -66,9 +66,9 @@ RUN apt-get install -y net-tools \
                        gir1.2-glib-2.0 \
                        libdbus-1-3 \
                        libgirepository-1.0-1 \
-                       {% if ENABLE_ASAN == "y" %}
+                       {%- if ENABLE_ASAN == "y" %}
                        libasan5 \
-                       {% endif %}
+                       {%- endif %}
                        libsystemd0
 
 # Install redis-server
