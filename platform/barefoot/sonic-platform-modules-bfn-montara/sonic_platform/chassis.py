@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
 try:
+    import os
     import time
     import syslog
+    import logging
+    import logging.config
+    import yaml
 
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
@@ -10,6 +14,7 @@ try:
     from sonic_platform.fan_drawer import fan_drawer_list_get
     from sonic_platform.thermal import thermal_list_get
     from eeprom import Eeprom
+    from platform_utils import file_create
 
     from sonic_platform.platform_thrift_client import pltfm_mgr_ready
     from sonic_platform.platform_thrift_client import thrift_try
@@ -19,6 +24,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+NUM_COMPONENT = 2
 class Chassis(ChassisBase):
     """
     Platform-specific Chassis class
@@ -44,6 +50,12 @@ class Chassis(ChassisBase):
         self.ready = False
         self.phy_port_cur_state = {}
         self.qsfp_interval = self.QSFP_CHECK_INTERVAL
+        self.__initialize_components()
+
+        with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
+            config_dict = yaml.load(f, yaml.SafeLoader)
+            file_create(config_dict['handlers']['file']['filename'], '646')
+            logging.config.dictConfig(config_dict)
 
     @property
     def _eeprom(self):
@@ -127,6 +139,12 @@ class Chassis(ChassisBase):
                 self.QSFP_PORT_END -= 1
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
+
+    def __initialize_components(self):
+        from sonic_platform.component import Components
+        for index in range(0, NUM_COMPONENT):
+            component = Components(index)
+            self._component_list.append(component)
 
     def get_name(self):
         """

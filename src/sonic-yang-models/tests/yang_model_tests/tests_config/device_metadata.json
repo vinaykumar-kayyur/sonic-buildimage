@@ -54,6 +54,26 @@
             }
         }
     },
+    "DEVICE_METADATA_TYPE_BMC_MGMT_TOR_PATTERN": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "bgp_asn": "65002",
+                    "type": "BmcMgmtToRRouter"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_TYPE_NOT_PROVISIONED_PATTERN": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "bgp_asn": "65002",
+                    "type": "not-provisioned"
+                }
+            }
+        }
+    },
     "DEVICE_METADATA_DEFAULT_SYNCHRONOUS_MODE": {
         "sonic-device_metadata:sonic-device_metadata": {
             "sonic-device_metadata:DEVICE_METADATA": {
@@ -237,6 +257,57 @@
             "sonic-device_metadata:DEVICE_METADATA": {
                 "sonic-device_metadata:localhost": {
                     "storage_device": "yes"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_INCORRECT_VOQ_CONFIG": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "asic_name": "Asic0",
+                    "switch_id": "2",
+                    "switch_type": "incorrect_pattern",
+                    "max_cores": "8"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_CORRECT_VOQ_CONFIG": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "asic_name": "Asic0",
+                    "switch_id": "2",
+                    "switch_type": "voq",
+                    "max_cores": "8"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_VALID_SUB_ROLE_CONFIG": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "sub_role": "FrontEnd"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_VALID_DHCP_SERVER": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "dhcp_server": "enabled"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_INVALID_DHCP_SERVER": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "dhcp_server": "invalid"
                 }
             }
         }
