@@ -1,4 +1,12 @@
-diff --git diff --git a/lib/js/package-lock.json b/lib/js/package-lock.json
+From f6fa1794539e68ac294038ac388d6bde40a6c237 Mar 2, 2021  00:00:00 2001
+From: richardyu-ms <richard.yu@microsoft.com>
+Date: Tue, 12 Apr 2022 15:46:16 +0000
+Subject: [PATCH] Fix security issue for package minimist
+
+---
+3 files changed, 9 insertions(+), 120 deletions(-)
+
+diff --git a/lib/js/package-lock.json b/lib/js/package-lock.json
 index ea1c04620..b68217af3 100644
 --- a/lib/js/package-lock.json
 +++ b/lib/js/package-lock.json
@@ -86,7 +94,7 @@ index ea1c04620..b68217af3 100644
      },
      "supports-color": {
        "version": "5.5.0",
-diff --git diff --git a/lib/ts/package-lock.json b/lib/ts/package-lock.json
+diff --git a/lib/ts/package-lock.json b/lib/ts/package-lock.json
 index fddef4426..e7f4d46fd 100644
 --- a/lib/ts/package-lock.json
 +++ b/lib/ts/package-lock.json
@@ -173,3 +181,89 @@ index fddef4426..e7f4d46fd 100644
      },
      "supports-color": {
        "version": "5.5.0",
+diff --git a/package-lock.json b/package-lock.json
+index 9c1e5f581..83793eaaf 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1427,16 +1427,7 @@
+       "integrity": "sha512-4vGP107UDhhNHeWA5N8j/nUPlQbtB/W/K2x/P7aElbWMWrOkJA0MRSVFsMFrTPSAAjZWCG9uki2+1cQDzFtVcQ==",
+       "dev": true,
+       "requires": {
+-        "html-validator": "3.1.3",
+-        "minimist": "1.2.0"
+-      },
+-      "dependencies": {
+-        "minimist": {
+-          "version": "1.2.0",
+-          "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz",
+-          "integrity": "sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=",
+-          "dev": true
+-        }
++        "html-validator": "3.1.3"
+       }
+     },
+     "http-signature": {
+@@ -1920,18 +1911,7 @@
+       "version": "2.1.1",
+       "resolved": "https://registry.npmjs.org/json5/-/json5-2.1.1.tgz",
+       "integrity": "sha512-l+3HXD0GEI3huGq1njuqtzYK8OYJyXMkOLtQ53pjWh89tvWS2h6l+1zMkYWqlb57+SiQodKZyvMEFb2X+KrFhQ==",
+-      "dev": true,
+-      "requires": {
+-        "minimist": "^1.2.0"
+-      },
+-      "dependencies": {
+-        "minimist": {
+-          "version": "1.2.0",
+-          "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz",
+-          "integrity": "sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=",
+-          "dev": true
+-        }
+-      }
++      "dev": true
+     },
+     "jsprim": {
+       "version": "1.4.1",
+@@ -2072,20 +2052,11 @@
+         "brace-expansion": "^1.1.7"
+       }
+     },
+-    "minimist": {
+-      "version": "0.0.8",
+-      "resolved": "http://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
+-      "integrity": "sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=",
+-      "dev": true
+-    },
+     "mkdirp": {
+       "version": "0.5.1",
+       "resolved": "http://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
+       "integrity": "sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=",
+-      "dev": true,
+-      "requires": {
+-        "minimist": "0.0.8"
+-      }
++      "dev": true
+     },
+     "ms": {
+       "version": "2.0.0",
+@@ -2790,7 +2761,6 @@
+         "glob": "~7.1.2",
+         "has": "~1.0.3",
+         "inherits": "~2.0.3",
+-        "minimist": "~1.2.0",
+         "object-inspect": "~1.6.0",
+         "resolve": "~1.7.1",
+         "resumer": "~0.0.0",
+@@ -2798,12 +2768,6 @@
+         "through": "~2.3.8"
+       },
+       "dependencies": {
+-        "minimist": {
+-          "version": "1.2.0",
+-          "resolved": "http://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz",
+-          "integrity": "sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=",
+-          "dev": true
+-        },
+         "resolve": {
+           "version": "1.7.1",
+           "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.7.1.tgz",
+
