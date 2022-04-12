@@ -48,10 +48,12 @@ module sonic-macsec {
 
                 leaf primary_ckn {
                     type string {
-                        pattern "[0-9a-fA-F]{64}";
+                        pattern "[0-9a-fA-F]{32,64}";
                     }
                     mandatory true;
                 }
+
+                must "count(primary_cak) = count(primary_ckn)";
 
                 leaf fallback_cak {
                     type string {
@@ -61,9 +63,12 @@ module sonic-macsec {
 
                 leaf fallback_ckn {
                     type string {
-                        pattern "[0-9a-fA-F]{64}";
+                        pattern "[0-9a-fA-F]{32,64}";
                     }
                 }
+
+                must "count(fallback_cak) = count(fallback_ckn)";
+                must "primary_ckn != fallback_ckn";
 
                 leaf policy {
                     type string {

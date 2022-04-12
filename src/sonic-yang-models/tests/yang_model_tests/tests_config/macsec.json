@@ -1,0 +1,43 @@
+{
+    "PROFILE_TEST": {
+        "sonic-macsec:sonic-macsec": {
+            "sonic-macsec:MACSEC_PROFILE": {
+                "MACSEC_PROFILE_LIST": [
+                    {
+                        "name": "test",
+                        "priority": 64,
+                        "cipher_suite": "GCM-AES-XPN-256",
+                        "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
+                        "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
+                        "fallback_cak": "0123456789ABCDEF0123456789ABCDE0",
+                        "fallback_ckn": "6162636465666768696A6B6C6D6E6F7071",
+                        "policy": "security",
+                        "enable_replay_protect": "true",
+                        "replay_window": 64,
+                        "send_sci": "true",
+                        "rekey_period": 3600
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth8",
+                        "description": "Ethernet8",
+                        "fec": "rs",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "pfc_asym": "on",
+                        "name": "Ethernet8",
+                        "tpid": "0x8100",
+                        "speed": 25000,
+                        "macsec": "test"
+                    }
+                ]
+            }
+        }
+    }
+}
