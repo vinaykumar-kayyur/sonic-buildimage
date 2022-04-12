@@ -28,14 +28,8 @@ RUN apt-get update &&       \
 # Fix for gcc/python/iputils-ping not found in arm docker
 RUN apt-get install -f -y python2.7 python2.7-dev
 RUN apt-get install -y   \
-        gcc-10           \
+        gcc              \
         iputils-ping
-{% endif %}
-{% if CONFIGURED_ARCH == "armhf" %}
-RUN ln -s -f /usr/bin/gcc-10 /usr/bin/arm-linux-gnueabihf-gcc
-{% endif %}
-{% if CONFIGURED_ARCH == "arm64" %}
-RUN ln -s -f /usr/bin/gcc-10 /usr/bin/aarch64-linux-gnu-gcc
 {% endif %}
 
 # Dependencies of restore_neighbors.py
@@ -46,7 +40,7 @@ RUN pip3 install \
 
 {% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
 # Remove installed gcc
-RUN apt-get remove -y gcc-10
+RUN apt-get remove -y gcc
 {% endif %}
 
 {% if docker_orchagent_debs.strip() -%}
