@@ -1,4 +1,4 @@
-From f6fa1794539e68ac294038ac388d6bde40a6c237 Mar 2, 2021  00:00:00 2001
+From f6fa1794539e68ac294038ac388d6bde40a6c237 Mar 2, 2021  00:00:00
 From: richardyu-ms <richard.yu@microsoft.com>
 Date: Tue, 12 Apr 2022 15:46:16 +0000
 Subject: [PATCH] Fix security issue for package minimist
