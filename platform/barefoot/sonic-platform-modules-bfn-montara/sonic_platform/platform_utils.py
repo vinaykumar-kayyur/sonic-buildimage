@@ -11,7 +11,10 @@ except ImportError as e:
 
 def file_create(path, mode=None):
     """
-    Checks if a file has been created with the appropriate permissions
+    Ensure that file is created with the appropriate permissions
+    Args:
+        path: full path of a file
+        mode: file permission in octal representation  
     """
     def run_cmd(cmd):
         if os.geteuid() != 0:
@@ -23,7 +26,7 @@ def file_create(path, mode=None):
         run_cmd(['mkdir', '-p', file_path])
     if not os.path.isfile(path):
         run_cmd(['touch', path])
-    if (mode is not None):    
+    if (mode is not None):
         run_cmd(['chmod', mode, path])
 
 def cancel_on_sigterm(func):
