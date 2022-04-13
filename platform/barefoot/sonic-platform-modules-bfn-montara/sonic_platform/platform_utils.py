@@ -10,6 +10,9 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 def file_create(path, mode=None):
+    """
+    Checks if a file has been created with the appropriate permissions
+    """
     def run_cmd(cmd):
         if os.geteuid() != 0:
             cmd.insert(0, 'sudo')
@@ -43,3 +46,31 @@ def cancel_on_sigterm(func):
             signal.signal(signal.SIGTERM, sigterm_handler)
         return result
     return wrapper
+
+def limit_execution_time(execution_time_secs: int):
+    """
+    Wrapper for a function whose execution time must be limited
+    Args:
+        execution_time_secs: maximum execution time in seconds,
+        after which the function execution will be stopped
+    """
+    def wrapper(func):
+        @wraps(func)
+        def execution_func(*args, **kwargs):
+            def handler():
+                raise
+
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(execution_time_secs)
+            result = None
+            try:
+                result = func(*args, **kwargs)
+            except Exception:
+                raise
+            finally:
+                signal.alarm(0)
+
+            return result
+        return execution_func
+    return wrapper
+
