@@ -24,7 +24,9 @@ module sonic-macsec {
                 key "name";
 
                 leaf name {
-                    type string;
+                    type string {
+                        length 1..128;
+                    }
                 }
 
                 leaf priority {

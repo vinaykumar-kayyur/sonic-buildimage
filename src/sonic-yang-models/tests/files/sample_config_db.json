@@ -1682,14 +1682,31 @@
                 "src_ip": "10.0.0.1"
             }
         },
+
+
         "NVGRE_TUNNEL_MAP": {
             "tunnel_1|Vlan111": {
                 "vlan_id": "111",
                 "vsid": "5000"
             }
+        },
+
+
+        "MACSEC_PROFILE": {
+            "test": {
+                "priority": "64",
+                "cipher_suite": "GCM-AES-128",
+                "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
+                "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
+                "fallback_cak": "00000000000000000000000000000000",
+                "fallback_ckn": "11111111111111111111111111111111",
+                "policy": "security",
+                "enable_replay_protect": "true",
+                "replay_window": "64",
+                "send_sci": "true",
+                "rekey_period": "3600"
+            }
         }
-
-
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
@@ -1700,22 +1717,6 @@
         "TACPLUS": {
             "global": {
             }
-        }
-    },
-
-    "MACSEC_PROFILE": {
-        "test": {
-            "priority": 64,
-            "cipher_suite": "GCM-AES-128",
-            "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
-            "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
-            "fallback_cak": "00000000000000000000000000000000",
-            "fallback_ckn": "11111111111111111111111111111111",
-            "policy": "security",
-            "enable_replay_protect": "true",
-            "replay_window": 64,
-            "send_sci": "true",
-            "rekey_period": 3600
         }
     }
 }
