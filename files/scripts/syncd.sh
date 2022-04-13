@@ -46,6 +46,10 @@ function startplatform() {
 function waitplatform() {
     
     if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
+        BOOT_TYPE=`getBootType`
+        if [[ x"$BOOT_TYPE" == x"fast" ]]; then
+            return
+        fi
         debug "Starting pmon service..."
         /bin/systemctl start pmon
         debug "Started pmon service"
