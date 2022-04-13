@@ -1682,8 +1682,6 @@
                 "src_ip": "10.0.0.1"
             }
         },
-
-
         "NVGRE_TUNNEL_MAP": {
             "tunnel_1|Vlan111": {
                 "vlan_id": "111",
@@ -1707,6 +1705,7 @@
                 "rekey_period": "3600"
             }
         }
+
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
