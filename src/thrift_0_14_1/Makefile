@@ -1,0 +1,31 @@
+SHELL = /bin/bash
+.ONESHELL:
+.SHELLFLAGS += -e -x
+
+THRIFT_VERSION = 0.14.1
+
+MAIN_TARGET = libthrift0_$(THRIFT_VERSION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = libthrift-dev_$(THRIFT_VERSION)_$(CONFIGURED_ARCH).deb \
+		  python3-thrift_$(THRIFT_VERSION)_$(CONFIGURED_ARCH).deb \
+		  thrift-compiler_$(THRIFT_VERSION)_$(CONFIGURED_ARCH).deb
+
+THRIFT_LINK_PRE = https://archive.apache.org/dist/thrift
+
+$(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
+	rm -rf thrift-$(THRIFT_VERSION)
+
+	wget -O "thrift_$(THRIFT_VERSION).tar.gz" "$(THRIFT_LINK_PRE)/$(THRIFT_VERSION)/thrift-$(THRIFT_VERSION).tar.gz"
+
+	tar -xvzf ./thrift_$(THRIFT_VERSION).tar.gz
+	pushd thrift-$(THRIFT_VERSION)
+
+	# Disable php perl and few other packages as they need additional packages to be installed
+	patch -p1 < ../patch/0001-Remove-unneeded-packages.patch
+	patch -p1 < ../patch/0002-Fix-build-rules.patch
+	patch -p1 < ../patch/0003-Remove-minimist-packages.patch
+	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -d -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+	popd
+
+	mv $(DERIVED_TARGETS) $* $(DEST)/
+
+$(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
