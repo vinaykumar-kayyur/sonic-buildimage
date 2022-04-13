@@ -619,7 +619,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
         while (option_position - message_buffer < len) {
             auto option = parse_dhcpv6_opt(option_position, &tmp);
             option_position = tmp;
-            if(ntohs(option->option_code) > 56) {   // DHCPv6 option code greater than 56 are currently unassigned
+            if(ntohs(option->option_code) > DHCPv6_OPTION_LIMIT) {
                 syslog(LOG_INFO, "DHCPv6 option is invalid or contains malformed payload\n");
                 return;
             }

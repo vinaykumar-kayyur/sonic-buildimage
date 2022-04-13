@@ -16,6 +16,7 @@
 #define RELAY_PORT 547
 #define CLIENT_PORT 546
 #define HOP_LIMIT 8     //HOP_LIMIT reduced from 32 to 8 as stated in RFC8415
+#define DHCPv6_OPTION_LIMIT 56      // DHCPv6 option code greater than 56 are currently unassigned
 
 #define lengthof(A) (sizeof (A) / sizeof (A)[0])
 
