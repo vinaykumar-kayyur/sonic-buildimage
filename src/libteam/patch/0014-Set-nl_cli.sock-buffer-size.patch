@@ -1,0 +1,29 @@
+From f95ae4297c14dbb228aaed5a116213ed48482a1d Mon Sep 17 00:00:00 2001
+From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
+Date: Fri, 24 Sep 2021 17:28:41 +0800
+Subject: [PATCH]   set nl_cli.sock buffer size
+Fix Loop callback failed with: No buffer space available
+---
+ libteam/libteam.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/libteam/libteam.c b/libteam/libteam.c
+index 2cc80ca..93c3d21 100644
+--- a/libteam/libteam.c
++++ b/libteam/libteam.c
+@@ -652,6 +652,12 @@ int team_init(struct team_handle *th, uint32_t ifindex)
+ 		eventbufsize = NETLINK_RCVBUF;
+ 	}
+ 
++	err = nl_socket_set_buffer_size(th->nl_cli.sock, eventbufsize, 0);
++	if (err) {
++	    err(th, "Failed to set cli socket buffer size.");
++	    return err;
++	}
++
+ 	err = nl_socket_set_buffer_size(th->nl_cli.sock_event, eventbufsize, 0);
+ 	if (err) {
+ 		err(th, "Failed to set cli event socket buffer size.");
+-- 
+2.25.1
+
