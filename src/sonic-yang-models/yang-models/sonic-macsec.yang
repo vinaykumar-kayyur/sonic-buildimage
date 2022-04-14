@@ -12,6 +12,9 @@ module sonic-macsec {
         description "First Revision";
     }
 
+    import sonic-types {
+        prefix stypes;
+    }
 
     container sonic-macsec {
 
@@ -83,9 +86,7 @@ module sonic-macsec {
                 }
 
                 leaf enable_replay_protect {
-                    type string {
-                        pattern "true|false";
-                    }
+                    type stypes:boolean_type;
                     default "false";
                 }
 
@@ -95,9 +96,7 @@ module sonic-macsec {
                 }
 
                 leaf send_sci {
-                    type string {
-                        pattern "true|false";
-                    }
+                    type stypes:boolean_type;
                     default "true";
                 }
 

@@ -144,7 +144,7 @@ setup(
                          './yang-models/sonic-pfc-priority-queue-map.yang',
                          './yang-models/sonic-pfc-priority-priority-group-map.yang',
                          './yang-models/sonic-port-qos-map.yang',
-                         './yang-models/sonic-macsec.yang',]),
+                         './yang-models/sonic-macsec.yang']),
         ('cvlyang-models', ['./cvlyang-models/sonic-acl.yang',
                          './cvlyang-models/sonic-bgp-common.yang',
                          './cvlyang-models/sonic-bgp-global.yang',
