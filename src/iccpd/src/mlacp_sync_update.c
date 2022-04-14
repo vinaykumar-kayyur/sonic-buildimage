@@ -517,6 +517,17 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                     mac_msg->vid, mac_msg->op_type);
             }
         }
+        /* change add_to_syncd before RB_INSERT since new_mac_msg will not be modified later in add_mac_to_chip , enhancement*/
+        if (strcmp(mac_msg->ifname, csm->peer_itf_name) == 0)
+        {
+            /*Send mac add message to mclagsyncd*/
+            if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
+                mac_msg->add_to_syncd = 1;
+        }
+        else if(local_if->state != PORT_STATE_DOWN)
+        {
+            mac_msg->add_to_syncd = 1;
+        }
 
         if (iccp_csm_init_mac_msg(&new_mac_msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
         {
