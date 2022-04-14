@@ -20,6 +20,19 @@ Type_1_list_maps_model = [
     'CABLE_LENGTH_LIST'
 ]
 
+# Workaround for those fields who is defined as leaf-list in YANG model but have string value in config DB.
+# Dictinary structure key = (<table_name>, <field_name>), value = seperator
+LEAF_LIST_WITH_STRING_VALUE_DICT = {
+    ('MIRROR_SESSION', 'src_ip'): ',',
+    ('NTP', 'src_intf'): ';',
+    ('BGP_ALLOWED_PREFIXES', 'prefixes_v4'): ',',
+    ('BGP_ALLOWED_PREFIXES', 'prefixes_v6'): ',',
+    ('BUFFER_PORT_EGRESS_PROFILE_LIST', 'profile_list'): ',',
+    ('BUFFER_PORT_INGRESS_PROFILE_LIST', 'profile_list'): ',',
+    ('PORT', 'adv_speeds'): ',',
+    ('PORT', 'adv_interface_types'): ',',
+}
+
 """
 This is the Exception thrown out of all public function of this class.
 """
@@ -407,9 +420,8 @@ class SonicYangExtMixin:
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
             vValue = list()
-            if isinstance(value, str):
-                self.leaf_list_with_string_value_set.add(tuple(self.elementPath))
-                value = (x.strip() for x in value.split(','))
+            if (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                value = (x.strip() for x in value.split(LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])]))
             for v in value:
                 vValue.append(_yangConvert(v))
         else:
@@ -757,8 +769,8 @@ class SonicYangExtMixin:
 
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
-            if tuple(self.elementPath) in self.leaf_list_with_string_value_set:
-                vValue = ','.join((_revYangConvert(x) for x in value))
+            if (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                vValue = LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])].join((_revYangConvert(x) for x in value))
             else:
                 vValue = list()
                 for v in value:

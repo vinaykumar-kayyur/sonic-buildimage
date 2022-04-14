@@ -65,12 +65,12 @@
         },
         "BUFFER_PORT_INGRESS_PROFILE_LIST": {
             "Ethernet9": {
-                "profile_list": ["ingress_lossy_profile"]
+                "profile_list": "ingress_lossy_profile"
             }
         },
         "BUFFER_PORT_EGRESS_PROFILE_LIST": {
             "Ethernet9": {
-                "profile_list": ["egress_lossless_profile", "egress_lossy_profile"]
+                "profile_list": "egress_lossless_profile,egress_lossy_profile"
             }
         },
         "PORTCHANNEL": {
@@ -394,10 +394,7 @@
         "NTP": {
             "global": {
                 "vrf": "mgmt",
-                "src_intf": [
-                    "eth0",
-                    "Loopback0"
-                ]
+                "src_intf": "eth0;Loopback0"
             }
         },
         "NTP_SERVER": {
