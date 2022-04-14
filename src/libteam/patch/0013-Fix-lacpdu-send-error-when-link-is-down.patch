@@ -1,0 +1,40 @@
+From 7c7c92dbb47a3ba61d1425c299226113443ce125 Mon Sep 17 00:00:00 2001
+From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
+Date: Thu, 26 Aug 2021 10:12:31 +0800
+Subject: [PATCH] fix lacpdu_send error when link is down
+
+---
+ teamd/teamd_runner_lacp.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 5c9159b..5d74fe7 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1391,10 +1391,22 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+ 	unsigned char hwaddr_len;
+ 	int err;
+ 	bool admin_state;
++	struct team_port *team_port;
+ 
+ 	admin_state = team_get_ifinfo_admin_state(lacp_port->ctx->ifinfo);
+-	if (!admin_state)
++	if (!admin_state) {
++		teamd_log_info("Port %s admin_state is DOWN, cancle lacpdu send. ",
++					lacp_port->tdport->ifname);
++		return 0;
++	}
++
++	team_port = lacp_port->tdport->team_port;
++	bool linkup = team_is_port_link_up(team_port);
++	if (!linkup) {
++		teamd_log_info("Port %s linkup is DOWN, cancle lacpdu send. ",
++					lacp_port->tdport->ifname);
+ 		return 0;
++	}
+ 
+ 	err = teamd_getsockname_hwaddr(lacp_port->sock, &ll_my, 0);
+ 	if (err)
+-- 
+2.25.1
+
