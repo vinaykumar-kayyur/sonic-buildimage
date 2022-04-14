@@ -6,14 +6,14 @@ module sonic-macsec {
 
     prefix macsec;
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     description "MACsec yang Module for SONiC OS";
 
     revision 2022-04-12 {
         description "First Revision";
-    }
-
-    import sonic-types {
-        prefix stypes;
     }
 
     container sonic-macsec {
