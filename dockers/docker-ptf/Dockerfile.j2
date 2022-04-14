@@ -59,7 +59,8 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         arping              \
         bridge-utils        \
         libteam-utils       \
-        gdb
+        gdb                 \
+        jq
 
 # Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
 # TODO: Clean up this step
