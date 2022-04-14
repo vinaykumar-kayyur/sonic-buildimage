@@ -986,17 +986,10 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     /* enquene lif_msg (add)*/
     if (!msg)
     {
-        arp_msg->op_type = NEIGH_SYNC_LIF;
-        arp_msg->learn_flag = NEIGH_LOCAL;
-        if (iccp_csm_init_msg(&msg, (char*)arp_msg, msg_len) == 0)
-        {
-            mlacp_enqueue_arp(csm, msg);
-            /*ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s",
-                            arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));*/
-        }
-        else
-            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s",
-                            arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
+        /* can't find arp entry when receive reply packet means kernel has not learned such entry, */
+        /* maybe this entry will not learn at all later, should drop this reply, */
+        /* or may cause arp entry unanimous between iccpd and kernel,  further more tor1 and tor2*/
+        return;
     }
 
     /* enqueue iccp_msg (add)*/
@@ -1216,21 +1209,10 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
     /* enquene lif_msg (add) */
     if (!msg)
     {
-        /* If MAC addr is NULL, and same ipv6 item is not exist in ndisc_list */
-        if (memcmp(mac_addr, null_mac, ETHER_ADDR_LEN) == 0)
-        {
-            return;
-        }
-
-        ndisc_msg->op_type = NEIGH_SYNC_LIF;
-        ndisc_msg->learn_flag = NEIGH_LOCAL;
-        if (iccp_csm_init_msg(&msg, (char *)ndisc_msg, msg_len) == 0)
-        {
-            mlacp_enqueue_ndisc(csm, msg);
-            /* ICCPD_LOG_DEBUG(__FUNCTION__, "NDISC-list enqueue: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
-        }
-        else
-            ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue NDISC-list: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr));
+        /* can't find arp entry when receive reply packet means kernel has not learned such entry, */
+        /* maybe this entry will not learn at all later, should drop this reply, */
+        /* or may cause arp entry unanimous between iccpd and kernel,  further more tor1 and tor2*/
+        return;
     }
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "add nd entry(%s, %s, %s) to kernel",
