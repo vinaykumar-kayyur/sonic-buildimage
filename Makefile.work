@@ -97,17 +97,6 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
-ifeq ($(SECURE_BOOT),)
-    override SECURE_BOOT = no
-endif
-
-SBSIGN_CONF := $(shell [ -f .sbsign.conf ] && cat .sbsign.conf || echo $(SBSIGN_CONF))
-ifneq ($(SBSIGN_CONF),)
-SONIC_SECURE_BOOT = yes
-SONIC_SBSIGN_DIR = $(SBSIGN_CONF)
-SONIC_SBSIGN_MOUNT=$(shell echo $(SONIC_SBSIGN_DIR):$(SONIC_SBSIGN_DIR):ro)
-endif
-
 ifeq ($(BLDENV), bullseye)
 SLAVE_DIR = sonic-slave-bullseye
 else ifeq ($(BLDENV), buster)
@@ -199,9 +188,17 @@ ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
 endif
 
-ifneq ($(SONIC_SBSIGN_MOUNT),)
-	DOCKER_RUN += -v "$(SONIC_SBSIGN_MOUNT)"
+ifeq ($(SONIC_ENABLE_SECUREBOOT_SIGNATURE), y)
+ifneq ($(SIGNING_KEY),)
+	DOCKER_SIGNING_SOURCE := $(shell dirname $(SIGNING_KEY))
+	DOCKER_RUN += -v "$(DOCKER_SIGNING_SOURCE):$(DOCKER_SIGNING_SOURCE):ro"
 endif
+ifneq ($(SIGNING_CERT),)
+	DOCKER_SIGNING_SOURCE := $(shell dirname $(SIGNING_CERT))
+	DOCKER_RUN += -v "$(DOCKER_SIGNING_SOURCE):$(DOCKER_SIGNING_SOURCE):ro"
+endif
+endif
+
 
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
 ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
@@ -279,7 +276,6 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
                            SONIC_SECURE_BOOT=$(SONIC_SECURE_BOOT) \
-                           SONIC_SBSIGN_DIR=$(SONIC_SBSIGN_DIR) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
                            INCLUDE_PDE=$(INCLUDE_PDE) \
@@ -312,6 +308,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
+                           SONIC_ENABLE_SECUREBOOT_SIGNATURE=$(SONIC_ENABLE_SECUREBOOT_SIGNATURE) \
                            SONIC_DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
                            ENABLE_HOST_SERVICE_ON_START=$(ENABLE_HOST_SERVICE_ON_START) \
                            SLAVE_DIR=$(SLAVE_DIR) \

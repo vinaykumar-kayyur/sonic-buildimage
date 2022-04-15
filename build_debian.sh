@@ -37,7 +37,6 @@ LINUX_KERNEL_VERSION=5.10.0-8-2
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
 PLATFORM_DIR=platform
-PLATFORM_SECURITY_CONF=./.sbsign.conf
 ## Hostname for the linux image
 HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
@@ -144,29 +143,21 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
 fi
 
-## Sign the kernel
-if [ -f $PLATFORM_SECURITY_CONF ]; then
-    sbsign_key_dir=`cat $PLATFORM_SECURITY_CONF`
-
-    if [ -d $sbsign_key_dir ]; then
-        secure_boot_key=`find $sbsign_key_dir -name "*.key"`
-        secure_boot_cert=`find $sbsign_key_dir -name "*.cert"`
-        if [[ ! -f $secure_boot_key ]]; then
-            echo "Error: SONiC linux kernel signing key missing"
-            exit 1
-        fi
-        if [[ ! -f $secure_boot_cert ]]; then
-            echo "Error: SONiC linux kernel signing cert missing"
-            exit 1
-        fi
-
-        echo '[INFO] Signing SONiC linux kernel image'
-        K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
-        sbsign --key $secure_boot_key --cert $secure_boot_cert --output /tmp/${K##*/} ${K}
-        sudo cp -f /tmp/${K##*/} ${K}
-    else
-        echo '[INFO] Skipping signing SONiC Linux kernel image'
+## Sign the Linux kernel
+if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
+    if [ ! -f $SIGNING_KEY ]; then
+       echo "Error: SONiC linux kernel signing key missing"
+       exit 1
     fi
+    if [ ! -f $SIGNING_CERT ]; then
+       echo "Error: SONiC linux kernel signing certificate missing"
+       exit 1
+    fi
+
+    echo '[INFO] Signing SONiC linux kernel image'
+    K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
+    sbsign --key $SIGNING_KEY --cert $SIGNING_CERT --output /tmp/${K##*/} ${K}
+    sudo cp -f /tmp/${K##*/} ${K}
 fi
 
 ## Update initramfs for booting with squashfs+overlay
