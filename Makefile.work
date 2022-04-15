@@ -199,7 +199,6 @@ ifneq ($(SIGNING_CERT),)
 endif
 endif
 
-
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
 ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
     DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
