@@ -67,6 +67,9 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## ensure proc is mounted
+sudo mount proc /proc -t proc || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -471,12 +474,17 @@ fi
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
+if [ -f files/image_config/sonic_release ]; then
+    sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
+fi
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
 build_version: '${SONIC_IMAGE_VERSION}'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
 kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
 commit_id: '$(git rev-parse --short HEAD)'
+branch: '$(git rev-parse --abbrev-ref HEAD)'
+release: '$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; else echo none; fi)'
 build_date: $(date -u)
 build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
