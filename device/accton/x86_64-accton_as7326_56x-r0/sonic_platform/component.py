@@ -59,7 +59,7 @@ class Component(ComponentBase):
                 cpld_addr = CPLD_ADDR_MAPPING[cpld_name]
                 cpld_version_raw = self.__get_sysfs_value(cpld_addr, "version")
                 cpld_version[cpld_name] = "{}".format(
-                    int(cpld_version_raw, 16))
+                    int(cpld_version_raw, 10))
             except Exception as e:
                 cpld_version[cpld_name] = 'None'
 
