@@ -226,7 +226,7 @@ class Psu(PsuBase):
         if val is not None:
             return int(val, 10) == 1
         else:
-            return 0
+            return False
 
     def get_model(self):
         """
