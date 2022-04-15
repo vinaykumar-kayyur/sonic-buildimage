@@ -309,6 +309,12 @@ def main():
                                 'localhost': {'namespace_id': namespace_id}
                              }
                           })
+    # load db config
+    if not swsscommon.SonicDBConfig.isInit():
+        if multi_asic.is_multi_asic():
+            swsscommon.SonicDBConfig.load_sonic_global_db_config(namespace=asic_name)
+        else:
+            swsscommon.SonicDBConfig.load_sonic_db_config()
     if hwsku is not None:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'hwsku': hwsku

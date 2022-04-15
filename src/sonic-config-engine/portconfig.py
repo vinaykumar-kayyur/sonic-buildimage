@@ -73,11 +73,6 @@ def db_connect_configdb(namespace=None):
     """
     Connect to configdb
     """
-    if not swsscommon.SonicDBConfig.isInit():
-        if multi_asic.is_multi_asic():
-            swsscommon.SonicDBConfig.load_sonic_global_db_config(namespace=namespace)
-        else:
-            swsscommon.SonicDBConfig.load_sonic_db_config()
     config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
     if config_db is None:
         return None
