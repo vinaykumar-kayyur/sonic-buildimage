@@ -34,11 +34,8 @@ jobs:
         LIBYANG_VERSION_BASE=$(grep "LIBYANG_VERSION_BASE =" rules/libyang.mk | awk '{print$3}')
         LIBYANG_VERSION=$(grep "LIBYANG_VERSION =" rules/libyang.mk | awk '{print$3}' | sed -e "s/\\$//" -e "s/(//" -e "s/)//" -e "s/LIBYANG_VERSION_BASE/$LIBYANG_VERSION_BASE/")
         SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv make -f Makefile.work target/debs/$bldenv/libyang_${LIBYANG_VERSION}_amd64.deb
-
-        mkdir $(Build.ArtifactStagingDirectory)/$bldenv
-        find target -name *.deb | xargs -i cp {} $(Build.ArtifactStagingDirectory)/$bldenv/
-        find target -name *.log | xargs -i cp {} $(Build.ArtifactStagingDirectory)/$bldenv/
       done
+      mv target $(Build.ArtifactStagingDirectory)
     displayName: Make common lib packages
   - publish: $(Build.ArtifactStagingDirectory)
     artifact: common-lib
