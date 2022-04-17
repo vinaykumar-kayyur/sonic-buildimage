@@ -45,15 +45,15 @@ function startplatform() {
 
 function waitplatform() {
 
+    BOOT_TYPE=`getBootType`
     if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
-        BOOT_TYPE=`getBootType`
-        if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
+        if [[ x"$BOOT_TYPE" != x"cold" ]]; then
             debug "PMON service is delayed by a timer for better fast/warm boot performance"
-            return
+        else
+            debug "Starting pmon service..."
+            /bin/systemctl start pmon
+            debug "Started pmon service"
         fi
-        debug "Starting pmon service..."
-        /bin/systemctl start pmon
-        debug "Started pmon service"
     fi
 }
 
