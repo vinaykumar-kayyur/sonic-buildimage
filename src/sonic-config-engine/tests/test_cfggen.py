@@ -709,7 +709,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_sub_port_interfaces(self, check_stderr=True):
         self.verify_sub_intf(check_stderr=check_stderr)
 
-    def test_minigraph_sub_port_intf_resource_non_backend_tor(self, check_stderr=True):
+    def test_minigraph_sub_port_intf_resource_type_non_backend_tor(self, check_stderr=True):
         self.verify_sub_intf_non_backend_tor(graph_file=self.sample_resource_graph, check_stderr=check_stderr)
 
     def test_minigraph_sub_port_intf_resource_type(self, check_stderr=True):
@@ -747,16 +747,6 @@ class TestCfgGen(TestCase):
 
     def verify_sub_intf_non_backend_tor(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
-
-        # INTERFACE table does not exist
-        # argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "INTERFACE"'
-        # output = self.run_script(argument)
-        # self.assertEqual(output.strip(), "")
-
-        # PORTCHANNEL_INTERFACE table does not exist
-        # argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "PORTCHANNEL_INTERFACE"'
-        # output = self.run_script(argument)
-        # self.assertEqual(output.strip(), "")
 
         # All the other tables stay unchanged
         self.test_var_json_data(graph_file=graph_file)
