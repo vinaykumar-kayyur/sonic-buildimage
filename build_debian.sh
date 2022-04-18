@@ -67,6 +67,9 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## ensure proc is mounted
+sudo mount proc /proc -t proc || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -235,7 +238,6 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
-    # kubeadm package auto install kubelet & kubectl
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
@@ -390,9 +392,9 @@ set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliv
 save
 quit
 EOF
-# Configure sshd to listen for v4 connections; disable listening for v6 connections
-sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+# Configure sshd to listen for v4 and v6 connections
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
 ## Config rsyslog
 sudo augtool -r $FILESYSTEM_ROOT --autosave "
@@ -472,12 +474,17 @@ fi
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
+if [ -f files/image_config/sonic_release ]; then
+    sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
+fi
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
 build_version: '${SONIC_IMAGE_VERSION}'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
 kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
 commit_id: '$(git rev-parse --short HEAD)'
+branch: '$(git rev-parse --abbrev-ref HEAD)'
+release: '$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; else echo none; fi)'
 build_date: $(date -u)
 build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME

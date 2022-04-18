@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -112,7 +110,6 @@ class Chassis(ChassisBase):
                 fan = Fan(fan_index, drawer, index + 1)
                 fan_index += 1
                 drawer._fan_list.append(fan)
-                self._fan_list.append(fan)
 
 
     def initialize_sfp(self):

@@ -1,9 +1,10 @@
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
 {%- if CONFIGURED_ARCH == "armhf"  -%}
-FROM multiarch/debian-debootstrap:armhf-jessie
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-jessie
 {%- elif CONFIGURED_ARCH == "arm64" -%}
-FROM multiarch/debian-debootstrap:arm64-jessie
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-jessie
 {%- else -%}
-FROM debian:jessie
+FROM {{ prefix }}debian:jessie
 {%- endif %}
 
 MAINTAINER johnar@microsoft.com
@@ -332,7 +333,7 @@ RUN apt-get install -y docker-ce=18.03.1~ce-0~debian
 {%- elif CONFIGURED_ARCH == "armhf" %}
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 {%- endif %}
-RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 
 # For jenkins slave
 RUN echo "deb [arch={{ CONFIGURED_ARCH }}] http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
