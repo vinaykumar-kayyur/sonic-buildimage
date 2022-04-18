@@ -24,15 +24,13 @@
 	url = https://github.com/Azure/sonic-py-swsssdk.git
 [submodule "src/sonic-snmpagent"]
 	path = src/sonic-snmpagent
-	url = https://github.com/liuh-80/sonic-snmpagent
-	branch = dev/liuh/fix_init_code_bug
+	url = https://github.com/Azure/sonic-snmpagent
 [submodule "src/ptf"]
 	path = src/ptf
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
-	url = https://github.com/liuh-80/sonic-utilities
-	branch = dev/liuh/fix_ut_break_with_swsscommon
+	url = https://github.com/Azure/sonic-utilities
 [submodule "platform/broadcom/sonic-platform-modules-arista"]
 	path = platform/broadcom/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
@@ -41,8 +39,7 @@
 	url = https://github.com/Azure/sonic-platform-common
 [submodule "src/sonic-platform-daemons"]
 	path = src/sonic-platform-daemons
-	url = https://github.com/liuh-80/sonic-platform-daemons
-	branch = dev/liuh/fix_ut_break_with_swsscommon
+	url = https://github.com/Azure/sonic-platform-daemons
 [submodule "src/sonic-platform-pde"]
 	path = src/sonic-platform-pde
 	url = https://github.com/Azure/sonic-platform-pdk-pde
