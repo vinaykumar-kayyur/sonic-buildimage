@@ -10,8 +10,7 @@ import re
 from parameterized import parameterized
 from unittest import TestCase, mock
 from tests.hostcfgd.test_passwh_vectors import HOSTCFGD_TEST_PASSWH_VECTOR
-from tests.common.mock_configdb import MockConfigDb, MockSubscriberStateTable
-from tests.common.mock_configdb import MockSelect, MockDBConnector
+from tests.common.mock_configdb import MockConfigDb, MockDBConnector
 
 test_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 modules_path = os.path.dirname(test_path)
@@ -32,8 +31,6 @@ sys.modules['hostcfgd'] = hostcfgd
 
 # Mock swsscommon classes
 hostcfgd.ConfigDBConnector = MockConfigDb
-hostcfgd.SubscriberStateTable = MockSubscriberStateTable
-hostcfgd.Select = MockSelect
 hostcfgd.DBConnector = MockDBConnector
 hostcfgd.Table = mock.Mock()
 
