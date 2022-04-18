@@ -211,11 +211,16 @@ wait() {
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
     for SECS in {1..60}; do
+        ALL_PEERS_RUNNING=true
         for peer in ${PEER}; do
             if [[ ! -z $DEV ]]; then
                 RUNNING=$(docker inspect -f '{{.State.Running}}' ${peer}$DEV)
             else
                 RUNNING=$(docker inspect -f '{{.State.Running}}' ${peer})
+            fi
+            if [[ x"$RUNNING" != x"true" ]]; then
+                ALL_PEERS_RUNNING=false
+                break
             fi
         done
         ALL_DEPS_RUNNING=true
@@ -231,7 +236,7 @@ wait() {
             fi
         done
 
-        if [[ x"$RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
+        if [[ x"$ALL_PEERS_RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
             break
         else
             sleep 1
@@ -248,13 +253,11 @@ wait() {
         fi
     done
 
-    for peer in ${PEER}; do
-        if [[ ! -z $DEV ]]; then
-            /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d ${peer}$DEV ${ALL_DEPS}
-        else
-            /usr/bin/docker-wait-any -s ${SERVICE} -d ${peer} ${ALL_DEPS}
-        fi
-    done
+    if [[ ! -z $DEV ]]; then
+        /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d `printf "%s$DEV " ${PEER}` ${ALL_DEPS}
+    else
+        /usr/bin/docker-wait-any -s ${SERVICE} -d ${PEER} ${ALL_DEPS}
+    fi
 }
 
 stop() {
