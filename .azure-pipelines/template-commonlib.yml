@@ -8,7 +8,10 @@ jobs:
     submodules: recursive
   - script: |
       set -ex
-      lbdenvs=${!$(Build.SourceBranchName)}
+      branch=$(Build.SourceBranchName)
+      # DIST_MASTER is set in variable.
+      BRANCH=DIST_${branch^^}
+      bldenvs=${!BRANCH}
       for bldenv in $bldenvs
       do
         BLDENV=$bldenv make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
