@@ -2,6 +2,8 @@ jobs:
 - job: Build
   timeoutInMinutes: 120
   pool: sonicbld
+  variables:
+  - template: template-variables.yml
   steps:
   - checkout: self
     clean: true
@@ -12,6 +14,7 @@ jobs:
       # DIST_MASTER is set in variable.
       BRANCH=DIST_${branch^^}
       bldenvs=${!BRANCH}
+      [ "$bldenvs" == "" ] && bldenvs=$(COMMON_LIB_BUILD_ENVS)
       for bldenv in $bldenvs
       do
         BLDENV=$bldenv make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
