@@ -67,6 +67,9 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## ensure proc is mounted
+sudo mount proc /proc -t proc || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -190,7 +193,7 @@ if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
 fi
 
 ## Add mtd and uboot firmware tools package
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools libubootenv-tool mtd-utils device-tree-compiler
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -444,7 +447,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setup
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==4.3.1'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
 
 # Install scapy
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
@@ -489,6 +492,7 @@ export build_version="${SONIC_IMAGE_VERSION}"
 export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
 export kernel_version="${kversion}"
 export asic_type="${sonic_asic_platform}"
+export asic_subtype="${TARGET_MACHINE}"
 export commit_id="$(git rev-parse --short HEAD)"
 export branch="$(git rev-parse --abbrev-ref HEAD)"
 export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
@@ -559,6 +563,9 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     fi
 fi
 
+# Collect host image version files before cleanup
+scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
 
@@ -570,6 +577,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 
 ## Clean up proxy
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
+
+## Clean up pip cache
+sudo LANG=C chroot $FILESYSTEM_ROOT pip3 cache purge
 
 ## Umount all
 echo '[INFO] Umount all'
@@ -590,7 +600,6 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000

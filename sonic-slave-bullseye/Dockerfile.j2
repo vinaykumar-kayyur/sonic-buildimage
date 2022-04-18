@@ -1,13 +1,14 @@
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
-FROM multiarch/debian-debootstrap:armhf-bullseye
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
-FROM multiarch/debian-debootstrap:arm64-bullseye
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-bullseye
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
-FROM debian:bullseye
+FROM {{ prefix }}debian:bullseye
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com
@@ -19,7 +20,9 @@ RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bull
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian bullseye-backports main" >> /etc/apt/sources.list
+        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian bullseye-backports main" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian bullseye main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
 
 {%- if CONFIGURED_ARCH == "armhf" %}
 RUN echo "deb [arch=armhf] http://deb.debian.org/debian bullseye main contrib non-free" > /etc/apt/sources.list && \
@@ -338,6 +341,7 @@ RUN apt-get update && apt-get install -y \
         libboost-regex-dev \
         googletest \
         libgtest-dev \
+        libgmock-dev \
         libgcc-10-dev \
 # For sonic-host-services build
         libcairo2-dev \
