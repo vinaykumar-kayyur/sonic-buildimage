@@ -420,7 +420,7 @@ class SonicYangExtMixin:
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
             vValue = list()
-            if (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+            if isinstance(value, str) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
                 value = (x.strip() for x in value.split(LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])]))
             for v in value:
                 vValue.append(_yangConvert(v))
@@ -769,7 +769,7 @@ class SonicYangExtMixin:
 
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
-            if (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+            if isinstance(value, list) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
                 vValue = LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])].join((_revYangConvert(x) for x in value))
             else:
                 vValue = list()
