@@ -8,14 +8,7 @@ jobs:
     submodules: recursive
   - script: |
       set -ex
-      case $(Build.SourceBranchName) in
-        202012 | 202106)
-          bldenvs="buster"
-          ;;
-        *)
-          bldenvs="buster bullseye"
-          ;;
-      esac
+      lbdenvs=${!$(Build.SourceBranchName)}
       for bldenv in $bldenvs
       do
         BLDENV=$bldenv make -f Makefile.work configure PLATFORM=vs ENABLE_DOCKER_BASE_PULL=y
