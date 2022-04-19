@@ -17,6 +17,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	wget -O "thrift_$(THRIFT_VERSION).tar.gz" "$(THRIFT_LINK_PRE)/$(THRIFT_VERSION)/thrift-$(THRIFT_VERSION).tar.gz"
 
 	tar -xvzf ./thrift_$(THRIFT_VERSION).tar.gz
+	if [ -f thrift.patch/series ]; then pushd thrift-$(THRIFT_VERSION) && QUILT_PATCHES=../thrift.patch quilt push -a; [ -d .pc ] && rm -rf .pc; popd; fi
 	pushd thrift-$(THRIFT_VERSION)
 
 	# Disable php perl and few other packages as they need additional packages to be installed

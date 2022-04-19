@@ -6,10 +6,10 @@ Subject: [PATCH] Fix security issue for package minimist
 ---
 3 files changed, 9 insertions(+), 120 deletions(-)
 
-diff --git a/lib/js/package-lock.json b/lib/js/package-lock.json
-index ea1c04620..b68217af3 100644
---- a/lib/js/package-lock.json
-+++ b/lib/js/package-lock.json
+Index: thrift-0.14.1/lib/js/package-lock.json
+===================================================================
+--- thrift-0.14.1.orig/lib/js/package-lock.json
++++ thrift-0.14.1/lib/js/package-lock.json
 @@ -1037,16 +1037,7 @@
        "dev": true,
        "requires": {
@@ -94,10 +94,10 @@ index ea1c04620..b68217af3 100644
      },
      "supports-color": {
        "version": "5.5.0",
-diff --git a/lib/ts/package-lock.json b/lib/ts/package-lock.json
-index fddef4426..e7f4d46fd 100644
---- a/lib/ts/package-lock.json
-+++ b/lib/ts/package-lock.json
+Index: thrift-0.14.1/lib/ts/package-lock.json
+===================================================================
+--- thrift-0.14.1.orig/lib/ts/package-lock.json
++++ thrift-0.14.1/lib/ts/package-lock.json
 @@ -1139,16 +1139,7 @@
        "dev": true,
        "requires": {
@@ -181,10 +181,10 @@ index fddef4426..e7f4d46fd 100644
      },
      "supports-color": {
        "version": "5.5.0",
-diff --git a/package-lock.json b/package-lock.json
-index 9c1e5f581..83793eaaf 100644
---- a/package-lock.json
-+++ b/package-lock.json
+Index: thrift-0.14.1/package-lock.json
+===================================================================
+--- thrift-0.14.1.orig/package-lock.json
++++ thrift-0.14.1/package-lock.json
 @@ -1427,16 +1427,7 @@
        "integrity": "sha512-4vGP107UDhhNHeWA5N8j/nUPlQbtB/W/K2x/P7aElbWMWrOkJA0MRSVFsMFrTPSAAjZWCG9uki2+1cQDzFtVcQ==",
        "dev": true,
@@ -266,4 +266,3 @@ index 9c1e5f581..83793eaaf 100644
          "resolve": {
            "version": "1.7.1",
            "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.7.1.tgz",
-
