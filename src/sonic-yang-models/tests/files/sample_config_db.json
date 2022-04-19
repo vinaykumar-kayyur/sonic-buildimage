@@ -304,7 +304,8 @@
                 "switch_id": "2",
                 "switch_type": "voq",
                 "max_cores": "8",
-                "sub_role": "FrondEnd"
+                "sub_role": "FrontEnd",
+                "dhcp_server": "disabled"
             }
         },
         "VLAN": {
@@ -425,7 +426,8 @@
                 "admin_status": "up",
                 "index": "0",
                 "asic_port_name": "Eth0-ASIC1",
-                "role": "Ext"
+                "role": "Ext",
+                "macsec": "test"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -1602,7 +1604,8 @@
 	          "tc_to_pg_map": "tc_to_pg_map1",
 	          "pfc_to_queue_map": "pfc_prio_to_q_map1",
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map1",
-	          "pfc_enable"      : "3,4"
+	          "pfc_enable"      : "3,4",
+	          "pfcwd_sw_enable" : "3,4"
             },
             "Ethernet4": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map2",
@@ -1611,7 +1614,8 @@
 	          "tc_to_pg_map": "tc_to_pg_map2",
 	          "pfc_to_queue_map": "pfc_prio_to_q_map2",
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map2",
-	          "pfc_enable"      : "3,4"
+	          "pfc_enable"      : "3,4",
+	          "pfcwd_sw_enable" : "3,4"
             }
         },
 
@@ -1683,13 +1687,35 @@
                 "vlan_id": "111",
                 "vsid": "5000"
             }
-        }
+        },
 
+
+        "MACSEC_PROFILE": {
+            "test": {
+                "priority": "64",
+                "cipher_suite": "GCM-AES-128",
+                "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
+                "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
+                "fallback_cak": "00000000000000000000000000000000",
+                "fallback_ckn": "11111111111111111111111111111111",
+                "policy": "security",
+                "enable_replay_protect": "true",
+                "replay_window": "64",
+                "send_sci": "true",
+                "rekey_period": "3600"
+            }
+        }
 
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."
+        }
+    },
+    "SAMPLE_CONFIG_DB_SPECIAL_CASE": {
+        "TACPLUS": {
+            "global": {
+            }
         }
     }
 }
