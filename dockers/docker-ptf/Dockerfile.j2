@@ -9,6 +9,9 @@ FROM {{ prefix }}debian:buster
 
 {% from "dockers/dockerfile-macros.j2" import install_python_wheels, copy_files %}
 
+USER root
+WORKDIR /root
+
 MAINTAINER Pavel Shirshov
 
 RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian buster-backports main" >> /etc/apt/sources.list
@@ -136,7 +139,7 @@ RUN rm -rf /debs \
 RUN python3 -m venv env-python3
 
 # Activating a virtualenv. The virtualenv automatically works for RUN, ENV and CMD.
-ENV VIRTUAL_ENV=env-python3
+ENV VIRTUAL_ENV=/root/env-python3
 ARG BACKUP_OF_PATH="$PATH"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
