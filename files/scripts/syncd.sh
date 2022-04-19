@@ -50,7 +50,7 @@ function waitplatform() {
         /bin/systemctl start pmon
         debug "Started pmon service"
     fi
-    if [[ x"$BOOT_TYPE" != x"cold" ]]; then
+    if [[ x"$BOOT_TYPE" = @(x"fast"|x"warm"|x"fastfast") ]]; then
         debug "LLDP service is delayed by a timer for better fast/warm boot performance"
     else
         debug "Starting lldp service..."
