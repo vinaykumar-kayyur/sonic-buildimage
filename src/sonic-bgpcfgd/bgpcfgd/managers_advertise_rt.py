@@ -5,6 +5,7 @@ from .managers_rm import ROUTE_MAPS
 import ipaddress
 from .log import log_debug, log_info, log_err, log_warn
 
+
 class AdvertiseRouteMgr(Manager):
     """ This class Advertises routes when ADVERTISE_NETWORK_TABLE in STATE_DB is updated """
     def __init__(self, common_objs, db, table):
@@ -30,6 +31,7 @@ class AdvertiseRouteMgr(Manager):
 
 
     def set_handler(self, key, data):
+        log_info("AdvertiseRouteMgr:: set handler")
         if not self._set_handler_validate(key, data):
             return True
         vrf, ip_prefix = self.split_key(key)
@@ -39,6 +41,7 @@ class AdvertiseRouteMgr(Manager):
 
 
     def del_handler(self, key):
+        log_info("AdvertiseRouteMgr:: del handler")
         if not self._del_handler_validate(key):
             return True
         vrf, ip_prefix = self.split_key(key)
@@ -46,11 +49,21 @@ class AdvertiseRouteMgr(Manager):
 
     def _ip_addr_validate(self, key):
         if key:
-            try:
-                _, address = self.split_key(key)
-                ipaddress.ip_address(address)
-            except ValueError:
+            _, ip_prefix = self.split_key(key)
+            ip_prefix = ip_prefix.split('/')
+            if len(ip_prefix) != 2:
                 log_err("BGPAdvertiseRouteMgr:: No valid ip prefix for advertised route %s" % key)
+                return False
+            try:
+                ip = ipaddress.ip_address(ip_prefix[0])
+                if ip.version == 4 and int(ip_prefix[1]) not in range(0, 33):
+                    log_err("BGPAdvertiseRouteMgr:: ipv4 prefix %s is illegal for advertised route %s" % (ip_prefix[1], key))
+                    return False
+                if ip.version == 6 and int(ip_prefix[1]) not in range(0, 129):
+                    log_err("BGPAdvertiseRouteMgr:: ipv6 prefix %s is illegal for advertised route %s" % (ip_prefix[1], key))
+                    return False
+            except ValueError:
+                log_err("BGPAdvertiseRouteMgr:: No valid ip %s for advertised route %s" % (ip_prefix[0], key))
                 return False
         else:
             return False
@@ -93,7 +106,6 @@ class AdvertiseRouteMgr(Manager):
     def advertise_route_commands(self, ip_prefix, vrf, op, data = None):
         is_ipv6 = TemplateFabric.is_ipv6(ip_prefix)
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
-
         cmd_list = []
         if vrf == 'default':
             cmd_list.append("router bgp %s" % bgp_asn)
@@ -107,7 +119,7 @@ class AdvertiseRouteMgr(Manager):
         '''
         if data and 'rm_name' in data:
             cmd_list.append("  network %s route-map %s" % (ip_prefix, data['rm_name']))
-            log_info("BGPAdvertiseRouteMgr:: update bgp %s network %s with route-map %" % 
+            log_info("BGPAdvertiseRouteMgr:: update bgp %s network %s with route-map %s" %
                      (bgp_asn, vrf + '|' + ip_prefix, data['rm_name']))
         else:
             cmd_list.append("  %snetwork %s" % ('no ' if op == self.OP_DELETE else '', ip_prefix))

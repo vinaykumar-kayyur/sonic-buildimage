@@ -1,5 +1,5 @@
 from unittest.mock import MagicMock
-
+from bgpcfgd.directory import Directory
 from bgpcfgd.managers_rm import RouteMapMgr
 from swsscommon import swsscommon
 
@@ -7,11 +7,12 @@ def constructor():
     cfg_mgr = MagicMock()
 
     common_objs = {
+        'directory': Directory(),
         'cfg_mgr':   cfg_mgr,
         'constants': {},
     }
 
-    mgr = RouteMapMgr(common_objs, "STATE_DB", swsscommon.STATE_ROUTE_MAP_TABLE_NAME)
+    mgr = RouteMapMgr(common_objs, "STATE_DB", "STATE_ROUTE_MAP_TABLE")#swsscommon.STATE_ROUTE_MAP_TABLE_NAME)
     return mgr
 
 def set_del_test(mgr, op, args, expected_ret, expected_cmds):
