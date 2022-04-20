@@ -8,7 +8,6 @@ try:
     from swsscommon import swsscommon
     from sonic_py_common import device_info
     from sonic_py_common.multi_asic import get_asic_id_from_name
-    from sonic_py_common import multi_asic
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
