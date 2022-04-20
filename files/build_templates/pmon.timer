@@ -1,5 +1,5 @@
 [Unit]
-# This delay is for fast-reboot performance
+# This delay is for fast/warm reboot performance
 Description=Delays pmon docker until SONiC has started
 PartOf=pmon.service
 
