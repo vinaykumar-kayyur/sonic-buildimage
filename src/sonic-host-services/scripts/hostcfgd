@@ -269,7 +269,7 @@ class FeatureHandler(object):
 
         self._cached_config[feature_name].auto_restart = feature.auto_restart # Update Cache
 
-        restart_config = "always" if feature.auto_restart == "enabled" else "no"
+        restart_config = "always" if "enabled" in feature.auto_restart else "no"
         service_conf = "[Service]\nRestart={}\n".format(restart_config)
         feature_names, feature_suffixes = self.get_feature_attribute(feature)
 
