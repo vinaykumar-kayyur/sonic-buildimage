@@ -34,3 +34,20 @@ class Psu(PddfPsu):
         # This platform supports AC PSU
         return ptype
 
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves the psu index number
+        """
+        return self.psu_index
+
+    def get_revision(self):
+
+        return "N/A"

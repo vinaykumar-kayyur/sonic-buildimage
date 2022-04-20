@@ -111,3 +111,36 @@ class Fan(PddfFan):
 
         self.pddf_obj.create_attr('dev_ops', 'set_status', self.pddf_obj.get_led_path())
         return True
+
+    @staticmethod
+    def get_model():
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        model = "Unknown"
+        return model
+
+    @staticmethod
+    def get_serial():
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial = "Unknown"
+        return serial
+
+    def get_position_in_parent(self):
+        """
+        Retrieves the fan/psu fan index number
+        """
+        return self.fantray_index if not self.is_psu_fan else self.fans_psu_index + 4
+		
+    @staticmethod
+    def is_replaceable():
+        """
+        Retrieves whether the device is replaceable
+        """
+        return False
