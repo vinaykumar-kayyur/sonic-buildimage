@@ -147,8 +147,7 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONIOENCODING=UTF-8
 
 RUN python3 -m pip install --upgrade --ignore-installed pip
 
-# Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
-# TODO: Clean up this step
+# Install all python modules from pypi. python3-scapy is exception, ptf debian package requires python3-scapy
 RUN python3 -m pip install setuptools \
     && pip3 install supervisor \
     && pip3 install ipython==5.4.1 \
