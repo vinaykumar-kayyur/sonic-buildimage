@@ -1,0 +1,11 @@
+[Unit]
+Description=Http-server service daemon
+Requires=updategraph.service
+After=database.service
+BindsTo=sonic.target
+After=sonic.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/http-server
+
