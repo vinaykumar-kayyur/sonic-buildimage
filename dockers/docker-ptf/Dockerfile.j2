@@ -152,6 +152,33 @@ RUN python3 -m pip install setuptools \
     && pip3 install supervisor \
     && pip3 install ipython==5.4.1 \
     && pip3 install Cython \
+    && git clone https://github.com/sflow/sflowtool \
+    && cd sflowtool \
+    && ./boot.sh \
+    && ./configure \
+    && make \
+    && make install \
+    && cd  .. \
+    && rm -fr sflowtool \
+    && git clone https://github.com/dyninc/OpenBFDD.git \
+    && cd OpenBFDD \
+    && ./autogen.sh \
+    && ./configure \
+    && make \
+    && make install \
+    && cd  .. \
+    && rm -fr OpenBFDD \
+    && wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
+    && tar xvfz 1.0.0.tar.gz \
+    && cd nanomsg-1.0.0    \
+    && mkdir -p build      \
+    && cd build            \
+    && cmake ..            \
+    && make install        \
+    && ldconfig            \
+    && cd ../..            \
+    && rm -fr nanomsg-1.0.0 \
+    && rm -f 1.0.0.tar.gz  \
     && pip3 install cffi    \
     && pip3 install nnpy    \
     && pip3 install dpkt    \
