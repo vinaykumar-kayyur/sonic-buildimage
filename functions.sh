@@ -66,3 +66,32 @@ sonic_get_version() {
         echo "${branch_name}.${BUILD_NUMBER}${dirty:--$(git rev-parse --short HEAD)}" | sed 's/\//_/g'
     fi
 }
+
+# Lock macro for shared file access
+# Parameters:
+#  $(1) - Lock file name
+#  $(2) - Timeout value
+function FLOCK()
+{
+	if [[ ! -f ${1}.lock ]]; then
+		touch ${1}.lock
+		chmod 777 ${1}.lock;
+	fi
+	local lock_fd=${1//[.\/-]/_}_lock_fd
+	eval $(echo exec {${lock_fd}}\<\>"${1}.lock")
+	echo ${!lock_fd}
+	if ! flock -x -w ${2} "${!lock_fd}" ; then
+		echo "ERROR: Lock timeout trying to access ${1}.lock";
+		exit 1;
+	fi
+	echo "Lock acquired .."
+}
+# UnLock macro for shared file access
+# Parameters:
+#  $(1) - Lock file name
+function FUNLOCK()
+{
+	local lock_fd=${1//[.\/-]/_}_lock_fd
+	eval $(echo exec "${!lock_fd}<&-")
+}
+

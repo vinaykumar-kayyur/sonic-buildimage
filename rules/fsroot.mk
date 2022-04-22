@@ -1,0 +1,5 @@
+FSROOT := fsroot.img
+
+$(FSROOT)_SRC_PATH = $(PWD)
+SONIC_INSTALL_PKGS += $(FSROOT)
+

@@ -41,6 +41,7 @@ BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
 BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
 BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
 BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
+FSROOT_PATH = $(TARGET_PATH)/image
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 DPKG_ADMINDIR_PATH = /sonic/dpkg
@@ -106,6 +107,7 @@ configure :
 	@mkdir -p $(PYTHON_DEBS_PATH)
 	@mkdir -p $(PYTHON_WHEELS_PATH)
 	@mkdir -p $(DPKG_ADMINDIR_PATH)
+	@mkdir -p target/image
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
@@ -1019,6 +1021,53 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 	$(call docker-image-load,$*)
 	$(FOOTER)
 
+SONIC_INSTALLERS_FSIMG = $(foreach ins,$(SONIC_INSTALLERS),$(ins)/fsroot.img \
+						 	$(eval $(ins)/fsroot.img_DST_PATH=$(FSROOT_PATH)/$(ins)) \
+						 	$(eval $(ins)/fsroot.img_BASE_IMAGE_NAME=$(ins)) \
+						 	$(eval $(ins)/fsroot.img_FS_IMAGE_NAME=fsroot.img) \
+							$(shell mkdir -p $(FSROOT_PATH)/$(ins)) \
+						 )
+SONIC_INSTALLERS_FSIMG_TARGET = $(addprefix $(FSROOT_PATH)/,$(SONIC_INSTALLERS_FSIMG))
+
+.PHONY: $(SONIC_INSTALLERS_FSIMG_TARGET)
+$(SONIC_INSTALLERS_FSIMG_TARGET) : $(FSROOT_PATH)/% : .platform \
+		$(call dpkg_depend,$(FSROOT_PATH)/$(FSROOT).dep)
+
+	$(HEADER)
+	
+
+	# Create imagefs for rootfs 
+	BASE_IMAGE_NAME=$($*_BASE_IMAGE_NAME) \
+	SONIC_USE_TMPFS_BUILD=$(SONIC_USE_TMPFS_BUILD) \
+		scripts/fsutil.sh imagefs mount $(LOG)
+
+	# Load the target deb from DPKG cache
+	$(eval $($*_FS_IMAGE_NAME)_DST_PATH=$(FSROOT_PATH)/$($*_BASE_IMAGE_NAME)) 
+	$(call LOAD_CACHE,$($*_FS_IMAGE_NAME),$@)
+
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($($*_FS_IMAGE_NAME)_CACHE_LOADED)' ] ; then
+
+		$(eval FSCMD= \
+			USERNAME="$(USERNAME)" \
+			PASSWORD="$(PASSWORD)" \
+			NUMPROCS="$(SONIC_CONFIG_MAKE_JOBS)" \
+			DBGOPT="$(DBGOPT)" CPORT=$(CPORT) CUSER=$(CUSER) \
+			SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+			BASE_IMAGE_NAME=$($*_BASE_IMAGE_NAME) \
+			SONIC_USE_TMPFS_BUILD=$(SONIC_USE_TMPFS_BUILD) \
+				./build_debian_rootfs.sh )
+		echo "ROOTFS CMD: $(FSCMD)" $(LOG)
+		$(FSCMD) $(LOG)
+
+		# Save the target deb into DPKG cache
+		$(call SAVE_CACHE,$($*_FS_IMAGE_NAME),$@)
+
+	fi
+	sync; sync; sync
+
+	$(FOOTER)
+
 ###############################################################################
 ## Installers
 ###############################################################################
@@ -1027,6 +1076,7 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         .platform \
         onie-image.conf \
+        build_debian_rootfs.sh \
         build_debian.sh \
         scripts/dbg_files.sh \
         build_image.sh \
@@ -1076,9 +1126,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(FILES_PATH)/,$($(SONIC_CTRMGRD)_FILES)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SYSTEM_HEALTH)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3))
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3)) \
+		| $(FSROOT_PATH)/$$*/fsroot.img 
+
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
+	export TARGET_MACHINE="$($*_MACHINE)"
 	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
 	export files_path="$(FILES_PATH)"
 	export python_debs_path="$(PYTHON_DEBS_PATH)"
@@ -1208,7 +1261,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 
 		$(if $($(docker:-dbg.gz=.gz)_MACHINE),\
-			mv $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh $($(docker:-dbg.gz=.gz)_MACHINE)_$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+			cp $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh $($(docker:-dbg.gz=.gz)_MACHINE)_$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		)
 	)
 
@@ -1258,17 +1311,17 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	)
 
 	# Build images for the MACHINE, DEPENDENT_MACHINE defined.
-	$(foreach dep_machine, $($*_MACHINE) $($*_DEPENDENT_MACHINE), \
-		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
-		DEBUG_SRC_ARCHIVE_DIRS="$(DBG_SRC_ARCHIVE)" \
-		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
-			scripts/dbg_files.sh
+	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+	DEBUG_SRC_ARCHIVE_DIRS="$(DBG_SRC_ARCHIVE)" \
+	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
+		scripts/dbg_files.sh $(LOG)
 
+	$(eval IMGCMD= \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 		USERNAME="$(USERNAME)" \
 		PASSWORD="$(PASSWORD)" \
-		TARGET_MACHINE=$(dep_machine) \
+		TARGET_MACHINE=$($*_MACHINE) \
 		IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		TARGET_PATH=$(TARGET_PATH) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
@@ -1278,19 +1331,31 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		SIGNING_CERT="$(SIGNING_CERT)" \
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
-			./build_debian.sh $(LOG)
+		BASE_IMAGE_NAME=$* \
+		SONIC_USE_TMPFS_BUILD=$(SONIC_USE_TMPFS_BUILD) \
+		SONIC_FS_IMAGE_COMPRESSION_TYPE=$(SONIC_FS_IMAGE_COMPRESSION_TYPE) \
+			./build_debian.sh )
+	$(IMGCMD) $(LOG)
 
-		USERNAME="$(USERNAME)" \
-		PASSWORD="$(PASSWORD)" \
-		TARGET_MACHINE=$(dep_machine) \
-		IMAGE_TYPE=$($*_IMAGE_TYPE) \
-		SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
-		SIGNING_KEY="$(SIGNING_KEY)" \
-		SIGNING_CERT="$(SIGNING_CERT)" \
-		CA_CERT="$(CA_CERT)" \
-		TARGET_PATH="$(TARGET_PATH)" \
-			./build_image.sh $(LOG)
-	)
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+	SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
+	SIGNING_KEY="$(SIGNING_KEY)" \
+	SIGNING_CERT="$(SIGNING_CERT)" \
+	CA_CERT="$(CA_CERT)" \
+	TARGET_PATH="$(TARGET_PATH)" \
+	BASE_IMAGE_NAME=$* \
+	SONIC_USE_TMPFS_BUILD=$(SONIC_USE_TMPFS_BUILD) \
+	SONIC_FS_IMAGE_COMPRESSION_TYPE=$(SONIC_FS_IMAGE_COMPRESSION_TYPE) \
+		./build_image.sh $(LOG)
+
+	# umount all tmfs
+	BASE_IMAGE_NAME=$* \
+	TARGET_MACHINE=$($*_MACHINE) \
+	SONIC_USE_TMPFS_BUILD=$(SONIC_USE_TMPFS_BUILD) \
+		scripts/fsutil.sh imagefs umount $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f *$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh

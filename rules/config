@@ -229,3 +229,13 @@ DEFAULT_CONTAINER_REGISTRY ?=
 # ENABLE_FIPS - support FIPS flag, if enabled, no additional config requred for the image to support FIPS
 ENABLE_FIPS_FEATURE ?= y
 ENABLE_FIPS ?= n
+
+
+# Use tmpfs to build the rootfs and the final image.
+SONIC_USE_TMPFS_BUILD ?=n
+
+# Select the final FS image compression type.
+# zip    : Standard, optimized for compression.
+# pigz   : Parallel compression, optimized for speed.
+SONIC_FS_IMAGE_COMPRESSION_TYPE ?=zip
+

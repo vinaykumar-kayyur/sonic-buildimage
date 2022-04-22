@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x 
+
 CONFIGURED_ARCH=$1
 IMAGE_DISTRO=$2
 FILESYSTEM_ROOT=$3
