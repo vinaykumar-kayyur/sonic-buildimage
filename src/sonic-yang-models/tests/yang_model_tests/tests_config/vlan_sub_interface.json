@@ -209,6 +209,56 @@
             }
         }
     },
+    "VLAN_SUB_INTERFACE_PO_MUST_CONDITION_TRUE_TEST": {
+        "sonic-vlan-sub-interface:sonic-vlan-sub-interface": {
+            "sonic-vlan-sub-interface:VLAN_SUB_INTERFACE": {
+                "VLAN_SUB_INTERFACE_LIST": [
+                    {
+                        "name": "PortChannel01.8"
+                    }
+                ],
+                "VLAN_SUB_INTERFACE_IPPREFIX_LIST": [
+                    {
+                        "name": "PortChannel01.8",
+                        "ip-prefix": "10.0.0.1/30"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "tpid": "0x8100",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "members": [
+                            "Ethernet0"
+                        ],
+                        "min_links": "1",
+                        "mtu": "9100",
+                        "tpid": "0x8100",
+                        "lacp_key": "auto",
+                        "name": "PortChannel01"
+                    }
+                ]
+            }
+        }
+    },
     "VLAN_SUB_INTERFACE_PO_MUST_CONDITION_FALSE_TEST": {
         "sonic-vlan-sub-interface:sonic-vlan-sub-interface": {
             "sonic-vlan-sub-interface:VLAN_SUB_INTERFACE": {
