@@ -45,16 +45,25 @@ BRKOUT_PATTERN_GROUPS = 6
 #
 # Helper Functions
 #
+
+# For python2 compatibility
+def py2JsonStrHook(j):
+    if isinstance(j, unicode):
+        return j.encode('utf-8', 'backslashreplace')
+    if isinstance(j, list):
+        return [py2JsonStrHook(item) for item in j]
+    if isinstance(j, dict):
+        return {py2JsonStrHook(key): py2JsonStrHook(value)
+            for key, value in j.iteritems()}
+    return j
+
 def readJson(filename):
     # Read 'platform.json' or 'hwsku.json' file
     try:
         with open(filename) as fp:
-            try:
-                data = json.load(fp)
-            except json.JSONDecodeError:
-                print("Json file does not exist")
-        data_dict = ast.literal_eval(json.dumps(data))
-        return data_dict
+            if sys.version_info.major == 2:
+                return json.load(fp, object_hook=py2JsonStrHook)
+            return json.load(fp)
     except Exception as e:
         print("error occurred while parsing json: {}".format(sys.exc_info()[1]))
         return None
@@ -63,12 +72,7 @@ def db_connect_configdb(namespace=None):
     """
     Connect to configdb
     """
-    try:
-        if namespace is not None:
-            swsscommon.SonicDBConfig.load_sonic_global_db_config(namespace=namespace)
-        config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
-    except Exception as e:
-        return None
+    config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
     if config_db is None:
         return None
     try:

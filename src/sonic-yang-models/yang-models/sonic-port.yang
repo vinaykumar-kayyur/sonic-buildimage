@@ -13,6 +13,10 @@ module sonic-port{
 		prefix ext;
 	}
 
+	import sonic-macsec {
+		prefix macsec;
+	}
+
 	description "PORT yang Module for SONiC OS";
 
 	revision 2019-07-01 {
@@ -110,9 +114,20 @@ module sonic-port{
 				}
 
 				leaf index {
-					type uint16 {
-						range 0..256;
+					type uint16;
+				}
+
+				leaf asic_port_name {
+					type string;
+					description "port name in asic and asic name, e.g Eth0-ASIC1";
+				}
+
+				leaf role {
+					type string {
+						pattern "Ext|Int|Inb|Rec";
 					}
+					description "Internal port or External port for multi-asic platform";
+					default "Ext";
 				}
 
 				leaf admin_status {
@@ -140,6 +155,12 @@ module sonic-port{
 
 				leaf mux_cable {
 					type boolean;
+				}
+
+				leaf macsec {
+					type leafref {
+						path "/macsec:sonic-macsec/macsec:MACSEC_PROFILE/macsec:MACSEC_PROFILE_LIST/macsec:name";
+					}
 				}
 
 			} /* end of list PORT_LIST */

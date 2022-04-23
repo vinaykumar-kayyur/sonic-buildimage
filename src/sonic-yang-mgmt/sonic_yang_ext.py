@@ -330,11 +330,11 @@ class SonicYangExtMixin:
                 # Assume ':'  means reference to another module
                 if ':' in uses['@name']:
                     prefix = uses['@name'].split(':')[0].strip()
-                    uses_module = self._findYangModuleFromPrefix(prefix, table_module)
+                    uses_module_name = self._findYangModuleFromPrefix(prefix, table_module)
                 else:
-                    uses_module = table_module
+                    uses_module_name = table_module['@name']
                 grouping = uses['@name'].split(':')[-1].strip()
-                leafs = self.preProcessedYang['grouping'][uses_module][grouping]
+                leafs = self.preProcessedYang['grouping'][uses_module_name][grouping]
                 self._fillLeafDict(leafs, leafDict)
         except Exception as e:
             self.sysLog(msg="_fillLeafDictUses failed:{}".format(str(e)), \
@@ -591,18 +591,23 @@ class SonicYangExtMixin:
     """
     def _xlateContainerInContainer(self, model, yang, configC, table):
         ccontainer = model
-        #print(ccontainer['@name'])
-        yang[ccontainer['@name']] = dict()
-        if not configC.get(ccontainer['@name']):
+        ccName = ccontainer['@name']
+        yang[ccName] = dict()
+        if ccName not in configC:
+            # Inner container doesn't exist in config
             return
-        self.sysLog(msg="xlateProcessListOfContainer: {}".format(ccontainer['@name']))
-        self._xlateContainer(ccontainer, yang[ccontainer['@name']], \
-        configC[ccontainer['@name']], table)
+        if len(configC[ccName]) == 0:
+            # Empty container, clean config and return
+            del configC[ccName]
+            return
+        self.sysLog(msg="xlateProcessListOfContainer: {}".format(ccName))
+        self._xlateContainer(ccontainer, yang[ccName], \
+        configC[ccName], table)
         # clean empty container
-        if len(yang[ccontainer['@name']]) == 0:
-            del yang[ccontainer['@name']]
+        if len(yang[ccName]) == 0:
+            del yang[ccName]
         # remove copy after processing
-        del configC[ccontainer['@name']]
+        del configC[ccName]
 
         return
 
