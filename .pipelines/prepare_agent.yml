@@ -38,5 +38,5 @@ steps:
       fi
       df -h
       lsblk
-      setfacl -R -b $(realpath .)
+      sudo setfacl -R -b /mnt
     displayName: 'prepare 1ES agent'
