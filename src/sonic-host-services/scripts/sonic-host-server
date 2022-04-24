@@ -15,11 +15,11 @@ from gi.repository import GObject
 
 def find_module_path():
     """Find path for host_moduels"""
-    for path in sys.path:
-        mod_path = path + '/host_modules'
-        if os.path.exists(mod_path):
-            return mod_path
-    return None
+    try:
+        from host_modules import host_service
+        return os.path.dirname(host_service.__file__)
+    except:
+        return None
 
 def register_modules(mod_path):
     """Register all host modules"""
