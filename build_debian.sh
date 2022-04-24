@@ -67,6 +67,9 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## ensure proc is mounted
+sudo mount proc /proc -t proc || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -110,6 +113,12 @@ sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-language
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
+
+echo '[INFO] Install and setup eatmydata'
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
+sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
+echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
+
 echo '[INFO] Install packages for building image'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
 
@@ -142,6 +151,23 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSI
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
+fi
+
+## Sign the Linux kernel
+if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
+    if [ ! -f $SIGNING_KEY ]; then
+       echo "Error: SONiC linux kernel signing key missing"
+       exit 1
+    fi
+    if [ ! -f $SIGNING_CERT ]; then
+       echo "Error: SONiC linux kernel signing certificate missing"
+       exit 1
+    fi
+
+    echo '[INFO] Signing SONiC linux kernel image'
+    K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
+    sbsign --key $SIGNING_KEY --cert $SIGNING_CERT --output /tmp/${K##*/} ${K}
+    sudo cp -f /tmp/${K##*/} ${K}
 fi
 
 ## Update initramfs for booting with squashfs+overlay
@@ -194,7 +220,7 @@ if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
 fi
 
 ## Add mtd and uboot firmware tools package
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools libubootenv-tool mtd-utils device-tree-compiler
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -324,15 +350,21 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-is-python3       \
     cron                    \
     libprotobuf23           \
-    libgrpc++               \
+    libgrpc++1              \
+    libgrpc10               \
     haveged                 \
     fdisk                   \
     gpg                     \
     jq                      \
     auditd
 
-# Change auditd log file path to fix auditd can't startup issue.
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/^\s*log_file\s*=.*/log_file = \/var\/log\/audit.log/g' /etc/audit/auditd.conf"
+# Have systemd create the auditd log directory
+sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
+sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.conf >/dev/null <<EOF
+[Service]
+LogsDirectory=audit
+LogsDirectoryMode=0750
+EOF
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -442,7 +474,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setup
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==4.3.1'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
 
 # Install scapy
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
@@ -487,6 +519,7 @@ export build_version="${SONIC_IMAGE_VERSION}"
 export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
 export kernel_version="${kversion}"
 export asic_type="${sonic_asic_platform}"
+export asic_subtype="${TARGET_MACHINE}"
 export commit_id="$(git rev-parse --short HEAD)"
 export branch="$(git rev-parse --abbrev-ref HEAD)"
 export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
@@ -557,8 +590,15 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     fi
 fi
 
+# Collect host image version files before cleanup
+scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
+
+# Remove eatmydata
+sudo rm $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata $FILESYSTEM_ROOT/usr/local/bin/dpkg
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove eatmydata
 
 ## Clean up apt
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove
@@ -568,6 +608,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 
 ## Clean up proxy
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
+
+## Clean up pip cache
+sudo LANG=C chroot $FILESYSTEM_ROOT pip3 cache purge
 
 ## Umount all
 echo '[INFO] Umount all'
@@ -588,8 +631,7 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
-sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
+sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
 gid_user=$(sudo LANG=C chroot $FILESYSTEM_ROOT id -g $USERNAME) || gid_user="none"

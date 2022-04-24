@@ -225,10 +225,9 @@ if [ ! -e /host/machine.conf ]; then
         grub_installation_needed="TRUE"
     fi
 
+    migrate_nos_configuration
     umount /mnt/onie-boot
 fi
-
-migrate_nos_configuration
 
 . /host/machine.conf
 
@@ -373,7 +372,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     mkdir -p /var/platform
 
     # Kdump tools configuration
-    sed -i -e "s/__PLATFORM__/$platform/g" /etc/default/kdump-tools
+    [ -f /etc/default/kdump-tools ] && sed -i -e "s/__PLATFORM__/$platform/g" /etc/default/kdump-tools
 
     firsttime_exit
 fi

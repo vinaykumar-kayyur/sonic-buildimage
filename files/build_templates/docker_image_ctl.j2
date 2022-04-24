@@ -233,6 +233,11 @@ start() {
         source $ASIC_CONF
     fi
 
+    PLATFORM_ENV_CONF=/usr/share/sonic/device/$PLATFORM/platform_env.conf
+    if [ -f "$PLATFORM_ENV_CONF" ]; then
+        source $PLATFORM_ENV_CONF
+    fi
+
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
     HWSKU=""
@@ -302,6 +307,10 @@ start() {
     if [ ! -f /etc/sonic/zero_profiles.json ] && [ -f /usr/share/sonic/templates/zero_profiles.j2 ]; then
         sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/zero_profiles.j2 > /etc/sonic/zero_profiles.json
     fi
+
+    {%- if enable_asan == "y" %}
+    mkdir -p /var/log/asan
+    {%- endif %}
     {%- endif %}
 
     # In Multi ASIC platforms the global database config file database_global.json will exist.
@@ -417,6 +426,7 @@ start() {
 {%- endif %}
 {%- if sonic_asic_platform == "broadcom" %}
 {%- if docker_container_name == "syncd" %}
+        --shm-size=${SYNCD_SHM_SIZE:-64m} \
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
@@ -425,6 +435,9 @@ start() {
 {%- endif %}
 {%- if docker_container_name == "swss" %}
         -e ASIC_VENDOR={{ sonic_asic_platform }} \
+{%- endif -%}
+{%- if docker_container_name in ["swss", "syncd"] and enable_asan == "y" %}
+        -v /var/log/asan/:/var/log/asan \
 {%- endif -%}
 {%- if docker_container_name == "bgp" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
@@ -485,6 +498,8 @@ stop() {
     fi
     {%- elif docker_container_name == "teamd" %}
     # Longer timeout of 60 sec to wait for Portchannels to be cleaned.
+    /usr/local/bin/container stop -t 60 $DOCKERNAME
+    {%- elif docker_container_name in ["swss", "syncd"] and enable_asan == "y" %}
     /usr/local/bin/container stop -t 60 $DOCKERNAME
     {%- else %}
     /usr/local/bin/container stop $DOCKERNAME

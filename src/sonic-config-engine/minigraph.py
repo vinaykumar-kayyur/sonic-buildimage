@@ -37,6 +37,7 @@ chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
+dhcp_server_enabled_device_types = ['BmcMgmtToRRouter']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -487,7 +488,7 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
-                pc_members[(pcintfname, pcmbr_list[i])] = {'NULL': 'NULL'}
+                pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
@@ -510,10 +511,11 @@ def parse_dpg(dpg, hname):
                     elif ":" in ipnhaddr:
                         port_nhipv6_map[ipnhfmbr] = ipnhaddr
                 elif ipnh.find(str(QName(ns, "Type"))).text == 'StaticRoute':
-                    prefix = ipnh.find(str(QName(ns, "AttachTo"))).text
+                    prefix = ipnh.find(str(QName(ns, "AssociatedTo"))).text
+                    ifname = ipnh.find(str(QName(ns, "AttachTo"))).text
                     nexthop = ipnh.find(str(QName(ns, "Address"))).text
                     advertise = ipnh.find(str(QName(ns, "Advertise"))).text
-                    static_routes[prefix] = {'nexthop': nexthop, 'advertise': advertise}
+                    static_routes[prefix] = {'nexthop': nexthop, 'ifname': ifname, 'advertise': advertise}
 
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
@@ -534,28 +536,36 @@ def parse_dpg(dpg, hname):
         vlan_members = {}
         vlan_member_list = {}
         dhcp_relay_table = {}
-        vlantype_name = ""
-        intf_vlan_mbr = defaultdict(list)
+        # Dict: vlan member (port/PortChannel) -> set of VlanID, in which the member if an untagged vlan member
+        untagged_vlan_mbr = defaultdict(set)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
+            vlantype = vintf.find(str(QName(ns, "Type")))
+            if vlantype is None:
+                vlantype_name = ""
+            else:
+                vlantype_name = vlantype.text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vmbr_list = vintfmbr.split(';')
-            for i, member in enumerate(vmbr_list):
-                intf_vlan_mbr[member].append(vlanid)
+            if vlantype_name != "Tagged":
+                for member in vmbr_list:
+                    untagged_vlan_mbr[member].add(vlanid)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vlantype = vintf.find(str(QName(ns, "Type")))
-            if vlantype != None:
-                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
+            if vlantype is None:
+                vlantype_name = ""
+            else:
+                vlantype_name = vlantype.text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
                 if vlantype_name == "Tagged":
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
-                elif len(intf_vlan_mbr[member]) > 1:
+                elif len(untagged_vlan_mbr[member]) > 1:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
                 else:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
@@ -1280,7 +1290,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
-        'deployment_id': deployment_id,
         'region': region,
         'cloudtype': cloudtype,
         'docker_routing_config_mode': docker_routing_config_mode,
@@ -1290,6 +1299,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    if deployment_id is not None:
+        results['DEVICE_METADATA']['localhost']['deployment_id'] = deployment_id
 
     cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
     if cluster:
@@ -1623,7 +1635,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
     results['FEATURE'] = {
         'telemetry': {
-            'status': 'enabled'
+            'state': 'enabled'
         }
     }
     results['TELEMETRY'] = {
@@ -1682,6 +1694,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
         }
     }
+
+    # Enable DHCP Server feature for specific device type
+    if current_device['type'] in dhcp_server_enabled_device_types:
+        results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
 
     return results
 

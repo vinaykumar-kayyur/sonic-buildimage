@@ -20,7 +20,6 @@ RUN apt-get update &&   \
         librrd8         \
         librrd-dev      \
         rrdtool         \
-        python-smbus    \
         python3-smbus   \
         dmidecode       \
         i2c-tools       \
@@ -47,18 +46,10 @@ RUN rm -rf prebuilt-python-wheels
 # doesn't ensure all dependencies are installed in the container. So here we
 # install any dependencies required by the Arista sonic_platform package.
 # TODO: eliminate the need to install these explicitly.
-# NOTE: Only install enum34 for Python 2, as our version of Python 3 is 3.7, which
-# contains 'enum' as part of the standard library. Installing enum34 there will
-# cause conflicts.
-RUN pip2 install enum34 \
-        grpcio==1.39.0 \
-        grpcio-tools==1.39.0
-
 RUN pip3 install grpcio==1.39.0 \
         grpcio-tools==1.39.0
 
 # Barefoot platform vendors' sonic_platform packages import the Python 'thrift' library
-RUN pip2 install thrift==0.13.0
 RUN pip3 install thrift==0.13.0
 
 {% if docker_platform_monitor_debs.strip() -%}
@@ -85,9 +76,6 @@ RUN pip3 install thrift==0.13.0
 {{ install_python_wheels(docker_platform_monitor_whls.split(' ')) }}
 {% endif %}
 
-
-# TODO: Remove this line once we no longer need Python 2
-RUN apt-get purge -y python-dev
 
 # Clean up
 RUN apt-get purge -y           \
