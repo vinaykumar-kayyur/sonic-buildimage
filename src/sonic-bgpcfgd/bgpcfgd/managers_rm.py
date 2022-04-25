@@ -1,11 +1,11 @@
 from .manager import Manager
 from .log import log_info, log_err
 
-ROUTE_MAPS = ['VXLAN_OV_ECMP_RM']
+ROUTE_MAPS = ['FROM_SDN_SLB_ROUTES']
 
 
 class RouteMapMgr(Manager):
-    """ This class add route-map when ROUTE_MAP_TABLE in STATE_DB is updated """
+    """ This class add route-map when ROUTE_MAP_TABLE in APPL_DB is updated """
     def __init__(self, common_objs, db, table):
         """
         Initialize the object
@@ -39,8 +39,8 @@ class RouteMapMgr(Manager):
 
 
     def _remove_rm(self, rm):
-        cmds = ['no route-map %s permit 100' % rm]
-        log_info("BGPRouteMapMgr:: remove route-map %s" % (rm))
+        cmds = ['no route-map %s permit 100' % ("%s_RM" % rm)]
+        log_info("BGPRouteMapMgr:: remove route-map %s" % ("%s_RM" % rm))
         self.cfg_mgr.push_list(cmds)
         log_info("BGPRouteMapMgr::Done")
 
@@ -54,8 +54,12 @@ class RouteMapMgr(Manager):
             log_err("BGPRouteMapMgr:: data is None")
             return False
         community_ids = data['community_id'].split(':')
-        if len(community_ids) != 2 or int(community_ids[0]) not in range(0, 65536) or int(community_ids[1]) not in range(0, 65536):
-            log_err("BGPRouteMapMgr:: data %s does not include valid community id %s" % (data, community_ids))
+        try:
+            if len(community_ids) != 2 or int(community_ids[0]) not in range(0, 65536) or int(community_ids[1]) not in range(0, 65536):
+                log_err("BGPRouteMapMgr:: data %s doesn't include valid community id %s" % (data, community_ids))
+                return False
+        except ValueError:
+            log_err("BGPRouteMapMgr:: data %s doesn't include valid community id %s" % (data, community_ids))
             return False
 
         return True
@@ -70,9 +74,9 @@ class RouteMapMgr(Manager):
 
     def _update_rm(self, rm, data):
         cmds = [
-            'route-map %s permit 100' % rm,
+            'route-map %s permit 100' % ("%s_RM" % rm),
             ' set community %s' % data['community_id']
         ]
-        log_info("BGPRouteMapMgr:: update route-map %s community %s" % (rm, data['community_id']))
+        log_info("BGPRouteMapMgr:: update route-map %s community %s" % ("%s_RM" % rm, data['community_id']))
         self.cfg_mgr.push_list(cmds)
         log_info("BGPRouteMapMgr::Done")

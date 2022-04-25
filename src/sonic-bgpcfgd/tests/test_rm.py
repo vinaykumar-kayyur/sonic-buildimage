@@ -12,7 +12,7 @@ def constructor():
         'constants': {},
     }
 
-    mgr = RouteMapMgr(common_objs, "STATE_DB", "STATE_ROUTE_MAP_TABLE")#swsscommon.STATE_ROUTE_MAP_TABLE_NAME)
+    mgr = RouteMapMgr(common_objs, "APPL_DB", "BGP_PROFILE_TABLE")
     return mgr
 
 def set_del_test(mgr, op, args, expected_ret, expected_cmds):
@@ -41,12 +41,12 @@ def test_set_del():
     set_del_test(
         mgr,
         "SET",
-        ("VXLAN_OV_ECMP_RM", {
+        ("FROM_SDN_SLB_ROUTES", {
             "community_id": "1234:1234"
         }),
         True,
         [
-            ["route-map VXLAN_OV_ECMP_RM permit 100",
+            ["route-map FROM_SDN_SLB_ROUTES_RM permit 100",
              " set community 1234:1234"]
         ]
     )
@@ -54,9 +54,9 @@ def test_set_del():
     set_del_test(
         mgr,
         "DEL",
-        ("VXLAN_OV_ECMP_RM",),
+        ("FROM_SDN_SLB_ROUTES",),
         True,
         [
-            ["no route-map VXLAN_OV_ECMP_RM permit 100"]
+            ["no route-map FROM_SDN_SLB_ROUTES_RM permit 100"]
         ]
     )

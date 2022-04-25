@@ -3,7 +3,7 @@ from .template import TemplateFabric
 from swsscommon import swsscommon
 from .managers_rm import ROUTE_MAPS
 import ipaddress
-from .log import log_debug, log_info, log_err, log_warn
+from .log import log_info, log_err
 
 
 class AdvertiseRouteMgr(Manager):
@@ -72,8 +72,8 @@ class AdvertiseRouteMgr(Manager):
 
     def _set_handler_validate(self, key, data):
         if data:
-            if 'rm_name' not in data or data['rm_name'] not in ROUTE_MAPS:
-                log_err("BGPAdvertiseRouteMgr:: No valid rm_name for advertised route %s" % data)
+            if 'profile' not in data or data['profile'] not in ROUTE_MAPS:
+                log_err("BGPAdvertiseRouteMgr:: No valid profile for advertised route %s" % data)
                 return False
         
         return self._ip_addr_validate(key)
@@ -117,10 +117,10 @@ class AdvertiseRouteMgr(Manager):
             For set operation, need to check if data is same or not, 
             need to check if it is ok by overwriting existing value or need to follow no/add sequence
         '''
-        if data and 'rm_name' in data:
-            cmd_list.append("  network %s route-map %s" % (ip_prefix, data['rm_name']))
+        if data and 'profile' in data:
+            cmd_list.append("  network %s route-map %s" % (ip_prefix, "%s_RM" % data['profile']))
             log_info("BGPAdvertiseRouteMgr:: update bgp %s network %s with route-map %s" %
-                     (bgp_asn, vrf + '|' + ip_prefix, data['rm_name']))
+                     (bgp_asn, vrf + '|' + ip_prefix, "%s_RM" % data['profile']))
         else:
             cmd_list.append("  %snetwork %s" % ('no ' if op == self.OP_DELETE else '', ip_prefix))
             log_info("BGPAdvertiseRouteMgr:: %sbgp %s network %s" % 

@@ -159,7 +159,7 @@ def test_set_del_bgp_asn_change():
         mgr,
         "SET",
         ("vrfRED|10.3.0.0/24", {
-            "rm_name": "VXLAN_OV_ECMP_RM"
+            "profile": "FROM_SDN_SLB_ROUTES"
         }),
         True,
         []
@@ -172,7 +172,7 @@ def test_set_del_bgp_asn_change():
          " no bgp network import-check"],
         ["router bgp 65100 vrf vrfRED",
          " address-family ipv4 unicast",
-         "  network 10.3.0.0/24 route-map VXLAN_OV_ECMP_RM"]
+         "  network 10.3.0.0/24 route-map FROM_SDN_SLB_ROUTES_RM"]
     ]
     def push_list(cmds):
         test_set_del_bgp_asn_change.push_list_called = True
@@ -192,7 +192,7 @@ def test_set_del_with_community():
         mgr,
         "SET",
         ("10.1.0.0/24", {
-            "rm_name": "VXLAN_OV_ECMP_RM"
+            "profile": "FROM_SDN_SLB_ROUTES"
         }),
         True,
         [
@@ -200,7 +200,7 @@ def test_set_del_with_community():
              " no bgp network import-check"],
             ["router bgp 65100",
              " address-family ipv4 unicast",
-             "  network 10.1.0.0/24 route-map VXLAN_OV_ECMP_RM"]
+             "  network 10.1.0.0/24 route-map FROM_SDN_SLB_ROUTES_RM"]
         ]
     )
 
@@ -208,13 +208,13 @@ def test_set_del_with_community():
         mgr,
         "SET",
         ("fc00:10::/64", {
-            "rm_name": "VXLAN_OV_ECMP_RM"
+            "profile": "FROM_SDN_SLB_ROUTES"
         }),
         True,
         [
             ["router bgp 65100",
              " address-family ipv6 unicast",
-             "  network fc00:10::/64 route-map VXLAN_OV_ECMP_RM"]
+             "  network fc00:10::/64 route-map FROM_SDN_SLB_ROUTES_RM"]
         ]
     )
 
