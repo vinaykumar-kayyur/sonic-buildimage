@@ -71,6 +71,7 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(DELTA_AG9032V2A_PLATFORM_MODULE) \
                                $(JUNIPER_QFX5210_PLATFORM_MODULE) \
                                $(CEL_SILVERSTONE_PLATFORM_MODULE) \
+                               $(CEL_SILVERSTONE2_PLATFORM_MODULE) \
                                $(JUNIPER_QFX5200_PLATFORM_MODULE) \
                                $(DELTA_AGC032_PLATFORM_MODULE) \
                                $(RUIJIE_B6510_48VS8CQ_PLATFORM_MODULE) \
