@@ -1,11 +1,12 @@
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
-FROM multiarch/debian-debootstrap:armhf-buster
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-arm-5.0.0-2 as qemu
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-buster
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/debian-debootstrap:arm64-buster
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-buster
 {%- else -%}
-FROM debian:buster
+FROM {{ prefix }}debian:buster
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com
@@ -110,6 +111,13 @@ RUN apt-get update && apt-get install -y \
         libxml-simple-perl \
         graphviz \
         aspell \
+# For SAI meta rpc build - make rpc
+        libgetopt-long-descriptive-perl \
+        libconst-fast-perl \
+        libtemplate-perl \
+        libnamespace-autoclean-perl \
+        libmoose-perl \
+        libmoosex-aliases-perl \
 # For linux build
         bc \
         fakeroot \
@@ -117,6 +125,7 @@ RUN apt-get update && apt-get install -y \
         devscripts \
         quilt \
         stgit \
+        sbsigntool \
 # For platform-modules build
         module-assistant \
 # For thrift build\
@@ -284,9 +293,6 @@ RUN apt-get update && apt-get install -y \
         librrd8 \
         librrd-dev \
         rrdtool \
-# For smartmontools 6.6-1
-        automake1.11 \
-        libselinux1-dev \
 # For kdump-tools
         liblzo2-dev \
 # For iptables
@@ -348,13 +354,17 @@ RUN apt-get update && apt-get install -y \
         libboost-regex1.71-dev \
         googletest \
         libgtest-dev \
+        libgmock-dev \
         libgcc-8-dev \
 # For sonic-host-services build
         libcairo2-dev \
         libdbus-1-dev \
         libgirepository1.0-dev \
         libsystemd-dev \
-        pkg-config
+        pkg-config \
+# For audisp-tacplus
+        libauparse-dev \
+        auditd
 
 # For iproute2
 RUN apt-get install -y -t buster-backports \
@@ -455,15 +465,20 @@ RUN pip3 uninstall -y enum34
 
 # For templating
 RUN pip2 install j2cli==0.3.10
+# Note: Jinja2 depends on MarkupSafe, however markupsafe 2.1.0 breaks Jinja2 2.10
+# Debian buster dist-packages include python3-markupsafe (1.1.0-1) and python3-jinja2 (2.10-2)
+# If not pinning the versions, any requirement like `MarkupSafe>=2.0` will pull latest into site-packages and mess up.
+RUN pip3 install MarkupSafe==2.0.1
+RUN pip3 install Jinja2==3.0.3
 
 # For sonic-mgmt-framework
 RUN pip2 install "PyYAML==5.4.1"
 RUN pip3 install "PyYAML==5.4.1"
-RUN pip2 install "lxml==4.6.2"
-RUN pip3 install "lxml==4.6.2"
+RUN pip2 install "lxml==4.6.5"
+RUN pip3 install "lxml==4.6.5"
 
 # For sonic-platform-common testing
-RUN pip3 install redis==3.5.3
+RUN pip3 install redis
 
 # For vs image build
 RUN pip2 install pexpect==4.6.0
@@ -538,4 +553,11 @@ RUN apt-get install -y nodejs
 
 # Tell azure pipeline to use node.js in the docker
 LABEL "com.azure.dev.pipelines.agent.handler.node.path"="/usr/bin/node"
+{% endif -%}
+
+# Install Bazel build system (amd64 and arm64 architectures are supported using this method)
+# TODO(PINS): Remove once pre-build Bazel binaries are available for armhf (armv7l)
+{%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
+ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
+RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
 {% endif -%}

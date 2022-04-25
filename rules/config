@@ -144,6 +144,9 @@ INCLUDE_NAT = y
 # INCLUDE_DHCP_RELAY - build and install dhcp-relay package
 INCLUDE_DHCP_RELAY = y
 
+# INCLUDE_P4RT - build docker-p4rt for P4RT support
+INCLUDE_P4RT = n
+
 # ENABLE_AUTO_TECH_SUPPORT - Enable the configuration for event-driven techsupport & coredump mgmt feature
 ENABLE_AUTO_TECH_SUPPORT = y
 
@@ -177,6 +180,13 @@ K8s_GCR_IO_PAUSE_VERSION = 3.4.1
 # The relative path is build root folder.
 SONIC_ENABLE_IMAGE_SIGNATURE ?= n
 
+# SONIC_ENABLE_SECUREBOOT_SIGNATURE - enable SONiC kernel signing to support UEFI secureboot
+# To support UEFI secureboot chain of trust requires EFI kernel to be signed as a PE binary
+#     SIGNING_KEY =
+#     SIGNING_CERT =
+# The absolute path should be provided.
+SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
+
 # PACKAGE_URL_PREFIX - the package url prefix
 PACKAGE_URL_PREFIX ?= https://packages.trafficmanager.net/public/packages
 
@@ -205,3 +215,9 @@ BUILD_MULTIASIC_KVM = n
 
 # INCLUDE_MUX - build docker-mux for dual ToR (Gemini)
 INCLUDE_MUX = y
+
+# ENABLE_ASAN - enable address sanitizer
+ENABLE_ASAN ?= n
+
+# reset default container registry from dockerhub to other
+DEFAULT_CONTAINER_REGISTRY ?=
