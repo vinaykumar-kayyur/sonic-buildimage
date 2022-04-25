@@ -50,6 +50,7 @@ class PddfApi():
             proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
                                     stdout=subprocess.PIPE,
                                     shell=False,
+                                    universal_newlines=True,
                                     stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
@@ -58,6 +59,7 @@ class PddfApi():
             proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
                                     stdout=subprocess.PIPE,
                                     shell=False,
+                                    universal_newlines=True,
                                     stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
