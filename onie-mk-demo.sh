@@ -81,7 +81,7 @@ cp onie-image-*.conf $tmp_installdir
 
 # Set sonic fips config for the installer script
 if [ "$ENABLE_FIPS" = "y" ]; then
-    sed -ie '$aONIE_PLATFORM_EXTRA_CMDLINE_LINUX="$ONIE_PLATFORM_EXTRA_CMDLINE_LINUX sonic_fips=1"' $tmp_installdir/onie-image*.conf
+    sed -ie '$aEXTRA_GRUB_CMDLINE_LINUX=sonic_fips=1' $tmp_installdir/onie-image*.conf
 fi
 
 # Escape special chars in the user provide kernel cmdline string for use in
