@@ -1,0 +1,79 @@
+From dfd3ddee21e881863ef4f54d22ec87a86f18acf9 Mon Sep 17 00:00:00 2001
+From: irene_pan <irene_pan@edge-core.com>
+Date: Tue, 26 Apr 2022 08:13:15 +0000
+Subject: [PATCH] [DHCP relay] Enlarge alias size to be equal to the definition
+ of linux source
+
+---
+ relay/dhcrelay.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/relay/dhcrelay.c b/relay/dhcrelay.c
+index 7492797..6e67018 100644
+--- a/relay/dhcrelay.c
++++ b/relay/dhcrelay.c
+@@ -139,9 +139,16 @@ static void setup_streams(void);
+ char *dhcrelay_sub_id = NULL;
+ #endif
+ 
++/* * The IFALIASZ value 256 is referred from the linux/if.h
++ *   https://github.com/torvalds/linux/blob/master/include/uapi/linux/if.h#L35
++ */
++#ifndef IFALIASZ
++#define IFALIASZ        256
++#endif
++
+ struct interface_name_alias_tuple {
+ 	char if_name[IFNAMSIZ];
+-	char if_alias[IFNAMSIZ];
++	char if_alias[IFALIASZ];
+ };
+ 
+ static struct interface_name_alias_tuple *g_interface_name_alias_map = NULL;
+@@ -1398,6 +1405,7 @@ format_relay_agent_rfc3046_msg(const struct interface_info *ip, struct dhcp_pack
+ 	size_t len = 0;
+ 	char hostname[HOST_NAME_MAX] = { 0 };
+ 	char ifname[IFNAMSIZ] = { 0 };
++	char ifalias[IFALIASZ] = { 0 };
+ 	char *buf = msg;
+ 
+ 	for ( ; format && *format && len < msgn; ++format) {
+@@ -1427,7 +1435,7 @@ format_relay_agent_rfc3046_msg(const struct interface_info *ip, struct dhcp_pack
+ 					*/
+ 					if (packet->htype && !packet->giaddr.s_addr) {
+ 						int ret = 0, vlanid = 0;
+-						char ifalias[IFNAMSIZ] = { 0 };
++						memset(ifalias, 0, IFALIASZ);
+ 
+ 						ret = _bridgefdbquery(print_hw_addr(packet->htype, packet->hlen, packet->chaddr),
+ 											  ifname,
+@@ -1448,15 +1456,15 @@ format_relay_agent_rfc3046_msg(const struct interface_info *ip, struct dhcp_pack
+ 						ret = get_interface_alias_by_name(ifname, ifalias);
+ 						if (ret < 0) {
+ 							//log_debug("Failed to retrieve alias for interface name '%s'. Defaulting to interface name.", ifname);
++							str = ifname;
+ 						}
+ 						else {
+ 							//log_debug("Mapped interface name '%s' to alias '%s'. Adding as option 82 interface alias for MAC Address %s",
+ 							//		  ifname, ifalias, print_hw_addr (packet->htype, packet->hlen, packet->chaddr));
+ 
+-							strncpy(ifname, ifalias, IFNAMSIZ);
++							str = ifalias;
+ 						}
+ 
+-						str = ifname;
+ 					}
+ 				break;
+ 
+@@ -2548,7 +2556,7 @@ get_interface_alias_by_name(const char *if_name, char *if_alias_out) {
+ 
+ 	for (i = 0; i < g_interface_name_alias_map_size; i++) {
+ 		if (strncmp(if_name, g_interface_name_alias_map[i].if_name, IFNAMSIZ) == 0) {
+-			strncpy(if_alias_out, g_interface_name_alias_map[i].if_alias, IFNAMSIZ);
++			strncpy(if_alias_out, g_interface_name_alias_map[i].if_alias, IFALIASZ);
+ 			return 0;
+ 		}
+ 	}
+-- 
+2.35.1
+
