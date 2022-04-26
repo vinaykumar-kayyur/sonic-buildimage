@@ -93,7 +93,10 @@ class AdvertiseRouteMgr(Manager):
 
 
     def remove_route_advertisement(self, vrf, ip_prefix):
-        self.advertised_routes.setdefault(vrf, dict()).pop(ip_prefix)
+        if ip_prefix not in self.advertised_routes.get(vrf, dict()):
+            log_info("BGPAdvertiseRouteMgr:: %s|%s does not exist" % (vrf, ip_prefix))
+            return
+        self.advertised_routes.get(vrf, dict()).pop(ip_prefix)
         if not self.advertised_routes.get(vrf, dict()):
             self.advertised_routes.pop(vrf, None)
 
@@ -113,13 +116,10 @@ class AdvertiseRouteMgr(Manager):
             cmd_list.append("router bgp %s vrf %s" % (bgp_asn, vrf))
 
         cmd_list.append(" address-family %s unicast" % ("ipv6" if is_ipv6 else "ipv4"))
-        '''
-            For set operation, need to check if data is same or not, 
-            need to check if it is ok by overwriting existing value or need to follow no/add sequence
-        '''
-        if data and 'profile' in data:
+
+        if data and 'profile' in data and data['profile'] != '':
             cmd_list.append("  network %s route-map %s" % (ip_prefix, "%s_RM" % data['profile']))
-            log_info("BGPAdvertiseRouteMgr:: update bgp %s network %s with route-map %s" %
+            log_info("BGPAdvertiseRouteMgr:: Update bgp %s network %s with route-map %s" %
                      (bgp_asn, vrf + '|' + ip_prefix, "%s_RM" % data['profile']))
         else:
             cmd_list.append("  %snetwork %s" % ('no ' if op == self.OP_DELETE else '', ip_prefix))

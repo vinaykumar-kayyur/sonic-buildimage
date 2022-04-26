@@ -1,7 +1,7 @@
 from .manager import Manager
 from .log import log_info, log_err
 
-ROUTE_MAPS = ['FROM_SDN_SLB_ROUTES']
+ROUTE_MAPS = ['FROM_SDN_SLB_ROUTES', '']
 
 
 class RouteMapMgr(Manager):
