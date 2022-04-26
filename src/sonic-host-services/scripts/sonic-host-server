@@ -18,8 +18,7 @@ def find_module_path():
     try:
         from host_modules import host_service
         return os.path.dirname(host_service.__file__)
-    except Exception as e:
-        print("error occurred in find_module_path: {}".format(sys.exc_info()[1]))
+    except ImportError as e:
         return None
 
 def register_modules(mod_path):
