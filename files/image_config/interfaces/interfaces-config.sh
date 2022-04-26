@@ -9,7 +9,7 @@ function wait_networking_service_done() {
     while [[ "${_WDOG_CNT}" -le "${_WDOG_MAX}" ]]; do
         networking_status="$(systemctl is-active networking 2>&1)"
 
-        if [[ "${networking_status}" == active ]]; then
+        if [ "${networking_status}" == active ] || [ "${networking_status}" == inactive ] || [ "${networking_status}" == failed ] ; then
             return
         fi
 
