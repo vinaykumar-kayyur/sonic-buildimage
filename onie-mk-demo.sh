@@ -80,7 +80,7 @@ cp onie-image.conf $tmp_installdir
 cp onie-image-*.conf $tmp_installdir
 
 # Set sonic fips config for the installer script
-if [ "$ENABLE_FIPS" == "y" ]; then
+if [ "$ENABLE_FIPS" = "y" ]; then
     sed -ie '$aONIE_PLATFORM_EXTRA_CMDLINE_LINUX="$ONIE_PLATFORM_EXTRA_CMDLINE_LINUX sonic_fips=1"' $tmp_installdir/onie-image*.conf
 fi
 
