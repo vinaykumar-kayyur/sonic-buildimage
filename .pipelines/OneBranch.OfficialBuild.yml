@@ -165,8 +165,8 @@ stages:
             BRANCH=$(Build.SourceBranchName)
             for f in $DOCKERS; do
               echo $f
-              ./push_docker.sh $f $REGISTRY_SERVER $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" $SONIC_VERSION $BRANCH
-              ./push_docker.sh $f $REGISTRY_SERVER $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" latest $BRANCH
+              ./push_docker.sh $f $REGISTRY_SERVER_INTERNAL $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" $SONIC_VERSION $BRANCH
+              ./push_docker.sh $f $REGISTRY_SERVER_INTERNAL $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" latest $BRANCH
             done
           env:
             REGISTRY_PASSWD: $(REGISTRY_PASSWD)
@@ -184,7 +184,8 @@ stages:
             make $OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         - name: generic
           script: |
-            make all
+            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
+            make $OPTIONS target/sonic-generic.bin
         - name: broadcom
           script: |
             OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
