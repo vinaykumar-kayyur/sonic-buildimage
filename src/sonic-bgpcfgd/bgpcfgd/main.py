@@ -63,7 +63,8 @@ def do_work():
         StaticRouteMgr(common_objs, "CONFIG_DB", "STATIC_ROUTE"),
         # Route Advertisement Managers
         AdvertiseRouteMgr(common_objs, "STATE_DB", swsscommon.STATE_ADVERTISE_NETWORK_TABLE_NAME),
-        RouteMapMgr(common_objs, "APPL_DB", "BGP_PROFILE_TABLE")#swsscommon.APP_BGP_PROFILE_TABLE_NAME),
+        # TBD, Change to schema name from swsscommon (swsscommon.APP_BGP_PROFILE_TABLE_NAME) when the submodule is advanced.
+        RouteMapMgr(common_objs, "APPL_DB", "BGP_PROFILE_TABLE"),
     ]
     runner = Runner(common_objs['cfg_mgr'])
     for mgr in managers:
