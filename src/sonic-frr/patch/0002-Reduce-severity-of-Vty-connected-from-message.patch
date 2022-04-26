@@ -1,7 +1,7 @@
 From 15274a197e4d3b7ac0f11ca63a5274f1168739f5 Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Thu, 21 Apr 2022 17:12:51 -0700
-Subject: [PATCH] [PATCH 2/8] Reduce severity of 'Vty connected from' message
+From: Pavel Shirshov <pavelsh@microsoft.com>
+Date: Mon, 16 Nov 2020 18:11:47 -0800
+Subject: [PATCH 2/8] Reduce severity of 'Vty connected from' message
 
 ---
  lib/vty.c | 2 +-

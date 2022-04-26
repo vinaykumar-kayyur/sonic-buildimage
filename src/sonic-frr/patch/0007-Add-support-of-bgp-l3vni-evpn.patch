@@ -1,7 +1,7 @@
 From 74ee34e4990dbd168b7b8072894eb0cf8927f9d1 Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Thu, 21 Apr 2022 17:39:24 -0700
-Subject: [PATCH] [PATCH 7/8] This is temp patch till Prefix to ARP indirection is
+From: Kishore Kunal <kishore.kunal@broadcom.com>
+Date: Fri, 15 Jan 2021 15:52:13 -0800
+Subject: [PATCH 7/8] This is temp patch till Prefix to ARP indirection is
  add in neighorch
 
 ---

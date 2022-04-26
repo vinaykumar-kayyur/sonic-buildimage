@@ -1,7 +1,7 @@
 From 92ab2d74fca06f86c00d886ac249f7f2d89e93fe Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Fri, 22 Apr 2022 12:54:28 -0700
-Subject: [PATCH] [PATCH 8/8] Link local scope was not set while binding socket
+From: Akhilesh Samineni <akhilesh.samineni@broadcom.com>
+Date: Mon, 5 Apr 2021 13:21:40 -0700
+Subject: [PATCH 8/8] Link local scope was not set while binding socket
  with local address causing socket errors for bgp ipv6 link local neighbors.
 
 ---

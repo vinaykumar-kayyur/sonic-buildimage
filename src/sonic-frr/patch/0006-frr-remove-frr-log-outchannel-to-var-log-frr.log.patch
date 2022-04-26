@@ -1,7 +1,11 @@
 From 0417036a3aece862c95111d4646ca7508a028165 Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Thu, 21 Apr 2022 17:25:02 -0700
+From: Ying Xie <ying.xie@microsoft.com>
+Date: Wed, 25 Nov 2020 22:28:43 +0000
 Subject: [PATCH] [PATCH 6/8] [frr] remove frr log outchannel to /var/log/frr.log
+SONiC runs frr inside a docker and the logs are sent to base image
+via rsyslog and recorded already. There is no need to keep the
+frr.log inside the docker. It will grow and take all harddrive
+space eventually.
 
 ---
  tools/etc/rsyslog.d/45-frr.conf | 19 -------------------

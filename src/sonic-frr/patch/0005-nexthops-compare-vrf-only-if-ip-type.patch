@@ -1,7 +1,7 @@
 From 786087468520db44c55e3566f77438b41f52763f Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Thu, 21 Apr 2022 17:23:22 -0700
-Subject: [PATCH] [PATCH 5/8] nexthops compare vrf only if ip type
+From: Pavel Shirshov <pavelsh@microsoft.com>
+Date: Mon, 16 Nov 2020 18:35:01 -0800
+Subject: [PATCH 5/8] nexthops compare vrf only if ip type
 
 ---
  lib/nexthop.c | 12 ++++++------

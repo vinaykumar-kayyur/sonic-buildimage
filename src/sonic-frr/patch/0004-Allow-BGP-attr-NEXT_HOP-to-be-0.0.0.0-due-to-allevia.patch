@@ -1,7 +1,7 @@
 From afff474c79e0c177e090d1b45d68c9f816a52e3e Mon Sep 17 00:00:00 2001
-From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
-Date: Thu, 21 Apr 2022 17:20:07 -0700
-Subject: [PATCH] [PATCH 4/8] Allow BGP attr NEXT_HOP to be 0.0.0.0 due to
+From: Pavel Shirshov <pavelsh@microsoft.com>
+Date: Mon, 16 Nov 2020 18:33:46 -0800
+Subject: [PATCH 4/8] Allow BGP attr NEXT_HOP to be 0.0.0.0 due to
  alleviate
 
 ---
