@@ -330,7 +330,7 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/restart_service
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install smartmontools=7.2-1
 
 # Install custom-built openssh sshd
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_${OPENSSH_VERSION}_*.deb
 
 # Remove sshd host keys, and will regenerate on first sshd start. This needs to be
 # done again here because our custom version of sshd is being installed, which
