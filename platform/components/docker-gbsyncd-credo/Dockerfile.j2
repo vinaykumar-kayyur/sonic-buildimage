@@ -20,7 +20,7 @@ debs/
 
 RUN dpkg -i \
 {% for deb in docker_gbsyncd_credo_debs.split(' ') -%}
-{% if 'libsaibcm' not in deb -%}
+{% if 'libsaibcm' not in deb and 'bfnsdk' not in deb and 'bfnplatform' not in deb -%}
 debs/{{ deb }}{{' '}}
 {%- endif %}
 {%- endfor %}
