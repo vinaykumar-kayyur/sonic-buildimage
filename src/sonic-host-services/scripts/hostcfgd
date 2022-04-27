@@ -1282,7 +1282,6 @@ class HostConfigDaemon:
         passwh = init_data['PASSW_HARDENING']
 
         self.feature_handler.sync_state_field(features)
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server, passwh)
         self.iptables.load(lpbk_table)
         self.ntpcfg.load(ntp_global, ntp_server)
