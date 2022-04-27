@@ -520,7 +520,7 @@ def filter_acl_mirror_table_bindings(acls, neighbors, port_channels):
 
     return acls
 
-def select_mmu_profiles(profile, hwsku, platform):
+def select_mmu_profiles(profile, platform, hwsku):
     """
         Select MMU files based on the device metadata attribute - SonicQosProfile
         if no QosProfile exists in the minigraph, then no action is needed.
@@ -533,11 +533,11 @@ def select_mmu_profiles(profile, hwsku, platform):
     if not profile:
         return
 
-    files_to_copy = ['pg_profile_lookup.ini', 'qos.json.j2', 'buffer_defaults_t0.j2', 'buffer_defaults_t1.j2']
+    files_to_copy = ['pg_profile_lookup.ini', 'qos.json.j2', 'buffers_defaults_t0.j2', 'buffers_defaults_t1.j2']
 
     path = os.path.join('/usr/share/sonic/device', platform, hwsku)
 
-    dir_path = os.path.join(path, profile)
+    dir_path = os.path.join(path, profile.upper())
     if os.path.exists(dir_path):
         for file_item in files_to_copy:
             file_in_dir = os.path.join(dir_path, file_item)
