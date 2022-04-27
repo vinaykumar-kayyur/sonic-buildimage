@@ -543,8 +543,7 @@ def select_mmu_profiles(profile, platform, hwsku):
             file_in_dir = os.path.join(dir_path, file_item)
             if os.path.isfile(file_in_dir):
                 base_file = os.path.join(path, file_item)
-                exec_cmd("sudo cp {} {}".format(file_in_dir, base_file)
-
+                exec_cmd("sudo cp {} {}".format(file_in_dir, base_file))
 
 ###############################################################################
 #
