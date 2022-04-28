@@ -537,7 +537,7 @@ def select_mmu_profiles(profile, platform, hwsku):
 
     path = os.path.join('/usr/share/sonic/device', platform, hwsku)
 
-    dir_path = os.path.join(path, profile.upper())
+    dir_path = os.path.join(path, profile)
     if os.path.exists(dir_path):
         for file_item in files_to_copy:
             file_in_dir = os.path.join(dir_path, file_item)

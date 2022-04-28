@@ -719,7 +719,7 @@
           <a:DeviceProperty>
           <a:Name>SonicQosProfile</a:Name>
           <a:Reference i:nil="true"/>
-          <a:Value>Rdma-centric</a:Value>
+          <a:Value>RDMA-CENTRIC</a:Value>
           </a:DeviceProperty>
         </a:Properties>
       </a:DeviceMetadata>
