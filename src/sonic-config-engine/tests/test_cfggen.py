@@ -33,7 +33,6 @@ class TestCfgGen(TestCase):
         self.output2_file = os.path.join(self.test_dir, 'output2')
         self.ecmp_graph = os.path.join(self.test_dir, 'fg-ecmp-sample-minigraph.xml')
         self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
-        self.sample_backend_graph = os.path.join(self.test_dir, 'sample-graph-backend-hwsku.xml')
         self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.voq_port_config = os.path.join(self.test_dir, 'voq-sample-port-config.ini')
         self.packet_chassis_graph = os.path.join(self.test_dir, 'sample-chassis-packet-lc-graph.xml')
@@ -708,7 +707,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "")
 
     def test_minigraph_sub_port_intf_hwsku(self, check_stderr=True):
-        self.verify_sub_intf(graph_file=self.sample_backend_graph, check_stderr=check_stderr)
+        self.verify_sub_intf(graph_file=self.sample_resource_graph, check_stderr=check_stderr)
 
     def test_minigraph_sub_port_intf_resource_type_non_backend_tor(self, check_stderr=True):
         self.verify_sub_intf_non_backend_tor(graph_file=self.sample_resource_graph, check_stderr=check_stderr)
