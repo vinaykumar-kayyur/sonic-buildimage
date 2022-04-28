@@ -2,6 +2,7 @@
 Description=Delays snmp container until SONiC has started
 PartOf=snmp.service
 After=swss.service
+Requisite=updategraph.service
 
 [Timer]
 OnUnitActiveSec=0 sec
