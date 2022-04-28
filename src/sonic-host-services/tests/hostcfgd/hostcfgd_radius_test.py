@@ -53,16 +53,15 @@ class TestHostcfgdRADIUS(TestCase):
             Returns:
                 None
         """
+
         t_path = templates_path
         op_path = output_path + "/" + test_name
         sop_path = sample_output_path + "/" + test_name
 
-        hostcfgd.PAM_PASSWORD_CONF_TEMPLATE = t_path + "/common-password.j2"
         hostcfgd.PAM_AUTH_CONF_TEMPLATE = t_path + "/common-auth-sonic.j2"
         hostcfgd.NSS_TACPLUS_CONF_TEMPLATE = t_path + "/tacplus_nss.conf.j2"
         hostcfgd.NSS_RADIUS_CONF_TEMPLATE = t_path + "/radius_nss.conf.j2"
         hostcfgd.PAM_RADIUS_AUTH_CONF_TEMPLATE = t_path + "/pam_radius_auth.conf.j2"
-        hostcfgd.PAM_PASSWORD_CONF = op_path + "/common-password"
         hostcfgd.PAM_AUTH_CONF = op_path + "/common-auth-sonic"
         hostcfgd.NSS_TACPLUS_CONF = op_path + "/tacplus_nss.conf"
         hostcfgd.NSS_RADIUS_CONF = op_path + "/radius_nss.conf"
@@ -71,7 +70,6 @@ class TestHostcfgdRADIUS(TestCase):
         hostcfgd.ETC_PAMD_LOGIN = op_path + "/login"
         hostcfgd.RADIUS_PAM_AUTH_CONF_DIR = op_path + "/"
 
-        # import pdb; pdb.set_trace()
         shutil.rmtree( op_path, ignore_errors=True)
         os.mkdir( op_path)
 
@@ -92,7 +90,8 @@ class TestHostcfgdRADIUS(TestCase):
                 host_config_daemon.config_db.get_table('RADIUS_SERVER')
         except:
             radius_server = []
-        host_config_daemon.aaacfg.load(aaa,[],[],radius_global,radius_server, [])
+
+        host_config_daemon.aaacfg.load(aaa,[],[],radius_global,radius_server)
         dcmp = filecmp.dircmp(sop_path, op_path)
         diff_output = ""
         for name in dcmp.diff_files:

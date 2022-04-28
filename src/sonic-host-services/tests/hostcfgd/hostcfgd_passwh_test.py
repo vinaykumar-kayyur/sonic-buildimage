@@ -103,7 +103,7 @@ class TestHostcfgdPASSWH(TestCase):
             syslog.syslog(syslog.LOG_ERR, "failed: get_table 'PASSW_HARDENING', exception={}".format(e))
             passwh_table = []
 
-        host_config_daemon.aaacfg.load([],[],[],[],[],passwh_table)
+        host_config_daemon.passwcfg.load(passwh_table)
 
 
         diff_output = ""

@@ -49,12 +49,10 @@ class TestHostcfgdTACACS(TestCase):
         op_path = output_path + "/" + test_name + "_" + config_name
         sop_path = sample_output_path + "/" +  test_name + "_" + config_name
 
-        hostcfgd.PAM_PASSWORD_CONF_TEMPLATE = t_path + "/common-password.j2"
         hostcfgd.PAM_AUTH_CONF_TEMPLATE = t_path + "/common-auth-sonic.j2"
         hostcfgd.NSS_TACPLUS_CONF_TEMPLATE = t_path + "/tacplus_nss.conf.j2"
         hostcfgd.NSS_RADIUS_CONF_TEMPLATE = t_path + "/radius_nss.conf.j2"
         hostcfgd.PAM_RADIUS_AUTH_CONF_TEMPLATE = t_path + "/pam_radius_auth.conf.j2"
-        hostcfgd.PAM_PASSWORD_CONF = op_path + "/common-password"
         hostcfgd.PAM_AUTH_CONF = op_path + "/common-auth-sonic"
         hostcfgd.NSS_TACPLUS_CONF = op_path + "/tacplus_nss.conf"
         hostcfgd.NSS_RADIUS_CONF = op_path + "/radius_nss.conf"
@@ -84,7 +82,7 @@ class TestHostcfgdTACACS(TestCase):
         except:
             tacacs_server = []
 
-        host_config_daemon.aaacfg.load(aaa,tacacs_global,tacacs_server,[],[],[])
+        host_config_daemon.aaacfg.load(aaa,tacacs_global,tacacs_server,[],[])
         dcmp = filecmp.dircmp(sop_path, op_path)
         diff_output = ""
         for name in dcmp.diff_files:
