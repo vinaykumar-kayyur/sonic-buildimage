@@ -37,6 +37,7 @@ class TestCfgGen(TestCase):
         self.voq_port_config = os.path.join(self.test_dir, 'voq-sample-port-config.ini')
         self.packet_chassis_graph = os.path.join(self.test_dir, 'sample-chassis-packet-lc-graph.xml')
         self.packet_chassis_port_ini = os.path.join(self.test_dir, 'sample-chassis-packet-lc-port-config.ini')
+        self.maxDiff = None
         # To ensure that mock config_db data is used for unit-test cases
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
