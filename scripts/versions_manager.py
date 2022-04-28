@@ -289,11 +289,11 @@ class VersionModule:
             arch = ''
             if len(items) > 2:
                 dist = items[2]
-            if filter_dist and dist and filter_dist != dist and dist != ALL_DIST:
+            if filter_dist and dist and filter_dist != dist and dist != ALL_DIST and dist != ALL_DIST:
                 continue
             if len(items) > 3:
                 arch = items[3]
-            if filter_arch and arch and filter_arch != arch and arch != ALL_ARCH:
+            if filter_arch and arch and filter_arch != arch and arch != ALL_ARCH and arch != ALL_ARCH:
                 continue
             versions = Component.get_versions(file_path)
             component = Component(versions, ctype, dist, arch)
