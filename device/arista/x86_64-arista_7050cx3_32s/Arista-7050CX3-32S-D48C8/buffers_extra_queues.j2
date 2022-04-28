@@ -4,30 +4,30 @@
 {% for port in port_names.split(',') %}
 {% if port in port_names_require_extra_buffer.split(',') %}
         "{{ port }}|0-1": {
-            "profile" : "egress_lossy_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         },
         "{{ port }}|2-4": {
-            "profile" : "egress_lossless_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
         "{{ port }}|5": {
-            "profile" : "egress_lossy_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         },
         "{{ port }}|6": {
-            "profile" : "egress_lossless_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
         "{{ port }}|7": {
-            "profile" : "egress_lossy_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         }{% if not loop.last %},{% endif %}
 
 {% else %}
         "{{ port }}|0-2": {
-            "profile" : "egress_lossy_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         },
         "{{ port }}|3-4": {
-            "profile" : "egress_lossless_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
         "{{ port }}|5-7": {
-            "profile" : "egress_lossy_profile"
+            "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         }{% if not loop.last %},{% endif %}
 
 {% endif %}
