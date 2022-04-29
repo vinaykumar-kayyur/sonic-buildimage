@@ -350,8 +350,6 @@ class TestJ2Files(TestCase):
             os.remove(qos_config_file_new)
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output)
-            if not utils.cmp(sample_output_file, test_output):
-                import pdb;pdb.set_trace()
             assert utils.cmp(sample_output_file, test_output)
             os.remove(test_output)
 
