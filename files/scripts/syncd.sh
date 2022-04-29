@@ -28,6 +28,14 @@ function startplatform() {
         debug "Firmware update procedure ended"
     fi
 
+    if [[ x"$sonic_asic_platform" == x"barefoot" ]]; then
+        is_usb0=$(ls /sys/class/net | grep usb0)
+        if [[ "$is_usb0" == "usb0" ]]; then
+            /usr/bin/ip link set usb0 down
+            /usr/bin/ip link set usb0 up
+        fi
+    fi
+
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
@@ -36,11 +44,18 @@ function startplatform() {
 }
 
 function waitplatform() {
-    
+
     if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
         debug "Starting pmon service..."
         /bin/systemctl start pmon
         debug "Started pmon service"
+    fi
+    if [[ x"$BOOT_TYPE" = @(x"fast"|x"warm"|x"fastfast") ]]; then
+        debug "LLDP service is delayed by a timer for better fast/warm boot performance"
+    else
+        debug "Starting lldp service..."
+        /bin/systemctl start lldp
+        debug "Started lldp service"
     fi
 }
 
@@ -56,7 +71,7 @@ function stopplatform1() {
         debug "${TYPE} shutdown syncd process ..."
         /usr/bin/docker exec -i syncd$DEV /usr/bin/syncd_request_shutdown --${TYPE}
 
-        # wait until syncd quits gracefully or force syncd to exit after 
+        # wait until syncd quits gracefully or force syncd to exit after
         # waiting for 20 seconds
         start_in_secs=${SECONDS}
         end_in_secs=${SECONDS}
@@ -68,7 +83,7 @@ function stopplatform1() {
         done
 
         if [[ $((end_in_secs - start_in_secs)) -gt $timer_threshold ]]; then
-            debug "syncd process in container syncd$DEV did not exit gracefully" 
+            debug "syncd process in container syncd$DEV did not exit gracefully"
         fi
 
         /usr/bin/docker exec -i syncd$DEV /bin/sync

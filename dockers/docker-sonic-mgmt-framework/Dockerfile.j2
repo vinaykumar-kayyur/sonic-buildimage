@@ -1,4 +1,4 @@
-FROM docker-config-engine-buster
+FROM docker-config-engine-buster-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -34,6 +34,6 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
 RUN apt-get remove -y g++ python3-dev
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
+RUN rm -rf /debs ~/.cache
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]

@@ -150,7 +150,8 @@
             "V4-ACL-TABLE|DEFAULT_DENY": {
                 "PACKET_ACTION": "DROP",
                 "IP_TYPE": "IPv4ANY",
-                "PRIORITY": "0"
+                "PRIORITY": "0",
+                "ETHER_TYPE": "2048"
             },
             "V4-ACL-TABLE|Rule_20": {
                 "PACKET_ACTION": "FORWARD",
@@ -282,6 +283,11 @@
                 "SRC_IPV6": "::/0",
                 "PRIORITY": "990000",
                 "DST_IPV6": "::/0"
+            },
+            "EVERFLOW_DSCP|RULE_1": {
+                "MIRROR_INGRESS_ACTION": "erspan",
+                "DSCP": "10",
+                "PRIORITY": "9999"
             }
         },
         "DEVICE_METADATA": {
@@ -293,7 +299,13 @@
                 "hwsku": "Stone",
                 "buffer_model": "dynamic",
                 "cloudtype": "Public",
-                "region": "usfoo"
+                "region": "usfoo",
+                "asic_name": "Asic0",
+                "switch_id": "2",
+                "switch_type": "voq",
+                "max_cores": "8",
+                "sub_role": "FrontEnd",
+                "dhcp_server": "disabled"
             }
         },
         "VLAN": {
@@ -411,7 +423,11 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x8100",
-                "admin_status": "up"
+                "admin_status": "up",
+                "index": "0",
+                "asic_port_name": "Eth0-ASIC1",
+                "role": "Ext",
+                "macsec": "test"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -746,7 +762,17 @@
                     "Ethernet25",
                     "Ethernet24"
                 ]
+            },
+            "EVERFLOW_DSCP": {
+                "type": "MIRROR_DSCP",
+                "policy_desc": "EVERFLOW_DSCP",
+                "ports": [
+                    "Ethernet14",
+                    "Ethernet24"
+                ],
+                "stage": "ingress"
             }
+
         },
         "PBH_HASH_FIELD": {
             "inner_ip_proto": {
@@ -876,11 +902,21 @@
             }
         },
         "VLAN_SUB_INTERFACE": {
-            "Ethernet120.10": {
+            "Ethernet12.10": {
                 "admin_status": "up"
             },
-            "Ethernet120.10|10.0.1.56/31": {},
-            "Ethernet120.10|fc00::1:71/126": {}
+            "Ethernet12.10|10.0.1.56/31": {},
+            "Ethernet12.10|fc00::1:71/126": {},
+            "Po0003.10": {
+                "admin_status": "up"
+            },
+            "Po0003.10|10.0.1.58/31": {},
+            "Po0003.10|fc00::1:75/126": {},
+            "Eth120.10": {
+                "admin_status": "up"
+            },
+            "Eth120.10|10.0.1.60/31": {},
+            "Eth120.10|fc00::1:79/126": {}
         },
         "VLAN_MEMBER": {
             "Vlan111|Ethernet0": {
@@ -997,6 +1033,21 @@
             },
             "DEBUG_COUNTER": {
                 "FLEX_COUNTER_STATUS": "enable"
+            },
+            "FLOW_CNT_ROUTE": {
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
+            }
+        },
+        "FLOW_COUNTER_ROUTE_PATTERN": {
+            "1.1.1.0/24": {
+                "max_match_count": "30"
+            },
+            "2000::/64": {
+                "max_match_count": "30"
+            },
+            "Vnet1|2.2.2.0/24": {
+                "max_match_count": "30"
             }
         },
         "CRM": {
@@ -1147,6 +1198,24 @@
             "default|ipv4_unicast|21.0.0.0/8": {
             }
         },
+        "BGP_PEER_RANGE": {
+            "BGPSLBPassive": {
+                "ip_range": [
+                    "10.255.0.0/25"
+                ],
+                "name": "BGPSLBPassive",
+                "src_address": "10.1.0.32"
+            },
+            "BGPVac": {
+                "ip_range": [
+                    "192.168.0.0/21",
+                    "192.169.0.0/21",
+                    "192.170.0.0/21"
+                ],
+                "name": "BGPVac",
+                "src_address": "10.1.0.32"
+            }
+        },
         "BGP_MONITORS": {
             "5.6.7.8": {
                 "admin_status": "up",
@@ -1192,6 +1261,14 @@
         "BGP_GLOBALS_LISTEN_PREFIX": {
             "default|30.0.0.0/8": {
                 "peer_group": "PG1"
+            }
+        },
+        "BGP_ALLOWED_PREFIXES" :{
+            "DEPLOYMENT_ID|4|123:123": {
+                "default_action": "permit"
+            },
+            "DEPLOYMENT_ID|5": {
+                "default_action": "permit"
             }
         },
         "ROUTE_MAP_SET": {
@@ -1527,7 +1604,8 @@
 	          "tc_to_pg_map": "tc_to_pg_map1",
 	          "pfc_to_queue_map": "pfc_prio_to_q_map1",
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map1",
-	          "pfc_enable"      : "3,4"
+	          "pfc_enable"      : "3,4",
+	          "pfcwd_sw_enable" : "3,4"
             },
             "Ethernet4": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map2",
@@ -1536,11 +1614,12 @@
 	          "tc_to_pg_map": "tc_to_pg_map2",
 	          "pfc_to_queue_map": "pfc_prio_to_q_map2",
 	          "pfc_to_pg_map"   : "pfc_prio_to_pg_map2",
-	          "pfc_enable"      : "3,4"
+	          "pfc_enable"      : "3,4",
+	          "pfcwd_sw_enable" : "3,4"
             }
         },
 
-        
+
         "MCLAG_DOMAIN": {
             "123": {
                 "source_ip": "12.1.1.1",
@@ -1584,6 +1663,8 @@
 
             }
         },
+
+
         "POLICER": {
             "everflow_static_policer": {
                 "meter_type": "bytes",
@@ -1592,12 +1673,49 @@
                 "cbs": "12500000",
                 "color": "aware",
                 "red_packet_action": "drop"
-           }
+            }
+        },
+
+
+        "NVGRE_TUNNEL": {
+            "tunnel_1": {
+                "src_ip": "10.0.0.1"
+            }
+        },
+        "NVGRE_TUNNEL_MAP": {
+            "tunnel_1|Vlan111": {
+                "vlan_id": "111",
+                "vsid": "5000"
+            }
+        },
+
+
+        "MACSEC_PROFILE": {
+            "test": {
+                "priority": "64",
+                "cipher_suite": "GCM-AES-128",
+                "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
+                "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
+                "fallback_cak": "00000000000000000000000000000000",
+                "fallback_ckn": "11111111111111111111111111111111",
+                "policy": "security",
+                "enable_replay_protect": "true",
+                "replay_window": "64",
+                "send_sci": "true",
+                "rekey_period": "3600"
+            }
         }
+
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
             "Error": "This Table is for testing, This Table does not have YANG models."
+        }
+    },
+    "SAMPLE_CONFIG_DB_SPECIAL_CASE": {
+        "TACPLUS": {
+            "global": {
+            }
         }
     }
 }
