@@ -390,44 +390,45 @@ void prepare_socket(int *local_sock, int *server_sock, relay_config *config, int
     bool bind_ll_addr = false;
     do {
         if (getifaddrs(&ifa) == -1) {
-	    syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces with %s\n", strerror(errno));
-	}
+            syslog(LOG_WARNING, "getifaddrs: Unable to get network interfaces with %s\n", strerror(errno));
+        }
+        else {
+            ifa_tmp = ifa;
+            while (ifa_tmp) {
+                if ((ifa_tmp->ifa_addr->sa_family == AF_INET6) && (strcmp(ifa_tmp->ifa_name, config->interface.c_str()) == 0)) {
+                    struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
+                    if(!IN6_IS_ADDR_LINKLOCAL(&in6->sin6_addr)) {  
+                        bind_addr = true;
+                        in6->sin6_family = AF_INET6;
+                        in6->sin6_port = htons(RELAY_PORT);
+                        addr = *in6;
+                    }
+                    if(IN6_IS_ADDR_LINKLOCAL(&in6->sin6_addr)) {
+                        bind_ll_addr = true;
+                        in6->sin6_family = AF_INET6;
+                        in6->sin6_port = htons(RELAY_PORT);
+                        ll_addr = *in6;
+                    }
+                }
+                ifa_tmp = ifa_tmp->ifa_next;
+            }
+            freeifaddrs(ifa);
+        }
 
-	ifa_tmp = ifa;
-	while (ifa_tmp) {
-	    if ((ifa_tmp->ifa_addr->sa_family == AF_INET6) && (strcmp(ifa_tmp->ifa_name, config->interface.c_str()) == 0)) {
-	        struct sockaddr_in6 *in6 = (struct sockaddr_in6*) ifa_tmp->ifa_addr;
-		if(!IN6_IS_ADDR_LINKLOCAL(&in6->sin6_addr)) {  
-		    bind_addr = true;
-		    in6->sin6_family = AF_INET6;
-		    in6->sin6_port = htons(RELAY_PORT);
-		    addr = *in6;
-		}
-		if(IN6_IS_ADDR_LINKLOCAL(&in6->sin6_addr)) {
-		    bind_ll_addr = true;
-		    in6->sin6_family = AF_INET6;
-		    in6->sin6_port = htons(RELAY_PORT);
-	  	    ll_addr = *in6;
-	        }
-	    }
-	    ifa_tmp = ifa_tmp->ifa_next;
-	}
-	freeifaddrs(ifa);
+        if (bind_addr && bind_ll_addr) {
+            break;
+        }
 
-	if (bind_addr && bind_ll_addr) {
-	    break;
-	}
-
-	syslog(LOG_WARNING, "Retry #%d to bind to sockets on interface %s\n", ++retry, config->interface.c_str());
-	sleep(5);
+        syslog(LOG_WARNING, "Retry #%d to bind to sockets on interface %s\n", ++retry, config->interface.c_str());
+        sleep(5);
     } while (retry < 6);
 
     if ((!bind_addr) || (bind(*local_sock, (sockaddr *)&addr, sizeof(addr)) == -1)) {
-	syslog(LOG_ERR, "bind: Failed to bind socket to global ipv6 address on interface %s after %d retries\n", config->interface.c_str(), retry);
+	    syslog(LOG_ERR, "bind: Failed to bind socket to global ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
     }
 
     if ((!bind_ll_addr) || (bind(*server_sock, (sockaddr *)&ll_addr, sizeof(addr)) == -1)) {
-	syslog(LOG_ERR, "bind: Failed to bind socket to link local ipv6 address on interface %s after %d retries\n", config->interface.c_str(), retry);
+	    syslog(LOG_ERR, "bind: Failed to bind socket to link local ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
     }
 }
 
