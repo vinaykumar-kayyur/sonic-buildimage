@@ -48,7 +48,7 @@ def test_set_del():
     set_del_test(
         mgr,
         "SET",
-        ("10.1.0.0/24", {}),
+        ("10.1.0.0/24", {"":""}),
         True,
         [
             ["router bgp 65100",
@@ -62,7 +62,7 @@ def test_set_del():
     set_del_test(
         mgr,
         "SET",
-        ("fc00:10::/64", {}),
+        ("fc00:10::/64", {"":""}),
         True,
         [
             ["router bgp 65100",
@@ -103,7 +103,7 @@ def test_set_del_vrf():
     set_del_test(
         mgr,
         "SET",
-        ("vrfRED|10.2.0.0/24", {}),
+        ("vrfRED|10.2.0.0/24", {"":""}),
         True,
         [
             ["router bgp 65100 vrf vrfRED",
@@ -117,7 +117,7 @@ def test_set_del_vrf():
     set_del_test(
         mgr,
         "SET",
-        ("vrfRED|fc00:20::/64", {}),
+        ("vrfRED|fc00:20::/64", {"":""}),
         True,
         [
             ["router bgp 65100 vrf vrfRED",

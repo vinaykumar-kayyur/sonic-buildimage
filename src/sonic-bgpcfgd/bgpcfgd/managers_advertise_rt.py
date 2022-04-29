@@ -78,13 +78,11 @@ class AdvertiseRouteMgr(Manager):
 
     def _set_handler_validate(self, key, data):
         if data:
-            if "profile" in data and data["profile"] not in ROUTE_MAPS:
-                log_err("BGPAdvertiseRouteMgr:: No valid profile for advertised route %s" % data)
-                return False
-            elif data != {"": ""}:
-                log_err("BGPAdvertiseRouteMgr:: Invalid data for advertised route %s" % data)
-                return False
-        return self._ip_addr_validate(key)
+            if ("profile" in data and data["profile"] in ROUTE_MAPS) or data == {"":""}:
+                return self._ip_addr_validate(key)
+            
+        log_err("BGPAdvertiseRouteMgr:: Invalid data %s for advertised route %s" % (key, data))
+        return False
 
     def _del_handler_validate(self, key):
         return self._ip_addr_validate(key)
