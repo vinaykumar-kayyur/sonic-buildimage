@@ -103,7 +103,6 @@ def add_profile(db, profile, priority, cipher_suite, primary_cak, primary_ckn, p
     Add MACsec profile
     """
     ctx = click.get_current_context()
-
     profile_entry = db.cfgdb.get_entry('MACSEC_PROFILE', profile)
     if not len(profile_entry) == 0:
         ctx.fail("{} already exists".format(profile))
@@ -169,7 +168,7 @@ def del_profile(db, profile):
 
 
 def register(cli):
-    cli.add_command(macsec)
+    cli.commands['macsec'].add_command(macsec)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,29 @@
+import pytest
+import mock_tables # lgtm [py/unused-import]
+from unittest import mock
+
+@pytest.fixture()
+def mock_cfgdb():
+    cfgdb = mock.Mock()
+    CONFIG = {
+        'PORT': {
+            'Ethernet0': {
+            }
+        }
+    }
+
+    def get_entry(table, key):
+        if table not in CONFIG or key not in CONFIG[table]:
+            return {}
+        return CONFIG[table][key]
+
+    def set_entry(table, key, data):
+        CONFIG.setdefault(table, {})
+        CONFIG[table].setdefault(key, {})
+        CONFIG[table][key] = data
+
+    cfgdb.get_entry = mock.Mock(side_effect=get_entry)
+    cfgdb.set_entry = mock.Mock(side_effect=set_entry)
+
+    yield cfgdb
+
