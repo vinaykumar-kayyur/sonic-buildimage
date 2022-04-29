@@ -421,6 +421,9 @@ class SonicYangExtMixin:
         if leafDict[key]['__isleafList']:
             vValue = list()
             if isinstance(value, str) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                # For field defined as leaf-list but has string value in CONFIG DB, need do special handling here. For exampe:
+                # port.adv_speeds in CONFIG DB has value "100,1000,10000", it shall be transferred to [100,1000,10000] as YANG value here to 
+                # make it align with its YANG definition.
                 value = (x.strip() for x in value.split(LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])]))
             for v in value:
                 vValue.append(_yangConvert(v))
@@ -770,6 +773,8 @@ class SonicYangExtMixin:
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
             if isinstance(value, list) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                # For field defined as leaf-list but has string value in CONFIG DB, we need do special handling here:
+                # e.g. port.adv_speeds is [10,100,1000] in YANG, need to convert it into a string for CONFIG DB: "10,100,1000"
                 vValue = LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])].join((_revYangConvert(x) for x in value))
             else:
                 vValue = list()
