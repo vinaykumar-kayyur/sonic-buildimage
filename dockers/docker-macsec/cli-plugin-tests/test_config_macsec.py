@@ -18,7 +18,7 @@ class TestConfigMACsec(object):
     def test_plugin_registration(self):
         cli = mock.MagicMock()
         macsec.register(cli)
-        cli.commands['macsec'].add_command.assert_called_once_with(macsec.macsec)
+        cli.add_command.assert_called_once_with(macsec.macsec)
 
     def test_default_profile(self, mock_cfgdb):
         runner = CliRunner()
@@ -117,6 +117,9 @@ class TestConfigMACsec(object):
         port_table = db.cfgdb.get_entry("PORT", "Ethernet0")
         assert port_table 
         assert port_table["macsec"] == "test"
+
+        result = runner.invoke(macsec.macsec.commands["profile"].commands["del"], ["test"], obj=db)
+        assert result.exit_code != 0
 
         result = runner.invoke(macsec.macsec.commands["port"].commands["del"], ["Ethernet0"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)

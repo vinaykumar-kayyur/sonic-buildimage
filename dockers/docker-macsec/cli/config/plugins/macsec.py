@@ -164,11 +164,17 @@ def del_profile(db, profile):
     if len(profile_entry) == 0:
         ctx.fail("{} doesn't exist".format(profile))
 
+    # Check if the profile is being used by any port
+    for port in db.cfgdb.get_keys('PORT'):
+        attr = db.cfgdb.get_entry('PORT', port)
+        if 'macsec' in attr and attr['macsec'] == profile:
+            ctx.fail("{} is being used by port {}, Please remove the MACsec from the port firstly".format(profile, port))
+
     db.cfgdb.set_entry("MACSEC_PROFILE", profile, None)
 
 
 def register(cli):
-    cli.commands['macsec'].add_command(macsec)
+    cli.add_command(macsec)
 
 
 if __name__ == '__main__':
