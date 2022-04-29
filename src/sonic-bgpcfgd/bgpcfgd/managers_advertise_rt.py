@@ -81,7 +81,7 @@ class AdvertiseRouteMgr(Manager):
             if ("profile" in data and data["profile"] in ROUTE_MAPS) or data == {"":""}:
                 return self._ip_addr_validate(key)
             
-        log_err("BGPAdvertiseRouteMgr:: Invalid data %s for advertised route %s" % (key, data))
+        log_err("BGPAdvertiseRouteMgr:: Invalid data %s for advertised route %s" % (data, key))
         return False
 
     def _del_handler_validate(self, key):
