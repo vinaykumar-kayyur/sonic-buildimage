@@ -669,7 +669,7 @@ fi
 # Add extra linux command line
 extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
 echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
-ONIE_PLATFORM_EXTRA_CMDLINE_LINUX="$ONIE_PLATFORM_EXTRA_CMDLINE_LINUX $extra_cmdline_linux"
+GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX $extra_cmdline_linux"
 
 cat <<EOF >> $grub_cfg
 menuentry '$demo_grub_entry' {

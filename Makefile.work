@@ -144,6 +144,12 @@ ifeq ($(ENABLE_FIPS_FEATURE), y)
 endif
 endif
 
+ifeq ($(ENABLE_FIPS_FEATURE), n)
+ifeq ($(ENABLE_FIPS), y)
+    $(error Cannot set fips config ENABLE_FIPS=y when ENABLE_FIPS_FEATURE=n)
+endif
+endif
+
 # Generate the version control build info
 $(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
     TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
