@@ -138,10 +138,9 @@ endif
 endif
 SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
 
+# Support FIPS feature, armhf not supported yet
 ifeq ($(PLATFORM_ARCH),armhf)
-ifeq ($(ENABLE_FIPS_FEATURE), y)
-    $(error Cannot enable fips in armhf)
-endif
+ENABLE_FIPS_FEATURE := n
 endif
 
 ifeq ($(ENABLE_FIPS_FEATURE), n)
@@ -367,6 +366,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            ENABLE_AUTO_TECH_SUPPORT=$(ENABLE_AUTO_TECH_SUPPORT) \
                            BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM) \
                            ENABLE_ASAN=$(ENABLE_ASAN) \
+                           ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
