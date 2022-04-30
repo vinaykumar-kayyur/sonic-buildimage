@@ -424,11 +424,11 @@ void prepare_socket(int *local_sock, int *server_sock, relay_config *config, int
     } while (retry < 6);
 
     if ((!bind_addr) || (bind(*local_sock, (sockaddr *)&addr, sizeof(addr)) == -1)) {
-	    syslog(LOG_ERR, "bind: Failed to bind socket to global ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
+        syslog(LOG_ERR, "bind: Failed to bind socket to global ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
     }
 
     if ((!bind_ll_addr) || (bind(*server_sock, (sockaddr *)&ll_addr, sizeof(addr)) == -1)) {
-	    syslog(LOG_ERR, "bind: Failed to bind socket to link local ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
+        syslog(LOG_ERR, "bind: Failed to bind socket to link local ipv6 address on interface %s after %d retries with %s\n", config->interface.c_str(), retry, strerror(errno));
     }
 }
 
