@@ -141,6 +141,7 @@ SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
 # Support FIPS feature, armhf not supported yet
 ifeq ($(PLATFORM_ARCH),armhf)
 ENABLE_FIPS_FEATURE := n
+ENABLE_FIPS := n
 endif
 
 ifeq ($(ENABLE_FIPS_FEATURE), n)
