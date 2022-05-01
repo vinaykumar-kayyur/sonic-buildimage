@@ -882,7 +882,7 @@ class PasswHardening(object):
     def load(self, policies_conf):
         for row in policies_conf:
             self.passw_policies_update(row, policies_conf[row], modify_conf=False)
-            # TODO
+
         self.modify_passw_conf_file()
 
     def passw_policies_update(self, key, data, modify_conf=True):
@@ -892,7 +892,6 @@ class PasswHardening(object):
         if data == {}:
             self.passw_policies = {}
         else:
-            # TODO: maybe create an input validation function for this val, and add val to all the inputs.
             if 'reject_user_passw_match' in data:
                 data['reject_user_passw_match'] = is_true(data['reject_user_passw_match'])
             if 'lower_class' in data:
@@ -989,17 +988,18 @@ class PasswHardening(object):
             Return update_age_status 'True' value meaning that was a modification from the last time, and vice versa.
         """
         update_age_status = False
+        days_num = None
         regex_days = AGE_DICT[age_type]['REGEX_DAYS']
         days_type = AGE_DICT[age_type]['DAYS']
+        if os.path.exists(ETC_LOGIN_DEF):
+            with open(ETC_LOGIN_DEF, 'r') as f:
+                login_def_data = f.readlines()
 
-        with open(ETC_LOGIN_DEF, 'r') as f:
-            login_def_data = f.readlines()
-
-        for line in login_def_data:
-            m1 = re.match(regex_days, line)
-            if m1:
-                days_num = int(m1.group(days_type))
-                break
+            for line in login_def_data:
+                m1 = re.match(regex_days, line)
+                if m1:
+                    days_num = int(m1.group(days_type))
+                    break
 
         if curr_expiration != days_num:
             update_age_status = True
@@ -1012,23 +1012,24 @@ class PasswHardening(object):
             getent_out = subprocess.check_output(['getent', 'passwd']).decode('utf-8').split('\n')
         except subprocess.CalledProcessError as err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
+            return False
 
         # Get range of normal users
         REGEX_UID_MAX = r'^UID_MAX[ \t]*(?P<uid_max>\d*)'
         REGEX_UID_MIN = r'^UID_MIN[ \t]*(?P<uid_min>\d*)'
         uid_max = None
         uid_min = None
+        if os.path.exists(ETC_LOGIN_DEF):
+            with open(ETC_LOGIN_DEF, 'r') as f:
+                login_def_data = f.readlines()
 
-        with open(ETC_LOGIN_DEF, 'r') as f:
-            login_def_data = f.readlines()
-
-        for line in login_def_data:
-            m1 = re.match(REGEX_UID_MAX, line)
-            m2 = re.match(REGEX_UID_MIN, line)
-            if m1:
-                uid_max = int(m1.group("uid_max"))
-            if m2:
-                uid_min = int(m2.group("uid_min"))
+            for line in login_def_data:
+                m1 = re.match(REGEX_UID_MAX, line)
+                m2 = re.match(REGEX_UID_MIN, line)
+                if m1:
+                    uid_max = int(m1.group("uid_max"))
+                if m2:
+                    uid_min = int(m2.group("uid_min"))
 
         if not uid_max or not uid_min:
             syslog.syslog(syslog.LOG_ERR,"failed, no UID_MAX/UID_MIN founded in login.def file")
