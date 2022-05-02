@@ -155,10 +155,10 @@ def get_platform_and_hwsku():
 
 def get_asic_conf_file_path():
     """
-    Retrieves the path to the ASIC conguration file on the device
+    Retrieves the path to the ASIC configuration file on the device
 
     Returns:
-        A string containing the path to the ASIC conguration file on success,
+        A string containing the path to the ASIC configuration file on success,
         None on failure
     """
     def asic_conf_path_candidates():
@@ -179,10 +179,10 @@ def get_asic_conf_file_path():
 
 def get_platform_env_conf_file_path():
     """
-    Retrieves the path to the PLATFORM ENV conguration file on the device
+    Retrieves the path to the PLATFORM ENV configuration file on the device
 
     Returns:
-        A string containing the path to the PLATFORM ENV conguration file on success,
+        A string containing the path to the PLATFORM ENV configuration file on success,
         None on failure
     """
     platform_env_conf_path_candidates = []
