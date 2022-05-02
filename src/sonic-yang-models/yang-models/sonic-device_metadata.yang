@@ -119,6 +119,14 @@ module sonic-device_metadata {
                     default enable;
                 }
 
+                leaf yang_config_validation {
+                    type enumeration {
+                        enum enable;
+                        enum disable;
+                    }
+                    default disable;
+                }
+
                 leaf cloudtype {
                     type string;
                 }
