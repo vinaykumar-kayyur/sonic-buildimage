@@ -187,6 +187,9 @@ SONIC_ENABLE_IMAGE_SIGNATURE ?= n
 # The absolute path should be provided.
 SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
 
+# ENABLE_YANG_CONFIG_VALIDATION - enable YANG validation of updates to ConfigDB
+ENABLE_YANG_CONFIG_VALIDATION = n
+
 # PACKAGE_URL_PREFIX - the package url prefix
 PACKAGE_URL_PREFIX ?= https://packages.trafficmanager.net/public/packages
 

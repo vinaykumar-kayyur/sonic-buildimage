@@ -333,6 +333,7 @@ $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
 $(info "ENABLE_ASAN"                     : "$(ENABLE_ASAN)")
+$(info "ENABLE_YANG_CONFIG_VALIDATION"   : "$(ENABLE_YANG_CONFIG_VALIDATION)")
 $(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
@@ -360,6 +361,7 @@ endif
 
 export kernel_procure_method=$(KERNEL_PROCURE_METHOD)
 export vs_build_prepare_mem=$(VS_PREPARE_MEM)
+export enable_yang_config_validation=$(ENABLE_YANG_CONFIG_VALIDATION)
 
 ###############################################################################
 ## Local targets
@@ -842,7 +844,10 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_pkgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_APT_PACKAGES)))\n" | awk '!a[$$0]++'))
 		if [ -d $($*.gz_PATH)/cli-plugin-tests/ ]; then pushd $($*.gz_PATH)/cli-plugin-tests; pytest-$($(SONIC_UTILITIES_PY3)_PYTHON_VERSION) -v $(LOG); popd; fi
-		# Label docker image with componenets versions
+		if [ -f $($*.gz_PATH)/init_cfg.json.j2 ] ; then
+			j2 $($*.gz_PATH)/init_cfg.json.j2 > $($*.gz_PATH)/init_cfg.json
+		fi
+                # Label docker image with componenets versions
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_labels=$(foreach component,\
 			$(call expand,$($*.gz_DEPENDS),RDEPENDS) \
 			$(call expand,$($*.gz_PYTHON_DEBS)) \

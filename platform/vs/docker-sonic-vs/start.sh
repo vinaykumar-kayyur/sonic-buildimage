@@ -33,8 +33,13 @@ mkdir -p /var/run/redis/sonic-db
 cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db/
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
-sonic-cfggen -t /usr/share/sonic/templates/init_cfg.json.j2 -a "{\"system_mac\": \"$SYSTEM_MAC_ADDRESS\"}" > /etc/sonic/init_cfg.json
-
+if [ -f /etc/sonic/init_cfg.json ]; then
+    sonic-cfggen -j /etc/sonic/init_cfg.json -a "{\"system_mac\": \"$SYSTEM_MAC_ADDRESS\"}" > /tmp/init_cfg.json
+    mv /tmp/init_cfg.json  /etc/sonic/init_cfg.json
+else
+   sonic-cfggen -t /usr/share/sonic/templates/init_cfg.json.j2 -a "{\"system_mac\": \"$SYSTEM_MAC_ADDRESS\"}" > /etc/sonic/init_cfg.json
+fi
+   
 if [[ -f /usr/share/sonic/virtual_chassis/default_config.json ]]; then
     sonic-cfggen -j /etc/sonic/init_cfg.json -j /usr/share/sonic/virtual_chassis/default_config.json --print-data > /tmp/init_cfg.json
     mv /tmp/init_cfg.json /etc/sonic/init_cfg.json
