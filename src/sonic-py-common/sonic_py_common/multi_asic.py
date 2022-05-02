@@ -5,8 +5,7 @@ import subprocess
 from natsort import natsorted
 from swsscommon import swsscommon
 
-from .device_info import CONTAINER_PLATFORM_PATH, HOST_DEVICE_PATH
-from .device_info import get_platform, get_asic_conf_file_path
+from .device_info import get_asic_conf_file_path
 from .device_info import is_supervisor, is_chassis
 
 ASIC_NAME_PREFIX = 'asic'
