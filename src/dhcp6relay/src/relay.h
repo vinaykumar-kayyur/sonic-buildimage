@@ -38,6 +38,7 @@ typedef enum
     DHCPv6_MESSAGE_TYPE_DECLINE = 9,
     DHCPv6_MESSAGE_TYPE_RELAY_FORW = 12,
     DHCPv6_MESSAGE_TYPE_RELAY_REPL = 13,
+    DHCPv6_MESSAGE_TYPE_MALFORMED = 14,
 
     DHCPv6_MESSAGE_TYPE_COUNT
 } dhcp_message_type_t;
@@ -59,7 +60,6 @@ struct relay_config {
 
 struct dhcpv6_msg {
     uint8_t msg_type;
-    uint8_t xid[3];
 };
 
 struct PACKED dhcpv6_relay_msg {
