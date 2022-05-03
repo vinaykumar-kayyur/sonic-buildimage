@@ -737,10 +737,12 @@ ifneq ($(CROSS_BUILD_ENVIRON),y)
 		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
 		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
 		python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
-else
-		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
-endif
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
+else
+		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
+		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
+		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
+endif
 		# clean up
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f; [ -d .pc ] && rm -rf .pc; fi
 		popd $(LOG_SIMPLE)
