@@ -805,7 +805,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     if not key:
                         break
 
-                    print(key)
                     if op == 'SET' and not self.bfdAllowed:
                         self.allow_bfd_protocol(namespace)
                         self.bfdAllowed = True
