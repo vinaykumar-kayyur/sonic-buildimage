@@ -384,12 +384,12 @@ stop() {
 
 kill() {
     {%- if docker_container_name == "database" %}
-    docker kill $DOCKERNAME
+    docker kill {{docker_container_name}}$DEV
     if [ "$DEV" ]; then
         ip netns delete "$NET_NS"
     fi
     {%- else %}
-    docker kill $DOCKERNAME
+    docker kill {{docker_container_name}}$DEV
     {%- endif %}
 }
 
