@@ -224,3 +224,6 @@ ENABLE_ASAN ?= n
 
 # reset default container registry from dockerhub to other
 DEFAULT_CONTAINER_REGISTRY ?=
+
+# INCLUDE_BOOTCHART - install systemd-bootchart
+INCLUDE_BOOTCHART = y
