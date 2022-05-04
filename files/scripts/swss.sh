@@ -207,8 +207,14 @@ stop() {
     check_warm_boot
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
 
-    /usr/bin/${SERVICE}.sh stop $DEV
-    debug "Stopped ${SERVICE}$DEV service..."
+    # For WARM/FAST boot do not perform service stop
+    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
+        /usr/bin/${SERVICE}.sh stop $DEV
+        debug "Stopped ${SERVICE}$DEV service..."
+    else
+        debug "Killing Docker swss..."
+        /usr/bin/${SERVICE}.sh kill $DEV
+    fi
 
     # Flush FAST_REBOOT table when swss needs to stop. The only
     # time when this would take effect is when fast-reboot
