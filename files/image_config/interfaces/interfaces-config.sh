@@ -9,7 +9,7 @@ function wait_networking_service_done() {
     while [[ "${_WDOG_CNT}" -le "${_WDOG_MAX}" ]]; do
         networking_status="$(systemctl is-active networking 2>&1)"
 
-        if [ "${networking_status}" == active ] || [ "${networking_status}" == inactive ] || [ "${networking_status}" == failed ] ; then
+        if [[ "${networking_status}" == active || "${networking_status}" == inactive || "${networking_status}" == failed ]] ; then
             return
         fi
 
@@ -29,11 +29,11 @@ if [[ $(ifquery --running eth0) ]]; then
 fi
 
 # Check if ZTP DHCP policy has been installed
-if [ -e /etc/network/ifupdown2/policy.d/ztp_dhcp.json ]; then
+if [[ -e /etc/network/ifupdown2/policy.d/ztp_dhcp.json ]]; then
     # Obtain port operational state information
     redis-dump -d 0 -k "PORT_TABLE:Ethernet*"  -y > /tmp/ztp_port_data.json
 
-    if [ $? -ne 0 ] || [ ! -e /tmp/ztp_port_data.json ] || [ "$(cat /tmp/ztp_port_data.json)" = "" ]; then
+    if [[ $? -ne 0 || ! -e /tmp/ztp_port_data.json || "$(cat /tmp/ztp_port_data.json)" = "" ]]; then
         echo "{}" > /tmp/ztp_port_data.json
     fi
 
@@ -53,28 +53,28 @@ CFGGEN_PARAMS=" \
 "
 sonic-cfggen $CFGGEN_PARAMS
 
-[ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
-[ -f /var/run/dhclient6.eth0.pid ] && kill `cat /var/run/dhclient6.eth0.pid` && rm -f /var/run/dhclient6.eth0.pid
+[[ -f /var/run/dhclient.eth0.pid ]] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
+[[ -f /var/run/dhclient6.eth0.pid ]] && kill `cat /var/run/dhclient6.eth0.pid` && rm -f /var/run/dhclient6.eth0.pid
 
 for intf_pid in $(ls -1 /var/run/dhclient*.Ethernet*.pid 2> /dev/null); do
-    [ -f ${intf_pid} ] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
+    [[ -f ${intf_pid} ]] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
 done
 
 
 # Setup eth1 if we connect to a remote chassis DB.
 PLATFORM=${PLATFORM:-`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`}
 CHASSISDB_CONF="/usr/share/sonic/device/$PLATFORM/chassisdb.conf"
-[ -f $CHASSISDB_CONF ] && source $CHASSISDB_CONF
+[[ -f $CHASSISDB_CONF ]] && source $CHASSISDB_CONF
 
 ASIC_CONF="/usr/share/sonic/device/$PLATFORM/asic.conf"
-[ -f $ASIC_CONF ] && source $ASIC_CONF
+[[ -f $ASIC_CONF ]] && source $ASIC_CONF
 
 if [[ -n "$midplane_subnet" && ($NUM_ASIC -gt 1) ]]; then
     for asic_id in `seq 0 $((NUM_ASIC - 1))`; do
        NET_NS="asic$asic_id"
 
        PIDS=`ip netns pids "$NET_NS" 2>/dev/null`
-       if [ "$?" -ne "0" ]; then # namespace doesn't exist
+       if [[ "$?" -ne "0" ]]; then # namespace doesn't exist
           continue
        fi
 
