@@ -169,6 +169,8 @@ def
 
 {%- if defs.generate_pg_profils is defined %}
 {{ defs.generate_pg_profils(port_names_active) }}
+{% elif defs.generate_pg_profiles_with_extra_lossless_pgs_with_inactive_ports is defined %}
+{{ defs.generate_pg_profiles_with_extra_lossless_pgs_with_inactive_ports(port_names_active, port_names_extra_queues, port_names_inactive) }},
 {% elif defs.generate_pg_profiles_with_inactive_ports is defined %}
 {{ defs.generate_pg_profiles_with_inactive_ports(port_names_active, port_names_inactive) }},
 {% else %}
