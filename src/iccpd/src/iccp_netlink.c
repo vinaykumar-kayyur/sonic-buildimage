@@ -564,6 +564,31 @@ errout:
     return err;
 }
 
+int iccp_netlink_if_admin_get(uint32_t ifindex)
+{
+    struct rtnl_link *link;
+    int err;
+    unsigned int flags;
+    bool admin;
+    struct System *sys = NULL;
+
+    if (!(sys = system_get_instance()))
+        return MCLAG_ERROR;
+
+    link = rtnl_link_alloc();
+    if (!link)
+        return -ENOMEM;
+
+    rtnl_link_set_ifindex(link, ifindex);
+    flags = rtnl_link_get_flags(link);
+    admin = flags & IFF_UP;
+    ICCPD_LOG_NOTICE(__FUNCTION__, "admin status %s",admin?"UP":"DOWN");
+
+errout:
+    rtnl_link_put(link);
+    return admin;
+}
+
 //Set IFF up flag for all member ports of a port-channel
 static int iccp_netlink_set_portchannel_iff_flag(
     struct LocalInterface* lif_po,
@@ -673,8 +698,12 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po, int dir)
         }
 
         /* Refresh link local address according the new MAC */
-        iccp_netlink_if_shutdown_set(lif_po->ifindex);
-        iccp_netlink_if_startup_set(lif_po->ifindex);
+        if(iccp_netlink_if_admin_get(lif_po->ifindex))
+        {
+            iccp_netlink_if_shutdown_set(lif_po->ifindex);
+            iccp_netlink_if_startup_set(lif_po->ifindex);
+        }
+
     }
 
     /*Set portchannel ip mac */
@@ -720,9 +749,11 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po, int dir)
                     }
 
                     /* Refresh link local address according the new MAC */
-                    iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
-                    iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
-
+                    if(iccp_netlink_if_admin_get(vlan->vlan_itf->ifindex))
+                    {
+                        iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
+                        iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
+                    }
                     iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
                     memcpy(vlan->vlan_itf->l3_mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN);
                 }
@@ -774,8 +805,12 @@ void recover_if_ipmac_on_standby(struct LocalInterface *lif_po, int dir)
         }
 
         /* Refresh link local address according the new MAC */
-        iccp_netlink_if_shutdown_set(lif_po->ifindex);
-        iccp_netlink_if_startup_set(lif_po->ifindex);
+        if(iccp_netlink_if_admin_get(lif_po->ifindex))
+        {
+            iccp_netlink_if_shutdown_set(lif_po->ifindex);
+            iccp_netlink_if_startup_set(lif_po->ifindex);
+        }
+
         /* Set the interface MAC address back to its local address so that subsequent vlan member
          * add processing (local_if_add_vlan) will not use the old MAC address for 
          * update_if_ipmac_on_standby()
@@ -810,8 +845,12 @@ void recover_if_ipmac_on_standby(struct LocalInterface *lif_po, int dir)
                 }
 
                 /* Refresh link local address according the new MAC */
-                iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
-                iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
+                if(iccp_netlink_if_admin_get(vlan->vlan_itf->ifindex))
+                {
+                    iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
+                    iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
+                }
+
 
                 iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
                 memcpy(vlan->vlan_itf->l3_mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
@@ -2352,9 +2391,11 @@ void update_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir)
             }
 
             /* Refresh link local address according the new MAC */
-            iccp_netlink_if_shutdown_set(lif_vlan->ifindex);
-            iccp_netlink_if_startup_set(lif_vlan->ifindex);
-
+            if(iccp_netlink_if_admin_get(lif_vlan->ifindex))
+            {
+                iccp_netlink_if_shutdown_set(lif_vlan->ifindex);
+                iccp_netlink_if_startup_set(lif_vlan->ifindex);
+            }
             iccp_set_interface_ipadd_mac(lif_vlan, macaddr);
             memcpy(lif_vlan->l3_mac_addr, system_mac, ETHER_ADDR_LEN);
             if (lif_vlan->is_l3_proto_enabled == false) {
@@ -2449,8 +2490,11 @@ void recover_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir, ui
             }
 
             /* Refresh link local address according the new MAC */
-            iccp_netlink_if_shutdown_set(lif_vlan->ifindex);
-            iccp_netlink_if_startup_set(lif_vlan->ifindex);
+            if(iccp_netlink_if_admin_get(lif_vlan->ifindex))
+            {
+                iccp_netlink_if_shutdown_set(lif_vlan->ifindex);
+                iccp_netlink_if_startup_set(lif_vlan->ifindex);
+            }
 
             iccp_set_interface_ipadd_mac(lif_vlan, macaddr);
             memcpy(lif_vlan->l3_mac_addr, system_mac, ETHER_ADDR_LEN);
