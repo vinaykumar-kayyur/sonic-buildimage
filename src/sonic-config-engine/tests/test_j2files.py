@@ -112,7 +112,7 @@ class TestJ2Files(TestCase):
         os.remove(qos_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', expected)
-        assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
+        assert filecmp.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def test_qos_arista7050_render_template(self):
         self._test_qos_render_template('arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S', 'sample-arista-7050-t0-minigraph.xml', 'qos-arista7050.json')
