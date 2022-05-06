@@ -96,7 +96,7 @@ class TestJ2Files(TestCase):
 
     def _test_qos_render_template(self, vendor, platform, sku, minigraph, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
-        qos_file = os.path.join(dir_path, 'qos_json.j2')
+        qos_file = os.path.join(dir_path, 'qos.json.j2')
         port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
 
         # copy qos_config.j2 to the SKU directory to have all templates in one directory
