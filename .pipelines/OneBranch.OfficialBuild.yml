@@ -163,10 +163,10 @@ stages:
             PORT=443
             DOCKERS=$(ls target/docker-*.gz)
             BRANCH=$(Build.SourceBranchName)
+            [[ "$BRANCH" == "internal" ]] && BRANCH="$BRANCH latest"
             for f in $DOCKERS; do
               echo $f
-              ./push_docker.sh $f $REGISTRY_SERVER_INTERNAL $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" $SONIC_VERSION $BRANCH
-              ./push_docker.sh $f $REGISTRY_SERVER_INTERNAL $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" latest $BRANCH
+              ./push_docker.sh $f $REGISTRY_SERVER_INTERNAL $PORT $REGISTRY_USERNAME "$REGISTRY_PASSWD" "$SONIC_VERSION $BRANCH"
             done
           env:
             REGISTRY_PASSWD: $(REGISTRY_PASSWD)
