@@ -28,7 +28,7 @@ $(eval $(call add_derived_package,$(LM_SENSORS),$(LIBSENSORS_DEV)))
 
 SENSORD = sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(SENSORD)))
-$(SENSORD)_DEPENDS += $(LIBSENSORS) $(LM_SENSORS)
+$(SENSORD)_DEPENDS += $(LIBSENSORS) $(LM_SENSORS) $(LIBSENSORS_DEV)
 
 SENSORD_DBG = sensord-dbgsym_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(SENSORD_DBG)))
