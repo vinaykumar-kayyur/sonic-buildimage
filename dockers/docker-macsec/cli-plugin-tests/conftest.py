@@ -2,6 +2,7 @@ import pytest
 import mock_tables # lgtm [py/unused-import]
 from unittest import mock
 
+
 @pytest.fixture()
 def mock_cfgdb():
     cfgdb = mock.Mock()
@@ -31,3 +32,6 @@ def mock_cfgdb():
 
     yield cfgdb
 
+
+# @pytest.fixture()
+# def mock_():

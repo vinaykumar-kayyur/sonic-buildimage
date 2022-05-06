@@ -1,5 +1,4 @@
 import sys
-import traceback
 
 from unittest import mock
 from click.testing import CliRunner
