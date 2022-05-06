@@ -31,7 +31,3 @@ def mock_cfgdb():
     cfgdb.get_keys = mock.Mock(side_effect=get_keys)
 
     yield cfgdb
-
-
-# @pytest.fixture()
-# def mock_():
