@@ -210,6 +210,14 @@
 {% endif %}
 {% if asic_type in pfc_to_pg_map_supported_asics  %}
     "PFC_PRIORITY_TO_PRIORITY_GROUP_MAP": {
+{% if port_names_list_extra_queues|length > 0 %}
+        "AZURE_DUALTOR": {
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "6": "6"
+        },
+{% endif %}
         "AZURE": {
             "3": "3",
             "4": "4"
@@ -235,7 +243,11 @@
             "tc_to_pg_map"    : "AZURE",
             "pfc_to_queue_map": "AZURE",
 {% if asic_type in pfc_to_pg_map_supported_asics %}
+{% if port in port_names_list_extra_queues %}
+            "pfc_to_pg_map"   : "AZURE_DUALTOR",
+{% else %}
             "pfc_to_pg_map"   : "AZURE",
+{% endif %}
 {% endif %}
 {% if port in port_names_list_extra_queues %}
             "pfc_enable"      : "2,3,4,6",
