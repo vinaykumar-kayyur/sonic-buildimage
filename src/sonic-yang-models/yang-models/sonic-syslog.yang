@@ -48,7 +48,7 @@ module sonic-syslog {
                 }
 
                 leaf port {
-                    description "Syslog server port";
+                    description "Syslog server UDP port";
                     type uint16;
                 }
 
@@ -60,7 +60,6 @@ module sonic-syslog {
                         }
                         type vrf-device;
                     }
-                    default "default";
                 }
 
             }
