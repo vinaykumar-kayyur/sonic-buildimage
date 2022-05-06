@@ -3,9 +3,9 @@
 . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
 
 VERSION_FILE="$BUILDINFO_PATH/versions/versions-py3"
-REAL_COMMAND=$(get_command pip3)
+REAL_COMMAND=$(get_command python3)
 if [ ! -x "$REAL_COMMAND" ]; then
-    echo "The command pip3 not found" 1>&2
+    echo "The command python3 not found" 1>&2
     exit 1
 fi
 
@@ -14,4 +14,4 @@ if [ "$SKIP_BUILD_HOOK" == y ]; then
     exit $?
 fi
 
-PIP_VERSION_FILE=$VERSION_FILE ENABLE_VERSION_CONTROL_PY=$ENABLE_VERSION_CONTROL_PY3 REAL_COMMAND=$REAL_COMMAND run_pip_command "$@"
+PIP_VERSION_FILE=$VERSION_FILE ENABLE_VERSION_CONTROL_PY=$ENABLE_VERSION_CONTROL_PY3 REAL_COMMAND=$REAL_COMMAND run_python_command "$@"

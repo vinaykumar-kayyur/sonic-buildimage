@@ -10,4 +10,9 @@ if [ ! -x "$REAL_COMMAND" ]; then
     exit 1
 fi
 
+if [ "$SKIP_BUILD_HOOK" == y ]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
 PIP_VERSION_FILE=$VERSION_FILE ENABLE_VERSION_CONTROL_PY=$ENABLE_VERSION_CONTROL_PY2 REAL_COMMAND=$REAL_COMMAND run_pip_command "$@"

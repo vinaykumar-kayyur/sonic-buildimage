@@ -39,8 +39,9 @@ ifeq ($(NOBUSTER), 0)
 endif
 ifeq ($(NOBULLSEYE), 0)
 	BLDENV=bullseye make -f Makefile.work $@
+else
+	make -f Makefile.work $@
 endif
-	BLDENV=bullseye make -f Makefile.work docker-cleanup
 
 jessie:
 	@echo "+++ Making $@ +++"

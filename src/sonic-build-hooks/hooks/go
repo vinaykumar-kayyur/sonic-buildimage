@@ -1,0 +1,51 @@
+#!/bin/bash
+
+. /usr/local/share/buildinfo/scripts/buildinfo_base.sh
+#[ -z $REAL_COMMAND ] && REAL_COMMAND=$(get_command go)
+[ -z $REAL_COMMAND ] && REAL_COMMAND=/usr/local/go/bin/go
+if [ -z "$REAL_COMMAND" ]; then
+    echo "The command go does not exist." 1>&2
+    exit 1
+fi
+
+if [ "$SKIP_BUILD_HOOK" == y ]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
+if [ ! -z "$(get_version_cache_option)" ]; then
+	GOFILE=${PWD}/go.mod
+	if [ -f ${GOFILE} ]; then 
+
+		SHAVAL=$(cat ${GOFILE} | sha1sum | awk '{print substr($1,0,11);}' )
+		GO_CACHE_PATH=${PKG_CACHE_PATH}/go/${SHAVAL}
+		export GO=${REAL_COMMAND}
+
+		EXT_PATH=${GOPATH##*/}
+		if [[ "${SHAVAL}" != "${EXT_PATH}" ]]; then
+			if [[ -e ${GO_CACHE_PATH}  && ! -z ${GOPATH} && ! -e ${GOPATH}/${SHAVAL} ]]; then
+				FLOCK ${GO_CACHE_PATH}
+				rsync -avzh --ignore-errors ${GO_CACHE_PATH} ${GOPATH}/  &>/dev/null
+				chmod -f -R 777 ${GOPATH}/${SHAVAL}
+				touch ${GOPATH}/${SHAVAL}
+				FUNLOCK ${GO_CACHE_PATH}
+			fi
+			export GOPATH=${GOPATH}/${SHAVAL}
+		fi
+		GOPATH=${GOPATH} GO=${REAL_COMMAND} ${REAL_COMMAND} "$@"
+
+		if [[ $2 == "vendor" && ! -e ${GO_CACHE_PATH} && -e ${GOPATH}/../${SHAVAL} ]]; then
+			mkdir -p ${GO_CACHE_PATH}
+			chmod -f 777 ${PKG_CACHE_PATH}/go
+			FLOCK ${GO_CACHE_PATH}
+			rsync -avzh --ignore-errors ${GOPATH}/ ${GO_CACHE_PATH} &>/dev/null
+			[ ! -z ${GO_CACHE_PATH} ] && chmod -f -R 777 ${GO_CACHE_PATH}
+			FUNLOCK ${GO_CACHE_PATH}
+		fi
+
+	else
+		GOPATH=${GOPATH} GO=${REAL_COMMAND} ${REAL_COMMAND} "$@"
+	fi
+else
+	GOPATH=${GOPATH} ${REAL_COMMAND} "$@"
+fi

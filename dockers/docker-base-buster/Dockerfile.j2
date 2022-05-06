@@ -39,7 +39,7 @@ COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 
 # Update apt cache and
 # pre-install fundamental packages
-RUN apt-get update &&        \
+RUN FORCE_UPDATE=Y apt-get update &&        \
     apt-get -y install       \
         curl                 \
         less                 \
