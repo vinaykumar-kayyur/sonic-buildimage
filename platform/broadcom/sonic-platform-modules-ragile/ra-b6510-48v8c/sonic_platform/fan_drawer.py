@@ -1,8 +1,5 @@
 #
-# fan_drawer_base.py
-#
-# Abstract base class for implementing a platform-specific class with which
-# to interact with a fan drawer module in SONiC
+# fan_drawer
 #
 
 try:
@@ -12,9 +9,6 @@ except ImportError as e:
 
 
 class FanDrawer(FanDrawerBase):
-    """
-    Abstract base class for interfacing with a fan drawer
-    """
     # Device type definition. Note, this is a constant.
     DEVICE_TYPE = "fan_drawer"
 
@@ -31,7 +25,7 @@ class FanDrawer(FanDrawerBase):
             string: The name of the device
         """
 
-        return "fan {}".format(self._index)
+        return "fan drawer {}".format(self._index)
 
     def get_num_fans(self):
         """
@@ -59,13 +53,17 @@ class FanDrawer(FanDrawerBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        return self._fan_list[self._index].set_status_led(color)
+        if self.get_num_fans() > 0:
+            return self._fan_list[0].set_status_led(color)
+        return False
 
-    def get_status_led(self, color):
+    def get_status_led(self):
         """
         Gets the state of the fan drawer LED
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        return self._fan_list[self._index].get_status_led(color)
+        if self.get_num_fans() > 0:
+            return self._fan_list[0].get_status_led()
+        return "N/A"
 
