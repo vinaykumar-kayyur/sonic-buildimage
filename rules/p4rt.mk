@@ -17,4 +17,4 @@ export SONIC_P4RT SONIC_P4RT_DBG SONIC_P4RT_VERSION
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
-DBG_SRC_ARCHIVE += sonic-p4rt
+#DBG_SRC_ARCHIVE += sonic-p4rt
