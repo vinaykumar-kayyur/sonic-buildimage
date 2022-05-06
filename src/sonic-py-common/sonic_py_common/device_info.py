@@ -492,7 +492,7 @@ def get_all_namespaces(config_db=None):
             namespace = "{}{}".format(NPU_NAME_PREFIX, npu)
             # TODO: enforce caller to provide config_db explicitly and remove its default value
             if not config_db:
-                config_db = ConfigDBConnector()
+                config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
                 config_db.connect()
 
             metadata = config_db.get_table('DEVICE_METADATA')
