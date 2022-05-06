@@ -76,6 +76,7 @@ $RepeatedMsgReduction on
 # The omfwd plug-in provides the core functionality of traditional message forwarding via UDP and plain TCP.
 # It is a built-in module that does not need to be loaded.
 
+{% if SYSLOG_SERVER is defined %}
 {% for server, data in SYSLOG_SERVER.items() %}
 {% set params_list = [] %}
 {% if 'source' in data %}
@@ -89,3 +90,4 @@ $RepeatedMsgReduction on
 {% endif %}
 *.* action(type="omfwd" target="{{ server }}" protocol="udp" {{ params_list|join(' ') }})
 {% endfor %}
+{% endif %}
