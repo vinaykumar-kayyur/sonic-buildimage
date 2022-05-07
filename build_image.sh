@@ -200,6 +200,11 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     generate_device_list ".platforms_asic"
     zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
 
+    echo "sonic_fips=0" > kernel-cmdline
+    [ "$ENABLE_FIPS" == "y" ] && echo "sonic_fips=1" > kernel-cmdline
+    zip -g $OLDPWD/$OUTPUT_ABOOT_IMAGE kernel-cmdline
+    rm kernel-cmdline
+
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE
     if [ "$SONIC_ENABLE_IMAGE_SIGNATURE" = "y" ]; then
