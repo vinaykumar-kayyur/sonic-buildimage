@@ -365,7 +365,9 @@ class TestCfgGenCaseInsensitive(TestCase):
             'Ethernet8': {
                 'state': 'auto',
                 'server_ipv4': '10.10.10.2/32',
-                'server_ipv6': 'fe80::2/128'
+                'server_ipv6': 'fe80::2/128',
+                'soc_ipv4': '10.10.10.3/32',
+                'cable_type': 'active-active'
             }
         }
 
