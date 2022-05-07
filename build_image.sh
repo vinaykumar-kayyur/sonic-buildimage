@@ -202,7 +202,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
 
     echo "sonic_fips=0" > kernel-cmdline
     [ "$ENABLE_FIPS" == "y" ] && echo "sonic_fips=1" > kernel-cmdline
-    zip -g $OLDPWD/$OUTPUT_ABOOT_IMAGE kernel-cmdline
+    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline
     rm kernel-cmdline
 
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
