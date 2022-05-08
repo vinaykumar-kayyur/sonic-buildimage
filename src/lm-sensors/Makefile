@@ -9,7 +9,6 @@ DERIVED_TARGETS = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb \
 				  sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 				  $(LM_SENSORS_DBG) \
 				  $(LIBSENSORS_DBG) \
-				  $(LIBSENSORS_DEV) \
 				  $(SENSORD_DBG)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
