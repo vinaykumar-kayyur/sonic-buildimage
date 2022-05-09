@@ -60,16 +60,17 @@ def limit_execution_time(execution_time_secs: int):
     def wrapper(func):
         @wraps(func)
         def execution_func(*args, **kwargs):
-            def handler():
-                raise
+            def handler(sig, frame):
+                if sigalrm_handler:
+                    sigalrm_handler(sig, frame)
+                raise Exception("Canceling {}() execution...".format(func.__name__))
 
+            sigalrm_handler = signal.getsignal(signal.SIGALRM)
             signal.signal(signal.SIGALRM, handler)
             signal.alarm(execution_time_secs)
             result = None
             try:
                 result = func(*args, **kwargs)
-            except Exception:
-                raise
             finally:
                 signal.alarm(0)
 
