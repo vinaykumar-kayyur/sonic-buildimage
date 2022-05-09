@@ -10,8 +10,7 @@ from swsscommon import swsscommon
 from parameterized import parameterized
 from unittest import TestCase, mock
 from tests.hostcfgd.test_tacacs_vectors import HOSTCFGD_TEST_TACACS_VECTOR
-from tests.common.mock_configdb import MockConfigDb, MockSubscriberStateTable
-from tests.common.mock_configdb import MockSelect, MockDBConnector
+from tests.common.mock_configdb import MockConfigDb, MockDBConnector
 
 test_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 modules_path = os.path.dirname(test_path)
@@ -32,9 +31,8 @@ sys.modules['hostcfgd'] = hostcfgd
 
 # Mock swsscommon classes
 hostcfgd.ConfigDBConnector = MockConfigDb
-hostcfgd.SubscriberStateTable = MockSubscriberStateTable
-hostcfgd.Select = MockSelect
 hostcfgd.DBConnector = MockDBConnector
+hostcfgd.Table = mock.Mock()
 
 class TestHostcfgdTACACS(TestCase):
     """
@@ -44,7 +42,7 @@ class TestHostcfgdTACACS(TestCase):
         return subprocess.check_output('diff -uR {} {} || true'.format(file1, file2), shell=True)
 
     """
-        Check different config 
+        Check different config
     """
     def check_config(self, test_name, test_data, config_name):
         t_path = templates_path

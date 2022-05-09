@@ -1,4 +1,4 @@
-FROM docker-config-engine-buster
+FROM docker-config-engine-buster-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
 
-RUN apt-get install -f -y iproute2 libcap2-bin libprotobuf-dev
+RUN apt-get install -f -y iproute2 libcap2-bin
 
 COPY \
 {% for deb in docker_gbsyncd_credo_debs.split(' ') -%}

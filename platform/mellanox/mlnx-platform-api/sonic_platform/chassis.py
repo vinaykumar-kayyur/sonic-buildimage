@@ -63,7 +63,6 @@ REBOOT_CAUSE_FILE_LENGTH = 1
 # Global logger class instance
 logger = Logger()
 
-
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
@@ -75,7 +74,7 @@ class Chassis(ChassisBase):
 
         # Initialize DMI data
         self.dmi_data = None
-        
+
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         #
@@ -116,7 +115,7 @@ class Chassis(ChassisBase):
 
         if SFP.shared_sdk_handle:
             deinitialize_sdk_handle(SFP.shared_sdk_handle)
-        
+
     ##############################################
     # PSU methods
     ##############################################
@@ -239,7 +238,7 @@ class Chassis(ChassisBase):
         if index < sfp_count:
             if not self._sfp_list:
                 self._sfp_list = [None] * sfp_count
-            
+
             if not self._sfp_list[index]:
                 from .sfp import SFP
                 self._sfp_list[index] = SFP(index)
@@ -296,7 +295,7 @@ class Chassis(ChassisBase):
         index = index - 1
         self.initialize_single_sfp(index)
         return super(Chassis, self).get_sfp(index)
-        
+
     def get_change_event(self, timeout=0):
         """
         Returns a nested dictionary containing all devices which have
@@ -311,7 +310,7 @@ class Chassis(ChassisBase):
                 - True if call successful, False if not;
                 - A nested dictionary where key is a device type,
                   value is a dictionary with key:value pairs in the format of
-                  {'device_id':'device_event'}, 
+                  {'device_id':'device_event'},
                   where device_id is the device ID for this device and
                         device_event,
                              status='1' represents device inserted,
@@ -597,7 +596,7 @@ class Chassis(ChassisBase):
         Note:
             We overload this method to ensure that watchdog is only initialized
             when it is referenced. Currently, only one daemon can open the watchdog.
-            To initialize watchdog in the constructor causes multiple daemon 
+            To initialize watchdog in the constructor causes multiple daemon
             try opening watchdog when loading and constructing a chassis object
             and fail. By doing so we can eliminate that risk.
         """
@@ -610,11 +609,11 @@ class Chassis(ChassisBase):
 
         return self._watchdog
 
-    
+
     def get_revision(self):
         """
         Retrieves the hardware revision of the device
-        
+
         Returns:
             string: Revision value of device
         """
@@ -648,7 +647,7 @@ class Chassis(ChassisBase):
 
     def _verify_reboot_cause(self, filename):
         '''
-        Open and read the reboot cause file in 
+        Open and read the reboot cause file in
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
@@ -658,24 +657,23 @@ class Chassis(ChassisBase):
         self.reboot_major_cause_dict = {
             'reset_main_pwr_fail'       :   self.REBOOT_CAUSE_POWER_LOSS,
             'reset_aux_pwr_or_ref'      :   self.REBOOT_CAUSE_POWER_LOSS,
+            'reset_comex_pwr_fail'      :   self.REBOOT_CAUSE_POWER_LOSS,
             'reset_asic_thermal'        :   self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC,
+            'reset_comex_thermal'       :   self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU,
             'reset_hotswap_or_wd'       :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_comex_wd'            :   self.REBOOT_CAUSE_WATCHDOG,
             'reset_swb_wd'              :   self.REBOOT_CAUSE_WATCHDOG,
-            'reset_sff_wd'              :   self.REBOOT_CAUSE_WATCHDOG
+            'reset_sff_wd'              :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_hotswap_or_halt'     :   self.REBOOT_CAUSE_HARDWARE_OTHER,
+            'reset_voltmon_upgrade_fail':   self.REBOOT_CAUSE_HARDWARE_OTHER,
+            'reset_reload_bios'         :   self.REBOOT_CAUSE_HARDWARE_BIOS,
+            'reset_from_comex'          :   self.REBOOT_CAUSE_HARDWARE_CPU,
+            'reset_fw_reset'            :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
+            'reset_from_asic'           :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
+            'reset_long_pb'             :   self.REBOOT_CAUSE_HARDWARE_BUTTON,
+            'reset_short_pb'            :   self.REBOOT_CAUSE_HARDWARE_BUTTON
         }
-        self.reboot_minor_cause_dict = {
-            'reset_fw_reset'            :   "Reset by ASIC firmware",
-            'reset_long_pb'             :   "Reset by long press on power button",
-            'reset_short_pb'            :   "Reset by short press on power button",
-            'reset_comex_thermal'       :   "ComEx thermal shutdown",
-            'reset_comex_pwr_fail'      :   "ComEx power fail",
-            'reset_comex_wd'            :   "Reset requested from ComEx",
-            'reset_from_asic'           :   "Reset requested from ASIC",
-            'reset_reload_bios'         :   "Reset caused by BIOS reload",
-            'reset_hotswap_or_halt'     :   "Reset caused by hotswap or halt",
-            'reset_from_comex'          :   "Reset from ComEx",
-            'reset_voltmon_upgrade_fail':   "Reset due to voltage monitor devices upgrade failure"
-        }
+        self.reboot_minor_cause_dict = {}
         self.reboot_by_software = 'reset_sw_reset'
         self.reboot_cause_initialized = True
 
@@ -755,7 +753,7 @@ class ModularChassis(Chassis):
         if index < count:
             if not self._module_list:
                 self._module_list = [None] * count
-            
+
             if not self._module_list[index]:
                 from .module import Module
                 self._module_list[index] = Module(index + 1)

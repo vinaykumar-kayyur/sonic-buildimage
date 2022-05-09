@@ -351,7 +351,9 @@ extract_image() {
     unzip -oq "$swipath" -x boot0 "$dockerfs" -d "$image_path"
 
     ## detect rootfs type
-    rootfs_type=`grep " $target_path " /proc/mounts | cut -d' ' -f3`
+    local mountstr="$(grep " $target_path " /proc/mounts)"
+    local rootdev="$(echo $mountstr | cut -f1 -d' ')"
+    rootfs_type="$(echo $mountstr | cut -d' ' -f3)"
 
     info "Extracting $dockerfs from swi"
     ## Unpacking dockerfs delayed
@@ -505,6 +507,10 @@ write_platform_specific_cmdline() {
     if [ "$sid" = "MineralD" ]; then
         aboot_machine=arista_7170_32cd
         flash_size=28000
+        cmdline_add hugepages=128
+    fi
+    if [ "$sid" = "Woodleaf" ]; then
+        aboot_machine=arista_7170b_64c
         cmdline_add hugepages=128
     fi
     if [ "$sid" = "Lodoga" ]; then

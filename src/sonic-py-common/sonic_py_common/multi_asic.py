@@ -5,11 +5,8 @@ import subprocess
 from natsort import natsorted
 from swsscommon import swsscommon
 
-from .device_info import CONTAINER_PLATFORM_PATH
-from .device_info import HOST_DEVICE_PATH
-from .device_info import get_platform
-from .device_info import is_supervisor
-from .device_info import is_chassis
+from .device_info import get_asic_conf_file_path
+from .device_info import is_supervisor, is_chassis
 
 ASIC_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
@@ -26,6 +23,10 @@ NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 
+
+# Dictionary to cache config_db connection handle per namespace
+# to prevent duplicate connections from being opened
+config_db_handle = {}
 
 def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
     """
@@ -73,32 +74,6 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     for db_id in db_list:
         db.connect(db_id)
     return db
-
-
-def get_asic_conf_file_path():
-    """
-    Retrieves the path to the ASIC conguration file on the device
-
-    Returns:
-        A string containing the path to the ASIC conguration file on success,
-        None on failure
-    """
-    asic_conf_path_candidates = []
-
-    asic_conf_path_candidates.append(os.path.join(CONTAINER_PLATFORM_PATH,
-                                                  ASIC_CONF_FILENAME))
-
-    platform = get_platform()
-    if platform:
-        asic_conf_path_candidates.append(os.path.join(
-            HOST_DEVICE_PATH, platform, ASIC_CONF_FILENAME))
-
-    for asic_conf_file_path in asic_conf_path_candidates:
-        if os.path.isfile(asic_conf_file_path):
-            return asic_conf_file_path
-
-    return None
-
 
 def get_num_asics():
     """
@@ -237,7 +212,9 @@ def get_all_namespaces():
     if is_multi_asic():
         for asic in range(num_asics):
             namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
-            config_db = connect_config_db_for_ns(namespace)
+            if namespace not in config_db_handle:
+                config_db_handle[namespace] =  connect_config_db_for_ns(namespace)
+            config_db = config_db_handle[namespace]
 
             metadata = config_db.get_table('DEVICE_METADATA')
             if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
