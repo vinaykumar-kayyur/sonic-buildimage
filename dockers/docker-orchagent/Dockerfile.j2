@@ -26,7 +26,6 @@ RUN apt-get update &&       \
 
 {% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
 # Fix for gcc/python/iputils-ping not found in arm docker
-RUN apt-get install -f -y python2.7 python2.7-dev
 RUN apt-get install -y   \
         gcc              \
         iputils-ping
