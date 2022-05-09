@@ -477,9 +477,6 @@ if [ "$install_env" = "onie" ]; then
     # Make filesystem
     mkfs.ext4 -L $demo_volume_label $demo_dev
 
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
-
     # Mount demo filesystem
     demo_mnt=$(${onie_bin} mktemp -d) || {
         echo "Error: Unable to create file system mount point"
@@ -512,19 +509,11 @@ elif [ "$install_env" = "sonic" ]; then
             rm -rf $f
         fi
     done
-
-    demo_dev=$(findmnt -n -o SOURCE --target /host)
-
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
 else
     demo_mnt="build_raw_image_mnt"
     demo_dev=$cur_wd/"%%OUTPUT_RAW_IMAGE%%"
 
     mkfs.ext4 -L $demo_volume_label $demo_dev
-
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
 
     echo "Mounting $demo_dev on $demo_mnt..."
     mkdir $demo_mnt
@@ -676,6 +665,11 @@ else # install_env = "onie"
         grub_cfg_root=UUID=$uuid
     fi
 fi
+
+# Add extra linux command line
+extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
+GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX $extra_cmdline_linux"
 
 cat <<EOF >> $grub_cfg
 menuentry '$demo_grub_entry' {
