@@ -333,6 +333,7 @@
         </ManagementAddressV6>
         <SerialNumber i:nil="true" />
         <Hostname>server1-SC</Hostname>
+        <HwSku>smartcable-sku</HwSku>
       </Device>
       <Device i:type="Server">
         <ElementType>Server</ElementType>
@@ -365,6 +366,7 @@
         </ManagementAddressV6>
         <SerialNumber i:nil="true" />
         <Hostname>server2-SC</Hostname>
+        <HwSku>smartcable-sku</HwSku>
       </Device>
       <Device i:type="Server">
         <ElementType>Server</ElementType>
