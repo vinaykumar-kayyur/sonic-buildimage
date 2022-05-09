@@ -12,7 +12,7 @@ from swsscommon.swsscommon import SonicV2Connector
 DHCPv6_COUNTER_TABLE = 'DHCPv6_COUNTER_TABLE'
 
 # DHCPv6 Counter Messages
-messages = ["Unknown", "Solicit", "Advertise", "Request", "Confirm", "Renew", "Rebind", "Reply", "Release", "Decline", "Relay-Forward", "Relay-Reply"]
+messages = ["Unknown", "Solicit", "Advertise", "Request", "Confirm", "Renew", "Rebind", "Reply", "Release", "Decline", "Relay-Forward", "Relay-Reply", "Malformed"]
 
 # DHCP_RELAY Config Table
 DHCP_RELAY = 'DHCP_RELAY'
@@ -26,9 +26,8 @@ def get_dhcp_helper_address(ctx, vlan):
         return ""
 
     dhcp_helpers = vlan_config.get('dhcp_servers', [])
-    dhcpv6_helpers = vlan_config.get('dhcpv6_servers', [])
 
-    return '\n'.join(natsorted(dhcp_helpers) + natsorted(dhcpv6_helpers))
+    return '\n'.join(natsorted(dhcp_helpers))
 
 
 vlan.VlanBrief.register_column('DHCP Helper Address', get_dhcp_helper_address)

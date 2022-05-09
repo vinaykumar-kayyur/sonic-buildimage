@@ -20,6 +20,19 @@ Type_1_list_maps_model = [
     'CABLE_LENGTH_LIST'
 ]
 
+# Workaround for those fields who is defined as leaf-list in YANG model but have string value in config DB.
+# Dictinary structure key = (<table_name>, <field_name>), value = seperator
+LEAF_LIST_WITH_STRING_VALUE_DICT = {
+    ('MIRROR_SESSION', 'src_ip'): ',',
+    ('NTP', 'src_intf'): ';',
+    ('BGP_ALLOWED_PREFIXES', 'prefixes_v4'): ',',
+    ('BGP_ALLOWED_PREFIXES', 'prefixes_v6'): ',',
+    ('BUFFER_PORT_EGRESS_PROFILE_LIST', 'profile_list'): ',',
+    ('BUFFER_PORT_INGRESS_PROFILE_LIST', 'profile_list'): ',',
+    ('PORT', 'adv_speeds'): ',',
+    ('PORT', 'adv_interface_types'): ',',
+}
+
 """
 This is the Exception thrown out of all public function of this class.
 """
@@ -49,7 +62,7 @@ class SonicYangExtMixin:
             self.yangFiles = [f.split('/')[-1] for f in self.yangFiles]
             self.yangFiles = [f.split('.')[0] for f in self.yangFiles]
             self.sysLog(syslog.LOG_DEBUG,'Loaded below Yang Models')
-            self.sysLog(syslog.LOG_DEBUG,self.yangFiles)
+            self.sysLog(syslog.LOG_DEBUG,str(self.yangFiles))
 
             # load json for each yang model
             self._loadJsonYangModel()
@@ -330,11 +343,11 @@ class SonicYangExtMixin:
                 # Assume ':'  means reference to another module
                 if ':' in uses['@name']:
                     prefix = uses['@name'].split(':')[0].strip()
-                    uses_module = self._findYangModuleFromPrefix(prefix, table_module)
+                    uses_module_name = self._findYangModuleFromPrefix(prefix, table_module)
                 else:
-                    uses_module = table_module
+                    uses_module_name = table_module['@name']
                 grouping = uses['@name'].split(':')[-1].strip()
-                leafs = self.preProcessedYang['grouping'][uses_module][grouping]
+                leafs = self.preProcessedYang['grouping'][uses_module_name][grouping]
                 self._fillLeafDict(leafs, leafDict)
         except Exception as e:
             self.sysLog(msg="_fillLeafDictUses failed:{}".format(str(e)), \
@@ -407,6 +420,11 @@ class SonicYangExtMixin:
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
             vValue = list()
+            if isinstance(value, str) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                # For field defined as leaf-list but has string value in CONFIG DB, need do special handling here. For exampe:
+                # port.adv_speeds in CONFIG DB has value "100,1000,10000", it shall be transferred to [100,1000,10000] as YANG value here to 
+                # make it align with its YANG definition.
+                value = (x.strip() for x in value.split(LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])]))
             for v in value:
                 vValue.append(_yangConvert(v))
         else:
@@ -545,6 +563,7 @@ class SonicYangExtMixin:
         primaryKeys = list(config.keys())
         for pkey in primaryKeys:
             try:
+                self.elementPath.append(pkey)
                 vKey = None
                 self.sysLog(syslog.LOG_DEBUG, "xlateList Extract pkey:{}".\
                     format(pkey))
@@ -552,9 +571,13 @@ class SonicYangExtMixin:
                 keyDict = self._extractKey(pkey, listKeys)
                 # fill rest of the values in keyDict
                 for vKey in config[pkey]:
+                    self.elementPath.append(vKey)
                     self.sysLog(syslog.LOG_DEBUG, "xlateList vkey {}".format(vKey))
-                    keyDict[vKey] = self._findYangTypedValue(vKey, \
-                                        config[pkey][vKey], leafDict)
+                    try:
+                        keyDict[vKey] = self._findYangTypedValue(vKey, \
+                                            config[pkey][vKey], leafDict)
+                    finally:
+                        self.elementPath.pop()
                 yang.append(keyDict)
                 # delete pkey from config, done to match one key with one list
                 del config[pkey]
@@ -566,6 +589,8 @@ class SonicYangExtMixin:
                 exceptionList.append(str(e))
                 # with multilist, we continue matching other keys.
                 continue
+            finally:
+                self.elementPath.pop()
 
         return
 
@@ -591,18 +616,27 @@ class SonicYangExtMixin:
     """
     def _xlateContainerInContainer(self, model, yang, configC, table):
         ccontainer = model
-        #print(ccontainer['@name'])
-        yang[ccontainer['@name']] = dict()
-        if not configC.get(ccontainer['@name']):
+        ccName = ccontainer['@name']
+        yang[ccName] = dict()
+        if ccName not in configC:
+            # Inner container doesn't exist in config
             return
-        self.sysLog(msg="xlateProcessListOfContainer: {}".format(ccontainer['@name']))
-        self._xlateContainer(ccontainer, yang[ccontainer['@name']], \
-        configC[ccontainer['@name']], table)
+
+        if len(configC[ccName]) == 0:
+            # Empty container, clean config and return
+            del configC[ccName]
+            return
+        self.sysLog(msg="xlateProcessListOfContainer: {}".format(ccName))
+        self.elementPath.append(ccName)
+        self._xlateContainer(ccontainer, yang[ccName], \
+        configC[ccName], table)
+        self.elementPath.pop()
+
         # clean empty container
-        if len(yang[ccontainer['@name']]) == 0:
-            del yang[ccontainer['@name']]
+        if len(yang[ccName]) == 0:
+            del yang[ccName]
         # remove copy after processing
-        del configC[ccontainer['@name']]
+        del configC[ccName]
 
         return
 
@@ -645,8 +679,10 @@ class SonicYangExtMixin:
         for vKey in vKeys:
             #vkey must be a leaf\leaf-list\choice in container
             if leafDict.get(vKey):
+                self.elementPath.append(vKey)
                 self.sysLog(syslog.LOG_DEBUG, "xlateContainer vkey {}".format(vKey))
                 yang[vKey] = self._findYangTypedValue(vKey, configC[vKey], leafDict)
+                self.elementPath.pop()
                 # delete entry from copy of config
                 del configC[vKey]
 
@@ -656,8 +692,8 @@ class SonicYangExtMixin:
                 configC.keys()), debug=syslog.LOG_ERR, doPrint=True)
             self.sysLog(msg="exceptionList:{}".format(exceptionList), \
                 debug=syslog.LOG_ERR, doPrint=True)
-            raise(Exception("All Keys are not parsed in {}\n{}".format(table, \
-                configC.keys())))
+            raise(Exception("All Keys are not parsed in {}\n{}\nexceptionList:{}".format(table, \
+                configC.keys(), exceptionList)))
 
         return
 
@@ -676,8 +712,10 @@ class SonicYangExtMixin:
             yangJ[key] = dict() if yangJ.get(key) is None else yangJ[key]
             yangJ[key][subkey] = dict()
             self.sysLog(msg="xlateConfigDBtoYang {}:{}".format(key, subkey))
+            self.elementPath.append(table)
             self._xlateContainer(cmap['container'], yangJ[key][subkey], \
                                 jIn[table], table)
+            self.elementPath = []
 
         return
 
@@ -734,9 +772,14 @@ class SonicYangExtMixin:
 
         # if it is a leaf-list do it for each element
         if leafDict[key]['__isleafList']:
-            vValue = list()
-            for v in value:
-                vValue.append(_revYangConvert(v))
+            if isinstance(value, list) and (self.elementPath[0], self.elementPath[-1]) in LEAF_LIST_WITH_STRING_VALUE_DICT:
+                # For field defined as leaf-list but has string value in CONFIG DB, we need do special handling here:
+                # e.g. port.adv_speeds is [10,100,1000] in YANG, need to convert it into a string for CONFIG DB: "10,100,1000"
+                vValue = LEAF_LIST_WITH_STRING_VALUE_DICT[(self.elementPath[0], self.elementPath[-1])].join((_revYangConvert(x) for x in value))
+            else:
+                vValue = list()
+                for v in value:
+                    vValue.append(_revYangConvert(v))
         elif leafDict[key]['type']['@name'] == 'boolean':
             vValue = 'true' if value else 'false'
         else:
@@ -845,12 +888,16 @@ class SonicYangExtMixin:
                 # create key of config DB table
                 pkey, pkeydict = self._createKey(entry, listKeys)
                 self.sysLog(syslog.LOG_DEBUG, "revXlateList pkey:{}".format(pkey))
+                self.elementPath.append(pkey)
                 config[pkey]= dict()
                 # fill rest of the entries
                 for key in entry:
                     if key not in pkeydict:
+                        self.elementPath.append(key)
                         config[pkey][key] = self._revFindYangTypedValue(key, \
                             entry[key], leafDict)
+                        self.elementPath.pop()
+                self.elementPath.pop()
 
         return
 
@@ -874,8 +921,10 @@ class SonicYangExtMixin:
         if yang.get(modelContainer['@name']):
             config[modelContainer['@name']] = dict()
             self.sysLog(msg="revXlateContainerInContainer {}".format(modelContainer['@name']))
+            self.elementPath.append(modelContainer['@name'])
             self._revXlateContainer(modelContainer, yang[modelContainer['@name']], \
                 config[modelContainer['@name']], table)
+            self.elementPath.pop()
         return
 
     """
@@ -907,7 +956,9 @@ class SonicYangExtMixin:
             #vkey must be a leaf\leaf-list\choice in container
             if leafDict.get(vKey):
                 self.sysLog(syslog.LOG_DEBUG, "revXlateContainer vkey {}".format(vKey))
+                self.elementPath.append(vKey)
                 config[vKey] = self._revFindYangTypedValue(vKey, yang[vKey], leafDict)
+                self.elementPath.pop()
 
         return
 
@@ -935,8 +986,10 @@ class SonicYangExtMixin:
                 cDbJson[table] = dict()
                 #print(key + "--" + subkey)
                 self.sysLog(msg="revXlateYangtoConfigDB {}".format(table))
+                self.elementPath.append(table)
                 self._revXlateContainer(cmap['container'], yangJ[module_top][container], \
                     cDbJson[table], table)
+                self.elementPath = []
 
         return
 

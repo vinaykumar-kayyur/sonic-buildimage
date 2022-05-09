@@ -24,6 +24,13 @@
         "eStrKey" : "Pattern",
         "eStr": ["on|off"]
     },
+    "PORT_VALID_SPEEDS_TEST_1": {
+        "desc": "PORT_VALID_SPEEDS_TEST_1 no failure."
+    },
+    "PORT_INVALID_SPEEDS_TEST_1": {
+        "desc": "PORT_INVALID_SPEEDS_TEST_1 InvalidValue condition failure.",
+        "eStr": ["pattern", "does not satisfy"]
+    },
     "PORT_VALID_ADVSPEEDS_TEST_1": {
         "desc": "PORT_VALID_ADVSPEEDS_TEST_1 no failure."
     },
@@ -73,5 +80,13 @@
      "PORT_INVALID_MUX_CABLE_TEST": {
          "desc": "PORT_INVALID_MUX_CABLE_TEST non-boolean values, expect fail",
          "eStrKey": "InvalidValue"
+     },
+     "PORT_VALID_MULTIASIC_TEST": {
+         "desc": "PORT_VALID_MULTIASIC_TEST no failure."
+     },
+     "PORT_INVALID_MULTIASIC_TEST": {
+         "desc": "PORT_INVALID_MULTIASIC_TEST invalid role pattern, expect fail",
+         "eStrKey": "Pattern"
      }
+
 }
