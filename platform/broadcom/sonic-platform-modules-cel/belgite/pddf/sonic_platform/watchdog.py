@@ -154,16 +154,16 @@ class CpldWatchdog(WatchdogBase):
         try:
             if self.timeout != seconds:
                 self.timeout = self._settimeout(seconds)
+
             if self.armed:
                 self._keepalive()
             else:
-                self._settimeout(seconds)
                 self._enable()
                 self.armed = True
+           
             ret = self.timeout
         except IOError as e:
             pass
-
         return ret
 
     def disarm(self):

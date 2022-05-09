@@ -23,3 +23,11 @@ class FanDrawer(PddfFanDrawer):
 
     def get_status_led(self, color=None):
         return self._fan_list[0].get_status_led()
+
+    def get_serial(self):
+        serial = "Unknown"
+        return serial
+
+    def get_model(self):
+        model = "Unknown"
+        return model

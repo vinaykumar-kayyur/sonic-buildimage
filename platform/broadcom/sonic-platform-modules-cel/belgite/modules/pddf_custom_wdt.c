@@ -522,9 +522,9 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 		new_timeout = new_timeout*1000;	
 		if (watchdog_set_timeout(p, new_timeout))
 			return -EINVAL;
-		//watchdog_keepalive(p);
-		/* Fall */
-		return 0;
+		
+                val = watchdog_get_timeout(p);	
+		return put_user(val, uarg.i);
 	case WDIOC_GETTIMEOUT:
 		val = watchdog_get_timeout(p);
 		return put_user(val, uarg.i);

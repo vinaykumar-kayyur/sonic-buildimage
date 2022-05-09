@@ -115,5 +115,28 @@ class Component(ComponentBase):
         return False
 
     def update_firmware(self, image_path):
+        return False
 
+    def get_available_firmware_version(self, image_path):
+        return 'N/A'
+
+    def get_firmware_update_notification(self, image_path):
+        return "None"
+
+    def get_model(self):
+        return 'N/A'
+
+    def get_position_in_parent(self):
+        return -1
+
+    def get_presence(self):
+        return True
+ 
+    def get_serial(self):
+        return 'N/A'
+
+    def get_status(self):
+        return True
+
+    def is_replaceable(self):
         return False

@@ -49,5 +49,7 @@ class Psu(PddfPsu):
         return self.psu_index
 
     def get_revision(self):
-
         return "N/A"
+
+    def temperature(self):
+        return self.get_temperature()

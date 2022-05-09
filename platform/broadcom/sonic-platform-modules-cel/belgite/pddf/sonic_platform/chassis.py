@@ -13,12 +13,12 @@ try:
     from sonic_platform.watchdog import Watchdog
     import sys
     import subprocess
+    from sonic_py_common import device_info
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_COMPONENT = 3
 FAN_DIRECTION_FILE_PATH = "/var/fan_direction"
-
 
 class Chassis(PddfChassis):
     """
@@ -26,10 +26,12 @@ class Chassis(PddfChassis):
     """
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
+
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
         vendor_ext = self._eeprom.vendor_ext_str()
         with open(FAN_DIRECTION_FILE_PATH, "w+") as f:
             f.write(vendor_ext)
+        (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
         self.__initialize_components()
 
@@ -74,9 +76,11 @@ class Chassis(PddfChassis):
             An object derived from WatchdogBase representing the hardware
             watchdog device
         """
-        self._watchdog = Watchdog()
+        if self._watchdog is None:
+            self._watchdog = Watchdog()
 
         return self._watchdog
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
@@ -138,3 +142,21 @@ class Chassis(PddfChassis):
     def get_system_eeprom_info(self):
         return self._eeprom.system_eeprom_info()
 
+    def get_name(self):
+        return self.modelstr()
+
+    def get_model(self):
+        return self._eeprom.part_number_str()
+
+    def set_status_led(self, color):
+        color_dict = {
+            'green': "STATUS_LED_COLOR_GREEN",
+            'red': "STATUS_LED_COLOR_AMBER",
+            'amber': "STATUS_LED_COLOR_AMBER",
+            'off': "STATUS_LED_COLOR_OFF"
+        }
+        return self.set_system_led("SYS_LED", color_dict.get(color, "off"))
+
+    def get_status_led(self):
+        return self.get_system_led("SYS_LED")
+        

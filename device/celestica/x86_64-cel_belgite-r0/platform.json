@@ -21,7 +21,7 @@
             {
                 "name": "Fantray1_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -31,7 +31,7 @@
             {
                 "name": "Fantray2_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -41,7 +41,7 @@
             {
                 "name": "Fantray3_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -51,7 +51,7 @@
             {
                 "name": "Fantray1_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -61,7 +61,7 @@
             {
                 "name": "Fantray2_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -71,7 +71,7 @@
             {
                 "name": "Fantray3_1",
                 "speed": {
-                    "controllable": false
+                    "controllable": true
                 },
                 "status_led": {
                     "controllable": true,
@@ -86,8 +86,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "controllable": false
                 },
 		"max_consumed_power": false,
                 "fans": [
@@ -97,8 +96,7 @@
                             "controllable": false
                         },
                         "status_led": {
-                            "controllable": true,
-                            "colors": ["green", "amber","off"]
+                            "controllable": false
                         }
                     }
                 ]
@@ -109,8 +107,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "controllable": false
                 },
 		"max_consumed_power": false,
                 "fans": [
@@ -120,8 +117,7 @@
                             "controllable": false
                         },
                         "status_led": {
-                            "controllable": true,
-                            "colors": ["green", "amber","off"]
+                            "controllable": false
                         }
                     }
                 ]
@@ -132,8 +128,7 @@
                     "controllable": false
                 },
                 "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "controllable": false
                 },
 		"max_consumed_power": false,
                 "fans": [
@@ -143,8 +138,7 @@
                             "controllable": false
                         },
                         "status_led": {
-                            "controllable": true,
-                            "colors": ["green", "amber","off"]
+                            "controllable": false
                         }
                     }
                 ]
@@ -157,9 +151,7 @@
                     {
                         "name": "PSU1_FAN1",
                         "speed": {
-                            "controllable": true,
-			    "minimum": 25,
-			    "maximum": 100
+                            "controllable": false
                         },
                         "status_led": {
                             "controllable": false
@@ -172,6 +164,7 @@
                 "voltage_high_threshold": false,
                 "voltage_low_threshold": false,
                 "temperature": false,
+                "fans_target_speed": false,
                 "status_led": {
                     "controllable": false
                 }
@@ -182,9 +175,7 @@
                     {
                         "name": "PSU2_FAN1",
                         "speed": {
-                            "controllable": true,
-			    "minimum": 25,
-			    "maximum": 100
+                            "controllable": false
                         },
                         "status_led": {
                             "controllable": false
@@ -197,6 +188,7 @@
                 "voltage_high_threshold": false,
                 "voltage_low_threshold": false,
                 "temperature": false,
+                "fans_target_speed": false,
                 "status_led": {
                     "controllable": false
                 }
