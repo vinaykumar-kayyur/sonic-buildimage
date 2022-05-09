@@ -364,7 +364,7 @@
           <d5p1:IPPrefix>::/0</d5p1:IPPrefix>
         </ManagementAddressV6>
         <SerialNumber i:nil="true" />
-        <Hostname>server1-SC</Hostname>
+        <Hostname>server2-SC</Hostname>
       </Device>
       <Device i:type="Server">
         <ElementType>Server</ElementType>
