@@ -39,6 +39,7 @@ variables:
 - group: SONIC-BUILD-VG-1
 - name: PUBLISH_BLOB_PREFIX
   value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranchName)
+- template: .azure-pipelines/template-variables.yml@acs-buildimage
 
 stages:
 - stage: Build
