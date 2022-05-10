@@ -1,18 +1,23 @@
 #!/bin/bash
 
-parse_config(){
-    . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
-    REAL_COMMAND=$(get_command git)
+. /usr/local/share/buildinfo/scripts/buildinfo_base.sh
 
-    version_file=$VERSION_PATH/versions-git
-    new_version_file=$BUILD_VERSION_PATH/versions-git
+parse_config(){
+    [ -z $REAL_COMMAND ] && REAL_COMMAND=$(get_command git)
+
+    version_file=${GIT_VERSION_FILE}
+    new_version_file=${BUILD_GIT_VERSION_FILE}
 
     MODE_CLONE=0
+    MODE_SUBMOD=0
     # parse input parameters
     for i in "$@"
     do
         if [[ $i == "clone" ]];then
             MODE_CLONE=1
+        fi
+        if [[ $i == "--recurse-submodules" ]];then
+            MODE_SUBMOD=1
         fi
     done
 }
@@ -43,33 +48,129 @@ get_clone_path(){
     [ -z $clone_PATH ] && clone_PATH=`echo $URL | sed 's/\/$//' | awk -F/ '{print$NF}' | awk -F. '{print$1}'`
 }
 
+bfind()
+{
+    queue="$1"
+    shift
+
+    while [ -n "$queue" ]
+    do
+        echo "$queue" | xargs -I'{}' find {} -mindepth 1 -maxdepth 1 $*
+        queue=`echo "$queue" | xargs -I'{}' find {} -mindepth 1 -maxdepth 1 -type d`
+    done
+
+}
+
+git_submod_bundle(){
+    git_filename=$1
+    $REAL_COMMAND submodule foreach --recursive $REAL_COMMAND bundle create bundle.git --all
+    $REAL_COMMAND bundle create bundle.git --all
+    find . -name "bundle.git" -exec tar -uvf ${git_filename} {} \;
+}
+
+git_submod_unbundle(){
+    git_filename=$1
+    clone_path=$2
+    tar -xvf ${git_filename}
+    BUNDLE_LIST=$(bfind ./ -name "bundle.git" ) 
+    echo ${BUNDLE_LIST}
+    for bundle in ${BUNDLE_LIST}
+    do
+        DIRPATH=${clone_path}/${bundle/#.\//}
+        $REAL_COMMAND clone ${bundle} $(dirname ${DIRPATH})
+    done 
+}
+
 main(){
     parse_config "$@"
+    get_clone_path "$@"
 
-    # execute git.
-    $REAL_COMMAND "$@"
-    result=$?
+	if [[ $MODE_CLONE == 1 && $ENABLE_VERSION_CONTROL_GIT == "y" && ! -z "$(get_version_cache_option)" ]];then
+		[ -f $version_file ] && commit=`grep $URL $version_file | awk -F"==" '{print $NF}'`
+		FILE_NAME=$(echo $URL |sed 's|[:/]\+|-|g')
+		if [[ $MODE_SUBMOD == 1 ]]; then
+            GIT_FILENAME=${PKG_CACHE_PATH}/git/${FILE_NAME}-subundle-${commit}.tgz
+        else
+		GIT_FILENAME=${PKG_CACHE_PATH}/git/${FILE_NAME}-${commit}.tgz
+        fi
+		if [ ! -z ${commit} ] && [ -f ${GIT_FILENAME} ]; then
+				log_info "Loading from git cache URL:${URL}, SRC:${GIT_FILENAME}, DST:${clone_PATH}"
+                if [[ $MODE_SUBMOD == 1 ]]; then
+                    git_submod_unbundle ${GIT_FILENAME} ${clone_PATH}
+                else
+				$REAL_COMMAND clone ${GIT_FILENAME} ${clone_PATH}
+                fi
+				result=$?
+				touch ${GIT_FILENAME}
+				exit $result
+		else
+			$REAL_COMMAND "$@"
+			result=$?
+		fi
+	else
+		# execute git.
+		$REAL_COMMAND "$@"
+		result=$?
+	fi
+
+	#Return if there is any error
+	if [ ${result} -ne 0 ]; then
+		exit $result
+	fi
 
     # if sub command is not "clone", exit
     if [[ $MODE_CLONE != 1 ]];then
         exit $result
     fi
 
-    get_clone_path "$@"
+
     pushd $clone_PATH &> /dev/null
-    commit_latest=`$REAL_COMMAND log -n 1 | head -n 1| awk '{print$2}'`
-    [ -f $version_file ] && commit=`grep $URL $version_file | awk -F== '{print$2}'`
+    commit_latest=`$REAL_COMMAND rev-parse HEAD`
+    [ -f $version_file ] && commit=`grep $URL $version_file | awk -F"==" '{print$2}'`
+	[ -z ${commit} ] && commit=${commit_latest}
+
+	if [[ ! -z "$(get_version_cache_option)" ]]; then
+		FILE_NAME=$(echo $URL |sed 's|[:/]\+|-|g')
+		#Append subundle suffix
+        if [[ $MODE_SUBMOD == 1 ]]; then
+            GIT_FILENAME=${PKG_CACHE_PATH}/git/${FILE_NAME}-subundle-${commit}.tgz
+        else
+			GIT_FILENAME=${PKG_CACHE_PATH}/git/${FILE_NAME}-${commit}.tgz
+        fi
+		mkdir -p ${PKG_CACHE_PATH}/git 
+		sudo chmod 777 ${PKG_CACHE_PATH}/git
+		if [[ ! -e ${GIT_FILENAME} ]]; then
+			FLOCK ${GIT_FILENAME}
+			if [[ $MODE_SUBMOD == 1 ]]; then
+				git_submod_bundle ${GIT_FILENAME}
+			else
+				$REAL_COMMAND bundle create ${GIT_FILENAME} --all 
+			fi
+			chmod -f 777 ${GIT_FILENAME}
+			FUNLOCK ${GIT_FILENAME}
+			log_info "Saved into git cache URL:${URL}, DST:${GIT_FILENAME}, SRC:${clone_PATH}"
+			file ${GIT_FILENAME}
+		else
+			log_info "Already exists git cache URL:${URL}, DST:${GIT_FILENAME}, SRC:${clone_PATH}"
+		fi
+	fi
+
 
     # control version or record version file
     if [[ $ENABLE_VERSION_CONTROL_GIT == "y" ]];then
         # control version
-        [ -n $commit ] && echo "git reset --hard $commit" >> ${new_version_file}.log
-        [ -n $commit ] && $REAL_COMMAND reset --hard $commit &> ${new_version_file}.log
-    else
-        # record version file
-        echo "$URL==$commit_latest" >> $new_version_file
-        sort $new_version_file -o $new_version_file -u &> /dev/null
-    fi
+        if [ ! -z ${commit} ] ; then 
+			$REAL_COMMAND reset --hard ${commit} &> /dev/null
+		fi
+	fi
+
+	[ -f $new_version_file ] && new_commit=`grep "$URL==${commit}" $new_version_file | awk -F"==" '{print $NF}'`
+	if [ -z ${new_commit} ]; then
+		# record version file
+		echo "$URL==${commit}" >> $new_version_file
+		sort $new_version_file -o $new_version_file -u &> /dev/null
+	fi
+
     popd &> /dev/null
 
     exit $result

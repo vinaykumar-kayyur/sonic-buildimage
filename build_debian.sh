@@ -81,7 +81,9 @@ echo '[INFO] Build host debian base system...'
 TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT
 
 # Prepare buildinfo
-sudo scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+sudo DBGOPT="${DBGOPT}" SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
+	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+
 
 sudo chown root:root $FILESYSTEM_ROOT
 
@@ -238,7 +240,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker
 sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
                                     "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+sudo LANG=C FORCE_UPDATE=Y chroot $FILESYSTEM_ROOT apt-get update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
 
 # Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
@@ -582,7 +584,8 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 fi
 
 # Collect host image version files before cleanup
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+DBGOPT="${DBGOPT}" SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
+	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc

@@ -1,9 +1,45 @@
 #!/bin/bash
 
+IMAGENAME=$1
+
 . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
+
+set -x 
+
+[ -d $POST_VERSION_PATH ] && rm -rf $POST_VERSION_PATH
 
 # Collect the version files
 collect_version_files $POST_VERSION_PATH
+
+if [ ! -z "$(get_version_cache_option)" ]; then
+	# Skip the deletion of cache files
+	cat <<-EOF >/etc/apt/apt.conf.d/docker-clean
+	DPkg::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };
+	APT::Update::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };
+	EOF
+	tar -C ${PKG_CACHE_PATH} --exclude=cache.tgz -zcvf ${PKG_CACHE_FILE_NAME} .
+	#scp -o StrictHostKeyChecking=no -i /ssh/id_rsa -P ${CPORT} ${PKG_CACHE_FILE_NAME} ${CUSER}@172.17.0.1:/${PKG_CACHE_PATH}/
+	set +x
+	if [[ ! ${IMAGENAME} =~ host-image ]]; then
+		sleep 1;echo  -e "\n_VCSTART_"; (cat ${PKG_CACHE_FILE_NAME} | base64); echo -e "_VCEND_\n";sleep 1
+	fi
+	set -x
+
+
+	#Delete the rsync package files
+	if [[ ! ${IMAGENAME} =~ -slave- ]]; then
+		/usr/bin/apt-get purge -y --auto-remove rsync
+	fi
+fi
+
+apt-get -s clean -y
+apt-get -s autoclean -y
+apt-get -s autoremove -y
+rm -f /var/cache/apt/archives/*.deb /var/cache/apt/*.bin
+
+if [[ ! ${IMAGENAME} =~ -slave- ]]; then
+	rm -f /var/lib/apt/lists/*
+fi
 
 [ -d $BUILD_VERSION_PATH ] && [ ! -z "$(ls -A $BUILD_VERSION_PATH)" ] && cp -rf $BUILD_VERSION_PATH/* $POST_VERSION_PATH
 rm -rf $BUILD_VERSION_PATH/*

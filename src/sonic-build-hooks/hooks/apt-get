@@ -10,6 +10,12 @@ if [ -z "$REAL_COMMAND" ]; then
     exit 1
 fi
 
+if [[ "$SKIP_BUILD_HOOK" == y || ${ENABLE_VERSION_CONTROL_DEB} != y ]]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
+
 INSTALL=$(check_apt_install "$@")
 COMMAND_INFO="Locked by command: $REAL_COMMAND $@"
 if [ "$INSTALL" == y ]; then
@@ -20,11 +26,29 @@ if [ "$INSTALL" == y ]; then
     [ "$lock_result" == y ] && release_apt_installation_lock
     exit $command_result
 else
-    if [[ "$1" == "purge" || "$@" == *" purge "* ]]; then
+    if [[ "$1" == "update" || "$@" == *" update "* ]]; then
+        set -x
+        if [[ "${FORCE_UPDATE}" == Y  ]]; then
+            UPDATE=y
+        elif $(set -- /var/lib/apt/lists/*_debian_dists_${DISTRO}_InRelease; test -e "$1"); then
+            exit 0
+        else
+            UPDATE=y
+        fi
+    elif [[ "$1" == "purge" || "$@" == *" purge "* ]]; then
       # When running the purge command, collect the debian versions
       dpkg-query -W -f '${Package}==${Version}\n' >> $POST_VERSION_PATH/purge-versions-deb
       chmod a+wr $POST_VERSION_PATH/purge-versions-deb
     fi
+
     $REAL_COMMAND "$@"
+    result=$?
+    if [[ ${UPDATE} == y ]]; then
+        cp /var/lib/apt/lists/* ${PKG_CACHE_PATH}/apt/
+		set +x
+    fi
+
+    exit ${result}
+
 fi
 

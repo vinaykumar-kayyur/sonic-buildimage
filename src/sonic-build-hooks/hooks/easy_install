@@ -1,0 +1,63 @@
+#!/bin/bash
+set -x 
+
+. /usr/local/share/buildinfo/scripts/buildinfo_base.sh
+[ -z $REAL_COMMAND ] && REAL_COMMAND=$(get_command easy_install)
+if [ -z "$REAL_COMMAND" ]; then
+    echo "The command easy_install does not exist." 1>&2
+    exit 1
+fi
+
+if [ "$SKIP_BUILD_HOOK" == y ]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
+
+if [ ! -x "$REAL_COMMAND" ]; then
+	return 1
+fi
+
+parameters=("$@")
+for para in "${parameters[@]}"
+do
+	if [[ "$para" == -* ]]; then
+		continue
+	elif [[ "$para" == pip* ]]; then
+		package=${para}
+	fi
+done
+
+if [[ -f ${PIP_VERSION_FILE} ]]; then
+	package_name=$(V awk -F"==" '/'${para}'/{print $1 }' ${PIP_VERSION_FILE} )
+	package_version=$( awk -F"==" '/'${para}'/{print $2 }' ${PIP_VERSION_FILE} )
+	package="${package_name}==${package_version}"
+fi
+
+
+SHA_PIP=$(echo ${package} | sha1sum | awk '{print substr($1,0,23);}')
+PIP_CACHE_DIR=${PKG_CACHE_PATH}/pip/${package//==/-}
+
+if [ "$ENABLE_VERSION_CONTROL_PY" != "y" ]; then
+	if [[ ! -z "$(get_version_cache_option)" && -e ${PIP_CACHE_DIR} ]]; then
+		FLOCK ${PIP_CACHE_DIR}
+		PIP_FILE=$(ls ${PIP_CACHE_DIR}/pip*)
+		sudo python ${PIP_FILE}/pip install --no-index ${PIP_FILE}
+		result=$?
+		chmod -f -R 777 ${PIP_CACHE_DIR}
+		touch ${PIP_CACHE_DIR}
+		FUNLOCK ${PIP_CACHE_DIR}
+		exit ${result}
+	fi
+fi
+
+$REAL_COMMAND "$@"
+result=$?
+
+if [[ ! -z "$(get_version_cache_option)" ]]; then
+	FLOCK ${PIP_CACHE_DIR}
+	sudo /usr/local/bin/pip download -d ${PIP_CACHE_DIR}  ${package}
+	chmod -f -R 777 ${PIP_CACHE_DIR}
+	FUNLOCK ${PIP_CACHE_DIR}
+fi
+exit ${result}

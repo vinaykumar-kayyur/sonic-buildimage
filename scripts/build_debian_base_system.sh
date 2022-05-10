@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x 
+
 CONFIGURED_ARCH=$1
 IMAGE_DISTRO=$2
 FILESYSTEM_ROOT=$3
@@ -52,50 +54,70 @@ if [ "$ARCH" != "$CONFIGURED_ARCH" ] || [ "$DISTRO" != "$IMAGE_DISTRO" ]; then
     exit 1
 fi
 
-BASE_VERSIONS=files/build/versions/host-base-image/versions-deb-${IMAGE_DISTRO}
+BASE_VERSIONS=files/build/versions/host-base-image/versions-deb-${IMAGE_DISTRO}-${CONFIGURED_ARCH}
 BASEIMAGE_TARBALLPATH=$TARGET/baseimage
 BASEIMAGE_TARBALL=$(realpath -e $TARGET)/baseimage.tgz
 
-rm -rf $BASEIMAGE_TARBALLPATH $BASEIMAGE_TARBALL
+BASE_IMG_CACHE_PATH=/vcache/baseimage/
+mkdir -p ${BASE_IMG_CACHE_PATH} && chmod -f -R 777 ${BASE_IMG_CACHE_PATH}
+BASE_IMG_SHA="$(echo ${IMAGE_DISTRO}/${CONFIGURED_ARCH} | sha1sum | awk '{print substr($1,0,23);}')"
+BASE_IMG_CACHE_FILE=${BASE_IMG_CACHE_PATH}/baseimage-${BASE_IMG_SHA}.tgz
 
-ARCHIEVES=$BASEIMAGE_TARBALLPATH/var/cache/apt/archives
-APTLIST=$BASEIMAGE_TARBALLPATH/var/lib/apt/lists
-TARGET_DEBOOTSTRAP=$BASEIMAGE_TARBALLPATH/debootstrap
-APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_${DISTRO}_main_binary-${CONFIGURED_ARCH}_Packages"
-DEBPATHS=$TARGET_DEBOOTSTRAP/debpaths
-DEBOOTSTRAP_BASE=$TARGET_DEBOOTSTRAP/base
-DEBOOTSTRAP_REQUIRED=$TARGET_DEBOOTSTRAP/required
-[ -d $BASEIMAGE_TARBALLPATH ] && rm -rf $BASEIMAGE_TARBALLPATH
-mkdir -p $ARCHIEVES
-mkdir -p $APTLIST
-mkdir -p $TARGET_DEBOOTSTRAP
-PACKAGES=$(sed -E 's/=(=[^=]*)$/\1/' $BASE_VERSIONS)
-URL_ARR=$(apt-get download --print-uris $PACKAGES | cut -d" " -f1 | tr -d "'")
-PACKAGE_ARR=($PACKAGES)
-LENGTH=${#PACKAGE_ARR[@]}
-for ((i=0;i<LENGTH;i++))
-do
-    package=${PACKAGE_ARR[$i]}
-    packagename=$(echo $package | sed -E 's/=[^=]*$//')
-    encoded_packagename=$(urlencode $packagename)
-    url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encoded_packagename}_")
-    if [ -z "$url" ] || [[ $(echo "$url" | wc -l) -gt 1 ]]; then
-        echo "No found package or found multiple package for package $packagename, url: $url" 2>&1
-        exit 1
-    fi
-    filename=$(basename "$url")
-    SKIP_BUILD_HOOK=y wget $url -O $ARCHIEVES/$filename
-    echo $packagename >> $DEBOOTSTRAP_REQUIRED
-    echo "$packagename /var/cache/apt/archives/$filename" >> $DEBPATHS
-done
-touch $APTDEBIAN
-touch $DEBOOTSTRAP_BASE
-(cd $BASEIMAGE_TARBALLPATH && fakeroot tar -zcf $BASEIMAGE_TARBALL .)
+if [[ ! -z "$(get_version_cache_option)" && -f ${BASE_IMG_CACHE_FILE} ]]; then
+	# Load from version cache
+	cp ${BASE_IMG_CACHE_FILE} ${BASEIMAGE_TARBALL}
+	touch ${BASE_IMG_CACHE_FILE}
+else
+	rm -rf $BASEIMAGE_TARBALLPATH $BASEIMAGE_TARBALL
 
-sudo debootstrap --verbose --variant=minbase --arch $CONFIGURED_ARCH --unpack-tarball=$BASEIMAGE_TARBALL $IMAGE_DISTRO $FILESYSTEM_ROOT
+	ARCHIEVES=$BASEIMAGE_TARBALLPATH/var/cache/apt/archives
+	APTLIST=$BASEIMAGE_TARBALLPATH/var/lib/apt/lists
+	TARGET_DEBOOTSTRAP=$BASEIMAGE_TARBALLPATH/debootstrap
+	APTDEBIAN="$APTLIST/deb.debian.org_debian_dists_${DISTRO}_main_binary-${CONFIGURED_ARCH}_Packages"
+	DEBPATHS=$TARGET_DEBOOTSTRAP/debpaths
+	DEBOOTSTRAP_BASE=$TARGET_DEBOOTSTRAP/base
+	DEBOOTSTRAP_REQUIRED=$TARGET_DEBOOTSTRAP/required
+	[ -d $BASEIMAGE_TARBALLPATH ] && rm -rf $BASEIMAGE_TARBALLPATH
+	mkdir -p $ARCHIEVES
+	mkdir -p $APTLIST
+	mkdir -p $TARGET_DEBOOTSTRAP
+	PACKAGES=$(sed -E 's/=(=[^=]*)$/\1/' $BASE_VERSIONS)
+	URL_ARR=$(/usr/bin/apt-get download --print-uris $PACKAGES | cut -d" " -f1 | tr -d "'")
+	PACKAGE_ARR=($PACKAGES)
+	LENGTH=${#PACKAGE_ARR[@]}
+	for ((i=0;i<LENGTH;i++))
+	do
+		package=${PACKAGE_ARR[$i]}
+		packagename=$(echo $package | sed -E 's/=[^=]*$//')
+		encoded_packagename=$(urlencode $packagename)
+		url=$(echo "$URL_ARR" | grep -i "/${packagename}_\|/${encoded_packagename}_")
+		if [ -z "$url" ] || [[ $(echo "$url" | wc -l) -gt 1 ]]; then
+			echo "No found package or found multiple package for package $packagename, url: $url" 2>&1
+			exit 1
+		fi
+		filename=$(basename "$url")
+		SKIP_BUILD_HOOK=y wget $url -O $ARCHIEVES/$filename
+		echo $packagename >> $DEBOOTSTRAP_REQUIRED
+		echo "$packagename /var/cache/apt/archives/$filename" >> $DEBPATHS
+	done
+	touch $APTDEBIAN
+	touch $DEBOOTSTRAP_BASE
+	(cd $BASEIMAGE_TARBALLPATH && fakeroot tar -zcf $BASEIMAGE_TARBALL .)
+
+	# Save it into version cache
+	if [[ ! -z "$(get_version_cache_option)" ]]; then
+		FLOCK ${BASE_IMG_CACHE_FILE}
+		cp ${BASEIMAGE_TARBALL} ${BASE_IMG_CACHE_FILE}
+		chmod -f 777 ${BASE_IMG_CACHE_FILE}
+		FUNLOCK ${BASE_IMG_CACHE_FILE}
+	fi
+fi
+
+sudo SKIP_BUILD_HOOK=y  debootstrap --verbose --variant=minbase --arch $CONFIGURED_ARCH --unpack-tarball=$BASEIMAGE_TARBALL $IMAGE_DISTRO $FILESYSTEM_ROOT
 RET=$?
 if [ $RET -ne 0 ]; then
     exit $RET
 fi
 
+sudo rm -rf $FILESYSTEM_ROOT/var/lib/apt/lists
 generate_version_file

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+. /usr/local/share/buildinfo/scripts/buildinfo_base.sh
+
+VERSION_FILE="$BUILDINFO_PATH/versions/versions-python2"
+REAL_COMMAND=$(get_command python)
+
+if [ ! -x "$REAL_COMMAND" ]; then
+    echo "The command python2 not found" 1>&2
+    exit 1
+fi
+
+if [ "$SKIP_BUILD_HOOK" == y ]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
+PIP_VERSION_FILE=$VERSION_FILE ENABLE_VERSION_CONTROL_PY=$ENABLE_VERSION_CONTROL_PY2 REAL_COMMAND=$REAL_COMMAND run_python_command "$@"
