@@ -66,6 +66,7 @@ stages:
           submodules: recursive
           displayName: 'Checkout code'
         - script: |
+            unset REGISTRY_SERVER
             git checkout -b $(Build.SourceBranchName)
             . functions.sh
             SONIC_VERSION=$(sonic_get_version)
