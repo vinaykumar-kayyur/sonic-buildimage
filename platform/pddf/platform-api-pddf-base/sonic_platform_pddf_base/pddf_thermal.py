@@ -13,7 +13,6 @@
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
-    import time 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
