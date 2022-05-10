@@ -44,9 +44,9 @@ class MonitorStateDbTask(ProcessTaskBase):
                 logger.log_warning("sel.select() did not return swsscommon.Select.OBJECT")
                 continue
             (key, op, cfvs) = cst.pop()
-            key_ext = key+".service"
+            key_ext = key + ".service"
             timestamp = "{}".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-            msg={"unit": key_ext,"evt_src":"feature","time":timestamp}
+            msg={"unit": key_ext, "evt_src":"feature", "time":timestamp}
             self.task_notify(msg)
         
         
@@ -75,7 +75,7 @@ class MonitorSystemBusTask(ProcessTaskBase):
     def on_job_removed(self, id, job, unit, result):
         if result == "done":
             timestamp = "{}".format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-            msg={"unit": unit,"evt_src":"sysbus","time":timestamp}
+            msg = {"unit": unit, "evt_src":"sysbus", "time":timestamp}
             self.task_notify(msg)
             return
 
@@ -148,7 +148,7 @@ class Sysmonitor(ProcessTaskBase):
         feature_table = self.config_db.get_table("FEATURE")
         for srv in feature_table.keys():
             if feature_table[srv]["state"] not in ["disabled", "always_disabled"]:
-                srvext=srv+".service"
+                srvext = srv + ".service"
                 if srvext not in dir_list:
                     dir_list.append(srvext)
         
@@ -228,7 +228,6 @@ class Sysmonitor(ProcessTaskBase):
         statusvalue['fail_reason'] = fail_reason
         statusvalue['update_time'] = update_time
         self.state_db.hmset(self.state_db.STATE_DB, key, statusvalue)
-        statusvalue.clear()
 
     #Reads the current status of the service and posts it to state db
     def get_unit_status(self, event):

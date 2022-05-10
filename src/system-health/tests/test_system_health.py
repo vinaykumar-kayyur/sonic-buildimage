@@ -660,34 +660,38 @@ def test_get_all_system_status_not_ok():
     print("result:{}".format(result))
     assert result == 'DOWN'
     
-@patch('health_checker.sysmonitor.Sysmonitor.post_unit_status', MagicMock())
 def test_post_unit_status():
-    sysmon = sysmonitor()
-    sysmon.post_unit_status("mock_bgp.service", 'up', 'up', '-', '-') 
+    sysmon = Sysmonitor()
+    sysmon.post_unit_status("mock_bgp", 'OK', 'Down', 'mock reason', '-') 
+    result = swsscommon.SonicV2Connector.get_all(MockConnector, 0, 'ALL_SERVICE_STATUS|mock_bgp')
+    print(result)
+    assert result['service_status'] == 'OK'
+    assert result['app_ready_status'] == 'Down'
+    assert result['fail_reason'] == 'mock reason'
+
+def test_post_system_status():
+    sysmon = Sysmonitor()
+    sysmon.post_system_status("UP") 
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    print("post system status result:{}".format(result))
+    assert result == "UP"
 
 @patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', MagicMock())
-@patch('health_checker.sysmonitor.Sysmonitor.post_system_status', MagicMock())
+@patch('health_checker.sysmonitor.Sysmonitor.post_system_status', test_post_system_status())
 @patch('health_checker.sysmonitor.Sysmonitor.print_console_message', MagicMock())
 def test_publish_system_status():
     sysmon = Sysmonitor()
     sysmon.publish_system_status('UP')
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    assert result == "UP"
 
-@patch('health_checker.sysmonitor.Sysmonitor.post_system_status', MagicMock())
-def test_post_unit_status():
-    sysmon = Sysmonitor()
-    sysmon.post_system_status("UP") 
-
-
-@patch('health_checker.sysmonitor.Sysmonitor.print_console_message', MagicMock())
-def test_print_console_message():
-    sysmon = Sysmonitor()
-    sysmon.print_console_message("System is ready") 
-    
-@patch('health_checker.sysmonitor.Sysmonitor.get_all_system_status', MagicMock())
-@patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', MagicMock())
+@patch('health_checker.sysmonitor.Sysmonitor.get_all_system_status', test_get_all_system_status_ok())
+@patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', test_publish_system_status())
 def test_update_system_status():
     sysmon = Sysmonitor()
     sysmon.update_system_status() 
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    assert result == "UP"
 
 from sonic_py_common.task_base import ProcessTaskBase
 import multiprocessing
