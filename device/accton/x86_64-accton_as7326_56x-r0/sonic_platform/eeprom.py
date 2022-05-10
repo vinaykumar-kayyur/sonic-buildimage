@@ -20,7 +20,6 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
     EEPROM_DECODE_HEADLINES = 6
 
     def __init__(self):
-        #self._eeprom_path = "/sys/bus/i2c/devices/0-0056/eeprom"
         exists = os.path.isfile('/sys/bus/i2c/devices/0-0056/eeprom')
         if (exists is True):
             self._eeprom_path = "/sys/bus/i2c/devices/0-0056/eeprom"
@@ -38,7 +37,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
         for line in lines:
             try:
-                match = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+)',
+                match = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)(.+)',
                                   line)
                 if match is not None:
                     idx = match.group(1)
