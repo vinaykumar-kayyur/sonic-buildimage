@@ -1,0 +1,36 @@
+module sonic-events-pmon {
+    namespace "http://github.com/sonic-net/sonic-events-pmon";
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+    
+    revision 2022-12-01 {
+        description "pmon alert events.";
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC pmon events";
+
+
+    container pmon-exited {
+        description "
+            Declares an event reportes by pmon for an unexpected exit.
+            The exited entity is the only param";
+
+        leaf entity {
+            type string;
+            description "entity that had unexpected exit";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+}
+

@@ -1,0 +1,168 @@
+module events-host {
+    namespace "http://github.com/sonic-net/sonic-events-host";
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+    revision 2022-12-01 {
+        description "BGP alert events.";
+    }
+
+    container disk-usage {
+        description "
+            Declares an event for disk usage crossing set limit
+            The parameters describe the usage & limit set.";
+            
+        leaf fs {
+            type  string;
+            description "Name of the file system";
+            default "";
+        }
+
+        uses evtcmn:sonic-events-usage;
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container memory-usage {
+        description "
+            Declares an event for memory usage crossing set limit
+            The parameters describe the usage & limit set.";
+            
+        uses evtcmn:sonic-events-usage;
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-sshd {
+        description "
+            Declares an event reported by sshd.
+            The fail type declares the type of failure.
+            INCORRECT_PASSWORD - denotes that sshd is sending
+            wrong password to AAA to intentionally fail this login.";
+
+        leaf fail_type {
+            type enumeration {
+                enum "INCORRECT_PASSWD";
+            }
+            description "Type of failure";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-disk {
+        description "
+            Declares an event reported by disk check.
+            The fail type declares the type of failure.
+            read-only - denotes that disk is in RO state.";
+
+        leaf fail_type {
+            type enumeration {
+                enum "read_only";
+            }
+            description "Type of failure";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-kernel {
+        description "
+            Declares an event reported by kernel.
+            The fail type declares the type of failure.";
+
+        leaf fail_type {
+            type enumeration {
+                enum "write_failed";
+                enum "write_protected";
+                enum "remount_read_only";
+                enum "aufs_read_lock";
+                enum "invalid_freelist";
+                enum "zlib_decompress";
+            }
+            description "Type of failure";
+        }
+
+        leaf msg {
+            type string;
+            description "human readable hint text";
+            default "";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-monit-proc {
+        description "
+            Declares an event reported by monit for a process
+            that is not running.
+    
+            Params: 
+                Name of the process that is not running.
+                The ASIC-index of that process.";
+               
+        leaf proc_name {
+            type string;
+            description "Name of the process not running";
+            default "";
+        }
+
+        leaf asic_index {
+            type uint8;
+            description "ASIC index in case of multi asic platform";
+            default 0;
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-monit-status {
+        description "
+            Declares an event reported by monit for status check
+            failure for a process
+    
+            Params: 
+                Name of the process that is not running.
+                The ASIC-index of that process.";
+               
+        leaf entity {
+            type string;
+            description "Name of the failing entity";
+            default "";
+        }
+
+        leaf asic_index {
+            type uint8;
+            description "ASIC index in case of multi asic platform";
+            default 0;
+        }
+
+        leaf reason {
+            type string;
+            description "Human readble text explaining failure";
+            default "";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container event-platform {
+        description "
+            Declares an event for platform related failure.
+            Params: 
+                fail_type provides the type of failure.";
+               
+        leaf fail_type {
+            type enumeration {
+                enum "watchdog_timeout";
+                enum "switch_parity_error";
+                enum "SEU_error";
+            }
+            description "Type of failure";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+}

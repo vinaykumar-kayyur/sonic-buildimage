@@ -1,0 +1,54 @@
+module sonic-events-syncd {
+    namespace "http://github.com/sonic-net/sonic-events-syncd";
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+    
+    revision 2022-12-01 {
+        description "syncd alert events.";
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC syncd events";
+
+    container syncd_failure {
+        description "
+            Declares an event for all types of syncd failure.
+            The type of failure and the asic-index of failing syncd are
+            provided along with a human readable message to give the
+            dev debugging additional info.";
+
+        leaf asic_index {
+            type uint8;
+            description "ASIC index in case of multi asic platform";
+            default 0;
+        }
+
+        leaf fail_type {
+            type enumeration {
+                enum "route_add_failed";
+                enum "switch_event_2";
+                enum "brcm_sai_switch_assert";
+                enum "assert";
+                enum "mmu_err";
+            }
+        }
+
+        leaf msg {
+            type string;
+            description "human readable hint text"
+            default "";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+}
+

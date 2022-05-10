@@ -1,0 +1,112 @@
+module sonic-events-swss {
+    namespace "http://github.com/sonic-net/sonic-events-swss";
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+    
+    revision 2022-12-01 {
+        description "SWSS alert events.";
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC SWSS events";
+
+    container redis-generic {
+        description "
+            Declares an event for a fatal error encountered by swss.
+            The asic-index of the failing process is the only param.";
+
+        leaf asic_index {
+            type uint8;
+            description "ASIC index in case of multi asic platform";
+            default 0;
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container if-state {
+        description "
+            Declares an event for i/f flap.
+            
+            The name of the flapping i/f and status are the only params.";
+
+        leaf ifname {
+            type string;
+            description "Interface name";
+        }
+
+        leaf status {
+            type enumeration {
+                enum "up";
+                enum "down";
+            }
+            description "Provides the status as up (true) or down (false)";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+
+    }
+
+    container pfc-storm {
+        description "
+            Declares an event for PFC storm.
+            
+            The name of the i/f facing the storm is the only param.";
+
+        leaf ifname {
+            type string;
+            description "Interface name";
+        }
+
+        leaf queue_index {
+            type uint8;
+        }
+
+        leaf queue_id {
+            type uint64_t;
+        }
+
+        leaf port_id {
+            type uint64_t;
+        }
+
+        leaf timestamp {
+            type yang::date-and-time;
+            description "time of the event";
+        }
+    }
+
+    container chk_crm_threshold {
+        description "
+            Declares an event for CRM threshold.";
+
+        leaf percent {
+            type uint8 {
+                 range "0..100" {
+                    error-message "Invalid percentage value";
+                }
+            }
+            description "percentage used";
+        }
+
+        leaf used_cnt {
+            type uint8;
+        }
+
+        leaf free_cnt {
+            type uint64_t;
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+}
+

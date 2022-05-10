@@ -1,0 +1,67 @@
+module sonic-events-dhcp-relay {
+    namespace "http://github.com/sonic-net/sonic-events-dhcp-relay";
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+
+    revision 2022-12-01 {
+        description "dhcp-relay alert events.";
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC dhcp-relay events";
+
+    container dhcp-relay-discard {
+        description "
+            Declares an event for dhcp-relay discarding packet on an
+            interface due to missing IP address assigned.
+            Params:
+                name of the interface discarding.
+                class of the missing IP address as IPv4 or IPv6.";
+
+        leaf ip_class {
+            type enumeration {
+                enum "ipV4";
+                enum "ipV6";
+            }
+            description "Class of IP address missing";
+        }
+
+        leaf ifname {
+            type string;
+            description "Name of the i/f discarding";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container dhcp-relay-disparity {
+        description "
+            Declares an event for disparity detected in
+            DHCP Relay behavior by dhcpmon.
+            parameters:
+                vlan that shows this disparity
+                The duration of disparity";
+
+        leaf vlan {
+            type string;
+            description "Name of the vlan affected";
+        }
+
+        leaf duration {
+            type uint32;
+            description "Duration of disparity";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+}
+

@@ -1,0 +1,62 @@
+module sonic-events-bgp {
+    namespace "http://github.com/Azure/sonic-events-bgp";
+
+    yang-version 1.1;
+
+    import sonic-events-common {
+        prefix evtcmn;
+    }
+
+    revision 2022-12-01 {
+        description "BGP alert events.";
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC BGP events";
+
+    container bgp-state {
+        description "
+            Declares an event for BGP state for a neighbor IP
+            The status says up or down";
+
+        leaf ip {
+            type inet:ip-address;
+            description "IP of neighbor";
+        }
+
+        leaf status {
+            type enumeration {
+                enum "up";
+                enum "down";
+            }
+            description "Provides the status as up (true) or down (false)";
+        }
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container bgp-hold-timer {
+        description "
+            Declares an event for BGP hold timer expiry.
+            This event does not have any other parameter.
+            Hence source + tag identifies an event";
+
+        uses evtcmn:sonic-events-cmn;
+    }
+
+    container zebra-no-buff {
+        description "
+            Declares an event for zebra running out of buffer.
+            This event does not have any other parameter.
+            Hence source + tag identifies an event";
+            
+        uses evtcmn:sonic-events-cmn;
+    }
+}
+
