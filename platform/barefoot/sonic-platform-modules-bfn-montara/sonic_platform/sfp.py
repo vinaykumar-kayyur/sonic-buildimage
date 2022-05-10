@@ -5,7 +5,6 @@ try:
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
     from sonic_platform.platform_thrift_client import thrift_try
     from sonic_platform.platform_thrift_client import pltfm_mgr_try
-    from sonic_platform.pltfm_mgr_rpc import ttypes
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -85,35 +84,31 @@ class Sfp(SfpOptoeBase):
         def qsfp_info_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_info_get(self.index)
 
-        if self.get_presence():
-            eeprom_hex = thrift_try(qsfp_info_get)
-            eeprom_raw = bytearray.fromhex(eeprom_hex)
-            with open(self.eeprom_path, 'wb') as fp:
-                fp.write(eeprom_raw)
-            return self.eeprom_path
-
-        return None
+        eeprom_hex = thrift_try(qsfp_info_get)
+        eeprom_raw = bytearray.fromhex(eeprom_hex)
+        with open(self.eeprom_path, 'wb') as fp:
+            fp.write(eeprom_raw)
+        return self.eeprom_path
 
     def read_eeprom(self, offset, num_bytes):
+        if not self.get_presence():
+            return None
+
         if not EEPROM_CACHED_API_SUPPORT:
             return super().read_eeprom(offset, num_bytes)
 
-        if offset // EEPROM_PAGE_SIZE == 0:
-            page = ttypes.qsfp_eeprom_page_t.PAGE0_LOWER
-        elif offset // EEPROM_PAGE_SIZE == 1:
-            page = ttypes.qsfp_eeprom_page_t.PAGE0_UPPER
-        elif offset // EEPROM_PAGE_SIZE == 4:
-            page = ttypes.qsfp_eeprom_page_t.PAGE3
-        else:
-            return None
-
-        def qsfp_cached_num_bytes_get(client):
-            return client.pltfm_mgr.pltfm_mgr_qsfp_cached_num_bytes_get(self.index, page, offset % EEPROM_PAGE_SIZE, num_bytes)
-
-        if self.get_presence():
+        def cached_num_bytes_get(page, offset, num_bytes):
+            def qsfp_cached_num_bytes_get(client):
+                return client.pltfm_mgr.pltfm_mgr_qsfp_cached_num_bytes_get(self.index, page, offset, num_bytes)
             return bytearray.fromhex(thrift_try(qsfp_cached_num_bytes_get))
 
-        return None
+        page_offset = offset % EEPROM_PAGE_SIZE
+        if page_offset + num_bytes > EEPROM_PAGE_SIZE:
+            curr_page_num_bytes_left = EEPROM_PAGE_SIZE - page_offset
+            curr_page_bytes = cached_num_bytes_get(offset // EEPROM_PAGE_SIZE, page_offset, curr_page_num_bytes_left)
+            return curr_page_bytes + self.read_eeprom(offset + curr_page_num_bytes_left, num_bytes - curr_page_num_bytes_left)
+
+        return cached_num_bytes_get(offset // EEPROM_PAGE_SIZE, page_offset, num_bytes)
 
     def write_eeprom(self, offset, num_bytes, write_buffer):
         # Not supported at the moment
