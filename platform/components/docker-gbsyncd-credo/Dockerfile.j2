@@ -12,17 +12,13 @@ RUN apt-get install -f -y iproute2 libcap2-bin
 
 COPY \
 {% for deb in docker_gbsyncd_credo_debs.split(' ') -%}
-{% if 'libsaibcm' not in deb -%}
 debs/{{ deb }}{{' '}}
-{%- endif %}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
 {% for deb in docker_gbsyncd_credo_debs.split(' ') -%}
-{% if 'libsaibcm' not in deb and 'bfnsdk' not in deb and 'bfnplatform' not in deb -%}
 debs/{{ deb }}{{' '}}
-{%- endif %}
 {%- endfor %}
 
 COPY ["docker-init.sh", "/usr/bin/"]
