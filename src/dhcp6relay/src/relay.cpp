@@ -638,6 +638,7 @@ void callback(evutil_socket_t fd, short event, void *arg) {
         }
         case DHCPv6_MESSAGE_TYPE_SOLICIT:
         case DHCPv6_MESSAGE_TYPE_REQUEST: 
+	case DHCPv6_MESSAGE_TYPE_CONFIRM:
         case DHCPv6_MESSAGE_TYPE_RENEW:
         case DHCPv6_MESSAGE_TYPE_REBIND:
         case DHCPv6_MESSAGE_TYPE_RELEASE:
