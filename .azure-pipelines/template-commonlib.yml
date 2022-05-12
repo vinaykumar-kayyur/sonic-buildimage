@@ -41,13 +41,7 @@ jobs:
         set -ex
         for bldenv in $(bldenvs)
         do
-          LIBNL3_VERSION_BASE=$(grep "LIBNL3_VERSION_BASE =" rules/libnl3.mk | awk '{print$3}')
-          LIBNL3_VERSION=$(grep "LIBNL3_VERSION =" rules/libnl3.mk | awk '{print$3}' | sed -e "s/(//" -e "s/)//" -e "s/\\$//" -e "s/LIBNL3_VERSION_BASE/$LIBNL3_VERSION_BASE/")
-          SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv make -f Makefile.work target/debs/$bldenv/libnl-3-200_${LIBNL3_VERSION}_${{ arch }}.deb ENABLE_DOCKER_BASE_PULL=y
-
-          LIBYANG_VERSION_BASE=$(grep "LIBYANG_VERSION_BASE =" rules/libyang.mk | awk '{print$3}')
-          LIBYANG_VERSION=$(grep "LIBYANG_VERSION =" rules/libyang.mk | awk '{print$3}' | sed -e "s/\\$//" -e "s/(//" -e "s/)//" -e "s/LIBYANG_VERSION_BASE/$LIBYANG_VERSION_BASE/")
-          SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv make -f Makefile.work target/debs/$bldenv/libyang_${LIBYANG_VERSION}_${{ arch }}.deb
+          SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv make -f Makefile.work lib-packages ENABLE_DOCKER_BASE_PULL=y
         done
         mv target $(Build.ArtifactStagingDirectory)
       displayName: Make common lib packages
