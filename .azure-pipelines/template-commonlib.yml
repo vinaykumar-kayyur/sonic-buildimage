@@ -15,7 +15,7 @@ jobs:
     ${{ else }}:
       pool: sonicbld-${{ arch }}
     variables:
-    - template: template-variables.yml
+      - template: template-variables.yml
     steps:
     - checkout: self
       clean: true

@@ -1378,4 +1378,4 @@ jessie : $$(addprefix $(TARGET_PATH)/,$$(JESSIE_DOCKER_IMAGES)) \
 
 .INTERMEDIATE : $(SONIC_INSTALL_DEBS) $(SONIC_INSTALL_WHEELS) $(DOCKER_LOAD_TARGETS) docker-start .platform
 
-lib-packages: $(LIBNL3) $(LIBYANG)
+lib-packages: $(addprefix $(DEBS_PATH)/,$(LIBNL3) $(LIBYANG))
