@@ -53,7 +53,7 @@ steps:
         "artifactPatterns":"**/*.bin\n
               **/*.swi\n
               **/*.raw\n
-              **/*.image.gz\n
+              **/*.img.gz\n
               **/*-rpc.gz\n
               **/python-saithrift*.deb"},
       publishContext: {"publishPrefix":"${{ parameters.publishPrefix }}",
