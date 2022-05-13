@@ -631,3 +631,12 @@ def is_fast_reboot_enabled():
         fb_system_state = stdout.rstrip('\n')
 
     return fb_system_state
+
+def is_gbsyncd_platform():
+    platform = get_platform()
+    if platform is None:
+        return False
+    gbsyncd_ini_file = "/usr/share/sonic/device/{}/gbsyncd.ini".format(platform)
+    if os.path.exists(gbsyncd_ini_file):
+        return True
+    return False

@@ -120,7 +120,7 @@ def get_pid(procname):
 class Feature(object):
     """ Represents a feature configuration from CONFIG_DB data. """
 
-    def __init__(self, feature_name, feature_cfg, device_config=None):
+    def __init__(self, feature_name, feature_cfg, feature_state_params=None):
         """ Initialize Feature object based on CONFIG_DB data.
 
         Args:
@@ -130,13 +130,13 @@ class Feature(object):
         """
 
         self.name = feature_name
-        self.state = self._get_target_state(feature_cfg.get('state'), device_config or {})
+        self.state = self._get_target_state(feature_cfg.get('state'), feature_state_params or {})
         self.auto_restart = feature_cfg.get('auto_restart', 'disabled')
         self.has_timer = safe_eval(feature_cfg.get('has_timer', 'False'))
         self.has_global_scope = safe_eval(feature_cfg.get('has_global_scope', 'True'))
         self.has_per_asic_scope = safe_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
-    def _get_target_state(self, state_configuration, device_config):
+    def _get_target_state(self, state_configuration, feature_state_params):
         """ Returns the target state for the feature by rendering the state field as J2 template.
 
         Args:
@@ -150,7 +150,7 @@ class Feature(object):
             return None
 
         template = jinja2.Template(state_configuration)
-        target_state = template.render(device_config)
+        target_state = template.render(feature_state_params)
         if target_state not in ('enabled', 'disabled', 'always_enabled', 'always_disabled'):
             raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
         return target_state
@@ -181,6 +181,10 @@ class FeatureHandler(object):
         self._device_config = device_config
         self._cached_config = {}
         self.is_multi_npu = device_info.is_multi_npu()
+        self.feature_state_params = {
+            "device_config": device_config,
+            "gbsyncd_supported_platform": device_info.is_gbsyncd_platform()
+        }
 
     def handle(self, feature_name, op, feature_cfg):
         if not feature_cfg:
@@ -189,7 +193,7 @@ class FeatureHandler(object):
             self._feature_state_table._del(feature_name)
             return
 
-        feature = Feature(feature_name, feature_cfg, self._device_config)
+        feature = Feature(feature_name, feature_cfg, self.feature_state_params)
         self._cached_config.setdefault(feature_name, Feature(feature_name, {}))
 
         # Change auto-restart configuration first.
@@ -1230,7 +1234,7 @@ class HostConfigDaemon:
         self.config_db.subscribe('VLAN_SUB_INTERFACE', make_callback(self.vlan_sub_intf_handler))
         self.config_db.subscribe('PORTCHANNEL_INTERFACE', make_callback(self.portchannel_intf_handler))
         self.config_db.subscribe('INTERFACE', make_callback(self.phy_intf_handler))
-        
+
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
         self.wait_till_system_init_done()
@@ -1251,4 +1255,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
