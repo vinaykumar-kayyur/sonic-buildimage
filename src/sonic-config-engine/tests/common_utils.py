@@ -7,7 +7,6 @@ import subprocess
 import argparse
 import shlex
 
-
 PY3x = sys.version_info >= (3, 0)
 PYvX_DIR = "py3" if PY3x else "py2"
 PYTHON_INTERPRETTER = "python3" if PY3x else "python2"
