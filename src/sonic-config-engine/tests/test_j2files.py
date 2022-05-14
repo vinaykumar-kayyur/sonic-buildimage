@@ -151,7 +151,7 @@ class TestJ2Files(TestCase):
         self._test_qos_render_template('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph.xml', 'qos-arista7260.json')
 
     def test_buffers_dell6100_render_template(self):
-        file_exist, dir_exist = self.create_machine_conf('x86_64-dell_s6100_c2538-r0')
+        file_exist, dir_exist = self.create_machine_conf('x86_64-dell_s6100_c2538-r0', 'dell')
         dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100')
         buffers_file = os.path.join(dell_dir_path, 'buffers.json.j2')
         port_config_ini_file = os.path.join(dell_dir_path, 'port_config.ini')
