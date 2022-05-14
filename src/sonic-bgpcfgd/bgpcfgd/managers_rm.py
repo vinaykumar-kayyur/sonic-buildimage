@@ -1,5 +1,5 @@
 from .manager import Manager
-from .log import log_info, log_err
+from .log import log_err, log_debug
 
 ROUTE_MAPS = ["FROM_SDN_SLB_ROUTES"]
 
@@ -22,27 +22,27 @@ class RouteMapMgr(Manager):
         )
 
     def set_handler(self, key, data):
-        log_info("BGPRouteMapMgr:: set handler")
+        log_debug("BGPRouteMapMgr:: set handler")
         """Only need a name as the key, and community id as the data"""
-        if not self._set_handler_validate(key, data):
+        if not self.__set_handler_validate(key, data):
             return True
 
-        self._update_rm(key, data)
+        self.__update_rm(key, data)
         return True
 
     def del_handler(self, key):
-        log_info("BGPRouteMapMgr:: del handler")
-        if not self._del_handler_validate(key):
+        log_debug("BGPRouteMapMgr:: del handler")
+        if not self.__del_handler_validate(key):
             return
-        self._remove_rm(key)
+        self.__remove_rm(key)
 
-    def _remove_rm(self, rm):
+    def __remove_rm(self, rm):
         cmds = ["no route-map %s permit 100" % ("%s_RM" % rm)]
-        log_info("BGPRouteMapMgr:: remove route-map %s" % ("%s_RM" % rm))
+        log_debug("BGPRouteMapMgr:: remove route-map %s" % ("%s_RM" % rm))
         self.cfg_mgr.push_list(cmds)
-        log_info("BGPRouteMapMgr::Done")
+        log_debug("BGPRouteMapMgr::Done")
 
-    def _set_handler_validate(self, key, data):
+    def __set_handler_validate(self, key, data):
         if key not in ROUTE_MAPS:
             log_err("BGPRouteMapMgr:: Invalid key for route-map %s" % key)
             return False
@@ -65,14 +65,14 @@ class RouteMapMgr(Manager):
 
         return True
 
-    def _del_handler_validate(self, key):
+    def __del_handler_validate(self, key):
         if key not in ROUTE_MAPS:
             log_err("BGPRouteMapMgr:: Invalid key for route-map %s" % key)
             return False
         return True
 
-    def _update_rm(self, rm, data):
+    def __update_rm(self, rm, data):
         cmds = ["route-map %s permit 100" % ("%s_RM" % rm), " set community %s" % data["community_id"]]
-        log_info("BGPRouteMapMgr:: update route-map %s community %s" % ("%s_RM" % rm, data["community_id"]))
+        log_debug("BGPRouteMapMgr:: update route-map %s community %s" % ("%s_RM" % rm, data["community_id"]))
         self.cfg_mgr.push_list(cmds)
-        log_info("BGPRouteMapMgr::Done")
+        log_debug("BGPRouteMapMgr::Done")
