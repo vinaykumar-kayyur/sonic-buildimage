@@ -47,6 +47,13 @@ function waitplatform() {
             debug "Started pmon service"
         fi
     fi
+    if [[ x"$BOOT_TYPE" = @(x"fast"|x"warm"|x"fastfast") ]]; then
+        debug "LLDP service is delayed by a timer for better fast/warm boot performance"
+    else
+        debug "Starting lldp service..."
+        /bin/systemctl start lldp
+        debug "Started lldp service"
+    fi
 }
 
 function stopplatform1() {
