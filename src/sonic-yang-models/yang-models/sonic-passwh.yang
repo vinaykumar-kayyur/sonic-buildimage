@@ -24,6 +24,7 @@ module sonic-passwh {
                 leaf state {
                     description "state of the feature";
                     type feature_state;
+                    default "disabled";
                 }
                 leaf expiration {
                     description "expiration time (days unit)";
