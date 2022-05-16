@@ -199,7 +199,7 @@ class Sfp(SfpBase):
             ext_id = iface_data['data']['Extended Identifier']['value']
             rate_identifier = iface_data['data']['RateIdentifier']['value']
             identifier = iface_data['data']['type']['value']
-            type_abbrv_name=iface_data['data']['type_abbrv_name']['value']
+            type_abbrv_name = iface_data['data']['type_abbrv_name']['value']
             bit_rate = str(
                 iface_data['data']['Nominal Bit Rate(100Mbs)']['value'])
 
