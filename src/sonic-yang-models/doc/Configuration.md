@@ -132,23 +132,23 @@ redis and json, correspondingly:
 
 ```
 "BGP_NEIGHBOR": {
-    10.0.0.57: {
-        rrclient: 0,
-        name: ARISTA01T1,
-        local_addr: 10.0.0.56,
-        nhopself: 0,
-        holdtime: 10,
-        asn: 64600,
-        keepalive: 3
+    "10.0.0.57": {
+        "rrclient": "0",
+        "name": "ARISTA01T1",
+        "local_addr": "10.0.0.56",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
+        "keepalive": "3"
     },
-    10.0.0.59: {
-        rrclient: 0,
-        name: ARISTA02T1,
-        local_addr: 10.0.0.58,
-        nhopself: 0,
-        holdtime: 10,
-        asn: 64600,
-        keepalive: 3
+    "10.0.0.59": {
+        "rrclient": "0",
+        "name": "ARISTA02T1",
+        "local_addr": "10.0.0.58",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
+        "keepalive": "3"
     },
 }
 ```
