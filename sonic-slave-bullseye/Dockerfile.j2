@@ -358,9 +358,10 @@ RUN apt-get update && apt-get install -y \
         libauparse-dev \
         auditd
 
-{% INCLUDE_PDE == "y" %}
+{%- if INCLUDE_PDE == "y" %}
 RUN apt-get -y install pypy3-dev
-{% endif %}
+{%- endif %}
+
 
 RUN apt-get -y build-dep openssh
 
