@@ -358,6 +358,10 @@ RUN apt-get update && apt-get install -y \
         libauparse-dev \
         auditd
 
+{% INCLUDE_PDE == "y" %}
+RUN apt-get -y install pypy3-dev
+{% endif %}
+
 RUN apt-get -y build-dep openssh
 
 # Build fix for ARM64 and ARMHF /etc/debian_version

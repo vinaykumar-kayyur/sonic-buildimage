@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y ipmitool telnet busybox kmod libpcap-de
 RUN apt-get install -y bzip2 curl ioping openssl bc sysstat
 
 # Packages for PDDF
-RUN apt-get install -y python-jsonschema i2c-tools
+RUN apt-get install -y python3-jsonschema i2c-tools
 
 RUN pip3 install pytest pexpect
 
