@@ -17,9 +17,9 @@ module sonic-vxlan {
     import sonic-vlan {
         prefix svlan;
     }
-	import sonic-types {
-		prefix stypes;
-	}
+    import sonic-types {
+        prefix stypes;
+    }
 
 
     organization
@@ -48,11 +48,11 @@ module sonic-vxlan {
                 max-elements 1;
 
                 leaf name {
-                    must "(starts-with(../name, 'vtep'))"
-                    {
-                        error-message "Error: Name should start with vtep";
-                        error-app-tag invalid-vtep-name;
-                    }
+                /* vni devices are created of the form 'name'-vlanid 
+                   The kernel has a max limit of 15 chars for netdevices.
+                   keeping aside 5 chars for hyphen and vlanid the 
+                   name should have a max of 10 chars */
+
                     type string {
                         length 1..10;
                     }
@@ -91,12 +91,7 @@ module sonic-vxlan {
 
                 leaf vni {
                     mandatory true;
-                    type uint32 {
-                        range "1..16777215" {
-                            error-message "Error: VNI ID out of range";
-                            error-app-tag vnid-invalid;
-                        }
-                    }
+                    type stypes:vnid_type;
                 }
             }
         }
@@ -119,92 +114,6 @@ module sonic-vxlan {
                     type leafref {
                         path "/svxlan:sonic-vxlan/svxlan:VXLAN_TUNNEL/svxlan:VXLAN_TUNNEL_LIST/svxlan:name";
                     }
-                }
-            }
-        }
-        container VXLAN_TUNNEL_TABLE { 
-            sonic-ext:db-name "STATE_DB"; 
-
-            config false;
-            description "state db vxlan tunnel table";
-
-            list VXLAN_TUNNEL_TABLE_LIST { 
-                key "name";
-
-                leaf name {
-                    type string; 
-                }
-
-                leaf src_ip {
-                    type inet:ipv4-address;
-                }
-
-                leaf dst_ip {
-                    type inet:ipv4-address;
-                }
-
-                leaf tnl_src {
-                    type string;
-                }
-
-                leaf operstatus {
-                    type stypes:oper-status;
-                }
-            }
-        }
-        container VXLAN_REMOTE_VNI_TABLE {
-            sonic-ext:db-name "APPL_DB";
-
-            config false;
-            description "app db vxlan remote vni table";
-
-            list VXLAN_REMOTE_VNI_TABLE_LIST {
-                key "vlan remote_vtep";
-
-                leaf vlan {
-                    type leafref {
-                        path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
-                    }
-                }
-
-                leaf remote_vtep {
-                    type inet:ipv4-address;
-                }
-
-                leaf vni {
-                    type string;
-                }
-            }
-        }
-        container VXLAN_FDB_TABLE{
-            sonic-ext:db-name "APPL_DB";
-
-            config false;
-            description "app db vxlan fdb table";
-
-            list VXLAN_FDB_TABLE_LIST {
-                key "vlan mac_addr";
-
-                leaf vlan {
-                    type leafref {
-                        path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
-                    }
-                }
-
-                leaf mac_addr {
-                    type yang:mac-address;
-                }
-
-                leaf remote_vtep {
-                    type inet:ipv4-address;
-                }
-
-                leaf type {
-                    type string;
-                }
-
-                leaf vni {
-                    type string;
                 }
             }
         }

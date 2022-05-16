@@ -2,10 +2,6 @@
     "VXLAN_VALID_TEST": {
         "desc": "Valid VXLAN Configuration."
     },
-    "VXLAN_VTEP_WRONG_NAME": {
-        "desc": "INCORRECT NAME in VXLAN_TUNNEL TABLE",
-        "eStr": ["Error: Name should start with vtep"]
-    },
     "VXLAN_EVPN_NVO_WITHOUT_VTEP": {
         "desc": "Configure EVPN_NVO without VXLAN_TUNNEL entry",
 	    "eStrKey" : "LeafRef"
@@ -20,6 +16,6 @@
     },
     "VXLAN_MAP_OOR_VNI": {
         "desc": "VNI Out of Range in VXLAN_TUNNEL_MAP TABLE",
-        "eStr": ["Error: VNI ID out of range"]
+        "eStrKey": "Range"
     }
 }
