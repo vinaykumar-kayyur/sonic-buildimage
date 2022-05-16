@@ -405,11 +405,11 @@ module sonic-crm {
                 }
 
                 leaf srv6_my_sid_entry_threshold_type{
-                            must "(((current()='PERCENTAGE' or current()='percentage') and
-                                ../srv6_my_sid_entry_high_threshold<100 and
-                                ../srv6_my_sid_entry_low_threshold<100) or
-                                (current()!='PERCENTAGE' and current()!='percentage'))";
-                            type stypes:crm_threshold_type;
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../srv6_my_sid_entry_high_threshold<100 and
+                        ../srv6_my_sid_entry_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
                 }
 
                 leaf srv6_my_sid_entry_high_threshold {
@@ -421,16 +421,16 @@ module sonic-crm {
                 }
         
                 leaf srv6_my_sid_entry_low_threshold {
-                            type threshold;
+                    type threshold;
                 }
 
 
                 leaf srv6_nexthop_threshold_type{
-                            must "(((current()='PERCENTAGE' or current()='percentage') and
-                                ../srv6_nexthop_high_threshold<100 and
-                                ../srv6_nexthop_low_threshold<100) or
-                                (current()!='PERCENTAGE' and current()!='percentage'))";
-                            type stypes:crm_threshold_type;
+                    must "(((current()='PERCENTAGE' or current()='percentage') and
+                        ../srv6_nexthop_high_threshold<100 and
+                        ../srv6_nexthop_low_threshold<100) or
+                        (current()!='PERCENTAGE' and current()!='percentage'))";
+                    type stypes:crm_threshold_type;
                 }
 
                 leaf srv6_nexthop_high_threshold {
@@ -442,7 +442,7 @@ module sonic-crm {
                 }
         
                 leaf srv6_nexthop_low_threshold {
-                            type threshold;
+                    type threshold;
                 }
             }
             /* end of Config */
