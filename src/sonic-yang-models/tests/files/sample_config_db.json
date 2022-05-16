@@ -1046,8 +1046,8 @@
         "TELEMETRY": {
             "certs": {
                 "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
-		"server_crt": "/etc/sonic/telemetry/dsmsroot.cer",
-		"server_key": "/etc/sonic/telemetry/dsmsroot.cer"
+		"server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+		"server_key": "/etc/sonic/telemetry/dsmsroot.key"
             },
 	    "gnmi": {
 		"client_auth": "true",
