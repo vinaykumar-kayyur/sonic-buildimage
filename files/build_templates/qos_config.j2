@@ -286,12 +286,12 @@
 {% endfor %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|2": {
-        {% if port in port_names_list_extra_queues %}
+{% if port in port_names_list_extra_queues %}
             "scheduler"   : "[SCHEDULER|scheduler.1]",
             "wred_profile": "[WRED_PROFILE|AZURE_LOSSLESS]"
-        {% else %}
+{% else %}
             "scheduler": "[SCHEDULER|scheduler.0]"
-        {% endif %}
+{% endif %}
         },
 {% endfor %}
 {% for port in PORT_ACTIVE %}
@@ -301,12 +301,12 @@
 {% endfor %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|6": {
-        {% if port in port_names_list_extra_queues %}
+{% if port in port_names_list_extra_queues %}
             "scheduler"   : "[SCHEDULER|scheduler.1]",
             "wred_profile": "[WRED_PROFILE|AZURE_LOSSLESS]"
-        {% else %}
+{% else %}
             "scheduler": "[SCHEDULER|scheduler.0]"
-        {% endif %}
+{% endif %}
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
