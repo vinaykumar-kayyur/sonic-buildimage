@@ -444,7 +444,8 @@
                 "index": "0",
                 "asic_port_name": "Eth0-ASIC1",
                 "role": "Ext",
-                "macsec": "test"
+                "macsec": "test",
+                "link_training": "off"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -455,7 +456,8 @@
                 "admin_status": "up",
                 "autoneg": "on",
                 "adv_speeds": "100000,50000",
-                "adv_interface_types": "CR,CR4"
+                "adv_interface_types": "CR,CR4",
+                "link_training": "on"
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
@@ -1813,7 +1815,15 @@
                 "rrclient": "0",
                 "admin_status": "up"
             }
-        }
+        },
+
+        "KDUMP": {
+            "config": {
+                "enabled": "true",
+                "num_dumps": "3",
+                "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M"
+             }
+         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
