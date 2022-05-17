@@ -2,11 +2,11 @@
   "COUNTERS_MACSEC_SA_RX_NAME_MAP": {
     "type": "hash",
     "value": {
-      "Ethernet0:72158392306652242:1": "oid:0x5c0000000027f9",
-      "Ethernet1:72158392306652242:1": "oid:0x5c0000000027fb",
-      "Ethernet4:72169757645755474:1": "oid:0x5c0000000027fd",
-      "Ethernet5:72169757645755474:2": "oid:0x5c0000000027ff",
-      "Ethernet0:72158392306652242:2": "oid:0x5c000000002801"
+      "Ethernet0:525400edac5b0001:1": "oid:0x5c0000000027f9",
+      "Ethernet1:525400edac5b0001:1": "oid:0x5c0000000027fb",
+      "Ethernet4:5254002003660001:1": "oid:0x5c0000000027fd",
+      "Ethernet5:5254002003660001:2": "oid:0x5c0000000027ff",
+      "Ethernet0:525400edac5b0001:2": "oid:0x5c000000002801"
     },
     "ttl": -0.001,
     "expireat": 1651809068.9579792
@@ -14,16 +14,16 @@
   "COUNTERS_MACSEC_NAME_MAP": {
     "type": "hash",
     "value": {
-      "Ethernet0:72158392306652242:1": "oid:0x5c0000000027f9",
-      "Ethernet0:72088722065085522:1": "oid:0x5c0000000027fa",
-      "Ethernet1:72158392306652242:1": "oid:0x5c0000000027fb",
-      "Ethernet1:72088722065085522:1": "oid:0x5c0000000027fc",
-      "Ethernet4:72169757645755474:1": "oid:0x5c0000000027fd",
-      "Ethernet4:72088722065085522:1": "oid:0x5c0000000027fe",
-      "Ethernet5:72169757645755474:2": "oid:0x5c0000000027ff",
-      "Ethernet5:72088722065085522:2": "oid:0x5c000000002800",
-      "Ethernet0:72158392306652242:2": "oid:0x5c000000002801",
-      "Ethernet0:72088722065085522:2": "oid:0x5c000000002802"
+      "Ethernet0:525400edac5b0001:1": "oid:0x5c0000000027f9",
+      "Ethernet0:5254008f4f1c0001:1": "oid:0x5c0000000027fa",
+      "Ethernet1:525400edac5b0001:1": "oid:0x5c0000000027fb",
+      "Ethernet1:5254008f4f1c0001:1": "oid:0x5c0000000027fc",
+      "Ethernet4:5254002003660001:1": "oid:0x5c0000000027fd",
+      "Ethernet4:5254008f4f1c0001:1": "oid:0x5c0000000027fe",
+      "Ethernet5:5254002003660001:2": "oid:0x5c0000000027ff",
+      "Ethernet5:5254008f4f1c0001:2": "oid:0x5c000000002800",
+      "Ethernet0:525400edac5b0001:2": "oid:0x5c000000002801",
+      "Ethernet0:5254008f4f1c0001:2": "oid:0x5c000000002802"
     },
     "ttl": -0.001,
     "expireat": 1651809068.9580717
@@ -31,11 +31,11 @@
   "COUNTERS_MACSEC_SA_TX_NAME_MAP": {
     "type": "hash",
     "value": {
-      "Ethernet0:72088722065085522:1": "oid:0x5c0000000027fa",
-      "Ethernet1:72088722065085522:1": "oid:0x5c0000000027fc",
-      "Ethernet4:72088722065085522:1": "oid:0x5c0000000027fe",
-      "Ethernet5:72088722065085522:2": "oid:0x5c000000002800",
-      "Ethernet0:72088722065085522:2": "oid:0x5c000000002802"
+      "Ethernet0:5254008f4f1c0001:1": "oid:0x5c0000000027fa",
+      "Ethernet1:5254008f4f1c0001:1": "oid:0x5c0000000027fc",
+      "Ethernet4:5254008f4f1c0001:1": "oid:0x5c0000000027fe",
+      "Ethernet5:5254008f4f1c0001:2": "oid:0x5c000000002800",
+      "Ethernet0:5254008f4f1c0001:2": "oid:0x5c000000002802"
     },
     "ttl": -0.001,
     "expireat": 1651809068.9580936

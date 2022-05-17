@@ -106,7 +106,7 @@ class MACsecIngressSC(MACsecSC):
         return buffer
 
     def get_header(self):
-        return "MACsec Ingress SC ({})\n".format(format(int(self.sci), 'x'))
+        return "MACsec Ingress SC ({})\n".format(self.sci)
 
 
 class MACsecEgressSC(MACsecSC):
@@ -124,7 +124,7 @@ class MACsecEgressSC(MACsecSC):
         return buffer
 
     def get_header(self):
-        return "MACsec Egress SC ({})\n".format(format(int(self.sci), 'x'))
+        return "MACsec Egress SC ({})\n".format(self.sci)
 
 
 class MACsecPort(MACsecAppMeta):
@@ -195,11 +195,12 @@ def create_macsec_objs(interface_name: str) -> typing.List[MACsecAppMeta]:
 @click.command()
 @click.argument('interface_name', required=False)
 def macsec(interface_name):
+    ctx = click.get_current_context()
     objs = []
     interface_names = [name.split(":")[1] for name in DB_CONNECTOR.keys(DB_CONNECTOR.APPL_DB, "MACSEC_PORT*")]
     if interface_name is not None:
         if interface_name not in interface_names:
-            return
+            ctx.fail("Cannot find the port {} in MACsec port lists {}".format(interface_name, interface_names))
         else:
             interface_names = [interface_name]
     for interface_name in natsorted(interface_names):

@@ -1,5 +1,5 @@
 {
-  "MACSEC_EGRESS_SA_TABLE:Ethernet1:72088722065085522:1": {
+  "MACSEC_EGRESS_SA_TABLE:Ethernet1:5254008f4f1c0001:1": {
     "type": "hash",
     "value": {
       "sak": "1EC8572B75A840BA6B3833DC550C620D2C65BBDDAD372D27A1DFEB0CD786671B",
@@ -25,7 +25,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2302043
   },
-  "MACSEC_EGRESS_SC_TABLE:Ethernet1:72088722065085522": {
+  "MACSEC_EGRESS_SC_TABLE:Ethernet1:5254008f4f1c0001": {
     "type": "hash",
     "value": {
       "encoding_an": "1"
@@ -33,7 +33,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2302194
   },
-  "MACSEC_INGRESS_SA_TABLE:Ethernet1:72158392306652242:1": {
+  "MACSEC_INGRESS_SA_TABLE:Ethernet1:525400edac5b0001:1": {
     "type": "hash",
     "value": {
       "active": "true",
@@ -46,7 +46,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2302353
   },
-  "MACSEC_INGRESS_SC_TABLE:Ethernet1:72158392306652242": {
+  "MACSEC_INGRESS_SC_TABLE:Ethernet1:525400edac5b0001": {
     "type": "hash",
     "value": {
       "Null": "Null"
@@ -54,7 +54,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2302475
   },
-  "MACSEC_INGRESS_SC_TABLE:Ethernet0:72158392306652242": {
+  "MACSEC_INGRESS_SC_TABLE:Ethernet0:525400edac5b0001": {
     "type": "hash",
     "value": {
       "Null": "Null"
@@ -62,7 +62,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.230258
   },
-  "MACSEC_EGRESS_SA_TABLE:Ethernet5:72088722065085522:2": {
+  "MACSEC_EGRESS_SA_TABLE:Ethernet5:5254008f4f1c0001:2": {
     "type": "hash",
     "value": {
       "sak": "3BEBB5BB2539D7231EB95F312B843966180B6C941750B9F1A08AF71BA4508599",
@@ -74,7 +74,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2302718
   },
-  "MACSEC_INGRESS_SA_TABLE:Ethernet0:72158392306652242:2": {
+  "MACSEC_INGRESS_SA_TABLE:Ethernet0:525400edac5b0001:2": {
     "type": "hash",
     "value": {
       "active": "true",
@@ -87,7 +87,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.230298
   },
-  "MACSEC_EGRESS_SC_TABLE:Ethernet5:72088722065085522": {
+  "MACSEC_EGRESS_SC_TABLE:Ethernet5:5254008f4f1c0001": {
     "type": "hash",
     "value": {
       "encoding_an": "2"
@@ -109,7 +109,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.23036
   },
-  "MACSEC_INGRESS_SA_TABLE:Ethernet5:72169757645755474:2": {
+  "MACSEC_INGRESS_SA_TABLE:Ethernet5:5254002003660001:2": {
     "type": "hash",
     "value": {
       "active": "true",
@@ -136,7 +136,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2304454
   },
-  "MACSEC_EGRESS_SA_TABLE:Ethernet4:72088722065085522:1": {
+  "MACSEC_EGRESS_SA_TABLE:Ethernet4:5254008f4f1c0001:1": {
     "type": "hash",
     "value": {
       "sak": "234128B1F6A679E02759D521C1FF448D5CE47B2E691852281EE8E34690B348DD",
@@ -148,7 +148,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2304764
   },
-  "MACSEC_INGRESS_SA_TABLE:Ethernet0:72158392306652242:1": {
+  "MACSEC_INGRESS_SA_TABLE:Ethernet0:525400edac5b0001:1": {
     "type": "hash",
     "value": {
       "active": "true",
@@ -161,7 +161,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.230506
   },
-  "MACSEC_EGRESS_SC_TABLE:Ethernet0:72088722065085522": {
+  "MACSEC_EGRESS_SC_TABLE:Ethernet0:5254008f4f1c0001": {
     "type": "hash",
     "value": {
       "encoding_an": "2"
@@ -169,7 +169,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305164
   },
-  "MACSEC_INGRESS_SA_TABLE:Ethernet4:72169757645755474:1": {
+  "MACSEC_INGRESS_SA_TABLE:Ethernet4:5254002003660001:1": {
     "type": "hash",
     "value": {
       "active": "true",
@@ -182,7 +182,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305293
   },
-  "MACSEC_EGRESS_SA_TABLE:Ethernet0:72088722065085522:2": {
+  "MACSEC_EGRESS_SA_TABLE:Ethernet0:5254008f4f1c0001:2": {
     "type": "hash",
     "value": {
       "sak": "7F2651140F12C434F782EF9AD7791EE2CFE2BF315A568A48785E35FC803C9DB6",
@@ -194,7 +194,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305422
   },
-  "MACSEC_INGRESS_SC_TABLE:Ethernet5:72169757645755474": {
+  "MACSEC_INGRESS_SC_TABLE:Ethernet5:5254002003660001": {
     "type": "hash",
     "value": {
       "Null": "Null"
@@ -202,7 +202,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305527
   },
-  "MACSEC_INGRESS_SC_TABLE:Ethernet4:72169757645755474": {
+  "MACSEC_INGRESS_SC_TABLE:Ethernet4:5254002003660001": {
     "type": "hash",
     "value": {
       "Null": "Null"
@@ -224,7 +224,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305753
   },
-  "MACSEC_EGRESS_SA_TABLE:Ethernet0:72088722065085522:1": {
+  "MACSEC_EGRESS_SA_TABLE:Ethernet0:5254008f4f1c0001:1": {
     "type": "hash",
     "value": {
       "sak": "AE8C9BB36EA44B60375E84BC8E778596289E79240FDFA6D7BA33D3518E705A5E",
@@ -236,7 +236,7 @@
     "ttl": -0.001,
     "expireat": 1651807960.2305882
   },
-  "MACSEC_EGRESS_SC_TABLE:Ethernet4:72088722065085522": {
+  "MACSEC_EGRESS_SC_TABLE:Ethernet4:5254008f4f1c0001": {
     "type": "hash",
     "value": {
       "encoding_an": "1"
