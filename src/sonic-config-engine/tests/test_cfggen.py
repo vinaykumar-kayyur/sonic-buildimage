@@ -893,8 +893,8 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
-            output_dict['Ethernet-IB0'],
-            {   'admin_status': 'up',
+            output_dict['Ethernet-IB0'], {
+                'admin_status': 'up',
                 'alias': 'Recirc0/1',
                 'coreId': '1',
                 'corePortId': '222',
@@ -907,16 +907,15 @@ class TestCfgGen(TestCase):
                 'role': 'Inb',
                 'speed': '400000',
                 'tpid': '0x8100'
-            }
-        )
+            })
 
     def test_minigraph_voq_recirc_ports(self):
         argument = "-m {} -p {} --var-json PORT".format(self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
-            output_dict['Ethernet-Rec0'],
-            {  'alias': 'Recirc0/0',
+            output_dict['Ethernet-Rec0'], {
+                'alias': 'Recirc0/0',
                 'coreId': '0',
                 'corePortId': '221',
                 'description': 'Recirc0/0',
@@ -929,8 +928,8 @@ class TestCfgGen(TestCase):
                 'speed': '400000',
                 'tpid': '0x8100',
                 'admin_status': 'up'
-            }
-        )
+            })
+
     def test_minigraph_dhcp(self):
         argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v DHCP_RELAY'
         output = self.run_script(argument)
