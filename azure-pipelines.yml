@@ -56,6 +56,7 @@ stages:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
+        pool: test
 
 - stage: Build
   pool: sonicbld
@@ -66,14 +67,11 @@ stages:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: broadcom
+        pool: test
         variables:
           swi_image: yes
       - name: mellanox
-      - name: marvell-armhf
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
-        variables:
-          PLATFORM_ARCH: armhf
+        pool: test
 
 - stage: Test
   dependsOn: BuildVS
