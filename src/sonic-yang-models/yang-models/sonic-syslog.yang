@@ -49,7 +49,7 @@ module sonic-syslog {
 
                 leaf port {
                     description "Syslog server UDP port";
-                    type uint16;
+                    type inet:port-number;
                 }
 
                 leaf vrf {
