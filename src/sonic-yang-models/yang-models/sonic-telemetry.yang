@@ -1,0 +1,56 @@
+module sonic-telemetry {
+  namespace "http://github.com/Azure/sonic-telemetry";
+  prefix tlm;
+  yang-version 1.1;
+
+
+  organization
+    "SONiC";
+
+  contact
+    "SONiC";
+
+  description
+    "SONIC TELEMETRY";
+
+  revision 2022-05-19 {
+    description
+      "Initial revision.";
+  }
+
+  import sonic-types {
+     prefix stypes;
+  }
+
+  container sonic-telemetry {
+    container TELEMETRY {
+        container gmni {
+            leaf client_auth {
+                type stypes:boolean_type;
+            }            
+            leaf log_level {
+                type string {
+                    length 1..255;
+                }
+            }
+            leaf port {
+                type string {
+                    length 1..255;
+                }
+             }
+        }
+
+        container certs {
+            leaf ca_crt {
+                type string;
+            }            
+            leaf server_key {
+                type string;
+            }
+            leaf server_crt {
+                type string;
+            }
+        }
+    }
+  }
+}
