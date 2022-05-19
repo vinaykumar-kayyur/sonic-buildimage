@@ -78,10 +78,12 @@ class eventd_server {
          *
          *  Thread is started upon creating SUB end of capture socket.
          */
-        int capture_events();
+        int capture_events(events_data_lst_t &);
 
 
     private:
+        uint32_t m_cache_max;
+
         void *m_ctx;
 
         events_data_lst_t m_events;
@@ -94,11 +96,5 @@ class eventd_server {
         thread m_thread_proxy;
         thread m_thread_capture;
 };
-
-
-
-
-
-
 
 
