@@ -4,14 +4,14 @@
             "sonic-telemetry:TELEMETRY": {
                 "certs": {
                     "ca_crt": "abcd.config",
-		    "server_crt": "a/b/c",
-		    "server_key": "123"
+                    "server_crt": "a/b/c",
+                    "server_key": "123"
                 },
-		"gnmi": {
-		    "client_auth": "true",
-		    "log_level": "2",
-		    "port": "50051"
-		}
+                "gnmi": {
+                    "client_auth": "true",
+                    "log_level": "2",
+                    "port": "50051"
+                }
             }
         }
     },
@@ -20,14 +20,14 @@
             "sonic-telemetry:TELEMETRY": {
                 "certs": {
                     "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
-		    "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
-		    "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+                    "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+                    "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
                 },
-		"gnmi": {
-		    "client_auth": "up",
-		    "log_level": "2",
-		    "port": "50051"
-		}
+                "gnmi": {
+                    "client_auth": "up",
+                    "log_level": "2",
+                    "port": "50051"
+                }
             }
         }
     },
@@ -39,11 +39,11 @@
                     "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
                     "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
                 },
-		"gnmi": {
-		    "client_auth": "true",
-		    "log_level": "2",
-		    "port": "abc"
-		}
+                "gnmi": {
+                    "client_auth": "true",
+                    "log_level": "2",
+                    "port": "abc"
+                }
             }
         }
     },
