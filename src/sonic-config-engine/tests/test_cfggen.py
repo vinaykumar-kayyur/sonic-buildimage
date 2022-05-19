@@ -897,19 +897,16 @@ class TestCfgGen(TestCase):
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
             output_dict['Ethernet-IB0'], {
-                'admin_status': 'up',
-                'alias': 'Recirc0/1',
-                'coreId': '1',
-                'corePortId': '222',
-                'description': 'Recirc0/1',
-                'index': '52',
-                'lanes': '222',
-                'mtu': '9100',
-                'numVoq': '8',
-                'pfc_asym': 'off',
-                'role': 'Inb',
-                'speed': '400000',
-                'tpid': '0x8100'
+                "lanes": "222",
+                "alias": "Recirc0/1",
+                "index": "52",
+                "role": "Inb",
+                "speed": "400000",
+                "description": "Recirc0/1",
+                "mtu": "9100",
+                "tpid": "0x8100",
+                "pfc_asym": "off",
+                "admin_status": "up"
             })
 
     def test_minigraph_voq_recirc_ports(self):
@@ -918,19 +915,16 @@ class TestCfgGen(TestCase):
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
             output_dict['Ethernet-Rec0'], {
-                'alias': 'Recirc0/0',
-                'coreId': '0',
-                'corePortId': '221',
-                'description': 'Recirc0/0',
-                'index': '51',
-                'lanes': '221',
-                'mtu': '9100',
-                'numVoq': '8',
-                'pfc_asym': 'off',
-                'role': 'Rec',
-                'speed': '400000',
-                'tpid': '0x8100',
-                'admin_status': 'up'
+                "lanes": "221",
+                "alias": "Recirc0/0",
+                "index": "51",
+                "role": "Rec",
+                "speed": "400000",
+                "description": "Recirc0/0",
+                "mtu": "9100",
+                "tpid": "0x8100",
+                "pfc_asym": "off",
+                "admin_status": "up"
             })
 
     def test_minigraph_dhcp(self):
