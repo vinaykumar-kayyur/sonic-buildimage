@@ -1105,7 +1105,7 @@
                 "dnat_entry_low_threshold": "70",
                 "ipmc_entry_threshold_type": "percentage",
                 "ipmc_entry_high_threshold": "85",
-                "ipmc_entry_low_threshold": "70"
+                "ipmc_entry_low_threshold": "70",
                 "ipv6_neighbor_high_threshold": "67",
                 "ipv6_neighbor_low_threshold": "56",
                 "ipv6_neighbor_threshold_type": "percentage",
