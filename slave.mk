@@ -123,6 +123,8 @@ include $(RULES_PATH)/config
 export PACKAGE_URL_PREFIX
 export TRUSTED_GPG_URLS
 export SONIC_VERSION_CONTROL_COMPONENTS
+DEFAULT_CONTAINER_REGISTRY := $(SONIC_DEFAULT_CONTAINER_REGISTRY)
+export DEFAULT_CONTAINER_REGISTRY
 
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
@@ -142,6 +144,11 @@ endif
 
 ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
+endif
+
+ifeq ($(SONIC_SAITHRIFT_V2),y)
+SAITHRIFT_V2 = y
+SAITHRIFT_VER = v2
 endif
 
 ifeq ($(SONIC_INCLUDE_SFLOW),y)
@@ -250,6 +257,7 @@ $(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
 $(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
 endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
+$(info "SAITHRIFT_V2"                    : "$(SAITHRIFT_V2)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
@@ -275,6 +283,7 @@ $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
+$(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
@@ -555,6 +564,7 @@ $(SONIC_INSTALL_DEBS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install
 		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
 			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && sudo lsof /var/lib/dpkg/lock-frontend && ps aux && exit 1 ; }
 		fi
+		sleep 10
 	done
 	$(FOOTER)
 
@@ -965,6 +975,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
 			)
 		fi
+		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
+			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
+
+			# Set the flag GLOBAL_TIMER for all the global system-wide dockers timers.
+			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_GLOBAL_TIMER = yes)
+			)
+		fi
 		# Any service template, inside instance directory, will be used to generate .service and @.service file.
 		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			export multi_instance="true"
@@ -974,6 +992,16 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)
 			export multi_instance="false"
 			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+		fi
+		# Any timer template, inside instance directory, will be used to generate .timer and @.timer file.
+		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
+			export multi_instance="true"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.timer
+			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE_TIMER = yes)
+			)
+			export multi_instance="false"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
 		fi
 		# Any service template, inside share_image directory, will be used to generate -chassis.service file.
 		# TODO: need better way to name the image-shared service
@@ -1007,7 +1035,20 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			$(eval SERVICES += "$(addsuffix -chassis.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
 		)
 	)
+	# Marks template timers with an "@" according to systemd convention
+	# If the $($docker)_TEMPLATE_TIMER) variable is set, the timer will be treated as a template
+	# If the $($docker)_GLOBAL_TIMER) and $($docker)_TEMPLATE_TIMER) variables are set the timer will be added both as a global and template timer.
+	$(foreach docker, $($*_DOCKERS),\
+		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE_TIMER),\
+			$(if $($(docker:-dbg.gz=.gz)_GLOBAL_TIMER),\
+				$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
+			)\
+			$(eval TIMERS += "$(addsuffix @.timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
+			$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
+		)
+	)
 	export installer_services="$(SERVICES)"
+	export installer_timers="$(TIMERS)"
 
 	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
 
