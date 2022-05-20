@@ -29,7 +29,7 @@
 #define MAX_PUBLISHERS_COUNT  1000
 
 
-eventd_server::eventd_server() : m_capture(NULL), 
+eventd_server::eventd_server() : m_capture(NULL)
 {
     m_ctx = zmq_ctx_new();
     RET_ON_ERR(m_ctx != NULL, "Failed to get zmq ctx");
@@ -65,10 +65,10 @@ eventd_server::zproxy_service()
     RET_ON_ERR(rc == 0, "Failing to bind XPUB to %s", get_config(XPUB_END_KEY));
 
     void *capture = zmq_socket(m_ctx, ZMQ_PUB);
-    RET_ON_ERR(capture != NULL, "failing to get ZMQ_XSUB socket");
+    RET_ON_ERR(capture != NULL, "failing to get ZMQ_PUB socket for capture");
 
     rc = zmq_bind(capture, get_config(CAPTURE_END_KEY));
-    RET_ON_ERR(rc == 0, "Failing to bind PAIR to %s", get_config(PAIR_END_KEY));
+    RET_ON_ERR(rc == 0, "Failing to bind capture PUB to %s", get_config((CAPTURE_END_KEY));
 
     m_thread_proxy = thread(&eventd_server::zproxy_service_run, this, frontend, 
             backend, capture);
@@ -102,9 +102,6 @@ eventd_server::capture_events(events_data_lst_t &lst)
     /* clean any pre-existing cache */
     int ret = -1;
     int i;
-
-    events_data_lst_t.swap(m_events);
-    last_events_t.swap(m_last_events);
 
     /*
      * Reserve a MAX_PUBLISHERS_COUNT entries for last events, as we use it only
@@ -164,7 +161,7 @@ eventd_server::capture_events(events_data_lst_t &lst)
     while(m_events.size() < m_cache_max) {
         string source, evt_str;
 
-        RET_ON_ERR(zmq_message_read(m_socket, ZMQ_DONTWAIT, source, evt_str) == 0,
+        RET_ON_ERR(zmq_message_read(m_socket, 0, source, evt_str) == 0,
                 "Failed to read from capture socket");
         try
         {
@@ -182,12 +179,11 @@ eventd_server::capture_events(events_data_lst_t &lst)
 
 
     /* Save only last event per sender */
-    m_last_events.clear();
     while(true) {
         internal_event_t event;
         string source, evt_str;
 
-        RET_ON_ERR(zmq_message_read(m_socket, ZMQ_DONTWAIT, source, evt_str) == 0,
+        RET_ON_ERR(zmq_message_read(m_socket, 0, source, evt_str) == 0,
                 "Failed to read from capture socket");
 
         deserialize(evt_str, event);
@@ -227,10 +223,10 @@ eventd_server::eventd_service()
                     break;
                 }
                 m_capture = zmq_socket(m_ctx, ZMQ_SUB);
-                RET_ON_ERR(capture != NULL, "failing to get ZMQ_XSUB socket");
+                RET_ON_ERR(capture != NULL, "failing to get ZMQ_SUB socket");
 
                 rc = zmq_connect(capture, get_config(CAPTURE_END_KEY));
-                RET_ON_ERR(rc == 0, "Failing to bind PAIR to %s", get_config(PAIR_END_KEY));
+                RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config((CAPTURE_END_KEY));
 
                 rc = zmq_setsockopt(sub_read, ZMQ_SUBSCRIBE, "", 0);
                 RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
@@ -244,6 +240,9 @@ eventd_server::eventd_service()
                     resp_code = -1;
                     break;
                 }
+                events_data_lst_t.swap(m_events);
+                last_events_t.swap(m_last_events);
+
                 /* Kick off the service */
                 m_thread_capture = thread(&eventd_server::capture_events, this, req_data);
 
@@ -253,6 +252,12 @@ eventd_server::eventd_service()
                 
             case EVENT_CACHE_STOP:
                 if (m_capture != NULL) {
+                    /*
+                     * Caller would have initiated SUBS channel.
+                     * Read for CACHE_DRAIN_IN_MILLISECS to drain off cache
+                     * before stopping.
+                     */
+                    this_thread::sleep_for(chrono::milliseconds(CACHE_DRAIN_IN_MILLISECS));
                     close(m_capture);
                     m_capture = NULL;
 

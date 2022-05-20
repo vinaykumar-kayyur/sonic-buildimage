@@ -3,7 +3,7 @@
  */
 #include "events_service.h"
 
-typedef map<runtime_id_t, events_cache_type_t> last_events_t;
+typedef map<runtime_id_t, events_data_type_t> last_events_t;
 
 class eventd_server {
     public:
@@ -68,17 +68,17 @@ class eventd_server {
          *
          *  It keeps two sets of data
          *      1) List of all events received in vector in same order as received
-         *      2) Map of last event from each runtime id
+         *      2) Map of last event from each runtime id upon list overflow max size.
          *
-         *  We add to the vector as much as allowed by vector and as well
-         *  the available memory. When mem exhausts, just keep updating map
-         *  with last event from that sender. 
+         *  We add to the vector as much as allowed by vector and max limit,
+         *  whichever comes first.
          *  
-         *  The sequence number in map will help assess the missed count.
+         *  The sequence number in internal event will help assess the missed count
+         *  by the consumer of the cache data.
          *
          *  Thread is started upon creating SUB end of capture socket.
          */
-        int capture_events(events_data_lst_t &);
+        int capture_events(events_data_lst_t &lst);
 
 
     private:
@@ -91,7 +91,6 @@ class eventd_server {
         last_events_t m_last_events;
 
         void *m_capture;
-
 
         thread m_thread_proxy;
         thread m_thread_capture;
