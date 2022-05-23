@@ -200,8 +200,11 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     generate_device_list ".platforms_asic"
     zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
 
-    echo "sonic_fips=0" > kernel-cmdline
-    [ "$ENABLE_FIPS" == "y" ] && echo "sonic_fips=1" > kernel-cmdline
+    if [ "$ENABLE_FIPS" = "y" ]; then
+        echo "sonic_fips=1" > kernel-cmdline
+    else
+        echo "sonic_fips=0" > kernel-cmdline
+    fi
     zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline
     rm kernel-cmdline
 
