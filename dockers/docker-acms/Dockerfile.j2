@@ -70,7 +70,7 @@ RUN chmod 600 /etc/sonic/credentials
 
 # Install ACMS
 COPY ["install_acms.sh", "/acms"]
-RUN cd /acms && sh install_acms.sh
+RUN cd /acms && sh install_acms.sh {{CONFIGURED_ARCH}}
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 
