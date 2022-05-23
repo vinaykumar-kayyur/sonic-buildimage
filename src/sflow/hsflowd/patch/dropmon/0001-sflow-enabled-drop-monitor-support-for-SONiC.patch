@@ -51,7 +51,7 @@ index e675730..fb52a54 100644
    # sonic {} loaded automatically
    # psample {} loaded automatically
 +  # packet drop monitoring:
-+  dropmon { group=1 start=on limit=1000 sw=on hw=on }
++  dropmon { group=1 start=on limit=1000 sw=off hw=on }
    # ====== detect new interfaces ======
    refreshAdaptors=60
    # ======  Agent IP selection ======
