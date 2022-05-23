@@ -888,7 +888,10 @@ def parse_system_defaults(meta):
     system_default_values = {}
 
     system_defaults = meta.find(str(QName(ns1, "SystemDefaults")))
-
+    
+    if system_defaults is None:
+        return system_default_values
+    
     for system_default in system_defaults.findall(str(QName(ns1, "SystemDefault"))):
         name = system_default.find(str(QName(ns1, "Name"))).text
         value = system_default.find(str(QName(ns1, "Value"))).text
