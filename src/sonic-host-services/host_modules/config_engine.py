@@ -2,7 +2,6 @@
 
 from host_modules import host_service
 import subprocess
-import re
 import os
 import shutil
 
