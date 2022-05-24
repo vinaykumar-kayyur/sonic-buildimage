@@ -594,6 +594,7 @@ void relay_relay_forw(int sock, const uint8_t *msg, int32_t len, const ip6_hdr *
 void callback(evutil_socket_t fd, short event, void *arg) {
     struct relay_config *config = (struct relay_config *)arg;
     static uint8_t message_buffer[4096];
+    std::string counterVlan = counter_table;
     int32_t len = recv(config->filter, message_buffer, 4096, 0);
     if (len <= 0) {
         syslog(LOG_WARNING, "recv: Failed to receive data at filter socket: %s\n", strerror(errno));
@@ -631,10 +632,6 @@ void callback(evutil_socket_t fd, short event, void *arg) {
     auto msg = parse_dhcpv6_hdr(current_position);
     auto option_position = current_position + sizeof(struct dhcpv6_msg);
 
-    counters[msg->msg_type]++;
-    std::string counterVlan = counter_table;
-    update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
-
     switch (msg->msg_type) {
         case DHCPv6_MESSAGE_TYPE_RELAY_FORW:
         {
@@ -660,6 +657,8 @@ void callback(evutil_socket_t fd, short event, void *arg) {
                     return;
                 }
             }
+            counters[msg->msg_type]++;
+            update_counter(config->db, counterVlan.append(config->interface), msg->msg_type);
             relay_client(config->local_sock, current_position, ntohs(udp_header->len) - sizeof(udphdr), ip_header, ether_header, config);
             break;
         }
