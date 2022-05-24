@@ -19,7 +19,7 @@ class TestGCU(object):
             patch_file = "test.patch"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.apply_patch_db(patch_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "apply-patch" in call_args
             assert "CONFIGDB" in call_args
             assert patch_file in call_args
@@ -35,7 +35,7 @@ class TestGCU(object):
             patch_file = "test.patch"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.apply_patch_db(patch_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "apply-patch" in call_args
             assert "CONFIGDB" in call_args
             assert patch_file in call_args
@@ -56,7 +56,7 @@ class TestGCU(object):
             patch_file = "test.patch"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.apply_patch_yang(patch_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "apply-patch" in call_args
             assert "SONICYANG" in call_args
             assert patch_file in call_args
@@ -72,7 +72,7 @@ class TestGCU(object):
             patch_file = "test.patch"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.apply_patch_yang(patch_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "apply-patch" in call_args
             assert "SONICYANG" in call_args
             assert patch_file in call_args
@@ -93,7 +93,7 @@ class TestGCU(object):
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.create_cp(cp_name)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "checkpoint" in call_args
             assert "delete-checkpoint" not in call_args
             assert cp_name in call_args
@@ -109,7 +109,7 @@ class TestGCU(object):
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.create_cp(cp_name)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "checkpoint" in call_args
             assert "delete-checkpoint" not in call_args
             assert cp_name in call_args
@@ -130,7 +130,7 @@ class TestGCU(object):
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.delete_cp(cp_name)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "delete-checkpoint" in call_args
             assert cp_name in call_args
             assert ret == test_ret, "Return value is wrong"
@@ -145,7 +145,7 @@ class TestGCU(object):
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
             ret, msg = gcu_stub.delete_cp(cp_name)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "delete-checkpoint" in call_args
             assert cp_name in call_args
             assert ret == test_ret, "Return value is wrong"

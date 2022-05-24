@@ -21,7 +21,7 @@ class TestConfigEngine(object):
                 config_file = "test.json"
                 config_stub = config_engine.Config(config_engine.MOD_NAME)
                 ret, msg = config_stub.reload(config_file)
-                call_args = mock_run.call_args.args[0]
+                call_args = mock_run.call_args[0][0]
                 assert "reload" in call_args
                 assert config_file not in call_args
                 assert ret == test_ret, "Return value is wrong"
@@ -36,7 +36,7 @@ class TestConfigEngine(object):
                 config_file = "test.json"
                 config_stub = config_engine.Config(config_engine.MOD_NAME)
                 ret, msg = config_stub.reload(config_file)
-                call_args = mock_run.call_args.args[0]
+                call_args = mock_run.call_args[0][0]
                 assert "reload" in call_args
                 assert config_file not in call_args
                 assert ret == test_ret, "Return value is wrong"
@@ -56,7 +56,7 @@ class TestConfigEngine(object):
             config_file = "test.patch"
             config_stub = config_engine.Config(config_engine.MOD_NAME)
             ret, msg = config_stub.save(config_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "save" in call_args
             assert config_file in call_args
             assert ret == test_ret, "Return value is wrong"
@@ -71,7 +71,7 @@ class TestConfigEngine(object):
             config_file = "test.patch"
             config_stub = config_engine.Config(config_engine.MOD_NAME)
             ret, msg = config_stub.save(config_file)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "save" in call_args
             assert config_file in call_args
             assert ret == test_ret, "Return value is wrong"

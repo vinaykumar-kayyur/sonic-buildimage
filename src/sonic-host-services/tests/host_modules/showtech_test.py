@@ -21,7 +21,7 @@ class TestShowtech(object):
             patch_file = "test.patch"
             showtech_stub = showtech.Showtech(showtech.MOD_NAME)
             ret, msg = showtech_stub.info(date_msg)
-            call_args = mock_run.call_args.args[0]
+            call_args = mock_run.call_args[0][0]
             assert "/usr/local/bin/generate_dump" in call_args
             assert date_msg in call_args
             assert ret == test_ret, "Return value is wrong"
