@@ -30,7 +30,8 @@
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
-	url = https://github.com/Azure/sonic-utilities
+	url = https://github.com/liuh-80/sonic-utilities
+	branch = dev/liuh/remove_unnecessary_global_variable
 [submodule "platform/broadcom/sonic-platform-modules-arista"]
 	path = platform/broadcom/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
