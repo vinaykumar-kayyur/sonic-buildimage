@@ -1,6 +1,6 @@
 # openssh package
 
-OPENSSH_VERSION = 8.4p1-2~bpo10+1
+OPENSSH_VERSION = 8.4p1-2_bpo10+1
 
 export OPENSSH_VERSION
 
