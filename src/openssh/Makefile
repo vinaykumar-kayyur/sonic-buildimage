@@ -11,8 +11,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git clone https://salsa.debian.org/ssh-team/openssh.git openssh-server
 	pushd ./openssh-server
 
-	# Check out tag: debian/1%8.4p1-5
-	git checkout -b openssh-src -f debian/1\%$(OPENSSH_VERSION)
+	# Check out tag: debian/1%8.4p1-2~bpo10+1
+	git checkout -b openssh-src -f f410134ed259d1a1353f18a3f61cb29eb6d295a8
 
 	# Apply patch series
 	stg init
