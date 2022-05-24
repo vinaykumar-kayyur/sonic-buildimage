@@ -331,9 +331,7 @@ RUN apt-get update && apt-get install -y \
         libboost-regex1.71-dev \
         googletest \
         libgtest-dev \
-        libgcc-8-dev \
-# For openssh
-        libfido2-dev
+        libgcc-8-dev
 
 RUN apt-get -y build-dep openssh
 
