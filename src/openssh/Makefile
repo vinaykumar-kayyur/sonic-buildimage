@@ -6,7 +6,7 @@ MAIN_TARGET = openssh-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-	# Obtain openssh: https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%258.4p1-5
+	# Obtain openssh: https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%258.4p1-2
 	rm -rf ./openssh-server
 	git clone https://salsa.debian.org/ssh-team/openssh.git openssh-server
 	pushd ./openssh-server
