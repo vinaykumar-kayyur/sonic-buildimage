@@ -197,7 +197,9 @@ class FeatureHandler(object):
         # the next called self.update_feature_state will start it again. If it will fail
         # again the auto restart will kick-in. Another order may leave it in failed state
         # and not auto restart.
-        self.update_feature_auto_restart(feature, feature_name)
+        if self._cached_config[feature_name].auto_restart != feature.auto_restart:
+            self.update_restart_field_in_systemd_config(feature)
+            self._cached_config[feature_name].auto_restart = feature.auto_restart
 
         # Enable/disable the container service if the feature state was changed from its previous state.
         if self._cached_config[feature_name].state != feature.state:
@@ -220,7 +222,7 @@ class FeatureHandler(object):
             feature = Feature(feature_name, feature_table[feature_name], self._device_config)
 
             self._cached_config.setdefault(feature_name, feature)
-            self.update_feature_auto_restart(feature, feature_name)
+            self.update_restart_field_in_systemd_config(feature)
             self.update_feature_state(feature)
             self.resync_feature_state(feature)
 
@@ -265,22 +267,17 @@ class FeatureHandler(object):
 
         return True
 
-    def update_feature_auto_restart(self, feature, feature_name):
-        dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
-        auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
+    def update_restart_field_in_systemd_config(self, feature):
+        """Updates `Restart=` field in feature's systemd configuration file
+        according to the value of `auto_restart` field in `FEATURE` table of `CONFIG_DB`.
 
-        write_conf = False
-        if not os.path.exists(auto_restart_conf):  # if the auto_restart_conf file is not found, set it
-            write_conf = True
+        Args:
+            feature: An object represents a container's configuration in `FEATURE`
+            table of `CONFIG_DB`.
 
-        if self._cached_config[feature_name].auto_restart != feature.auto_restart:
-            write_conf = True
-
-        if not write_conf:
-            return
-
-        self._cached_config[feature_name].auto_restart = feature.auto_restart # Update Cache
-
+        Returns:
+            None.
+        """
         restart_config = "always" if feature.auto_restart == "enabled" else "no"
         service_conf = "[Service]\nRestart={}\n".format(restart_config)
         feature_names, feature_suffixes = self.get_feature_attribute(feature)
