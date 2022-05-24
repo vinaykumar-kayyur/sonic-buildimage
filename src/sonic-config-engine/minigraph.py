@@ -84,6 +84,7 @@ def get_peer_switch_info(link_metadata, devices):
     return peer_switch_table, mux_tunnel_name, peer_switch_ip
 
 
+
 def parse_device(device):
     lo_prefix = None
     lo_prefix_v6 = None
@@ -1833,6 +1834,21 @@ def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
                 print("Warning: skip parsing device %s for mux cable entry, cable type %s not supported" % (cable_name, cable_type), file=sys.stderr)
         else:
             print("Warning: skip parsing device %s for mux cable entry, device definition not found" % cable_name, file=sys.stderr)
+
+        if cable_name in devices:
+            cable_type = devices[cable_name].get('subtype')
+            if cable_type is None:
+                continue
+            if cable_type in dualtor_cable_types:
+                mux_cable_table[intf]['cable_type'] = cable_type
+                if cable_type == 'active-active':
+                    soc_ipv4 = devices[cable_name]['lo_addr'].split('/')[0]
+                    soc_ipv4_prefix = ipaddress.ip_network(UNICODE_TYPE(soc_ipv4))
+                    mux_cable_table[intf]['soc_ipv4'] = str(soc_ipv4_prefix)
+            else:
+                print("Warning: skip parsing device %s for mux cable entry, cable type %s not supported" % (cable_name, cable_type))
+        else:
+            print("Warning: skip parsing device %s for mux cable entry, device definition not found" % cable_name)
 
     return mux_cable_table
 
