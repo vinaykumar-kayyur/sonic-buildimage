@@ -1,4 +1,4 @@
-# SONiC make file
+# SONiC make file  
 
 NOJESSIE ?= 1
 NOSTRETCH ?= 0
