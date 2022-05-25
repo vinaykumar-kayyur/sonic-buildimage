@@ -6,13 +6,15 @@ MAIN_TARGET = openssh-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-	# Obtain openssh: https://salsa.debian.org/ssh-team/openssh/-/tree/debian/buster-backports/debian
-	rm -rf ./openssh-server
-	git clone https://salsa.debian.org/ssh-team/openssh.git openssh-server
-	pushd ./openssh-server
+	# Remove stable files
+	rm -rf ./openssh-$(OPENSSH_VERSION)
 
-	# Check out commit: debian/buster-backports/debian (1%8.4p1-2~bpo10+1)
-	git checkout -b openssh-src -f f410134ed259d1a1353f18a3f61cb29eb6d295a8
+	dget https://deb.debian.org/debian/pool/main/o/openssh/openssh_$(OPENSSH_VERSION_FULL).dsc
+	pushd ./openssh-$(OPENSSH_VERSION)
+
+	git init
+	git add -f *
+	git commit -qm "initial commit"
 
 	# Apply patch series
 	stg init
