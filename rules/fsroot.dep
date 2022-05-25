@@ -1,0 +1,27 @@
+
+SPATH       := $($(FSROOT)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/fsroot.mk rules/fsroot.dep   
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+DEP_FILES   += $(SONIC_COMMON_DOCKER_FILES_LIST)
+DEP_FILES   += build_debian_rootfs.sh
+DEP_FILES   += build_debian.sh
+DEP_FILES   += onie-image.conf
+DEP_FILES   += scripts/fsutil.sh
+
+define COPY_FROM_CACHE
+	cp  $(1) $(2)
+endef
+
+define COPY_TO_CACHE
+	cp  $(1) $(2)
+endef
+
+#DPKG FRK - Add more dependency files
+$(FSROOT)_CACHE_MODE  := GIT_CONTENT_SHA
+$(FSROOT)_CACHE_USER  := sudo
+$(FSROOT)_FORCE_COPY  := yes
+$(FSROOT)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
+$(FSROOT)_DEP_FILES   := $(DEP_FILES)
+$(FSROOT)_LOAD_HANDLER := COPY_FROM_CACHE
+$(FSROOT)_SAVE_HANDLER := COPY_TO_CACHE
+

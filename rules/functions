@@ -134,6 +134,23 @@ $(1)_DBG_DOCKER += $(2)
 SONIC_DBG_DOCKERS += $(2)
 endef
 
+###############################################################################
+## Definition of dependent machines
+###############################################################################
+
+# call:
+#     add_dbg_docker some_docker.gz, some-docker-dbg.gz
+define add_dependent_machine
+$(2)_PATH = $($(1)_PATH)
+$(2)_MACHINE = $($(1)_MACHINE)
+$(2)_IMAGE_TYPE = $($(1)_IMAGE_TYPE)
+$(2)_INSTALLS = $($(1)_INSTALLS)
+$(2)_LAZY_INSTALLS = $($(1)_LAZY_INSTALLS)
+$(2)_LAZY_BUILD_INSTALLS = $($(1)_LAZY_BUILD_INSTALLS)
+$(2)_DOCKERS = $($(1)_DOCKERS)
+SONIC_DEPENDENT_INSTALLERS += $(2)
+endef
+
 
 
 ###############################################################################

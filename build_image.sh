@@ -24,6 +24,7 @@ fi
 }
 
 IMAGE_VERSION="${SONIC_IMAGE_VERSION}"
+BUILD_PATH=target/fs/${TARGET_MACHINE}
 
 generate_kvm_image()
 {
@@ -82,11 +83,12 @@ generate_onie_installer_image()
         done
     done
 
+    PAYLOAD_LIST="${BUILD_PATH}/$ONIE_INSTALLER_PAYLOAD"
     ## Generate an ONIE installer image
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
-          $ONIE_INSTALLER_PAYLOAD
+          $PAYLOAD_LIST
 }
 
 # Generate asic-specific device list
@@ -179,7 +181,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     sudo rm -f $OUTPUT_ABOOT_IMAGE
     sudo rm -f $ABOOT_BOOT_IMAGE
     ## Add main payload
-    cp $ONIE_INSTALLER_PAYLOAD $OUTPUT_ABOOT_IMAGE
+    cp ${BUILD_PATH}/$ONIE_INSTALLER_PAYLOAD $OUTPUT_ABOOT_IMAGE
     ## Add Aboot boot0 file
     j2 -f env files/Aboot/boot0.j2 ./onie-image.conf > files/Aboot/boot0
     sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" files/Aboot/boot0
