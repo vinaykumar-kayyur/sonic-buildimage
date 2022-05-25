@@ -296,8 +296,6 @@ class Sfp(SfpBase):
     def _read_eeprom_bytes(self, offset, num_bytes, path_idx):
         eeprom_raw = []
 
-        eeprom = None
-
         for i in range(0, num_bytes):
             eeprom_raw.append("0x00")
 
