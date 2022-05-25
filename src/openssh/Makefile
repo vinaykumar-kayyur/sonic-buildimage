@@ -2,8 +2,8 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = openssh-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
-DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
+MAIN_TARGET = $(OPENSSH_SERVER)
+DERIVED_TARGETS = $(OPENSSH_SERVER_DBG)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove stale files
