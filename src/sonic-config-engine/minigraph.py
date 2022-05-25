@@ -1543,9 +1543,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if autoneg:
             port['autoneg'] = 'on' if autoneg.lower() == 'true' else 'off'
 
-        # If macsec is enabled on interface, add the profile to port
+        # If macsec is enabled on interface, and profile is valid, add the profile to port
         macsec_enabled = linkmetas.get(alias, {}).get('MacSecEnabled')
-        if macsec_enabled:
+        if macsec_enabled and macsec_profile['PrimaryKey']:
             port['macsec_profile'] = macsec_profile['PrimaryKey']
 
     # If connected to a smart cable, get the connection position
@@ -1911,15 +1911,15 @@ def parse_meta_get_macsec_profile(root, hname):
                         name = device_property.find(str(QName(ns1, "Name"))).text
                         value = device_property.find(str(QName(ns1, "Value"))).text
                         if name == 'MacSecProfile':
-                            values = value.split(' ')
+                            values = value.strip().split(' ')
                             for val in values:
-                                keys = val.split('=')
+                                keys = val.strip().split('=')
                                 if keys[0] == 'PrimaryKey':
-                                    macsec_profile['PrimaryKey'] = keys[1]
+                                    macsec_profile['PrimaryKey'] = keys[1].strip('\"')
                                 elif keys[0] == 'FallbackKey':
-                                    macsec_profile['FallbackKey'] = keys[1]
+                                    macsec_profile['FallbackKey'] = keys[1].strip('\"')
                                 elif keys[0] == 'MacsecPolicy':
-                                    macsec_profile['MacsecPolicy'] = keys[1]
+                                    macsec_profile['MacsecPolicy'] = keys[1].strip('\"')
     return macsec_profile
 
 port_alias_map = {}
