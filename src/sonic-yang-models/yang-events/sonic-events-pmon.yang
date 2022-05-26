@@ -2,6 +2,10 @@ module sonic-events-pmon {
     namespace "http://github.com/sonic-net/sonic-events-pmon";
     yang-version 1.1;
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     import sonic-events-common {
         prefix evtcmn;
     }
@@ -21,6 +25,8 @@ module sonic-events-pmon {
 
 
     container pmon-exited {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event reportes by pmon for an unexpected exit.
             The exited entity is the only param";

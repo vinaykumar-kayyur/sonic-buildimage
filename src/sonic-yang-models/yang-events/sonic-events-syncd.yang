@@ -2,6 +2,10 @@ module sonic-events-syncd {
     namespace "http://github.com/sonic-net/sonic-events-syncd";
     yang-version 1.1;
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     import sonic-events-common {
         prefix evtcmn;
     }
@@ -20,6 +24,8 @@ module sonic-events-syncd {
         "SONIC syncd events";
 
     container syncd_failure {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for all types of syncd failure.
             The type of failure and the asic-index of failing syncd are
