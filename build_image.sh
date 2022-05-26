@@ -179,7 +179,10 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     sudo rm -f $OUTPUT_ABOOT_IMAGE
     sudo rm -f $ABOOT_BOOT_IMAGE
     ## Add main payload
-    cp $ONIE_INSTALLER_PAYLOAD $OUTPUT_ABOOT_IMAGE
+    tmpdir=$(mktemp -d)
+    jar -xf $ONIE_INSTALLER_PAYLOAD -C $tmpdir
+    pushd $tmpdir && zip -n .squashfs:.gz $OUTPUT_ABOOT_IMAGE -r .; popd
+    rm $tmpdir -rf
     ## Add Aboot boot0 file
     j2 -f env files/Aboot/boot0.j2 ./onie-image.conf > files/Aboot/boot0
     sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" files/Aboot/boot0

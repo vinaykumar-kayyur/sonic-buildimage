@@ -536,9 +536,9 @@ fi
 # Decompress the file for the file system directly to the partition
 if [ x"$docker_inram" = x"on" ]; then
     # when disk is small, keep dockerfs.tar.gz in disk, expand it into ramfs during initrd
-    unzip -o $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
+    tar xvf $ONIE_INSTALLER_PAYLOAD -C $demo_mnt/$image_dir
 else
-    unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
+    tar xvf $ONIE_INSTALLER_PAYLOAD --exclude="$FILESYSTEM_DOCKERFS" -C $demo_mnt/$image_dir
 
     if [ "$install_env" = "onie" ]; then
         TAR_EXTRA_OPTION="--numeric-owner"
@@ -546,7 +546,7 @@ else
         TAR_EXTRA_OPTION="--numeric-owner --warning=no-timestamp"
     fi
     mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
-    unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
+    tar -xf $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" -O | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 fi
 
 if [ "$install_env" = "onie" ]; then
