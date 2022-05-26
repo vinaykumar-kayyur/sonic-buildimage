@@ -2,6 +2,10 @@ module events-host {
     namespace "http://github.com/sonic-net/sonic-events-host";
     yang-version 1.1;
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     import sonic-events-common {
         prefix evtcmn;
     }
@@ -10,6 +14,8 @@ module events-host {
     }
 
     container disk-usage {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event for disk usage crossing set limit
             The parameters describe the usage & limit set.";
@@ -26,6 +32,8 @@ module events-host {
     }
 
     container memory-usage {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event for memory usage crossing set limit
             The parameters describe the usage & limit set.";
@@ -36,6 +44,8 @@ module events-host {
     }
 
     container event-sshd {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event reported by sshd.
             The fail type declares the type of failure.
@@ -53,6 +63,8 @@ module events-host {
     }
 
     container event-disk {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event reported by disk check.
             The fail type declares the type of failure.
@@ -69,6 +81,8 @@ module events-host {
     }
 
     container event-kernel {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event reported by kernel.
             The fail type declares the type of failure.";
@@ -95,6 +109,8 @@ module events-host {
     }
 
     container event-monit-proc {
+        evtcmn:severity "2"
+
         description "
             Declares an event reported by monit for a process
             that is not running.
@@ -119,6 +135,8 @@ module events-host {
     }
 
     container event-monit-status {
+        evtcmn:severity "2"
+
         description "
             Declares an event reported by monit for status check
             failure for a process
@@ -149,6 +167,8 @@ module events-host {
     }
 
     container event-platform {
+        evtcmn:severity "2"
+
         description "
             Declares an event for platform related failure.
             Params: 

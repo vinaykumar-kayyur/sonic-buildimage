@@ -7,6 +7,10 @@ module sonic-events-bgp {
         prefix evtcmn;
     }
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     revision 2022-12-01 {
         description "BGP alert events.";
     }
@@ -21,6 +25,8 @@ module sonic-events-bgp {
         "SONIC BGP events";
 
     container bgp-state {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for BGP state for a neighbor IP
             The status says up or down";
@@ -42,6 +48,8 @@ module sonic-events-bgp {
     }
 
     container bgp-hold-timer {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for BGP hold timer expiry.
             This event does not have any other parameter.
@@ -51,6 +59,8 @@ module sonic-events-bgp {
     }
 
     container zebra-no-buff {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for zebra running out of buffer.
             This event does not have any other parameter.

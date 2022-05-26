@@ -2,6 +2,10 @@ module sonic-events-swss {
     namespace "http://github.com/sonic-net/sonic-events-swss";
     yang-version 1.1;
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     import sonic-events-common {
         prefix evtcmn;
     }
@@ -20,6 +24,8 @@ module sonic-events-swss {
         "SONIC SWSS events";
 
     container redis-generic {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for a fatal error encountered by swss.
             The asic-index of the failing process is the only param.";
@@ -34,6 +40,8 @@ module sonic-events-swss {
     }
 
     container if-state {
+        oc-alarm-types:MINOR
+
         description "
             Declares an event for i/f flap.
             
@@ -57,6 +65,8 @@ module sonic-events-swss {
     }
 
     container pfc-storm {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for PFC storm.
             
@@ -86,6 +96,8 @@ module sonic-events-swss {
     }
 
     container chk_crm_threshold {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for CRM threshold.";
 

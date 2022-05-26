@@ -2,6 +2,10 @@ module sonic-events-dhcp-relay {
     namespace "http://github.com/sonic-net/sonic-events-dhcp-relay";
     yang-version 1.1;
 
+    import openconfig-alarm-types {
+        prefix oc-alarm-types;
+    }
+
     import sonic-events-common {
         prefix evtcmn;
     }
@@ -20,6 +24,8 @@ module sonic-events-dhcp-relay {
         "SONIC dhcp-relay events";
 
     container dhcp-relay-discard {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for dhcp-relay discarding packet on an
             interface due to missing IP address assigned.
@@ -44,6 +50,8 @@ module sonic-events-dhcp-relay {
     }
 
     container dhcp-relay-disparity {
+        oc-alarm-types:MAJOR
+
         description "
             Declares an event for disparity detected in
             DHCP Relay behavior by dhcpmon.
