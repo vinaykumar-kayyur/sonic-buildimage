@@ -1815,7 +1815,7 @@ def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
                     entry['server_ipv6'] = str(server_ipv6_lo_prefix)
                 mux_cable_table[intf] = entry 
             else:
-                print("Warning: no server IPv4 loopback found for {}, skipping mux cable table entry".format(neighbor))
+                print("Warning: no server IPv4 loopback found for {}, skipping mux cable table entry".format(neighbor), file=sys.stderr)
 
         if cable_name in devices:
             cable_type = devices[cable_name].get('subtype')
@@ -1828,9 +1828,9 @@ def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
                     soc_ipv4_prefix = ipaddress.ip_network(UNICODE_TYPE(soc_ipv4))
                     mux_cable_table[intf]['soc_ipv4'] = str(soc_ipv4_prefix)
             else:
-                print("Warning: skip parsing device %s for mux cable entry, cable type %s not supported" % (cable_name, cable_type))
+                print("Warning: skip parsing device %s for mux cable entry, cable type %s not supported" % (cable_name, cable_type), file=sys.stderr)
         else:
-            print("Warning: skip parsing device %s for mux cable entry, device definition not found" % cable_name)
+            print("Warning: skip parsing device %s for mux cable entry, device definition not found" % cable_name, file=sys.stderr)
 
     return mux_cable_table
 
