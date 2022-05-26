@@ -5,11 +5,7 @@ DOCKER_DATABASE = $(DOCKER_DATABASE_STEM).gz
 DOCKER_DATABASE_DBG = $(DOCKER_DATABASE_STEM)-$(DBG_IMAGE_MARK).gz
 
 $(DOCKER_DATABASE)_DEPENDS += $(LIBSWSSCOMMON) \
-                                          $(LIBYANG) \
-                                          $(LIBYANG_CPP) \
-                                          $(LIBYANG_PY3) \
-                                          $(PYTHON3_SWSSCOMMON) \
-                                          $(SONIC_DB_CLI)
+                              $(SONIC_DB_CLI)
 
 $(DOCKER_DATABASE)_PATH = $(DOCKERS_PATH)/$(DOCKER_DATABASE_STEM)
 
