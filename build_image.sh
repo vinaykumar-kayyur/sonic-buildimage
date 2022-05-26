@@ -180,7 +180,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     sudo rm -f $ABOOT_BOOT_IMAGE
     ## Add main payload
     tmpdir=$(mktemp -d)
-    jar -xf $ONIE_INSTALLER_PAYLOAD -C $tmpdir
+    tar -xf $ONIE_INSTALLER_PAYLOAD -C $tmpdir
     pushd $tmpdir && zip -n .squashfs:.gz $OUTPUT_ABOOT_IMAGE -r .; popd
     rm $tmpdir -rf
     ## Add Aboot boot0 file
