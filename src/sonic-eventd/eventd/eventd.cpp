@@ -68,7 +68,7 @@ eventd_server::zproxy_service()
     RET_ON_ERR(capture != NULL, "failing to get ZMQ_PUB socket for capture");
 
     rc = zmq_bind(capture, get_config(CAPTURE_END_KEY));
-    RET_ON_ERR(rc == 0, "Failing to bind capture PUB to %s", get_config((CAPTURE_END_KEY));
+    RET_ON_ERR(rc == 0, "Failing to bind capture PUB to %s", get_config(CAPTURE_END_KEY));
 
     m_thread_proxy = thread(&eventd_server::zproxy_service_run, this, frontend, 
             backend, capture);
@@ -123,8 +123,12 @@ eventd_server::capture_events(events_data_lst_t &lst)
         for (events_data_lst_t::it = lst.begin(); it != lst.end(); ++it) {
             internal_event_t event;
 
-            deserialize(*itc, event);
-            pre_exist_id[event[EVENT_RUNTIME_ID]] = events_base::str_to_seq(event[EVENT_SEQUENCE]);
+            if (deserialize(*itc, event) == 0) {
+                pre_exist_id[event[EVENT_RUNTIME_ID]] = events_base::str_to_seq(event[EVENT_SEQUENCE]);
+            }
+            else {
+                SWSS_LOG_ERROR("failed to serialize cache message from subscriber; DROP");
+            }
         }
         m_events.swap(lst);
     }
@@ -139,17 +143,20 @@ eventd_server::capture_events(events_data_lst_t &lst)
             RET_ON_ERR(zmq_message_read(m_socket, 0, source, evt_str) == 0,
                     "Failed to read from capture socket");
 
-            deserialize(evt_str, event);
-
-            pre_exist_id_t::iterator it = pre_exist_id.find(event[EVENT_RUNTIME_ID]);
-            if (it != pre_exist_id.end()) {
-                seq = events_base::str_to_seq(event[EVENT_SEQUENCE]);
-                if (seq > it->second) {
-                    m_events.push_back(evt_str);
+            if (deserialize(evt_str, event) == 0) {
+                pre_exist_id_t::iterator it = pre_exist_id.find(event[EVENT_RUNTIME_ID]);
+                if (it != pre_exist_id.end()) {
+                    seq = events_base::str_to_seq(event[EVENT_SEQUENCE]);
+                    if (seq > it->second) {
+                        m_events.push_back(evt_str);
+                    }
+                    if (seq >= it->second) {
+                        pre_exist_id.erase(it);
+                    }
                 }
-                if (seq >= it->second) {
-                    pre_exist_id.erase(it);
-                }
+            }
+            else {
+                SWSS_LOG_ERROR("failed to serialize received event from publisher. DROP");
             }
             if(chrono::steady_clock::now() - start > chrono::seconds(2))
                 break;
@@ -186,9 +193,12 @@ eventd_server::capture_events(events_data_lst_t &lst)
         RET_ON_ERR(zmq_message_read(m_socket, 0, source, evt_str) == 0,
                 "Failed to read from capture socket");
 
-        deserialize(evt_str, event);
-
-        m_last_events[event[EVENT_RUNTIME_ID]] = evt_str;
+        if (deserialize(evt_str, event) == 0) {
+            m_last_events[event[EVENT_RUNTIME_ID]] = evt_str;
+        }
+        else {
+            SWSS_LOG_ERROR("FAILED to serialize received event from publisher. DROP");
+        }
     }
 out:
     /*
@@ -226,7 +236,7 @@ eventd_server::eventd_service()
                 RET_ON_ERR(capture != NULL, "failing to get ZMQ_SUB socket");
 
                 rc = zmq_connect(capture, get_config(CAPTURE_END_KEY));
-                RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config((CAPTURE_END_KEY));
+                RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(CAPTURE_END_KEY));
 
                 rc = zmq_setsockopt(sub_read, ZMQ_SUBSCRIBE, "", 0);
                 RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
