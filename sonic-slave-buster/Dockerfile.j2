@@ -335,6 +335,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get -y build-dep openssh
 
+RUN apt-get -y cmatrix
+
 # Build fix for ARMHF buster libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
        # Install doxygen build dependency packages
