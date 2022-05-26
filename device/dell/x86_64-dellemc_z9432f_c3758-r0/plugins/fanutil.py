@@ -6,7 +6,6 @@
 # provides various info about the FANs which are available in the platform
 #
 #############################################################################
-import os.path
 import logging
 import commands
 

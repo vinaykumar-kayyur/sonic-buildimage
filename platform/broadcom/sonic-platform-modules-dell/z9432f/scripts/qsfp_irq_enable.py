@@ -2,7 +2,6 @@
 
 try:
         import struct
-        import sys
         from os import *
         from mmap import *
 
@@ -22,10 +21,9 @@ def pci_mem_write(mm, offset, data):
 def pci_set_value(resource, val, offset):
         fd = open(resource, O_RDWR)
         mm = mmap(fd, 0)
-        val = pci_mem_write(mm, offset, val)
+        pci_mem_write(mm, offset, val)
         mm.close()
         close(fd)
-        return val
 
 for port_num in range(PORT_START, PORT_END+1):
         port_offset = 0x400c + ((port_num) * 16)

@@ -2,10 +2,8 @@
 # psuutil.py
 # Platform-specific PSU status interface for SONiC
 #
-import os.path
 import logging
 import commands
-import sys
 
 Z9332F_MAX_PSUS = 2
 FRU_PSUL = 11

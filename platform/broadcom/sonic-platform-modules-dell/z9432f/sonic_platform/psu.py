@@ -10,7 +10,7 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.ipmihelper import IpmiSensor, IpmiFru, get_ipmitool_raw_output
+    from sonic_platform.ipmihelper import IpmiSensor, IpmiFru
     from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")

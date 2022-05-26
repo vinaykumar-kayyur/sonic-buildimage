@@ -73,7 +73,7 @@ def fetch_raw_fru(dev_id, offset):
     """ Fetch RAW value from FRU (dev_id) @ given offset """
     status, cmd_ret = commands.getstatusoutput(IPMI_RAW_STORAGE_READ.format(dev_id, offset))
     if status:
-        logging.error('Failed to execute ipmitool :' + IPMI_RAW_STORAGE_READ.format(dev_id))
+        logging.error('Failed to execute ipmitool :' + IPMI_RAW_STORAGE_READ.format(dev_id, offset))
         return -1
     return int(cmd_ret.strip().split(' ')[1])
 
@@ -133,8 +133,7 @@ def print_temperature_sensors():
         (get_pmc_register('PSU2_Rear_temp'))
 
 
-RET_STATUS, IPMI_CMD_RET = \
-      commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+    commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
 
 print_temperature_sensors()
 
@@ -252,5 +251,4 @@ for psu in range(1, Z9432F_MAX_PSUS + 1):
 
 print '\n    Total Power:                 ',\
     get_pmc_register('PSU_Total_watt')
-RET_STATUS, IPMI_CMD_RET = \
-     commands.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+    commands.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
