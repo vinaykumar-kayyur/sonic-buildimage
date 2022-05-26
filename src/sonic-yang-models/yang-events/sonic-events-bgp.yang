@@ -25,7 +25,7 @@ module sonic-events-bgp {
         "SONIC BGP events";
 
     container bgp-state {
-        oc-alarm-types:MAJOR
+        oc-alarm-types:MINOR
 
         description "
             Declares an event for BGP state for a neighbor IP
