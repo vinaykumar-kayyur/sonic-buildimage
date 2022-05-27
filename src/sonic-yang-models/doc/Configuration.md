@@ -25,6 +25,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
+         * [KDUMP](#kdump)
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -43,7 +44,8 @@ Table of Contents
          * [Queue](#queue)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
-         * [TC to Queue map](#tc-to-queue-map)  
+         * [TC to Queue map](#tc-to-queue-map)    
+         * [Telemetry](#telemetry)  
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
@@ -104,17 +106,18 @@ redis and json, correspondingly:
 
 
 ***Redis format***
-```
-127.0.0.1:6379[4]> keys BGP_NEIGHBOR:*
 
-1) "BGP_NEIGHBOR:10.0.0.31"
-2) "BGP_NEIGHBOR:10.0.0.39"
-3) "BGP_NEIGHBOR:10.0.0.11"
-4) "BGP_NEIGHBOR:10.0.0.7"
+```
+127.0.0.1:6379[4]> keys BGP_NEIGHBOR|*
+
+1) "BGP_NEIGHBOR|10.0.0.31"
+2) "BGP_NEIGHBOR|10.0.0.39"
+3) "BGP_NEIGHBOR|10.0.0.11"
+4) "BGP_NEIGHBOR|10.0.0.7"
 
 ...
 
-127.0.0.1:6379[4]> hgetall BGP_NEIGHBOR:10.0.0.3
+127.0.0.1:6379[4]> hgetall BGP_NEIGHBOR|10.0.0.3
 
 1) "admin_status"
 2) "up"
@@ -127,26 +130,27 @@ redis and json, correspondingly:
 ```
 
 ***Json format***
+
 ```
 "BGP_NEIGHBOR": {
-	"10.0.0.57": {
-		"rrclient": "0", 
-		"name": "ARISTA01T1", 
-		"local_addr": "10.0.0.56", 
-		"nhopself": "0", 
-		"holdtime": "10", 
-		"asn": "64600", 
-		"keepalive": "3"
-	}, 
-    "10.0.0.59": {
-        "rrclient": "0", 
-        "name": "ARISTA02T1", 
-        "local_addr": "10.0.0.58", 
-        "nhopself": "0", 
-        "holdtime": "10", 
-        "asn": "64600", 
+    "10.0.0.57": {
+        "rrclient": "0",
+        "name": "ARISTA01T1",
+        "local_addr": "10.0.0.56",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
         "keepalive": "3"
-	},
+    },
+    "10.0.0.59": {
+        "rrclient": "0",
+        "name": "ARISTA02T1",
+        "local_addr": "10.0.0.58",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
+        "keepalive": "3"
+    },
 }
 ```
 
@@ -861,6 +865,20 @@ instance is supported in SONiC.
 
 ```
 
+### KDUMP
+
+```
+{
+    "KDUMP": {
+        "config": {
+            "enabled": "true",
+            "num_dumps": "3",
+            "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M"
+         }
+     }
+}
+
+```
 
 ### L2 Neighbors
 
@@ -1152,7 +1170,8 @@ optional attributes.
             "description": "fortyGigE1/1/1",
             "mtu": "9100",
             "alias": "fortyGigE1/1/1",
-            "speed": "40000"
+            "speed": "40000",
+            "link_training": "off"
         },
         "Ethernet1": {
             "index": "1",
@@ -1161,9 +1180,10 @@ optional attributes.
             "mtu": "9100",
             "alias": "fortyGigE1/1/2",
             "admin_status": "up",
-            "speed": "40000"
+            "speed": "40000",
+            "link_training": "on"
         },
-		"Ethernet63": {
+        "Ethernet63": {
             "index": "63",
             "lanes": "87,88",
             "description": "fortyGigE1/4/16",
@@ -1334,6 +1354,25 @@ name as object key and member list as attribute.
     }
   }
 }  
+```
+
+### Telemetry
+
+```
+{
+    "TELEMETRY": {
+        "certs": {
+            "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
+            "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+            "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+        },
+        "gnmi": {
+            "client_auth": "true",
+            "log_level": "2",
+            "port": "50051"
+        }
+    }
+}
 ```
 
 ### Versions
