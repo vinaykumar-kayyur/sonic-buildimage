@@ -12,6 +12,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV IMAGE_VERSION=$image_version
 
 # Install required packages
+RUN apt-get clean
+RUN apt-get install -y dpkg-dev || true
 RUN apt-get update &&   \
     apt-get install -y  \
         build-essential \
