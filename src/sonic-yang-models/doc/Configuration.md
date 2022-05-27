@@ -44,7 +44,8 @@ Table of Contents
          * [Queue](#queue)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
-         * [TC to Queue map](#tc-to-queue-map)  
+         * [TC to Queue map](#tc-to-queue-map)    
+         * [Telemetry](#telemetry)  
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
@@ -105,17 +106,18 @@ redis and json, correspondingly:
 
 
 ***Redis format***
-```
-127.0.0.1:6379[4]> keys BGP_NEIGHBOR:*
 
-1) "BGP_NEIGHBOR:10.0.0.31"
-2) "BGP_NEIGHBOR:10.0.0.39"
-3) "BGP_NEIGHBOR:10.0.0.11"
-4) "BGP_NEIGHBOR:10.0.0.7"
+```
+127.0.0.1:6379[4]> keys BGP_NEIGHBOR|*
+
+1) "BGP_NEIGHBOR|10.0.0.31"
+2) "BGP_NEIGHBOR|10.0.0.39"
+3) "BGP_NEIGHBOR|10.0.0.11"
+4) "BGP_NEIGHBOR|10.0.0.7"
 
 ...
 
-127.0.0.1:6379[4]> hgetall BGP_NEIGHBOR:10.0.0.3
+127.0.0.1:6379[4]> hgetall BGP_NEIGHBOR|10.0.0.3
 
 1) "admin_status"
 2) "up"
@@ -128,26 +130,27 @@ redis and json, correspondingly:
 ```
 
 ***Json format***
+
 ```
 "BGP_NEIGHBOR": {
-	"10.0.0.57": {
-		"rrclient": "0", 
-		"name": "ARISTA01T1", 
-		"local_addr": "10.0.0.56", 
-		"nhopself": "0", 
-		"holdtime": "10", 
-		"asn": "64600", 
-		"keepalive": "3"
-	}, 
-    "10.0.0.59": {
-        "rrclient": "0", 
-        "name": "ARISTA02T1", 
-        "local_addr": "10.0.0.58", 
-        "nhopself": "0", 
-        "holdtime": "10", 
-        "asn": "64600", 
+    "10.0.0.57": {
+        "rrclient": "0",
+        "name": "ARISTA01T1",
+        "local_addr": "10.0.0.56",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
         "keepalive": "3"
-	},
+    },
+    "10.0.0.59": {
+        "rrclient": "0",
+        "name": "ARISTA02T1",
+        "local_addr": "10.0.0.58",
+        "nhopself": "0",
+        "holdtime": "10",
+        "asn": "64600",
+        "keepalive": "3"
+    },
 }
 ```
 
@@ -1351,6 +1354,25 @@ name as object key and member list as attribute.
     }
   }
 }  
+```
+
+### Telemetry
+
+```
+{
+    "TELEMETRY": {
+        "certs": {
+            "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
+            "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+            "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+        },
+        "gnmi": {
+            "client_auth": "true",
+            "log_level": "2",
+            "port": "50051"
+        }
+    }
+}
 ```
 
 ### Versions
