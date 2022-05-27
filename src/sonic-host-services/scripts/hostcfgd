@@ -11,7 +11,7 @@ import signal
 
 import jinja2
 from sonic_py_common import device_info
-from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table
+from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table, SignalHandlerHelper, SIGNAL_INT
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -1245,6 +1245,11 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGHUP, signal_handler)
+
+    # Initialize swsscommon signal helper, because python signal handler will be blocked by long running c++ code.
+    # For more information please check: https://docs.python.org/3/library/signal.html
+    SignalHandlerHelper.registerSignalHandler(SIGNAL_INT)
+
     daemon = HostConfigDaemon()
     daemon.register_callbacks()
     daemon.start()
