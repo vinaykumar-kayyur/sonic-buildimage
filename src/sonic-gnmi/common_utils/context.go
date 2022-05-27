@@ -117,4 +117,3 @@ func IncDbusFailCnt() {
 	atomic.AddUint64(&globalCounters.Dbus_fail_cnt, 1)
 	SetMemCounters(&globalCounters)
 }
-
