@@ -27,9 +27,8 @@ hostcfgd.DBConnector = MockDBConnector
 hostcfgd.Table = mock.Mock()
 
 
-class TestHostcfgd(TestCase):
-    """
-        Test hostcfd daemon - feature
+class TestFeatureHandler(TestCase):
+    """Test methods of `FeatureHandler` class. 
     """
     def __verify_table(self, table, feature_state_table, expected_table):
         """
@@ -61,78 +60,117 @@ class TestHostcfgd(TestCase):
         feature_state_table.set.assert_has_calls([
             mock.call(feature, [('state', get_state(table[feature]['state']))]) for feature in table
         ])
+
         return True if not ddiff else False
 
-    def __verify_fs(self, table):
-        """
-            verify filesystem changes made by hostcfgd.
+    def checks_systemd_config_file(self, feature_table):
+        """Checks whether the systemd configuration file of each feature was created or not
+        and whether the `Restart=` field in the file is set correctly or not.
 
-            Checks whether systemd override configuration files
-            were generated and Restart= for systemd unit is set
-            correctly
+        Args:
+            feature_table: A dictionary indicates `Feature` table in `CONFIG_DB`.
 
-            Args:
-                table(dict): Current Config Db table
-
-            Returns: Boolean wether test passed.
+        Returns: Boolean value indicates whether test passed or not.
         """
 
-        exp_dict = {
-            'enabled': 'always',
-            'disabled': 'no',
-        }
-        auto_restart_conf = os.path.join(hostcfgd.FeatureHandler.SYSTEMD_SERVICE_CONF_DIR, 'auto_restart.conf')
+        truth_table = {'enabled': 'always',
+                       'disabled': 'no'}
 
-        for feature in table:
-            auto_restart = table[feature].get('auto_restart', 'disabled')
-            with open(auto_restart_conf.format(feature)) as conf:
-                conf = conf.read().strip()
-            assert conf == '[Service]\nRestart={}'.format(exp_dict[auto_restart])
+        systemd_config_file_path = os.path.join(hostcfgd.FeatureHandler.SYSTEMD_SERVICE_CONF_DIR,
+                                                'auto_restart.conf')
+
+        for feature_name in feature_table:
+            auto_restart_status = feature_table[feature_name].get('auto_restart', 'disabled')
+            if "enabled" in auto_restart_status:
+                auto_restart_status = "enabled"
+            elif "disabled" in auto_restart_status:
+                auto_restart_status = "disabled"
+
+            feature_systemd_config_file_path = systemd_config_file_path.format(feature_name)
+            assert os.path.exists(feature_systemd_config_file_path), "Systemd configuration file of feature '{}' does not exist!".format(feature_name)
+            #print(feature_systemd_config_file_path)
+            with open(feature_systemd_config_file_path) as systemd_config_file:
+                status = systemd_config_file.read().strip()
+            assert status == '[Service]\nRestart={}'.format(truth_table[auto_restart_status])
 
 
     @parameterized.expand(HOSTCFGD_TEST_VECTOR)
     @patchfs
-    def test_hostcfgd_feature_handler(self, test_name, test_data, fs):
-        """
-            Test feature config capability in the hostcfd
+    def test_sync_state_field(self, test_scenario_name, config_data, fs):
+        """Tests the method `sync_state_field(...)` of `FeatureHandler` class.
 
-            Args:
-                test_name(str): test name
-                test_data(dict): test data which contains initial Config Db tables, and expected results
+        Args:
+            test_secnario_name: A string indicates different testing scenario.
+            config_data: A dictionary contains initial `CONFIG_DB` tables and expected results.
 
-            Returns:
-                None
+        Returns:
+            Boolean value indicates whether test will pass or not.
         """
-        fs.add_real_paths(swsscommon_package.__path__)  # add real path of swsscommon for database_config.json
+        # add real path of sesscommon for database_config.json
+        fs.add_real_paths(swsscommon_package.__path__)
         fs.create_dir(hostcfgd.FeatureHandler.SYSTEMD_SYSTEM_DIR)
-        MockConfigDb.set_config_db(test_data['config_db'])
+
+        MockConfigDb.set_config_db(config_data['config_db'])
         feature_state_table_mock = mock.Mock()
         with mock.patch('hostcfgd.subprocess') as mocked_subprocess:
             popen_mock = mock.Mock()
-            attrs = test_data['popen_attributes']
+            attrs = config_data['popen_attributes']
             popen_mock.configure_mock(**attrs)
             mocked_subprocess.Popen.return_value = popen_mock
 
-            # Initialize Feature Handler
             device_config = {}
             device_config['DEVICE_METADATA'] = MockConfigDb.CONFIG_DB['DEVICE_METADATA']
             feature_handler = hostcfgd.FeatureHandler(MockConfigDb(), feature_state_table_mock, device_config)
 
-            # sync the state field and Handle Feature Updates
-            features = MockConfigDb.CONFIG_DB['FEATURE']
-            feature_handler.sync_state_field(features)
-            for key, fvs in features.items():
-                feature_handler.handle(key, 'SET', fvs)
+            feature_table = MockConfigDb.CONFIG_DB['FEATURE']
+            feature_handler.sync_state_field(feature_table)
 
             # Verify if the updates are properly updated
-            assert self.__verify_table(
-                MockConfigDb.get_config_db()['FEATURE'],
-                feature_state_table_mock,
-                test_data['expected_config_db']['FEATURE']
-            ), 'Test failed for test data: {0}'.format(test_data)
-            mocked_subprocess.check_call.assert_has_calls(test_data['expected_subprocess_calls'], any_order=True)
+            assert self.__verify_table(MockConfigDb.get_config_db()['FEATURE'],
+                                       feature_state_table_mock,
+                                       config_data['expected_config_db']['FEATURE']), 'Test failed for test data: {0}'.format(config_data)
 
-            self.__verify_fs(test_data['config_db']['FEATURE'])
+            mocked_subprocess.check_call.assert_has_calls(config_data['enable_feature_subprocess_calls'],
+                                                          any_order=True)
+            self.checks_systemd_config_file(config_data['config_db']['FEATURE'])
+
+
+    @parameterized.expand(HOSTCFGD_TEST_VECTOR)
+    @patchfs
+    def test_handler(self, test_scenario_name, config_data, fs):
+        """Tests the method `handle(...)` of `FeatureHandler` class.
+
+        Args:
+            test_secnario_name: A string indicates different testing scenario.
+            config_data: A dictionary contains initial `CONFIG_DB` tables and expected results.
+
+        Returns:
+            Boolean value indicates whether test will pass or not.
+        """
+        # add real path of sesscommon for database_config.json
+        fs.add_real_paths(swsscommon_package.__path__)
+        fs.create_dir(hostcfgd.FeatureHandler.SYSTEMD_SYSTEM_DIR)
+
+        MockConfigDb.set_config_db(config_data['config_db'])
+        feature_state_table_mock = mock.Mock()
+        with mock.patch('hostcfgd.subprocess') as mocked_subprocess:
+            popen_mock = mock.Mock()
+            attrs = config_data['popen_attributes']
+            popen_mock.configure_mock(**attrs)
+            mocked_subprocess.Popen.return_value = popen_mock
+
+            device_config = {}
+            device_config['DEVICE_METADATA'] = MockConfigDb.CONFIG_DB['DEVICE_METADATA']
+            feature_handler = hostcfgd.FeatureHandler(MockConfigDb(), feature_state_table_mock, device_config)
+
+            feature_table = MockConfigDb.CONFIG_DB['FEATURE']
+
+            for feature_name, feature_config in feature_table.items():
+                feature_handler.handler(feature_name, 'SET', feature_config)
+
+            self.checks_systemd_config_file(config_data['config_db']['FEATURE'])
+            mocked_subprocess.check_call.assert_has_calls(config_data['enable_feature_subprocess_calls'],
+                                                          any_order=True)
 
     def test_feature_config_parsing(self):
         swss_feature = hostcfgd.Feature('swss', {
@@ -211,7 +249,6 @@ class TesNtpCfgd(TestCase):
 
             ntpcfgd.handle_ntp_source_intf_chg('eth0')
             mocked_subprocess.check_call.assert_has_calls([call('systemctl restart ntp-config', shell=True)])
-
 
 class TestHostcfgdDaemon(TestCase):
 
