@@ -340,6 +340,42 @@ class TestJ2Files(TestCase):
             assert utils.cmp(config_sample_output_file, config_test_output)
             os.remove(config_test_output)
 
+    def test_config_brcm_render_template(self):
+        if utils.PYvX_DIR != 'py3':
+            #Skip on python2 as the change will not be backported to previous version
+            return
+
+        dir_paths = [
+            '../../../device/arista/x86_64-arista_7050cx3_32s/Arista-7050CX3-32S-D48C8',
+            '../../../device/arista/x86_64-arista_7260cx3_64/Arista-7260CX3-D108C8',
+            '../../../device/arista/x86_64-arista_7260cx3_64/Arista-7260CX3-C64'
+            ]
+        config_bcm_sample_outputs = [
+            'arista7050cx3-dualtor.config.bcm',
+            'arista7260-dualtor.config.bcm',
+            'arista7260-t1.config.bcm'
+        ]
+        sample_minigraph_files = [
+            'sample-arista-7050cx3-dualtor-minigraph.xml',
+            'sample-arista-7260-dualtor-minigraph.xml',
+            'sample-arista-7260-t1-minigraph.xml'
+        ]
+        for i, path in enumerate(dir_paths):
+            device_template_path = os.path.join(self.test_dir, path)
+            config_sample_output = config_bcm_sample_outputs[i]
+            sample_minigraph_file = os.path.join(self.test_dir,sample_minigraph_files[i])
+            port_config_ini_file = os.path.join(device_template_path, 'port_config.ini')
+            config_bcm_file = os.path.join(device_template_path, 'config.bcm.j2')
+            config_test_output = os.path.join(self.test_dir, 'config_output.bcm')
+
+            argument = '-m ' + sample_minigraph_file + ' -p ' + port_config_ini_file + ' -t ' + config_bcm_file + ' > ' + config_test_output
+            self.run_script(argument)
+          
+            #check output config.bcm
+            config_sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, config_sample_output)
+            assert utils.cmp(config_sample_output_file, config_test_output)
+            os.remove(config_test_output)
+
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
         buffers_file = os.path.join(dir_path, buffer_template)

@@ -4,10 +4,10 @@
 {%- if DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['subtype'] is defined -%}
 {%-     set switch_subtype = DEVICE_METADATA['localhost']['subtype'] -%}
 {%-     if 'dualtor' in switch_subtype.lower() %}
-{%-         set IPinIP_sock = 'sai_tunnel_support=1
-                               sai_tunnel_underlay_route_mode=1
-                               host_as_route_disable=1
-                               l3_ecmp_levels=2' -%}
+{%-         set IPinIP_sock = 'sai_tunnel_support=1\r\n'
+                               + 'sai_tunnel_underlay_route_mode=1\r\n'
+                               + 'host_as_route_disable=1\r\n'
+                               + 'l3_ecmp_levels=2' -%} -%}
 {%-         set map_prio = 'sai_remap_prio_on_tnl_egress=1' -%}
 {%-     endif %}
 {%- endif %}
