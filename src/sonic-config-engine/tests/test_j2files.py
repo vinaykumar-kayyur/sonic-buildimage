@@ -282,7 +282,7 @@ class TestJ2Files(TestCase):
 
     def test_qos_dscp_remapping_render_template(self):
         if utils.PYvX_DIR != 'py3':
-            # Skip on python2 as the change will not be backported to previous version
+            #Skip on python2 as the change will not be backported to previous version
             return
 
         dir_paths = [
@@ -295,6 +295,11 @@ class TestJ2Files(TestCase):
             'qos-arista7260-dualtor.json',
             'qos-arista7260-t1.json'
         ]
+        config_bcm_sample_outputs = [
+            'config.arista7050cx3-dualtor.bcm',
+            'config.arista7260-dualtor.bcm',
+            'config.arista7260-t1.bcm'
+        ]
         sample_minigraph_files = [
             'sample-arista-7050cx3-dualtor-minigraph.xml',
             'sample-arista-7260-dualtor-minigraph.xml',
@@ -303,10 +308,13 @@ class TestJ2Files(TestCase):
         for i, path in enumerate(dir_paths):
             device_template_path = os.path.join(self.test_dir, path)
             sample_output = sample_outputs[i]
+            config_sample_output = config_bcm_sample_outputs[i]
             sample_minigraph_file = os.path.join(self.test_dir,sample_minigraph_files[i])
             qos_file = os.path.join(device_template_path, 'qos.json.j2')
+            config_bcm_file = os.path.join(device_template_path, 'config.bcm.j2')
             port_config_ini_file = os.path.join(device_template_path, 'port_config.ini')
             test_output = os.path.join(self.test_dir, 'output.json')
+            config_test_output = os.path.join(self.test_dir, 'config_output.bcm')
 
             # copy qos_config.j2 to the target directory to have all templates in one directory
             qos_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'qos_config.j2')
@@ -315,13 +323,22 @@ class TestJ2Files(TestCase):
             argument = '-m ' + sample_minigraph_file + ' -p ' + port_config_ini_file + ' -t ' + qos_file + ' > ' + test_output
             self.run_script(argument)
 
+            argument_config = '-m ' + sample_minigraph_file + ' -p ' + port_config_ini_file + ' -t ' + config_bcm_file + ' > ' + config_test_output
+            self.run_script(argument_config)
+
             # cleanup
             qos_config_file_new = os.path.join(device_template_path, 'qos_config.j2')
             os.remove(qos_config_file_new)
 
-            sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output)
-            assert utils.cmp(sample_output_file, test_output)
+            #Test Qos
+            sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output)            
+            assert utils.cmp(sample_output_file, test_output)            
             os.remove(test_output)
+            
+            #Test config.bcm
+            config_sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, config_sample_output)
+            assert utils.cmp(config_sample_output_file, config_test_output)
+            os.remove(config_test_output)
 
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
