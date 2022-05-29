@@ -302,6 +302,12 @@
                 "MIRROR_INGRESS_ACTION": "erspan",
                 "DSCP": "10",
                 "PRIORITY": "9999"
+            },
+            "DATAACL|RULE0": {
+                "PRIORITY": "999",
+                "PACKET_ACTION": "DROP",
+                "IP_TYPE": "IPv4ANY",
+                "SRC_IP": "1.1.1.1/32"
             }
         },
         "DEVICE_METADATA": {
@@ -816,6 +822,14 @@
                     "Ethernet24"
                 ],
                 "stage": "ingress"
+            },
+            "DATAACL": {
+                "stage": "INGRESS",
+                "type": "CUSTOM_L3",
+                "ports": [
+                    "Ethernet0",
+                    "PortChannel0003"
+                ]
             }
 
         },
@@ -1045,6 +1059,18 @@
                 "VERSION": "version_1_0_3"
             }
         },
+        "TELEMETRY": {
+            "certs": {
+                "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
+		"server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+		"server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+            },
+	    "gnmi": {
+		"client_auth": "true",
+		"log_level": "2",
+		"port": "50051"
+	    }
+        },
         "FLEX_COUNTER_TABLE": {
             "PFCWD": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -1100,12 +1126,21 @@
                 "acl_counter_high_threshold": "85",
                 "acl_counter_low_threshold": "70",
                 "acl_counter_threshold_type": "percentage",
+                "dnat_entry_threshold_type": "percentage",
+                "dnat_entry_high_threshold": "85",
+                "dnat_entry_low_threshold": "70",
+                "ipmc_entry_threshold_type": "percentage",
+                "ipmc_entry_high_threshold": "85",
+                "ipmc_entry_low_threshold": "70",
                 "ipv6_neighbor_high_threshold": "67",
                 "ipv6_neighbor_low_threshold": "56",
                 "ipv6_neighbor_threshold_type": "percentage",
                 "nexthop_group_high_threshold": "67",
                 "nexthop_group_low_threshold": "56",
                 "nexthop_group_threshold_type": "percentage",
+                "snat_entry_threshold_type": "percentage",
+                "snat_entry_high_threshold": "85",
+                "snat_entry_low_threshold": "70",
                 "polling_interval": "0"
             }
         },
@@ -1516,7 +1551,7 @@
                 "pir": "2560000",
                 "type": "STRICT"
             }
-        },
+	},
 
         "WRED_PROFILE": {
             "Wred1": {
@@ -1802,7 +1837,24 @@
                 "num_dumps": "3",
                 "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M"
              }
-         }
+         },
+         "ACL_TABLE_TYPE": {
+             "CUSTOM_L3": {
+                 "matches": [
+                     "IN_PORTS",
+                     "OUT_PORTS",
+                     "SRC_IP"
+                 ],
+                 "actions": [
+                     "PACKET_ACTION",
+                     "MIRROR_INGRESS_ACTION"
+                 ],
+                 "bind_points": [
+                     "PORT",
+                     "LAG"
+                 ]
+             }
+        }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
