@@ -51,7 +51,4 @@
 {%- macro generate_queue_buffers_with_extra_lossless_queues(port_names, port_names_require_extra_buffer) %}
 {{ defs.generate_queue_buffers_with_extra_lossless_queues(port_names, port_names_require_extra_buffer) }}
 {%- endmacro %}
-{%- macro generate_pg_profiles_with_extra_lossy_pgs(port_names, port_names_require_extra_lossless_pgs) %}
-{{ defs.generate_pg_profiles_with_extra_lossy_pgs(port_names, port_names_require_extra_lossless_pgs) }}
-{%- endmacro %}
 {% endif %}

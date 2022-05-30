@@ -34,22 +34,4 @@
 {% endfor %}
     }
 {% endmacro %}
-{%- macro generate_pg_profiles_with_extra_lossy_pgs(port_names, port_names_require_extra_lossless_pgs) %}
-    "BUFFER_PG": {
-{% for port in port_names.split(',') %}
-{% if port not in port_names_require_extra_lossless_pgs.split(',') %}
-        "{{ port }}|2": {
-            "profile" : "ingress_lossy_profile"
-        },
-        "{{ port }}|6": {
-            "profile" : "ingress_lossy_profile"
-        },
-{% endif %}
-        "{{ port }}|0": {
-            "profile" : "ingress_lossy_profile"
-        }{% if not loop.last %},{% endif %}
-
-{% endfor %}
-    },
-{% endmacro %}
 {% endif %}
