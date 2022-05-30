@@ -40,7 +40,7 @@ class GCU(host_service.HostModule):
         return result.returncode, msg
 
     @host_service.method(host_service.bus_name(MOD_NAME), in_signature='s', out_signature='is')
-    def create_cp(self, checkpoint_file):
+    def create_checkpoint(self, checkpoint_file):
 
         cmd = ['/usr/local/bin/config', 'checkpoint', checkpoint_file]
 
@@ -55,7 +55,7 @@ class GCU(host_service.HostModule):
         return result.returncode, msg
 
     @host_service.method(host_service.bus_name(MOD_NAME), in_signature='s', out_signature='is')
-    def delete_cp(self, checkpoint_file):
+    def delete_checkpoint(self, checkpoint_file):
 
         cmd = ['/usr/local/bin/config', 'delete-checkpoint', checkpoint_file]
 
