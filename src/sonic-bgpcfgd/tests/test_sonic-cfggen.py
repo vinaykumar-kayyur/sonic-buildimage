@@ -63,6 +63,12 @@ def test_tsa_isolate():
              "tsa/isolate.json",
              "tsa/isolate.conf")
 
+def test_tsa_isolate_v6():
+    run_test("tsa/bgpd.tsa.isolate.conf.j2",
+             "bgpd/tsa/bgpd.tsa.isolate.conf.j2",
+             "tsa/isolate_v6.json",
+             "tsa/isolate_v6.conf")
+
 def test_tsa_unisolate():
     run_test("tsa/bgpd.tsa.unisolate.conf.j2",
              "bgpd/tsa/bgpd.tsa.unisolate.conf.j2",

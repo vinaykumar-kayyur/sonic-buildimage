@@ -11,7 +11,11 @@
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
-ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
+{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% if name == "Loopback0" and prefix | ipv6 %}
+ipv6 prefix-list PL_LoopbackV6 permit {{ prefix | ip_network }}/{{ prefix | prefixlen }}
+{% endif %}
+{% endfor %}
 {% endif %}
 !
 {% if VLAN_INTERFACE is defined %}
@@ -89,7 +93,11 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
   address-family ipv6
-    network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/64
+{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% if name == "Loopback0" and prefix | ipv6 %}
+    network {{ prefix | ip_network }}/{{ prefix | prefixlen }}
+{% endif %}
+{% endfor %}
   exit-address-family
 {% endif %}
 {% if ((multi_asic is defined and DEVICE_METADATA['localhost']['switch_type'] != 'chassis-packet') or (DEVICE_METADATA['localhost']['switch_type'] == 'voq')) %}
