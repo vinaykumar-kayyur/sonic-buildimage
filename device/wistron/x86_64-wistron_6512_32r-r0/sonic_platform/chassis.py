@@ -12,12 +12,6 @@ try:
     import time
     import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.fan import Fan
-    from sonic_platform.psu import Psu
-    from sonic_platform.component import Component
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.eeprom import Tlv
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -44,6 +38,11 @@ class Chassis(ChassisBase):
         self.sku_name = self._get_sku_name()
         self.platform_name = self._get_platform_name()
         self.name = self.sku_name
+        from sonic_platform.fan import Fan
+        from sonic_platform.psu import Psu
+        from sonic_platform.thermal import Thermal
+        from sonic_platform.sfp import Sfp
+        from sonic_platform.eeprom import Tlv
 
 
         for fan_index in range(0, NUM_FAN):
@@ -114,6 +113,7 @@ class Chassis(ChassisBase):
         Returns:
             A string containing platform-specific component versions
         """
+        from sonic_platform.component import Component
         self.component = Component(component_name)
         if component_name not in self._component_name_list:
             return None
@@ -129,6 +129,7 @@ class Chassis(ChassisBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
+        from sonic_platform.component import Component
         self.component = Component(component_name)
         if component_name not in self._component_name_list:
             return False
