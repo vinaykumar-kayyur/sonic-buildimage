@@ -104,6 +104,7 @@ def obfuscate(data):
     else:
         return data
 
+
 def get_pid(procname):
     for dirname in os.listdir('/proc'):
         if dirname == 'curproc':
@@ -116,6 +117,7 @@ def get_pid(procname):
         if procname in content:
             return dirname
     return ""
+
 
 class Feature(object):
     """ Represents a feature configuration from CONFIG_DB data. """
@@ -136,6 +138,7 @@ class Feature(object):
         self.has_global_scope = safe_eval(feature_cfg.get('has_global_scope', 'True'))
         self.has_per_asic_scope = safe_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
+
     def _get_target_state(self, state_configuration, device_config):
         """ Returns the target state for the feature by rendering the state field as J2 template.
 
@@ -154,6 +157,7 @@ class Feature(object):
         if target_state not in ('enabled', 'disabled', 'always_enabled', 'always_disabled'):
             raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
         return target_state
+
 
     def compare_state(self, feature_name, feature_cfg):
         if self.name != feature_name or not isinstance(feature_cfg, dict):
@@ -198,6 +202,8 @@ class FeatureHandler(object):
         # again the auto restart will kick-in. Another order may leave it in failed state
         # and not auto restart.
         if self._cached_config[feature_name].auto_restart != feature.auto_restart:
+            syslog.syslog(syslog.LOG_INFO, "Auto-restart status of feature '{}' is changed from '{}' to '{}' ..."
+                          .format(feature_name, self._cached_config[feature_name].auto_restart, feature.auto_restart))
             self.update_systemd_config(feature)
             self._cached_config[feature_name].auto_restart = feature.auto_restart
 
@@ -207,7 +213,6 @@ class FeatureHandler(object):
                 self._cached_config[feature_name].state = feature.state
             else:
                 self.resync_feature_state(self._cached_config[feature_name])
-
 
     def sync_state_field(self, feature_table):
         """
@@ -226,7 +231,6 @@ class FeatureHandler(object):
             self.update_systemd_config(feature)
             self.update_feature_state(feature)
             self.resync_feature_state(feature)
-
 
     def update_feature_state(self, feature):
         cached_feature = self._cached_config[feature.name]
@@ -285,18 +289,25 @@ class FeatureHandler(object):
         feature_names, feature_suffixes = self.get_feature_attribute(feature_config)
 
         for feature_name in feature_names:
-            dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
-            systemd_config_file_path = os.path.join(dir_name, 'auto_restart.conf')
-            if not os.path.exists(dir_name):
-                os.mkdir(dir_name)
-            with open(systemd_config_file_path, 'w') as systemd_config_file:
-                systemd_config_file.write(feature_systemd_config)
+            syslog.syslog(syslog.LOG_INFO, "Updating feature '{}' systemd config file related to auto-restart ..."
+                          .format(feature_name))
+            feature_systemd_config_dir_path = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
+            feature_systemd_config_file_path = os.path.join(feature_systemd_config_dir_path, 'auto_restart.conf')
+
+            if not os.path.exists(feature_systemd_config_dir_path):
+                os.mkdir(feature_systemd_config_dir_path)
+            with open(feature_systemd_config_file_path, 'w') as feature_systemd_config_file_handler:
+                feature_systemd_config_file_handler.write(feature_systemd_config)
+
+            syslog.syslog(syslog.LOG_INFO, "Feautre '{}' systemd config file related to auto-restart is updated!"
+                          .format(feature_name))
 
         try:
+            syslog.syslog(syslog.LOG_INFO, "Reloading systemd configuration files ...")
             run_cmd("sudo systemctl daemon-reload", raise_exception=True)
+            syslog.syslog(syslog.LOG_INFO, "Systemd configuration files are reloaded!")
         except Exception as err:
-            syslog.syslog(syslog.LOG_ERR, "Failed to reload systemd configuration!")
-
+            syslog.syslog(syslog.LOG_ERR, "Failed to reload systemd configuration files!")
 
     def get_feature_attribute(self, feature):
         # Create feature name suffix depending feature is running in host or namespace or in both
@@ -351,7 +362,7 @@ class FeatureHandler(object):
                     run_cmd(cmd, raise_exception=True)
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
-                                    .format(feature.name, feature_suffixes[-1]))
+                                  .format(feature.name, feature_suffixes[-1]))
                     self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
 
@@ -376,7 +387,7 @@ class FeatureHandler(object):
                     run_cmd(cmd, raise_exception=True)
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
-                                    .format(feature.name, feature_suffixes[-1]))
+                                  .format(feature.name, feature_suffixes[-1]))
                     self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
 

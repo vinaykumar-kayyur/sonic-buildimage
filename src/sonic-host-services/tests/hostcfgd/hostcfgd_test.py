@@ -30,36 +30,18 @@ hostcfgd.Table = mock.Mock()
 class TestFeatureHandler(TestCase):
     """Test methods of `FeatureHandler` class. 
     """
-    def __verify_table(self, table, feature_state_table, expected_table):
+    def checks_config_table(self, feature_table, expected_table):
+        """Compares `FEATURE` table in `CONFIG_DB` with expected output table.
+
+        Args:
+            feature_table: A dictionary indicates current `FEATURE` table in `CONFIG_DB`.
+            expected_table A dictionary indicates the expected `FEATURE` table in `CONFIG_DB`.
+
+        Returns:
+            Returns True if `FEATURE` table in `CONFIG_DB` was not modified unexpectedly;
+            otherwise, returns False.
         """
-            verify config db tables
-
-            Compares Config DB table (FEATURE) with expected output table.
-            Verifies that State DB table (FEATURE) is updated.
-
-            Args:
-                table(dict): Current Config Db table
-                feature_state_table(Mock): Mocked State DB FEATURE table
-                expected_table(dict): Expected Config Db table
-
-            Returns:
-                None
-        """
-        ddiff = DeepDiff(table, expected_table, ignore_order=True)
-        print('DIFF:', ddiff)
-
-        def get_state(cfg_state):
-            """ Translates CONFIG DB state field into STATE DB state field """
-            if cfg_state == 'always_disabled':
-                return 'disabled'
-            elif cfg_state == 'always_enabled':
-                return 'enabled'
-            else:
-                return cfg_state
-
-        feature_state_table.set.assert_has_calls([
-            mock.call(feature, [('state', get_state(table[feature]['state']))]) for feature in table
-        ])
+        ddiff = DeepDiff(feature_table, expected_table, ignore_order=True)
 
         return True if not ddiff else False
 
@@ -87,12 +69,36 @@ class TestFeatureHandler(TestCase):
                 auto_restart_status = "disabled"
 
             feature_systemd_config_file_path = systemd_config_file_path.format(feature_name)
-            assert os.path.exists(feature_systemd_config_file_path), "Systemd configuration file of feature '{}' does not exist!".format(feature_name)
-            #print(feature_systemd_config_file_path)
+            is_config_file_existing = os.path.exists(feature_systemd_config_file_path)
+            assert is_config_file_existing, "Systemd configuration file of feature '{}' does not exist!".format(feature_name)
+
             with open(feature_systemd_config_file_path) as systemd_config_file:
                 status = systemd_config_file.read().strip()
             assert status == '[Service]\nRestart={}'.format(truth_table[auto_restart_status])
 
+    def get_state_db_set_calls(self, feature_table):
+        """Returns a Mock call objects which recorded the `set` calls to `FEATURE` table in `STATE_DB`.
+
+        Args:
+            feature_table: A dictionary indicates `FEATURE` table in `CONFIG_DB`.
+
+        Returns:
+            set_call_list: A list indicates Mock call objects.
+        """
+        set_call_list = []
+
+        for feature_name in feature_table.keys():
+            feature_state = ""
+            if "enabled" in feature_table[feature_name]["state"]:
+                feature_state = "enabled"
+            elif "disabled" in feature_table[feature_name]["state"]:
+                feature_state = "disabled"
+            else:
+                feature_state = feature_table[feature_name]["state"]
+
+            set_call_list.append(mock.call(feature_name, [("state", feature_state)]))
+
+        return set_call_list
 
     @parameterized.expand(HOSTCFGD_TEST_VECTOR)
     @patchfs
@@ -125,15 +131,19 @@ class TestFeatureHandler(TestCase):
             feature_table = MockConfigDb.CONFIG_DB['FEATURE']
             feature_handler.sync_state_field(feature_table)
 
-            # Verify if the updates are properly updated
-            assert self.__verify_table(MockConfigDb.get_config_db()['FEATURE'],
-                                       feature_state_table_mock,
-                                       config_data['expected_config_db']['FEATURE']), 'Test failed for test data: {0}'.format(config_data)
+            is_any_difference = self.checks_config_table(MockConfigDb.get_config_db()['FEATURE'],
+                                                         config_data['expected_config_db']['FEATURE'])
+            assert is_any_difference, "'FEATURE' table in 'CONFIG_DB' is modified unexpectedly!"
 
+            feature_table_state_db_calls = self.get_state_db_set_calls(feature_table)
+
+            self.checks_systemd_config_file(config_data['config_db']['FEATURE'])
             mocked_subprocess.check_call.assert_has_calls(config_data['enable_feature_subprocess_calls'],
                                                           any_order=True)
+            mocked_subprocess.check_call.assert_has_calls(config_data['daemon_reload_subprocess_call'],
+                                                          any_order=True)
+            feature_state_table_mock.set.assert_has_calls(feature_table_state_db_calls)
             self.checks_systemd_config_file(config_data['config_db']['FEATURE'])
-
 
     @parameterized.expand(HOSTCFGD_TEST_VECTOR)
     @patchfs
@@ -170,6 +180,8 @@ class TestFeatureHandler(TestCase):
 
             self.checks_systemd_config_file(config_data['config_db']['FEATURE'])
             mocked_subprocess.check_call.assert_has_calls(config_data['enable_feature_subprocess_calls'],
+                                                          any_order=True)
+            mocked_subprocess.check_call.assert_has_calls(config_data['daemon_reload_subprocess_call'],
                                                           any_order=True)
 
     def test_feature_config_parsing(self):
@@ -249,6 +261,7 @@ class TesNtpCfgd(TestCase):
 
             ntpcfgd.handle_ntp_source_intf_chg('eth0')
             mocked_subprocess.check_call.assert_has_calls([call('systemctl restart ntp-config', shell=True)])
+
 
 class TestHostcfgdDaemon(TestCase):
 

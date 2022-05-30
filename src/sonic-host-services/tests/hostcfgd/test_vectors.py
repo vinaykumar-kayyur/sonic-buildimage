@@ -496,8 +496,7 @@ HOSTCFGD_TEST_VECTOR = [
                     },
                 },
             },
-            "enable_feature_subprocess_calls": [
-            ],
+            "enable_feature_subprocess_calls": [],
             "daemon_reload_subprocess_call": [
                 call("sudo systemctl daemon-reload", shell=True),
             ],
