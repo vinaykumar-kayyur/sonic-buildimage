@@ -92,7 +92,7 @@ class TestGCU(object):
             mock_run.return_value = res_mock
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
-            ret, msg = gcu_stub.create_cp(cp_name)
+            ret, msg = gcu_stub.create_checkpoint(cp_name)
             call_args = mock_run.call_args[0][0]
             assert "checkpoint" in call_args
             assert "delete-checkpoint" not in call_args
@@ -108,7 +108,7 @@ class TestGCU(object):
             mock_run.return_value = res_mock
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
-            ret, msg = gcu_stub.create_cp(cp_name)
+            ret, msg = gcu_stub.create_checkpoint(cp_name)
             call_args = mock_run.call_args[0][0]
             assert "checkpoint" in call_args
             assert "delete-checkpoint" not in call_args
@@ -129,7 +129,7 @@ class TestGCU(object):
             mock_run.return_value = res_mock
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
-            ret, msg = gcu_stub.delete_cp(cp_name)
+            ret, msg = gcu_stub.delete_checkpoint(cp_name)
             call_args = mock_run.call_args[0][0]
             assert "delete-checkpoint" in call_args
             assert cp_name in call_args
@@ -144,7 +144,7 @@ class TestGCU(object):
             mock_run.return_value = res_mock
             cp_name = "test_name"
             gcu_stub = gcu.GCU(gcu.MOD_NAME)
-            ret, msg = gcu_stub.delete_cp(cp_name)
+            ret, msg = gcu_stub.delete_checkpoint(cp_name)
             call_args = mock_run.call_args[0][0]
             assert "delete-checkpoint" in call_args
             assert cp_name in call_args
