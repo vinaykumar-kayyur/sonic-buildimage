@@ -339,8 +339,11 @@ class TestJ2Files(TestCase):
         TEST_DATA = [
             # (vendor, platform, sku, minigraph, buffer_template, sample_output )
             ('arista', 'x86_64-arista_7050cx3_32s', 'Arista-7050CX3-32S-D48C8', 'sample-arista-7050cx3-dualtor-minigraph.xml', 'buffers.json.j2', 'buffer-arista7050cx3-dualtor.json'),
+            ('arista', 'x86_64-arista_7050cx3_32s', 'Arista-7050CX3-32S-D48C8', 'sample-arista-7050cx3-dualtor-minigraph-remap-disabled.xml', 'buffers.json.j2', 'buffer-arista7050cx3-dualtor-remap-disabled.json'),
             ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D108C8', 'sample-arista-7260-dualtor-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-dualtor.json'),
-            ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t1.json')
+            ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D108C8', 'sample-arista-7260-dualtor-minigraph-remap-disabled.xml', 'buffers.json.j2', 'buffer-arista7260-dualtor-remap-disabled.json'),
+            ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t1.json'),
+            ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph-remap-disabled.xml', 'buffers.json.j2', 'buffer-arista7260-t1-remap-disabled.json')
         ]
 
         for test_data in TEST_DATA:
