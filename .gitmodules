@@ -109,3 +109,4 @@
 [submodule "src/sonic-gnmi"]
 	path = src/sonic-gnmi
 	url = https://github.com/ganglyu/sonic-gnmi
+	branch = gnmi_init_draft
