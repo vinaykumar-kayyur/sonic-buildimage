@@ -1,4 +1,3 @@
-{% if (SYSTEM_DEFAULTS is defined) and ('tunnel_qos_remap' in SYSTEM_DEFAULTS) and (SYSTEM_DEFAULTS['tunnel_qos_remap']['status'] == 'enabled') %}
 {% if ('type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] == 'LeafRouter') %}
 {%- macro generate_dscp_to_tc_map() %}
     "DSCP_TO_TC_MAP": {
@@ -288,7 +287,6 @@
         }
     },
 {%- endmacro %}
-{% endif %}
 {% endif %}
 
 {%- include 'qos_config.j2' %}
