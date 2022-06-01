@@ -11,7 +11,7 @@ import signal
 
 import jinja2
 from sonic_py_common import device_info
-from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table, SignalHandlerHelper, SIGNAL_INT
+from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table, SignalHandlerHelper, SIGNAL_INT, SIGNAL_TERM
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -61,12 +61,6 @@ def safe_eval(val, default_value=False):
 def signal_handler(sig, frame):
     if sig == signal.SIGHUP:
         syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGHUP' is caught and ignoring..")
-    elif sig == signal.SIGINT:
-        syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGINT' is caught and exiting...")
-        sys.exit(128 + sig)
-    elif sig == signal.SIGTERM:
-        syslog.syslog(syslog.LOG_INFO, "HostCfgd: signal 'SIGTERM' is caught and exiting...")
-        sys.exit(128 + sig)
     else:
         syslog.syslog(syslog.LOG_INFO, "HostCfgd: invalid signal - ignoring..")
 
@@ -1242,13 +1236,12 @@ class HostConfigDaemon:
 
 
 def main():
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGHUP, signal_handler)
 
     # Initialize swsscommon signal helper, because python signal handler will be blocked by long running c++ code.
     # For more information please check: https://docs.python.org/3/library/signal.html
     SignalHandlerHelper.registerSignalHandler(SIGNAL_INT)
+    SignalHandlerHelper.registerSignalHandler(SIGNAL_TERM)
 
     daemon = HostConfigDaemon()
     daemon.register_callbacks()
