@@ -286,8 +286,10 @@ class FeatureHandler(object):
         """
         restart_field_str = "always" if "enabled" in feature_config.auto_restart else "no"
         feature_systemd_config = "[Service]\nRestart={}\n".format(restart_field_str)
-        feature_names, feature_suffixes = self.get_feature_attribute(feature_config)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature_config)
 
+        # On multi-ASIC device, creates systemd configuration file for each feature instance
+        # residing in difference namespace.
         for feature_name in feature_names:
             syslog.syslog(syslog.LOG_INFO, "Updating feature '{}' systemd config file related to auto-restart ..."
                           .format(feature_name))
@@ -309,7 +311,7 @@ class FeatureHandler(object):
         except Exception as err:
             syslog.syslog(syslog.LOG_ERR, "Failed to reload systemd configuration files!")
 
-    def get_feature_attribute(self, feature):
+    def get_multiasic_feature_instances(self, feature):
         # Create feature name suffix depending feature is running in host or namespace or in both
         feature_names = (
             ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
@@ -340,7 +342,7 @@ class FeatureHandler(object):
 
     def enable_feature(self, feature):
         cmds = []
-        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature)
         for feature_name in feature_names:
             # Check if it is already enabled, if yes skip the system call
             unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
@@ -370,7 +372,7 @@ class FeatureHandler(object):
 
     def disable_feature(self, feature):
         cmds = []
-        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature)
         for feature_name in feature_names:
             # Check if it is already disabled, if yes skip the system call
             unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
