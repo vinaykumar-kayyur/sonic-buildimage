@@ -165,7 +165,7 @@ dependent_startup=true
 dependent_startup_wait_for=bgpd:running
 {% endif %}
 
-{% if WARM_RESTART is defined and WARM_RESTART.bgp is defined and WARM_RESTART.bgp.bgp_eoiu is defined and WARM_RESTART.bgp.bgp_eoiu == "true" %}
+{% if ADVANCED_RESTART is defined and ADVANCED_RESTART.bgp is defined and ADVANCED_RESTART.bgp.bgp_eoiu is defined and ADVANCED_RESTART.bgp.bgp_eoiu == "true" %}
 [program:bgp_eoiu_marker]
 command=/usr/bin/bgp_eoiu_marker.py
 priority=7

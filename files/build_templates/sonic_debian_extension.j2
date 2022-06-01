@@ -353,10 +353,10 @@ sudo cp $IMAGE_CONFIGS/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
 sudo cp $IMAGE_CONFIGS/ntp/ntp.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "ntp.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
-# Copy warmboot-finalizer files
-sudo LANG=C cp $IMAGE_CONFIGS/warmboot-finalizer/finalize-warmboot.sh $FILESYSTEM_ROOT/usr/local/bin/finalize-warmboot.sh
-sudo LANG=C cp $IMAGE_CONFIGS/warmboot-finalizer/warmboot-finalizer.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "warmboot-finalizer.service" | sudo tee -a $GENERATED_SERVICE_FILE
+# Copy advanced boot-finalizer files
+sudo LANG=C cp $IMAGE_CONFIGS/advancedboot-finalizer/finalize-advancedboot.sh $FILESYSTEM_ROOT/usr/local/bin/finalize-advancedboot.sh
+sudo LANG=C cp $IMAGE_CONFIGS/advancedboot-finalizer/advancedboot-finalizer.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "advancedboot-finalizer.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
 # Copy watchdog-control files
 sudo LANG=C cp $IMAGE_CONFIGS/watchdog-control/watchdog-control.sh $FILESYSTEM_ROOT/usr/local/bin/watchdog-control.sh

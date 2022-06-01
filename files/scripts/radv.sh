@@ -6,14 +6,14 @@ function debug()
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
-function check_warm_boot()
+function check_advanced_boot()
 {
-    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
+    SYSTEM_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    if [[ x"$SYSTEM_ADVANCED_START" == x"true" ]] || [[ x"$SERVICE_ADVANCED_START" == x"true" ]]; then
+        ADVANCED_BOOT="true"
     else
-        WARM_BOOT="false"
+        ADVANCED_BOOT="false"
     fi
 }
 
@@ -29,9 +29,9 @@ function check_fast_boot ()
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # start service docker
@@ -46,13 +46,13 @@ wait() {
 stop() {
     debug "Stopping ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
-    # For WARM/FAST boot do not perform service stop
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
+    # For ADVANCED/FAST boot do not perform service stop
+    if [[ x"$ADVANCED_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         /usr/bin/${SERVICE}.sh stop $DEV
         debug "Stopped ${SERVICE}$DEV service..."
     else

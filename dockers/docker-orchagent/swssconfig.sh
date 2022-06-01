@@ -50,11 +50,11 @@ fast_reboot
 
 HWSKU=${HWSKU:-`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['hwsku']"`}
 
-# Don't load json config if system warm start or
-# swss docker warm start is enabled, the data already exists in appDB.
-SYSTEM_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-SWSS_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|swss" enable`
-if [[ "$SYSTEM_WARM_START" == "true" ]] || [[ "$SWSS_WARM_START" == "true" ]]; then
+# Don't load json config if system advanced start or
+# swss docker advanced start is enabled, the data already exists in appDB.
+SYSTEM_ADVANCED_START=`sonic-db-cli STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+SWSS_ADVANCED_START=`sonic-db-cli STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|swss" enable`
+if [[ "$SYSTEM_ADVANCED_START" == "true" ]] || [[ "$SWSS_ADVANCED_START" == "true" ]]; then
   exit 0
 fi
 

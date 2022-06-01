@@ -1,0 +1,11 @@
+[Unit]
+Description=Monitor advanced reboot recovery and disable advancedboot when done
+Requires=database.service
+After=database.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/finalize-advancedboot.sh
+
+[Install]
+WantedBy=multi-user.target

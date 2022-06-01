@@ -790,7 +790,7 @@
                 "role": "Int",
                 "speed": "40000",
                 "tpid": "0x8100"
-            } 
+            }
         },
         "ACL_TABLE": {
             "V4-ACL-TABLE": {
@@ -1149,7 +1149,7 @@
                 "polling_interval": "0"
             }
         },
-        "WARM_RESTART": {
+        "ADVANCED_RESTART": {
             "bgp": {
                 "bgp_timer": "500"
             }

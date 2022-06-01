@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 """"
-Description: restore_nat_entries.py -- restoring nat entries table into kernel during system warm reboot.
+Description: restore_nat_entries.py -- restoring nat entries table into kernel during system advanced reboot.
     The script is started by supervisord in nat docker when the docker is started.
-    It does not do anything in case neither system nor nat warm restart is enabled.
-    In case nat warm restart enabled only, it sets the stateDB flag so natsyncd can continue
+    It does not do anything in case neither system nor nat advanced restart is enabled.
+    In case nat advanced restart enabled only, it sets the stateDB flag so natsyncd can continue
     the reconciation process.
-    In case system warm reboot is enabled, it will try to restore the nat entries table into kernel
+    In case system advanced reboot is enabled, it will try to restore the nat entries table into kernel
     , then it sets the stateDB flag for natsyncd to continue the
     reconciliation process.
 """
@@ -72,20 +72,20 @@ def restore_update_kernel_nat_entries(filename):
 def main():
     logger.log_info("restore_nat_entries service is started")
 
-    # Use warmstart python binding to check warmstart information
-    warmstart = swsscommon.WarmStart()
-    warmstart.initialize("natsyncd", "nat")
-    warmstart.checkWarmStart("natsyncd", "nat", False)
+    # Use advancedstart python binding to check advancedstart information
+    advancedstart = swsscommon.AdvancedStart()
+    advancedstart.initialize("natsyncd", "nat")
+    advancedstart.checkAdvancedStart("natsyncd", "nat", False)
 
-    # if swss or system warm reboot not enabled, don't run
-    if not warmstart.isWarmStart():
-        logger.log_info("restore_nat_entries service is skipped as warm restart not enabled")
+    # if swss or system advanced reboot not enabled, don't run
+    if not advancedstart.isAdvancedStart():
+        logger.log_info("restore_nat_entries service is skipped as advanced restart not enabled")
         return
 
-    # NAT restart not system warm reboot, set statedb directly
-    if not warmstart.isSystemWarmRebootEnabled():
+    # NAT restart not system advanced reboot, set statedb directly
+    if not advancedstart.isSystemAdvancedRebootEnabled():
         set_statedb_nat_restore_done()
-        logger.log_info("restore_nat_entries service is done as system warm reboot not enabled")
+        logger.log_info("restore_nat_entries service is done as system advanced reboot not enabled")
         return
 
     # Program the nat conntrack entries in the kernel by reading the
@@ -101,7 +101,7 @@ def main():
 
     # set statedb to signal other processes like natsyncd
     set_statedb_nat_restore_done()
-    logger.log_info("restore_nat_entries service is done for system warmreboot")
+    logger.log_info("restore_nat_entries service is done for system advanced reboot")
     return
 
 

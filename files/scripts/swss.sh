@@ -49,14 +49,14 @@ function unlock_service_state_change()
     /usr/bin/flock -u ${LOCKFD}
 }
 
-function check_warm_boot()
+function check_advanced_boot()
 {
-    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
+    SYSTEM_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    if [[ x"$SYSTEM_ADVANCED_START" == x"true" ]] || [[ x"$SERVICE_ADVANCED_START" == x"true" ]]; then
+        ADVANCED_BOOT="true"
     else
-        WARM_BOOT="false"
+        ADVANCED_BOOT="false"
     fi
 }
 
@@ -71,11 +71,11 @@ function check_fast_boot()
 
 function validate_restore_count()
 {
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|orchagent" restore_count`
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
+        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_TABLE|orchagent" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
-            WARM_BOOT="false"
+            ADVANCED_BOOT="false"
         fi
     fi
 }
@@ -109,9 +109,9 @@ function clean_up_tables()
 }
 
 start_peer_and_dependent_services() {
-    check_warm_boot
+    check_advanced_boot
 
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" != x"true" ]]; then
         for peer in ${PEER}; do
             if [[ ! -z $DEV ]]; then
                 /bin/systemctl start ${peer}@$DEV
@@ -133,8 +133,8 @@ start_peer_and_dependent_services() {
 }
 
 stop_peer_and_dependent_services() {
-    # if warm/fast start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
+    # if advanced/fast start enabled or peer lock exists, don't stop peer service docker
+    if [[ x"$ADVANCED_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         for dep in ${MULTI_INST_DEPENDENT}; do
             if [[ ! -z $DEV ]]; then
                 /bin/systemctl stop ${dep}@$DEV
@@ -161,13 +161,13 @@ start() {
     lock_service_state_change
 
     wait_for_database_service
-    check_warm_boot
+    check_advanced_boot
     validate_restore_count
 
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
 
-    # Don't flush DB during warm boot
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
+    # Don't flush DB during advanced boot
+    if [[ x"$ADVANCED_BOOT" != x"true" ]]; then
         debug "Flushing APP, ASIC, COUNTER, CONFIG, and partial STATE databases ..."
         $SONIC_DB_CLI APPL_DB FLUSHDB
         $SONIC_DB_CLI ASIC_DB FLUSHDB
@@ -266,13 +266,13 @@ stop() {
     [[ -f ${LOCKFILE} ]] || /usr/bin/touch ${LOCKFILE}
 
     lock_service_state_change
-    check_warm_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    check_advanced_boot
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     check_fast_boot
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
-    # For WARM/FAST boot do not perform service stop
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
+    # For ADVANCED/FAST boot do not perform service stop
+    if [[ x"$ADVANCED_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         /usr/bin/${SERVICE}.sh stop $DEV
         debug "Stopped ${SERVICE}$DEV service..."
     else

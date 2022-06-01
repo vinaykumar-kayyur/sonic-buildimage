@@ -36,15 +36,15 @@ function unlock_service_state_change()
     /usr/bin/flock -u ${LOCKFD}
 }
 
-function check_warm_boot()
+function check_advanced_boot()
 {
-    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
-    # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
+    SYSTEM_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    # SYSTEM_ADVANCED_START could be empty, always make ADVANCED_BOOT meaningful.
+    if [[ x"$SYSTEM_ADVANCED_START" == x"true" ]] || [[ x"$SERVICE_ADVANCED_START" == x"true" ]]; then
+        ADVANCED_BOOT="true"
     else
-        WARM_BOOT="false"
+        ADVANCED_BOOT="false"
     fi
 }
 
@@ -102,11 +102,11 @@ start() {
     mkdir -p /host/warmboot
 
     wait_for_database_service
-    check_warm_boot
+    check_advanced_boot
 
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
 
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
         # Leave a mark for syncd scripts running inside docker.
         touch /host/warmboot/warm-starting
     else
@@ -148,12 +148,12 @@ stop() {
     debug "Stopping ${SERVICE}$DEV service..."
 
     lock_service_state_change
-    check_warm_boot
+    check_advanced_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
         TYPE=warm
     elif [[ x"$FAST_BOOT" == x"true" ]]; then
         TYPE=fast

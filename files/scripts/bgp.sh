@@ -6,24 +6,24 @@ function debug()
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
-function check_warm_boot()
+function check_advanced_boot()
 {
-    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
+    SYSTEM_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    if [[ x"$SYSTEM_ADVANCED_START" == x"true" ]] || [[ x"$SERVICE_ADVANCED_START" == x"true" ]]; then
+        ADVANCED_BOOT="true"
     else
-        WARM_BOOT="false"
+        ADVANCED_BOOT="false"
     fi
 }
 
 function validate_restore_count()
 {
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|bgp" restore_count`
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
+        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_TABLE|bgp" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
-            WARM_BOOT="false"
+            ADVANCED_BOOT="false"
         fi
     fi
 }
@@ -40,12 +40,12 @@ function check_fast_boot ()
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     validate_restore_count
 
     check_fast_boot
 
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
 
     # start service docker
@@ -61,13 +61,13 @@ wait() {
 stop() {
     debug "Stopping ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # Kill bgpd to start the bgp graceful restart procedure
-    if [[ x"$WARM_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
         debug "Kill zebra first"
         /usr/bin/docker exec -i bgp pkill -9 zebra || [ $? == 1 ]
         /usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]

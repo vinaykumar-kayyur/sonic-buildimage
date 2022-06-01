@@ -1,11 +1,11 @@
-module sonic-warm-restart  {
+module sonic-advanced-restart  {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-warm-restart";
+    namespace "http://github.com/Azure/sonic-advanced-restart";
     prefix wrm;
 
-    description "SONIC WARMRESTART";
+    description "SONIC ADVANCEDRESTART";
 
     revision 2021-05-24 {
         description "First Revision";
@@ -32,20 +32,20 @@ module sonic-warm-restart  {
 
             enum system {
                description
-                 "Warm Restart on a System level.";
+                 "Advanced Restart on a System level.";
             }
 
         }
 
         description
-            "The modules supported in warm-restart";
+            "The modules supported in advanced-restart";
     }
 
 
-    container sonic-warm-restart {
-        container WARM_RESTART {
+    container sonic-advanced-restart {
+        container ADVANCED_RESTART {
 
-            list WARM_RESTART_LIST {
+            list ADVANCED_RESTART_LIST {
                 key "module";
 
                 leaf module {
@@ -97,9 +97,9 @@ module sonic-warm-restart  {
                        "Timer value for swss module";
                 }
 
-            } /* end of list WARM_RESTART_LIST */
-        } /* end of container WARM_RESTART */
-    } /* end of container sonic-warm-restart */
+            } /* end of list ADVANCED_RESTART_LIST */
+        } /* end of container ADVANCED_RESTART */
+    } /* end of container sonic-advanced-restart */
 
 
-} /* end of module sonic-warm-restart */
+} /* end of module sonic-advanced-restart */

@@ -8,24 +8,24 @@ function debug()
     /bin/echo `date` "- $1" >> ${DEBUG_LOG}
 }
 
-function check_warm_boot()
+function check_advanced_boot()
 {
-    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
+    SYSTEM_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_ADVANCED_START=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    if [[ x"$SYSTEM_ADVANCED_START" == x"true" ]] || [[ x"$SERVICE_ADVANCED_START" == x"true" ]]; then
+        ADVANCED_BOOT="true"
     else
-        WARM_BOOT="false"
+        ADVANCED_BOOT="false"
     fi
 }
 
 function validate_restore_count()
 {
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|${SERVICE}" restore_count`
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
+        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "ADVANCED_RESTART_TABLE|${SERVICE}" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
-            WARM_BOOT="false"
+            ADVANCED_BOOT="false"
         fi
     fi
 }
@@ -42,12 +42,12 @@ function check_fast_boot ()
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     validate_restore_count
 
     check_fast_boot
 
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
 
     # On supervisor card, skip starting asic related services here. In wait(),
@@ -78,14 +78,14 @@ wait() {
 stop() {
     debug "Stopping ${SERVICE}$DEV service..."
 
-    check_warm_boot
+    check_advanced_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Advanced boot flag: ${SERVICE}$DEV ${ADVANCED_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" == x"true" ]]; then
         # Send USR1 signal to all teamd instances to stop them
-        # It will prepare teamd for warm-reboot
+        # It will prepare teamd for advanced-reboot
         # Note: We must send USR1 signal before syncd, because it will send the last packet through CPU port
         docker exec -i ${SERVICE}$DEV pkill -USR1 -f ${TEAMD_CMD} > /dev/null || [ $? == 1 ]
     elif [[ x"$FAST_BOOT" == x"true" ]]; then
@@ -95,7 +95,7 @@ stop() {
         docker exec -i ${SERVICE}$DEV pkill -USR2 -f ${TEAMD_CMD} || [ $? == 1 ]
     fi
 
-    if [[ x"$WARM_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
+    if [[ x"$ADVANCED_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
         while docker exec -i ${SERVICE}$DEV pgrep -f ${TEAMD_CMD} > /dev/null; do
             sleep 0.05
         done

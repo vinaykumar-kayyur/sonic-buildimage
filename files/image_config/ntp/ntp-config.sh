@@ -7,11 +7,11 @@ reboot_type='cold'
 
 function get_database_reboot_type()
 {
-    SYSTEM_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SYSTEM_ADVANCED_START=`sonic-db-cli STATE_DB hget "ADVANCED_RESTART_ENABLE_TABLE|system" enable`
     SYSTEM_FAST_START=`sonic-db-cli STATE_DB get "FAST_REBOOT|system"`
 
-    if [[ x"${SYSTEM_WARM_START}" == x"true" ]]; then
-        reboot_type='warm'
+    if [[ x"${SYSTEM_ADVANCED_START}" == x"true" ]]; then
+        reboot_type='advanced'
     elif [[ x"${SYSTEM_FAST_START}" == x"1" ]]; then
         reboot_type='fast'
     fi
