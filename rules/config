@@ -227,3 +227,6 @@ DEFAULT_CONTAINER_REGISTRY ?=
 
 # INCLUDE_BOOTCHART - install systemd-bootchart
 INCLUDE_BOOTCHART = y
+
+# ENABLE_BOOTCHART - whether to enable systemd-bootchart on boot
+ENABLE_BOOTCHART = n

@@ -195,6 +195,11 @@ ifeq ($(SONIC_INCLUDE_BOOTCHART),y)
 INCLUDE_BOOTCHART = y
 endif
 
+ifeq ($(SONIC_ENABLE_BOOTCHART),y)
+ENABLE_BOOTCHART = y
+endif
+
+
 ifeq ($(ENABLE_ASAN),y)
 	ifneq ($(CONFIGURED_ARCH),amd64)
 		@echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
@@ -337,6 +342,7 @@ $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "INCLUDE_BOOTCHART                : "$(INCLUDE_BOOTCHART)")
+$(info "ENABLE_BOOTCHART                 : "$(ENABLE_BOOTCHART)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
@@ -1152,6 +1158,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			echo $($(component)_NAME)==$($(component)_VERSION)))"
 	export include_mux="$(INCLUDE_MUX)"
 	export include_bootchart="$(INCLUDE_BOOTCHART)"
+	export enable_bootchart="$(ENABLE_BOOTCHART)"
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
 		export docker_image_name="$(basename $(docker))"

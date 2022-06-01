@@ -43,7 +43,10 @@
 #  * ENABLE_AUTO_TECH_SUPPORT: Enable the configuration for event-driven techsupport & coredump mgmt feature
 #  *                 Default: y
 #  *                 Values: y,n
-#  * INCLUDE_BOOTCHART: Enable SONiC bootchart
+#  * INCLUDE_BOOTCHART: Install SONiC bootchart
+#  *                 Default: y
+#  *                 Values: y,n
+#  * ENABLE_BOOTCHART: Enable SONiC bootchart
 #  *                 Default: n
 #  *                 Values: y,n
 #
@@ -359,6 +362,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM) \
                            ENABLE_ASAN=$(ENABLE_ASAN) \
                            SONIC_INCLUDE_BOOTCHART=$(INCLUDE_BOOTCHART) \
+                           SONIC_ENABLE_BOOTCHART=$(ENABLE_BOOTCHART) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
