@@ -138,7 +138,6 @@ class Feature(object):
         self.has_global_scope = safe_eval(feature_cfg.get('has_global_scope', 'True'))
         self.has_per_asic_scope = safe_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
-
     def _get_target_state(self, state_configuration, device_config):
         """ Returns the target state for the feature by rendering the state field as J2 template.
 
@@ -157,7 +156,6 @@ class Feature(object):
         if target_state not in ('enabled', 'disabled', 'always_enabled', 'always_disabled'):
             raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
         return target_state
-
 
     def compare_state(self, feature_name, feature_cfg):
         if self.name != feature_name or not isinstance(feature_cfg, dict):
