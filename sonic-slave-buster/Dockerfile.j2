@@ -333,8 +333,7 @@ RUN apt-get update && apt-get install -y \
         libgcc-8-dev
 
 # For openssh-server
-RUN apt-get -y install -y -t buster-backports \
-        openssh-client \
+RUN apt-get -y install -t buster-backports \
         openssh-server \
         libfido2-dev
 RUN apt-get -y build-dep openssh
