@@ -335,6 +335,7 @@ RUN apt-get update && apt-get install -y \
 
 # For openssh-server
 RUN apt-get -y install -y -t buster-backports \
+        openssh-client \
         openssh-server \
         libfido2-dev
 RUN apt-get -y build-dep openssh
