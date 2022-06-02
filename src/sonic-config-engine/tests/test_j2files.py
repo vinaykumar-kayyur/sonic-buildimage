@@ -378,7 +378,7 @@ class TestJ2Files(TestCase):
             ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t1.json'),
             ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph-remap-disabled.xml', 'buffers.json.j2', 'buffer-arista7260-t1-remap-disabled.json')
         ]
-        
+
         for test_data in TEST_DATA:
             self._test_buffers_render_template(vendor=test_data[0],
                                                 platform=test_data[1],
