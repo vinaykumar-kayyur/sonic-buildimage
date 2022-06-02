@@ -68,9 +68,7 @@ module sonic-vlan-sub-interface {
 
                 leaf loopback_action {
                     description "Packet action when a packet ingress and gets routed on the same IP interface";
-                    type string{
-                        pattern "drop|forward";
-                    }
+                    type stypes:loopback_action;
                 }
             }
 
