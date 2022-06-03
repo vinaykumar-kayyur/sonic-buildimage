@@ -49,6 +49,7 @@ variables:
 
 stages:
 - stage: BuildVS
+
   pool: sonicbld
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
