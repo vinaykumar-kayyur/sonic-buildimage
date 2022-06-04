@@ -430,7 +430,18 @@ out:
         zmq_ctx_term(zctx);
     }
     SWSS_LOG_ERROR("Eventd service exiting\n");
-
-    meturn 0;
 }
+
+
+int main()
+{
+    SWSS_LOG_INFO("The eventd service started");
+
+    run_eventd_service();
+
+    SWSS_LOG_INFO("The eventd service exited");
+
+    return 0;
+}
+
 
