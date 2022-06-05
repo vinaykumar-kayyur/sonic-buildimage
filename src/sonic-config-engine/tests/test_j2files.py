@@ -289,7 +289,7 @@ class TestJ2Files(TestCase):
         os.remove(buffers_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-mellanox2700.json')
-        assert filecmp.cmp(sample_output_file, self.output_file)
+        assert utils.cmp(sample_output_file, self.output_file)
 
     def test_buffers_mellanox2410_render_template(self):
         # Mellanox buffer template rendering for double ingress pools mode
@@ -309,7 +309,7 @@ class TestJ2Files(TestCase):
         os.remove(buffers_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-mellanox2410.json')
-        assert filecmp.cmp(sample_output_file, self.output_file)
+        assert utils.cmp(sample_output_file, self.output_file)
 
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
