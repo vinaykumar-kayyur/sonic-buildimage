@@ -1,16 +1,16 @@
 # eventd package
 
-EVENTD = eventd.0.0_$(CONFIGURED_ARCH).deb
-$(EVENTD)_SRC_PATH = $(SRC_PATH)/sonic-eventd
-$(EVENTD)_DEPENDS += $(LIBSWSSCOMMON)  $(LIBSWSSCOMMON_DEV)
+SONIC_EVENTD_VERSION = 1.0.0-0
+SONIC_EVENTD_PKG_NAME = eventd
 
-$(EVENTD)_RDEPENDS += $(LIBSWSSCOMMON)
-SONIC_DPKG_DEBS += $(EVENTD)
+SONIC_EVENTD = sonic-$(SONIC_EVENTD_PKG_NAME)_$(SONIC_EVENTD_VERSION)_$(CONFIGURED_ARCH).deb
+$(SONIC_EVENTD)_SRC_PATH = $(SRC_PATH)/sonic-eventd
+$(SONIC_EVENTD)_DEPENDS += $(LIBSWSSCOMMON)  $(LIBSWSSCOMMON_DEV)
 
-EVENTD_DBG = eventd-dbg_1.0.0_$(CONFIGURED_ARCH).deb
-$(EVENTD_DBG)_DEPENDS += $(EVENTD)
-$(EVENTD_DBG)_RDEPENDS += $(EVENTD)
-$(eval $(call add_derived_package,$(EVENTD),$(EVENTD_DBG)))
+SONIC_DPKG_DEBS += $(SONIC_EVENTD)
+
+SONIC_EVENTD_DBG = sonic-$(SONIC_EVENTD_PKG_NAME)-dbgsym_$(SONIC_EVENTD_VERSION)_$(CONFIGURED_ARCH).deb
+$(eval $(call add_derived_package,$(SONIC_EVENTD),$(SONIC_EVENTD_DBG)))
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
