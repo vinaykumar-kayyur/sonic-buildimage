@@ -2,9 +2,6 @@ parameters:
 - name: runID
   default: ''
   type: string
-- name: branch
-  default: ''
-  type: string
 
 jobs:
 - job: UpgradeVersions
@@ -66,11 +63,10 @@ jobs:
         sudo mkdir -p $HOME
         sudo chown -R $(id -un):$(id -gn) $HOME
       fi
-      SOURCE_BRANCH=$(Build.SourceBranchName)
-      [ -n "${{ parameters.branch }}" ] && SOURCE_BRANCH=${{ parameters.branch }}
+      SOURCE_BRANCH=$(Build.SourceBranch)
       REPO_NAME=$(Build.Repository.Name)
       [ -z "$GIT_REPO" ] && GIT_REPO=${REPO_NAME#*/}
-      BRANCH_NAME=repd/versions/$SOURCE_BRANCH
+      BRANCH_NAME=repd/versions/${SOURCE_BRANCH#refs/heads/}
       echo '#!/bin/bash' > git_env_password.sh
       echo 'echo $GIT_PASSWORD' >> git_env_password.sh
       chmod a+x git_env_password.sh
@@ -89,7 +85,7 @@ jobs:
       TITLE="Upgrade SONiC Versions"
       BODY="Upgrade SONiC Versions"
       RET=0
-      if ! gh pr create -t "$TITLE" -b "$BODY" -B refs/heads/$SOURCE_BRANCH -R $(Build.Repository.Name) > pr.log 2>&1; then
+      if ! gh pr create -t "$TITLE" -b "$BODY" -B $(Build.SourceBranch) -R $(Build.Repository.Name) > pr.log 2>&1; then
         if ! grep -q "already exists" pr.log; then
           RET=1
         fi
