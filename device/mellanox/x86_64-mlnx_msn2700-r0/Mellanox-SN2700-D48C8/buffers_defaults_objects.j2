@@ -249,11 +249,7 @@
         },
 {% endif %}
         "{{ port }}|0": {
-{% if dynamic_mode is defined %}
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-{% else %}
-            "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
-{% endif %}
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
