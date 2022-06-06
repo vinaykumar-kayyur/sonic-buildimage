@@ -253,28 +253,6 @@
       </DeviceLinkBase>
       <DeviceLinkBase i:type="LogicalLink">
         <ElementType>LogicalLink</ElementType>
-        <Bandwidth>10000</Bandwidth>
-        <ChassisInternal>false</ChassisInternal>
-        <EndDevice>switch-t0</EndDevice>
-        <EndPort>fortyGigE0/4</EndPort>
-        <FlowControl>true</FlowControl>
-        <StartDevice>mux-cable</StartDevice>
-        <StartPort>L</StartPort>
-        <Validate>true</Validate>
-      </DeviceLinkBase>
-      <DeviceLinkBase i:type="LogicalLink">
-        <ElementType>LogicalLink</ElementType>
-        <Bandwidth>10000</Bandwidth>
-        <ChassisInternal>false</ChassisInternal>
-        <EndDevice>switch-t0</EndDevice>
-        <EndPort>fortyGigE0/8</EndPort>
-        <FlowControl>true</FlowControl>
-        <StartDevice>mux-cable</StartDevice>
-        <StartPort>U</StartPort>
-        <Validate>true</Validate>
-      </DeviceLinkBase>
-      <DeviceLinkBase i:type="LogicalLink">
-        <ElementType>LogicalLink</ElementType>
         <Bandwidth>0</Bandwidth>
         <ChassisInternal>false</ChassisInternal>
         <EndDevice>switch-t0</EndDevice>
