@@ -18,6 +18,7 @@ parameters:
   - 202012
   - 202106
   - 202111
+  - 202205
 
 pool:
   vmImage: 'windows-latest'
