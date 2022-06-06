@@ -457,7 +457,11 @@ class FeatureTransitionHandler:
         service_restart = False
 
         if set_owner == "local":
-            if ct_owner != "local":
+            # none is a default value for current_owner when docker stop.
+            # It is not necessary to restart the feature again when the system
+            #  config a new value for it from none.
+            # The container script will handle the restart operation.
+            if (ct_owner != "local") and (ct_owner != "none"):
                 service_restart = True
         else:
             if (ct_owner != "none") and (remote_state == "pending"):
