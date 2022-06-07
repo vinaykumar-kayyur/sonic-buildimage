@@ -96,7 +96,7 @@ dependent_startup_wait_for=rsyslogd:running
 {% if not skip_xcvrd %}
 [program:xcvrd]
 {% if delay_xcvrd %}
-command={% if skip_cmis_mgr %} bash -c "sleep 30 && python3 /usr/local/bin/xcvrd --skip_cmis_mgr" {% else %} bash -c "sleep 30 && python3 /usr/local/bin/xcvrd" {% endif % }
+command={% if skip_cmis_mgr %} bash -c "sleep 30 && python3 /usr/local/bin/xcvrd --skip_cmis_mgr" {% else %} bash -c "sleep 30 && python3 /usr/local/bin/xcvrd" {% endif %}
 {% else %}
 command={% if skip_cmis_mgr %} python3 /usr/local/bin/xcvrd --skip_cmis_mgr {% else %} python3 /usr/local/bin/xcvrd {% endif %}
 {% endif %}
