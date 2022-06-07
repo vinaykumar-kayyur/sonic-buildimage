@@ -28,8 +28,8 @@ module sonic-events-bgp {
         oc-alarm-types:MINOR
 
         description "
-            Declares an event for BGP state for a neighbor IP
-            The status says up or down";
+            Declares an event for BGP state for a neighbor IP going up.
+            Going down is reported via notification;
 
         leaf ip {
             type inet:ip-address;
@@ -39,7 +39,6 @@ module sonic-events-bgp {
         leaf status {
             type enumeration {
                 enum "up";
-                enum "down";
             }
             description "Provides the status as up (true) or down (false)";
         }
@@ -47,13 +46,37 @@ module sonic-events-bgp {
         uses evtcmn:sonic-events-cmn;
     }
 
-    container bgp-hold-timer {
+    container notification {
         oc-alarm-types:MAJOR
 
         description "
-            Declares an event for BGP hold timer expiry.
-            This event does not have any other parameter.
-            Hence source + tag identifies an event";
+            Reports an notification.
+            The error codes as per IANA.
+            The other params are as in the message";
+
+        leaf major-code {
+            type uint8;
+            description "Major IANA error code; [RFC4271][RFC7313]";
+        }
+
+        leaf minor-code {
+            type uint8;
+            description "Minor IANA error code; [RFC4271][RFC7313]";
+        }
+
+        leaf ip {
+            type inet:ip-address;
+            description "IP of neighbor associated with this notification";
+        }
+
+        leaf ASN {
+            type uint32;
+            description "ASN number from the notification";
+        }
+
+        leaf is-sent {
+            type boolean;
+            description "true - if this notification was for sent messages; false if it was for received.";
 
         uses evtcmn:sonic-events-cmn;
     }
