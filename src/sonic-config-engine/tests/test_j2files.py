@@ -27,6 +27,7 @@ class TestJ2Files(TestCase):
         self.multi_asic_port_config = os.path.join(self.test_dir, 'multi_npu_data', 'sample_port_config-0.ini')
         self.dell9332_t1_minigraph = os.path.join(self.test_dir, 'sample-dell-9332-t1-minigraph.xml')
         self.radv_test_minigraph = os.path.join(self.test_dir, 'radv-test-sample-graph.xml')
+        self.no_ip_helper_minigraph = os.path.join(self.test_dir, 't0-sample-no-ip-helper-graph.xml')
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
@@ -41,6 +42,31 @@ class TestJ2Files(TestCase):
 
     def run_diff(self, file1, file2):
         return subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+
+    def create_machine_conf(self, platform, vendor):
+        file_exist = True
+        dir_exist = True
+        mode = {'arista': 'aboot',
+                'dell': 'onie',
+                'mellanox': 'onie'
+               }
+        echo_cmd = "echo '{}_platform={}' | sudo tee -a /host/machine.conf > /dev/null".format(mode[vendor], platform)
+        if not os.path.exists('/host/machine.conf'):
+            file_exist = False
+            if not os.path.isdir('/host'):
+                dir_exist = False
+                os.system('sudo mkdir /host')
+            os.system('sudo touch /host/machine.conf')
+            os.system(echo_cmd)
+
+        return file_exist, dir_exist
+
+    def remove_machine_conf(self, file_exist, dir_exist):
+        if not file_exist:
+            os.system('sudo rm -f /host/machine.conf')
+
+        if not dir_exist:
+            os.system('sudo rmdir /host')
 
     def test_interfaces(self):
         interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
@@ -69,7 +95,13 @@ class TestJ2Files(TestCase):
         template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
         self.run_script(argument)
-        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay.supervisord.conf'), self.output_file), self.output_file)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay.supervisord.conf'), self.output_file))
+
+        # Test generation of docker-dhcp-relay.supervisord.conf when a vlan is missing ip/ipv6 helpers
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
+        argument = '-m ' + self.no_ip_helper_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay-no-ip-helper.supervisord.conf'), self.output_file))
 
     def test_radv(self):
         # Test generation of radvd.conf with multiple ipv6 prefixes
@@ -333,6 +365,7 @@ class TestJ2Files(TestCase):
             os.remove(test_output)
 
     def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
+        file_exist, dir_exist = self.create_machine_conf(platform, vendor)
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
         buffers_file = os.path.join(dir_path, buffer_template)
         port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
@@ -348,6 +381,7 @@ class TestJ2Files(TestCase):
         # cleanup
         buffers_config_file_new = os.path.join(dir_path, 'buffers_config.j2')
         os.remove(buffers_config_file_new)
+        self.remove_machine_conf(file_exist, dir_exist)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, expected)
         assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
@@ -378,7 +412,7 @@ class TestJ2Files(TestCase):
             ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t1.json'),
             ('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-C64', 'sample-arista-7260-t1-minigraph-remap-disabled.xml', 'buffers.json.j2', 'buffer-arista7260-t1-remap-disabled.json')
         ]
-        
+
         for test_data in TEST_DATA:
             self._test_buffers_render_template(vendor=test_data[0],
                                                 platform=test_data[1],
