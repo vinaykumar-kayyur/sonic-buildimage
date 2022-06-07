@@ -40,7 +40,6 @@ module sonic-default-lossless-buffer-parameter {
                         }
                     }
                     mandatory true;
-                    default 0;
                     description "The default dynamic_th used in lossless buffer profile generated dynamically";
                 }
 

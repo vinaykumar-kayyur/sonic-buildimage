@@ -40,7 +40,6 @@ module sonic-lossless-traffic-pattern {
                         }
                     }
                     mandatory true;
-                    default 1500;
                     description "The maximum packet size of a lossless packet";
                 }
 
@@ -51,7 +50,6 @@ module sonic-lossless-traffic-pattern {
                         }
                     }
                     mandatory true;
-                    default 100;
                     description "The percentage of small packets which is used to calculate the headroom size";
                 }
             }
