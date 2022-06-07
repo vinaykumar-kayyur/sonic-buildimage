@@ -38,31 +38,47 @@ class Chassis(ChassisBase):
         self.sku_name = self._get_sku_name()
         self.platform_name = self._get_platform_name()
         self.name = self.sku_name
-        from sonic_platform.fan import Fan
-        from sonic_platform.psu import Psu
-        from sonic_platform.thermal import Thermal
+
+        self._transceiver_presence = [0] * NUM_SFP
+
+        self.__initialize_fan()
+        self.__initialize_psu()
+        self.__initialize_thermals()
+        self.__initialize_components()
+        self.__initialize_sfp()
+        self.__initialize_eeprom()
+
+    def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
-        from sonic_platform.eeprom import Tlv
+        for index in range(0, NUM_SFP):
+            sfp_module = Sfp(index, 'QSFP_DD')
+            self._sfp_list.append(sfp_module)
 
 
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
         for fan_index in range(0, NUM_FAN):
             fan = Fan(fan_index)
             self._fan_list.append(fan)
 
+    def __initialize_psu(self):
+        from sonic_platform.psu import Psu
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
 
+    def __initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
-        for index in range(0, NUM_SFP):
-            sfp_module = Sfp(index, 'QSFP_DD')
-            self._sfp_list.append(sfp_module)
-        self._component_name_list = COMPONENT_NAME_LIST
+    def __initialize_eeprom(self):
+        from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
-        self._transceiver_presence = [0] * NUM_SFP
+
+    def __initialize_components(self):
+        self._component_name_list = COMPONENT_NAME_LIST
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
