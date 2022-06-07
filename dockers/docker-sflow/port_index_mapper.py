@@ -78,7 +78,7 @@ class PortIndexMapper(object):
                             key != 'PortConfigDone' and
                             key not in self.cur_interfaces):
                         self.update_db(key, op)
-            elif state == swsscomm.Select.ERROR:
+            elif state == swsscommon.Select.ERROR:
                 logger.log_error("Receieved error from select()")
                 break
 
