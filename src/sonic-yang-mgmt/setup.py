@@ -28,6 +28,7 @@ setup(
         'xmltodict==0.12.0',
         'ijson==2.6.1',
         'jsondiff>=1.2.0',
+        'tabulate==0.8.2'
     ],
     tests_require = [
         'pytest>3',
