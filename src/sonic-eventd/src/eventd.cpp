@@ -21,29 +21,31 @@
 /* Count of elements returned in each read */
 #define READ_SET_SIZE 100
 
+#define VEC_SIZE(p) ((int)p.size())
+
 int
 eventd_proxy::init()
 {
-    int ret = -1;
+    int ret = -1, rc = 0;
     SWSS_LOG_INFO("Start xpub/xsub proxy");
 
     m_frontend = zmq_socket(m_ctx, ZMQ_XSUB);
     RET_ON_ERR(m_frontend != NULL, "failing to get ZMQ_XSUB socket");
 
-    int rc = zmq_bind(m_frontend, get_config(XSUB_END_KEY));
-    RET_ON_ERR(rc == 0, "Failing to bind XSUB to %s", get_config(XSUB_END_KEY));
+    rc = zmq_bind(m_frontend, get_config(string(XSUB_END_KEY)).c_str());
+    RET_ON_ERR(rc == 0, "Failing to bind XSUB to %s", get_config(string(XSUB_END_KEY)).c_str());
 
     m_backend = zmq_socket(m_ctx, ZMQ_XPUB);
     RET_ON_ERR(m_backend != NULL, "failing to get ZMQ_XPUB socket");
 
-    rc = zmq_bind(m_backend, get_config(XPUB_END_KEY));
-    RET_ON_ERR(rc == 0, "Failing to bind XPUB to %s", get_config(XPUB_END_KEY));
+    rc = zmq_bind(m_backend, get_config(string(XPUB_END_KEY)).c_str());
+    RET_ON_ERR(rc == 0, "Failing to bind XPUB to %s", get_config(string(XPUB_END_KEY)).c_str());
 
     m_capture = zmq_socket(m_ctx, ZMQ_PUB);
     RET_ON_ERR(m_capture != NULL, "failing to get ZMQ_PUB socket for capture");
 
-    rc = zmq_bind(m_capture, get_config(CAPTURE_END_KEY));
-    RET_ON_ERR(rc == 0, "Failing to bind capture PUB to %s", get_config(CAPTURE_END_KEY));
+    rc = zmq_bind(m_capture, get_config(string(CAPTURE_END_KEY)).c_str());
+    RET_ON_ERR(rc == 0, "Failing to bind capture PUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
 
     m_thr = thread(&eventd_proxy::run, this);
     ret = 0;
@@ -58,8 +60,6 @@ eventd_proxy::run()
 
     /* runs forever until zmq context is terminated */
     zmq_proxy(m_frontend, m_backend, m_capture);
-
-    return 0;
 }
 
 
@@ -68,6 +68,7 @@ capture_service::~capture_service()
     stop_capture();
 }
 
+void
 capture_service::stop_capture()
 {
     if (m_socket != NULL) {
@@ -80,7 +81,7 @@ capture_service::stop_capture()
 }
 
 static bool
-validate_event(const internal_event_t &event, string &rid, string &seq)
+validate_event(const internal_event_t &event, runtime_id_t &rid, sequence_t &seq)
 {
     bool ret = false;
 
@@ -90,13 +91,12 @@ validate_event(const internal_event_t &event, string &rid, string &seq)
     itc_e = event.find(EVENT_STR_DATA);
 
     if ((itc_r != event.end()) && (itc_s != event.end()) && (itc_e != event.end())) {
-        invalid_evt = true;
-
+        ret = true;
         rid = itc_r->second;
-        seq = itc_s->second;
+        seq = str_to_seq(itc_s->second);
     }
     else {
-        SWSS_LOG_ERROR("Invalid evt: %s", map_to_str(event).str());
+        SWSS_LOG_ERROR("Invalid evt: %s", map_to_str(event).c_str());
     }
 
     return ret;
@@ -104,12 +104,12 @@ validate_event(const internal_event_t &event, string &rid, string &seq)
         
 
 void
-capture_service::init_capture_cache(events_data_lst_t &lst)
+capture_service::init_capture_cache(const events_data_lst_t &lst)
 {
     /* clean any pre-existing cache */
-    int ret = -1;
     int i;
-    string rid, seq;
+    runtime_id_t rid;
+    sequence_t seq;
 
     /*
      * Reserve a MAX_PUBLISHERS_COUNT entries for last events, as we use it only
@@ -121,13 +121,14 @@ capture_service::init_capture_cache(events_data_lst_t &lst)
         m_last_events[to_string(i)] = "";
     }
 
-    /* Cache last 
-    for (events_data_lst_t::it = lst.begin(); it != lst.end(); ++it) {
+    /* Cache last events -- as only the last instance */
+    /* This is required to compute missed count */
+    for (events_data_lst_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
         internal_event_t event;
 
         if (deserialize(*itc, event) == 0) {
             if (validate_event(event, rid, seq)) {
-                m_pre_exist_id[event[EVENT_RUNTIME_ID]] = rid;
+                m_pre_exist_id[rid] = seq;
                 m_events.push_back(*itc);
             }
         }
@@ -142,12 +143,11 @@ void
 capture_service::do_capture()
 {
     /* clean any pre-existing cache */
-    int ret = -1;
-    int i;
-    string rid, seq;
+    runtime_id_t rid;
+    sequence_t seq;
 
     /* Check read events against provided cache for 2 seconds to skip */
-    chrono::steady_clock::timepoint start = chrono::steady_clock::now();
+    chrono::steady_clock::time_point start = chrono::steady_clock::now();
     while(!m_pre_exist_id.empty()) {
         internal_event_t event;
         string source, evt_str;
@@ -158,10 +158,9 @@ capture_service::do_capture()
         if (validate_event(event, rid, seq)) {
 
             serialize(event, evt_str);
-            m_pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
+            pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
 
             if (it != m_pre_exist_id.end()) {
-                seq = events_base::str_to_seq(seq);
                 if (seq > it->second) {
                     m_events.push_back(evt_str);
                 }
@@ -176,7 +175,7 @@ capture_service::do_capture()
     pre_exist_id_t().swap(m_pre_exist_id);
 
     /* Save until max allowed */
-    while(m_events.size() < m_cache_max) {
+    while(VEC_SIZE(m_events) < m_cache_max) {
         internal_event_t event;
         string source, evt_str;
 
@@ -193,7 +192,7 @@ capture_service::do_capture()
                 stringstream ss;
                 ss << e.what();
                 SWSS_LOG_ERROR("Cache save event failed with %s events:size=%d",
-                        ss.str().c_str(), m_events.size());
+                        ss.str().c_str(), VEC_SIZE(m_events));
                 break;
             }
         }
@@ -218,13 +217,13 @@ out:
      * Capture stop will close the socket which fail the read
      * and hence bail out.
      */
-    return 0;
 }
 
 int
 capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
 {
     int ret = -1;
+    int rc;
 
     /* Can go in single step only. */
     RET_ON_ERR((ctrl - m_ctrl) == 1, "m_ctrl(%d) > ctrl(%d)", m_ctrl, ctrl);
@@ -237,8 +236,8 @@ capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
             sock = zmq_socket(m_ctx, ZMQ_SUB);
             RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
 
-            rc = zmq_connect(sock, get_config(CAPTURE_END_KEY));
-            RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(CAPTURE_END_KEY));
+            rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
+            RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
 
             rc = zmq_setsockopt(sock, ZMQ_SUBSCRIBE, "", 0);
             RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
@@ -303,6 +302,7 @@ capture_service::read_cache(events_data_lst_t &lst_fifo,
 void
 run_eventd_service()
 {
+    int cache_max;
     event_service service;
     eventd_proxy *proxy = NULL;
     capture_service *capture = NULL;
@@ -315,7 +315,7 @@ run_eventd_service()
     void *zctx = zmq_ctx_new();
     RET_ON_ERR(ctx != NULL, "Failed to get zmq ctx");
 
-    cache_max = get_config_data(CACHE_MAX_CNT, (uint32_t)MAX_CACHE_SIZE);
+    cache_max = get_config_data(string(CACHE_MAX_CNT), (int)MAX_CACHE_SIZE));
     RET_ON_ERR(cache_max > 0, "Failed to get CACHE_MAX_CNT");
 
     proxy = new eventd_proxy(zctx);
@@ -389,19 +389,21 @@ run_eventd_service()
                     last_events_t().swap(capture_last_events);
                 }
 
-                int sz = capture_fifo_events.size() < READ_SET_SIZE ?
-                    capture_fifo_events.size() : READ_SET_SIZE;
+                {
+                int sz = VEC_SIZE(capture_fifo_events) < READ_SET_SIZE ?
+                    VEC_SIZE(capture_fifo_events) : READ_SET_SIZE;
 
                 if (sz != 0) {
                     auto it = std::next(capture_fifo_events.begin(), sz);
                     move(capture_fifo_events.begin(), capture_fifo_events.end(),
                             back_inserter(resp_data));
 
-                    if (sz == capture_fifo_events.size()) {
+                    if (sz == VEC_SIZE(capture_fifo_events)) {
                         events_data_lst_t().swap(capture_fifo_events);
                     } else {
                         events.erase(capture_fifo_events.begin(), it);
                     }
+                }
                 }
                 break;
 

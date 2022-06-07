@@ -24,14 +24,14 @@ class eventd_proxy
             zmq_close(m_backend);
             zmq_close(m_capture);
 
-            if (m_thr.joinable)
+            if (m_thr.joinable())
                 m_thr.join();
         }
 
         int init();
 
     private:
-        int run();
+        void run();
 
         void *m_ctx;
         void *m_frontend;
@@ -96,7 +96,7 @@ class capture_service
 {
     public:
         capture_service(void *ctx, int cache_max) : m_ctx(ctx), m_socket(NULL),
-            m_ctl(NEED_INIT), m_status(0), m_cache_max(cache_max)
+            m_ctrl(NEED_INIT), m_cache_max(cache_max)
         {}
 
         ~capture_service();
@@ -107,7 +107,7 @@ class capture_service
                 last_events_t &lst_last);
 
     private:
-        void init_capture_cache(events_data_lst_t &lst);
+        void init_capture_cache(const events_data_lst_t &lst);
         void do_capture();
 
         void stop_capture();
@@ -117,7 +117,7 @@ class capture_service
         capture_control_t m_ctrl;
         thread m_thr;
 
-        uint32_t m_cache_max;
+        int m_cache_max;
 
         events_data_lst_t m_events;
 
