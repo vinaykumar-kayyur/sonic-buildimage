@@ -55,7 +55,7 @@ fi
 # Generate the version files for the host base image
 TEMP_DIR=$(mktemp -d)
 ./scripts/versions_manager.py generate -t $TEMP_DIR -n host-base-image -d $IMAGE_DISTRO -a $CONFIGURED_ARCH
-PACKAGES=$(sed -E 's/=(=[^=]*)$/\1/' $TEMP_DIR/version-deb)
+PACKAGES=$(sed -E 's/=(=[^=]*)$/\1/' $TEMP_DIR/versions-deb)
 if [ -z "$PACKAGES" ]; then
     echo "Not found host-base-image packages, please check the version files in files/build/versions/host-base-image" 2>&1
     exit 1
