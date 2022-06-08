@@ -325,7 +325,8 @@
                 "switch_type": "voq",
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
-                "dhcp_server": "disabled"
+                "dhcp_server": "disabled",
+                "bgp_adv_lo_prefix_as_128": "true"
             }
         },
         "VLAN": {
@@ -1789,6 +1790,21 @@
                 "nhopself": "0",
                 "rrclient": "0",
                 "admin_status": "up"
+            }
+        },
+
+        "PASSW_HARDENING": {
+            "POLICIES": {
+                "state": "enabled",
+                "expiration": "180",
+                "expiration_warning": "15",
+                "history_cnt": "10",
+                "len_min": "8",
+                "reject_user_passw_match": "true",
+                "digits_class": "true",
+                "lower_class": "true",
+                "special_class": "true",
+                "upper_class": "true"
             }
         },
 
