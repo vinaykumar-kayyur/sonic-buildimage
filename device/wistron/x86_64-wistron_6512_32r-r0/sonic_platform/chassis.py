@@ -23,7 +23,6 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-COMPONENT_NAME_LIST = ["BIOS"]
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
 GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
@@ -44,7 +43,6 @@ class Chassis(ChassisBase):
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
-        self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
 
@@ -76,9 +74,6 @@ class Chassis(ChassisBase):
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
-
-    def __initialize_components(self):
-        self._component_name_list = COMPONENT_NAME_LIST
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
@@ -118,38 +113,6 @@ class Chassis(ChassisBase):
             values.
         """
         return self._eeprom.get_eeprom()
-
-    def get_firmware_version(self, component_name):
-        """
-        Retrieves platform-specific hardware/firmware versions for chassis
-        componenets such as BIOS, CPLD, FPGA, etc.
-        Args:
-            type: A string, component name
-
-        Returns:
-            A string containing platform-specific component versions
-        """
-        from sonic_platform.component import Component
-        self.component = Component(component_name)
-        if component_name not in self._component_name_list:
-            return None
-        return self.component.get_firmware_version()
-
-    def install_component_firmware(self, component_name, image_path):
-        """
-        Install firmware to module
-        Args:
-            type: A string, component name.
-            image_path: A string, path to firmware image.
-
-        Returns:
-            A boolean, True if install successfully, False if not
-        """
-        from sonic_platform.component import Component
-        self.component = Component(component_name)
-        if component_name not in self._component_name_list:
-            return False
-        return self.component.upgrade_firmware(image_path)
 
     def get_reboot_cause(self):
         """
