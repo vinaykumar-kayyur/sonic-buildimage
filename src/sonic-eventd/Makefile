@@ -1,10 +1,13 @@
 RM := rm -rf
 EVENTD_TARGET := eventd
+EVENTD_TEST := tests/tests
 CP := cp
 MKDIR := mkdir
 CC := g++
 MV := mv
-LIBS := -levent -lhiredis -lswsscommon -pthread -lboost_thread -lboost_system
+LIBS := -levent -lhiredis -lswsscommon -lpthread -lboost_thread -lboost_system -lzmq -lboost_serialization -luuid
+TEST_LIBS := -L/usr/src/gtest -lgtest -lgtest_main -lgmock -lgmock_main
+
 CFLAGS += -Wall -std=c++17 -fPIE -I$(PWD)/../sonic-swss-common/common
 PWD := $(shell pwd)
 
@@ -15,13 +18,21 @@ endif
 endif
 
 -include src/subdir.mk
+-include tests/subdir.mk
  
-all: sonic-eventd
+all: sonic-eventd eventd-tests
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TARGET) $(OBJS) $(LIBS)
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+eventd-tests: $(TEST_OBJS)
+	@echo 'Building target: $@'
+	@echo 'Invoking: G++ Linker'
+	$(CC) $(LDFLAGS) -o $(EVENTD_TEST) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

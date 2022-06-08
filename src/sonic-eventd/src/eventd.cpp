@@ -217,7 +217,9 @@ out:
      * Capture stop will close the socket which fail the read
      * and hence bail out.
      */
+    return;
 }
+
 
 int
 capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
@@ -255,7 +257,7 @@ capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
              * if overall mem consumption is too high. Clearing the map just before use
              * is likely to help.
              */
-            for (i=0; i<MAX_PUBLISHERS_COUNT; ++i) {
+            for (int i=0; i<MAX_PUBLISHERS_COUNT; ++i) {
                 m_last_events[to_string(i)] = "";
             }
             
@@ -313,9 +315,9 @@ run_eventd_service()
     SWSS_LOG_ERROR("Eventd service starting\n");
 
     void *zctx = zmq_ctx_new();
-    RET_ON_ERR(ctx != NULL, "Failed to get zmq ctx");
+    RET_ON_ERR(zctx != NULL, "Failed to get zmq ctx");
 
-    cache_max = get_config_data(string(CACHE_MAX_CNT), (int)MAX_CACHE_SIZE));
+    cache_max = get_config_data(string(CACHE_MAX_CNT), (int)MAX_CACHE_SIZE);
     RET_ON_ERR(cache_max > 0, "Failed to get CACHE_MAX_CNT");
 
     proxy = new eventd_proxy(zctx);
@@ -329,7 +331,7 @@ run_eventd_service()
         int code, resp = -1; 
         events_data_lst_t req_data, resp_data;
 
-        RET_ON_ERR(channel_read(code, data) == 0,
+        RET_ON_ERR(service.channel_read(code, req_data) == 0,
                 "Failed to read request");
 
         switch(code) {
@@ -354,7 +356,7 @@ run_eventd_service()
                     resp = -1;
                     break;
                 }
-                resp = capture->set_control(START_CAPTURE, req_data);
+                resp = capture->set_control(START_CAPTURE, &req_data);
                 break;
 
                 
@@ -401,7 +403,7 @@ run_eventd_service()
                     if (sz == VEC_SIZE(capture_fifo_events)) {
                         events_data_lst_t().swap(capture_fifo_events);
                     } else {
-                        events.erase(capture_fifo_events.begin(), it);
+                        capture_fifo_events.erase(capture_fifo_events.begin(), it);
                     }
                 }
                 }
@@ -417,11 +419,11 @@ run_eventd_service()
                 assert(false);
                 break;
         }
-        RET_ON_ERR(channel_write(resp_code, resp_data) == 0,
+        RET_ON_ERR(service.channel_write(resp, resp_data) == 0,
                 "Failed to write response back");
     }
 out:
-    m_service.close();
+    service.close_service();
     if (proxy != NULL) {
         delete proxy;
     }
@@ -433,17 +435,4 @@ out:
     }
     SWSS_LOG_ERROR("Eventd service exiting\n");
 }
-
-
-int main()
-{
-    SWSS_LOG_INFO("The eventd service started");
-
-    run_eventd_service();
-
-    SWSS_LOG_INFO("The eventd service exited");
-
-    return 0;
-}
-
 

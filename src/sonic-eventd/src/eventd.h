@@ -90,8 +90,6 @@ typedef enum {
 } capture_control_t;
 
 
-int capture_status;
-
 class capture_service
 {
     public:
