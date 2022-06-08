@@ -1282,13 +1282,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['DEVICE_METADATA']['localhost']['peer_switch'] = list(results['PEER_SWITCH'].keys())[0]
     
     # Enable tunnel_qos_remap if downstream_redundancy_types(T1) or redundancy_type(T0) = Gemini/Libra
-    force_enable_tunnel_qos_map = False
+    enable_tunnel_qos_map = False
     if results['DEVICE_METADATA']['localhost']['type'].lower() == 'leafrouter' and ('gemini' in str(downstream_redundancy_types).lower() or 'libra' in str(downstream_redundancy_types).lower()):
-        force_enable_tunnel_qos_map = True
+        enable_tunnel_qos_map = True
     elif results['DEVICE_METADATA']['localhost']['type'].lower() == 'torrouter' and ('gemini' in str(redundancy_type).lower() or 'libra' in str(redundancy_type).lower()):
-        force_enable_tunnel_qos_map = True
+        enable_tunnel_qos_map = True
 
-    if force_enable_tunnel_qos_map:
+    if enable_tunnel_qos_map:
         system_defaults['tunnel_qos_remap'] = {"status": "enabled"}
 
     if len(system_defaults) > 0:
