@@ -323,6 +323,7 @@ capture_service::read_cache(event_serialized_lst_t &lst_fifo,
 void
 run_eventd_service()
 {
+    int code = 0;
     int cache_max;
     event_service service;
     eventd_proxy *proxy = NULL;
@@ -346,8 +347,8 @@ run_eventd_service()
 
     RET_ON_ERR(service.init_server(zctx) == 0, "Failed to init service");
 
-    while(true) {
-        int code, resp = -1; 
+    while(code != EVENT_EXIT) {
+        int resp = -1; 
         event_serialized_lst_t req_data, resp_data;
 
         RET_ON_ERR(service.channel_read(code, req_data) == 0,
@@ -432,6 +433,11 @@ run_eventd_service()
             case EVENT_ECHO:
                 resp = 0;
                 resp_data.swap(req_data);
+                break;
+
+            case EVENT_EXIT:
+                resp = 0;
+                break;
 
             default:
                 SWSS_LOG_ERROR("Unexpected request: %d", code);
