@@ -894,6 +894,8 @@ def parse_meta(meta, hname):
     kube_data = {}
     macsec_profile = {}
     redundancy_type = None
+    downstream_redundancy_types = None
+
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -938,30 +940,9 @@ def parse_meta(meta, hname):
                     macsec_profile = parse_macsec_profile(value)
                 elif name == "RedundancyType":
                     redundancy_type = value
-    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type
-
-
-def parse_system_defaults(meta):
-    system_default_values = {}
-
-    system_defaults = meta.find(str(QName(ns1, "SystemDefaults")))
-    
-    if system_defaults is None:
-        return system_default_values
-    
-    for system_default in system_defaults.findall(str(QName(ns1, "SystemDefault"))):
-        name = system_default.find(str(QName(ns1, "Name"))).text
-        value = system_default.find(str(QName(ns1, "Value"))).text
-
-        # Tunnel Qos remapping 
-        if name == "TunnelQosRemapEnabled":
-            if value.lower() == "true":
-                status = "enabled"
-            else:
-                status = "disabled"
-            system_default_values["tunnel_qos_remap"] = {"status": status}
-
-    return system_default_values
+                elif name == "DownstreamRedundancyTypes":
+                    downstream_redundancy_types = value
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type
 
 
 def parse_linkmeta(meta, hname):
@@ -1318,6 +1299,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     static_routes = {}
     system_defaults = {}
     macsec_profile = {}
+    downstream_redundancy_types = None
     redundancy_type = None
 
     hwsku_qn = QName(ns, "HwSku")
@@ -1349,13 +1331,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
-            elif child.tag == str(QName(ns, "SystemDefaultsDeclaration")):
-                system_defaults = parse_system_defaults(child)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
                 (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content, static_routes, tunnel_intfs_qos_remap_config) = parse_dpg(child, asic_name)
@@ -1370,8 +1350,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
-            elif child.tag == str(QName(ns, "SystemDefaultsDeclaration")):
-                system_defaults = parse_system_defaults(child)
 
     # set the host device type in asic metadata also
     device_type = [devices[key]['type'] for key in devices if key.lower() == hostname.lower()][0]
@@ -1407,10 +1385,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 'ip': kube_data.get('ip', '')
             }
         }
-    
-    if len(system_defaults) > 0:
-        results['SYSTEM_DEFAULTS'] = system_defaults
-    
+
     results['PEER_SWITCH'], mux_tunnel_name, peer_switch_ip = get_peer_switch_info(linkmetas, devices)
 
     if bool(results['PEER_SWITCH']):
@@ -1419,7 +1394,20 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             print("Warning: more than one peer switch was found. Only the first will be parsed: {}".format(results['PEER_SWITCH'].keys()[0]))
 
         results['DEVICE_METADATA']['localhost']['peer_switch'] = list(results['PEER_SWITCH'].keys())[0]
+    
+    # Enable tunnel_qos_remap if downstream_redundancy_types(T1) or redundancy_type(T0) = Gemini/Libra
+    enable_tunnel_qos_map = False
+    if results['DEVICE_METADATA']['localhost']['type'].lower() == 'leafrouter' and ('gemini' in str(downstream_redundancy_types).lower() or 'libra' in str(downstream_redundancy_types).lower()):
+        enable_tunnel_qos_map = True
+    elif results['DEVICE_METADATA']['localhost']['type'].lower() == 'torrouter' and ('gemini' in str(redundancy_type).lower() or 'libra' in str(redundancy_type).lower()):
+        enable_tunnel_qos_map = True
 
+    if enable_tunnel_qos_map:
+        system_defaults['tunnel_qos_remap'] = {"status": "enabled"}
+
+    if len(system_defaults) > 0:
+        results['SYSTEM_DEFAULTS'] = system_defaults
+    
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
