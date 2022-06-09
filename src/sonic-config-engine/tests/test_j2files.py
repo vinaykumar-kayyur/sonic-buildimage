@@ -383,10 +383,7 @@ class TestJ2Files(TestCase):
 
         os.remove(os.path.join(out_file_dir, expected_files[1]))
 
-        if match:
-            assert True
-        else:
-            assert False, diff
+        assert match, diff
 
     def test_extra_lossless_buffer_for_tunnel_remapping(self):
         if utils.PYvX_DIR != 'py3':
