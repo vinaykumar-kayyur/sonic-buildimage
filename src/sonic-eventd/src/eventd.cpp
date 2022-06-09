@@ -123,6 +123,7 @@ capture_service::init_capture_cache(const event_serialized_lst_t &lst)
         if (deserialize(*itc, event) == 0) {
             if (validate_event(event, rid, seq)) {
                 m_pre_exist_id[rid] = seq;
+                printf("init_capture_cache: rid=%s seq=%d\n", rid.c_str(), seq);
                 m_events.push_back(*itc);
             }
         }
@@ -130,6 +131,7 @@ capture_service::init_capture_cache(const event_serialized_lst_t &lst)
             SWSS_LOG_ERROR("failed to serialize cache message from subscriber; DROP");
         }
     }
+    printf("init_capture_cache: lst=%d m_events=%d\n", (int)lst.size(), (int)m_events.size());
 }
 
 
@@ -142,7 +144,7 @@ capture_service::do_capture()
     int block_ms=100;
     internal_event_t event;
     string source, evt_str;
-    chrono::steady_clock::time_point start;
+    int init_cnt;
 
     void *sock = NULL;
     sock = zmq_socket(m_ctx, ZMQ_SUB);
@@ -164,32 +166,39 @@ capture_service::do_capture()
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 
-    /* Check read events against provided cache for 2 seconds to skip */
-    start = chrono::steady_clock::now();
-    while((m_ctrl == START_CAPTURE) && !m_pre_exist_id.empty()) {
+    /* Check read events against provided cache until as many events are read.*/
+    init_cnt = (int)m_events.size();
+    while((m_ctrl == START_CAPTURE) && !m_pre_exist_id.empty() && (init_cnt > 0)) {
 
         if (zmq_message_read(sock, 0, source, event) == -1) {
             RET_ON_ERR(zerrno == EAGAIN,
                     "0:Failed to read from capture socket");
         }
         else if (validate_event(event, rid, seq)) {
-
+            init_cnt--;
             serialize(event, evt_str);
             pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
 
+            printf("do_capture pre: rid=%s seq=%d\n", rid.c_str(), seq);
             if (it != m_pre_exist_id.end()) {
                 if (seq > it->second) {
                     m_events.push_back(evt_str);
+                }
+                else {
+                    printf("skipped. Found seq=%d\n",  it->second);
                 }
                 if (seq >= it->second) {
                     m_pre_exist_id.erase(it);
                 }
             }
         }
-        if(chrono::steady_clock::now() - start > chrono::seconds(2))
-            break;
+        else {
+            printf("do_capture pre: event failed to validate\n");
+        }
     }
     pre_exist_id_t().swap(m_pre_exist_id);
+
+    printf("after pre-exist m_events=%d max=%d m_ctrl=%d\n", (int)m_events.size(), m_cache_max, m_ctrl);
 
     /* Save until max allowed */
     while((m_ctrl == START_CAPTURE) && (VEC_SIZE(m_events) < m_cache_max)) {
@@ -199,6 +208,7 @@ capture_service::do_capture()
                     "1: Failed to read from capture socket");
         }
         else if (validate_event(event, rid, seq)) {
+            printf("do_capture main: rid=%s seq=%d\n", rid.c_str(), seq);
             serialize(event, evt_str);
             try
             {
@@ -213,7 +223,11 @@ capture_service::do_capture()
                 break;
             }
         }
+        else {
+            printf("do_capture main: event failed to validate\n");
+        }
     }
+    printf("after main m_events=%d max=%d m_ctrl=%d\n", (int)m_events.size(), m_cache_max, m_ctrl);
 
 
     /* Save only last event per sender */
