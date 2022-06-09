@@ -54,5 +54,7 @@ stages:
   - job: build
     steps:
     - script: |
-        set -ex
-        git diff origin $(System.PullRequest.TargetBranch)
+        set -x
+        git diff origin $(System.PullRequest.TargetBranch) || echo failed 1
+        git diff origin/$(System.PullRequest.TargetBranch) || echo failed 2
+        git diff HEAD~ || echo failed 3
