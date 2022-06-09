@@ -1,3 +1,4 @@
+#include "logger.h"
 
 void run_eventd_service();
 

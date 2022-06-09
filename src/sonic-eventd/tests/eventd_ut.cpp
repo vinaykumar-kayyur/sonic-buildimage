@@ -12,9 +12,152 @@
 
 using namespace std;
 
-typedef vector<internal_event_t> lst_events_t;
+#define ARRAY_SIZE(p) ((int)(sizeof(p) / sizeof((p)[0])))
 
-void run_sub(void *zctx, bool &term, string &read_source, lst_events_t &lst)
+typedef struct {
+    int id;
+    string source;
+    string tag;
+    string rid;
+    string seq;
+    event_params_t params;
+    int missed_cnt;
+} test_data_t;
+
+internal_event_t create_ev(const test_data_t &data)
+{
+    internal_event_t event_data;
+
+    {
+        string param_str;
+
+        EXPECT_EQ(0, serialize(data.params, param_str));
+
+        map_str_str_t event_str_map = { { data.source + ":" + data.tag, param_str}};
+
+        EXPECT_EQ(0, serialize(event_str_map, event_data[EVENT_STR_DATA]));
+    }
+
+    event_data[EVENT_RUNTIME_ID] = data.rid;
+    event_data[EVENT_SEQUENCE] = data.seq;
+
+    return event_data;
+}
+
+/* Mock test data with event parameters and expected missed count */
+static const test_data_t ldata[] = {
+    {
+        0,
+        "source0",
+        "tag0",
+        "guid-0",
+        "1",
+        {{"ip", "10.10.10.10"}, {"state", "up"}},
+        0
+    },
+    {
+        1,
+        "source0",
+        "tag1",
+        "guid-1",
+        "100",
+        {{"ip", "10.10.27.10"}, {"state", "down"}},
+        0
+    },
+    {
+        2,
+        "source1",
+        "tag2",
+        "guid-2",
+        "101",
+        {{"ip", "10.10.24.10"}, {"state", "down"}},
+        0
+    },
+    {
+        3,
+        "source0",
+        "tag3",
+        "guid-1",
+        "105",
+        {{"ip", "10.10.10.10"}, {"state", "up"}},
+        4
+    },
+    {
+        4,
+        "source0",
+        "tag4",
+        "guid-0",
+        "2",
+        {{"ip", "10.10.20.10"}, {"state", "down"}},
+        0
+    },
+    {
+        5,
+        "source1",
+        "tag5",
+        "guid-2",
+        "110",
+        {{"ip", "10.10.24.10"}, {"state", "down"}},
+        8
+    },
+    {
+        6,
+        "source0",
+        "tag0",
+        "guid-0",
+        "5",
+        {{"ip", "10.10.10.10"}, {"state", "up"}},
+        2
+    },
+    {
+        7,
+        "source0",
+        "tag1",
+        "guid-1",
+        "106",
+        {{"ip", "10.10.27.10"}, {"state", "down"}},
+        0
+    },
+    {
+        8,
+        "source1",
+        "tag2",
+        "guid-2",
+        "111",
+        {{"ip", "10.10.24.10"}, {"state", "down"}},
+        0
+    },
+    {
+        9,
+        "source0",
+        "tag3",
+        "guid-1",
+        "109",
+        {{"ip", "10.10.10.10"}, {"state", "up"}},
+        2
+    },
+    {
+        10,
+        "source0",
+        "tag4",
+        "guid-0",
+        "6",
+        {{"ip", "10.10.20.10"}, {"state", "down"}},
+        0
+    },
+    {
+        11,
+        "source1",
+        "tag5",
+        "guid-2",
+        "119",
+        {{"ip", "10.10.24.10"}, {"state", "down"}},
+        7
+    },
+};
+
+
+void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t &lst)
 {
     void *mock_sub = zmq_socket (zctx, ZMQ_SUB);
     string source;
@@ -34,6 +177,7 @@ void run_sub(void *zctx, bool &term, string &read_source, lst_events_t &lst)
     }
 
     zmq_close(mock_sub);
+    printf("run_sub exited\n");
 }
 
 void *init_pub(void *zctx)
@@ -45,33 +189,26 @@ void *init_pub(void *zctx)
     return mock_pub;
 }
 
-void run_pub(void *mock_pub, const string wr_source, lst_events_t &lst)
+void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
 {
-    for(lst_events_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
+    for(internal_events_lst_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
         EXPECT_EQ(0, zmq_message_send(mock_pub, wr_source, *itc));
     }
+    printf("Published %d events\n", (int)lst.size());
 }
-
-
-static internal_event_t
-create_ev(const string rid, sequence_t n, const string d)
-{
-    stringstream ss;
-
-    ss << d << ":" << n;
-
-    return internal_event_t({ {EVENT_STR_DATA, ss.str()},
-            { EVENT_RUNTIME_ID, rid }, { EVENT_SEQUENCE, seq_to_str(n) }});
-}
-
 
 
 TEST(eventd, proxy)
 {
-    printf("TEST started\n");
+    printf("PROxy TEST started\n");
+    {
+        /* Direct log messages to stdout */
+        string dummy, op("STDOUT");
+        swss::Logger::swssOutputNotify(dummy, op);
+    }
     bool term_sub = false;
     string rd_source, wr_source("hello");
-    lst_events_t rd_evts, wr_evts;
+    internal_events_lst_t rd_evts, wr_evts;
 
     void *zctx = zmq_ctx_new();
     EXPECT_TRUE(NULL != zctx);
@@ -91,8 +228,10 @@ TEST(eventd, proxy)
     /* Provide time for async connect to complete */
     this_thread::sleep_for(chrono::milliseconds(100));
 
+    EXPECT_TRUE(5 < ARRAY_SIZE(ldata));
+
     for(int i=0; i<5; ++i) {
-        wr_evts.push_back(create_ev("hello", i, "test body"));
+        wr_evts.push_back(create_ev(ldata[i]));
     }
 
     EXPECT_TRUE(rd_evts.empty());
@@ -101,17 +240,126 @@ TEST(eventd, proxy)
     /* Publish events. */
     run_pub(mock_pub, wr_source, wr_evts);
 
-    while(rd_evts.size() != wr_evts.size()) {
+    for(int i=0; (rd_evts.size() != wr_evts.size()) && (i < 100); ++i) {
+        /* Loop & wait for atmost a second */
         printf("rd_evts.size != wr_evts.size %d != %d\n", 
                 (int)rd_evts.size(), (int)wr_evts.size());
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 
+    delete pxy;
+    pxy = NULL;
+
     term_sub = true;
-    printf("Waiting for sub thread to join...\n");
 
     thr.join();
     zmq_close(mock_pub);
     zmq_ctx_term(zctx);
+    printf("eventd_proxy is tested GOOD\n");
+}
+
+
+TEST(eventd, capture)
+{
+    printf("Capture TEST started\n");
+    {
+        /* Direct log messages to stdout */
+        string dummy, op("STDOUT");
+        swss::Logger::swssOutputNotify(dummy, op);
+        swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
+    }
+
+    string wr_source("hello");
+    internal_events_lst_t wr_evts;
+    int init_cache = 3;
+    int cache_max = init_cache + 3;
+    event_serialized_lst_t evts_start, evts_expect, evts_read;
+    last_events_t last_evts_exp, last_evts_read;
+
+    void *zctx = zmq_ctx_new();
+    EXPECT_TRUE(NULL != zctx);
+
+    /* Run the proxy; Capture service reads from proxy */
+    eventd_proxy *pxy = new eventd_proxy(zctx);
+    EXPECT_TRUE(NULL != pxy);
+
+    /* Starting proxy */
+    EXPECT_EQ(0, pxy->init());
+
+    /* Create capture service */
+    capture_service *pcap = new capture_service(zctx, cache_max);
+
+    /* Expect START_CAPTURE */
+    EXPECT_EQ(-1, pcap->set_control(STOP_CAPTURE));
+
+    EXPECT_TRUE(init_cache > 1);
+    EXPECT_TRUE((cache_max+3) < ARRAY_SIZE(ldata));
+
+    /* Collect few serailized strings of events for startup cache */
+    for(int i=0; i < init_cache; ++i) {
+        internal_event_t ev(create_ev(ldata[i]));
+        string evt_str;
+        serialize(ev, evt_str);
+        evts_start.push_back(evt_str);
+        evts_expect.push_back(evt_str);
+    }
+
+    /*
+     * Collect events to publish for capture to cache
+     * re-publishing some events sent in cache.
+     */
+    for(int i=1; i < ARRAY_SIZE(ldata); ++i) {
+        internal_event_t ev(create_ev(ldata[i]));
+        string evt_str;
+
+        serialize(ev, evt_str);
+
+        wr_evts.push_back(ev);
+
+        if (i < cache_max) {
+            evts_expect.push_back(evt_str);
+        } else {
+            /* collect last entries for overflow */
+            last_evts_exp[ldata[i].rid] = evt_str;
+        }
+    }
+
+    EXPECT_EQ(0, pcap->set_control(INIT_CAPTURE));
+    EXPECT_EQ(0, pcap->set_control(START_CAPTURE, &evts_start));
+
+    /* Init pub connection */
+    void *mock_pub = init_pub(zctx);
+
+    /* Provide time for async connect to complete */
+    this_thread::sleep_for(chrono::milliseconds(4000));
+
+    /* Publish events from 1 to all. */
+    run_pub(mock_pub, wr_source, wr_evts);
+
+    /* Provide time for async message receive. */
+    this_thread::sleep_for(chrono::milliseconds(100));
+
+    /* Stop capture, closes socket & terminates the thread */
+    EXPECT_EQ(0, pcap->set_control(STOP_CAPTURE));
+
+    printf("-------------- OK\n");
+#if 0
+    /* Read the cache */
+    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read));
+
+
+    EXPECT_EQ(evts_read, evts_expect);
+    EXPECT_EQ(last_evts_read, last_evts_exp);
+
+    delete pxy;
+    pxy = NULL;
+
+    delete pcap;
+    pcap = NULL;
+
+    zmq_close(mock_pub);
+    zmq_ctx_term(zctx);
+#endif
+    printf("eventd_proxy is tested GOOD\n");
 }
 

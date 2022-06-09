@@ -3,7 +3,7 @@
  */
 #include "events_service.h"
 
-typedef map<runtime_id_t, events_data_type_t> last_events_t;
+typedef map<runtime_id_t, event_serialized_t> last_events_t;
 
 /*
  *  Started by eventd_service.
@@ -93,31 +93,31 @@ typedef enum {
 class capture_service
 {
     public:
-        capture_service(void *ctx, int cache_max) : m_ctx(ctx), m_socket(NULL),
+        capture_service(void *ctx, int cache_max) : m_ctx(ctx), m_cap_run(false),
             m_ctrl(NEED_INIT), m_cache_max(cache_max)
         {}
 
         ~capture_service();
 
-        int set_control(capture_control_t ctrl, events_data_lst_t *p=NULL);
+        int set_control(capture_control_t ctrl, event_serialized_lst_t *p=NULL);
 
-        int read_cache(events_data_lst_t &lst_fifo,
+        int read_cache(event_serialized_lst_t &lst_fifo,
                 last_events_t &lst_last);
 
     private:
-        void init_capture_cache(const events_data_lst_t &lst);
+        void init_capture_cache(const event_serialized_lst_t &lst);
         void do_capture();
 
         void stop_capture();
 
         void *m_ctx;
-        void *m_socket;
+        bool m_cap_run;
         capture_control_t m_ctrl;
         thread m_thr;
 
         int m_cache_max;
 
-        events_data_lst_t m_events;
+        event_serialized_lst_t m_events;
 
         last_events_t m_last_events;
 

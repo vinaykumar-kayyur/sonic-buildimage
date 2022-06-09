@@ -23,6 +23,8 @@
 
 #define VEC_SIZE(p) ((int)p.size())
 
+extern int zerrno;
+
 int
 eventd_proxy::init()
 {
@@ -60,6 +62,8 @@ eventd_proxy::run()
 
     /* runs forever until zmq context is terminated */
     zmq_proxy(m_frontend, m_backend, m_capture);
+
+    SWSS_LOG_INFO("Stopped xpub/xsub proxy");
 }
 
 
@@ -71,10 +75,8 @@ capture_service::~capture_service()
 void
 capture_service::stop_capture()
 {
-    if (m_socket != NULL) {
-        zmq_close(m_socket);
-        m_socket = NULL;
-    }
+    m_ctrl = STOP_CAPTURE;
+
     if (m_thr.joinable()) {
         m_thr.join();
     }
@@ -104,26 +106,18 @@ validate_event(const internal_event_t &event, runtime_id_t &rid, sequence_t &seq
         
 
 void
-capture_service::init_capture_cache(const events_data_lst_t &lst)
+capture_service::init_capture_cache(const event_serialized_lst_t &lst)
 {
     /* clean any pre-existing cache */
-    int i;
     runtime_id_t rid;
     sequence_t seq;
 
-    /*
-     * Reserve a MAX_PUBLISHERS_COUNT entries for last events, as we use it only
-     * upon m_events/vector overflow, which might block adding new entries in map
-     * if overall mem consumption is too high. Clearing the map just before use
-     * is likely to help.
+    /* Cache given events as initial stock.
+     * Save runtime ID with last seen seq to avoid duplicates, while reading
+     * from capture socket.
+     * No check for max cache size here, as most likely not needed.
      */
-    for (i=0; i<MAX_PUBLISHERS_COUNT; ++i) {
-        m_last_events[to_string(i)] = "";
-    }
-
-    /* Cache last events -- as only the last instance */
-    /* This is required to compute missed count */
-    for (events_data_lst_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
+    for (event_serialized_lst_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
         internal_event_t event;
 
         if (deserialize(*itc, event) == 0) {
@@ -142,20 +136,43 @@ capture_service::init_capture_cache(const events_data_lst_t &lst)
 void
 capture_service::do_capture()
 {
-    /* clean any pre-existing cache */
+    int rc;
     runtime_id_t rid;
     sequence_t seq;
+    int block_ms=100;
+    internal_event_t event;
+    string source, evt_str;
+    chrono::steady_clock::time_point start;
+
+    void *sock = NULL;
+    sock = zmq_socket(m_ctx, ZMQ_SUB);
+    RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
+
+    rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
+    RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
+
+    rc = zmq_setsockopt(sock, ZMQ_SUBSCRIBE, "", 0);
+    RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
+
+    rc = zmq_setsockopt(sock, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms));
+    RET_ON_ERR(rc == 0, "Failed to ZMQ_RCVTIMEO to %d", block_ms);
+
+    m_cap_run = true;
+
+    while (m_ctrl != START_CAPTURE) {
+        /* Wait for capture start */
+        this_thread::sleep_for(chrono::milliseconds(10));
+    }
 
     /* Check read events against provided cache for 2 seconds to skip */
-    chrono::steady_clock::time_point start = chrono::steady_clock::now();
-    while(!m_pre_exist_id.empty()) {
-        internal_event_t event;
-        string source, evt_str;
+    start = chrono::steady_clock::now();
+    while((m_ctrl == START_CAPTURE) && !m_pre_exist_id.empty()) {
 
-        RET_ON_ERR(zmq_message_read(m_socket, 0, source, event) == 0,
-                "Failed to read from capture socket");
-
-        if (validate_event(event, rid, seq)) {
+        if (zmq_message_read(sock, 0, source, event) == -1) {
+            RET_ON_ERR(zerrno == EAGAIN,
+                    "0:Failed to read from capture socket");
+        }
+        else if (validate_event(event, rid, seq)) {
 
             serialize(event, evt_str);
             pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
@@ -175,13 +192,13 @@ capture_service::do_capture()
     pre_exist_id_t().swap(m_pre_exist_id);
 
     /* Save until max allowed */
-    while(VEC_SIZE(m_events) < m_cache_max) {
-        internal_event_t event;
-        string source, evt_str;
+    while((m_ctrl == START_CAPTURE) && (VEC_SIZE(m_events) < m_cache_max)) {
 
-        RET_ON_ERR(zmq_message_read(m_socket, 0, source, event) == 0,
-                "Failed to read from capture socket");
-        if (validate_event(event, rid, seq)) {
+        if (zmq_message_read(sock, 0, source, event) == -1) {
+            RET_ON_ERR(zerrno == EAGAIN,
+                    "1: Failed to read from capture socket");
+        }
+        else if (validate_event(event, rid, seq)) {
             serialize(event, evt_str);
             try
             {
@@ -200,14 +217,13 @@ capture_service::do_capture()
 
 
     /* Save only last event per sender */
-    while(true) {
-        internal_event_t event;
-        string source, evt_str;
+    while((m_ctrl == START_CAPTURE)) {
 
-        RET_ON_ERR(zmq_message_read(m_socket, 0, source, event) == 0,
-                "Failed to read from capture socket");
+        if (zmq_message_read(sock, 0, source, event) == -1) {
+            RET_ON_ERR(zerrno == EAGAIN,
+                    "2:Failed to read from capture socket");
 
-        if (validate_event(event, rid, seq)) {
+        } else if (validate_event(event, rid, seq)) {
             serialize(event, evt_str);
             m_last_events[rid] = evt_str;
         }
@@ -217,35 +233,29 @@ out:
      * Capture stop will close the socket which fail the read
      * and hence bail out.
      */
+    zmq_close(sock);
+    m_cap_run = false;
     return;
 }
 
 
 int
-capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
+capture_service::set_control(capture_control_t ctrl, event_serialized_lst_t *lst)
 {
     int ret = -1;
-    int rc;
 
     /* Can go in single step only. */
-    RET_ON_ERR((ctrl - m_ctrl) == 1, "m_ctrl(%d) > ctrl(%d)", m_ctrl, ctrl);
-    m_ctrl = ctrl;
+    RET_ON_ERR((ctrl - m_ctrl) == 1, "m_ctrl(%d)+1 < ctrl(%d)", m_ctrl, ctrl);
 
-    switch(m_ctrl) {
+    switch(ctrl) {
         case INIT_CAPTURE:
-            {
-            void *sock = NULL;
-            sock = zmq_socket(m_ctx, ZMQ_SUB);
-            RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
-
-            rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
-            RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
-
-            rc = zmq_setsockopt(sock, ZMQ_SUBSCRIBE, "", 0);
-            RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
-
-            m_socket = sock;
+            m_thr = thread(&capture_service::do_capture, this);
+            for(int i=0; !m_cap_run && (i < 100); ++i) {
+                /* Wait max a second for thread to init */
+                this_thread::sleep_for(chrono::milliseconds(10));
             }
+            RET_ON_ERR(m_cap_run, "Failed to init capture");
+            m_ctrl = ctrl;
             ret = 0;
             break;
 
@@ -264,9 +274,7 @@ capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
             if ((lst != NULL) && (!lst->empty())) {
                 init_capture_cache(*lst);
             }
-
-            m_thr = thread(&capture_service::do_capture, this);
-            RET_ON_ERR(m_thr.joinable(), "Capture thread not running");
+            m_ctrl = ctrl;
             ret = 0;
             break;
 
@@ -279,10 +287,11 @@ capture_service::set_control(capture_control_t ctrl, events_data_lst_t *lst)
              */
             this_thread::sleep_for(chrono::milliseconds(CACHE_DRAIN_IN_MILLISECS));
             stop_capture();
+            ret = 0;
             break;
 
         default:
-            SWSS_LOG_ERROR("Unexpected code=%d", m_ctrl);
+            SWSS_LOG_ERROR("Unexpected code=%d", ctrl);
             break;
     }
 out:
@@ -290,13 +299,13 @@ out:
 }
 
 int
-capture_service::read_cache(events_data_lst_t &lst_fifo,
+capture_service::read_cache(event_serialized_lst_t &lst_fifo,
         last_events_t &lst_last)
 {
     lst_fifo.swap(m_events);
     lst_last.swap(m_last_events);
     last_events_t().swap(m_last_events);
-    events_data_lst_t().swap(m_events);
+    event_serialized_lst_t().swap(m_events);
     return 0;
 }
 
@@ -309,7 +318,7 @@ run_eventd_service()
     eventd_proxy *proxy = NULL;
     capture_service *capture = NULL;
 
-    events_data_lst_t capture_fifo_events;
+    event_serialized_lst_t capture_fifo_events;
     last_events_t capture_last_events;
 
     SWSS_LOG_ERROR("Eventd service starting\n");
@@ -329,7 +338,7 @@ run_eventd_service()
 
     while(true) {
         int code, resp = -1; 
-        events_data_lst_t req_data, resp_data;
+        event_serialized_lst_t req_data, resp_data;
 
         RET_ON_ERR(service.channel_read(code, req_data) == 0,
                 "Failed to read request");
@@ -340,7 +349,7 @@ run_eventd_service()
                 if (capture != NULL) {
                     delete capture;
                 }
-                events_data_lst_t().swap(capture_fifo_events);
+                event_serialized_lst_t().swap(capture_fifo_events);
                 last_events_t().swap(capture_last_events);
 
                 capture = new capture_service(zctx, cache_max);
@@ -401,7 +410,7 @@ run_eventd_service()
                             back_inserter(resp_data));
 
                     if (sz == VEC_SIZE(capture_fifo_events)) {
-                        events_data_lst_t().swap(capture_fifo_events);
+                        event_serialized_lst_t().swap(capture_fifo_events);
                     } else {
                         capture_fifo_events.erase(capture_fifo_events.begin(), it);
                     }
