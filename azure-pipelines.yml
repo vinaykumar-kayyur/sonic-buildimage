@@ -55,7 +55,4 @@ stages:
     steps:
     - script: |
         set -ex
-        git branch
-        git status
-        git log -n 10 --oneline
-        git remote -vv
+        git diff origin $(System.PullRequest.TargetBranch)
