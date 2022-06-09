@@ -411,10 +411,7 @@ class TestJ2Files(TestCase):
 
         os.remove(os.path.join(out_file_dir, expected_files[1]))
 
-        if match:
-            assert True
-        else:
-            assert False, diff
+        assert match, diff
 
     def test_buffers_dell6100_render_template(self):
         self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
