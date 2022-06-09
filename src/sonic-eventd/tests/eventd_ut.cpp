@@ -232,14 +232,22 @@ void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
 }
 
 
+void debug_on()
+{
+    /* compile with -D DEBUG_TEST or add "#define DEBUG_TEST" to include. */
+#ifdef DEBUG_TEST
+    /* Direct log messages to stdout */
+    string dummy, op("STDOUT");
+    swss::Logger::swssOutputNotify(dummy, op);
+    swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
+#endif
+}
+
 TEST(eventd, proxy)
 {
+    debug_on();
+
     printf("PROxy TEST started\n");
-    {
-        /* Direct log messages to stdout */
-        string dummy, op("STDOUT");
-        swss::Logger::swssOutputNotify(dummy, op);
-    }
     bool term_sub = false;
     bool term_cap = false;
     string rd_csource, rd_source, wr_source("hello");
@@ -307,12 +315,7 @@ TEST(eventd, proxy)
 TEST(eventd, capture)
 {
     printf("Capture TEST started\n");
-    {
-        /* Direct log messages to stdout */
-        string dummy, op("STDOUT");
-        swss::Logger::swssOutputNotify(dummy, op);
-        swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
-    }
+    debug_on();
 
     /*
      * Need to run subscriber; Else publisher would skip publishing
@@ -432,12 +435,7 @@ TEST(eventd, capture)
 TEST(eventd, captureCacheMax)
 {
     printf("Capture TEST with matchinhg cache-max started\n");
-    {
-        /* Direct log messages to stdout */
-        string dummy, op("STDOUT");
-        swss::Logger::swssOutputNotify(dummy, op);
-        swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
-    }
+    debug_on();
 
     /*
      * Need to run subscriber; Else publisher would skip publishing
@@ -560,12 +558,7 @@ TEST(eventd, service)
      * TEST(eventd, capture) has already tested caching.
      */
     printf("Service TEST started\n");
-    {
-        /* Direct log messages to stdout */
-        string dummy, op("STDOUT");
-        swss::Logger::swssOutputNotify(dummy, op);
-        swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
-    }
+    debug_on();
 
     /* capture related */
     int init_cache = 4;     /* provided along with start capture */
