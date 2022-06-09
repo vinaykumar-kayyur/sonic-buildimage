@@ -182,13 +182,9 @@ void run_cap(void *zctx, bool &term, string &read_source,
         if (rc != -1) {
             cnt = ++i;
         }
-        else {
-            printf("CAP failed rc=%d zerrno=%d\n", rc, zerrno);
-        }
     }
 
     zmq_close(mock_cap);
-    printf("run_cap exited =%d\n", cnt);
 }
 
 void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t &lst,
@@ -213,7 +209,6 @@ void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t 
     }
 
     zmq_close(mock_sub);
-    printf("run_sub exited =%d\n", (int)lst.size());
 }
 
 void *init_pub(void *zctx)
@@ -230,7 +225,6 @@ void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
     for(internal_events_lst_t::const_iterator itc = lst.begin(); itc != lst.end(); ++itc) {
         EXPECT_EQ(0, zmq_message_send(mock_pub, wr_source, *itc));
     }
-    printf("Published %d events\n", (int)lst.size());
 }
 
 
@@ -285,8 +279,6 @@ TEST(eventd, proxy)
     wr_sz = (int)wr_evts.size();
     for(int i=0; (wr_sz != rd_evts_sz) && (i < 100); ++i) {
         /* Loop & wait for atmost a second */
-        printf("rd_evts.size != wr_evts.size %d != %d\n", 
-                (int)rd_evts.size(), (int)wr_evts.size());
         this_thread::sleep_for(chrono::milliseconds(10));
     }
     this_thread::sleep_for(chrono::milliseconds(1000));
@@ -299,8 +291,6 @@ TEST(eventd, proxy)
 
     thr.join();
     thrc.join();
-    printf("wr=%d rd=%d rdc=%d\n", (int)wr_evts.size(), (int)rd_evts.size(),
-            rd_cevts_sz);
     EXPECT_EQ(rd_evts.size(), wr_evts.size());
     EXPECT_EQ(rd_cevts_sz,  wr_evts.size());
 
@@ -310,7 +300,6 @@ TEST(eventd, proxy)
 }
 
 
-#if 0
 TEST(eventd, capture)
 {
     printf("Capture TEST started\n");
@@ -321,10 +310,24 @@ TEST(eventd, capture)
         swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
     }
 
+    /*
+     * Need to run subscriber; Else publisher would skip publishing
+     * in the absence of any subscriber.
+     */
+    bool term_sub = false;
+    string sub_source;
+    int sub_evts_sz;
+    internal_events_lst_t sub_evts;
+
+    /* run_pub details */
     string wr_source("hello");
     internal_events_lst_t wr_evts;
-    int init_cache = 3;
-    int cache_max = init_cache + 3;
+
+    /* capture related */
+    int init_cache = 3;     /* provided along with start capture */
+    int cache_max = init_cache + 3; /* capture service cache max */
+
+    /* startup strings; expected list & read list from capture */
     event_serialized_lst_t evts_start, evts_expect, evts_read;
     last_events_t last_evts_exp, last_evts_read;
 
@@ -337,6 +340,9 @@ TEST(eventd, capture)
 
     /* Starting proxy */
     EXPECT_EQ(0, pxy->init());
+
+    /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
+    thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Create capture service */
     capture_service *pcap = new capture_service(zctx, cache_max);
@@ -369,8 +375,10 @@ TEST(eventd, capture)
         wr_evts.push_back(ev);
 
         if (i < cache_max) {
-            if (i >= init_cache)
+            if (i >= init_cache) {
+                /* for i < init_cache, evts_expect is already populated */
                 evts_expect.push_back(evt_str);
+            }
         } else {
             /* collect last entries for overflow */
             last_evts_exp[ldata[i].rid] = evt_str;
@@ -384,21 +392,23 @@ TEST(eventd, capture)
     void *mock_pub = init_pub(zctx);
 
     /* Provide time for async connect to complete */
-    this_thread::sleep_for(chrono::milliseconds(4000));
+    this_thread::sleep_for(chrono::milliseconds(200));
 
     /* Publish events from 1 to all. */
     run_pub(mock_pub, wr_source, wr_evts);
 
     /* Provide time for async message receive. */
-    this_thread::sleep_for(chrono::milliseconds(4000));
+    this_thread::sleep_for(chrono::milliseconds(100));
 
     /* Stop capture, closes socket & terminates the thread */
     EXPECT_EQ(0, pcap->set_control(STOP_CAPTURE));
 
+    /* terminate subs thread */
+    term_sub = true;
+
     /* Read the cache */
     EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read));
 
-    printf("evts_read=%d evts_expect=%d\n", (int)evts_read.size(), (int)evts_expect.size());
     EXPECT_EQ(evts_read, evts_expect);
     EXPECT_EQ(last_evts_read, last_evts_exp);
 
@@ -408,9 +418,11 @@ TEST(eventd, capture)
     delete pcap;
     pcap = NULL;
 
+    thr_sub.join();
+
     zmq_close(mock_pub);
     zmq_ctx_term(zctx);
     printf("eventd_proxy is tested GOOD\n");
 }
-#endif
+
 

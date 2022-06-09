@@ -94,7 +94,7 @@ class capture_service
 {
     public:
         capture_service(void *ctx, int cache_max) : m_ctx(ctx), m_cap_run(false),
-            m_ctrl(NEED_INIT), m_cache_max(cache_max)
+            m_ctrl(NEED_INIT), m_cache_max(cache_max), m_last_events_init(false)
         {}
 
         ~capture_service();
@@ -120,6 +120,7 @@ class capture_service
         event_serialized_lst_t m_events;
 
         last_events_t m_last_events;
+        bool m_last_events_init;
 
         typedef map<runtime_id_t, sequence_t> pre_exist_id_t;
         pre_exist_id_t m_pre_exist_id;
