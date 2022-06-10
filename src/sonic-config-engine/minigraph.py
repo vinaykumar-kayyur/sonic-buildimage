@@ -1436,9 +1436,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     mgmt_intf_count = 0
     mgmt_alias_reverse_mapping = {}
     for key in mgmt_intf:
-        if key[1] == '0.0.0.0/0':
-            continue
-
         alias = key[0]
         if alias in mgmt_alias_reverse_mapping:
             name = mgmt_alias_reverse_mapping[alias]
