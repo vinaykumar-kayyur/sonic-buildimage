@@ -1,4 +1,4 @@
--%}l3_alpm_hit_skip=1
+l3_alpm_hit_skip=1
 sai_adjust_acl_drop_in_rx_drop=1
 sai_remap_prio_on_tnl_egress=1
 PHY_AN_ALLOW_PLL_CHANGE=1
