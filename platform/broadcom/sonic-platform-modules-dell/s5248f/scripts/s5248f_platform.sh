@@ -61,7 +61,7 @@ switch_board_qsfp() {
                         done
                         for ((i=50;i<=57;i++));
                         do
-                            echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                            echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
  
         "delete_device")
