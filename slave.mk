@@ -173,10 +173,10 @@ endif
 # Pre-built Bazel is not available for armhf, so exclude P4RT
 # TODO(PINS): Remove when Bazel binaries are available for armhf
 ifeq ($(CONFIGURED_ARCH),armhf)
-	ifeq ($(INCLUDE_P4RT),y)
-		@echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
-	endif
-	override INCLUDE_P4RT = n
+ifeq ($(INCLUDE_P4RT),y)
+$(warning Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH))
+endif
+override INCLUDE_P4RT = n
 endif
 
 ifeq ($(SONIC_INCLUDE_MACSEC),y)

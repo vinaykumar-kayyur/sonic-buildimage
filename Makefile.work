@@ -11,6 +11,7 @@
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
 #  * INCLUDE_KUBERNETES: Allows including Kubernetes
 #  * INCLUDE_MUX: Include MUX feature/services for TOR switch.
+#  * INCLUDE_P4RT: Include P4RT feature/services.
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
 #  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
@@ -363,6 +364,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
+			   SONIC_INCLUDE_P4RT=$(INCLUDE_P4RT) \
                            TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
