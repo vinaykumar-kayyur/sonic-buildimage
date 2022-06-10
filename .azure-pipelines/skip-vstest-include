@@ -1,3 +1,4 @@
 ^platform
 ^.azure-pipelines
 ^files/build/versions
+^azure-pipelines.yml
