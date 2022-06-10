@@ -132,4 +132,5 @@ jobs:
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
+      - template: template-skipvstest.yml
       - template: check-dirty-version.yml

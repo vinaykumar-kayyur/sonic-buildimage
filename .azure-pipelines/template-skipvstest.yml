@@ -1,0 +1,11 @@
+steps:
+- ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+  - script: |
+      set -ex
+      git diff HEAD~ | grep '^diff ' | awk '{print$NF}' | sed 's#b/##' | grep -v -f .azure-pipelines/skip-vstest-include && exit 0
+      git diff HEAD~ | grep '^diff ' | awk '{print$NF}' | sed 's#b/##' | grep -f .azure-pipelines/skip-vstest-exclude && exit 0
+      set +x
+      echo "Skip vstest jobs"
+      echo "##vso[task.setvariable variable=SKIP_VSTEST;isOutput=true]YES"
+    name: SetVar
+    displayName: "Set SKIP_VSTST variable"
