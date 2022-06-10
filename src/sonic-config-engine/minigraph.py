@@ -1852,12 +1852,12 @@ def parse_device_desc_xml(filename):
         results['LOOPBACK_INTERFACE'] = {('lo_v6', lo_prefix_v6): {}}
 
     results['MGMT_INTERFACE'] = {}
-    if mgmt_prefix != '0.0.0.0/0':
+    if mgmt_prefix and mgmt_prefix != '0.0.0.0/0':
         mgmtipn = ipaddress.ip_network(UNICODE_TYPE(mgmt_prefix), False)
         gwaddr = ipaddress.ip_address((next(mgmtipn.hosts())))
         results['MGMT_INTERFACE'].update({('eth0', mgmt_prefix): {'gwaddr': gwaddr}})
 
-    if mgmt_prefix_v6:
+    if mgmt_prefix_v6 and mgmt_prefix_v6 != '::/0':
         mgmtipn_v6 = ipaddress.ip_network(UNICODE_TYPE(mgmt_prefix_v6), False)
         gwaddr_v6 = ipaddress.ip_address((next(mgmtipn_v6.hosts())))
         results['MGMT_INTERFACE'].update({('eth0', mgmt_prefix_v6): {'gwaddr': gwaddr_v6}})
