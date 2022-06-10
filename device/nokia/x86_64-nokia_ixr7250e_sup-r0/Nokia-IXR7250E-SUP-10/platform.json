@@ -150,6 +150,10 @@
 		"controllable": false
             },
             {
+                "name": "temp_6(fan)",
+		"controllable": false
+            },
+            {
                 "name": "sfm1_1(fan)",
 		"controllable": false
             },
