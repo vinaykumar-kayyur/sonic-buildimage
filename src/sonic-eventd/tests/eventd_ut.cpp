@@ -204,11 +204,18 @@ void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t 
     EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_SUBSCRIBE, "", 0));
     EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
 
-    while(!term) {
-        if (0 == zmq_message_read(mock_sub, 0, source, ev_int)) {
-            lst.push_back(ev_int);
-            read_source.swap(source);
-            cnt = (int)lst.size();
+    if (cnt == 0) {
+        while(!term) {
+            if (0 == zmq_message_read(mock_sub, 0, source, ev_int)) {
+                lst.push_back(ev_int);
+                read_source.swap(source);
+                cnt = (int)lst.size();
+            }
+        }
+    }
+    else {
+        while(!term) {
+            this_thread::sleep_for(chrono::milliseconds(100));
         }
     }
 
@@ -349,6 +356,11 @@ TEST(eventd, capture)
     EXPECT_EQ(0, pxy->init());
 
     /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
+    /*
+     * Block sub from calling zmq_message_read as capture service is calling
+     * and zmq_message_read crashes on access from more than one thread.
+     */
+    sub_evts_sz = -1; 
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Create capture service */
@@ -469,6 +481,11 @@ TEST(eventd, captureCacheMax)
     EXPECT_EQ(0, pxy->init());
 
     /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
+    /*
+     * Block sub from calling zmq_message_read as capture service is calling
+     * and zmq_message_read crashes on access from more than one thread.
+     */
+    sub_evts_sz = -1; 
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Create capture service */
