@@ -200,23 +200,8 @@ def get_all_namespaces():
     So we loop through the databases in different namespaces and depending on the sub_role
     decide whether this is a front end ASIC/namespace or a back end one.
     """
-    front_ns = []
-    back_ns = []
-    num_asics = get_num_asics()
-
-    if is_multi_asic():
-        for asic in range(num_asics):
-            namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
-            config_db =  connect_config_db_for_ns(namespace)
-            metadata = config_db.get_table('DEVICE_METADATA')
-            if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
-                front_ns.append(namespace)
-            elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
-                back_ns.append(namespace)
-        if config_db:
-            # Ensure the client socket is closed
-            config_db.close('CONFIG_DB')
-
+    global front_ns
+    global back_ns
     return {'front_ns': front_ns, 'back_ns': back_ns}
 
 
@@ -446,3 +431,41 @@ def validate_namespace(namespace):
         return True
     else:
         return False
+
+
+"""
+One time module initialization. Get all the namespaces from CONFIG_DB.
+get_all_namespaces() gets called lot many times(eg. 'portstat -s all')
+especially when a platform has lot many interfaces across multiple namespaces
+so doing DB connect/close at is time consuming, hence we store this static
+information for the lifetime of the process. This prevents two issues we have seen:
+1. FD leak due to too many files opened by the process
+2. Race condition within multiple threads of the same process
+"""
+front_ns = []
+back_ns = []
+num_asics = get_num_asics()
+if is_multi_asic():
+    for asic in range(num_asics):
+        namespace = "{}{}".format(ASIC_NAME_PREFIX, asic)
+        command = 'sonic-db-cli -n {} CONFIG_DB HGET "DEVICE_METADATA|localhost" "sub_role"'.format(namespace)
+        proc = subprocess.Popen(command,
+                            stdout=subprocess.PIPE,
+                            shell=True,
+                            universal_newlines=True,
+                            stderr=subprocess.STDOUT)
+        try:
+            stdout, stderr = proc.communicate()
+            if proc.returncode != 0:
+                raise RuntimeError(
+                    "Command {} failed with stderr {}".format(command, stderr)
+                )
+
+            if stdout.rstrip('\n') != "":
+                role = stdout.rstrip('\n')
+                if role == FRONTEND_ASIC_SUB_ROLE:
+                    front_ns.append(namespace)
+                elif role == BACKEND_ASIC_SUB_ROLE:
+                    back_ns.append(namespace)
+        except OSError as e:
+            raise OSError("Error running command {}".format(command))
