@@ -2,6 +2,8 @@ steps:
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - script: |
       set -ex
+      git config --global user.email "test@example.com"
+      git config --global user.name "CI agent"
       git rebase origin/$(System.PullRequest.TargetBranch)
       git diff HEAD~ --name-only | grep -v -f .azure-pipelines/vstest-exclude && exit 0
       git diff HEAD~ --name-only | grep -f .azure-pipelines/vstest-include && exit 0
