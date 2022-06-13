@@ -865,6 +865,14 @@ class TestCfgGen(TestCase):
             }
         )
 
+    def test_minigraph_voq_port_macsec_enabled(self):
+        argument = '-m "' + self.sample_graph_voq + '" -p "' + self.voq_port_config + '" -v "PORT[\'Ethernet0\']"'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}")
+        )
+
     def test_minigraph_voq_inband_interface_vlan(self):
         argument = "-m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)

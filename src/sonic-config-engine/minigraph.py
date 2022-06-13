@@ -887,6 +887,7 @@ def parse_meta(meta, hname):
     switch_type = None
     max_cores = None
     kube_data = {}
+    macsec_profile = {}
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -927,7 +928,9 @@ def parse_meta(meta, hname):
                     kube_data["enable"] = value
                 elif name == "KubernetesServerIp":
                     kube_data["ip"] = value
-    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data
+                elif name == 'MacSecProfile':
+                    macsec_profile = parse_macsec_profile(value)
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile
 
 
 def parse_system_defaults(meta):
@@ -976,6 +979,7 @@ def parse_linkmeta(meta, hname):
         upper_tor_hostname = ''
         lower_tor_hostname = ''
         auto_negotiation = None
+        macsec_enabled = False
 
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
@@ -1008,12 +1012,24 @@ def parse_linkmeta(meta, hname):
             linkmetas[port]["MacSecEnabled"] = macsec_enabled
     return linkmetas
 
+def parse_macsec_profile(val_string):
+    macsec_profile = {}
+    values = val_string.strip().split(' ')
+    for val in values:
+        keys = val.strip().split('=')
+        if keys[0] == 'PrimaryKey':
+            macsec_profile['PrimaryKey'] = keys[1].strip('\"')
+        elif keys[0] == 'FallbackKey':
+            macsec_profile['FallbackKey'] = keys[1].strip('\"')
+
+    return macsec_profile
 
 def parse_asic_meta(meta, hname):
     sub_role = None
     switch_id = None
     switch_type = None
     max_cores = None
+    macsec_profile = {}
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -1029,7 +1045,10 @@ def parse_asic_meta(meta, hname):
                     switch_type = value
                 elif name == "MaxCores":
                     max_cores = value
-    return sub_role, switch_id, switch_type, max_cores
+                elif name == 'MacSecProfile':
+                    macsec_profile = parse_macsec_profile(value)
+
+    return sub_role, switch_id, switch_type, max_cores, macsec_profile
 
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
@@ -1310,9 +1329,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Get the local device node from DeviceMetadata
     local_devices = parse_asic_meta_get_devices(root)
 
-    # Get the macsec profile data from DeviceMetadata
-    macsec_profile = parse_meta_get_macsec_profile(root, hostname)
-
     for child in root:
         if asic_name is None:
             if child.tag == str(QName(ns, "DpgDec")):
@@ -1324,7 +1340,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1340,7 +1356,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (sub_role, switch_id, switch_type, max_cores ) = parse_asic_meta(child, asic_name)
+                (sub_role, switch_id, switch_type, max_cores, macsec_profile) = parse_asic_meta(child, asic_name)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1545,8 +1561,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
         # If macsec is enabled on interface, and profile is valid, add the profile to port
         macsec_enabled = linkmetas.get(alias, {}).get('MacSecEnabled')
-        if macsec_enabled and macsec_profile['PrimaryKey']:
-            port['macsec_profile'] = macsec_profile['PrimaryKey']
+        if macsec_enabled and 'PrimaryKey' in macsec_profile:
+            port['macsec'] = macsec_profile['PrimaryKey']
 
     # If connected to a smart cable, get the connection position
     for port_name, port in ports.items():
@@ -1897,30 +1913,6 @@ def parse_asic_meta_get_devices(root):
                 local_devices.append(name)
 
     return local_devices
-
-def parse_meta_get_macsec_profile(root, hname):
-    macsec_profile = {}
-
-    for child in root:
-        if child.tag == str(QName(ns, "MetadataDeclaration")):
-            device_metas = child.find(str(QName(ns, "Devices")))
-            for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
-                if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
-                    properties = device.find(str(QName(ns1, "Properties")))
-                    for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
-                        name = device_property.find(str(QName(ns1, "Name"))).text
-                        value = device_property.find(str(QName(ns1, "Value"))).text
-                        if name == 'MacSecProfile':
-                            values = value.strip().split(' ')
-                            for val in values:
-                                keys = val.strip().split('=')
-                                if keys[0] == 'PrimaryKey':
-                                    macsec_profile['PrimaryKey'] = keys[1].strip('\"')
-                                elif keys[0] == 'FallbackKey':
-                                    macsec_profile['FallbackKey'] = keys[1].strip('\"')
-                                elif keys[0] == 'MacsecPolicy':
-                                    macsec_profile['MacsecPolicy'] = keys[1].strip('\"')
-    return macsec_profile
 
 port_alias_map = {}
 port_alias_asic_map = {}
