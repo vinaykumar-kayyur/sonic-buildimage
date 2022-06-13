@@ -111,7 +111,7 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image
 
@@ -125,7 +125,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     mkdir -p `dirname $OUTPUT_RAW_IMAGE`
     sudo rm -f $OUTPUT_RAW_IMAGE
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image "$tmp_output_onie_image"
 
@@ -159,7 +159,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image
     # Generate single asic KVM image
