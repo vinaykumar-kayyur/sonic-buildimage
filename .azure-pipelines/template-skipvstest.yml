@@ -4,9 +4,10 @@ steps:
       set -ex
       git config --global user.email "test@example.com"
       git config --global user.name "CI agent"
-      git rebase origin/$(System.PullRequest.TargetBranch)
-      git diff HEAD~ --name-only | grep -v -f .azure-pipelines/vstest-exclude && exit 0
-      git diff HEAD~ --name-only | grep -f .azure-pipelines/vstest-include && exit 0
+      tar_branch=origin/$(System.PullRequest.TargetBranch)
+      git rebase $tar_branch
+      git diff $tar_branch --name-only | grep -v -f .azure-pipelines/vstest-exclude && exit 0
+      git diff $tar_branch --name-only | grep -f .azure-pipelines/vstest-include && exit 0
       set +x
       echo "Skip vstest jobs"
       echo "##vso[task.setvariable variable=SKIP_VSTEST;isOutput=true]YES"
