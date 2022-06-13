@@ -29,10 +29,10 @@ module sonic-system-defaults{
                 }
 
                 leaf status {
-					description "default status of the feature";
+                    description "default status of the feature";
                     type string {
-						pattern "enabled|disabled";
-					}
+                        pattern "enabled|disabled";
+                    }
                 }
 
             }
