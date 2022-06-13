@@ -16,6 +16,9 @@ SONIC_CONFIG_BUILD_JOBS = 1
 # Corresponding -j argument will be passed to make/dpkg commands that build separate packages
 SONIC_CONFIG_MAKE_JOBS = $(shell nproc)
 
+# SONIC_CONFIG_BUILD_LOAD_AVG - set the load average for the slave build
+SONIC_CONFIG_BUILD_LOAD_AVG = -1
+
 # DEFAULT_BUILD_LOG_TIMESTAMP - add timestamp in build log
 # Supported format: simple, none
 DEFAULT_BUILD_LOG_TIMESTAMP = none
