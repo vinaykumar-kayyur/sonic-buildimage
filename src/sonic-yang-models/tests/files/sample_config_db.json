@@ -1874,6 +1874,11 @@
                      "LAG"
                  ]
              }
+        },
+        "SYSTEM_DEFAULTS": {
+            "tunnel_qos_remap": {
+                "status": "enabled"
+            }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
