@@ -43,7 +43,7 @@ eventd-tests: $(TEST_OBJS)
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TEST) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	@echo 'Finished building target: $@'
-	@echo 'Blocked $(EVENTD_TEST)'
+	$(EVENTD_TEST)
 	@echo 'Finished running tests'
 	@echo ' '
 

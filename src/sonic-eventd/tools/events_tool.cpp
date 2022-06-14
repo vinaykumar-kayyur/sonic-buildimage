@@ -247,7 +247,7 @@ do_send(const string infile, int cnt, int pause)
 
 void usage()
 {
-    printf(s_usage);
+    printf("%s", s_usage);
     exit(-1);
 }
 
