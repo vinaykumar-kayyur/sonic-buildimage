@@ -51,6 +51,7 @@ Table of Contents
          * [VLAN_MEMBER](#vlan_member)  
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
+         * [PASSWORD_HARDENING](#password_hardening)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
@@ -774,6 +775,7 @@ instance is supported in SONiC.
         "bgp_asn": "65100",
         "deployment_id": "1",
         "type": "ToRRouter",
+        "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional"
     }
   }
@@ -934,6 +936,9 @@ Loopback interface configuration lies in **LOOPBACK_INTERFACE** table
 and has similar schema with data plane interfaces. The loopback device
 name and loopback IP prefix act as multi-level key for loopback
 interface objects.
+By default SONiC advertises Loopback interface IPv6 /128 subnet address
+as prefix with /64 subnet. To overcome this set "bgp_adv_lo_prefix_as_128"
+to true in DEVICE_METADATA
 
 ```
 {
@@ -1171,7 +1176,9 @@ optional attributes.
             "mtu": "9100",
             "alias": "fortyGigE1/1/1",
             "speed": "40000",
-            "link_training": "off"
+            "link_training": "off",
+            "laser_freq": "191300",
+            "tx_power": "-27.3"
         },
         "Ethernet1": {
             "index": "1",
@@ -1181,7 +1188,9 @@ optional attributes.
             "alias": "fortyGigE1/1/2",
             "admin_status": "up",
             "speed": "40000",
-            "link_training": "on"
+            "link_training": "on",
+            "laser_freq": "191300",
+            "tx_power": "-27.3"
         },
         "Ethernet63": {
             "index": "63",
@@ -1189,7 +1198,9 @@ optional attributes.
             "description": "fortyGigE1/4/16",
             "mtu": "9100",
             "alias": "fortyGigE1/4/16",
-            "speed": "40000"
+            "speed": "40000",
+            "laser_freq": "191300",
+            "tx_power": "-27.3"
         }
     }
 }
@@ -1502,6 +1513,40 @@ The packet action could be:
         "wred_red_enable": "true", 
         "yellow_drop_probability": "5", 
         "red_drop_probability": "5"
+    }
+  }
+}
+```
+### PASSWORD_HARDENING
+
+Password Hardening, a user password is the key credential used in order to verify the user accessing the switch and acts as the first line of defense in regards to securing the switch. PASSWORD_HARDENING - support the enforce strong policies.
+
+-   state - Enable/Disable password hardening feature
+-   len_min - The minimum length of the PW should be subject to a user change.
+-   expiration - PW Age Change Once a PW change takes place - the DB record for said PW is updated with the new PW value and a fresh new age (=0).
+-   expiration_warning - The switch will provide a warning for PW change before and (this is to allow a sufficient warning for upgrading the PW which might be relevant to numerous switches).
+-   history_cnt - remember last passwords, and reject to use the old passw
+-   reject_user_passw_match - reject to set same username and passw
+-   PW classes -  are the type of characters the user is required to enter when setting/updating a PW.
+There are 4 classes
+    -   lower_class - Small characters - a-z
+    -   upper_class - Big characters - A-Z
+    -   digits_class -Numbers - 0-9
+    -   special_class - Special Characters `~!@#$%^&*()-_+=|[{}];:',<.>/? and white space
+```
+{
+"PASSW_HARDENING": {
+    "POLICIES": {
+        "state": "disabled",
+        "expiration": "180",
+        "expiration_warning": "15",
+        "history_cnt": "10",
+        "len_min": "8",
+        "reject_user_passw_match": "true",
+        "lower_class": "true",
+        "upper_class": "true",
+        "digits_class": "true",
+        "special_class": "true"
     }
   }
 }
