@@ -8,6 +8,8 @@ steps:
       sudo sed -i "s#{{codename}}#$UBUNTU_CODENAME#" /etc/apt/sources.list
       sudo apt update
 
+      sudo pip3 install jinja2==3.0.0
+
       if [[ $PLATFORM_ARCH == arm* ]];then
         echo arm agent, skip.
         exit 0
