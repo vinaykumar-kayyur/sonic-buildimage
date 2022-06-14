@@ -73,5 +73,7 @@ RsyslogPlugin::RsyslogPlugin(SyslogParser* syslog_parser, string mod_name, strin
     parser = syslog_parser;
     module_name = mod_name;
     regex_path = path;
-    onInit();
+    if(!onInit()) {
+        SWSS_LOG_ERROR("Initializing rsyslog plugin failed.\n");
+    }
 }
