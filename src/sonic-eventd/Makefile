@@ -1,6 +1,7 @@
 RM := rm -rf
 EVENTD_TARGET := eventd
 EVENTD_TEST := tests/tests
+EVENTD_TOOL := tools/events_tool
 CP := cp
 MKDIR := mkdir
 CC := g++
@@ -19,8 +20,9 @@ endif
 
 -include src/subdir.mk
 -include tests/subdir.mk
+-include tools/subdir.mk
  
-all: sonic-eventd eventd-tests
+all: sonic-eventd eventd-tests eventd-tool
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'
@@ -29,12 +31,19 @@ sonic-eventd: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
+eventd-tool: $(TOOL_OBJS)
+	@echo 'Building target: $@'
+	@echo 'Invoking: G++ Linker'
+	$(CC) $(LDFLAGS) -o $(EVENTD_TOOL) $(TOOL_OBJS) $(LIBS)
+	@echo 'Finished building target: $@'
+	@echo ' '
+
 eventd-tests: $(TEST_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TEST) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	@echo 'Finished building target: $@'
-	$(EVENTD_TEST)
+	@echo 'Blocked $(EVENTD_TEST)'
 	@echo 'Finished running tests'
 	@echo ' '
 
