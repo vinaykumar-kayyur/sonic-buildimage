@@ -34,7 +34,7 @@ private:
     bool onInit() {
         event_handle = events_init_publisher(module_name);
         int return_code = createRegexList();
-	return (event_handle != NULL || return_code == 0); 
+	return (event_handle != NULL && return_code == 0); 
     }
 
 };
