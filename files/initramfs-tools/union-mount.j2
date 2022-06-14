@@ -132,7 +132,8 @@ case "${ROOT}" in
         ;;
     *)
         ## Mount the raw partition again
-        mount ${ROOT} ${rootmnt}/host
+        mount -t ext4 ${ROOT} ${rootmnt}/host
+        tune2fs -m 0 -r 0 ${ROOT}
         ;;
 esac
 
@@ -188,4 +189,9 @@ fi
 ## fscklog file: /tmp will be lost when overlayfs is mounted
 if [ -f /tmp/fsck.log.gz ]; then
     mv /tmp/fsck.log.gz ${rootmnt}/var/log
+fi
+
+## ssd-fw-upgrade log file: /tmp will be lost when overlayfs is mounted
+if [ -f /tmp/ssd-fw-upgrade.log.gz ]; then
+    mv /tmp/ssd-fw-upgrade.log.gz ${rootmnt}/var/log
 fi

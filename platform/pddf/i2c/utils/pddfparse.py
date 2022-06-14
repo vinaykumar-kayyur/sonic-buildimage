@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import unicodedata
+from sonic_py_common import device_info
 
 bmc_cache = {}
 cache = {}
@@ -33,7 +34,7 @@ color_map = {
 class PddfParse():
     def __init__(self):
         if not os.path.exists("/usr/share/sonic/platform"):
-            platform, hwsku = self.get_platform_and_hwsku()
+            platform, hwsku = device_info.get_platform_and_hwsku()
             os.symlink("/usr/share/sonic/device/"+platform, "/usr/share/sonic/platform")
 
         try:
@@ -47,30 +48,6 @@ class PddfParse():
         self.data_sysfs_obj = {}
         self.sysfs_obj = {}
 
-    # Returns platform and HW SKU
-    def get_platform_and_hwsku(self):
-        try:
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    universal_newlines=True,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            platform = stdout.rstrip('\n')
-
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    universal_newlines=True,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            hwsku = stdout.rstrip('\n')
-        except OSError as e:
-            raise OSError("Cannot detect platform")
-
-        return (platform, hwsku)
 
     ###################################################################################################################
     #   GENERIC DEFS
@@ -359,9 +336,18 @@ class PddfParse():
         ret = self.runcmd(cmd)
         if ret != 0:
             return create_ret.append(ret)
-        self.create_device(dev['i2c']['dev_attr'], "pddf/devices/mux", ops)
+        cmd = "echo %s > /sys/kernel/pddf/devices/mux/virt_bus" % (dev['i2c']['dev_attr']['virt_bus'])
+        ret = self.runcmd(cmd)
+        if ret != 0:
+            return create_ret.append(ret)
         cmd = "echo 'add' > /sys/kernel/pddf/devices/mux/dev_ops"
         ret = self.runcmd(cmd)
+        # Check if the dev_attr array contain idle_state
+        if 'idle_state' in dev['i2c']['dev_attr']:
+            cmd = "echo {} > /sys/bus/i2c/devices/{}-00{:02x}/idle_state".format(dev['i2c']['dev_attr']['idle_state'],
+                    int(dev['i2c']['topo_info']['parent_bus'],0), int(dev['i2c']['topo_info']['dev_addr'],0))
+            ret = self.runcmd(cmd)
+
         return create_ret.append(ret)
 
     def create_xcvr_i2c_device(self, dev, ops):

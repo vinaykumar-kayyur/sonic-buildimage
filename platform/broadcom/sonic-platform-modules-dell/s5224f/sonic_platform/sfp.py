@@ -13,6 +13,7 @@ try:
     import time
     import struct
     import mmap
+    import subprocess
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
 
 except ImportError as e:
@@ -44,6 +45,7 @@ class Sfp(SfpOptoeBase):
         SfpOptoeBase.__init__(self)
         self.port_type = sfp_type
         self.sfp_type = sfp_type
+        self.port_type = sfp_type
         self.index = index
         self.eeprom_path = eeprom_path
         self._initialize_media(delay=False)

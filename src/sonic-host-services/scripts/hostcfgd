@@ -11,8 +11,7 @@ import signal
 
 import jinja2
 from sonic_py_common import device_info
-from swsscommon.swsscommon import SubscriberStateTable, DBConnector, Select
-from swsscommon.swsscommon import ConfigDBConnector, TableConsumable
+from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -25,6 +24,10 @@ PAM_RADIUS_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_radius_auth.conf
 NSS_CONF = "/etc/nsswitch.conf"
 ETC_PAMD_SSHD = "/etc/pam.d/sshd"
 ETC_PAMD_LOGIN = "/etc/pam.d/login"
+PAM_LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_limits.j2"
+LIMITS_CONF_TEMPLATE = "/usr/share/sonic/templates/limits.conf.j2"
+PAM_LIMITS_CONF = "/etc/pam.d/pam-limits-conf"
+LIMITS_CONF = "/etc/security/limits.conf"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
@@ -41,6 +44,7 @@ RADIUS_PAM_AUTH_CONF_DIR = "/etc/pam_radius_auth.d/"
 
 # MISC Constants
 CFG_DB = "CONFIG_DB"
+STATE_DB = "STATE_DB"
 HOSTCFGD_MAX_PRI = 10  # Used to enforce ordering b/w daemons under Hostcfgd
 DEFAULT_SELECT_TIMEOUT = 1000
 
@@ -100,6 +104,7 @@ def obfuscate(data):
     else:
         return data
 
+
 def get_pid(procname):
     for dirname in os.listdir('/proc'):
         if dirname == 'curproc':
@@ -112,6 +117,7 @@ def get_pid(procname):
         if procname in content:
             return dirname
     return ""
+
 
 class Feature(object):
     """ Represents a feature configuration from CONFIG_DB data. """
@@ -166,16 +172,23 @@ class FeatureHandler(object):
     SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
     SYSTEMD_SERVICE_CONF_DIR = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
 
-    def __init__(self, config_db, device_config):
+    # Feature state constants
+    FEATURE_STATE_ENABLED = "enabled"
+    FEATURE_STATE_DISABLED = "disabled"
+    FEATURE_STATE_FAILED = "failed"
+
+    def __init__(self, config_db, feature_state_table, device_config):
         self._config_db = config_db
+        self._feature_state_table = feature_state_table
         self._device_config = device_config
         self._cached_config = {}
         self.is_multi_npu = device_info.is_multi_npu()
 
-    def handle(self, feature_name, op, feature_cfg):
+    def handler(self, feature_name, op, feature_cfg):
         if not feature_cfg:
-            self._cached_config.pop(feature_name)
             syslog.syslog(syslog.LOG_INFO, "Deregistering feature {}".format(feature_name))
+            self._cached_config.pop(feature_name, None)
+            self._feature_state_table._del(feature_name)
             return
 
         feature = Feature(feature_name, feature_cfg, self._device_config)
@@ -186,7 +199,11 @@ class FeatureHandler(object):
         # the next called self.update_feature_state will start it again. If it will fail
         # again the auto restart will kick-in. Another order may leave it in failed state
         # and not auto restart.
-        self.update_feature_auto_restart(feature, feature_name)
+        if self._cached_config[feature_name].auto_restart != feature.auto_restart:
+            syslog.syslog(syslog.LOG_INFO, "Auto-restart status of feature '{}' is changed from '{}' to '{}' ..."
+                          .format(feature_name, self._cached_config[feature_name].auto_restart, feature.auto_restart))
+            self.update_systemd_config(feature)
+            self._cached_config[feature_name].auto_restart = feature.auto_restart
 
         # Enable/disable the container service if the feature state was changed from its previous state.
         if self._cached_config[feature_name].state != feature.state:
@@ -195,21 +212,23 @@ class FeatureHandler(object):
             else:
                 self.resync_feature_state(self._cached_config[feature_name])
 
-    def sync_state_field(self):
+    def sync_state_field(self, feature_table):
         """
         Summary:
         Updates the state field in the FEATURE|* tables as the state field
         might have to be rendered based on DEVICE_METADATA table
         """
-        feature_table = self._config_db.get_table('FEATURE')
         for feature_name in feature_table.keys():
             if not feature_name:
                 syslog.syslog(syslog.LOG_WARNING, "Feature is None")
                 continue
 
             feature = Feature(feature_name, feature_table[feature_name], self._device_config)
-            if not feature.compare_state(feature_name, feature_table.get(feature_name, {})):
-                self.resync_feature_state(feature)
+
+            self._cached_config.setdefault(feature_name, feature)
+            self.update_systemd_config(feature)
+            self.update_feature_state(feature)
+            self.resync_feature_state(feature)
 
     def update_feature_state(self, feature):
         cached_feature = self._cached_config[feature.name]
@@ -252,42 +271,45 @@ class FeatureHandler(object):
 
         return True
 
-    def update_feature_auto_restart(self, feature, feature_name):
+    def update_systemd_config(self, feature_config):
+        """Updates `Restart=` field in feature's systemd configuration file
+        according to the value of `auto_restart` field in `FEATURE` table of `CONFIG_DB`.
 
-        dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
-        auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
+        Args:
+            feature: An object represents a feature's configuration in `FEATURE`
+            table of `CONFIG_DB`.
 
-        write_conf = False
-        if not os.path.exists(auto_restart_conf):  # if the auto_restart_conf file is not found, set it
-            write_conf = True
+        Returns:
+            None.
+        """
+        restart_field_str = "always" if "enabled" in feature_config.auto_restart else "no"
+        feature_systemd_config = "[Service]\nRestart={}\n".format(restart_field_str)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature_config)
 
-        if self._cached_config[feature_name].auto_restart != feature.auto_restart:
-            write_conf = True
+        # On multi-ASIC device, creates systemd configuration file for each feature instance
+        # residing in difference namespace.
+        for feature_name in feature_names:
+            syslog.syslog(syslog.LOG_INFO, "Updating feature '{}' systemd config file related to auto-restart ..."
+                          .format(feature_name))
+            feature_systemd_config_dir_path = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
+            feature_systemd_config_file_path = os.path.join(feature_systemd_config_dir_path, 'auto_restart.conf')
 
-        if not write_conf:
-            return
+            if not os.path.exists(feature_systemd_config_dir_path):
+                os.mkdir(feature_systemd_config_dir_path)
+            with open(feature_systemd_config_file_path, 'w') as feature_systemd_config_file_handler:
+                feature_systemd_config_file_handler.write(feature_systemd_config)
 
-        self._cached_config[feature_name].auto_restart = feature.auto_restart # Update Cache
-
-        restart_config = "always" if feature.auto_restart == "enabled" else "no"
-        service_conf = "[Service]\nRestart={}\n".format(restart_config)
-        feature_names, feature_suffixes = self.get_feature_attribute(feature)
-
-        for name in feature_names:
-            dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(name)
-            auto_restart_conf = os.path.join(dir_name, 'auto_restart.conf')
-            if not os.path.exists(dir_name):
-                os.mkdir(dir_name)
-            with open(auto_restart_conf, 'w') as cfgfile:
-                cfgfile.write(service_conf)
+            syslog.syslog(syslog.LOG_INFO, "Feautre '{}' systemd config file related to auto-restart is updated!"
+                          .format(feature_name))
 
         try:
+            syslog.syslog(syslog.LOG_INFO, "Reloading systemd configuration files ...")
             run_cmd("sudo systemctl daemon-reload", raise_exception=True)
+            syslog.syslog(syslog.LOG_INFO, "Systemd configuration files are reloaded!")
         except Exception as err:
-            syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to configure auto_restart".format(feature.name))
-            return
+            syslog.syslog(syslog.LOG_ERR, "Failed to reload systemd configuration files!")
 
-    def get_feature_attribute(self, feature):
+    def get_multiasic_feature_instances(self, feature):
         # Create feature name suffix depending feature is running in host or namespace or in both
         feature_names = (
             ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
@@ -318,7 +340,7 @@ class FeatureHandler(object):
 
     def enable_feature(self, feature):
         cmds = []
-        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature)
         for feature_name in feature_names:
             # Check if it is already enabled, if yes skip the system call
             unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
@@ -340,12 +362,15 @@ class FeatureHandler(object):
                     run_cmd(cmd, raise_exception=True)
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
-                                    .format(feature.name, feature_suffixes[-1]))
+                                  .format(feature.name, feature_suffixes[-1]))
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
+
+        self.set_feature_state(feature, self.FEATURE_STATE_ENABLED)
 
     def disable_feature(self, feature):
         cmds = []
-        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        feature_names, feature_suffixes = self.get_multiasic_feature_instances(feature)
         for feature_name in feature_names:
             # Check if it is already disabled, if yes skip the system call
             unit_file_state = self.get_systemd_unit_state("{}.{}".format(feature_name, feature_suffixes[-1]))
@@ -362,11 +387,17 @@ class FeatureHandler(object):
                     run_cmd(cmd, raise_exception=True)
                 except Exception as err:
                     syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
-                                    .format(feature.name, feature_suffixes[-1]))
+                                  .format(feature.name, feature_suffixes[-1]))
+                    self.set_feature_state(feature, self.FEATURE_STATE_FAILED)
                     return
+
+        self.set_feature_state(feature, self.FEATURE_STATE_DISABLED)
 
     def resync_feature_state(self, feature):
         self._config_db.mod_entry('FEATURE', feature.name, {'state': feature.state})
+
+    def set_feature_state(self, feature, state):
+        self._feature_state_table.set(feature.name, [('state', state)])
 
 
 class Iptables(object):
@@ -385,6 +416,10 @@ class Iptables(object):
         be string
         '''
         return (isinstance(key, tuple))
+
+    def load(self, lpbk_table):
+        for row in lpbk_table:
+            self.iptables_handler(row, lpbk_table[row])
 
     def command(self, chain, ip, ver, op):
         cmd = 'iptables' if ver == '4' else 'ip6tables'
@@ -870,15 +905,13 @@ class KdumpCfg(object):
             memory = self.kdump_defaults["memory"]
             if data.get("memory") is not None:
                 memory = data.get("memory")
-            if data.get("memory") is not None:
-                run_cmd("sonic-kdump-config --memory " + memory)
+            run_cmd("sonic-kdump-config --memory " + memory)
 
             # Num dumps
             num_dumps = self.kdump_defaults["num_dumps"]
             if data.get("num_dumps") is not None:
                 num_dumps = data.get("num_dumps")
-            if data.get("num_dumps") is not None:
-                run_cmd("sonic-kdump-config --num_dumps " + num_dumps)
+            run_cmd("sonic-kdump-config --num_dumps " + num_dumps)
 
 class NtpCfg(object):
     """
@@ -891,6 +924,15 @@ class NtpCfg(object):
     def __init__(self):
         self.ntp_global = {}
         self.ntp_servers = set()
+
+    def load(self, ntp_global_conf, ntp_server_conf):
+        syslog.syslog(syslog.LOG_INFO, "NtpCfg load ...")
+
+        for row in ntp_global_conf:
+            self.ntp_global_update(row, ntp_global_conf[row], is_load=True)
+
+        # Force reload on init
+        self.ntp_server_update(0, None, is_load=True)
 
     def handle_ntp_source_intf_chg(self, intf_name):
         # if no ntp server configured, do nothing
@@ -905,7 +947,7 @@ class NtpCfg(object):
             cmd = 'systemctl restart ntp-config'
             run_cmd(cmd)
 
-    def ntp_global_update(self, key, data):
+    def ntp_global_update(self, key, data, is_load=False):
         syslog.syslog(syslog.LOG_INFO, 'NTP GLOBAL Update')
         orig_src = self.ntp_global.get('src_intf', '')
         orig_src_set = set(orig_src.split(";"))
@@ -914,14 +956,17 @@ class NtpCfg(object):
         new_src = data.get('src_intf', '')
         new_src_set = set(new_src.split(";"))
         new_vrf = data.get('vrf', '')
-        
+
         # Update the Local Cache
         self.ntp_global = data
+
+        # If initial load don't restart daemon
+        if is_load: return
 
         # check if ntp server configured, if not, do nothing
         if not self.ntp_servers:
             syslog.syslog(syslog.LOG_INFO, "No ntp server when global config change, do nothing")
-            return 
+            return
 
         if orig_src_set != new_src_set:
             syslog.syslog(syslog.LOG_INFO, "ntp global update for source intf old {} new {}, restarting ntp-config"
@@ -934,21 +979,82 @@ class NtpCfg(object):
             cmd = 'service ntp restart'
             run_cmd(cmd)
 
-    def ntp_server_update(self, key, op):
+    def ntp_server_update(self, key, op, is_load=False):
         syslog.syslog(syslog.LOG_INFO, 'ntp server update key {}'.format(key))
 
         restart_config = False
-        if op == "SET" and key not in self.ntp_servers:
+        if not is_load:
+            if op == "SET" and key not in self.ntp_servers:
+                restart_config = True
+                self.ntp_servers.add(key)
+            elif op == "DEL" and key in self.ntp_servers:
+                restart_config = True
+                self.ntp_servers.remove(key)
+        else:
             restart_config = True
-            self.ntp_servers.add(key)
-        elif op == "DEL" and key in self.ntp_servers:
-            restart_config = True
-            self.ntp_servers.remove(key)
 
         if restart_config:
             cmd = 'systemctl restart ntp-config'
             syslog.syslog(syslog.LOG_INFO, 'ntp server update, restarting ntp-config, ntp servers configured {}'.format(self.ntp_servers))
             run_cmd(cmd)
+
+class PamLimitsCfg(object):
+    """
+    PamLimit Config Daemon
+    1) The pam_limits PAM module sets limits on the system resources that can be obtained in a user-session.
+    2) Purpose of this daemon is to render pam_limits config file.
+    """
+    def __init__(self, config_db):
+        self.config_db = config_db
+        self.hwsku = ""
+        self.type = ""
+
+    # Load config from ConfigDb and render config file/
+    def update_config_file(self):
+        device_metadata = self.config_db.get_table('DEVICE_METADATA')
+        if "localhost" not in device_metadata:
+            return
+
+        self.read_localhost_config(device_metadata["localhost"])
+        self.render_conf_file()
+
+    # Read localhost config
+    def read_localhost_config(self, localhost):
+        if "hwsku" in localhost:
+            self.hwsku = localhost["hwsku"]
+        else:
+            self.hwsku = ""
+
+        if "type" in localhost:
+            self.type = localhost["type"]
+        else:
+            self.type = ""
+
+    # Render pam_limits config files
+    def render_conf_file(self):
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
+        env.filters['sub'] = sub
+
+        try:
+            template_file = os.path.abspath(PAM_LIMITS_CONF_TEMPLATE)
+            template = env.get_template(template_file)
+            pam_limits_conf = template.render(
+                                        hwsku=self.hwsku,
+                                        type=self.type)
+            with open(PAM_LIMITS_CONF, 'w') as f:
+                f.write(pam_limits_conf)
+
+            template_file = os.path.abspath(LIMITS_CONF_TEMPLATE)
+            template = env.get_template(template_file)
+            limits_conf = template.render(
+                                        hwsku=self.hwsku,
+                                        type=self.type)
+            with open(LIMITS_CONF, 'w') as f:
+                f.write(limits_conf)
+        except Exception as e:
+            syslog.syslog(syslog.LOG_ERR,
+                    "modify pam_limits config file failed with exception: {}"
+                    .format(e))
 
 class HostConfigDaemon:
     def __init__(self):
@@ -956,28 +1062,24 @@ class HostConfigDaemon:
         # before moving forward
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
-        self.dbconn = DBConnector(CFG_DB, 0)
-        self.selector = Select()
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
-
-        self.select = Select()
-        self.callbacks = dict()
-        self.subscriber_map = dict()
 
         # Load DEVICE metadata configurations
         self.device_config = {}
         self.device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
 
+        # Load feature state table
+        self.state_db_conn = DBConnector(STATE_DB, 0)
+        feature_state_table = Table(self.state_db_conn, 'FEATURE')
+
         # Initialize KDump Config and set the config to default if nothing is provided
         self.kdumpCfg = KdumpCfg(self.config_db)
-        self.kdumpCfg.load(self.config_db.get_table('KDUMP'))
 
         # Initialize IpTables
         self.iptables = Iptables()
 
         # Intialize Feature Handler
-        self.feature_handler = FeatureHandler(self.config_db, self.device_config)
-        self.feature_handler.sync_state_field()
+        self.feature_handler = FeatureHandler(self.config_db, feature_state_table, self.device_config)
 
         # Initialize Ntp Config Handler
         self.ntpcfg = NtpCfg()
@@ -987,24 +1089,34 @@ class HostConfigDaemon:
         # Initialize AAACfg
         self.hostname_cache=""
         self.aaacfg = AaaCfg()
-        
 
-    def load(self):
-        aaa = self.config_db.get_table('AAA')
-        tacacs_global = self.config_db.get_table('TACPLUS')
-        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
-        radius_global = self.config_db.get_table('RADIUS')
-        radius_server = self.config_db.get_table('RADIUS_SERVER')
+        # Initialize PamLimitsCfg
+        self.pamLimitsCfg = PamLimitsCfg(self.config_db)
+        self.pamLimitsCfg.update_config_file()
+
+    def load(self, init_data):
+        features = init_data['FEATURE']
+        aaa = init_data['AAA']
+        tacacs_global = init_data['TACPLUS']
+        tacacs_server = init_data['TACPLUS_SERVER']
+        radius_global = init_data['RADIUS']
+        radius_server = init_data['RADIUS_SERVER']
+        lpbk_table = init_data['LOOPBACK_INTERFACE']
+        ntp_server = init_data['NTP_SERVER']
+        ntp_global = init_data['NTP']
+        kdump = init_data['KDUMP']
+
+        self.feature_handler.sync_state_field(features)
         self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
+        self.iptables.load(lpbk_table)
+        self.ntpcfg.load(ntp_global, ntp_server)
+        self.kdumpCfg.load(kdump)
 
-        try:
-            dev_meta = self.config_db.get_table('DEVICE_METADATA')
-            if 'localhost' in dev_meta:
-                if 'hostname' in dev_meta['localhost']:
-                    self.hostname_cache = dev_meta['localhost']['hostname']
-        except Exception as e:
-            pass
-        
+        dev_meta = self.config_db.get_table('DEVICE_METADATA')
+        if 'localhost' in dev_meta:
+            if 'hostname' in dev_meta['localhost']:
+                self.hostname_cache = dev_meta['localhost']['hostname']
+
         # Update AAA with the hostname
         self.aaacfg.hostname_update(self.hostname_cache)
 
@@ -1097,39 +1209,37 @@ class HostConfigDaemon:
         systemctl_cmd = "sudo systemctl is-system-running --wait --quiet"
         subprocess.call(systemctl_cmd, shell=True)
 
-    def subscribe(self, table, callback, pri):
-        try:
-            if table not in self.callbacks:
-                self.callbacks[table] = []
-                subscriber = SubscriberStateTable(self.dbconn, table, TableConsumable.DEFAULT_POP_BATCH_SIZE, pri)
-                self.selector.addSelectable(subscriber) # Add to the Selector
-                self.subscriber_map[subscriber.getFd()] = (subscriber, table) # Maintain a mapping b/w subscriber & fd
-
-            self.callbacks[table].append(callback)
-        except Exception as err:
-            syslog.syslog(syslog.LOG_ERR, "Subscribe to table {} failed with error {}".format(table, err))
-
     def register_callbacks(self):
-        self.subscribe('KDUMP', lambda table, key, op, data: self.kdump_handler(key, op, data), HOSTCFGD_MAX_PRI)
+
+        def make_callback(func):
+            def callback(table, key, data):
+                if data is None:
+                    op = "DEL"
+                else:
+                    op = "SET"
+                return func(key, op, data)
+            return callback
+
+        self.config_db.subscribe('KDUMP', make_callback(self.kdump_handler))
         # Handle FEATURE updates before other tables
-        self.subscribe('FEATURE', lambda table, key, op, data: self.feature_handler.handle(key, op, data), HOSTCFGD_MAX_PRI-1)
+        self.config_db.subscribe('FEATURE', make_callback(self.feature_handler.handler))
         # Handle AAA, TACACS and RADIUS related tables
-        self.subscribe('AAA', lambda table, key, op, data: self.aaa_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('TACPLUS', lambda table, key, op, data: self.tacacs_global_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('TACPLUS_SERVER', lambda table, key, op, data: self.tacacs_server_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('RADIUS', lambda table, key, op, data: self.radius_global_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
-        self.subscribe('RADIUS_SERVER', lambda table, key, op, data: self.radius_server_handler(key, op, data), HOSTCFGD_MAX_PRI-2)
+        self.config_db.subscribe('AAA', make_callback(self.aaa_handler))
+        self.config_db.subscribe('TACPLUS', make_callback(self.tacacs_global_handler))
+        self.config_db.subscribe('TACPLUS_SERVER', make_callback(self.tacacs_server_handler))
+        self.config_db.subscribe('RADIUS', make_callback(self.radius_global_handler))
+        self.config_db.subscribe('RADIUS_SERVER', make_callback(self.radius_server_handler))
         # Handle IPTables configuration
-        self.subscribe('LOOPBACK_INTERFACE', lambda table, key, op, data: self.lpbk_handler(key, op, data), HOSTCFGD_MAX_PRI-3)
+        self.config_db.subscribe('LOOPBACK_INTERFACE', make_callback(self.lpbk_handler))
         # Handle NTP & NTP_SERVER updates
-        self.subscribe('NTP', lambda table, key, op, data: self.ntp_global_handler(key, op, data), HOSTCFGD_MAX_PRI-4)
-        self.subscribe('NTP_SERVER', lambda table, key, op, data: self.ntp_server_handler(key, op, data), HOSTCFGD_MAX_PRI-4)
+        self.config_db.subscribe('NTP', make_callback(self.ntp_global_handler))
+        self.config_db.subscribe('NTP_SERVER', make_callback(self.ntp_server_handler))
         # Handle updates to src intf changes in radius
-        self.subscribe('MGMT_INTERFACE', lambda table, key, op, data: self.mgmt_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('VLAN_INTERFACE', lambda table, key, op, data: self.vlan_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('VLAN_SUB_INTERFACE', lambda table, key, op, data: self.vlan_sub_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('PORTCHANNEL_INTERFACE', lambda table, key, op, data: self.portchannel_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
-        self.subscribe('INTERFACE', lambda table, key, op, data: self.phy_intf_handler(key, op, data), HOSTCFGD_MAX_PRI-5)
+        self.config_db.subscribe('MGMT_INTERFACE', make_callback(self.mgmt_intf_handler))
+        self.config_db.subscribe('VLAN_INTERFACE', make_callback(self.vlan_intf_handler))
+        self.config_db.subscribe('VLAN_SUB_INTERFACE', make_callback(self.vlan_sub_intf_handler))
+        self.config_db.subscribe('PORTCHANNEL_INTERFACE', make_callback(self.portchannel_intf_handler))
+        self.config_db.subscribe('INTERFACE', make_callback(self.phy_intf_handler))
         
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
@@ -1138,27 +1248,7 @@ class HostConfigDaemon:
                       "systemctl has finished initialization -- proceeding ...")
 
     def start(self):
-        while True:
-            state, selectable_ = self.selector.select(DEFAULT_SELECT_TIMEOUT)
-            if state == self.selector.TIMEOUT:
-                continue
-            elif state == self.selector.ERROR:
-                syslog.syslog(syslog.LOG_ERR,
-                        "error returned by select")
-                continue
-
-            fd = selectable_.getFd()
-            # Get the Corresponding subscriber & table
-            subscriber, table = self.subscriber_map.get(fd, (None, ""))
-            if not subscriber:
-                syslog.syslog(syslog.LOG_ERR,
-                        "No Subscriber object found for fd: {}, subscriber map: {}".format(fd, subscriber_map))
-                continue
-            key, op, fvs = subscriber.pop()
-            # Get the registered callback
-            cbs = self.callbacks.get(table, None)
-            for callback in cbs:
-                callback(table, key, op, dict(fvs))
+        self.config_db.listen(init_data_handler=self.load)
 
 
 def main():
@@ -1167,7 +1257,6 @@ def main():
     signal.signal(signal.SIGHUP, signal_handler)
     daemon = HostConfigDaemon()
     daemon.register_callbacks()
-    daemon.load()
     daemon.start()
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ jobs:
       - template: cleanup.yml
       - ${{ parameters.preSteps }}
       - script: |
-          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox)$"; then
+          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox|marvell-armhf)$"; then
             CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(CACHE_MODE) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(PLATFORM_AZP)"
             BUILD_OPTIONS="$(BUILD_OPTIONS) $CACHE_OPTIONS"
             echo "##vso[task.setvariable variable=BUILD_OPTIONS]$BUILD_OPTIONS"
@@ -43,22 +43,28 @@ jobs:
           [ -n "$SYSTEM_PULLREQUEST_PULLREQUESTID" ] && BRANCH_NAME="$SYSTEM_PULLREQUEST_TARGETBRANCH-$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"
           git checkout -b $BRANCH_NAME
           sudo modprobe overlay
-          pip3 install MarkupSafe==2.0.1 --force-reinstall
           sudo apt-get install -y acl
           sudo bash -c "echo 1 > /proc/sys/vm/compact_memory"
           ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(PLATFORM_AZP) PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
         displayName: 'Make configure'
     postSteps:
-      - script: cp target -r $(Build.ArtifactStagingDirectory)/
+      - script: |
+          mkdir -p $(Build.ArtifactStagingDirectory)/target
+          mv target/* $(Build.ArtifactStagingDirectory)/target/
         displayName: Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
         displayName: "Archive sonic image"
       - publish:  $(Build.ArtifactStagingDirectory)
-        condition: failed()
+        condition: or(failed(), canceled())
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)$(System.JobAttempt)'
         displayName: "Archive failed sonic image"
+      - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        - template: trigger-publish-artifacts-build.yml
+          parameters:
+            artifactName: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
+            publishPrefix: '$(Build.DefinitionName)/$(Build.SourceBranchName)/$(GROUP_NAME)'
       - ${{ parameters.postSteps }}
       - template: cleanup.yml
     jobGroups: ${{ parameters.jobGroups }}
