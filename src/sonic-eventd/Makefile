@@ -50,6 +50,7 @@ eventd-tests: $(TEST_OBJS)
 install:
 	$(MKDIR) -p $(DESTDIR)/usr/sbin
 	$(MV) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
+	$(MV) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(EVENTD_TARGET)
