@@ -139,11 +139,6 @@ elif [ "$install_env" = "sonic" ]; then
             rm -rf $f
         fi
     done
-
-    demo_dev=$(findmnt -n -o SOURCE --target /host)
-
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
 fi
 
 # Create target directory or clean it up if exists
@@ -185,6 +180,9 @@ if [ "$install_env" = "onie" ]; then
         cp /etc/machine.conf $demo_mnt
     fi
 fi
+
+extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
 
 # Update Bootloader Menu with installed image
 bootloader_menu_config

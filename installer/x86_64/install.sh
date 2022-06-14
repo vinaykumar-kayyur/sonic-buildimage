@@ -477,9 +477,6 @@ if [ "$install_env" = "onie" ]; then
     # Make filesystem
     mkfs.ext4 -L $demo_volume_label $demo_dev
 
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
-
     # Mount demo filesystem
     demo_mnt=$(${onie_bin} mktemp -d) || {
         echo "Error: Unable to create file system mount point"
@@ -512,19 +509,11 @@ elif [ "$install_env" = "sonic" ]; then
             rm -rf $f
         fi
     done
-
-    demo_dev=$(findmnt -n -o SOURCE --target /host)
-
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
 else
     demo_mnt="build_raw_image_mnt"
     demo_dev=$cur_wd/"%%OUTPUT_RAW_IMAGE%%"
 
     mkfs.ext4 -L $demo_volume_label $demo_dev
-
-    # Don't reserve any blocks just for root
-    tune2fs -m 0 -r 0 $demo_dev
 
     echo "Mounting $demo_dev on $demo_mnt..."
     mkdir $demo_mnt
@@ -677,6 +666,11 @@ else # install_env = "onie"
     fi
 fi
 
+# Add extra linux command line
+extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
+GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX $extra_cmdline_linux"
+
 cat <<EOF >> $grub_cfg
 menuentry '$demo_grub_entry' {
         search --no-floppy --label --set=root $demo_volume_label
@@ -685,13 +679,13 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-5.10.0-8-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-5.10.0-12-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 systemd.unified_cgroup_hierarchy=0 \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-5.10.0-8-2-amd64
+        initrd  /$image_dir/boot/initrd.img-5.10.0-12-2-amd64
 }
 EOF
 
