@@ -49,21 +49,25 @@ variables:
 
 stages:
 - stage: BuildVS
-  pool: sonicbld
+  pool: sonicbld-1ES
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      preSteps:
+        - template: .azure-pipelines/prepare_agent.yml
       jobGroups:
       - name: vs
 
 - stage: Build
-  pool: sonicbld
+  pool: sonicbld-1ES
   dependsOn: []
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      preSteps:
+        - template: .azure-pipelines/prepare_agent.yml
       jobGroups:
       - name: broadcom
         variables:

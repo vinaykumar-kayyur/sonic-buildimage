@@ -1,0 +1,41 @@
+steps:
+  - script: |
+      set -ex
+      # 1ES agent has issues in /etc/apt/sources.list
+      . /etc/os-release
+      sudo sed -i "s#{{mirror}}#http://azure.archive.ubuntu.com/ubuntu#" /etc/apt/sources.list
+      sudo sed -i "s#{{security}}#http://security.ubuntu.com/ubuntu#" /etc/apt/sources.list
+      sudo sed -i "s#{{codename}}#$UBUNTU_CODENAME#" /etc/apt/sources.list
+      sudo apt update
+
+      if [[ $PLATFORM_ARCH == arm* ]];then
+        echo arm agent, skip.
+        exit 0
+      fi
+
+      if [ ! -d /nfs ];then
+        sudo mkdir /nfs
+        sudo mount -t nfs -o sec=sys,vers=4.1 172.16.131.132:/vol1 /nfs
+      fi
+      if [ ! -d /data ];then
+        sudo mkdir /data
+        if [ ! -e /dev/disk/azure/scsi1/lun0 ];then
+          echo Additional disk not found.
+          lsblk
+          exit 1
+        fi
+        disk=$(realpath /dev/disk/azure/scsi1/lun0)
+        sudo sgdisk -n 0:0:0 -t 0:8300 -c 0:data $disk
+        sudo mkfs.ext4 -F ${disk}1 || true
+        sudo mount ${disk}1 /data
+      fi
+      if ! docker info | grep -i root | grep data;then
+        sudo systemctl stop docker
+        sudo sed -i 's#--data-root /mnt/docker#--data-root /data/docker#' /lib/systemd/system/docker.service
+        sudo systemctl daemon-reload
+        sudo systemctl start docker
+      fi
+      df -h
+      lsblk
+      sudo setfacl -R -b /mnt
+    displayName: 'prepare 1ES agent'
