@@ -57,6 +57,24 @@ Note:\n\
 
 bool term_receive = false;
 
+template <typename Map>
+string
+t_map_to_str(const Map &m)
+{
+    stringstream _ss;
+    string sep;
+
+    _ss << "{";
+    for (const auto elem: m) {
+        _ss << sep << "{" << elem.first << "," << elem.second << "}";
+        if (sep.empty()) {
+            sep = ", ";
+        }   
+    }
+    _ss << "}";
+    return _ss.str();
+}
+
 void
 do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt=0, int pause=0)
 {
@@ -91,8 +109,8 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
 
         total_missed += missed_cnt;
 
-        evt[key] = map_to_str(params);
-        (*fp) << map_to_str(evt) << "\n";
+        evt[key] = t_map_to_str(params);
+        (*fp) << t_map_to_str(evt) << "\n";
         fp->flush();
         
         if ((++index % PRINT_CHUNK_SZ) == 0) {
@@ -117,7 +135,6 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
 
 
 #if 0
-test code 
 void
 parse_file(const string infile)
 {
@@ -143,7 +160,6 @@ parse_file(const string infile)
     }
 }
 #endif
-
 
 int
 do_send(const string infile, int cnt, int pause)
@@ -196,7 +212,7 @@ do_send(const string infile, int cnt, int pause)
 #if 0
     cout << "Events to send\n";
     for(lst_t::const_iterator itc=lst.begin(); itc != lst.end(); ++itc) {
-        cout << "tag:" << itc->tag << " params:" << map_to_str(itc->params) << "\n";
+        cout << "tag:" << itc->tag << " params:" << t_map_to_str(itc->params) << "\n";
     }
     cout << "Events END\n";
 #endif
@@ -327,7 +343,6 @@ int main(int argc, char **argv)
     else {
         ASSERT(false, "Elect -s for send or -r receive or both; Bailing out with no action\n");
     }
-
 
     printf("--------- END: Good run -----------------\n");
     return 0;
