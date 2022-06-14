@@ -35,8 +35,8 @@ module sonic-lossless-traffic-pattern {
 
                 leaf mtu {
                     type uint32 {
-                        range 64..10240 {
-                            error-message "Invaild MTU which should be in [64, 10240].";
+                        range 1..9216 {
+                            error-message "Invaild MTU which should be in [1, 9216].";
                         }
                     }
                     mandatory true;

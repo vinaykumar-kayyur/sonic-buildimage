@@ -44,7 +44,7 @@
                 "LOSSLESS_TRAFFIC_PATTERN_LIST": [
                     {
                         "name": "AZURE",
-                        "mtu": "63",
+                        "mtu": "0",
                         "small_packet_percentage": "100"
                     }
                 ]
@@ -57,7 +57,7 @@
                 "LOSSLESS_TRAFFIC_PATTERN_LIST": [
                     {
                         "name": "AZURE",
-                        "mtu": "10241",
+                        "mtu": "9217",
                         "small_packet_percentage": "100"
                     }
                 ]
