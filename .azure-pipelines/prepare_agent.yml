@@ -17,7 +17,7 @@ steps:
 
       if [ ! -d /nfs ];then
         sudo mkdir /nfs
-        sudo mount -t nfs -o sec=sys,vers=4.1 172.16.131.132:/vol1 /nfs
+        sudo mount -t nfs -o sec=sys,vers=4.1 10.0.5.4:/jenkins-vol-1 /nfs
       fi
       if [ ! -d /data ];then
         sudo mkdir /data
