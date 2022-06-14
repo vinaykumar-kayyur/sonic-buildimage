@@ -164,7 +164,24 @@ capture_service::do_capture()
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 
-    /* Check read events against provided cache until as many events are read.*/
+    /*
+     * Check read events against provided cache until as many events are read.
+     * to avoid sending duplicates.
+     * After starting cache service, the caller drains his local cache, which
+     * could potentially return a new event, that both caller & cache service reads.
+     * 
+     * The cache service connects but defers any reading until caller provides
+     * the startup cache. But all events that arrived since connect, though not read
+     * will be held by ZMQ in its local cache. 
+     *
+     * When cache service starts reading, check against the initial stock for duplicates.
+     * m_pre_exist_id caches the last seq number in initial stock for each runtime id.
+     * So only allow sequence number greater than cached number.
+     *
+     * Theoretically all the events provided via initial stock could be duplicates.
+     * Hence until as many events as in initial stock or until the cached id map
+     * is empty, do this check.
+     */
     init_cnt = (int)m_events.size();
     while((m_ctrl == START_CAPTURE) && !m_pre_exist_id.empty() && (init_cnt > 0)) {
 
