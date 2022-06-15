@@ -115,7 +115,7 @@
     },
     "PORT_QOS_MAP": {
         "global": {
-            "dscp_to_tc_map"  : "AZURE"
+            "dscp_to_tc_map"  : "[DSCP_TO_TC_MAP|AZURE]"
         },
         "Ethernet0": {
             "dscp_to_tc_map"  : "AZURE",
