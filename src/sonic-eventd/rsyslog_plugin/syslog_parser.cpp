@@ -1,12 +1,7 @@
 #include <iostream>
-#include <ios>
-#include <fstream>
-#include <regex>
 #include "syslog_parser.h"
 #include "common/logger.h"
 
-
-using namespace std;
 /**
  * Parses syslog message and returns structured event
  *

@@ -2,13 +2,12 @@
 #define RSYSLOG_PLUGIN_H
 
 #include <string>
-#include <fstream>
 #include "syslog_parser.h"
-#include "common/logger.h"
 #include "common/events.h"
+#include "common/logger.h"
 
 using namespace std;
-using json = nlohmann::json;
+using namespace swss;
 
 /**
  * Rsyslog Plugin will utilize an instance of a syslog parser to read syslog messages from rsyslog.d and will continuously read from stdin

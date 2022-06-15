@@ -4,11 +4,8 @@
 #include <fstream>
 #include <regex>
 #include "rsyslog_plugin.h"
-#include "common/logger.h"
 #include "common/json.hpp"
 
-using namespace std;
-using namespace swss;
 using json = nlohmann::json;
 
 bool RsyslogPlugin::onMessage(string msg) {

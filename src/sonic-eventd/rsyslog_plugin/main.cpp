@@ -1,9 +1,6 @@
 #include <iostream>
 #include <unistd.h>
 #include "rsyslog_plugin.h"
-#include "syslog_parser.h"
-
-using namespace std;
 
 void showUsage() {
     cout << "Usage for rsyslog_plugin: \n" << "options\n"
