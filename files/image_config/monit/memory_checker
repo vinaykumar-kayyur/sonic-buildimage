@@ -106,15 +106,15 @@ def get_running_container_names():
         running_container_names: A list indicates names of running containers.
     """
     running_container_names = []
-    docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-    container_obj = docker_client.containers
     try:
+        docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+        container_obj = docker_client.containers
         container_list = container_obj.list(filters={"status": "running"})
         for container in container_list:
             running_container_names.append(container.name)
-    except docker.errors.APIError as err:
+    except (docker.errors.APIError, docker.erros.DockerException) as err:
         syslog.syslog(syslog.LOG_ERR,
-                      "Failed to retrieve the running container list from docker daemon! Error: '{}'"
+                      "Failed to retrieve the running container list from docker daemon! Error message is: '{}'"
                       .format(err))
         sys.exit(5)
 
