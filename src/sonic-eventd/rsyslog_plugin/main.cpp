@@ -6,10 +6,10 @@
 using namespace std;
 
 void showUsage() {
-    cerr << "Usage for rsyslog_plugin: " << " <option(s)> SOURCES\n"
-        << "Options:\n"
-        << "\t-r,required,type=string\t\tPath to regex file"
-        << "\t-m,required,type=string\t\tYANG module name of source generating syslog message"
+    cout << "Usage for rsyslog_plugin: \n" << "options\n"
+        << "\t-r,required,type=string\t\tPath to regex file\n"
+        << "\t-m,required,type=string\t\tYANG module name of source generating syslog message\n"
+        << "\t-h                     \t\tHelp"
         << endl;
 }
 
@@ -18,18 +18,16 @@ int main(int argc, char** argv) {
     string module_name;
     int option_val;
 
-    while((option_val = getopt(argc, argv, "r:m:")) != -1) {
+    while((option_val = getopt(argc, argv, "r:m:h")) != -1) {
         switch(option_val) {
             case 'r':
-                if(optarg != NULL) {
-                    regex_path = optarg;
-                }
+                regex_path = optarg;
                 break;
             case 'm':
-                if(optarg != NULL) {
-                    module_name = optarg;
-                }
+                module_name = optarg;
                 break;
+            case 'h':
+            case '?':
             default:
                 showUsage();
                 return 1;
@@ -37,12 +35,15 @@ int main(int argc, char** argv) {
     }
 
     if(regex_path.empty() || module_name.empty()) { // Missing required rc path
-        showUsage();
+        cerr << "Error: Missing regex_path and module_name." << endl;
         return 1;
     }
     
-    SyslogParser* parser = new SyslogParser({}, json::array());
-    RsyslogPlugin* plugin = new RsyslogPlugin(parser, module_name, regex_path);
+    RsyslogPlugin* plugin = new RsyslogPlugin(module_name, regex_path);
+    if(!plugin->onInit()) {
+        SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized.\n");
+	return 1;
+    }
 
     plugin->run();
     return 0;

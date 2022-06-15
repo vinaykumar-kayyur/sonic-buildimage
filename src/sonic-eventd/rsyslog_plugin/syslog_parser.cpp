@@ -16,34 +16,23 @@ using namespace std;
 */
 
 bool SyslogParser::parseMessage(string message, string& event_tag, event_params_t& param_map) {
-    for(long unsigned int i = 0; i < regex_list.size(); i++) {
+    for(long unsigned int i = 0; i < m_regex_list.size(); i++) {
         smatch match_results;
-	regex_search(message, match_results, expressions[i]);
-	vector<string> groups;
-	vector<string> params;
-	try {
-	    event_tag = regex_list[i]["tag"];
-	    vector<string> p = regex_list[i]["params"];
-	    params = p;
-	} catch (exception& exception) {
-	    SWSS_LOG_ERROR("Invalid regex list, throws exception: %s\n", exception.what());
-	    return false;
+	vector<string> params = m_regex_list[i]["params"];
+	if(!regex_search(message, match_results, m_expressions[i]) || params.size() != match_results.size() - 1) {
+            continue;
 	}
-	// first match in groups is entire message
-	for(long unsigned int j = 1; j < match_results.size(); j++) {
-	    groups.push_back(match_results.str(j));
-	}
-	if (groups.size() == params.size()) { // found matching regex
-            transform(params.begin(), params.end(), groups.begin(), inserter(param_map, param_map.end()), [](string a, string b) {
-	        return make_pair(a,b);
-	    });
-	    return true;
-	}
+	// found matching regex
+	event_tag = m_regex_list[i]["tag"];
+        transform(params.begin(), params.end(), match_results.begin() + 1, inserter(param_map, param_map.end()), [](string a, string b) {
+	    return make_pair(a,b);
+	});
+	return true;
     }
     return false;
 }
 
-SyslogParser::SyslogParser(vector<regex> regex_expressions, json list) {
-    expressions = regex_expressions;
-    regex_list = list;
+SyslogParser::SyslogParser(vector<regex> expressions, json regex_list) {
+    m_expressions = expressions;
+    m_regex_list = regex_list;
 }

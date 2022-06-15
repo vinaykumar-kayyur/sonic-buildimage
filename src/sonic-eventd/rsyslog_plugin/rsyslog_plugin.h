@@ -18,25 +18,17 @@ using json = nlohmann::json;
 
 class RsyslogPlugin {
 public:
-    RsyslogPlugin(SyslogParser* syslog_parser, string mod_name, string path);
-    void onMessage(string msg);
+    bool onInit();
+    bool onMessage(string msg);
     void run();
-    bool createRegexList();
-    event_handle_t fetchHandle() {
-        return event_handle;
-    }
-    SyslogParser* parser;
+    RsyslogPlugin(string module_name, string regex_path);
 private:
-    string regex_path;
-    string module_name;
-    event_handle_t event_handle;
+    SyslogParser* m_parser;
+    event_handle_t m_event_handle;
+    string m_regex_path;
+    string m_module_name;
 
-    bool onInit() {
-        event_handle = events_init_publisher(module_name);
-        int return_code = createRegexList();
-	return (event_handle != NULL && return_code == 0); 
-    }
-
+    bool createRegexList();
 };
 
 #endif
