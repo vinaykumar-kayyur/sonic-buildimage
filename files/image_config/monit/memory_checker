@@ -25,6 +25,8 @@ import sys
 import syslog
 import re
 
+import docker
+
 
 def get_command_result(command):
     """Executes the command and return the resulting output.
