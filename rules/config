@@ -231,4 +231,4 @@ ENABLE_FIPS_FEATURE ?= y
 ENABLE_FIPS ?= n
 
 # SONIC_SLAVE_DOCKER_DRIVER - set the sonic slave docker storage driver
-SONIC_SLAVE_DOCKER_DRIVER ?= overlay2
+SONIC_SLAVE_DOCKER_DRIVER ?= vfs
