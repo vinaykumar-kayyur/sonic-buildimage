@@ -34,7 +34,7 @@ module sonic-default-lossless-buffer-parameter {
                 }
 
                 leaf default_dynamic_th {
-                    type int32 {
+                    type int8 {
                         range -8..7 {
                             error-message "Invalid default dynamic_th which should be a number in the range [-8, 7].";
                         }
@@ -44,7 +44,7 @@ module sonic-default-lossless-buffer-parameter {
                 }
 
                 leaf over_subscribe_ratio {
-                    type uint32;
+                    type uint16;
                     description "The over subscribe ratio of shared headroom pool";
                 }
             }

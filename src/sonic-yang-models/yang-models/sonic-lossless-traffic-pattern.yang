@@ -34,7 +34,7 @@ module sonic-lossless-traffic-pattern {
                 }
 
                 leaf mtu {
-                    type uint32 {
+                    type uint16 {
                         range 1..9216 {
                             error-message "Invaild MTU which should be in [1, 9216].";
                         }
@@ -44,7 +44,7 @@ module sonic-lossless-traffic-pattern {
                 }
 
                 leaf small_packet_percentage {
-                    type uint32 {
+                    type uint8 {
                         range 0..100 {
                             error-message "Invalid small packets percentage which should be in [0, 100].";
                         }
