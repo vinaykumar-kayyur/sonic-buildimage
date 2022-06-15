@@ -72,6 +72,12 @@ TEST(rsyslog_plugin, onInit_invalidJS0N) {
     delete plugin;
 }
 
+TEST(rsyslog_plugin, onInit_emptyJSON) {
+    auto plugin = createPlugin("./test_regex_6.rc.json");
+    EXPECT_EQ(false, plugin->onInit());
+    delete plugin;
+}
+
 TEST(rsyslog_plugin, onInit_missingRegex) {
     auto plugin = createPlugin("./test_regex_3.rc.json");
     EXPECT_EQ(false, plugin->onInit());
