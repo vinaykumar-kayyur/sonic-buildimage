@@ -111,7 +111,10 @@ def get_running_container_names():
         for container in container_list:
             running_container_names.append(container.name)
     except docker.errors.APIError as err:
-        print("Failed to retrieve the running container list. Error: '{}'".format(err))
+        syslog.syslog(syslog.LOG_ERR,
+                      "Failed to retrieve the running container list from docker daemon! Error: '{}'"
+                      .format(err))
+        sys.exit(5)
 
     return running_container_names
 
@@ -131,7 +134,8 @@ def main():
         check_memory_usage(args.container_name, args.threshold_value)
     else:
         syslog.syslog(syslog.LOG_INFO,
-                      "[memory_checker] Exits without checking memory usage since contain '{}' is not running!".format(args.container_name))
+                      "[memory_checker] Exits without checking memory usage since container '{}' is not running!"
+                      .format(args.container_name))
 
 
 if __name__ == "__main__":
