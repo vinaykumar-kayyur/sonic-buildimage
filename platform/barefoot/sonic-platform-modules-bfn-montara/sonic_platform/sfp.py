@@ -3,6 +3,10 @@
 try:
     import os
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
+    from sonic_platform_base.sonic_xcvr.mem_maps.public.cmis import CmisMemMap
+    from sonic_platform_base.sonic_xcvr.codes.public.cmis import CmisCodes
+    from sonic_platform_base.sonic_xcvr.xcvr_eeprom import XcvrEeprom
+    from sonic_platform_base.sonic_xcvr.fields import consts
     from sonic_platform.platform_thrift_client import thrift_try
     from sonic_platform.platform_thrift_client import pltfm_mgr_try
 except ImportError as e:
@@ -96,6 +100,22 @@ class Sfp(SfpOptoeBase):
 
         if not EEPROM_CACHED_API_SUPPORT:
             return super().read_eeprom(offset, num_bytes)
+
+
+        # TODO: remove when memory model is verified before requesting page that may not be supported
+        #
+        # If memory model is flat - the requested page can only be 00_LOWER or 00_UPPER,
+        # SONiC Cmis implementation, CmisCdbApi constructor reads consts.CDB_SUPPORT field
+        # which is located on PAGE1 without verifying whether memory supports it or not.
+        if offset >= EEPROM_PAGE_SIZE * 2:
+            id_byte_raw = self.read_eeprom(0, 1)
+            if id_byte_raw is None:
+                return None
+            id_byte = id_byte_raw[0]
+            if id_byte == 0x18 or id_byte == 0x19 or id_byte == 0x1e:
+                eeprom_wrapper = XcvrEeprom(self.read_eeprom, None, CmisMemMap(CmisCodes))
+                if eeprom_wrapper.read(consts.FLAT_MEM_FIELD) is True:
+                    return bytearray(num_bytes)
 
         def cached_num_bytes_get(page, offset, num_bytes):
             def qsfp_cached_num_bytes_get(client):
