@@ -37,7 +37,8 @@ resources:
     ref: master
 
 variables:
-- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
+- name: VERSION_CONTROL_OPTIONS
+  value: all
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - template: .azure-pipelines/template-variables.yml
 - ${{ else }}:
