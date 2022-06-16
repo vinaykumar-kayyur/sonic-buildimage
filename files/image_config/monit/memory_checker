@@ -88,7 +88,7 @@ def check_memory_usage(container_name, threshold_value):
             print("[{}]: Memory usage ({} Bytes) is larger than the threshold ({} Bytes)!"
                   .format(container_name, mem_usage_bytes, threshold_value))
             syslog.syslog(syslog.LOG_INFO, "[{}]: Memory usage ({} Bytes) is larger than the threshold ({} Bytes)!"
-                  .format(container_name, mem_usage_bytes, threshold_value))
+                          .format(container_name, mem_usage_bytes, threshold_value))
             sys.exit(3)
     else:
         syslog.syslog(syslog.LOG_ERR, "[memory_checker] Failed to retrieve memory value from '{}'"
@@ -105,13 +105,10 @@ def get_running_container_names():
     Returns:
         running_container_names: A list indicates names of running containers.
     """
-    running_container_names = []
     try:
         docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-        container_obj = docker_client.containers
-        container_list = container_obj.list(filters={"status": "running"})
-        for container in container_list:
-            running_container_names.append(container.name)
+        running_container_list = docker_client.containers.list(filters={"status": "running"})
+        running_container_names = [ container.name for container in running_container_list ]
     except (docker.errors.APIError, docker.errors.DockerException) as err:
         syslog.syslog(syslog.LOG_ERR,
                       "Failed to retrieve the running container list from docker daemon! Error message is: '{}'"
