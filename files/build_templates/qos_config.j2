@@ -222,7 +222,7 @@
 {% else %}
         "global": {
             "dscp_to_tc_map"  : "AZURE"
-        },
+        }{% if PORT_ACTIVE %},{% endif %}
 {% endif %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}": {
