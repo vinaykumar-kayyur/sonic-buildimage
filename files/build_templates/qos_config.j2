@@ -219,7 +219,7 @@
 {% else %}
         "global": {
             "dscp_to_tc_map"  : "[DSCP_TO_TC_MAP|AZURE]"
-        },
+        }{% if PORT_ACTIVE %},{% endif %}
 {% endif %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}": {
