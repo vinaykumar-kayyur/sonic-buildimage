@@ -12,7 +12,7 @@ RUN apt-get update && \
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 RUN mkdir prebuilt-python-wheels
 COPY prebuilt-python-wheels/* prebuilt-python-wheels/
-RUN pip3 install prebuilt-python-wheels/grpcio*cp37*.whl
+RUN pip3 install prebuilt-python-wheels/grpcio*cp3*.whl
 RUN rm -rf prebuilt-python-wheels
 {%- endif %}
 

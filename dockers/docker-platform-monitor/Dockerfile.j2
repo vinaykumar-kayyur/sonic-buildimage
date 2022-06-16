@@ -36,8 +36,8 @@ RUN pip2 install 'setuptools==40.8.0'
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 RUN mkdir prebuilt-python-wheels
 COPY prebuilt-python-wheels/* prebuilt-python-wheels/
-RUN pip2 install prebuilt-python-wheels/lxml*cp27*.whl
-RUN pip3 install prebuilt-python-wheels/lxml*cp37*.whl
+RUN pip2 install prebuilt-python-wheels/lxml*cp2*.whl
+RUN pip3 install prebuilt-python-wheels/lxml*cp3*.whl
 RUN rm -rf prebuilt-python-wheels
 {%- endif %}
 

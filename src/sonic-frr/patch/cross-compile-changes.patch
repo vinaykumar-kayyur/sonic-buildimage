@@ -46,25 +46,36 @@ Index: frr/debian/rules
 ===================================================================
 --- frr.orig/debian/rules
 +++ frr/debian/rules
-@@ -36,7 +36,7 @@ export PYTHON=python3
+@@ -29,14 +29,14 @@ else
+   CONF_SYSTEMD=--enable-systemd=no
+ endif
+ 
+-export PYTHON=python3
++export PYTHON=/python_virtualenv/env3/bin/python3
+ 
+ %:
+ 	dh $@ --with=$(DH_WITH_SYSTEMD)autoreconf --parallel
  
  override_dh_auto_configure:
  	$(shell dpkg-buildflags --export=sh); \
 -	dh_auto_configure -- \
-+	mkdir -p build && dh_auto_configure --builddirectory=build -- \
++	rm -rf build && mkdir -p build && dh_auto_configure --builddirectory=build -- \
  		--enable-exampledir=/usr/share/doc/frr/examples/ \
  		--localstatedir=/var/run/frr \
  		--sbindir=/usr/lib/frr \
-@@ -68,7 +68,7 @@ override_dh_auto_configure:
+@@ -68,16 +68,16 @@ override_dh_auto_configure:
  		# end
  
  override_dh_auto_install:
 -	dh_auto_install
 +	cd build && dh_auto_install
  
- 	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/frr-reload.py
- 	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/generate_support_bundle.py
-@@ -77,7 +77,7 @@ override_dh_auto_install:
+-	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/frr-reload.py
+-	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/generate_support_bundle.py
++	sed -e '1c #!/python_virtualenv/env3/bin/python3' -i debian/tmp/usr/lib/frr/frr-reload.py
++	sed -e '1c #!/python_virtualenv/env3/bin/python3' -i debian/tmp/usr/lib/frr/generate_support_bundle.py
+ 
+ # let dh_systemd_* and dh_installinit do their thing automatically
  ifeq ($(filter pkg.frr.nosystemd,$(DEB_BUILD_PROFILES)),)
  	cp tools/frr.service debian/frr.service
  endif

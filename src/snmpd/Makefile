@@ -59,7 +59,11 @@ endif
 ifneq ($(CROSS_BUILD_ENVIRON), y)
 	dpkg-buildpackage -rfakeroot -b -d -us -uc -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 else
+ifeq (,$(findstring 5.9,$(SNMPD_VERSION)))
 	patch -p1 < ../patch-$(SNMPD_VERSION)/cross-compile-changes.patch
+else
+	find . -type f -name Makefile.PL|xargs sed -i "0, /WriteMakefile(/s//sub WriteMakefile_cross { push(@_, 'CC' => '$$CROSS_CC'); push(@_, 'LD' => '$$CROSS_CC'); WriteMakefile(@_); }\n\nWriteMakefile_cross(/"
+endif
 	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L$$CROSS_PKGS_LIB_PATH" dpkg-buildpackage -rfakeroot -b -d -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 endif
 	popd
