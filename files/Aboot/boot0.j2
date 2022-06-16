@@ -658,17 +658,22 @@ write_default_cmdline() {
     cmdline_clear
 
     if $in_aboot; then
-        # generate the default kernel parameters for the platform
+        # Generate the default kernel parameters for the platform
         cat /etc/cmdline | sed "/^\(${bootconfigvars// /\|}\|crashkernel\|loglevel\|ignore_loglevel\)\(\$\|=\)/d;/^\$/d" | cmdline_append
-    elif grep -q "$delimiter" /proc/cmdline; then
-        # we are on a recent sonic image using delimiter. extracting the part of the
+    elif grep -q "$delimiter" /proc/cmdline && ! grep -Eq "log_buf_len=.* $delimiter" /proc/cmdline; then
+        # We are on a recent sonic image using delimiter. extracting the part of the
         # cmdline coming from aboot is trivial.
+        # The 2nd part of the condition ensures that the append bug is not present.
+        # When it is it should go through the last case of this if/else block to
+        # regenerate the aboot cmdline
         cat /proc/cmdline | sed -E "s/^(.*) $delimiter .*$/\1/" | tr ' ' '\n' | cmdline_append
-    else
-        # we are either on SONiC or EOS and the commandline doesn't have a delimiter
-        # for the Aboot part. Take an educated guess at a right delimiter.
-        # Subject to breakage if EOS or SONiC cmdline change.
+    elif grep -q "SWI=" /proc/cmdline; then
+        # We are in EOS and the cmdline doesn't have a delimiter for the aboot part
         cat /proc/cmdline | sed -E 's/^(.*) rw .*$/\1/' | tr ' ' '\n' | cmdline_append
+    else
+        # We are in SONiC and the cmdline doesn't have a delimiter for the aboot part.
+        # sid= should most of the time be the last parameter provided by Aboot
+        cat /proc/cmdline | sed -E 's/^(.* sid=[^ ]+).*$/\1/' | tr ' ' '\n' | cmdline_append
     fi
 
     cmdline_add "$delimiter"
