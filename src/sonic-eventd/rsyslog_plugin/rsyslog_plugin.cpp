@@ -54,6 +54,10 @@ bool RsyslogPlugin::createRegexList() {
         }
         m_parser->m_expressions.push_back(expression);
     }
+    if(m_parser->m_expressions.empty()) {
+        SWSS_LOG_ERROR("Empty list of regex expressions.\n");
+        return false;
+    }
     regex_file.close();
     return true;
 }
@@ -65,9 +69,7 @@ bool RsyslogPlugin::createRegexList() {
         if(line.empty()) {
             continue;
         }
-        if(!onMessage(line)) {
-            SWSS_LOG_DEBUG("RsyslogPlugin was not able to parse or publish the log message: %s\n", line.c_str());
-	}
+        onMessage(line);
     }
 }
 
