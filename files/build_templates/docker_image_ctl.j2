@@ -537,6 +537,7 @@ start() {
         --env "NAMESPACE_COUNT"=$NUM_ASIC \
         --name=$DOCKERNAME \
 {%- if docker_container_name == "gbsyncd" %}
+        -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
         "docker-$GBSYNCD_PLATFORM":latest \
 {%- elif docker_image_name is defined %}
         {{docker_image_name}}:latest \
