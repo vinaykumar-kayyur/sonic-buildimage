@@ -3,6 +3,7 @@
 #platform init script for Dell S6100
 
 if [[ "$1" == "init" ]]; then
+    depmod -a
     case "$(cat /proc/cmdline)" in
         *SONIC_BOOT_TYPE=warm*)
             TYPE='warm'
@@ -23,6 +24,9 @@ if [[ "$1" == "init" ]]; then
     if [[ "$TYPE" == "cold" ]]; then
         /usr/local/bin/iom_power_on.sh
     fi
+
+    systemctl enable s6100-lpc-monitor.service
+    systemctl start --no-block s6100-lpc-monitor.service
 
     pericom="/sys/bus/pci/devices/0000:08:00.0"
     modprobe i2c-dev
