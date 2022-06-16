@@ -37,7 +37,7 @@ resources:
     ref: master
 
 variables:
-- name: VERSION_CONTROL_OPTIONS
+- name: SONIC_VERSION_CONTROL_COMPONENTS
   value: all
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - template: .azure-pipelines/template-variables.yml
