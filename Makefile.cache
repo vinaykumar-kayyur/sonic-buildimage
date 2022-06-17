@@ -561,7 +561,8 @@ ALL_DEP_FILES_LIST += $(foreach pkg,$(2), $($(filter none,$($(1)_CACHE_MODE)), \
 $(addsuffix .$(3),$(addprefix $(2)/, $(1))) : $(2)/%.$(3) : \
 	$(2)/%.flags $$$$($$$$*_DEP_FILES) $$$$(if $$$$($$$$*_SMDEP_FILES), $(2)/%.smdep)
 	@$$(eval $$*_DEP_FILES_MODIFIED := $$? )
-	@$$(file >$$@.tmp,$$($$*_DEP_FILES))
+	@$$(eval $$*_DEP_VERSION_FILES := $$(wildcard files/build/versions/dockers/$$(patsubst %-$$(DBG_IMAGE_MARK),%,$$*)/*) $$(wildcard files/build/versions/default/*))
+	@$$(file >$$@.tmp,$$($$*_DEP_FILES) $$($$*_DEP_VERSION_FILES))
 	@cat $$@.tmp |xargs git hash-object >$$@.sha.tmp
 	@if ! cmp -s $$@.sha.tmp $$@.sha; then cp $$@.tmp $$@; cp $$@.sha.tmp $$@.sha; fi
 	@rm -f $$@.tmp $$@.sha.tmp
