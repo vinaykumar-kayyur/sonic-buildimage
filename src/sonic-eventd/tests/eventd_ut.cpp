@@ -172,6 +172,8 @@ void run_cap(void *zctx, bool &term, string &read_source,
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
 
     while(!term) {
+        int rc;
+#if 0
         /*
          * Don't call zmq_message_read as that is not thread safe
          * Subscriber thread is already calling.
@@ -179,10 +181,21 @@ void run_cap(void *zctx, bool &term, string &read_source,
         zmq_msg_t source, data;
         zmq_msg_init(&source);
         zmq_msg_init(&data);
-        int rc = zmq_msg_recv(&source, mock_cap, 0);
+        rc = zmq_msg_recv(&source, mock_cap, 0);
         if (rc != -1) {
             rc = zmq_msg_recv(&data, mock_cap, 0);
         }
+#else
+        /*
+         * Intending to make it thread safe.
+         * Fix, if test fails. Else it is already good.
+         */
+        {
+            string source;
+            internal_event_t ev_int;
+            rc = zmq_message_read(mock_cap, 0, source, ev_int);
+        }
+#endif
         if (rc != -1) {
             cnt = ++i;
         }

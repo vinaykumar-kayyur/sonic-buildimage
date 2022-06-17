@@ -1,7 +1,7 @@
 Source: sonic-eventd
 Section: devel
 Priority: optional
-Maintainer: Kelly Yeh <kellyyeh@microsoft.com>
+Maintainer: Renuka Manavalan <remanava@microsoft.com>
 Build-Depends: debhelper (>= 12.0.0), libevent-dev, libboost-thread-dev, libboost-system-dev, libswsscommon-dev
 Standards-Version: 3.9.3
 Homepage: https://github.com/Azure/sonic-buildimage
