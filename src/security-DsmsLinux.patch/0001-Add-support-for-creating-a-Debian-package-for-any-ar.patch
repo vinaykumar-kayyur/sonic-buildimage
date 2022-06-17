@@ -1,0 +1,325 @@
+From 731ed164834f3d5d98dac68d999d8ab7f7f7f698 Mon Sep 17 00:00:00 2001
+From: Saikrishna Arcot <sarcot@microsoft.com>
+Date: Wed, 1 Jun 2022 13:55:08 -0700
+Subject: [PATCH] Add support for creating a Debian package for any arch/OS
+
+Additionally, don't set the RPATH in the binary, and don't strip the
+binary in the Makefile (this will be done during packaging).
+
+Signed-off-by: Saikrishna Arcot <sarcot@microsoft.com>
+---
+ Makefile                                      |  19 +++
+ src/acms/debian/changelog                     | 114 ++++++++++++++++++
+ src/acms/debian/compat                        |   1 +
+ src/acms/debian/control                       |  12 ++
+ src/acms/debian/copyright                     |   8 ++
+ src/acms/debian/rules                         |  29 +++++
+ src/acms/debian/source/format                 |   1 +
+ src/acms/makefile.prj                         |  17 ++-
+ .../src/secretsPayloadTests.cpp               |   3 +-
+ 9 files changed, 194 insertions(+), 10 deletions(-)
+ create mode 100644 Makefile
+ create mode 100644 src/acms/debian/changelog
+ create mode 100644 src/acms/debian/compat
+ create mode 100644 src/acms/debian/control
+ create mode 100644 src/acms/debian/copyright
+ create mode 100755 src/acms/debian/rules
+ create mode 100644 src/acms/debian/source/format
+
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 0000000..2676a0b
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,20 @@
++.ONESHELL:
++SHELL = /bin/bash
++.SHELLFLAGS += -e
++
++MAIN_TARGET = $(ACMS_CLIENT)
++DERIVED_TARGETS = 
++
++$(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
++	pushd src/acms
++
++	# Build source and Debian packages
++	dpkg-buildpackage -rfakeroot -b -us -uc -tc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
++
++	pushd ..
++	# Move the newly-built .deb packages to the destination directory
++	mv $(DERIVED_TARGETS) $* $(DEST)/
++	popd
++	popd
++
++$(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
+diff --git a/src/acms/debian/changelog b/src/acms/debian/changelog
+new file mode 100644
+index 0000000..cf04caa
+--- /dev/null
++++ b/src/acms/debian/changelog
+@@ -0,0 +1,114 @@
++acms-client (5.22) Release; urgency=medium
++
++  * Reduce polling time, commit db0a842a64cbdc7f7172d8564d92a8b583640aac
++
++ -- MAINTAINER <dsmsdev>  Mon, 27 Sep 2021 16:03:09 -0700
++
++acms-client (5.21) Release; urgency=medium
++
++  * Added api-version to dsms URL, commit 0e57dbf54f27db142e7d3de1164a1f6a1c624609
++
++ -- MAINTAINER <dsmsdev>  Fri, 24 Sep 2021 16:03:09 -0700
++
++acms-client (5.20) Release; urgency=medium
++
++  * Added Managed Key support, commit 1fca1943ea341e4a14ca880a341b312d26f0f22b
++  * Added Mariner support (includes disabling partial chain validation)
++
++ -- MAINTAINER <dsmsdev>  Fri, 17 Sep 2021 16:03:09 -0700
++
++acms-client (5.14) Release; urgency=medium
++
++  * Overlake release (new bootstrap process; new SDK), commit 079f39c1243d9625f6c1a5d45bf3cbf47c8e9d04
++
++ -- MAINTAINER <dsmsdev>  Tue, 13 Oct 2020 16:03:09 -0700
++
++acms-client (5.13) Release; urgency=medium
++
++  * Expose DisableCheckChainRevocation, commit 9bd16353b08dc3154d62417ce63dd3bded40d4c3
++
++ -- MAINTAINER <dsmsdev>  Fri, 07 Aug 2020 16:03:09 -0700
++
++acms-client (5.12) Release; urgency=medium
++
++  * Overlake release (gRPC and SDK), commit cf35addcc1dcc9597413e5702605705514c2bc30
++
++ -- MAINTAINER <dsmsdev>  Fri, 24 Jul 2020 16:03:09 -0700
++
++acms-client (5.11) Release; urgency=medium
++
++  * Enabled CRL check and fixed crashes in cert validation, commit 1b5458e0d2ca6af299a385d7955b1c5c89b0f5d7
++
++ -- MAINTAINER <dsmsdev>  Thu, 16 Jul 2020 16:03:09 -0700
++
++acms-client (5.9) Release; urgency=medium
++
++  * Added -PollOnceAndExit verb, commit d098fee07698f11c51b3edf9060bb9914ca809f8
++
++ -- MAINTAINER <dsmsdev>  Mon, 08 Jun 2020 19:43:02 -0700
++
++acms-client (5.8) Release; urgency=medium
++
++  * Update to fix deadlock
++
++ -- MAINTAINER <dsmsdev>  Thu, 20 May 2020 12:00:00 -0800
++
++acms-client (5.7) Release; urgency=medium
++
++  * Update to fix crash in Ubuntu 16.04
++
++ -- MAINTAINER <dsmsdev>  Thu, 13 Feb 2020 12:00:00 -0800
++
++acms-client (5.6) Release; urgency=medium
++
++  * Update Ubuntu xenial/bionic dependencies to include libcurl3/4
++
++ -- MAINTAINER <dsmsdev>  Thu, 19 Dec 2019 12:00:00 -0800
++
++acms-client (5.5) Release; urgency=medium
++
++  * Initial release of Ubuntu 16.04 support, commit 06775dd1a7547d69067fa9448ac01376ce3c9167
++
++ -- MAINTAINER <dsmsdev>  Mon, 16 Dec 2019 11:18:32 -0800
++
++acms-client (5.3) Release; urgency=medium
++
++  * Bug fixes in CA cert distribution work, commit 776f76c600c312e350353729a2fe144143de7cc7
++
++ -- MAINTAINER <dsmsdev>  Thu, 05 Dec 2019 14:00:00 -0800
++
++acms-client (5.1) Release; urgency=medium
++
++  * Misc updates to CA cert distribution work, commit 2d76447f144b15534d8822db1da51083864e618a
++
++ -- MAINTAINER <dsmsdev>  Wed, 20 Nov 2019 01:10:00 -0800
++
++acms-client (5.0) Release; urgency=medium
++
++  * Root cert distribution work, commit a8e7bd6f59e67836b9f6230ab21659690cbfa00b
++
++ -- MAINTAINER <dsmsdev>  Mon, 11 Nov 2019 12:08:00 -0800
++
++acms-client (4.1) Release; urgency=medium
++
++  * Keeping package in sync with minor changes, commit d78d1f98ec6eebcfe0de718fd01234309cc3ab50
++
++ -- MAINTAINER <dsmsdev>  Wed, 02 Oct 2019 11:56:00 -0700
++
++acms-client (4.0) Release; urgency=medium
++
++  * MSCrypt integration and acms_secrets.ini, commit 0547d7a0b462520805329aa99fef9985c90d8294
++
++ -- MAINTAINER <dsmsdev>  Fri, 27 Sep 2019 16:41:00 -0700
++
++acms-client (1.1) Release; urgency=medium
++
++  * Triggering updates for any secret changes, commit 6cf544f5682a1661b96b13b7d66774346d910ee5
++
++ -- MAINTAINER <dsmsdev>  Tue, 25 Jun 2019 16:03:43 -0700
++
++acms-client (1.0) Release; urgency=medium
++
++  * Initial release, commit d4daea5e70b8ba231b980ae7c4541d4fb47331ae
++
++ -- MAINTAINER <dsmsdev>  Thu, 20 Jun 2019 14:40:48 -0700
+diff --git a/src/acms/debian/compat b/src/acms/debian/compat
+new file mode 100644
+index 0000000..48082f7
+--- /dev/null
++++ b/src/acms/debian/compat
+@@ -0,0 +1 @@
++12
+diff --git a/src/acms/debian/control b/src/acms/debian/control
+new file mode 100644
+index 0000000..a50a05c
+--- /dev/null
++++ b/src/acms/debian/control
+@@ -0,0 +1,12 @@
++Source: acms-client
++Priority: optional
++Maintainer: MAINTAINER <dsmsdev>
++Build-Depends: debhelper (>= 12), libbond, libssl-dev, libacl1-dev, libcurl4-dev, libxml2-dev
++Standards-Version: 4.4.1
++Section: net
++
++Package: acms-client 
++Architecture: any
++Depends: ${shlibs:Depends}, ${misc:Depends}
++Description: Azure Credentials Management Service
++ This package provides ACMS client
+diff --git a/src/acms/debian/copyright b/src/acms/debian/copyright
+new file mode 100644
+index 0000000..fce5b44
+--- /dev/null
++++ b/src/acms/debian/copyright
+@@ -0,0 +1,8 @@
++Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
++Upstream-Name: acms-client
++Upstream-Contact: <preferred name and address to reach the upstream project>
++
++Files: *
++Copyright: <years> <put author's name and email here>
++           <years> <likewise for another author>
++License: Closed
+diff --git a/src/acms/debian/rules b/src/acms/debian/rules
+new file mode 100755
+index 0000000..aad1f62
+--- /dev/null
++++ b/src/acms/debian/rules
+@@ -0,0 +1,26 @@
++#!/usr/bin/make -f
++# See debhelper(7) (uncomment to enable)
++# output every command that modifies files on the build system.
++#export DH_VERBOSE = 1
++
++# see FEATURE AREAS in dpkg-buildflags(1)
++# ACMS Makefile appears to ignore CFLAGS/CXXFLAGS/CPPFLAGS set from the
++# environment, so the flags that debhelper specifies will have no impact.
++# Fortunately, the flags that are used appear secure.
++#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
++
++DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
++DEB_HOST_GNU_CPU ?= $(shell dpkg-architecture -qDEB_HOST_GNU_CPU)
++
++%:
++	# Parallel build (even with -j2) appears to have some race condition issues
++	dh $@ --no-parallel
++
++override_dh_auto_build:
++	dh_auto_build -- BUILD_ARCH=$(DEB_HOST_GNU_CPU)
++
++override_dh_auto_install:
++	dh_install bin.$(DEB_HOST_GNU_CPU)/acms /usr/bin/
++	dh_install bin.$(DEB_HOST_GNU_CPU)/libIaaSBootstrapper.so.1.0.0 /usr/lib/$(DEB_HOST_MULTIARCH)/
++
++override_dh_auto_test:
++	# Skip tests
+diff --git a/src/acms/debian/source/format b/src/acms/debian/source/format
+new file mode 100644
+index 0000000..163aaf8
+--- /dev/null
++++ b/src/acms/debian/source/format
+@@ -0,0 +1 @@
++3.0 (quilt)
+diff --git a/src/acms/makefile.prj b/src/acms/makefile.prj
+index ef693e9..aeba2e1 100644
+--- a/src/acms/makefile.prj
++++ b/src/acms/makefile.prj
+@@ -12,7 +12,7 @@ endif
+ PROJ_BIN_DIR=$(ROOT)/bin.$(BUILD_ARCH)
+ OBJ_DIR=obj.$(BUILD_ARCH)
+ 
+-PROJ_LINKER_FLAGS=-Wl,-z,relro,-z,now -Wl,-z,noexecstack -Wl,--no-undefined -Wl,-rpath,'$$ORIGIN' $(INTERNAL_LINKER_FLAGS)
++PROJ_LINKER_FLAGS=-Wl,-z,relro,-z,now -Wl,-z,noexecstack -Wl,--no-undefined $(INTERNAL_LINKER_FLAGS)
+ 
+ PROJ_COMPILER_FLAGS:=-Wl,-z,relro,-z,now -Wl,-z,noexecstack \
+     -Wno-deprecated-declarations -Wconversion -Wempty-body -Wall -Werror \
+@@ -33,6 +33,12 @@ ifeq ($(BUILD_ARCH), aarch64)
+     LD=aarch64-linux-gnu-ld
+     OBJCOPY=aarch64-linux-gnu-objcopy
+     STRIP=aarch64-linux-gnu-strip
++else ifeq ($(BUILD_ARCH), arm)
++    AR=arm-linux-gnueabihf-ar
++    CXX=arm-linux-gnueabihf-g++
++    LD=arm-linux-gnueabihf-ld
++    OBJCOPY=arm-linux-gnueabihf-objcopy
++    STRIP=arm-linux-gnueabihf-strip
+ else ifeq ($(BUILD_ARCH), x86_64)
+     ifdef GENERIC
+         AR=ar
+@@ -126,9 +132,6 @@ $(TARGET_FULL_NAME): $(PROJ_OBJ_FILES) $(INTERNAL_LINKER_LIBS)
+ 	@mkdir -p $(dir $@)
+ 	$(info Linking $@)
+ 	$(CXX) $(PROJ_OBJ_FILES) $(PROJ_LINKER_LIBS) $(PROJ_LINKER_FLAGS) -fPIE -pie -o $@
+-	@$(OBJCOPY) --only-keep-debug $@ $@.dbg
+-	@$(STRIP) --strip-debug --strip-unneeded $@
+-	@$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
+ 	$(CHECK_NOTE_STAMP)
+ 	$(READ_ELF)
+ 
+@@ -158,12 +161,8 @@ $(TARGET_FULL_NAME): $(PROJ_OBJ_FILES) $(INTERNAL_LINKER_LIBS)
+ 	@mkdir -p $(dir $@)
+ 	@mkdir -p $(PROJ_BIN_DIR)
+ 	$(info Linking $@)
+-	$(CXX) $(PROJ_OBJ_FILES) $(PROJ_LINKER_LIBS) $(PROJ_LINKER_FLAGS) -fPIC -shared -Wl,-soname,$(TARGET_SO_VERSION_NAME) -o $@
+-	@$(OBJCOPY) --only-keep-debug $@ $@.dbg
+-	@$(STRIP) --strip-debug --strip-unneeded $@
+-	@$(OBJCOPY) --add-gnu-debuglink=$@.dbg $@
++	$(CXX) $(PROJ_OBJ_FILES) $(PROJ_LINKER_LIBS) $(PROJ_LINKER_FLAGS) -fPIC -shared -Wl,-soname,$(TARGET_SO_VERSION_FULL_NAME) -o $@
+ 	@cp $@ $(PROJ_BIN_DIR)
+-	@cp $@.dbg $(PROJ_BIN_DIR)
+ 	@ln -f -s $(TARGET_SO_VERSION_FULL_NAME) $(PROJ_BIN_DIR)/$(TARGET_SO_VERSION_NAME)
+ 	$(CHECK_NOTE_STAMP)
+ 	$(READ_ELF)
+diff --git a/src/acms/tests/secretsPayloadTests/src/secretsPayloadTests.cpp b/src/acms/tests/secretsPayloadTests/src/secretsPayloadTests.cpp
+index fea04ed..8d08387 100644
+--- a/src/acms/tests/secretsPayloadTests/src/secretsPayloadTests.cpp
++++ b/src/acms/tests/secretsPayloadTests/src/secretsPayloadTests.cpp
+@@ -20,6 +20,7 @@
+ #include "CACertUtils.h"
+ 
+ #include "gtest/gtest.h"
++#pragma GCC diagnostic ignored "-Wconversion"
+ 
+ namespace
+ {
+@@ -437,4 +438,4 @@ namespace
+         // restore write permissions
+         ASSERT_EQ(0, chmod(dirpath.c_str(), S_IRWXU|S_IRWXG|S_IRWXO));
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.25.1
+

@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-config-engine-buster-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
+FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 
@@ -23,20 +23,12 @@ RUN rm -rf               \
 # Update apt's cache of available packages
 RUN apt-get update &&       \
     apt-get install -f -y   \
+        curl                \
         rsyslog             \
         gnupg               \
-        gnupg1              \
-        gnupg2              \
         libacl1             \
         libuuid1            \
-        libxml2             \
-        python-dev          \
-        python-pip          \
-        python-setuptools
-
-RUN apt-get install -y -t buster-backports curl
-
-RUN pip install wheel
+        libxml2
 
 {% if docker_acms_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -73,10 +65,6 @@ COPY ["install_acms.sh", "/acms"]
 RUN cd /acms && sh install_acms.sh {{CONFIGURED_ARCH}}
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
-
-RUN apt-get autoremove -y   \
-    python-pip              \
-    python-setuptools
 
 RUN apt-get clean -y      && \
     apt-get autoclean -y  && \

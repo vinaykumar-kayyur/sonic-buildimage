@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''
 This script will call dSMS GetIssuers API to download AME Root Certificate
 '''
 
 import os, re, shutil, time
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error
 import json
 from sonic_py_common import logger
 
@@ -19,7 +19,7 @@ sonic_logger = logger.Logger()
 def copy_cert(source, destination_dir):
     # Copy the certificate file from /acms to /etc/sonic/credentials
     if os.path.isfile(source):
-        cert_file = os.path.split(source)[1]
+        cert_file = os.path.basename(source)
         destination = os.path.join(destination_dir, cert_file)
         if os.path.isfile(destination):
             # Check if Root cert has changed
@@ -32,12 +32,12 @@ def copy_cert(source, destination_dir):
             # Delete existing file before copying latest one
             os.remove(destination)
             sonic_logger.log_info("CA_cert_downloader: copy_cert: Existing Root Cert file removed")
-        shutil.copyfile(source, destination)
-        if os.path.exists(destination):
-            return True
-        else:
-            sonic_logger.log_error("CA_cert_downloader: copy_cert: "+stderr)
+        try:
+            shutil.copyfile(source, destination)
+        except OSError as e:
+            sonic_logger.log_error("CA_cert_downloader: copy_cert: Failed to copy to the destination: " + e.reason)
             return False
+        return True
     else:
         sonic_logger.log_error("CA_cert_downloader: copy_cert: File does not exist")
         return False
@@ -46,21 +46,20 @@ def extract_cert(response):
     # Extract certificate from the API response
     if os.path.exists(ROOT_CERT):
         os.remove(ROOT_CERT)
-    root_cert = open(ROOT_CERT, 'w')
-    root = response['RootsInfos'][0]
-    for item in root['Intermediates']:
-        root_cert.write(item['PEM']+"\n")
-    root_cert.write(root['PEM']+"\n")
-    root_cert.close() 
+    with open(ROOT_CERT, 'w') as root_cert:
+        root = response['RootsInfos'][0]
+        for item in root['Intermediates']:
+            root_cert.write(item['PEM']+"\n")
+        root_cert.write(root['PEM']+"\n")
 
 def get_cert(ca, url):
     # Call API and get response
     payload = {'caname': ca}
-    url = url+"&"+urllib.urlencode(payload)
-    req = urllib2.Request(url)
+    url = url+"&"+urllib.parse.urlencode(payload)
+    req = urllib.request.Request(url)
     while True:
         try:
-            response = urllib2.urlopen(req)
+            response = urllib.request.urlopen(req)
             sonic_logger.log_info("CA_cert_downloader: get_cert: URL: "+url)
             if response.getcode() == 200:
                 try:
@@ -69,10 +68,11 @@ def get_cert(ca, url):
                     return True
                 except ValueError as e:
                     sonic_logger.log_error("CA_cert_downloader: get_cert: Invalid JSON response!")
+                    return False
             else:
                 sonic_logger.log_error("CA_cert_downloader: get_cert: GET request failed!")
                 return False
-        except urllib2.URLError as e:
+        except urllib.error.URLError as e:
             sonic_logger.log_error("CA_cert_downloader: get_cert: Unable to reach "+url)
             sonic_logger.log_error("CA_cert_downloader: get_cert: "+str(e.reason))
             # Retry every 5 min

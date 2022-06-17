@@ -1,0 +1,224 @@
+From ff06fc22c13d0ad15ba419cdf659ac24e4d243c7 Mon Sep 17 00:00:00 2001
+From: Saikrishna Arcot <sarcot@microsoft.com>
+Date: Tue, 31 May 2022 17:57:50 -0700
+Subject: [PATCH] Add debian packaging files
+
+---
+ compiler/CMakeLists.txt    |  2 +-
+ cpp/CMakeLists.txt         |  2 +-
+ debian/changelog           |  5 +++++
+ debian/compat              |  1 +
+ debian/control             | 33 ++++++++++++++++++++++++++++++
+ debian/copyright           | 41 ++++++++++++++++++++++++++++++++++++++
+ debian/libbond-bin.dirs    |  1 +
+ debian/libbond-bin.install |  2 ++
+ debian/libbond.dirs        |  2 ++
+ debian/libbond.install     |  3 +++
+ debian/rules               | 16 +++++++++++++++
+ debian/source/format       |  1 +
+ 12 files changed, 107 insertions(+), 2 deletions(-)
+ create mode 100644 debian/changelog
+ create mode 100644 debian/compat
+ create mode 100644 debian/control
+ create mode 100644 debian/copyright
+ create mode 100644 debian/libbond-bin.dirs
+ create mode 100644 debian/libbond-bin.install
+ create mode 100644 debian/libbond.dirs
+ create mode 100644 debian/libbond.install
+ create mode 100755 debian/rules
+ create mode 100644 debian/source/format
+
+diff --git a/compiler/CMakeLists.txt b/compiler/CMakeLists.txt
+index c8d06afd..86bfe278 100644
+--- a/compiler/CMakeLists.txt
++++ b/compiler/CMakeLists.txt
+@@ -107,7 +107,7 @@ set (test_sources
+     tests/TestMain.hs
+     ${tests})
+ 
+-set (completion_dir etc/bash_completion.d)
++set (completion_dir ${CMAKE_INSTALL_SYSCONFDIR}/bash_completion.d)
+ set (completion ${CMAKE_CURRENT_BINARY_DIR}/gbc.comp)
+ set (output ${CMAKE_CURRENT_BINARY_DIR}/build/gbc/gbc${CMAKE_EXECUTABLE_SUFFIX})
+ set (GBC_EXECUTABLE ${output} PARENT_SCOPE)
+diff --git a/cpp/CMakeLists.txt b/cpp/CMakeLists.txt
+index b45078e7..2e6a82a1 100644
+--- a/cpp/CMakeLists.txt
++++ b/cpp/CMakeLists.txt
+@@ -110,7 +110,7 @@ target_include_directories (bond_apply BEFORE PRIVATE
+ 
+ install (TARGETS bond bond_apply
+     EXPORT bond
+-    ARCHIVE DESTINATION lib/bond
++	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     INCLUDES DESTINATION include)
+ 
+ install (DIRECTORY ${BOND_IDL}/bond/core DESTINATION include/bond)
+diff --git a/debian/changelog b/debian/changelog
+new file mode 100644
+index 00000000..7a84dc34
+--- /dev/null
++++ b/debian/changelog
+@@ -0,0 +1,5 @@
++bond (8.0.1-1) unstable; urgency=medium
++
++  * Initial release
++
++ -- Saikrishna Arcot <sarcot@microsoft.com>  Tue, 31 May 2022 17:31:02 -0700
+diff --git a/debian/compat b/debian/compat
+new file mode 100644
+index 00000000..48082f72
+--- /dev/null
++++ b/debian/compat
+@@ -0,0 +1 @@
++12
+diff --git a/debian/control b/debian/control
+new file mode 100644
+index 00000000..84035b81
+--- /dev/null
++++ b/debian/control
+@@ -0,0 +1,33 @@
++Source: bond
++Priority: optional
++Maintainer: Saikrishna Arcot <sarcot@microsoft.com>
++Build-Depends: debhelper (>= 12), haskell-stack, rapidjson-dev, libboost-dev, libboost-thread-dev, zlib1g-dev
++Standards-Version: 4.4.1
++Section: libs
++Homepage: https://github.com/Microsoft/bond
++Vcs-Browser: https://github.com/Microsoft/bond
++Vcs-Git: https://github.com/Microsoft/bond.git
++
++Package: libbond
++Section: libdevel
++Architecture: any
++Multi-Arch: same
++Depends: rapidjson-dev, libboost-dev, libboost-thread-dev, zlib1g-dev, ${misc:Depends}
++Description: Open source, cross-platform framework for working with schematized data
++ Bond is an open source, cross-platform framework for working with schematized
++ data. It supports cross-language serialization/deserialization and powerful
++ generic mechanisms for efficiently manipulating data. Bond is broadly used at
++ Microsoft in high scale services.
++ .
++ This package contains the static library and development headers.
++
++Package: libbond-bin
++Architecture: any
++Depends: ${shlibs:Depends}, ${misc:Depends}
++Description: Open source, cross-platform framework for working with schematized data (binaries)
++ Bond is an open source, cross-platform framework for working with schematized
++ data. It supports cross-language serialization/deserialization and powerful
++ generic mechanisms for efficiently manipulating data. Bond is broadly used at
++ Microsoft in high scale services.
++ .
++ This package contains the binaries.
+diff --git a/debian/copyright b/debian/copyright
+new file mode 100644
+index 00000000..a0d933d1
+--- /dev/null
++++ b/debian/copyright
+@@ -0,0 +1,41 @@
++Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
++Upstream-Name: bond
++Upstream-Contact: <preferred name and address to reach the upstream project>
++Source: https://github.com/Microsoft/bond
++
++Files: *
++Copyright: <years> <put author's name and email here>
++           <years> <likewise for another author>
++License: MIT
++
++Files: debian/*
++Copyright: 2022 Saikrishna Arcot <sarcot@microsoft.com>
++License: MIT
++
++License: MIT
++ Permission is hereby granted, free of charge, to any person obtaining a
++ copy of this software and associated documentation files (the "Software"),
++ to deal in the Software without restriction, including without limitation
++ the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ and/or sell copies of the Software, and to permit persons to whom the
++ Software is furnished to do so, subject to the following conditions:
++ .
++ The above copyright notice and this permission notice shall be included
++ in all copies or substantial portions of the Software.
++ .
++ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
++ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
++ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
++ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++
++# Please also look if there are files or directories which have a
++# different copyright/license attached and list them here.
++# Please avoid picking licenses with terms that are more restrictive than the
++# packaged work, as it may make Debian's contributions unacceptable upstream.
++#
++# If you need, there are some extra license texts available in two places:
++#   /usr/share/debhelper/dh_make/licenses/
++#   /usr/share/common-licenses/
+diff --git a/debian/libbond-bin.dirs b/debian/libbond-bin.dirs
+new file mode 100644
+index 00000000..e7724817
+--- /dev/null
++++ b/debian/libbond-bin.dirs
+@@ -0,0 +1 @@
++usr/bin
+diff --git a/debian/libbond-bin.install b/debian/libbond-bin.install
+new file mode 100644
+index 00000000..b680fb8d
+--- /dev/null
++++ b/debian/libbond-bin.install
+@@ -0,0 +1,2 @@
++usr/bin/*
++etc/bash_completion.d/*
+diff --git a/debian/libbond.dirs b/debian/libbond.dirs
+new file mode 100644
+index 00000000..44188162
+--- /dev/null
++++ b/debian/libbond.dirs
+@@ -0,0 +1,2 @@
++usr/lib
++usr/include
+diff --git a/debian/libbond.install b/debian/libbond.install
+new file mode 100644
+index 00000000..db63a281
+--- /dev/null
++++ b/debian/libbond.install
+@@ -0,0 +1,3 @@
++usr/include/*
++usr/lib/*/lib*.a
++usr/lib/*/bond*.cmake
+diff --git a/debian/rules b/debian/rules
+new file mode 100755
+index 00000000..006f3d6a
+--- /dev/null
++++ b/debian/rules
+@@ -0,0 +1,16 @@
++#!/usr/bin/make -f
++# See debhelper(7) (uncomment to enable)
++# output every command that modifies files on the build system.
++#export DH_VERBOSE = 1
++
++# see FEATURE AREAS in dpkg-buildflags(1)
++export DEB_BUILD_MAINT_OPTIONS = hardening=+all
++
++%:
++	dh $@
++
++override_dh_auto_configure:
++	dh_auto_configure -- -DBOND_ENABLE_GRPC=FALSE -DBOND_FIND_RAPIDJSON=TRUE
++
++override_dh_auto_test:
++	# Skip tests
+diff --git a/debian/source/format b/debian/source/format
+new file mode 100644
+index 00000000..163aaf8d
+--- /dev/null
++++ b/debian/source/format
+@@ -0,0 +1 @@
++3.0 (quilt)
+-- 
+2.25.1
+

@@ -3,7 +3,7 @@
 # Update the public key to download ACMS client
 MACHINE=$(uname -m)
 CONFIGURED_ARCH=$1
-if [ "$CONFIGURED_ARCH" = "armhf" ]; then
+if [ "$CONFIGURED_ARCH" != "amd64" ]; then
     echo "Ignore to install acms-client for CONFIGURED_ARCH=$CONFIGURED_ARCH"
     exit 0
 fi
@@ -15,7 +15,7 @@ apt-get update -o Dir::Etc::sourcelist="sources.list.d/msftUbuntu1804Prod.list" 
 chown -R _apt:root /acms
 
 # Download the ACMS client
-apt-get download acms-client=5.13
+apt-get download acms-client=5.22
 dpkg --unpack acms-client*.deb
 
 rm acms-client*.deb

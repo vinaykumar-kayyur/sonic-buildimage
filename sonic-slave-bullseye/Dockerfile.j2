@@ -356,7 +356,14 @@ RUN apt-get update && apt-get install -y \
         pkg-config \
 # For audisp-tacplus
         libauparse-dev \
-        auditd
+        auditd \
+# For bond
+        libssl-dev \
+        libacl1-dev \
+        libxml2-dev \
+        uuid-dev \
+        haskell-stack \
+        rapidjson-dev
 
 RUN apt-get -y build-dep openssh
 

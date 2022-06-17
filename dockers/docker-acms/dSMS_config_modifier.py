@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 This script will determine the correct dSMS region to configure ACMS and update the config file
 It will also update the ACMS config file with the bootstrap cert path
@@ -33,14 +33,12 @@ def update_dsms_url(conf_file, new_url):
     '''
     Update the dSMS URL in the given config file by looking for line starting with FullHttpsDsmsUrl pattern
     '''
-    conf_file_t = open(conf_file, "r+")
-    contents = conf_file_t.read()
-    if new_url not in contents:
-        new_contents = re.sub("FullHttpsDsmsUrl=.*", "FullHttpsDsmsUrl="+new_url, contents)
-        conf_file_t.seek(0)
-        conf_file_t.write(new_contents)
-    conf_file_t.close()
-    return
+    with open(conf_file, "r+") as conf_file_t:
+        contents = conf_file_t.read()
+        if new_url not in contents:
+            new_contents = re.sub("FullHttpsDsmsUrl=.*", "FullHttpsDsmsUrl="+new_url, contents)
+            conf_file_t.seek(0)
+            conf_file_t.write(new_contents)
 
 def fix_endpoint_for_cloud(cloud):
     '''
@@ -66,13 +64,11 @@ def update_config(path_to_bootstrap_cert):
     Determine the correct dSMS endpoint and update the ACMS config file
     '''
     region = get_device_region_from_bootstrap_cert(path_to_bootstrap_cert)
-    acms_conf_file = open(acms_conf, "r+")
-    contents = acms_conf_file.read()
-    new_contents = re.sub("region", region, contents)
-    new_contents = re.sub("BootstrapCert=.*\n*", "BootstrapCert="+path_to_bootstrap_cert+"\n", new_contents)
-    sonic_logger.log_info("dSMS_config_modifier: update_config: Updated config: "+new_contents)
-    acms_conf_file.seek(0)
-    acms_conf_file.write(new_contents)
-    sonic_logger.log_debug("dSMS_config_modifier: update_config: dSMS endpoint set to "+region)
-    acms_conf_file.close()
-    return
+    with open(acms_conf, "r+") as acms_conf_file:
+        contents = acms_conf_file.read()
+        new_contents = re.sub("region", region, contents)
+        new_contents = re.sub("BootstrapCert=.*\n*", "BootstrapCert="+path_to_bootstrap_cert+"\n", new_contents)
+        sonic_logger.log_info("dSMS_config_modifier: update_config: Updated config: "+new_contents)
+        acms_conf_file.seek(0)
+        acms_conf_file.write(new_contents)
+        sonic_logger.log_debug("dSMS_config_modifier: update_config: dSMS endpoint set to "+region)
