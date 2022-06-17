@@ -314,3 +314,4 @@ phy_force_firmware_load
 phy_pcs_repeater
 l3_alpm_hit_skip
 sai_verify_incoming_chksum
+phy_an_lt_msft
