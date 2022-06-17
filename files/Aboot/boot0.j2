@@ -86,7 +86,7 @@ installer_image_path="$image_path/$installer_image"
 
 boot_config="$target_path/boot-config"
 
-cmdline_allowlist="crashkernel hwaddr_ma1"
+cmdline_allowlist="crashkernel"
 
 # for backward compatibility with the sonic_upgrade= behavior
 install="${install:-${sonic_upgrade:-}}"
@@ -395,8 +395,7 @@ extract_image() {
 
 extract_image_secureboot() {
     info "Extracting necessary swi content"
-    # NOTE: boot/ is not used by the boot process but only extracted for kdump
-    unzip -oq "$swipath" 'boot/*' platform/firsttime .imagehash -d "$image_path"
+    unzip -oq "$swipath" platform/firsttime .imagehash -d "$image_path"
 
     info "Installing image as $installer_image_path"
     mv "$swipath" "$installer_image_path"
@@ -660,7 +659,7 @@ write_default_cmdline() {
     if $in_aboot; then
         # Generate the default kernel parameters for the platform
         cat /etc/cmdline | sed "/^\(${bootconfigvars// /\|}\|crashkernel\|loglevel\|ignore_loglevel\)\(\$\|=\)/d;/^\$/d" | cmdline_append
-    elif grep -q "$delimiter" /proc/cmdline && ! grep -Eq "log_buf_len=.* $delimiter" /proc/cmdline; then
+    elif grep -q "$delimiter" /proc/cmdline && ! grep -Eq "varlog_size=.* $delimiter" /proc/cmdline; then
         # We are on a recent sonic image using delimiter. extracting the part of the
         # cmdline coming from aboot is trivial.
         # The 2nd part of the condition ensures that the append bug is not present.
@@ -673,6 +672,9 @@ write_default_cmdline() {
     else
         # We are in SONiC and the cmdline doesn't have a delimiter for the aboot part.
         # sid= should most of the time be the last parameter provided by Aboot
+        # Alternatively we are in SONiC and the cmdline-aboot-end delimiter was
+        # added after image specific parameters due to a BUG which is solved by the
+        # following statement.
         cat /proc/cmdline | sed -E 's/^(.* sid=[^ ]+).*$/\1/' | tr ' ' '\n' | cmdline_append
     fi
 
