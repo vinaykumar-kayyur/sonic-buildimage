@@ -561,6 +561,10 @@ define SHA_DEP_RULES
 ALL_DEP_FILES_LIST += $(foreach pkg,$(2), $($(filter none,$($(1)_CACHE_MODE)), \
                       $(addsuffix .$(3),$(addprefix $(pkg)/, $(1))) \
                       $(addsuffix .$(3).sha,$(addprefix $(pkg)/, $(1)))))
+$(if $(filter $(SONIC_DOCKER_IMAGES) $(SONIC_DOCKER_DBG_IMAGES), $(1)), \
+	$(foreach docker, $(1), \
+	$(eval $(docker)_DEP_FILES+=$(wildcard files/build/versions/default/*) \
+	$(wildcard files/build/versions/dockers/$(subst -dbg,,$(basename $(docker)))/*))))
 $(addsuffix .$(3),$(addprefix $(2)/, $(1))) : $(2)/%.$(3) : \
 	$(2)/%.flags $$$$($$$$*_DEP_FILES) $$$$(if $$$$($$$$*_SMDEP_FILES), $(2)/%.smdep)
 	@$$(eval $$*_DEP_FILES_MODIFIED := $$? )
