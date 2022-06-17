@@ -24,6 +24,13 @@
                 ]
             }
         },
+        "sonic-mgmt_vrf:sonic-mgmt_vrf": {
+            "sonic-mgmt_vrf:MGMT_VRF_CONFIG": {
+                "sonic-mgmt_vrf:vrf_global": {
+                    "mgmtVrfEnabled": "true"
+                }
+            }
+        },
         "sonic-vrf:sonic-vrf": {
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
@@ -41,6 +48,18 @@
                     {
                         "server_address": "100.0.0.1",
                         "source": "invalid_value"
+                    }
+                ]
+            }
+        }
+    },
+    "SYSLOG_SERVER_SOURCE_IP_FAMILY_MISMATCH": {
+        "sonic-syslog:sonic-syslog": {
+            "sonic-syslog:SYSLOG_SERVER": {
+                "SYSLOG_SERVER_LIST": [
+                    {
+                        "server_address": "100.0.0.1",
+                        "source": "1111::1111"
                     }
                 ]
             }
@@ -67,6 +86,25 @@
                         "vrf": "invalid_value"
                     }
                 ]
+            }
+        }
+    },
+    "SYSLOG_SERVER_DISABLED_MGMT_VRF": {
+        "sonic-syslog:sonic-syslog": {
+            "sonic-syslog:SYSLOG_SERVER": {
+                "SYSLOG_SERVER_LIST": [
+                    {
+                        "server_address": "100.0.0.1",
+                        "vrf": "mgmt"
+                    }
+                ]
+            }
+        },
+        "sonic-mgmt_vrf:sonic-mgmt_vrf": {
+            "sonic-mgmt_vrf:MGMT_VRF_CONFIG": {
+                "sonic-mgmt_vrf:vrf_global": {
+                    "mgmtVrfEnabled": "false"
+                }
             }
         }
     },

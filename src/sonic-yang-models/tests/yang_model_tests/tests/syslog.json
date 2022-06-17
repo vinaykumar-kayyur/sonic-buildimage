@@ -6,6 +6,10 @@
         "desc": "Configure invalid SOURCE in SYSLOG_SERVER.",
         "eStrKey": "InvalidValue"
     },
+    "SYSLOG_SERVER_SOURCE_IP_FAMILY_MISMATCH": {
+        "desc": "Configure SOURCE IP family mismatch in SYSLOG_SERVER.",
+        "eStrKey": "Must"
+    },
     "SYSLOG_SERVER_INVALID_PORT": {
         "desc": "Configure invalid PORT in SYSLOG_SERVER.",
         "eStrKey": "InvalidValue"
@@ -13,6 +17,10 @@
     "SYSLOG_SERVER_INVALID_VRF": {
         "desc": "Configure invalid VRF in SYSLOG_SERVER.",
         "eStrKey": "InvalidValue"
+    },
+    "SYSLOG_SERVER_DISABLED_MGMT_VRF": {
+        "desc": "Configure disabled management VRF in SYSLOG_SERVER.",
+        "eStrKey": "Must"
     },
     "SYSLOG_SERVER_TEST": {
         "desc": "Load syslog server table with ipv4 address as syslog servers."
