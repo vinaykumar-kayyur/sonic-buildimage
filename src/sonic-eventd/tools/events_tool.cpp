@@ -3,6 +3,16 @@
 #include "events.h"
 #include "events_common.h"
 
+/*
+ * Sample i/p file contents for send
+ *
+ * {"src_0:key-0": {"foo": "bar", "hello": "world" }}
+ * {"src_0:key-1": {"foo": "barXX", "hello": "world" }}
+ *
+ * Repeat the above line to increase entries.
+ * Each line is parsed independently, so no "," expected at the end.
+ */
+
 #define ASSERT(res, m, ...) \
     if (!(res)) {\
         int _e = errno; \
