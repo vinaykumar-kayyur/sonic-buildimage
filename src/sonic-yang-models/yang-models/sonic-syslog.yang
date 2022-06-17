@@ -9,6 +9,10 @@ module sonic-syslog {
         prefix inet;
     }
 
+    import sonic-mgmt_vrf {
+        prefix mvrf;
+    }
+
     import sonic-vrf {
         prefix vrf;
     }
@@ -45,6 +49,8 @@ module sonic-syslog {
                 leaf source {
                     description "Syslog source IP address";
                     type inet:ip-address;
+                    must "(contains(current(), '.') and contains(../server_address, '.'))
+                    or (contains(current(), ':') and contains(../server_address, ':'))";
                 }
 
                 leaf port {
@@ -60,6 +66,8 @@ module sonic-syslog {
                         }
                         type vrf-device;
                     }
+                    must "(current() != 'mgmt')
+                    or (/mvrf:sonic-mgmt_vrf/mvrf:MGMT_VRF_CONFIG/mvrf:vrf_global/mvrf:mgmtVrfEnabled = 'true')";
                 }
 
             }
