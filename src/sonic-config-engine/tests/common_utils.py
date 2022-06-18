@@ -73,6 +73,9 @@ class YangWrapper(object):
                 cmd += ' -p ' + args.port_config
             if args.namespace is not None:
                 cmd += ' -n ' + args.namespace
+            if "-j " in argument:
+                strs = argument.split(' ')
+                cmd += " -j {}".format(next(strs[i+1] for i in range(len(strs)) if strs[i]=='-j'))
             cmd += ' --print-data'
             output = subprocess.check_output(cmd, shell=True).decode()
             try:

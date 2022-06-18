@@ -963,6 +963,7 @@ def parse_linkmeta(meta, hname):
         port = None
         fec_disabled = None
 
+        import pdb;pdb.set_trace()
         # Sample: ARISTA05T1:Ethernet1/33;switch-t0:fortyGigE0/4
         key = linkmeta.find(str(QName(ns1, "Key"))).text
         endpoints = key.split(';')
@@ -1890,7 +1891,7 @@ def parse_asic_sub_role(filename, asic_name):
     root = ET.parse(filename).getroot()
     for child in root:
         if child.tag == str(QName(ns, "MetadataDeclaration")):
-            sub_role, _, _, _ ,_= parse_asic_meta(child, asic_name)
+            sub_role, _, _, _, _= parse_asic_meta(child, asic_name)
             return sub_role
 
 def parse_asic_switch_type(filename, asic_name):
@@ -1898,7 +1899,7 @@ def parse_asic_switch_type(filename, asic_name):
         root = ET.parse(filename).getroot()
         for child in root:
             if child.tag == str(QName(ns, "MetadataDeclaration")):
-                _, _, switch_type, _,_ = parse_asic_meta(child, asic_name)
+                _, _, switch_type, _, _ = parse_asic_meta(child, asic_name)
                 return switch_type
     return None
 
