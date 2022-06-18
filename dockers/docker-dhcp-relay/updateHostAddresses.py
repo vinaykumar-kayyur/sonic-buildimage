@@ -46,23 +46,16 @@ class DnsmasqStaticHostMonitor(object):
 
         # Build a lookup dictionary from VLAN to VLAN members, with the members being sorted
         # by their port index
-        vlan_members = vlan_member_table.getKeys()
-        vlan_member_lookup = {}
-        for vlan_member in vlan_members:
-            (vlan, port) = vlan_member.split(":", maxsplit=1)
-
+        port_keys = port_table.getKeys()
+        port_index_lookup = {}
+        for port in port_keys:
             # Get the index that corresponds to this ethernet port
             (status, port_index) = port_table.hget(port, 'index')
             if not status:
                 syslog.syslog(syslog.LOG_WARNING, f"Unable to get port index for {port}")
                 continue
             port_index = int(port_index)
-            if vlan not in vlan_member_lookup:
-                vlan_member_lookup[vlan] = []
-            vlan_member_lookup[vlan].append((port, port_index))
-
-        for vlan in vlan_member_lookup.keys():
-            vlan_member_lookup[vlan].sort(key=lambda a: a[1])
+            port_index_lookup[port] = port_index
 
         with open("/etc/dnsmasq.hosts", "w") as f:
             # Get all known MAC addresses
@@ -73,24 +66,29 @@ class DnsmasqStaticHostMonitor(object):
                 if not status:
                     continue
 
-                for i in range(len(vlan_member_lookup[vlan])):
-                    if vlan_member_lookup[vlan][i][0] != port:
+                vlan_ip_addresses = self.appl_db.keys(f"{APP_INTF_TABLE_NAME}:{vlan}:*")
+                ipv4_network = None
+                for vlan_ip_address in vlan_ip_addresses:
+                    ipv4_network = ipaddress.ip_interface(vlan_ip_address.split(":", maxsplit=2)[2])
+                    if ipv4_network.version != 4:
                         continue
-
-                    vlan_ip_addresses = self.appl_db.keys(f"{APP_INTF_TABLE_NAME}:{vlan}:*")
-                    ipv4_network = None
-                    for vlan_ip_address in vlan_ip_addresses:
-                        ipv4_network = ipaddress.ip_interface(vlan_ip_address.split(":", maxsplit=2)[2])
-                        if ipv4_network.version != 4:
-                            continue
-
-                    if not ipv4_network:
-                        syslog.syslog(syslog.LOG_INFO, f"No IPv4 addresses found for {vlan}, skipping")
-                        continue
-
-                    # Write a host entry
-                    f.write(f"{mac_address},{ipv4_network.network[i * 4 + 1]},15m\n")
                     break
+
+                if not ipv4_network:
+                    syslog.syslog(syslog.LOG_INFO, f"No IPv4 addresses found for {vlan}, skipping")
+                    continue
+
+                ipv4_supernet = ipv4_network.network
+                if ipv4_supernet.prefixlen > 24:
+                    ipv4_supernet = ipv4_supernet.supernet(new_prefix=24)
+
+                # Write a host entry
+                ipv4_device_address = ipv4_supernet[port_index_lookup[port] * 4 + 1]
+                if ipv4_device_address not in ipv4_network.network.hosts():
+                    syslog.syslog(syslog.LOG_ERR, f"Calculated address {ipv4_device_address} not part of {ipv4_network} for {mac_address}")
+                    continue
+                f.write(f"{mac_address},{ipv4_device_address},15m\n")
+
 
         # Update the next time we'll update /etc/dnsmasq.hosts
         current_time = time.clock_gettime(time.CLOCK_MONOTONIC)
