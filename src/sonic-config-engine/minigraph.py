@@ -963,7 +963,6 @@ def parse_linkmeta(meta, hname):
         port = None
         fec_disabled = None
 
-        import pdb;pdb.set_trace()
         # Sample: ARISTA05T1:Ethernet1/33;switch-t0:fortyGigE0/4
         key = linkmeta.find(str(QName(ns1, "Key"))).text
         endpoints = key.split(';')
