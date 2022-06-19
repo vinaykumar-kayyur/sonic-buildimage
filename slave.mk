@@ -791,6 +791,7 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 
 # start docker daemon
 docker-start :
+	@sudo sed -i 's/--storage-driver=vfs/--storage-driver=$(SONIC_SLAVE_DOCKER_DRIVER)/' /etc/default/docker
 	@sudo sed -i -e '/http_proxy/d' -e '/https_proxy/d' /etc/default/docker
 	@sudo bash -c "{ echo \"export http_proxy=$$http_proxy\"; \
 	            echo \"export https_proxy=$$https_proxy\"; \
@@ -1048,6 +1049,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(OPENSSH_SERVER) \
                 $(PYTHON_SWSSCOMMON) \
                 $(PYTHON3_SWSSCOMMON) \
+                $(SONIC_DB_CLI) \
                 $(SONIC_UTILITIES_DATA) \
                 $(SONIC_HOST_SERVICES_DATA) \
                 $(BASH) \
@@ -1064,7 +1066,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY3)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2)) \
@@ -1134,7 +1135,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export config_engine_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY3))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export swsssdk_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY3))"
-	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export platform_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export redis_dump_load_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY3))"
@@ -1377,3 +1377,7 @@ jessie : $$(addprefix $(TARGET_PATH)/,$$(JESSIE_DOCKER_IMAGES)) \
 .PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_STDEB_DEBS) $(SONIC_CLEAN_WHEELS) $(SONIC_PHONY_TARGETS) clean distclean configure
 
 .INTERMEDIATE : $(SONIC_INSTALL_DEBS) $(SONIC_INSTALL_WHEELS) $(DOCKER_LOAD_TARGETS) docker-start .platform
+
+## To build some commonly used libs. Some submodules depend on these libs.
+## It is used in component pipelines. For example: swss needs libnl, libyang
+lib-packages: $(addprefix $(DEBS_PATH)/,$(LIBNL3) $(LIBYANG))
