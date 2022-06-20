@@ -83,6 +83,10 @@
         }
     },
 {%- endmacro %}
+{%- macro generate_global_dscp_to_tc_map() %}
+{# This is an empty macro since the global DSCP_TO_TC map is not required #}
+{%- endmacro %}
+
 {% endif %}
 
 {%- include 'qos_config.j2' %}
