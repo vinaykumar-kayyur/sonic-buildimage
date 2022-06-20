@@ -109,9 +109,9 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
         int missed_cnt=-1;
 
         int rc = event_receive(h, key, params, missed_cnt);
-        if (rc == -1) {
-            ASSERT(event_last_error() == EAGAIN, "Failed to receive rc=%d err=%d\n",
-                    rc, event_last_error());
+        if (rc != 0) {
+            ASSERT(rc == EAGAIN, "Failed to receive rc=%d index=%d\n",
+                    rc, index);
             continue;
         }
         ASSERT(!key.empty(), "received EMPTY key");
@@ -253,7 +253,7 @@ do_send(const string infile, int cnt, int pause)
             }
             
             int rc = event_publish(h, evt.tag, evt.params.empty() ? NULL : &evt.params);
-            ASSERT(rc == 0, "Failed to publish index=%d", index);
+            ASSERT(rc == 0, "Failed to publish index=%d rc=%d", index, rc);
 
             if ((cnt > 0) && (--cnt == 0)) {
                 /* set to termninate */

@@ -23,8 +23,6 @@
 
 #define VEC_SIZE(p) ((int)p.size())
 
-extern int zerrno;
-
 int
 eventd_proxy::init()
 {
@@ -137,15 +135,26 @@ void
 capture_service::do_capture()
 {
     int rc;
-    runtime_id_t rid;
-    sequence_t seq;
     int block_ms=300;
-    internal_event_t event;
-    string source, evt_str;
     int init_cnt;
 
-    void *sock = NULL;
-    sock = zmq_socket(m_ctx, ZMQ_SUB);
+    typedef enum {
+        /*
+         * In this state every event read is compared with init cache given 
+         * Only new events are saved.
+         */
+        CAP_STATE_INIT = 0, 
+
+        /* In this state, all events read are cached until max limit */
+        CAP_STATE_ACTIVE,
+
+        /* Cache has hit max. Hence only save last event for each runime ID */
+        CAP_STATE_LAST
+    } cap_state_t;
+
+    cap_state_t cap_state = CAP_STATE_INIT;
+
+    void *sock = zmq_socket(m_ctx, ZMQ_SUB);
     RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
 
     rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
@@ -165,11 +174,6 @@ capture_service::do_capture()
     }
 
     /*
-     * Check read events against provided cache until as many events are read.
-     * to avoid sending duplicates.
-     * After starting cache service, the caller drains his local cache, which
-     * could potentially return a new event, that both caller & cache service reads.
-     * 
      * The cache service connects but defers any reading until caller provides
      * the startup cache. But all events that arrived since connect, though not read
      * will be held by ZMQ in its local cache. 
@@ -183,71 +187,86 @@ capture_service::do_capture()
      * is empty, do this check.
      */
     init_cnt = (int)m_events.size();
-    while((m_ctrl == START_CAPTURE) && !m_pre_exist_id.empty() && (init_cnt > 0)) {
 
-        if (zmq_message_read(sock, 0, source, event) == -1) {
-            RET_ON_ERR(zerrno == EAGAIN,
-                    "0:Failed to read from capture socket");
+    /* Read until STOP_CAPTURE */
+    while(m_ctrl == START_CAPTURE) {
+        runtime_id_t rid;
+        sequence_t seq;
+        internal_event_t event;
+        string source, evt_str;
+
+        if ((rc = zmq_message_read(sock, 0, source, event)) != 0) {
+            /*
+             * The capture socket captures SUBSCRIBE requests too.
+             * The messge could contain subscribe filter strings and binary code.
+             * Empty string with binary code will fail to deserialize.
+             * Else would fail event validation.
+             */
+            RET_ON_ERR((rc == EAGAIN) || (rc == ERR_MESSAGE_INVALID),
+                "0:Failed to read from capture socket");
+            continue;
         }
-        else if (validate_event(event, rid, seq)) {
+        if (!validate_event(event, rid, seq)) {
+            continue;
+        }
+        serialize(event, evt_str);
+
+        switch(cap_state) {
+        case CAP_STATE_INIT:
+            {
             bool add = true;
             init_cnt--;
-            serialize(event, evt_str);
             pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
 
             if (it != m_pre_exist_id.end()) {
                 if (seq <= it->second) {
+                    /* Duplicate; Later/same seq in cache. */
                     add = false;
                 }
                 if (seq >= it->second) {
+                    /* new one; This runtime ID need not be checked again */
                     m_pre_exist_id.erase(it);
                 }
             }
             if (add) {
                 m_events.push_back(evt_str);
             }
-        }
-    }
-    pre_exist_id_t().swap(m_pre_exist_id);
+            }
+            if(m_pre_exist_id.empty() || (init_cnt <= 0)) {
+                /* Init check is no more needed. */
+                pre_exist_id_t().swap(m_pre_exist_id);
+                cap_state = CAP_STATE_ACTIVE;
+            }
+            break;
 
-    /* Save until max allowed */
-    while((m_ctrl == START_CAPTURE) && (VEC_SIZE(m_events) < m_cache_max)) {
-
-        if (zmq_message_read(sock, 0, source, event) == -1) {
-            RET_ON_ERR(zerrno == EAGAIN,
-                    "1: Failed to read from capture socket");
-        }
-        else if (validate_event(event, rid, seq)) {
-            serialize(event, evt_str);
+        case CAP_STATE_ACTIVE:
+            /* Save until max allowed */
             try
             {
                 m_events.push_back(evt_str);
+                if (VEC_SIZE(m_events) >= m_cache_max) {
+                    cap_state = CAP_STATE_LAST;
+                }
+                break;
             }
-            catch (exception& e)
+            catch (bad_alloc& e) 
             {
                 stringstream ss;
                 ss << e.what();
                 SWSS_LOG_ERROR("Cache save event failed with %s events:size=%d",
                         ss.str().c_str(), VEC_SIZE(m_events));
-                break;
+                cap_state = CAP_STATE_LAST;
+                // fall through to save this event in last set.
             }
-        }
-    }
 
-    /* Clear the map, created to ensure memory space available */
-    m_last_events.clear();
-    m_last_events_init = true;
-
-    /* Save only last event per sender */
-    while(m_ctrl == START_CAPTURE) {
-
-        if (zmq_message_read(sock, 0, source, event) == -1) {
-            RET_ON_ERR(zerrno == EAGAIN,
-                    "2:Failed to read from capture socket");
-
-        } else if (validate_event(event, rid, seq)) {
-            serialize(event, evt_str);
+        case CAP_STATE_LAST:
+            if (!m_last_events_init) {
+                /* Clear the map, created to ensure memory space available */
+                m_last_events.clear();
+                m_last_events_init = true;
+            }
             m_last_events[rid] = evt_str;
+            break;
         }
     }
 
