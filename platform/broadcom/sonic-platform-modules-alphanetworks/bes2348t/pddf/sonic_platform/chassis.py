@@ -45,6 +45,9 @@ class Chassis(PddfChassis):
                              index, len(self._sfp_list)))
         return sfp
 
+    def get_serial_number(self):
+        return self.get_serial()
+
     def initizalize_system_led(self):
         return True
 
