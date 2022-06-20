@@ -16,6 +16,7 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 
+extern bool dual_tor_sock;
 
 /**
  * DHCP message types
@@ -77,6 +78,7 @@ typedef struct
     uint8_t is_uplink;              /** north interface? */
     char intf[IF_NAMESIZE];         /** device (interface) name */
     uint8_t *buffer;                /** buffer used to read socket data */
+    struct msghdr msg;
     size_t snaplen;                 /** snap length or buffer size */
     uint64_t counters[DHCP_COUNTERS_COUNT][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT];
                                     /** current/snapshot counters of DHCP packets */

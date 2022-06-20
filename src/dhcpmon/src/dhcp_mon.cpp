@@ -26,9 +26,9 @@ typedef struct
 } dhcp_mon_state_t;
 
 /** window_interval_sec monitoring window for dhcp relay health checks */
-static int window_interval_sec = 18;
+static int window_interval_sec = 5;
 /** dhcp_unhealthy_max_count max count of consecutive unhealthy statuses before reporting to syslog */
-static int dhcp_unhealthy_max_count = 10;
+static int dhcp_unhealthy_max_count = 1;
 /** libevent base struct */
 static struct event_base *base;
 /** libevent timeout event struct */
@@ -102,8 +102,13 @@ static void check_dhcp_relay_health(dhcp_mon_state_t *state_data)
         break;
     case DHCP_MON_STATUS_HEALTHY:
         state_data->count = 0;
+        syslog(LOG_ALERT, state_data->msg, state_data->count * window_interval_sec, context->intf);
+        dhcp_devman_print_status(context, DHCP_COUNTERS_SNAPSHOT);
+        dhcp_devman_print_status(context, DHCP_COUNTERS_CURRENT);
         break;
     case DHCP_MON_STATUS_INDETERMINATE:
+        dhcp_devman_print_status(context, DHCP_COUNTERS_SNAPSHOT);
+        dhcp_devman_print_status(context, DHCP_COUNTERS_CURRENT);
         if (state_data->count) {
             state_data->count++;
         }

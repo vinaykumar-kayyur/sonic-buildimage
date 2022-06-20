@@ -2,8 +2,9 @@ RM := rm -rf
 DHCPMON_TARGET := dhcpmon
 CP := cp
 MKDIR := mkdir
-CC := gcc
+CC := g++
 MV := mv
+PWD := $(shell pwd)
 
 # All of the sources participating in the build are defined here
 -include src/subdir.mk

@@ -21,6 +21,9 @@
 #include <libexplain/ioctl.h>
 #include <linux/filter.h>
 #include <netpacket/packet.h>
+#include "subscriberstatetable.h"
+#include "select.h"
+#include <iostream>
 
 #include "dhcp_device.h"
 
@@ -49,34 +52,43 @@
 #define OP_JSET     (BPF_JMP | BPF_JSET | BPF_K)    /** bpf jset */
 #define OP_LDXB     (BPF_LDX | BPF_B    | BPF_MSH)  /** bpf ldxb */
 
+constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
+swss::Select swssSelect;
+std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
+swss::SubscriberStateTable muxTable(stateDbPtr.get(), "HW_MUX_CABLE_TABLE");
+
+swss::DBConnector configDb("CONFIG_DB", 0);
+
 /** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
  * This program is obtained using the following command tcpdump:
- * `tcpdump -dd "udp and (port 67 or port 68)"`
+ * `tcpdump -dd "inbound and udp and (port 67 or port 68)"`
  */
 static struct sock_filter dhcp_bpf_code[] = {
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c}, // (000) ldh      [12]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd}, // (001) jeq      #0x86dd          jt 2	jf 9
-    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014}, // (002) ldb      [20]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011}, // (003) jeq      #0x11            jt 4	jf 22
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036}, // (004) ldh      [54]
-    {.code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043}, // (005) jeq      #0x43            jt 21	jf 6
-    {.code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044}, // (006) jeq      #0x44            jt 21	jf 7
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038}, // (007) ldh      [56]
-    {.code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043}, // (008) jeq      #0x43            jt 21	jf 20
-    {.code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800}, // (009) jeq      #0x800           jt 10	jf 22
-    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017}, // (010) ldb      [23]
-    {.code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011}, // (011) jeq      #0x11            jt 12	jf 22
-    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014}, // (012) ldh      [20]
-    {.code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff}, // (013) jset     #0x1fff          jt 22	jf 14
-    {.code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (014) ldxb     4*([14]&0xf)
-    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (015) ldh      [x + 14]
-    {.code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043}, // (016) jeq      #0x43            jt 21	jf 17
-    {.code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044}, // (017) jeq      #0x44            jt 21	jf 18
-    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010}, // (018) ldh      [x + 16]
-    {.code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043}, // (019) jeq      #0x43            jt 21	jf 20
-    {.code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044}, // (020) jeq      #0x44            jt 21	jf 22
-    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000}, // (021) ret      #262144
-    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000}, // (022) ret      #0
+    { 0x28, 0, 0, 0xfffff004 },
+    { 0x15, 22, 0, 0x00000004 },
+    { 0x28, 0, 0, 0x0000000c },
+    { 0x15, 0, 7, 0x000086dd },
+    { 0x30, 0, 0, 0x00000014 },
+    { 0x15, 0, 18, 0x00000011 },
+    { 0x28, 0, 0, 0x00000036 },
+    { 0x15, 15, 0, 0x00000043 },
+    { 0x15, 14, 0, 0x00000044 },
+    { 0x28, 0, 0, 0x00000038 },
+    { 0x15, 12, 11, 0x00000043 },
+    { 0x15, 0, 12, 0x00000800 },
+    { 0x30, 0, 0, 0x00000017 },
+    { 0x15, 0, 10, 0x00000011 },
+    { 0x28, 0, 0, 0x00000014 },
+    { 0x45, 8, 0, 0x00001fff },
+    { 0xb1, 0, 0, 0x0000000e },
+    { 0x48, 0, 0, 0x0000000e },
+    { 0x15, 4, 0, 0x00000043 },
+    { 0x15, 3, 0, 0x00000044 },
+    { 0x48, 0, 0, 0x00000010 },
+    { 0x15, 1, 0, 0x00000043 },
+    { 0x15, 0, 1, 0x00000044 },
+    { 0x6, 0, 0, 0x00040000 },
+    { 0x6, 0, 0, 0x00000000 },
 };
 
 /** Filter program socket struct */
@@ -217,6 +229,109 @@ static void read_callback(int fd, short event, void *arg)
         } else {
             syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
                    context->intf, buffer_sz);
+        }
+    }
+}
+
+/**
+ * @code read_callback_dual_tor(fd, event, arg);
+ *
+ * @brief callback for libevent which is called every time out in order to read queued packet capture when dual tor mode is enabled
+ *
+ * @param fd            socket to read from
+ * @param event         libevent triggered event
+ * @param arg           user provided argument for callback (interface context)
+ *
+ * @return none
+ */
+static void read_callback_dual_tor(int fd, short event, void *arg)
+{
+    dhcp_device_context_t *context = (dhcp_device_context_t*) arg;
+    ssize_t buffer_sz;
+    struct sockaddr_ll sll;
+    socklen_t slen = sizeof sll;
+
+    bool standby = false;
+    swss::Selectable *selectable;
+    int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
+    if (ret == swss::Select::ERROR) {
+        syslog(LOG_WARNING, "Select: returned ERROR");
+    }
+
+    while ((event == EV_READ) &&
+           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen) > 0))) {
+        std::string member_table = std::string("VLAN_MEMBER|") + context->intf + "|";
+        char interfaceName;
+  	    char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
+
+        if (selectable == static_cast<swss::Selectable *> (&muxTable)) {
+            std::deque<swss::KeyOpFieldsValuesTuple> entries;
+            muxTable.pops(entries);
+            for (auto &entry: entries) {
+                std::string vlan = kfvKey(entry);
+                std::string operation = kfvOp(entry);
+                std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
+
+                for (auto &fieldValue: fieldValues) {
+                    std::string f = fvField(fieldValue);
+                    std::string v = fvValue(fieldValue);
+                    if(f == "state" && v == "standby") {
+                        standby = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!standby && configDb.exists(member_table.append(interface))) {
+            struct ether_header *ethhdr = (struct ether_header*) context->buffer;
+            struct ip *iphdr = (struct ip*) (context->buffer + IP_START_OFFSET);
+            struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
+            uint8_t *dhcphdr = context->buffer + DHCP_START_OFFSET;
+            int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
+
+            if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+                (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
+                int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
+                            ntohs(~udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
+                int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
+                const u_char *dhcp_option = context->buffer + dhcp_option_offset;
+                dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
+                                            ethhdr->ether_shost[1] == context->mac[1] &&
+                                            ethhdr->ether_shost[2] == context->mac[2] &&
+                                            ethhdr->ether_shost[3] == context->mac[3] &&
+                                            ethhdr->ether_shost[4] == context->mac[4] &&
+                                            ethhdr->ether_shost[5] == context->mac[5]) ?
+                                            DHCP_TX : DHCP_RX;
+                int offset = 0;
+                int stop_dhcp_processing = 0;
+                while ((offset < (dhcp_option_sz + 1)) && dhcp_option[offset] != 255) {
+                    switch (dhcp_option[offset])
+                    {
+                    case 53:
+                        if (offset < (dhcp_option_sz + 2)) {
+                            handle_dhcp_option_53(context, &dhcp_option[offset], dir, iphdr, dhcphdr);
+                        }
+                        stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
+                        break;
+                    default:
+                        break;
+                    }
+
+                    if (stop_dhcp_processing == 1) {
+                        break;
+                    }
+
+                    if (dhcp_option[offset] == 0) { // DHCP Option Padding
+                        offset++;
+                    } else {
+                        offset += dhcp_option[offset + 1] + 2;
+                    }
+                }
+            } else {
+                syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
+                    context->intf, buffer_sz);
+            }
         }
     }
 }
@@ -412,7 +527,7 @@ static int init_socket(dhcp_device_context_t *context, const char *intf)
 
         struct sockaddr_ll addr;
         memset(&addr, 0, sizeof(addr));
-        addr.sll_ifindex = if_nametoindex(intf);
+        addr.sll_ifindex = 0; // any interface
         addr.sll_family = AF_PACKET;
         addr.sll_protocol = htons(ETH_P_ALL);
         if (bind(context->sock, (struct sockaddr *) &addr, sizeof(addr))) {
@@ -553,6 +668,7 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
                               in_addr_t giaddr_ip)
 {
     int rv = -1;
+    struct event *ev;
 
     do {
         if (context == NULL) {
@@ -579,7 +695,17 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
             break;
         }
 
-        struct event *ev = event_new(base, context->sock, EV_READ | EV_PERSIST, read_callback, context);
+        int enable = 1;
+        if (setsockopt(context->sock, SOL_SOCKET, IP_PKTINFO,  &enable, sizeof(int)) != 0) {
+            syslog(LOG_ALERT, "setsockopt: failed to set IP_PKTINFO with '%s'\n", strerror(errno));
+            break;
+        }
+
+        if (dual_tor_sock)
+            ev = event_new(base, context->sock, EV_READ | EV_PERSIST, read_callback_dual_tor, context);
+        else
+            ev = event_new(base, context->sock, EV_READ | EV_PERSIST, read_callback, context);
+
         if (ev == NULL) {
             syslog(LOG_ALERT, "event_new: failed to allocate memory for libevent event '%s'\n", strerror(errno));
             break;
