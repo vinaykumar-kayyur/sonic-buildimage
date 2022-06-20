@@ -1,6 +1,12 @@
 #include <iostream>
+#include <memory>
 #include <unistd.h>
 #include "rsyslog_plugin.h"
+
+#define SUCCESS_CODE 0
+#define INVALID_REGEX_ERROR_CODE 1
+#define EVENT_INIT_PUBLISH_ERROR_CODE 2
+#define MISSING_ARGS_ERROR_CODE 3
 
 void showUsage() {
     cout << "Usage for rsyslog_plugin: \n" << "options\n"
@@ -11,17 +17,17 @@ void showUsage() {
 }
 
 int main(int argc, char** argv) {
-    string regex_path;
-    string module_name;
-    int option_val;
+    string regexPath;
+    string moduleName;
+    int optionVal;
 
-    while((option_val = getopt(argc, argv, "r:m:h")) != -1) {
-        switch(option_val) {
+    while((optionVal = getopt(argc, argv, "r:m:h")) != -1) {
+        switch(optionVal) {
             case 'r':
-                regex_path = optarg;
+                regexPath = optarg;
                 break;
             case 'm':
-                module_name = optarg;
+                moduleName = optarg;
                 break;
             case 'h':
             case '?':
@@ -31,17 +37,21 @@ int main(int argc, char** argv) {
         }
     }
 
-    if(regex_path.empty() || module_name.empty()) { // Missing required rc path
-        cerr << "Error: Missing regex_path and module_name." << endl;
-        return 1;
+    if(regexPath.empty() || moduleName.empty()) { // Missing required rc path
+        cerr << "Error: Missing regexPath and moduleName." << endl;
+        return MISSING_ARGS_ERROR_CODE;
     }
-    
-    RsyslogPlugin* plugin = new RsyslogPlugin(module_name, regex_path);
-    if(!plugin->onInit()) {
-        SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized.\n");
-	return 1;
+
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin(moduleName, regexPath));
+    int returnCode = plugin->onInit();
+    if(returnCode == INVALID_REGEX_ERROR_CODE) {
+        SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized due to invalid regex file provided.\n");
+        return returnCode;
+    } else if(returnCode == EVENT_INIT_PUBLISH_ERROR_CODE) {
+        SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized due to event_init_publish call failing.\n");
+	return returnCode;
     }
 
     plugin->run();
-    return 0;
+    return SUCCESS_CODE;
 }

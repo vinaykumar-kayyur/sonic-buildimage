@@ -10,24 +10,19 @@
  *
 */
 
-bool SyslogParser::parseMessage(string message, string& event_tag, event_params_t& param_map) {
-    for(long unsigned int i = 0; i < m_regex_list.size(); i++) {
-        smatch match_results;
-	vector<string> params = m_regex_list[i]["params"];
-	if(!regex_search(message, match_results, m_expressions[i]) || params.size() != match_results.size() - 1) {
+bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t& paramMap) {
+    for(long unsigned int i = 0; i < m_regexList.size(); i++) {
+        smatch matchResults;
+        vector<string> params = m_regexList[i]["params"];
+        if(!regex_search(message, matchResults, m_expressions[i]) || params.size() != matchResults.size() - 1) {
             continue;
-	}
-	// found matching regex
-	event_tag = m_regex_list[i]["tag"];
-        transform(params.begin(), params.end(), match_results.begin() + 1, inserter(param_map, param_map.end()), [](string a, string b) {
-	    return make_pair(a,b);
-	});
-	return true;
+        }
+        // found matching regex
+        eventTag = m_regexList[i]["tag"];
+        transform(params.begin(), params.end(), matchResults.begin() + 1, inserter(paramMap, paramMap.end()), [](string a, string b) {
+            return make_pair(a,b);
+        });
+        return true;
     }
     return false;
-}
-
-SyslogParser::SyslogParser(vector<regex> expressions, json regex_list) {
-    m_expressions = expressions;
-    m_regex_list = regex_list;
 }

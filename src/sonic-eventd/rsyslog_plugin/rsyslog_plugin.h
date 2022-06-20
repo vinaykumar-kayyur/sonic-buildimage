@@ -2,6 +2,7 @@
 #define RSYSLOG_PLUGIN_H
 
 #include <string>
+#include <memory>
 #include "syslog_parser.h"
 #include "common/events.h"
 #include "common/logger.h"
@@ -17,16 +18,15 @@ using namespace swss;
 
 class RsyslogPlugin {
 public:
-    bool onInit();
+    int onInit();
     bool onMessage(string msg);
     void run();
-    RsyslogPlugin(string module_name, string regex_path);
+    RsyslogPlugin(string moduleName, string regexPath);
 private:
-    SyslogParser* m_parser;
-    event_handle_t m_event_handle;
-    string m_regex_path;
-    string m_module_name;
-
+    unique_ptr<SyslogParser> m_parser;
+    event_handle_t m_eventHandle;
+    string m_regexPath;
+    string m_moduleName;
     bool createRegexList();
 };
 

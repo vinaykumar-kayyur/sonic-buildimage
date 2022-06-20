@@ -19,10 +19,8 @@ using json = nlohmann::json;
 class SyslogParser {
 public:
     vector<regex> m_expressions;
-    json m_regex_list = json::array();
-
-    SyslogParser(vector<regex> expressions, json regex_list);
-    bool parseMessage(string message, string& tag, event_params_t& param_dict);
+    json m_regexList = json::array();
+    bool parseMessage(string message, string& tag, event_params_t& paramDict);
 };
 
 #endif
