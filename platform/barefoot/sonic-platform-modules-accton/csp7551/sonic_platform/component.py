@@ -34,7 +34,7 @@ COMPONENT_LIST= [
    ("FAN_CPLD", "FAN CPLD"),
    ("PORT_CPLD1", "PORT CPLD 1"),
    ("PORT_CPLD2", "PORT CPLD 2"),
-   ("FPGA", "FPGA"),
+   ("SWITCH_FPGA", "SWITCH FPGA"),
    ("BIOS", "Basic Input/Output System"),
    ("BMC", "Baseboard Management Controller"),
    ("REFRESH", "Refresh action.\nThis component is used to trigger component firmware refresh and will cause the system to restart.\nUsers can use below command to trigger refresh action.\n'config platform firmware install chassis component REFRESH fw /etc/accton/fw/csp7551/chassis/refresh'")
@@ -131,6 +131,16 @@ class Component(ComponentBase):
             with open(refresh_path,'w') as f:
                 f.write(str(val))
 
+    def __update_refresh_update_file(self,component):
+        refresh_path="/etc/accton/fw/csp7551/chassis/refresh_update"
+        with open(refresh_path,'r') as f:
+            val = f.read()
+        val = int(val) | 1<<component
+        with open(refresh_path,'w') as f:
+            f.write(str(val))
+
+
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
@@ -180,7 +190,7 @@ class Component(ComponentBase):
             fpga_version = "{}.{}".format(int(fpga_major_version_raw,16),int(fpga_minor_version_raw,16))
             return fpga_version
         except Exception as e:
-            print('Get exception when read FPGA version.')
+            print('Get exception when read SWITCH FPGA version.')
             return None
 
     def __get_bios_version(self):
@@ -218,6 +228,17 @@ class Component(ComponentBase):
             print('Get exception when read ONIE version.')
             return None
 
+    def __get_refresh_version(self):
+        refresh_path="/etc/accton/fw/csp7551/chassis/refresh_update"
+        if not os.path.isfile(refresh_path):
+            return "0"
+        else:
+            with open(refresh_path,'r') as f:
+                val = f.read()
+            refresh_version = "{}".format(hex(int(val)))
+            return refresh_version
+
+
     def __cpld_upd(self, image_path):
         retcode = 0xff
         if self.name == "PORT_CPLD1" or self.name == "PORT_CPLD2":
@@ -231,20 +252,28 @@ class Component(ComponentBase):
             retcode = self.__execute_cmd(cpld_upd_cmd)
 
         if retcode == 0:
-            if self.name == "PORT_CPLD1" or self.name == "PORT_CPLD2":
+            print("Update successfully.")
+            if self.name == "PORT_CPLD1":
                 self.__update_refresh_file(0)
+                self.__update_refresh_update_file(2)
+            elif self.name == "PORT_CPLD2":
+                self.__update_refresh_file(0)
+                self.__update_refresh_update_file(3)
             elif self.name == "SYS_CPLD":
+                self.__update_refresh_update_file(0)
                 self.__update_refresh_file(2)
             elif self.name == "FAN_CPLD":
+                self.__update_refresh_update_file(1)
                 self.__update_refresh_file(1)
             return True
         else:
+            print("Update failed.")
             return False
 
     def __fpga_upd(self, image_path):
         retcode1 = 0xff
         retcode = 0xff
-        if self.name == "FPGA":
+        if self.name == "SWITCH_FPGA":
             print("Erasing the SPI flash, this takes about a minute...")
             fpga_upd_cmd = "fpga_upd -E"
             retcode1 = self.__execute_cmd(fpga_upd_cmd)
@@ -261,9 +290,12 @@ class Component(ComponentBase):
             retcode = self.__execute_cmd(cpld_upd_cmd)
         '''
         if retcode == 0 and retcode1 == 0:
+            print("Update successfully.")
+            self.__update_refresh_update_file(4)
             self.__update_refresh_file(0)
             return True
         else:
+            print("Update failed.")
             return False
 
     def __bmc_upd(self, image_path):
@@ -271,9 +303,12 @@ class Component(ComponentBase):
         print("Use refresh to apply the bmc image, it may takes few minutes...")
         retcode = self._scp_transfile(image_path,"/run/initramfs/image-bmc")
         if retcode == True:
+            print("Transfer successfully.")
+            self.__update_refresh_update_file(6)
             self.__update_refresh_file(4)
             return True
         else:
+            print("Transfer failed.")
             return False
 
     def __bios_upd(self, image_path):
@@ -286,13 +321,14 @@ class Component(ComponentBase):
         #self._syscmd_call("rm -rf /tmp/layout")
         for line in log.splitlines():
             if "VERIFIED" in line:
-                print("Update Scuess")
+                print("Update successfully.")
+                self.__update_refresh_update_file(5)
                 self.__update_refresh_file(0)
                 return True
             elif "identical" in line:
                 print("Content identical , not need update, return True")
                 return True
-        print("Update Fail")
+        print("Update failed.")
         return False
 
     def __refresh(self, image_path):
@@ -306,6 +342,8 @@ class Component(ComponentBase):
             return False
         with open(image_path, 'w') as f:
             f.write("")
+        with open("/etc/accton/fw/csp7551/chassis/refresh_update", 'w') as f:
+            f.write("0")
         cmd = "sync;sync;sync"
         self._syscmd_call(cmd)
         #mat = re.match(r'.*refresh_(\d)',image_path,re.M|re.I)
@@ -318,6 +356,14 @@ class Component(ComponentBase):
         if st != 0 or log is None:
             print('error on refresh cmd : status {}, err is {}'.format(st, err))
             return False
+        print("System will reboot to refresh updated components' firmware. Please stay tune.")
+        i=0
+        while i < 20:
+            print(".")
+            i = i+1
+            time.sleep(30)
+
+        print("System not auto reboot, please check /media/card/log/refresh_log for more detail")
         return True
 
     def get_name(self):
@@ -347,7 +393,7 @@ class Component(ComponentBase):
         if "CPLD" in self.name:
             cpld_version = self.__get_cpld_version()
             fw_version = cpld_version.get(self.name)
-        elif self.name == "FPGA":
+        elif self.name == "SWITCH_FPGA":
             fw_version = self.__get_fpga_version()
         elif self.name == "BIOS":
             fw_version = self.__get_bios_version()
@@ -356,7 +402,7 @@ class Component(ComponentBase):
         elif self.name == "ONIE":
             fw_version = self.__get_onie_version()
         elif self.name == "REFRESH":
-            fw_version = "1.0"
+            fw_version = self.__get_refresh_version()
 
         return fw_version
 
@@ -371,7 +417,7 @@ class Component(ComponentBase):
         ret = False
         if "CPLD" in self.name:
             ret = self.__cpld_upd(image_path)
-        elif "FPGA" == self.name:
+        elif "SWITCH_FPGA" == self.name:
             ret = self.__fpga_upd(image_path)
         elif "BMC" == self.name:
             ret = self.__bmc_upd(image_path)
@@ -392,7 +438,7 @@ class Component(ComponentBase):
         ret = False
         if "CPLD" in self.name:
             ret = self.__cpld_upd(image_path)
-        elif "FPGA" == self.name:
+        elif "SWITCH_FPGA" == self.name:
             ret = self.__fpga_upd(image_path)
         elif "BMC" == self.name:
             ret = self.__bmc_upd(image_path)

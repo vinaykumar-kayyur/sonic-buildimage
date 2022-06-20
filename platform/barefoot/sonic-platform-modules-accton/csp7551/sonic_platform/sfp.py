@@ -1287,7 +1287,7 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num >=FPGA_PORT_START and self.port_num <=FPGA_PORT_END:
            return False
-        if self.port_num > 0 and self.port_num <= 17:
+        if self.port_num > 0 and self.port_num < 17:
             cpld_path="/sys/bus/i2c/devices/33-0062"
         elif self.port_num >16 and self.port_num < 33:
             cpld_path="/sys/bus/i2c/devices/34-0064"
@@ -1552,7 +1552,7 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num >=FPGA_PORT_START and self.port_num <=FPGA_PORT_END:
            return False
-        if self.port_num > 0 and self.port_num <= 17:
+        if self.port_num > 0 and self.port_num < 17:
             cpld_path="/sys/bus/i2c/devices/33-0062"
         elif self.port_num >16 and self.port_num < 33:
             cpld_path="/sys/bus/i2c/devices/34-0064"
@@ -1711,7 +1711,7 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num >=FPGA_PORT_START and self.port_num <=FPGA_PORT_END:
            return False
-        if self.port_num > 0 and self.port_num <= 17:
+        if self.port_num > 0 and self.port_num < 17:
             cpld_path="/sys/bus/i2c/devices/33-0062"
         elif self.port_num >16 and self.port_num < 33:
             cpld_path="/sys/bus/i2c/devices/34-0064"
