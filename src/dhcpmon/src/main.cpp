@@ -32,6 +32,8 @@ static const uint32_t dhcpmon_default_health_check_window = 18;
  *  with DHCP relay */
 static const uint32_t dhcpmon_default_unhealthy_max_count = 10;
 
+bool dual_tor_sock = false;
+
 /**
  * @code usage(prog);
  *
@@ -115,7 +117,6 @@ int main(int argc, char **argv)
     int max_unhealthy_count = dhcpmon_default_unhealthy_max_count;
     size_t snaplen = dhcpmon_default_snaplen;
     int make_daemon = 0;
-    int dual_tor_sock = false;
 
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(basename(argv[0]), LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);

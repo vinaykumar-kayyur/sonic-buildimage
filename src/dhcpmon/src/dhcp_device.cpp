@@ -23,7 +23,6 @@
 #include <netpacket/packet.h>
 #include "subscriberstatetable.h"
 #include "select.h"
-#include <iostream>
 
 #include "dhcp_device.h"
 
@@ -56,7 +55,6 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 swss::Select swssSelect;
 std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
 swss::SubscriberStateTable muxTable(stateDbPtr.get(), "HW_MUX_CABLE_TABLE");
-
 swss::DBConnector configDb("CONFIG_DB", 0);
 
 /** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
@@ -253,13 +251,14 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
 
     bool standby = false;
     swss::Selectable *selectable;
+    swssSelect.addSelectable(&muxTable);
     int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
     if (ret == swss::Select::ERROR) {
         syslog(LOG_WARNING, "Select: returned ERROR");
     }
 
     while ((event == EV_READ) &&
-           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen) > 0))) {
+           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) {
         std::string member_table = std::string("VLAN_MEMBER|") + context->intf + "|";
         char interfaceName;
   	    char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
@@ -268,14 +267,14 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
             std::deque<swss::KeyOpFieldsValuesTuple> entries;
             muxTable.pops(entries);
             for (auto &entry: entries) {
-                std::string vlan = kfvKey(entry);
+                std::string intf_key = kfvKey(entry);
                 std::string operation = kfvOp(entry);
                 std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
                 for (auto &fieldValue: fieldValues) {
                     std::string f = fvField(fieldValue);
                     std::string v = fvValue(fieldValue);
-                    if(f == "state" && v == "standby") {
+                    if(intf_key == interface && f == "state" && v == "standby") {
                         standby = true;
                         break;
                     }
@@ -692,12 +691,6 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
 
         if (setsockopt(context->sock, SOL_SOCKET, SO_ATTACH_FILTER, &dhcp_sock_bfp, sizeof(dhcp_sock_bfp)) != 0) {
             syslog(LOG_ALERT, "setsockopt: failed to attach filter with '%s'\n", strerror(errno));
-            break;
-        }
-
-        int enable = 1;
-        if (setsockopt(context->sock, SOL_SOCKET, IP_PKTINFO,  &enable, sizeof(int)) != 0) {
-            syslog(LOG_ALERT, "setsockopt: failed to set IP_PKTINFO with '%s'\n", strerror(errno));
             break;
         }
 
