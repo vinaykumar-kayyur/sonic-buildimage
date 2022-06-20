@@ -1432,7 +1432,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
     mgmt_alias_reverse_mapping = {}
-    for key in mgmt_intf:
+    sorted_keys = sorted(mgmt_intf.keys(), key=lambda x : x[0])
+    for key in sorted_keys:
         alias = key[0]
         if alias in mgmt_alias_reverse_mapping:
             name = mgmt_alias_reverse_mapping[alias]
