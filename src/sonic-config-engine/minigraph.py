@@ -1852,7 +1852,7 @@ def get_ports_in_active_active(root, devices, neighbors):
             soc_intfs = {}
             for intfname, ipprefix in lo_intfs.keys():
                 intfname_lower = intfname.lower()
-                if hostname in intfname_lower and "soc" in intfname_lower:
+                if hostname + "soc" == intfname_lower:
                     ipprefix = str(ipaddress.ip_network(UNICODE_TYPE(ipprefix.split("/")[0])))
                     if "." in ipprefix:
                         soc_intfs["soc_ipv4"] = ipprefix
