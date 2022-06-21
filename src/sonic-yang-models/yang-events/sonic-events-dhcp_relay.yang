@@ -46,6 +46,10 @@ module sonic-events-dhcp-relay {
             description "Name of the i/f discarding";
         }
 
+        type leafref {
+            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+        }
+
         uses evtcmn:sonic-events-cmn;
     }
 

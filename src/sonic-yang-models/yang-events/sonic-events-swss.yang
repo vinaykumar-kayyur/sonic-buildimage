@@ -52,6 +52,10 @@ module sonic-events-swss {
             description "Interface name";
         }
 
+        type leafref {
+            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+        }
+
         leaf status {
             type enumeration {
                 enum "up";
@@ -75,6 +79,10 @@ module sonic-events-swss {
         leaf ifname {
             type string;
             description "Interface name";
+        }
+
+        type leafref {
+            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
         }
 
         leaf queue_index {
