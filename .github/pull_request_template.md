@@ -31,6 +31,7 @@
 - [ ] 202012
 - [ ] 202106
 - [ ] 202111
+- [ ] 202205
 
 #### Description for the changelog
 <!--
@@ -42,7 +43,7 @@ pull request for inclusion in the changelog:
 <!--
 Provide a link to config_db schema for the table for which YANG model
 is defined
-Link should point to correct section on https://github.com/Azure/SONiC/wiki/Configuration.
+Link should point to correct section on https://github.com/Azure/sonic-buildimage/blob/master/src/sonic-yang-models/doc/Configuration.md
 -->
 
 #### A picture of a cute animal (not mandatory but encouraged)

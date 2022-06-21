@@ -536,9 +536,9 @@ fi
 # Decompress the file for the file system directly to the partition
 if [ x"$docker_inram" = x"on" ]; then
     # when disk is small, keep dockerfs.tar.gz in disk, expand it into ramfs during initrd
-    unzip -o $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
+    unzip -o $ONIE_INSTALLER_PAYLOAD -x "platform.tar.gz" -d $demo_mnt/$image_dir
 else
-    unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
+    unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" "platform.tar.gz"  -d $demo_mnt/$image_dir
 
     if [ "$install_env" = "onie" ]; then
         TAR_EXTRA_OPTION="--numeric-owner"
@@ -548,6 +548,9 @@ else
     mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
     unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 fi
+
+mkdir -p $demo_mnt/$image_dir/platform
+unzip -op $ONIE_INSTALLER_PAYLOAD "platform.tar.gz" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/platform
 
 if [ "$install_env" = "onie" ]; then
     # Store machine description in target file system
@@ -666,6 +669,11 @@ else # install_env = "onie"
     fi
 fi
 
+# Add extra linux command line
+extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
+GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX $extra_cmdline_linux"
+
 cat <<EOF >> $grub_cfg
 menuentry '$demo_grub_entry' {
         search --no-floppy --label --set=root $demo_volume_label
@@ -674,13 +682,13 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-5.10.0-8-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-5.10.0-12-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 systemd.unified_cgroup_hierarchy=0 \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-5.10.0-8-2-amd64
+        initrd  /$image_dir/boot/initrd.img-5.10.0-12-2-amd64
 }
 EOF
 

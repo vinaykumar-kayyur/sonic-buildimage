@@ -16,7 +16,7 @@ ifeq ($(CROSS_BUILD_ENVIRON), y)
 endif
 	stg branch --create $(STG_BRANCH) $(FRR_TAG)
 	stg import -s ../patch/series
-	tools/tarsource.sh -V -e '-sonic'
+	gbp dch --ignore-branch --new-version=$(FRR_VERSION)-sonic-$(FRR_SUBVERSION) --dch-opt="--force-bad-version" --commit --git-author	
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
 	patch -p1 < ../patch/cross-compile-changes.patch

@@ -29,7 +29,10 @@ DEFAULT_BUILD_LOG_TIMESTAMP = none
 # SONIC_USE_DOCKER_BUILDKIT = y
 
 # SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD - use native dockerd for build.
-# If set to y SONiC build container will use native dockerd instead of dind for faster build
+# If set to y SONiC build container will use native dockerd instead of dind for faster build.
+# Special handling of the docker image file names is needed to avoid conflicts with
+# other SONiC build jobs on the same server. This requires changes to the Dockerfile.j2 FROM statement
+# in the dockers/ and platform/ subdirs to use a variable reference instead of an explicit image name.
 # SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD = y
 
 # SONIC_CONFIG_ENABLE_COLORS - enable colored output in build system.
@@ -128,6 +131,9 @@ INCLUDE_ICCPD = n
 # INCLUDE_SFLOW - build docker-sflow for sFlow support
 INCLUDE_SFLOW = y
 
+# ENABLE_SFLOW_DROPMON - support of drop packets monitoring feature for sFlow deamon
+ENABLE_SFLOW_DROPMON = n
+
 # INCLUDE_MGMT_FRAMEWORK - build docker-sonic-mgmt-framework for CLI and REST server support
 INCLUDE_MGMT_FRAMEWORK = y
 
@@ -221,3 +227,11 @@ ENABLE_ASAN ?= n
 
 # reset default container registry from dockerhub to other
 DEFAULT_CONTAINER_REGISTRY ?=
+
+# ENABLE_FIPS_FEATURE - support FIPS feature, only for amd64 or arm64, armhf not supported yet
+# ENABLE_FIPS - support FIPS flag, if enabled, no additional config requred for the image to support FIPS
+ENABLE_FIPS_FEATURE ?= y
+ENABLE_FIPS ?= n
+
+# SONIC_SLAVE_DOCKER_DRIVER - set the sonic slave docker storage driver
+SONIC_SLAVE_DOCKER_DRIVER ?= vfs
