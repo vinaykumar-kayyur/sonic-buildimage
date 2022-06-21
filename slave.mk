@@ -745,7 +745,7 @@ ifneq ($(CROSS_BUILD_ENVIRON),y)
 		python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 else
-		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} sudo -E $(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION))/pip$($*_PYTHON_VERSION) install . && sudo -E $(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION))/pip$($*_PYTHON_VERSION) uninstall --yes `$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION))/python$($*_PYTHON_VERSION) setup.py --name`
+		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py build $(LOG); 
 		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 endif
