@@ -214,23 +214,23 @@ capture_service::do_capture()
         switch(cap_state) {
         case CAP_STATE_INIT:
             {
-            bool add = true;
-            init_cnt--;
-            pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
+                bool add = true;
+                init_cnt--;
+                pre_exist_id_t::iterator it = m_pre_exist_id.find(rid);
 
-            if (it != m_pre_exist_id.end()) {
-                if (seq <= it->second) {
-                    /* Duplicate; Later/same seq in cache. */
-                    add = false;
+                if (it != m_pre_exist_id.end()) {
+                    if (seq <= it->second) {
+                        /* Duplicate; Later/same seq in cache. */
+                        add = false;
+                    }
+                    if (seq >= it->second) {
+                        /* new one; This runtime ID need not be checked again */
+                        m_pre_exist_id.erase(it);
+                    }
                 }
-                if (seq >= it->second) {
-                    /* new one; This runtime ID need not be checked again */
-                    m_pre_exist_id.erase(it);
+                if (add) {
+                    m_events.push_back(evt_str);
                 }
-            }
-            if (add) {
-                m_events.push_back(evt_str);
-            }
             }
             if(m_pre_exist_id.empty() || (init_cnt <= 0)) {
                 /* Init check is no more needed. */

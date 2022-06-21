@@ -606,7 +606,7 @@ TEST(eventd, service)
      * It runs proxy & capture service
      * It uses its own zmq context
      */
-    thread thrSvc(&run_eventd_service);
+    thread thread_service(&run_eventd_service);
 
     /* Need client side service to interact with server side */
     EXPECT_EQ(0, service.init_client(zctx));
@@ -641,7 +641,7 @@ TEST(eventd, service)
 
     service.close_service();
 
-    thrSvc.join();
+    thread_service.join();
 
     zmq_ctx_term(zctx);
     printf("Service TEST completed\n");
