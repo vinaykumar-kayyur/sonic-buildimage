@@ -214,7 +214,7 @@ $(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
 $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
-$(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
+$(info "DEFAULT_CONTAINER_REGISTRY"      : "$(DEFAULT_CONTAINER_REGISTRY)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
