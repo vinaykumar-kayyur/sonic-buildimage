@@ -238,7 +238,7 @@ TEST(eventd, proxy)
 {
     debug_on();
 
-    printf("PROxy TEST started\n");
+    printf("Proxy TEST started\n");
     bool term_sub = false;
     bool term_cap = false;
     string rd_csource, rd_source, wr_source("hello");

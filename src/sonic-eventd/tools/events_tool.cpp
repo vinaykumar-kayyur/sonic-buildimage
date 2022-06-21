@@ -115,7 +115,7 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
             continue;
         }
         ASSERT(!key.empty(), "received EMPTY key");
-        ASSERT(missed_cnt >= 0, "MIssed count uninitialized");
+        ASSERT(missed_cnt >= 0, "Missed count uninitialized");
 
         total_missed += missed_cnt;
 

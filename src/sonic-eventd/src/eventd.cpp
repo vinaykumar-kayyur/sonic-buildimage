@@ -448,20 +448,20 @@ run_eventd_service()
                 }
 
                 {
-                int sz = VEC_SIZE(capture_fifo_events) < READ_SET_SIZE ?
-                    VEC_SIZE(capture_fifo_events) : READ_SET_SIZE;
+                    int sz = VEC_SIZE(capture_fifo_events) < READ_SET_SIZE ?
+                        VEC_SIZE(capture_fifo_events) : READ_SET_SIZE;
 
-                if (sz != 0) {
-                    auto it = std::next(capture_fifo_events.begin(), sz);
-                    move(capture_fifo_events.begin(), capture_fifo_events.end(),
-                            back_inserter(resp_data));
+                    if (sz != 0) {
+                        auto it = std::next(capture_fifo_events.begin(), sz);
+                        move(capture_fifo_events.begin(), capture_fifo_events.end(),
+                                back_inserter(resp_data));
 
-                    if (sz == VEC_SIZE(capture_fifo_events)) {
-                        event_serialized_lst_t().swap(capture_fifo_events);
-                    } else {
-                        capture_fifo_events.erase(capture_fifo_events.begin(), it);
+                        if (sz == VEC_SIZE(capture_fifo_events)) {
+                            event_serialized_lst_t().swap(capture_fifo_events);
+                        } else {
+                            capture_fifo_events.erase(capture_fifo_events.begin(), it);
+                        }
                     }
-                }
                 }
                 break;
 
