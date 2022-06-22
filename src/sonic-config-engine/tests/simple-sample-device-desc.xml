@@ -1,4 +1,4 @@
-<Device i:type="ToRRouter">
+<Device i:type="ToRRouter" xmlns="Microsoft.Search.Autopilot.Evolution" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
   <Hostname>switch-t0</Hostname>
   <HwSku>Force10-S6000</HwSku>
   <ClusterName>AAA00PrdStr00</ClusterName>
