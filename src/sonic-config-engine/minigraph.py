@@ -1873,7 +1873,7 @@ def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors
         is_active_active = port in active_active_ports
         is_active_standby = port in mux_cable_ports
         if is_active_active and is_active_standby:
-            print(f"Warning: skip {port} as it is defined as active-standby and actie-active", file=sys.stderr)
+            print("Warning: skip %s as it is defined as active-standby and actie-active" % port, file=sys.stderr)
             continue
         if not (is_active_active or is_active_standby):
             continue
@@ -1897,7 +1897,7 @@ def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors
 
         if is_active_active:
             if redundancy_type is None or redundancy_type not in ("libra", "mixed"):
-                print(f"Warning: skip {port} as it is defined as active-active but with redundancy_type as {redundancy_type}", file=sys.stderr)
+                print("Warning: skip %s as it is defined as active-active but with redundancy_type as %s" % (port, redundancy_type), file=sys.stderr)
                 # continue
             entry['cable_type'] = 'active-active'
             entry.update(active_active_ports[port])
