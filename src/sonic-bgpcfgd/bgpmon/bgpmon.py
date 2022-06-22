@@ -27,7 +27,7 @@ import subprocess
 import json
 import os
 import syslog
-import swsssdk
+from swsscommon import swsscommon
 import time
 
 PIPE_BATCH_MAX_COUNT = 50
@@ -43,10 +43,8 @@ class BgpStateGet:
         self.new_peer_l = set()
         self.new_peer_state = {}
         self.cached_timestamp = 0
-        self.db = swsssdk.SonicV2Connector()
+        self.db = swsscommon.SonicV2Connector()
         self.db.connect(self.db.STATE_DB, False)
-        client = self.db.get_redis_client(self.db.STATE_DB)
-        self.pipe = client.pipeline()
         self.db.delete_all_by_pattern(self.db.STATE_DB, "NEIGH_STATE_TABLE|*" )
 
     # A quick way to check if there are anything happening within BGP is to
@@ -106,11 +104,10 @@ class BgpStateGet:
         for key, value in data.items():
             if value is None:
                 # delete case
-                self.pipe.delete(key)
+                self.db.delete(self.db.STATE_DB, key)
             else:
                 # Add or Modify case
-                self.pipe.hmset(key, value)
-        self.pipe.execute()
+                self.db.hmset(self.db.STATE_DB, key, value)
         data.clear()
 
     def update_neigh_states(self):
