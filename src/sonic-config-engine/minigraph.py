@@ -938,6 +938,7 @@ def parse_meta(meta, hname):
                     macsec_profile = parse_macsec_profile(value)
                 elif name == "RedundancyType":
                     redundancy_type = redundancy_type
+                    redundancy_type = value
     return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type
 
 
