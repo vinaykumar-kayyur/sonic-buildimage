@@ -1058,10 +1058,10 @@ def filter_acl_table_for_backend(acls, vlan_members):
                                'stage': 'ingress',
                                'type': 'L3'
                              }
-    ports = list()
+    ports = set()
     for vlan, member in vlan_members.keys():
-        ports.append(member)
-    filter_acls['DATAACL']['ports'] = ports
+        ports.add(member)
+    filter_acls['DATAACL']['ports'] = list(ports)
     return filter_acls
 
 def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role, device_type, is_storage_device, vlan_members):
