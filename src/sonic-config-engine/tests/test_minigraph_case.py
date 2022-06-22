@@ -469,14 +469,16 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_parse_device_desc_xml_mgmt_interface(self):
         # Regular device_desc.xml with both IPv4 and IPv6 mgmt address
         result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc)
-        self.assertEqual(len(result.keys()), 2)
-        self.assertTrue(('eth0', '10.0.0.100/24') in result.keys())
-        self.assertTrue(('eth0', 'FC00:1::32/64') in result.keys())
-        self.assertTrue(ipaddress.ip_address(u'10.0.0.1', False) == result[('eth0', '10.0.0.100/24')])
-        self.assertTrue(ipaddress.ip_address(u'fc00:1::1', False) == result[('eth0', 'FC00:1::32/64')])
+        mgmt_intf = result['MGMT_INTERFACE']
+        self.assertEqual(len(mgmt_intf.keys()), 2)
+        self.assertTrue(('eth0', '10.0.0.100/24') in mgmt_intf.keys())
+        self.assertTrue(('eth0', 'FC00:1::32/64') in mgmt_intf.keys())
+        self.assertTrue(ipaddress.ip_address(u'10.0.0.1') == mgmt_intf[('eth0', '10.0.0.100/24')]['gwaddr'])
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1') == mgmt_intf[('eth0', 'FC00:1::32/64')]['gwaddr'])
 
         # Special device_desc.xml with IPv6 mgmt address only
         result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc_ipv6_only)
-        self.assertEqual(len(result.keys()), 1)
-        self.assertTrue(('eth0', 'FC00:1::32/64') in result.keys())
-        self.assertTrue(ipaddress.ip_address(u'fc00:1::1', False) == result[('eth0', 'FC00:1::32/64')])
+        mgmt_intf = result['MGMT_INTERFACE']
+        self.assertEqual(len(mgmt_intf.keys()), 1)
+        self.assertTrue(('eth0', 'FC00:1::32/64') in mgmt_intf.keys())
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1') == mgmt_intf[('eth0', 'FC00:1::32/64')]['gwaddr'])
