@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import ipaddress
 
 import tests.common_utils as utils
 import minigraph
@@ -468,21 +469,14 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_parse_device_desc_xml_mgmt_interface(self):
         # Regular device_desc.xml with both IPv4 and IPv6 mgmt address
         result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc)
-        expected_mgmt_interface = {
-            ('eth0', '10.0.0.100/24'): {
-                'gwaddr': '10.0.0.1'
-            },
-            ('eth0', 'FC00:1::32/64'): {
-                'gwaddr': 'FC00:1::1'
-            },
-        }
-        self.assertEqual(result['MGMT_INTERFACE'], expected_mgmt_interface)
+        self.assertEqual(len(result.keys()), 2)
+        self.assertTrue(('eth0', '10.0.0.100/24') in result.keys())
+        self.assertTrue(('eth0', 'FC00:1::32/64') in result.keys())
+        self.assertTrue(ipaddress.ip_address(u'10.0.0.1', False) == result[('eth0', '10.0.0.100/24')])
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1', False) == result[('eth0', 'FC00:1::32/64')])
 
         # Special device_desc.xml with IPv6 mgmt address only
         result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc_ipv6_only)
-        expected_mgmt_interface = {
-            ('eth0', 'FC00:1::32/64'): {
-                'gwaddr': 'FC00:1::1'
-            },
-        }
-        self.assertEqual(result['MGMT_INTERFACE'], expected_mgmt_interface)
+        self.assertEqual(len(result.keys()), 1)
+        self.assertTrue(('eth0', 'FC00:1::32/64') in result.keys())
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1', False) == result[('eth0', 'FC00:1::32/64')])
