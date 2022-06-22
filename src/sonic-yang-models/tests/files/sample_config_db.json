@@ -117,7 +117,8 @@
         },
         "PORTCHANNEL_INTERFACE": {
                 "PortChannel0003": {
-                    "nat_zone": "1"
+                    "nat_zone": "1",
+                    "loopback_action": "drop"
                 },
                 "PortChannel0004": {"vrf_name": "Vrf_blue"},
                 "PortChannel42|10.1.0.1/31": {},
@@ -132,7 +133,8 @@
         },
         "VLAN_INTERFACE": {
             "Vlan111": {
-                "nat_zone": "0"
+                "nat_zone": "0",
+                "loopback_action": "forward"
             },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
@@ -325,7 +327,8 @@
                 "switch_type": "voq",
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
-                "dhcp_server": "disabled"
+                "dhcp_server": "disabled",
+                "bgp_adv_lo_prefix_as_128": "true"
             }
         },
         "VLAN": {
@@ -445,7 +448,9 @@
                 "asic_port_name": "Eth0-ASIC1",
                 "role": "Ext",
                 "macsec": "test",
-                "link_training": "off"
+                "link_training": "off",
+                "laser_freq": "191600",
+                "tx_power": "-26.6"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -457,7 +462,9 @@
                 "autoneg": "on",
                 "adv_speeds": "100000,50000",
                 "adv_interface_types": "CR,CR4",
-                "link_training": "on"
+                "link_training": "on",
+                "laser_freq": "191300",
+                "tx_power": "-27.3"
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
@@ -925,7 +932,8 @@
             "Ethernet14": {},
             "Ethernet16": {},
             "Ethernet18": {
-                "nat_zone": "1"
+                "nat_zone": "1",
+                "loopback_action": "forward"
             },
             "Ethernet112|2a04:5555:40:a709::2/126": {
                 "scope": "global",
@@ -962,7 +970,8 @@
         },
         "VLAN_SUB_INTERFACE": {
             "Ethernet12.10": {
-                "admin_status": "up"
+                "admin_status": "up",
+                "loopback_action": "drop"
             },
             "Ethernet12.10|10.0.1.56/31": {},
             "Ethernet12.10|fc00::1:71/126": {},
