@@ -734,7 +734,7 @@ class TestCfgGen(TestCase):
             self.test_jinja_expression(self.sample_backend_graph, self.port_config, BACKEND_LEAF_ROUTER)
 
             # ACL_TABLE should contain EVERFLOW related entries
-            argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "ACL_TABLE"'
+            argument = '-m "' + self.sample_backend_graph + '" -p "' + self.port_config + '" -v "ACL_TABLE"'
             output = self.run_script(argument)
             sample_output = utils.to_dict(output.strip()).keys()
             assert 'DATAACL' not in sample_output, sample_output
@@ -747,7 +747,7 @@ class TestCfgGen(TestCase):
             else:
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_LEAF_ROUTER, TOR_ROUTER, self.sample_backend_graph), shell=True)
 
-            self.test_jinja_expression(self.sample_graph, self.port_config, TOR_ROUTER)
+            self.test_jinja_expression(self.sample_backend_graph, self.port_config, TOR_ROUTER)
 
     def test_minigraph_sub_port_no_vlan_member(self, check_stderr=True):
         try:
