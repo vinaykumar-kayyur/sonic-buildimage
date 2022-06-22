@@ -723,6 +723,32 @@ class TestCfgGen(TestCase):
     def test_minigraph_no_vlan_member(self, check_stderr=True):
         self.verify_no_vlan_member()
 
+    def test_minigraph_backend_acl_leaf(self, check_stderr=True):
+        try:
+            print('\n    Change device type to %s' % (BACKEND_LEAF_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_LEAF_ROUTER, self.sample_backend_graph), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_LEAF_ROUTER, self.sample_backend_graph), shell=True)
+
+            self.test_jinja_expression(self.sample_backend_graph, self.port_config, BACKEND_LEAF_ROUTER)
+
+            # ACL_TABLE should contain EVERFLOW related entries
+            argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "ACL_TABLE"'
+            output = self.run_script(argument)
+            sample_output = utils.to_dict(output.strip()).keys()
+            assert 'DATAACL' not in sample_output, sample_output
+            assert 'EVERFLOW' in sample_output, sample_output
+
+        finally:
+            print('\n    Change device type back to %s' % (TOR_ROUTER))
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_LEAF_ROUTER, TOR_ROUTER, self.sample_backend_graph), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_LEAF_ROUTER, TOR_ROUTER, self.sample_backend_graph), shell=True)
+
+            self.test_jinja_expression(self.sample_graph, self.port_config, TOR_ROUTER)
+
     def test_minigraph_sub_port_no_vlan_member(self, check_stderr=True):
         try:
             print('\n    Change device type to %s' % (BACKEND_LEAF_ROUTER))
