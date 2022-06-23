@@ -313,6 +313,30 @@ class Chassis(ChassisBase):
         self.initialize_single_sfp(index)
         return super(Chassis, self).get_sfp(index)
 
+    def get_port_or_cage_type(self, index):
+        """
+        Retrieves sfp port or cage type corresponding to physical port <index>
+
+        Args:
+            index: An integer (>=0), the index of the sfp to retrieve.
+                   The index should correspond to the physical port in a chassis.
+                   For example:-
+                   1 for Ethernet0, 2 for Ethernet4 and so on for one platform.
+                   0 for Ethernet0, 1 for Ethernet4 and so on for another platform.
+
+        Returns:
+            The masks of all types of port or cage that can be supported on the port
+            Types are defined in sfp_base.py
+            Eg.
+                Both SFP and SFP+ are supported on the port, the return value should be 0x0a
+                which is 0x02 | 0x08
+        """
+        index = index - 1
+        if self.RJ45_port_list and index in self.RJ45_port_list:
+            from sonic_platform_base.sfp_base import SfpBase
+            return SfpBase.SFP_PORT_TYPE_BIT_RJ45
+        raise NotImplementedError
+
     def get_change_event(self, timeout=0):
         """
         Returns a nested dictionary containing all devices which have
