@@ -101,6 +101,7 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {# TODO: COPP policy type rules #}
 {% endfor %}
 {% else %}
+auto eth0
 iface eth0 inet dhcp
     metric 202
 {% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
