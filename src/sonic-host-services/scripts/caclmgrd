@@ -277,7 +277,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def get_loopback_ip_from_loopback_keys(self, loopback_keys):
 
         for key in loopback_keys:
-            self.log_warning(" the key in loopback is  = {} {}".format(key, type(key)))
             if not _ip_prefix_in_key(key):
                 continue
 
@@ -292,7 +291,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     def generate_fwd_traffic_from_host_to_soc(self, namespace):
 
-        fwd_dulator_grpc_traffic_from_host_to_soc_cmds = []
+        fwd_dualtor_grpc_traffic_from_host_to_soc_cmds = []
         if self.DualToR:
             loopback_table = self.config_db_map[DEFAULT_NAMESPACE].get_table('LOOPBACK_INTERFACE')
             loopback_address = self.get_loopback_ip_from_loopback_keys(loopback_table.keys())
@@ -302,10 +301,10 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 for key in mux_table_keys:
                     kvp = mux_table.get(key)
                     if 'cable_type' in kvp and kvp['cable_type'] == 'active-active':
-                        fwd_dulator_grpc_traffic_from_host_to_soc_cmds.append(self.iptables_cmd_ns_prefix[namespace] + 
+                        fwd_dualtor_grpc_traffic_from_host_to_soc_cmds.append(self.iptables_cmd_ns_prefix[namespace] + 
                                 "iptables -t nat -A POSTROUTING --destination {} -j SNAT --to-source {}".format(kvp['soc_ipv4'], loopback_address))
 
-        return fwd_dulator_grpc_traffic_from_host_to_soc_cmds
+        return fwd_dualtor_grpc_traffic_from_host_to_soc_cmds
 
     def generate_fwd_traffic_from_namespace_to_host_commands(self, namespace, acl_source_ip_map):
         """
@@ -702,16 +701,16 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Add iptables commands to allow front panel traffic
         iptables_cmds = self.generate_fwd_traffic_from_namespace_to_host_commands(namespace, service_to_source_ip_map)
 
-        dualtor_iptables_cmds = self.generate_fwd_traffic_from_host_to_soc(namespace)
-
         self.log_info("Issuing the following iptables commands:")
         for cmd in iptables_cmds:
             self.log_info("  " + cmd)
-        for cmd in dualtor_iptables_cmds:
-            self.log_info("  " + cmd)
 
         self.run_commands(iptables_cmds)
+
         if self.DualToR:
+            dualtor_iptables_cmds = self.generate_fwd_traffic_from_host_to_soc(namespace)
+            for cmd in dualtor_iptables_cmds:
+                self.log_info("  " + cmd)
             self.run_commands(dualtor_iptables_cmds)
 
 
