@@ -11,19 +11,12 @@ resources:
     ref: master
     endpoint: build
 
-schedules:
-- cron: "0 8 * * *"
+pr: none
+trigger:
   branches:
     include:
     - master
-    - 202012
-  always: true
-
-trigger: none
-pr:
-  branches:
-    include:
-    - master
+    - 202???
   paths:
     include:
     - sonic-slave-jessie
@@ -31,7 +24,7 @@ pr:
     - sonic-slave-buster
     - sonic-slave-bullseye
     - src/sonic-build-hooks
-    - .azure-pipelines
+    - files/build/versions
 
 parameters:
 - name: 'arches'
@@ -59,16 +52,18 @@ stages:
   jobs:
   - ${{ each dist in parameters.dists }}:
     - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
-      - ${{ each arch in parameters.arches }}:
-        - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-          - template: docker-sonic-slave-template.yml
-            parameters:
-              pool: sonicbld
-              arch: ${{ arch }}
-              dist: ${{ dist }}
-        - ${{ else }}:
-          - template: '/.azure-pipelines/docker-sonic-slave-template.yml@buildimage'
-            parameters:
-              pool: sonicbld
-              arch: ${{ arch }}
-              dist: ${{ dist }}
+      - template: '/.azure-pipelines/docker-sonic-slave-template.yml@buildimage'
+        parameters:
+          pool: sonicbld
+          arch: amd64
+          dist: ${{ dist }}
+      - template: '/.azure-pipelines/docker-sonic-slave-template.yml@buildimage'
+        parameters:
+          pool: sonicbld-arm64
+          arch: arm64
+          dist: ${{ dist }}
+      - template: '/.azure-pipelines/docker-sonic-slave-template.yml@buildimage'
+        parameters:
+          pool: sonicbld-armhf
+          arch: armhf
+          dist: ${{ dist }}
