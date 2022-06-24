@@ -356,14 +356,7 @@ RUN apt-get update && apt-get install -y \
         pkg-config \
 # For audisp-tacplus
         libauparse-dev \
-        auditd \
-# For bond
-        libssl-dev \
-        libacl1-dev \
-        libxml2-dev \
-        uuid-dev \
-        haskell-stack \
-        rapidjson-dev
+        auditd
 
 RUN apt-get -y build-dep openssh
 
@@ -394,6 +387,21 @@ RUN apt upgrade -y base-files
        # workaround because of https://bugs.launchpad.net/qemu/+bug/1805913, just disable aspell
        # Issue now being tracked here - https://gitlab.com/qemu-project/qemu/-/issues/263
        RUN cp /bin/true /usr/bin/aspell
+{%- endif %}
+
+{%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
+# Add in dependencies for Bond compilation on armhf and arm64.
+# Also add in libtinfo5 as a build fix for prebuilt GHC being available only
+# with libtinfo5 linkage
+RUN apt install -y \
+        libssl-dev \
+        libacl1-dev \
+        libxml2-dev \
+        uuid-dev \
+        haskell-stack \
+        rapidjson-dev \
+        llvm \
+        libtinfo5
 {%- endif %}
 
 ## Config dpkg
