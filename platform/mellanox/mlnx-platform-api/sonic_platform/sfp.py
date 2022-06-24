@@ -418,11 +418,11 @@ class SFP(SfpBase):
                 logger.log_error('Failed to open SDK handle')
         return SFP.shared_sdk_handle
 
-    @property
-    def sfp_type(self):
+    def _detect_sfp_type(self):
         if not self._sfp_type:
             eeprom_raw = []
             eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
+
             if eeprom_raw:
                 if eeprom_raw[0] in SFP_TYPE_CODE_LIST:
                     self._sfp_type = SFP_TYPE
@@ -431,11 +431,10 @@ class SFP(SfpBase):
                 elif eeprom_raw[0] in QSFP_DD_TYPE_CODE_LIST:
                     self._sfp_type = QSFP_DD_TYPE
 
-            # we don't regonize this identifier value, treat the xSFP module as the default type
-        if not self._sfp_type:
-            raise RuntimeError("Failed to detect SFP type for SFP {}".format(self.index))
-        else:
-            return self._sfp_type
+    @property
+    @utils.pre_initialize(_detect_sfp_type)
+    def sfp_type(self):
+        return self._sfp_type
 
     def _dom_capability_detect(self):
         if self._sfp_capability and self._sfp_capability.dom_detect_finished:
@@ -914,7 +913,7 @@ class SFP(SfpBase):
             transceiver_info_dict['nominal_bit_rate'] = "Not supported for CMIS cables"
             transceiver_info_dict['application_advertisement'] = host_media_list
 
-        else:
+        elif self.sfp_type == SFP_TYPE:
             offset = 0
             vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
@@ -923,6 +922,9 @@ class SFP(SfpBase):
             if sfpi_obj is None:
                 print("Error: sfp_object open failed")
                 return None
+        else:
+            # None of any supported SFP type, could be SFP object not correctly initialized.
+            return None
 
         if self.sfp_type != QSFP_DD_TYPE:
             sfp_interface_bulk_raw = self._read_eeprom_specific_bytes(offset + XCVR_INTERFACE_DATA_START, XCVR_INTERFACE_DATA_SIZE)
