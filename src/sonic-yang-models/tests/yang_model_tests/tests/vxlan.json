@@ -10,10 +10,6 @@
         "desc": "Configure VXLAN_TUNNEL_MAP without VXLAN_TUNNEL entry",
 	    "eStrKey" : "LeafRef"
     },
-    "VXLAN_MAP_WITHOUT_VLAN": {
-        "desc": "Configure VXLAN_TUNNEL_MAP without VLAN entry",
-	    "eStrKey" : "LeafRef"
-    },
     "VXLAN_MAP_OOR_VNI": {
         "desc": "VNI Out of Range in VXLAN_TUNNEL_MAP TABLE",
         "eStrKey": "Range"
