@@ -14,9 +14,10 @@ module sonic-vxlan {
     import sonic-extension {
         prefix sonic-ext;
     }
-    import sonic-vlan {
-        prefix svlan;
-    }
+    // Comment sonic-vlan import here until libyang back-links issue is resolved for VLAN leaf reference.
+    //import sonic-vlan {
+    //    prefix svlan;
+    //}
     import sonic-types {
         prefix stypes;
     }
@@ -83,8 +84,12 @@ module sonic-vxlan {
 
                 leaf vlan {
                     mandatory true;
-                    type leafref {
-                        path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                    // Comment VLAN leaf reference here until libyang back-links issue is resolved and use VLAN string pattern
+                    // type leafref {
+                    //    path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                    //}
+                    type string {
+                        pattern 'Vlan([0-9]{1,3}|[1-3][0-9]{3}|[4][0][0-8][0-9]|[4][0][9][0-4])';
                     }
 
                 }
