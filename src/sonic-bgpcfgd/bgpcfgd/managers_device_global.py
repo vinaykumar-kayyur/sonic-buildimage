@@ -1,7 +1,5 @@
 from .manager import Manager
 from .log import log_err, log_debug
-from swsscommon import swsscommon
-import subprocess
 import re
 
 class DeviceGlobalCfgMgr(Manager):
@@ -34,7 +32,7 @@ class DeviceGlobalCfgMgr(Manager):
             return False
 
         if "tsa_enabled" in data:
-            self.cfg_mgr.commit()
+            self.cfg_mgr.update()
             self.isolate_unisolate_device(data["tsa_enabled"])
             self.directory.put(self.db_name, self.table_name, "tsa_enabled", data["tsa_enabled"])
             return True        
@@ -44,12 +42,13 @@ class DeviceGlobalCfgMgr(Manager):
         log_debug("DeviceGlobalCfgMgr:: del handler")
         return True
 
-    def check_state_and_get_tsa_routemaps(self, cmds):
+    def check_state_and_get_tsa_routemaps(self, cfg):
         """ API to get TSA route-maps if device is isolated"""
         cmd = ""
         if self.directory.path_exist("CONFIG_DB", "BGP_DEVICE_GLOBAL", "tsa_enabled"):
             tsa_status = self.directory.get_slot("CONFIG_DB", "BGP_DEVICE_GLOBAL")["tsa_enabled"]
             if tsa_status == "true":
+                cmds = cfg.replace("#012", "\n").split("\n")
                 log_debug("DeviceGlobalCfgMgr:: Device is isolated. Applying TSA route-maps")
                 cmd = self.get_tsa_routemaps(cmds)            
         return cmd
@@ -67,12 +66,18 @@ class DeviceGlobalCfgMgr(Manager):
         self.cfg_mgr.push(cmd)
         log_debug("DeviceGlobalCfgMgr::Done")
 
-    def get_tsa_routemaps(self, cfg):
-        route_map_names = self.__extract_out_route_map_names(cfg)
+    def get_tsa_routemaps(self, cmds):
+        if not cmds:
+            return ""
+
+        route_map_names = self.__extract_out_route_map_names(cmds)
         return self.__generate_routemaps_from_template(route_map_names, self.tsa_template)
 
-    def get_tsb_routemaps(self, cfg):
-        route_map_names = self.__extract_out_route_map_names(cfg)
+    def get_tsb_routemaps(self, cmds):
+        if not cmds:
+            return ""
+
+        route_map_names = self.__extract_out_route_map_names(cmds)
         return self.__generate_routemaps_from_template(route_map_names, self.tsb_template)
 
     def __generate_routemaps_from_template(self, route_map_names, template):
@@ -91,12 +96,14 @@ class DeviceGlobalCfgMgr(Manager):
         log_debug("DeviceGlobalCfgMgr::get_tsa_routemaps:: Done")
         return cmd
 
-    def __extract_out_route_map_names(self, cfg):
-        route_map_names = []
-        out_route_map = re.compile(r'^\s*neighbor \S+ route-map (\S+) out$')        
-        for line in cfg.replace("#012", "\n").split("\n"):
-            result = out_route_map.match(line)            
-            if result:
-                route_map_names.append(result.group(1))                
-        return route_map_names
+    def __extract_out_route_map_names(self, cmds):
+        if not cmds:
+            return ""
 
+        route_map_names = []
+        out_route_map = re.compile(r'^\s*neighbor \S+ route-map (\S+) out$')
+        for line in cmds:
+            result = out_route_map.match(line)
+            if result:
+                route_map_names.append(result.group(1))
+        return route_map_names
