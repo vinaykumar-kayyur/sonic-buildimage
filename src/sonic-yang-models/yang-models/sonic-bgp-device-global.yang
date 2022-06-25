@@ -20,10 +20,10 @@ module sonic-bgp-device-global {
     container sonic-bgp-device-global {
         container BGP_DEVICE_GLOBAL {
             container STATE {
-                description: "BGP device-specific global data"
+                description "BGP device-specific global data";
                 leaf tsa_enabled {
                     type boolean;
-                    default "False";
+                    default "false";
                     description
                     "When set to true, Traffic is shifted away (TSA), i.e, BGP routes are not advertised to neighboring routers";
                 }

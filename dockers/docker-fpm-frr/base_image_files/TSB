@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)" == "False" ]]; then
+if [[ "$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)" == "false" ]]; then
   echo "System is already in Normal mode"
 else
   # toggle the mux to auto if dualtor

@@ -57,7 +57,7 @@ class BGPPeerGroupMgr(object):
         """
         try:
             pg = self.peergroup_template.render(**kwargs)
-            tsa_rm = self.device_global_cfgmgr.check_state_and_update_tsa_routemaps(pg)
+            tsa_rm = self.device_global_cfgmgr.check_state_and_get_tsa_routemaps(pg)
         except jinja2.TemplateError as e:
             log_err("Can't render peer-group template: '%s': %s" % (name, str(e)))
             return False

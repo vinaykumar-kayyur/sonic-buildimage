@@ -49,7 +49,7 @@ class DeviceGlobalCfgMgr(Manager):
         cmd = ""
         if self.directory.path_exist("CONFIG_DB", "BGP_DEVICE_GLOBAL", "tsa_enabled"):
             tsa_status = self.directory.get_slot("CONFIG_DB", "BGP_DEVICE_GLOBAL")["tsa_enabled"]
-            if tsa_status == "True":
+            if tsa_status == "true":
                 log_debug("DeviceGlobalCfgMgr:: Device is isolated. Applying TSA route-maps")
                 cmd = self.get_tsa_routemaps(cmds)            
         return cmd
@@ -57,7 +57,7 @@ class DeviceGlobalCfgMgr(Manager):
     def isolate_unisolate_device(self, tsa_status):
         """ API to get TSA/TSB route-maps and apply configuration"""
         cmd = "\n"
-        if tsa_status == "True":
+        if tsa_status == "true":
             log_debug("DeviceGlobalCfgMgr:: Device isolated. Executing TSA")
             cmd += self.get_tsa_routemaps(self.cfg_mgr.get_text())
         else:
@@ -87,6 +87,7 @@ class DeviceGlobalCfgMgr(Manager):
             else:
                 continue                        
             cmd += template.render(route_map_name=rm,ip_version=ipv,ip_protocol=ipp, constants=self.constants)
+            cmd += "\n"
         log_debug("DeviceGlobalCfgMgr::get_tsa_routemaps:: Done")
         return cmd
 
@@ -98,14 +99,4 @@ class DeviceGlobalCfgMgr(Manager):
             if result:
                 route_map_names.append(result.group(1))                
         return route_map_names
-
-    def __update_traffic_shift_using_cmd(self, tsa_status):
-        if tsa_status == "True":
-            log_debug("DeviceGlobalCfgMgr:: Device isolated. Executing TSA")
-            subprocess.run(['TSA'])
-        else:
-            log_debug("DeviceGlobalCfgMgr:: Device un-isolated. Executing TSB")
-            subprocess.run(['TSB'])        
-        log_debug("DeviceGlobalCfgMgr::Done")
-
 

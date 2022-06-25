@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)" == "True" ]]; then
+if [[ "$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)" == "true" ]]; then
   echo "System is already in Maintenance"
 else
   # toggle the mux to standby if dualtor and any mux active
