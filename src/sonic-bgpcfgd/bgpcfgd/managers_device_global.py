@@ -97,9 +97,6 @@ class DeviceGlobalCfgMgr(Manager):
         return cmd
 
     def __extract_out_route_map_names(self, cmds):
-        if not cmds:
-            return ""
-
         route_map_names = []
         out_route_map = re.compile(r'^\s*neighbor \S+ route-map (\S+) out$')
         for line in cmds:
