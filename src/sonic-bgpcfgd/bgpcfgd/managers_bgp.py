@@ -10,6 +10,7 @@ from .template import TemplateFabric
 from .utils import run_command
 from .managers_device_global import DeviceGlobalCfgMgr
 
+
 class BGPPeerGroupMgr(object):
     """ This class represents peer-group and routing policy for the peer_type """
     def __init__(self, common_objs, base_template):
