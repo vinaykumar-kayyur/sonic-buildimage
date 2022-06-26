@@ -449,7 +449,7 @@ RUN apt-get install -y -t buster-backports \
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 # Arm vs. amd64 versions conflict - remove amd64 packages
 RUN apt-get remove -y libnl-3-200 libsnmp30
-RUN apt-get install -y libpcre3:$arch
+RUN apt-get install -y libpcre2-dev:$arch libpcre3:$arch
 {%- endif %}
 
 RUN apt-get -y build-dep openssh

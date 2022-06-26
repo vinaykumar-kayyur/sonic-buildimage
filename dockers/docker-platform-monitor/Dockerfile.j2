@@ -30,7 +30,6 @@ RUN apt-get update &&   \
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 RUN mkdir prebuilt-python-wheels
 COPY prebuilt-python-wheels/* prebuilt-python-wheels/
-RUN pip2 install prebuilt-python-wheels/lxml*cp2*.whl
 RUN pip3 install prebuilt-python-wheels/lxml*cp3*.whl
 RUN rm -rf prebuilt-python-wheels
 {%- endif %}
