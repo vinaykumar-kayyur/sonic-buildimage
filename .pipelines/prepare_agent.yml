@@ -9,6 +9,7 @@ steps:
       sudo sed -i "s#{{codename}}#$UBUNTU_CODENAME#" /etc/apt/sources.list
       sudo apt update
 
+      sudo setfacl -R -b /mnt
       if [[ $PLATFORM_ARCH == arm* ]];then
         echo arm agent, skip.
         exit 0
@@ -38,5 +39,4 @@ steps:
       fi
       df -h
       lsblk
-      sudo setfacl -R -b /mnt
     displayName: 'prepare 1ES agent'
