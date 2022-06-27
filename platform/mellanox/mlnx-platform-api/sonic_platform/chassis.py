@@ -120,6 +120,8 @@ class Chassis(ChassisBase):
             self.sfp_event.deinitialize()
 
         if self._sfp_list:
+            if utils.is_host():
+                return
             from .sfp import SFP, deinitialize_sdk_handle
             if SFP.shared_sdk_handle:
                 deinitialize_sdk_handle(SFP.shared_sdk_handle)
