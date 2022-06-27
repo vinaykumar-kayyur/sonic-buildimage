@@ -565,7 +565,7 @@ class SFP(SfpBase):
             self._sfp_capability.dom_volt_supported = False
             self._sfp_capability.dom_rx_power_supported = False
             self._sfp_capability.dom_tx_power_supported = False
-            self._sfp_capability.dom_detect_finished = True
+            self._sfp_capability.dom_detect_finished = False
 
     @property
     @utils.pre_initialize(_dom_capability_detect)
