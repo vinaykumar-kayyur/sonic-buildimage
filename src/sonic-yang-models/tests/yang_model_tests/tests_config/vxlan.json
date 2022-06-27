@@ -38,18 +38,6 @@
              }
          }
     },
-    "VXLAN_VTEP_WRONG_NAME": {
-        "sonic-vxlan:sonic-vxlan": {
-            "sonic-vxlan:VXLAN_TUNNEL": {
-                "VXLAN_TUNNEL_LIST": [
-                    {
-                        "name": "tunnel1",
-                        "src_ip": "1.2.3.4"
-                    }
-                ]
-             }
-         }
-    },
     "VXLAN_EVPN_NVO_WITHOUT_VTEP": {
         "sonic-vxlan:sonic-vxlan": {
             "sonic-vxlan:VXLAN_EVPN_NVO": {
