@@ -1014,7 +1014,7 @@ def parse_linkmeta(meta, hname):
 
 def parse_macsec_profile(val_string):
     macsec_profile = {}
-    values = val_string.strip().split(' ')
+    values = val_string.strip().split()
     for val in values:
         keys = val.strip().split('=')
         if keys[0] == 'PrimaryKey':
