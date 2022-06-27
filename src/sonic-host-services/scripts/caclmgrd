@@ -84,7 +84,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         }
     }
 
-    UPDATE_DELAY_SECS = 1
+    UPDATE_DELAY_SECS = 0.5
 
     DualToR = False
 
