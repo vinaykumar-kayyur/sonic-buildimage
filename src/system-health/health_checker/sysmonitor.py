@@ -163,7 +163,7 @@ class Sysmonitor(ProcessTaskBase):
                1. Add an empty table entry to CONFIG DB
                2. Add all fields to the table
             
-            So, if system health read data on middle of step 1 and step 2, it might read invalid data. A retry
+            So, if system health read db on middle of step 1 and step 2, it might read invalid data. A retry
             mechanism is here to avoid such issue.
 
         Args:
@@ -179,7 +179,7 @@ class Sysmonitor(ProcessTaskBase):
             for srv, fields in feature_table.items():
                 if 'state' not in fields:
                     success = False
-                    logger.log_warn("FEATURE table is not fully ready: {}, retrying".format(feature_table))
+                    logger.log_warning("FEATURE table is not fully ready: {}, retrying".format(feature_table))
                     break
                 if fields["state"] not in ["disabled", "always_disabled"]:
                     srvext = srv + ".service"
