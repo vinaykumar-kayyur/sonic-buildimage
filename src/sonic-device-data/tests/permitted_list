@@ -315,3 +315,4 @@ phy_pcs_repeater
 l3_alpm_hit_skip
 sai_verify_incoming_chksum
 phy_an_lt_msft
+system_ref_core_clock_khz
