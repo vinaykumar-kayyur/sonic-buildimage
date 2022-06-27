@@ -483,6 +483,7 @@ class SFP(SfpBase):
                 self._sfp_capability.qsfp_page3_available = dom_status_indicator['data']['FlatMem']['value'] == 'Off'
                 self._sfp_capability.dom_detect_finished = True
             else:
+                logger.log_warning("SFP {}: Dom capabilty parsing is failed due to eeprom read fail, will re-try next time.".format(self.index))
                 self._sfp_capability.dom_supported = False
                 self._sfp_capability.dom_temp_supported = False
                 self._sfp_capability.dom_volt_supported = False
@@ -531,6 +532,7 @@ class SFP(SfpBase):
                 self._sfp_capability.dom_thresholds_supported = False
                 self._sfp_capability.dom_rx_tx_power_bias_supported = False
                 self._sfp_capability.dom_detect_finished = False
+                logger.log_warning("SFP {}: Dom capabilty parsing is failed due to eeprom read fail, will re-try next time.".format(self.index))
 
         elif self.sfp_type == SFP_TYPE:
             sfpi_obj = sff8472InterfaceId()
@@ -566,6 +568,7 @@ class SFP(SfpBase):
             self._sfp_capability.dom_rx_power_supported = False
             self._sfp_capability.dom_tx_power_supported = False
             self._sfp_capability.dom_detect_finished = False
+            logger.log_warning("SFP {}: Dom capabilty parsing is failed due to sfp type is not one of the supported ones, will re-try next time.".format(self.index))
 
     @property
     @utils.pre_initialize(_dom_capability_detect)
@@ -924,6 +927,7 @@ class SFP(SfpBase):
                 return None
         else:
             # None of any supported SFP type, could be SFP object not correctly initialized.
+            logger.log_warning("SFP {}: type is not one the supported type, or SFP object initialization is not finished yet.".format(self.index))
             return None
 
         if self.sfp_type != QSFP_DD_TYPE:
