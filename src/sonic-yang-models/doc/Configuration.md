@@ -1444,7 +1444,8 @@ channel name as object key, and tagging mode as attributes.
 ### VXLAN
 
 VXLAN_TUNNEL holds the VTEP source ip configuration.  
-VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.
+VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.  
+VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered tunnels.
 
 ```
 {
@@ -1462,6 +1463,11 @@ VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.
            "vni": "22000",
            "vlan": "70"
          },
+  }
+  "VXLAN_EVPN_NVO": {
+        "nvo1": {
+            "source_vtep": "vtep1"
+        }
   }
 }
 ```
