@@ -30,9 +30,8 @@ iface lo inet loopback
 {% block mgmt_interface %}
 
 # The management network interface
-auto eth0
 {% if (ZTP_DHCP_DISABLED is not defined) and (ZTP is defined) and (ZTP['mode'] is defined and ZTP['mode']['profile'] == 'active') %}
-
+auto eth0
 
 # ZTP out-of-band interface
 allow-hotplug eth0
@@ -64,6 +63,9 @@ iface {{ port }} inet6 dhcp
 
 {% else %}
 {% if MGMT_INTERFACE %}
+{% for (name, prefix) in MGMT_INTERFACE|pfx_filter|unique(attribute=0) %}
+auto {{ name }}
+{% endfor %}
 {% for (name, prefix) in MGMT_INTERFACE|pfx_filter %}
 iface eth0 {{ 'inet' if prefix | ipv4 else 'inet6' }} static
     address {{ prefix | ip }}
@@ -93,6 +95,7 @@ iface eth0 {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {# TODO: COPP policy type rules #}
 {% endfor %}
 {% else %}
+auto eth0
 iface eth0 inet dhcp
     metric 202
 {% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
