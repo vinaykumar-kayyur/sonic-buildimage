@@ -91,6 +91,8 @@ class TestJ2Files(TestCase):
         return output_file
 
     def test_interfaces(self):
+        interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
+
         # ZTP enabled
         argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config_tiny + ' -j ' + self.ztp + ' -j ' + self.port_data + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + '> ' + self.output_file
         self.run_script(argument)
@@ -109,7 +111,6 @@ class TestJ2Files(TestCase):
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt_ztp_inband_ip'), self.output_file))
 
         # ZTP disabled, MGMT_INTERFACE defined
-        interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
         self.run_script(argument)
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces'), self.output_file))
