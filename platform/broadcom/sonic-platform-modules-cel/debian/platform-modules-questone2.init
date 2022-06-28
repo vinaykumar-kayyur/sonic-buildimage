@@ -1,0 +1,52 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          setup-board
+# Required-Start:    $portmap
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Setup questone2 board.
+### END INIT INFO
+
+
+case "$1" in
+start)
+        echo -n "Setting up board... "
+
+        # Loads kernel modules
+        modprobe questone2_baseboard_cpld
+        modprobe questone2_switchboard
+        modprobe mc24lc64t
+        modprobe optoe
+        modprobe sff_8436_eeprom
+
+        # Add driver to support TLV - EEPROM
+        echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
+
+        ## populate SYSTEM EEPROM
+        # I2C_1<->i2c-66  I2C_2<->i2c-67  I2C_3<->i2c-68  I2C_4<->i2c-69
+        # I2C_5<->i2c-70  I2C_6<->i2c-71  I2C_7<->i2c-72  I2C_11<->i2c-73   I2C_12<->i2c-74
+        # I2C_3_PCA9548_chnnel_0<->i2c-75  I2C_1_PCA9548_chnnel_0<->i2c-2  I2C_6_PCA9548_chnnel_0<->i2c-83
+        echo 24lc64t 0x57 > /sys/bus/i2c/devices/i2c-69/new_device
+
+        echo "done."
+        ;;
+
+stop)
+        echo "done."
+        ;;
+
+force-reload|restart)
+        echo "Not supported"
+        ;;
+
+*)
+        echo "Usage: /etc/init.d/platform-modules-questone2 {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

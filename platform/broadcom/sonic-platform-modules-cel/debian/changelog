@@ -1,3 +1,9 @@
+sonic-cel-platform-modules (1.0) unstable; urgency=low
+
+  * Add questone2 platform module.
+
+ -- Rancho Zhang <razhang@celestica.com>  Wed, 13 Apr 2022 15:20:10 +0700
+
 sonic-cel-platform-modules (0.9) unstable; urgency=low
 
   * Add haliburton platform module.
