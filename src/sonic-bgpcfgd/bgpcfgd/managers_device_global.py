@@ -32,7 +32,7 @@ class DeviceGlobalCfgMgr(Manager):
             return False
 
         if "tsa_enabled" in data:
-            self.cfg_mgr.update()
+            self.cfg_mgr.commit()
             self.isolate_unisolate_device(data["tsa_enabled"])
             self.directory.put(self.db_name, self.table_name, "tsa_enabled", data["tsa_enabled"])
             return True        
