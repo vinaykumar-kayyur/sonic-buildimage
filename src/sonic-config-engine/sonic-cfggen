@@ -138,6 +138,13 @@ def ip_network(value):
         return "Invalid ip address %s" % value
     return r_v.network
 
+def load_namespace_config(asic_name):
+    if not SonicDBConfig.isInit():
+        if is_multi_asic():
+            SonicDBConfig.load_sonic_global_db_config(namespace=asic_name)
+        else:
+            SonicDBConfig.load_sonic_db_config()
+
 class FormatConverter:
     """Convert config DB based schema to legacy minigraph based schema for backward capability.
 We will move to DB schema and remove this class when the config templates are modified.
@@ -296,12 +303,6 @@ def main():
                                 'localhost': {'namespace_id': namespace_id}
                              }
                           })
-    # load db config
-    if not SonicDBConfig.isInit():
-        if is_multi_asic():
-            SonicDBConfig.load_sonic_global_db_config(namespace=asic_name)
-        else:
-            SonicDBConfig.load_sonic_db_config()
     if hwsku is not None:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'hwsku': hwsku
@@ -309,6 +310,7 @@ def main():
         deep_update(data, hardware_data)
         if args.port_config is None:
             args.port_config = device_info.get_path_to_port_config_file(hwsku)
+        load_namespace_config(asic_name)
         (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
         if ports is None:
             print('Failed to get port config', file=sys.stderr)
@@ -334,6 +336,7 @@ def main():
 
     if args.minigraph is not None:
         minigraph = args.minigraph
+        load_namespace_config(asic_name)
         if platform:
             if args.port_config is not None:
                 deep_update(data, parse_xml(minigraph, platform, args.port_config, asic_name=asic_name, hwsku_config_file=args.hwsku_config))
