@@ -73,8 +73,8 @@ class SonicCfgDescriber:
             field = re.search("/(.*)\:(.*) \=", condition)
             ref_table = condition.split("/")[2].split(':')[-1]
             values = re.findall("\'(.*?)\'", condition, re.DOTALL)
-            desc = "when " + ref_table + ":" + field.group(2) + " in "
-                    + ",".join(values)
+            desc = "when " + ref_table + ":" + field.group(2) + \
+                   " in " + ",".join(values)
 
         return desc
 
