@@ -8,6 +8,32 @@ Index: libyang-1.0.73/CMakeLists.txt
  
  # force out-of-source build
  if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+Index: libyang-1.0.73/packages/debian.control.in
+===================================================================
+--- libyang-1.0.73.orig/packages/debian.control.in
++++ libyang-1.0.73/packages/debian.control.in
+@@ -2,7 +2,7 @@ Source: @PACKAGE_NAME@
+ Maintainer: CESNET <rkrejci@cesnet.cz>
+ Priority: extra
+ Standards-Version: 3.8.2
+-Build-Depends: debhelper (>= 9), gcc
++Build-Depends: debhelper (>= 9), 
+ Homepage: https://github.com/CESNET/libyang
+ 
+ Package: @PACKAGE_NAME@
+Index: libyang-1.0.73/packages/debian.rules.in
+===================================================================
+--- libyang-1.0.73.orig/packages/debian.rules.in
++++ libyang-1.0.73/packages/debian.rules.in
+@@ -13,7 +13,7 @@ override_dh_strip:
+ 	dh_strip -ppython3-yang@PACKAGE_PART_NAME@ --dbg-package=python3-yang@PACKAGE_PART_NAME@-dbg
+ 
+ override_dh_auto_configure:
+-	cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE:String="@BUILD_TYPE@" -DENABLE_LYD_PRIV=ON -DGEN_LANGUAGE_BINDINGS=ON -DGEN_PYTHON_VERSION=2 .
++	CC=$(CROSS_CC) CXX=$(CROSS_CXX) cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE:String="@BUILD_TYPE@" -DENABLE_LYD_PRIV=ON -DGEN_LANGUAGE_BINDINGS=ON -DGEN_PYTHON_VERSION=2 .
+ 
+ override_dh_makeshlibs:
+ 	dh_makeshlibs -Xextensions -Xuser_types
 Index: libyang-1.0.73/packages/local-deb.sh.in
 ===================================================================
 --- libyang-1.0.73.orig/packages/local-deb.sh.in
@@ -17,6 +43,6 @@ Index: libyang-1.0.73/packages/local-deb.sh.in
  git log -10 --pretty=format:'  * %s (%aN)%n' 2>/dev/null >>debian/changelog || echo -e "  * unknown changes \n" >>debian/changelog
  git log -1 --pretty=format:'%n -- %aN <%aE>  %aD%n' >>debian/changelog 2>/dev/null || echo " -- ${USER} <${USER}@`hostname`>  `date -R`" >>debian/changelog
 -debuild --no-lintian -i -b -us -uc
-+debuild --no-lintian -i -b -us -uc -a ${CONFIGURED_ARCH}
++debuild -e CROSS_CC -e CROSS_CXX --no-lintian -i -b -us -uc -a ${CONFIGURED_ARCH} 
  mv ../*.deb debs
  export LC_TIME=$LOCAL_LC_TIME

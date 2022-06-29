@@ -17,8 +17,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
  
 ifeq ($(CROSS_BUILD_ENVIRON), y)
 	patch -p1 < ../patch/cross-compile-changes.patch
-	sed -i "s/cmake/CC=$$CROSS_CC CXX=$$CROSS_CXX cmake/g" packages/debian.rules.in
-	sed -i "/Architecture/ s/any/$$CONFIGURED_ARCH/; /Build-Depends/ s/gcc//" packages/debian.control.in
 endif
 
 	mkdir build

@@ -8,11 +8,11 @@ FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM {{ prefix }}multiarch/debian-debootstrap:arm64-bullseye
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- elif CONFIGURED_ARCH == "armhf" and CROSS_BUILD_ENVIRON == "y" %}
-FROM {{ prefix }}multiarch/qemu-user-static:x86_64-arm as qemu
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-arm-6.1.0-8 as qemu
 FROM {{ prefix }}debian:bullseye
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and CROSS_BUILD_ENVIRON == "y" %}
-FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64 as qemu
+FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM {{ prefix }}debian:bullseye
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 {%- else -%}
