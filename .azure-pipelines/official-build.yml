@@ -39,6 +39,9 @@ stages:
   - name: CACHE_MODE
     value: wcache
   - template: azure-pipelines-repd-build-variables.yml
+  preSteps:
+  - script: which init.sh && init.sh
+    displayName: Init agent
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
