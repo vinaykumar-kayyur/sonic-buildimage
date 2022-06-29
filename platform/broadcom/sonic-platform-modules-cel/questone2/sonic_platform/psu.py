@@ -10,7 +10,6 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.eeprom import Eeprom
     from sonic_platform.fan import Fan
     from .helper import APIHelper
 except ImportError as e:
@@ -49,8 +48,7 @@ class Psu(PsuBase):
         PsuBase.__init__(self)
         self.index = psu_index
         self._api_helper = APIHelper()
-        fan = Fan(0, 0, is_psu_fan=True, psu_index=self.index,
-                      psu_fan_direction='N/A')
+        fan = Fan(0, 0, True, self.index, 'N/A')
         self._fan_list.append(fan)
 
     def get_voltage(self):
