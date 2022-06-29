@@ -117,7 +117,7 @@ class TestCfgHelp(TestCase):
 
     def setUp(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.script_file = 'python3 ' + os.path.join(self.test_dir, '..', 'sonic-cfg-help')
+        self.script_file = 'python ' + os.path.join(self.test_dir, '..', 'sonic-cfg-help')
 
     def run_script(self, argument):
         print('\n    Running sonic-cfg-help ' + argument)
