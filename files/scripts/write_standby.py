@@ -141,7 +141,7 @@ class MuxStateWriter(object):
 
         if self.is_warmrestart:
             # If in warmrestart context, take no action
-            logger.log_warning("Taking no action due to ongoing warmrestart.")
+            logger.log_warning("Skip setting mux state due to ongoing warmrestart.")
             return
 
         intfs = self.get_auto_mux_intfs()
