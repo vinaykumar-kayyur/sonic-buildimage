@@ -9,6 +9,7 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
@@ -170,6 +171,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'1': {'baud_rate': '9600', 'remote_device': 'managed_device', 'flow_control': 1}}"))
+
+    def test_minigraph_dhcp_server_feature(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'dhcp_server\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '')
+
+        try:
+            # For DHCP server enabled device type
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BMC_MGMT_TOR_ROUTER, self.sample_graph), shell=True)
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), 'enabled')
+        finally:
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BMC_MGMT_TOR_ROUTER, TOR_ROUTER, self.sample_graph), shell=True)
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'
@@ -333,6 +347,50 @@ class TestCfgGenCaseInsensitive(TestCase):
             }
         }
 
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+        
+        # Validate tunnel config is as before when tunnel_qos_remap = disabled
+        sample_graph_disabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-disabled.xml')
+        argument = '-m "' + sample_graph_disabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+
+        # Validate extra config is generated when tunnel_qos_remap = enabled
+        sample_graph_enabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-enabled.xml')
+        argument = '-m "' + sample_graph_enabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
+        expected_tunnel = {
+            "MuxTunnel0": {
+                "tunnel_type": "IPINIP",
+                "src_ip": "25.1.1.10",
+                "dst_ip": "10.1.0.32",
+                "dscp_mode": "pipe",
+                "encap_ecn_mode": "standard",
+                "ecn_mode": "copy_from_outer",
+                "ttl_mode": "pipe",
+                "decap_dscp_to_tc_map": "[DSCP_TO_TC_MAP|AZURE_TUNNEL]",
+                "decap_tc_to_pg_map": "[TC_TO_PRIORITY_GROUP_MAP|AZURE_TUNNEL]",
+                "encap_tc_to_dscp_map": "[TC_TO_DSCP_MAP|AZURE_TUNNEL]",
+                "encap_tc_to_queue_map": "[TC_TO_QUEUE_MAP|AZURE_TUNNEL]"
+            }
+        }
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+
+        # Validate extra config for mux tunnel is generated automatically when tunnel_qos_remap = enabled
+        sample_graph_enabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-enabled-no-tunnel-attributes.xml')
+        argument = '-m "' + sample_graph_enabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),

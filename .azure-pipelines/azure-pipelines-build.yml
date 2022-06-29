@@ -97,6 +97,7 @@ jobs:
             platform_rpc: nephos
 
     buildSteps:
+      - template: template-skipvstest.yml
       - bash: |
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
@@ -131,3 +132,4 @@ jobs:
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
+      - template: check-dirty-version.yml
