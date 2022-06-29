@@ -1,0 +1,6 @@
+libmdio_ipc_client (1.1) unstable; urgency=low
+
+  * Initial release.
+
+ --  libmdio_ipc_client <@broadcom.com>  Fri, 18 Dec 2020 12:00:00 -0800
+

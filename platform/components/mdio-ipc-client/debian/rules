@@ -1,0 +1,45 @@
+#!/usr/bin/make -f
+
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+export DH_VERBOSE = 1
+
+# see EXAMPLES in dpkg-buildflags(1) and read /usr/share/dpkg/*
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/default.mk
+
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+PACKAGE_NAME := libmdio_ipc_client
+
+# main packaging script based on dh7 syntax
+%:
+	dh $@
+
+build:
+	$(MAKE)
+
+clean:
+	$(MAKE) clean
+
+override_dh_auto_install:
+	dh_installdirs -p $(PACKAGE_NAME) /usr/lib
+	cp libmdio_ipc_client.so debian/$(PACKAGE_NAME)/usr/lib
+	cp mdio_ipc_client.h debian/$(PACKAGE_NAME)/usr/include
+	dh_auto_install --destdir=debian/$(PACKAGE_NAME)
+
+override_dh_auto_test:
+
+override_dh_clean:
+	dh_auto_clean
+	$(MAKE) clean
+
+override_dh_strip:
+	dh_strip -p$(PACKAGE_NAME) --dbg-package=$(PACKAGE_NAME)-dbg
