@@ -14,7 +14,7 @@ YANG_MODELS_DIR = "/usr/local/yang-models"
 
 class SonicCfgDescriber:
 
-    def __init__(self, table_name, field, print_format, 
+    def __init__(self, table_name, field, print_format,
                  yang_models_dir=YANG_MODELS_DIR):
         self.yang_models_dir = yang_models_dir
         self.yang_parser = sonic_yang.SonicYang(self.yang_models_dir)
@@ -74,7 +74,7 @@ class SonicCfgDescriber:
             ref_table = condition.split("/")[2].split(':')[-1]
             values = re.findall("\'(.*?)\'", condition, re.DOTALL)
             desc = "when " + ref_table + ":" + field.group(2) + " in "
-                   + ",".join(values)
+                    + ",".join(values)
 
         return desc
 
@@ -97,7 +97,7 @@ class SonicCfgDescriber:
             return []
         if isinstance(key, dict):
             if key.get('description', {}).get('text') is not None:
-                desc += "\n".join(textwrap.wrap(re.sub(r"\s+", " ", 
+                desc += "\n".join(textwrap.wrap(re.sub(r"\s+", " ",
                                   key['description']['text']), width=50))
             if key.get('mandatory') is not None:
                 mandatory = key.get('mandatory').get('@value')
@@ -163,18 +163,19 @@ class SonicCfgDescriber:
 
         if 'list' in table:
             out += self.validate_and_parse_leaf(table['list'], field,
-                        "This field is for storing mapping between two fields")
+                                                "This field is for storing \
+                                                mapping between two fields")
 
         print(tabulate(out, header, tablefmt=self.print_format))
 
 
 def main():
-    parser=argparse.ArgumentParser(description="Description of table name")
-    parser.add_argument("-t", "--table", help="Table name", default ='')
-    parser.add_argument("-f", "--field", help="Field", default ='')
+    parser = argparse.ArgumentParser(description="Description of table name")
+    parser.add_argument("-t", "--table", help="Table name", default='')
+    parser.add_argument("-f", "--field", help="Field", default='')
     parser.add_argument("-p", "--print_format", help="Print format",
-                        default ='grid')
-    parser.add_argument('-a', "--all", action="store_true", default=False, 
+                        default='grid')
+    parser.add_argument('-a', "--all", action="store_true", default=False,
                         help="Print all tables")
     args = parser.parse_args()
     if not (args.table or args.all):
@@ -197,3 +198,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
