@@ -1,0 +1,5 @@
+libmdio-ipc-client (1.1) unstable; urgency=low
+
+  * Initial release.
+
+ --  Jiahua Wang <jiahua.wang@broadcom.com>  Fri, 18 Dec 2020 12:00:00 -0800

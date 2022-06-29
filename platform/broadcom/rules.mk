@@ -26,6 +26,7 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/raw-image.mk
 include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
+include $(PLATFORM_PATH)/../components/libmdio-ipc-client.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx-rpc.mk
 include $(PLATFORM_PATH)/../components/docker-gbsyncd-credo.mk

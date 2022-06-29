@@ -1,0 +1,10 @@
+
+SPATH       := $($(MDIO_IPC_CLIENT_LIBRARY)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) platform/components/libmdio-ipc-client.mk platform/components/libmdio-ipc-client.dep
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+DEP_FILES   += $(shell git ls-files $(SPATH))
+
+$(MDIO_IPC_CLIENT_LIBRARY)_CACHE_MODE  := GIT_CONTENT_SHA
+$(MDIO_IPC_CLIENT_LIBRARY)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST) $(LOCAL_PAI_DEBS_PATH)
+$(MDIO_IPC_CLIENT_LIBRARY)_DEP_FILES   := $(DEP_FILES)
+
