@@ -163,8 +163,8 @@ class SonicCfgDescriber:
 
         if 'list' in table:
             out += self.validate_and_parse_leaf(table['list'], field,
-                                                "This field is for storing \
-                                                mapping between two fields")
+                                                "This field is for storing " +
+                                                "mapping between two fields")
 
         print(tabulate(out, header, tablefmt=self.print_format))
 
