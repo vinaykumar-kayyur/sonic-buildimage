@@ -40,7 +40,7 @@ stages:
     value: wcache
   - template: azure-pipelines-repd-build-variables.yml
   preSteps:
-  - script: which init.sh && init.sh
+  - script: if which init.sh;then init.sh;fi
     displayName: Init agent
   jobs:
   - template: azure-pipelines-build.yml
