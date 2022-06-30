@@ -1050,18 +1050,18 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
 
 def filter_acl_table_for_backend(acls, vlan_members):
     filter_acls = {}
-    for acl_name in acls:
+    for acl_name, value in acls.items():
         if 'everflow' not in acl_name.lower():
-            filter_acls[acl_name] = acls[acl_name]
+            filter_acls[acl_name] = value
 
+    ports = set()
+    for vlan, member in vlan_members:
+        ports.add(member)
     filter_acls['DATAACL'] = { 'policy_desc': 'DATAACL',
                                'stage': 'ingress',
-                               'type': 'L3'
+                               'type': 'L3',
+                               'ports': list(ports)
                              }
-    ports = set()
-    for vlan, member in vlan_members.keys():
-        ports.add(member)
-    filter_acls['DATAACL']['ports'] = list(ports)
     return filter_acls
 
 def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role, device_type, is_storage_device, vlan_members):
