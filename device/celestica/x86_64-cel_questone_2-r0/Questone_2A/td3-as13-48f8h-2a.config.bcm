@@ -3,6 +3,8 @@ ptp_bs_fref_0=50000000
 ptp_bs_fref_1=50000000
 oversubscribe_mode=1
 pbmp_xport_xe=0x11ffffffe1ffffffe
+stable_size=0x5500000
+ifp_inports_support_enable=1
 
 #FC0
 portmap_1.0=1:100
@@ -101,7 +103,7 @@ portmap_59.0=73:100
 portmap_60.0=77:100
 
 
-portmap_64.0=81:10
+#portmap_64.0=81:10
 
 phy_chain_tx_lane_map_physical{1.0}=0x0123
 phy_chain_rx_lane_map_physical{1.0}=0x1302
@@ -407,4 +409,4 @@ dport_map_port_1=53
 dport_map_port_15=54
 dport_map_port_2=55
 dport_map_port_16=56
-dport_map_port_64=57
+#dport_map_port_64=57
