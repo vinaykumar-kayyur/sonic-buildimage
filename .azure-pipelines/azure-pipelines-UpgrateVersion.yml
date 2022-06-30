@@ -26,7 +26,7 @@ resources:
     ref: master
     endpoint: build
 
-pool: sonicbld
+pool: sonicbld-1ES
 
 parameters:
 - name: 'jobFilters'
@@ -55,6 +55,8 @@ stages:
       jobFilters: ${{ parameters.jobFilters }}
       buildOptions: '${{ variables.VERSION_CONTROL_OPTIONS }} ENABLE_DOCKER_BASE_PULL=n SONIC_BUILD_JOBS=$(nproc) ENABLE_IMAGE_SIGNATURE=y'
       preSteps:
+      - script: if which init.sh;then init.sh;fi
+        displayName: Init agent
       - template: .azure-pipelines/template-clean-sonic-slave.yml@buildimage
 - stage: UpgradeVersions
   jobs:

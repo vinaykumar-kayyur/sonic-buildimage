@@ -25,9 +25,9 @@ parameters:
   default: sonicdev
 - name: pool
   type: string
-  default: sonicbld
+  default: sonicbld-1ES
   values:
-  - sonicbld
+  - sonicbld-1ES
   - sonicbld-arm64
   - sonicbld-armhf
 
@@ -41,6 +41,8 @@ jobs:
     - template: template-clean-sonic-slave.yml
   - ${{ else }}:
     - template: '/.azure-pipelines/template-clean-sonic-slave.yml@buildimage'
+  - script: if which init.sh;then init.sh;fi
+    displayName: Init agent
   - checkout: self
     clean: true
     submodules: recursive

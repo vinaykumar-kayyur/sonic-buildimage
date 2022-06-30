@@ -16,10 +16,12 @@ pr: none
 
 jobs:
 - job: Build
-  pool: sonicbld
+  pool: sonicbld-1ES
   timeoutInMinutes: 5
   steps:
   - checkout: none
+  - script: if which init.sh;then init.sh;fi
+    displayName: Init agent
   - script: |
       set -xe
       sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete
