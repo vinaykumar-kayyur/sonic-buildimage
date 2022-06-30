@@ -46,7 +46,7 @@ Index: frr/debian/rules
 ===================================================================
 --- frr.orig/debian/rules
 +++ frr/debian/rules
-@@ -27,14 +27,14 @@ else
+@@ -27,10 +27,10 @@ else
    CONF_LUA=--enable-scripting
  endif
  
@@ -54,21 +54,14 @@ Index: frr/debian/rules
 +export PYTHON=/python_virtualenv/env3/bin/python3
  
  %:
- 	dh $@
+-	dh $@
++	dh $@ --builddirectory=build
  
  override_dh_auto_configure:
  	$(shell dpkg-buildflags --export=sh); \
--	dh_auto_configure -- \
-+	rm -rf build && mkdir -p build && dh_auto_configure --builddirectory=build -- \
- 		--localstatedir=/var/run/frr \
- 		--sbindir=/usr/lib/frr \
- 		--sysconfdir=/etc/frr \
-@@ -65,14 +65,14 @@ override_dh_auto_configure:
- 		# end
- 
+@@ -67,12 +67,12 @@ override_dh_auto_configure:
  override_dh_auto_install:
--	dh_auto_install
-+	cd build && ln -s ../debian debian && dh_auto_install
+ 	dh_auto_install
  
 -	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/frr-reload.py
 -	sed -e '1c #!/usr/bin/python3' -i debian/tmp/usr/lib/frr/generate_support_bundle.py
