@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
 from tabulate import tabulate
 import re
 import textwrap
 
-from collections import OrderedDict
 import sonic_yang
 
 YANG_MODELS_DIR = "/usr/local/yang-models"
@@ -20,19 +18,24 @@ class SonicCfgDescriber:
         self.yang_parser = sonic_yang.SonicYang(self.yang_models_dir)
         self.yang_parser.loadYangModel()
         self.table_descr = {}
+        self.table_name = table_name
+        self.field = field
         self.print_format = print_format
 
+    def print_documentation(self):
         for j in self.yang_parser.yJson:
             toplevel = j['module'].get('container')
             if toplevel is not None:
                 container = toplevel.get('container')
                 if isinstance(container, list):
                     for c in container:
-                        if c.get('@name') == table_name or not table_name:
-                            self.print_table(c, field)
+                        if c.get('@name') == self.table_name or \
+                           not self.table_name:
+                            self.print_table(c, self.field)
                 elif isinstance(container, dict):
-                    if container.get('@name') == table_name or not table_name:
-                        self.print_table(container, field)
+                    if container.get('@name') == self.table_name or \
+                       not self.table_name:
+                        self.print_table(container, self.field)
 
     def print_table(self, table, field):
         if table is None:
@@ -194,6 +197,7 @@ def main():
         return -1
 
     yang_cfg = SonicCfgDescriber(args.table, args.field, args.print_format)
+    yang_cfg.print_documentation()
 
 
 if __name__ == "__main__":
