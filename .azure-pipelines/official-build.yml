@@ -34,7 +34,7 @@ variables:
 
 stages:
 - stage: Build
-  pool: sonicbld
+  pool: sonicbld-1ES
   variables:
   - name: CACHE_MODE
     value: wcache
