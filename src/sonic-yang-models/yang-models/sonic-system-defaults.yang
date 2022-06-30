@@ -30,9 +30,7 @@ module sonic-system-defaults{
 
                 leaf status {
                     description "default status of the feature";
-                    type string {
-                        pattern "enabled|disabled";
-                    }
+                    type stypes:admin_mode;
                 }
 
             }
