@@ -4,7 +4,6 @@
     },
     "SYSTEM_DEFAULTS_WITH_INVALID_STATUS_VALUE" : {
         "desc": "Referring invalid status value",
-        "eStrKey": "Pattern",
-        "eStr": "does not satisfy"
+        "eStrKey": "InvalidValue"
     }
 }
