@@ -46,7 +46,7 @@
 {%- if include_p4rt == "y" %}{% do features.append(("p4rt", "enabled", false, "enabled")) %}{% endif %}
 {%- if include_restapi == "y" %}{% do features.append(("restapi", "enabled", false, "enabled")) %}{% endif %}
 {%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled")) %}{% endif %}
-{%- if include_macsec == "y" %}{% do features.append(("macsec", "disabled", false, "enabled")) %}{% endif %}
+{%- if include_macsec == "y" %}{% do features.append(("macsec", "{% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] == 'SpineRouter' %}enabled{% else %}disabled{% endif %}", false, "enabled")) %}{% endif %}
 {%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", true, "enabled")) %}{% endif %}
     "FEATURE": {
 {# has_timer field if set, will start the feature systemd .timer unit instead of .service unit #}
@@ -79,6 +79,8 @@
             "rate_limit_interval" : "180",
             "max_techsupport_limit" : "10.0",
             "max_core_limit" : "5.0",
+            "available_mem_threshold": "10.0",
+            "min_available_mem": "200",
             "since" : "2 days ago"
         }
     },
@@ -88,7 +90,8 @@
 {%- if enable_auto_tech_support == "y" %}
             "state" : "enabled", {% else %}
             "state" : "disabled", {% endif %}
-            "rate_limit_interval" : "600"
+            "rate_limit_interval" : "600",
+            "available_mem_threshold": "10.0"
         }{%if not loop.last %},{% endif -%}
 {% endfor %}
     },
