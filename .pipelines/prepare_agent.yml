@@ -30,6 +30,15 @@ steps:
         sudo sgdisk -n 0:0:0 -t 0:8300 -c 0:data $disk
         sudo mkfs.ext4 -F ${disk}1 || true
         sudo mount ${disk}1 /data
+
+        # Make symbolic link for the source path to increase the space
+        sudo rm -rf $(Agent.BuildDirectory)/s /data/s
+        sudo mkdir /data/s
+        sudo chown $USER:$(id -gn) /data/s
+        ln -s /data/s $(Agent.BuildDirectory)/s
+        echo "pwd=$(pwd)"
+        ls -lt $(Agent.BuildDirectory)
+        ls -lt
       fi
       if ! docker info | grep -i root | grep data;then
         sudo systemctl stop docker
