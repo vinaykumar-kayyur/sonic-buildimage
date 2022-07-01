@@ -1,0 +1,22 @@
+Source: gcovpreload
+Priority: optional
+Maintainer: Petter Shao <pettershao@ragilenetworks>
+Build-Depends:
+ debhelper-compat (= 11),
+ procps <!nocheck>,
+ redis-server (>= 2:2.4.2-2) [linux-any kfreebsd-any] <!nocheck>,
+Standards-Version: 4.2.1
+Section: libs
+Homepage: 
+Vcs-Git: 
+Vcs-Browser: 
+
+Package: libgcovpreload
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Pre-Depends:
+ ${misc:Pre-Depends},
+Multi-Arch: same
+Description: minimalistic C client library for Redis
