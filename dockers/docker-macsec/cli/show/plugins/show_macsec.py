@@ -5,7 +5,6 @@ import click
 from tabulate import tabulate
 
 import utilities_common.multi_asic as multi_asic_util
-from swsscommon.swsscommon import SonicV2Connector
 from swsscommon.swsscommon import CounterTable, MacsecCounter
 
 

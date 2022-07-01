@@ -46,7 +46,6 @@ def add_port(port, profile):
     config_db = ctx.obj
 
     if clicommon.get_interface_naming_mode() == "alias":
-        alias = port
         port = interface_alias_to_name(config_db, port)
         if port is None:
             ctx.fail("cannot find port name for alias {}".format(port))
@@ -77,7 +76,6 @@ def del_port(port):
     config_db = ctx.obj
 
     if clicommon.get_interface_naming_mode() == "alias":
-        alias = port
         port = interface_alias_to_name(config_db, port)
         if port is None:
             ctx.fail("cannot find port name for alias {}".format(port))
