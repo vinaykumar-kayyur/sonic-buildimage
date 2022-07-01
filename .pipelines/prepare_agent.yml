@@ -42,10 +42,13 @@ steps:
       fi
       if ! docker info | grep -i root | grep data;then
         sudo systemctl stop docker
-        sudo sed -i 's#--data-root /mnt/docker#--data-root /data/docker#' /lib/systemd/system/docker.service
+        sudo sed -i 's#--data-root /mnt/docker##' /lib/systemd/system/docker.service
+        sudo sed -i 's/^ExecStart=.*$/& --data-root \/data\/docker/' /lib/systemd/system/docker.service
         sudo systemctl daemon-reload
         sudo systemctl start docker
       fi
       df -h
       lsblk
+      docker info
+      sudo cat /lib/systemd/system/docker.service
     displayName: 'prepare 1ES agent'
