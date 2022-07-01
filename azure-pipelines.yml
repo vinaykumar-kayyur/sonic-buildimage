@@ -37,7 +37,7 @@ resources:
     ref: master
   - repository: pipeline
     type: github
-    name: Azure/sonic-pipelines
+    name: sonic-net/sonic-pipelines
     endpoint: build
     ref: test-template
 
