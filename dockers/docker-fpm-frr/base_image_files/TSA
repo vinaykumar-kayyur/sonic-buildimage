@@ -1,7 +1,9 @@
 #!/bin/bash
 
+
 if [[ "$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)" == "true" ]]; then
   echo "System is already in Maintenance"
+  logger -t TSA -p user.info "System is already in Maintenance"
 else
   # toggle the mux to standby if dualtor and any mux active
   if
@@ -13,6 +15,7 @@ else
   fi
 
   /usr/bin/TS TSA
+  logger -t TSA -p user.info "System Mode: Normal -> Maintenance"
   echo "System Mode: Normal -> Maintenance"
   echo ""
   echo "Please execute 'config save' to preserve System mode in Maintenance after reboot or config reload"

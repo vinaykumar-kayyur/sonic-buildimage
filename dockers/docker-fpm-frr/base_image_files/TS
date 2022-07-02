@@ -28,7 +28,9 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
             echo -e "BGP"$asic" : \c"
             if [[ -n "$TSA_STATE_UPDATE" ]]; then 
                 sonic-cfggen -a "$TSA_STATE_UPDATE" -w -n $NAMESPACE_PREFIX$asic
+                logger -t $1 -p user.info "ConfigDB updated"
             else
+                # If TSC is executed, invoke FRR script to check installed route-maps
                 docker exec -i bgp$asic /usr/bin/$1
             fi
         fi
@@ -37,7 +39,9 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
 else
         if [[ -n "$TSA_STATE_UPDATE" ]]; then 
             sonic-cfggen -a "$TSA_STATE_UPDATE" -w
+            logger -t $1 -p user.info "ConfigDB updated"
         else
+            # If TSC is executed, invoke FRR script to check installed route-maps
             docker exec -i bgp /usr/bin/$1
         fi
 fi

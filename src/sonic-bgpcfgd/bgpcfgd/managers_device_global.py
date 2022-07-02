@@ -1,5 +1,5 @@
 from .manager import Manager
-from .log import log_err, log_debug
+from .log import log_err, log_debug, log_notice
 import re
 
 class DeviceGlobalCfgMgr(Manager):
@@ -33,6 +33,7 @@ class DeviceGlobalCfgMgr(Manager):
 
         if "tsa_enabled" in data:
             self.cfg_mgr.commit()
+            self.cfg_mgr.update()
             self.isolate_unisolate_device(data["tsa_enabled"])
             self.directory.put(self.db_name, self.table_name, "tsa_enabled", data["tsa_enabled"])
             return True        
@@ -49,7 +50,7 @@ class DeviceGlobalCfgMgr(Manager):
             tsa_status = self.directory.get_slot("CONFIG_DB", "BGP_DEVICE_GLOBAL")["tsa_enabled"]
             if tsa_status == "true":
                 cmds = cfg.replace("#012", "\n").split("\n")
-                log_debug("DeviceGlobalCfgMgr:: Device is isolated. Applying TSA route-maps")
+                log_notice("DeviceGlobalCfgMgr:: Device is isolated. Applying TSA route-maps")
                 cmd = self.get_tsa_routemaps(cmds)            
         return cmd
 
@@ -57,10 +58,10 @@ class DeviceGlobalCfgMgr(Manager):
         """ API to get TSA/TSB route-maps and apply configuration"""
         cmd = "\n"
         if tsa_status == "true":
-            log_debug("DeviceGlobalCfgMgr:: Device isolated. Executing TSA")
+            log_notice("DeviceGlobalCfgMgr:: Device isolated. Executing TSA")
             cmd += self.get_tsa_routemaps(self.cfg_mgr.get_text())
         else:
-            log_debug("DeviceGlobalCfgMgr:: Device un-isolated. Executing TSB")
+            log_notice("DeviceGlobalCfgMgr:: Device un-isolated. Executing TSB")
             cmd += self.get_tsb_routemaps(self.cfg_mgr.get_text())
 
         self.cfg_mgr.push(cmd)
@@ -93,14 +94,13 @@ class DeviceGlobalCfgMgr(Manager):
                 continue                        
             cmd += template.render(route_map_name=rm,ip_version=ipv,ip_protocol=ipp, constants=self.constants)
             cmd += "\n"
-        log_debug("DeviceGlobalCfgMgr::get_tsa_routemaps:: Done")
         return cmd
 
     def __extract_out_route_map_names(self, cmds):
-        route_map_names = []
+        route_map_names = set() 
         out_route_map = re.compile(r'^\s*neighbor \S+ route-map (\S+) out$')
         for line in cmds:
             result = out_route_map.match(line)
             if result:
-                route_map_names.append(result.group(1))
+                route_map_names.add(result.group(1))
         return route_map_names
