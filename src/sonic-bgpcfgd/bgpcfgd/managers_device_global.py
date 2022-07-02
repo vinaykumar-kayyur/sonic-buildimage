@@ -83,7 +83,7 @@ class DeviceGlobalCfgMgr(Manager):
 
     def __generate_routemaps_from_template(self, route_map_names, template):
         cmd = "\n"
-        for rm in route_map_names:
+        for rm in sorted(route_map_names):
             if "_INTERNAL_" in rm:
                 continue            
             if "V4" in rm:
