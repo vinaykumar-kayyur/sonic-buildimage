@@ -1304,7 +1304,7 @@
                 "tsa_enabled": "false"
             }
         },
-	"BGP_PEER_RANGE": {
+        "BGP_PEER_RANGE": {
             "BGPSLBPassive": {
                 "ip_range": [
                     "10.255.0.0/25"
