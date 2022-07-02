@@ -15,7 +15,7 @@ was executed, the string in it will be appended to Monit syslog messages.
 The following is an example in Monit configuration file to show how Monit will run
 this script:
 
-check program container_memory_<container_name> with path "/usr/bin/memory_checker <container_name> <threshold_value>"
+check program container_memory_<container_name> with path "/usr/bin/memory_checker <container_name>"
     if status == 3 for X times within Y cycles exec "/usr/bin/restart_service <container_name>"
 """
 
@@ -26,6 +26,12 @@ import syslog
 import re
 
 import docker
+
+import swsssdk
+
+# The FEATURE table in 'CONFIG_DB' contains high memory alert state
+# and memory threshold of each container.
+FEATURE_TABLE_NAME = "FEATURE"
 
 
 def get_command_result(command):
@@ -118,19 +124,57 @@ def get_running_container_names():
     return running_container_names
 
 
+def get_alert_status_and_threshold(container_name):
+    """Retrieves the status of high memory alert and memory threshold of a container 
+    from 'Config_DB'.
+
+    Args:
+      container_name: A string indicates the name of a container.
+
+    Returns: 
+      high_mem_alert_status: A string indicates status of high memory alert.
+      mem_threshold: An integer indicates memory threshold of a container.
+    """
+    config_db = swsssdk.ConfigDBConnector()
+    config_db.connect()
+    features_table = config_db.get_table(FEATURE_TABLE_NAME)
+    if not features_table:
+        syslog.syslog(syslog.LOG_ERR, "Failed to retrieve 'FEATURE' table from 'CONFIG_DB'. Exiting...")
+        sys.exit(5)
+
+    if container_name not in features_table:
+        syslog.syslog(syslog.LOG_ERR, "Failed to retrieve feature '{}' from `FEATURE` table. Exiting..."
+                      .format(container_name))
+        sys.exit(6)
+
+    high_mem_alert_status = features_table[container_name].get("high_mem_alert")
+    mem_threshold = features_table[container_name].get("mem_threshold")
+    if not high_mem_alert_status:
+        syslog.syslog(syslog.LOG_ERR, "Failed to determine high memory alert status of feature '{}'. Exiting..."
+                      .format(container_name))
+        sys.exit(7)
+    try:
+        mem_threshold = int(mem_threshold)
+    except ValueError as err:
+        syslog.syslog(syslog.LOG_ERR, "Failed to determine memory threshold of feature '{}' and Error is '{}'. Exiting..."
+                      .format(container_name, err))
+        sys.exit(8)
+
+    return high_mem_alert_status, mem_threshold
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check memory usage of a container \
             and an alerting message will be written into syslog if memory usage \
-            is larger than the threshold value", usage="/usr/bin/memory_checker <container_name> <threshold_value_in_bytes>")
+            is larger than the threshold value", usage="/usr/bin/memory_checker <container_name>")
     parser.add_argument("container_name", help="container name")
-    # TODO: Currently the threshold value is hard coded as a command line argument and will
-    # remove this in the new version since we want to read this value from 'CONFIG_DB'.
-    parser.add_argument("threshold_value", type=int, help="threshold value in bytes")
     args = parser.parse_args()
 
     running_container_names = get_running_container_names()
     if args.container_name in running_container_names:
-        check_memory_usage(args.container_name, args.threshold_value)
+        high_mem_alert_status, mem_threshold = get_alert_status_and_threshold(args.container_name)
+        if "enabled" in high_mem_alert_status:
+            check_memory_usage(args.container_name, mem_threshold)
     else:
         syslog.syslog(syslog.LOG_INFO,
                       "[memory_checker] Exits without checking memory usage since container '{}' is not running!"
