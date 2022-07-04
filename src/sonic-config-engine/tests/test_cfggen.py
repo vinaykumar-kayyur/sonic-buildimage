@@ -39,6 +39,7 @@ class TestCfgGen(TestCase):
         self.packet_chassis_graph = os.path.join(self.test_dir, 'sample-chassis-packet-lc-graph.xml')
         self.packet_chassis_port_ini = os.path.join(self.test_dir, 'sample-chassis-packet-lc-port-config.ini')
         self.maxDiff = None
+        self.macsec_profile = os.path.join(self.test_dir, 'macsec_profile.json')
         # To ensure that mock config_db data is used for unit-test cases
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
@@ -837,7 +838,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output, '')
 
     def test_minigraph_voq_metadata(self):
-        argument = "-m {} -p {} --var-json DEVICE_METADATA".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json DEVICE_METADATA".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         output = json.loads(self.run_script(argument))
         self.assertEqual(output['localhost']['asic_name'], 'Asic0')
         self.assertEqual(output['localhost']['switch_id'], '0')
@@ -845,7 +846,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output['localhost']['max_cores'], '16')
 
     def test_minigraph_voq_system_ports(self):
-        argument = "-m {} -p {} --var-json SYSTEM_PORT".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json SYSTEM_PORT".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         self.assertDictEqual(
             json.loads(self.run_script(argument)),
             {
@@ -863,8 +864,16 @@ class TestCfgGen(TestCase):
             }
         )
 
+    def test_minigraph_voq_port_macsec_enabled(self):
+        argument = '-j "' + self.macsec_profile + '" -m "' + self.sample_graph_voq + '" -p "' + self.voq_port_config + '" -v "PORT[\'Ethernet0\']"'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}")
+        )
+
     def test_minigraph_voq_inband_interface_vlan(self):
-        argument = "-m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
@@ -877,7 +886,7 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_voq_inband_interface_port(self):
-        argument = "-m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
@@ -890,7 +899,7 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_voq_inband_port(self):
-        argument = "-m {} -p {} --var-json PORT".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json PORT".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
@@ -908,7 +917,7 @@ class TestCfgGen(TestCase):
             })
 
     def test_minigraph_voq_recirc_ports(self):
-        argument = "-m {} -p {} --var-json PORT".format(self.sample_graph_voq, self.voq_port_config)
+        argument = "-j {} -m {} -p {} --var-json PORT".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
         self.assertDictEqual(
@@ -966,4 +975,3 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict("{('PortChannel32.2', '192.168.1.4/24'): {}, 'PortChannel32.2': {'admin_status': 'up'}, ('PortChannel33.2', '192.168.2.4/24'): {}, 'PortChannel33.2': {'admin_status': 'up'}}")
         )
-
