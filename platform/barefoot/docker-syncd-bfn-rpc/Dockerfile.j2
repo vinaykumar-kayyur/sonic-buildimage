@@ -12,15 +12,16 @@ debs/
 RUN apt-get purge -y syncd
 
 ## Pre-install the fundamental packages
-RUN apt-get update \
+RUN apt-get update      \
  && apt-get -y install  \
     net-tools           \
-    python-pip          \
-    python-setuptools   \
+    python3-pip         \
+    python3-setuptools  \
+    python-is-python3   \
     build-essential     \
     libssl-dev          \
     libffi-dev          \
-    python-dev          \
+    python3-dev         \
     wget                \
     cmake               \
     libqt5core5a        \
@@ -42,10 +43,10 @@ RUN wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
  && cd ..               \
  && rm -fr nanomsg-1.0.0 \
  && rm -f 1.0.0.tar.gz  \
- && pip2 install cffi==1.7.0    \
- && pip2 install --upgrade cffi==1.7.0 \
- && pip2 install wheel  \
- && pip2 install nnpy   \
+ && pip3 install cffi==1.7.0    \
+ && pip3 install --upgrade cffi==1.7.0 \
+ && pip3 install wheel  \
+ && pip3 install nnpy   \
  && mkdir -p /opt       \
  && cd /opt             \
  && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py \
