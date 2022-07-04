@@ -30,7 +30,6 @@ try:
     from .utils import extract_RJ45_ports_index
     from . import utils
     from .device_data import DeviceDataManager
-    from .sfp import SFP, RJ45Port, deinitialize_sdk_handle
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -110,6 +109,8 @@ class Chassis(ChassisBase):
         self.sfp_event = None
         self.reboot_cause_initialized = False
 
+        self.sfp_module = None
+
         # Build the RJ45 port list from platform.json and hwsku.json
         self.RJ45_port_list = extract_RJ45_ports_index()
 
@@ -120,11 +121,8 @@ class Chassis(ChassisBase):
             self.sfp_event.deinitialize()
 
         if self._sfp_list:
-            if utils.is_host():
-                return
-            from .sfp import SFP, deinitialize_sdk_handle
-            if SFP.shared_sdk_handle:
-                deinitialize_sdk_handle(SFP.shared_sdk_handle)
+            if self.sfp_module.SFP.shared_sdk_handle:
+                self.sfp_module.deinitialize_sdk_handle(sfp_module.SFP.shared_sdk_handle)
 
     ##############################################
     # PSU methods
@@ -243,6 +241,12 @@ class Chassis(ChassisBase):
     # SFP methods
     ##############################################
 
+    def _import_sfp_module(self):
+        if not self.sfp_module:
+            from . import sfp as sfp_module
+            self.sfp_module = sfp_module
+        return self.sfp_module
+
     def initialize_single_sfp(self, index):
         sfp_count = self.get_num_sfps()
         if index < sfp_count:
@@ -250,32 +254,32 @@ class Chassis(ChassisBase):
                 self._sfp_list = [None] * sfp_count
 
             if not self._sfp_list[index]:
-                from .sfp import SFP
+                sfp_module = self._import_sfp_module()
                 if self.RJ45_port_list and index in self.RJ45_port_list:
-                    self._sfp_list[index] = RJ45Port(index)
+                    self._sfp_list[index] = sfp_module.RJ45Port(index)
                 else:
-                    self._sfp_list[index] = SFP(index)
+                    self._sfp_list[index] = sfp_module.SFP(index)
                 self.sfp_initialized_count += 1
 
     def initialize_sfp(self):
         if not self._sfp_list:
-            from .sfp import SFP
+            sfp_module = self._import_sfp_module()
             sfp_count = self.get_num_sfps()
             for index in range(sfp_count):
                 if self.RJ45_port_list and index in self.RJ45_port_list:
-                    sfp_module = RJ45Port(index)
+                    sfp_object = sfp_module.RJ45Port(index)
                 else:
-                    sfp_module = SFP(index)
-                self._sfp_list.append(sfp_module)
+                    sfp_object = sfp_module.SFP(index)
+                self._sfp_list.append(sfp_object)
             self.sfp_initialized_count = sfp_count
         elif self.sfp_initialized_count != len(self._sfp_list):
-            from .sfp import SFP
+            sfp_module = self._import_sfp_module()
             for index in range(len(self._sfp_list)):
                 if self._sfp_list[index] is None:
                     if self.RJ45_port_list and index in self.RJ45_port_list:
-                        self._sfp_list[index] = RJ45Port(index)
+                        self._sfp_list[index] = sfp_module.RJ45Port(index)
                     else:
-                        self._sfp_list[index] = SFP(index)
+                        self._sfp_list[index] = sfp_module.SFP(index)
             self.sfp_initialized_count = len(self._sfp_list)
 
     def get_num_sfps(self):
