@@ -9,7 +9,7 @@ parameters:
 jobs:
 - ${{ each arch in parameters.archs }}:
   - job: Build_${{ arch }}
-    timeoutInMinutes: 120
+    timeoutInMinutes: 240
     ${{ if eq(arch,'amd64') }}:
       pool: sonicbld
     ${{ else }}:
@@ -39,9 +39,10 @@ jobs:
       displayName: Make configure
     - script: |
         set -ex
+        grep amd64 .arch && extarget=target/docker-sonic-vs.gz
         for bldenv in $(bldenvs)
         do
-          SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv make -f Makefile.work lib-packages ENABLE_DOCKER_BASE_PULL=y
+          make -f Makefile.work SONIC_BUILD_JOBS=$(nproc) BLDENV=$bldenv $extarget lib-packages
         done
         mv target $(Build.ArtifactStagingDirectory)
       displayName: Make common lib packages
