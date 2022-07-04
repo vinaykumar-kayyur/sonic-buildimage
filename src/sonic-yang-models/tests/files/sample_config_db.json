@@ -1953,6 +1953,11 @@
                 "TYPE": "RW"
             }
         },
+        "SYSTEM_DEFAULTS": {
+            "tunnel_qos_remap": {
+                "status": "enabled"
+	        }
+        },
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
                 "mtu": "1024",
