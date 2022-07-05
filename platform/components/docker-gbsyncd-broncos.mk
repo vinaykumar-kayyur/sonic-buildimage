@@ -1,4 +1,4 @@
-LIBSAI_BRONCOS = libsai-broncos_0.0.1_amd64.deb
+LIBSAI_BRONCOS = libsaibroncos_0.0.1_amd64.deb
 $(LIBSAI_BRONCOS)_URL =
 
 ifneq ($($(LIBSAI_BRONCOS)_URL),)
