@@ -39,7 +39,6 @@ $UDPServerRun 514
 # Define a custom template
 $template SONiCFileFormat,"%timegenerated%.%timegenerated:::date-subseconds% %HOSTNAME% %syslogseverity-text:::uppercase% %syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n"
 $ActionFileDefaultTemplate SONiCFileFormat
-$ActionForwardDefaultTemplateName SONiCFileFormat
 
 #
 # Set the default permissions for all log files.
@@ -88,6 +87,10 @@ $RepeatedMsgReduction on
 {% if 'vrf' in data and data['vrf'] != "default" %}
 {% set dummy = params_list.append('device=' + '"' + data.vrf|string + '"') %}
 {% endif %}
-*.* action(type="omfwd" target="{{ server }}" protocol="udp" {{ params_list|join(' ') }})
+{% if params_list %}
+*.* action(type="omfwd" target="{{ server }}" protocol="udp" {{ params_list|join(' ') }} template="SONiCFileFormat")
+{% else %}
+*.* action(type="omfwd" target="{{ server }}" protocol="udp" template="SONiCFileFormat")
+{% endif %}
 {% endfor %}
 {% endif %}
