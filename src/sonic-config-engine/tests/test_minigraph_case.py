@@ -10,8 +10,6 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
-        self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
-        self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.sample_simple_device_desc = os.path.join(self.test_dir, 'simple-sample-device-desc.xml')
         self.sample_simple_device_desc_ipv6_only = os.path.join(self.test_dir, 'simple-sample-device-desc-ipv6-only.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
