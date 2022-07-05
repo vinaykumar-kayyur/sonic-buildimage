@@ -1,0 +1,6 @@
+###############################################################################
+## Monit configuration for mux container
+###############################################################################
+check program container_memory_mux with path "/usr/bin/memory_checker mux"
+    if status == 3 for 10 times within 20 cycles then alert repeat every 1 cycles
+

@@ -36,6 +36,7 @@ $(DOCKER_NAT)_RUN_OPT += -v /host/warmboot:/var/warmboot
 $(DOCKER_NAT)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 
 $(DOCKER_NAT)_BASE_IMAGE_FILES += natctl:/usr/bin/natctl
+$(DOCKER_NAT)_BASE_IMAGE_FILES += monit_nat:/etc/monit/conf.d
 
 SONIC_BUSTER_DOCKERS += $(DOCKER_NAT)
 SONIC_BUSTER_DBG_DOCKERS += $(DOCKER_NAT_DBG)

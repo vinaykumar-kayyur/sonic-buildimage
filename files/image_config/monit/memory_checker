@@ -175,6 +175,9 @@ def main():
         high_mem_alert_status, mem_threshold = get_alert_status_and_threshold(args.container_name)
         if "enabled" in high_mem_alert_status:
             check_memory_usage(args.container_name, mem_threshold)
+        else:
+            syslog.syslog(syslog.LOG_INFO, "High memory alerting of container '{}' is disabled and Exiting ..."
+                          .format(args.container_name))
     else:
         syslog.syslog(syslog.LOG_INFO,
                       "[memory_checker] Exits without checking memory usage since container '{}' is not running!"

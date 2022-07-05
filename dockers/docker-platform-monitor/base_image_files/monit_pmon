@@ -1,0 +1,5 @@
+###############################################################################
+## Monit configuration for pmon container
+###############################################################################
+check program container_memory_pmon with path "/usr/bin/memory_checker pmon"
+    if status == 3 for 10 times within 20 cycles then alert repeat every 1 cycles

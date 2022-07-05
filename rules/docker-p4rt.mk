@@ -33,3 +33,4 @@ $(DOCKER_P4RT)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_P4RT)_GIT_COMMIT = $(shell cd "$($(SONIC_P4RT)_SRC_PATH)" && git log -n 1 --format=format:"%H %s" || echo "Unable to fetch git log for p4rt")
 
 $(DOCKER_P4RT)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
+$(DOCKER_P4RT)_BASE_IMAGE_FILES += monit_p4rt:/etc/monit/conf.d

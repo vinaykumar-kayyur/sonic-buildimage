@@ -1,0 +1,6 @@
+###############################################################################
+## Monit configuration for radv container
+###############################################################################
+check program container_memory_radv with path "/usr/bin/memory_checker radv"
+    if status == 3 for 10 times within 20 cycles then alert repeat every 1 cycles
+

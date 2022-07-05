@@ -32,4 +32,6 @@ endif
 $(DOCKER_MUX)_CONTAINER_NAME = mux
 $(DOCKER_MUX)_RUN_OPT += --privileged -t
 $(DOCKER_MUX)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
+
+$(DOCKER_MUX)_BASE_IMAGE_FILES += monit_mux:/etc/monit/conf.d
 $(DOCKER_MUX)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)

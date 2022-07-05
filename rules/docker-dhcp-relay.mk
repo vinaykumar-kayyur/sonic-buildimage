@@ -56,3 +56,4 @@ $(DOCKER_DHCP_RELAY)_CLI_SHOW_PLUGIN = /cli/show/plugins/show_dhcp_relay.py
 $(DOCKER_DHCP_RELAY)_CLI_CLEAR_PLUGIN = /cli/clear/plugins/clear_dhcp6relay_counter.py
 
 $(DOCKER_DHCP_RELAY)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
+$(DOCKER_DHCP_RELAY)_BASE_IMAGE_FILES += monit_dhcprelay:/etc/monit/conf.d
