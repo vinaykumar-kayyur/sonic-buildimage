@@ -1870,7 +1870,7 @@ def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors
         redundancy_type = redundancy_type.lower()
 
     for port in ports:
-        is_active_active = port in active_active_ports
+        is_active_active = redundancy_type in ("libra", "mixed") and port in active_active_ports
         is_active_standby = port in mux_cable_ports
         if is_active_active and is_active_standby:
             print("Warning: skip %s as it is defined as active-standby and actie-active" % port, file=sys.stderr)
@@ -1892,19 +1892,17 @@ def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors
                 server_ipv6_lo_addr = devices[neighbor]['lo_addr_v6'].split('/')[0]
                 server_ipv6_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv6_lo_addr))
                 entry['server_ipv6'] = str(server_ipv6_lo_prefix)
+
+            if is_active_active:
+                entry['cable_type'] = 'active-active'
+                entry.update(active_active_ports[port])
+
+            mux_cable_table[port] = entry
         else:
             print("Warning: no server IPv4 loopback found for {}, skipping mux cable table entry".format(neighbor), file=sys.stderr)
 
-        if is_active_active:
-            if redundancy_type is None or redundancy_type not in ("libra", "mixed"):
-                print("Warning: skip %s as it is defined as active-active but with redundancy_type as %s" % (port, redundancy_type), file=sys.stderr)
-                # continue
-            entry['cable_type'] = 'active-active'
-            entry.update(active_active_ports[port])
-
-        mux_cable_table[port] = entry
-
     return mux_cable_table
+
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
