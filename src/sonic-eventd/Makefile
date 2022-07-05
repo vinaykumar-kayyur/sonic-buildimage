@@ -2,6 +2,8 @@ RM := rm -rf
 EVENTD_TARGET := eventd
 EVENTD_TEST := tests/tests
 EVENTD_TOOL := tools/events_tool
+RSYSLOG-PLUGIN_TARGET := rsyslog_plugin
+RSYSLOG-PLUGIN_TEST: rsyslog_plugin_tests/tests
 CP := cp
 MKDIR := mkdir
 CC := g++
@@ -21,8 +23,10 @@ endif
 -include src/subdir.mk
 -include tests/subdir.mk
 -include tools/subdir.mk
- 
-all: sonic-eventd eventd-tests eventd-tool
+-include rsyslog_plugin/subdir.mk
+-include rsyslog_plugin_tests/subdir.mk
+
+all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'
@@ -38,12 +42,28 @@ eventd-tool: $(TOOL_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
+rsyslog-plugin: $(RSYSLOG-PLUGIN_OBJS)
+	@echo 'Buidling Target: $@'
+	@echo 'Invoking: G++ Linker'
+	$(CC) $(LDFLAGS) -o $(RSYSLOG-PLUGIN_TARGET) $(RSYSLOG-PLUGIN_OBJS) $(LIBS)
+	@echo 'Finished building target: $@'
+	@echo ' '
+
 eventd-tests: $(TEST_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TEST) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	@echo 'Finished building target: $@'
 	$(EVENTD_TEST)
+	@echo 'Finished running tests'
+	@echo ' '
+
+rsyslog-plugin-tests: $(RSYSLOG-PLUGIN-TEST_OBJS)
+	@echo 'BUILDING target: $@'
+	@echo 'Invoking G++ Linker'
+	$(CC) $(LDFLAGS) -o $(RSYSLOG-PLUGIN_TEST) $(RSYSLOG-PLUGIN-TEST_OBJS) $(LIBS) $(TEST_LIBS)
+	@echo 'Finished building target: $@'
+	$(RSYSLOG-PLUGIN_TEST)
 	@echo 'Finished running tests'
 	@echo ' '
 
@@ -54,11 +74,10 @@ install:
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(EVENTD_TARGET)
+	$(RM) $(DESTDIR)/usr/sbin/$(RSYSLOG-PLUGIN_TARGET)
 	$(RM) -rf $(DESTDIR)/usr/sbin
 
 clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-
-
