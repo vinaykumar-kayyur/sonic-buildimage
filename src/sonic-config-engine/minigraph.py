@@ -1810,10 +1810,10 @@ def get_tunnel_entries(tunnel_intfs, tunnel_intfs_qos_remap_config, lo_intfs, tu
     tunnels = {}
 
     default_qos_map_for_mux_tunnel = {
-        "decap_dscp_to_tc_map": "[DSCP_TO_TC_MAP|AZURE_TUNNEL]",
-        "decap_tc_to_pg_map": "[TC_TO_PRIORITY_GROUP_MAP|AZURE_TUNNEL]",
-        "encap_tc_to_dscp_map": "[TC_TO_DSCP_MAP|AZURE_TUNNEL]",
-        "encap_tc_to_queue_map": "[TC_TO_QUEUE_MAP|AZURE_TUNNEL]"
+        "decap_dscp_to_tc_map": "AZURE_TUNNEL",
+        "decap_tc_to_pg_map": "AZURE_TUNNEL",
+        "encap_tc_to_dscp_map": "AZURE_TUNNEL",
+        "encap_tc_to_queue_map": "AZURE_TUNNEL"
     }
 
     for type, tunnel_dict in tunnel_intfs.items():
