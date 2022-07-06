@@ -10,3 +10,4 @@ haliburton/script/popmsg.sh usr/local/bin
 haliburton/script/udev_prefix.sh usr/local/bin
 haliburton/script/reload_udev.sh usr/local/bin
 haliburton/script/50-ttyUSB-C0.rules etc/udev/rules.d
+
