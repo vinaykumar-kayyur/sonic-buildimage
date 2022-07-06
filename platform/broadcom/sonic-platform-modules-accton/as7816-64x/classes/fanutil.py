@@ -104,7 +104,7 @@ class FanUtil(object):
             return None
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
@@ -135,7 +135,7 @@ class FanUtil(object):
         val_file.write(content)
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
@@ -185,7 +185,7 @@ class FanUtil(object):
         try:
             val_file = open(self.FAN_DUTY_PATH)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))          
             return False
 
         content = val_file.readline().rstrip()
@@ -204,7 +204,7 @@ class FanUtil(object):
         try:
             fan_file = open(self.FAN_DUTY_PATH, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))          
             return False
         fan_file.write(str(val))
         fan_file.close()

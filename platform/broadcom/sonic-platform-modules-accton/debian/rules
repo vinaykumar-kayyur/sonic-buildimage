@@ -13,7 +13,6 @@ include /usr/share/dpkg/pkg-info.mk
 
 export INSTALL_MOD_DIR:=extra
 
-PYTHON         ?= python2
 PYTHON3        ?= python3
 
 PACKAGE_PRE_NAME := sonic-platform-accton
@@ -29,7 +28,7 @@ SERVICE_DIR := service
 CONF_DIR := conf
 
 %:
-	dh $@ --with systemd,python2,python3 --buildsystem=pybuild
+	dh $@ --with systemd,python3 --buildsystem=pybuild
 
 clean:
 	dh_testdir
@@ -41,7 +40,7 @@ build:
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
 		cd $(MOD_SRC_DIR)/$${mod}; \
-		$(PYTHON) setup.py build; \
+		$(PYTHON3) setup.py build; \
 		if [ -f sonic_platform_setup.py ]; then \
 			$(PYTHON3) sonic_platform_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
 			echo "Finished makig whl package for $$mod"; \
@@ -74,7 +73,7 @@ binary-indep:
 		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
 		cd $(MOD_SRC_DIR)/$${mod}; \
-		$(PYTHON) setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
+		$(PYTHON3) setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
 		cd -; \
 	done)
 	# Resuming debhelper scripts

@@ -1,7 +1,12 @@
-FROM docker-syncd-centec
+FROM docker-syncd-centec-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+  && apt-get -y install \
+  libboost-atomic1.71-dev \
+  libqt5core5a   \
+  libqt5network5
 
 COPY \
 {% for deb in docker_syncd_centec_rpc_debs.split(' ') -%}

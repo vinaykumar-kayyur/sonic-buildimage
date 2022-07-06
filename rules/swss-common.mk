@@ -17,8 +17,12 @@ SONIC_DPKG_DEBS += $(LIBSWSSCOMMON)
 LIBSWSSCOMMON_DEV = $(LIBSWSSCOMMON_NAME)-dev_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(LIBSWSSCOMMON_DEV)))
 
-PYTHON_SWSSCOMMON = python-swsscommon_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
-$(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(PYTHON_SWSSCOMMON)))
+ifeq ($(ENABLE_PY2_MODULES), y)
+    PYTHON_SWSSCOMMON = python-swsscommon_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
+    $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(PYTHON_SWSSCOMMON)))
+else
+    $(LIBSWSSCOMMON)_BUILD_ENV += DEB_BUILD_PROFILES=nopython2
+endif
 
 PYTHON3_SWSSCOMMON = python3-swsscommon_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(PYTHON3_SWSSCOMMON)))
@@ -27,6 +31,9 @@ LIBSWSSCOMMON_DBG = $(LIBSWSSCOMMON_NAME)-dbg_$(LIBSWSSCOMMON_VERSION)_$(CONFIGU
 $(LIBSWSSCOMMON_DBG)_DEPENDS += $(LIBSWSSCOMMON)
 $(LIBSWSSCOMMON_DBG)_RDEPENDS += $(LIBSWSSCOMMON)
 $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(LIBSWSSCOMMON_DBG)))
+
+SONIC_DB_CLI = sonic-db-cli_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
+$(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(SONIC_DB_CLI)))
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.

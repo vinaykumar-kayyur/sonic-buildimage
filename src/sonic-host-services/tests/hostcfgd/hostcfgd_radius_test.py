@@ -10,10 +10,9 @@ from swsscommon import swsscommon
 from parameterized import parameterized
 from unittest import TestCase, mock
 from tests.hostcfgd.test_radius_vectors import HOSTCFGD_TEST_RADIUS_VECTOR
-from tests.common.mock_configdb import MockConfigDb
+from tests.common.mock_configdb import MockConfigDb, MockDBConnector
 
 
-swsscommon.ConfigDBConnector = MockConfigDb
 test_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 modules_path = os.path.dirname(test_path)
 scripts_path = os.path.join(modules_path, "scripts")
@@ -31,6 +30,10 @@ hostcfgd = importlib.util.module_from_spec(spec)
 loader.exec_module(hostcfgd)
 sys.modules['hostcfgd'] = hostcfgd
 
+# Mock swsscommon classes
+hostcfgd.ConfigDBConnector = MockConfigDb
+hostcfgd.DBConnector = MockDBConnector
+hostcfgd.Table = mock.Mock()
 
 class TestHostcfgdRADIUS(TestCase):
     """
@@ -44,11 +47,9 @@ class TestHostcfgdRADIUS(TestCase):
     def test_hostcfgd_radius(self, test_name, test_data):
         """
             Test RADIUS hostcfd daemon initialization
-
             Args:
                 test_name(str): test name
                 test_data(dict): test data which contains initial Config Db tables, and expected results
-
             Returns:
                 None
         """

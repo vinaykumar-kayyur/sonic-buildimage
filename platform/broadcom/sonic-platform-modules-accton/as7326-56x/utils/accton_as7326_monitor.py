@@ -166,14 +166,14 @@ class device_monitor(object):
               
         thermal = ThermalUtil()
         fan = FanUtil()
-        fan_dir=fan.get_fan_dir(1)            
-        if fan_dir > 1:
-            fan_dri=1 #something wrong, set fan_dir to default val
-        if fan_dir < 0:
-            fan_dri=1 #something wrong, set fan_dir to default val
+        #fan_dir=fan.get_fan_dir(1)            
+        #if fan_dir > 1:
+        #    fan_dri=1 #something wrong, set fan_dir to default val
+        #if fan_dir < 0:
+        #    fan_dri=1 #something wrong, set fan_dir to default val
         ori_pwm=fan.get_fan_duty_cycle()
         new_pwm=0  
-        logging.debug('fan_dir=%d, ori_pwm=%d', fan_dir, ori_pwm)
+        #logging.debug('fan_dir=%d, ori_pwm=%d', fan_dir, ori_pwm)
         logging.debug('test_temp=%d', test_temp)
         if test_temp==0: 
             temp1 = thermal._get_thermal_val(1)
@@ -282,11 +282,11 @@ def main(argv):
         try:
             opts, args = getopt.getopt(argv,'hdlt:',['lfile='])
         except getopt.GetoptError:
-            print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
             return 0
         for opt, arg in opts:
             if opt == '-h':
-                print 'Usage: %s [-d] [-l <log_file>]' % sys.argv[0]
+                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
                 return 0
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG
@@ -295,7 +295,7 @@ def main(argv):
         
         if sys.argv[1]== '-t':
             if len(sys.argv)!=8:
-                print "temp test, need input six temp"
+                print("temp test, need input six temp")
                 return 0
             
             i=0
@@ -304,11 +304,11 @@ def main(argv):
                i=i+1
             test_temp = 1   
             log_level = logging.DEBUG
-            print test_temp_list                       
+            print(test_temp_list)                       
     
     fan = FanUtil()
     fan.set_fan_duty_cycle(38)
-    print "set default fan speed to 37.5%"
+    print("set default fan speed to 37.5%")
     monitor = device_monitor(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:

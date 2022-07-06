@@ -104,7 +104,7 @@ class FanUtil(object):
             return None
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
@@ -135,7 +135,7 @@ class FanUtil(object):
         val_file.write(content)
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
@@ -185,7 +185,7 @@ class FanUtil(object):
         try:
             val_file = open(self.FAN_DUTY_PATH)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))          
             return False
 
         content = val_file.readline().rstrip()
@@ -197,7 +197,7 @@ class FanUtil(object):
         try:
             fan_file = open(self.FAN_DUTY_PATH, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))          
             return False
         fan_file.write(str(val))
         fan_file.close()
@@ -224,14 +224,3 @@ class FanUtil(object):
 
         return True
 
-#def main():
-#    fan = FanUtil()
-#
-#    print 'get_size_node_map : %d' % fan.get_size_node_map()
-#    print 'get_size_path_map : %d' % fan.get_size_path_map()
-#    for x in range(fan.get_idx_fan_start(), fan.get_num_fans()+1):
-#        for y in range(fan.get_idx_node_start(), fan.get_num_nodes()+1):
-#            print fan.get_fan_to_device_path(x, y)
-#
-#if __name__ == '__main__':
-#    main()

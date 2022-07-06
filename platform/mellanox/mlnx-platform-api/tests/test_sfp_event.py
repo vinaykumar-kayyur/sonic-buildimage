@@ -1,8 +1,23 @@
+#
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
-import select
 import sys
 
-from mock import MagicMock
+from mock import MagicMock, patch
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
@@ -14,8 +29,8 @@ class TestSfpEvent(object):
     @classmethod
     def setup_class(cls):
         os.environ["MLNX_PLATFORM_API_UNIT_TESTING"] = "1"
-        select.select = MagicMock(return_value=([99], None, None))
 
+    @patch('select.select', MagicMock(return_value=([99], None, None)))
     def test_check_sfp_status(self):
         from sonic_platform.sfp_event import SDK_SFP_STATE_IN, SDK_SFP_STATE_OUT, SDK_SFP_STATE_ERR
         from sonic_platform.sfp_event import SDK_ERRORS_TO_ERROR_BITS, SDK_ERRORS_TO_DESCRIPTION, SDK_SFP_BLOCKING_ERRORS

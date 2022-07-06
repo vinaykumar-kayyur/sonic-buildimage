@@ -3,7 +3,7 @@
 NOJESSIE ?= 1
 NOSTRETCH ?= 0
 NOBUSTER ?= 0
-NOBULLSEYE ?= 1
+NOBULLSEYE ?= 0
 
 ifeq ($(NOJESSIE),0)
 BUILD_JESSIE=1
@@ -35,11 +35,12 @@ ifeq ($(NOSTRETCH), 0)
 	EXTRA_DOCKER_TARGETS=$(notdir $@) BLDENV=stretch make -f Makefile.work stretch
 endif
 ifeq ($(NOBUSTER), 0)
-	BLDENV=buster make -f Makefile.work $@
+	EXTRA_DOCKER_TARGETS=$(notdir $@) BLDENV=buster make -f Makefile.work buster
 endif
 ifeq ($(NOBULLSEYE), 0)
 	BLDENV=bullseye make -f Makefile.work $@
 endif
+	BLDENV=bullseye make -f Makefile.work docker-cleanup
 
 jessie:
 	@echo "+++ Making $@ +++"
@@ -83,7 +84,7 @@ $(PLATFORM_PATH):
 configure : $(PLATFORM_PATH)
 	$(call make_work, $@)
 
-clean reset showtag sonic-slave-build sonic-slave-bash :
+clean reset showtag docker-cleanup sonic-slave-build sonic-slave-bash :
 	$(call make_work, $@)
 
 # Freeze the versions, see more detail options: scripts/versions_manager.py freeze -h

@@ -177,7 +177,8 @@ endef
 # call:
 #     generate_manifest some_docker.gz, version_suffix
 define generate_manifest
-    $(eval export version=$($(1).gz_VERSION)$(2))
+    $(eval export version=$($(1).gz_VERSION))
+    $(eval export version_suffix=$(2))
     $(eval export name=$($(1).gz_CONTAINER_NAME))
     $(eval export package_name=$($(1).gz_PACKAGE_NAME))
     $(eval export asic_service=$(shell [ -f files/build_templates/per_namespace/$(name).service.j2 ] && echo true || echo false))
@@ -196,7 +197,7 @@ define generate_manifest
     $(eval export tmpfs=$($(1).gz_CONTAINER_TMPFS))
     $(eval export config_cli_plugin=$($(1).gz_CLI_CONFIG_PLUGIN))
     $(eval export show_cli_plugin=$($(1).gz_CLI_SHOW_PLUGIN))
-    j2 $($*.gz_PATH)/Dockerfile$(2).j2 > $($(1).gz_PATH)/Dockerfile$(2)
+    $(eval export clear_cli_plugin=$($(1).gz_CLI_CLEAR_PLUGIN))
     j2 --customize scripts/j2cli/json_filter.py files/build_templates/manifest.json.j2 > $($(1).gz_PATH)/manifest.common.json
     if [ -f $($*.gz_PATH)/manifest.part.json.j2 ]; then
         j2 --customize scripts/j2cli/json_filter.py $($(1).gz_PATH)/manifest.part.json.j2 > $($(1).gz_PATH)/manifest.part.json

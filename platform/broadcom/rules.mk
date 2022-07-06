@@ -3,18 +3,18 @@ include $(PLATFORM_PATH)/sai.mk
 include $(PLATFORM_PATH)/platform-modules-nokia.mk
 include $(PLATFORM_PATH)/platform-modules-dell.mk
 include $(PLATFORM_PATH)/platform-modules-arista.mk
-include $(PLATFORM_PATH)/platform-modules-ingrasys.mk
+#include $(PLATFORM_PATH)/platform-modules-ingrasys.mk
 include $(PLATFORM_PATH)/platform-modules-accton.mk
-include $(PLATFORM_PATH)/platform-modules-alphanetworks.mk
-include $(PLATFORM_PATH)/platform-modules-inventec.mk
+#include $(PLATFORM_PATH)/platform-modules-alphanetworks.mk
+#include $(PLATFORM_PATH)/platform-modules-inventec.mk
 include $(PLATFORM_PATH)/platform-modules-cel.mk
-include $(PLATFORM_PATH)/platform-modules-delta.mk
-include $(PLATFORM_PATH)/platform-modules-quanta.mk
-#include $(PLATFORM_PATH)/platform-modules-mitac.mk
+#include $(PLATFORM_PATH)/platform-modules-delta.mk
+#include $(PLATFORM_PATH)/platform-modules-quanta.mk
+##include $(PLATFORM_PATH)/platform-modules-mitac.mk
 include $(PLATFORM_PATH)/platform-modules-juniper.mk
-include $(PLATFORM_PATH)/platform-modules-brcm-xlr-gts.mk
-include $(PLATFORM_PATH)/platform-modules-ruijie.mk
-include $(PLATFORM_PATH)/platform-modules-ragile.mk
+#include $(PLATFORM_PATH)/platform-modules-brcm-xlr-gts.mk
+#include $(PLATFORM_PATH)/platform-modules-ruijie.mk
+#include $(PLATFORM_PATH)/platform-modules-ragile.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-rpc.mk
 include $(PLATFORM_PATH)/docker-saiserver-brcm.mk
@@ -42,8 +42,8 @@ SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) \
              $(DOCKER_FPM)
 
 # Inject brcm sai into syncd
-$(SYNCD)_DEPENDS += $(BRCM_SAI) $(BRCM_SAI_DEV)
-$(SYNCD)_UNINSTALLS += $(BRCM_SAI_DEV) $(BRCM_SAI)
+$(SYNCD)_DEPENDS += $(BRCM_XGS_SAI) $(BRCM_XGS_SAI_DEV)
+$(SYNCD)_UNINSTALLS += $(BRCM_XGS_SAI_DEV) $(BRCM_XGS_SAI)
 
 ifeq ($(ENABLE_SYNCD_RPC),y)
 $(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)

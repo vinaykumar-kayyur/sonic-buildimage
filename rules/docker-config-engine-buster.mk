@@ -7,7 +7,8 @@ $(DOCKER_CONFIG_ENGINE_BUSTER)_DEPENDS += $(LIBSWSSCOMMON) \
                                           $(LIBYANG) \
                                           $(LIBYANG_CPP) \
                                           $(LIBYANG_PY3) \
-                                          $(PYTHON3_SWSSCOMMON)
+                                          $(PYTHON3_SWSSCOMMON) \
+                                          $(SONIC_DB_CLI)
 $(DOCKER_CONFIG_ENGINE_BUSTER)_PYTHON_WHEELS += $(SWSSSDK_PY3)
 $(DOCKER_CONFIG_ENGINE_BUSTER)_PYTHON_WHEELS += $(SONIC_PY_COMMON_PY3) \
                                                 $(SONIC_YANG_MGMT_PY3) \
@@ -23,3 +24,4 @@ $(DOCKER_CONFIG_ENGINE_BUSTER)_DBG_DEPENDS = $($(DOCKER_BASE_BUSTER)_DBG_DEPENDS
 $(DOCKER_CONFIG_ENGINE_BUSTER)_DBG_IMAGE_PACKAGES = $($(DOCKER_BASE_BUSTER)_DBG_IMAGE_PACKAGES)
 
 SONIC_DOCKER_IMAGES += $(DOCKER_CONFIG_ENGINE_BUSTER)
+SONIC_BUSTER_DOCKERS += $(DOCKER_CONFIG_ENGINE_BUSTER)

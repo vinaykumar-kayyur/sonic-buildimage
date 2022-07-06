@@ -24,6 +24,11 @@
         "desc": "Referring non-existing BGP neighbor table.",
         "eStrKey" : "LeafRef"
     },
+    "BGP_NEIGHBOR_NEG_INVALID_ADMIN_STATUS": {
+        "desc": "Incorrect admin status.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["admin_status"]
+    },
     "BGP_NEIGHBOR_NEG_INVALID_NAME": {
         "desc": "Incorrect neighbor name.",
         "eStrKey": "InvalidValue",
@@ -133,7 +138,65 @@
     "BGP_NEIGHBOR_NEG_INVALID_HOPS": {
         "desc": "Invalid TTL hops for unnumbered interface neigbhor.",
         "eStrKey" : "Pattern"
+    },
+    "BGP_MONITORS_ALL_VALID": {
+        "desc": "Configure BGP monitor table."
+    },
+    "BGP_MONITORS_NEG_INVALID_ADMIN_STATUS": {
+        "desc": "Incorrect admin status.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["admin_status"]
+    },
+    "BGP_MONITORS_NEG_INVALID_NAME": {
+        "desc": "Incorrect monitor name.",
+        "eStr": ["Invalid BGP monitor name"]
+    },
+    "BGP_MONITORS_NEG_INVALID_ASN": {
+        "desc": "Invalid local AS number.",
+        "eStrKey" : "InvalidValue"
+    },
+    "BGP_PEERRANGE_ALL_VALID": {
+        "desc": "Configure BGP peer range table."
+    },
+    "BGP_ALLOWED_PREFIXES_COM_LIST_ALL_VALID": {
+        "desc": "Configue BGP allowed prefix list."
+    },
+    "BGP_ALLOWED_PREFIXES_COM_LIST_INVALID_DEPLOYMENT": {
+        "desc": "Invalid default action.",
+        "eStrKey" : "Pattern"
+    },
+    "BGP_ALLOWED_PREFIXES_COM_LIST_INVALID_DEFAULT_ACTION": {
+        "desc": "Invalid default action.",
+        "eStrKey" : "InvalidValue",
+        "eStr" : ["default_action"]
+    },
+    "BGP_ALLOWED_PREFIXES_COM_LIST_INVALID_PREFIXES_IPV4": {
+        "desc": "Invalid IPv4 prefix.",
+        "eStrKey" : "Pattern"
+    },
+    "BGP_ALLOWED_PREFIXES_COM_LIST_INVALID_PREFIXES_IPV6": {
+        "desc": "Invalid IPv6 prefix.",
+        "eStrKey" : "Pattern"
+    },
+    "BGP_ALLOWED_PREFIXES_LIST_ALL_VALID": {
+        "desc": "Configue BGP allowed prefix list."
+    },
+    "BGP_ALLOWED_PREFIXES_LIST_INVALID_DEPLOYMENT": {
+        "desc": "Invalid default action.",
+        "eStrKey" : "Pattern"
+    },
+    "BGP_ALLOWED_PREFIXES_LIST_INVALID_DEFAULT_ACTION": {
+        "desc": "Invalid default action.",
+        "eStrKey" : "InvalidValue",
+        "eStr" : ["default_action"]
+    },
+    "BGP_ALLOWED_PREFIXES_LIST_INVALID_PREFIXES_IPV4": {
+        "desc": "Invalid IPv4 prefix.",
+        "eStrKey" : "Pattern"
+    },
+    "BGP_ALLOWED_PREFIXES_LIST_INVALID_PREFIXES_IPV6": {
+        "desc": "Invalid IPv6 prefix.",
+        "eStrKey" : "Pattern"
     }
-
 }
 
