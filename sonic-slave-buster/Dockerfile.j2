@@ -99,16 +99,6 @@ RUN LIBPYTHON3_DEPS="`apt-cache depends libpython3-dev:$arch |grep Depends|awk {
 
 RUN apt-get install -y swig libssl-dev
 
-# Cross-compile the heaviest python packages for arm
-ARG pre_built_target_dir=PRE_BUILT_TARGET 
-RUN rm -rf $pre_built_target_dir && mkdir $pre_built_target_dir && rm -rf python-cache && mkdir python-cache
-RUN PATH=/python_virtualenv/env2/bin/:$PATH CC=$CROSS_CC pip2 install --cache-dir python-cache grpcio==1.38.0 grpcio-tools==1.20.0 m2crypto==0.36.0 bitarray==1.5.3 lxml==4.6.5 
-RUN PATH=/python_virtualenv/env3/bin/:$PATH CC=$CROSS_CC pip3 install --cache-dir python-cache grpcio==1.38.0 grpcio-tools==1.20.0 m2crypto==0.36.0 bitarray==1.5.3 lxml==4.6.5
-RUN find python-cache -name "*.whl" -exec cp {} $pre_built_target_dir \;
-
-RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip list
-
-# Depend on cross-compiled lxml
 RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip install pyang==2.4.0
 RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip install pyangbind==0.8.1
 RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip uninstall -y enum34

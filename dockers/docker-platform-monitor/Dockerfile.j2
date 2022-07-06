@@ -27,13 +27,6 @@ RUN apt-get update &&   \
         python3-jsonschema \
         libpci3
 
-{%- if CROSS_BUILD_ENVIRON == "y" %}
-RUN mkdir prebuilt-python-wheels
-COPY prebuilt-python-wheels/* prebuilt-python-wheels/
-RUN pip3 install prebuilt-python-wheels/lxml*cp3*.whl
-RUN rm -rf prebuilt-python-wheels
-{%- endif %}
-
 # On Arista devices, the sonic_platform wheel is not installed in the container.
 # Instead, the installation directory is mounted from the host OS. However, this method
 # doesn't ensure all dependencies are installed in the container. So here we
