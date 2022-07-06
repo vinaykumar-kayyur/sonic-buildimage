@@ -8,6 +8,6 @@
     "BGP_DEVICE_GLOBAL_WITH_INVALID_VALUE": {
         "desc": "Load bgp device global table with invalid value",
         "eStrKey": "InvalidValue",
-	"eStr": ["tsa_enabled"]
+        "eStr": ["tsa_enabled"]
     }
 }
