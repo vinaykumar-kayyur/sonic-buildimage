@@ -54,6 +54,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     Attributes:
         config_db: Handle to Config Redis database via SwSS SDK
     """
+    FEATURE_TABLE = "FEATURE"
     ACL_TABLE = "ACL_TABLE"
     ACL_RULE = "ACL_RULE"
     DEVICE_METADATA_TABLE = "DEVICE_METADATA"
