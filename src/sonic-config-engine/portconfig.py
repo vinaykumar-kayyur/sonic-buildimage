@@ -8,6 +8,7 @@ try:
     from swsscommon import swsscommon
     from sonic_py_common import device_info
     from sonic_py_common.multi_asic import get_asic_id_from_name
+    from utilities_common.general import load_db_config
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
@@ -72,6 +73,7 @@ def db_connect_configdb(namespace=None):
     """
     Connect to configdb
     """
+    load_db_config()
     config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
     if config_db is None:
         return None
