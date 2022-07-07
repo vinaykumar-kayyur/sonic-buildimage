@@ -266,6 +266,9 @@ fi
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# package for supporting password hardening
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libpam-cracklib
+
 # Install pam-tacplus and nss-tacplus
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libtac2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -424,6 +427,18 @@ sudo chmod og-rw $FILESYSTEM_ROOT_ETC_SONIC/core_analyzer.rc.json
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libffi-dev libssl-dev
 
+{% if include_bootchart == 'y' %}
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install systemd-bootchart
+sudo tee $FILESYSTEM_ROOT_ETC/systemd/bootchart.conf > /dev/null <<EOF
+[Bootchart]
+Samples=4500
+Frequency=25
+EOF
+{% if enable_bootchart == 'y' %}
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable systemd-bootchart
+{% endif %}
+{% endif %}
+
 if [[ $CONFIGURED_ARCH == armhf ]]; then
     # The azure-storage package depends on the cryptography package. Newer
     # versions of cryptography require the rust compiler, the correct version
@@ -521,6 +536,9 @@ then
 fi
 {% endif %}
 
+# Copy backend acl template
+sudo cp $BUILD_TEMPLATES/backend_acl.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+
 # Copy hostname configuration scripts
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "hostname-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
@@ -614,7 +632,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT depmod -a {{kversion}}
 sudo dpkg --root=$FILESYSTEM_ROOT -i {{deb}} || sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f --download-only
 
 sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/{{dev}}
-sudo cp {{ deb }} $FILESYSTEM_ROOT/$PLATFORM_DIR/{{dev}}/
+sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/common
+sudo cp {{ deb }} $FILESYSTEM_ROOT/$PLATFORM_DIR/common/
+sudo ln -sf "../common/{{ debfilename }}" "$FILESYSTEM_ROOT/$PLATFORM_DIR/{{dev}}/{{ debfilename }}"
 for f in $(find $FILESYSTEM_ROOT/var/cache/apt/archives -name "*.deb"); do
     sudo mv $f $FILESYSTEM_ROOT/$PLATFORM_DIR/{{dev}}/
 done

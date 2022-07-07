@@ -25,7 +25,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [KDUMP](#kdump)
+         * [KDUMP](#kdump)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -51,7 +51,8 @@ Table of Contents
          * [VLAN_MEMBER](#vlan_member)  
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
-         * [PASSWORD_HARDENING](#password_hardening)
+         * [PASSWORD_HARDENING](#password_hardening)  
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
@@ -707,12 +708,13 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 
 ### Data Plane L3 Interfaces
 
-IP configuration for data plane are defined in **INTERFACE**,
-**PORTCHANNEL_INTERFACE**, and **VLAN_INTERFACE** table. The objects
-in all three tables have the interface (could be physical port, port
-channel, or vlan) that IP address is attached to as first-level key, and
-IP prefix as second-level key. IP interface objects don't have any
-attributes.
+IP configuration for data plane are defined in **INTERFACE**, **VLAN_SUB_INTERFACE**,
+**PORTCHANNEL_INTERFACE** and **VLAN_INTERFACE** table. The objects
+in all four tables have the interface (could be physical port, port
+channel, vlan or vlan sub interface) that IP address is attached to as first-level key, and
+IP prefix as second-level key. IP interface address objects don't have any attributes.
+IP interface attributes, resides in those tables as well, key is the interface name
+and value is a list of field-values representing the interface attributes, e.g. loopback action.
 
 ```
 {
@@ -720,21 +722,29 @@ attributes.
         "Ethernet0|10.0.0.0/31": {},
         "Ethernet4|10.0.0.2/31": {},
         "Ethernet8|10.0.0.4/31": {}
-		...
+        "Ethernet8": {
+            "loopback_action": "drop"
+        }
     },
-	
+
 "PORTCHANNEL_INTERFACE": {
         "PortChannel01|10.0.0.56/31": {},
         "PortChannel01|FC00::71/126": {},
         "PortChannel02|10.0.0.58/31": {},
         "PortChannel02|FC00::75/126": {}
-		...
     },
+
 "VLAN_INTERFACE": {
         "Vlan1000|192.168.0.1/27": {}
+    },
+
+"VLAN_SUB_INTERFACE": {
+        "Ethernet4.1|10.0.0.2/31": {},
+        "Ethernet4.1": {
+            "loopback_action": "drop"
+        }
     }
 }
-
 ```
 
 
@@ -1607,6 +1617,32 @@ The method could be:
     }
 }
 ```
+
+### SYSTEM_DEFAULTS table
+To have a better management of the features in SONiC, a new table `SYSTEM_DEFAULTS` is introduced.
+
+```
+"SYSTEM_DEFAULTS": {
+        "tunnel_qos_remap": {
+            "status": "enabled"
+        }
+        "default_bgp_status": {
+            "status": "down"
+        }
+        "synchronous_mode": {
+            "status": "enable"
+        }
+        "dhcp_server": {
+            "status": "enable"
+        }
+    }
+```
+The default value of flags in `SYSTEM_DEFAULTS` table can be set in `init_cfg.json` and loaded into db at system startup. These flags are usually set at image being build, and are unlikely to change at runtime.
+
+If the values in `config_db.json` is changed by user, it will not be rewritten back by `init_cfg.json` as `config_db.json` is loaded after `init_cfg.json` in [docker_image_ctl.j2](https://github.com/Azure/sonic-buildimage/blob/master/files/build_templates/docker_image_ctl.j2)
+
+For the flags that can be changed by reconfiguration, we can update entries in `minigraph.xml`, and parse the new values in to config_db with minigraph parser at reloading minigraph. If there are duplicated entries in `init_cfg.json` and `minigraph.xml`, the values in `minigraph.xml` will overwritten the values defined in `init_cfg.json`.
+#### 5.2.3 Update value directly in db memory
 
 For Developers
 ==============
