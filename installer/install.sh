@@ -62,8 +62,8 @@ if [ -r ./machine.conf ]; then
     read_conf_file "./machine.conf"
 fi
 
-if [ -r ./onie-image-arm64.conf ]; then
-    . ./onie-image-arm64.conf
+if [ -r ./onie-image*.conf ]; then
+. ./onie-image*.conf
 fi
 
 echo "ONIE Installer: platform: $platform"
