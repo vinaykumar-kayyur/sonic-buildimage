@@ -3,9 +3,9 @@
 HW_VERSION="/var/run/hw-management/system/config1"
 HW_RESPIN_VERSION="/var/run/hw-management/system/config3"
 SENSORS_CONF_FILE="/usr/share/sonic/platform/sensors.conf"
-SENSORS_RESPIN_CONF_FILE="/usr/share/sonic/platform/sensors_repin.conf"
+SENSORS_RESPIN_CONF_FILE="/usr/share/sonic/platform/sensors_respin.conf"
 SENSORS_CONF_FILE_A1="/usr/share/sonic/platform/sensors.conf.a1"
-SENSORS_RESPIN_CONF_FILE_A1="/usr/share/sonic/platform/sensors_repin.conf.a1"
+SENSORS_RESPIN_CONF_FILE_A1="/usr/share/sonic/platform/sensors_respin.conf.a1"
 
 function get_sensor_conf_path() {
     local _HW_VERSION="0"
