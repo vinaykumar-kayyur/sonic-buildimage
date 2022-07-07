@@ -15,9 +15,6 @@ else
   fi
 
   /usr/bin/TS TSA
-  logger -t TSA -p user.info "System Mode: Normal -> Maintenance"
-  echo "System Mode: Normal -> Maintenance"
-  echo ""
   echo "Please execute 'config save' to preserve System mode in Maintenance after reboot or config reload"
 fi
 

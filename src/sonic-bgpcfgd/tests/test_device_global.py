@@ -6,6 +6,7 @@ from bgpcfgd.template import TemplateFabric
 from . import swsscommon_test
 from .util import load_constants
 import bgpcfgd.managers_device_global
+from swsscommon import swsscommon
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 BASE_PATH = os.path.abspath('../sonic-bgpcfgd/tests/data/general/peer-group.conf/')
@@ -38,7 +39,7 @@ def constructor():
         'tf':        TemplateFabric(TEMPLATE_PATH),
         'constants': constants
     }
-    mgr = bgpcfgd.managers_device_global.DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", "BGP_DEVICE_GLOBAL")
+    mgr = bgpcfgd.managers_device_global.DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)
     cfg_mgr.update()    
     return mgr
 
@@ -71,17 +72,17 @@ def test_check_state_and_get_tsa_routemaps():
     
 def test_get_tsa_routemaps(): 
     m = constructor()
-    assert m.get_tsa_routemaps([]) == ""
+    assert m.get_ts_routemaps([], m.tsa_template) == ""
 
-    res = m.get_tsa_routemaps(m.cfg_mgr.get_text())
+    res = m.get_ts_routemaps(m.cfg_mgr.get_text(), m.tsa_template)
     expected_res = get_string_from_file("/result_isolate.conf")
     assert res == expected_res
 
 def test_get_tsb_routemaps(): 
     m = constructor()
-    assert m.get_tsb_routemaps([]) == ""
+    assert m.get_ts_routemaps([], m.tsb_template) == ""
 
-    res = m.get_tsb_routemaps(m.cfg_mgr.get_text())
+    res = m.get_ts_routemaps(m.cfg_mgr.get_text(), m.tsb_template)
     expected_res = get_string_from_file("/result_unisolate.conf")
     assert res == expected_res
 
@@ -103,3 +104,4 @@ def test_del_handler():
     m = constructor()
     res = m.del_handler("STATE")
     assert res, "Expect True return value for del_handler"
+

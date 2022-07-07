@@ -66,7 +66,7 @@ def do_work():
         AdvertiseRouteMgr(common_objs, "STATE_DB", swsscommon.STATE_ADVERTISE_NETWORK_TABLE_NAME),
         RouteMapMgr(common_objs, "APPL_DB", swsscommon.APP_BGP_PROFILE_TABLE_NAME),
         # Device Global Manager
-        DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", "BGP_DEVICE_GLOBAL"),
+        DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME),
     ]
     runner = Runner(common_objs['cfg_mgr'])
     for mgr in managers:
@@ -99,3 +99,4 @@ def main():
         sys.exit(rc)
     except SystemExit:
         os._exit(rc)
+

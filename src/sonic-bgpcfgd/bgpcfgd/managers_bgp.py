@@ -24,7 +24,7 @@ class BGPPeerGroupMgr(object):
         tf = common_objs['tf']
         self.policy_template = tf.from_file(base_template + "policies.conf.j2")
         self.peergroup_template = tf.from_file(base_template + "peer-group.conf.j2")
-        self.device_global_cfgmgr = DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", "BGP_DEVICE_GLOBAL")
+        self.device_global_cfgmgr = DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)
 
     def update(self, name, **kwargs):
         """
