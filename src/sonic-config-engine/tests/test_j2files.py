@@ -12,11 +12,18 @@ class TestJ2Files(TestCase):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.simple_minigraph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
+        self.port_data = os.path.join(self.test_dir, 'sample-port-data.json')
+        self.ztp = os.path.join(self.test_dir, "sample-ztp.json")
+        self.ztp_inband = os.path.join(self.test_dir, "sample-ztp-inband.json")
+        self.ztp_ip = os.path.join(self.test_dir, "sample-ztp-ip.json")
+        self.ztp_inband_ip = os.path.join(self.test_dir, "sample-ztp-inband-ip.json")
         self.t0_minigraph = os.path.join(self.test_dir, 't0-sample-graph.xml')
         self.t0_mvrf_minigraph = os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml')
-        self.t0_two_mgmt_minigraph  = os.path.join(self.test_dir, 't0-sample-graph-two-mgmt.xml')
+        self.t0_minigraph_nomgmt = os.path.join(self.test_dir, 't0-sample-graph-nomgmt.xml')
+        self.t0_mvrf_minigraph_nomgmt = os.path.join(self.test_dir, 't0-sample-graph-mvrf-nomgmt.xml')
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.t0_port_config_tiny = os.path.join(self.test_dir, 't0-sample-port-config-tiny.ini')
         self.l1_l3_port_config = os.path.join(self.test_dir, 'l1-l3-sample-port-config.ini')
         self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
@@ -85,6 +92,25 @@ class TestJ2Files(TestCase):
 
     def test_interfaces(self):
         interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
+
+        # ZTP enabled
+        argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config_tiny + ' -j ' + self.ztp + ' -j ' + self.port_data + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + '> ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt_ztp'), self.output_file))
+
+        argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config_tiny + ' -j ' + self.ztp_inband + ' -j ' + self.port_data + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + '> ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt_ztp_inband'), self.output_file))
+
+        argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config_tiny + ' -j ' + self.ztp_ip + ' -j ' + self.port_data + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + '> ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt_ztp_ip'), self.output_file))
+
+        argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config_tiny + ' -j ' + self.ztp_inband_ip + ' -j ' + self.port_data + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + '> ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt_ztp_inband_ip'), self.output_file))
+
+        # ZTP disabled, MGMT_INTERFACE defined
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
         self.run_script(argument)
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces'), self.output_file))
@@ -93,10 +119,16 @@ class TestJ2Files(TestCase):
         self.run_script(argument)
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'mvrf_interfaces'), self.output_file))
 
-        argument = '-m ' + self.t0_two_mgmt_minigraph + ' -p ' + self.t0_port_config + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
+        # ZTP disabled, no MGMT_INTERFACE defined
+        argument = '-m ' + self.t0_minigraph_nomgmt + ' -p ' + self.t0_port_config + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
         self.run_script(argument)
-        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'two_mgmt_interfaces'), self.output_file), self.output_file)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'interfaces_nomgmt'), self.output_file))
 
+        argument = '-m ' + self.t0_mvrf_minigraph_nomgmt + ' -p ' + self.t0_port_config + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'mvrf_interfaces_nomgmt'), self.output_file))
+
+        
     def test_ports_json(self):
         ports_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ports.json.j2')
         argument = '-m ' + self.simple_minigraph + ' -p ' + self.t0_port_config + ' -t ' + ports_template + ' > ' + self.output_file
@@ -573,6 +605,34 @@ class TestJ2Files(TestCase):
         argument = '-j {} -t {} > {}'.format(ntp_interfaces_json, conf_template, self.output_file)
         self.run_script(argument)
         assert utils.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
+
+    def test_backend_acl_template_render(self):
+        acl_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'build_templates',
+            'backend_acl.j2'
+        )
+        test_list = {
+            'single_vlan': {
+                'input': 'single_vlan.json',
+                'output': 'acl_single_vlan.json'
+            },
+            'multi_vlan': {
+                'input': 'multi_vlan.json',
+                'output': 'acl_multi_vlan.json'
+            },
+        }
+        for _, v in test_list.items():
+            input_file = os.path.join(
+                self.test_dir, 'data', 'backend_acl', v['input']
+            )
+            argument = " -j {} -t {} > {}".format(
+                input_file, acl_template, self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'data', 'backend_acl', v['output']
+            )
+            self.run_script(argument)
+            assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
