@@ -103,7 +103,9 @@ jobs:
       - template: template-skipvstest.yml
       - bash: |
           set -ex
+          exit 0
           if [ $(GROUP_NAME) == vs ]; then
+            exit 0
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
@@ -119,6 +121,7 @@ jobs:
               rm target/sonic-vs.img
             fi
           else
+            exit 1
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
