@@ -35,7 +35,6 @@ jobs:
           fi
         displayName: "Set cache options"
       - checkout: self
-        submodules: recursive
         condition: eq(variables.SKIP_CHECKOUT, '') 
         displayName: 'Checkout code'
       - script: |
@@ -54,7 +53,7 @@ jobs:
         displayName: Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)
-        artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
+        artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME).1'
         displayName: "Archive sonic image"
       - publish:  $(Build.ArtifactStagingDirectory)
         condition: or(failed(), canceled())

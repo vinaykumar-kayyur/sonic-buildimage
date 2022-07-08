@@ -92,7 +92,6 @@ stages:
     steps:
     - checkout: self
       clean: true
-      submodules: recursive
       displayName: 'Checkout code'
 
     - task: DownloadPipelineArtifact@2
