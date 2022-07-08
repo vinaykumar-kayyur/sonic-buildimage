@@ -29,9 +29,6 @@ SYSLOG_IDENTIFIER = "caclmgrd"
 
 DEFAULT_NAMESPACE = ''
 
-FEATURES_PRESENT = [""]
-
-
 # ========================== Helper Functions =========================
 
 
@@ -120,9 +117,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         self.namespace_docker_mgmt_ip = {}
         self.namespace_docker_mgmt_ipv6 = {}
 
+        # Get all features that are present {feature_name : True/False}
         self.feature_present = {}
-        for feature in FEATURES_PRESENT:
-            self.feature_present[feature] = self.is_feature_present(feature)
+        self.update_feature_present()
 
         metadata = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.DEVICE_METADATA_TABLE)
         if 'subtype' in metadata['localhost'] and metadata['localhost']['subtype'] == 'DualToR':
@@ -208,14 +205,11 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         tcp_flags_str = tcp_flags_str[:-1]
         return tcp_flags_str
 
-    def is_feature_present(self, feature_name):
+    def update_feature_present(self):
         feature_tb_info = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.FEATURE_TABLE)
         if feature_tb_info:
             for k, v in feature_tb_info.items():
-                if feature_name == k:
-                    return True
-
-        return False
+                self.feature_present[k] = True
 
     def generate_block_ip2me_traffic_iptables_commands(self, namespace):
         INTERFACE_TABLE_NAME_LIST = [
