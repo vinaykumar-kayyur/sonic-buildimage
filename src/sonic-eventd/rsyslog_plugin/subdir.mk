@@ -9,5 +9,5 @@ rsyslog_plugin/%.o: rsyslog_plugin/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	$(CC) -D__FILENAME__="$(subst rsyslog_plugin/,,$<)" $(CFLAGS) -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$(@)" "$<"
-	@echo 'Finished building: $<
-	'@echo ' '
+	@echo 'Finished building: $<'
+	@echo ' '

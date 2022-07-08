@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 #include "syslog_parser.h"
-#include "common/events.h"
-#include "common/logger.h"
+#include "events.h"
+#include "logger.h"
 
 using namespace std;
 using namespace swss;

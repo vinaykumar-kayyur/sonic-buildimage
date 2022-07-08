@@ -2,8 +2,8 @@ RM := rm -rf
 EVENTD_TARGET := eventd
 EVENTD_TEST := tests/tests
 EVENTD_TOOL := tools/events_tool
-RSYSLOG-PLUGIN_TARGET := rsyslog_plugin
-RSYSLOG-PLUGIN_TEST: rsyslog_plugin_tests/tests
+RSYSLOG-PLUGIN_TARGET := rsyslog_plugin/rsyslog_plugin
+RSYSLOG-PLUGIN_TEST := rsyslog_plugin_tests/tests
 CP := cp
 MKDIR := mkdir
 CC := g++
@@ -26,7 +26,7 @@ endif
 -include rsyslog_plugin/subdir.mk
 -include rsyslog_plugin_tests/subdir.mk
 
-all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests
+all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'

@@ -103,24 +103,22 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
     ASSERT(h != NULL, "Failed to get subscriber handle");
 
     while(!term_receive) {
-        string key;
-        event_params_t params;
-        map_str_str_t evt;
-        int missed_cnt=-1;
+        event_receive_op_t evt;
+        map_str_str_t evtOp;
 
-        int rc = event_receive(h, key, params, missed_cnt);
-        if (rc != 0) {
-            ASSERT(rc == EAGAIN, "Failed to receive rc=%d index=%d\n",
-                    rc, index);
+        evt = event_receive(h);
+        if (evt.rc != 0) {
+            ASSERT(evt.rc == EAGAIN, "Failed to receive rc=%d index=%d\n",
+                    evt.rc, index);
             continue;
         }
-        ASSERT(!key.empty(), "received EMPTY key");
-        ASSERT(missed_cnt >= 0, "Missed count uninitialized");
+        ASSERT(!evt.key.empty(), "received EMPTY key");
+        ASSERT(evt.missed_cnt >= 0, "Missed count uninitialized");
 
-        total_missed += missed_cnt;
+        total_missed += evt.missed_cnt;
 
-        evt[key] = t_map_to_str(params);
-        (*fp) << t_map_to_str(evt) << "\n";
+        evtOp[evt.key] = t_map_to_str(evt.params);
+        (*fp) << t_map_to_str(evtOp) << "\n";
         fp->flush();
         
         if ((++index % PRINT_CHUNK_SZ) == 0) {

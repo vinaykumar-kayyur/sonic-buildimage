@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 #include <regex>
-#include "common/json.hpp"
-#include "common/events.h"
+#include "json.hpp"
+#include "events.h"
 
 using namespace std;
 using json = nlohmann::json;
