@@ -175,6 +175,7 @@ stages:
             BUILD_NUMBER: $(Build.BuildId)
           displayName: "Publish to Docker Registry"
         - task: ComponentGovernanceComponentDetection@0
+          condition: eq(variables['PLATFORM_ARCH'], 'amd64')
         - script: |
             sudo rm -rf fsroot
             docker rmi -f $(docker images docker-* -a -q | grep docker-) || true
