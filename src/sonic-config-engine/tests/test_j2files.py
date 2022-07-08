@@ -266,7 +266,7 @@ class TestJ2Files(TestCase):
 
     def test_buffers_mellanox2700_render_template(self):
         # Mellanox buffer template rendering for single ingress pool mode
-        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json') 
+        self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json') 
 
     def test_buffers_mellanox2410_render_template(self):
         # Mellanox buffer template rendering for double ingress pools mode
