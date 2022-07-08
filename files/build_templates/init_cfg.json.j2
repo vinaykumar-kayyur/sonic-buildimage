@@ -86,7 +86,7 @@
         }
     },
     "AUTO_TECHSUPPORT_FEATURE": {
-{%- for feature, _, _, _ in features %}
+{%- for feature, _, _, _, _ in features %}
         "{{feature}}": {
 {%- if enable_auto_tech_support == "y" %}
             "state" : "enabled", {% else %}
