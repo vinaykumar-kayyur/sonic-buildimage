@@ -1,0 +1,660 @@
+{
+    "DTEL_SWITCH_ID_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "switch_id",
+                        "switch_id": "1"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_SWITCH_ID_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "switch_id",
+                        "switch_id": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_FLOW_STATE_CLEAR_CYCLE_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "flow_state_clear_cycle",
+                        "flow_state_clear_cycle": "10"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_FLOW_STATE_CLEAR_CYCLE_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "flow_state_clear_cycle",
+                        "flow_state_clear_cycle": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_LATENCY_SENSITIVITY_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "latency_sensitivity",
+                        "latency_sensitivity": "100"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_LATENCY_SENSITIVITY_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "latency_sensitivity",
+                        "latency_sensitivity": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_SINK_PORT_LIST_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "sink_port_list",
+                        "sink_port_list": [
+                            "Ethernet0",
+                            "PortChannel0001"
+                        ]
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    },
+                    {
+                        "admin_status": "up",
+                        "alias": "eth4",
+                        "description": "Ethernet4",
+                        "mtu": 9000,
+                        "name": "Ethernet4",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        },
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "members": [
+                            "Ethernet4"
+                        ],
+                        "min_links": "1",
+                        "mtu": "9100",
+                        "tpid": "0x8100",
+                        "lacp_key": "auto",
+                        "name": "PortChannel0001"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_SINK_PORT_LIST_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "sink_port_list",
+                        "sink_port_list": [
+                            "Ethernet0"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_ENDPOINT_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "int_endpoint",
+                        "int_endpoint": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_ENDPOINT_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "int_endpoint",
+                        "int_endpoint": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_TRANSIT_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "int_transit",
+                        "int_transit": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_TRANSIT_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "int_transit",
+                        "int_transit": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_DROP_REPORT_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "drop_report",
+                        "drop_report": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_DROP_REPORT_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "drop_report",
+                        "drop_report": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_POSTCARD_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "POSTCARD",
+                        "postcard": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_POSTCARD_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "POSTCARD",
+                        "postcard": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "src_ip": "10.0.0.64",
+                        "dst_ip_list": [
+                            "10.0.0.65"
+                        ],
+                        "truncate_size": "1400",
+                        "udp_dest_port": "32766",
+                        "vrf": "default"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_NEG1_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "src_ip": "255.255.255.257"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_NEG2_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "dst_ip_list": [
+                            "255.255.255.257"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_NEG3_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "truncate_size": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_NEG4_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "udp_dest_port": "65536"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_VRF_TEST": {
+        "sonic-vrf:sonic-vrf": {
+            "sonic-vrf:VRF": {
+                "VRF_LIST": [
+                {
+                    "name": "Vrf1"
+                }
+                ]
+            }
+        },
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "vrf": "Vrf1"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_REPORT_SESSION_VRF_NEG_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_REPORT_SESSION": {
+                "DTEL_REPORT_SESSION_LIST": [
+                    {
+                        "name": "REPORT_SESSION_1",
+                        "vrf": "Vrf1"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL": {
+                "DTEL_LIST": [
+                    {
+                        "name": "queue_report",
+                        "queue_report": "true"
+                    }
+                ]
+            },
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port": "Ethernet0",
+                        "qindex": "1",
+                        "queue_depth_threshold": "100",
+                        "queue_latency_threshold": "5000000",
+                        "queue_tail_drop": "true",
+                        "threshold_breach_quota": "10000"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG1_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port" :"Ethernet0",
+                        "qindex" :"1"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG2_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port" :"Ethernet0",
+                        "qindex" :"8"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG3_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port": "Ethernet0",
+                        "qindex": "1",
+                        "queue_depth_threshold": "abc"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG4_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port": "Ethernet0",
+                        "qindex": "1",
+                        "queue_latency_threshold": "abc"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG5_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port": "Ethernet0",
+                        "qindex": "1",
+                        "queue_tail_drop": "abc"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_QUEUE_REPORT_NEG6_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_QUEUE_REPORT": {
+                "DTEL_QUEUE_REPORT_LIST": [
+                    {
+                        "port": "Ethernet0",
+                        "qindex": "1",
+                        "threshold_breach_quota": "abc"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "max_hop_count": "100",
+                        "collect_switch_id": "true",
+                        "collect_ingress_timestamp": "true",
+                        "collect_egress_timestamp": "true",
+                        "collect_switch_ports": "true",
+                        "collect_queue_info": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG1_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "max_hop_count": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG2_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "collect_switch_id": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG3_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "collect_ingress_timestamp": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG4_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "collect_egress_timestamp": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG5_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "collect_switch_ports": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_INT_SESSION_NEG6_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_INT_SESSION": {
+                "DTEL_INT_SESSION_LIST": [
+                    {
+                        "name": "INT_SESSION_1",
+                        "collect_queue_info": "abc"
+                    }
+                ]
+            }
+        }
+    },
+    "DTEL_EVENT_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_EVENT": {
+                "DTEL_EVENT_LIST": [
+                    {
+                        "name": "EVENT_TYPE_FLOW_STATE",
+                        "event_report_session": "RS-1",
+                        "event_dscp_value": "64"
+                    }
+                ]
+
+            }
+        }
+    },
+    "DTEL_EVENT_NEG1_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_EVENT": {
+                "DTEL_EVENT_LIST": [
+                    {
+                        "name": "abc"
+                    }
+                ]
+
+            }
+        }
+    },
+    "DTEL_EVENT_NEG2_TEST": {
+        "sonic-dtel:sonic-dtel": {
+            "sonic-dtel:DTEL_EVENT": {
+                "DTEL_EVENT_LIST": [
+                    {
+                        "name": "EVENT_TYPE_FLOW_STATE",
+                        "event_dscp_value": "abc"
+                    }
+                ]
+
+            }
+        }
+    }
+
+}

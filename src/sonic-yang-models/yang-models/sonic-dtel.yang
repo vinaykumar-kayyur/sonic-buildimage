@@ -1,0 +1,294 @@
+module sonic-dtel{
+    yang-version 1.1;
+    namespace "http://github.com/Azure/sonic-dtel";
+    prefix dtel;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+    import sonic-port {
+        prefix port;
+        revision-date 2019-07-01;
+    }
+    import sonic-portchannel {
+        prefix lag;
+    }
+    import sonic-vrf {
+        prefix vrf;
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC DTEL";
+
+    revision 2022-06-16 {
+        description
+            "Initial revision.";
+    }
+
+    container sonic-dtel {
+        container DTEL {
+            description "DTEL part of config_db.json";
+
+            list DTEL_LIST {
+                key "name";
+
+                leaf name {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf switch_id {
+                    type uint8;
+                    description "Globally unique switch ID";
+                }
+
+                leaf flow_state_clear_cycle {
+                    type uint16;
+                    description "DTEL flow state clear cycle, units: seconds";
+                }
+
+                leaf latency_sensitivity {
+                    type uint16;
+                    description "Latency sensitivity for flow state change detection, units: 2^n nanoseconds";
+                }
+
+                leaf-list sink_port_list {
+                    type union {
+                        type leafref {
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type leafref {
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                        }
+                    }
+                    default "";
+                    description "DTEL sink ports";
+                }
+
+                leaf int_endpoint {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                }
+
+                leaf int_transit {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                }
+                leaf queue_report {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                }
+
+                leaf drop_report {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                }
+
+                leaf postcard {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                }
+
+            }
+        }
+
+        container DTEL_REPORT_SESSION {
+            description "DTEL report session part of config_db.json";
+
+            list DTEL_REPORT_SESSION_LIST {
+                key "name";
+
+                leaf name {
+                    type string {
+                        length 1..128;
+                    }
+                }
+
+                leaf src_ip {
+                    type inet:ip-address;
+                    description "DTEL report source IP address";
+                }
+
+                leaf-list dst_ip_list {
+                    type inet:ip-address;
+                    description "DTEL report destination IP addresses";
+                }
+
+                leaf truncate_size {
+                    type uint32;
+                    description "DTEL report truncate size";
+                }
+
+                leaf udp_dest_port {
+                    type string {
+                        pattern "0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]";
+                    }
+                    description "DTEL report UDP destination port";
+                }
+
+                leaf vrf {
+                    type union {
+                        type string {
+                            pattern "default";
+                        }
+                        type leafref {
+                            path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
+                        }
+                    }
+                    description "DTEL report virtual router name";
+                }
+            }
+        }
+
+        container DTEL_QUEUE_REPORT {
+            description "DTEL_QUEUE_REPORT of config_db.json";
+
+            list DTEL_QUEUE_REPORT_LIST {
+                key "port qindex" ;
+
+                leaf port {
+                    type union {
+                        type leafref {
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type leafref {
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                        }
+                    }
+                }
+
+                leaf qindex {
+                    type string {
+                        pattern "[0-7]?" {
+                            error-message "Invalid queue index";
+                            error-app-tag queue-index-invalid;
+                        }
+                    }
+                    description "Queue object ID";
+                }
+
+                leaf queue_depth_threshold {
+                    type uint32;
+                    description "Queue depth threshold, unit : bytes";
+                }
+
+                leaf queue_latency_threshold {
+                    type uint32;
+                    description "Queue latency threshold, unit : nanoseconds";
+                }
+
+                leaf queue_tail_drop {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Send report for packets dropped by the queue";
+
+                }
+
+                leaf threshold_breach_quota {
+                    type uint32;
+                    description "Maximum number of continuous reports after threshold breach";
+                }
+            }
+        }
+
+        container DTEL_INT_SESSION  {
+            list DTEL_INT_SESSION_LIST {
+                key "name";
+
+                leaf name {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf max_hop_count {
+                    type uint8;
+                    description "The maximum number of hops that are allowed to add their metadata to the packet";
+                }
+
+                leaf collect_switch_id {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Collect switch ID";
+                }
+
+                leaf collect_ingress_timestamp {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Collect ingress timestamp";
+                }
+
+                leaf collect_egress_timestamp {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Collect egress timestamp";
+                }
+
+                leaf collect_switch_ports {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Collect ingress and egress ports";
+                }
+
+                leaf collect_queue_info {
+                    type string {
+                        pattern "true|false";
+                    }
+                    default "false";
+                    description "Collect queue information";
+                }
+
+            }
+        }
+
+        container DTEL_EVENT {
+            list DTEL_EVENT_LIST {
+                key "name";
+
+                leaf name {
+                    type string {
+                        pattern "EVENT_TYPE_FLOW_STATE|EVENT_TYPE_FLOW_REPORT_ALL_PACKETS|EVENT_TYPE_FLOW_TCPFLAG|EVENT_TYPE_QUEUE_REPORT_THRESHOLD_BREACH|EVENT_TYPE_QUEUE_REPORT_TAIL_DROP|EVENT_TYPE_DROP_REPORT";
+                    }
+                }
+
+                leaf event_report_session {
+                    type string;
+                    description "DTEL report session";
+                }
+
+                leaf event_dscp_value {
+                    type uint8;
+                    description "DTEL report DSCP value";
+                }
+
+            }
+        }
+    }
+}

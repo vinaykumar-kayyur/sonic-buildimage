@@ -1936,6 +1936,20 @@
                 "default_dynamic_th": "0",
                 "over_subscribe_ratio": "0"
             }
+        },
+
+        "DTEL" : {
+            "dtel": {
+                "switch_id": "1",
+                "flow_state_clear_cycle" : "10",
+                "latency_sensitivity" : "100",
+                "sink_port_list" : [
+                    "Ethernet0",
+                    "Ethernet4"
+                ],
+                "int_endpoint" : "true",
+                "int_transit" : "true"
+            }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
