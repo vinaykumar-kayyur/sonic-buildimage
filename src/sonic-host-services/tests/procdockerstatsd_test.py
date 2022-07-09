@@ -31,9 +31,14 @@ class TestProcDockerStatsDaemon(object):
             ('500MiB', 524288000),
             ('66.41MiB', 69635932),
             ('333.6MiB', 349804954),
+            ('7.75GB', 7750000000),
+            ('800GB', 800000000000),
             ('1GiB', 1073741824),
             ('500GiB', 536870912000),
-            ('7.751GiB', 8322572878)
+            ('7.751GiB', 8322572878),
+            ('8.1TiB', 8906044184986),
+            ('12TB', 12000000000000),
+            ('2.25TB', 2250000000000)
         ]
 
         pdstatsd = procdockerstatsd.ProcDockerStats(procdockerstatsd.SYSLOG_IDENTIFIER)
