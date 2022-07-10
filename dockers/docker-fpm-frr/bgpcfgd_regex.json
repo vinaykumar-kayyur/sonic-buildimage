@@ -1,0 +1,13 @@
+[
+    {
+        "tag": "bgp_down",
+        "regex": "Peer .default\\|([0-9a-f:.]*[0-9a-f]*). admin state is set to .down.",
+        "params": [ "peer_ip" ]
+    },
+    {
+        "tag": "bgp_up",
+        "regex": "Peer .default\\|([0-9a-f:.]*[0-9a-f]*). admin state is set to .up.",
+        "params": [ "peer_ip" ]
+    }
+]
+
