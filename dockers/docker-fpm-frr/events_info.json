@@ -2,8 +2,8 @@
     "yang_module": "sonic-events-bgp",
     "proclist": [
         {
-            "name": "bgpcfgd",
-            "parse_json": "bgpcfgd_regex.json"
+            "name": "bgp",
+            "parse_json": "bgp_regex.json"
         }
     ]
 }
