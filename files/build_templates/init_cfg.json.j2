@@ -27,30 +27,30 @@
             "POLL_INTERVAL": "10000"
         }
     },
-{%- set features = [("bgp", "enabled", false, "enabled"),
-                   ("database", "always_enabled", false, "always_enabled"),
-                   ("lldp", "enabled", true, "enabled"),
-                   ("pmon", "enabled", true, "enabled"),
-                   ("pmon", "enabled", false, "enabled"),
-                   ("radv", "enabled", false, "enabled"),
-                   ("snmp", "enabled", true, "enabled"),
-                   ("swss", "enabled", false, "enabled"),
-                   ("syncd", "enabled", false, "enabled"),
-                   ("teamd", "enabled", false, "enabled")] %}
-{% do features.append(("dhcp_relay", "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] is not in ['ToRRouter', 'EPMS', 'MgmtTsToR', 'MgmtToRRouter']) %}enabled{% else %}disabled{% endif %}", false, "enabled")) %}
-{%- if sonic_asic_platform == "vs" %}{% do features.append(("gbsyncd", "enabled", false, "enabled")) %}{% endif %}
-{%- if include_iccpd == "y" %}{% do features.append(("iccpd", "disabled", false, "enabled")) %}{% endif %}
-{%- if include_mgmt_framework == "y" %}{% do features.append(("mgmt-framework", "enabled", true, "enabled")) %}{% endif %}
-{%- if include_mux == "y" %}{% do features.append(("mux", "{% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %}enabled{% else %}always_disabled{% endif %}", false, "enabled")) %}{% endif %}
-{%- if include_nat == "y" %}{% do features.append(("nat", "disabled", false, "enabled")) %}{% endif %}
-{%- if include_p4rt == "y" %}{% do features.append(("p4rt", "enabled", false, "enabled")) %}{% endif %}
-{%- if include_restapi == "y" %}{% do features.append(("restapi", "enabled", false, "enabled")) %}{% endif %}
-{%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled")) %}{% endif %}
-{%- if include_macsec == "y" %}{% do features.append(("macsec", "disabled", false, "enabled")) %}{% endif %}
-{%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", true, "enabled")) %}{% endif %}
+{%- set features = [("bgp", "enabled", false, "enabled", "1073741824"),
+                   ("database", "always_enabled", false, "always_enabled", "1073741824"),
+                   ("lldp", "enabled", true, "enabled", "1073741824"),
+                   ("pmon", "enabled", true, "enabled", "1073741824"),
+                   ("pmon", "enabled", false, "enabled", "1073741824"),
+                   ("radv", "enabled", false, "enabled", "1073741824"),
+                   ("snmp", "enabled", true, "enabled", "1073741824"),
+                   ("swss", "enabled", false, "enabled", "1073741824"),
+                   ("syncd", "enabled", false, "enabled", "1073741824"),
+                   ("teamd", "enabled", false, "enabled", "1073741824")] %}
+{% do features.append(("dhcp_relay", "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] is not in ['ToRRouter', 'EPMS', 'MgmtTsToR', 'MgmtToRRouter']) %}enabled{% else %}disabled{% endif %}", false, "enabled", "1073741824")) %}
+{%- if sonic_asic_platform == "vs" %}{% do features.append(("gbsyncd", "enabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_iccpd == "y" %}{% do features.append(("iccpd", "disabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_mgmt_framework == "y" %}{% do features.append(("mgmt-framework", "enabled", true, "enabled", "1073741824")) %}{% endif %}
+{%- if include_mux == "y" %}{% do features.append(("mux", "{% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %}enabled{% else %}always_disabled{% endif %}", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_nat == "y" %}{% do features.append(("nat", "disabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_p4rt == "y" %}{% do features.append(("p4rt", "enabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_restapi == "y" %}{% do features.append(("restapi", "enabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_macsec == "y" %}{% do features.append(("macsec", "disabled", false, "enabled", "1073741824")) %}{% endif %}
+{%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", true, "enabled", "1073741824")) %}{% endif %}
     "FEATURE": {
 {# has_timer field if set, will start the feature systemd .timer unit instead of .service unit #}
-{%- for feature, state, has_timer, autorestart in features %}
+{%- for feature, state, has_timer, autorestart, mem_threshold_val in features %}
         "{{feature}}": {
             "state": "{{state}}",
             "has_timer" : {{has_timer | lower()}},
@@ -67,7 +67,8 @@
 {%- if feature in ["lldp", "pmon", "radv", "snmp", "telemetry"] %}
             "set_owner": "kube", {% else %}
             "set_owner": "local", {% endif %} {% endif %}
-            "high_mem_alert": "disabled"
+            "high_mem_alert": "disabled",
+            "mem_threshold": "{{mem_threshold_val}}"
         }{% if not loop.last %},{% endif -%}
 {% endfor %}
     },
@@ -85,7 +86,7 @@
         }
     },
     "AUTO_TECHSUPPORT_FEATURE": {
-{%- for feature, _, _, _ in features %}
+{%- for feature, _, _, _, _ in features %}
         "{{feature}}": {
 {%- if enable_auto_tech_support == "y" %}
             "state" : "enabled", {% else %}
