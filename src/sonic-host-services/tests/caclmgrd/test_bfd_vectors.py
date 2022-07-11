@@ -16,6 +16,10 @@ CACLMGRD_BFD_TEST_VECTOR = [
                     }
                 },
                 "FEATURE": {
+                    "bgp": {
+                        "auto_restart": "enabled",
+                        "state": "enabled",
+                    }
                 },
             },
             "expected_subprocess_calls": [
