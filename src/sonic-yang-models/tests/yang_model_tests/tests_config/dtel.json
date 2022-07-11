@@ -395,7 +395,7 @@
                 "DTEL_QUEUE_REPORT_LIST": [
                     {
                         "port" :"Ethernet0",
-                        "qindex" :"8"
+                        "qindex" :"-1"
                     }
                 ]
             }

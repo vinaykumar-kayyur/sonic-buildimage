@@ -32,28 +32,28 @@
     },
     "DTEL_INT_ENDPOINT_NEG_TEST": {
         "desc": "Config invaild endpoint in DTEL.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_INT_TRANSIT_TEST": {
         "desc": "Config int transit in DTEL."
     },
     "DTEL_INT_TRANSIT_NEG_TEST": {
         "desc": "Config invaild int transit in DTEL.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_DROP_REPORT_TEST": {
         "desc": "Config drop report in DTEL."
     },
     "DTEL_DROP_REPORT_NEG_TEST": {
         "desc": "Config invaild drop report in DTEL.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_POSTCARD_TEST": {
         "desc": "Config postcard in DTEL."
     },
     "DTEL_POSTCARD_NEG_TEST": {
         "desc": "Config invaild postcard in DTEL.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_REPORT_SESSION_TEST": {
         "desc": "Config dtel report session"
@@ -72,7 +72,7 @@
     },
     "DTEL_REPORT_SESSION_NEG4_TEST": {
         "desc": "Config invalid dtel report udp destination port",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_REPORT_SESSION_VRF_TEST": {
         "desc": "Config dtel report session vrf"
@@ -90,7 +90,7 @@
     },
     "DTEL_QUEUE_REPORT_NEG2_TEST": {
         "desc": "Config dtel queue report with invalid queue ID",
-        "eStr": "Invalid queue index"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_QUEUE_REPORT_NEG3_TEST": {
         "desc": "Config dtel queue report with invalid queue depth threshold",
@@ -102,7 +102,7 @@
     },
     "DTEL_QUEUE_REPORT_NEG5_TEST": {
         "desc": "Config dtel queue report with invalid queue tail drop",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_QUEUE_REPORT_NEG6_TEST": {
         "desc": "Config dtel queue report with invalid threshold breach quota",
@@ -117,23 +117,23 @@
     },
     "DTEL_INT_SESSION_NEG2_TEST": {
         "desc": "Config invalid collect_switch_id in dtel int session.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_INT_SESSION_NEG3_TEST": {
         "desc": "Config invalid collect_ingress_timestamp in dtel int session.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_INT_SESSION_NEG4_TEST": {
         "desc": "Config invalid collect_egress_timestamp in dtel int session.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_INT_SESSION_NEG5_TEST": {
         "desc": "Config invalid collect_switch_ports in dtel int session.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_INT_SESSION_NEG6_TEST": {
         "desc": "Config invalid collect_queue_info in dtel int session.",
-        "eStrKey": "Pattern"
+        "eStrKey": "InvalidValue"
     },
     "DTEL_EVENT_TEST": {
         "desc": "Config dtel event."
