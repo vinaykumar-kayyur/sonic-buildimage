@@ -1,6 +1,6 @@
 #include <iostream>
 #include "syslog_parser.h"
-#include "common/logger.h"
+#include "logger.h"
 
 /**
  * Parses syslog message and returns structured event

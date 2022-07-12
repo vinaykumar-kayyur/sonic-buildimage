@@ -3,7 +3,7 @@
 #include <fstream>
 #include <regex>
 #include "rsyslog_plugin.h"
-#include "common/json.hpp"
+#include "json.hpp"
 
 using json = nlohmann::json;
 
@@ -16,7 +16,7 @@ bool RsyslogPlugin::onMessage(string msg) {
     } else {
         int returnCode = event_publish(m_eventHandle, tag, &paramDict);
         if (returnCode != 0) {
-            SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s. last thrown event error: %d\n", tag.c_str(), event_last_error());
+            SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s.\n", tag.c_str());
             return false;
         }
         return true;
@@ -64,7 +64,7 @@ bool RsyslogPlugin::createRegexList() {
     return true;
 }
 
-[[noreturn]] void RsyslogPlugin::run() {
+void RsyslogPlugin::run() {
     while(true) {
         string line;
         getline(cin, line);
