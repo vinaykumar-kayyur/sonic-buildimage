@@ -62,8 +62,14 @@ if [ -r ./machine.conf ]; then
     read_conf_file "./machine.conf"
 fi
 
-if [ -r ./onie-image*.conf ]; then
-. ./onie-image*.conf
+# Load generic onie-image.conf
+if [ -r ./onie-image.conf ]; then
+. ./onie-image.conf
+fi
+
+# Load arch-specific onie-image-[arch].conf if exists
+if [ -r ./onie-image-*.conf ]; then
+. ./onie-image-*.conf
 fi
 
 echo "ONIE Installer: platform: $platform"

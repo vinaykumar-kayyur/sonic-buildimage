@@ -77,7 +77,7 @@ mkdir $tmp_installdir || clean_up 1
 
 cp -r $installer_dir/* $tmp_installdir || clean_up 1
 cp onie-image.conf $tmp_installdir
-cp onie-image-*.conf $tmp_installdir
+cp onie-image-$arch.conf $tmp_installdir
 
 # Set sonic fips config for the installer script
 if [ "$ENABLE_FIPS" = "y" ]; then
