@@ -31,7 +31,7 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
             if [[ -n "$TSA_STATE_UPDATE" ]]; then 
                 sonic-cfggen -a "$TSA_STATE_UPDATE" -w -n $NAMESPACE_PREFIX$asic
                 logger -t $1 -p user.info "BGP$asic: $log_msg"
-                echo "BGP$asic: $log_msg"
+                echo "$log_msg"
             else
                 # If TSC is executed, invoke FRR script to check installed route-maps
                 docker exec -i bgp$asic /usr/bin/$1
