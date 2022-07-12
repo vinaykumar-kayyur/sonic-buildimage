@@ -67,7 +67,7 @@
 {%- if feature in ["lldp", "pmon", "radv", "snmp", "telemetry"] %}
             "set_owner": "kube", {% else %}
             "set_owner": "local", {% endif %} {% endif %}
-            "high_mem_alert": "disabled",
+            "high_mem_alert": "enabled",
             "mem_threshold": "{{mem_threshold_val}}"
         }{% if not loop.last %},{% endif -%}
 {% endfor %}
