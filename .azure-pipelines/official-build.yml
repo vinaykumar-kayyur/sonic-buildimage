@@ -46,6 +46,8 @@ stages:
   - template: azure-pipelines-repd-build-variables.yml
   preSteps:
   - template: azure-pipelines/template-initagent.yml@pipelines
+  postSteps:
+  - template: azure-pipelines/template-template-showagent.yml@pipelines
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
