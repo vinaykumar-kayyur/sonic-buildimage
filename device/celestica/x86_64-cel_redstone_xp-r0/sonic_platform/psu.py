@@ -45,7 +45,7 @@ class Psu(PsuBase):
         self.hwmon_path = self._api_helper.get_hwmon_path(i2c_adapter, i2c_address)
         self.eeprom_path = "/sys/bus/i2c/devices/{}-00{}/eeprom".format(i2c_adapter, i2c_eeprom)
 
-        self._fan_list.append(Fan(0, 0, is_psu_fan=True, psu_index=self.index))
+        self._fan_list.append(Fan(self.index + 4, 0))
 
     @property
     def presence(self):

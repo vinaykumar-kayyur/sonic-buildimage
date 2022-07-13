@@ -44,14 +44,14 @@ NULL_VAL = "N/A"
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
-    def __init__(self, fan_tray_index, fan_index=0, is_psu_fan=False, psu_index=0):
+    def __init__(self, fan_tray_index, fan_index=0):
         FanBase.__init__(self)
         self.fan_index = fan_index
         self._api_helper = APIHelper()
         self.fan_tray_index = fan_tray_index
-        self.is_psu_fan = is_psu_fan
+        self.is_psu_fan = fan_tray_index >= 4
         if self.is_psu_fan:
-            self.psu_index = psu_index
+            self.psu_index = fan_tray_index - 4
             self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]["num"]
             self.psu_i2c_addr = PSU_I2C_MAPPING[self.psu_index]["addr"]
             self.psu_hwmon_path = PSU_HWMON_PATH.format(
