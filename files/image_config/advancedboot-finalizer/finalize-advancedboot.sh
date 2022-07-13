@@ -93,7 +93,7 @@ function check_list()
 function finalize_advanced_boot()
 {
     debug "Finalizing advanced reboot..."
-    sudo config advanced_restart disable
+    sudo config warm_restart disable
 }
 
 function stop_control_plane_assistant()
