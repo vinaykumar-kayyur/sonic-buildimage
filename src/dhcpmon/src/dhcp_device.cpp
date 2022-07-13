@@ -51,10 +51,10 @@
 #define OP_JSET     (BPF_JMP | BPF_JSET | BPF_K)    /** bpf jset */
 #define OP_LDXB     (BPF_LDX | BPF_B    | BPF_MSH)  /** bpf ldxb */
 
-constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
-swss::Select swssSelect;
-std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
-swss::SubscriberStateTable muxTable(stateDbPtr.get(), "HW_MUX_CABLE_TABLE");
+std::shared_ptr<swss::DBConnector> mStateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
+std::shared_ptr<swss::Table> mStateDbMuxTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(), "HW_MUX_CABLE_TABLE"
+        );
 swss::DBConnector configDb("CONFIG_DB", 0);
 
 /** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
@@ -250,12 +250,6 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
     socklen_t slen = sizeof sll;
 
     bool standby = false;
-    swss::Selectable *selectable;
-    swssSelect.addSelectable(&muxTable);
-    int ret = swssSelect.select(&selectable, DEFAULT_TIMEOUT_MSEC);
-    if (ret == swss::Select::ERROR) {
-        syslog(LOG_WARNING, "Select: returned ERROR");
-    }
 
     while ((event == EV_READ) &&
            ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) {
@@ -263,26 +257,10 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
         char interfaceName;
   	    char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
 
-        if (selectable == static_cast<swss::Selectable *> (&muxTable)) {
-            std::deque<swss::KeyOpFieldsValuesTuple> entries;
-            muxTable.pops(entries);
-            for (auto &entry: entries) {
-                std::string intf_key = kfvKey(entry);
-                std::string operation = kfvOp(entry);
-                std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
-
-                for (auto &fieldValue: fieldValues) {
-                    std::string f = fvField(fieldValue);
-                    std::string v = fvValue(fieldValue);
-                    if(intf_key == interface && f == "state" && v == "standby") {
-                        standby = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!standby && configDb.exists(member_table.append(interface))) {
+        std::string state;
+        std::string intf(interface);
+        mStateDbMuxTablePtr->hget(intf, "state", state);
+        if (state != "standby" && configDb.exists(member_table.append(interface))) {
             struct ether_header *ethhdr = (struct ether_header*) context->buffer;
             struct ip *iphdr = (struct ip*) (context->buffer + IP_START_OFFSET);
             struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
