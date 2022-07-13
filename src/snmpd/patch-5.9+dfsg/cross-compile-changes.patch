@@ -1,165 +1,17 @@
-Index: net-snmp-5.9+dfsg/perl/ASN/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/ASN/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/ASN/Makefile.PL
-@@ -13,7 +13,9 @@ my $lib_version;
- # See lib/ExtUtils/MakeMaker.pm for details of how to influence
- # the contents of the Makefile that is written.
+diff --git a/debian/rules b/debian/rules
+index b23b335..b8a79b9 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -5,6 +5,12 @@ export DEB_BUILD_MAINT_OPTIONS := hardening=+all
+ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+ DEB_BUILD_ARCH_OS  ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH_OS)
  
--WriteMakefile(AsnInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
++DEB_BUILD_MULTIARCH  ?= $(shell dpkg-architecture -qDEB_BUILD_MULTIARCH)
 +
-+WriteMakefile_cross(AsnInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/AnyData_SNMP/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/AnyData_SNMP/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/AnyData_SNMP/Makefile.PL
-@@ -1,7 +1,9 @@
- use ExtUtils::MakeMaker;
- # See lib/ExtUtils/MakeMaker.pm for details of how to influence
- # the contents of the Makefile that is written.
--WriteMakefile(
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
++ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
++export PERL5OPT := -I/usr/lib/$(DEB_HOST_MULTIARCH)/perl/cross-config
++endif
 +
-+WriteMakefile_cross(
-     'NAME'		=> 'AnyData::SNMP',
-     'VERSION_FROM'	=> 'Storage.pm', # finds $VERSION
-     'PREREQ_PM'		=> {# SNMP => 5.0,
-Index: net-snmp-5.9+dfsg/perl/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/Makefile.PL
-@@ -8,7 +8,9 @@ use MakefileSubs;
- # Prevent that MakeMaker complains about unknown parameter names.
- NetSNMPGetOpts();
+ LIB_VERSION = 40
  
--WriteMakefile(
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(
-     'NAME' => 'Bundle::NetSNMP',
-     'DIR' => [qw(default_store ASN OID agent SNMP TrapReceiver)],
-     );
-Index: net-snmp-5.9+dfsg/perl/OID/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/OID/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/OID/Makefile.PL
-@@ -10,7 +10,9 @@ use MakefileSubs;
- 
- my $lib_version;
- 
--WriteMakefile(OidInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(OidInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/SNMP/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/SNMP/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/SNMP/Makefile.PL
-@@ -14,7 +14,9 @@ my $prefix;
- # See lib/ExtUtils/MakeMaker.pm for details of how to influence
- # the contents of the Makefile that is written.
- 
--WriteMakefile(SnmpInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(SnmpInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/TrapReceiver/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/TrapReceiver/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/TrapReceiver/Makefile.PL
-@@ -7,7 +7,9 @@ use MakefileSubs;
- 
- my $lib_version;
- 
--WriteMakefile(TrapReceiverInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(TrapReceiverInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/agent/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/agent/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/agent/Makefile.PL
-@@ -7,7 +7,9 @@ use MakefileSubs;
- 
- my $lib_version;
- 
--WriteMakefile(AgentInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(AgentInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/agent/Support/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/agent/Support/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/agent/Support/Makefile.PL
-@@ -10,7 +10,9 @@ my $lib_version;
- # See lib/ExtUtils/MakeMaker.pm for details of how to influence
- # the contents of the Makefile that is written.
- 
--WriteMakefile(SupportInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(SupportInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/agent/default_store/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/agent/default_store/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/agent/default_store/Makefile.PL
-@@ -7,7 +7,9 @@ use MakefileSubs;
- 
- my $lib_version;
- 
--WriteMakefile(AgentDefaultStoreInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(AgentDefaultStoreInitMakeParams());
- 
- Check_Version($lib_version);
- 
-Index: net-snmp-5.9+dfsg/perl/default_store/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/default_store/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/default_store/Makefile.PL
-@@ -8,7 +8,9 @@ use MakefileSubs;
- 
- my $lib_version;
- 
--WriteMakefile(DefaultStoreInitMakeParams());
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(DefaultStoreInitMakeParams());
- 
- sub DefaultStoreInitMakeParams {
-     my $opts;
-Index: net-snmp-5.9+dfsg/perl/manager/Makefile.PL
-===================================================================
---- net-snmp-5.9+dfsg.orig/perl/manager/Makefile.PL
-+++ net-snmp-5.9+dfsg/perl/manager/Makefile.PL
-@@ -1,7 +1,9 @@
- use ExtUtils::MakeMaker;
- # See lib/ExtUtils/MakeMaker.pm for details of how to influence
- # the contents of the Makefile that is written.
--WriteMakefile(
-+sub WriteMakefile_cross { push(@_, 'CC' => $ENV{'CROSS_CC'}); push(@_, 'LD' => $ENV{'CROSS_CC'}); WriteMakefile(@_); }
-+
-+WriteMakefile_cross(
-     'NAME'		=> 'NetSNMP::manager',
-     'VERSION'	        => '', # finds $VERSION
-     'PREREQ_PM'		=> {# SNMP => 4.0,
+ MIB_MODULES = smux ucd-snmp/dlmod mibII/mta_sendmail disman/event-mib

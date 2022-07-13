@@ -59,8 +59,7 @@ endif
 ifneq ($(CROSS_BUILD_ENVIRON), y)
 	dpkg-buildpackage -rfakeroot -b -d -us -uc -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 else
-	patch -p1 < ../patch-$(SNMPD_VERSION)/cross-compile-changes.patch
-	CFLAGS="-I $$CROSS_PERL_CORE_PATH" LDFLAGS=" -L$$CROSS_PKGS_LIB_PATH" dpkg-buildpackage -rfakeroot -b -d -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j1 --admindir $(SONIC_DPKG_ADMINDIR)
+	PYTHONPATH=/usr/lib/python2.7/plat-arm-linux-gnueabihf/ dpkg-buildpackage -rfakeroot -b -d -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j1 --admindir $(SONIC_DPKG_ADMINDIR)
 endif
 	popd
 

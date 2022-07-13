@@ -20,7 +20,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	cp ../patches/config.sub .
 	cp ../patches/config.guess .
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-	./configure --disable-static --enable-libtool-lock --libdir=$(CROSS_PKGS_LIB_PATH) --libexecdir=$(CROSS_PKGS_LIB_PATH) --host=$(CROSS_HOST_TYPE) 
+	./configure --disable-static --enable-libtool-lock --host=$(CROSS_HOST_TYPE)
 else
 	./configure --disable-static --enable-libtool-lock
 endif

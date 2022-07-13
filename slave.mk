@@ -291,18 +291,19 @@ VIRTENV_BIN_CROSS_PYTHON3 = $(VIRTENV_BASE_CROSS_PYTHON3)/bin/
 VIRTENV_LIB_CROSS_PYTHON2 = $(VIRTENV_BASE_CROSS_PYTHON2)/lib/
 VIRTENV_LIB_CROSS_PYTHON3 = $(VIRTENV_BASE_CROSS_PYTHON3)/lib/
 
+CROSS_HOST_TYPE = $(shell dpkg-architecture -a $(CONFIGURED_ARCH) -q DEB_HOST_MULTIARCH)
+
 ifeq ($(CONFIGURED_ARCH),armhf)
-CROSS_HOST_TYPE = arm-linux-gnueabihf
 GOARCH=arm
 else ifeq ($(CONFIGURED_ARCH),arm64)
-CROSS_HOST_TYPE = aarch64-linux-gnu
 GOARCH=arm64
 endif
 
 CROSS_COMPILE = $(CROSS_HOST_TYPE)-
-CROSS_CC = $(CROSS_COMPILE)gcc
-CROSS_CXX = $(CROSS_COMPILE)g++
-CROSS_AR = $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+CXX = $(CROSS_COMPILE)g++
+AR = $(CROSS_COMPILE)ar
+LD = $(CROSS_COMPILE)ld
 CROSS_LIB_PATH = /usr/$(CROSS_HOST_TYPE)/lib/
 CROSS_BIN_PATH = /usr/$(CROSS_HOST_TYPE)/bin/
 CROSS_PKGS_LIB_PATH = /usr/lib/$(CROSS_HOST_TYPE)
@@ -310,7 +311,8 @@ CROSS_PKGS_LIB_PATH = /usr/lib/$(CROSS_HOST_TYPE)
 CROSS_LIBPERL_VERSION = $(shell dpkg -s libperl-dev:$(CONFIGURED_ARCH)|grep Version|awk  '{split($$2,v,"-"); print v[1];}')
 CROSS_PERL_CORE_PATH = $(CROSS_PKGS_LIB_PATH)/perl/$(CROSS_LIBPERL_VERSION)/CORE/
 
-CROSS_COMPILE_FLAGS := CGO_ENABLED=1 GOOS=linux GOARCH=$(GOARCH) CROSS_COMPILE=$(CROSS_COMPILE) OVERRIDE_HOST_TYPE=$(CROSS_HOST_TYPE) CROSS_CC=$(CROSS_CC) CROSS_CXX=$(CROSS_CXX) CROSS_LIB_PATH=$(CROSS_LIB_PATH) CROSS_BIN_PATH=$(CROSS_BIN_PATH) CROSS_HOST_TYPE=$(CROSS_HOST_TYPE) CROSS_PKGS_LIB_PATH=$(CROSS_PKGS_LIB_PATH) CROSS_PERL_CORE_PATH=$(CROSS_PERL_CORE_PATH)
+CROSS_COMPILE_FLAGS := CGO_ENABLED=1 GOOS=linux GOARCH=$(GOARCH) CROSS_COMPILE=$(CROSS_COMPILE) OVERRIDE_HOST_TYPE=$(CROSS_HOST_TYPE) CROSS_LIB_PATH=$(CROSS_LIB_PATH) CROSS_BIN_PATH=$(CROSS_BIN_PATH) CROSS_HOST_TYPE=$(CROSS_HOST_TYPE) CROSS_PKGS_LIB_PATH=$(CROSS_PKGS_LIB_PATH) CROSS_PERL_CORE_PATH=$(CROSS_PERL_CORE_PATH) CC=$(CC) CXX=$(CXX) AR=$(AR) LD=$(LD)
+
 endif
 
 ###############################################################################
@@ -818,9 +820,12 @@ ifneq ($(CROSS_BUILD_ENVIRON),y)
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 else
-		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py build $(LOG); 
-		if [ ! "$($*_TEST)" = "n" ]; then PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
-		PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH} python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
+		{
+			export PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH}
+			pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
+			if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
+			python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
+		}
 endif
 		# clean up
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f; [ -d .pc ] && rm -rf .pc; fi

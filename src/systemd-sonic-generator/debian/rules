@@ -1,29 +1,8 @@
 #!/usr/bin/make -f
-
-DISTRIBUTION = $(shell sed -n "s/^VERSION_CODENAME=//p" /etc/os-release)
-VERSION = 1.0.0
-PACKAGEVERSION = $(VERSION)
+export DH_VERBOSE=1
 
 %:
 	dh $@
-
-override_dh_auto_clean:
-override_dh_auto_build:
-override_dh_auto_install:
-ifeq ($(CROSS_BUILD_ENVIRON), y)
-	make CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_CC) LD_LIBRARY_PATH=$(CROSS_LIB_PATH) systemd-sonic-generator
-else
-	make systemd-sonic-generator
-endif
-	make install DESTDIR=debian/systemd-sonic-generator
-
-ifeq ($(CROSS_BUILD_ENVIRON), y)
-override_dh_shlibdeps:
-	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info -l$(CROSS_LIB_PATH)
-endif
-
-override_dh_gencontrol:
-	dh_gencontrol -- -v$(PACKAGEVERSION)
 
 override_dh_auto_test:
 ifneq "$(DEB_HOST_ARCH)" "armhf"
