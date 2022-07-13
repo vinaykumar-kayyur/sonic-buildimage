@@ -112,6 +112,19 @@ sudo pip3 install j2cli
  * Install [Docker](https://docs.docker.com/engine/install/) and configure your system to allow running the 'docker' command without 'sudo':
     * Add current user to the docker group: `sudo gpasswd -a ${USER} docker`
     * Log out and log back in so that your group membership is re-evaluated
+    * The image build followed after the platform configuration fails with containerd running on cgroupv2. 
+    It should be changed to run with cgroupv1. 
+    For .deb based distros edit grub (/etc/default/grub) to have `systemd.unified_cgroup_hierarchy=0` in `GRUB_CMDLINE_LINUX`
+    For EL distros updated the kernel with:
+    ```
+    sudo apt install -y grubby && \
+     sudo grubby \
+     --update-kernel=ALL \
+     --args="systemd.unified_cgroup_hierarchy=0"
+    ```
+  
+ * Platform configuration step fails due to sairedis being missing (https://github.com/Azure/sonic-sairedis/issues/697#issuecomment-731498253).
+ This can be circumvented by cloning the sonic-sairedis (/Azure/sonic-sairedis.git) into the cloned "sonic-buildimage" directory and running a recursive submodule update within the directory (`git submodule update --init --recursive`)
 
 ## Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer:
