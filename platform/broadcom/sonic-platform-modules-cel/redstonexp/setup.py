@@ -1,4 +1,3 @@
-import os
 from setuptools import setup
 
 DEVICE_NAME = 'celestica'

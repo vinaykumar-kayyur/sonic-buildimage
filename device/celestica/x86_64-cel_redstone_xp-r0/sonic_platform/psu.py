@@ -2,7 +2,7 @@ import os
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.fan import Fan
+    from .fan import Fan
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
