@@ -14,14 +14,21 @@ schedules:
 trigger: none
 pr: none
 
+resources:
+  repositories:
+  - repository: pipelines
+    type: github
+    name: sonic-net/sonic-pipelines
+    ref: main
+    endpoint: sonic-net
+
 jobs:
 - job: Build
   pool: sonicbld-1ES
   timeoutInMinutes: 5
   steps:
   - checkout: none
-  - script: if which init.sh;then init.sh;fi
-    displayName: Init agent
+  - template: azure-pipelines/template-initagent.yml@pipelines
   - script: |
       set -xe
       sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete

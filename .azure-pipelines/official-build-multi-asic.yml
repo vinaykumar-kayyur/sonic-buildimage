@@ -14,6 +14,14 @@ schedules:
 trigger: none
 pr: none
 
+resources:
+  repositories:
+  - repository: pipelines
+    type: github
+    name: sonic-net/sonic-pipelines
+    ref: main
+    endpoint: sonic-net
+
 stages:
 - stage: Build
   pool: sonicbld-1ES
@@ -28,8 +36,7 @@ stages:
       jobGroups:
       - name: vs
       preSteps:
-      - script: if which init.sh;then init.sh;fi
-        displayName: Init agent
+      - template: azure-pipelines/template-initagent.yml@pipelines
 
 - stage: Test
   variables:

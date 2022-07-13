@@ -17,8 +17,7 @@ jobs:
     variables:
       - template: template-variables.yml
     steps:
-    - script: if which init.sh;then init.sh;fi
-      displayName: Init agent
+    - template: azure-pipelines/template-initagent.yml@pipelines
     - checkout: self
       clean: true
       submodules: recursive

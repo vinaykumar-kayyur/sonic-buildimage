@@ -41,8 +41,7 @@ jobs:
     - template: template-clean-sonic-slave.yml
   - ${{ else }}:
     - template: '/.azure-pipelines/template-clean-sonic-slave.yml@buildimage'
-  - script: if which init.sh;then init.sh;fi
-    displayName: Init agent
+  - template: azure-pipelines/template-initagent.yml@pipelines
   - checkout: self
     clean: true
     submodules: recursive

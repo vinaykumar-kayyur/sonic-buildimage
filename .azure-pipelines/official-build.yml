@@ -25,6 +25,11 @@ resources:
     name: Azure/sonic-buildimage
     ref: master
     endpoint: build
+  - repository: pipelines
+    type: github
+    name: sonic-net/sonic-pipelines
+    ref: main
+    endpoint: sonic-net
 
 trigger: none
 pr: none
@@ -40,8 +45,7 @@ stages:
     value: wcache
   - template: azure-pipelines-repd-build-variables.yml
   preSteps:
-  - script: if which init.sh;then init.sh;fi
-    displayName: Init agent
+  - template: azure-pipelines/template-initagent.yml@pipelines
   jobs:
   - template: azure-pipelines-build.yml
     parameters:

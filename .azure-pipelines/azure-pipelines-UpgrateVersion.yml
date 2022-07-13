@@ -25,6 +25,11 @@ resources:
     name: Azure/sonic-buildimage
     ref: master
     endpoint: build
+  - repository: pipelines
+    type: github
+    name: sonic-net/sonic-pipelines
+    ref: main
+    endpoint: sonic-net
 
 pool: sonicbld-1ES
 
@@ -55,9 +60,10 @@ stages:
       jobFilters: ${{ parameters.jobFilters }}
       buildOptions: '${{ variables.VERSION_CONTROL_OPTIONS }} ENABLE_DOCKER_BASE_PULL=n SONIC_BUILD_JOBS=$(nproc) ENABLE_IMAGE_SIGNATURE=y'
       preSteps:
-      - script: if which init.sh;then init.sh;fi
-        displayName: Init agent
+      - template: azure-pipelines/template-initagent.yml@pipelines
       - template: .azure-pipelines/template-clean-sonic-slave.yml@buildimage
+      postSteps:
+      - template: azure-pipelines/template-showagent.yml@pipelines
 - stage: UpgradeVersions
   jobs:
   - job: UpgradeVersions
