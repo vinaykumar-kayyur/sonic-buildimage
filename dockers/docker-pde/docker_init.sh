@@ -11,8 +11,8 @@ start_bcm()
 
 PLATFORM_DIR=/usr/share/sonic/platform
 HWSKU_DIR=/usr/share/sonic/hwsku
-# Default use python2 version
-SONIC_PLATFORM_API_PYTHON_VERSION=2
+# Default use python3 version
+SONIC_PLATFORM_API_PYTHON_VERSION=3
 
 mkdir -p /etc/sai.d/
 
