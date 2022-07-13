@@ -160,6 +160,12 @@ capture_service::do_capture()
 
     cap_state_t cap_state = CAP_STATE_INIT;
 
+    /*
+     * Need subscription for publishers to publish. Start one.
+     * As we are reading off of capture socket, we don't read from
+     * this handle. Not reading is a not a concern, as zmq will cache
+     * few initial messages and rest it will drop.
+     */
     subs_handle = events_init_subscriber();
     RET_ON_ERR(subs_handle != NULL, "failed to subscribe to all");
 

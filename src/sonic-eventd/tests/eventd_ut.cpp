@@ -341,7 +341,7 @@ TEST(eventd, capture)
 
     /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
-    
+
     /* Create capture service */
     capture_service *pcap = new capture_service(zctx, cache_max);
 
