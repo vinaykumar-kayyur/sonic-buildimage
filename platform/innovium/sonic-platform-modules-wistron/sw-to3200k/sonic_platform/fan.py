@@ -70,7 +70,7 @@ class Fan(FanBase):
             for file in dirs:
                 if file.startswith("hwmon"):
                     return file
-        except:
+        except BaseException:
             pass
         return ''
 
@@ -250,8 +250,6 @@ class Fan(FanBase):
             if status is None:
                 return  False
             return status
-
-        return False
 
 
     def get_model(self):
