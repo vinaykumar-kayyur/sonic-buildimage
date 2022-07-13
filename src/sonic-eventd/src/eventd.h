@@ -2,6 +2,7 @@
  * Header file for eventd daemon
  */
 #include "events_service.h"
+#include "events.h"
 
 typedef map<runtime_id_t, event_serialized_t> last_events_t;
 
