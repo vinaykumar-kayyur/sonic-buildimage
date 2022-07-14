@@ -105,10 +105,10 @@ class BgpStateGet:
         for key, value in data.items():
             if value is None:
                 # delete case
-                self.pipe.pushDel(key)
+                self.pipe.pushDEL(key)
             else:
                 # Add or Modify case
-                self.pipe.pushHset(key, value)
+                self.pipe.pushHSET(key, value)
 
         self.pipe.flush()
         data.clear()
