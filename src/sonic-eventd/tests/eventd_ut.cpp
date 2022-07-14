@@ -212,6 +212,9 @@ void *init_pub(void *zctx)
     EXPECT_TRUE(NULL != mock_pub);
     EXPECT_EQ(0, zmq_connect(mock_pub, get_config(XSUB_END_KEY).c_str()));
 
+    /* Provide time for async connect to complete */
+    this_thread::sleep_for(chrono::milliseconds(200));
+
     return mock_pub;
 }
 
@@ -264,9 +267,6 @@ TEST(eventd, proxy)
     /* Init pub connection */
     void *mock_pub = init_pub(zctx);
 
-    /* Provide time for async connect to complete */
-    this_thread::sleep_for(chrono::milliseconds(100));
-
     EXPECT_TRUE(5 < ARRAY_SIZE(ldata));
 
     for(int i=0; i<5; ++i) {
@@ -312,10 +312,6 @@ TEST(eventd, capture)
     printf("Capture TEST started\n");
     debug_on();
 
-    /*
-     * Need to run subscriber; Else publisher would skip publishing
-     * in the absence of any subscriber.
-     */
     bool term_sub = false;
     string sub_source;
     int sub_evts_sz = 0;
@@ -370,6 +366,8 @@ TEST(eventd, capture)
     /*
      * Collect events to publish for capture to cache
      * re-publishing some events sent in cache.
+     * Hence i=1, when first init_cache events are already
+     * in crash.
      */
     for(int i=1; i < ARRAY_SIZE(ldata); ++i) {
         internal_event_t ev(create_ev(ldata[i]));
@@ -394,9 +392,6 @@ TEST(eventd, capture)
 
     /* Init pub connection */
     void *mock_pub = init_pub(zctx);
-
-    /* Provide time for async connect to complete */
-    this_thread::sleep_for(chrono::milliseconds(200));
 
     /* Publish events from 1 to all. */
     run_pub(mock_pub, wr_source, wr_evts);
@@ -527,9 +522,6 @@ TEST(eventd, captureCacheMax)
     /* Init pub connection */
     void *mock_pub = init_pub(zctx);
 
-    /* Provide time for async connect to complete */
-    this_thread::sleep_for(chrono::milliseconds(200));
-
     /* Publish events from 1 to all. */
     run_pub(mock_pub, wr_source, wr_evts);
 
@@ -590,12 +582,7 @@ TEST(eventd, service)
     printf("Service TEST started\n");
     debug_on();
 
-    /* capture related */
-    int init_cache = 4;     /* provided along with start capture */
-
     /* startup strings; expected list & read list from capture */
-    event_serialized_lst_t evts_start, evts_read;
-
     event_service service;
 
     void *zctx = zmq_ctx_new();
@@ -605,37 +592,79 @@ TEST(eventd, service)
      * Start the eventd server side service
      * It runs proxy & capture service
      * It uses its own zmq context
+     * It starts to capture too.
      */
     thread thread_service(&run_eventd_service);
 
     /* Need client side service to interact with server side */
     EXPECT_EQ(0, service.init_client(zctx));
 
-    EXPECT_EQ(-1, service.cache_stop());
+    {
+        /* eventd_service starts cache too; Test this caching */
+        /* Init pub connection */
+        void *mock_pub = init_pub(zctx);
 
-    EXPECT_TRUE(init_cache > 1);
+        internal_events_lst_t wr_evts;
+        int wr_sz = 2;
+        string wr_source("hello");
 
-    /* Collect few serailized strings of events for startup cache */
-    for(int i=0; i < init_cache; ++i) {
-        internal_event_t ev(create_ev(ldata[i]));
-        string evt_str;
-        serialize(ev, evt_str);
-        evts_start.push_back(evt_str);
+        /* Test service startup caching */
+        event_serialized_lst_t evts_start, evts_read;
+
+        for(int i=0; i<wr_sz; ++i) {
+            string evt_str;
+            internal_event_t ev(create_ev(ldata[i]));
+
+            wr_evts.push_back(ev);
+            serialize(ev, evt_str);
+            evts_start.push_back(evt_str);
+        }
+
+        /* Publish events. */
+        run_pub(mock_pub, wr_source, wr_evts);
+
+        /* Published events must have been captured. Give a pause, to ensure sent. */
+        this_thread::sleep_for(chrono::milliseconds(200));
+
+        EXPECT_EQ(0, service.cache_stop());
+
+        /* Read the cache; expect wr_sz events */
+        EXPECT_EQ(0, service.cache_read(evts_read));
+
+        EXPECT_EQ(evts_read, evts_start);
+
+        zmq_close(mock_pub);
+    }
+
+    {
+        /* Test normal cache op; init, start & stop via event_service APIs */
+        int init_cache = 4;     /* provided along with start capture */
+        event_serialized_lst_t evts_start, evts_read;
+
+        EXPECT_TRUE(init_cache > 1);
+
+        /* Collect few serailized strings of events for startup cache */
+        for(int i=0; i < init_cache; ++i) {
+            internal_event_t ev(create_ev(ldata[i]));
+            string evt_str;
+            serialize(ev, evt_str);
+            evts_start.push_back(evt_str);
         }
 
 
-    EXPECT_EQ(0, service.cache_init());
-    EXPECT_EQ(0, service.cache_start(evts_start));
+        EXPECT_EQ(0, service.cache_init());
+        EXPECT_EQ(0, service.cache_start(evts_start));
 
-    this_thread::sleep_for(chrono::milliseconds(200));
+        this_thread::sleep_for(chrono::milliseconds(200));
 
-    /* Stop capture, closes socket & terminates the thread */
-    EXPECT_EQ(0, service.cache_stop());
+        /* Stop capture, closes socket & terminates the thread */
+        EXPECT_EQ(0, service.cache_stop());
 
-    /* Read the cache */
-    EXPECT_EQ(0, service.cache_read(evts_read));
+        /* Read the cache */
+        EXPECT_EQ(0, service.cache_read(evts_read));
 
-    EXPECT_EQ(evts_read, evts_start);
+        EXPECT_EQ(evts_read, evts_start);
+    }
 
     EXPECT_EQ(0, service.send_recv(EVENT_EXIT));
 

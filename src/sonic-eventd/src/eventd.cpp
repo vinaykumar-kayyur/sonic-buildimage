@@ -103,6 +103,10 @@ validate_event(const internal_event_t &event, runtime_id_t &rid, sequence_t &seq
 }
         
 
+/*
+ * Initialize cache with set of events provided.
+ * Events read by cache service will be appended
+ */
 void
 capture_service::init_capture_cache(const event_serialized_lst_t &lst)
 {
@@ -137,6 +141,8 @@ capture_service::do_capture()
     int rc;
     int block_ms=300;
     int init_cnt;
+    event_handle_t subs_handle = NULL;
+    void *sock = NULL;
 
     typedef enum {
         /*
@@ -154,7 +160,16 @@ capture_service::do_capture()
 
     cap_state_t cap_state = CAP_STATE_INIT;
 
-    void *sock = zmq_socket(m_ctx, ZMQ_SUB);
+    /*
+     * Need subscription for publishers to publish. Start one.
+     * As we are reading off of capture socket, we don't read from
+     * this handle. Not reading is a not a concern, as zmq will cache
+     * few initial messages and rest it will drop.
+     */
+    subs_handle = events_init_subscriber();
+    RET_ON_ERR(subs_handle != NULL, "failed to subscribe to all");
+
+    sock = zmq_socket(m_ctx, ZMQ_SUB);
     RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
 
     rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
@@ -275,6 +290,7 @@ out:
      * Capture stop will close the socket which fail the read
      * and hence bail out.
      */
+    events_deinit_subscriber(subs_handle);
     zmq_close(sock);
     m_cap_run = false;
     return;
@@ -382,6 +398,15 @@ run_eventd_service()
     RET_ON_ERR(proxy->init() == 0, "Failed to init proxy");
 
     RET_ON_ERR(service.init_server(zctx) == 0, "Failed to init service");
+
+    /*
+     * Start cache service, right upon eventd starts so as not to lose
+     * events until telemetry starts.
+     * Telemetry will send a stop & collect cache upon startup
+     */
+    capture = new capture_service(zctx, cache_max);
+    RET_ON_ERR(capture->set_control(INIT_CAPTURE) == 0, "Failed to init capture");
+    RET_ON_ERR(capture->set_control(START_CAPTURE) == 0, "Failed to start capture");
 
     while(code != EVENT_EXIT) {
         int resp = -1; 
