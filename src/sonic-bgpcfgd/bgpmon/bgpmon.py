@@ -45,6 +45,7 @@ class BgpStateGet:
         self.cached_timestamp = 0
         self.db = swsscommon.SonicV2Connector()
         self.db.connect(self.db.STATE_DB, False)
+        self.pipe = swsscommon.RedisPipeline(db.get_redis_client(db.STATE_DB))
         self.db.delete_all_by_pattern(self.db.STATE_DB, "NEIGH_STATE_TABLE|*" )
 
     # A quick way to check if there are anything happening within BGP is to
@@ -104,10 +105,12 @@ class BgpStateGet:
         for key, value in data.items():
             if value is None:
                 # delete case
-                self.db.delete(self.db.STATE_DB, key)
+                self.pipe.pushDel(key)
             else:
                 # Add or Modify case
-                self.db.hmset(self.db.STATE_DB, key, value)
+                self.pipe.pushHset(key, value)
+
+        self.pipe.flush()
         data.clear()
 
     def update_neigh_states(self):
