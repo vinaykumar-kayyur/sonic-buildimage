@@ -1,0 +1,29 @@
+From 37137df1d88fa8faa0ae2da45c9d68663bfa0b76 Mon Sep 17 00:00:00 2001
+From: David Sips <david.sips@broadcom.com>
+Date: Mon, 23 Mar 2020 10:30:28 -0700
+Subject: [PATCH] Do not save persistent usm configuration
+
+---
+ snmplib/snmpusm.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/snmplib/snmpusm.c b/snmplib/snmpusm.c
+index f8fc74c..5160cd7 100644
+--- a/snmplib/snmpusm.c
++++ b/snmplib/snmpusm.c
+@@ -3976,7 +3976,11 @@ usm_store_users(int majorID, int minorID, void *serverarg, void *clientarg)
+     /*
+      * save the user base 
+      */
+-    usm_save_users("usmUser", appname);
++    /* For SONiC, saving the user database is a not desireable. It is desired
++     * that all user creation and deletion be done from the UI and that the
++     * system have no memory of users created or deleted.
++     */
++    /* usm_save_users("usmUser", appname); */
+ 
+     /*
+      * never fails 
+-- 
+2.18.0
+

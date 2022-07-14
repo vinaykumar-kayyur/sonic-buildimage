@@ -1,0 +1,20 @@
+From bcc4970ab8c84103e9511a2083211c7551af8d2c Wed Jul 24 12:30:00 2019
+From: Santosh Doke <santosh.doke@broadcom.com>
+Date: Wed, 24 Jul 2019 12:30:28 +0000
+Subject: [PATCH] Enable v6
+
+Signed-off-by: Santosh Doke <santosh.doke@broadcom.com>
+---
+
+diff --git a/debian/rules b/debian/rules
+index 4c3b5b6..41d22e2 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -33,6 +33,7 @@ ifeq (hurd,$(DEB_BUILD_ARCH_OS))
+ IPV6 = --enable-ipv6
+ EXCL_MIB_MODULES += mibII
+ else
++IPV6 = --enable-ipv6
+ MIB_MODULES += host
+ endif
+

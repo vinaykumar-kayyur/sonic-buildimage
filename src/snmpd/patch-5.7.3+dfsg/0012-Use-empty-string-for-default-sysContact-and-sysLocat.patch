@@ -1,0 +1,26 @@
+From 74d5431b43bd7d789690b01ab059d06e82fb598f Mon Sep 17 00:00:00 2001
+From: Rajendra Dendukuri <rajendra.dendukuri@broadcom.com>
+Date: Mon, 27 Jan 2020 10:01:00 -0800
+Subject: [PATCH] Use empty string for default sysContact and sysLocation
+
+Signed-off-by: Rajendra Dendukuri <rajendra.dendukuri@broadcom.com>
+---
+ debian/rules | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/debian/rules b/debian/rules
+index bc7bd35..5311117 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -52,7 +52,7 @@ override_dh_auto_configure:
+ 	  $(IPV6) --with-logfile=none \
+ 	  --without-rpm --with-libwrap --with-openssl \
+ 	  --without-dmalloc --without-efence --without-rsaref \
+-	  --with-sys-contact="root" --with-sys-location="Unknown" \
++	  --with-sys-contact="" --with-sys-location="" \
+ 	  --with-mib-modules="$(MIB_MODULES)" \
+ 	  --with-out-mib-modules="$(EXCL_MIB_MODULES)" \
+ 	  --enable-mfd-rewrites \
+-- 
+2.18.0
+

@@ -1,0 +1,10 @@
+--- a/debian/rules.org	2020-03-14 12:11:33.888448000 -0700
++++ b/debian/rules	2020-03-14 11:19:43.286328000 -0700
+@@ -36,6 +36,7 @@
+ else
+ IPV6 = --enable-ipv6
+ MIB_MODULES += host
++EXCL_MIB_MODULES += mibII/ipv6
+ endif
+ 
+ %:
