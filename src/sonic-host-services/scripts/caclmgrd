@@ -303,6 +303,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     kvp = mux_table.get(key)
                     if 'cable_type' in kvp and kvp['cable_type'] == 'active-active':
                         fwd_dualtor_grpc_traffic_from_host_to_soc_cmds.append(self.iptables_cmd_ns_prefix[namespace] + 
+                                "iptables -t nat -D POSTROUTING --destination {} -j SNAT --to-source {}".format(kvp['soc_ipv4'], loopback_address))
+                        fwd_dualtor_grpc_traffic_from_host_to_soc_cmds.append(self.iptables_cmd_ns_prefix[namespace] + 
                                 "iptables -t nat -A POSTROUTING --destination {} -j SNAT --to-source {}".format(kvp['soc_ipv4'], loopback_address))
 
         return fwd_dualtor_grpc_traffic_from_host_to_soc_cmds
