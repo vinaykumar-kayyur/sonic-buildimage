@@ -2000,7 +2000,7 @@ def parse_asic_switch_type(filename, asic_name):
         root = ET.parse(filename).getroot()
         for child in root:
             if child.tag == str(QName(ns, "MetadataDeclaration")):
-                _, _, switch_type, _, _ = parse_asic_meta(child, asic_name)
+                _, _, switch_type, _, _, _ = parse_asic_meta(child, asic_name)
                 return switch_type
     return None
 
