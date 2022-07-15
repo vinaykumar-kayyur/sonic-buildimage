@@ -285,7 +285,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 if iface_name.startswith("Loopback3"):
                     ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
                     if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                        return ip_ntwrk
+                        ip_addr = ip_ntwrk.network_address
+                        return ip_addr
 
         return None
 
