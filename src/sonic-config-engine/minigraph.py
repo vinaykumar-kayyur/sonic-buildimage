@@ -10,6 +10,7 @@ from collections import defaultdict
 from lxml import etree as ET
 from lxml.etree import QName
 
+from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config
 from sonic_py_common.interface import backplane_prefix
@@ -184,6 +185,7 @@ def formulate_fine_grained_ecmp(version, dpg_ecmp_content, port_device_map, port
 
     fine_grained_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "NEIGH": NEIGH}
     return fine_grained_content
+
 
 def parse_png(png, hname, dpg_ecmp_content = None):
     neighbors = {}
@@ -400,8 +402,8 @@ def parse_asic_png(png, asic_name, hostname):
                     device_data['lo_addr_v6']= lo_prefix_v6
                 devices[name] = device_data
 
-
     return (neighbors, devices, port_speeds)
+
 
 def parse_loopback_intf(child):
     lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
@@ -411,6 +413,7 @@ def parse_loopback_intf(child):
         ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
         lo_intfs[(intfname, ipprefix)] = {}
     return lo_intfs
+
 
 def parse_dpg(dpg, hname):
     aclintfs = None
@@ -455,7 +458,7 @@ def parse_dpg(dpg, hname):
             ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
             intfs[(intfname, ipprefix)] = {}
             ip_intfs_map[ipprefix] = intfalias
-        lo_intfs =  parse_loopback_intf(child)
+        lo_intfs = parse_loopback_intf(child)
 
         subintfs = child.find(str(QName(ns, "SubInterfaces")))
         if subintfs is not None:
@@ -757,7 +760,6 @@ def parse_dpg(dpg, hname):
     return None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
 
 
-
 def parse_host_loopback(dpg, hname):
     for child in dpg:
         hostname = child.find(str(QName(ns, "Hostname")))
@@ -765,6 +767,7 @@ def parse_host_loopback(dpg, hname):
             continue
         lo_intfs = parse_loopback_intf(child)
         return lo_intfs
+
 
 def parse_cpg(cpg, hname, local_devices=[]):
     bgp_sessions = {}
@@ -891,6 +894,9 @@ def parse_meta(meta, hname):
     max_cores = None
     kube_data = {}
     macsec_profile = {}
+    redundancy_type = None
+    qos_profile = None
+
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -933,7 +939,11 @@ def parse_meta(meta, hname):
                     kube_data["ip"] = value
                 elif name == 'MacSecProfile':
                     macsec_profile = parse_macsec_profile(value)
-    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile
+                elif name == "RedundancyType":
+                    redundancy_type = value
+                elif name == "SonicQosProfile":
+                    qos_profile = value
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type, qos_profile
 
 
 def parse_system_defaults(meta):
@@ -957,7 +967,6 @@ def parse_system_defaults(meta):
             system_default_values["tunnel_qos_remap"] = {"status": status}
 
     return system_default_values
-
 
 def parse_linkmeta(meta, hname):
     link = meta.find(str(QName(ns, "Link")))
@@ -1167,7 +1176,26 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
 #
 ###############################################################################
 
-def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
+def filter_acl_table_for_backend(acls, vlan_members):
+    filter_acls = {}
+    for acl_name, value in acls.items():
+        if 'everflow' not in acl_name.lower():
+            filter_acls[acl_name] = value
+
+    ports = set()
+    for vlan, member in vlan_members:
+        ports.add(member)
+    filter_acls['DATAACL'] = { 'policy_desc': 'DATAACL',
+                               'stage': 'ingress',
+                               'type': 'L3',
+                               'ports': list(ports)
+                             }
+    return filter_acls
+
+def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role, device_type, is_storage_device, vlan_members):
+    if device_type == 'BackEndToRRouter' and is_storage_device:
+        return filter_acl_table_for_backend(acls, vlan_members)
+
     filter_acls = {}
     
     # If the asic role is BackEnd no ACL Table (Ctrl/Data/Everflow) is binded.
@@ -1239,6 +1267,31 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
         if ((local_sub_role == FRONTEND_ASIC_SUB_ROLE and peer_sub_role == BACKEND_ASIC_SUB_ROLE) or
             (local_sub_role == BACKEND_ASIC_SUB_ROLE and peer_sub_role == FRONTEND_ASIC_SUB_ROLE)):
             bgp_sessions[peer_ip].update({'admin_status': 'up'})
+
+def select_mmu_profiles(profile, platform, hwsku):
+    """
+        Select MMU files based on the device metadata attribute - SonicQosProfile
+        if no QosProfile exists in the minigraph, then no action is needed.
+        if a profile exists in the minigraph,
+            - create a dir path to search 1 level down from the base path.
+            - if no such dir path exists, no action is needed.
+            - if a dir path exists, check for the presence of each file from
+              the copy list in the dir path and copy it over to the base path.
+    """
+    if not profile:
+        return
+
+    files_to_copy = ['pg_profile_lookup.ini', 'qos.json.j2', 'buffers_defaults_t0.j2', 'buffers_defaults_t1.j2']
+
+    path = os.path.join('/usr/share/sonic/device', platform, hwsku)
+
+    dir_path = os.path.join(path, profile)
+    if os.path.exists(dir_path):
+        for file_item in files_to_copy:
+            file_in_dir = os.path.join(dir_path, file_item)
+            if os.path.isfile(file_in_dir):
+                base_file = os.path.join(path, file_item)
+                exec_cmd("sudo cp {} {}".format(file_in_dir, base_file))
 
 ###############################################################################
 #
@@ -1313,6 +1366,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     static_routes = {}
     system_defaults = {}
     macsec_profile = {}
+    redundancy_type = None
+    qos_profile = None
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -1343,7 +1398,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type, qos_profile) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1367,6 +1422,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "SystemDefaultsDeclaration")):
                 system_defaults = parse_system_defaults(child)
 
+    select_mmu_profiles(qos_profile, platform, hwsku)
     # set the host device type in asic metadata also
     device_type = [devices[key]['type'] for key in devices if key.lower() == hostname.lower()][0]
     if asic_name is None:
@@ -1459,7 +1515,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
     mgmt_alias_reverse_mapping = {}
-    for key in mgmt_intf:
+    sorted_keys = natsorted(mgmt_intf.keys(), alg=natsortns.IGNORECASE, key=lambda x : "|".join(x))
+    for key in sorted_keys:
         alias = key[0]
         if alias in mgmt_alias_reverse_mapping:
             name = mgmt_alias_reverse_mapping[alias]
@@ -1566,11 +1623,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         macsec_enabled = linkmetas.get(alias, {}).get('MacSecEnabled')
         if macsec_enabled and 'PrimaryKey' in macsec_profile:
             port['macsec'] = macsec_profile['PrimaryKey']
-
-    # If connected to a smart cable, get the connection position
-    for port_name, port in ports.items():
-        if port_name in mux_cable_ports:
-            port['mux_cable'] = "true"
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
@@ -1713,7 +1765,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Add src_ip and qos remapping config into TUNNEL table if tunnel_qos_remap is enabled
     results['TUNNEL'] = get_tunnel_entries(tunnel_intfs, tunnel_intfs_qos_remap_config, lo_intfs, system_defaults.get('tunnel_qos_remap', {}), mux_tunnel_name, peer_switch_ip)
 
-    results['MUX_CABLE'] = get_mux_cable_entries(mux_cable_ports, neighbors, devices)
+    active_active_ports = get_ports_in_active_active(root, devices, neighbors)
+    results['MUX_CABLE'] = get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors, devices, redundancy_type)
+
+    # If connected to a smart cable, get the connection position
+    for port_name, port in results['PORT'].items():
+        if port_name in results['MUX_CABLE']:
+            port['mux_cable'] = "true"
 
     if static_routes:
         results['STATIC_ROUTE'] = static_routes
@@ -1734,7 +1792,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
-    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
+    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role, current_device['type'], is_storage_device, vlan_members)
     results['FEATURE'] = {
         'telemetry': {
             'state': 'enabled'
@@ -1826,45 +1884,75 @@ def get_tunnel_entries(tunnel_intfs, tunnel_intfs_qos_remap_config, lo_intfs, tu
 
     return tunnels
 
-def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
-    mux_cable_table = {}
 
-    for intf, cable_name in mux_cable_ports.items():
-        if intf in neighbors:
-            entry = {}
-            neighbor = neighbors[intf]['name']
-            entry['state'] = 'auto'
-
-            if devices[neighbor]['lo_addr'] is not None:
-                # Always force a /32 prefix for server IPv4 loopbacks
-                server_ipv4_lo_addr = devices[neighbor]['lo_addr'].split("/")[0]
-                server_ipv4_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv4_lo_addr))
-                entry['server_ipv4'] = str(server_ipv4_lo_prefix)
-
-                if 'lo_addr_v6' in devices[neighbor] and devices[neighbor]['lo_addr_v6'] is not None:
-                    server_ipv6_lo_addr = devices[neighbor]['lo_addr_v6'].split('/')[0]
-                    server_ipv6_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv6_lo_addr))
-                    entry['server_ipv6'] = str(server_ipv6_lo_prefix)
-                mux_cable_table[intf] = entry 
-            else:
-                print("Warning: no server IPv4 loopback found for {}, skipping mux cable table entry".format(neighbor), file=sys.stderr)
-
-        if cable_name in devices:
-            cable_type = devices[cable_name].get('subtype')
-            if cable_type is None:
+def get_ports_in_active_active(root, devices, neighbors):
+    """Parse out ports in active-active cable type."""
+    servers = {hostname.lower(): device_data for hostname, device_data in devices.items() if device_data["type"] == "Server"}
+    ports_in_active_active = {}
+    dpg_section = root.find(str(QName(ns, "DpgDec")))
+    neighbor_to_port_mapping = {neighbor["name"].lower(): port for port, neighbor in neighbors.items()}
+    if dpg_section is not None:
+        for child in dpg_section:
+            hostname = child.find(str(QName(ns, "Hostname")))
+            if hostname is None:
                 continue
-            if cable_type in dualtor_cable_types:
-                mux_cable_table[intf]['cable_type'] = cable_type
-                if cable_type == 'active-active':
-                    soc_ipv4 = devices[cable_name]['lo_addr'].split('/')[0]
-                    soc_ipv4_prefix = ipaddress.ip_network(UNICODE_TYPE(soc_ipv4))
-                    mux_cable_table[intf]['soc_ipv4'] = str(soc_ipv4_prefix)
-            else:
-                print("Warning: skip parsing device %s for mux cable entry, cable type %s not supported" % (cable_name, cable_type), file=sys.stderr)
+            hostname = hostname.text.lower()
+            if hostname not in servers:
+                continue
+            lo_intfs = parse_loopback_intf(child)
+            soc_intfs = {}
+            for intfname, ipprefix in lo_intfs.keys():
+                intfname_lower = intfname.lower()
+                if hostname + "soc" == intfname_lower:
+                    ipprefix = str(ipaddress.ip_network(UNICODE_TYPE(ipprefix.split("/")[0])))
+                    if "." in ipprefix:
+                        soc_intfs["soc_ipv4"] = ipprefix
+                    elif ":" in ipprefix:
+                        soc_intfs["soc_ipv6"] = ipprefix
+            if hostname in neighbor_to_port_mapping and soc_intfs:
+                ports_in_active_active[neighbor_to_port_mapping[hostname]] = soc_intfs
+    return ports_in_active_active
+
+
+def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors, devices, redundancy_type):
+    mux_cable_table = {}
+    if redundancy_type:
+        redundancy_type = redundancy_type.lower()
+
+    for port in ports:
+        is_active_active = redundancy_type in ("libra", "mixed") and port in active_active_ports
+        is_active_standby = port in mux_cable_ports
+        if is_active_active and is_active_standby:
+            print("Warning: skip %s as it is defined as active-standby and actie-active" % port, file=sys.stderr)
+            continue
+        if not (is_active_active or is_active_standby):
+            continue
+
+        entry = {}
+        neighbor = neighbors[port]['name']
+        entry['state'] = 'auto'
+
+        if devices[neighbor]['lo_addr'] is not None:
+            # Always force a /32 prefix for server IPv4 loopbacks
+            server_ipv4_lo_addr = devices[neighbor]['lo_addr'].split("/")[0]
+            server_ipv4_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv4_lo_addr))
+            entry['server_ipv4'] = str(server_ipv4_lo_prefix)
+
+            if 'lo_addr_v6' in devices[neighbor] and devices[neighbor]['lo_addr_v6'] is not None:
+                server_ipv6_lo_addr = devices[neighbor]['lo_addr_v6'].split('/')[0]
+                server_ipv6_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv6_lo_addr))
+                entry['server_ipv6'] = str(server_ipv6_lo_prefix)
+
+            if is_active_active:
+                entry['cable_type'] = 'active-active'
+                entry.update(active_active_ports[port])
+
+            mux_cable_table[port] = entry
         else:
-            print("Warning: skip parsing device %s for mux cable entry, device definition not found" % cable_name, file=sys.stderr)
+            print("Warning: no server IPv4 loopback found for {}, skipping mux cable table entry".format(neighbor), file=sys.stderr)
 
     return mux_cable_table
+
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()

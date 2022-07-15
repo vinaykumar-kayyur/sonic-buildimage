@@ -25,7 +25,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [KDUMP](#kdump)
+         * [KDUMP](#kdump)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -49,9 +49,11 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
+         * [VXLAN](#vxlan)   
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
-         * [PASSWORD_HARDENING](#password_hardening)
+         * [PASSWORD_HARDENING](#password_hardening)  
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
@@ -1100,27 +1102,45 @@ attributes in those objects.
 ***NTP server***
 ```
 {
-"NTP_SERVER": {
+    "NTP_SERVER": {
         "2.debian.pool.ntp.org": {},
         "1.debian.pool.ntp.org": {},
         "3.debian.pool.ntp.org": {},
         "0.debian.pool.ntp.org": {}
     },
 
-"NTP_SERVER": {
-    "23.92.29.245": {},
-    "204.2.134.164": {}
+    "NTP_SERVER": {
+        "23.92.29.245": {},
+        "204.2.134.164": {}
     }
 }
 ```
 
-***Syslogserver***
+***Syslog server***
 ```
 {
-"SYSLOG_SERVER": {
-    "10.0.0.5": {},
-    "10.0.0.6": {},
-    "10.11.150.5": {}
+    "SYSLOG_SERVER": {
+        "10.0.0.5": {},
+        "10.0.0.6": {},
+        "10.11.150.5": {}
+    },
+
+    "SYSLOG_SERVER" : {
+        "2.2.2.2": {
+            "source": "1.1.1.1",
+            "port": "514",
+            "vrf": "default"
+        },
+        "4.4.4.4": {
+            "source": "3.3.3.3",
+            "port": "514",
+            "vrf": "mgmt"
+        },
+        "2222::2222": {
+            "source": "1111::1111",
+            "port": "514",
+            "vrf": "Vrf-Data"
+        }
     }
 }
 ```
@@ -1459,6 +1479,37 @@ channel name as object key, and tagging mode as attributes.
 }
 ```
 
+### VXLAN
+
+VXLAN_TUNNEL holds the VTEP source ip configuration.  
+VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.  
+VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered tunnels.
+
+```
+{
+"VXLAN_TUNNEL": {
+        "vtep1": {
+            "src_ip": "10.10.10.10"
+        }
+  }
+"VXLAN_TUNNEL_MAP" : {
+        "vtep1|map_1000_Vlan100": {
+           "vni": "1000",
+           "vlan": "100"
+         },
+        "vtep1|testmap": {
+           "vni": "22000",
+           "vlan": "70"
+         },
+  }
+  "VXLAN_EVPN_NVO": {
+        "nvo1": {
+            "source_vtep": "vtep1"
+        }
+  }
+}
+```
+
 ### Virtual router
 
 The virtual router table allows to insert or update a new virtual router
@@ -1616,6 +1667,32 @@ The method could be:
     }
 }
 ```
+
+### SYSTEM_DEFAULTS table
+To have a better management of the features in SONiC, a new table `SYSTEM_DEFAULTS` is introduced.
+
+```
+"SYSTEM_DEFAULTS": {
+        "tunnel_qos_remap": {
+            "status": "enabled"
+        }
+        "default_bgp_status": {
+            "status": "down"
+        }
+        "synchronous_mode": {
+            "status": "enable"
+        }
+        "dhcp_server": {
+            "status": "enable"
+        }
+    }
+```
+The default value of flags in `SYSTEM_DEFAULTS` table can be set in `init_cfg.json` and loaded into db at system startup. These flags are usually set at image being build, and are unlikely to change at runtime.
+
+If the values in `config_db.json` is changed by user, it will not be rewritten back by `init_cfg.json` as `config_db.json` is loaded after `init_cfg.json` in [docker_image_ctl.j2](https://github.com/Azure/sonic-buildimage/blob/master/files/build_templates/docker_image_ctl.j2)
+
+For the flags that can be changed by reconfiguration, we can update entries in `minigraph.xml`, and parse the new values in to config_db with minigraph parser at reloading minigraph. If there are duplicated entries in `init_cfg.json` and `minigraph.xml`, the values in `minigraph.xml` will overwritten the values defined in `init_cfg.json`.
+#### 5.2.3 Update value directly in db memory
 
 For Developers
 ==============
