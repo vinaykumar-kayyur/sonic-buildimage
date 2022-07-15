@@ -1,5 +1,5 @@
 ###############################################################################
-## Monit configuration for mgmt_framework container
+## Monit configuration for mgmt-framework container
 ###############################################################################
 check program container_memory_mgmt_framework with path "/usr/bin/memory_checker mgmt-framework"
     if status == 3 for 10 times within 20 cycles then alert repeat every 1 cycles
