@@ -793,7 +793,7 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 	# put a lock here to avoid race conditions
 	while true; do
 	if mkdir $(PYTHON_WHEELS_PATH)/pip_lock &> /dev/null; then
-	{ sudo -E pip$($*_PYTHON_VERSION) install $(PYTHON_WHEELS_PATH)/$* $(LOG) && rm -d $(PYTHON_WHEELS_PATH)/pip_lock && break; } || { rm -d $(PYTHON_WHEELS_PATH)/pip_lock && exit 1 ; }
+	{ sudo -E pip$($*_PYTHON_VERSION) install --upgrade --no-deps --force-reinstall $(PYTHON_WHEELS_PATH)/$* $(LOG) && rm -d $(PYTHON_WHEELS_PATH)/pip_lock && break; } || { rm -d $(PYTHON_WHEELS_PATH)/pip_lock && exit 1 ; }
 	fi
 	done
 	$(FOOTER)
