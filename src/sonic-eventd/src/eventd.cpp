@@ -228,6 +228,13 @@ capture_service::do_capture()
 
         switch(cap_state) {
         case CAP_STATE_INIT:
+            /*
+             * In this state check against cache, if duplicate
+             * When duplicate or new one seen, remove the entry from pre-exist map
+             * Stay in this state, until the pre-exist cache is empty or as many
+             * messages as in cache are seen, as in worst case even if you see
+             * duplicate of each, it will end with first m_events.size()
+             */
             {
                 bool add = true;
                 init_cnt--;

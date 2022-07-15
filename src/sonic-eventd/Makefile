@@ -7,7 +7,7 @@ RSYSLOG-PLUGIN_TEST := rsyslog_plugin_tests/tests
 CP := cp
 MKDIR := mkdir
 CC := g++
-MV := mv
+CP := cp
 LIBS := -levent -lhiredis -lswsscommon -lpthread -lboost_thread -lboost_system -lzmq -lboost_serialization -luuid
 TEST_LIBS := -L/usr/src/gtest -lgtest -lgtest_main -lgmock -lgmock_main
 
@@ -69,8 +69,8 @@ rsyslog-plugin-tests: $(RSYSLOG-PLUGIN-TEST_OBJS)
 
 install:
 	$(MKDIR) -p $(DESTDIR)/usr/sbin
-	$(MV) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
-	$(MV) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
+	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
+	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(EVENTD_TARGET)
