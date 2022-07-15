@@ -179,8 +179,7 @@ def main():
             syslog.syslog(syslog.LOG_INFO, "High memory alerting of container '{}' is disabled and Exiting ..."
                           .format(args.container_name))
     else:
-        syslog.syslog(syslog.LOG_INFO,
-                      "[memory_checker] Exits without checking memory usage since container '{}' is not running!"
+        syslog.syslog(syslog.LOG_INFO, "[memory_checker] Container '{}' is not running and Exiting ..."
                       .format(args.container_name))
 
 
