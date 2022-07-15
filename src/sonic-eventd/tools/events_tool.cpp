@@ -61,6 +61,7 @@ Note:\n\
             ]\n\
       Default: <some test message>\n\
 \n\
+-c  - Use offline cache in receive mode\n\
 -o  - O/p file to write received events\n\
       Default: STDOUT\n";
 
@@ -86,7 +87,7 @@ t_map_to_str(const Map &m)
 }
 
 void
-do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt=0, int pause=0)
+do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt, int pause, bool use_cache)
 {
     int index=0, total_missed = 0;
     ostream* fp = &cout;
@@ -99,7 +100,9 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
             printf("outfile=%s set\n", outfile.c_str());
         }
     }   
-    event_handle_t h = events_init_subscriber(false, 100, filter.empty() ? NULL : &filter);
+    event_handle_t h = events_init_subscriber(use_cache, 2000, filter.empty() ? NULL : &filter);
+    printf("Subscribed with use_cache=%d timeout=2000 filter %s\n",
+            use_cache, filter.empty() ? "empty" : "non-empty");
     ASSERT(h != NULL, "Failed to get subscriber handle");
 
     while(!term_receive) {
@@ -129,10 +132,6 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
             if (--cnt <= 0) {
                 break;
             }
-        }
-        if (pause) {
-            /* Pause between two sends */
-            this_thread::sleep_for(chrono::milliseconds(pause));
         }
     }
 
@@ -277,6 +276,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
+    bool use_cache = false;
     int op = OP_INIT;
     int cnt=0, pause=0;
     string json_str_msg, outfile("STDOUT"), infile;
@@ -284,8 +284,12 @@ int main(int argc, char **argv)
 
     for(;;)
     {
-        switch(getopt(argc, argv, "srn:p:i:o:f:")) // note the colon (:) to indicate that 'b' has a parameter and is not a switch
+        switch(getopt(argc, argv, "srn:p:i:o:f:c")) // note the colon (:) to indicate that 'b' has a parameter and is not a switch
         {
+        case 'c':
+            use_cache = true;
+            continue;
+
         case 's':
             op |= OP_SEND;
             continue;
@@ -339,14 +343,14 @@ int main(int argc, char **argv)
             op, cnt, pause, infile.c_str(), outfile.c_str());
 
     if (op == OP_SEND_RECV) {
-        thread thr(&do_receive, filter, outfile, 0, 0);
+        thread thr(&do_receive, filter, outfile, 0, 0, use_cache);
         do_send(infile, cnt, pause);
     }
     else if (op == OP_SEND) {
         do_send(infile, cnt, pause);
     }
     else if (op == OP_RECV) {
-        do_receive(filter, outfile, cnt, pause);
+        do_receive(filter, outfile, cnt, pause, use_cache);
     }
     else {
         ASSERT(false, "Elect -s for send or -r receive or both; Bailing out with no action\n");
