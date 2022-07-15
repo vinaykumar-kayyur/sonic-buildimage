@@ -274,7 +274,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         return allow_internal_docker_ip_cmds
 
-    def get_loopback_ip_from_loopback_table(self, loopback_table):
+    def get_loopback_ip_from_loopback_table(self, loopback_table, loopback_name):
 
         if loopback_table:
             for key, _ in loopback_table.items():
@@ -282,7 +282,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     continue
 
                 iface_name, iface_cidr = key
-                if iface_name.startswith("Loopback3"):
+                if iface_name.startswith(loopback_name):
                     ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
                     if isinstance(ip_ntwrk, ipaddress.IPv4Network):
                         ip_addr = ip_ntwrk.network_address
@@ -295,7 +295,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         fwd_dualtor_grpc_traffic_from_host_to_soc_cmds = []
         if self.DualToR:
             loopback_table = self.config_db_map[DEFAULT_NAMESPACE].get_table('LOOPBACK_INTERFACE')
-            loopback_address = self.get_loopback_ip_from_loopback_table(loopback_table)
+            loopback_name = 'Loopback3'
+            loopback_address = self.get_loopback_ip_from_loopback_table(loopback_table, loopback_name)
             if loopback_address is not None:
                 mux_table = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.CONFIG_MUX_CABLE)
                 mux_table_keys = mux_table.keys()
