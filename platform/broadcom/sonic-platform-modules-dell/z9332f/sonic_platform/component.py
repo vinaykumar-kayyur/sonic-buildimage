@@ -91,6 +91,12 @@ def get_pciephy_version():
 
     return val
 
+def get_onie_version():
+    try:
+        return subprocess.check_output('/usr/local/bin/onie_version', text=True).strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return 'NA'
+
 
 class Component(ComponentBase):
     """DellEMC Platform-specific Component class"""
@@ -134,6 +140,11 @@ class Component(ComponentBase):
         ['PCIe',
          'ASIC PCIe firmware',
          get_pciephy_version
+         ],
+
+        ['ONIE',
+         'Open Network Install Environment',
+         get_onie_version
          ]
     ]
 
@@ -377,9 +388,15 @@ class Component(ComponentBase):
         Args:
             image_path: A string, path to firmware image
 
+        Returns:
+            False if image not found.
+
         Raises:
             RuntimeError: update failed
         """
+        if not os.path.isfile(image_path):
+            return False
+
         valid, version = self._get_available_firmware_version(image_path)
         if valid:
             avail_ver = version.get(self.name)
