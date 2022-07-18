@@ -87,6 +87,7 @@ static struct sock_filter dhcp_bpf_code[] = {
     {.code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044}, // (022) jeq      #0x44            jt 21	jf 22
     {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000}, // (023) ret      #262144
     {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000}, // (024) ret      #0
+};
 
 /** Filter program socket struct */
 static struct sock_fprog dhcp_sock_bfp = {
@@ -185,7 +186,7 @@ static void read_callback(int fd, short event, void *arg)
         uint8_t *dhcphdr = context->buffer + DHCP_START_OFFSET;
         int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
-        if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+        if (((unsigned)buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
             (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
             int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
                           ntohs(udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
@@ -248,15 +249,12 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
     struct sockaddr_ll sll;
     socklen_t slen = sizeof sll;
 
-    bool standby = false;
-
     while ((event == EV_READ) &&
            ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) 
     {
         std::string member_table = std::string("VLAN_MEMBER|") + context->intf + "|";
-        char interfaceName;
-        char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
-
+        char interfaceName[IF_NAMESIZE];
+        char *interface = if_indextoname(sll.sll_ifindex, interfaceName);
         std::string state;
         std::string intf(interface);
         mStateDbMuxTablePtr->hget(intf, "state", state);
@@ -267,11 +265,11 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
             uint8_t *dhcphdr = context->buffer + DHCP_START_OFFSET;
             int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
-            if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+            if (((unsigned)buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
                 (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) 
             {
                 int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
-                            ntohs(~udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
+                            ntohs(udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
                 int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
                 const u_char *dhcp_option = context->buffer + dhcp_option_offset;
                 dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
