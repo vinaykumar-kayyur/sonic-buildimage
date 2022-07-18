@@ -110,10 +110,6 @@ def get_running_container_names():
     Returns:
         running_container_names: A list indicates names of running containers.
     """
-    if not is_service_active("docker"):
-        syslog.syslog(syslog.LOG_INFO,"Skipping memory check since Docker engine is down")
-        return []
-
     try:
         docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
         running_container_list = docker_client.containers.list(filters={"status": "running"})
@@ -136,6 +132,10 @@ def main():
     # remove this in the new version since we want to read this value from 'CONFIG_DB'.
     parser.add_argument("threshold_value", type=int, help="threshold value in bytes")
     args = parser.parse_args()
+
+    if not is_service_active("docker"):
+        syslog.syslog(syslog.LOG_INFO,"Skipping memory check: docker daemon is down")
+        sys.exit(0)
 
     running_container_names = get_running_container_names()
     if args.container_name in running_container_names:
