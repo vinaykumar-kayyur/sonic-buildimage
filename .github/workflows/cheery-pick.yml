@@ -24,13 +24,13 @@ jobs:
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
         echo $GITHUB_CONTEXT
-        git config -l | grep user
+        git config -l
     - name: Test
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
         set -e
-        sha=$(echo $GITHUB_CONTEXT | jq ".sha")
+        sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha")
         label_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
         echo $sha
         echo $label_count
