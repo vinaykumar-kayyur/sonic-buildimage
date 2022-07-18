@@ -822,7 +822,7 @@ ifneq ($(CROSS_BUILD_ENVIRON),y)
 else
 		{
 			export PATH=$(VIRTENV_BIN_CROSS_PYTHON$($*_PYTHON_VERSION)):${PATH}
-			pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
+			python$($*_PYTHON_VERSION) setup.py build $(LOG)
 			if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 			python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 		}
