@@ -37,6 +37,6 @@ jobs:
         echo $labels_count
         for (( i=0; i<$labels_count; i++ ))
         do
-          echo The ${i}th lable: $(echo labels_json | jq ".[$i].name" | sed 's/"//g')
+          echo The ${i}th lable: $(echo $labels_json | jq ".[$i].name" | sed 's/"//g')
         done
         echo The PR is merged.
