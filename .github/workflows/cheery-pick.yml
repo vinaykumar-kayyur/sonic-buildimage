@@ -60,6 +60,7 @@ jobs:
         # create PR
         set -x
         git pull
+        git log -n 20 --oneline
         git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
         git checkout .
         git clean -xdff
