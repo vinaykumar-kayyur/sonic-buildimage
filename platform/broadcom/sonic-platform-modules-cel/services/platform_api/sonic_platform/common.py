@@ -38,8 +38,8 @@ class Common:
             p = subprocess.Popen(
                 command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
-            if err == '':
-                status, output = True, raw_data.strip()
+            if err == b'':
+                status, output = True, str(raw_data.strip(), 'utf-8')
         except Exception:
             pass
         return status, output
