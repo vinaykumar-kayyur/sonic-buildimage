@@ -59,9 +59,7 @@ jobs:
 
         # create PR
         set -x
-        git remote -vv
-        git status
-        exit 0
+        git fetch origin
         git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
         git checkout .
         git clean -xdff
