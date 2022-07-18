@@ -19,14 +19,21 @@ jobs:
 #        set -ex
 #        sudo apt-get update
 #        sudo apt-get install -y jq
+    - name: Debug
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: |
+        echo $GITHUB_CONTEXT
+        git config -l | grep user
     - name: Test
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
         set -e
-        echo $GITHUB_CONTEXT | jq
-        echo $GITHUB_CONTEXT | jq ".event.pull_request.labels"
-        echo HHHHHHHHHHHHHHHHHHHHHHHHHHH1
+        sha=$(echo $GITHUB_CONTEXT | jq ".sha")
+        label_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
+        echo $sha
+        echo $label_count
         exit 1
         lables_json=$(echo $GITHUB_CONTEXT | jq ".labels")
         for (( i=0; i<$lables_count; i++ ))
