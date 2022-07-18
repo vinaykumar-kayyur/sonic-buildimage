@@ -58,7 +58,8 @@ jobs:
         fi
 
         # create PR
-        git checkout ${{ matrix.branch }}
+        set -x
+        git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
         git checkout .
         git clean -xdff
         if ! git cherry-pick $sha;then
