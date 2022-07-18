@@ -32,11 +32,11 @@ jobs:
         set -e
         sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha" | sed 's/"//g')
         labels_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
-        lables_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
+        labels_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
         echo $sha
-        echo $label_count
-        for (( i=0; i<$lables_count; i++ ))
+        echo $labels_count
+        for (( i=0; i<$labels_count; i++ ))
         do
-          echo The ${i}th lable: $(echo lables_json | jq ".[$i].name" | sed 's/"//g')
+          echo The ${i}th lable: $(echo labels_json | jq ".[$i].name" | sed 's/"//g')
         done
         echo The PR is merged.
