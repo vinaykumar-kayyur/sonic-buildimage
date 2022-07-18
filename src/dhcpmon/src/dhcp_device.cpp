@@ -62,32 +62,31 @@ swss::DBConnector configDb("CONFIG_DB", 0);
  * `tcpdump -dd "inbound and udp and (port 67 or port 68)"`
  */
 static struct sock_filter dhcp_bpf_code[] = {
-    { 0x28, 0, 0, 0xfffff004 },
-    { 0x15, 22, 0, 0x00000004 },
-    { 0x28, 0, 0, 0x0000000c },
-    { 0x15, 0, 7, 0x000086dd },
-    { 0x30, 0, 0, 0x00000014 },
-    { 0x15, 0, 18, 0x00000011 },
-    { 0x28, 0, 0, 0x00000036 },
-    { 0x15, 15, 0, 0x00000043 },
-    { 0x15, 14, 0, 0x00000044 },
-    { 0x28, 0, 0, 0x00000038 },
-    { 0x15, 12, 11, 0x00000043 },
-    { 0x15, 0, 12, 0x00000800 },
-    { 0x30, 0, 0, 0x00000017 },
-    { 0x15, 0, 10, 0x00000011 },
-    { 0x28, 0, 0, 0x00000014 },
-    { 0x45, 8, 0, 0x00001fff },
-    { 0xb1, 0, 0, 0x0000000e },
-    { 0x48, 0, 0, 0x0000000e },
-    { 0x15, 4, 0, 0x00000043 },
-    { 0x15, 3, 0, 0x00000044 },
-    { 0x48, 0, 0, 0x00000010 },
-    { 0x15, 1, 0, 0x00000043 },
-    { 0x15, 0, 1, 0x00000044 },
-    { 0x6, 0, 0, 0x00040000 },
-    { 0x6, 0, 0, 0x00000000 },
-};
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0xfffff004}, // (000) ldh      #fffff004
+    {.code = OP_JEQ, .jt = 22,  .jf = 0,  .k = 0x00000004}, // (001) jeq      #0x04            jt 22 jf 0
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c}, // (002) ldh      [12]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd}, // (003) jeq      #0x86dd          jt 2	jf 9
+    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014}, // (004) ldb      [20]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011}, // (005) jeq      #0x11            jt 4	jf 22
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036}, // (006) ldh      [54]
+    {.code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043}, // (007) jeq      #0x43            jt 21	jf 6
+    {.code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044}, // (008) jeq      #0x44            jt 21	jf 7
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038}, // (009) ldh      [56]
+    {.code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043}, // (010) jeq      #0x43            jt 21	jf 20
+    {.code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800}, // (011) jeq      #0x800           jt 10	jf 22
+    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017}, // (012) ldb      [23]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011}, // (013) jeq      #0x11            jt 12	jf 22
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014}, // (014) ldh      [20]
+    {.code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff}, // (015) jset     #0x1fff          jt 22	jf 14
+    {.code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (016) ldxb     4*([14]&0xf)
+    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (017) ldh      [x + 14]
+    {.code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043}, // (018) jeq      #0x43            jt 21	jf 17
+    {.code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044}, // (019) jeq      #0x44            jt 21	jf 18
+    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010}, // (020) ldh      [x + 16]
+    {.code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043}, // (021) jeq      #0x43            jt 21	jf 20
+    {.code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044}, // (022) jeq      #0x44            jt 21	jf 22
+    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000}, // (023) ret      #262144
+    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000}, // (024) ret      #0
 
 /** Filter program socket struct */
 static struct sock_fprog dhcp_sock_bfp = {
