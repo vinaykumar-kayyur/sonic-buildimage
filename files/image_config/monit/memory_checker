@@ -24,7 +24,6 @@ import subprocess
 import sys
 import syslog
 import re
-import os
 
 import docker
 
@@ -97,9 +96,9 @@ def check_memory_usage(container_name, threshold_value):
         sys.exit(4)
 
 
-def is_service_active(feat):
-    status = os.system('systemctl is-active --quiet {}'.format(feat))
-    return status == 0
+def is_service_active(service):
+    status = subprocess.run("systemctl is-active --quiet {}".format(service), shell=True, check=False)
+    return status.returncode == 0
 
 
 def get_running_container_names():
@@ -111,18 +110,19 @@ def get_running_container_names():
     Returns:
         running_container_names: A list indicates names of running containers.
     """
-    running_container_names = []
+    if not is_service_active("docker"):
+        syslog.syslog(syslog.LOG_INFO,"Skipping memory check since Docker engine is down")
+        return []
 
-    if (is_service_active("docker")):
-        try:
-            docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-            running_container_list = docker_client.containers.list(filters={"status": "running"})
-            running_container_names = [ container.name for container in running_container_list ]
-        except (docker.errors.APIError, docker.errors.DockerException) as err:
-            syslog.syslog(syslog.LOG_ERR,
-                          "Failed to retrieve the running container list from docker daemon! Error message is: '{}'"
-                          .format(err))
-            sys.exit(5)
+    try:
+        docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+        running_container_list = docker_client.containers.list(filters={"status": "running"})
+        running_container_names = [ container.name for container in running_container_list ]
+    except (docker.errors.APIError, docker.errors.DockerException) as err:
+        syslog.syslog(syslog.LOG_ERR,
+                      "Failed to retrieve the running container list from docker daemon! Error message is: '{}'"
+                      .format(err))
+        sys.exit(5)
 
     return running_container_names
 
