@@ -252,10 +252,11 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
     bool standby = false;
 
     while ((event == EV_READ) &&
-           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) {
+           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) 
+    {
         std::string member_table = std::string("VLAN_MEMBER|") + context->intf + "|";
         char interfaceName;
-  	    char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
+        char *interface = if_indextoname(sll.sll_ifindex, &interfaceName);
 
         std::string state;
         std::string intf(interface);
@@ -268,7 +269,8 @@ static void read_callback_dual_tor(int fd, short event, void *arg)
             int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
             if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
-                (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
+                (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) 
+            {
                 int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
                             ntohs(~udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
                 int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
