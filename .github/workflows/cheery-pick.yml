@@ -31,7 +31,7 @@ jobs:
       run: |
         set -e
         sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha" | sed 's/"//g')
-        label_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
+        labels_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
         lables_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
         echo $sha
         echo $label_count
