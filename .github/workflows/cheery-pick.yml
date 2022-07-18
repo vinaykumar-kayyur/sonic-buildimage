@@ -8,35 +8,61 @@ on:
     - master
 
 jobs:
-  job:
+  show_info:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: [202205, 202111, 202106]
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-#    - name: install dependency
-#      run: |
-#        set -ex
-#        sudo apt-get update
-#        sudo apt-get install -y jq
     - name: Debug
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
         echo $GITHUB_CONTEXT
         git config -l
-    - name: Test
+    - name: Get PR Info
+      id: info
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |
         set -e
         sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha" | sed 's/"//g')
+        pr_id=$(echo $GITHUB_CONTEXT | jq ".event.number" | sed 's/"//g')
         labels_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels" | grep -c '"name": ')
         labels_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
         echo $sha
         echo $labels_count
+        create_pr=''
         for (( i=0; i<$labels_count; i++ ))
         do
-          echo The ${i}th lable: $(echo $labels_json | jq ".[$i].name" | sed 's/"//g')
+          label=$(echo $labels_json | jq ".[$i].name" | sed 's/"//g')
+          echo The ${i}th lable: $label
+          if echo $label | grep -oE "Request for ${{ matrix.branch }} Branch";then
+            create_pr=1
+          fi
+          if echo $label | grep -oE "Created PR for ${{ matrix.branch }} Branch";then
+            echo "already has tag: Created PR for ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
+          if echo $label | grep -oE "Included in ${{ matrix.branch }} Branch";then
+            echo "already has tag: Included in ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
         done
-        echo The PR is merged.
+        if [[ "$create_pr" != "1" ]];then
+          echo "Didn't find cherry-pick tag."
+          exit 0
+        fi
+
+        # create PR
+        git checkout ${{ matrix.branch }}
+        git checkout .
+        git clean -xdff
+        if ! git cherry-pick $sha;then
+          echo cherry-pick failed.
+        else
+          git push origin HEAD:sonicbld/${pr_id}-${{ matrix.branch }}
+        fi
