@@ -1,0 +1,36 @@
+name: CherryPick
+on:
+  pull_request_target:
+    types:
+    - labeled
+    - closed
+    branches:
+    - master
+
+jobs:
+  job:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+#    - name: install dependency
+#      run: |
+#        set -ex
+#        sudo apt-get update
+#        sudo apt-get install -y jq
+    - name: Test
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: |
+        set -e
+        echo $GITHUB_CONTEXT | jq
+        echo $GITHUB_CONTEXT | jq ".event.pull_request.labels"
+        echo HHHHHHHHHHHHHHHHHHHHHHHHHHH1
+        exit 1
+        lables_json=$(echo $GITHUB_CONTEXT | jq ".labels")
+        for (( i=0; i<$lables_count; i++ ))
+        do
+          echo The ${i}th lable: $(echo lables_json | jq ".[$i]")
+        done
+        echo The PR is merged.
