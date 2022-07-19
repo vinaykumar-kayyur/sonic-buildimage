@@ -1,0 +1,109 @@
+name: PreCherryPick
+on:
+  pull_request_target:
+    types:
+    - labeled
+    - closed
+    branches:
+    - master
+
+jobs:
+  cherry_pick:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: [202111]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Debug
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: |
+        echo $GITHUB_CONTEXT
+        git config --global user.name mssonicbld
+        git config --global user.email sonicbuildadmin@microsoft.com
+    - name: Get PR Info
+      id: info
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: |
+        set -e
+        exit 0
+        sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha" | sed 's/"//g')
+        pr_id=$(echo $GITHUB_CONTEXT | jq ".event.number" | sed 's/"//g')
+        pr_body=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.body" | sed 's/"//g')
+        issues_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.issue.href" | sed 's/"//g')
+        base_url=$(echo $issues_url | awk -F'issues' '{print$1}')
+        repo_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.html.href" | awk -F'pull' '{print$1}' | sed 's/"//g')
+        labels_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels | length")
+        labels_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
+        echo =============================
+        echo SHA:           $sha
+        echo PRID:          $pr_id
+        echo issues_url:    $issues_url
+        echo base_url:      $base_url
+        echo repo_url:      $repo_url
+        echo labels_count:  $labels_count
+        echo =============================
+        create_pr=''
+        for (( i=0; i<$labels_count; i++ ))
+        do
+          label=$(echo $labels_json | jq ".[$i].name" | sed 's/"//g')
+          echo label ${i}: $label
+          if echo $label | grep -oE "Request for ${{ matrix.branch }} Branch";then
+            create_pr=1
+          fi
+          if echo $label | grep -oE "Created PR to ${{ matrix.branch }} Branch";then
+            echo "already has tag: Cherry-pick PR to ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
+          if echo $label | grep -oE "Included in ${{ matrix.branch }} Branch";then
+            echo "already has tag: Included in ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
+        done
+        if [[ "$create_pr" != "1" ]];then
+          echo "Didn't find cherry-pick tag."
+          exit 0
+        fi
+
+        # Begin to cherry-pick PR
+        set -x
+        git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
+        git checkout .
+        git clean -xdff
+        if ! git cherry-pick $sha;then
+          echo cherry-pick failed.
+          # Add label
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${issues_url}/labels \
+            -d '{"labels":["Cherry Pick Conflict_${{ matrix.branch }}"]}'
+          echo "Add label \"Cherry Pick Conflict_${{ matrix.branch }}\""
+        else
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/mssonicbld/sonic-buildimage.git HEAD:${pr_id}-${{ matrix.branch }} -f
+          # Create PR
+          result=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${base_url}pulls -d '{"title":"auto cherry-pick ${pr_id} into ${{ matrix.branch }}","body":"${pr_body}","head":"mssonicbld:${pr_id}-${{ matrix.branch }}","base":"${{ matrix.branch }}"}')
+          new_issue_url=$(echo $result | jq '.issue_url' | sed 's/"//g')
+          if [[ "$(echo $result | jq '.errors' | sed 's/"//g')" != "" ]];then
+            echo PR create failed:
+            echo $result | jq '.errors'
+            exit 1
+          fi
+          # Add label
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${issues_url}/labels \
+            -d '{"labels":["Created PR to ${{ matrix.branch }} Branch"]}'
+          echo "Add label \"Created PR to ${{ matrix.branch }} Branch\""
+          # Add comment to new PR
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            ${new_issue_url}/comments -d '{"body":"Original PR: ${issues_url}"}'
+        fi
+
