@@ -71,6 +71,7 @@ jobs:
           git push origin HEAD:sonicbld/${pr_id}-${{ matrix.branch }}
           echo '"Created PR for ${{ matrix.branch }} Branch": *' > .github/workflows/label.yml
         fi
+        cat .github/workflows/label.yml
     - uses: actions/labeler@main
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
