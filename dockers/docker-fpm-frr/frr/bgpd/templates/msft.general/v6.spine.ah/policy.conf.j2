@@ -14,7 +14,7 @@ bgp as-path access-list RNG_ASNS permit _64945_
 ipv6 prefix-list DEFAULT_IPV6 permit ::/0
 !
 route-map FROM_AH_V6 deny 100
-  match ip address prefix-list DEFAULT_IPV6
+  match ipv6 address prefix-list DEFAULT_IPV6
 !
 route-map FROM_AH_V6 deny 200
   match as-path WAN_ASNS
@@ -22,7 +22,7 @@ route-map FROM_AH_V6 deny 200
 route-map FROM_AH_V6 deny 300
   match as-path RNG_ASNS
 !
-route-map FROM_RH_V6 permit 400
+route-map FROM_AH_V6 permit 400
  set ipv6 next-hop prefer-global
  on-match next
 !
@@ -38,7 +38,7 @@ route-map FROM_AH_V6 permit 1000
   set community no-export additive
 !
 route-map TO_AH_V6 permit 100
-  match ip address prefix-list DEFAULT_IPV6
+  match ipv6 address prefix-list DEFAULT_IPV6
 !
 route-map TO_AH_V6 deny 200
   match as-path WAN_ASNS

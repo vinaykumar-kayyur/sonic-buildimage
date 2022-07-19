@@ -16,7 +16,7 @@ route-map FROM_RH_V6 permit 100
  on-match next
 !
 route-map FROM_RH_V6 permit 200
-  match ip address prefix-list DEFAULT_IPV6
+  match ipv6 address prefix-list DEFAULT_IPV6
 !
 route-map FROM_RH_V6 permit 300
   match community LEAK_COMMUNITY
@@ -33,7 +33,7 @@ route-map TO_RH_V6 deny 100
   match as-path WAN_ASNS
 !
 route-map TO_RH_V6 deny 200
-  match ip address prefix-list DEFAULT_IPV6
+  match ipv6 address prefix-list DEFAULT_IPV6
 !
 route-map TO_RH_V6 permit 1000
 !
