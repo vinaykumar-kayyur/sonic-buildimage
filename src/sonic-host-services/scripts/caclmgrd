@@ -41,6 +41,22 @@ def _ip_prefix_in_key(key):
     """
     return (isinstance(key, tuple))
 
+def get_ip_from_interface_table(table, intf_name):
+
+    if table:
+        for key, _ in table.items():
+            if not _ip_prefix_in_key(key):
+                continue
+
+            iface_name, iface_cidr = key
+            if iface_name.startswith(intf_name):
+                ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+                if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                    ip_addr = ip_ntwrk.network_address
+                    return ip_addr
+
+    return None
+
 # ============================== Classes ==============================
 
 
@@ -275,31 +291,17 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         return allow_internal_docker_ip_cmds
 
-    def get_ip_from_interface_table(self, table, intf_name):
-
-        if table:
-            for key, _ in table.items():
-                if not _ip_prefix_in_key(key):
-                    continue
-
-                iface_name, iface_cidr = key
-                if iface_name.startswith(intf_name):
-                    ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
-                    if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                        ip_addr = ip_ntwrk.network_address
-                        return ip_addr
-
-        return None
 
     def generate_fwd_traffic_from_host_to_soc(self, namespace):
 
         fwd_dualtor_grpc_traffic_from_host_to_soc_cmds = []
         if self.DualToR:
-            loopback_table = self.config_db_map[DEFAULT_NAMESPACE].get_table(LOOPBACK_TABLE)
+            loopback_table = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.LOOPBACK_TABLE)
             loopback_name = 'Loopback3'
-            loopback_address = self.get_ip_from_interface_table(loopback_table, loopback_name)
+            loopback_address = get_ip_from_interface_table(loopback_table, loopback_name)
             fwd_dualtor_grpc_traffic_from_host_to_soc_cmds.append(self.iptables_cmd_ns_prefix[namespace] + 
-                    "iptables -t nat -D POSTROUTING --flush")
+                    "iptables -t nat --flush POSTROUTING")
+            
             if loopback_address is not None:
                 mux_table = self.config_db_map[DEFAULT_NAMESPACE].get_table(self.CONFIG_MUX_CABLE)
                 mux_table_keys = mux_table.keys()
