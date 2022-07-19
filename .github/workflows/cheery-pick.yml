@@ -66,15 +66,15 @@ jobs:
         git clean -xdff
         if ! git cherry-pick $sha;then
           echo cherry-pick failed.
-          echo "code_conflict_with_${{ matrix.branch }}:" > .github/workflows/label.yml
-          echo "- '*'" >> .github/workflows/label.yml
+          echo "code_conflict_with_${{ matrix.branch }}:" > .github/workflows/temp.yml
+          echo "- '*'" >> .github/workflows/temp.yml
         else
           git push origin HEAD:sonicbld/${pr_id}-${{ matrix.branch }}
-          echo 'created_pr_for_${{ matrix.branch }}' > .github/workflows/label.yml
-          echo "- '*'" >> .github/workflows/label.yml
+          echo 'created_pr_for_${{ matrix.branch }}' > .github/workflows/temp.yml
+          echo "- '*'" >> .github/workflows/temp.yml
         fi
         cat .github/workflows/label.yml
     - uses: actions/labeler@main
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        configuration-path: .github/workflows/label.yml
+        configuration-path: .github/workflows/temp.yml
