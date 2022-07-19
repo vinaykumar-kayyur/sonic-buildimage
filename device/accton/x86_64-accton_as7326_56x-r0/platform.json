@@ -341,6 +341,390 @@
         ]
     },
     "interfaces": {
+        "Ethernet0": {
+            "index": "1",
+            "lanes": "3",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet1": {
+            "index": "2",
+            "lanes": "2",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet2": {
+            "index": "3",
+            "lanes": "4",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+		"Ethernet3": {
+            "index": "4",
+            "lanes": "8",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet4": {
+            "index": "5",
+            "lanes": "7",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet5": {
+            "index": "6",
+            "lanes": "1",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet6": {
+            "index": "7",
+            "lanes": "5",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet7": {
+            "index": "8",
+            "lanes": "16",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+		"Ethernet8": {
+            "index": "9",
+            "lanes": "6",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet9": {
+            "index": "10",
+            "lanes": "14",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet10": {
+            "index": "11",
+            "lanes": "13",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet11": {
+            "index": "12",
+            "lanes": "15",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet12": {
+            "index": "13",
+            "lanes": "23",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+		
+        "Ethernet13": {
+            "index": "14",
+            "lanes": "22",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet14": {
+            "index": "15",
+            "lanes": "24",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet15": {
+            "index": "16",
+            "lanes": "32",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet16": {
+            "index": "17",
+            "lanes": "31",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet17": {
+            "index": "18",
+            "lanes": "21",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+		
+        "Ethernet18": {
+            "index": "19",
+            "lanes": "29",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet19": {
+            "index": "20",
+            "lanes": "36",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet20": {
+            "index": "21",
+            "lanes": "30",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet21": {
+            "index": "22",
+            "lanes": "34",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet22": {
+            "index": "23",
+            "lanes": "33",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet23": {
+            "index": "24",
+            "lanes": "35",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet24": {
+            "index": "25",
+            "lanes": "43",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet25": {
+            "index": "26",
+            "lanes": "42",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet26": {
+            "index": "27",
+            "lanes": "44",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet27": {
+            "index": "28",
+            "lanes": "52",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet28": {
+            "index": "29",
+            "lanes": "51",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet29": {
+            "index": "30",
+            "lanes": "41",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet30": {
+            "index": "31",
+            "lanes": "49",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet31": {
+            "index": "32",
+            "lanes": "60",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet32": {
+            "index": "33",
+            "lanes": "50",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+		"Ethernet33": {
+            "index": "34",
+            "lanes": "58",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet34": {
+            "index": "35",
+            "lanes": "57",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet35": {
+            "index": "36",
+            "lanes": "59",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet36": {
+            "index": "37",
+            "lanes": "62",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet37": {
+            "index": "38",
+            "lanes": "63",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+		"Ethernet38": {
+            "index": "39",
+            "lanes": "64",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet39": {
+            "index": "40",
+            "lanes": "65",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet40": {
+            "index": "41",
+            "lanes": "66",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet41": {
+            "index": "42",
+            "lanes": "61",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet42": {
+            "index": "43",
+            "lanes": "68",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+		"Ethernet43": {
+            "index": "44",
+            "lanes": "69",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet44": {
+            "index": "45",
+            "lanes": "67",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet45": {
+            "index": "46",
+            "lanes": "71",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet46": {
+            "index": "47",
+            "lanes": "72",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
+        "Ethernet47": {
+            "index": "48",
+            "lanes": "70",
+            "breakout_modes": {
+                "1x25G": ["Eth44/1(Port44)"]
+            }
+        },
+
         "Ethernet48": {
             "index": "49,49,49,49",
             "lanes": "77,78,79,80",
