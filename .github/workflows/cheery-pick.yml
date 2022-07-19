@@ -66,10 +66,12 @@ jobs:
         git clean -xdff
         if ! git cherry-pick $sha;then
           echo cherry-pick failed.
-          echo '"Code Conflict with ${{ matrix.branch }} Branch": *' > .github/workflows/label.yml
+          echo "\"Code Conflict with ${{ matrix.branch }} Branch\":" > .github/workflows/label.yml
+          echo "- '*'" >> .github/workflows/label.yml
         else
           git push origin HEAD:sonicbld/${pr_id}-${{ matrix.branch }}
-          echo '"Created PR for ${{ matrix.branch }} Branch": *' > .github/workflows/label.yml
+          echo '"Created PR for ${{ matrix.branch }} Branch":' > .github/workflows/label.yml
+          echo "- '*'" >> .github/workflows/label.yml
         fi
         cat .github/workflows/label.yml
     - uses: actions/labeler@main
