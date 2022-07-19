@@ -20,9 +20,11 @@
 [
     {
         "SWITCH_TABLE:switch": {
-{% if "broadcom" not in asic_type and "marvell" not in asic_type %}
+{% if DEVICE_METADATA.localhost.type in ["ToRRouter", "LeafRouter"] %}
+{% if "broadcom" not in asic_type %}
             "vxlan_port": "{{ vxlan_port }}",
             "vxlan_router_mac": "{{ vxlan_mac }}",
+{% endif %}
 {% endif %}
             "ecmp_hash_seed": "{{ hash_seed_value }}",
             "lag_hash_seed": "{{ hash_seed_value }}",
