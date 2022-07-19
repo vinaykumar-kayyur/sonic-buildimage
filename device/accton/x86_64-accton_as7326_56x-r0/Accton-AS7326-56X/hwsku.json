@@ -11,7 +11,7 @@
         "Ethernet2": {
             "default_brkout_mode": "1x25G"
         },
-        
+     
         "Ethernet3": {
             "default_brkout_mode": "1x25G"
         },

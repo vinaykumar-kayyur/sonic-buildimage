@@ -356,7 +356,7 @@
                 "1x25G": ["Eth2/1(Port2)"]
             }
         },
-
+ 
         "Ethernet2": {
             "index": "3",
             "lanes": "4",
