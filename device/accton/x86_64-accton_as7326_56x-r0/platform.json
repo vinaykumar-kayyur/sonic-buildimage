@@ -345,7 +345,7 @@
             "index": "1",
             "lanes": "3",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth1/1(Port1)"]
             }
         },
 
@@ -353,7 +353,7 @@
             "index": "2",
             "lanes": "2",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth2/1(Port2)"]
             }
         },
 
@@ -361,7 +361,7 @@
             "index": "3",
             "lanes": "4",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth3/1(Port3)"]
             }
         },
 
@@ -369,7 +369,7 @@
             "index": "4",
             "lanes": "8",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth4/1(Port4)"]
             }
         },
 
@@ -377,7 +377,7 @@
             "index": "5",
             "lanes": "7",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth5/1(Port5)"]
             }
         },
 
@@ -385,7 +385,7 @@
             "index": "6",
             "lanes": "1",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth6/1(Port6)"]
             }
         },
 
@@ -393,7 +393,7 @@
             "index": "7",
             "lanes": "5",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth7/1(Port7)"]
             }
         },
 
@@ -401,7 +401,7 @@
             "index": "8",
             "lanes": "16",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth8/1(Port8)"]
             }
         },
 
@@ -409,7 +409,7 @@
             "index": "9",
             "lanes": "6",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth9/1(Port9)"]
             }
         },
 
@@ -417,7 +417,7 @@
             "index": "10",
             "lanes": "14",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth10/1(Port10)"]
             }
         },
 
@@ -425,7 +425,7 @@
             "index": "11",
             "lanes": "13",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth11/1(Port11)"]
             }
         },
 
@@ -433,7 +433,7 @@
             "index": "12",
             "lanes": "15",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth12/1(Port12)"]
             }
         },
 
@@ -441,7 +441,7 @@
             "index": "13",
             "lanes": "23",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth13/1(Port13)"]
             }
         },
 		
@@ -449,7 +449,7 @@
             "index": "14",
             "lanes": "22",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth14/1(Port14)"]
             }
         },
 
@@ -457,7 +457,7 @@
             "index": "15",
             "lanes": "24",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth15/1(Port15)"]
             }
         },
 
@@ -465,7 +465,7 @@
             "index": "16",
             "lanes": "32",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth16/1(Port16)"]
             }
         },
 
@@ -473,7 +473,7 @@
             "index": "17",
             "lanes": "31",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth17/1(Port17)"]
             }
         },
 
@@ -481,7 +481,7 @@
             "index": "18",
             "lanes": "21",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth18/1(Port18)"]
             }
         },
 		
@@ -489,7 +489,7 @@
             "index": "19",
             "lanes": "29",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth19/1(Port19)"]
             }
         },
 
@@ -497,7 +497,7 @@
             "index": "20",
             "lanes": "36",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth20/1(Port20)"]
             }
         },
 
@@ -505,7 +505,7 @@
             "index": "21",
             "lanes": "30",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth21/1(Port21)"]
             }
         },
 
@@ -513,7 +513,7 @@
             "index": "22",
             "lanes": "34",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth22/1(Port22)"]
             }
         },
 
@@ -521,7 +521,7 @@
             "index": "23",
             "lanes": "33",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth23/1(Port23)"]
             }
         },
 
@@ -529,7 +529,7 @@
             "index": "24",
             "lanes": "35",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth24/1(Port24)"]
             }
         },
 
@@ -537,7 +537,7 @@
             "index": "25",
             "lanes": "43",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth25/1(Port25)"]
             }
         },
 
@@ -545,7 +545,7 @@
             "index": "26",
             "lanes": "42",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth26/1(Port26)"]
             }
         },
 
@@ -553,7 +553,7 @@
             "index": "27",
             "lanes": "44",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth27/1(Port27)"]
             }
         },
 
@@ -561,7 +561,7 @@
             "index": "28",
             "lanes": "52",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth28/1(Port28)"]
             }
         },
 
@@ -569,7 +569,7 @@
             "index": "29",
             "lanes": "51",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth29/1(Port29)"]
             }
         },
 
@@ -577,7 +577,7 @@
             "index": "30",
             "lanes": "41",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth30/1(Port30)"]
             }
         },
 
@@ -585,7 +585,7 @@
             "index": "31",
             "lanes": "49",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth31/1(Port31)"]
             }
         },
 
@@ -593,7 +593,7 @@
             "index": "32",
             "lanes": "60",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth32/1(Port32)"]
             }
         },
 
@@ -601,7 +601,7 @@
             "index": "33",
             "lanes": "50",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth33/1(Port33)"]
             }
         },
 
@@ -609,7 +609,7 @@
             "index": "34",
             "lanes": "58",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth34/1(Port34)"]
             }
         },
 
@@ -617,7 +617,7 @@
             "index": "35",
             "lanes": "57",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth35/1(Port35)"]
             }
         },
 
@@ -625,7 +625,7 @@
             "index": "36",
             "lanes": "59",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth36/1(Port36)"]
             }
         },
 
@@ -633,7 +633,7 @@
             "index": "37",
             "lanes": "62",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth37/1(Port37)"]
             }
         },
 
@@ -641,7 +641,7 @@
             "index": "38",
             "lanes": "63",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth38/1(Port38)"]
             }
         },
 
@@ -649,7 +649,7 @@
             "index": "39",
             "lanes": "64",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth39/1(Port39)"]
             }
         },
 
@@ -657,7 +657,7 @@
             "index": "40",
             "lanes": "65",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth40/1(Port40)"]
             }
         },
 
@@ -665,7 +665,7 @@
             "index": "41",
             "lanes": "66",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth41/1(Port41)"]
             }
         },
 
@@ -673,7 +673,7 @@
             "index": "42",
             "lanes": "61",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth42/1(Port42)"]
             }
         },
 
@@ -681,7 +681,7 @@
             "index": "43",
             "lanes": "68",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth43/1(Port43)"]
             }
         },
 
@@ -697,7 +697,7 @@
             "index": "45",
             "lanes": "67",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth45/1(Port45)"]
             }
         },
 
@@ -705,7 +705,7 @@
             "index": "46",
             "lanes": "71",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth46/1(Port46)"]
             }
         },
 
@@ -713,7 +713,7 @@
             "index": "47",
             "lanes": "72",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth47/1(Port47)"]
             }
         },
 
@@ -721,7 +721,7 @@
             "index": "48",
             "lanes": "70",
             "breakout_modes": {
-                "1x25G": ["Eth44/1(Port44)"]
+                "1x25G": ["Eth48/1(Port48)"]
             }
         },
 
