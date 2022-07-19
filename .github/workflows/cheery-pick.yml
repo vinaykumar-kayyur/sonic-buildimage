@@ -61,13 +61,17 @@ jobs:
 
         # create PR
         set -x
-        git pull
-        git log -n 20 --oneline
         git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
         git checkout .
         git clean -xdff
         if ! git cherry-pick $sha;then
           echo cherry-pick failed.
+          echo "Code Conflict with ${{ matrix.branch }} Branch: *" > .github/workflows/label.yml
         else
           git push origin HEAD:sonicbld/${pr_id}-${{ matrix.branch }}
+          echo "Created PR for ${{ matrix.branch }} Branch: *" > .github/workflows/label.yml
         fi
+    - uses: actions/labeler@main
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        configuration-path: .github/workflows/label.yml
