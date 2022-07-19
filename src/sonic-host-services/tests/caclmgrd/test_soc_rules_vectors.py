@@ -25,7 +25,9 @@ CACLMGRD_SOC_TEST_VECTOR = [
                     "Loopback3|10.10.10.10/32": {
                         "NULL": "NULL",
                     }
-                }
+                },
+                "FEATURE": {
+                },
             },
             "expected_subprocess_calls": [
                 call("iptables -t nat -A POSTROUTING --destination 192.168.1.0/32 -j SNAT --to-source 10.10.10.10",shell=True, universal_newlines=True, stdout=-1)
