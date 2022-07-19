@@ -98,7 +98,7 @@ steps:
 
       # Mount nfs
       sudo mkdir /nfs
-      sudo mount -t nfs -o sec=sys,vers=4.1 172.16.131.132:/vol1 /nfs
+      sudo mount -t nfs -o sec=sys,vers=4.1 172.16.17.4:/nfs-int /nfs
       sudo chown nobody /nfs
       sudo chmod u=rwx,g=rwx,o=r /nfs
       df -h
