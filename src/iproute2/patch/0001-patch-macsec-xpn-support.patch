@@ -1,15 +1,15 @@
-From 22f385c0ebc8b73fa3063eeff2da1b37f4e6c0cc Mon Sep 17 00:00:00 2001
+From 129613207b2f1616507814fbe060a2ce317d0bbb Mon Sep 17 00:00:00 2001
 From: Ze Gan <ganze718@gmail.com>
 Date: Mon, 18 Jul 2022 15:07:15 +0000
 Subject: [PATCH] MACsec XPN support
 
 Signed-off-by: Ze Gan <ganze718@gmail.com>
 ---
- ip/ipmacsec.c | 83 +++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 71 insertions(+), 12 deletions(-)
+ ip/ipmacsec.c | 97 +++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 83 insertions(+), 14 deletions(-)
 
 diff --git a/ip/ipmacsec.c b/ip/ipmacsec.c
-index 18289ec..e1c7d1f 100644
+index 18289ec..fffe94a 100644
 --- a/ip/ipmacsec.c
 +++ b/ip/ipmacsec.c
 @@ -10,6 +10,7 @@
@@ -165,7 +165,7 @@ index 18289ec..e1c7d1f 100644
 +			print_uint(PRINT_ANY, "pn", " PN %u,",
 +				rta_getattr_u32(sa_attr[MACSEC_SA_ATTR_PN]));
 +		} else {
-+			print_uint(PRINT_ANY, "pn", " PN %" PRIu64 ",",
++			print_u64(PRINT_ANY, "pn", " PN %" PRIu64 ",",
 +				rta_getattr_u64(sa_attr[MACSEC_SA_ATTR_PN]));
 +		}
  
@@ -179,7 +179,33 @@ index 18289ec..e1c7d1f 100644
  		print_key(sa_attr[MACSEC_SA_ATTR_KEYID]);
  
  		print_txsa_stats(prefix, sa_attr[MACSEC_SA_ATTR_STATS]);
-@@ -1322,9 +1375,15 @@ static int macsec_parse_opt(struct link_util *lu, int argc, char **argv,
+@@ -965,13 +1018,23 @@ static void print_rx_sc(const char *prefix, __be64 sci, __u8 active,
+ 		print_string(PRINT_FP, NULL, "%s", prefix);
+ 		print_uint(PRINT_ANY, "an", "%u:",
+ 			   rta_getattr_u8(sa_attr[MACSEC_SA_ATTR_AN]));
+-		print_uint(PRINT_ANY, "pn", " PN %u,",
+-			   rta_getattr_u32(sa_attr[MACSEC_SA_ATTR_PN]));
++		if (!sa_attr[MACSEC_SA_ATTR_SSCI]) {
++			print_uint(PRINT_ANY, "pn", " PN %u,",
++				rta_getattr_u32(sa_attr[MACSEC_SA_ATTR_PN]));
++		} else {
++			print_u64(PRINT_ANY, "pn", " PN %" PRIu64 ",",
++				rta_getattr_u64(sa_attr[MACSEC_SA_ATTR_PN]));
++		}
+ 
+ 		print_bool(PRINT_JSON, "active", NULL, state);
+ 		print_string(PRINT_FP, NULL, " state %s,",
+ 			     state ? "on" : "off");
+ 
++		if (sa_attr[MACSEC_SA_ATTR_SSCI]) {
++			print_uint(PRINT_ANY, "ssci", " SSCI %u,",
++				ntohl(rta_getattr_u32(sa_attr[MACSEC_SA_ATTR_SSCI])));
++		}
++
+ 		print_key(sa_attr[MACSEC_SA_ATTR_KEYID]);
+ 
+ 		print_rxsa_stats(prefix, sa_attr[MACSEC_SA_ATTR_STATS]);
+@@ -1322,9 +1385,15 @@ static int macsec_parse_opt(struct link_util *lu, int argc, char **argv,
  			else if (strcmp(*argv, "gcm-aes-256") == 0 ||
  			         strcmp(*argv, "GCM-AES-256") == 0)
  				cipher.id = MACSEC_CIPHER_ID_GCM_AES_256;
