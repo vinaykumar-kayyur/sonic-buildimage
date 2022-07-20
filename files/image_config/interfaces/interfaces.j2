@@ -86,9 +86,6 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% for route in MGMT_INTERFACE[(name, prefix)]['forced_mgmt_routes'] %}
     up ip rule add pref 32764 to {{ route }} table {{ vrf_table }}
 {% endfor %}
-{% if prefix | ipv4 %}
-    up ip rule add pref 32764 to 10.20.6.16/32 table {{ vrf_table }}
-{% endif %}
     # management port down rules
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }} table {{ vrf_table }}
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }} table {{ vrf_table }}
@@ -96,9 +93,6 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% for route in MGMT_INTERFACE[(name, prefix)]['forced_mgmt_routes'] %}
     pre-down ip rule delete pref 32764 to {{ route }} table {{ vrf_table }}
 {% endfor %}
-{% if prefix | ipv4 %}
-    down ip rule delete pref 32764 to 10.20.6.16/32 table {{ vrf_table }}
-{% endif %}
 {# TODO: COPP policy type rules #}
 {% endfor %}
 {% else %}
