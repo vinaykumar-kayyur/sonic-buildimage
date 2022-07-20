@@ -8,8 +8,9 @@ Table of Contents
    * [<strong>Config Load and Save</strong>](#config-load-and-save)  
          * [Incremental Configuration](#incremental-configuration)  
    * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
-         * [ACL and Mirroring](#acl-and-mirroring)  
-         * [BGP Sessions](#bgp-sessions)  
+         * [ACL and Mirroring](#acl-and-mirroring)
+         * [BGP Device Global](#bgp-device-global)  
+         * [BGP Sessions](#bgp-sessions)
          * [BUFFER_PG](#buffer_pg)  
          * [Buffer pool](#buffer-pool)  
          * [Buffer profile](#buffer-profile)  
@@ -333,7 +334,21 @@ and migration plan
     }
 }
 ```
+### BGP Device Global 
 
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
+It has a STATE object containing device state like **tsa_enabled** 
+which is set to true if device is currently isolated using 
+traffic-shift-away (TSA) route-maps in BGP
+
+```
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "tsa_enabled": "true"
+    }
+}
+```
 ### BGP Sessions
 
 BGP session configuration is defined in **BGP_NEIGHBOR** table. BGP
@@ -422,22 +437,6 @@ When the system is running in dynamic buffer model, profiles can be:
         "profile": "static_profile"
     }
   }
-}
-
-```
-### BGP Device Global 
-
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
-It has a STATE object containing device state like **tsa_enabled** 
-which is set to true if device is currently isolated using 
-traffic-shift-away (TSA) route-maps in BGP
-
-```
-{
-"BGP_DEVICE_GLOBAL": {
-    "STATE": {
-        "tsa_enabled": "true"
-    }
 }
 
 ```
