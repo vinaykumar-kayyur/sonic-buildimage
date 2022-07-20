@@ -425,7 +425,22 @@ When the system is running in dynamic buffer model, profiles can be:
 }
 
 ```
+### BGP Device Global 
 
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
+It has a STATE object containing device state like **tsa_enabled** 
+which is set to true if device is currently isolated using 
+traffic-shift-away (TSA) route-maps in BGP
+
+```
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "tsa_enabled": "true"
+    }
+}
+
+```
 ### Buffer pool
 
 When the system is running in traditional buffer model, the size of all of the buffer pools and xoff of ingress_lossless_pool need to be configured explicitly.
