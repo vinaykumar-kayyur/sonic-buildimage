@@ -1,0 +1,51 @@
+name: PostCherryPick
+on:
+  pull_request_target:
+    types:
+    - closed
+    branches:
+    - '202205'
+    - '202111'
+    - '202106'
+    - '202012'
+
+jobs:
+  post_cherry_pick:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo $GITHUB_CONTEXT | jq
+    - name: Main
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+        TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        set -e
+        source .github/workflows/github_restapi.sh
+        issue_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.issue.href" | sed 's/"//g')
+        base_url=$(echo $issue_url | awk -F'/issues' '{print$1}')
+        repo_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.html.href" | awk -F'pull' '{print$1}' | sed 's/"//g')
+        base_ref=$(echo $GITHUB_CONTEXT | jq ".base_ref" | sed 's/"//g')
+        echo =============================
+        echo issue_url:     $issue_url
+        echo base_url:      $base_url
+        echo repo_url:      $repo_url
+        echo base_ref:      $base_ref
+        echo =============================
+        comments=$(list_comments ${{ secrets.GITHUB_TOKEN }} ${issue_url})
+        if [[ $(expr length "$comments") -lt "5" ]];then
+          exit 0
+        fi
+        count=$(echo $comments | jq 'length')
+        for (( i=0; i<$count; i++ ))
+        do
+          if [[ $(echo $result | jq ".[$i].user.login" | sed 's/"//g') == "github-actions[bot]" ]];then
+            origin_issue_url=$(echo $result | jq ".[$i].body" | sed 's/"//g' | sed 's/Original PR: //')
+            break
+          fi
+        done
+        # Add label
+        add_label "${{ secrets.GITHUB_TOKEN }}" "${origin_issue_url}" "Included in ${base_ref} Branch"

@@ -1,0 +1,113 @@
+name: PreCherryPick
+on:
+  pull_request_target:
+    types:
+    - labeled
+    - closed
+    branches:
+    - master
+
+jobs:
+  pre_cherry_pick:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: [202205,202111,202106,202012]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Debug
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo $GITHUB_CONTEXT | jq
+    - name: Main
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+        TOKEN: ${{ secrets.TOKEN }}
+      run: |
+        set -e
+        source .github/workflows/github_restapi.sh
+        sha=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.merge_commit_sha" | sed 's/"//g')
+        pr_id=$(echo $GITHUB_CONTEXT | jq ".event.number" | sed 's/"//g')
+        pr_body=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.body" | sed 's/"//g')
+        issues_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.issue.href" | sed 's/"//g')
+        base_url=$(echo $issues_url | awk -F'/issues' '{print$1}')
+        repo_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.html.href" | awk -F'pull' '{print$1}' | sed 's/"//g')
+        labels_count=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels | length")
+        labels_json=$(echo $GITHUB_CONTEXT | jq ".event.pull_request.labels")
+        echo =============================
+        echo SHA:           $sha
+        echo PRID:          $pr_id
+        echo issues_url:    $issues_url
+        echo base_url:      $base_url
+        echo repo_url:      $repo_url
+        echo labels_count:  $labels_count
+        echo =============================
+        create_pr=''
+        for (( i=0; i<$labels_count; i++ ))
+        do
+          label=$(echo $labels_json | jq ".[$i].name" | sed 's/"//g')
+          echo label ${i}: $label
+          if echo $label | grep -oE "Request for ${{ matrix.branch }} Branch";then
+            create_pr=1
+          fi
+          if echo $label | grep -oE "Created PR to ${{ matrix.branch }} Branch";then
+            echo "already has tag: Cherry-pick PR to ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
+          if echo $label | grep -oE "Included in ${{ matrix.branch }} Branch";then
+            echo "already has tag: Included in ${{ matrix.branch }} Branch, exit"
+            exit 0
+          fi
+        done
+        if [[ "$create_pr" != "1" ]];then
+          echo "Didn't find cherry-pick tag."
+          exit 0
+        fi
+
+        # Begin to cherry-pick PR
+        git checkout -b ${{ matrix.branch }} --track origin/${{ matrix.branch }}
+        git checkout .
+        git clean -xdff
+
+        git config user.name mssonicbld
+        git config user.email sonicbuildadmin@microsoft.com
+
+        git config credential.https://github.com.username mssonicbld
+        git remote add mssonicbld https://mssonicbld:${TOKEN}@github.com/mssonicbld/sonic-buildimage
+        git fetch mssonicbld
+        git remote -vv
+
+        if ! git cherry-pick $sha;then
+          echo 'cherry-pick failed.'
+          # Add label
+          add_label "${{ secrets.GITHUB_TOKEN }}" "${issues_url}" "Cherry Pick Conflict_${{ matrix.branch }}"
+          echo 'Add label "Cherry Pick Conflict_${{ matrix.branch }}" success'
+        else
+          # Create PR to release branch
+          git push mssonicbld HEAD:${pr_id}-${{ matrix.branch }} -f
+          result=$(create_pr ${{ secrets.TOKEN }} ${base_url} "auto cherry-pick ${pr_id} into ${{ matrix.branch }}" "mssonicbld:${pr_id}-${{ matrix.branch }}" "${{ matrix.branch }}")
+          if [[ $(expr length "$result") -lt "10" ]];then
+            echo result:
+            echo $result
+            exit 3
+          fi
+          new_issue_url=$(echo $result | jq '.issue_url' | sed 's/"//g')
+          echo new_issue_url: $new_issue_url
+
+          # Add label
+          add_label "${{ secrets.GITHUB_TOKEN }}" "${issues_url}" "Created PR to ${{ matrix.branch }} Branch"
+          echo Add label Created PR to ${{ matrix.branch }} Branch
+
+          # Add comment to new PR
+          add_comment ${{ secrets.GITHUB_TOKEN }} ${new_issue_url} "Original PR: ${issues_url}"
+          echo Add comment to new PR
+
+          # Add comment to old PR
+          add_comment ${{ secrets.GITHUB_TOKEN }} ${issues_url} "Cherry-pick PR to ${{ matrix.branch }}: ${new_issue_url}"
+          echo Add comment to old PR
+        fi
