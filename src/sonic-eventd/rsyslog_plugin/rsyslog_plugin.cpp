@@ -2,20 +2,28 @@
 #include <vector>
 #include <fstream>
 #include <regex>
+#include <ctime>
+#include <unordered_map>
 #include "rsyslog_plugin.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
 
-bool RsyslogPlugin::onMessage(string msg) {
+bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
     string tag;
     event_params_t paramDict;
-    if(!m_parser->parseMessage(msg, tag, paramDict)) {
+    if(!m_parser->parseMessage(msg, tag, paramDict, luaState)) {
         SWSS_LOG_DEBUG("%s was not able to be parsed into a structured event\n", msg.c_str());
         return false;
     } else {
+	string timestamp = paramDict["timestamp"];
+        string formattedTimestamp = m_timestampFormatter->changeTimestampFormat(paramDict["timestamp"]);
+	if(timestamp.empty()) {
+            SWSS_LOG_ERROR("Timestamp Formatter was unable to format %s.\n", timestamp.c_str());
+	}
+	paramDict["timestamp"] = formattedTimestamp;
         int returnCode = event_publish(m_eventHandle, tag, &paramDict);
-        if (returnCode != 0) {
+        if (returnCode != 0 || timestamp.empty()) {
             SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s.\n", tag.c_str());
             return false;
         }
@@ -37,14 +45,17 @@ bool RsyslogPlugin::createRegexList() {
         return false;
     }
 
-    string regexString;
     regex expression;
 
     for(long unsigned int i = 0; i < m_parser->m_regexList.size(); i++) {
+        string regexString = "([a-zA-Z]{3} [0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6}) ";
         try {
-            regexString = m_parser->m_regexList[i]["regex"];
+	    string givenRegex = m_parser->m_regexList[i]["regex"];
+            regexString += givenRegex;
             string tag = m_parser->m_regexList[i]["tag"];
             vector<string> params = m_parser->m_regexList[i]["params"];
+	    params.insert(params.begin(), "timestamp"); // each event will have timestamp so inserting it
+	    m_parser->m_regexList[i]["params"] = params;
             regex expr(regexString);
             expression = expr;
         } catch (domain_error& deException) {
@@ -56,23 +67,28 @@ bool RsyslogPlugin::createRegexList() {
 	}
         m_parser->m_expressions.push_back(expression);
     }
+
     if(m_parser->m_expressions.empty()) {
         SWSS_LOG_ERROR("Empty list of regex expressions.\n");
         return false;
     }
+
     regexFile.close();
     return true;
 }
 
 void RsyslogPlugin::run() {
+    lua_State* luaState = luaL_newstate();
+    luaL_openlibs(luaState);
     while(true) {
         string line;
         getline(cin, line);
         if(line.empty()) {
             continue;
         }
-        onMessage(line);
+        onMessage(line, luaState);
     }
+    lua_close(luaState);
 }
 
 int RsyslogPlugin::onInit() {
@@ -87,7 +103,9 @@ int RsyslogPlugin::onInit() {
 }
 
 RsyslogPlugin::RsyslogPlugin(string moduleName, string regexPath) {
+    const string timestampFormatRegex = "([a-zA-Z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})";
     m_parser = unique_ptr<SyslogParser>(new SyslogParser());
+    m_timestampFormatter = unique_ptr<TimestampFormatter>(new TimestampFormatter(timestampFormatRegex));
     m_moduleName = moduleName;
     m_regexPath = regexPath;
 }

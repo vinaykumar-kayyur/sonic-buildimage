@@ -10,7 +10,7 @@
  *
 */
 
-bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t& paramMap) {
+bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t& paramMap, lua_State* luaState) {
     for(long unsigned int i = 0; i < m_regexList.size(); i++) {
         smatch matchResults;
         vector<string> params = m_regexList[i]["params"];
@@ -19,9 +19,35 @@ bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t
         }
         // found matching regex
         eventTag = m_regexList[i]["tag"];
-        transform(params.begin(), params.end(), matchResults.begin() + 1, inserter(paramMap, paramMap.end()), [](string a, string b) {
-            return make_pair(a,b);
-        });
+	// check params for lua code
+	for(long unsigned int j = 0; j < params.size(); j++) {
+            auto delimPos = params[j].find(':');
+	    string resultValue = matchResults[j + 1].str();
+            if(delimPos != string::npos) { // have to execute lua script
+                string param = params[j].substr(0, delimPos);
+                string luaString = params[j].substr(delimPos + 1); 
+		if(luaString.empty()) { // empty lua code
+		    SWSS_LOG_INFO("Lua code missing after :, skipping operation");
+		    paramMap[param] = resultValue;
+                    continue; 
+		}
+		const char* luaCode = luaString.c_str();
+		lua_pushstring(luaState, resultValue.c_str());
+		lua_setglobal(luaState, "arg");
+		if(luaL_dostring(luaState, luaCode) == 0) {
+                    lua_pop(luaState, lua_gettop(luaState));
+		} else {
+                    SWSS_LOG_ERROR("Invalid lua code, unable to do operation.\n");
+		    paramMap[param] = resultValue;
+		    continue;
+		}
+		lua_getglobal(luaState, "ret");
+		paramMap[param] = lua_tostring(luaState, -1);
+		lua_pop(luaState, 1);
+	    } else {
+                paramMap[params[j]] = resultValue;
+	    }
+	}
         return true;
     }
     return false;
