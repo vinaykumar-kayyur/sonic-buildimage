@@ -37,7 +37,7 @@ resources:
     ref: master
 
 variables:
-- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
+- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - template: .azure-pipelines/template-variables.yml
 - ${{ else }}:
@@ -53,7 +53,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
@@ -77,7 +77,7 @@ stages:
 
 - stage: Test
   dependsOn: BuildVS
-  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), succeeded())
+  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues'))
   variables:
   - name: inventory
     value: veos_vtb
