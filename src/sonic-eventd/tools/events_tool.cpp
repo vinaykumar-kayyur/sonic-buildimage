@@ -141,33 +141,6 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
 }
 
 
-#if 0
-void
-parse_file(const string infile)
-{
-    ifstream input(infile);
-    string line;
-    
-    while(getline( input, line )) {
-        const auto &data = nlohmann::json::parse(line);
-        printf("is_obj=%d is_arr=%d\n", data.is_object(), data.is_array());
-        printf("size=%d\n", (int)data.size());
-        string k(data.begin().key());
-        printf("key=%s\n", k.c_str());
-        const auto &val = data.begin().value();
-        printf("val: is_obj=%d is_arr=%d\n", val.is_object(), val.is_array());
-        printf("Params:\n");
-        for(auto par_it = val.begin(); par_it != val.end(); par_it++) {
-            string k(par_it.key());
-            string v(par_it.value());
-            printf("   key=%s\n",k.c_str());
-            printf("   val=%s\n", v.c_str());
-        }
-        printf("------------------------------\n");
-    }
-}
-#endif
-
 int
 do_send(const string infile, int cnt, int pause)
 {
@@ -215,14 +188,6 @@ do_send(const string infile, int cnt, int pause)
             lst.push_back(evt);
         }
     }
-
-#if 0
-    cout << "Events to send\n";
-    for(lst_t::const_iterator itc=lst.begin(); itc != lst.end(); ++itc) {
-        cout << "tag:" << itc->tag << " params:" << t_map_to_str(itc->params) << "\n";
-    }
-    cout << "Events END\n";
-#endif
 
     if (lst.empty()) {
         evt_t evt = {
