@@ -442,6 +442,7 @@ When the system is running in dynamic buffer model, profiles can be:
 }
 
 ```
+
 ### Buffer pool
 
 When the system is running in traditional buffer model, the size of all of the buffer pools and xoff of ingress_lossless_pool need to be configured explicitly.
