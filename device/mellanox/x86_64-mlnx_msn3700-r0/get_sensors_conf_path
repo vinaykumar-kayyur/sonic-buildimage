@@ -11,7 +11,7 @@ function get_sensor_conf_path() {
     local _SWB_RESPIN_VERSION="0"
     if [[ -e $SWB_RESPIN_VERSION ]]; then
         _SWB_RESPIN_VERSION=$(cat $SWB_RESPIN_VERSION 2>&1)
-        if [[ "$_SWB_RESPIN_VERSION" == "2" -o "$_SWB_RESPIN_VERSION" == "6"]]; then
+        if (($_SWB_RESPIN_VERSION == "2" || $_SWB_RESPIN_VERSION == "6")); then
             if [[ -e $SENSORS_SWB_RESPIN_CONF_FILE ]]; then
                 echo $SENSORS_SWB_RESPIN_CONF_FILE
                 return
