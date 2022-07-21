@@ -18,8 +18,7 @@ using namespace std;
 using namespace swss;
 using json = nlohmann::json;
 
-TEST(syslog_parser, matching_regex) {
-    
+TEST(syslog_parser, matching_regex) {    
     json jList = json::array();
     vector<regex> testExpressions;
     string regexString = "timestamp (.*) message (.*) other_data (.*)";
@@ -166,14 +165,8 @@ TimestampFormatter* createFormatter() {
     return formatter;
 }
 
-TEST(rsyslog_plugin, onInit_invalidJS0N) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_1.rc.json");
-    EXPECT_NE(0, plugin->onInit());
-    delete plugin;
-}
-
 TEST(rsyslog_plugin, onInit_emptyJSON) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_6.rc.json");
+    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_1.rc.json");
     EXPECT_NE(0, plugin->onInit());
     delete plugin;
 }

@@ -23,7 +23,7 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
 	}
 	paramDict["timestamp"] = formattedTimestamp;
         int returnCode = event_publish(m_eventHandle, tag, &paramDict);
-        if (returnCode != 0 || timestamp.empty()) {
+        if(returnCode != 0) {
             SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s.\n", tag.c_str());
             return false;
         }
