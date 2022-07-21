@@ -142,7 +142,9 @@ def main():
     args = parser.parse_args()
 
     if not is_service_active("docker"):
-        syslog.syslog(syslog.LOG_INFO, "[memory_checker] Exits without checking memory usage of container '{}' since docker daemon is not running!".format(args.container_name))
+        syslog.syslog(syslog.LOG_INFO,
+                      "[memory_checker] Exits without checking memory usage of container '{}' since docker daemon is not running!"
+                      .format(args.container_name))
         sys.exit(0)
 
     running_container_names = get_running_container_names()
