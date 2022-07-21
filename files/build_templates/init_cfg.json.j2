@@ -27,6 +27,11 @@
             "POLL_INTERVAL": "10000"
         }
     },
+    "BGP_DEVICE_GLOBAL": {
+        "STATE": {
+            "tsa_enabled": "false"
+        }
+    },
 {%- set features = [("bgp", "enabled", false, "enabled"),
                    ("database", "always_enabled", false, "always_enabled"),
                    ("lldp", "enabled", true, "enabled"),
@@ -80,6 +85,8 @@
             "rate_limit_interval" : "180",
             "max_techsupport_limit" : "10.0",
             "max_core_limit" : "5.0",
+            "available_mem_threshold": "10.0",
+            "min_available_mem": "200",
             "since" : "2 days ago"
         }
     },
@@ -89,7 +96,8 @@
 {%- if enable_auto_tech_support == "y" %}
             "state" : "enabled", {% else %}
             "state" : "disabled", {% endif %}
-            "rate_limit_interval" : "600"
+            "rate_limit_interval" : "600",
+            "available_mem_threshold": "10.0"
         }{%if not loop.last %},{% endif -%}
 {% endfor %}
     },

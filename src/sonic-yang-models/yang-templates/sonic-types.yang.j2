@@ -117,6 +117,12 @@ module sonic-types {
         }
     }
 
+    typedef loopback_action {
+        type string {
+            pattern "drop|forward";
+        }
+    }
+
     typedef admin_mode {
         type enumeration {
             enum enabled;
@@ -254,6 +260,14 @@ module sonic-types {
         type string {
             length 1..63;
         }
+    }
+
+    typedef vnid_type {
+        type uint32 {
+             range "1..16777215";
+        }
+        description
+            "VXLAN Network Identifier";
     }
 
     {% if yang_model_type == "cvl" %}

@@ -29,6 +29,9 @@ include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx-rpc.mk
 include $(PLATFORM_PATH)/../components/docker-gbsyncd-credo.mk
+ifeq ($(INCLUDE_GBSYNCD_BRONCOS), y)
+include $(PLATFORM_PATH)/../components/docker-gbsyncd-broncos.mk
+endif
 
 BCMCMD = bcmcmd
 $(BCMCMD)_URL = "https://sonicstorage.blob.core.windows.net/packages/20190307/bcmcmd?sv=2015-04-05&sr=b&sig=sUdbU7oVbh5exbXXHVL5TDFBTWDDBASHeJ8Cp0B0TIc%3D&se=2038-05-06T22%3A34%3A19Z&sp=r"
@@ -42,8 +45,8 @@ SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) \
              $(DOCKER_FPM)
 
 # Inject brcm sai into syncd
-$(SYNCD)_DEPENDS += $(BRCM_SAI) $(BRCM_SAI_DEV)
-$(SYNCD)_UNINSTALLS += $(BRCM_SAI_DEV) $(BRCM_SAI)
+$(SYNCD)_DEPENDS += $(BRCM_XGS_SAI) $(BRCM_XGS_SAI_DEV)
+$(SYNCD)_UNINSTALLS += $(BRCM_XGS_SAI_DEV) $(BRCM_XGS_SAI)
 
 ifeq ($(ENABLE_SYNCD_RPC),y)
 $(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)
