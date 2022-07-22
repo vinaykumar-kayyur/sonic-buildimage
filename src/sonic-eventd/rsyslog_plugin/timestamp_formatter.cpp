@@ -47,14 +47,13 @@ string TimestampFormatter::getYear(string timestamp) {
     return year;
 }
 
-string TimestampFormatter::changeTimestampFormat(string timestamp) {
+string TimestampFormatter::changeTimestampFormat(string message) {
     smatch dateComponents;
     string formattedTimestamp; // need to change format of Mmm dd hh:mm:ss.SSSSSS to YYYY-mm-ddThh:mm:ss.SSSSSSZ
-    if(!regex_search(timestamp, dateComponents, m_expression) || dateComponents.size() != 4) {
-        SWSS_LOG_ERROR("Timestamp unable to be broken down into components.\n");
+    if(!regex_search(message, dateComponents, m_expression) || dateComponents.size() != 4) { //whole,month,day,time
+        printf("Timestamp unable to be broken down into components.\n");
         return ""; // empty string is error
     }
-
     string month;
     auto it = g_monthDict.find(dateComponents[1].str());
     if(it != g_monthDict.end()) {
@@ -63,16 +62,19 @@ string TimestampFormatter::changeTimestampFormat(string timestamp) {
         SWSS_LOG_ERROR("Timestamp month was given in wrong format.\n");
         return "";
     }
-
     string day = dateComponents[2].str();
     if(day.size() == 1) { // convert 1 -> 01
        day.insert(day.begin(), '0');
     }
-
     string time = dateComponents[3].str();
     string currentTimestamp = month + day + time;
     string year = getYear(currentTimestamp);
 
     formattedTimestamp = year + "-" + month + "-" + day + "T" + time + "Z";
     return formattedTimestamp;
+}
+
+TimestampFormatter::TimestampFormatter(string timestampFormatRegex) {
+    regex expr(timestampFormatRegex);
+    m_expression = expr;
 }

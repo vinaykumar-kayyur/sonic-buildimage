@@ -1,6 +1,6 @@
 #ifndef TIMESTAMP_FORMATTER_H
 #define TIMESTAMP_FORMATTER_H
-
+#include <iostream>
 #include <string>
 #include <regex>
 #include <ctime>
@@ -13,11 +13,8 @@
 
 class TimestampFormatter {
 public:
-    std::string changeTimestampFormat(std::string timestamp);
-    TimestampFormatter(std::string regexFormatString) {
-        std::regex expr(regexFormatString);
-	m_expression = expr;
-    }
+    std::string changeTimestampFormat(std::string message);
+    TimestampFormatter(std::string timestampFormatRegex);
     std::string m_storedTimestamp;
     std::string m_storedYear;
 private:

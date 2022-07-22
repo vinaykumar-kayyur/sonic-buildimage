@@ -6,6 +6,7 @@ extern "C"
 }
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <regex>
 #include "gtest/gtest.h"
 #include "json.hpp"
@@ -21,11 +22,11 @@ using json = nlohmann::json;
 TEST(syslog_parser, matching_regex) {    
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = "timestamp (.*) message (.*) other_data (.*)";
+    string regexString = "message (.*) other_data (.*) even_more_data (.*)";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = { "timestamp", "message", "other_data" };
+    jTest["params"] = { "message", "other_data", "even_more_data" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -34,23 +35,56 @@ TEST(syslog_parser, matching_regex) {
     event_params_t paramDict;
 
     event_params_t expectedDict;
-    expectedDict["timestamp"] = "test_timestamp";
     expectedDict["message"] = "test_message";
     expectedDict["other_data"] = "test_data";
+    expectedDict["even_more_data"] = "test_data";
 
-    SyslogParser* parser = new SyslogParser();
+    unique_ptr<SyslogParser> parser(new SyslogParser());
     parser->m_expressions = testExpressions;
     parser->m_regexList = jList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
-    bool success = parser->parseMessage("timestamp test_timestamp message test_message other_data test_data", tag, paramDict, luaState);
+    bool success = parser->parseMessage("message test_message other_data test_data even_more_data test_data", tag, paramDict, luaState);
     EXPECT_EQ(true, success);
     EXPECT_EQ("test_tag", tag);
     EXPECT_EQ(expectedDict, paramDict);
     
     lua_close(luaState);
-    delete parser;
+}
+
+TEST(syslog_parser, matching_regex_timestamp) {    
+    json jList = json::array();
+    vector<regex> testExpressions;
+    string regexString = "message (.*) other_data (.*)";
+    json jTest;
+    jTest["tag"] = "test_tag";
+    jTest["regex"] = regexString;
+    jTest["params"] = { "message", "other_data" };
+    jList.push_back(jTest);
+    regex expression(regexString);
+    testExpressions.push_back(expression);
+
+    string tag;
+    event_params_t paramDict;
+
+    event_params_t expectedDict;
+    expectedDict["message"] = "test_message";
+    expectedDict["other_data"] = "test_data";
+    expectedDict["timestamp"] = "2022-07-21T02:10:00.000000Z";
+
+    unique_ptr<SyslogParser> parser(new SyslogParser());
+    parser->m_expressions = testExpressions;
+    parser->m_regexList = jList;
+    lua_State* luaState = luaL_newstate();
+    luaL_openlibs(luaState);
+
+    bool success = parser->parseMessage("Jul 21 02:10:00.000000 message test_message other_data test_data", tag, paramDict, luaState);
+    EXPECT_EQ(true, success);
+    EXPECT_EQ("test_tag", tag);
+    EXPECT_EQ(expectedDict, paramDict);
+    
+    lua_close(luaState);
 }
 
 TEST(syslog_parser, no_matching_regex) {
@@ -68,7 +102,7 @@ TEST(syslog_parser, no_matching_regex) {
     string tag;
     event_params_t paramDict;
 
-    SyslogParser* parser = new SyslogParser();
+    unique_ptr<SyslogParser> parser(new SyslogParser());
     parser->m_expressions = testExpressions;
     parser->m_regexList = jList;
     lua_State* luaState = luaL_newstate();
@@ -78,7 +112,6 @@ TEST(syslog_parser, no_matching_regex) {
     EXPECT_EQ(false, success);
 
     lua_close(luaState);
-    delete parser;
 }
 
 TEST(syslog_parser, lua_code_valid_1) {
@@ -102,7 +135,7 @@ TEST(syslog_parser, lua_code_valid_1) {
     expectedDict["major-code"] = "2";
     expectedDict["minor-code"] = "2";
 
-    SyslogParser* parser = new SyslogParser();
+    unique_ptr<SyslogParser> parser(new SyslogParser());
     parser->m_expressions = testExpressions;
     parser->m_regexList = jList;
     lua_State* luaState = luaL_newstate();
@@ -114,7 +147,6 @@ TEST(syslog_parser, lua_code_valid_1) {
     EXPECT_EQ(expectedDict, paramDict);
     
     lua_close(luaState);
-    delete parser;
 }
 
 TEST(syslog_parser, lua_code_valid_2) {
@@ -138,7 +170,7 @@ TEST(syslog_parser, lua_code_valid_2) {
     expectedDict["major-code"] = "6";
     expectedDict["minor-code"] = "2";
 
-    SyslogParser* parser = new SyslogParser();
+    unique_ptr<SyslogParser> parser(new SyslogParser());
     parser->m_expressions = testExpressions;
     parser->m_regexList = jList;
     lua_State* luaState = luaL_newstate();
@@ -150,43 +182,26 @@ TEST(syslog_parser, lua_code_valid_2) {
     EXPECT_EQ(expectedDict, paramDict);
     
     lua_close(luaState);
-    delete parser;
-
-}
-
-RsyslogPlugin* createPlugin(string path) {
-    RsyslogPlugin* plugin = new RsyslogPlugin("test_mod_name", path);
-    return plugin;
-}
-
-TimestampFormatter* createFormatter() {
-    const string timestampFormatRegex = "([a-zA-Z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})";
-    TimestampFormatter* formatter = new TimestampFormatter(timestampFormatRegex);
-    return formatter;
 }
 
 TEST(rsyslog_plugin, onInit_emptyJSON) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_1.rc.json");
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_1.rc.json"));
     EXPECT_NE(0, plugin->onInit());
-    delete plugin;
 }
 
 TEST(rsyslog_plugin, onInit_missingRegex) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_3.rc.json");
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_3.rc.json"));
     EXPECT_NE(0, plugin->onInit());
-    delete plugin;
 }
 
 TEST(rsyslog_plugin, onInit_invalidRegex) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_4.rc.json");
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_4.rc.json"));
     EXPECT_NE(0, plugin->onInit());
-    delete plugin;
 }
 
 TEST(rsyslog_plugin, onMessage) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_2.rc.json");
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_2.rc.json"));
     EXPECT_EQ(0, plugin->onInit());
-
     ifstream infile("./rsyslog_plugin_tests/test_syslogs.txt");
     string logMessage;
     bool parseResult;
@@ -197,13 +212,11 @@ TEST(rsyslog_plugin, onMessage) {
     }
     lua_close(luaState);
     infile.close();
-    delete plugin;
 }
 
 TEST(rsyslog_plugin, onMessage_noParams) {
-    auto plugin = createPlugin("./rsyslog_plugin_tests/test_regex_5.rc.json");
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
     EXPECT_EQ(0, plugin->onInit());
-
     ifstream infile("./rsyslog_plugin_tests/test_syslogs_2.txt");
     string logMessage;
     bool parseResult;
@@ -214,11 +227,11 @@ TEST(rsyslog_plugin, onMessage_noParams) {
     }
     lua_close(luaState);
     infile.close();
-    delete plugin;
 }
 
 TEST(timestampFormatter, changeTimestampFormat) {
-    auto formatter = createFormatter();
+    string timestampFormatRegex = "([a-zA-Z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})";
+    unique_ptr<TimestampFormatter> formatter(new TimestampFormatter(timestampFormatRegex));
     
     string timestampOne = "Jul 20 10:09:40.230874";
     string timestampTwo = "Jan 1 00:00:00.000000";

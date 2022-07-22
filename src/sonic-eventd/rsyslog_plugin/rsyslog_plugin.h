@@ -10,7 +10,6 @@ extern "C"
 #include <string>
 #include <memory>
 #include "syslog_parser.h"
-#include "timestamp_formatter.h"
 #include "events.h"
 #include "logger.h"
 
@@ -31,7 +30,6 @@ public:
     RsyslogPlugin(string moduleName, string regexPath);
 private:
     unique_ptr<SyslogParser> m_parser;
-    unique_ptr<TimestampFormatter> m_timestampFormatter;
     event_handle_t m_eventHandle;
     string m_regexPath;
     string m_moduleName;
