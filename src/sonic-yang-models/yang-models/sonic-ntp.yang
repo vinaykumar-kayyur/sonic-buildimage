@@ -17,14 +17,16 @@ module sonic-ntp {
         prefix mvrf;
     }
 
-    import sonic-portchannel {
-        prefix lag;
-    }
-    /* comment out sonic-vlan until related build issue is fixed
-    import sonic-vlan {
-        prefix vlan;
-    }
-    */
+    // Comment sonic-portchannel import here until libyang back-links issue is resolved for PORTCHANNEL leaf reference.
+    // import sonic-portchannel {
+    //     prefix lag;
+    // }
+
+    // Comment sonic-vlan import here until libyang back-links issue is resolved for VLAN leaf reference.
+    //  import sonic-vlan {
+    //      prefix vlan;
+    //  }
+
     import sonic-loopback-interface {
         prefix lo;
     }
@@ -54,19 +56,22 @@ module sonic-ntp {
                         type leafref {
                             path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
                         }
-                        type leafref {
-                            path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name;
-                        }
-                        /*
-                        type leafref {
-                            path /vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name;
-                        }
-                        */
+                        // Comment PORTCHANNEL leaf reference here until libyang back-links issue is resolved and use PORTCHANNEL string pattern
+                        // type leafref {
+                        //     path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                        // }
+                        // Comment VLAN leaf reference here until libyang back-links issue is resolved and use VLAN string pattern
+                        //type leafref {
+                        //    path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
+                        //}
                         type leafref {
                             path /lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name;
                         }
                         type leafref {
                             path /mprt:sonic-mgmt_port/mprt:MGMT_PORT/mprt:MGMT_PORT_LIST/mprt:name;
+                        }
+                        type string {
+                            pattern '(Vlan([0-9]{1,3}|[1-3][0-9]{3}|[4][0][0-8][0-9]|[4][0][9][0-4]))|(PortChannel[0-9]{1,4})';
                         }
                     }
 

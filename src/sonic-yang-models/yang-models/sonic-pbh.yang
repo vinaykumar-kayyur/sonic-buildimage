@@ -13,9 +13,10 @@ module sonic-pbh {
 		prefix port;
 	}
 
-	import sonic-portchannel {
-		prefix lag;
-	}
+    // Comment sonic-portchannel import here until libyang back-links issue is resolved for PORTCHANNEL leaf reference.
+	// import sonic-portchannel {
+	// 	prefix lag;
+	// }
 
 	description "PBH YANG Module for SONiC OS: hashing for NVGRE & VxLAN with IPv4/IPv6 inner 5-tuple";
 
@@ -240,8 +241,12 @@ module sonic-pbh {
 						type leafref {
 							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
 						}
-						type leafref {
-							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+		                // Comment PORTCHANNEL leaf reference here until libyang back-links issue is resolved and use PORTCHANNEL string pattern
+						// type leafref {
+						// 	path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+						// }
+						type string {
+							pattern 'PortChannel[0-9]{1,4}';
 						}
 					}
 				}
