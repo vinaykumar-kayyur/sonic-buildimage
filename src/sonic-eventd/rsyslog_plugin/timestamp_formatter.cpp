@@ -51,7 +51,7 @@ string TimestampFormatter::changeTimestampFormat(string message) {
     smatch dateComponents;
     string formattedTimestamp; // need to change format of Mmm dd hh:mm:ss.SSSSSS to YYYY-mm-ddThh:mm:ss.SSSSSSZ
     if(!regex_search(message, dateComponents, m_expression) || dateComponents.size() != 4) { //whole,month,day,time
-        printf("Timestamp unable to be broken down into components.\n");
+        SWSS_LOG_ERROR("Timestamp unable to be broken down into components.\n");
         return ""; // empty string is error
     }
     string month;

@@ -66,6 +66,6 @@ bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t
 }
 
 SyslogParser::SyslogParser() {
-    string timestampFormatRegex = "([a-zA-Z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6}).*";
+    string timestampFormatRegex = "([a-zA-Z]{3})\\s*([0-9]{1,2})\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6}).*";
     m_timestampFormatter = unique_ptr<TimestampFormatter>(new TimestampFormatter(timestampFormatRegex));
 }
