@@ -1,6 +1,7 @@
 #include <iostream>
 #include "timestamp_formatter.h"
 #include "logger.h"
+#include "events.h"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ using namespace std;
  *
  */
 
-const unordered_map<string, string> g_monthDict {
+static const unordered_map<string, string> g_monthDict {
     { "Jan", "01" },
     { "Feb", "02" },
     { "Mar", "03" },
@@ -47,34 +48,27 @@ string TimestampFormatter::getYear(string timestamp) {
     return year;
 }
 
-string TimestampFormatter::changeTimestampFormat(string message) {
-    smatch dateComponents;
-    string formattedTimestamp; // need to change format of Mmm dd hh:mm:ss.SSSSSS to YYYY-mm-ddThh:mm:ss.SSSSSSZ
-    if(!regex_search(message, dateComponents, m_expression) || dateComponents.size() != 4) { //whole,month,day,time
-        SWSS_LOG_ERROR("Timestamp unable to be broken down into components.\n");
-        return ""; // empty string is error
+string TimestampFormatter::changeTimestampFormat(vector<string> dateComponents) {
+    if(dateComponents.size() < 3) {
+        SWSS_LOG_ERROR("Timestamp formatter unable to format due to invalid input");
+        return "";
     }
+    string formattedTimestamp; // need to change format of Mmm dd hh:mm:ss.SSSSSS to YYYY-mm-ddThh:mm:ss.SSSSSSZ
     string month;
-    auto it = g_monthDict.find(dateComponents[1].str());
+    auto it = g_monthDict.find(dateComponents[0]);
     if(it != g_monthDict.end()) {
         month = it->second;
     } else {
         SWSS_LOG_ERROR("Timestamp month was given in wrong format.\n");
         return "";
     }
-    string day = dateComponents[2].str();
+    string day = dateComponents[1];
     if(day.size() == 1) { // convert 1 -> 01
        day.insert(day.begin(), '0');
     }
-    string time = dateComponents[3].str();
+    string time = dateComponents[2];
     string currentTimestamp = month + day + time;
     string year = getYear(currentTimestamp);
-
     formattedTimestamp = year + "-" + month + "-" + day + "T" + time + "Z";
     return formattedTimestamp;
-}
-
-TimestampFormatter::TimestampFormatter(string timestampFormatRegex) {
-    regex expr(timestampFormatRegex);
-    m_expression = expr;
 }

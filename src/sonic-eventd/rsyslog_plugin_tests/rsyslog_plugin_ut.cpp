@@ -22,11 +22,11 @@ using json = nlohmann::json;
 TEST(syslog_parser, matching_regex) {    
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = "message (.*) other_data (.*) even_more_data (.*)";
+    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*message (.*) other_data (.*) even_more_data (.*)";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = { "message", "other_data", "even_more_data" };
+    jTest["params"] = { "month", "day", "time", "message", "other_data", "even_more_data" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -56,11 +56,11 @@ TEST(syslog_parser, matching_regex) {
 TEST(syslog_parser, matching_regex_timestamp) {    
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = "message (.*) other_data (.*)";
+    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*message (.*) other_data (.*)";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = { "message", "other_data" };
+    jTest["params"] = { "month", "day", "time", "message", "other_data" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -90,11 +90,11 @@ TEST(syslog_parser, matching_regex_timestamp) {
 TEST(syslog_parser, no_matching_regex) {
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = "no match";
+    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\s*no match";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = vector<string>();
+    jTest["params"] = { "month", "day", "time" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -117,11 +117,11 @@ TEST(syslog_parser, no_matching_regex) {
 TEST(syslog_parser, lua_code_valid_1) {
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = ".* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
+    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*.* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = { "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
+    jTest["params"] = { "month", "day", "time", "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -152,11 +152,11 @@ TEST(syslog_parser, lua_code_valid_1) {
 TEST(syslog_parser, lua_code_valid_2) {
     json jList = json::array();
     vector<regex> testExpressions;
-    string regexString = ".* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
+    string regexString = "([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*.* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
     json jTest;
     jTest["tag"] = "test_tag";
     jTest["regex"] = regexString;
-    jTest["params"] = { "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
+    jTest["params"] = { "month", "day", "time", "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
     jList.push_back(jTest);
     regex expression(regexString);
     testExpressions.push_back(expression);
@@ -169,6 +169,7 @@ TEST(syslog_parser, lua_code_valid_2) {
     expectedDict["ip"] = "10.10.24.216";
     expectedDict["major-code"] = "6";
     expectedDict["minor-code"] = "2";
+    expectedDict["timestamp"] = "2022-12-03T12:36:24.503424Z";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
     parser->m_expressions = testExpressions;
@@ -176,7 +177,7 @@ TEST(syslog_parser, lua_code_valid_2) {
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
-    bool success = parser->parseMessage("NOTIFICATION: received from neighbor 10.10.24.216 active 6/2 (Administrative Shutdown) 0 bytes", tag, paramDict, luaState);
+    bool success = parser->parseMessage("Dec  3 12:36:24.503424 NOTIFICATION: received from neighbor 10.10.24.216 active 6/2 (Administrative Shutdown) 0 bytes", tag, paramDict, luaState);
     EXPECT_EQ(true, success);
     EXPECT_EQ("test_tag", tag);
     EXPECT_EQ(expectedDict, paramDict);
@@ -230,12 +231,11 @@ TEST(rsyslog_plugin, onMessage_noParams) {
 }
 
 TEST(timestampFormatter, changeTimestampFormat) {
-    string timestampFormatRegex = "([a-zA-Z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})";
-    unique_ptr<TimestampFormatter> formatter(new TimestampFormatter(timestampFormatRegex));
+    unique_ptr<TimestampFormatter> formatter(new TimestampFormatter());
     
-    string timestampOne = "Jul 20 10:09:40.230874";
-    string timestampTwo = "Jan 1 00:00:00.000000";
-    string timestampThree = "Dec 31 23:59:59.000000"; 
+    vector<string> timestampOne = { "Jul", "20", "10:09:40.230874" };
+    vector<string> timestampTwo = { "Jan", "1", "00:00:00.000000" };
+    vector<string> timestampThree = { "Dec", "31", "23:59:59.000000" }; 
 
     string formattedTimestampOne = formatter->changeTimestampFormat(timestampOne);
     EXPECT_EQ("2022-07-20T10:09:40.230874Z", formattedTimestampOne);

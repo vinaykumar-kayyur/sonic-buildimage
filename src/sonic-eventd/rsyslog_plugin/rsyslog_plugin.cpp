@@ -44,9 +44,14 @@ bool RsyslogPlugin::createRegexList() {
 
     for(long unsigned int i = 0; i < m_parser->m_regexList.size(); i++) {
         try {
-	    regexString = m_parser->m_regexList[i]["regex"];
+	    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*"; 
+            string eventRegex = m_parser->m_regexList[i]["regex"];
+	    regexString = timestampRegex + eventRegex; 
             string tag = m_parser->m_regexList[i]["tag"];
             vector<string> params = m_parser->m_regexList[i]["params"];
+	    vector<string> timestampParams = { "month", "day", "time" };
+	    params.insert(params.begin(), timestampParams.begin(), timestampParams.end());
+	    m_parser->m_regexList[i]["params"] = params;
             regex expr(regexString);
             expression = expr;
         } catch (domain_error& deException) {

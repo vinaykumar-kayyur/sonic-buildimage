@@ -29,7 +29,6 @@ public:
     unique_ptr<TimestampFormatter> m_timestampFormatter;
     vector<regex> m_expressions;
     json m_regexList = json::array();
-    void addTimestamp(string message, event_params_t& paramDict);
     bool parseMessage(string message, string& tag, event_params_t& paramDict, lua_State* luaState);
     SyslogParser();
 };
