@@ -96,16 +96,16 @@ def check_memory_usage(container_name, threshold_value):
         sys.exit(4)
 
 
-def is_service_active(service):
+def is_service_active(service_name):
     """Test if service is running.
 
     Args:
-        command: A string contains the service name
+        service_name: A string contains the service name
 
     Returns:
         True if service is running, False otherwise
     """
-    status = subprocess.run("systemctl is-active --quiet {}".format(service), shell=True, check=False)
+    status = subprocess.run("systemctl is-active --quiet {}".format(service_name), shell=True, check=False)
     return status.returncode == 0
 
 
