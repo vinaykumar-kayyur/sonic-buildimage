@@ -29,6 +29,7 @@ modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
 import sonic_platform.chassis
+from sonic_platform_base.sfp_base import SfpBase
 from sonic_platform.chassis import Chassis
 from sonic_platform.device_data import DeviceDataManager
 
@@ -269,3 +270,30 @@ class TestChassis:
         module_list = chassis.get_all_modules()
         assert len(module_list) == 3
         assert chassis.module_initialized_count == 3
+
+    def test_revision_permission(self):
+        old_dmi_file =  sonic_platform.chassis.DMI_FILE
+        #Override the dmi file
+        sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
+        new_dmi_file = sonic_platform.chassis.DMI_FILE
+        os.system("touch " + new_dmi_file)
+        os.system("chmod -r " + new_dmi_file)
+        chassis = Chassis()
+        rev = chassis.get_revision()
+        sonic_platform.chassis.DMI_FILE = old_dmi_file
+        os.system("rm -f " + new_dmi_file)
+        assert rev == "N/A"
+
+    def test_get_port_or_cage_type(self):
+        chassis = Chassis()
+        chassis._RJ45_port_inited = True
+        chassis._RJ45_port_list = [0]
+        assert SfpBase.SFP_PORT_TYPE_BIT_RJ45 == chassis.get_port_or_cage_type(1)
+
+        exceptionRaised = False
+        try:
+            chassis.get_port_or_cage_type(2)
+        except NotImplementedError:
+            exceptionRaised = True
+
+        assert exceptionRaised

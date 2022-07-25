@@ -332,6 +332,12 @@
             }
         },
         "VLAN": {
+            "Vlan100": {
+                "description": "vxlan",
+                "vlanid": "100",
+                "mtu": "9216",
+                "admin_status": "up"
+            },
             "Vlan111": {
                 "description": "svlan",
                 "dhcp_servers": [
@@ -426,9 +432,21 @@
             "2001:aa:aa::aa": {}
         },
         "SYSLOG_SERVER" : {
-            "10.13.14.17": {},
-            "20.1.1.1": {},
-            "2001:aa:aa::aa": {}
+            "10.13.14.17": {
+                "source": "1.1.1.1",
+                "port": "514",
+                "vrf": "default"
+            },
+            "20.1.1.1": {
+                "source": "1.1.1.1",
+                "port": "514",
+                "vrf": "mgmt"
+            },
+            "2001:aa:aa::aa": {
+                "source": "1111::1111",
+                "port": "514",
+                "vrf": "Vrf_blue"
+            }
         },
         "CABLE_LENGTH": {
             "AZURE": {
@@ -1453,7 +1471,8 @@
                 "has_timer": "False",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
-                "set_owner": "local"
+                "set_owner": "local",
+                "check_up_status": "False"
             },
             "database": {
                 "auto_restart": "always_enabled",
@@ -1462,7 +1481,8 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "always_enabled",
-                "set_owner": "local"
+                "set_owner": "local",
+                "check_up_status": "false"
             },
             "snmp": {
                 "auto_restart": "enabled",
@@ -1471,7 +1491,8 @@
                 "has_timer": "true",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
-                "set_owner": "kube"
+                "set_owner": "kube",
+                "check_up_status": "true"
             },
             "swss": {
                 "auto_restart": "enabled",
@@ -1480,7 +1501,8 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
-                "set_owner": "local"
+                "set_owner": "local",
+                "check_up_status": "false"
             },
             "syncd": {
                 "auto_restart": "enabled",
@@ -1489,7 +1511,8 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
-                "set_owner": "local"
+                "set_owner": "local",
+                "check_up_status": "false"
             },
             "lldp": {
                 "auto_restart": "enabled",
@@ -1498,7 +1521,8 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
-                "set_owner": "kube"
+                "set_owner": "kube",
+                "check_up_status": "false"
             },
             "dhcp_relay": {
                 "auto_restart": "enabled",
@@ -1507,7 +1531,8 @@
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
-                "set_owner": "kube"
+                "set_owner": "kube",
+                "check_up_status": "true"
             }
         },
         "DHCP_RELAY": {
@@ -1684,7 +1709,22 @@
               "4": "4"
             }
         },
-
+        "VXLAN_TUNNEL": {
+            "vtep1": {
+                "src_ip": "1.2.3.4"
+            }
+        },
+        "VXLAN_EVPN_NVO": {
+            "nvo1": {
+                "source_vtep": "vtep1"
+            }
+        },
+        "VXLAN_TUNNEL_MAP": {
+            "vtep1|map_100_Vlan100": {
+                "vni" : "100",
+                "vlan": "Vlan100"
+            }
+        },
         "PORT_QOS_MAP": {
            "Ethernet0": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
@@ -1878,8 +1918,12 @@
                      "LAG"
                  ]
              }
+        },
+        "SYSTEM_DEFAULTS": {
+            "tunnel_qos_remap": {
+                "status": "enabled"
+	    }
          },
-
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
                 "mtu": "1024",
