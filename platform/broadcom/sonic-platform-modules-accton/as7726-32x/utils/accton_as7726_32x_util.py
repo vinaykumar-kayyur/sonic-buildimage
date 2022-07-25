@@ -133,6 +133,7 @@ def main():
             logging.info('no option')
     for arg in args:
         if arg == 'install':
+           ds100_setting()
            do_install()
         elif arg == 'clean':
            do_uninstall()
@@ -317,6 +318,33 @@ def system_ready():
         print("not device_exist()")
         return False
     return True
+
+def ds100_setting():
+    _, output = log_os_system("i2cset -y 0 0x77 0x0 0x1", 0)
+    _, output = log_os_system("i2cset -y 0 0x76 0x0 0x20", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x06 0x18", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x0F 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x16 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x17 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x18 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x1D 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x24 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x25 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x26 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x2C 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x2D 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x2E 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x34 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x35 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x3A 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x3B 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x3C 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x41 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x42 0xAA", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x43 0x00", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x5E 0x06", 0)
+    _, output = log_os_system("i2cset -y 0 0x58 0x5F 0x00", 0)
+    return
 
 def do_install():
     if driver_inserted() == False:
