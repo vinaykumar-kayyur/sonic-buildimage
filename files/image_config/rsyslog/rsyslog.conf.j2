@@ -38,6 +38,8 @@ $UDPServerRun 514
 
 # Define a custom template
 $template SONiCFileFormat,"%timegenerated%.%timegenerated:::date-subseconds% %HOSTNAME% %syslogseverity-text:::uppercase% %syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n"
+$template SONiCFileFormat_RFC3164,"<%PRI%>%timegenerated%.%timegenerated:::date-subseconds% %HOSTNAME% %syslogseverity-text:::uppercase% %syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n"
+$template SONiCFileFormat_RFC5424,"<%PRI%>1 %TIMESTAMP:::date-rfc3339% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA% %msg%\n"
 $ActionFileDefaultTemplate SONiCFileFormat
 
 #
@@ -88,9 +90,9 @@ $RepeatedMsgReduction on
 {% set dummy = params_list.append('device=' + '"' + data.vrf|string + '"') %}
 {% endif %}
 {% if params_list %}
-*.* action(type="omfwd" target="{{ server }}" protocol="udp" {{ params_list|join(' ') }} template="SONiCFileFormat")
+*.* action(type="omfwd" target="{{ server }}" protocol="udp" {{ params_list|join(' ') }} template="SONiCFileFormat_RFC3164")
 {% else %}
-*.* action(type="omfwd" target="{{ server }}" protocol="udp" template="SONiCFileFormat")
+*.* action(type="omfwd" target="{{ server }}" protocol="udp" template="SONiCFileFormat_RFC3164")
 {% endif %}
 {% endfor %}
 {% endif %}
