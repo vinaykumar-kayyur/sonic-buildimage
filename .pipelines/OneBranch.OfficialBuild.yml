@@ -225,7 +225,7 @@ stages:
             OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-mellanox.bin
             make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-mlnx-rpc.gz
-            cp target/debs/buster/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
+            cp target/debs/bullseye/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
         - name: barefoot
           script: |
             sudo modprobe overlay
