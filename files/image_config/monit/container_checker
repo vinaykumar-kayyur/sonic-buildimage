@@ -20,34 +20,8 @@ import docker
 import sys
 
 import swsssdk
-from sonic_py_common import multi_asic, device_info, daemon_base
+from sonic_py_common import multi_asic, device_info
 from swsscommon import swsscommon
-
-def get_asic_presence_list():
-    """
-    @summary: This function will get the asic presence list. On Supervisor, the list includes only the asics
-              for inserted and detected fabric cards. For non-supervisor cards, e.g. line card, the list should
-              contain all supported asics by the card. The function gets the asic list from CHASSIS_ASIC_TABLE from
-              CHASSIS_STATE_DB. The function assumes that the first N asic ids (asic0 to asic(N-1)) in
-              CHASSIS_ASIC_TABLE belongs to the supervisor, where N is the max number of asics supported by the Chassis 
-    @return:  List of asics present
-    """
-    asics_list = []
-    if multi_asic.is_multi_asic():
-        if not device_info.is_supervisor():
-            # Supervisor has FRU Fabric cards. If not supervisor, all asics
-            # should be present. Add all asics, 0 - num_asics to the list.
-            asics_list = list(range(0,multi_asic.get_num_asics()))
-        else:
-            # Get asic list from CHASSIS_ASIC_TABLE
-            chassis_state_db = daemon_base.db_connect("CHASSIS_STATE_DB")
-            asic_table = swsscommon.Table(chassis_state_db, 'CHASSIS_ASIC_TABLE')
-            if asic_table:
-                asics_presence_list = list(asic_table.getKeys())
-                for asic in asics_presence_list:
-                    # asic is asid id: asic0, asic1.... asicN. Get the numeric value.
-                    asics_list.append(int(asic[4:]))
-    return asics_list
 
 def get_expected_running_containers():
     """
@@ -69,10 +43,14 @@ def get_expected_running_containers():
 
     # Get current asic presence list. For multi_asic system, multi instance containers
     # should be checked only for asics present.
-    asics_id_presence = get_asic_presence_list()
+    asics_id_presence = multi_asic.get_asic_presence_list()
 
-    # Some services, like database and bgp run all the instances irrespective of asic presence.
+    # Some services may run all the instances irrespective of asic presence.
     # Add those to exception list.
+    # database service: Currently services have dependency on all database services to
+    # be up irrespective of asic presence.
+    # bgp service: Currently bgp runs all instances. Once this is fixed to be config driven,
+    # it will be removed from exception list.
     run_all_instance_list = ['database', 'bgp']
 
     for container_name in feature_table.keys():
