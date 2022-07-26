@@ -49,6 +49,7 @@ Table of Contents
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
+         * [VXLAN](#vxlan)   
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)  
@@ -1101,27 +1102,45 @@ attributes in those objects.
 ***NTP server***
 ```
 {
-"NTP_SERVER": {
+    "NTP_SERVER": {
         "2.debian.pool.ntp.org": {},
         "1.debian.pool.ntp.org": {},
         "3.debian.pool.ntp.org": {},
         "0.debian.pool.ntp.org": {}
     },
 
-"NTP_SERVER": {
-    "23.92.29.245": {},
-    "204.2.134.164": {}
+    "NTP_SERVER": {
+        "23.92.29.245": {},
+        "204.2.134.164": {}
     }
 }
 ```
 
-***Syslogserver***
+***Syslog server***
 ```
 {
-"SYSLOG_SERVER": {
-    "10.0.0.5": {},
-    "10.0.0.6": {},
-    "10.11.150.5": {}
+    "SYSLOG_SERVER": {
+        "10.0.0.5": {},
+        "10.0.0.6": {},
+        "10.11.150.5": {}
+    },
+
+    "SYSLOG_SERVER" : {
+        "2.2.2.2": {
+            "source": "1.1.1.1",
+            "port": "514",
+            "vrf": "default"
+        },
+        "4.4.4.4": {
+            "source": "3.3.3.3",
+            "port": "514",
+            "vrf": "mgmt"
+        },
+        "2222::2222": {
+            "source": "1111::1111",
+            "port": "514",
+            "vrf": "Vrf-Data"
+        }
     }
 }
 ```
@@ -1456,6 +1475,37 @@ channel name as object key, and tagging mode as attributes.
 	"Vlan2000|PortChannel47": {
 		"tagging_mode": "tagged"
 	}
+  }
+}
+```
+
+### VXLAN
+
+VXLAN_TUNNEL holds the VTEP source ip configuration.  
+VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.  
+VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered tunnels.
+
+```
+{
+"VXLAN_TUNNEL": {
+        "vtep1": {
+            "src_ip": "10.10.10.10"
+        }
+  }
+"VXLAN_TUNNEL_MAP" : {
+        "vtep1|map_1000_Vlan100": {
+           "vni": "1000",
+           "vlan": "100"
+         },
+        "vtep1|testmap": {
+           "vni": "22000",
+           "vlan": "70"
+         },
+  }
+  "VXLAN_EVPN_NVO": {
+        "nvo1": {
+            "source_vtep": "vtep1"
+        }
   }
 }
 ```

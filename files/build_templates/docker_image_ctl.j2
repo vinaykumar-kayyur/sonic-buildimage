@@ -127,7 +127,7 @@ function waitForAllInstanceDatabaseConfigJsonFilesReady()
 	cnt=0
 	SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
 	if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
-            # Create a separate python script to get a list of location of all instance database_config.json file 
+            # Create a separate python script to get a list of location of all instance database_config.json file
             redis_database_cfg_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
             		    global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
                             print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']) \
@@ -296,6 +296,20 @@ start() {
     if [ -f "$PLATFORM_ENV_CONF" ]; then
         source $PLATFORM_ENV_CONF
     fi
+
+    {%- if docker_container_name == "gbsyncd" %}
+    GBSYNCD_CONF=/usr/share/sonic/device/$PLATFORM/gbsyncd.ini
+    GBSYNCD_PLATFORM=gbsyncd-vs
+    if [ -f "$GBSYNCD_CONF" ]; then
+        while IFS="=" read -r key value; do
+            case "$key" in
+                platform)
+                    GBSYNCD_PLATFORM="$value"
+                    ;;
+            esac
+       done < "$GBSYNCD_CONF"
+    fi
+    {%- endif %}
 
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
@@ -522,7 +536,10 @@ start() {
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
         --env "NAMESPACE_COUNT"=$NUM_ASIC \
         --name=$DOCKERNAME \
-{%- if docker_image_name is defined %}
+{%- if docker_container_name == "gbsyncd" %}
+        -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
+        "docker-$GBSYNCD_PLATFORM":latest \
+{%- elif docker_image_name is defined %}
         {{docker_image_name}}:latest \
 {%- else %}
         {{docker_image_id}} \
