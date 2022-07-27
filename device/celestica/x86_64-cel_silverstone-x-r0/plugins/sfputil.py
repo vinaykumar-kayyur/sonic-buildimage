@@ -97,7 +97,6 @@ class SfpUtil(SfpUtilBase):
             A boolean, True if bytes are written successfully, False if not
         """
 
-        sysfsfile_eeprom = None
         sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[port_num]
         try:
             with open(sysfs_sfp_i2c_client_eeprom_path, mode="r+b", buffering=0) as sysfsfile_eeprom:
@@ -116,7 +115,7 @@ class SfpUtil(SfpUtilBase):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
-	    # Get Transceiver status
+        # Get Transceiver status
         self.modprs_register = self.get_transceiver_status
 
         # All SFPs' eeprom switch to page 0

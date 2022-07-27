@@ -21,7 +21,6 @@ try:
     from sonic_platform.component import Component
     from sonic_platform.watchdog import Watchdog
     from helper import APIHelper
-    from sonic_platform_base import device_base
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -40,6 +39,7 @@ GETREG_PATH = "/sys/devices/platform/sys_cpld/getreg"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
 IPMI_AIR_FLOW_CMD = "0x62 {}"
 IPMI_OEM_NETFN = "0x3A"
+
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""

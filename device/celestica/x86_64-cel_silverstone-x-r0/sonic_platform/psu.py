@@ -11,6 +11,7 @@ import subprocess
 import sys
 import re
 import math
+
 try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
@@ -64,6 +65,7 @@ PSU1_FRU_ID = 3
 SS_READ_OFFSET = 0
 PSU_MAX_POWER = 1500
 
+
 class Psu(PsuBase):
     """Platform-specific Psu class"""
 
@@ -76,8 +78,9 @@ class Psu(PsuBase):
 
         self.psu1_id = "0x3a"
         self.psu2_id = "0x3b"
-
-
+        fan_index = PSU_NUM_FAN[self.index]
+        fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
+        self._fan_list.append(fan)
 
     def get_voltage(self):
         """
@@ -86,7 +89,6 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        psu_voltage = 0.0
         psu_vout_key = globals()['PSU{}_VOUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_vout_key))
@@ -102,7 +104,6 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        psu_current = 0.0
         psu_cout_key = globals()['PSU{}_COUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_cout_key))
@@ -111,7 +112,9 @@ class Psu(PsuBase):
         psu_current = int(ss_read, 16) * 5 * math.pow(10, -1)
 
         return psu_current
-    def get_maximum_supplied_power(self):
+
+    @staticmethod
+    def get_maximum_supplied_power():
         return 1500.0
 
     def get_power(self):
@@ -120,7 +123,6 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        psu_power = 0.0
         psu_pout_key = globals()['PSU{}_POUT_SS_ID'.format(self.index + 1)]
         status, raw_ss_read = self._api_helper.ipmi_raw(
             IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_pout_key))
@@ -128,10 +130,13 @@ class Psu(PsuBase):
         # Formula: Rx6x10^0
         psu_power = int(ss_read, 16) * 6
         return float(psu_power)
-    def get_voltage_high_threshold(self):
+
+    @staticmethod
+    def get_voltage_high_threshold():
         return 14.0
 
-    def get_voltage_low_threshold(self):
+    @staticmethod
+    def get_voltage_low_threshold():
         return 11.0
 
     def get_powergood_status(self):
@@ -160,7 +165,6 @@ class Psu(PsuBase):
             self.STATUS_LED_COLOR_AMBER: PSU_LED_AMBER_CMD,
             self.STATUS_LED_COLOR_OFF: PSU_LED_OFF_CMD
         }.get(color)
-        status, set_led = self._api_helper.ipmi_raw("0x3a 0x42 0x02 0x00")
         status, set_led = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_SET_PSU_LED_CMD.format(led_cmd))
         set_status_led = False if not status else True
@@ -192,16 +196,17 @@ class Psu(PsuBase):
         """
         return PSU_NAME_LIST[self.index]
 
-    def run_command(self, command):
+    @staticmethod
+    def run_command(command):
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         (out, err) = proc.communicate()
 
         if proc.returncode != 0:
             sys.exit(proc.returncode)
-
         return out
 
-    def find_value(self, in_string):
+    @staticmethod
+    def find_value(in_string):
         result = re.search("^.+ ([0-9a-f]{2}) .+$", in_string)
         if result:
             return result.group(1)
@@ -224,7 +229,7 @@ class Psu(PsuBase):
         if status_byte is None:
             return False
 
-        presence = ( int(status_byte, 16) >> 0 ) & 1
+        presence = (int(status_byte, 16) >> 0) & 1
         if presence:
             return True
         else:
@@ -276,6 +281,7 @@ class Psu(PsuBase):
             model = fru_pn_list[4]
 
         return model
+
     def get_serial(self):
         """
         Retrieves the serial number of the device
