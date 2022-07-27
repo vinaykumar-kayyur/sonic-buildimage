@@ -43,6 +43,12 @@
 #  * ENABLE_AUTO_TECH_SUPPORT: Enable the configuration for event-driven techsupport & coredump mgmt feature
 #  *                 Default: y
 #  *                 Values: y,n
+#  * INCLUDE_BOOTCHART: Install SONiC bootchart
+#  *                 Default: y
+#  *                 Values: y,n
+#  * ENABLE_BOOTCHART: Enable SONiC bootchart
+#  *                 Default: n
+#  *                 Values: y,n
 #
 ###############################################################################
 
@@ -98,6 +104,12 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
+ifeq ($(CONFIGURED_ARCH),amd64)
+TARGET_BOOTLOADER = grub
+else
+TARGET_BOOTLOADER = uboot
+endif
+
 ifeq ($(BLDENV), bullseye)
 SLAVE_DIR = sonic-slave-bullseye
 else ifeq ($(BLDENV), buster)
@@ -127,16 +139,25 @@ endif
 ifeq ($(CONFIGURED_ARCH),amd64)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = n
 else
 ifeq ($(CONFIGURED_ARCH), $(COMPILE_HOST_ARCH))
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = n
 else ifneq ($(CONFIGURED_ARCH),)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)-march-$(CONFIGURED_ARCH)
+ifneq ($(CROSS_BLDENV),)
+MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = y
+else
 MULTIARCH_QEMU_ENVIRON = y
+CROSS_BUILD_ENVIRON = n
+endif
 endif
 endif
 SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
+DOCKER_ROOT = $(PWD)/fsroot.docker.$(BLDENV)
 
 # Support FIPS feature, armhf not supported yet
 ifeq ($(PLATFORM_ARCH),armhf)
@@ -156,8 +177,8 @@ $(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
     scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 $(shell BUILD_SLAVE=y DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
 
 # Add the versions in the tag, if the version change, need to rebuild the slave
@@ -181,6 +202,8 @@ endif
 DOCKER_LOCKFILE_SAVE := $(DOCKER_LOCKDIR)/docker_save.lock
 $(shell mkdir -m 0777 -p $(DOCKER_LOCKDIR))
 $(shell [ -f $(DOCKER_LOCKFILE_SAVE) ] || (touch $(DOCKER_LOCKFILE_SAVE) && chmod 0777 $(DOCKER_LOCKFILE_SAVE)))
+$(docker run --rm -v $(DOCKER_ROOT)\:/mount alpine sh -c 'rm -rf /mount/')
+$(mkdir -p $(DOCKER_ROOT))
 
 ifeq ($(DOCKER_BUILDER_MOUNT),)
 override DOCKER_BUILDER_MOUNT := "$(PWD):/sonic"
@@ -199,6 +222,11 @@ DOCKER_RUN := docker run --rm=true --privileged --init \
     -e "no_proxy=$(no_proxy)" \
     -i$(shell { if [ -t 0 ]; then echo t; fi }) \
     $(SONIC_BUILDER_EXTRA_CMDLINE)
+
+# Mount the $(DOCKER_ROOT) to /var/lib/docker in the slave container, the overlay fs is not supported as dockerd root folder.
+ifneq ($(filter $(SONIC_SLAVE_DOCKER_DRIVER),overlay overlay2),)
+	DOCKER_RUN += -v $(DOCKER_ROOT):/var/lib/docker
+endif
 
 ifneq ($(DOCKER_BUILDER_USER_MOUNT),)
 	DOCKER_RUN += $(foreach mount,$(subst $(comma), ,$(DOCKER_BUILDER_USER_MOUNT)), $(addprefix -v , $(mount)))
@@ -253,7 +281,7 @@ ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
 endif
 endif
 
-ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
 ifeq ($(DOCKER_DATA_ROOT_FOR_MULTIARCH),)
 	DOCKER_DATA_ROOT_FOR_MULTIARCH := /var/lib/march/docker
 endif
@@ -294,12 +322,18 @@ endif
 
 endif
 
+SPLIT_LOG = | tee
+
+DOCKER_BASE_LOG = $(SLAVE_DIR)/$(SLAVE_BASE_IMAGE)_$(SLAVE_BASE_TAG).log
+DOCKER_LOG = $(SLAVE_DIR)/$(SLAVE_IMAGE)_$(SLAVE_TAG).log
+
+
 DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
 		    --build-arg no_proxy=$(no_proxy) \
-		    $(SLAVE_DIR)
+		    $(SLAVE_DIR) $(SPLIT_LOG) $(DOCKER_BASE_LOG)
 
 DOCKER_BASE_PULL = docker pull \
 			$(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
@@ -312,13 +346,14 @@ DOCKER_BUILD = docker build --no-cache \
                --build-arg slave_base_tag_ref=$(SLAVE_BASE_TAG) \
 	       -t $(SLAVE_IMAGE):$(SLAVE_TAG) \
 	       -f $(SLAVE_DIR)/Dockerfile.user \
-	       $(SLAVE_DIR)
+	       $(SLAVE_DIR) $(SPLIT_LOG) $(DOCKER_LOG)
 
 SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
                            PLATFORM=$(PLATFORM) \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON)  \
+                           CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
@@ -368,8 +403,11 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            ENABLE_AUTO_TECH_SUPPORT=$(ENABLE_AUTO_TECH_SUPPORT) \
                            BUILD_MULTIASIC_KVM=$(BUILD_MULTIASIC_KVM) \
                            ENABLE_ASAN=$(ENABLE_ASAN) \
+                           SONIC_INCLUDE_BOOTCHART=$(INCLUDE_BOOTCHART) \
+                           SONIC_ENABLE_BOOTCHART=$(ENABLE_BOOTCHART) \
                            ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
+                           SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -377,7 +415,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 .DEFAULT_GOAL :=  all
 
 %::
-ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
 	@$(DOCKER_MULTIARCH_CHECK)
 ifneq ($(BLDENV), )
 	@$(DOCKER_SERVICE_MULTIARCH_CHECK)
@@ -457,7 +495,7 @@ reset :
 	@read ans && (
 	    if [ $$ans == y ]; then
 	        echo "Resetting local repository. Please wait...";
-	        $(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) sudo rm -rf fsroot;
+	        sudo rm -rf fsroot*;
 	        if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ] && [[ "$(CONFIGURED_ARCH)" == "armhf" || "$(CONFIGURED_ARCH)" ==  "arm64" ]]; then
 	            echo "Stopping march $(CONFIGURED_ARCH) docker"
 	            sudo kill -9 `sudo cat /var/run/march/docker.pid` || true

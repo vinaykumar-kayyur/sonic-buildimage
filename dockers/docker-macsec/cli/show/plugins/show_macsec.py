@@ -4,20 +4,19 @@ from natsort import natsorted
 import click
 from tabulate import tabulate
 
-from swsscommon.swsscommon import SonicV2Connector
+import utilities_common.multi_asic as multi_asic_util
+from swsscommon.swsscommon import CounterTable, MacsecCounter
 
 
-DB_CONNECTOR = SonicV2Connector(use_unix_socket_path=False)
-DB_CONNECTOR.connect(DB_CONNECTOR.APPL_DB)
-DB_CONNECTOR.connect(DB_CONNECTOR.COUNTERS_DB)
+DB_CONNECTOR = None
+COUNTER_TABLE = None
 
 
 class MACsecAppMeta(object):
-    SEPARATOR = DB_CONNECTOR.get_db_separator(DB_CONNECTOR.APPL_DB)
-
     def __init__(self, *args) -> None:
-        key = self.__class__.get_appl_table_name() + MACsecAppMeta.SEPARATOR + \
-            MACsecAppMeta.SEPARATOR.join(args)
+        SEPARATOR = DB_CONNECTOR.get_db_separator(DB_CONNECTOR.APPL_DB)
+        key = self.__class__.get_appl_table_name() + SEPARATOR + \
+            SEPARATOR.join(args)
         self.meta = DB_CONNECTOR.get_all(
             DB_CONNECTOR.APPL_DB, key)
         if len(self.meta) == 0:
@@ -28,12 +27,8 @@ class MACsecAppMeta(object):
 
 class MACsecCounters(object):
     def __init__(self, *args) -> None:
-        key = ":".join(args)
-        counters_id = DB_CONNECTOR.get(
-            DB_CONNECTOR.COUNTERS_DB, self.__class__.get_counter_table_name(), key)
-        counter_key = "COUNTERS:" + counters_id
-        self.counters = DB_CONNECTOR.get_all(
-            DB_CONNECTOR.COUNTERS_DB, counter_key)
+        _, fvs = COUNTER_TABLE.get(MacsecCounter(), ":".join(args))
+        self.counters = dict(fvs)
 
 
 class MACsecSA(MACsecAppMeta, MACsecCounters):
@@ -61,10 +56,6 @@ class MACsecIngressSA(MACsecSA):
     def get_appl_table_name(cls) -> str:
         return "MACSEC_INGRESS_SA_TABLE"
 
-    @classmethod
-    def get_counter_table_name(cls) -> str:
-        return "COUNTERS_MACSEC_SA_RX_NAME_MAP"
-
     def get_header(self):
         return "MACsec Ingress SA ({})\n".format(self.an)
 
@@ -76,10 +67,6 @@ class MACsecEgressSA(MACsecSA):
     @classmethod
     def get_appl_table_name(cls) -> str:
         return "MACSEC_EGRESS_SA_TABLE"
-
-    @classmethod
-    def get_counter_table_name(cls) -> str:
-        return "COUNTERS_MACSEC_SA_TX_NAME_MAP"
 
     def get_header(self):
         return "MACsec Egress SA ({})\n".format(self.an)
@@ -194,19 +181,36 @@ def create_macsec_objs(interface_name: str) -> typing.List[MACsecAppMeta]:
 
 @click.command()
 @click.argument('interface_name', required=False)
-def macsec(interface_name):
-    ctx = click.get_current_context()
-    objs = []
-    interface_names = [name.split(":")[1] for name in DB_CONNECTOR.keys(DB_CONNECTOR.APPL_DB, "MACSEC_PORT*")]
-    if interface_name is not None:
-        if interface_name not in interface_names:
-            ctx.fail("Cannot find the port {} in MACsec port lists {}".format(interface_name, interface_names))
-        else:
+@multi_asic_util.multi_asic_click_options
+def macsec(interface_name, namespace, display):
+    MacsecContext(namespace, display).show(interface_name)
+
+
+class MacsecContext(object):
+
+    def __init__(self, namespace_option, display_option):
+        self.db = None
+        self.multi_asic = multi_asic_util.MultiAsic(
+            display_option, namespace_option)
+
+    @multi_asic_util.run_on_multi_asic
+    def show(self, interface_name):
+        global DB_CONNECTOR
+        global COUNTER_TABLE
+        DB_CONNECTOR = self.db
+        COUNTER_TABLE = CounterTable(self.db.get_redis_client(self.db.COUNTERS_DB))
+
+        interface_names = [name.split(":")[1] for name in self.db.keys(self.db.APPL_DB, "MACSEC_PORT*")]
+        if interface_name is not None:
+            if interface_name not in interface_names:
+                return
             interface_names = [interface_name]
-    for interface_name in natsorted(interface_names):
-        objs += create_macsec_objs(interface_name)
-    for obj in objs:
-        print(obj.dump_str())
+
+        objs = []
+        for interface_name in natsorted(interface_names):
+            objs += create_macsec_objs(interface_name)
+        for obj in objs:
+            print(obj.dump_str())
 
 
 def register(cli):
