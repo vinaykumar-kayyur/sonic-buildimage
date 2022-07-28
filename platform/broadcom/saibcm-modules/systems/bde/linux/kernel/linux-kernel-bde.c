@@ -18,13 +18,6 @@
  * Linux Kernel BDE
  */
 
-#ifdef __STDC_ALLOC_LIB__
-#define __STDC_WANT_LIB_EXT2__ 1
-#else
-#define _POSIX_C_SOURCE 200809L
-#endif
-
-#include <linux/string.h> 
 #include <gmodule.h>
 #include <linux-bde.h>
 #include <linux_dma.h>
@@ -3202,13 +3195,11 @@ _init(void)
      */
     if (eb_bus) {
         char  *tok;
-        static char *eb_bus_copy;
         uint   irq = -1, eb_rd16bit=0, eb_wr16bit =0;
         unsigned int eb_ba = 0x0;
 
         gprintk("EB bus info: %s\n", eb_bus);
-        eb_bus_copy = strdup(eb_bus);
-        while ((tok = strtok_r(eb_bus_copy, ",", &eb_bus_copy))) {
+        while ((tok = strtok_r(eb_bus, ",", &eb_bus))) {
             _parse_eb_args(tok, "BA=%x IRQ=%d RD16=%d WR16=%d",
                     &eb_ba, &irq, &eb_rd16bit, &eb_wr16bit);
             _eb_device_create(eb_ba, irq, eb_rd16bit, eb_wr16bit);
