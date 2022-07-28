@@ -18,6 +18,7 @@
  * Linux Kernel BDE
  */
 
+#include <string.h>
 #include <gmodule.h>
 #include <linux-bde.h>
 #include <linux_dma.h>
