@@ -99,6 +99,9 @@ sed -i -e "s/%%DEMO_TYPE%%/$demo_type/g" \
        -e "s/%%EXTRA_CMDLINE_LINUX%%/$EXTRA_CMDLINE_LINUX/" \
        -e "s@%%OUTPUT_RAW_IMAGE%%@$output_raw_image@" \
     $tmp_installdir/install.sh || clean_up 1
+sed -i -e "s/%%ONIE_IMAGE_PART_SIZE%%/$onie_image_part_size/" \
+       -e "s/%%EXTRA_CMDLINE_LINUX%%/$EXTRA_CMDLINE_LINUX/" \
+    $tmp_installdir/default_platform.conf || clean_up 1
 echo -n "."
 cp -r $* $tmp_installdir || clean_up 1
 echo -n "."
