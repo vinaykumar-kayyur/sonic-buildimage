@@ -23,9 +23,8 @@
 #else
 #define _POSIX_C_SOURCE 200809L
 #endif
- 
-#include <string.h>
-#include <stdlib.h>
+
+#include <linux/string.h> 
 #include <gmodule.h>
 #include <linux-bde.h>
 #include <linux_dma.h>
@@ -3214,7 +3213,6 @@ _init(void)
                     &eb_ba, &irq, &eb_rd16bit, &eb_wr16bit);
             _eb_device_create(eb_ba, irq, eb_rd16bit, eb_wr16bit);
         }
-        free(eb_bus_copy);
     }
 
 
