@@ -71,9 +71,6 @@
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
 	url = https://github.com/Azure/sonic-mgmt-framework
-[submodule "src/sonic-telemetry"]
-	path = src/sonic-telemetry
-	url = https://github.com/Azure/sonic-telemetry
 [submodule "Switch-SDK-drivers"]
 	path = platform/mellanox/sdk-src/sx-kernel/Switch-SDK-drivers
 	url = https://github.com/Mellanox/Switch-SDK-drivers
@@ -108,7 +105,7 @@
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-gnmi"]
 	path = src/sonic-gnmi
-	url = https://github.com/ganglyu/sonic-gnmi
+	url = https://github.com/ganglyu/sonic-gnmi.git
 	branch = gnmi_init_draft
 [submodule "src/dhcprelay"]
 	path = src/dhcprelay
@@ -116,3 +113,4 @@
 [submodule "src/sonic-host-services"]
 	path = src/sonic-host-services
 	url = https://github.com/ganglyu/sonic-host-services.git
+	branch = update_dbus
