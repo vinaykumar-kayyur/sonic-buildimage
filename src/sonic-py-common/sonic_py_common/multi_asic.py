@@ -508,5 +508,5 @@ def get_asic_presence_list():
                 asics_presence_list = list(asic_table.getKeys())
                 for asic in asics_presence_list:
                     # asic is asid id: asic0, asic1.... asicN. Get the numeric value.
-                    asics_list.append(int(asic[4:]))
+                    asics_list.append(int(get_asic_id_from_name(asic)))
     return asics_list
