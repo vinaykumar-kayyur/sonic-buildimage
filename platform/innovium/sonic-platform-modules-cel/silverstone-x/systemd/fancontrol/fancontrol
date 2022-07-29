@@ -42,7 +42,7 @@ PIDFILE="/var/run/fancontrol.pid"
 THERMAL_OVERLOAD_CONTROL_FILE="/usr/local/bin/thermal_overload_control.sh"
 
 DEBUG=0
-MIN=150
+MAX=150
 #innovium temp calculation factor
 INVA=124.28
 INVB=422.03
@@ -54,6 +54,8 @@ BASECPLD_GETREG_FILE="/sys/devices/platform/sys_cpld/getreg"
 PSUPRS_REG="0xA160"
 # PSUs present bits in baseboard CPLD
 PSUPRS_BIT=(3 2)
+
+START=1
 
 function log() {
     if [ $DEBUG -eq 1 ]; then
@@ -584,20 +586,34 @@ function FancontrolPid
     # $3: fcvcount
     # $4: minpwm
     # $5: maxpwm
+    # $6: CPU internal sensor--1; not--0
     # current_pwm = $lastpwm+PVALUE*$p_temp+IVALUE*$i_temp+DVALUE*$d_temp
     #FAN PWM (k) =PWM(k-1)+5*(T(k)-T(k-1))+0.5*(T(k)-90)
     local p_temp i_temp d_temp
-    local lastpwmpercent=0 pidpwmpercent=0
-    local a
+    local lastpwmpercent=0 pidpwmpercent=0 CPU_pidpwm_min=64 pidpwm_min=0
+
+    lastpwm_pid=$lastpwm
+    pidpwm_min=$4
+
+    # store CPU last pwm indepentently to avoid fan jitter caused by CPU pid pwm soaring and restoring at a short time
+    # to avoid CPU pid pwm decrease continuously to a very low value and lead to nonsensitive pwm when CPU temperature rises.
+    if [ $6 -eq 1 -a $START -eq 0 ]; then
+        lastpwm_pid=$cpu_last_pwm
+        pidpwm_min=$CPU_pidpwm_min
+
+    # use the final pwm as the last CPU pid pwm at the 1st time
+    elif [ $6 -eq 1 -a $START -eq 1 ]; then
+        START=0
+    fi
 
     p_temp=$(($1-${lasttemp[$3]}))
     # temperature unit is 0.001 C, so setpoint multiple 1000 to be the same level
     i_temp=$(($1-$2*1000))
     d_temp=$(($1-2*${lasttemp[$3]}+${lastlasttemp[$3]}))
     log ==============FancontrolPid========temper$3 currenttemp: $1 lasttemp:${lasttemp[$3]} 
-    log PID: $p_temp $i_temp $d_temp 
+    log PID: $p_temp $i_temp $d_temp
 
-    lastpwmpercent=$(echo ${lastpwm} | awk '{printf "%0.2f",$1/255*100}')
+    lastpwmpercent=$(echo ${lastpwm_pid} | awk '{printf "%0.2f",$1/255*100}')
     pidpwmpercent=$(echo ${lastpwmpercent} $PVALUE $p_temp $IVALUE $i_temp $DVALUE $d_temp | awk '{printf "%0.3f",$1+$2*($3/1000)+$4*($5/1000)+$6*($7/1000)}')
     log lastpwmpercent:$lastpwmpercent pidpwmpercent:$pidpwmpercent
     pidpwm=$(echo ${pidpwmpercent} | awk '{printf "%d",$1*255/100}')
@@ -605,12 +621,12 @@ function FancontrolPid
     if [[ "$pidpwm" -gt "$5" ]]
     then 
        pidpwm=$5
-    elif [[ "$pidpwm" -lt "$4" ]]
+    elif [[ "$pidpwm" -lt "$pidpwm_min" ]]
     then
-       pidpwm=$4
+       pidpwm=$pidpwm_min
     fi
-    
-    log "pid temp_pwm=$pidpwm lastpwm=$lastpwm"
+
+    log "pid temp_pwm=$pidpwm lastpwm=$lastpwm_pid"
 
 }
 
@@ -631,14 +647,14 @@ function FancontrolLinear
     ub=$up_b
 
     log ==============FancontrolLinear========temper$7 currenttemp: $1 lasttemp:${lasttemp[$7]}
-    log "lowerBound $lb, upperBound $ub, lastpwm $lastpwm"
+    log "lowerBound $lb, upperBound $ub, lastpwm $linearpwm"
     #temp rising
     if [[ "$1" -gt "${lasttemp[0]}" ]]
     then
         log "Temperature rises from ${lasttemp[0]} to $1"
-        if [[ "$lb" -lt "$lastpwm" ]]
+        if [[ "$lb" -lt "$linearpwm" ]]
         then 
-            linearpwm=$lastpwm
+            linearpwm=$linearpwm
         else
             linearpwm=$lb
         fi
@@ -646,16 +662,16 @@ function FancontrolLinear
     elif [[ "$1" -lt "${lasttemp[0]}" ]]
     then
         log "Temperature declines from ${lasttemp[0]} to $1"
-        if [[ "$ub" -gt "$lastpwm" ]]
-        then 
-            linearpwm=$lastpwm
+        if [[ "$ub" -gt "$linearpwm" ]]
+        then
+            linearpwm=$linearpwm
         else
             linearpwm=$ub
         fi
     #temp no change   
     else
         log "Temperature keeps to $1"
-        linearpwm=$lastpwm
+        linearpwm=$linearpwm
     fi
     
     if [[ "$linearpwm" -gt "$5" ]]
@@ -664,7 +680,7 @@ function FancontrolLinear
     elif [[ "$linearpwm" -lt "$4" ]]
     then
        linearpwm=$4
-    fi    
+    fi
         
     log "linear  linearpwm=$linearpwm"
 
@@ -858,11 +874,18 @@ function UpdateFanSpeeds
                 FancontrolLinear ${tval} ${mint} ${maxt} ${minpwm} ${maxpwm} ${tHyst} ${fcvcount}
                 temp_pwm=$linearpwm
                 log "cal update linear  temp_pwm=$temp_pwm pwmval=$pwmval"
-            else     
-                FancontrolPid ${tval} ${AFCSETPOINT[$fcvcount]} ${fcvcount} ${minpwm} ${maxpwm}
+            # The 3rd sensor should be CPU internal sensor
+            elif [ "$fcvcount" -eq 2 ]; then
+                FancontrolPid ${tval} ${AFCSETPOINT[$fcvcount]} ${fcvcount} ${minpwm} ${maxpwm} 1
+                temp_pwm=$pidpwm
+                # CPU use it's own pidpwm but not the final pwm as the last pid pwm to eliminate effect from CPU soaring temperature at a short time.
+                cpu_last_pwm=$pidpwm
+                log "cal update pid  temp_pwm=$temp_pwm pwmval=$pwmval"
+            else
+                FancontrolPid ${tval} ${AFCSETPOINT[$fcvcount]} ${fcvcount} ${minpwm} ${maxpwm} 0
                 temp_pwm=$pidpwm
                 log "cal update pid  temp_pwm=$temp_pwm pwmval=$pwmval"
-            fi 
+            fi
             
             if [[ "$temp_pwm" -gt "$pwmval" ]]
             then
@@ -918,6 +941,7 @@ function UpdateFanSpeeds
 
 log 'Enabling PWM on fans...'
 let fcvcount=0
+let cpu_last_pwm=0
 lastpwm=$MAX
 while (( $fcvcount < ${#AFCPWM[@]} )) # go through all pwm outputs
 do
