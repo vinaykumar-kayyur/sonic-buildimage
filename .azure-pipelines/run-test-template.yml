@@ -51,7 +51,8 @@ steps:
 
     docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer get-fips'"
     if [ "${{ parameters.enable_fips }}" != "y" ]; then
-      docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer set-fips --disable-fips; sudo reboot'" && sleep 60
+      docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer set-fips --disable-fips'"
+      docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo reboot'" && sleep 60
     fi
   displayName: "Setup testbed"
 
