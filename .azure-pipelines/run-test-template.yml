@@ -14,7 +14,7 @@ parameters:
 steps:
 - checkout: self
   clean: true
-  displayName: 'checkout sonic-mgmt repo'
+  displayName: 'checkout sonic-buildimage repo'
 
 - task: DownloadPipelineArtifact@2
   inputs:
