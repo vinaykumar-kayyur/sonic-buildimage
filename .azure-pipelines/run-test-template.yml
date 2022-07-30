@@ -42,6 +42,10 @@ steps:
     username=$(id -un)
     sudo chown -R $username.$username /data/sonic-vm
 
+    sudo modprobe nbd max_part=8
+    sudo qemu-nbd --connect=/dev/nbd0 /data/sonic-vm/images/sonic-vs.img
+    
+
     pushd /data/sonic-mgmt
     git remote update
     git reset --hard origin/master
@@ -52,7 +56,9 @@ steps:
     docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer get-fips'"
     if [ "${{ parameters.enable_fips }}" != "y" ]; then
       docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer set-fips --disable-fips'"
-      docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo reboot'"
+      #docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo reboot'"
+      sudo virsh destroy ${{ parameters.dut }} && sleep 5
+      sudo virsh start ${{ parameters.dut }}
     fi
 
     sleep 180
