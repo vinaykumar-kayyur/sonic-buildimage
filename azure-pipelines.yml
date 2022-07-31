@@ -194,7 +194,7 @@ stages:
         tbname: vms-kvm-t1-lag
         ptf_name: ptf_vms6-2
         tbtype: t1-lag
-        enable_fips: n
+        enable_fips: y
 
   - job:
     pool: sonictest-sonic-t0
