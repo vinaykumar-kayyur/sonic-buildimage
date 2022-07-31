@@ -41,11 +41,14 @@ steps:
     sudo gzip -fd /data/sonic-vm/images/sonic-vs.img.gz
     username=$(id -un)
     sudo chown -R $username.$username /data/sonic-vm
+  displayName: "Prepare vs image"
 
-    sudo modprobe nbd max_part=8
-    sudo qemu-nbd --connect=/dev/nbd0 /data/sonic-vm/images/sonic-vs.img
-    
+- template: azure-pipelines-customize-vs-image.yml
+  parameters:
+    image_path: /data/sonic-vm/images/sonic-vs.img
+    enable_fips: ${{ parameters.enable_fips }}
 
+- script: |
     pushd /data/sonic-mgmt
     git remote update
     git reset --hard origin/master
@@ -55,10 +58,10 @@ steps:
 
     docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer get-fips'"
     if [ "${{ parameters.enable_fips }}" != "y" ]; then
-      docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer set-fips --disable-fips'"
+      #docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo sonic-installer set-fips --disable-fips'"
       #docker exec sonic-mgmt bash -c "pushd /data/sonic-mgmt/ansible; ansible -i veos_vtb ${{ parameters.dut }} -m command -a 'sudo reboot'"
-      sudo virsh destroy ${{ parameters.dut }} && sleep 5
-      sudo virsh start ${{ parameters.dut }}
+      #sudo virsh destroy ${{ parameters.dut }} && sleep 5
+      #sudo virsh start ${{ parameters.dut }}
     fi
 
     sleep 180
