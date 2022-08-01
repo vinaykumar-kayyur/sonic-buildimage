@@ -1,4 +1,5 @@
 # libgcovpreload package
+# Created for gcda files generations
 
 GCOV_PRELOAD_VERSION = 0.0.1
 GCOV_PRELOAD_VERSION_FULL = $(GCOV_PRELOAD_VERSION)-1
