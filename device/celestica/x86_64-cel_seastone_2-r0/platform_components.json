@@ -1,0 +1,13 @@
+{
+    "chassis": {
+        "Celestica-Seastone2": {
+            "component": {
+		"BIOS": {},
+                "CPLD_BASEBOARD": {},
+                "CPLD_SWITCHBOARD": {},
+                "FPGA": {},
+                "BMC": {}
+            }
+        }
+    }
+}
