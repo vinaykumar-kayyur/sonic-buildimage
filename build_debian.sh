@@ -356,8 +356,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     auditd
 
 # default rsyslog version is 8.2110.0 which has a bug on log rate limit,
-# use backport version 8.2206.0-1~bpo11+1
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install rsyslog=8.2206.0-1~bpo11+1
+# use backport version
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -t bullseye-backports -y install rsyslog
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
