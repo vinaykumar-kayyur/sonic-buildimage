@@ -106,8 +106,10 @@ jobs:
         fi
         if [ ${{ parameters.sync_rpc_image }} == true ]; then
           make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-syncd-brcm-rpcv2.gz
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) BLDENV=buster ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-saiserverv2-brcm.gz
+          if [ ${{ parameters.platform }} == broadcom ]; then
+            make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-syncd-${{ parameters.platform_short }}-rpcv2.gz
+            make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) BLDENV=buster ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-saiserverv2-${{ parameters.platform_short }}.gz
+          fi
         fi
 
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/sonic-${{ parameters.platform }}.bin
