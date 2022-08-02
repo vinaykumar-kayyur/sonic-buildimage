@@ -13,7 +13,7 @@ import sonic_platform
 import subprocess
 import sys
 import re
-
+import math
 
 try:
     from sonic_platform_base.psu_base import PsuBase
@@ -39,6 +39,39 @@ PSU_I2C_MAPPING = {
     },
 }
 
+IPMI_OEM_NETFN = "0x39"
+IPMI_SENSOR_NETFN = "0x04"
+IPMI_SS_READ_CMD = "0x2D {}"
+IPMI_SET_PSU_LED_CMD = "0x02 0x02 {}"
+IPMI_GET_PSU_LED_CMD = "0x01 0x02"
+IPMI_FRU_PRINT_ID = "ipmitool fru print {}"
+IPMI_FRU_MODEL_KEY = "Board Product"
+IPMI_FRU_SERIAL_KEY = "Board Serial "
+
+PSU_LED_OFF_CMD = "0x00"
+PSU_LED_GREEN_CMD = "0x01"
+PSU_LED_AMBER_CMD = "0x02"
+
+PSU1_VOUT_SS_ID = "0x2e"
+PSU1_COUT_SS_ID = "0x2f"
+PSU1_POUT_SS_ID = "0x30"
+PSU1_STATUS_REG = "0x3a"
+PSU1_TMP1_REG = "0x2c"
+PSU1_TMP2_REG = "0x2d"
+PSU1_TMP3_REG = "0x6a"
+
+PSU2_VOUT_SS_ID = "0x37"
+PSU2_COUT_SS_ID = "0x38"
+PSU2_POUT_SS_ID = "0x39"
+PSU2_STATUS_REG = "0x3b"
+PSU2_TMP1_REG = "0x35"
+PSU2_TMP2_REG = "0x36"
+PSU2_TMP3_REG = "0x6b"
+
+PSU1_FRU_ID = 3
+
+SS_READ_OFFSET = 0
+PSU_MAX_POWER = 1500
 
 class Psu(PsuBase):
     """Platform-specific Psu class"""
@@ -96,20 +129,12 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        psu_voltage = 0.0
-        voltage_name = "in{}_input"
-        voltage_label = "vout1"
-
-        vout_label_path = self.__search_file_by_contain(
-            self.hwmon_path, voltage_label, "in")
-        if vout_label_path:
-            dir_name = os.path.dirname(vout_label_path)
-            basename = os.path.basename(vout_label_path)
-            in_num = filter(str.isdigit, basename)
-            vout_path = os.path.join(
-                dir_name, voltage_name.format(in_num))
-            vout_val = self._api_helper.read_txt_file(vout_path)
-            psu_voltage = float(vout_val) / 1000
+        psu_vout_key = globals()['PSU{}_VOUT_SS_ID'.format(self.index + 1)]
+        status, raw_ss_read = self._api_helper.ipmi_raw(
+            IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_vout_key))
+        ss_read = raw_ss_read.split()[SS_READ_OFFSET]
+        # Formula: Rx1x10^-1
+        psu_voltage = int(ss_read, 16) * math.pow(10, -1)
 
         return psu_voltage
 
@@ -119,22 +144,18 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        psu_current = 0.0
-        current_name = "curr{}_input"
-        current_label = "iout1"
-
-        curr_label_path = self.__search_file_by_contain(
-            self.hwmon_path, current_label, "cur")
-        if curr_label_path:
-            dir_name = os.path.dirname(curr_label_path)
-            basename = os.path.basename(curr_label_path)
-            cur_num = filter(str.isdigit, basename)
-            cur_path = os.path.join(
-                dir_name, current_name.format(cur_num))
-            cur_val = self._api_helper.read_txt_file(cur_path)
-            psu_current = float(cur_val) / 1000
+        psu_cout_key = globals()['PSU{}_COUT_SS_ID'.format(self.index + 1)]
+        status, raw_ss_read = self._api_helper.ipmi_raw(
+            IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_cout_key))
+        ss_read = raw_ss_read.split()[SS_READ_OFFSET]
+        # Formula: Rx5x10^-1
+        psu_current = int(ss_read, 16) * 5 * math.pow(10, -1)
 
         return psu_current
+
+    @staticmethod
+    def get_maximum_supplied_power():
+        return 1500.0
 
     def get_power(self):
         """
@@ -142,22 +163,13 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        psu_power = 0.0
-        current_name = "power{}_input"
-        current_label = "pout1"
-
-        pw_label_path = self.__search_file_by_contain(
-            self.hwmon_path, current_label, "power")
-        if pw_label_path:
-            dir_name = os.path.dirname(pw_label_path)
-            basename = os.path.basename(pw_label_path)
-            pw_num = filter(str.isdigit, basename)
-            pw_path = os.path.join(
-                dir_name, current_name.format(pw_num))
-            pw_val = self._api_helper.read_txt_file(pw_path)
-            psu_power = float(pw_val) / 1000000
-
-        return psu_power
+        psu_pout_key = globals()['PSU{}_POUT_SS_ID'.format(self.index + 1)]
+        status, raw_ss_read = self._api_helper.ipmi_raw(
+            IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_pout_key))
+        ss_read = raw_ss_read.split()[SS_READ_OFFSET]
+        # Formula: Rx6x10^0
+        psu_power = int(ss_read, 16) * 6
+        return float(psu_power)
 
     def get_powergood_status(self):
         """
@@ -176,23 +188,20 @@ class Psu(PsuBase):
                    Note: Only support green and off
         Returns:
             bool: True if status LED state is set successfully, False if not
+        Note
+            Set manual
+            ipmitool raw 0x3a 0x42 0x2 0x00
         """
+        led_cmd = {
+            self.STATUS_LED_COLOR_GREEN: PSU_LED_GREEN_CMD,
+            self.STATUS_LED_COLOR_AMBER: PSU_LED_AMBER_CMD,
+            self.STATUS_LED_COLOR_OFF: PSU_LED_OFF_CMD
+        }.get(color)
+        status, set_led = self._api_helper.ipmi_raw(
+            IPMI_OEM_NETFN, IPMI_SET_PSU_LED_CMD.format(led_cmd))
+        set_status_led = False if not status else True
 
-        set_status_str = {
-            self.STATUS_LED_COLOR_GREEN: '1',
-            self.STATUS_LED_COLOR_OFF: '0'
-        }.get(color, None)
-
-        if not set_status_str:
-            return False
-
-        try:
-            with open(self.green_led_path, 'w') as file:
-                file.write(set_status_str)
-        except IOError:
-            return False
-
-        return True
+        return set_status_led
 
     def get_status_led(self):
         """
@@ -200,13 +209,16 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        status = self._api_helper.read_txt_file(self.green_led_path)
-        status_str = {
-            '255': self.STATUS_LED_COLOR_GREEN,
-            '0': self.STATUS_LED_COLOR_OFF
-        }.get(status, None)
+        status, hx_color = self._api_helper.ipmi_raw(
+            IPMI_OEM_NETFN, IPMI_GET_PSU_LED_CMD)
 
-        return status_str
+        status_led = {
+            "00": self.STATUS_LED_COLOR_OFF,
+            "01": self.STATUS_LED_COLOR_GREEN,
+            "02": self.STATUS_LED_COLOR_AMBER,
+        }.get(hx_color, self.STATUS_LED_COLOR_OFF)
+
+        return status_led
 
     def get_name(self):
         """
@@ -254,6 +266,7 @@ class Psu(PsuBase):
         else:
             return False
 
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -276,3 +289,44 @@ class Psu(PsuBase):
             return False
         else:
             return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+            eg.ipmitool fru print 4
+            Product Manufacturer  : DELTA
+            Product Name          : DPS-1300AB-6 J
+            Product Part Number   : DPS-1300AB-6 J
+            Product Version       : S1F
+            Product Serial        : JDMD2111000125
+            Product Asset Tag     : S1F
+        """
+        model = "Unknown"
+        ipmi_fru_idx = self.index + PSU1_FRU_ID
+        status, raw_model = self._api_helper.ipmi_fru_id(
+            ipmi_fru_idx, IPMI_FRU_MODEL_KEY)
+
+        fru_pn_list = raw_model.split()
+        if len(fru_pn_list) > 3:
+            model = fru_pn_list[3]
+
+        return model
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial = "Unknown"
+        ipmi_fru_idx = self.index + PSU1_FRU_ID
+        status, raw_model = self._api_helper.ipmi_fru_id(
+            ipmi_fru_idx, IPMI_FRU_SERIAL_KEY)
+
+        fru_sr_list = raw_model.split()
+        if len(fru_sr_list) > 3:
+            serial = fru_sr_list[3]
+
+        return serial
