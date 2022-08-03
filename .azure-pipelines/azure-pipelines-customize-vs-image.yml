@@ -1,0 +1,33 @@
+parameters:
+- name: image_path
+  type: string
+- name: enable_fips
+  type: string
+  default: y
+
+steps:
+- script: |
+    set -x
+    image_path="${{ parameters.image_path }}"
+    enable_fips="${{ parameters.enable_fips }}"
+    fips_option=0
+    [ "$enable_fips" == 'y' ] && fips_option=1
+    tmp_path=$(mktemp -d)
+    ls -l "$image_path"
+    sudo modprobe nbd max_part=8
+    ls -lt /dev/nbd*
+    for ((i=0; i<5; i++)); do
+      sudo qemu-nbd --connect=/dev/nbd0 "$image_path"
+      sleep 5
+      [ -e /dev/nbd0p3 ] && break
+      echo "Retry to connect $image_path"
+    done
+    sudo mount /dev/nbd0p3 $tmp_path
+    sudo sed -i "s/ sonic_fips=.//g" "$tmp_path/grub/grub.cfg"
+    sudo sed -i -E "s#\slinux\s+/.*#& sonic_fips=$fips_option#" "$tmp_path/grub/grub.cfg"
+    sudo cat "$tmp_path/grub/grub.cfg"
+    sudo umount $tmp_path
+    sudo qemu-nbd --disconnect /dev/nbd0
+    rm -r $tmp_path
+    
+  displayName: "Customize vs image"
