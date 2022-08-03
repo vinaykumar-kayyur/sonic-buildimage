@@ -1,0 +1,11 @@
+!
+! template: bgpd/templates/msft.general/v4.tor.storage.backend/policy.conf.j2
+! Allow all local routes to be sent to T1 (default action - implicit deny at the end)
+route-map TO_TIER1_V4 permit 10
+!
+
+route-map FROM_TIER1_V4 permit 10
+! Allow all routes from T1 besides local (default action - implicit deny at the end)
+!
+! end of template: bgpd/templates/msft.general/v4.tor.storage.backend/policy.conf.j2
+!
