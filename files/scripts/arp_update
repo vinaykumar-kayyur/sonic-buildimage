@@ -77,6 +77,21 @@ while /bin/true; do
       eval `eval $ip6cmd`
   done
 
+  DBNEIGH=$(sonic-db-cli APPL_DB keys NEIGH_TABLE*)
+  TUNNEL_ENTRY=$(sonic-db-cli CONFIG_DB keys "TUNNEL|*")
+  if [[ ! -z $TUNNEL_ENTRY ]]; then
+    for neigh in $DBNEIGH; do
+        MAC=$(sonic-db-cli APPL_DB hgetall $neigh | cut -d '{' -f 2 | cut -d ',' -f 1 | cut -d ' ' -f 2 | cut -d "'" -f 2)
+        if [[ $MAC == "00:00:00:00:00:00" ]]; then
+            intf="$( cut -d ':' -f 2 <<< "$neigh" )"
+            ip="$( cut -d ':' -f 3- <<< "$neigh" )"
+            pingcmd="timeout 0.2 ping -I $intf -n -q -i 0 -c 1 -W 1 $ip >/dev/null"
+            eval $pingcmd
+            logger "arp_update: resolving failed neighbor entry, pinging ${ip} on ${intf}"
+        fi
+    done
+  fi
+
   # sleep here before handling the mismatch as it is not required during startup
   sleep 300
 
