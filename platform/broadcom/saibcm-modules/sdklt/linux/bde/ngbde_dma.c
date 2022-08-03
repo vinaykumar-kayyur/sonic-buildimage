@@ -20,6 +20,8 @@
  * be found in the LICENSES folder.$
  */
 
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 #include <ngbde.h>
 
 /*! \cond */
@@ -224,7 +226,11 @@ ngbde_dmamem_free(ngbde_dmamem_t *dmamem)
         }
         dma_free_coherent(dmamem->dev, dmamem->size,
                           dmamem->vaddr, dmamem->paddr);
-        memset(dmamem, 0, sizeof(*dmamem));
+#ifdef __STDC_LIB_EXT1__
+    memset_s(dmamem, sizeof(*dmamem), 0, sizeof(*dmamem));
+#else
+    memset(dmamem, 0, sizeof(*dmamem));
+#endif
         break;
     case NGBDE_DMA_T_PGMEM:
         if (dma_debug) {
@@ -240,7 +246,11 @@ ngbde_dmamem_free(ngbde_dmamem_t *dmamem)
                              dmamem->size, DMA_BIDIRECTIONAL);
         }
         ngbde_pgmem_free(dmamem->vaddr);
-        memset(dmamem, 0, sizeof(*dmamem));
+#ifdef __STDC_LIB_EXT1__
+    memset_s(dmamem, sizeof(*dmamem), 0, sizeof(*dmamem));
+#else
+    memset(dmamem, 0, sizeof(*dmamem));
+#endif
         break;
     case NGBDE_DMA_T_NONE:
         /* Nothing to free */
