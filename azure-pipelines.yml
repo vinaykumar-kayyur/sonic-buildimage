@@ -196,8 +196,8 @@ stages:
         tbtype: t1-lag
 
 - job:
-    pool: sonictest-t1-lag-1
-    displayName: "kvmtest-t1-lag"
+    pool: sonictest-t1-lag
+    displayName: "kvmtest-t1-lag-1"
     timeoutInMinutes: 360
 
     steps:
