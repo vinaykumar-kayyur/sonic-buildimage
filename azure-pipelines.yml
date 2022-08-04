@@ -195,7 +195,7 @@ stages:
         ptf_name: ptf_vms6-2
         tbtype: t1-lag
 
-- job:
+  - job:
     pool: sonictest-t1-lag
     displayName: "kvmtest-t1-lag-1"
     timeoutInMinutes: 360
