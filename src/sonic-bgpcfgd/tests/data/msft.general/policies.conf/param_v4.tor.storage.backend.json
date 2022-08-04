@@ -1,7 +1,8 @@
 {
     "CONFIG_DB__DEVICE_METADATA": {
         "localhost": {
-            "type": "BackEndToRRouter"
+            "type": "BackEndToRRouter",
+            "storage_device": "true"
         }
     },
     "CONFIG_DB__DEVICE_NEIGHBOR_METADATA": {

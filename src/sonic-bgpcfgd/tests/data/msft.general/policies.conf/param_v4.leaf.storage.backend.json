@@ -2,6 +2,7 @@
     "CONFIG_DB__DEVICE_METADATA": {
         "localhost": {
             "type": "BackEndLeafRouter",
+            "storage_device": "true",
             "bgp_asn": "65100"
         }
     },
