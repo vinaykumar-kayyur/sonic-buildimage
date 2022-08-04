@@ -2,7 +2,7 @@ import os
 import yaml
 
 CONSTANTS_PATH = os.path.abspath('../../files/image_config/constants/constants.yml')
-CONSTANTS_CHECK_NEIG_PATH = os.path.abspath('../../files/image_config/constants/constants_check_neig.yml')
+CONSTANTS_USE_NEIG_PATH = os.path.abspath('../../files/image_config/constants/constants_use_neig.yml')
 
 def load_constants_dir_mappings():
     data = load_constants()
