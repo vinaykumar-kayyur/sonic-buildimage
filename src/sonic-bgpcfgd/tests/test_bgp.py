@@ -4,15 +4,15 @@ import os
 from bgpcfgd.directory import Directory
 from bgpcfgd.template import TemplateFabric
 from . import swsscommon_test
-from .util import load_constants
+from .util import load_constants, CONSTANTS_PATH, CONSTANTS_CHECK_NEIG_PATH 
 from swsscommon import swsscommon
 import bgpcfgd.managers_bgp
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
-def constructor():
+def constructor(constants_path = CONSTANTS_PATH):
     cfg_mgr = MagicMock()
-    constants = load_constants()['constants']
+    constants = load_constants(constants_path)['constants']
     common_objs = {
         'directory': Directory(),
         'cfg_mgr':   cfg_mgr,
@@ -83,8 +83,20 @@ def test_add_peer():
     res = m.set_handler("30.30.30.1", {'asn': '65200', 'holdtime': '180', 'keepalive': '60', 'local_addr': '30.30.30.30', 'name': 'TOR', 'nhopself': '0', 'rrclient': '0'})
     assert res, "Expect True return value"
 
+def test_add_peer_check_neig_meta():
+    m = constructor(CONSTANTS_CHECK_NEIG_PATH)
+
+    res = m.set_handler("30.30.30.1", {'asn': '65200', 'holdtime': '180', 'keepalive': '60', 'local_addr': '30.30.30.30', 'name': 'TOR', 'nhopself': '0', 'rrclient': '0'})
+    assert res, "Expect True return value"
+
 def test_add_peer_ipv6():
     m = constructor()
+    res = m.set_handler("fc00:20::1", {'asn': '65200', 'holdtime': '180', 'keepalive': '60', 'local_addr': 'fc00:20::20', 'name': 'TOR', 'nhopself': '0', 'rrclient': '0'})
+    assert res, "Expect True return value"
+
+def test_add_peer_ipv6_check_neig_meta():
+    m = constructor(CONSTANTS_CHECK_NEIG_PATH)
+    
     res = m.set_handler("fc00:20::1", {'asn': '65200', 'holdtime': '180', 'keepalive': '60', 'local_addr': 'fc00:20::20', 'name': 'TOR', 'nhopself': '0', 'rrclient': '0'})
     assert res, "Expect True return value"
 
