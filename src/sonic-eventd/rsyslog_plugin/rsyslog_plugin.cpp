@@ -2,20 +2,22 @@
 #include <vector>
 #include <fstream>
 #include <regex>
+#include <ctime>
+#include <unordered_map>
 #include "rsyslog_plugin.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
 
-bool RsyslogPlugin::onMessage(string msg) {
+bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
     string tag;
     event_params_t paramDict;
-    if(!m_parser->parseMessage(msg, tag, paramDict)) {
+    if(!m_parser->parseMessage(msg, tag, paramDict, luaState)) {
         SWSS_LOG_DEBUG("%s was not able to be parsed into a structured event\n", msg.c_str());
         return false;
     } else {
         int returnCode = event_publish(m_eventHandle, tag, &paramDict);
-        if (returnCode != 0) {
+        if(returnCode != 0) {
             SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s.\n", tag.c_str());
             return false;
         }
@@ -42,9 +44,14 @@ bool RsyslogPlugin::createRegexList() {
 
     for(long unsigned int i = 0; i < m_parser->m_regexList.size(); i++) {
         try {
-            regexString = m_parser->m_regexList[i]["regex"];
+	    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*"; 
+            string eventRegex = m_parser->m_regexList[i]["regex"];
+	    regexString = timestampRegex + eventRegex; 
             string tag = m_parser->m_regexList[i]["tag"];
             vector<string> params = m_parser->m_regexList[i]["params"];
+	    vector<string> timestampParams = { "month", "day", "time" };
+	    params.insert(params.begin(), timestampParams.begin(), timestampParams.end());
+	    m_parser->m_regexList[i]["params"] = params;
             regex expr(regexString);
             expression = expr;
         } catch (domain_error& deException) {
@@ -56,23 +63,28 @@ bool RsyslogPlugin::createRegexList() {
 	}
         m_parser->m_expressions.push_back(expression);
     }
+
     if(m_parser->m_expressions.empty()) {
         SWSS_LOG_ERROR("Empty list of regex expressions.\n");
         return false;
     }
+
     regexFile.close();
     return true;
 }
 
 void RsyslogPlugin::run() {
+    lua_State* luaState = luaL_newstate();
+    luaL_openlibs(luaState);
     while(true) {
         string line;
         getline(cin, line);
         if(line.empty()) {
             continue;
         }
-        onMessage(line);
+        onMessage(line, luaState);
     }
+    lua_close(luaState);
 }
 
 int RsyslogPlugin::onInit() {

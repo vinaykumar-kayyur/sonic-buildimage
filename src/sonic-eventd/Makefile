@@ -7,8 +7,7 @@ RSYSLOG-PLUGIN_TEST := rsyslog_plugin_tests/tests
 CP := cp
 MKDIR := mkdir
 CC := g++
-CP := cp
-LIBS := -levent -lhiredis -lswsscommon -lpthread -lboost_thread -lboost_system -lzmq -lboost_serialization -luuid
+LIBS := -levent -lhiredis -lswsscommon -lpthread -lboost_thread -lboost_system -lzmq -lboost_serialization -luuid -llua5.1
 TEST_LIBS := -L/usr/src/gtest -lgtest -lgtest_main -lgmock -lgmock_main
 
 CFLAGS += -Wall -std=c++17 -fPIE -I$(PWD)/../sonic-swss-common/common
@@ -26,7 +25,7 @@ endif
 -include rsyslog_plugin/subdir.mk
 -include rsyslog_plugin_tests/subdir.mk
 
-all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin
+all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'

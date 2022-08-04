@@ -1,7 +1,7 @@
 [
     {
         "tag": "TEST-TAG-INVALID-REGEX",
-	"regex": "++",
+	"regex": "+++             ++++(",
 	"params": []
     }
 ]

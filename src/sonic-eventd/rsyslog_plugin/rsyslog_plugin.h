@@ -1,6 +1,12 @@
 #ifndef RSYSLOG_PLUGIN_H
 #define RSYSLOG_PLUGIN_H
 
+extern "C"
+{
+    #include <lua5.1/lua.h>
+    #include <lua5.1/lualib.h>
+    #include <lua5.1/lauxlib.h>
+}
 #include <string>
 #include <memory>
 #include "syslog_parser.h"
@@ -19,7 +25,7 @@ using namespace swss;
 class RsyslogPlugin {
 public:
     int onInit();
-    bool onMessage(string msg);
+    bool onMessage(string msg, lua_State* luaState);
     void run();
     RsyslogPlugin(string moduleName, string regexPath);
 private:
