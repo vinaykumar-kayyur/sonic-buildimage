@@ -58,8 +58,9 @@ class Fan(FanBase):
         max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
         raw_speed = self._api_common.get_output(
             self._fan_index, config, 0)
+        speed_percent = int(float(raw_speed) / max_rpm * 100.0)
 
-        return int(float(raw_speed) / max_rpm * 100.0)
+        return speed_percent if speed_percent <= 100 else 100
 
     def get_target_speed(self):
         """

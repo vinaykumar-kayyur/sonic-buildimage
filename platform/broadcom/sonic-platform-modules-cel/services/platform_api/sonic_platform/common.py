@@ -131,7 +131,7 @@ class Common:
         bin_val = bin(int(hver, 16))[2:].zfill(num_of_bits)
         bit_split = num_of_bits / (num_of_points + 1)
         for x in range(0, num_of_points+1):
-            split_bin = bin_val[c_bit:c_bit+bit_split]
+            split_bin = bin_val[int(c_bit):int(c_bit+bit_split)]
             ver_list.append(str(int(split_bin, 2)))
             c_bit += bit_split
         return '.'.join(ver_list)
