@@ -194,6 +194,19 @@ stages:
         tbname: vms-kvm-t1-lag
         ptf_name: ptf_vms6-2
         tbtype: t1-lag
+
+- job:
+    pool: sonictest-t1-lag-1
+    displayName: "kvmtest-t1-lag"
+    timeoutInMinutes: 360
+
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-03
+        tbname: vms-kvm-t1-lag
+        ptf_name: ptf_vms6-2
+        tbtype: t1-lag
         enable_fips: n
 
   - job:
