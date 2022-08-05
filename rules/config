@@ -167,6 +167,19 @@ INCLUDE_MACSEC = y
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
 
+# INCLUDE_KUBERNETES_MASTER - if set to y kubernetes packages are installed o be able 
+# to run as master node in kubernetes cluster
+INCLUDE_KUBERNETES_MASTER ?= n
+
+# MASTER_KUBERNETES_VERSION - version of k8s components
+# MASTER_PAUSE_VERSION - version of pause container image
+# MASTER_COREDNS_VERSION - version of coredns container image
+# MASTER_ETCD_VERSION = version of etcd container image
+MASTER_KUBERNETES_VERSION = 1.22.2
+MASTER_PAUSE_VERSION = 3.5
+MASTER_COREDNS_VERSION = 1.8.4
+MASTER_ETCD_VERSION = 3.5.0-0
+
 KUBE_DOCKER_PROXY = http://172.16.1.1:3128/
 
 # KUBERNETES_VERSION - Set to the required version.
