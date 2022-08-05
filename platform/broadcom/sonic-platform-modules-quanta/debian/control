@@ -5,7 +5,7 @@ Maintainer: Chih-Pei Chang <Chih-Pei.Chang@qct.io>, Jonathan Tsai <jonathan.tsai
 Build-Depends: debhelper (>= 9), bzip2
 Standards-Version: 3.9.3
 
-Package: sonic-platform-quanta-ix1b-32x
+Package: sonic-platform-quanta
 Architecture: amd64
 Description: kernel modules for platform devices such as psu, led, sfp
 
