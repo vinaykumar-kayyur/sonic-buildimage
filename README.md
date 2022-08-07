@@ -97,6 +97,8 @@ Any server can be a build image server as long as it has:
   * Multiple cores to increase build speed
   * Plenty of RAM (less than 8 GiB is likely to cause issues)
   * 300G of free disk space
+  * KVM Virtualization Support.
+> Note: If you are in a VM, make sure you have support for nested virtualization.
 
 A good choice of OS for building SONiC is currently Ubuntu 20.04.
 
