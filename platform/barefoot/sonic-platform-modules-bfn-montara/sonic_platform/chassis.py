@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
 try:
+    import os
     import time
     import syslog
+    import logging
+    import logging.config
+    import yaml
 
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
@@ -10,7 +14,7 @@ try:
     from sonic_platform.fan_drawer import fan_drawer_list_get
     from sonic_platform.thermal import thermal_list_get
     from eeprom import Eeprom
-    from sonic_platform.thermal_manager import ThermalManager
+    from platform_utils import file_create
 
     from sonic_platform.platform_thrift_client import pltfm_mgr_ready
     from sonic_platform.platform_thrift_client import thrift_try
@@ -20,6 +24,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+NUM_COMPONENT = 2
 class Chassis(ChassisBase):
     """
     Platform-specific Chassis class
@@ -41,12 +46,16 @@ class Chassis(ChassisBase):
         self.__thermals = None
         self.__psu_list = None
         self.__sfp_list = None
-        self.__thermal_mngr = None
-        self.__polling_thermal_time = 30
 
         self.ready = False
         self.phy_port_cur_state = {}
         self.qsfp_interval = self.QSFP_CHECK_INTERVAL
+        self.__initialize_components()
+
+        with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
+            config_dict = yaml.load(f, yaml.SafeLoader)
+            file_create(config_dict['handlers']['file']['filename'], '646')
+            logging.config.dictConfig(config_dict)
 
     @property
     def _eeprom(self):
@@ -114,16 +123,6 @@ class Chassis(ChassisBase):
     def _sfp_list(self, value):
         pass
 
-    @property
-    def _thermal_mngr(self):
-        if self.__thermal_mngr is None:
-            self.__thermal_mngr = ThermalManager(self.__polling_thermal_time)
-        return self.__thermal_mngr
-
-    @_thermal_mngr.setter
-    def _thermal_mngr(self, value):
-        self.__thermal_mngr = ThermalManager(value)
-
     def __update_port_info(self):
         def qsfp_max_port_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_get_max_port()
@@ -140,6 +139,12 @@ class Chassis(ChassisBase):
                 self.QSFP_PORT_END -= 1
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
+
+    def __initialize_components(self):
+        from sonic_platform.component import Components
+        for index in range(0, NUM_COMPONENT):
+            component = Components(index)
+            self._component_list.append(component)
 
     def get_name(self):
         """
@@ -346,10 +351,3 @@ class Chassis(ChassisBase):
             specified.
         """
         return self.system_led
-
-    def get_thermal_manager(self):
-        return self._thermal_mngr
-
-    def __del__(self):
-        if self.__thermal_mngr is not None:
-            self.__thermal_mngr.stop()

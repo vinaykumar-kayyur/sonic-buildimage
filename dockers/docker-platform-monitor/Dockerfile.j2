@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-config-engine-buster
+FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 ARG image_version
@@ -25,7 +25,8 @@ RUN apt-get update &&   \
         i2c-tools       \
         psmisc          \
         python3-jsonschema \
-        libpci3
+        libpci3         \
+        iputils-ping
 
 # On Arista devices, the sonic_platform wheel is not installed in the container.
 # Instead, the installation directory is mounted from the host OS. However, this method

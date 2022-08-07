@@ -3,8 +3,8 @@
 import time
 
 from sonic_py_common import logger as log
-from swsscommon.swsscommon import ConfigDBConnector, DBConnector, FieldValuePairs, ProducerStateTable, SonicV2Connector
-from swsscommon.swsscommon import APPL_DB 
+from swsscommon.swsscommon import ConfigDBConnector, DBConnector, FieldValuePairs, ProducerStateTable, SonicV2Connector, Table
+from swsscommon.swsscommon import APPL_DB, STATE_DB 
 
 logger = log.Logger('write_standby')
 
@@ -22,6 +22,7 @@ class MuxStateWriter(object):
     def __init__(self):
         self.config_db_connector = None
         self.appl_db_connector = None
+        self.state_db_connector = None
         self.asic_db_connector = None
 
     @property
@@ -45,6 +46,16 @@ class MuxStateWriter(object):
         if self.appl_db_connector is None:
             self.appl_db_connector = DBConnector(APPL_DB, REDIS_SOCK_PATH, True)
         return self.appl_db_connector
+    
+    @property
+    def state_db(self):
+        """
+        Returns the state DB connector.
+        Intializes the connector during the first call
+        """
+        if self.state_db_connector is None:
+            self.state_db_connector = DBConnector(STATE_DB, REDIS_SOCK_PATH, True)
+        return self.state_db_connector
 
     @property
     def asic_db(self):
@@ -75,6 +86,16 @@ class MuxStateWriter(object):
 
         return 'subtype' in metadata and 'dualtor' in metadata['subtype'].lower()
 
+    @property
+    def is_warmrestart(self):
+        """
+        Checks if a warmrestart is going on
+        """
+        tbl = Table(self.state_db, 'WARM_RESTART_ENABLE_TABLE')
+        (status, value) = tbl.hget('system', 'enable')
+
+        return status and value == 'true' 
+
     def get_auto_mux_intfs(self):
         """
         Returns a list of all mux cable interfaces that are configured to auto-switch
@@ -91,7 +112,7 @@ class MuxStateWriter(object):
         tunnel_key_pattern = 'ASIC_STATE:SAI_OBJECT_TYPE_TUNNEL:*'
         return len(self.asic_db.keys('ASIC_DB', tunnel_key_pattern)) > 0
 
-    def wait_for_tunnel(self, interval=1, timeout=30):
+    def wait_for_tunnel(self, interval=1, timeout=60):
         """
         Waits until the IP-in-IP tunnel has been created
 
@@ -117,6 +138,12 @@ class MuxStateWriter(object):
         if not self.is_dualtor:
             # If not running on a dual ToR system, take no action
             return
+
+        if self.is_warmrestart:
+            # If in warmrestart context, take no action
+            logger.log_warning("Skip setting mux state due to ongoing warmrestart.")
+            return
+
         intfs = self.get_auto_mux_intfs()
         state = 'standby'
         if self.wait_for_tunnel():

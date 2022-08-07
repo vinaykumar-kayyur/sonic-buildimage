@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import ipaddress
 
 import tests.common_utils as utils
 import minigraph
@@ -9,20 +10,26 @@ from unittest import TestCase
 
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
 class TestCfgGenCaseInsensitive(TestCase):
 
     def setUp(self):
+        self.yang = utils.YangWrapper()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.sample_graph = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
         self.sample_simple_graph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
         self.sample_resource_graph = os.path.join(self.test_dir, 'sample-graph-resource-type.xml')
         self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
+        self.sample_simple_device_desc = os.path.join(self.test_dir, 'simple-sample-device-desc.xml')
+        self.sample_simple_device_desc_ipv6_only = os.path.join(self.test_dir, 'simple-sample-device-desc-ipv6-only.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
         print('\n    Running sonic-cfggen ' + argument)
+        self.assertTrue(self.yang.validate(argument))
+
         if check_stderr:
             output = subprocess.check_output(self.script_file + ' ' + argument, stderr=subprocess.STDOUT, shell=True)
         else:
@@ -44,27 +51,27 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(output, '')
 
     def test_minigraph_sku(self):
-        argument = '-v "DEVICE_METADATA[\'localhost\'][\'hwsku\']" -m "' + self.sample_graph + '"'
+        argument = '-v "DEVICE_METADATA[\'localhost\'][\'hwsku\']" -m "' + self.sample_graph + '" -p "' + self.port_config + '"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'Force10-S6000')
 
     def test_print_data(self):
-        argument = '-m "' + self.sample_graph + '" --print-data'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" --print-data'
         output = self.run_script(argument)
         self.assertTrue(len(output.strip()) > 0)
 
     def test_jinja_expression(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'ToRRouter')
 
     def test_minigraph_subtype(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'DualToR')
 
     def test_minigraph_peer_switch_hostname(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'peer_switch\']"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'peer_switch\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'switch2-t0')
 
@@ -156,7 +163,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         )
 
     def test_minigraph_console_mgmt_feature(self):
-        argument = '-m "' + self.sample_graph + '" -v CONSOLE_SWITCH'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v CONSOLE_SWITCH'
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
@@ -168,6 +175,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'1': {'baud_rate': '9600', 'remote_device': 'managed_device', 'flow_control': 1}}"))
+
+    def test_minigraph_dhcp_server_feature(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'dhcp_server\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '')
+
+        try:
+            # For DHCP server enabled device type
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BMC_MGMT_TOR_ROUTER, self.sample_graph), shell=True)
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), 'enabled')
+        finally:
+            output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BMC_MGMT_TOR_ROUTER, TOR_ROUTER, self.sample_graph), shell=True)
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'
@@ -209,6 +229,13 @@ class TestCfgGenCaseInsensitive(TestCase):
                 'lo_addr_v6': 'fe80::0002/128',
                 'mgmt_addr': '10.0.0.2/32',
                 'type': 'Server'
+            },
+            'server1-SC': {
+                'hwsku': 'smartcable-sku',
+                'lo_addr': '0.0.0.0/0',
+                'lo_addr_v6': '::/0',
+                'mgmt_addr': '0.0.0.0/0',
+                'type': 'SmartCable'
             }
         }
         output = self.run_script(argument)
@@ -337,6 +364,50 @@ class TestCfgGenCaseInsensitive(TestCase):
             expected_tunnel
         )
 
+        # Validate tunnel config is as before when tunnel_qos_remap = disabled
+        sample_graph_disabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-disabled.xml')
+        argument = '-m "' + sample_graph_disabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+
+        # Validate extra config is generated when tunnel_qos_remap = enabled
+        sample_graph_enabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-enabled.xml')
+        argument = '-m "' + sample_graph_enabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
+        expected_tunnel = {
+            "MuxTunnel0": {
+                "tunnel_type": "IPINIP",
+                "src_ip": "25.1.1.10",
+                "dst_ip": "10.1.0.32",
+                "dscp_mode": "pipe",
+                "encap_ecn_mode": "standard",
+                "ecn_mode": "copy_from_outer",
+                "ttl_mode": "pipe",
+                "decap_dscp_to_tc_map": "AZURE_TUNNEL",
+                "decap_tc_to_pg_map": "AZURE_TUNNEL",
+                "encap_tc_to_dscp_map": "AZURE_TUNNEL",
+                "encap_tc_to_queue_map": "AZURE_TUNNEL"
+            }
+        }
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+
+        # Validate extra config for mux tunnel is generated automatically when tunnel_qos_remap = enabled
+        sample_graph_enabled_remap = os.path.join(self.test_dir, 'simple-sample-graph-case-remap-enabled-no-tunnel-attributes.xml')
+        argument = '-m "' + sample_graph_enabled_remap + '" -p "' + self.port_config + '" -v "TUNNEL"'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
+
     def test_minigraph_mux_cable_table(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "MUX_CABLE"'
         expected_table = {
@@ -348,7 +419,10 @@ class TestCfgGenCaseInsensitive(TestCase):
             'Ethernet8': {
                 'state': 'auto',
                 'server_ipv4': '10.10.10.2/32',
-                'server_ipv6': 'fe80::2/128'
+                'server_ipv6': 'fe80::2/128',
+                'soc_ipv4': '10.10.10.3/32',
+                'soc_ipv6': 'fe80::3/128',
+                'cable_type': 'active-active'
             }
         }
 
@@ -393,5 +467,19 @@ class TestCfgGenCaseInsensitive(TestCase):
             expected_ports.sort()
         )
 
+    def test_parse_device_desc_xml_mgmt_interface(self):
+        # Regular device_desc.xml with both IPv4 and IPv6 mgmt address
+        result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc)
+        mgmt_intf = result['MGMT_INTERFACE']
+        self.assertEqual(len(mgmt_intf.keys()), 2)
+        self.assertTrue(('eth0', '10.0.0.100/24') in mgmt_intf.keys())
+        self.assertTrue(('eth0', 'FC00:1::32/64') in mgmt_intf.keys())
+        self.assertTrue(ipaddress.ip_address(u'10.0.0.1') == mgmt_intf[('eth0', '10.0.0.100/24')]['gwaddr'])
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1') == mgmt_intf[('eth0', 'FC00:1::32/64')]['gwaddr'])
 
-    
+        # Special device_desc.xml with IPv6 mgmt address only
+        result = minigraph.parse_device_desc_xml(self.sample_simple_device_desc_ipv6_only)
+        mgmt_intf = result['MGMT_INTERFACE']
+        self.assertEqual(len(mgmt_intf.keys()), 1)
+        self.assertTrue(('eth0', 'FC00:1::32/64') in mgmt_intf.keys())
+        self.assertTrue(ipaddress.ip_address(u'fc00:1::1') == mgmt_intf[('eth0', 'FC00:1::32/64')]['gwaddr'])

@@ -28,9 +28,12 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
+import sonic_platform.chassis
+from sonic_platform_base.sfp_base import SfpBase
 from sonic_platform.chassis import Chassis
 from sonic_platform.device_data import DeviceDataManager
 
+sonic_platform.chassis.extract_RJ45_ports_index = mock.MagicMock(return_value=[])
 
 class TestChassis:
     """Test class to test chassis.py. The test cases covers:
@@ -38,7 +41,7 @@ class TestChassis:
         2. Fan drawer related API
         3. SFP related API (Except modular chassis SFP related API)
         4. Reboot cause related API
-    
+
     Thermal, Eeprom, Watchdog, Component, System LED related API will be tested in seperate class
     """
     @classmethod
@@ -166,7 +169,6 @@ class TestChassis:
     @mock.patch('sonic_platform.sfp_event.sfp_event.check_sfp_status', MagicMock())
     @mock.patch('sonic_platform.sfp_event.sfp_event.__init__', MagicMock(return_value=None))
     @mock.patch('sonic_platform.sfp_event.sfp_event.initialize', MagicMock())
-    @mock.patch('sonic_platform.sfp.SFP.reinit', MagicMock())
     @mock.patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
     def test_change_event(self):
         from sonic_platform.sfp_event import sfp_event
@@ -185,7 +187,6 @@ class TestChassis:
         assert status is True
         assert 'sfp' in event_dict and event_dict['sfp'][1] == '1'
         assert len(chassis._sfp_list) == 3
-        assert SFP.reinit.call_count == 1
 
         # Call get_change_event with timeout=1.0
         return_port_dict = {}
@@ -269,3 +270,30 @@ class TestChassis:
         module_list = chassis.get_all_modules()
         assert len(module_list) == 3
         assert chassis.module_initialized_count == 3
+
+    def test_revision_permission(self):
+        old_dmi_file =  sonic_platform.chassis.DMI_FILE
+        #Override the dmi file
+        sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
+        new_dmi_file = sonic_platform.chassis.DMI_FILE
+        os.system("touch " + new_dmi_file)
+        os.system("chmod -r " + new_dmi_file)
+        chassis = Chassis()
+        rev = chassis.get_revision()
+        sonic_platform.chassis.DMI_FILE = old_dmi_file
+        os.system("rm -f " + new_dmi_file)
+        assert rev == "N/A"
+
+    def test_get_port_or_cage_type(self):
+        chassis = Chassis()
+        chassis._RJ45_port_inited = True
+        chassis._RJ45_port_list = [0]
+        assert SfpBase.SFP_PORT_TYPE_BIT_RJ45 == chassis.get_port_or_cage_type(1)
+
+        exceptionRaised = False
+        try:
+            chassis.get_port_or_cage_type(2)
+        except NotImplementedError:
+            exceptionRaised = True
+
+        assert exceptionRaised
