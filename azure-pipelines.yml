@@ -28,12 +28,12 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
+    name: sonic-net/sonic-mgmt
+    endpoint: sonic-net
   - repository: buildimage
     type: github
-    name: Azure/sonic-buildimage
-    endpoint: build
+    name: sonic-net/sonic-buildimage
+    endpoint: sonic-net
     ref: master
 
 variables:
@@ -75,7 +75,7 @@ stages:
 
 - stage: Test
   dependsOn: BuildVS
-  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), succeeded())
+  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues'))
   variables:
   - name: inventory
     value: veos_vtb
