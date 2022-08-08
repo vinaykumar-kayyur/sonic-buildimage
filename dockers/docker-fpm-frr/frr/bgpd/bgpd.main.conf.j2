@@ -7,6 +7,10 @@
 ! BGP configuration
 !
 ! TSA configuration
+{% set is_storage_device = DEVICE_METADATA['localhost']['storage_device'] %}
+{% if is_storage_device is not defined or is_storage_device | length == 0 %}
+{% set is_storage_device = "false" %}
+{% endif %}
 !
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 !
@@ -87,7 +91,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 !
 {# advertise loopback #}
-{% if DEVICE_METADATA['localhost']['storage_device'] != 'true' or DEVICE_METADATA['localhost']['type'] not in 'BackEnd' %}
+{% if is_storage_device != 'true' or DEVICE_METADATA['localhost']['type'] not in 'BackEnd' %}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 {% endif %}
 !
@@ -95,7 +99,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32 route-map HIDE_INTERNAL
 {% endif %}
 !
-{% if DEVICE_METADATA['localhost']['storage_device'] != 'true' or DEVICE_METADATA['localhost']['type'] not in 'BackEnd' %}
+{% if is_storage_device != 'true' or DEVICE_METADATA['localhost']['type'] not in 'BackEnd' %}
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
   address-family ipv6
 {% if ( ('localhost' in DEVICE_METADATA) and ('bgp_adv_lo_prefix_as_128' in  DEVICE_METADATA['localhost']) and 
