@@ -372,6 +372,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            MASTER_PAUSE_VERSION=$(MASTER_PAUSE_VERSION) \
                            MASTER_COREDNS_VERSION=$(MASTER_COREDNS_VERSION) \
                            MASTER_ETCD_VERSION=$(MASTER_ETCD_VERSION) \
+                           MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD)
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \

@@ -190,6 +190,7 @@ MASTER_KUBERNETES_VERSION = 1.22.2
 MASTER_PAUSE_VERSION = 3.5
 MASTER_COREDNS_VERSION = 1.8.4
 MASTER_ETCD_VERSION = 3.5.0-0
+MASTER_CRI_DOCKERD = 0.2.5
 
 # SONIC_ENABLE_IMAGE_SIGNATURE - enable image signature
 # To not use the auto-generated self-signed certificate, the required files to sign the image as below:
