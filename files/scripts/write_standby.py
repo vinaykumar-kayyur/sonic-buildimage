@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import time
 
 from sonic_py_common import logger as log
@@ -19,11 +20,12 @@ class MuxStateWriter(object):
     Class used to write standby mux state to APP DB
     """
 
-    def __init__(self):
+    def __init__(self, state):
         self.config_db_connector = None
         self.appl_db_connector = None
         self.state_db_connector = None
         self.asic_db_connector = None
+        self.default_state = state
 
     @property
     def config_db(self):
@@ -106,10 +108,10 @@ class MuxStateWriter(object):
         all_intfs = self.config_db.get_table('MUX_CABLE')
         for intf, status in all_intfs.items():
             state = status['state'].lower()
-            if state == 'standby':
-                intf_modes[intf] = 'standby'
-            elif state in ['active', 'auto', 'manual']:
-                intf_modes[intf] = 'active'
+            if state in ['active', 'standby']:
+                intf_modes[intf] = state
+            elif state in ['auto', 'manual']:
+                intf_modes[intf] = self.default_state
         return intf_modes
 
     def tunnel_exists(self):
@@ -164,5 +166,10 @@ class MuxStateWriter(object):
 
 
 if __name__ == '__main__':
-    mux_writer = MuxStateWriter()
+    parser = argparse.ArgumentParser(description='Write initial mux state')
+    parser.add_argument('-s', '--state',
+                        help='state: intial state for "auto" and/or "manual" config, default "standby"',
+                        type=str, required=False, default='standby')
+    args = parser.parse_args()
+    mux_writer = MuxStateWriter(state=args.state)
     mux_writer.apply_mux_config()
