@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica
+# Celestica (c) 2022
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the PSUs status which are available in the platform
