@@ -167,6 +167,17 @@ INCLUDE_MACSEC = y
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
 
+KUBE_DOCKER_PROXY = http://172.16.1.1:3128/
+
+# KUBERNETES_VERSION - Set to the required version.
+# K8s_GCR_IO_PAUSE_VERSION - Version of k8s universal pause container image
+# These are Used *only* when INCLUDE_KUBERNETES=y
+# NOTE: As a worker node it has to run version compatible to kubernetes master.
+#
+KUBERNETES_VERSION = 1.21.1
+KUBERNETES_CNI_VERSION = 0.8.7
+K8s_GCR_IO_PAUSE_VERSION = 3.4.1
+
 # INCLUDE_KUBERNETES_MASTER - if set to y kubernetes packages are installed o be able 
 # to run as master node in kubernetes cluster
 INCLUDE_KUBERNETES_MASTER ?= n
@@ -179,17 +190,6 @@ MASTER_KUBERNETES_VERSION = 1.22.2
 MASTER_PAUSE_VERSION = 3.5
 MASTER_COREDNS_VERSION = 1.8.4
 MASTER_ETCD_VERSION = 3.5.0-0
-
-KUBE_DOCKER_PROXY = http://172.16.1.1:3128/
-
-# KUBERNETES_VERSION - Set to the required version.
-# K8s_GCR_IO_PAUSE_VERSION - Version of k8s universal pause container image
-# These are Used *only* when INCLUDE_KUBERNETES=y
-# NOTE: As a worker node it has to run version compatible to kubernetes master.
-#
-KUBERNETES_VERSION = 1.21.1
-KUBERNETES_CNI_VERSION = 0.8.7
-K8s_GCR_IO_PAUSE_VERSION = 3.4.1
 
 # SONIC_ENABLE_IMAGE_SIGNATURE - enable image signature
 # To not use the auto-generated self-signed certificate, the required files to sign the image as below:
