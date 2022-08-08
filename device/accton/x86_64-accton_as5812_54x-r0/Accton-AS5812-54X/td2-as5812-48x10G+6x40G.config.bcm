@@ -3,7 +3,7 @@ bcm_stat_flags=0
 parity_enable=0
 parity_correction=0
 
-bcm_num_cos=10
+bcm_num_cos=8
 l2_mem_entries=32768
 l3_mem_entries=16384
 l3_alpm_enable=2
@@ -12,6 +12,7 @@ ipv6_lpm_128b_enable=1
 mmu_lossless=0
 lls_num_l2uc=12
 module_64ports=0
+port_flex_enable=1
 
 #SFI
 serdes_if_type=9
@@ -103,40 +104,22 @@ portmap_47=75:10
 portmap_48=76:10
 
 # QSFP+ 49/WC24/port 49
-portmap_49=97:10
-portmap_50=98:10
-portmap_51=99:10
-portmap_52=100:10
+portmap_49=97:40
 
 # QSFP+ 51/WC25/port 50
-portmap_53=101:10
-portmap_54=102:10
-portmap_55=103:10
-portmap_56=104:10
+portmap_53=101:40
 
 # QSFP+ 53/WC20/port 51
-portmap_57=81:10
-portmap_58=82:10
-portmap_59=83:10
-portmap_60=84:10
+portmap_57=81:40
 
 # QSFP+ 50/WC26/port 52
-portmap_61=105:10
-portmap_62=106:10
-portmap_63=107:10
-portmap_64=108:10
+portmap_61=105:40
 
 # QSFP+ 52/WC27/port 53
-portmap_65=109:10
-portmap_66=110:10
-portmap_67=111:10
-portmap_68=112:10
+portmap_65=109:40
 
 # QSFP+ 54/WC19/port 54
-portmap_69=77:10
-portmap_70=78:10
-portmap_71=79:10
-portmap_72=80:10
+portmap_69=77:40
 
 # L3 ECMP
 # - In Trident2, VP LAGs share the same table as ECMP group table.
