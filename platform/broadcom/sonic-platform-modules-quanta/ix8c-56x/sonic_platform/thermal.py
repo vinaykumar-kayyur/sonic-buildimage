@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Inventec d7264
+# Quanta IX8C
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Thermal information
@@ -59,7 +59,7 @@ class Thermal(ThermalBase):
             with open(attr_path, 'r') as fd:
                 retval = fd.read()
         except Exception as error:
-            logging.error("Unable to open ", attr_path, " file !")
+            logging.error("Unable to open " + attr_path + " file !")
 
         retval = retval.rstrip(' \t\n\r')
         return retval

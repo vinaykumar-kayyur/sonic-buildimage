@@ -239,10 +239,10 @@ class Chassis(ChassisBase):
                 cur_xcvr_presence = self._sfp_list[index-1].get_presence()
                 if cur_xcvr_presence != self.__xcvr_presence[index]:
                     if cur_xcvr_presence is True:
-                        xcvr_change_event_dict[str(index)] = '1'
+                        xcvr_change_event_dict[index] = '1'
                         self.__xcvr_presence[index] = True
                     elif cur_xcvr_presence is False:
-                        xcvr_change_event_dict[str(index)] = '0'
+                        xcvr_change_event_dict[index] = '0'
                         self.__xcvr_presence[index] = False
                     event = True
 

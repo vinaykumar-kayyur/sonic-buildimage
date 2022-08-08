@@ -60,7 +60,7 @@ class Thermal(ThermalBase):
             with open(attr_path, 'r') as fd:
                 retval = fd.read()
         except Exception as error:
-            logging.error("Unable to open ", attr_path, " file !")
+            logging.error("Unable to open " + attr_path + " file !")
 
         retval = retval.rstrip(' \t\n\r')
         return retval
