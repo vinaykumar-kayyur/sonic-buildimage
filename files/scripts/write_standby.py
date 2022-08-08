@@ -96,14 +96,21 @@ class MuxStateWriter(object):
 
         return status and value == 'true' 
 
-    def get_auto_mux_intfs(self):
+    def get_all_mux_intfs_modes(self):
         """
-        Returns a list of all mux cable interfaces that are configured to auto-switch
+        Returns a list of all mux cable interfaces, with suggested modes
+        Setting mux initial modes is crucial to kick off the statemachines,
+        have to set the modes for all mux/gRPC ports.
         """
+        intf_modes = {}
         all_intfs = self.config_db.get_table('MUX_CABLE')
-        auto_intfs = [intf for intf, status in all_intfs.items()
-                                if status['state'].lower() == 'auto']
-        return auto_intfs
+        for intf, status in all_intfs.items():
+            state = status['state'].lower()
+            if state == 'standby':
+                intf_modes[intf] = 'standby'
+            elif state in ['active', 'auto', 'manual']:
+                intf_modes[intf] = 'active'
+        return intf_modes
 
     def tunnel_exists(self):
         """
@@ -144,14 +151,13 @@ class MuxStateWriter(object):
             logger.log_warning("Skip setting mux state due to ongoing warmrestart.")
             return
 
-        intfs = self.get_auto_mux_intfs()
-        state = 'standby'
+        modes = self.get_all_mux_intfs_modes()
         if self.wait_for_tunnel():
-            logger.log_warning("Applying {} state to interfaces {}".format(state, intfs))
+            logger.log_warning("Applying state to interfaces {}".format(modes))
             producer_state_table = ProducerStateTable(self.appl_db, 'MUX_CABLE_TABLE')
-            fvs = create_fvs(state=state)
 
-            for intf in intfs:
+            for intf, state in modes.items():
+                fvs = create_fvs(state=state)
                 producer_state_table.set(intf, fvs)
         else:
             logger.log_error("Timed out waiting for tunnel {}, mux state will not be written".format(self.tunnel_name))
