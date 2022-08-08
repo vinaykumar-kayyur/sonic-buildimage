@@ -94,7 +94,6 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% if is_storage_device != 'true' or DEVICE_METADATA['localhost']['type'] not in 'BackEnd' %}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 {% endif %}
-!
 {% if ((multi_asic is defined and DEVICE_METADATA['localhost']['switch_type'] != 'chassis-packet') or (DEVICE_METADATA['localhost']['switch_type'] == 'voq')) %}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32 route-map HIDE_INTERNAL
 {% endif %}
