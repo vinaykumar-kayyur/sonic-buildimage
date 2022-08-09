@@ -25,3 +25,4 @@ $(DOCKER_RESTAPI)_RUN_OPT += -v /etc/sonic/credentials:/etc/sonic/credentials:ro
 $(DOCKER_RESTAPI)_RUN_OPT += -p=8081:8081/tcp
 
 $(DOCKER_RESTAPI)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
+$(DOCKER_RESTAPI)_BASE_IMAGE_FILES += monit_restapi:/etc/monit/conf.d

@@ -36,6 +36,7 @@ $(DOCKER_MGMT_FRAMEWORK)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
 $(DOCKER_MGMT_FRAMEWORK)_RUN_OPT += --mount type=bind,source="/var/platform/",target="/mnt/platform/"
 
 $(DOCKER_MGMT_FRAMEWORK)_BASE_IMAGE_FILES += sonic-cli:/usr/bin/sonic-cli
+$(DOCKER_MGMT_FRAMEWORK)_BASE_IMAGE_FILES += monit_mgmt_framework:/etc/monit/conf.d
 
 SONIC_BUSTER_DOCKERS += $(DOCKER_MGMT_FRAMEWORK)
 SONIC_BUSTER_DBG_DOCKERS += $(DOCKER_MGMT_FRAMEWORK_DBG)

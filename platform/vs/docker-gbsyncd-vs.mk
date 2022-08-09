@@ -15,3 +15,5 @@ $(DOCKER_GBSYNCD_BASE)_VERSION = 1.0.0
 $(DOCKER_GBSYNCD_BASE)_PACKAGE_NAME = gbsyncd
 
 $(DOCKER_GBSYNCD_BASE)_RUN_OPT += -v /host/warmboot:/var/warmboot
+
+$(DOCKER_GBSYNCD_BASE)_BASE_IMAGE_FILES += monit_syncd:/etc/monit/conf.d

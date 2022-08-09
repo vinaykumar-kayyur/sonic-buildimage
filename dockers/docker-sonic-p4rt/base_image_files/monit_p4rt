@@ -1,0 +1,5 @@
+###############################################################################
+## Monit configuration for p4rt container
+###############################################################################
+check program container_memory_p4rt with path "/usr/bin/memory_checker p4rt"
+    if status == 3 for 10 times within 20 cycles then alert repeat every 1 cycles
