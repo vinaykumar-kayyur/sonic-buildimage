@@ -1,5 +1,6 @@
 {
     "port_num": 33,
+    "sfp_api": "sfp_optoe",
     "eeprom_path": "/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom",
     "port_i2c_mapping": [
         2,

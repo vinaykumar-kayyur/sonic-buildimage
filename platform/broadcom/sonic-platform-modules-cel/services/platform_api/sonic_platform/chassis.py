@@ -63,13 +63,17 @@ class Chassis(ChassisBase):
 
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
+        from sonic_platform.sfp_optoe import SfpOptoe
 
         sfp_config_path = self._api_common.get_config_path(self.SFP_CONFIG)
         sfp_config = self._api_common.load_json_file(sfp_config_path)
 
         sfp_index = 0
         for index in range(0, sfp_config['port_num']):
-            sfp = Sfp(sfp_index, conf=sfp_config)
+            if sfp_config['sfp_api'] == "sfp_optoe":
+                sfp = SfpOptoe(sfp_index, conf=sfp_config)
+            else:
+                sfp = Sfp(sfp_index, conf=sfp_config)
             self._sfp_list.append(sfp)
             sfp_index += 1
         self.sfp_module_initialized = True
