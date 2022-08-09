@@ -111,8 +111,8 @@ class MuxStateWriter(object):
             if state in ['active', 'standby']:
                 intf_modes[intf] = state
             elif state in ['auto', 'manual']:
-                if 'soc_ipv4' in status or 'soc_ipv6' in status or
-                   ('cable_type' in status and status['cable_type'] == 'active-active'):
+                if ('soc_ipv4' in status or 'soc_ipv6' in status or
+                    ('cable_type' in status and status['cable_type'] == 'active-active')):
                     intf_modes[intf] = 'active'
                 else:
                     intf_modes[intf] = self.default_state
