@@ -20,12 +20,13 @@ class MuxStateWriter(object):
     Class used to write standby mux state to APP DB
     """
 
-    def __init__(self, state):
+    def __init__(self, activeactive, activestandby):
         self.config_db_connector = None
         self.appl_db_connector = None
         self.state_db_connector = None
         self.asic_db_connector = None
-        self.default_state = state
+        self.default_active_active_state = activeactive
+        self.default_active_standby_state = activestandby
 
     @property
     def config_db(self):
@@ -113,9 +114,9 @@ class MuxStateWriter(object):
             elif state in ['auto', 'manual']:
                 if ('soc_ipv4' in status or 'soc_ipv6' in status or
                     ('cable_type' in status and status['cable_type'] == 'active-active')):
-                    intf_modes[intf] = 'active'
+                    intf_modes[intf] = self.default_active_active_state
                 else:
-                    intf_modes[intf] = self.default_state
+                    intf_modes[intf] = self.default_active_standby_state
         return intf_modes
 
     def tunnel_exists(self):
@@ -171,9 +172,12 @@ class MuxStateWriter(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Write initial mux state')
-    parser.add_argument('-s', '--state',
-                        help='state: intial state for "auto" and/or "manual" config, default "standby"',
+    parser.add_argument('-a', '--active_active',
+                        help='state: intial state for "auto" and/or "manual" config in active-active mode, default "active"',
+                        type=str, required=False, default='active')
+    parser.add_argument('-s', '--active_standby',
+                        help='state: intial state for "auto" and/or "manual" config in active-standby mode, default "standby"',
                         type=str, required=False, default='standby')
     args = parser.parse_args()
-    mux_writer = MuxStateWriter(state=args.state)
+    mux_writer = MuxStateWriter(activeactive=args.active_active, activestandby=args.active_standby)
     mux_writer.apply_mux_config()
