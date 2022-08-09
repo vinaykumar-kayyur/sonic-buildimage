@@ -1,0 +1,147 @@
+{
+    "MUX_CABLE_POSITIVE_CONFIG": {
+        "sonic-mux-cable:sonic-mux-cable": {
+            "sonic-mux-cable:MUX_CABLE": {
+                "PEER_TOR": "10.10.10.11",
+                "PORTS_LIST": [
+                    {
+                        "port": "Ethernet8",
+                        "STATE": "auto",
+                        "SERVER": {
+                            "IPv4": "10.1.1.1",
+                            "IPv6": "fc00::75",
+                            "cable_type": "active-active",
+                            "soc_ipv4": "10.1.1.2",
+                            "soc_ipv6": "fc00::76"
+                        }
+                    },
+                    {
+                        "port": "Ethernet12",
+                        "STATE": "manual",
+                        "SERVER": {
+                            "IPv4": "10.1.1.3",
+                            "IPv6": "fc00::77",
+                            "cable_type": "active-active",
+                            "soc_ipv4": "10.1.1.4",
+                            "soc_ipv6": "fc00::78"
+                        }
+                    },
+                    {
+                        "port": "Ethernet16",
+                        "STATE": "active",
+                        "SERVER": {
+                            "IPv4": "10.1.1.5",
+                            "IPv6": "fc00::79",
+                            "cable_type": "active-standby",
+                            "soc_ipv4": "10.1.1.6",
+                            "soc_ipv6": "fc00::80"
+                        }
+                    },
+                    {
+                        "port": "Ethernet20",
+                        "STATE": "standby",
+                        "SERVER": {
+                            "IPv4": "10.1.1.7",
+                            "IPv6": "fc00::81",
+                            "cable_type": "active-standby",
+                            "soc_ipv4": "10.1.1.8",
+                            "soc_ipv6": "fc00::82"
+                        }
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "description": "Ethernet8/1",
+                        "lanes": "45",
+                        "speed": 100000
+                    },
+                    {
+                        "name": "Ethernet12",
+                        "description": "Ethernet12/1",
+                        "lanes": "49",
+                        "speed": 100000
+                    },
+                    {
+                        "name": "Ethernet16",
+                        "description": "Ethernet8/1",
+                        "lanes": "53",
+                        "speed": 100000
+                    },
+                    {
+                        "name": "Ethernet20",
+                        "description": "Ethernet20/1",
+                        "lanes": "57",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
+    "MUX_CABLE_STATE_PATTERN": {
+        "sonic-mux-cable:sonic-mux-cable": {
+            "sonic-mux-cable:MUX_CABLE": {
+                "PEER_TOR": "10.10.10.11",
+                "PORTS_LIST": [
+                    {
+                        "port": "Ethernet4",
+                        "STATE": "auto1c",
+                        "SERVER": {
+                            "IPv4": "10.1.11.1",
+                            "IPv6": "fc00::85",
+                            "cable_type": "active-active",
+                            "soc_ipv4": "10.1.11.2"
+                        }
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet4",
+                        "description": "Ethernet4/1",
+                        "lanes": "41",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
+    "MUX_CABLE_CABLE_TYPE_PATTERN": {
+        "sonic-mux-cable:sonic-mux-cable": {
+            "sonic-mux-cable:MUX_CABLE": {
+                "PEER_TOR": "10.10.22.11",
+                "PORTS_LIST": [
+                    {
+                        "port": "Ethernet4",
+                        "STATE": "auto",
+                        "SERVER": {
+                            "IPv4": "10.1.22.1",
+                            "IPv6": "fc00::95",
+                            "cable_type": "standby-standby",
+                            "soc_ipv4": "10.1.22.2"
+                        }
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet4",
+                        "description": "Ethernet4/1",
+                        "lanes": "41",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    }
+}

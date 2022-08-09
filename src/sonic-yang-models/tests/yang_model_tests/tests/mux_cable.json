@@ -1,0 +1,15 @@
+{
+    "MUX_CABLE_POSITIVE_CONFIG": {
+        "desc": "Configure MUX_CABLE POSITIVE_CONFIGs."
+    },
+    "MUX_CABLE_STATE_PATTERN": {
+        "desc": "Configure MUX_CABLE INCORRECT STATE_PATTERN.",
+        "eStrKey": "Pattern",
+        "eStr": ["auto1c"]
+    },
+    "MUX_CABLE_CABLE_TYPE_PATTERN": {
+        "desc": "Configure MUX_CABLE INCORRECT CABLE_TYPE_PATTERN.",
+        "eStrKey": "Pattern",
+        "eStr": ["standby-standby"]
+    }
+}

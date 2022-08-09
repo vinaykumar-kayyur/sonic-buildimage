@@ -1,0 +1,93 @@
+module sonic-mux-cable {
+
+    yang-version 1.1;
+
+    namespace  "http://github.com/Azure/sonic-mux-cable";
+
+    prefix mux-cable;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
+    import sonic-port {
+        prefix port;
+    }
+
+    description "MUX CABLE YANG module for SONiC OS";
+
+    revision 2022-08-10 {
+        description "Initial version";
+    }
+
+    container sonic-mux-cable {
+
+        container MUX_CABLE {
+
+            description "MUX_CABLE part of config_db.json";
+
+            leaf PEER_TOR {
+                description "peer TOR IP address";
+                type inet:ip-address;
+            }
+
+            list PORTS_LIST {
+
+                description "List of PORTs which has MUX_CABLE";
+
+                key "port";
+
+                leaf port {
+                    description "PORT which has MUX_CABLE";
+                    type leafref {
+                        path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
+                    }
+                }
+
+                leaf STATE {
+                    description "State of MUX on Port";
+                    type string {
+                        pattern "auto|manual|active|standby";
+                    }
+                }
+
+                container SERVER {
+
+                    description "SERVER config on given MUX port";
+
+                    leaf IPv4 {
+                        description "SERVER IPv4";
+                        type inet:ipv4-address;
+                    }
+
+                    leaf IPv6 {
+                        description "SERVER IPv6";
+                        type inet:ipv6-address;
+                    }
+
+                    leaf cable_type {
+                        description "cable_type of MUX on Port";
+                        type string {
+                            pattern "active-standby|active-active";
+                        }
+                    }
+
+                    leaf soc_ipv4 {
+                        description "SERVER soc_ipv4";
+                        type inet:ipv4-address;
+                    }
+
+                    leaf soc_ipv6 {
+                        description "SERVER soc_ipv6";
+                        type inet:ipv6-address;
+                    }
+
+                } /* end of container SERVER */
+
+            }/* end of list PORTS_LIST */
+
+        } /* end of container MUX_CABLE */
+
+    } /* end of container sonic-mux-cable */
+
+} /* end of module sonic-mux-cable */
