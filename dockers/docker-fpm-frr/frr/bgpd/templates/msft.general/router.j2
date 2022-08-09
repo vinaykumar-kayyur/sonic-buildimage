@@ -27,7 +27,7 @@
 {%             include path_template % "v4.tor.rotterdam" %}
 {%         elif neighbor_type == 'BackEndToRRouter' %}
 {%             include path_template % "v4.tor.frontend" %}
-{%         elif neighbor_type == 'BackEndLeafRouter' and is_storage_device %}
+{%         elif neighbor_type == 'BackEndLeafRouter' and is_storage_device == 'true' and device_type == 'BackEndToRRouter' %}
 {%             include path_template % "v4.tor.storage.backend" %}
 {%         elif neighbor_type == 'ToRRouter' %}
 {%             include path_template % "v4.tor.backend" %}
@@ -40,7 +40,7 @@
 {%         elif neighbor_type in ['ToRRouter', 'BackEndToRRouter', 'AggRouter', 'VpnAggregator'] %}
 {%             if neighbor_deployment_id is defined and neighbor_deployment_id == '26' %}
 {%                 include path_template % "v4.leaf.tor.tycoon" %}
-{%             elif neighbor_type == 'BackEndToRRouter' and is_storage_device %}
+{%             elif neighbor_type == 'BackEndToRRouter' and is_storage_device == 'true' and device_type == 'BackEndLeafRouter' %}
 {%                 include path_template % "v4.leaf.storage.backend" %}
 {%             else %}
 {%                 include path_template % "v4.leaf.tor.all" %}
