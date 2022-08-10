@@ -1020,5 +1020,5 @@ class TestCfgGen(TestCase):
         argument = "-m {} -p {} -n asic1 -v \"PORT[\'Ethernet13\']\"".format(self.packet_chassis_graph, self.packet_chassis_port_ini)
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
-        self.assertEqual(output_dict['tx_power'], '7')
+        self.assertEqual(output_dict['tx_power'], '7.5')
         self.assertEqual(output_dict['laser_freq'], 131000)
