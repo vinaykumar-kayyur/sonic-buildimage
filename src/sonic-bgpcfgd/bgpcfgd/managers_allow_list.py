@@ -222,7 +222,7 @@ class BGPAllowListMgr(Manager):
         :param community_value: community, which we want to use to filter prefixes
         :return: a dictionary with names
         """
-        if neighbor_type == '':
+        if not neighbor_type:
             if community_value == BGPAllowListMgr.EMPTY_COMMUNITY:
                 community_name = BGPAllowListMgr.EMPTY_COMMUNITY
             else:
@@ -673,7 +673,7 @@ class BGPAllowListMgr(Manager):
         :rm_2_call: a dictionary: key - name of a route-map, value - name of a route-map call defined for the route-map
         """
         ret = set()
-        if neighbor_type == '':
+        if not neighbor_type:
             target_allow_list_prefix = 'ALLOW_LIST_DEPLOYMENT_ID_%d_V' % deployment_id
         else:
             target_allow_list_prefix = 'ALLOW_LIST_DEPLOYMENT_ID_%d_NEIGHBOR_%s_V' % (deployment_id, neighbor_type)
