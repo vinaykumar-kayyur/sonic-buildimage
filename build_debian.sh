@@ -59,6 +59,11 @@ TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
     exit 1
 }
 
+FILESYSTEM_BASE=/sonic/build
+mkdir -p ${FILESYSTEM_BASE}
+sudo mount -t tmpfs -o size=16G tmpfs ${FILESYSTEM_BASE}
+FILESYSTEM_ROOT=${FILESYSTEM_BASE}/fsroot
+
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
