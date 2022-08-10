@@ -62,17 +62,12 @@ def get_cert(ca, url):
             response = urllib.request.urlopen(req)
             sonic_logger.log_info("CA_cert_downloader: get_cert: URL: "+url)
             if response.getcode() == 200:
-                try:
-                    json_response = json.loads(response.read())
-                    extract_cert(json_response)
-                    return True
-                except ValueError as e:
-                    sonic_logger.log_error("CA_cert_downloader: get_cert: Invalid JSON response!")
-                    return False
+                json_response = json.loads(response.read())
+                extract_cert(json_response)
+                return True
             else:
                 sonic_logger.log_error("CA_cert_downloader: get_cert: GET request failed!")
-                return False
-        except urllib.error.URLError as e:
+        except Exception as e:
             sonic_logger.log_error("CA_cert_downloader: get_cert: Unable to reach "+url)
             sonic_logger.log_error("CA_cert_downloader: get_cert: "+str(e.reason))
             # Retry every 5 min
