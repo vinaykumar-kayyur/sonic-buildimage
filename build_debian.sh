@@ -291,13 +291,13 @@ then
     echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main" | \
         sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/azure.list
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg libxml2-utils
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install metricsext2
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb 
-    sudo LANG=C chroot $FILESYSTEM_ROOT rm - /tmp/cri-dockerd.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/cri-dockerd.deb
 else
     echo '[INFO] Skipping Install kubernetes master'
 fi
