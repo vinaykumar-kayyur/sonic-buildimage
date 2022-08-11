@@ -4,7 +4,6 @@ import subprocess
 
 from natsort import natsorted
 from swsscommon import swsscommon
-from sonic_py_common import daemon_base
 
 from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
