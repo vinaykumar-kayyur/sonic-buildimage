@@ -7,7 +7,7 @@ parameters:
 - name: 'platforms'
   type: object
   default:
-  - broadcom: sonic-aboot-broadcom.swi.log sonic-aboot-broadcom.swi sonic-broadcom.bin docker-syncd-brcm-rpc.gz debs/buster/python-saithrift_0.9.4_amd64.deb sonic-aboot-broadcom-dnx.swi
+  - broadcom: sonic-aboot-broadcom.swi.log sonic-aboot-broadcom.swi sonic-broadcom.bin docker-syncd-brcm-rpc.gz debs/bullseye/python-saithrift_0.9.4_amd64.deb sonic-aboot-broadcom-dnx.swi
   - mellanox: sonic-mellanox.bin.log sonic-mellanox.bin
   - marvell-armhf: sonic-marvell-armhf.bin.log sonic-marvell-armhf.bin
 - name: 'branch'
@@ -23,7 +23,6 @@ steps:
   - ${{ each pair in platform }}:
     - task: SSH@0
       displayName: "========= ${{ pair.key }} ========="
-      condition: always()
       inputs: 
         sshEndpoint: 'acs-trusty8'
         runOptions: 'inline'
@@ -73,7 +72,6 @@ steps:
           mv ${{ pair.key }}/target/${target} ${{ pair.key }}/target/${filename}-${image_version}.${extension}
         done
       displayName: 'Download ${{ pair.key }} artifacts'
-      condition: always()
     - script: |
         PORT=443
         SONIC_VERSION="$(date "+%Y%m%d").01"
@@ -86,9 +84,8 @@ steps:
       displayName: 'Push docker registry'
       env:
         REGISTRY_PASSWD: $(REGISTRY_PASSWD)
-      condition: always()
     - task: CopyFilesOverSSH@0
-      condition: ne(variables.SKIP, 'true')
+      condition: and(ne(variables.SKIP, 'true'), succeeded())
       inputs:
         sshEndpoint: 'acs-trusty8'
         sourceFolder: '${{ pair.key }}/target/'
@@ -99,7 +96,7 @@ steps:
         targetFolder: '/data/installer/sonic/${{ pair.key }}/public/'
         readyTimeout: '20000'
     - task: SSH@0
-      condition: ne(variables.SKIP, 'true')
+      condition: and(ne(variables.SKIP, 'true'), succeeded())
       displayName: "Remove ${{ pair.key }} old image"
       inputs:
         sshEndpoint: 'acs-trusty8'
@@ -118,7 +115,7 @@ steps:
             extension="${target##*.}"
             # remove tail .*
             filename="${target%.*}"
-            tc=$(expr $(ls -al ${filename}-*.${extension} | wc -l) - $(IMAGE_KEEP_NUM))
+            tc=$(expr $(ls -al ${filename}-master*.${extension} | wc -l) - $(IMAGE_KEEP_NUM))
             if (( $tc > 0 ));then
               ls -alt ${filename}-*.${extension} | tail -n $tc | awk '{print$NF}' | xargs -i rm {}
             fi
