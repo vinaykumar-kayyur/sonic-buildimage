@@ -160,7 +160,7 @@ SFP_PORT_START = 1
 SFP_PORT_END = 48
 
 PORT_INFO_PATH = '/sys/class/questone2_fpga'
-SFP_I2C_START = 10
+SFP_I2C_START = 2
 
 
 class Sfp(SfpBase):
@@ -253,7 +253,7 @@ class Sfp(SfpBase):
             sysfsfile_eeprom.seek(offset)
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+                eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
         except Exception:
             pass
         finally:
@@ -371,7 +371,9 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
+        type_abbrv_name            |1*255VCHAR     |type of SFP, abbreviated *
         hardware_rev               |1*255VCHAR     |hardware version of SFP
+        vendor_rev                 |1*255VCHAR     |vendor revision of SFP *
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -384,6 +386,7 @@ class Sfp(SfpBase):
         specification_compliance   |1*255VCHAR     |specification compliance
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement *
         ========================================================================
          """
         compliance_code_dict = {}
@@ -408,7 +411,6 @@ class Sfp(SfpBase):
                 sfp_type_data = sfpi_obj.parse_sfp_type(sfp_type_raw, 0)
             else:
                 return None
-
             sfp_vendor_name_raw = self.__read_eeprom_specific_bytes(
                 (offset + OSFP_VENDOR_NAME_OFFSET), XCVR_VENDOR_NAME_WIDTH)
             if sfp_vendor_name_raw is not None:
@@ -456,6 +458,9 @@ class Sfp(SfpBase):
             transceiver_info_dict['cable_length'] = 'N/A'
             transceiver_info_dict['specification_compliance'] = '{}'
             transceiver_info_dict['nominal_bit_rate'] = 'N/A'
+            transceiver_info_dict['type_abbrv_name'] = 'N/A'
+            transceiver_info_dict['vendor_rev'] = 'N/A'
+            transceiver_info_dict['application_advertisement'] = 'N/A'
 
         else:
             if self.sfp_type == QSFP_TYPE:
@@ -528,6 +533,9 @@ class Sfp(SfpBase):
             transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
             transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
+            transceiver_info_dict['type_abbrv_name'] = 'N/A'
+            transceiver_info_dict['vendor_rev'] = 'N/A'
+            transceiver_info_dict['application_advertisement'] = 'N/A'
             if self.sfp_type == QSFP_TYPE:
                 for key in qsfp_cable_length_tup:
                     if key in sfp_interface_bulk_data['data']:
