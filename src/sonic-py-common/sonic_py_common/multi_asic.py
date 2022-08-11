@@ -497,13 +497,13 @@ def get_asic_presence_list():
         if not is_supervisor():
             # This is not supervisor, all asics should be present. Assuming that asics
             # are not removable entity on Line Cards. Add all asics, 0 - num_asics to the list.
-            asics_list = list(range(0,get_num_asics()))
+            asics_list = list(range(0, get_num_asics()))
         else:
             # This is supervisor card. Some fabric cards may not be inserted.
             # Get asic list from CHASSIS_ASIC_TABLE which lists only the asics
             # present based on Fabric card detection by the platform.
-            db = daemon_base.db_connect(CHASSIS_STATE_DB)
-            asic_table = swsscommon.Table(db,CHASSIS_ASIC_INFO_TABLE)
+            db = swsscommon.DBConnector(CHASSIS_STATE_DB, 0, True)
+            asic_table = swsscommon.Table(db, CHASSIS_ASIC_INFO_TABLE)
             if asic_table:
                 asics_presence_list = list(asic_table.getKeys())
                 for asic in asics_presence_list:
