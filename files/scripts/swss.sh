@@ -9,6 +9,8 @@ LOCKFILE="/tmp/swss-syncd-lock$DEV"
 NAMESPACE_PREFIX="asic"
 ETC_SONIC_PATH="/etc/sonic/"
 
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
 DEPENDENT="radv"
 MULTI_INST_DEPENDENT="teamd"
 
