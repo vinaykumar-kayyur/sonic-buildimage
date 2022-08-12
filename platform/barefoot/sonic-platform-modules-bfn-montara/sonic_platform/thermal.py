@@ -121,6 +121,10 @@ class Thermal(ThermalBase):
     def __get(self, attr_prefix, attr_suffix):
         sensor_data = _sensors_get().get(self.__chip, {}).get(self.__label, {})
         value = _value_get(sensor_data, attr_prefix, attr_suffix)
+
+        if attr_prefix == 'temp' and attr_suffix == 'input':
+            return value if value is not None else -0.0
+
         if value is not None and self.check_in_range(value) and self.check_high_threshold(value, attr_suffix):
             return value
         elif self.__name in self._thresholds and attr_prefix == 'temp':
