@@ -18,7 +18,6 @@
  * Linux Kernel BDE
  */
 
-#include <string.h>
 #include <gmodule.h>
 #include <linux-bde.h>
 #include <linux_dma.h>
@@ -179,27 +178,36 @@ MODULE_PARM_DESC(spifreq,
 typedef irqreturn_t (*irq_handler_t)(int _i, void *_d, struct pt_regs *_r);
 #endif
 #define SYNC_IRQ(_i) synchronize_irq(_i)
-char * ___strtok;
-char * strtok(char * s,const char * ct)
+char * __strtok_r (char *s, const char *delim, char **save_ptr)
 {
-    char *sbegin, *send;
-    sbegin  = s ? s : ___strtok;
-    if (!sbegin) {
-        return NULL;
+  char *end;
+  if (s == NULL)
+    s = *save_ptr;
+  if (*s == '\0')
+    {
+      *save_ptr = s;
+      return NULL;
     }
-    sbegin += strspn(sbegin,ct);
-    if (*sbegin == '\0') {
-        ___strtok = NULL;
-        return( NULL );
+  /* Scan leading delimiters.  */
+  s += strspn (s, delim);
+  if (*s == '\0')
+    {
+      *save_ptr = s;
+      return NULL;
     }
-    send = strpbrk( sbegin, ct);
-    if (send && *send != '\0')
-        *send++ = '\0';
-    ___strtok = send;
-    return (sbegin);
+  /* Find the end of the token.  */
+  end = s + strcspn (s, delim);
+  if (*end == '\0')
+    {
+      *save_ptr = end;
+      return s;
+    }
+  /* Terminate the token and make *SAVE_PTR point past it.  */
+  *end = '\0';
+  *save_ptr = end + 1;
+  return s;
 }
-LKM_EXPORT_SYM(___strtok);
-LKM_EXPORT_SYM(strtok);
+LKM_EXPORT_SYM(__strtok_r);
 
 /* PCIe capabilities */
 #ifndef PCI_CAP_ID_EXP
@@ -3093,6 +3101,7 @@ static int
 _init(void)
 {
     unsigned i;
+    char* saveptr;
 
     /* allocate and init the DMA buffer pool */
     _dma_init();
@@ -3200,7 +3209,7 @@ _init(void)
         unsigned int eb_ba = 0x0;
 
         gprintk("EB bus info: %s\n", eb_bus);
-        while ((tok = strtok_r(eb_bus, ",", &eb_bus))) {
+        while ((tok = __strtok_r(eb_bus, ",", &saveptr))) {
             _parse_eb_args(tok, "BA=%x IRQ=%d RD16=%d WR16=%d",
                     &eb_ba, &irq, &eb_rd16bit, &eb_wr16bit);
             _eb_device_create(eb_ba, irq, eb_rd16bit, eb_wr16bit);
