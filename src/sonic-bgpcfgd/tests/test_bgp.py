@@ -4,21 +4,24 @@ import os
 from bgpcfgd.directory import Directory
 from bgpcfgd.template import TemplateFabric
 from . import swsscommon_test
-from .util import load_constants, CONSTANTS_PATH
+from .util import load_constants
 from swsscommon import swsscommon
 import bgpcfgd.managers_bgp
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
 def load_constant_files():
-    path = "tests/data/constants"
-    constant_files = [os.path.abspath(os.path.join(path, name)) for name in os.listdir(path)
+    paths = ["tests/data/constants", "../../files/image_config/constants"]
+    constant_files = []
+
+    for path in paths:
+        constant_files += [os.path.abspath(os.path.join(path, name)) for name in os.listdir(path)
                    if os.path.isfile(os.path.join(path, name)) and name.startswith("constants")]
     
     return constant_files
 
 
-def constructor(constants_path = CONSTANTS_PATH):
+def constructor(constants_path):
     cfg_mgr = MagicMock()
     constants = load_constants(constants_path)['constants']
     common_objs = {
