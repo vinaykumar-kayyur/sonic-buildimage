@@ -517,8 +517,7 @@ int get_num_of_asic() {
     char *line = NULL;
     char* token;
     char* platform;
-    char* saveptr1;
-    char* saveptr2;
+    char* saveptr;
     size_t len = 0;
     ssize_t nread;
     bool ans;
@@ -537,8 +536,8 @@ int get_num_of_asic() {
     while ((nread = getline(&line, &len, fp)) != -1) {
         if ((strstr(line, "onie_platform") != NULL) ||
             (strstr(line, "aboot_platform") != NULL)) {
-            token = strtok_r(line, "=", &saveptr1);
-            platform = strtok_r(NULL, "=", &saveptr1);
+            token = strtok_r(line, "=", &saveptr);
+            platform = strtok_r(NULL, "=", &saveptr);
             strip_trailing_newline(platform);
             break;
         }
@@ -550,8 +549,8 @@ int get_num_of_asic() {
         if (fp != NULL) {
             while ((nread = getline(&line, &len, fp)) != -1) {
                 if (strstr(line, "NUM_ASIC") != NULL) {
-                    token = strtok_r(line, "=", &saveptr2);
-                    str_num_asic = strtok_r(NULL, "=", &saveptr2);
+                    token = strtok_r(line, "=", &saveptr);
+                    str_num_asic = strtok_r(NULL, "=", &saveptr);
                     strip_trailing_newline(str_num_asic);
                     if (str_num_asic != NULL){
                         sscanf(str_num_asic, "%d",&num_asic);
