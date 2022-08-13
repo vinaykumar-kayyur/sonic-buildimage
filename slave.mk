@@ -278,6 +278,7 @@ $(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
 $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
+$(info "INCLUDE_KUBERNETES_MASTER"       : "$(INCLUDE_KUBERNETES_MASTER)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
@@ -935,6 +936,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export default_buffer_model="$(SONIC_BUFFER_MODEL)"
 	export include_kubernetes="$(INCLUDE_KUBERNETES)"
+	export include_kubernetes_master="$(INCLUDE_KUBERNETES_MASTER)"
 	export kube_docker_proxy="$(KUBE_DOCKER_PROXY)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($*_INSTALLS))"
@@ -1075,6 +1077,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
+	MASTER_KUBERNETES_VERSION=$(MASTER_KUBERNETES_VERSION) \
+	MASTER_KUBERNETES_CONTAINER_IMAGE_VERSION=$(MASTER_KUBERNETES_CONTAINER_IMAGE_VERSION) \
+	MASTER_PAUSE_VERSION=$(MASTER_PAUSE_VERSION) \
+	MASTER_COREDNS_VERSION=$(MASTER_COREDNS_VERSION) \
+	MASTER_ETCD_VERSION=$(MASTER_ETCD_VERSION) \
+	MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
 		./build_debian.sh $(LOG)
 
 	USERNAME="$(USERNAME)" \
