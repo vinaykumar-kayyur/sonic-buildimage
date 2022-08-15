@@ -22,10 +22,6 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-    - name: Debug
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo $GITHUB_CONTEXT | jq
     - name: approve
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
