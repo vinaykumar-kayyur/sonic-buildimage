@@ -112,6 +112,7 @@ stages:
 
     - script: |
         set -x
+        sudo apt-get install -y libzmq3-dev libzmq5 libboost-serialization1.71.0 uuid-dev
         sudo dpkg -i --force-confask,confnew ../libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i ../python3-swsscommon_1.0.0_amd64.deb
         sudo docker load -i ../target/docker-sonic-vs.gz
