@@ -65,7 +65,7 @@ class Component(ComponentBase):
         # Retrieves the cpld register value
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
         p = subprocess.Popen(
-            cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            shlex.split(cmd), universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data, err = p.communicate()
         if err is not '':
             return None
@@ -76,11 +76,11 @@ class Component(ComponentBase):
         cpld_version = dict()
         with open(SMC_CPLD_PATH, 'r') as fd:
             smc_cpld_version = fd.read()
-        smc_cpld_version = 'None' if smc_cpld_version is 'None' else "{}.{}".format(
+        smc_cpld_version = 'None' if smc_cpld_version == 'None' else "{}.{}".format(
             int(smc_cpld_version[2], 16), int(smc_cpld_version[3], 16))
 
         mmc_cpld_version = self.get_register_value(MMC_CPLD_ADDR)
-        mmc_cpld_version = 'None' if mmc_cpld_version is 'None' else "{}.{}".format(
+        mmc_cpld_version = 'None' if mmc_cpld_version == 'None' else "{}.{}".format(
             int(mmc_cpld_version[2], 16), int(mmc_cpld_version[3], 16))
 
         cpld_version["SMC_CPLD"] = smc_cpld_version

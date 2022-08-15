@@ -1,6 +1,7 @@
 import os
 import imp
 import yaml
+import shlex
 import subprocess
 
 from sonic_py_common import device_info
@@ -47,7 +48,7 @@ class Common:
         output = ""
         try:
             p = subprocess.Popen(
-                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if p.returncode == 0:
                 status, output = True, raw_data.strip()
@@ -67,7 +68,7 @@ class Common:
             cleaned_input = input_translator.get(input)
 
         elif type(input_translator) is str:
-            cleaned_input = eval(input_translator.format(input))
+            cleaned_input = eval(input_translator.format(input), {"__builtins__": None}, {})
 
         return cleaned_input
 
@@ -77,9 +78,9 @@ class Common:
         if type(output_translator) is dict:
             output = output_translator.get(output)
         elif type(output_translator) is str:
-            output = eval(output_translator.format(output))
+            output = eval(output_translator.format(output), {"__builtins__": None}, {})
         elif type(output_translator) is list:
-            output = eval(output_translator[index].format(output))
+            output = eval(output_translator[index].format(output), {"__builtins__": None}, {})
 
         return output
 
@@ -195,7 +196,8 @@ class Common:
         return True
 
     def is_host(self):
-        return os.system(self.HOST_CHK_CMD) == 0
+        command = shlex.split(self.HOST_CHK_CMD)
+        return subprocess.run(command).returncode == 0
 
     def load_json_file(self, path):
         """
