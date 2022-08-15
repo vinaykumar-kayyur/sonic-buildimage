@@ -3,6 +3,7 @@ import signal
 import sys
 import syslog
 import traceback
+import threading
 
 from swsscommon import swsscommon
 
@@ -19,6 +20,7 @@ from .managers_setsrc import ZebraSetSrc
 from .managers_static_rt import StaticRouteMgr
 from .managers_rm import RouteMapMgr
 from .managers_device_global import DeviceGlobalCfgMgr
+from .static_rt_timer import StaticRouteTimer
 from .runner import Runner, signal_handler
 from .template import TemplateFabric
 from .utils import read_constants
@@ -28,6 +30,9 @@ from .vars import g_debug
 
 def do_work():
     """ Main function """
+    st_rt_timer = StaticRouteTimer()
+    thr = threading.Thread(target = st_rt_timer.run)
+    thr.start()
     frr = FRR(["bgpd", "zebra", "staticd"])
     frr.wait_for_daemons(seconds=20)
     #
@@ -72,6 +77,7 @@ def do_work():
     for mgr in managers:
         runner.add_manager(mgr)
     runner.run()
+    thr.join()
 
 
 def main():
