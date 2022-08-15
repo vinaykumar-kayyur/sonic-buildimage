@@ -2,7 +2,6 @@
     "MUX_CABLE_POSITIVE_CONFIG": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {
-                "PEER_TOR": "10.10.10.11",
                 "PORTS_LIST": [
                     {
                         "port": "Ethernet8",
@@ -85,7 +84,6 @@
     "MUX_CABLE_STATE_PATTERN": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {
-                "PEER_TOR": "10.10.10.11",
                 "PORTS_LIST": [
                     {
                         "port": "Ethernet4",
@@ -116,7 +114,6 @@
     "MUX_CABLE_CABLE_TYPE_PATTERN": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {
-                "PEER_TOR": "10.10.22.11",
                 "PORTS_LIST": [
                     {
                         "port": "Ethernet4",

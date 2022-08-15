@@ -26,11 +26,6 @@ module sonic-mux-cable {
 
             description "MUX_CABLE part of config_db.json";
 
-            leaf PEER_TOR {
-                description "peer TOR IP address";
-                type inet:ip-address;
-            }
-
             list PORTS_LIST {
 
                 description "List of PORTs which has MUX_CABLE";
