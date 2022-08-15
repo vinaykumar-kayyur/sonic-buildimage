@@ -5,7 +5,7 @@
 #   * PSU
 #
 import os
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as parse
 import glob
 from fru import *
 from fantlv import *
@@ -176,7 +176,7 @@ class status():
 
     @staticmethod
     def getETroot(filename):
-        tree = ET.parse(filename)
+        tree = parse(filename)
         root = tree.getroot()
         return root;
 
