@@ -2,9 +2,8 @@ import os
 import ast
 import imp
 import yaml
-import shlex
 import subprocess
-
+from shlex import quote, split
 from sonic_py_common import device_info
 
 
@@ -49,7 +48,7 @@ class Common:
         output = ""
         try:
             p = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                split(quote(command)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if p.returncode == 0:
                 status, output = True, raw_data.strip()
@@ -197,7 +196,7 @@ class Common:
         return True
 
     def is_host(self):
-        command = shlex.split(self.HOST_CHK_CMD)
+        command = split(quote(self.HOST_CHK_CMD))
         return subprocess.run(command).returncode == 0
 
     def load_json_file(self, path):

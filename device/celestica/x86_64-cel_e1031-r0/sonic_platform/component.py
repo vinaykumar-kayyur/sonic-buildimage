@@ -10,8 +10,8 @@
 try:
     import os.path
     import shutil
-    import shlex
     import subprocess
+    from shlex import quote, split
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -40,7 +40,7 @@ class Component(ComponentBase):
         # Run bash command and print output to stdout
         try:
             process = subprocess.Popen(
-                shlex.split(command), universal_newlines=True, stdout=subprocess.PIPE)
+                split(quote(command)), universal_newlines=True, stdout=subprocess.PIPE)
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:
@@ -65,7 +65,7 @@ class Component(ComponentBase):
         # Retrieves the cpld register value
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
         p = subprocess.Popen(
-            shlex.split(cmd), universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            split(quote(cmd)), universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data, err = p.communicate()
         if err is not '':
             return None
