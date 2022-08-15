@@ -97,10 +97,12 @@ class StaticRouteMgr(Manager):
         :param key: key to split
         :return: vrf name extracted from the key, ip prefix extracted from the key
         """
-        if '|' not in key:
-            return 'default', key
-        else:
+        if '|' in key:
             return tuple(key.split('|', 1))
+        elif ':' in key:
+            return tuple(key.split(':', 1))
+        else:
+            return 'default', key
 
     def static_route_commands(self, ip_nh_set, cur_nh_set, ip_prefix, vrf, route_tag, cur_route_tag):
         op_cmd_list = {}
