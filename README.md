@@ -153,7 +153,6 @@ To build SONiC installer image and docker images, run the following commands:
 - PLATFORM=centec
 - PLATFORM=nephos
 - PLATFORM=innovium
-- PLATFORM=p4
 - PLATFORM=vs
 
 ## Usage for ARM Architecture
