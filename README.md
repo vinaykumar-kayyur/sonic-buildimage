@@ -269,7 +269,7 @@ This may take a while, but it is a one-time action, so please be patient.
 
 ## Contribution Guide
 
-All contributors must sign a contribution license agreement before contributions can be accepted.  Contact [sonic-cla-agreements@microsoft.com](mailto:sonic-cla-agreements@microsoft.com).
+All contributors must sign a contribution license agreement before contributions can be accepted.  Visit [EasyCLA - Linux Foundation](https://easycla.lfx.linuxfoundation.org).
 
 ## GitHub Workflow
 
