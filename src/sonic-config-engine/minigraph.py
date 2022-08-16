@@ -1443,7 +1443,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if bool(results['PEER_SWITCH']):
         results['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
-        if 'gemini' in str(redundancy_type).lower() or ('gemini' in str(downstream_redundancy_types).lower():
+        if 'gemini' in str(redundancy_type).lower() or 'gemini' in str(downstream_redundancy_types).lower():
             results['DEVICE_METADATA']['localhost']['DualToRtype'] = 'active-standby'
         elif 'libra' in str(redundancy_type).lower() or 'libra' in str(downstream_redundancy_types).lower():
             results['DEVICE_METADATA']['localhost']['DualToRtype'] = 'active-active'
