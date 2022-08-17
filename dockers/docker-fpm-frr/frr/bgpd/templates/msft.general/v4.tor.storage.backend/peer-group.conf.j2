@@ -1,5 +1,5 @@
 !
-! template: bgpd/templates/msft.general/v4.mgmttor/peer-group.conf.j2
+! template: bgpd/templates/msft.general/v4.tor.storage.backend/peer-group.conf.j2
 !
   neighbor TIER1_V4 peer-group
   address-family ipv4 unicast
@@ -8,8 +8,8 @@
     neighbor TIER1_V4 route-map FROM_TIER1_V4 in
     neighbor TIER1_V4 route-map TO_TIER1_V4 out
     neighbor TIER1_V4 send-community
-    neighbor TIER1_V4 maximum-prefix 4000 90 warning-only
+    neighbor TIER1_V4 maximum-prefix 12000 90 warning-only
   exit-address-family
 !
-! end of template: bgpd/templates/msft.general/v4.mgmttor/peer-group.conf.j2
+! end of template: bgpd/templates/msft.general/v4.tor.storage.backend/peer-group.conf.j2
 !
