@@ -5,10 +5,10 @@
 #   * PSU
 #
 import os
-import defusedxml.ElementTree as parse
 import glob
 from fru import *
 from fantlv import *
+from defusedxml.ElementTree import parse
 
 
 
