@@ -38,16 +38,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git add -f *
 	git commit -m "unmodified snmpd source"
 
-ifneq (,$(findstring 5.9,$(SNMPD_VERSION)))
-	# Looks like Debian did a binNMU (binary non-maintainer upload), so the latest dsc
-	# file that we can get doesn't actually have the exact version number that Debian's
-	# repos have.
-	DEBEMAIL="$(shell git config --get user.name) <$(shell git config --get user.email)>" dch --bin-nmu "Rebuild against perl 5.32.0"
-	dch -r ""
-	git add debian/changelog
-	git commit -m "fix package version"
-endif
-
 	# Apply patches
 	stg init
 	stg import -s ../patch-$(SNMPD_VERSION)/series
