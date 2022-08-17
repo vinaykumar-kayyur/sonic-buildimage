@@ -8,12 +8,7 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-import re
 import sys
-import time
 import subprocess
 
 try:
@@ -113,8 +108,7 @@ class Fan(FanBase):
         #self.logger.log_warning("self_index {} psu {} status {}".format(self.index, self.is_psu_fan,self.is_get_status))
         #if self.index == 0 and self.is_psu_fan == False and self.is_get_status == False:
         if self.index == 0 and self.is_get_status == False:
-            file = open(FAN_STATUS_FILE, 'w')
-            try:
+            with open(FAN_STATUS_FILE, 'w') as file:
                 proc = subprocess.Popen(IPMI_SENSOR_LIST_CMD, shell=True, stdout=subprocess.PIPE)
                 out, err = proc.communicate()
                 out = out.decode()
@@ -122,19 +116,10 @@ class Fan(FanBase):
                 if proc.returncode != 0:
                     sys.exit(proc.returncode)
                 all_info_list = out.split("\n")
-            except Exception as e:
-                print(str(e))
-            finally:
-                file.close()
         else:
-            file = open(FAN_STATUS_FILE, 'r')
-            try:
+            with open(FAN_STATUS_FILE, 'r') as file:
                 out = file.read()
                 all_info_list = out.split("\n")
-            except Exception as e:
-                print(str(e))
-            finally:
-                file.close()
              
         #self.logger.log_warning ("Out arg")
         #print (out) 
