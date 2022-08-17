@@ -31,11 +31,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf net-snmp-$(SNMPD_VERSION)
 
 	# download debian net-snmp
-ifneq (,$(findstring 5.9,$(SNMPD_VERSION)))
-	dget -u https://sonicstorage.blob.core.windows.net/debian/pool/main/n/net-snmp/net-snmp_$(SNMPD_VERSION)-3.dsc
-else
 	dget -u https://sonicstorage.blob.core.windows.net/debian/pool/main/n/net-snmp/net-snmp_$(SNMPD_VERSION_FULL).dsc
-endif
 
 	pushd net-snmp-$(SNMPD_VERSION)
 	git init
