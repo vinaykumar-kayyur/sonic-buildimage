@@ -109,14 +109,15 @@ do_receive(const event_subscribe_sources_t filter, const string outfile, int cnt
         event_receive_op_t evt;
         map_str_str_t evtOp;
 
-        evt = event_receive(h);
-        if (evt.rc != 0) {
-            ASSERT(evt.rc == EAGAIN, "Failed to receive rc=%d index=%d\n",
-                    evt.rc, index);
+        int rc = event_receive(h, evt);
+        if (rc != 0) {
+            ASSERT(rc == EAGAIN, "Failed to receive rc=%d index=%d\n",
+                    rc, index);
             continue;
         }
         ASSERT(!evt.key.empty(), "received EMPTY key");
         ASSERT(evt.missed_cnt >= 0, "Missed count uninitialized");
+        ASSERT(evt.publish_epoch_ms > 0, "publish_epoch_ms uninitialized");
 
         total_missed += evt.missed_cnt;
 

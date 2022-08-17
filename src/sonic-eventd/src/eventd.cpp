@@ -1,17 +1,29 @@
 #include <thread>
 #include "eventd.h"
+#include "dbconnector.h"
 
 /*
- * There are 3 threads, including the main
+ * There are 5 threads, including the main
  *
- * main thread -- Runs eventd service that accepts commands event_req_type_t
+ * (0) main thread -- Runs eventd service that accepts commands event_req_type_t
  *  This can be used to control caching events and a no-op echo service.
  *
- * capture/cache service 
- *  Saves all the events between cache start & stop
+ * (1) capture/cache service 
+ *      Saves all the events between cache start & stop.
+ *      Update missed cached counter in memory.
  *
- * Main proxy service that runs XSUB/XPUB ends
+ * (2) Main proxy service that runs XSUB/XPUB ends
+ *
+ * (3) Get stats for total published counter in memory. This thread also sends
+ *     heartbeat message. It accomplishes by counting upon receive missed due
+ *     to event receive timeout.
+ *
+ * (4) Thread to update counters from memory to redis periodically.
+ *
  */
+
+using namespace std;
+using namespace swss;
 
 #define MB(N) ((N) * 1024 * 1024)
 #define EVT_SIZE_AVG 150
@@ -22,6 +34,23 @@
 #define READ_SET_SIZE 100
 
 #define VEC_SIZE(p) ((int)p.size())
+
+/* Sock read timeout in milliseconds, to enable look for control signals */
+#define CAPTURE_SOCK_TIMEOUT 800
+
+#define HEARTBEAT_INTERVAL_SECS 2  /* Default: 2 seconds */
+
+/* Source & tag for heartbeat events */
+#define EVENTD_PUBLISHER_SOURCE "sonic-events-eventd"
+#define EVENTD_HEARTBEAT_TAG "heartbeat"
+
+
+const char *counter_keys[COUNTERS_EVENTS_TOTAL] = {
+    COUNTERS_EVENTS_PUBLISHED,
+    COUNTERS_EVENTS_MISSED_CACHE
+};
+
+static bool s_unit_testing = false;
 
 int
 eventd_proxy::init()
@@ -64,6 +93,193 @@ eventd_proxy::run()
     SWSS_LOG_INFO("Stopped xpub/xsub proxy");
 }
 
+
+stats_collector::stats_collector() :
+    m_shutdown(false), m_pause_heartbeat(false), m_heartbeats_published(0),
+    m_heartbeats_interval_cnt(0)
+{
+    set_heartbeat_interval(HEARTBEAT_INTERVAL_SECS);
+    for (int i=0; i < COUNTERS_EVENTS_TOTAL; ++i) {
+        m_lst_counters[i] = 0;
+    }
+    m_updated = false;
+}
+
+
+void
+stats_collector::set_heartbeat_interval(int val)
+{
+    if (val > 0) {
+        /* Round to highest possible multiples of MIN */
+        m_heartbeats_interval_cnt = 
+            (((val * 1000) + STATS_HEARTBEAT_MIN - 1) / STATS_HEARTBEAT_MIN);
+    }
+    else if (val == 0) {
+        /* Least possible */
+        m_heartbeats_interval_cnt = 1;
+    }
+    else if (val == -1) {
+        /* Turn off heartbeat */
+        m_heartbeats_interval_cnt = 0;
+        SWSS_LOG_INFO("Heartbeat turned OFF");
+    }
+    /* Any other value is ignored as invalid */
+
+    SWSS_LOG_INFO("Set heartbeat: val=%d secs cnt=%d min=%d ms final=%d secs",
+            val, m_heartbeats_interval_cnt, STATS_HEARTBEAT_MIN,
+            (m_heartbeats_interval_cnt * STATS_HEARTBEAT_MIN / 1000));
+}
+
+
+int
+stats_collector::get_heartbeat_interval()
+{
+    return m_heartbeats_interval_cnt * STATS_HEARTBEAT_MIN / 1000;
+}
+
+int
+stats_collector::start()
+{
+    int rc = -1;
+
+    if (!s_unit_testing) {
+        try {
+            m_counters_db = make_shared<swss::DBConnector>("COUNTERS_DB", 0, true);
+        }
+        catch (exception &e)
+        {
+            SWSS_LOG_ERROR("Unable to get DB Connector, e=(%s)\n", e.what());
+        }
+        RET_ON_ERR(m_counters_db != NULL, "Failed to get COUNTERS_DB");
+
+        m_stats_table = make_shared<swss::Table>(
+                m_counters_db.get(), COUNTERS_EVENTS_TABLE);
+        RET_ON_ERR(m_stats_table != NULL, "Failed to get events table");
+
+        m_thr_writer = thread(&stats_collector::run_writer, this);
+    }
+    m_thr_collector = thread(&stats_collector::run_collector, this);
+    rc = 0;
+out:
+    return rc;
+}
+
+void
+stats_collector::run_writer()
+{
+    while (true) {
+        if (m_updated.exchange(false)) {
+            /* Update if there had been any update */
+
+            for (int i = 0; i < COUNTERS_EVENTS_TOTAL; ++i) {
+                vector<FieldValueTuple> fv;
+
+                fv.emplace_back(EVENTS_STATS_FIELD_NAME, to_string(m_lst_counters[i]));
+
+                m_stats_table->set(counter_keys[i], fv);
+            }
+        }
+        if (m_shutdown) {
+            break;
+        }
+        this_thread::sleep_for(chrono::milliseconds(10));
+        /*
+         * After sleep always do an update if needed before checking
+         * shutdown flag, as any counters collected during sleep
+         * needs to be updated.
+         */
+    }
+
+    m_stats_table.reset();
+    m_counters_db.reset();
+}
+
+void
+stats_collector::run_collector()
+{
+    int hb_cntr = 0;
+    string hb_key = string(EVENTD_PUBLISHER_SOURCE) + ":" + EVENTD_HEARTBEAT_TAG;
+    event_handle_t pub_handle = NULL;
+    event_handle_t subs_handle = NULL;
+
+    /*
+     * A subscriber is required to set a subscription. Else all published
+     * events will be dropped at the point of publishing itself.
+     */
+    pub_handle = events_init_publisher(EVENTD_PUBLISHER_SOURCE);
+    RET_ON_ERR(pub_handle != NULL,
+            "failed to create publisher handle for heartbeats");
+
+    subs_handle = events_init_subscriber(false, STATS_HEARTBEAT_MIN);
+    RET_ON_ERR(subs_handle != NULL, "failed to subscribe to all");
+
+    /*
+     * Though we can count off of capture socket, then we need to duplicate
+     * code in event_receive which has the logic to count all missed per
+     * runtime id. It also has logic to retire closed runtime IDs.
+     *
+     * So use regular subscriber API w/o cache but timeout to enable
+     * exit, upon shutdown.
+     */
+    /*
+     * The collector service runs until shutdown.
+     * The only task is to update total_published & total_missed_internal.
+     * The write of these counters into redis is done by another thread.
+     */
+
+    while(!m_shutdown) {
+        event_receive_op_t op;
+        int rc = 0;
+
+        try {
+            rc = event_receive(subs_handle, op);
+        }
+        catch (exception& e)
+        {
+            rc = -1;
+            stringstream ss;
+            ss << e.what();
+            SWSS_LOG_ERROR("Receive event failed with %s", ss.str().c_str());
+        }
+
+        if ((rc == 0) && (op.key != hb_key)) {
+            /* TODO: Discount EVENT_STR_CTRL_DEINIT messages too */
+            increment_published(1+op.missed_cnt);
+
+            /* reset counter on receive to restart. */
+            hb_cntr = 0;
+        }
+        else {
+            if (rc < 0) {
+                SWSS_LOG_ERROR(
+                        "event_receive failed with rc=%d; stats:published(%lu)", rc,
+                        m_lst_counters[INDEX_COUNTERS_EVENTS_PUBLISHED]);
+            }
+            if (!m_pause_heartbeat && (m_heartbeats_interval_cnt > 0) &&
+                    ++hb_cntr >= m_heartbeats_interval_cnt) {
+                rc = event_publish(pub_handle, EVENTD_HEARTBEAT_TAG);
+                if (rc != 0) {
+                    SWSS_LOG_ERROR("Failed to publish heartbeat rc=%d", rc);
+                }
+                hb_cntr = 0;
+                ++m_heartbeats_published;
+            }
+        }
+    }
+
+out:
+    /*
+     * NOTE: A shutdown could lose messages in cache. 
+     * But consider, that eventd shutdown is a critical shutdown as it would
+     * bring down all other features. Hence done only at system level shutdown,
+     * hence losing few messages in flight is acceptable. Any more complex code
+     * to handle is unwanted.
+     */
+
+    events_deinit_subscriber(subs_handle);
+    events_deinit_publisher(pub_handle);
+    m_shutdown = true;
+}
 
 capture_service::~capture_service()
 {
@@ -110,10 +326,6 @@ validate_event(const internal_event_t &event, runtime_id_t &rid, sequence_t &seq
 void
 capture_service::init_capture_cache(const event_serialized_lst_t &lst)
 {
-    /* clean any pre-existing cache */
-    runtime_id_t rid;
-    sequence_t seq;
-
     /* Cache given events as initial stock.
      * Save runtime ID with last seen seq to avoid duplicates, while reading
      * from capture socket.
@@ -123,13 +335,13 @@ capture_service::init_capture_cache(const event_serialized_lst_t &lst)
         internal_event_t event;
 
         if (deserialize(*itc, event) == 0) {
+            runtime_id_t rid;
+            sequence_t seq;
+
             if (validate_event(event, rid, seq)) {
                 m_pre_exist_id[rid] = seq;
                 m_events.push_back(*itc);
             }
-        }
-        else {
-            SWSS_LOG_ERROR("failed to serialize cache message from subscriber; DROP");
         }
     }
 }
@@ -139,10 +351,10 @@ void
 capture_service::do_capture()
 {
     int rc;
-    int block_ms=300;
+    int block_ms=CAPTURE_SOCK_TIMEOUT;
     int init_cnt;
-    event_handle_t subs_handle = NULL;
-    void *sock = NULL;
+    void *cap_sub_sock = NULL;
+    counters_t total_overflow = 0;
 
     typedef enum {
         /*
@@ -161,24 +373,20 @@ capture_service::do_capture()
     cap_state_t cap_state = CAP_STATE_INIT;
 
     /*
-     * Need subscription for publishers to publish. Start one.
-     * As we are reading off of capture socket, we don't read from
-     * this handle. Not reading is a not a concern, as zmq will cache
-     * few initial messages and rest it will drop.
+     * Need subscription for publishers to publish.
+     * The stats collector service already has active subscriber for all.
      */
-    subs_handle = events_init_subscriber();
-    RET_ON_ERR(subs_handle != NULL, "failed to subscribe to all");
 
-    sock = zmq_socket(m_ctx, ZMQ_SUB);
-    RET_ON_ERR(sock != NULL, "failing to get ZMQ_SUB socket");
+    cap_sub_sock = zmq_socket(m_ctx, ZMQ_SUB);
+    RET_ON_ERR(cap_sub_sock != NULL, "failing to get ZMQ_SUB socket");
 
-    rc = zmq_connect(sock, get_config(string(CAPTURE_END_KEY)).c_str());
+    rc = zmq_connect(cap_sub_sock, get_config(string(CAPTURE_END_KEY)).c_str());
     RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
 
-    rc = zmq_setsockopt(sock, ZMQ_SUBSCRIBE, "", 0);
+    rc = zmq_setsockopt(cap_sub_sock, ZMQ_SUBSCRIBE, "", 0);
     RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
 
-    rc = zmq_setsockopt(sock, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms));
+    rc = zmq_setsockopt(cap_sub_sock, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms));
     RET_ON_ERR(rc == 0, "Failed to ZMQ_RCVTIMEO to %d", block_ms);
 
     m_cap_run = true;
@@ -210,7 +418,7 @@ capture_service::do_capture()
         internal_event_t event;
         string source, evt_str;
 
-        if ((rc = zmq_message_read(sock, 0, source, event)) != 0) {
+        if ((rc = zmq_message_read(cap_sub_sock, 0, source, event)) != 0) {
             /*
              * The capture socket captures SUBSCRIBE requests too.
              * The messge could contain subscribe filter strings and binary code.
@@ -268,6 +476,9 @@ capture_service::do_capture()
                 m_events.push_back(evt_str);
                 if (VEC_SIZE(m_events) >= m_cache_max) {
                     cap_state = CAP_STATE_LAST;
+                    /* Clear the map, created to ensure memory space available */
+                    m_last_events.clear();
+                    m_last_events_init = true;
                 }
                 break;
             }
@@ -282,12 +493,12 @@ capture_service::do_capture()
             }
 
         case CAP_STATE_LAST:
-            if (!m_last_events_init) {
-                /* Clear the map, created to ensure memory space available */
-                m_last_events.clear();
-                m_last_events_init = true;
-            }
+            total_overflow++;
             m_last_events[rid] = evt_str;
+            if (total_overflow > m_last_events.size()) {
+                m_total_missed_cache++;
+                m_stats_instance->increment_missed_cache(1);
+            }
             break;
         }
     }
@@ -297,8 +508,7 @@ out:
      * Capture stop will close the socket which fail the read
      * and hence bail out.
      */
-    events_deinit_subscriber(subs_handle);
-    zmq_close(sock);
+    zmq_close(cap_sub_sock);
     m_cap_run = false;
     return;
 }
@@ -365,7 +575,7 @@ out:
 
 int
 capture_service::read_cache(event_serialized_lst_t &lst_fifo,
-        last_events_t &lst_last)
+        last_events_t &lst_last, counters_t &overflow_cnt)
 {
     lst_fifo.swap(m_events);
     if (m_last_events_init) {
@@ -375,7 +585,35 @@ capture_service::read_cache(event_serialized_lst_t &lst_fifo,
     }
     last_events_t().swap(m_last_events);
     event_serialized_lst_t().swap(m_events);
+    overflow_cnt = m_total_missed_cache;
     return 0;
+}
+
+static int
+process_options(stats_collector *stats, const event_serialized_lst_t &req_data,
+        event_serialized_lst_t &resp_data)
+{
+    int ret = -1;
+    if (!req_data.empty()) {
+        RET_ON_ERR(req_data.size() == 1, "Expect only one options string %d",
+                (int)req_data.size());
+        const auto &data = nlohmann::json::parse(*(req_data.begin()));
+        RET_ON_ERR(data.size() == 1, "Only one supported option. Expect 1. size=%d",
+                (int)data.size());
+        const auto it = data.find(GLOBAL_OPTION_HEARTBEAT);
+        RET_ON_ERR(it != data.end(), "Expect HEARTBEAT_INTERVAL; got %s",
+                data.begin().key().c_str());
+        stats->set_heartbeat_interval(it.value());
+        ret = 0;
+    }
+    else {
+        nlohmann::json msg = nlohmann::json::object();
+        msg[GLOBAL_OPTION_HEARTBEAT] = stats->get_heartbeat_interval();
+        resp_data.push_back(msg.dump());
+        ret = 0;
+    }
+out:
+    return ret;
 }
 
 
@@ -385,13 +623,14 @@ run_eventd_service()
     int code = 0;
     int cache_max;
     event_service service;
+    stats_collector stats_instance;
     eventd_proxy *proxy = NULL;
     capture_service *capture = NULL;
 
     event_serialized_lst_t capture_fifo_events;
     last_events_t capture_last_events;
 
-    SWSS_LOG_ERROR("Eventd service starting\n");
+    SWSS_LOG_INFO("Eventd service starting\n");
 
     void *zctx = zmq_ctx_new();
     RET_ON_ERR(zctx != NULL, "Failed to get zmq ctx");
@@ -406,14 +645,22 @@ run_eventd_service()
 
     RET_ON_ERR(service.init_server(zctx) == 0, "Failed to init service");
 
+    RET_ON_ERR(stats_instance.start() == 0, "Failed to start stats collector");
+
+    /* Pause heartbeat during caching */
+    stats_instance.heartbeat_ctrl(true);
+
     /*
      * Start cache service, right upon eventd starts so as not to lose
      * events until telemetry starts.
      * Telemetry will send a stop & collect cache upon startup
      */
-    capture = new capture_service(zctx, cache_max);
+    capture = new capture_service(zctx, cache_max, &stats_instance);
     RET_ON_ERR(capture->set_control(INIT_CAPTURE) == 0, "Failed to init capture");
     RET_ON_ERR(capture->set_control(START_CAPTURE) == 0, "Failed to start capture");
+
+    this_thread::sleep_for(chrono::milliseconds(200));
+    RET_ON_ERR(stats_instance.is_running(), "Failed to start stats instance");
 
     while(code != EVENT_EXIT) {
         int resp = -1; 
@@ -431,7 +678,7 @@ run_eventd_service()
                 event_serialized_lst_t().swap(capture_fifo_events);
                 last_events_t().swap(capture_last_events);
 
-                capture = new capture_service(zctx, cache_max);
+                capture = new capture_service(zctx, cache_max, &stats_instance);
                 if (capture != NULL) {
                     resp = capture->set_control(INIT_CAPTURE);
                 }
@@ -444,6 +691,9 @@ run_eventd_service()
                     resp = -1;
                     break;
                 }
+                /* Pause heartbeat during caching */
+                stats_instance.heartbeat_ctrl(true);
+
                 resp = capture->set_control(START_CAPTURE, &req_data);
                 break;
 
@@ -456,10 +706,15 @@ run_eventd_service()
                 }
                 resp = capture->set_control(STOP_CAPTURE);
                 if (resp == 0) {
-                    resp = capture->read_cache(capture_fifo_events, capture_last_events);
+                    counters_t overflow;
+                    resp = capture->read_cache(capture_fifo_events, capture_last_events,
+                            overflow);
                 }
                 delete capture;
                 capture = NULL;
+
+                /* Unpause heartbeat upon stop caching */
+                stats_instance.heartbeat_ctrl();
                 break;
 
 
@@ -503,6 +758,10 @@ run_eventd_service()
                 resp_data.swap(req_data);
                 break;
 
+            case EVENT_OPTIONS:
+                resp = process_options(&stats_instance, req_data, resp_data);
+                break;
+
             case EVENT_EXIT:
                 resp = 0;
                 break;
@@ -517,6 +776,8 @@ run_eventd_service()
     }
 out:
     service.close_service();
+    stats_instance.stop();
+
     if (proxy != NULL) {
         delete proxy;
     }
@@ -528,4 +789,10 @@ out:
     }
     SWSS_LOG_ERROR("Eventd service exiting\n");
 }
+
+void set_unit_testing(bool b)
+{
+    s_unit_testing = b;
+}
+
 

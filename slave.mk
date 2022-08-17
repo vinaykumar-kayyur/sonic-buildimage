@@ -1154,7 +1154,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CTRMGRD)) \
         $(addprefix $(FILES_PATH)/,$($(SONIC_CTRMGRD)_FILES)) \
-        $(addprefix $(FILES_PATH)/,$($(DOCKER_EVENTD)_PLUGIN)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SYSTEM_HEALTH)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3))
@@ -1293,6 +1292,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		$(if $($(docker:-dbg.gz=.gz)_MACHINE),\
 			mv $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh $($(docker:-dbg.gz=.gz)_MACHINE)_$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		)
+		$(foreach file, $($(docker)_SHARED_FILES), \
+			{ cp $($(file)_PATH)/$(file) $(FILES_PATH)/ $(LOG) || exit 1 ; } ; )
 	)
 
 	# Exported variables are used by sonic_debian_extension.sh

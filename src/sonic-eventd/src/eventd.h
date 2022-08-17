@@ -1,15 +1,31 @@
 /*
  * Header file for eventd daemon
  */
+#include "table.h"
 #include "events_service.h"
 #include "events.h"
+#include "events_wrap.h"
+
+#define ARRAY_SIZE(l) (sizeof(l)/sizeof((l)[0]))
 
 typedef map<runtime_id_t, event_serialized_t> last_events_t;
+
+/* stat counters */
+typedef uint64_t counters_t;
+
+typedef enum {
+    INDEX_COUNTERS_EVENTS_PUBLISHED,
+    INDEX_COUNTERS_EVENTS_MISSED_CACHE,
+    COUNTERS_EVENTS_TOTAL
+} stats_counter_index_t;
+
+#define EVENTS_STATS_FIELD_NAME "value"
+#define STATS_HEARTBEAT_MIN 300
 
 /*
  *  Started by eventd_service.
  *  Creates XPUB & XSUB end points.
- onicanalytics.azurecr.io  Bind the same
+ *  Bind the same
  *  Create a PUB socket end point for capture and bind.
  *  Call run_proxy method with sockets in a dedicated thread.
  *  Thread runs forever until the zmq context is terminated.
@@ -41,6 +57,104 @@ class eventd_proxy
         thread m_thr;
 };
 
+
+class stats_collector
+{
+    public:
+        stats_collector();
+
+        ~stats_collector() { stop(); }
+
+        int start();
+
+        void stop() {
+
+            m_shutdown = true;
+
+            if (m_thr_collector.joinable()) {
+                m_thr_collector.join();
+            }
+
+            if (m_thr_writer.joinable()) {
+                m_thr_writer.join();
+            }
+        }
+
+        void increment_published(counters_t val) {
+            _update_stats(INDEX_COUNTERS_EVENTS_PUBLISHED, val);
+        }
+
+        void increment_missed_cache(counters_t val) {
+            _update_stats(INDEX_COUNTERS_EVENTS_MISSED_CACHE, val);
+        }
+
+        counters_t read_counter(stats_counter_index_t index) {
+            if (index != COUNTERS_EVENTS_TOTAL) {
+                return m_lst_counters[index];
+            }
+            else {
+                return 0;
+            }
+        }
+
+        /* Sets heartbeat interval in milliseconds */
+        void set_heartbeat_interval(int val_in_ms);
+
+        /*
+         * Get heartbeat interval in milliseconds
+         * NOTE: Set & get value may not match as the value is rounded
+         *       to a multiple of smallest possible interval.
+         */
+        int get_heartbeat_interval();
+
+        /* A way to pause heartbeat */
+        void heartbeat_ctrl(bool pause = false) {
+            m_pause_heartbeat = pause;
+            SWSS_LOG_INFO("Set heartbeat_ctrl pause=%d", pause);
+        }
+
+        uint64_t heartbeats_published() const {
+            return m_heartbeats_published;
+        }
+
+        bool is_running()
+        {
+            return !m_shutdown;
+        }
+
+    private:
+        void _update_stats(stats_counter_index_t index, counters_t val) {
+            if (index != COUNTERS_EVENTS_TOTAL) {
+                m_lst_counters[index] += val;
+                m_updated = true;
+            }
+            else {
+                SWSS_LOG_ERROR("Internal code error. Invalid index=%d", index);
+            }
+        }
+
+        void run_collector();
+
+        void run_writer();
+       
+        atomic<bool> m_updated;
+
+        counters_t m_lst_counters[COUNTERS_EVENTS_TOTAL];
+
+        bool m_shutdown;
+
+        thread m_thr_collector;
+        thread m_thr_writer;
+
+        shared_ptr<swss::DBConnector> m_counters_db;
+        shared_ptr<swss::Table> m_stats_table;
+
+        bool m_pause_heartbeat;
+
+        uint64_t m_heartbeats_published;
+
+        int m_heartbeats_interval_cnt;
+};
 
 /*
  *  Capture/Cache service
@@ -94,8 +208,10 @@ typedef enum {
 class capture_service
 {
     public:
-        capture_service(void *ctx, int cache_max) : m_ctx(ctx), m_cap_run(false),
-            m_ctrl(NEED_INIT), m_cache_max(cache_max), m_last_events_init(false)
+        capture_service(void *ctx, int cache_max, stats_collector *stats) :
+            m_ctx(ctx), m_stats_instance(stats), m_cap_run(false),
+            m_ctrl(NEED_INIT), m_cache_max(cache_max),
+            m_last_events_init(false), m_total_missed_cache(0)
         {}
 
         ~capture_service();
@@ -103,7 +219,7 @@ class capture_service
         int set_control(capture_control_t ctrl, event_serialized_lst_t *p=NULL);
 
         int read_cache(event_serialized_lst_t &lst_fifo,
-                last_events_t &lst_last);
+                last_events_t &lst_last, counters_t &overflow_cnt);
 
     private:
         void init_capture_cache(const event_serialized_lst_t &lst);
@@ -112,6 +228,8 @@ class capture_service
         void stop_capture();
 
         void *m_ctx;
+        stats_collector *m_stats_instance;
+
         bool m_cap_run;
         capture_control_t m_ctrl;
         thread m_thr;
@@ -125,6 +243,8 @@ class capture_service
 
         typedef map<runtime_id_t, sequence_t> pre_exist_id_t;
         pre_exist_id_t m_pre_exist_id;
+
+        counters_t m_total_missed_cache;
 
 };
 
@@ -144,4 +264,5 @@ class capture_service
  */
 void run_eventd_service();
 
-
+/* To help skip redis access during unit testing */
+void set_unit_testing(bool b);
