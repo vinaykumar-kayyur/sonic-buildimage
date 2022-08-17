@@ -98,7 +98,7 @@ class APIHelper():
                 result = raw_data.strip()
             else:
                 status = False
-        except:
+        except Exception as E:
             print(str(E))
             status = False
         return status, result

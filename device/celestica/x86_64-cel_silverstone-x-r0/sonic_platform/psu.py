@@ -9,7 +9,6 @@
 #############################################################################
 
 import os
-import sonic_platform
 import subprocess
 import sys
 import re
