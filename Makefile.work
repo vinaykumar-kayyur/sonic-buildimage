@@ -10,6 +10,7 @@
 #  * ENABLE_ZTP: Enables zero touch provisioning.
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
 #  * INCLUDE_KUBERNETES: Allows including Kubernetes
+#  * INCLUDE_KUBERNETES_MASTER: Allows including Kubernetes master
 #  * INCLUDE_MUX: Include MUX feature/services for TOR switch.
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
@@ -139,13 +140,21 @@ endif
 ifeq ($(CONFIGURED_ARCH),amd64)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = n
 else
 ifeq ($(CONFIGURED_ARCH), $(COMPILE_HOST_ARCH))
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = n
 else ifneq ($(CONFIGURED_ARCH),)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)-march-$(CONFIGURED_ARCH)
+ifneq ($(CROSS_BLDENV),)
+MULTIARCH_QEMU_ENVIRON = n
+CROSS_BUILD_ENVIRON = y
+else
 MULTIARCH_QEMU_ENVIRON = y
+CROSS_BUILD_ENVIRON = n
+endif
 endif
 endif
 SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
@@ -169,8 +178,8 @@ $(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
     scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
-$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
+$(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 $(shell BUILD_SLAVE=y DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
 
 # Add the versions in the tag, if the version change, need to rebuild the slave
@@ -194,7 +203,8 @@ endif
 DOCKER_LOCKFILE_SAVE := $(DOCKER_LOCKDIR)/docker_save.lock
 $(shell mkdir -m 0777 -p $(DOCKER_LOCKDIR))
 $(shell [ -f $(DOCKER_LOCKFILE_SAVE) ] || (touch $(DOCKER_LOCKFILE_SAVE) && chmod 0777 $(DOCKER_LOCKFILE_SAVE)))
-$(shell sudo rm -rf $(DOCKER_ROOT) && mkdir -p $(DOCKER_ROOT))
+$(docker run --rm -v $(DOCKER_ROOT)\:/mount alpine sh -c 'rm -rf /mount/')
+$(mkdir -p $(DOCKER_ROOT))
 
 ifeq ($(DOCKER_BUILDER_MOUNT),)
 override DOCKER_BUILDER_MOUNT := "$(PWD):/sonic"
@@ -272,7 +282,7 @@ ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
 endif
 endif
 
-ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
 ifeq ($(DOCKER_DATA_ROOT_FOR_MULTIARCH),)
 	DOCKER_DATA_ROOT_FOR_MULTIARCH := /var/lib/march/docker
 endif
@@ -344,6 +354,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PLATFORM=$(PLATFORM) \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON)  \
+                           CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
@@ -356,6 +367,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
                            KUBERNETES_CNI_VERSION=$(KUBERNETES_CNI_VERSION) \
                            K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
+                           INCLUDE_KUBERNETES_MASTER=$(INCLUDE_KUBERNETES_MASTER) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \
@@ -405,7 +417,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 .DEFAULT_GOAL :=  all
 
 %::
-ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
+ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
 	@$(DOCKER_MULTIARCH_CHECK)
 ifneq ($(BLDENV), )
 	@$(DOCKER_SERVICE_MULTIARCH_CHECK)
