@@ -2,6 +2,7 @@ RM := rm -rf
 EVENTD_TARGET := eventd
 EVENTD_TEST := tests/tests
 EVENTD_TOOL := tools/events_tool
+EVENTD_PUBLISH_TOOL := tools/events_publish_tool.py
 RSYSLOG-PLUGIN_TARGET := rsyslog_plugin/rsyslog_plugin
 RSYSLOG-PLUGIN_TEST := rsyslog_plugin_tests/tests
 CP := cp
@@ -70,6 +71,7 @@ install:
 	$(MKDIR) -p $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
+	$(CP) $(EVENTD_PUBLISH_TOOL) $(DESTDIR)/usr/sbin
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(EVENTD_TARGET)
