@@ -8,6 +8,7 @@ class StaticRouteTimer(object):
         self.db = SonicV2Connector()
         self.db.connect(self.db.APPL_DB)
         self.timer = None
+        self.start = None
 
     DEFAULT_TIMER = 180
     MAX_TIMER     = 1800
@@ -21,7 +22,6 @@ class StaticRouteTimer(object):
                 self.timer = timer
                 return
             log_err("Custom static route expiry time of {}s is invalid!".format(timer))
-        self.timer = self.DEFAULT_TIMER
         return
 
     def alarm(self):
@@ -37,11 +37,17 @@ class StaticRouteTimer(object):
                 else:
                     self.db.delete(self.db.APPL_DB, sr)
                     log_debug("Static route {}:{} deleted".format(val[0], val[1]))
+        self.start = time.time()
         return
 
     def run(self):
         while True:
             self.set_timer()
             log_debug("Static route expiry set to {}s".format(self.timer))
-            time.sleep(self.timer)
-            self.alarm()
+            if self.timer:
+                time.sleep(self.timer)
+                self.alarm()
+            else:
+                time.sleep(1)
+                if time.time() - self.start == self.DEFAULT_TIMER:
+                    self.alarm()
