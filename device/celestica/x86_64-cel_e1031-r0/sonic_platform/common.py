@@ -196,8 +196,7 @@ class Common:
         return True
 
     def is_host(self):
-        command = split(self.HOST_CHK_CMD)
-        return subprocess.run(command).returncode == 0
+        return subprocess.run(split(self.HOST_CHK_CMD), stdout=None, stderr=None).returncode == 0
 
     def load_json_file(self, path):
         """
