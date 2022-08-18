@@ -14,14 +14,11 @@ RUN apt-get purge -y syncd
 ## Pre-install the fundamental packages
 RUN apt-get update      \
  && apt-get -y install  \
-    build-essential     \
-    libffi-dev          \
     wget                \
     cmake               \
     libqt5core5a        \
     libqt5network5      \
     python3-setuptools  \
-    python3-dev         \
     python3-pip         \
     python-is-python3   \
     libboost-atomic1.74.0
