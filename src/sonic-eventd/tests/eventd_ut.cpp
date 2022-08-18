@@ -11,8 +11,10 @@
 #include "../src/eventd.h"
 
 using namespace std;
+using namespace swss;
 
-#define ARRAY_SIZE(p) ((int)(sizeof(p) / sizeof((p)[0])))
+extern bool g_is_redis_available;
+extern const char *counter_keys[];
 
 typedef struct {
     int id;
@@ -28,16 +30,8 @@ internal_event_t create_ev(const test_data_t &data)
 {
     internal_event_t event_data;
 
-    {
-        string param_str;
-
-        EXPECT_EQ(0, serialize(data.params, param_str));
-
-        map_str_str_t event_str_map = { { data.source + ":" + data.tag, param_str}};
-
-        EXPECT_EQ(0, serialize(event_str_map, event_data[EVENT_STR_DATA]));
-    }
-
+    event_data[EVENT_STR_DATA] = convert_to_json(
+            data.source + ":" + data.tag, data.params);
     event_data[EVENT_RUNTIME_ID] = data.rid;
     event_data[EVENT_SEQUENCE] = data.seq;
 
@@ -226,21 +220,8 @@ void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
 }
 
 
-void debug_on()
-{
-    /* compile with -D DEBUG_TEST or add "#define DEBUG_TEST" to include. */
-#ifdef DEBUG_TEST
-    /* Direct log messages to stdout */
-    string dummy, op("STDOUT");
-    swss::Logger::swssOutputNotify(dummy, op);
-    swss::Logger::setMinPrio(swss::Logger::SWSS_DEBUG);
-#endif
-}
-
 TEST(eventd, proxy)
 {
-    debug_on();
-
     printf("Proxy TEST started\n");
     bool term_sub = false;
     bool term_cap = false;
@@ -310,12 +291,12 @@ TEST(eventd, proxy)
 TEST(eventd, capture)
 {
     printf("Capture TEST started\n");
-    debug_on();
 
     bool term_sub = false;
     string sub_source;
     int sub_evts_sz = 0;
     internal_events_lst_t sub_evts;
+    stats_collector stats_instance;
 
     /* run_pub details */
     string wr_source("hello");
@@ -328,6 +309,7 @@ TEST(eventd, capture)
     /* startup strings; expected list & read list from capture */
     event_serialized_lst_t evts_start, evts_expect, evts_read;
     last_events_t last_evts_exp, last_evts_read;
+    counters_t overflow, overflow_exp = 0;
 
     void *zctx = zmq_ctx_new();
     EXPECT_TRUE(NULL != zctx);
@@ -343,7 +325,7 @@ TEST(eventd, capture)
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Create capture service */
-    capture_service *pcap = new capture_service(zctx, cache_max);
+    capture_service *pcap = new capture_service(zctx, cache_max, &stats_instance);
 
     /* Expect START_CAPTURE */
     EXPECT_EQ(-1, pcap->set_control(STOP_CAPTURE));
@@ -352,7 +334,7 @@ TEST(eventd, capture)
     EXPECT_EQ(0, pcap->set_control(INIT_CAPTURE));
 
     EXPECT_TRUE(init_cache > 1);
-    EXPECT_TRUE((cache_max+3) < ARRAY_SIZE(ldata));
+    EXPECT_TRUE((cache_max+3) < (int)ARRAY_SIZE(ldata));
 
     /* Collect few serailized strings of events for startup cache */
     for(int i=0; i < init_cache; ++i) {
@@ -369,7 +351,7 @@ TEST(eventd, capture)
      * Hence i=1, when first init_cache events are already
      * in crash.
      */
-    for(int i=1; i < ARRAY_SIZE(ldata); ++i) {
+    for(int i=1; i < (int)ARRAY_SIZE(ldata); ++i) {
         internal_event_t ev(create_ev(ldata[i]));
         string evt_str;
 
@@ -385,8 +367,10 @@ TEST(eventd, capture)
         } else {
             /* collect last entries for overflow */
             last_evts_exp[ldata[i].rid] = evt_str;
+            overflow_exp++;
         }
     }
+    overflow_exp -= (int)last_evts_exp.size();
 
     EXPECT_EQ(0, pcap->set_control(START_CAPTURE, &evts_start));
 
@@ -406,13 +390,14 @@ TEST(eventd, capture)
     term_sub = true;
 
     /* Read the cache */
-    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read));
+    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read, overflow));
 
 #ifdef DEBUG_TEST
     if ((evts_read.size() != evts_expect.size()) ||
             (last_evts_read.size() != last_evts_exp.size())) {
         printf("size: sub_evts_sz=%d sub_evts=%d\n", sub_evts_sz, (int)sub_evts.size());
         printf("init_cache=%d cache_max=%d\n", init_cache, cache_max);
+        printf("overflow=%ul overflow_exp=%ul\n", overflow, overflow_exp);
         printf("evts_start=%d evts_expect=%d evts_read=%d\n",
                 (int)evts_start.size(), (int)evts_expect.size(), (int)evts_read.size());
         printf("last_evts_exp=%d last_evts_read=%d\n", (int)last_evts_exp.size(),
@@ -424,6 +409,7 @@ TEST(eventd, capture)
     EXPECT_EQ(evts_read, evts_expect);
     EXPECT_EQ(last_evts_read.size(), last_evts_exp.size());
     EXPECT_EQ(last_evts_read, last_evts_exp);
+    EXPECT_EQ(overflow, overflow_exp);
 
     delete pxy;
     pxy = NULL;
@@ -445,7 +431,6 @@ TEST(eventd, capture)
 TEST(eventd, captureCacheMax)
 {
     printf("Capture TEST with matchinhg cache-max started\n");
-    debug_on();
 
     /*
      * Need to run subscriber; Else publisher would skip publishing
@@ -455,6 +440,7 @@ TEST(eventd, captureCacheMax)
     string sub_source;
     int sub_evts_sz = 0;
     internal_events_lst_t sub_evts;
+    stats_collector stats_instance;
 
     /* run_pub details */
     string wr_source("hello");
@@ -467,6 +453,7 @@ TEST(eventd, captureCacheMax)
     /* startup strings; expected list & read list from capture */
     event_serialized_lst_t evts_start, evts_expect, evts_read;
     last_events_t last_evts_read;
+    counters_t overflow;
 
     void *zctx = zmq_ctx_new();
     EXPECT_TRUE(NULL != zctx);
@@ -482,7 +469,7 @@ TEST(eventd, captureCacheMax)
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Create capture service */
-    capture_service *pcap = new capture_service(zctx, cache_max);
+    capture_service *pcap = new capture_service(zctx, cache_max, &stats_instance);
 
     /* Expect START_CAPTURE */
     EXPECT_EQ(-1, pcap->set_control(STOP_CAPTURE));
@@ -502,7 +489,7 @@ TEST(eventd, captureCacheMax)
      * Collect events to publish for capture to cache
      * re-publishing some events sent in cache.
      */
-    for(int i=1; i < ARRAY_SIZE(ldata); ++i) {
+    for(int i=1; i < (int)ARRAY_SIZE(ldata); ++i) {
         internal_event_t ev(create_ev(ldata[i]));
         string evt_str;
 
@@ -535,7 +522,7 @@ TEST(eventd, captureCacheMax)
     term_sub = true;
 
     /* Read the cache */
-    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read));
+    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read, overflow));
 
 #ifdef DEBUG_TEST
     if ((evts_read.size() != evts_expect.size()) ||
@@ -545,11 +532,13 @@ TEST(eventd, captureCacheMax)
         printf("evts_start=%d evts_expect=%d evts_read=%d\n",
                 (int)evts_start.size(), (int)evts_expect.size(), (int)evts_read.size());
         printf("last_evts_read=%d\n", (int)last_evts_read.size());
+        printf("overflow=%ul overflow_exp=%ul\n", overflow, overflow_exp);
     }
 #endif
 
     EXPECT_EQ(evts_read, evts_expect);
     EXPECT_TRUE(last_evts_read.empty());
+    EXPECT_EQ(overflow, 0);
 
     delete pxy;
     pxy = NULL;
@@ -568,7 +557,6 @@ TEST(eventd, captureCacheMax)
     printf("Capture TEST with matchinhg cache-max completed\n");
 }
 
-
 TEST(eventd, service)
 {
     /*
@@ -580,7 +568,6 @@ TEST(eventd, service)
      * TEST(eventd, capture) has already tested caching.
      */
     printf("Service TEST started\n");
-    debug_on();
 
     /* startup strings; expected list & read list from capture */
     event_service service;
@@ -594,6 +581,11 @@ TEST(eventd, service)
      * It uses its own zmq context
      * It starts to capture too.
      */
+
+    if (!g_is_redis_available) {
+        set_unit_testing(true);
+    }
+
     thread thread_service(&run_eventd_service);
 
     /* Need client side service to interact with server side */
@@ -603,6 +595,7 @@ TEST(eventd, service)
         /* eventd_service starts cache too; Test this caching */
         /* Init pub connection */
         void *mock_pub = init_pub(zctx);
+        EXPECT_TRUE(NULL != mock_pub);
 
         internal_events_lst_t wr_evts;
         int wr_sz = 2;
@@ -640,6 +633,7 @@ TEST(eventd, service)
         /* Test normal cache op; init, start & stop via event_service APIs */
         int init_cache = 4;     /* provided along with start capture */
         event_serialized_lst_t evts_start, evts_read;
+        vector<internal_event_t> evts_start_int;
 
         EXPECT_TRUE(init_cache > 1);
 
@@ -649,6 +643,7 @@ TEST(eventd, service)
             string evt_str;
             serialize(ev, evt_str);
             evts_start.push_back(evt_str);
+            evts_start_int.push_back(ev);
         }
 
 
@@ -663,7 +658,32 @@ TEST(eventd, service)
         /* Read the cache */
         EXPECT_EQ(0, service.cache_read(evts_read));
 
-        EXPECT_EQ(evts_read, evts_start);
+        if (evts_read != evts_start) {
+            vector<internal_event_t> evts_read_int;
+
+            for (event_serialized_lst_t::const_iterator itc = evts_read.begin();
+                    itc != evts_read.end(); ++itc) {
+                internal_event_t event;
+
+                if (deserialize(*itc, event) == 0) {
+                    evts_read_int.push_back(event);
+                }
+            }
+            EXPECT_EQ(evts_read_int, evts_start_int);
+        }
+    }
+
+    {
+        string set_opt_bad("{\"HEARTBEAT_INTERVAL\": 2000, \"OFFLINE_CACHE_SIZE\": 500}");
+        string set_opt_good("{\"HEARTBEAT_INTERVAL\":5}");
+        char buff[100];
+        buff[0] = 0;
+
+        EXPECT_EQ(-1, service.global_options_set(set_opt_bad.c_str()));
+        EXPECT_EQ(0, service.global_options_set(set_opt_good.c_str()));
+        EXPECT_LT(0, service.global_options_get(buff, sizeof(buff)));
+
+        EXPECT_EQ(set_opt_good, string(buff));
     }
 
     EXPECT_EQ(0, service.send_recv(EVENT_EXIT));
@@ -676,3 +696,220 @@ TEST(eventd, service)
     printf("Service TEST completed\n");
 }
 
+
+void
+wait_for_heartbeat(stats_collector &stats_instance, long unsigned int cnt,
+        int wait_ms = 3000) 
+{
+    int diff = 0;
+
+    auto st = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    while (stats_instance.heartbeats_published() == cnt) {
+        auto en = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        diff = en - st;
+        if (diff > wait_ms) {
+            EXPECT_LE(diff, wait_ms);
+            EXPECT_EQ(cnt, stats_instance.heartbeats_published());
+            break;
+        }
+        else {
+            stringstream ss;
+            ss << (en -st);
+        }
+        this_thread::sleep_for(chrono::milliseconds(300));
+    }
+}
+
+TEST(eventd, heartbeat)
+{
+    printf("heartbeat TEST started\n");
+
+    int rc;
+    long unsigned int cnt;
+    stats_collector stats_instance;
+
+    if (!g_is_redis_available) {
+        set_unit_testing(true);
+    }
+
+    void *zctx = zmq_ctx_new();
+    EXPECT_TRUE(NULL != zctx);
+
+    eventd_proxy *pxy = new eventd_proxy(zctx);
+    EXPECT_TRUE(NULL != pxy);
+
+    /* Starting proxy */
+    EXPECT_EQ(0, pxy->init());
+
+    rc = stats_instance.start();
+    EXPECT_EQ(rc, 0);
+
+    /* Wait for any non-zero heartbeat */
+    wait_for_heartbeat(stats_instance, 0);
+
+    /* Pause heartbeat */
+    stats_instance.heartbeat_ctrl(true);
+    
+    /* Sleep to ensure the other thread noticed the pause request. */
+    this_thread::sleep_for(chrono::milliseconds(200));
+
+    /* Get current count */
+    cnt = stats_instance.heartbeats_published();
+
+    /* Wait for 3 seconds with no new neartbeat */
+    this_thread::sleep_for(chrono::seconds(3));
+
+    EXPECT_EQ(stats_instance.heartbeats_published(), cnt);
+
+    /* Set interval as 1 second */
+    stats_instance.set_heartbeat_interval(1);
+
+    /* Turn on heartbeat */
+    stats_instance.heartbeat_ctrl();
+
+    /* Wait for heartbeat count to change from last count */
+    wait_for_heartbeat(stats_instance, cnt, 2000);
+
+    stats_instance.stop();
+
+    delete pxy;
+
+    zmq_ctx_term(zctx);
+
+    printf("heartbeat TEST completed\n");
+}
+
+
+TEST(eventd, testDB)
+{
+    printf("DB TEST started\n");
+
+    /* consts used */
+    const int pub_count = 7;
+    const int cache_max = 3;
+
+    stats_collector stats_instance;
+    event_handle_t pub_handle;
+    event_serialized_lst_t evts_read;
+    last_events_t last_evts_read;
+    counters_t overflow;
+    string tag;
+
+    if (!g_is_redis_available) {
+        printf("redis not available; Hence DB TEST skipped\n");
+        return;
+    }
+
+    EXPECT_LT(cache_max, pub_count);
+    DBConnector db("COUNTERS_DB", 0, true);
+
+
+    /* Not testing heartbeat; Hence set high val as 10 seconds */
+    stats_instance.set_heartbeat_interval(10000);
+
+    /* Start instance to capture published count & as well writes to DB */
+    EXPECT_EQ(0, stats_instance.start());
+
+    void *zctx = zmq_ctx_new();
+    EXPECT_TRUE(NULL != zctx);
+
+    /* Run proxy to enable receive as capture test needs to receive */
+    eventd_proxy *pxy = new eventd_proxy(zctx);
+    EXPECT_TRUE(NULL != pxy);
+
+    /* Starting proxy */
+    EXPECT_EQ(0, pxy->init());
+
+    /* Create capture service */
+    capture_service *pcap = new capture_service(zctx, cache_max, &stats_instance);
+
+    /* Initialize the capture */
+    EXPECT_EQ(0, pcap->set_control(INIT_CAPTURE));
+
+    /* Kick off capture */
+    EXPECT_EQ(0, pcap->set_control(START_CAPTURE));
+
+    pub_handle = events_init_publisher("test_db");
+
+    for(int i=0; i < pub_count; ++i) {
+        tag = string("test_db_tag_") + to_string(i);
+        event_publish(pub_handle, tag);
+    }
+
+    /* Pause to ensure all publisghed events did reach capture service */
+    this_thread::sleep_for(chrono::milliseconds(200));
+
+    EXPECT_EQ(0, pcap->set_control(STOP_CAPTURE));
+
+    /* Read the cache */
+    EXPECT_EQ(0, pcap->read_cache(evts_read, last_evts_read, overflow));
+
+    /*
+     * Sent pub_count messages of different tags.
+     * Upon cache max, only event per sender/runtime-id is saved. Hence
+     * expected last_evts_read is one.
+     * expected overflow = pub_count - cache_max - 1
+     */
+
+    EXPECT_EQ(cache_max, (int)evts_read.size());
+    EXPECT_EQ(1, (int)last_evts_read.size());
+    EXPECT_EQ((pub_count - cache_max - 1), overflow);
+
+    EXPECT_EQ(pub_count, stats_instance.read_counter(
+                INDEX_COUNTERS_EVENTS_PUBLISHED));
+    EXPECT_EQ((pub_count - cache_max - 1), stats_instance.read_counter(
+                INDEX_COUNTERS_EVENTS_MISSED_CACHE));
+
+    events_deinit_publisher(pub_handle);
+
+    for (int i=0; i < COUNTERS_EVENTS_TOTAL; ++i) {
+        string key = string("COUNTERS_EVENTS:") + counter_keys[i];
+        unordered_map<string, string> m;
+        bool key_found = false, val_found=false, val_match=false;
+
+        if (db.exists(key)) {
+            try {
+                m = db.hgetall(key);
+                unordered_map<string, string>::const_iterator itc = 
+                    m.find(string(EVENTS_STATS_FIELD_NAME));
+                if (itc != m.end()) {
+                    int expect =  (counter_keys[i] == string(COUNTERS_EVENTS_PUBLISHED) ?
+                            pub_count : (pub_count - cache_max - 1));
+                    val_match = (expect == stoi(itc->second) ? true : false);
+                    val_found = true;
+                }
+            }
+            catch (exception &e)
+            {
+                printf("Failed to get key=(%s) err=(%s)", key.c_str(), e.what());
+                EXPECT_TRUE(false);
+            }
+            key_found = true;
+        }
+
+        if (!val_match) {
+            printf("key=%s key_found=%d val_found=%d fields=%d",
+                    key.c_str(), key_found, val_found, (int)m.size());
+
+            printf("hgetall BEGIN key=%s", key.c_str());
+            for(unordered_map<string, string>::const_iterator itc = m.begin();
+                    itc != m.end(); ++itc) {
+                printf("val[%s] = (%s)", itc->first.c_str(), itc->second.c_str());
+            }
+            printf("hgetall END\n");
+            EXPECT_TRUE(false);
+        }
+    }
+
+    stats_instance.stop();
+
+    delete pxy;
+    delete pcap;
+
+    zmq_ctx_term(zctx);
+
+    printf("DB TEST completed\n");
+}
+
+
+// TODO -- Add unit tests for stats
