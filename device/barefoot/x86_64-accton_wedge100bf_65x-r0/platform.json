@@ -213,11 +213,25 @@
         "psus": [
             {
                 "name": "psu-1",
-                "temperature": false
+                "thermals": [
+                    {
+                        "name": "psu_driver-i2c-7-5a:psu1-temp1"
+                    },
+                    {
+                        "name": "psu_driver-i2c-7-5a:psu1-temp2"
+                    }
+                ]
             },
             {
                 "name": "psu-2",
-                "temperature": false
+                "thermals": [
+                    {
+                        "name": "psu_driver-i2c-7-59:psu2-temp1"
+                    },
+                    {
+                        "name": "psu_driver-i2c-7-59:psu2-temp2"
+                    }
+                ]
             }
         ],
         "thermals": [
@@ -250,18 +264,6 @@
             },
             {
                 "name": "pch_haswell-virtual-0:temp1"
-            },
-            {
-                "name": "psu_driver-i2c-7-5a:psu1-temp1"
-            },
-            {
-                "name": "psu_driver-i2c-7-5a:psu1-temp2"
-            },
-            {
-                "name": "psu_driver-i2c-7-59:psu2-temp1"
-            },
-            {
-                "name": "psu_driver-i2c-7-59:psu2-temp2"
             },
             {
                 "name": "tmp75-i2c-3-4a:exhaust-temp"
