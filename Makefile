@@ -1,7 +1,7 @@
 # SONiC make file
 
 NOJESSIE ?= 1
-NOSTRETCH ?= 1
+NOSTRETCH ?= 0
 NOBUSTER ?= 0
 NOBULLSEYE ?= 0
 
