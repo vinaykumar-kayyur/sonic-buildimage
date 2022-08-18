@@ -8,19 +8,15 @@
 #
 #############################################################################
 
-import os
-import syslog
 import time
 
 try:
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
     #from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
-    from sonic_platform.common import Common
+    from .common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-QSFP_INFO_OFFSET = 128
 
 
 class SfpOptoe(SfpOptoeBase):
