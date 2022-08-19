@@ -1,55 +1,172 @@
-From 49af0fd826d57df4c418fbb8c3597df40f5c8f77 Mon Sep 17 00:00:00 2001
+From a70001d66a55d15cfbc29f12f69969ef33a89fc5 Mon Sep 17 00:00:00 2001
 From: liuh-80 <liuh@microsoft.com>
 Date: Fri, 19 Aug 2022 13:28:45 +0800
 Subject: [PATCH] Disable create local user
 
 ---
- nss_tacplus.c | 77 +++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 69 insertions(+), 8 deletions(-)
+ nss_tacplus.c | 175 ++++++++++++++++----------------------------------
+ 1 file changed, 55 insertions(+), 120 deletions(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index 2de00a6..305d30e 100644
+index 2de00a6..30cb53d 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
-@@ -385,6 +385,72 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
-     return 0;
+@@ -41,8 +41,6 @@
+ 
+ static const char *nssname = "nss_tacplus"; /* for syslogs */
+ static const char *config_file = "/etc/tacplus_nss.conf";
+-static const char *user_conf = "/etc/tacplus_user";
+-static const char *user_conf_tmp = "/tmp/tacplus_user_tmp";
+ 
+ /*
+  * pwbuf is used to reduce number of arguments passed around; the strings in
+@@ -386,126 +384,68 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
  }
  
-+/*
+ /*
+- * If useradd finished, user name should be deleted in conf.
+- */
+-static int delete_conf_line(const char *name)
+-{
+-    FILE *fp, *fp_tmp;
+-    char line[128];
+-    char del_line[128];
+-    int len = strlen(name);
+-
+-    if(len >= 126) {
+-        syslog(LOG_ERR, "%s: user name %s out of range 128", nssname, name);
+-        return -1;
+-    }
+-    else {
+-        snprintf(del_line, 128, "%s\n", name);
+-    }
+-
+-    fp = fopen(user_conf, "r");
+-    if(!fp) {
+-        syslog(LOG_ERR, "%s: %s fopen failed", nssname, user_conf);
+-        return NSS_STATUS_UNAVAIL;
+-    }
+-    fp_tmp = fopen(user_conf_tmp, "w");
+-    if(!fp_tmp) {
+-        syslog(LOG_ERR, "%s: %s fopen failed", nssname, user_conf_tmp);
+-        fclose(fp);
+-        return NSS_STATUS_UNAVAIL;
+-    }
+-
+-    while(fgets(line, sizeof line, fp)) {
+-        if(strcmp(line, del_line)) {
+-            fprintf(fp_tmp, "%s", line);
+-        }
+-    }
+-    fclose(fp_tmp);
+-    fclose(fp);
+-
+-    if(0 != remove(user_conf) || 0 != rename(user_conf_tmp, user_conf)) {
+-        syslog(LOG_ERR, "%s: %s rewrite failed", nssname, user_conf);
+-        return -1;
+-    }
+-
+-    return 0;
+-}
+-
+-/*
+- * If not found in local, look up in tacacs user conf. If user name is not in
+- * conf, it will be written in conf and created by command 'useradd'. When
+- * useradd command use getpwnam(), it will return when username found in conf.
 + * copy a passwd structure and it's strings, using the provided buffer
 + * for the strings.
 + * if usename is non-NULL, use that, rather than pw_name in srcpw, so we can
 + * preserve the original requested name (this is part of the tacacs remapping).
 + * For strings, if pointer is null, use an empty string.
 + * Returns 0 if everything fit, otherwise 1.
-+ */
+  */
+-static int create_or_modify_local_user(const char *name, int level, bool existing_user)
 +static int
 +pwcreate(char *buf, size_t len, struct passwd *destpw,
 +       const char *usename)
-+{
+ {
+-    FILE *fp;
+-    useradd_info_t *user;
+-    char buf[512];
+-    int len = 512;
+-    int lvl, cnt;
+-    bool found = false;
+-    const char* command = existing_user ? "/usr/sbin/usermod": "/usr/sbin/useradd";
+-
+-    fp = fopen(user_conf, "ab+");
+-    if(!fp) {
+-        syslog(LOG_ERR, "%s: %s fopen failed", nssname, user_conf);
+-        return -1;
+-    }
 +    size_t needlen;
 +    int cnt;
-+
-+    pw_dir = "/home/";
-+    pw_gecos = "remote_user";
-+    pw_shell = "/bin/bash";
-+    pw_passwd = "x";
-+
+ 
+-    while(fgets(buf, sizeof buf, fp)) {
+-        if('#' == *buf || isspace(*buf))
+-            continue;
+-        // Delete line break
+-        cnt = strlen(buf);
+-        buf[cnt - 1] = '\0';
+-        if(!strcmp(buf, name)) {
+-            found = true;
+-            break;
+-        }
+-    }
++    const char *pw_dir = "/home/";
++    const char *pw_gecos = "remote_user";
++    const char *pw_shell = "/bin/bash";
++    const char *pw_passwd = "x";
+ 
+-    /*
+-     * If user is found in user_conf, it means that getpwnam is called by
+-     * useradd in this NSS module.
+-     */
+-    if(found) {
 +    needlen = usename ? strlen(usename) + 1 : 1 +
 +        pw_dir ? strlen(pw_dir) + 1 : 1 +
 +        pw_gecos ? strlen(pw_gecos) + 1 : 1 +
 +        pw_shell ? strlen(pw_shell) + 1 : 1 +
 +        pw_passwd ? strlen(pw_passwd) + 1 : 1;
 +    if(needlen > len) {
-+        if(debug)
+         if(debug)
+-            syslog(LOG_DEBUG, "%s: %s found in %s", nssname, name, user_conf);
+-        fclose(fp);
 +            syslog(LOG_DEBUG, "%s provided password buffer too small (%ld<%ld)",
 +                nssname, (long)len, (long)needlen);
-+        return 1;
-+    }
-+
-+    destpw->pw_uid = rand();
-+    destpw->pw_gid = rand();
-+
+         return 1;
+     }
+ 
+-    snprintf(buf, len, "%s\n", name);
+-    if(EOF == fputs(buf, fp)) {
+-        syslog(LOG_ERR, "%s: %s write local user failed", nssname, name);
+-        fclose(fp);
+-        return -1;
+-    }
+-    fclose(fp);
++    destpw->pw_uid = 1000 + (rand() % 1000);
++    destpw->pw_gid = 1000;
+ 
+-    lvl = level;
+-    while(lvl >= MIN_TACACS_USER_PRIV) {
+-        user = &useradd_grp_list[lvl];
+-        if(user->info && user->secondary_grp && user->shell) {
+-            snprintf(buf, len, "%s -G %s \"%s\" -g %d -c \"%s\" -d /home/%s -m -s %s",
+-                command, user->secondary_grp, name, user->gid, user->info, name, user->shell);
+-            if(debug) syslog(LOG_DEBUG, "%s", buf);
+-            fp = popen(buf, "r");
+-            if(!fp || -1 == pclose(fp)) {
+-                syslog(LOG_ERR, "%s: %s popen failed errno=%d %s",
+-                        nssname, command, errno, strerror(errno));
+-                delete_conf_line(name);
+-                return -1;
+-            }
+-            if(debug)
+-                syslog(LOG_DEBUG, "%s: %s %s success", nssname, command, name);
+-            delete_conf_line(name);
+-            return 0;
+-        }
+-        lvl--;
+-    }
 +    cnt = snprintf(buf, len, "%s", usename ? usename : "");
 +    destpw->pw_name = buf;
 +    cnt++; /* allow for null byte also */
@@ -76,15 +193,13 @@ index 2de00a6..305d30e 100644
 +    cnt++;
 +    buf += cnt;
 +    len -= cnt;
-+
+ 
+-    return -1;
 +    return 0;
-+}
-+
-+
+ }
+ 
  /*
-  * If useradd finished, user name should be deleted in conf.
-  */
-@@ -630,19 +696,14 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
+@@ -630,19 +570,14 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
      if(0 != ret)
          return ret;
  
@@ -102,8 +217,8 @@ index 2de00a6..305d30e 100644
 -        syslog(LOG_ERR, "%s: %s not found in local after useradd",  nssname, pb->name);
 -        ret = -1;
 -    }
-+    pwcreate(pb->buf, pb->buflen, pb->pw, username)
-+    *found = true;
++    pwcreate(pb->buf, pb->buflen, pb->pw, username);
++    found = true;
  
      return ret;
  }
