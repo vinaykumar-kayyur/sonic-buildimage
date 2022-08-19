@@ -1,0 +1,86 @@
+modeule sonic-mux-cable {
+    namespace "http://github.com/Azure/sonic-mux-cable";
+    prefix mux_cable;
+    yang-version 1.1;
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONiC DualToR MUX CABLE confifuration data";
+
+    revision 2022-08-19 {
+        description
+            "Initial revision";
+    }
+
+    container sonic-mux-cable {
+        
+        container MUX_CABLE {
+            
+            list MUX_CABLE_LIST {
+                
+                key "ifname";
+
+                leaf ifname {
+                    type string {
+                        length 1..255;
+                    }
+                }
+
+                leaf cable_type {
+                    type enumeration {
+                        enum active-active {
+                            value "active-active";
+                        }
+
+                        enum active-standby {
+                            value "active-standby";
+                        }
+                    }
+                }
+
+                leaf server_ipv4 {
+                    type inet:ipv4-address;
+                }
+
+                leaf server_ipv6 {
+                    type inet:ipv6-address;
+                }
+
+                leaf soc_ipv4 {
+                    type inet:ipv4-address;
+                }
+
+                leaf state {
+                    type enumeration {
+                        enum auto {
+                            value "auto";
+                        }
+
+                        enum manual {
+                            value "manual";
+                        }
+
+                        enum detach {
+                            value "detach";
+                        }
+
+                        enum active {
+                            value "active";
+                        }
+
+                        enum standby {
+                            value "standby";
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+}
