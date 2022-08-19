@@ -10,6 +10,8 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+QSFP_PWR_CTRL_ADDR = 93
+
 
 class PddfSfp(SfpOptoeBase):
     """
@@ -194,8 +196,18 @@ class PddfSfp(SfpOptoeBase):
             else:
                 lpmode = False
         else:
-            # Use common SfpOptoeBase implementation for get_lpmode
-            lpmode = super().get_lpmode()
+            xcvr_id = self._xcvr_api_factory._get_id()
+            if xcvr_id is not None:
+                if xcvr_id == 0x18 or xcvr_id == 0x19 or xcvr_id == 0x1e:
+                    # QSFP-DD or OSFP
+                    # Use common SfpOptoeBase implementation for get_lpmode
+                    lpmode = super().get_lpmode()
+                elif xcvr_id == 0x11 or xcvr_id == 0x0d or xcvr_id == 0x0c:
+                    # QSFP28, QSFP+, QSFP
+                    val = self.read_eeprom(QSFP_PWR_CTRL_ADDR, 1)
+                    if val is not None:
+                        if (ord(val) & 0x3) == 0x3:
+                            lpmode = True
 
         return lpmode
 
@@ -321,8 +333,20 @@ class PddfSfp(SfpOptoeBase):
             except IOError as e:
                 status = False
         else:
-            # Use common SfpOptoeBase implementation for set_lpmode
-            status = super().set_lpmode(lpmode)
+            xcvr_id = self._xcvr_api_factory._get_id()
+            if xcvr_id is not None:
+                if xcvr_id == 0x18 or xcvr_id == 0x19 or xcvr_id == 0x1e:
+                    # QSFP-DD or OSFP
+                    # Use common SfpOptoeBase implementation for set_lpmode
+                    status = super().set_lpmode(lpmode)
+                elif xcvr_id == 0x11 or xcvr_id == 0x0d or xcvr_id == 0x0c:
+                    # QSFP28, QSFP+, QSFP
+                    val = self.read_eeprom(QSFP_PWR_CTRL_ADDR, 1)
+                    if val is not None:
+                        val = ord(val) & 0xf0
+                        val |= 0x3 if lpmode else 0xd
+                        buf = bytearray([val])
+                        status = self.write_eeprom(QSFP_PWR_CTRL_ADDR, 1, buf)
 
         return status
 
