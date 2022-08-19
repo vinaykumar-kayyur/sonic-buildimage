@@ -1,27 +1,112 @@
-From c9372321ccf88313fc63e02c4c032fb7e6765458 Mon Sep 17 00:00:00 2001
+From 49af0fd826d57df4c418fbb8c3597df40f5c8f77 Mon Sep 17 00:00:00 2001
 From: liuh-80 <liuh@microsoft.com>
 Date: Fri, 19 Aug 2022 13:28:45 +0800
 Subject: [PATCH] Disable create local user
 
 ---
- nss_tacplus.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ nss_tacplus.c | 77 +++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 69 insertions(+), 8 deletions(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index 2de00a6..c5aa266 100644
+index 2de00a6..305d30e 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
-@@ -631,8 +631,8 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
+@@ -385,6 +385,72 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
+     return 0;
+ }
+ 
++/*
++ * copy a passwd structure and it's strings, using the provided buffer
++ * for the strings.
++ * if usename is non-NULL, use that, rather than pw_name in srcpw, so we can
++ * preserve the original requested name (this is part of the tacacs remapping).
++ * For strings, if pointer is null, use an empty string.
++ * Returns 0 if everything fit, otherwise 1.
++ */
++static int
++pwcreate(char *buf, size_t len, struct passwd *destpw,
++       const char *usename)
++{
++    size_t needlen;
++    int cnt;
++
++    pw_dir = "/home/";
++    pw_gecos = "remote_user";
++    pw_shell = "/bin/bash";
++    pw_passwd = "x";
++
++    needlen = usename ? strlen(usename) + 1 : 1 +
++        pw_dir ? strlen(pw_dir) + 1 : 1 +
++        pw_gecos ? strlen(pw_gecos) + 1 : 1 +
++        pw_shell ? strlen(pw_shell) + 1 : 1 +
++        pw_passwd ? strlen(pw_passwd) + 1 : 1;
++    if(needlen > len) {
++        if(debug)
++            syslog(LOG_DEBUG, "%s provided password buffer too small (%ld<%ld)",
++                nssname, (long)len, (long)needlen);
++        return 1;
++    }
++
++    destpw->pw_uid = rand();
++    destpw->pw_gid = rand();
++
++    cnt = snprintf(buf, len, "%s", usename ? usename : "");
++    destpw->pw_name = buf;
++    cnt++; /* allow for null byte also */
++    buf += cnt;
++    len -= cnt;
++    /* If many-to-one mapping, set pw_passwd "a" for pam_account success */
++    cnt = snprintf(buf, len, "%s", 0 == many_to_one ? "x" : "a");
++    destpw->pw_passwd = buf;
++    cnt++;
++    buf += cnt;
++    len -= cnt;
++    cnt = snprintf(buf, len, "%s", pw_shell ? pw_shell : "");
++    destpw->pw_shell = buf;
++    cnt++;
++    buf += cnt;
++    len -= cnt;
++    cnt = snprintf(buf, len, "%s", pw_gecos ? pw_gecos : "");
++    destpw->pw_gecos = buf;
++    cnt++;
++    buf += cnt;
++    len -= cnt;
++    cnt = snprintf(buf, len, "%s", pw_dir ? pw_dir: "");
++    destpw->pw_dir = buf;
++    cnt++;
++    buf += cnt;
++    len -= cnt;
++
++    return 0;
++}
++
++
+ /*
+  * If useradd finished, user name should be deleted in conf.
+  */
+@@ -630,19 +696,14 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
+     if(0 != ret)
          return ret;
  
-     if(0 == getuid()) {
+-    if(0 == getuid()) {
 -        if(0 != create_or_modify_local_user(username, level, found))
 -            return -1;
-+        //if(0 != create_or_modify_local_user(username, level, found))
-+        //    return -1;
-     } else {
+-    } else {
++    if(0 != getuid()) {
          if(debug)
              syslog(LOG_DEBUG, "%d does not privilege to create or modify user %s", getuid(), username);
+     }
+ 
+     ret = lookup_pw_local(username, pb, &found);
+-    if(0 == ret && !found) {
+-        syslog(LOG_ERR, "%s: %s not found in local after useradd",  nssname, pb->name);
+-        ret = -1;
+-    }
++    pwcreate(pb->buf, pb->buflen, pb->pw, username)
++    *found = true;
+ 
+     return ret;
+ }
 -- 
 2.37.1.windows.1
 
