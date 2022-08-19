@@ -8,8 +8,7 @@ import os
 import glob
 from fru import *
 from fantlv import *
-from defusedxml.ElementTree import parse
-
+from lxml import etree as ET
 
 
 MAILBOX_DIR = "/sys/bus/i2c/devices/"
@@ -176,7 +175,7 @@ class status():
 
     @staticmethod
     def getETroot(filename):
-        tree = parse(filename)
+        tree = ET.parse(filename)
         root = tree.getroot()
         return root;
 
