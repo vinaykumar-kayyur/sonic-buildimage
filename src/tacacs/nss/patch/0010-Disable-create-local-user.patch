@@ -1,0 +1,27 @@
+From c9372321ccf88313fc63e02c4c032fb7e6765458 Mon Sep 17 00:00:00 2001
+From: liuh-80 <liuh@microsoft.com>
+Date: Fri, 19 Aug 2022 13:28:45 +0800
+Subject: [PATCH] Disable create local user
+
+---
+ nss_tacplus.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/nss_tacplus.c b/nss_tacplus.c
+index 2de00a6..c5aa266 100644
+--- a/nss_tacplus.c
++++ b/nss_tacplus.c
+@@ -631,8 +631,8 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
+         return ret;
+ 
+     if(0 == getuid()) {
+-        if(0 != create_or_modify_local_user(username, level, found))
+-            return -1;
++        //if(0 != create_or_modify_local_user(username, level, found))
++        //    return -1;
+     } else {
+         if(debug)
+             syslog(LOG_DEBUG, "%d does not privilege to create or modify user %s", getuid(), username);
+-- 
+2.37.1.windows.1
+
