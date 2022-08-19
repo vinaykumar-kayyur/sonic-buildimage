@@ -9,10 +9,6 @@ LOCKFILE="/tmp/swss-syncd-lock$DEV"
 NAMESPACE_PREFIX="asic"
 ETC_SONIC_PATH="/etc/sonic/"
 
-# DEPENDENT initially contains namespace independent services
-# namespace specific services are added later in this script.
-DEPENDENT="radv"
-MULTI_INST_DEPENDENT="teamd"
 
 . /usr/local/bin/asic_status.sh
 
@@ -299,13 +295,22 @@ stop() {
 
 function check_peer_gbsyncd()
 {
-    PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
-    HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
     GEARBOX_CONFIG=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/gearbox_config.json
 
     if [ -f $GEARBOX_CONFIG ]; then
         PEER="$PEER gbsyncd"
     fi
+}
+
+function check_ports_present()
+{
+    PORT_CONFIG_INI=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/port_config.ini
+    HWSKU_JSON=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/hwsku.json
+
+    if [[ -f $PORT_CONFIG_INI ]] || [[ -f $HWSKU_JSON ]]; then
+         return 0
+    fi
+    return 1
 }
 
 if [ "$DEV" ]; then
@@ -318,7 +323,23 @@ else
     DEPENDENT+=" bgp"
 fi
 
+PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
+
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
+DEPENDENT="radv"
+MULTI_INST_DEPENDENT=""
+
 check_peer_gbsyncd
+
+check_ports_present
+PORTS_PRESENT=$?
+
+if [[ $PORTS_PRESENT == 0 ]]; then
+    MULTI_INST_DEPENDENT="teamd"
+fi
+
 read_dependent_services
 
 case "$1" in
