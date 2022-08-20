@@ -192,12 +192,12 @@ def determine_reboot_cause():
     if REBOOT_CAUSE_NON_HARDWARE not in hardware_reboot_cause:
         previous_reboot_cause = hardware_reboot_cause
         # Check if any software reboot was issued before this hardware reboot happened
-        if software_reboot_cause is not REBOOT_CAUSE_UNKNOWN:
+        if REBOOT_CAUSE_UNKNOWN not in software_reboot_cause:
             additional_reboot_info = software_reboot_cause
         elif proc_cmdline_reboot_cause is not None:
             additional_reboot_info = proc_cmdline_reboot_cause
     elif proc_cmdline_reboot_cause is not None:
-        if software_reboot_cause is not REBOOT_CAUSE_UNKNOWN:
+        if REBOOT_CAUSE_UNKNOWN not in software_reboot_cause:
             # Get the reboot cause from REBOOT_CAUSE_FILE
             previous_reboot_cause = software_reboot_cause
         else:
