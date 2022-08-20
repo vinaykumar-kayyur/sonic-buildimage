@@ -82,8 +82,8 @@ class Thermal(ThermalBase):
     @classmethod
     def __sensors_get(cls, cached=True) -> dict:
         cls.__lock.acquire()
-        if time.time() > cls.__timestamp + 5:
-            # Update cache once per 5 seconds
+        if time.time() > cls.__timestamp + 15:
+            # Update cache once per 15 seconds
             try:
                 data = platform_sensors_get(['-A', '-u']) or ''
                 data += subprocess.check_output("/usr/bin/sensors -A -u",
