@@ -11,6 +11,6 @@
     },
     "MUX_CABLE_INVALID_IP": {
         "desc": "Load MUX_CABLE with invalid server ip address.",
-        "eStrKey": "InvalidValue"
+        "eStrKey": "Pattern"
     }
 }

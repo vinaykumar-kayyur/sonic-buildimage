@@ -4,6 +4,7 @@
             "sonic-mux-cable:MUX_CABLE": {
                 "MUX_CABLE_LIST": [
                     {
+                        "ifname": "Ethernet0",
                         "server_ipv4": "192.168.0.2/32",
                         "server_ipv6": "fc02:1000::30/128",
                         "state": "auto"
@@ -19,6 +20,7 @@
             "sonic-mux-cable:MUX_CABLE": {
                 "MUX_CABLE_LIST": [
                     {
+                        "ifname": "Ethernet4",
                         "cable_type": "active-active",
                         "server_ipv4": "192.168.0.2/32",
                         "server_ipv6": "fc02:1000::30/128",
