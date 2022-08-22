@@ -1,0 +1,9 @@
+{
+    "CONSOLE_DISABLED": {
+        "desc": "Verifying CONSOLE_SWITCH configuration."
+    },
+    "CONSOLE_DISABLED_INCORRECT_PATTERN": {
+        "desc": "CONSOLE_SWITCH configuration pattern failure.",
+        "eStrKey": "Pattern"
+    }
+}

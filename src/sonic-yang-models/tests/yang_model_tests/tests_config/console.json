@@ -1,0 +1,20 @@
+{
+    "CONSOLE_DISABLED": {
+        "sonic-console:sonic-console": {
+            "sonic-console:CONSOLE_SWITCH": {
+                "sonic-console:console-mgmt": {
+                    "enabled": "no"
+                }
+            }
+        }
+    },
+    "CONSOLE_DISABLED_INCORRECT_PATTERN": {
+        "sonic-console:sonic-console": {
+            "sonic-console:CONSOLE_SWITCH": {
+                "sonic-console:console-mgmt": {
+                    "enabled": "false"
+                }
+            }
+        }
+    }
+}
