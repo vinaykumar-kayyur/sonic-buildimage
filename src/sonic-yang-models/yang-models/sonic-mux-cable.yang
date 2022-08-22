@@ -55,6 +55,10 @@ module sonic-mux-cable {
                     type inet:ipv4-prefix;
                 }
 
+                leaf soc_ipv6 {
+                    type inet:ipv6-prefix;
+                }
+
                 leaf state {
                     type enumeration {
                         enum auto;
