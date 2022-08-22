@@ -27,6 +27,23 @@ class DnsmasqStaticHostMonitor(object):
         self.hosts_update_delay = hosts_update_delay
         self.changes_since_last_update = False
 
+        # Build a lookup table from port to port index. Also determine the
+        # "base" port index.
+        port_table = Table(self.appl_db, APP_PORT_TABLE_NAME)
+        port_keys = port_table.getKeys()
+        self.port_index_lookup = {}
+        self.min_port_index = None
+        for port in port_keys:
+            # Get the index that corresponds to this ethernet port
+            (status, port_index) = port_table.hget(port, 'index')
+            if not status:
+                syslog.syslog(syslog.LOG_WARNING, f"Unable to get port index for {port}")
+                continue
+            port_index = int(port_index)
+            self.port_index_lookup[port] = port_index
+            if self.min_port_index is None or port_index < self.min_port_index:
+                self.min_port_index = port_index
+
     def new_host_update(self, key, op, data):
         self.changes_since_last_update = True
         current_time = time.clock_gettime(time.CLOCK_MONOTONIC)
@@ -41,21 +58,6 @@ class DnsmasqStaticHostMonitor(object):
                 "Updating dnsmasq.hosts with current MAC addresses")
 
         fdb_table = Table(self.state_db, STATE_FDB_TABLE_NAME)
-        port_table = Table(self.appl_db, APP_PORT_TABLE_NAME)
-        vlan_member_table = Table(self.appl_db, APP_VLAN_MEMBER_TABLE_NAME)
-
-        # Build a lookup dictionary from VLAN to VLAN members, with the members being sorted
-        # by their port index
-        port_keys = port_table.getKeys()
-        port_index_lookup = {}
-        for port in port_keys:
-            # Get the index that corresponds to this ethernet port
-            (status, port_index) = port_table.hget(port, 'index')
-            if not status:
-                syslog.syslog(syslog.LOG_WARNING, f"Unable to get port index for {port}")
-                continue
-            port_index = int(port_index)
-            port_index_lookup[port] = port_index
 
         with open("/etc/dnsmasq.hosts", "w") as f:
             # Get all known MAC addresses
@@ -82,8 +84,12 @@ class DnsmasqStaticHostMonitor(object):
                 if ipv4_supernet.prefixlen > 24:
                     ipv4_supernet = ipv4_supernet.supernet(new_prefix=24)
 
+                if port not in self.port_index_lookup:
+                    syslog.syslog(syslog.LOG_ERR, f"Got port {port} that doesn't map to a port index, skipping")
+                    continue
+
                 # Write a host entry
-                ipv4_device_address = ipv4_supernet[port_index_lookup[port] * 4 + 1]
+                ipv4_device_address = ipv4_supernet[(self.port_index_lookup[port] - self.min_port_index) * 4 + 1]
                 if ipv4_device_address not in ipv4_network.network.hosts():
                     syslog.syslog(syslog.LOG_ERR, f"Calculated address {ipv4_device_address} not part of {ipv4_network} for {mac_address}")
                     continue
@@ -115,15 +121,18 @@ class DnsmasqStaticHostMonitor(object):
 
     def start(self):
         while True:
-            select_timeout_msec = 60 * 1000
+            # Keep a low timeout, so that it can respond to Ctrl-C in a reasonable
+            # amount of time
+            select_timeout_msec = 5 * 1000
             hosts_update_delay_msec = self.hosts_update_delay * 1000
             if hosts_update_delay_msec < select_timeout_msec:
                 select_timeout_msec = self.hosts_update_delay_msec
             state, selectable_ = self.selector.select(select_timeout_msec)
             if state == self.selector.TIMEOUT:
                 if self.changes_since_last_update:
-                    # Add a bit of a hack here where if we need to update the hosts file,
-                    # but there's no new change, then manually do the update here
+                    # Add a bit of a hack here where if we need to update the hosts file
+                    # because of changes since the last update to it, then manually do
+                    # the update here.
                     current_time = time.clock_gettime(time.CLOCK_MONOTONIC)
                     if self.next_hosts_update is None or current_time >= self.next_hosts_update:
                         self.update_static_dnsmasq_hosts_file()
