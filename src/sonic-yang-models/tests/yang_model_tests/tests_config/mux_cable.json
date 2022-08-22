@@ -13,6 +13,7 @@
             }
         }
     },
+
     "MUX_CABLE_ACTIVE_ACTIVE_INTERFACE": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {
@@ -29,6 +30,7 @@
             }
         }
     },
+
     "MUX_CABLE_INVALID_STATE": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {
@@ -41,6 +43,7 @@
             }
         }
     },
+    
     "MUX_CABLE_INVALID_IP": {
         "sonic-mux-cable:sonic-mux-cable": {
             "sonic-mux-cable:MUX_CABLE": {

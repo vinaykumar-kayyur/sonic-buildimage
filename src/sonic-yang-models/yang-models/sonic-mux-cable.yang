@@ -1,4 +1,4 @@
-modeule sonic-mux-cable {
+module sonic-mux-cable {
     namespace "http://github.com/Azure/sonic-mux-cable";
     prefix mux_cable;
     yang-version 1.1;
