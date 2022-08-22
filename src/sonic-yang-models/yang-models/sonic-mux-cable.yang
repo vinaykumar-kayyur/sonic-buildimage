@@ -33,14 +33,10 @@ module sonic-mux-cable {
 
                 leaf cable_type {
                     type enumeration {
-                        enum active-active {
-                            value "active-active";
-                        }
-
-                        enum active-standby {
-                            value "active-standby";
-                        }
+                        enum active-active;
+                        enum active-standby;
                     }
+                    default active-standby;
                 }
 
                 leaf server_ipv4 {
@@ -57,30 +53,16 @@ module sonic-mux-cable {
 
                 leaf state {
                     type enumeration {
-                        enum auto {
-                            value "auto";
-                        }
-
-                        enum manual {
-                            value "manual";
-                        }
-
-                        enum detach {
-                            value "detach";
-                        }
-
-                        enum active {
-                            value "active";
-                        }
-
-                        enum standby {
-                            value "standby";
-                        }
+                        enum auto;
+                        enum manual;
+                        enum detach;
+                        enum active;
+                        enum standby;
                     }
-                }
 
+                    default auto;
+                }
             }
         }
     }
-
 }
