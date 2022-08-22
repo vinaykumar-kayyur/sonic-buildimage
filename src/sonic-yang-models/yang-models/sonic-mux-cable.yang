@@ -6,7 +6,7 @@ module sonic-mux-cable {
     import ietf-inet-types {
         prefix inet;
     }
-    
+
     organization
         "SONiC";
 
@@ -44,15 +44,15 @@ module sonic-mux-cable {
                 }
 
                 leaf server_ipv4 {
-                    type inet:ipv4-address;
+                    type inet:ipv4-prefix;
                 }
 
                 leaf server_ipv6 {
-                    type inet:ipv6-address;
+                    type inet:ipv6-prefix;
                 }
 
                 leaf soc_ipv4 {
-                    type inet:ipv4-address;
+                    type inet:ipv4-prefix;
                 }
 
                 leaf state {
