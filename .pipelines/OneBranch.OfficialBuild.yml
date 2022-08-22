@@ -40,6 +40,7 @@ variables:
 - name: PUBLISH_BLOB_PREFIX
   value: pipelines/$(Build.DefinitionName)/$(Build.SourceBranchName)
 - template: .azure-pipelines/template-variables.yml@acs-buildimage
+- template: .pipelines/azure-pipelines-repd-build-variables.yml@acs-buildimage
 
 stages:
 - stage: Build
