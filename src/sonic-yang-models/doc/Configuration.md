@@ -36,7 +36,7 @@ Table of Contents
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
-         * [Peer Switch]
+         * [Peer Switch](#peer-switch)
          * [Policer](#policer)   
          * [Port](#port)   
          * [Port Channel](#port-channel)  
