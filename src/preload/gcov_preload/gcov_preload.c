@@ -9,7 +9,7 @@ void sighandler(int signo)
 #ifdef SIMPLE_WAY
     exit(signo); 
 #else
-    extern void __gcov_flush(); /* flush function */
+    extern void __gcov_flush(); /* flush */
     __gcov_flush(); /* flush out gcov stats data */
     raise(signo); /* raise the signal again to crash process */ 
 #endif 
