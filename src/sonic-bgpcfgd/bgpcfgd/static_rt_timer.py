@@ -1,4 +1,4 @@
-from .log import log_err, log_debug
+from .log import log_err, log_info, log_debug
 from swsssdk import SonicV2Connector
 import time
 
@@ -15,7 +15,7 @@ class StaticRouteTimer(object):
 
     def set_timer(self):
         """ Check for custom route expiry time in STATIC_ROUTE:EXPIRY_TIME """
-        timer = self.db.get(self.db.APPL_DB, "STATIC_ROUTE:EXPIRY_TIME", "time")
+        timer = self.db.get(self.db.APPL_DB, "STATIC_ROUTE_EXPIRY_TIME", "time")
         if timer is not None:
             timer = int(timer)     
             if timer > 0 and timer <= self.MAX_TIMER:
@@ -41,13 +41,14 @@ class StaticRouteTimer(object):
         return
 
     def run(self):
+        self.start = time.time()
         while True:
             self.set_timer()
-            log_debug("Static route expiry set to {}s".format(self.timer))
             if self.timer:
+                log_info("Static route expiry set to {}s".format(self.timer))
                 time.sleep(self.timer)
                 self.alarm()
             else:
                 time.sleep(1)
-                if time.time() - self.start == self.DEFAULT_TIMER:
+                if time.time() - self.start >= self.DEFAULT_TIMER:
                     self.alarm()
