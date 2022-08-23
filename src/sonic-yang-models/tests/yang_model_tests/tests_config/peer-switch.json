@@ -2,11 +2,12 @@
     "PEER_SWITCH_LOAD_NORMAL": {
         "sonic-peer-switch:sonic-peer-switch": {
             "sonic-peer-switch:PEER_SWITCH": {
-                "PEER_SWITCH": {
-                    "vlab-05": {
+                "PEER_SWITCH_LIST": [
+                    {
+                        "peer_switch": "vlab-05",
                         "address_ipv4":  "10.1.0.33"
                     }
-                }
+                ]
             }
         }
     },
@@ -14,11 +15,11 @@
     "PEER_SWITCH_MISSING_DEVICE__NAME": {
         "sonic-peer-switch:sonic-peer-switch": {
             "sonic-peer-switch:PEER_SWITCH": {
-                "PEER_SWITCH": {
-                    "": {
+                "PEER_SWITCH_LIST": [
+                    {
                         "address_ipv4":  "10.1.0.33"
                     }
-                }
+                ]
             }
         }
     },
@@ -26,11 +27,12 @@
     "PEER_SWITCH_INVALID_IP_ADDRESS": {
         "sonic-peer-switch:sonic-peer-switch": {
             "sonic-peer-switch:PEER_SWITCH": {
-                "PEER_SWITCH": {
-                    "vlab-05": {
+                "PEER_SWITCH_LIST": [
+                    {
+                        "peer_switch": "vlab-05",
                         "address_ipv4":  "10.1.0.33/32"
                     }
-                }
+                ]
             }
         }
     }

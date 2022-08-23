@@ -7,6 +7,10 @@ module sonic-peer-switch {
         prefix inet;
     }
     
+    import sonic-types {
+        prefix stypes;
+    }
+    
     organization
         "SONiC";
 
@@ -23,16 +27,18 @@ module sonic-peer-switch {
 
     container sonic-peer-switch {
         container PEER_SWITCH {
-            key = "name";
+            list PEER_SWITCH_LIST {
+                max-elements 1;
 
-            leaf "name" {
-                type string {
-                    length 1..255;
+                key "peer_switch";
+                
+                leaf peer_switch {
+                    type stypes:hostname;
                 }
-            }
 
-            leaf address_ipv4 {
-                type inet:ipv4_address;
+                leaf address_ipv4 {
+                    type inet:ipv4-address;
+                }
             }
         }
     }
