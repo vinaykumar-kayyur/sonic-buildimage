@@ -1,0 +1,39 @@
+module sonic-peer-switch {
+    yang-version 1.1;
+    namespace "http://github.com/Azure/sonic-peer-switch";
+    prefix peer_switch;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+    
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONiC DualToR peer switch data";
+
+    revision 2022-08-23 {
+        description
+            "Initial revision";
+    }
+
+    container sonic-peer-switch {
+        container PEER_SWITCH {
+            key = "name";
+
+            leaf "name" {
+                type string {
+                    length 1..255;
+                }
+            }
+
+            leaf address_ipv4 {
+                type inet:ipv4_address;
+            }
+        }
+    }
+}
