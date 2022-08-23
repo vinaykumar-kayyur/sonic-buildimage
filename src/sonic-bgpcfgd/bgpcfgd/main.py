@@ -67,6 +67,7 @@ def do_work():
         BBRMgr(common_objs, "CONFIG_DB", "BGP_BBR"),
         # Static Route Managers
         StaticRouteMgr(common_objs, "CONFIG_DB", "STATIC_ROUTE"),
+        StaticRouteMgr(common_objs, "APPL_DB", "STATIC_ROUTE"),
         # Route Advertisement Managers
         AdvertiseRouteMgr(common_objs, "STATE_DB", swsscommon.STATE_ADVERTISE_NETWORK_TABLE_NAME),
         RouteMapMgr(common_objs, "APPL_DB", swsscommon.APP_BGP_PROFILE_TABLE_NAME),
