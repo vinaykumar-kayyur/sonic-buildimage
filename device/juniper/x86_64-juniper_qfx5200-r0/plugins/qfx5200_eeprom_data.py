@@ -32,15 +32,10 @@
 # components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
-import binascii
 import os
-import sys
+import binascii
+import subprocess
 from sonic_eeprom import eeprom_tlvinfo
-
-if sys.version_info[0] < 3:
-    import commands
-else:
-    import subprocess as commands
 
 
 def fantype_detect():
@@ -56,11 +51,9 @@ def fantype_detect():
     for filename in os.listdir(refpgaTMC_path):
         if filename.endswith('_type'):
             fantype_path = os.path.join(refpgaTMC_path, filename)
-            cat_string = "cat "
-            fantype_string = cat_string + fantype_path
-            status, fan_type = commands.getstatusoutput(fantype_string)
-            if ((fan_type == AFO) or (fan_type == AFI)):
-                return fan_type
+            p = subprocess.run(["cat", fantype_patch])
+            if ((p.stdout == AFO) or (p.stdout == AFI)):
+                return p.stdout
             else:
                 pass
 
