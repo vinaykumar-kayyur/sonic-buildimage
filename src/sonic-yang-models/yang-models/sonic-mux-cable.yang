@@ -39,45 +39,39 @@ module sonic-mux-cable {
                     }
                 }
 
-                leaf STATE {
+                leaf state {
                     description "State of MUX on Port";
                     type string {
                         pattern "auto|manual|active|standby";
                     }
                 }
 
-                container SERVER {
+                leaf server_ipv4 {
+                    description "SERVER IPv4";
+                    type inet:ipv4-address;
+                }
 
-                    description "SERVER config on given MUX port";
+                leaf server_ipv6 {
+                    description "SERVER IPv6";
+                    type inet:ipv6-address;
+                }
 
-                    leaf IPv4 {
-                        description "SERVER IPv4";
-                        type inet:ipv4-address;
+                leaf cable_type {
+                    description "cable_type of MUX on Port";
+                    type string {
+                        pattern "active-standby|active-active";
                     }
+                }
 
-                    leaf IPv6 {
-                        description "SERVER IPv6";
-                        type inet:ipv6-address;
-                    }
+                leaf soc_ipv4 {
+                    description "SERVER soc_ipv4";
+                    type inet:ipv4-address;
+                }
 
-                    leaf cable_type {
-                        description "cable_type of MUX on Port";
-                        type string {
-                            pattern "active-standby|active-active";
-                        }
-                    }
-
-                    leaf soc_ipv4 {
-                        description "SERVER soc_ipv4";
-                        type inet:ipv4-address;
-                    }
-
-                    leaf soc_ipv6 {
-                        description "SERVER soc_ipv6";
-                        type inet:ipv6-address;
-                    }
-
-                } /* end of container SERVER */
+                leaf soc_ipv6 {
+                    description "SERVER soc_ipv6";
+                    type inet:ipv6-address;
+                }
 
             }/* end of list PORTS_LIST */
 
