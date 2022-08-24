@@ -51,7 +51,7 @@ def fantype_detect():
     for filename in os.listdir(refpgaTMC_path):
         if filename.endswith('_type'):
             fantype_path = os.path.join(refpgaTMC_path, filename)
-            p = subprocess.run(["cat", fantype_patch])
+            p = subprocess.run(["cat", fantype_path])
             if ((p.stdout == AFO) or (p.stdout == AFI)):
                 return p.stdout
             else:
