@@ -10,7 +10,7 @@ module sonic-peer-switch {
     import sonic-types {
         prefix stypes;
     }
-    
+
     organization
         "SONiC";
 
@@ -34,10 +34,14 @@ module sonic-peer-switch {
                 
                 leaf peer_switch {
                     type stypes:hostname;
+
+                    description "SONiC DualToR peer host name."
                 }
 
                 leaf address_ipv4 {
                     type inet:ipv4-address;
+
+                    description "SONiC DualToR peer's IPv4 address."
                 }
             }
         }
