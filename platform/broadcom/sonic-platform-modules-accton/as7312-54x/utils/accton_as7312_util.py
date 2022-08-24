@@ -96,20 +96,6 @@ def main():
            do_sonic_platform_clean()
         elif arg == 'show':
             device_traversal()
-        elif arg == 'sff':
-            if len(ARGS) != 2:
-                show_eeprom_help()
-            elif int(ARGS[1]) == 0 or int(ARGS[1]) > DEVICE_NO['sfp']:
-                show_eeprom_help()
-            else:
-                show_eeprom(ARGS[1])
-            return
-        elif arg == 'set':
-            if len(ARGS) < 3:
-                show_set_help()
-            else:
-                set_device(ARGS[1:])
-            return
         else:
             show_help()
     return 0
