@@ -122,9 +122,6 @@ def show_help():
 
 def show_set_help():
     cmd = sys.argv[0].split('/')[-1] + ' ' + ARGS[0]
-    print(cmd + ' [led|sfp|fan]')
-    print('    use "' + cmd + ' led 0-4 "  to set led color')
-    print('    use "' + cmd + ' fan 0-100" to set fan duty percetage')
     print('    use "' + cmd + ' sfp 1-48 {0|1}" to set sfp# tx_disable')
     sys.exit(0)
 
