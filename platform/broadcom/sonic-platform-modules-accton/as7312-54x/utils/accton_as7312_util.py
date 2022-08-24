@@ -104,12 +104,6 @@ def main():
             else:
                 show_eeprom(ARGS[1])
             return
-        elif arg == 'set':
-            if len(ARGS) < 3:
-                show_set_help()
-            else:
-                set_device(ARGS[1:])
-            return
         else:
             show_help()
     return 0
