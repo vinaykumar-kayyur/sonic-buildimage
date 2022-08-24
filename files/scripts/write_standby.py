@@ -178,6 +178,12 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--active_standby',
                         help='state: intial state for "auto" and/or "manual" config in active-standby mode, default "standby"',
                         type=str, required=False, default='standby')
+    parser.add_argument('--shutdown-mux', help='write "standby" for both active-active and active-standby mode mux ports when shutdown mux',
+                       action='store_true', required=False)
     args = parser.parse_args()
-    mux_writer = MuxStateWriter(activeactive=args.active_active, activestandby=args.active_standby)
+    active_active_state = args.active_active
+    active_standby_state = args.active_standby
+    if args.shutdown_mux:
+        active_active_state = "standby"
+    mux_writer = MuxStateWriter(activeactive=active_active_state, activestandby=active_standby_state)
     mux_writer.apply_mux_config()
