@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #############################################################################
-# Celestica
+# Celestica 2022
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the fan status which are available in the platform
