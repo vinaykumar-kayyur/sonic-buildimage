@@ -47,31 +47,31 @@ module sonic-mux-cable {
                         enum active-standby;
                     }
                     default active-standby;
-                    description "SONiC DualToR interface cable type."
+                    description "SONiC DualToR interface cable type.";
                 }
 
                 leaf server_ipv4 {
                     type inet:ipv4-prefix;
 
-                    description "Server IPv4 Address."
+                    description "Server IPv4 Address.";
                 }
 
                 leaf server_ipv6 {
                     type inet:ipv6-prefix;
 
-                    description "Server IPv6 Address."
+                    description "Server IPv6 Address.";
                 }
 
                 leaf soc_ipv4 {
                     type inet:ipv4-prefix;
 
-                    description "SoC IPv4 address. Optional and for active-active ports only. "
+                    description "SoC IPv4 address. Optional and for active-active ports only. ";
                 }
 
                 leaf soc_ipv6 {
                     type inet:ipv6-prefix;
 
-                    description "SoC IPv6 address. Optional and for active-active ports only. "
+                    description "SoC IPv6 address. Optional and for active-active ports only. ";
                 }
 
                 leaf state {
@@ -84,7 +84,7 @@ module sonic-mux-cable {
                     }
 
                     default auto;
-                    description "MUX mode determining if auto failover is enabled. "
+                    description "MUX mode determining if auto failover is enabled. ";
                 }
             }
         }
