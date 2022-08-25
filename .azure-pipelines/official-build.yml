@@ -36,6 +36,8 @@ stages:
 - stage: Build
   pool: sonicbld
   variables:
+  - name: DOCKER_BUILDER_USER_MOUNT
+    value: /data/dockertmp:/tmp:rw
   - name: CACHE_MODE
     value: wcache
   - template: azure-pipelines-repd-build-variables.yml
@@ -46,3 +48,9 @@ stages:
       jobFilters: none
       ${{ if contains(variables['Build.DefinitionName'], 'cross') }}:
         qemuOrCrossBuild: true
+      preSteps:
+      - script: |
+          set -ex
+          sudo mkdir -p /data/dockertmp
+          sudo chown $(whoami):$(whoami) /data/dockertmp
+        displayName: Mount for tmp
