@@ -40,6 +40,7 @@ Table of Contents
          * [MUX_CABLE](#muxcable)  
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
+         * [Peer Switch](#peer-switch)
          * [Policer](#policer)   
          * [Port](#port)   
          * [Port Channel](#port-channel)  

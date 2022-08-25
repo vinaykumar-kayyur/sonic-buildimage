@@ -1806,6 +1806,11 @@
             }
         },
 
+        "PEER_SWITCH": {
+            "vlab-05": {
+                "address_ipv4":  "10.1.0.33"
+            }
+        },
 
         "MUX_CABLE": {
             "Ethernet4": {
