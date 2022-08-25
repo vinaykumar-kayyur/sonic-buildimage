@@ -19,17 +19,30 @@ using namespace std;
 using namespace swss;
 using json = nlohmann::json;
 
+vector<EventParam> createEventParams(vector<string> params, vector<string> luaCodes) {
+    vector<EventParam> eventParams;
+    for(long unsigned int i = 0; i < params.size(); i++) {
+        EventParam ep = EventParam();
+        ep.paramName = params[i];
+        ep.luaCode = luaCodes[i];
+        eventParams.push_back(ep);
+    }
+    return eventParams;
+}
+
 TEST(syslog_parser, matching_regex) {    
     json jList = json::array();
-    vector<regex> testExpressions;
+    vector<RegexStruct> regexList;
     string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*message (.*) other_data (.*) even_more_data (.*)";
-    json jTest;
-    jTest["tag"] = "test_tag";
-    jTest["regex"] = regexString;
-    jTest["params"] = { "month", "day", "time", "message", "other_data", "even_more_data" };
-    jList.push_back(jTest);
+    vector<string> params = { "month", "day", "time", "message", "other_data", "even_more_data" };
+    vector<string> luaCodes = { "", "", "", "", "", "" };
     regex expression(regexString);
-    testExpressions.push_back(expression);
+    
+    RegexStruct rs = RegexStruct();
+    rs.tag = "test_tag";
+    rs.regexExpression = expression;
+    rs.params = createEventParams(params, luaCodes);
+    regexList.push_back(rs);
 
     string tag;
     event_params_t paramDict;
@@ -40,8 +53,7 @@ TEST(syslog_parser, matching_regex) {
     expectedDict["even_more_data"] = "test_data";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
-    parser->m_expressions = testExpressions;
-    parser->m_regexList = jList;
+    parser->m_regexList = regexList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
@@ -55,15 +67,17 @@ TEST(syslog_parser, matching_regex) {
 
 TEST(syslog_parser, matching_regex_timestamp) {    
     json jList = json::array();
-    vector<regex> testExpressions;
+    vector<RegexStruct> regexList;
     string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*message (.*) other_data (.*)";
-    json jTest;
-    jTest["tag"] = "test_tag";
-    jTest["regex"] = regexString;
-    jTest["params"] = { "month", "day", "time", "message", "other_data" };
-    jList.push_back(jTest);
+    vector<string> params = { "month", "day", "time", "message", "other_data" };
+    vector<string> luaCodes = { "", "", "", "", "" };
     regex expression(regexString);
-    testExpressions.push_back(expression);
+
+    RegexStruct rs = RegexStruct();
+    rs.tag = "test_tag";
+    rs.regexExpression = expression;
+    rs.params = createEventParams(params, luaCodes);
+    regexList.push_back(rs);
 
     string tag;
     event_params_t paramDict;
@@ -74,8 +88,7 @@ TEST(syslog_parser, matching_regex_timestamp) {
     expectedDict["timestamp"] = "2022-07-21T02:10:00.000000Z";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
-    parser->m_expressions = testExpressions;
-    parser->m_regexList = jList;
+    parser->m_regexList = regexList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
@@ -89,22 +102,23 @@ TEST(syslog_parser, matching_regex_timestamp) {
 
 TEST(syslog_parser, no_matching_regex) {
     json jList = json::array();
-    vector<regex> testExpressions;
-    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\s*no match";
-    json jTest;
-    jTest["tag"] = "test_tag";
-    jTest["regex"] = regexString;
-    jTest["params"] = { "month", "day", "time" };
-    jList.push_back(jTest);
+    vector<RegexStruct> regexList;
+    string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*no match";
+    vector<string> params = { "month", "day", "time" };
+    vector<string> luaCodes = { "", "", "" };
     regex expression(regexString);
-    testExpressions.push_back(expression);
+
+    RegexStruct rs = RegexStruct();
+    rs.tag = "test_tag";
+    rs.regexExpression = expression;
+    rs.params = createEventParams(params, luaCodes);
+    regexList.push_back(rs);
 
     string tag;
     event_params_t paramDict;
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
-    parser->m_expressions = testExpressions;
-    parser->m_regexList = jList;
+    parser->m_regexList = regexList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
@@ -116,15 +130,17 @@ TEST(syslog_parser, no_matching_regex) {
 
 TEST(syslog_parser, lua_code_valid_1) {
     json jList = json::array();
-    vector<regex> testExpressions;
+    vector<RegexStruct> regexList;
     string regexString = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*.* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
-    json jTest;
-    jTest["tag"] = "test_tag";
-    jTest["regex"] = regexString;
-    jTest["params"] = { "month", "day", "time", "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
-    jList.push_back(jTest);
+    vector<string> params = { "month", "day", "time", "is-sent", "ip", "major-code", "minor-code" };
+    vector<string> luaCodes = { "", "", "", "ret=tostring(arg==\"sent\")", "", "", "" };
     regex expression(regexString);
-    testExpressions.push_back(expression);
+
+    RegexStruct rs = RegexStruct();
+    rs.tag = "test_tag";
+    rs.regexExpression = expression;
+    rs.params = createEventParams(params, luaCodes);
+    regexList.push_back(rs);
 
     string tag;
     event_params_t paramDict;
@@ -136,8 +152,7 @@ TEST(syslog_parser, lua_code_valid_1) {
     expectedDict["minor-code"] = "2";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
-    parser->m_expressions = testExpressions;
-    parser->m_regexList = jList;
+    parser->m_regexList = regexList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
@@ -151,15 +166,17 @@ TEST(syslog_parser, lua_code_valid_1) {
 
 TEST(syslog_parser, lua_code_valid_2) {
     json jList = json::array();
-    vector<regex> testExpressions;
+    vector<RegexStruct> regexList;
     string regexString = "([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*.* (sent|received) (?:to|from) .* ([0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}.[0-9]{2,3}) active ([1-9]{1,3})/([1-9]{1,3}) .*";
-    json jTest;
-    jTest["tag"] = "test_tag";
-    jTest["regex"] = regexString;
-    jTest["params"] = { "month", "day", "time", "is-sent:ret=tostring(arg==\"sent\")", "ip", "major-code", "minor-code" };
-    jList.push_back(jTest);
+    vector<string> params = { "month", "day", "time", "is-sent", "ip", "major-code", "minor-code" };
+    vector<string> luaCodes = { "", "", "", "ret=tostring(arg==\"sent\")", "", "", "" };
     regex expression(regexString);
-    testExpressions.push_back(expression);
+
+    RegexStruct rs = RegexStruct();
+    rs.tag = "test_tag";
+    rs.regexExpression = expression;
+    rs.params = createEventParams(params, luaCodes);
+    regexList.push_back(rs);
 
     string tag;
     event_params_t paramDict;
@@ -172,8 +189,7 @@ TEST(syslog_parser, lua_code_valid_2) {
     expectedDict["timestamp"] = "2022-12-03T12:36:24.503424Z";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
-    parser->m_expressions = testExpressions;
-    parser->m_regexList = jList;
+    parser->m_regexList = regexList;
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 

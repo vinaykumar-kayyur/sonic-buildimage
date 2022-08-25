@@ -18,6 +18,17 @@ extern "C"
 using namespace std;
 using json = nlohmann::json;
 
+struct EventParam {
+    string paramName;
+    string luaCode;
+};
+
+struct RegexStruct {
+    regex regexExpression;
+    vector<EventParam> params;
+    string tag;
+};
+
 /**
  * Syslog Parser is responsible for parsing log messages fed by rsyslog.d and returns
  * matched result to rsyslog_plugin to use with events publish API
@@ -25,10 +36,9 @@ using json = nlohmann::json;
  */
 
 class SyslogParser {
-public:
+public: 
     unique_ptr<TimestampFormatter> m_timestampFormatter;
-    vector<regex> m_expressions;
-    json m_regexList = json::array();
+    vector<RegexStruct> m_regexList;
     bool parseMessage(string message, string& tag, event_params_t& paramDict, lua_State* luaState);
     SyslogParser();
 };

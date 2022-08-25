@@ -1,11 +1,10 @@
-from swsscommon.swsscommon import events_init_publisher, events_deinit_publisher, event_publish, FieldValueMap
+from swsscommon.swsscommon import events_init_publisher, event_publish, FieldValueMap
 import time
 import sys
 import ipaddress
 import random
 import argparse
 import json
-import re
 import logging
 
 logging.basicConfig(

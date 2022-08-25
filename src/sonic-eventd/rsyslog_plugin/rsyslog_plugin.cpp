@@ -25,49 +25,79 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
     }
 }
 
+void parseParams(vector<string> params, vector<EventParam>& eventParams) {
+    for(long unsigned int i = 0; i < params.size(); i++) {
+        if(params[i].empty()) {
+            SWSS_LOG_ERROR("Empty param provided in regex file\n");	
+            continue;
+       	}
+        EventParam ep = EventParam();
+        auto delimPos = params[i].find(':');
+        if(delimPos == string::npos) { // no lua code
+            ep.paramName = params[i];
+        } else {
+            ep.paramName = params[i].substr(0, delimPos);
+	    ep.luaCode = params[i].substr(delimPos + 1);
+            if(ep.luaCode.empty()) {
+                SWSS_LOG_ERROR("Lua code missing after :\n");
+            }
+	}
+        eventParams.push_back(ep);
+    }
+}
+
 bool RsyslogPlugin::createRegexList() {
     fstream regexFile;
+    json jsonList = json::array();
     regexFile.open(m_regexPath, ios::in);
     if (!regexFile) {
         SWSS_LOG_ERROR("No such path exists: %s for source %s\n", m_regexPath.c_str(), m_moduleName.c_str());
         return false;
     }
     try {
-        regexFile >> m_parser->m_regexList;
+        regexFile >> jsonList;
     } catch (invalid_argument& iaException) {
         SWSS_LOG_ERROR("Invalid JSON file: %s, throws exception: %s\n", m_regexPath.c_str(), iaException.what());
         return false;
     }
 
     string regexString;
+    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*"; 
     regex expression;
+    vector<RegexStruct> regexList;
 
-    for(long unsigned int i = 0; i < m_parser->m_regexList.size(); i++) {
+    for(long unsigned int i = 0; i < jsonList.size(); i++) {
+        RegexStruct rs = RegexStruct();
+        vector<EventParam> eventParams;
         try {
-	    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*"; 
-            string eventRegex = m_parser->m_regexList[i]["regex"];
+            string eventRegex = jsonList[i]["regex"];
 	    regexString = timestampRegex + eventRegex; 
-            string tag = m_parser->m_regexList[i]["tag"];
-            vector<string> params = m_parser->m_regexList[i]["params"];
+            string tag = jsonList[i]["tag"];
+            vector<string> params = jsonList[i]["params"];
 	    vector<string> timestampParams = { "month", "day", "time" };
 	    params.insert(params.begin(), timestampParams.begin(), timestampParams.end());
-	    m_parser->m_regexList[i]["params"] = params;
             regex expr(regexString);
             expression = expr;
-        } catch (domain_error& deException) {
+            parseParams(params, eventParams);
+            rs.params = eventParams;
+            rs.tag = tag;
+            rs.regexExpression = expression;
+            regexList.push_back(rs);
+	} catch (domain_error& deException) {
             SWSS_LOG_ERROR("Missing required key, throws exception: %s\n", deException.what());
             return false;
         } catch (regex_error& reException) {
             SWSS_LOG_ERROR("Invalid regex, throws exception: %s\n", reException.what());
 	    return false;
 	}
-        m_parser->m_expressions.push_back(expression);
     }
 
-    if(m_parser->m_expressions.empty()) {
+    if(regexList.empty()) {
         SWSS_LOG_ERROR("Empty list of regex expressions.\n");
         return false;
     }
+
+    m_parser->m_regexList = regexList;
 
     regexFile.close();
     return true;
