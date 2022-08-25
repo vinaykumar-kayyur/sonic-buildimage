@@ -3,7 +3,7 @@
  * xcvr-cls.h
  *
  * Pradchaya Phucharoen <pphuchar@celestica.com>
- * Copyright (C) 2019 Celestica Corp.
+ * Copyright (C) 2019-2022 Celestica Corp.
  */
 
 #ifndef _LINUX_I2C_CLS_H
