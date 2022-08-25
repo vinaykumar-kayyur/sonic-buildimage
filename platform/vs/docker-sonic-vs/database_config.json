@@ -83,7 +83,7 @@
             "separator": ":",
             "instance" : "redis"
         },
-        "STATIC_CONFIG_DB" : {
+        "PROFILE_DB" : {
             "id" : 15,
             "separator": ":",
             "instance" : "redis"
