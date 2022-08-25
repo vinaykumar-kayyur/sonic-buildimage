@@ -441,7 +441,7 @@ def is_packet_chassis():
 
 
 def is_chassis():
-    return is_voq_chassis() or is_packet_chassis() or is_supervisor()
+    return is_voq_chassis() or is_packet_chassis()
 
 
 def is_supervisor():
