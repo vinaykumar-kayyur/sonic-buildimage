@@ -460,7 +460,7 @@ def is_supervisor():
         return False
 
 def get_device_runtime_metadata():
-    chassis_metada = {}
+    chassis_metadata = {}
     if is_chassis():
         chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard', 
                                                 'chassis_type': 'voq' if is_voq_chassis() else 'packet'}}
