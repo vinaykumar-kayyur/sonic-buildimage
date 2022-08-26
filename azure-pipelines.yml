@@ -28,12 +28,12 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
+    name: sonic-net/sonic-mgmt
+    endpoint: sonic-net
   - repository: buildimage
     type: github
-    name: Azure/sonic-buildimage
-    endpoint: build
+    name: sonic-net/sonic-buildimage
+    endpoint: sonic-net
     ref: master
 
 variables:
@@ -185,7 +185,7 @@ stages:
   - job:
     pool: sonictest-t1-lag
     displayName: "kvmtest-t1-lag"
-    timeoutInMinutes: 300
+    timeoutInMinutes: 360
 
     steps:
     - template: .azure-pipelines/run-test-template.yml
@@ -208,3 +208,17 @@ stages:
         ptf_name: ptf_vms6-1
         tbtype: t0-sonic
         vmtype: vsonic
+
+  - job:
+    pool: sonictest-ma
+    displayName: "kvmtest-multi-asic-t1-lag"
+    timeoutInMinutes: 240
+
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-08
+        tbname: vms-kvm-four-asic-t1-lag
+        ptf_name: ptf_vms6-4
+        tbtype: multi-asic-t1-lag-pr
+        image: sonic-4asic-vs.img.gz
