@@ -570,9 +570,10 @@ static int iccp_netlink_set_portchannel_iff_flag(
 {
     int rv, ret_rv = 0;
     char* token;
+    char* saveptr;
     struct LocalInterface* member_if;
     char *tmp_member_buf = NULL;
-
+    
     if (!lif_po)
         return MCLAG_ERROR;
 
@@ -590,7 +591,7 @@ static int iccp_netlink_set_portchannel_iff_flag(
             lif_po->portchannel_member_buf);
     }
     /* Port-channel members are stored as comma separated strings */
-    token = strtok(tmp_member_buf, ",");
+    token = strtok_r(tmp_member_buf, ",", &saveptr);
     while (token != NULL)
     {
         member_if = local_if_find_by_name(token);
@@ -614,7 +615,7 @@ static int iccp_netlink_set_portchannel_iff_flag(
                 "Can't find member %s:%s, if_up(%d), location %d",
                 lif_po->name, token, is_iff_up, location);
         }
-        token = strtok(NULL, ",");
+        token = strtok_r(NULL, ",", &saveptr);
     }
     if (tmp_member_buf)
         free(tmp_member_buf);

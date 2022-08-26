@@ -86,6 +86,7 @@ static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, ch
     char* param = NULL;
     char* desc_copy = NULL;
     char* token = NULL;
+    char* saveptr;
 
     if (parser == NULL)
         return;
@@ -94,11 +95,11 @@ static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, ch
 
     snprintf(buf, OPTION_MAX_LEN - 1, "%s", syntax);
 
-    if ((token = strtok(buf, " ")) == NULL)
+    if ((token = strtok_r(buf, " ", &saveptr)) == NULL)
         return;
 
     opt_name = strdup(token);
-    if ((token = strtok(NULL, " ")) != NULL)
+    if ((token = strtok_r(NULL, " ", &saveptr)) != NULL)
         param = strdup(token);
     desc_copy = strdup(desc);
     if ((opt = cmd_option_find(parser, opt_name)) != NULL)
