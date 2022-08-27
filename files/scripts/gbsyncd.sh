@@ -4,8 +4,8 @@
 
 function startplatform() {
 
-    declare -a DbCliArray=($SONIC_GLOBAL_DB_CLI $SONIC_DB_CLI)
-    for DB_CLI in  ${DbCliArray[@]}; do
+    declare -A DbCliArray=([0]=$SONIC_GLOBAL_DB_CLI [1]=$SONIC_DB_CLI)
+    for DB_CLI in "${DbCliArray[@]}"; do
         # Add gbsyncd to FEATURE table, if not in. It did have same config as syncd.
         if [ -z $($DB_CLI CONFIG_DB HGET 'FEATURE|gbsyncd' state) ]; then
             local CMD="local r=redis.call('DUMP', KEYS[1]); redis.call('RESTORE', KEYS[2], 0, r)"
