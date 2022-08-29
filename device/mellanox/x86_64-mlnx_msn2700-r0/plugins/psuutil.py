@@ -26,6 +26,7 @@ try:
     import os.path
     import syslog
     import subprocess
+    from shlex import split
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -65,7 +66,7 @@ class PsuUtil(PsuBase):
         self.fan_speed = "thermal/psu{}_fan1_speed_get"
 
     def _get_sku_name(self):
-        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(split(self.GET_HWSKU_CMD), universal_newlines=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 

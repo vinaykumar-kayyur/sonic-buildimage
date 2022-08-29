@@ -28,6 +28,7 @@ try:
     import syslog
     import subprocess
     from glob import glob
+    from shlex import split
     from sonic_fan.fan_base import FanBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -72,7 +73,7 @@ class FanUtil(FanBase):
         self.num_of_fan, self.num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
 
     def _get_sku_name(self):
-        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(split(self.GET_HWSKU_CMD), universal_newlines=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 

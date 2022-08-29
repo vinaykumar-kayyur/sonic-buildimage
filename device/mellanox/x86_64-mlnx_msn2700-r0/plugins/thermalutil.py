@@ -26,6 +26,7 @@ try:
     from os.path import join
     import syslog
     import subprocess
+    from shlex import split
     from sonic_thermal.thermal_base import ThermalBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -380,7 +381,7 @@ class ThermalUtil(ThermalBase):
     thermal_list = []
 
     def _get_sku_name(self):
-        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(split(self.GET_HWSKU_CMD), universal_newlines=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 
