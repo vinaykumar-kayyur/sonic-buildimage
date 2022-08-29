@@ -1,4 +1,3 @@
-import os.path
 import subprocess
 from shlex import split
 
@@ -53,7 +52,7 @@ class PsuUtil(PsuBase):
         Base_bus_number = 0
         status = 0
         try:
-            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=subprocess.PIPE, text=True)
+            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=subprocess.PIPE, universal_newlines=True)
             if p.stdout.readline() != None:
                 status = 1
             p.close()

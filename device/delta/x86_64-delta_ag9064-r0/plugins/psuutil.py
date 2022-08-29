@@ -3,7 +3,6 @@
 # provides the PSUs status which are available in the platform
 #
 
-import os.path
 import subprocess
 from shlex import split
 
@@ -42,7 +41,7 @@ class PsuUtil(PsuBase):
 
         status = 0
         try:
-            p = subprocess.Popen(split(self.psu_status.format(index)), stdout=subprocess.PIPE, text=True)
+            p = subprocess.Popen(split(self.psu_status.format(index)), stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content)
             if reg_value != 0:
@@ -65,7 +64,7 @@ class PsuUtil(PsuBase):
             return False
         status = 0
         try:
-            p = subprocess.Popen(split(self.psu_presence.format(index)), stdout=subprocess.PIPE, text=True)
+            p = subprocess.Popen(split(self.psu_presence.format(index)), stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:
