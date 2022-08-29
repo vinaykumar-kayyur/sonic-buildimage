@@ -5,6 +5,7 @@
 from sonic_platform_base.sonic_ssd.ssd_base import SsdBase
 from subprocess import Popen, PIPE
 from re import findall
+from shlex import split
 from os.path import exists
 
 INNODISK = "iSmart -d {}"
@@ -39,7 +40,7 @@ class SsdUtil(SsdBase):
         self.health = self._parse_re(r'Health:\s*(.+?)', self.ssd_info)
 
     def _execute_shell(self, cmd):
-        process = Popen(cmd.split(), universal_newlines=True, stdout=PIPE)
+        process = Popen(split(cmd), universal_newlines=True, stdout=PIPE)
         output, _ = process.communicate()
         return output
 
