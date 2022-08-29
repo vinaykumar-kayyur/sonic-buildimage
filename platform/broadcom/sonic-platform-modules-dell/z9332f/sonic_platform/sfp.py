@@ -964,14 +964,9 @@ class Sfp(SfpBase):
                 dom_channel_monitor_raw = self._read_eeprom_bytes(self.eeprom_path,2048 + 130, 1)
                 if dom_channel_monitor_raw is not None:
                     tx_disable_data = int(dom_channel_monitor_raw[0], 16)
-                    tx_disable_list.append(bool(tx_disable_data & 0x01 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x02 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x04 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x08 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x10 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x20 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x40 != 0))
-                    tx_disable_list.append(bool(tx_disable_data & 0x80 != 0))
+                    for i in range(8):
+                        tx_disable_list.append(bool(tx_disable_data & (1 << i) != 0))    
+                    
             elif self.sfp_type == 'QSFP':
                 tx_disable_data = self._get_eeprom_data('tx_disable')
                 for tx_disable_id in ('Tx1Disable', 'Tx2Disable', 'Tx3Disable', 'Tx4Disable'):
