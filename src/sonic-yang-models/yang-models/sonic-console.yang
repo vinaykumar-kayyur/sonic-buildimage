@@ -61,7 +61,7 @@ module sonic-console {
         container CONSOLE_SWITCH {
             description "CONSOLE_SWITCH part of config_db.json";
 
-            container console_mgmt {
+            leaf console_mgmt {
                 leaf enabled {
                     description "This configuration indicate if enable console management feature on SONiC";
                     type console-mgmt-enabled;
