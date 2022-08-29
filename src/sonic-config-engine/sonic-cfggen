@@ -255,12 +255,11 @@ def _get_jinja2_env(paths):
     return env
 
 def filter_tables(data, remove_table, keep_table):
-    if remove_table:
-        for table in remove_table:
-            if table in data.keys():
-                del data[table]
+    for table in remove_table:
+        if table in data.keys():
+            del data[table]
 
-    if keep_table:
+    if len(keep_table) > 0:
         tables = data.keys()
         for table in tables:
             if table not in keep_table:
@@ -292,9 +291,23 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--print-data", help="print all data", action='store_true')
     group.add_argument("-w", "--write-to-db", help="write config into configdb", action='store_true')
+    group.add_argument("--write-to-profile-db", help="write config into profile-db", action='store_true')
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-    group.add_argument("--remove-tables", help="Table filter, remove tables from result")
-    group.add_argument("--keep-tables", help="Table filter, keep tables from result")
+
+    group.add_argument(
+        "--remove-tables", help="Table filter, remove tables from result",
+        type=str,
+        dest='remove_tables',
+        default=[],
+        action='append')
+
+    group.add_argument(
+        "--keep-tables", help="Table filter, keep tables from result",
+        type=str,
+        dest='keep_tables',
+        default=[],
+        action='append')
+
     args = parser.parse_args()
 
     platform = device_info.get_platform()
@@ -433,17 +446,17 @@ def main():
             if dest_file == "config-db" or dest_file == "profile-db":
                 deep_update(data, FormatConverter.to_deserialized(json.loads(template_data)))
             else:
-                filter_tables(template_data, args.remove_table, args.keep_table)
+                filter_tables(template_data, args.remove_tables, args.keep_tables)
                 with smart_open(dest_file, 'w') as df:
                     print(template_data, file=df)
 
     if args.var is not None:
         template = jinja2.Template('{{' + args.var + '}}')
         template_data = template.render(data)
-        filter_tables(template_data, args.remove_table, args.keep_table)
+        filter_tables(template_data, args.remove_tables, args.keep_tables)
         print(template_data)
 
-    filter_tables(data, args.remove_table, args.keep_table)
+    filter_tables(data, args.remove_tables, args.keep_tables)
 
     if args.var_json is not None and args.var_json in data:
         if args.key is not None:
@@ -458,11 +471,19 @@ def main():
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
 
-        if dest_file == "profile-db":
-            configdb.db_connect("PROFILE_DB")
-        else:
-            configdb.connect(False)
+        configdb.connect(False)
         configdb.mod_config(FormatConverter.output_to_db(data))
+
+    if args.write_to_profile_db:
+        profile_db = None
+        if args.namespace is None:
+            profile_db = ConfigDBPipeConnector(use_unix_socket_path=True, **db_kwargs)
+        else:
+            SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
+            profile_db = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
+
+        profile_db.db_connect("PROFILE_DB")
+        profile_db.mod_config(FormatConverter.output_to_db(data))
 
     if args.print_data:
         print(json.dumps(FormatConverter.to_serialized(data), indent=4, cls=minigraph_encoder))
