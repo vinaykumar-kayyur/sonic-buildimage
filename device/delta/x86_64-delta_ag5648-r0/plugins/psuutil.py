@@ -47,8 +47,8 @@ class PsuUtil(PsuBase):
         Base_bus_number = 49
         status = 0
         try:
-            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=None, stderr=None)
-            if p.readline() != None:
+            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=subprocess.PIPE, text=None)
+            if p.stdout.readline() != None:
                 status = 1
             p.close()
         except IOError:
