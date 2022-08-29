@@ -50,7 +50,7 @@ module sonic-console {
                     default "0";
                 }
 
-                remote_device {
+                leaf remote_device {
                     description "Configure the remote device name";
                     type stypes:hostname;
                 }
