@@ -3,14 +3,14 @@ module sonic-console {
     namespace "http://github.com/Azure/sonic-console";
     prefix console;
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     description "SONiC CONSOLE";
 
     revision 2022-08-22 {
         description "First Revision";
-    }
-
-    import sonic-types {
-        prefix stypes;
     }
 
     typedef console-mgmt-enabled {
