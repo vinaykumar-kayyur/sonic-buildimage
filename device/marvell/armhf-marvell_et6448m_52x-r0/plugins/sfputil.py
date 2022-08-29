@@ -4,14 +4,11 @@ try:
     import re
     import sys
     import glob
+    import subprocess
+    from shlex import split
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-if sys.version_info[0] < 3:
-    import commands
-else:
-    import subprocess as commands
 
 smbus_present = 1
 
@@ -43,7 +40,7 @@ class SfpUtil(SfpUtilBase):
 
         # Enable optical SFP Tx
         if smbus_present == 0:
-            os.system("i2cset -y -m 0x0f 0 0x41 0x5 0x00")
+            subprocess.run(split("i2cset -y -m 0x0f 0 0x41 0x5 0x00"))
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
@@ -67,7 +64,7 @@ class SfpUtil(SfpUtilBase):
             #print port_eeprom_path
             if not os.path.exists(port_eeprom_path):
                 bus_dev_path = bus_path.format(self.port_to_i2c_mapping[x])
-                os.system("echo optoe2 0x50 > " + bus_dev_path + "/new_device")
+                subprocess.run("echo optoe2 0x50 > " + bus_dev_path + "/new_device"))
             self.port_to_eeprom_mapping[x] = port_eeprom_path
             self._port_to_eeprom_mapping[x] = port_eeprom_path
         SfpUtilBase.__init__(self)
@@ -113,8 +110,8 @@ class SfpUtil(SfpUtilBase):
         pos = [1, 2, 4, 8]
         bit_pos = pos[prt]
         if smbus_present == 0:
-            cmdstatus, sfpstatus = commands.getstatusoutput(
-                'i2cget -y 0 0x41 0x3')  # need to verify the cpld register logic
+            p = subprocess.run(split('i2cget -y 0 0x41 0x3'), capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
+            cmdstatus, sfpstatus = p.returncode, p.stdout
             sfpstatus = int(sfpstatus, 16)
         else:
             bus = smbus.SMBus(0)
