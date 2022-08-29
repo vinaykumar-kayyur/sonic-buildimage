@@ -7,6 +7,7 @@
 import os.path
 import subprocess
 import logging
+from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -25,7 +26,7 @@ def show_log(txt):
 def exec_cmd(cmd, show):
     logging.info('Run :'+cmd)
     try:
-        output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True).stdout
         show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
@@ -45,7 +46,7 @@ def log_os_system(cmd, show):
     status = 1
     output = ""
     try:
-        output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True).stdout
         my_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info('Failed :'+cmd)
