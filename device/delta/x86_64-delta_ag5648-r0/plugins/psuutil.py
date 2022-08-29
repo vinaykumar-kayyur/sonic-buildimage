@@ -1,4 +1,6 @@
 import os.path
+import subprocess
+from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -45,7 +47,7 @@ class PsuUtil(PsuBase):
         Base_bus_number = 49
         status = 0
         try:
-            p = os.popen(self.psu_presence.format(index + Base_bus_number) + "> /dev/null 2>&1")
+            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=None, stderr=None)
             if p.readline() != None:
                 status = 1
             p.close()

@@ -5,6 +5,7 @@
 
 import os.path
 import subprocess
+from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -41,8 +42,8 @@ class PsuUtil(PsuBase):
 
         status = 0
         try:
-            p = os.popen(self.psu_status.format(index))
-            content = p.readline().rstrip()
+            p = subprocess.Popen(split(self.psu_status.format(index)), stdout=subprocess.PIPE, text=True)
+            content = p.stdout.readline().rstrip()
             reg_value = int(content)
             if reg_value != 0:
                 return False
@@ -64,8 +65,8 @@ class PsuUtil(PsuBase):
             return False
         status = 0
         try:
-            p = os.popen(self.psu_presence.format(index))
-            content = p.readline().rstrip()
+            p = subprocess.Popen(split(self.psu_presence.format(index)), stdout=subprocess.PIPE, text=True)
+            content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:
                 return False
