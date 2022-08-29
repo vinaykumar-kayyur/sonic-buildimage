@@ -70,7 +70,7 @@ SFP_INFO_OFFSET = 0
 SFP_DOM_OFFSET = 256
 
 SFP_STATUS_CONTROL_OFFSET = 110
-SFP_STATUS_CONTROL_WIDTH = 7
+SFP_STATUS_CONTROL_WIDTH = 1
 SFP_TX_DISABLE_HARD_BIT = 7
 SFP_TX_DISABLE_SOFT_BIT = 6
 
@@ -977,7 +977,8 @@ class Sfp(SfpBase):
                 for tx_disable_id in ('Tx1Disable', 'Tx2Disable', 'Tx3Disable', 'Tx4Disable'):
                     tx_disable_list.append(tx_disable_data['data'][tx_disable_id]['value'] == 'On')
             else:
-                tx_disable_data = self._read_eeprom_bytes(self.eeprom_path, SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
+                offset = 256
+                tx_disable_data = self._read_eeprom_bytes(self.eeprom_path, offset + SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
                 data = int(tx_disable_data[0], 16)
                 tx_disable_hard = (sffbase().test_bit(data, SFP_TX_DISABLE_HARD_BIT) != 0)
                 tx_disable_soft = (sffbase().test_bit(data, SFP_TX_DISABLE_SOFT_BIT) != 0)
@@ -996,11 +997,12 @@ class Sfp(SfpBase):
             return self._write_eeprom_bytes( 0 + 86, 1, bytearray([val]))
 
         else:
+            offset = 256
             if tx_disable is True:
                 val = 64
             else:
                 val = 191
-            return self._write_eeprom_bytes(110 ,1, bytearray([val]))
+            return self._write_eeprom_bytes(offset + SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH, bytearray([val]))
 
     def get_tx_disable_channel(self):
         """
@@ -1009,7 +1011,8 @@ class Sfp(SfpBase):
         tx_disable_channel = None
         try:
             if self.sfp_type == 'QSFP_DD':
-                 dom_channel_monitor_raw = self._read_eeprom_bytes(self.eeprom_path,2048 + 130, 1)
+                 offset = 2048
+                 dom_channel_monitor_raw = self._read_eeprom_bytes(self.eeprom_path, offset + 130, 1)
                  if dom_channel_monitor_raw is not None:
                     tx_disable_channel = int(dom_channel_monitor_raw[0], 16)
             elif self.sfp_type == 'QSFP':
@@ -1329,7 +1332,7 @@ class Sfp(SfpBase):
         channel_state = self.get_tx_disable_channel()
         if channel_state is None or channel_state == 'N/A':
             return False
-        if self.sfp_type == 'QSFP-DD':
+        if self.sfp_type == 'QSFP_DD':
             for i in range(8):
                 mask = (1 << i)
                 if not (channel & mask):
@@ -1353,14 +1356,14 @@ class Sfp(SfpBase):
             channel_state = self.get_tx_disable_channel()
             if channel_state is None or channel_state == "N/A":
                 return False
-
+            offset = 256
             mask = (1 << 0)
             if disable:
                channel_state |= mask
             else:
                channel_state &= ~mask
 
-            return self._write_eeprom_bytes(110, 1, bytearray([write_val]))
+            return self._write_eeprom_bytes(offset + SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH, bytearray([channel_state]))
 
     def set_power_override(self, power_override, power_set):
         """
