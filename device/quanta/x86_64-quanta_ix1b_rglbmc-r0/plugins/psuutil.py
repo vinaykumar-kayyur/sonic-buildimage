@@ -26,7 +26,7 @@ def show_log(txt):
 def exec_cmd(cmd, show):
     logging.info('Run :'+cmd)
     try:
-        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True).stdout
+        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True, check=True).stdout
         show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
@@ -46,7 +46,7 @@ def log_os_system(cmd, show):
     status = 1
     output = ""
     try:
-        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True).stdout
+        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True, check=True).stdout
         my_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info('Failed :'+cmd)
