@@ -1,4 +1,3 @@
-import sys
 import os.path
 import subprocess
 from shlex import split

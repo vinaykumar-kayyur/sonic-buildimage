@@ -2,7 +2,6 @@ try:
     import os
     import time
     import re
-    import sys
     import glob
     import subprocess
     from shlex import split
