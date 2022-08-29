@@ -702,7 +702,6 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
         "flow_control": "1"
     }
   },
-
 "CONSOLE_SWITCH": {
     "console_mgmt": {
         "enabled": "yes"
