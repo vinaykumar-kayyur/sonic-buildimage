@@ -19,7 +19,7 @@ def main():
     passwd_prompt = 'Password:'
     cmd_prompt = "{}@sonic:~\$ $".format(args.u)
     grub_selection = "The highlighted entry will be executed"
-    firsttime_prompt = '+ firsttime_exit'
+    firsttime_prompt = 'firsttime_exit'
 
     i = 0
     while True:
