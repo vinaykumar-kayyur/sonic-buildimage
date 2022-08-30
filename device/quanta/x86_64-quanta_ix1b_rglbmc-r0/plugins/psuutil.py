@@ -29,7 +29,7 @@ def exec_cmd(cmd, show):
     out_file = cmd.split('>')[1].strip()
     try:
         with open(out_file, 'w') as f:
-            output = subprocess.run(split(in_cmd), universal_newlines=True, check=True).stdout
+            output = subprocess.run(split(in_cmd), stdout=f, universal_newlines=True, check=True).stdout
             show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
