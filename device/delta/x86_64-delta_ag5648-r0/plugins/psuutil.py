@@ -14,7 +14,7 @@ class PsuUtil(PsuBase):
 
         self.psu_path = "/sys/bus/i2c/devices/6-00{}/"
         self.psu_oper_status = "in1_input"
-        self.psu_presence = ["i2cget", "-y", "6", "0x" "0x00"]
+        self.psu_presence = ["i2cget", "-y", "6", "0x", "0x00"]
 
     def get_num_psus(self):
         """
