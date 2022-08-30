@@ -7,7 +7,6 @@
 import os.path
 import subprocess
 import logging
-from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -23,13 +22,12 @@ def show_log(txt):
     return
 
 
-def exec_cmd(cmd, show):
+def exec_cmd(cmd_args, out_file, show):
+    cmd = ' '.join(cmd_args) + ' > ' + out_file
     logging.info('Run :'+cmd)
-    in_cmd = cmd.split('>')[0]
-    out_file = cmd.split('>')[1].strip()
     try:
         with open(out_file, 'w') as f:
-            output = subprocess.run(split(in_cmd), stdout=f, universal_newlines=True, check=True).stdout
+            output = subprocess.run(cmd_args, stdout=f, universal_newlines=True, check=True).stdout
             show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
@@ -44,15 +42,14 @@ def my_log(txt):
     return
 
 
-def log_os_system(cmd, show):
+def log_os_system(cmd1_args, cmd2_args, show):
+    cmd = ' '.join(cmd1_args) + ' | ' + ' '.join(cmd2_args)
     logging.info('Run :'+cmd)
     status = 1
     output = ""
-    cmd1 = split(cmd.split('|')[0].rstrip())
-    cmd2 = split(cmd.split('|')[1].lstrip())
     try:
-        p1 = subprocess.Popen(cmd1, universal_newlines=True, stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()
         output = p2.communicate()[0]
         if p2.returncode == 1:
@@ -66,28 +63,28 @@ def log_os_system(cmd, show):
 
 
 def gpio16_exist():
-    ls = log_os_system("ls /sys/class/gpio/ | grep gpio16", 0)
+    ls = log_os_system(["ls", "/sys/class/gpio/"], ["rep", "gpio16"], 0)
     logging.info('mods:'+ls)
     if len(ls) == 0:
         return False
 
 
 def gpio17_exist():
-    ls = log_os_system("ls /sys/class/gpio/ | grep gpio17", 0)
+    ls = log_os_system(["ls", "/sys/class/gpio/"], ["grep", "gpio17"], 0)
     logging.info('mods:'+ls)
     if len(ls) == 0:
         return False
 
 
 def gpio19_exist():
-    ls = log_os_system("ls /sys/class/gpio/ | grep gpio19", 0)
+    ls = log_os_system(["ls", "/sys/class/gpio/"], ["grep", "gpio19"], 0)
     logging.info('mods:'+ls)
     if len(ls) == 0:
         return False
 
 
 def gpio20_exist():
-    ls = log_os_system("ls /sys/class/gpio/ | grep gpio20", 0)
+    ls = log_os_system(["ls", "/sys/class/gpio/"], ["grep", "gpio20"], 0)
     logging.info('mods:'+ls)
     if len(ls) == 0:
         return False
@@ -106,20 +103,20 @@ class PsuUtil(PsuBase):
         PsuBase.__init__(self)
 
         if gpio16_exist() == False:
-            output = exec_cmd("echo 16 > /sys/class/gpio/export ", 1)
-            output = exec_cmd("echo in > /sys/class/gpio/gpio16/direction ", 1)
+            output = exec_cmd(["echo", "16"], "/sys/class/gpio/export", 1)
+            output = exec_cmd(["echo", "in"], "/sys/class/gpio/gpio16/direction", 1)
 
         if gpio17_exist() == False:
-            output = exec_cmd("echo 17 > /sys/class/gpio/export ", 1)
-            output = exec_cmd("echo in > /sys/class/gpio/gpio17/direction ", 1)
+            output = exec_cmd(["echo", "17"], "/sys/class/gpio/export", 1)
+            output = exec_cmd(["echo", "in"], "/sys/class/gpio/gpio17/direction", 1)
 
         if gpio19_exist() == False:
-            output = exec_cmd("echo 19 > /sys/class/gpio/export ", 1)
-            output = exec_cmd("echo in > /sys/class/gpio/gpio19/direction ", 1)
+            output = exec_cmd(["echo", "19"], "/sys/class/gpio/export", 1)
+            output = exec_cmd(["echo", "in"], "/sys/class/gpio/gpio19/direction", 1)
 
         if gpio20_exist() == False:
-            output = exec_cmd("echo 20 > /sys/class/gpio/export ", 1)
-            output = exec_cmd("echo in > /sys/class/gpio/gpio20/direction ", 1)
+            output = exec_cmd(["echo", "20"], "/sys/class/gpio/export", 1)
+            output = exec_cmd(["echo", "in"], "/sys/class/gpio/gpio20/direction", 1)
 
     # Get sysfs attribute
     def get_attr_value(self, attr_path):
