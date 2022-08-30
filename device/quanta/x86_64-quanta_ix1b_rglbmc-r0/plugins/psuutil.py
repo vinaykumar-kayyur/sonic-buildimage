@@ -25,9 +25,12 @@ def show_log(txt):
 
 def exec_cmd(cmd, show):
     logging.info('Run :'+cmd)
+    in_cmd = cmd.split('>')[0]
+    out_file = cmd.split('>')[1].strip()
     try:
-        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True, check=True).stdout
-        show_log(cmd + "output:"+str(output))
+        with open(out_file, 'w') as f:
+            output = subprocess.run(split(in_cmd), universal_newlines=True, check=True).stdout
+            show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
         if show:
@@ -45,8 +48,15 @@ def log_os_system(cmd, show):
     logging.info('Run :'+cmd)
     status = 1
     output = ""
+    cmd1 = split(cmd.split('|')[0].rstrip())
+    cmd2 = split(cmd.split('|')[1].lstrip())
     try:
-        output = subprocess.run(split(cmd), universal_newlines=True, capture_output=True, check=True).stdout
+        p1 = subprocess.Popen(cmd1, universal_newlines=True, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()
+        output = p2.communicate()[0]
+        if p2.returncode == 1:
+            raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
         my_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info('Failed :'+cmd)
