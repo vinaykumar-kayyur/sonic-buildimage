@@ -1,6 +1,5 @@
 import os.path
 import subprocess
-from shlex import split
 
 smbus_present = 1
 try:
@@ -29,7 +28,7 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
         if smbus_present == 0:
-            p = subprocess.run(split('i2cget -y 0 0x41 0xa'), capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
+            p = subprocess.run(["i2cget", "-y", "0", "0x41", "0xa"], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
             cmdstatus, psustatus = p.returncode, p.stdout
             psustatus = int(psustatus, 16)
         else:
@@ -53,7 +52,7 @@ class PsuUtil(PsuBase):
             return False
 
         if smbus_present == 0:
-            p = subprocess.run(split('i2cget -y 0 0x41 0xa'), capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
+            p = subprocess.run(["i2cget", "-y", "0", "0x41", "0xa"], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
             cmdstatus, psustatus = p.returncode, p.stdout
             psustatus = int(psustatus, 16)
         else:
