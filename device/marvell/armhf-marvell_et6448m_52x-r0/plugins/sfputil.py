@@ -109,8 +109,8 @@ class SfpUtil(SfpUtilBase):
         pos = [1, 2, 4, 8]
         bit_pos = pos[prt]
         if smbus_present == 0:
-            p = subprocess.run(['i2cget', '-y', '0', '0x41', '0x3'], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
-            cmdstatus, sfpstatus = p.returncode, p.stdout
+            proc = subprocess.run(['i2cget', '-y', '0', '0x41', '0x3'], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
+            cmdstatus, sfpstatus = proc.returncode, proc.stdout
             sfpstatus = int(sfpstatus, 16)
         else:
             bus = smbus.SMBus(0)
