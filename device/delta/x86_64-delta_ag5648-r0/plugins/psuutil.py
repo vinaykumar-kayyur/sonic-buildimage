@@ -1,5 +1,4 @@
 import subprocess
-from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -15,7 +14,7 @@ class PsuUtil(PsuBase):
 
         self.psu_path = "/sys/bus/i2c/devices/6-00{}/"
         self.psu_oper_status = "in1_input"
-        self.psu_presence = "i2cget -y 6 0x{} 0x00"
+        self.psu_presence = ["i2cget", "-y", "6", "0x" "0x00"]
 
     def get_num_psus(self):
         """
@@ -45,8 +44,9 @@ class PsuUtil(PsuBase):
             return False
         Base_bus_number = 49
         status = 0
+        self.psu_presence[3] += str(index + Base_bus_number)
         try:
-            p = subprocess.Popen(split(self.psu_presence.format(index + Base_bus_number)), stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(self.psu_presence, stdout=subprocess.PIPE, universal_newlines=True)
             if p.stdout.readline() != None:
                 status = 1
             p.close()

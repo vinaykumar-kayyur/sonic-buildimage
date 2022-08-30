@@ -4,7 +4,6 @@
 #
 
 import subprocess
-from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -17,7 +16,7 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         PsuBase.__init__(self)
-        self.psu_status = "ipmitool raw 0x38 0x1 {} 0x50"
+        self.psu_status = ["ipmitool", "raw", "0x38", "0x1", "", "0x50"]
 
     def get_num_psus(self):
         """
@@ -39,8 +38,9 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
+        cmd = ["ipmitool", "raw", "0x38", "0x2", "7", "0x32", "0x28", "1"]
         try:
-            p = subprocess.Popen(split("ipmitool raw 0x38 0x2 7 0x32 0x28 1"), stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             mask = (1 << (8 - index))
@@ -63,8 +63,9 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
         status = 0
+        self.psu_status[4] += str(index-1)
         try:
-            p = subprocess.Popen(split(self.psu_status.format(index - 1)), stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(psu_status), stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:

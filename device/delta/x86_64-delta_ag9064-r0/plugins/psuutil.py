@@ -4,7 +4,6 @@
 #
 
 import subprocess
-from shlex import split
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -17,8 +16,8 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         PsuBase.__init__(self)
-        self.psu_presence = "cat /sys/devices/platform/delta-ag9064-cpld.0/psu{}_scan"
-        self.psu_status = "cat /sys/devices/platform/delta-ag9064-swpld1.0/psu{}_pwr_ok"
+        self.psu_presence = ["cat", "/sys/devices/platform/delta-ag9064-cpld.0/psu"]
+        self.psu_status = ["cat", "/sys/devices/platform/delta-ag9064-swpld1.0/psu"]
 
     def get_num_psus(self):
         """
@@ -40,8 +39,9 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
+        self.psu_status[1] += str(index) + '_pwr_ok'
         try:
-            p = subprocess.Popen(split(self.psu_status.format(index)), stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(self.psu_status, stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content)
             if reg_value != 0:
@@ -63,8 +63,9 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
         status = 0
+        self.psu_presence[1] += str(index) + '_scan'
         try:
-            p = subprocess.Popen(split(self.psu_presence.format(index)), stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(self.psu_presence, stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:
