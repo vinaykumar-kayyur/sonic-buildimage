@@ -30,7 +30,7 @@ class SsdUtil(SsdBase):
         self.temperature = NOT_AVAILABLE
         self.health = NOT_AVAILABLE
 
-        self.ssd_info = self._execute_shell(INNODISK.append(str(diskdev)))
+        self.ssd_info = self._execute_shell(INNODISK.append(diskdev))
 
         self.model = self._parse_re(r'Model Name:\s*(.+?)\n', self.ssd_info)
         self.serial = self._parse_re(r'Serial Number:\s*(.+?)\n', self.ssd_info)
