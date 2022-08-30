@@ -13,9 +13,7 @@ module sonic-feature{
 
     typedef feature-state {
         description "configuration to set the feature running state";
-        type string {
-            pattern "enabled|disabled|always_enabled|always_disabled";
-        }
+        type string;
     }
 
     typedef feature-owner {
@@ -87,6 +85,13 @@ module sonic-feature{
                                 kubernetes or local";
                     type feature-owner;
                     default "local";
+                }
+
+                leaf check_up_status {
+                    description "This configuration controls the system ready tool to check
+                        the app ready/up status";
+                    type stypes:boolean_type;
+                    default "false";
                 }
             }
         }

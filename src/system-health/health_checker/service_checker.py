@@ -51,6 +51,8 @@ class ServiceChecker(HealthChecker):
 
         self.need_save_cache = False
 
+        self.config_db = None
+
         self.load_critical_process_cache()
 
     def get_expected_running_containers(self, feature_table):
@@ -142,11 +144,11 @@ class ServiceChecker(HealthChecker):
         # Get container volumn folder
         container_folder = self._get_container_folder(container)
         if not container_folder:
-            logger.log_error('Failed to get container folder for {}'.format(container_folder))
+            logger.log_warning('Could not find MergedDir of container {}, was container stopped?'.format(container))
             return
 
         if not os.path.exists(container_folder):
-            logger.log_error('Container folder does not exist: {}'.format(container_folder))
+            logger.log_warning('MergedDir {} of container {} not found in filesystem, was container stopped?'.format(container_folder, container))
             return
 
         # Get critical_processes file path
@@ -218,7 +220,7 @@ class ServiceChecker(HealthChecker):
         output = utils.run_command(ServiceChecker.CHECK_CMD)
         lines = output.splitlines()
         if not lines or len(lines) < ServiceChecker.MIN_CHECK_CMD_LINES:
-            self.set_object_not_ok('Service', 'monit', 'output of \"monit summary -B\" is invalid or incompatible')
+            self.set_object_not_ok('Service', 'monit', 'monit service is not ready')
             return
 
         status_begin = lines[1].find('Status')
@@ -248,9 +250,10 @@ class ServiceChecker(HealthChecker):
         Args:
             config (config.Config): Health checker configuration.
         """
-        config_db = swsscommon.ConfigDBConnector()
-        config_db.connect()
-        feature_table = config_db.get_table("FEATURE")
+        if not self.config_db:
+            self.config_db = swsscommon.ConfigDBConnector()
+            self.config_db.connect()
+        feature_table = self.config_db.get_table("FEATURE")
         expected_running_containers, self.container_feature_dict = self.get_expected_running_containers(feature_table)
         current_running_containers = self.get_current_running_containers()
 

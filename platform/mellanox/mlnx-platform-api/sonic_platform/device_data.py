@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
 
 import glob
 import os
-from sonic_py_common import device_info
 
 from . import utils
 
@@ -144,11 +143,12 @@ DEVICE_DATA = {
             }
         }
     },
-    'x86_64-mlnx_msn4800-r0': {
+    'x86_64-nvidia_sn4800-r0': {
         'thermal': {
             "capability": {
                 "comex_amb": False
-            }
+            },
+            'cpu_threshold': (80, 95)  # min=80, max=95
         },
         'sfp': {
             'max_port_per_line_card': 16
@@ -157,7 +157,8 @@ DEVICE_DATA = {
     'x86_64-nvidia_sn2201-r0': {
         'thermal': {
             "capability": {
-                "comex_amb": False
+                "comex_amb": False,
+                "cpu_amb": True
             }
         }
     },
@@ -170,6 +171,7 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_platform_name(cls):
+        from sonic_py_common import device_info
         return device_info.get_platform()
 
     @classmethod
@@ -225,7 +227,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -238,7 +240,7 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return None
-        
+
         thermal_data = platform_data.get('thermal', None)
         if not thermal_data:
             return None
@@ -256,8 +258,43 @@ class DeviceDataManager:
         platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
         if not platform_data:
             return 0
-        
+
         sfp_data = platform_data.get('sfp', None)
         if not sfp_data:
             return 0
         return sfp_data.get('max_port_per_line_card', 0)
+
+    @classmethod
+    def is_cpu_thermal_control_supported(cls):
+        return cls.get_cpu_thermal_threshold() != (None, None)
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_cpu_thermal_threshold(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
+        if not platform_data:
+            return None, None
+
+        thermal_data = platform_data.get('thermal', None)
+        if not thermal_data:
+            return None, None
+
+        return thermal_data.get('cpu_threshold', (None, None))
+
+    @classmethod
+    def get_bios_component(cls):
+        from .component import ComponentBIOS, ComponentBIOSSN2201
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentBIOSSN2201()
+        return ComponentBIOS()
+
+    @classmethod
+    def get_cpld_component_list(cls):
+        from .component import ComponentCPLD, ComponentCPLDSN2201
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentCPLDSN2201.get_component_list()
+        return ComponentCPLD.get_component_list()

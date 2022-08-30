@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@ include $(PLATFORM_PATH)/mlnx-ffb.mk
 include $(PLATFORM_PATH)/issu-version.mk
 include $(PLATFORM_PATH)/mlnx-onie-fw-update.mk
 include $(PLATFORM_PATH)/mlnx-ssd-fw-update.mk
+include $(PLATFORM_PATH)/install-pending-fw.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM)
@@ -46,5 +47,8 @@ $(SYNCD)_RDEPENDS += $(MLNX_SAI)
 
 # Inject mlnx sdk libs to platform monitor
 $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(APPLIBS) $(SX_COMPLIB) $(SXD_LIBS) $(SX_GEN_UTILS) $(PYTHON_SDK_API) $(APPLIBS_DEV) $(SX_COMPLIB_DEV) $(SXD_LIBS_DEV) $(SX_GEN_UTILS_DEV)
+
+# Force the target bootloader for mellanox platforms to grub regardless of arch
+TARGET_BOOTLOADER = grub
 
 export SONIC_BUFFER_MODEL=dynamic

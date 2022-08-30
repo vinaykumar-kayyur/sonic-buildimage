@@ -30,6 +30,8 @@
 - [ ] 202006
 - [ ] 202012
 - [ ] 202106
+- [ ] 202111
+- [ ] 202205
 
 #### Description for the changelog
 <!--
@@ -37,6 +39,12 @@ Write a short (one line) summary that describes the changes in this
 pull request for inclusion in the changelog:
 -->
 
+#### Link to config_db schema for YANG module changes
+<!--
+Provide a link to config_db schema for the table for which YANG model
+is defined
+Link should point to correct section on https://github.com/Azure/sonic-buildimage/blob/master/src/sonic-yang-models/doc/Configuration.md
+-->
 
 #### A picture of a cute animal (not mandatory but encouraged)
 

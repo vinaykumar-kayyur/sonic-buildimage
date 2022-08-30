@@ -61,6 +61,7 @@ module sonic-types {
     typedef packet_action{
         type enumeration {
             enum DROP;
+            enum ACCEPT;
             enum FORWARD;
             enum REDIRECT;
             enum DO_NOT_NAT;
@@ -116,6 +117,12 @@ module sonic-types {
         }
     }
 
+    typedef loopback_action {
+        type string {
+            pattern "drop|forward";
+        }
+    }
+
     typedef admin_mode {
         type enumeration {
             enum enabled;
@@ -135,13 +142,17 @@ module sonic-types {
             enum CR;
             enum CR2;
             enum CR4;
+            enum CR8;
             enum SR;
             enum SR2;
             enum SR4;
+            enum SR8;
             enum LR;
             enum LR4;
+            enum LR8;
             enum KR;
             enum KR4;
+            enum KR8;
             enum CAUI;
             enum GMII;
             enum SFI;
@@ -204,7 +215,23 @@ module sonic-types {
         }
     }
 
-    typedef copp_packet_action {
+    typedef policer_mode {
+        type enumeration {
+            enum sr_tcm;
+            enum tr_tcm;
+            enum storm;
+        }
+    }
+
+    typedef policer_color_source {
+        type enumeration {
+	    enum aware;
+	    enum blind;
+        }
+    }
+
+
+    typedef policer_packet_action {
         type enumeration {
             enum drop;
             enum forward;
@@ -229,9 +256,31 @@ module sonic-types {
         }
     }
 
+    typedef hostname {
+        type string {
+            length 1..63;
+        }
+    }
 
-    /* Required for CVL */
+    typedef vnid_type {
+        type uint32 {
+             range "1..16777215";
+        }
+        description
+            "VXLAN Network Identifier";
+    }
+
+    typedef tc_type {
+        type uint8 {
+            range "0..15" {
+                error-message "Invalid Traffic Class";
+                error-app-tag tc-invalid;
+            }
+        }
+    }
+
     {% if yang_model_type == "cvl" %}
+    /* Required for CVL */
     container operation {
         description
             "This definition is used internally by CVL and
