@@ -72,11 +72,14 @@ jobs:
       image_latest=$(echo $(echo $image_tag | awk -F: '{print$1}'):latest)
       docker rmi $image_tag || true
 
-      if docker pull ${{ parameters.registry_url }}/${image_tag};then
+      if [[ "$(Build.Reason)" == "IndividualCI" ]] && docker pull ${{ parameters.registry_url }}/${image_tag};then
         exit 0
       fi
 
       DOCKER_DATA_ROOT_FOR_MULTIARCH=/data/march/docker make configure PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} $args || docker image ls $image_tag
+      if [[ "$(Build.Reason)" == "PullRequest" ]];then
+        exit 0
+      fi
 
       docker tag ${image_tag} ${REGISTRY_SERVER}/${image_tag}
       docker push ${REGISTRY_SERVER}/${image_tag}
