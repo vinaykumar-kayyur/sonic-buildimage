@@ -24,7 +24,7 @@ bool SyslogParser::parseMessage(string message, string& eventTag, event_params_t
         if(!formattedTimestamp.empty()) {
             paramMap["timestamp"] = formattedTimestamp;
 	} else {
-            SWSS_LOG_ERROR("Timestamp is invalid and is not able to be formatted");
+            SWSS_LOG_INFO("Timestamp is invalid and is not able to be formatted");
 	}
 
         // found matching regex
