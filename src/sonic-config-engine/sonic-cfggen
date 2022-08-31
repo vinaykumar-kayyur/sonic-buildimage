@@ -36,6 +36,7 @@ from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id
 from sonic_py_common import device_info
 from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
 
+profile_tables = ['BUFFER_POOL', 'BUFFER_PROFILE']
 
 PY3x = sys.version_info >= (3, 0)
 
@@ -254,17 +255,22 @@ def _get_jinja2_env(paths):
 
     return env
 
-def filter_tables(data, remove_table, keep_table):
-    for table in remove_table:
-        if table in data.keys():
-            del data[table]
-
-    if len(keep_table) > 0:
+def filter_profile_tables(data, generate_profile):
+    if generate_profile:
+        # remove all none profile tables
         tables = data.keys()
         for table in tables:
-            if table not in keep_table:
+            if table not in profile_tables:
                 del data[table]
-
+    # TODO: Enable following code after profile config related code migrated.
+    '''
+    else:
+        # remove profile tables
+        for table in profile_tables:
+            if table in data.keys():
+                del data[table]
+    '''
+    
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
@@ -281,6 +287,7 @@ def main():
     parser.add_argument("-d", "--from-db", help="read config from configdb", action='store_true')
     parser.add_argument("-H", "--platform-info", help="read platform and hardware info", action='store_true')
     parser.add_argument("-s", "--redis-unix-sock-file", help="unix sock file for redis connection")
+    parser.add_argument("-P", "--profile-config", help="generate profile config", action='store_true')
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file", action="append", default=[],
                        type=lambda opt_value: tuple(opt_value.split(',')) if ',' in opt_value else (opt_value, sys.stdout))
@@ -291,22 +298,7 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--print-data", help="print all data", action='store_true')
     group.add_argument("-w", "--write-to-db", help="write config into configdb", action='store_true')
-    group.add_argument("--write-to-profile-db", help="write config into profile-db", action='store_true')
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-
-    group.add_argument(
-        "--remove-tables", help="Table filter, remove tables from result",
-        type=str,
-        dest='remove_tables',
-        default=[],
-        action='append')
-
-    group.add_argument(
-        "--keep-tables", help="Table filter, keep tables from result",
-        type=str,
-        dest='keep_tables',
-        default=[],
-        action='append')
 
     args = parser.parse_args()
 
@@ -394,9 +386,12 @@ def main():
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, namespace=args.namespace, **db_kwargs)
 
-        configdb.connect()
-        deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
+        if args.profile_config:
+            configdb.db_connect("PROFILE_DB")
+        else:
+            configdb.connect()
 
+        deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
     # the minigraph file must be provided to get the mac address for backend asics
     # or switch_type chassis_packet
@@ -446,17 +441,15 @@ def main():
             if dest_file == "config-db" or dest_file == "profile-db":
                 deep_update(data, FormatConverter.to_deserialized(json.loads(template_data)))
             else:
-                filter_tables(template_data, args.remove_tables, args.keep_tables)
                 with smart_open(dest_file, 'w') as df:
                     print(template_data, file=df)
 
     if args.var is not None:
         template = jinja2.Template('{{' + args.var + '}}')
         template_data = template.render(data)
-        filter_tables(template_data, args.remove_tables, args.keep_tables)
         print(template_data)
 
-    filter_tables(data, args.remove_tables, args.keep_tables)
+    filter_profile_tables(data, args.profile_config)
 
     if args.var_json is not None and args.var_json in data:
         if args.key is not None:
@@ -471,19 +464,12 @@ def main():
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
 
-        configdb.connect(False)
-        configdb.mod_config(FormatConverter.output_to_db(data))
-
-    if args.write_to_profile_db:
-        profile_db = None
-        if args.namespace is None:
-            profile_db = ConfigDBPipeConnector(use_unix_socket_path=True, **db_kwargs)
+        if args.profile_config:
+            configdb.db_connect("PROFILE_DB")
         else:
-            SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
-            profile_db = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
+            configdb.connect(False)
 
-        profile_db.db_connect("PROFILE_DB")
-        profile_db.mod_config(FormatConverter.output_to_db(data))
+        configdb.mod_config(FormatConverter.output_to_db(data))
 
     if args.print_data:
         print(json.dumps(FormatConverter.to_serialized(data), indent=4, cls=minigraph_encoder))
