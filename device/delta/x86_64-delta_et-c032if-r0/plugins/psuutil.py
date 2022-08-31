@@ -63,7 +63,7 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
         status = 0
-        self.psu_status[4] += str(index-1)
+        self.psu_status[4] = str(index-1)
         try:
             p = subprocess.Popen(psu_status, stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
