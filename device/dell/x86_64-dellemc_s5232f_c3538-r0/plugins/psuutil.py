@@ -100,7 +100,7 @@ class PsuUtil(PsuBase):
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         ret_status = p.returncode
         line = p.stdout.replace('\n', '')
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
+        ipmi_sdr_list = line[8] if len(line) > 8 else 'f'
 
         if ret_status:
             logging.error('Failed to execute ipmitool : ')
@@ -131,7 +131,7 @@ class PsuUtil(PsuBase):
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         ret_status = p.returncode
         line = p.stdout.replace('\n', '')
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
+        ipmi_sdr_list = line[8] if len(line) > 8 else '0'
 
         if ret_status:
             logging.error('Failed to execute ipmitool : ')
