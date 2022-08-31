@@ -7,16 +7,12 @@
 import os.path
 import logging
 import sys
-
-if sys.version_info[0] < 3:
-    import commands
-else:
-    import subprocess as commands
+import subprocess
 
 
 Z9264F_MAX_PSUS = 2
-IPMI_PSU_DATA = "docker exec -it pmon ipmitool sdr list"
-IPMI_PSU_DATA_DOCKER = "ipmitool sdr list"
+IPMI_PSU_DATA = ["docker", "exec", "-it", "pmon", "ipmitool", "sdr", "list"]
+IPMI_PSU_DATA_DOCKER = ["ipmitool", "sdr", "list"]
 PSU_PRESENCE = "PSU{0}_state"
 # Use this for older firmware
 # PSU_PRESENCE="PSU{0}_prsnt"
@@ -53,7 +49,8 @@ class PsuUtil(PsuBase):
         if dockerenv == True:
             ipmi_cmd = IPMI_PSU_DATA_DOCKER
 
-        status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
+        p = subprocess.run(ipmi_cmd, capture_output=True, universal_newlines=True)
+        status, ipmi_sdr_list = p.returncode, p.stdout
 
         if status:
             logging.error('Failed to execute:' + ipmi_sdr_list)

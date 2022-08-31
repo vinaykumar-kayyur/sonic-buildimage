@@ -3,11 +3,11 @@
 # Platform-specific PSU status interface for SONiC
 #
 
-import commands
 import os
 import sys
+import subprocess
 
-SENSORS_CMD = "docker exec -i pmon /usr/bin/sensors"
+SENSORS_CMD = ["docker", "exec", "-i", "pmon", "/usr/bin/sensors"]
 DOCKER_SENSORS_CMD = "/usr/bin/sensors"
 
 try:
@@ -95,10 +95,11 @@ class PsuUtil(PsuBase):
     def get_sensor(self):
         dockerenv = self.isDockerEnv()
         if not dockerenv:
-          status, cmd_output = commands.getstatusoutput(SENSORS_CMD)
-        else :
-          status, cmd_output = commands.getstatusoutput(DOCKER_SENSORS_CMD)
-
+            p = subprocess.run(SENSORS_CMD, capture_output=True, universal_newlines=True)
+            status, cmd_output = p.returncode, p.stdout
+        else:
+            p = subprocess.run(DOCKER_SENSORS_CMD, capture_output=True, universal_newlines=True)
+            status, cmd_output = p.returncode, p.stdout
         if status:
             print('Failed to execute sensors command')
             sys.exit(0)

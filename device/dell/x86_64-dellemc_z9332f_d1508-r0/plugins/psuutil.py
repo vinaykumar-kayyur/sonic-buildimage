@@ -7,18 +7,14 @@
 import os.path
 import logging
 import sys
-
-if sys.version_info[0] < 3:
-    import commands
-else:
-    import subprocess as commands
+import subprocess
 
 
 Z9332F_MAX_PSUS = 2
-IPMI_PSU1_DATA = "docker exec -it pmon ipmitool raw 0x04 0x2d 0x2f |  awk '{print substr($0,9,1)}'"
-IPMI_PSU1_DATA_DOCKER = "ipmitool raw 0x04 0x2d 0x2f |  awk '{print substr($0,9,1)}'"
-IPMI_PSU2_DATA = "docker exec -it pmon ipmitool raw 0x04 0x2d 0x39 |  awk '{print substr($0,9,1)}'"
-IPMI_PSU2_DATA_DOCKER = "ipmitool raw 0x04 0x2d 0x39 |  awk '{print substr($0,9,1)}'"
+IPMI_PSU1_DATA = ["docker", "exec", "-it", "pmon", "ipmitool", "raw", "0x04", "0x2d", "0x2f"]
+IPMI_PSU1_DATA_DOCKER = ["ipmitool", "raw", "0x04", "0x2d", "0x2f"]
+IPMI_PSU2_DATA = ["docker", "exec", "-it", "pmon", "ipmitool", "raw", "0x04", "0x2d", "0x39"]
+IPMI_PSU2_DATA_DOCKER = ["ipmitool", "raw", "0x04", "0x2d", "0x39"]
 PSU_PRESENCE = "PSU{0}_Status"
 # Use this for older firmware
 # PSU_PRESENCE="PSU{0}_prsnt"
@@ -55,14 +51,17 @@ class PsuUtil(PsuBase):
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
+                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
             elif index == 2:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
+                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
         else:
             if index == 1:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU1_DATA)
+                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
             elif index == 2:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU2_DATA)
+                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
+        status = p.returncode
+        line = p.stdout.replace('\n', '')
+        ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         if status:
             logging.error('Failed to execute ipmitool')
@@ -107,14 +106,17 @@ class PsuUtil(PsuBase):
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
+                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
             elif index == 2:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU2_DATA_DOCKER)
+                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
         else:
             if index == 1:
-                status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU1_DATA)
+                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
             elif index == 2:
-                ret_status, ipmi_sdr_list = commands.getstatusoutput(IPMI_PSU2_DATA)
+                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
+        status = p.returncode
+        line = p.stdout.replace('\n', '')
+        ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         # if ret_status:
            #   print ipmi_sdr_list

@@ -7,7 +7,7 @@
 #
 #############################################################################
 import logging
-import commands
+import subprocess
 
 try:
     from sonic_fan.fan_base import FanBase
@@ -20,10 +20,10 @@ class FanUtil(FanBase):
     NUM_FANS_PERTRAY = 2
     FANTRAY_NUM_START_IDX = 1
     FRU_FAN_START_IDX = 1
-    IPMI_FAN_PRESENCE = "ipmitool sensor get FAN{0}_prsnt"
-    IPMI_FAN_FRONT_SPEED = "ipmitool sdr get Fan{0}_Front_rpm"
-    IPMI_FAN_REAR_SPEED = "ipmitool sdr get Fan{0}_Rear_rpm"
-    IPMI_FRU_DATA = "ipmitool fru print {0}"
+    IPMI_FAN_PRESENCE = ["ipmitool", "sensor", "get", "FAN"]
+    IPMI_FAN_FRONT_SPEED = ["ipmitool", "sdr", "get", "Fan"]
+    IPMI_FAN_REAR_SPEED = ["ipmitool", "sdr", "get", "Fan"]
+    IPMI_FRU_DATA = ["ipmitool", "fru", "print", ""]
 
     def __init__(self, log_level=logging.DEBUG):
         FanBase.__init__(self)
@@ -31,7 +31,9 @@ class FanUtil(FanBase):
 
     def get_fan_status(self,fan_id):
         try:
-           ret_status, ipmi_cmd_ret = commands.getstatusoutput(self.IPMI_FAN_PRESENCE.format(fan_id))
+            self.IPMI_FAN_PRESENCE[3] += str(fan_id) + '_prsnt'
+            p = subprocess.run(self.IPMI_FAN_PRESENCE, capture_output=True, universal_newlines=True)
+            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
            if ret_status == 0:
               return(ipmi_cmd_ret.splitlines()[5].strip(' ').strip('[]'))
         except Exception:
@@ -39,7 +41,9 @@ class FanUtil(FanBase):
    
     def get_front_fan_speed(self,fan_id):
         try:
-           ret_status, ipmi_cmd_ret = commands.getstatusoutput(self.IPMI_FAN_FRONT_SPEED.format(fan_id))
+            self.IPMI_FAN_FRONT_SPEED[3] += str(fan_id) + "_Front_rpm"
+            p = subprocess.run(split(self.IPMI_FAN_FRONT_SPEED.format(fan_id)), capture_output=True, universal_newlines=True)
+            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
            if ret_status == 0:
               rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
               return rdata
@@ -48,7 +52,9 @@ class FanUtil(FanBase):
     
     def get_rear_fan_speed(self,fan_id):
         try:
-           ret_status, ipmi_cmd_ret = commands.getstatusoutput(self.IPMI_FAN_REAR_SPEED.format(fan_id))
+            self.IPMI_FAN_REAR_SPEED[3] += str(fan_id) + "_Rear_rpm"
+            p = subprocess.run(self.IPMI_FAN_REAR_SPEED, capture_output=True, universal_newlines=True)
+            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
            if ret_status == 0:
               rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
               return rdata
@@ -61,7 +67,9 @@ class FanUtil(FanBase):
     def get_fan_direction_from_fru(self,fru_id,reg_name):
         output = None
         try:
-           status, ipmi_fru_list = commands.getstatusoutput(self.IPMI_FRU_DATA.format(fru_id))
+            self.IPMI_FRU_DATA[3] += str(fru_id)
+            p = subprocess.run(self.IPMI_FRU_DATA, capture_output=True, universal_newlines=True)
+            status, ipmi_fru_list = p.returncode, p.stdout
            if status == 0:
               for item in ipmi_fru_list.split("\n"):
                   if reg_name in item:
