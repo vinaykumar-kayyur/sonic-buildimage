@@ -25,6 +25,7 @@ Table of Contents
          * [Device Metadata](#device-metadata)  
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [DTEL](#dtel)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [KDUMP](#kdump)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -854,6 +855,30 @@ instance is supported in SONiC.
 }
 
 ```
+### DTEL
+
+Dataplane Telemetry(DTEL) is designed to allow the collection and reporting of network state.
+By the data plane, without requiring intervention or work by the control plane in collecting and deliverying the state from the data plane.
+The network state information may be directly exported by the data plane to the telemetry monitoring system
+
+```
+{
+    "DTEL": {
+        "switch_id": "1",
+        "flow_state_clear_cycle" : "10",
+        "latency_sensitivity" : "100",
+        "sink_port_list" : [
+            "Ethernet8",
+            "Ethernet76"
+        ],
+        "int_endpoint" : "true",
+        "int_transit" : "true"
+    }
+}
+
+```
+
+
 
 
 ### MPLS_TC_TO_TC_MAP
