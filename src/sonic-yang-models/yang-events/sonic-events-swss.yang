@@ -8,6 +8,10 @@ module sonic-events-swss {
     }
     import sonic-events-common {
         prefix evtcmn;
+        revision-date 2022-12-01;
+    }
+    import sonic-types {
+        prefix stypes;
     }
     revision 2022-12-01 {
         description "SWSS alert events.";
@@ -54,10 +58,7 @@ module sonic-events-swss {
             }
 
             leaf status {
-                type enumeration {
-                    enum "up";
-                    enum "down";
-                }
+                type stypes:admin_status;
                 description "Provides the status as up (true) or down (false)";
             }
 
