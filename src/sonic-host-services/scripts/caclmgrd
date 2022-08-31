@@ -542,7 +542,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
                 # Obtain default IP protocol(s) and destination port(s) for this service
                 ip_protocols = self.ACL_SERVICES[acl_service]["ip_protocols"]
-                dst_ports = self.ACL_SERVICES[acl_service]["dst_ports"]
                 if "dst_ports" in self.ACL_SERVICES[acl_service]:
                     dst_ports = self.ACL_SERVICES[acl_service]["dst_ports"]
 
