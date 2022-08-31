@@ -13,7 +13,7 @@ from swsscommon.swsscommon import CounterTable, MacsecCounter
 from utilities_common.cli import UserCache
 
 CACHE_MANAGER = UserCache(app_name="macsec")
-CACHE_FILE = os.path.join(CACHE_MANAGER.get_directory(), "macsecstats")
+CACHE_FILE = os.path.join(CACHE_MANAGER.get_directory(), "macsecstats{}")
 
 DB_CONNECTOR = None
 COUNTER_TABLE = None
@@ -207,11 +207,10 @@ def cache_find(cache: dict, target: MACsecAppMeta) -> MACsecAppMeta:
 
 @click.command()
 @click.argument('interface_name', required=False)
-@click.option('--dump-file', type=click.File('wb'), required=False, default=None)
+@click.option('--dump-file', is_flag=True, required=False, default=False)
 @multi_asic_util.multi_asic_click_options
 def macsec(interface_name, dump_file, namespace, display):
     MacsecContext(namespace, display).show(interface_name, dump_file)
-
 
 class MacsecContext(object):
 
@@ -237,19 +236,11 @@ class MacsecContext(object):
         for interface_name in natsorted(interface_names):
             objs += create_macsec_objs(interface_name)
 
-        cache = {"objs":[]}
+        cache = {}
+        if os.path.isfile(CACHE_FILE.format(self.multi_asic.current_namespace)):
+            cache = pickle.load(open(CACHE_FILE.format(self.multi_asic.current_namespace), "rb"))
 
-        if os.path.isfile(CACHE_FILE):
-            with open(CACHE_FILE, "rb") as f:
-                while True:
-                    try:
-                        data = pickle.load(f)
-                        cache['time'] = data['time']
-                        cache['objs'] += data['objs']
-                    except EOFError:
-                        break
-
-        if dump_file is None:
+        if not dump_file:
             if cache and cache["time"] and objs:
                 print("Last cached time was {}".format(cache["time"]))
             for obj in objs:
@@ -260,9 +251,9 @@ class MacsecContext(object):
                 "time": datetime.datetime.now(),
                 "objs": objs
             }
-            pickle.dump(dump_obj, dump_file)
-            dump_file.flush()
-
+            with open(CACHE_FILE.format(self.multi_asic.current_namespace), 'wb') as dump_file:
+                pickle.dump(dump_obj, dump_file)
+                dump_file.flush()
 
 def register(cli):
     cli.add_command(macsec)

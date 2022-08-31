@@ -3,7 +3,7 @@ import click
 
 import show.plugins.macsec as show_macsec
 import utilities_common.cli as clicommon
-
+from sonic_py_common import multi_asic
 
 @click.group(cls=clicommon.AliasedGroup)
 def macsec():
@@ -19,13 +19,14 @@ def macsec_clear_counters(clean_cache):
     """
 
     if clean_cache:
-        os.remove(show_macsec.CACHE_FILE)
-        print("Clean cache {}".format(show_macsec.CACHE_FILE))
+        for namespace in multi_asic.get_namespace_list():
+            if os.path.isfile(show_macsec.CACHE_FILE.format(namespace)):
+                os.remove(show_macsec.CACHE_FILE.format(namespace))
+            print("Cleaned cache")
         return
 
-    clicommon.run_command("show macsec --dump-file {}".format(show_macsec.CACHE_FILE))
+    clicommon.run_command("show macsec --dump-file")
     print("Clear MACsec counters")
-
 
 def register(cli):
     cli.add_command(macsec_clear_counters)
