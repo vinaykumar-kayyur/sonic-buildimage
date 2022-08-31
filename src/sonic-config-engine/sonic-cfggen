@@ -258,7 +258,7 @@ def _get_jinja2_env(paths):
 def filter_profile_tables(data, generate_profile):
     if generate_profile:
         # remove all none profile tables
-        tables = data.keys()
+        tables = list(data.keys())
         for table in tables:
             if table not in profile_tables:
                 del data[table]
@@ -299,7 +299,6 @@ def main():
     group.add_argument("--print-data", help="print all data", action='store_true')
     group.add_argument("-w", "--write-to-db", help="write config into configdb", action='store_true')
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-
     args = parser.parse_args()
 
     platform = device_info.get_platform()
@@ -446,8 +445,7 @@ def main():
 
     if args.var is not None:
         template = jinja2.Template('{{' + args.var + '}}')
-        template_data = template.render(data)
-        print(template_data)
+        print(template.render(data))
 
     filter_profile_tables(data, args.profile_config)
 
