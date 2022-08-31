@@ -5,13 +5,10 @@ module sonic-events-common {
 
     organization
         "SONiC";
-
     contact
         "SONiC";
-
     description
         "SONIC Events common definition";
-
     revision 2022-12-01 {
         description
             "Common reusable definitions";
