@@ -67,6 +67,7 @@ stages:
             arch: ${{ arch }}
             dist: ${{ dist }}
 - stage: Build_march
+  dependsOn: []
   jobs:
   - ${{ each dist in parameters.dists }}:
     - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
