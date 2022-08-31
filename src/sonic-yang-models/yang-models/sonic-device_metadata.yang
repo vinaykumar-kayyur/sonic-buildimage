@@ -151,7 +151,7 @@ module sonic-device_metadata {
                     }
                 }
 
-                leaf DualToRtype {
+                leaf dualatortype {
                     type string {
                         pattern "active-active|active-standby";
                     }
