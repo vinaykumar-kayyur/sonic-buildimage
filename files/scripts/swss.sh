@@ -311,7 +311,11 @@ function check_macsec()
     MACSEC_STATE=`show feature status | grep macsec | awk '{print $2}'`
 
     if [[ ${MACSEC_STATE} == 'enabled' ]]; then
-        DEPENDENT="${DEPENDENT} macsec"
+        if [ "$DEV" ]; then
+            DEPENDENT="${DEPENDENT} macsec@${DEV}"
+        else
+            DEPENDENT="${DEPENDENT} macsec"
+        fi
     fi
 }
 
