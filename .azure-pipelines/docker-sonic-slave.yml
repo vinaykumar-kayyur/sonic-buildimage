@@ -31,6 +31,8 @@ trigger:
     - sonic-slave-*
     - src/sonic-build-hooks
     - files/build/versions
+    - Makefile
+    - Makefile.work
 
 parameters:
 - name: 'arches'
