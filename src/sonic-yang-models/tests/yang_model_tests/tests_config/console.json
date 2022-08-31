@@ -28,7 +28,7 @@
     "CONSOLE_PORT_DEFAULT_FLOW_CONTROL": {
         "sonic-console:sonic-console": {
             "sonic-console:CONSOLE_PORT": {
-                "CONSOLE_PORT_LIST ": [
+                "CONSOLE_PORT_LIST": [
                     {
                         "name": "1",
                         "baud_rate": "9600"
@@ -40,7 +40,7 @@
     "CONSOLE_PORT_INVALID_NAME": {
         "sonic-console:sonic-console": {
             "sonic-console:CONSOLE_PORT": {
-                "CONSOLE_PORT_LIST ": [
+                "CONSOLE_PORT_LIST": [
                     {
                         "name": "invalid",
                         "baud_rate": "9600"
@@ -52,7 +52,7 @@
     "CONSOLE_PORT_INVALID_BAUD": {
         "sonic-console:sonic-console": {
             "sonic-console:CONSOLE_PORT": {
-                "CONSOLE_PORT_LIST ": [
+                "CONSOLE_PORT_LIST": [
                     {
                         "name": "1",
                         "baud_rate": "invalid"
@@ -64,7 +64,7 @@
     "CONSOLE_PORT_VALID": {
         "sonic-console:sonic-console": {
             "sonic-console:CONSOLE_PORT": {
-                "CONSOLE_PORT_LIST ": [
+                "CONSOLE_PORT_LIST": [
                     {
                         "name": "1",
                         "baud_rate": "9600",
