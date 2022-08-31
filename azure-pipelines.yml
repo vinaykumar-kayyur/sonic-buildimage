@@ -28,20 +28,17 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
+    name: sonic-net/sonic-mgmt
+    endpoint: sonic-net
   - repository: buildimage
     type: github
-    name: Azure/sonic-buildimage
-    endpoint: build
+    name: sonic-net/sonic-buildimage
+    endpoint: sonic-net
     ref: master
 
 variables:
 - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
-- ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-  - template: .azure-pipelines/template-variables.yml
-- ${{ else }}:
-  - template: .azure-pipelines/template-variables.yml@buildimage
+- template: .azure-pipelines/template-variables.yml@buildimage
 - name: CACHE_MODE
   value: rcache
 - name: ENABLE_FIPS
@@ -53,7 +50,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
@@ -185,7 +182,7 @@ stages:
   - job:
     pool: sonictest-t1-lag
     displayName: "kvmtest-t1-lag"
-    timeoutInMinutes: 300
+    timeoutInMinutes: 360
 
     steps:
     - template: .azure-pipelines/run-test-template.yml
@@ -208,3 +205,17 @@ stages:
         ptf_name: ptf_vms6-1
         tbtype: t0-sonic
         vmtype: vsonic
+
+  - job:
+    pool: sonictest-ma
+    displayName: "kvmtest-multi-asic-t1-lag"
+    timeoutInMinutes: 240
+
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-08
+        tbname: vms-kvm-four-asic-t1-lag
+        ptf_name: ptf_vms6-4
+        tbtype: multi-asic-t1-lag-pr
+        image: sonic-4asic-vs.img.gz

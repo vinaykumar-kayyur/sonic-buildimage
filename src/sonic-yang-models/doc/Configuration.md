@@ -9,6 +9,7 @@ Table of Contents
          * [Incremental Configuration](#incremental-configuration)  
    * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
          * [ACL and Mirroring](#acl-and-mirroring)  
+         * [BGP Device Global](#bgp-device-global)  
          * [BGP Sessions](#bgp-sessions)  
          * [BUFFER_PG](#buffer_pg)  
          * [Buffer pool](#buffer-pool)  
@@ -35,6 +36,7 @@ Table of Contents
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
+         * [Peer Switch](#peer-switch)
          * [Policer](#policer)   
          * [Port](#port)   
          * [Port Channel](#port-channel)  
@@ -335,7 +337,21 @@ and migration plan
     }
 }
 ```
+### BGP Device Global 
 
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
+It has a STATE object containing device state like **tsa_enabled** 
+which is set to true if device is currently isolated using 
+traffic-shift-away (TSA) route-maps in BGP
+
+```
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "tsa_enabled": "true"
+    }
+}
+```
 ### BGP Sessions
 
 BGP session configuration is defined in **BGP_NEIGHBOR** table. BGP
@@ -1102,27 +1118,58 @@ attributes in those objects.
 ***NTP server***
 ```
 {
-"NTP_SERVER": {
+    "NTP_SERVER": {
         "2.debian.pool.ntp.org": {},
         "1.debian.pool.ntp.org": {},
         "3.debian.pool.ntp.org": {},
         "0.debian.pool.ntp.org": {}
     },
 
-"NTP_SERVER": {
-    "23.92.29.245": {},
-    "204.2.134.164": {}
+    "NTP_SERVER": {
+        "23.92.29.245": {},
+        "204.2.134.164": {}
     }
 }
 ```
 
-***Syslogserver***
+***Syslog server***
 ```
 {
-"SYSLOG_SERVER": {
-    "10.0.0.5": {},
-    "10.0.0.6": {},
-    "10.11.150.5": {}
+    "SYSLOG_SERVER": {
+        "10.0.0.5": {},
+        "10.0.0.6": {},
+        "10.11.150.5": {}
+    },
+
+    "SYSLOG_SERVER" : {
+        "2.2.2.2": {
+            "source": "1.1.1.1",
+            "port": "514",
+            "vrf": "default"
+        },
+        "4.4.4.4": {
+            "source": "3.3.3.3",
+            "port": "514",
+            "vrf": "mgmt"
+        },
+        "2222::2222": {
+            "source": "1111::1111",
+            "port": "514",
+            "vrf": "Vrf-Data"
+        }
+    }
+}
+```
+
+### Peer Switch
+
+Below is an exmaple of the peer switch table configuration. 
+```
+{
+    "PEER_SWITCH": {
+        "vlab-05": {
+            "address_ipv4":  "10.1.0.33"
+        }
     }
 }
 ```
