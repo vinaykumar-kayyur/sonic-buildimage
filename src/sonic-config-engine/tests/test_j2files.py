@@ -307,17 +307,6 @@ class TestJ2Files(TestCase):
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output_file)
             assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
-            
-            # test generate profile config
-            argument = '-P -m ' + self.arista7800r3_48cq2_lc_t2_minigraph + ' -p ' + port_config_ini_file + ' -t ' + template_file + ' > ' + self.output_file
-            self.run_script(argument)
-
-            # cleanup
-            cfg_file_new = os.path.join(arista_dir_path, cfg_file)
-            os.remove(cfg_file_new)
-
-            sample_output_file = os.path.join(self.test_dir, 'sample_output_profile', utils.PYvX_DIR, sample_output_file)
-            assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def test_qos_and_buffer_arista7800r3_48cq2_lc_render_template(self):
         self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cq2_lc', 'Arista-7800R3-48CQ2-C48')
@@ -485,8 +474,44 @@ class TestJ2Files(TestCase):
 
         assert match, diff
 
+    def _test_buffers_profile_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
+        file_exist, dir_exist = self.create_machine_conf(platform, vendor)
+        dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
+        buffers_file = os.path.join(dir_path, buffer_template)
+        port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
+
+        # copy buffers_config.j2 to the SKU directory to have all templates in one directory
+        buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
+        shutil.copy2(buffers_config_file, dir_path)
+
+        minigraph = os.path.join(self.test_dir, minigraph)
+        argument = '-P -m ' + minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ',profile-db --print-data > ' + self.output_file
+        self.run_script(argument)
+
+        # cleanup
+        buffers_config_file_new = os.path.join(dir_path, 'buffers_config.j2')
+        os.remove(buffers_config_file_new)
+        self.remove_machine_conf(file_exist, dir_exist)
+
+        out_file_dir = os.path.join(self.test_dir, 'sample_output_profile', utils.PYvX_DIR)
+        expected_files = [expected, self.modify_cable_len(expected, out_file_dir)]
+        match = False
+        diff = ''
+        for out_file in expected_files:
+            sample_output_file = os.path.join(out_file_dir, out_file)
+            if utils.cmp(sample_output_file, self.output_file):
+                match = True
+                break
+            else:
+                diff = diff + str(self.run_diff(sample_output_file, self.output_file))
+
+        os.remove(os.path.join(out_file_dir, expected_files[1]))
+
+        assert match, diff
+
     def test_buffers_dell6100_render_template(self):
         self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
+        self._test_buffers_profile_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
 
     def test_buffers_mellanox2700_render_template(self):
         self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2700-r0', 'Mellanox-SN2700-D48C8', 'sample-mellanox-2700-t0-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2700.json')
