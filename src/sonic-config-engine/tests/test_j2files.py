@@ -307,6 +307,17 @@ class TestJ2Files(TestCase):
 
             sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output_file)
             assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
+            
+            # test generate profile config
+            argument = '-P -m ' + self.arista7800r3_48cq2_lc_t2_minigraph + ' -p ' + port_config_ini_file + ' -t ' + template_file + ' > ' + self.output_file
+            self.run_script(argument)
+
+            # cleanup
+            cfg_file_new = os.path.join(arista_dir_path, cfg_file)
+            os.remove(cfg_file_new)
+
+            sample_output_file = os.path.join(self.test_dir, 'sample_output_profile', utils.PYvX_DIR, sample_output_file)
+            assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def test_qos_and_buffer_arista7800r3_48cq2_lc_render_template(self):
         self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cq2_lc', 'Arista-7800R3-48CQ2-C48')
