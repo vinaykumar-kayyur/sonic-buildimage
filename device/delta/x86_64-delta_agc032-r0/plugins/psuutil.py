@@ -50,7 +50,7 @@ class PsuUtil(PsuBase):
             return False
         Base_bus_number = 0
         status = 0
-        self.psu_presence[2] += str(index + Base_bus_number)
+        self.psu_presence[2] += hex(index + Base_bus_number)
         try:
             p = subprocess.Popen(self.psu_presence, stdout=subprocess.PIPE, universal_newlines=True)
             if p.stdout.readline() != None:

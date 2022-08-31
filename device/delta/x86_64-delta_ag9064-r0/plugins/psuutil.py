@@ -16,8 +16,8 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         PsuBase.__init__(self)
-        self.psu_presence = ["cat", "/sys/devices/platform/delta-ag9064-cpld.0/psu"]
-        self.psu_status = ["cat", "/sys/devices/platform/delta-ag9064-swpld1.0/psu"]
+        self.psu_presence = "/sys/devices/platform/delta-ag9064-cpld.0/psu"
+        self.psu_status = "/sys/devices/platform/delta-ag9064-swpld1.0/psu"
 
     def get_num_psus(self):
         """
@@ -41,8 +41,8 @@ class PsuUtil(PsuBase):
         status = 0
         self.psu_status[1] += str(index) + '_pwr_ok'
         try:
-            p = subprocess.Popen(self.psu_status, stdout=subprocess.PIPE, universal_newlines=True)
-            content = p.stdout.readline().rstrip()
+            p = open(self.psu_status, 'r')
+            content = p.readline().rstrip()
             reg_value = int(content)
             if reg_value != 0:
                 return False
@@ -65,8 +65,8 @@ class PsuUtil(PsuBase):
         status = 0
         self.psu_presence[1] += str(index) + '_scan'
         try:
-            p = subprocess.Popen(self.psu_presence, stdout=subprocess.PIPE, universal_newlines=True)
-            content = p.stdout.readline().rstrip()
+            p = open(psu_presence, 'r')
+            content = p.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:
                 return False
