@@ -308,7 +308,7 @@ function check_peer_gbsyncd()
 
 function check_macsec()
 {
-    MACSEC_STATE=`show feature status | grep macsec  | awk '{print $2}'`
+    MACSEC_STATE=`show feature status | grep macsec | awk '{print $2}'`
 
     if [[ ${MACSEC_STATE} == 'enabled' ]]; then
         DEPENDENT="${DEPENDENT} macsec"
