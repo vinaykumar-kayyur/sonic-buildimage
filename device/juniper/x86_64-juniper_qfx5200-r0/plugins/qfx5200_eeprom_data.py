@@ -33,6 +33,7 @@
 # as noted in the Third-Party source code file.
 
 import os
+import shutil
 import binascii
 import subprocess
 from sonic_eeprom import eeprom_tlvinfo
@@ -170,20 +171,17 @@ def main():
     eeprom_file.write("Main board eeprom (0x57)\r\n")
     eeprom_file.write("===============================\r\n")
 
-    MainEepromCreate = 'sudo echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-0/new_device'
+    MainEepromCreate = '24c02 0x57'
+    out_file = '/sys/bus/i2c/devices/i2c-0/new_device'
     # Write the contents of Main Board EEPROM to file
-    try:
-        os.system(MainEepromCreate)
-    except OSError:
-        print('Error: Execution of "%s" failed', MainEepromCreate)
-        return False
+    f = open(out_file, 'w')
+    f.write(MainEepromCreate)
+    f.close()
 
     MainEepromFileCmd = 'cat /sys/bus/i2c/devices/i2c-0/0-0057/eeprom > /etc/init.d/MainEeprom_qfx5200_ascii'
-    try:
-        os.system(MainEepromFileCmd)
-    except OSError:
-        print('Error: Execution of "%s" failed', MainEepromFileCmd)
-        return False
+    src_file = '/sys/bus/i2c/devices/i2c-0/0-0057/eeprom'
+    dst_file = '/etc/init.d/MainEeprom_qfx5200_ascii'
+    shutil.copy(src_file, dst_file)
 
     maineeprom_ascii = '/etc/init.d/MainEeprom_qfx5200_ascii'
 
