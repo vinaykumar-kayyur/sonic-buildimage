@@ -237,9 +237,17 @@ class MacsecContext(object):
         for interface_name in natsorted(interface_names):
             objs += create_macsec_objs(interface_name)
 
-        cache = {}
+        cache = {"objs":[]}
+
         if os.path.isfile(CACHE_FILE):
-            cache = pickle.load(open(CACHE_FILE, "rb"))
+            with open(CACHE_FILE, "rb") as f:
+                while True:
+                    try:
+                        data = pickle.load(f)
+                        cache['time'] = data['time']
+                        cache['objs'] += data['objs']
+                    except EOFError:
+                        break
 
         if dump_file is None:
             if cache and cache["time"] and objs:
@@ -253,6 +261,7 @@ class MacsecContext(object):
                 "objs": objs
             }
             pickle.dump(dump_obj, dump_file)
+            dump_file.flush()
 
 
 def register(cli):
