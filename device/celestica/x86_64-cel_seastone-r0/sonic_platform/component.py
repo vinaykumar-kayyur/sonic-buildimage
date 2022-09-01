@@ -8,7 +8,6 @@
 
 import os.path
 import shutil
-import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
@@ -148,7 +147,7 @@ class Component(ComponentBase):
         # elif self.name == "BIOS":
         #     install_command = "afulnx_64 %s /p /b /n /x /r" % image_path
 
-        return self_api_helper.run_command(install_command)
+        return self._api_helper.run_command(install_command)
 
 
     def update_firmware(self, image_path):

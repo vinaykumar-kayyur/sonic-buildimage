@@ -108,9 +108,10 @@ class APIHelper():
                         raw_data = p2.communicate()[0]
                         if p2.returncode == 1:
                             raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
+                        result = raw_data.strip()
         except subprocess.CalledProcessError:
             status = False
-        return status, raw_data.strip()
+        return status, result
 
     def ipmi_set_ss_thres(self, id, threshold_key, value):
         status = True

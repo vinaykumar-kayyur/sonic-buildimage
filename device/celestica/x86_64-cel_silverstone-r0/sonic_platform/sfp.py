@@ -6,7 +6,6 @@
 #
 #############################################################################
 
-import os
 import time
 import subprocess
 from ctypes import create_string_buffer

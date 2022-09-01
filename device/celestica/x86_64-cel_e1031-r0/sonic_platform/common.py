@@ -211,7 +211,7 @@ class Common:
         """
         return os.path.join(self.DEVICE_PATH, self.platform, self.CONFIG_DIR, config_name) if self.is_host() else os.path.join(self.PMON_PLATFORM_PATH, self.CONFIG_DIR, config_name)
 
-        def get_event(self, timeout, config, sfp_list):
+    def get_event(self, timeout, config, sfp_list):
         """
         Returns a nested dictionary containing all devices which have
         experienced a change at chassis level
