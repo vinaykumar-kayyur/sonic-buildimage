@@ -54,21 +54,7 @@ jobs:
       containerRegistry: ${{ parameters.registry_conn }}
   - bash: |
       set -ex
-      case ${{ parameters.dist }} in
-        bullseye)
-          args='NOJESSIE=1 NOSTRETCH=1 NOBUSTER=1'
-          ;;
-        buster)
-          args='NOJESSIE=1 NOSTRETCH=1 NOBULLSEYE=1'
-          ;;
-        stretch)
-          args='NOJESSIE=1 NOBUSTER=1 NOBULLSEYE=1'
-          ;;
-        jessie)
-          args='NOSTRETCH=1 NOBUSTER=1 NOBULLSEYE=1'
-          ;;
-      esac
-      image_tag=$(make showtag PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} $args | grep sonic-slave | tail -n 1)
+      image_tag=$(BLDENV=${{ parameters.dist }} make -f Makefile.work showtag PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} | grep sonic-slave | tail -n 1)
       image_latest=$(echo $(echo $image_tag | awk -F: '{print$1}'):latest)
       docker rmi $image_tag || true
 
