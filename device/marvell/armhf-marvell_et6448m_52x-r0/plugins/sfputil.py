@@ -63,7 +63,7 @@ class SfpUtil(SfpUtilBase):
             if not os.path.exists(port_eeprom_path):
                 bus_dev_path = bus_path.format(self.port_to_i2c_mapping[x]) + "/new_device"
                 with open(bus_dev_path, 'w') as f:
-                    subprocess.run(["echo", "optoe2", "0x50"], stdout=f)
+                    f.write("optoe2 0x50")
             self.port_to_eeprom_mapping[x] = port_eeprom_path
             self._port_to_eeprom_mapping[x] = port_eeprom_path
         SfpUtilBase.__init__(self)
