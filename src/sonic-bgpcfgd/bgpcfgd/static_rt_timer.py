@@ -11,6 +11,7 @@ class StaticRouteTimer(object):
         self.start = None
 
     DEFAULT_TIMER = 180
+    DEFAULT_SLEEP = 60
     MAX_TIMER     = 1800
 
     def set_timer(self):
@@ -49,6 +50,6 @@ class StaticRouteTimer(object):
                 time.sleep(self.timer)
                 self.alarm()
             else:
-                time.sleep(1)
+                time.sleep(self.DEFAULT_SLEEP)
                 if time.time() - self.start >= self.DEFAULT_TIMER:
                     self.alarm()
