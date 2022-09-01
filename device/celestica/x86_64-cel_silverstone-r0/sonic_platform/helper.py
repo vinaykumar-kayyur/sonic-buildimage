@@ -3,7 +3,7 @@ import struct
 import subprocess
 from mmap import *
 
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
+HOST_CHK_CMD = "docker"
 EMPTY_STRING = ""
 
 
@@ -13,7 +13,7 @@ class APIHelper():
         pass
 
     def is_host(self):
-        return os.system(HOST_CHK_CMD) == 0
+        return subprocess.run(HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
 
     def pci_get_value(self, resource, offset):
         status = True
@@ -28,23 +28,23 @@ class APIHelper():
             status = False
         return status, result
 
-    def run_command(self, cmd):
+    def run_command(self, cmd1_args, cmd2_args):
         status = True
         result = ""
         try:
-            p = subprocess.Popen(
-                cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
-                result = raw_data.strip()
-        except:
+            with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+                with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                    raw_data = p2.communicate()[0]
+                    if p2.returncode == 1:
+                        raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
+        except subprocess.CalledProcessError:
             status = False
-        return status, result
+        return status, raw_data.strip()
 
     def run_interactive_command(self, cmd):
         try:
-            os.system(cmd)
-        except:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError:
             return False
         return True
 
@@ -61,9 +61,9 @@ class APIHelper():
         status = True
         result = ""
         try:
-            cmd = "ipmitool raw {} {}".format(str(netfn), str(cmd))
+            cmd = ["ipmitool", "raw", str(netfn), str(cmd)]
             p = subprocess.Popen(
-                cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if err == '':
                 result = raw_data.strip()
@@ -76,28 +76,30 @@ class APIHelper():
     def ipmi_fru_id(self, id, key=None):
         status = True
         result = ""
+        cmd1_args = ["ipmitool", "fru", "print", str(id)]
         try:
-            cmd = "ipmitool fru print {}".format(str(
-                id)) if not key else "ipmitool fru print {0} | grep '{1}' ".format(str(id), str(key))
-
-            p = subprocess.Popen(
-                cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
-                result = raw_data.strip()
+            if not key:
+                p = subprocess.Popen(
+                    cmd1_args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                raw_data, err = p.communicate()
             else:
-                status = False
-        except:
+                cmd2_args = ["grep", str(key)]
+                with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+                    with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                        raw_data = p2.communicate()[0]
+                        if p2.returncode == 1:
+                            raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
+        except subprocess.CalledProcessError:
             status = False
-        return status, result
+        return status, raw_data.strip()
 
     def ipmi_set_ss_thres(self, id, threshold_key, value):
         status = True
         result = ""
         try:
-            cmd = "ipmitool sensor thresh '{}' {} {}".format(str(id), str(threshold_key), str(value))
+            cmd = ["ipmitool", "sensor", "thresh", str(id), str(threshold_key), str(value)]
             p = subprocess.Popen(
-                cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if err == '':
                 result = raw_data.strip()

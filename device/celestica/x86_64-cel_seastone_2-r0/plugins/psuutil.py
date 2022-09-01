@@ -13,16 +13,15 @@ class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     def __init__(self):
-        self.ipmi_sensor = "ipmitool sensor"
+        self.ipmi_sensor = ["ipmitool", "sensor"]
         PsuBase.__init__(self)
 
-    def run_command(self, command):
-        proc = subprocess.Popen(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
-        (out, err) = proc.communicate()
-
-        if proc.returncode != 0:
-            sys.exit(proc.returncode)
-
+    def run_command(self, cmd1_args, cmd2_args):
+        with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                out = p2.communicate()[0]
+                if p2.returncode != 0:
+                    sys.exit(p2.returncode)
         return out
 
     def find_value(self, grep_string):
@@ -50,7 +49,8 @@ class PsuUtil(PsuBase):
             return False
 
         grep_key = "PSUL_Status" if index == 1 else "PSUR_Status"
-        grep_string = self.run_command(self.ipmi_sensor + ' | grep ' + grep_key)
+        grep_cmd = ["grep", grep_key]
+        grep_string = self.run_command(self.ipmi_sensor, grep_cmd)
         status_byte = self.find_value(grep_string)
 
         if status_byte is None:
@@ -74,7 +74,8 @@ class PsuUtil(PsuBase):
             return False
 
         grep_key = "PSUL_Status" if index == 1 else "PSUR_Status"
-        grep_string = self.run_command(self.ipmi_sensor + ' | grep ' + grep_key)
+        grep_cmd = ["grep", grep_key]
+        grep_string = self.run_command(self.ipmi_sensor, grep_cmd)
         status_byte = self.find_value(grep_string)
 
         if status_byte is None:

@@ -5,7 +5,7 @@ from .thermal_conditions import *
 from .thermal_infos import *
 
 class ThermalManager(ThermalManagerBase):
-    FSC_ALGORITHM_CMD = 'service fancontrol {}'
+    FSC_ALGORITHM_CMD = ['service', 'fancontrol', '']
 
     @classmethod
     def start_thermal_control_algorithm(cls):
@@ -43,4 +43,5 @@ class ThermalManager(ThermalManagerBase):
             bool: True if set success, False if fail.
         """
         cmd = 'start' if enable else 'stop'
-        return APIHelper().run_command(cls.FSC_ALGORITHM_CMD.format(cmd))
+        cls.FSC_ALGORITHM_CMD[2] = cmd
+        return APIHelper().run_command(cls.FSC_ALGORITHM_CMD.format)

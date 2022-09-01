@@ -168,7 +168,7 @@ class Sfp(SfpBase):
     # Path to QSFP sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    HOST_CHK_CMD = "docker"
 
     PLATFORM = "x86_64-cel_silverstone-r0"
     HWSKU = "Silverstone"
@@ -270,7 +270,7 @@ class Sfp(SfpBase):
             return 'N/A'
 
     def __is_host(self):
-        return os.system(self.HOST_CHK_CMD) == 0
+        return subprocess.run(self.HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
 
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
