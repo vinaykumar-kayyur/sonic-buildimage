@@ -32,7 +32,6 @@
 # components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
-import os
 import binascii
 import subprocess
 from sonic_eeprom import eeprom_tlvinfo
