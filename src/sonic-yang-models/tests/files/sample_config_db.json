@@ -1798,6 +1798,11 @@
             }
         },
 
+        "PEER_SWITCH": {
+            "vlab-05": {
+                "address_ipv4":  "10.1.0.33"
+            }
+        },
 
         "POLICER": {
             "everflow_static_policer": {
@@ -1924,10 +1929,28 @@
                  ]
              }
         },
+
+        "SNMP": {
+            "CONTACT": {
+                "Contact": "testuser@contoso.com"
+            },
+            "LOCATION": {
+                "Location": "SNMP Server Location"
+            }
+        },
+        "SNMP_COMMUNITY": {
+            "public": {
+                "TYPE": "RO"
+            },
+            "private": {
+                "TYPE": "RW"
+            }
+        },
+
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
-	    }
+            }
          },
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
@@ -1940,6 +1963,23 @@
             "AZURE": {
                 "default_dynamic_th": "0",
                 "over_subscribe_ratio": "0"
+            }
+        },
+
+        "CONSOLE_PORT": {
+            "1": {
+                "baud_rate": "115200",
+                "flow_control": "0",
+                "remote_device": "host-1"
+            },
+            "2": {
+                "baud_rate": "9600",
+                "flow_control": "1"
+            }
+        },
+        "CONSOLE_SWITCH": {
+            "console_mgmt": {
+                "enabled": "yes"
             }
         }
     },
