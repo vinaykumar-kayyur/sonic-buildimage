@@ -172,9 +172,8 @@ def main():
     MainEepromCreate = '24c02 0x57'
     out_file = '/sys/bus/i2c/devices/i2c-0/new_device'
     # Write the contents of Main Board EEPROM to file
-    f = open(out_file, 'w')
-    f.write(MainEepromCreate)
-    f.close()
+    with open(out_file, 'w') as file:
+        file.write(MainEepromCreate)
 
     MainEepromFileCmd = ['cat', '/sys/bus/i2c/devices/i2c-0/0-0057/eeprom']
     out_file = '/etc/init.d/MainEeprom_qfx5200_ascii'
