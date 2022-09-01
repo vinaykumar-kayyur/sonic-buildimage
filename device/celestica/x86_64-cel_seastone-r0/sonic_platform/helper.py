@@ -100,7 +100,7 @@ class APIHelper():
             if not key:
                 p = subprocess.Popen(
                     cmd1_args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                raw_data, err = p.communicate()
+                raw_data = p.communicate()[0]
             else:
                 cmd2_args = ["grep", str(key)]
                 with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
@@ -108,7 +108,7 @@ class APIHelper():
                         raw_data = p2.communicate()[0]
                         if p2.returncode == 1:
                             raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
-                        result = raw_data.strip()
+            result = raw_data.strip()
         except subprocess.CalledProcessError:
             status = False
         return status, result

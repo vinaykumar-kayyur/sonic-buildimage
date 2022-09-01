@@ -65,7 +65,7 @@ class APIHelper():
             cmd = ["ipmitool", "raw", str(netfn), str(cmd)]
             p = subprocess.Popen(
                 cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
+            raw_data = p.communicate()[0]
             if err == '':
                 result = raw_data.strip()
             else:
@@ -90,7 +90,7 @@ class APIHelper():
                         raw_data = p2.communicate()[0]
                         if p2.returncode == 1:
                             raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
-                        result = raw_data.strip()
+            result = raw_data.strip()
         except subprocess.CalledProcessError:
             status = False
         return status, result
