@@ -21,18 +21,6 @@ module sonic-events-common {
         }
     }
 
-    grouping sonic-events-severity {
-        leaf severity {
-            type uint8 {
-                range "0..12" {
-                    error-message "Incorrect val for %";
-                }
-            }
-            default "2"
-            description "Severity level";
-        }
-    }
-
     grouping sonic-events-usage {
         leaf usage {
             type uint8 {
