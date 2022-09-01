@@ -28,6 +28,7 @@ class MuxStateWriter(object):
         self.default_active_active_state = activeactive
         self.default_active_standby_state = activestandby
         self.shutdown_module = shutdown_module
+        self.is_shutdwon = (self.shutdown_module != None)
 
     @property
     def config_db(self):
@@ -162,7 +163,7 @@ class MuxStateWriter(object):
             # If not running on a dual ToR system, take no action
             return
 
-        if self.is_warmrestart:
+        if self.is_warmrestart and self.is_shutdwon:
             # If in warmrestart context, take no action
             logger.log_warning("Skip setting mux state due to ongoing warmrestart.")
             return
