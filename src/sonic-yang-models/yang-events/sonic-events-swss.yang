@@ -49,13 +49,11 @@ module sonic-events-swss {
                 The name of the flapping i/f and status are the only params.";
 
             leaf ifname {
-                type string;
+                type leafref {
+                    path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                }
                 description "Interface name";
-            }
-
-            type leafref {
-                path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
-            }
+            } 
 
             leaf status {
                 type stypes:admin_status;
@@ -73,12 +71,10 @@ module sonic-events-swss {
                 The name of the i/f facing the storm is the only param.";
 
             leaf ifname {
-                type string;
+                type leafref {
+                    path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                }
                 description "Interface name";
-            }
-
-            type leafref {
-                path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
             }
 
             leaf queue_index {

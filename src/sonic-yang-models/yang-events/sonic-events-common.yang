@@ -52,4 +52,28 @@ module sonic-events-common {
             description "Percentage limit set";
         }
     }
+
+    identity EVENT_SEVERITY {
+        description
+            "Base identity for event severities. Severities 2-4
+            are supported";
+    }
+
+    identity EVENT_SEVERITY_2 {
+        base EVENT_SEVERITY;
+        description
+            "Indicates that the severity level of this type of event is 2";
+    }
+
+     identity EVENT_SEVERITY_3 {
+        base EVENT_SEVERITY;
+        description
+            "Indicates that the severity level of this type of event is 3";
+    }
+
+     identity EVENT_SEVERITY_4 {
+        base EVENT_SEVERITY;
+        description
+            "Indicates that the severity level of this type of event is 4";
+    }
 }

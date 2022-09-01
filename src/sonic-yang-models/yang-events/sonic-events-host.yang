@@ -111,6 +111,8 @@ module sonic-events-host {
         }
 
         container event-monit-proc {
+            eventcmn:EVENT_SEVERITY_2;
+
             description "
                 Declares an event reported by monit for a process
                 that is not running.
@@ -129,11 +131,11 @@ module sonic-events-host {
             }
 
             uses evtcmn:sonic-events-cmn;
-
-            uses evtcmn:sonic-events-severity;
         }
 
         container event-monit-status {
+            eventcmn: EVENT_SEVERITY_2;
+
             description "
                 Declares an event reported by monit for status check
                 failure for a process
@@ -158,11 +160,11 @@ module sonic-events-host {
             }
 
             uses evtcmn:sonic-events-cmn;
-
-            uses evtcmn:sonic-events-severity;
         }
 
         container event-platform {
+            evtcmn:EVENT_SEVERITY_2;
+
             description "
                 Declares an event for platform related failure.
                 Params: 
@@ -178,8 +180,6 @@ module sonic-events-host {
             }
 
             uses evtcmn:sonic-events-cmn;
-
-            uses evtcmn:sonic-events-severity;
         }
     }
 }
