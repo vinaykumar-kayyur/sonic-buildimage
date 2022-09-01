@@ -81,11 +81,12 @@ def main():
     eeprom_file.write("Vendor Name=%s\r\n" % eeprom_qfx5210.vendor_name_str())
     eeprom_file.write("Manufacture Name=%s\r\n" % eeprom_qfx5210.manufacture_name_str())
 
-    CPUeepromFileCmd = 'cat /sys/devices/pci0000:00/0000:00:1f.3/i2c-0/0-0056/eeprom > /etc/init.d/eeprom_qfx5210_ascii'
-    src_file = '/sys/devices/pci0000:00/0000:00:1f.3/i2c-0/0-0056/eeprom'
-    dst_file =  '/etc/init.d/eeprom_qfx5210_ascii'
+    CPUeepromFileCmd = ['cat', '/sys/devices/pci0000:00/0000:00:1f.3/i2c-0/0-0056/eeprom']
     # Write the contents of CPU EEPROM to file
-    shutil.copy(src_file, dst_file)
+    out_file = '/etc/init.d/eeprom_qfx5210_ascii'
+    content = subprocess.run(CPUeepromFileCmd, universal_newlines=True, capture_output=True).stdout
+    with open(out_file, 'w') as file:
+        file.write(content)
 
     eeprom_ascii = '/etc/init.d/eeprom_qfx5210_ascii'
     # Read file contents in Hex format

@@ -33,8 +33,6 @@
 # as noted in the Third-Party source code file.
 
 import os
-import shutil
-import binascii
 import subprocess
 from sonic_eeprom import eeprom_tlvinfo
 
@@ -178,10 +176,11 @@ def main():
     f.write(MainEepromCreate)
     f.close()
 
-    MainEepromFileCmd = 'cat /sys/bus/i2c/devices/i2c-0/0-0057/eeprom > /etc/init.d/MainEeprom_qfx5200_ascii'
-    src_file = '/sys/bus/i2c/devices/i2c-0/0-0057/eeprom'
-    dst_file = '/etc/init.d/MainEeprom_qfx5200_ascii'
-    shutil.copy(src_file, dst_file)
+    MainEepromFileCmd = ['cat', '/sys/bus/i2c/devices/i2c-0/0-0057/eeprom']
+    out_file = '/etc/init.d/MainEeprom_qfx5200_ascii'
+    content = subprocess.run(MainEepromFileCmd, universal_newlines=True, capture_output=True).stdout
+    with open(out_file, 'w') as file:
+        file.write(content)
 
     maineeprom_ascii = '/etc/init.d/MainEeprom_qfx5200_ascii'
 
