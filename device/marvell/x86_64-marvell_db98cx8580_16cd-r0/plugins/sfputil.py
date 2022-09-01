@@ -28,9 +28,8 @@ class SfpUtil(SfpUtilBase):
     def __init__(self):
         subprocess.run(["modprobe", "i2c-dev"])
         if not os.path.exists("/sys/bus/i2c/devices/0-0050"):
-            file = open("/sys/bus/i2c/devices/i2c-0/new_device", 'w')
-            file.write("optoe2 0x50")
-            file.close()
+            with open("/sys/bus/i2c/devices/i2c-0/new_device", 'w') as file
+                file.write("optoe2 0x50")
 
         eeprom_path = '/sys/bus/i2c/devices/0-0050/eeprom'
         # for x in range(self.port _start, self.port_end +1):
