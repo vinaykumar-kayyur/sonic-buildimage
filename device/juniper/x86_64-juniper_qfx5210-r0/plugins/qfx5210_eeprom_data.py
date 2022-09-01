@@ -34,6 +34,7 @@
 
 import os
 import binascii
+import subprocess
 from sonic_eeprom import eeprom_tlvinfo
 
 
@@ -84,9 +85,8 @@ def main():
     CPUeepromFileCmd = ['cat', '/sys/devices/pci0000:00/0000:00:1f.3/i2c-0/0-0056/eeprom']
     # Write the contents of CPU EEPROM to file
     out_file = '/etc/init.d/eeprom_qfx5210_ascii'
-    content = subprocess.run(CPUeepromFileCmd, universal_newlines=True, capture_output=True).stdout
     with open(out_file, 'w') as file:
-        file.write(content)
+        subprocess.run(CPUeepromFileCmd, universal_newlines=True, stdout=file)
 
     eeprom_ascii = '/etc/init.d/eeprom_qfx5210_ascii'
     # Read file contents in Hex format

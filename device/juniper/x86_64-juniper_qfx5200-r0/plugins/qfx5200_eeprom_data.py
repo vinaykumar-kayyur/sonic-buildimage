@@ -177,9 +177,8 @@ def main():
 
     MainEepromFileCmd = ['cat', '/sys/bus/i2c/devices/i2c-0/0-0057/eeprom']
     out_file = '/etc/init.d/MainEeprom_qfx5200_ascii'
-    content = subprocess.run(MainEepromFileCmd, universal_newlines=True, capture_output=True).stdout
     with open(out_file, 'w') as file:
-        file.write(content)
+        subprocess.run(MainEepromFileCmd, universal_newlines=True, stdout=file)
 
     maineeprom_ascii = '/etc/init.d/MainEeprom_qfx5200_ascii'
 
