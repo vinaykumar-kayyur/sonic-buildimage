@@ -17,6 +17,30 @@
 [![P4](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon?subject=P4)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
 [![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=master&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=master)
 
+*202205 builds*:
+
+[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=202205&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=202205)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=202205&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=202205)
+[![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=202205&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=202205)
+[![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=202205&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=202205)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=202205&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=202205)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=202205&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=202205)
+[![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=202205&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=202205)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=202205&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=202205)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=202205&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=202205)
+
+*202111 builds*
+
+[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=202111&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=202111)
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=202111&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=202111)
+[![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=202111&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=202111)
+[![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=202111&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=202111)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=202111&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=202111)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=202111&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=202111)
+[![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=202111&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=202111)
+[![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=202111&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=202111)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=202111&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=202111)
+
 *202012 builds*:
 
 [![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=202012&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=202012)
@@ -64,7 +88,7 @@
 
 # Description
 
-Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatible network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [list](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms)
+Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatible network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [list](https://github.com/sonic-net/SONiC/wiki/Supported-Devices-and-Platforms)
 
 # Hardware
 
@@ -73,6 +97,8 @@ Any server can be a build image server as long as it has:
   * Multiple cores to increase build speed
   * Plenty of RAM (less than 8 GiB is likely to cause issues)
   * 300G of free disk space
+  * KVM Virtualization Support.
+> Note: If you are in a VM, make sure you have support for nested virtualization.
 
 A good choice of OS for building SONiC is currently Ubuntu 20.04.
 
@@ -92,7 +118,7 @@ sudo pip3 install j2cli
 ## Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer:
 
-    git clone https://github.com/Azure/sonic-buildimage.git
+    git clone https://github.com/sonic-net/sonic-buildimage.git
 
 ## Usage
 
@@ -127,7 +153,6 @@ To build SONiC installer image and docker images, run the following commands:
 - PLATFORM=centec
 - PLATFORM=nephos
 - PLATFORM=innovium
-- PLATFORM=p4
 - PLATFORM=vs
 
 ## Usage for ARM Architecture
@@ -149,6 +174,17 @@ To build Arm32 bit for (ARMHF) platform
 
     make target/sonic-marvell-armhf.bin
 
+To build Arm32 bit for (ARMHF) Marvell platform on amd64 host for debian buster using cross-compilation run the following commands:
+
+    # Execute make configure once to configure ASIC and ARCH for cross-compilation build
+
+    NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+
+    # Execute Arm32 build using cross-compilation environment
+
+    NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 make target/sonic-marvell-armhf.bin
+
+Running the above Arm32 build using cross-compilation instead of qemu emulator drastically reduces the build time. 
 
 
 To build Arm64 bit for platform
@@ -203,10 +239,10 @@ Every target has a clean target, so in order to clean swss, execute:
 It is recommended to use clean targets to clean all packages that are built together, like dev packages for instance. In order to be more familiar with build process and make some changes to it, it is recommended to read this short [Documentation](README.buildsystem.md).
 
 ## Build debug dockers and debug SONiC installer image:
-SONiC build system supports building dockers and ONIE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
+SONiC build system supports building dockers and ONIE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/sonic-net/sonic-buildimage/blob/master/README.buildsystem.md).
 
 ## SAI Version
-Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release.
+Please refer to [SONiC roadmap](https://github.com/sonic-net/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release.
 
 ## Notes:
 - If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.
@@ -228,11 +264,11 @@ This may take a while, but it is a one-time action, so please be patient.
   - docker-syncd-invm.gz: docker image for the daemon to sync database and Innovium switch ASIC (gzip tar archive)
   - docker-sonic-p4.gz: docker image for all-in-one for p4 software switch (gzip tar archive)
   - docker-sonic-vs.gz: docker image for all-in-one for software virtual switch (gzip tar archive)
-  - docker-sonic-mgmt.gz: docker image for [managing, configuring and monitoring SONiC](https://github.com/Azure/sonic-mgmt) (gzip tar archive)
+  - docker-sonic-mgmt.gz: docker image for [managing, configuring and monitoring SONiC](https://github.com/sonic-net/sonic-mgmt) (gzip tar archive)
 
 ## Contribution Guide
 
-All contributors must sign a contribution license agreement before contributions can be accepted.  Contact [sonic-cla-agreements@microsoft.com](mailto:sonic-cla-agreements@microsoft.com).
+All contributors must sign a contribution license agreement before contributions can be accepted.  Visit [EasyCLA - Linux Foundation](https://easycla.lfx.linuxfoundation.org).
 
 ## GitHub Workflow
 

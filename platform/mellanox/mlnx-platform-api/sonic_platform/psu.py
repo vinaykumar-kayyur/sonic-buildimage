@@ -190,12 +190,32 @@ class FixedPsu(PsuBase):
         """
         return None
 
-     
+    def get_input_voltage(self):
+        """
+        Retrieves current PSU voltage input
+
+        Returns:
+            A float number, the input voltage in volts, 
+            e.g. 12.1 
+        """
+        return None
+
+    def get_input_current(self):
+        """
+        Retrieves the input current draw of the power supply
+
+        Returns:
+            A float number, the electric current in amperes, e.g 15.4
+        """
+        return None
+
 class Psu(FixedPsu):
     """Platform-specific Psu class"""
     PSU_CURRENT = "power/psu{}_curr"
     PSU_POWER = "power/psu{}_power"
     PSU_VPD = "eeprom/psu{}_vpd"
+    PSU_CURRENT_IN = "power/psu{}_curr_in"
+    PSU_VOLT_IN = "power/psu{}_volt_in"
 
     shared_led = None
 
@@ -207,7 +227,10 @@ class Psu(FixedPsu):
         self._psu_voltage_max = None
         self._psu_voltage_capability = None
 
+        self.psu_voltage_in = os.path.join(PSU_PATH, self.PSU_VOLT_IN.format(self.index))
+
         self.psu_current = os.path.join(PSU_PATH, self.PSU_CURRENT.format(self.index))
+        self.psu_current_in = os.path.join(PSU_PATH, self.PSU_CURRENT_IN.format(self.index))
         self.psu_power = os.path.join(PSU_PATH, self.PSU_POWER.format(self.index))
         self.psu_power_max = self.psu_power + "_max"
         self.psu_presence = os.path.join(PSU_PATH, "thermal/psu{}_status".format(self.index))
@@ -397,6 +420,7 @@ class Psu(FixedPsu):
 
         return None
 
+    @utils.default_return(None)
     def get_voltage_high_threshold(self):
         """
         Retrieves the high threshold PSU voltage output
@@ -414,10 +438,12 @@ class Psu(FixedPsu):
             if 'max' in capability:
                 max_voltage = utils.read_int_from_file(self.psu_voltage_max, log_func=logger.log_info)
                 max_voltage = InvalidPsuVolWA.run(self, max_voltage, self.psu_voltage_max)
-                return float(max_voltage) / 1000
+                if max_voltage:
+                    return float(max_voltage) / 1000
 
         return None
 
+    @utils.default_return(None)
     def get_voltage_low_threshold(self):
         """
         Retrieves the low threshold PSU voltage output
@@ -435,7 +461,8 @@ class Psu(FixedPsu):
             if 'min' in capability:
                 min_voltage = utils.read_int_from_file(self.psu_voltage_min, log_func=logger.log_info)
                 min_voltage = InvalidPsuVolWA.run(self, min_voltage, self.psu_voltage_min)
-                return float(min_voltage) / 1000
+                if min_voltage:
+                    return float(min_voltage) / 1000
 
         return None
 
@@ -453,6 +480,30 @@ class Psu(FixedPsu):
         else:
             return None
 
+    def get_input_voltage(self):
+        """
+        Retrieves current PSU voltage input
+
+        Returns:
+            A float number, the input voltage in volts, 
+            e.g. 12.1 
+        """
+        if self.get_powergood_status():
+            voltage = utils.read_int_from_file(self.psu_voltage_in, log_func=logger.log_info)
+            return float(voltage) / 1000
+        return None
+
+    def get_input_current(self):
+        """
+        Retrieves the input current draw of the power supply
+
+        Returns:
+            A float number, the electric current in amperes, e.g 15.4
+        """
+        if self.get_powergood_status():
+            amperes = utils.read_int_from_file(self.psu_current_in, log_func=logger.log_info)
+            return float(amperes) / 1000
+        return None
 
 class InvalidPsuVolWA:
     """This class is created as a workaround for a known hardware issue that the PSU voltage threshold could be a 
@@ -471,7 +522,7 @@ class InvalidPsuVolWA:
     EXPECT_PLATFORMS = ['x86_64-mlnx_msn3700-r0', 'x86_64-mlnx_msn3700c-r0', 'x86_64-mlnx_msn3800-r0', 'x86_64-mlnx_msn4600c-r0']
     MFR_FIELD = 'MFR_NAME'
     CAPACITY_FIELD = 'CAPACITY'
-    WAIT_TIME = 5
+    WAIT_TIME = 1
 
     @classmethod
     def run(cls, psu, threshold_value, threshold_file):
@@ -499,8 +550,8 @@ class InvalidPsuVolWA:
             logger.log_warning('PSU {} threshold file {} value {}, but its capacity is {}'.format(psu.index, threshold_file, threshold_value, capacity))
             return threshold_value
 
-        # Run a sensor -s command to triger hardware to get the real threashold value
-        utils.run_command('sensor -s')
+        # Run a sensors -s command to triger hardware to get the real threashold value
+        utils.run_command('sensors -s')
 
         # Wait for the threshold value change
         return cls.wait_set_done(threshold_file)
@@ -516,5 +567,7 @@ class InvalidPsuVolWA:
             wait_time -= 1
             time.sleep(1)
 
-        logger.log_error('sensor -s does not recover PSU threshold sensor after {} seconds'.format(cls.WAIT_TIME))
+        # It is enough to use warning here because user might power off/on the PSU which may cause threshold_file
+        # does not exist
+        logger.log_warning('sensors -s does not recover PSU threshold sensor after {} seconds'.format(cls.WAIT_TIME))
         return None

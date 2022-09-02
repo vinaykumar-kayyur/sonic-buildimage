@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from ipaddress import ip_interface
 
-from swsssdk import ConfigDBConnector, SonicV2Connector
+from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 from sonic_py_common import logger as log
 
 from pyroute2 import IPRoute
@@ -192,7 +192,7 @@ class TunnelPacketHandler(object):
             peer_switch = self.config_db.get_keys(PEER_SWITCH_TABLE)[0]
             tunnel = self.config_db.get_keys(TUNNEL_TABLE)[0]
         except IndexError:
-            logger.log_warning('PEER_SWITCH or TUNNEL table'
+            logger.log_warning('PEER_SWITCH or TUNNEL table '
                                'not found in config DB')
             return None, None
 
