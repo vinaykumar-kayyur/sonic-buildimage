@@ -30,7 +30,7 @@ jobs:
       BUILD_OPTIONS: ${{ parameters.buildOptions }}
       DOCKER_DATA_ROOT_FOR_MULTIARCH: /data/march/docker
       dbg_image: no
-      swi_image: yes
+      swi_image: no
       raw_image: no
       docker_syncd_rpc_image: no
       syncd_rpc_image: no
