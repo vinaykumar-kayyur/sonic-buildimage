@@ -58,7 +58,7 @@ jobs:
       image_latest=$(echo $(echo $image_tag | awk -F: '{print$1}'):latest)
       docker rmi $image_tag || true
 
-      if [[ "$(Build.Reason)" == "IndividualCI" ]] && docker pull ${{ parameters.registry_url }}/${image_tag};then
+      if [[ "$(Build.Reason)" =~ [a-zA-Z]*CI ]] && docker pull ${{ parameters.registry_url }}/${image_tag};then
         exit 0
       fi
 
