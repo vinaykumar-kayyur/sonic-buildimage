@@ -51,7 +51,7 @@ def log_os_system(cmd1_args, cmd2_args, show):
         with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
             with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
                 output = p2.communicate()[0]
-                if p2.returncode == 1:
+                if p2.returncode != 0:
                     raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
                 my_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
