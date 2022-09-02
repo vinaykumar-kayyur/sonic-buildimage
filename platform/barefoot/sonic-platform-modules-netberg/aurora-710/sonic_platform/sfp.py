@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 try:
-    import os
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
     from sonic_py_common.logger import Logger
 
@@ -72,7 +71,7 @@ class Sfp(SfpOptoeBase):
             GPIO_VALUE.format(gpio + (self.index) ^ 1))
         if attr_rv != 'ERR':
             if attr_rv == "1":
-                presence = True
+                lpmode = True
         else:
             raise SyntaxError
 
@@ -109,7 +108,7 @@ class Sfp(SfpOptoeBase):
             GPIO_VALUE.format(gpio + (self.index) ^ 1))
         if attr_rv != 'ERR':
             if attr_rv == "1":
-                presence = True
+                status = True
         else:
             raise SyntaxError
 
