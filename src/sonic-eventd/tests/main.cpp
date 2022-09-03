@@ -17,7 +17,7 @@ bool g_is_redis_available = false;
 
 class SwsscommonEnvironment : public ::testing::Environment {
 public:
-    // Override this to define how to set up the environment.
+    // Override this to define how to set up the environment
     void SetUp() override {
         // by default , init should be false
         cout<<"Default : isInit = "<<SonicDBConfig::isInit()<<endl;
