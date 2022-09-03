@@ -171,7 +171,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             self.iptables_cmd_ns_prefix[namespace] = "ip netns exec " + namespace + " "
             self.namespace_docker_mgmt_ip[namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[namespace],
                                                                                              namespace)
-            self.namespace_docker_mgmt_ipv7[namespace] = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[namespace],
+            self.namespace_docker_mgmt_ipv6[namespace] = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[namespace],
                                                                                              namespace)
 
     def get_namespace_mgmt_ip(self, iptable_ns_cmd_prefix, namespace):
