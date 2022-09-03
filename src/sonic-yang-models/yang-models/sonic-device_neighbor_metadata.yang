@@ -34,7 +34,7 @@ module sonic-device_neighbor_metadata {
                 key "name";
 
                 leaf name {
-                    description "device name string, max length 255";
+                    description "Host name string, max length 255";
                     type string {
                         length 1..255;
                     }
@@ -45,7 +45,7 @@ module sonic-device_neighbor_metadata {
                 }
 
                 leaf lo_addr {
-                    description "device looback ipv4 address, type of ietf-inet
+                    description "Device loopback ipv4 address, type of ietf-inet
                                  ipv4-prefix or ipv4-address";
                     type union {
                         type inet:ipv4-prefix;
@@ -54,7 +54,7 @@ module sonic-device_neighbor_metadata {
                 }
 
                 leaf lo_addr_v6 {
-                    description "device looback ipv6 address, type of ietf-inet
+                    description "Device loopback ipv6 address, type of ietf-inet
                                  ipv6-prefix or ipv6-address";
                     type union {
                         type inet:ipv6-prefix;
@@ -63,7 +63,7 @@ module sonic-device_neighbor_metadata {
                 }
 
                 leaf mgmt_addr {
-                    description "device managerment ipv4 address, type of ietf-inet
+                    description "Device management ipv4 address, type of ietf-inet
                                  ipv4-prefix or ipv4-address";
                     type union {
                         type inet:ipv4-prefix;
@@ -72,7 +72,7 @@ module sonic-device_neighbor_metadata {
                 }
 
                 leaf mgmt_addr_v6 {
-                    description "device managerment ipv6 address, type of ietf-inet
+                    description "Device management ipv6 address, type of ietf-inet
                                  ipv6-prefix or ipv6-address";
                     type union {
                         type inet:ipv6-prefix;
