@@ -4,6 +4,9 @@ IMAGENAME=$1
 
 . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
 
+
+[ -d $POST_VERSION_PATH ] && rm -rf $POST_VERSION_PATH
+
 # Collect the version files
 collect_version_files $POST_VERSION_PATH
 
@@ -11,8 +14,5 @@ collect_version_files $POST_VERSION_PATH
 tar -C ${PKG_CACHE_PATH} --exclude=cache.tgz -zcvf /cache.tgz .
 
 # Disable the build hooks
-symlink_build_hooks -d
-set_reproducible_mirrors -d
-
-# Remove the version deb preference
-rm -f $VERSION_DEB_PREFERENCE
+# symlink_build_hooks -d
+# set_reproducible_mirrors -d
