@@ -81,7 +81,9 @@ echo '[INFO] Build host debian base system...'
 TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT
 
 # Prepare buildinfo
-sudo scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+sudo SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
+	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+
 
 sudo chown root:root $FILESYSTEM_ROOT
 
@@ -635,7 +637,8 @@ if [[ $TARGET_BOOTLOADER == uboot ]]; then
 fi
 
 # Collect host image version files before cleanup
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
+	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
