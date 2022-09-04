@@ -23,6 +23,7 @@ fi
 PKG_CACHE_FILE_NAME=${PKG_CACHE_PATH}/cache.tgz
 mkdir -p ${PKG_CACHE_PATH}
 
+. ${BUILDINFO_PATH}/scripts/utils.sh
 
 
 URL_PREFIX=$(echo "${PACKAGE_URL_PREFIX}" | sed -E "s#(//[^/]*/).*#\1#")
@@ -75,6 +76,28 @@ check_if_url_exist()
         echo n
     fi
 }
+
+get_version_cache_option()
+{
+	#SONIC_VERSION_CACHE="cache"
+	if [ ! -z ${SONIC_VERSION_CACHE} ]; then
+		if [ ${SONIC_VERSION_CACHE} == "rcache" ]; then
+			echo -n "rcache"
+		elif [ ${SONIC_VERSION_CACHE} == "wcache" ]; then
+			echo -n "wcache"
+		elif [ ${SONIC_VERSION_CACHE} == "cache" ]; then
+			echo -n  "wcache"
+		else
+			echo -n ""
+			return 1
+		fi
+		echo -n ""
+		return 0
+	fi
+	echo -n ""
+	return 1
+}
+
 
 # Enable or disable the reproducible mirrors
 set_reproducible_mirrors()
@@ -331,4 +354,8 @@ ENABLE_VERSION_CONTROL_PY2=$(check_version_control "py2")
 ENABLE_VERSION_CONTROL_PY3=$(check_version_control "py3")
 ENABLE_VERSION_CONTROL_WEB=$(check_version_control "web")
 ENABLE_VERSION_CONTROL_GIT=$(check_version_control "git")
+ENABLE_VERSION_CONTROL_PIP=$(check_version_control "pip")
+ENABLE_VERSION_CONTROL_PYTHON=$(check_version_control "python")
+ENABLE_VERSION_CONTROL_EASY_INSTALL=$(check_version_control "easy_install")
+ENABLE_VERSION_CONTROL_GO=$(check_version_control "go")
 ENABLE_VERSION_CONTROL_DOCKER=$(check_version_control "docker")

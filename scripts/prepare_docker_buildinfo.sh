@@ -1,14 +1,24 @@
 #!/bin/bash
 
+BUILDINFO_BASE=/usr/local/share/buildinfo
+
+SCRIPT_SRC_PATH=src/sonic-build-hooks
+if [ -e ${SCRIPT_SRC_PATH} ]; then
+	. ${SCRIPT_SRC_PATH}/scripts/utils.sh 
+else
+	. ${BUILDINFO_BASE}/scripts/utils.sh 
+fi
+
 IMAGENAME=$1
 DOCKERFILE=$2
 ARCH=$3
-DOCKERFILE_TARGE=$4
+DOCKERFILE_TARGET=$4
 DISTRO=$5
 
+
 [ -z "$BUILD_SLAVE" ] && BUILD_SLAVE=n
-[ -z "$DOCKERFILE_TARGE" ] && DOCKERFILE_TARGE=$DOCKERFILE
-DOCKERFILE_PATH=$(dirname "$DOCKERFILE_TARGE")
+[ -z "$DOCKERFILE_TARGET" ] && DOCKERFILE_TARGET=$DOCKERFILE
+DOCKERFILE_PATH=$(dirname "$DOCKERFILE_TARGET")
 BUILDINFO_PATH="${DOCKERFILE_PATH}/buildinfo"
 BUILDINFO_VERSION_PATH="${BUILDINFO_PATH}/versions"
 DOCKER_PATH=$(dirname $DOCKERFILE)
@@ -34,15 +44,18 @@ fi
 scripts/docker_version_control.sh $@
 
 DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
+ARG SONIC_VERSION_CACHE
+ARG SONIC_VERSION_CONTROL_COMPONENTS
 COPY ["buildinfo", "/usr/local/share/buildinfo"]
 COPY vcache/ /sonic/target/vcache/'${IMAGENAME}'
 RUN dpkg -i /usr/local/share/buildinfo/sonic-build-hooks_1.0_all.deb
 ENV IMAGENAME='${IMAGENAME}'
+ENV DISTRO='${DISTRO}'
 RUN pre_run_buildinfo '${IMAGENAME}'
 '
 
 # Add the auto-generate code if it is not added in the target Dockerfile
-if [ ! -f $DOCKERFILE_TARGE ] || ! grep -q "Auto-Generated for buildinfo" $DOCKERFILE_TARGE; then
+if [ ! -f $DOCKERFILE_TARGET ] || ! grep -q "Auto-Generated for buildinfo" $DOCKERFILE_TARGET; then
     # Insert the docker build script before the RUN command
     LINE_NUMBER=$(grep -Fn -m 1 'RUN' $DOCKERFILE | cut -d: -f1)
     TEMP_FILE=$(mktemp)
@@ -50,12 +63,14 @@ if [ ! -f $DOCKERFILE_TARGE ] || ! grep -q "Auto-Generated for buildinfo" $DOCKE
 
     # Append the docker build script at the end of the docker file
     echo -e "\nRUN post_run_buildinfo ${IMAGENAME} " >> $TEMP_FILE
+    echo -e "\nRUN post_run_cleanup ${IMAGENAME} " >> $TEMP_FILE
 
-    cat $TEMP_FILE > $DOCKERFILE_TARGE
+    cat $TEMP_FILE > $DOCKERFILE_TARGET
     rm -f $TEMP_FILE
 fi
 
 # Copy the build info config
+mkdir -p ${BUILDINFO_PATH}
 cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
 
 # Generate the version lock files
