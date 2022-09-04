@@ -387,6 +387,11 @@ $(info "INCLUDE_PDE"                     : "$(INCLUDE_PDE)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
+$(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
+$(info "SONIC_VERSION_CACHE_METHOD"      : "$(SONIC_VERSION_CACHE)")
+ifneq ($(SONIC_VERSION_CACHE),)
+$(info "SONIC_VERSION_CACHE_SOURCE"      : "$(SONIC_VERSION_CACHE_SOURCE)")
+endif
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BUILD_LOG_TIMESTAMP"             : "$(BUILD_LOG_TIMESTAMP)")
 $(info "SONIC_IMAGE_VERSION"             : "$(SONIC_IMAGE_VERSION)")
@@ -414,7 +419,6 @@ $(info "ENABLE_NATIVE_WRITE"             : "$(ENABLE_NATIVE_WRITE)")
 $(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
-$(info "SONIC_VERSION_CONTROL_COMPONENTS": "$(SONIC_VERSION_CONTROL_COMPONENTS)")
 $(info "ENABLE_ASAN"                     : "$(ENABLE_ASAN)")
 $(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
@@ -920,6 +924,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 	DBGOPT='$(DBGOPT)' \
+	DISTRO=$(BLDENV) \
+	ARCH=$(CONFIGURED_ARCH) \
 	scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(TARGET_DOCKERFILE)/Dockerfile.buildinfo $(LOG)
 	docker info $(LOG)
 	docker build --squash --no-cache \
@@ -935,8 +941,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
 
 	if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH} \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 		DBGOPT='$(DBGOPT)' \
+		DISTRO=$(BLDENV) ARCH=${CONFIGURED_ARCH} \
 		scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
 
 	$(call docker-image-save,$*,$@)
@@ -1044,6 +1051,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 		DBGOPT='$(DBGOPT)' \
+		DISTRO=$(BLDENV) \
+		ARCH=$(CONFIGURED_ARCH) \
 		scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
 		docker build --squash --no-cache \
@@ -1065,8 +1074,9 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
 
 		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH}\
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 			DBGOPT='$(DBGOPT)' \
+			DISTRO=$(BLDENV) ARCH=${CONFIGURED_ARCH} \
 			scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $($*.gz_PATH)/Dockerfile $(LOG)
 		if [ ! -z $(filter $*.gz,$(SONIC_PACKAGES_LOCAL)) ]; then docker tag $(DOCKER_IMAGE_REF) $*:$(SONIC_IMAGE_VERSION); fi
 
@@ -1113,6 +1123,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 		DBGOPT='$(DBGOPT)' \
+		DISTRO=$(BLDENV) \
+		ARCH=$(CONFIGURED_ARCH) \
 		scripts/prepare_docker_buildinfo.sh $*-dbg $($*.gz_PATH)/Dockerfile-dbg $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
 		docker build \
@@ -1129,8 +1141,9 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			-t $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH) $(LOG)
 
 		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) ARCH=${CONFIGURED_ARCH}\
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 			DBGOPT='$(DBGOPT)' \
+			DISTRO=$(BLDENV) ARCH=$(CONFIGURED_ARCH) \
 			scripts/collect_docker_version_files.sh $*-dbg $(TARGET_PATH) $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH)  $($*.gz_PATH)/Dockerfile-dbg $(LOG)
 		if [ ! -z $(filter $*.gz,$(SONIC_PACKAGES_LOCAL)) ]; then docker tag $(DOCKER_IMAGE_REF) $*:$(SONIC_IMAGE_VERSION); fi
 

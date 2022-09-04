@@ -76,7 +76,7 @@ mkdir -p ${BUILDINFO_PATH}
 cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
 
 # Generate the version lock files
-scripts/versions_manager.py generate -t "$BUILDINFO_VERSION_PATH" -n "$IMAGENAME" -d "$DISTRO" -a "$ARCH"
+scripts/versions_manager.py generate -t "$BUILDINFO_VERSION_PATH" -n "${IMAGENAME//-dbg/}" -d "$DISTRO" -a "$ARCH"
 
 touch $BUILDINFO_VERSION_PATH/versions-deb
 
@@ -103,7 +103,7 @@ SRC_VERSION_PATH=files/build/versions
 if [ ! -z ${SONIC_VERSION_CACHE} ]; then
 
 	# Version files for SHA calculation
-	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
+	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME/-dbg/}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
 	DEP_FILES="Dockerfile.j2"
 	if [[ ${DOCKER_IMAGE_NAME} =~ '-dbg' ]]; then
 		DEP_DBG_FILES="build_debug_docker_j2.sh"
@@ -129,7 +129,7 @@ if [ ! -z ${SONIC_VERSION_CACHE} ]; then
 	if [[  -e ${GLOBAL_CACHE_FILE} ]]; then
 		cp ${GLOBAL_CACHE_FILE} ${LOCAL_CACHE_FILE}
 		touch ${GLOBAL_CACHE_FILE}
-	else
+	elif [[ "${SONIC_VERSION_CONTROL_COMPONENTS}" != "none" ]]; then
 		# When file is modified, Global SHA is calculated with the local change.
 		# Load from the previous version of build cache if exists
 		VERSIONS=( "HEAD" "HEAD~1" "HEAD~2" )
