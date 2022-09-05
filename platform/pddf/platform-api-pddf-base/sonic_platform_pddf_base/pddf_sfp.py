@@ -204,10 +204,10 @@ class PddfSfp(SfpOptoeBase):
                     lpmode = super().get_lpmode()
                 elif xcvr_id == 0x11 or xcvr_id == 0x0d or xcvr_id == 0x0c:
                     # QSFP28, QSFP+, QSFP
-                    val = self.read_eeprom(QSFP_PWR_CTRL_ADDR, 1)
-                    if val is not None:
-                        if (ord(val) & 0x3) == 0x3:
-                            lpmode = True
+                    power_set = self.get_power_set()
+                    power_override = self.get_power_override()
+                    # By default the lpmode pin is pulled high as mentioned in the sff community
+                    return power_set if power_override else True
 
         return lpmode
 
@@ -341,12 +341,10 @@ class PddfSfp(SfpOptoeBase):
                     status = super().set_lpmode(lpmode)
                 elif xcvr_id == 0x11 or xcvr_id == 0x0d or xcvr_id == 0x0c:
                     # QSFP28, QSFP+, QSFP
-                    val = self.read_eeprom(QSFP_PWR_CTRL_ADDR, 1)
-                    if val is not None:
-                        val = ord(val) & 0xf0
-                        val |= 0x3 if lpmode else 0xd
-                        buf = bytearray([val])
-                        status = self.write_eeprom(QSFP_PWR_CTRL_ADDR, 1, buf)
+                    if lpmode is True:
+                        self.set_power_override(True, True)
+                    else:
+                        self.set_power_override(True, False)
 
         return status
 
