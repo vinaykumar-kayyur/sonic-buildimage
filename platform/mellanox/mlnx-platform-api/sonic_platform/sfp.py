@@ -247,6 +247,9 @@ QSFP_TYPE = "QSFP"
 OSFP_TYPE = "OSFP"
 QSFP_DD_TYPE = "QSFP_DD"
 
+SX_SFP_PATH_PAGE0 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/0/i2c-0x50/data"
+READ_FROM_SX_SYSFS = True
+
 #variables for sdk
 REGISTER_NUM = 1
 DEVICE_ID = 1
@@ -373,21 +376,30 @@ class SFP(SfpBase):
     # Read out any bytes from any offset
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
         eeprom_raw = []
-        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
-        try:
-            output = subprocess.check_output(ethtool_cmd, 
-                                             shell=True, 
-                                             universal_newlines=True)
-            output_lines = output.splitlines()
-            first_line_raw = output_lines[0]
-            if "Offset" in first_line_raw:
-                for line in output_lines[2:]:
-                    line_split = line.split()
-                    eeprom_raw = eeprom_raw + line_split[1:]
-        except subprocess.CalledProcessError as e:
-            return None
+        if not READ_FROM_SX_SYSFS:
+            ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
+            try:
+                output = subprocess.check_output(ethtool_cmd, 
+                                                shell=True, 
+                                                universal_newlines=True)
+                output_lines = output.splitlines()
+                first_line_raw = output_lines[0]
+                if "Offset" in first_line_raw:
+                    for line in output_lines[2:]:
+                        line_split = line.split()
+                        eeprom_raw = eeprom_raw + line_split[1:]
+            except subprocess.CalledProcessError as e:
+                return None
 
-        return eeprom_raw
+            return eeprom_raw
+        else:
+            try:
+                with open(SX_SFP_PATH_PAGE0.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
+                    #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE0.format((self.index - 1)*8))
+                    f.seek(offset)
+                    return ["{:02x}".format(c) for c in f.read(num_bytes)]
+            except (OSError, IOError):
+                return None
 
 
     def _detect_sfp_type(self, sfp_type):
