@@ -17,7 +17,7 @@ function FLOCK()
     eval $(echo exec {${lock_fd}}\<\>"${filename}.flock")
     #echo ${!lock_fd}
     if ! flock -x -w ${timeout} "${!lock_fd}" ; then
-        echo "ERROR: Lock timeout trying to access ${filename}.flock";
+        echo "ERROR: Lock timeout trying to access ${filename}.flock" 1>&2;
         exit 1;
     fi
     #echo "Lock acquired .."

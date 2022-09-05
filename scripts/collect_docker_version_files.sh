@@ -48,4 +48,55 @@ DOCKER_BUILDKIT=1 docker build -f ${DOCKER_PATH}/Dockerfile.cleanup  --no-cache 
 docker rmi tmp-${DOCKER_IMAGE_TAG}
 docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/log ${BUILD_LOG_PATH}/
 
+
+# Save the cache contents from docker build
+LOCAL_CACHE_FILE=target/vcache/${DOCKER_IMAGE_NAME}/cache.tgz
+CACHE_ENCODE_FILE=${DOCKER_PATH}/vcache/cache.base64
+sleep 1; sync ${CACHE_ENCODE_FILE}
+
+# Decode the cache content into gz format
+SRC_VERSION_PATH=files/build/versions
+if [[ -e ${CACHE_ENCODE_FILE} ]]; then
+
+	cat ${CACHE_ENCODE_FILE} | base64 -d  >${LOCAL_CACHE_FILE}
+	rm -f ${CACHE_ENCODE_FILE}
+fi
+
+# Version package cache
+IMAGE_DBGS_NAME=${DOCKER_IMAGE_NAME//-/_}_image_dbgs
+if [[ ${DOCKER_IMAGE_NAME} == sonic-slave-* ]]; then
+	GLOBAL_CACHE_DIR=${SONIC_VERSION_CACHE_SOURCE}/${DOCKER_IMAGE_NAME}
+else
+	GLOBAL_CACHE_DIR=/vcache/${DOCKER_IMAGE_NAME}
+fi
+
+if [[ ! -z ${SONIC_VERSION_CACHE} && -e ${CACHE_ENCODE_FILE} ]]; then
+
+	# Select version files for SHA calculation
+	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
+	DEP_FILES="${DOCKER_PATH}/Dockerfile.j2"
+	if [[ ${DOCKER_IMAGE_NAME} =~ '-dbg' ]]; then
+		DEP_FILES="${DEP_FILES} build_debug_docker_j2.sh"
+	fi
+
+	# Calculate the version SHA
+	VERSION_SHA="$( (echo -n "${!IMAGE_DBGS_NAME}"; cat ${DEP_FILES} ${VERSION_FILES}) | sha1sum | awk '{print substr($1,0,23);}')"
+    GLOBAL_CACHE_FILE=${GLOBAL_CACHE_DIR}/${DOCKER_IMAGE_NAME}-${VERSION_SHA}.tgz
+
+	GIT_FILE_STATUS=$(git status -s ${DEP_FILES})
+
+	# If the cache file is not exists in the global cache for the given SHA, 
+	# store the new cache file into version cache path.
+	if [ -f ${LOCAL_CACHE_FILE} ]; then
+		if [[ -z ${GIT_FILE_STATUS} && ! -e ${GLOBAL_CACHE_FILE} ]]; then
+			mkdir -p ${GLOBAL_CACHE_DIR}
+			chmod -f 777 ${GLOBAL_CACHE_DIR}
+			FLOCK ${GLOBAL_CACHE_FILE}
+			cp ${LOCAL_CACHE_FILE} ${GLOBAL_CACHE_FILE} 
+			chmod -f 777 ${LOCAL_CACHE_FILE} ${GLOBAL_CACHE_FILE} 
+			FUNLOCK ${GLOBAL_CACHE_FILE}
+		fi
+	fi
+fi
+
 docker container rm $DOCKER_CONTAINER

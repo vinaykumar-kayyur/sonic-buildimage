@@ -84,3 +84,75 @@ touch $BUILDINFO_VERSION_PATH/versions-deb
 LOCAL_CACHE_DIR=target/vcache/${IMAGENAME}
 mkdir -p ${LOCAL_CACHE_DIR} ${DOCKER_PATH}/vcache/
 chmod -f 777 ${LOCAL_CACHE_DIR} ${DOCKER_PATH}/vcache/
+
+if [[ "$SKIP_BUILD_HOOK" == y || ${ENABLE_VERSION_CONTROL_DOCKER} != y ]]; then
+	exit 0
+fi
+
+# Version cache 
+DOCKER_IMAGE_NAME=${IMAGENAME}
+IMAGE_DBGS_NAME=${DOCKER_IMAGE_NAME//-/_}_image_dbgs
+
+if [[ ${DOCKER_IMAGE_NAME} == sonic-slave-* ]]; then
+	GLOBAL_CACHE_DIR=${SONIC_VERSION_CACHE_SOURCE}/${DOCKER_IMAGE_NAME}
+else
+	GLOBAL_CACHE_DIR=/vcache/${DOCKER_IMAGE_NAME}
+fi
+
+SRC_VERSION_PATH=files/build/versions
+if [ ! -z ${SONIC_VERSION_CACHE} ]; then
+
+	# Version files for SHA calculation
+	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
+	DEP_FILES="Dockerfile.j2"
+	if [[ ${DOCKER_IMAGE_NAME} =~ '-dbg' ]]; then
+		DEP_DBG_FILES="build_debug_docker_j2.sh"
+	fi
+
+	#Calculate the version SHA
+	VERSION_SHA="$( (echo -n "${!IMAGE_DBGS_NAME}"; \
+		(cd ${DOCKER_PATH}; cat ${DEP_FILES}); \
+		cat ${DEP_DBG_FILES} ${VERSION_FILES}) \
+		| sha1sum | awk '{print substr($1,0,23);}')"
+
+	GLOBAL_CACHE_FILE=${GLOBAL_CACHE_DIR}/${DOCKER_IMAGE_NAME}-${VERSION_SHA}.tgz
+	LOCAL_CACHE_FILE=${LOCAL_CACHE_DIR}/cache.tgz
+	GIT_FILE_STATUS=$(git status -s ${DEP_FILES})
+
+	# Create the empty cache tar file as local cache
+	if [[ ! -f ${LOCAL_CACHE_FILE} ]]; then
+		tar -zcf ${LOCAL_CACHE_FILE} -T /dev/null
+		chmod -f 777 ${LOCAL_CACHE_FILE}
+	fi
+
+	# Global cache file exists, load from global cache.
+	if [[  -e ${GLOBAL_CACHE_FILE} ]]; then
+		cp ${GLOBAL_CACHE_FILE} ${LOCAL_CACHE_FILE}
+		touch ${GLOBAL_CACHE_FILE}
+	else
+		# When file is modified, Global SHA is calculated with the local change.
+		# Load from the previous version of build cache if exists
+		VERSIONS=( "HEAD" "HEAD~1" "HEAD~2" )
+		for VERSION in ${VERSIONS[@]}; do
+			VERSION_PREV_SHA="$( (echo -n "${!IMAGE_DBGS_NAME}"; \
+				(cd ${DOCKER_PATH}; git --no-pager show $(ls -f ${DEP_FILES}|sed 's|.*|'${VERSION}':./&|g')); \
+				(git --no-pager show $(ls -f ${DEP_DBG_FILES} ${VERSION_FILES}|sed 's|.*|'${VERSION}':&|g'))) \
+				| sha1sum | awk '{print substr($1,0,23);}')"
+			GLOBAL_PREV_CACHE_FILE=${GLOBAL_CACHE_DIR}/${DOCKER_IMAGE_NAME}-${VERSION_PREV_SHA}.tgz
+			if [[  -e ${GLOBAL_PREV_CACHE_FILE} ]]; then
+				cp ${GLOBAL_PREV_CACHE_FILE} ${LOCAL_CACHE_FILE}
+				touch ${GLOBAL_PREV_CACHE_FILE}
+				break
+			fi
+		done
+	fi
+
+	rm -f ${DOCKER_PATH}/vcache/cache.tgz
+	ln -f ${LOCAL_CACHE_FILE} ${DOCKER_PATH}/vcache/cache.tgz
+
+
+else
+	# Delete the cache file if version cache is disabled.
+	rm -f ${DOCKER_PATH}/vcache/cache.tgz
+fi
+
