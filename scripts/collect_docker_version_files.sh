@@ -1,5 +1,7 @@
 #!/bin/bash
   
+[[ ! -z "${DBGOPT}" && $0 =~ ${DBGOPT} ]] && set -x 
+
 BUILDINFO_BASE=/usr/local/share/buildinfo
 
 SCRIPT_SRC_PATH=src/sonic-build-hooks
@@ -21,6 +23,8 @@ DOCKER_IMAGE_NAME=$(echo $DOCKER_IMAGE | cut -d: -f1 | sed "s/-$DOCKER_USERNAME\
 #Create the container specific to the user tag and slave tag
 DOCKER_CONTAINER=${DOCKER_IMAGE_TAG/:/-}
 TARGET_VERSIONS_PATH=$TARGET_PATH/versions/dockers/$DOCKER_IMAGE_NAME
+BUILD_LOG_PATH=target/versions/log/$DOCKER_IMAGE_NAME
+mkdir -p ${BUILD_LOG_PATH}
 
 [ -d $TARGET_VERSIONS_PATH ] && rm -rf $TARGET_VERSIONS_PATH
 mkdir -p $TARGET_VERSIONS_PATH
@@ -42,5 +46,6 @@ docker tag ${DOCKER_IMAGE_TAG} tmp-${DOCKER_IMAGE_TAG}
 DOCKER_BUILDKIT=1 docker build -f ${DOCKER_PATH}/Dockerfile.cleanup  --target output -o target/vcache/${DOCKER_IMAGE_NAME} ${DOCKER_PATH}
 DOCKER_BUILDKIT=1 docker build -f ${DOCKER_PATH}/Dockerfile.cleanup  --no-cache --target final --tag ${DOCKER_IMAGE_TAG} ${DOCKER_PATH}
 docker rmi tmp-${DOCKER_IMAGE_TAG}
+docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/log ${BUILD_LOG_PATH}/
 
 docker container rm $DOCKER_CONTAINER

@@ -36,9 +36,15 @@ fi
 
 log_err()
 {
-    echo "$1" >> $LOG_PATH/error.log
+    echo "$(date "+%F-%H-%M-%S") ERR $1" >> $LOG_PATH/error.log
     echo "$1" 1>&2
 }
+log_info()
+{
+    echo "$(date "+%F-%H-%M-%S") INFO $1" >> $LOG_PATH/info.log
+    echo "$1" 1>&2
+}
+
 
 # Get the real command not hooked by sonic-build-hook package
 get_command()
@@ -138,7 +144,7 @@ download_packages()
                 local filename=$(echo $url | awk -F"/" '{print $NF}' | cut -d? -f1 | cut -d# -f1)
                 [ -f $WEB_VERSION_FILE ] && version=$(grep "^${url}=" $WEB_VERSION_FILE | awk -F"==" '{print $NF}')
                 if [ -z "$version" ]; then
-                    echo "Warning: Failed to verify the package: $url, the version is not specified" 1>&2
+                    log_err "Warning: Failed to verify the package: $url, the version is not specified" 1>&2
                     continue
                 fi
 
@@ -152,7 +158,7 @@ download_packages()
                 else
                     real_version=$(get_url_version $url)
                     if [ "$real_version" != "$version" ]; then
-                        echo "Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
+                        log_err "Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
                        exit 1
                     fi
                 fi
@@ -317,10 +323,10 @@ update_version_file()
     if [ ! -f "$pre_version_file" ]; then
         return 0
     fi
-    local pacakge_versions="$(cat $pre_version_file)"
-    [ -f "$version_file" ] && pacakge_versions="$pacakge_versions $(cat $version_file)"
+    local package_versions="$(cat $pre_version_file)"
+    [ -f "$version_file" ] && package_versions="$package_versions $(cat $version_file)"
     declare -A versions
-    for pacakge_version in $pacakge_versions; do
+    for pacakge_version in $package_versions; do
         package=$(echo $pacakge_version | awk -F"==" '{print $1}')
         version=$(echo $pacakge_version | awk -F"==" '{print $2}')
         if [ -z "$package" ] || [ -z "$version" ]; then

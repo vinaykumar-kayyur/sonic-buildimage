@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[[ ! -z "${DBGOPT}" && $0 =~ ${DBGOPT} ]] && set -x 
+
 BUILDINFO_BASE=/usr/local/share/buildinfo
 
 SCRIPT_SRC_PATH=src/sonic-build-hooks

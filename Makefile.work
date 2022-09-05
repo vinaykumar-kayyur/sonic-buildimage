@@ -190,6 +190,7 @@ $(shell \
 	DISTRO=$(BLDENV) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 	SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
@@ -209,6 +210,7 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/prepare_docker_buildinfo.sh \
 		$(SLAVE_BASE_IMAGE) \
 		$(SLAVE_DIR)/Dockerfile \
@@ -232,13 +234,14 @@ SLAVE_TAG = $(shell \
 	(cat $(SLAVE_DIR)/Dockerfile.user \
 		 $(SLAVE_DIR)/Dockerfile \
 		 $(SLAVE_DIR)/buildinfo/versions/versions-* \
-		 .git/HEAD \
+		.git/HEAD 2>/dev/null \
 	&& echo $(USER)/$(PWD)/$(CONFIGURED_PLATFORM)) \
 	| sha1sum \
 	| awk '{print substr($$1,0,11);}')
 
 COLLECT_DOCKER=DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/collect_docker_version_files.sh \
 		$(SLAVE_BASE_IMAGE) \
 		target \
