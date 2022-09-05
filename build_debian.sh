@@ -82,6 +82,7 @@ TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $I
 
 # Prepare buildinfo
 sudo SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
+	DBGOPT="${DBGOPT}" \
 	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
 
 
@@ -638,6 +639,7 @@ fi
 
 # Collect host image version files before cleanup
 SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
+	DBGOPT="${DBGOPT}" \
 	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
