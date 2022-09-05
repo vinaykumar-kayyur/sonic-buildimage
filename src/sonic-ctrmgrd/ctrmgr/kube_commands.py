@@ -20,6 +20,7 @@ from jinja2 import Template
 
 import yaml
 from sonic_py_common import device_info
+from swsssdk import ConfigDBConnector
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
 KUBELET_YAML = "/var/lib/kubelet/config.yaml"
@@ -267,6 +268,19 @@ users:
     log_debug("{} downloaded".format(KUBE_ADMIN_CONF))
 
 
+def _get_local_ipv6():
+    try:
+        config_db = ConfigDBConnector()
+        config_db.connect()
+        mgmt_ip_data = config_db.get_table('MGMT_INTERFACE')
+        for key in mgmt_ip_data.keys():
+            if key[1].find(":") >= 0:
+                return key[1].split("/")[0]
+        raise IOError("IPV6 not find from MGMT_INTERFACE table")
+    except Exception as e:
+        raise IOError(str(e))
+
+
 def _troubleshoot_tips():
     """ log troubleshoot tips which could be handy,
         when in trouble with join
@@ -320,11 +334,12 @@ def _do_reset(pending_join = False):
 
 
 def _do_join(server, port, insecure):
-    KUBEADM_JOIN_CMD = "kubeadm join --discovery-file {} --node-name {}"
+    KUBEADM_JOIN_CMD = "kubeadm join --discovery-file {} --node-name {} --apiserver-advertise-address {}"
     err = ""
     out = ""
     ret = 0
     try:
+        local_ipv6 = _get_local_ipv6()
         #_download_file(server, port, insecure)
         _gen_cli_kubeconf(server, port, insecure)
         _do_reset(True)
@@ -336,11 +351,11 @@ def _do_join(server, port, insecure):
 
         if ret == 0:
             (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
-                KUBE_ADMIN_CONF, get_device_name()), timeout=60)
+                KUBE_ADMIN_CONF, get_device_name(), local_ipv6), timeout=60)
             log_debug("ret = {}".format(ret))
 
     except IOError as e:
-        err = "Download failed: {}".format(str(e))
+        err = "Join failed: {}".format(str(e))
         ret = -1
         out = ""
 
