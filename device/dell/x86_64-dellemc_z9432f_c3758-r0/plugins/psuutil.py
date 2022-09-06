@@ -176,10 +176,10 @@ class PsuUtil(PsuBase):
 
         if index == 1:
             p = subprocess.run(self.IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout.replace('\n', '')
+            cmd_status, line = p.returncode, p.stdout
         elif index == 2:
             p = subprocess.run(self.IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout.replace('\n', '')
+            cmd_status, line = p.returncode, p.stdout
         else:
             logging.error("Invalid PSU number:" + index)
         if line[-1:] == '\n':
