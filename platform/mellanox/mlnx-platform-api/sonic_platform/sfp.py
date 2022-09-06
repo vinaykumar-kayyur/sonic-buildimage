@@ -247,7 +247,10 @@ QSFP_TYPE = "QSFP"
 OSFP_TYPE = "OSFP"
 QSFP_DD_TYPE = "QSFP_DD"
 
-SX_SFP_PATH_PAGE0 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/0/i2c-0x50/data"
+SX_SFP_PATH_PAGE00 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/0/i2c-0x50/data"
+SX_SFP_PATH_PAGE01 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/1/data"
+SX_SFP_PATH_PAGE02 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/2/data"
+SX_SFP_PATH_PAGE17 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/17/data"
 READ_FROM_SX_SYSFS = True
 
 #variables for sdk
@@ -354,21 +357,31 @@ class SFP(SfpBase):
             bool: True if device is present, False if not
         """
         presence = False
-        ethtool_cmd = "ethtool -m sfp{} hex on offset 0 length 1 2>/dev/null".format(self.index)
-        try:
-            proc = subprocess.Popen(ethtool_cmd, 
-                                    stdout=subprocess.PIPE, 
-                                    shell=True, 
-                                    stderr=subprocess.STDOUT, 
-                                    universal_newlines=True)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            result = stdout.rstrip('\n')
-            if result != '':
-                presence = True
+        if not READ_FROM_SX_SYSFS:
+            ethtool_cmd = "ethtool -m sfp{} hex on offset 0 length 1 2>/dev/null".format(self.index)
+            try:
+                proc = subprocess.Popen(ethtool_cmd, 
+                                        stdout=subprocess.PIPE, 
+                                        shell=True, 
+                                        stderr=subprocess.STDOUT, 
+                                        universal_newlines=True)
+                stdout = proc.communicate()[0]
+                proc.wait()
+                result = stdout.rstrip('\n')
+                if result != '':
+                    presence = True
 
-        except OSError as e:
-            raise OSError("Cannot detect sfp")
+            except OSError as e:
+                raise OSError("Cannot detect sfp")
+        else:
+            try:
+                with open(SX_SFP_PATH_PAGE00.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
+                    #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE0.format((self.index - 1)*8))
+                    f.read(1)
+                    presence = True
+            except (OSError, IOError):
+                #raise OSError("Cannot detect sfp")
+                presence = False
 
         return presence
 
@@ -394,8 +407,19 @@ class SFP(SfpBase):
             return eeprom_raw
         else:
             try:
-                with open(SX_SFP_PATH_PAGE0.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
-                    #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE0.format((self.index - 1)*8))
+                if offset < 256:
+                    page = SX_SFP_PATH_PAGE00
+                elif offset < 512:
+                    page = SX_SFP_PATH_PAGE01
+                    offset = offset - 256
+                elif offset < 768:
+                    page = SX_SFP_PATH_PAGE02
+                    offset = offset - 512
+                else:
+                    page = SX_SFP_PATH_PAGE17
+                    offset = offset - 768 # some arbitary number, just want to make this work.
+                with open(page.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
+                    #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE00.format((self.index - 1)*8))
                     f.seek(offset)
                     return ["{:02x}".format(c) for c in f.read(num_bytes)]
             except (OSError, IOError):
@@ -1008,7 +1032,7 @@ class SFP(SfpBase):
 
             if self.dom_rx_tx_power_bias_supported:
                 # page 11h
-                offset = 512
+                offset = 768  # some arbitary number, just want to make this work.
                 dom_data_raw = self._read_eeprom_specific_bytes(offset + QSFP_DD_CHANNL_MON_OFFSET, QSFP_DD_CHANNL_MON_WIDTH)
                 if dom_data_raw is None:
                     return transceiver_dom_info_dict
@@ -1184,8 +1208,9 @@ class SFP(SfpBase):
             if sfpd_obj is None:
                 return transceiver_dom_threshold_info_dict
 
-            # page 02
-            offset = 384
+            # QSFP-DD cable threshold is started from 128 byte of page02
+            # so the offset will be page00 + page01 = 256 + 256
+            offset = 512
             dom_module_threshold_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_MODULE_THRESHOLD_OFFSET), QSFP_DD_MODULE_THRESHOLD_WIDTH)
             if dom_module_threshold_raw is None:
                 return transceiver_dom_threshold_info_dict
