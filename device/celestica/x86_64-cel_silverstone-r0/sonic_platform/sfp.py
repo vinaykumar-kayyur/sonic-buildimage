@@ -167,7 +167,7 @@ class Sfp(SfpBase):
     # Path to QSFP sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker"
+    HOST_CHK_CMD = ["docker"]
 
     PLATFORM = "x86_64-cel_silverstone-r0"
     HWSKU = "Silverstone"

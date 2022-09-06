@@ -42,6 +42,5 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail.
         """
-        cmd = 'start' if enable else 'stop'
-        cls.FSC_ALGORITHM_CMD[2] = cmd
-        return APIHelper().run_command(cls.FSC_ALGORITHM_CMD.format)
+        cls.FSC_ALGORITHM_CMD[2] = 'start' if enable else 'stop'
+        return APIHelper().run_command(cls.FSC_ALGORITHM_CMD)

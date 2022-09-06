@@ -6,7 +6,6 @@
 #
 #############################################################################
 
-import json
 import os.path
 
 try:
@@ -108,8 +107,8 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        CFUFLASH_FW_UPGRADE_CMD[3] = CFUFLASH_FW_UPGRADE_CMD[3].format(UPGRADE_OPT.get(self.name))
-        CFUFLASH_FW_UPGRADE_CMD[6] = CFUFLASH_FW_UPGRADE_CMD[6].format(image_path)
+        CFUFLASH_FW_UPGRADE_CMD[3] = UPGRADE_OPT.get(self.name)
+        CFUFLASH_FW_UPGRADE_CMD[6] = image_path
 
         if not os.path.isfile(image_path):
             return False

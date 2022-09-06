@@ -3,7 +3,7 @@ import struct
 import subprocess
 from mmap import *
 
-HOST_CHK_CMD = "docker"
+HOST_CHK_CMD = ["docker"]
 EMPTY_STRING = ""
 
 
@@ -32,11 +32,12 @@ class APIHelper():
         status = True
         result = ""
         try:
+            cmd = ' '.join(cmd1_args) + ' | ' + ' '.join(cmd2_args)
             with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
                 with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
                     raw_data = p2.communicate()[0]
-                    if p2.returncode == 1:
-                        raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
+                    if p2.returncode != 0:
+                        raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
                     result = raw_data.strip()
         except subprocess.CalledProcessError:
             status = False
@@ -65,7 +66,7 @@ class APIHelper():
             cmd = ["ipmitool", "raw", str(netfn), str(cmd)]
             p = subprocess.Popen(
                 cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data = p.communicate()[0]
+            raw_data, err = p.communicate()
             if err == '':
                 result = raw_data.strip()
             else:
@@ -78,21 +79,20 @@ class APIHelper():
         status = True
         result = ""
         cmd1_args = ["ipmitool", "fru", "print", str(id)]
-        try:
-            if not key:
+        if not key:
+            try:
                 p = subprocess.Popen(
                     cmd1_args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 raw_data, err = p.communicate()
-            else:
-                cmd2_args = ["grep", str(key)]
-                with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-                    with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                        raw_data = p2.communicate()[0]
-                        if p2.returncode == 1:
-                            raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
-            result = raw_data.strip()
-        except subprocess.CalledProcessError:
-            status = False
+                if err == '':
+                    result = raw_data.strip()
+                else:
+                    status = False
+            except:
+                status = False
+        else:
+            cmd2_args = ["grep", str(key)]
+            status, result = self.run_command(cmd1_args, cmd2_args)
         return status, result
 
     def ipmi_set_ss_thres(self, id, threshold_key, value):

@@ -24,7 +24,7 @@ class Common:
 
     SET_METHOD_IPMI = 'ipmitool'
     NULL_VAL = 'N/A'
-    HOST_CHK_CMD = "docker"
+    HOST_CHK_CMD = ["docker"]
     REF_KEY = '$ref:'
 
     def __init__(self, conf=None):
@@ -81,7 +81,7 @@ class Common:
             output = ast.literal_eval(output_translator[index].format(output))
 
         return output
-    
+
     def _sysfs_read(self, index, config):
         sysfs_path = config.get('sysfs_path')
         argument = config.get('argument', '')
