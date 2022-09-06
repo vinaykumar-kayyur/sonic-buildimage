@@ -1,0 +1,17 @@
+[Unit]
+Description=Http-server service daemon
+Requires=updategraph.service
+After=updategraph.service
+BindsTo=sonic.target
+After=sonic.target
+StartLimitIntervalSec=1200
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/http-server
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=sonic.target
