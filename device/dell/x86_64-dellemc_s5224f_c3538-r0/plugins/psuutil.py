@@ -47,6 +47,8 @@ class PsuUtil(PsuBase):
 
         p = subprocess.run(ipmi_cmd, capture_output=True, universal_newlines=True)
         status, ipmi_sdr_list = p.returncode, p.stdout
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
 
         if status:
             logging.error('Failed to execute:' + ipmi_sdr_list)
@@ -96,6 +98,8 @@ class PsuUtil(PsuBase):
         cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
         proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
         line = proc.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
         psu_status = line[8] if len(line) > 8 else ''
         return 1 if psu_status == '1' else 0
 

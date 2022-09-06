@@ -4,7 +4,6 @@
 #
 
 
-import os.path
 import logging
 import sys
 import subprocess
@@ -42,8 +41,6 @@ class PsuUtil(PsuBase):
     def get_pmc_register(self, reg_name):
 
         status = 1
-        ipmi_cmd_1 = IPMI_PSU1_DATA
-        ipmi_cmd_2 = IPMI_PSU1_DATA
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
@@ -56,7 +53,9 @@ class PsuUtil(PsuBase):
             elif index == 2:
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         status = p.returncode
-        line = p.stdout.replace('\n', '')
+        line = p.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
         ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         if status:
@@ -85,7 +84,7 @@ class PsuUtil(PsuBase):
         """
         # Until psu_status is implemented this is hardcoded temporarily
 
-        psu_status = 'f'
+        psu_status = ''
         ret_status = 1
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
@@ -99,8 +98,10 @@ class PsuUtil(PsuBase):
             elif index == 2:
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         ret_status = p.returncode
-        line = p.stdout.replace('\n', '')
-        ipmi_sdr_list = line[8] if len(line) > 8 else 'f'
+        line = p.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
+        ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         if ret_status:
             logging.error('Failed to execute ipmitool : ')
@@ -130,7 +131,9 @@ class PsuUtil(PsuBase):
             elif index == 2:
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         ret_status = p.returncode
-        line = p.stdout.replace('\n', '')
+        line = p.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
         ipmi_sdr_list = line[8] if len(line) > 8 else '0'
 
         if ret_status:

@@ -60,7 +60,9 @@ class PsuUtil(PsuBase):
             elif index == 2:
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         status = p.returncode
-        line = p.stdout.replace('\n', '')
+        line = p.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
         ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         if status:
@@ -115,7 +117,9 @@ class PsuUtil(PsuBase):
             elif index == 2:
                 p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
         status = p.returncode
-        line = p.stdout.replace('\n', '')
+        line = p.stdout
+        if line[-1:] == '\n':
+            line = line[:-1]
         ipmi_sdr_list = line[8] if len(line) > 8 else ''
 
         # if ret_status:

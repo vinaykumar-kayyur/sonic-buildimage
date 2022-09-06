@@ -20,9 +20,9 @@ class FanUtil(FanBase):
     NUM_FANS_PERTRAY = 2
     FANTRAY_NUM_START_IDX = 1
     FRU_FAN_START_IDX = 1
-    IPMI_FAN_PRESENCE = ["ipmitool", "sensor", "get", "FAN"]
-    IPMI_FAN_FRONT_SPEED = ["ipmitool", "sdr", "get", "Fan"]
-    IPMI_FAN_REAR_SPEED = ["ipmitool", "sdr", "get", "Fan"]
+    IPMI_FAN_PRESENCE = ["ipmitool", "sensor", "get", "FAN{0}_prsnt"]
+    IPMI_FAN_FRONT_SPEED = ["ipmitool", "sdr", "get", "Fan{0}_Front_rpm"]
+    IPMI_FAN_REAR_SPEED = ["ipmitool", "sdr", "get", "Fan{0}_Rear_rpm"]
     IPMI_FRU_DATA = ["ipmitool", "fru", "print", ""]
 
     def __init__(self, log_level=logging.DEBUG):
@@ -31,36 +31,36 @@ class FanUtil(FanBase):
 
     def get_fan_status(self,fan_id):
         try:
-            self.IPMI_FAN_PRESENCE[3] += str(fan_id) + '_prsnt'
+            self.IPMI_FAN_PRESENCE[3] = self.IPMI_FAN_PRESENCE[3].format(fan_id)
             p = subprocess.run(self.IPMI_FAN_PRESENCE, capture_output=True, universal_newlines=True)
             ret_status, ipmi_cmd_ret = p.returncode, p.stdout
-           if ret_status == 0:
-              return(ipmi_cmd_ret.splitlines()[5].strip(' ').strip('[]'))
+            if ret_status == 0:
+                return(ipmi_cmd_ret.splitlines()[5].strip(' ').strip('[]'))
         except Exception:
-           logging.error('Failed to execute : %s'%self.IPMI_FAN_PRESENCE.format(fan_id))
+            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_PRESENCE)))
    
     def get_front_fan_speed(self,fan_id):
         try:
-            self.IPMI_FAN_FRONT_SPEED[3] += str(fan_id) + "_Front_rpm"
+            self.IPMI_FAN_FRONT_SPEED[3] = self.IPMI_FAN_FRONT_SPEED[3].format(fan_id)
             p = subprocess.run(split(self.IPMI_FAN_FRONT_SPEED.format(fan_id)), capture_output=True, universal_newlines=True)
             ret_status, ipmi_cmd_ret = p.returncode, p.stdout
-           if ret_status == 0:
-              rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
-              return rdata
+            if ret_status == 0:
+                rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
+                return rdata
         except Exception:
-           logging.error('Failed to execute : %s'%self.IPMI_FAN_FRONT_SPEED.format(fan_id))
+            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_FRONT_SPEED)))
     
     def get_rear_fan_speed(self,fan_id):
         try:
-            self.IPMI_FAN_REAR_SPEED[3] += str(fan_id) + "_Rear_rpm"
+            self.IPMI_FAN_REAR_SPEED[3] = self.IPMI_FAN_REAR_SPEED[3].format(fan_id)
             p = subprocess.run(self.IPMI_FAN_REAR_SPEED, capture_output=True, universal_newlines=True)
             ret_status, ipmi_cmd_ret = p.returncode, p.stdout
-           if ret_status == 0:
-              rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
-              return rdata
+            if ret_status == 0:
+                rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
+                return rdata
 
         except Exception:
-           logging.error('Failed to execute : %s'%self.IPMI_FAN_REAR_SPEED.format(fan_id))
+            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_REAR_SPEED)))
 
 
     # Read FAN FRU info
@@ -70,28 +70,28 @@ class FanUtil(FanBase):
             self.IPMI_FRU_DATA[3] += str(fru_id)
             p = subprocess.run(self.IPMI_FRU_DATA, capture_output=True, universal_newlines=True)
             status, ipmi_fru_list = p.returncode, p.stdout
-           if status == 0:
-              for item in ipmi_fru_list.split("\n"):
-                  if reg_name in item:
-                     output = item.strip()
-                     if output is None:
-                        logging.error('\nFailed to fetch: ' +  reg_name + ' sensor ')
-                     output = output.split(':')[1].strip(' ')
-                     if output == 'F2B' or output == 'B2F':
-                        return output
+            if status == 0:
+                for item in ipmi_fru_list.split("\n"):
+                    if reg_name in item:
+                        output = item.strip()
+                        if output is None:
+                            logging.error('\nFailed to fetch: ' +  reg_name + ' sensor ')
+                        output = output.split(':')[1].strip(' ')
+                        if output == 'F2B' or output == 'B2F':
+                            return output
         except Exception:
-           logging.error('Failed to execute:' + ipmi_fru_list)
+            logging.error('Failed to execute:' + ipmi_fru_list)
 
     def get_num_fans(self):
         return self.num_fans
 
     def get_presence(self, index):
         if index is None:
-           return False
+            return False
 
         if index < self.FANTRAY_NUM_START_IDX or index > self.FANTRAY_NUM_START_IDX + self.num_fans - 1:
-           logging.error('Invalid FAN index:%d', index)
-           return False
+            logging.error('Invalid FAN index:%d', index)
+            return False
 
         tray_index = ((index-1)/self.NUM_FANS_PERTRAY) + 1
 
@@ -102,11 +102,11 @@ class FanUtil(FanBase):
 
     def get_status(self, index):
         if index is None:
-           return False
+            return False
 
         if index < self.FANTRAY_NUM_START_IDX or index > self.FANTRAY_NUM_START_IDX + self.num_fans - 1:
-           logging.error('Invalid FAN index:%d', index)
-           return False
+            logging.error('Invalid FAN index:%d', index)
+            return False
 
         tray_index = ((index-1)/self.NUM_FANS_PERTRAY) + 1
         fantray_front_speed=self.get_front_fan_speed(tray_index)
@@ -120,38 +120,38 @@ class FanUtil(FanBase):
 
     def get_direction(self, index):
         if index is None:
-           return None
+            return None
 
         if index < self.FANTRAY_NUM_START_IDX or index > self.FANTRAY_NUM_START_IDX + self.num_fans - 1:
-           logging.error('Invalid FAN index:%d', index)
-           return None
+            logging.error('Invalid FAN index:%d', index)
+            return None
 
         tray_index = ((index-1)/self.NUM_FANS_PERTRAY)
         fru_id = self.FRU_FAN_START_IDX + tray_index
         direction = self.get_fan_direction_from_fru(fru_id,'Board Extra')
 
         if direction == 'B2F':
-           return "INTAKE"
+            return "INTAKE"
         elif direction == 'F2B':
-           return "EXHAUST"
+            return "EXHAUST"
         else:
-           return None
+            return None
 
 
     def get_speed(self, index):
         if index is None:
-           return 0
+            return 0
 
         if index < self.FANTRAY_NUM_START_IDX or index > self.FANTRAY_NUM_START_IDX + self.num_fans - 1:
-           logging.error('Invalid FAN index:%d', index)
-           return 0
+            logging.error('Invalid FAN index:%d', index)
+            return 0
 
         tray_index = ((index-1)/self.NUM_FANS_PERTRAY) + 1
 
         if (index % 2 != 0):
-           fantray_speed=self.get_front_fan_speed(tray_index)
+            fantray_speed=self.get_front_fan_speed(tray_index)
         else:
-           fantray_speed=self.get_rear_fan_speed(tray_index)
+            fantray_speed=self.get_rear_fan_speed(tray_index)
         
         if (self.get_presence(index) == True):
             return int(fantray_speed.strip())

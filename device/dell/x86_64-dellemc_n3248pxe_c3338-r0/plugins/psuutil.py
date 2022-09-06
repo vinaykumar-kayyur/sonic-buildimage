@@ -100,6 +100,8 @@ class PsuUtil(PsuBase):
         else:
             p = subprocess.run(DOCKER_SENSORS_CMD, capture_output=True, universal_newlines=True)
             status, cmd_output = p.returncode, p.stdout
+        if cmd_output[-1:] == '\n':
+            cmd_output = cmd_output[:-1]
         if status:
             print('Failed to execute sensors command')
             sys.exit(0)

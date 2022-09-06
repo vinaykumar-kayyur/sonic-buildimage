@@ -4,7 +4,6 @@
 #
 
 
-import os.path
 import logging
 import sys
 import subprocess
