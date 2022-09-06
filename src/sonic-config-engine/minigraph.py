@@ -396,6 +396,29 @@ def parse_dpg(dpg, hname):
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
 
+        dhcp = child.find(str(QName(ns, "Dhcp")))
+        dhcp_table = {}
+
+        if dhcp is not None:
+            for vintf in dhcp.findall(str(QName(ns, "VlanInterface"))):
+                vintfname = vintf.find(str(QName(ns, "Name"))).text
+
+                dhcp_attributes = {}
+
+                dhcp_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
+                if dhcp_node is not None and dhcp_node.text is not None:
+                    dhcpservers = dhcp_node.text
+                    vdhcpserver_list = dhcpservers.split(';')
+                    dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
+
+                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionRfc6939")))
+                if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
+                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "true"
+                elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
+                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "false"
+
+                dhcp_table[vintfname] = dhcp_attributes
+
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
@@ -496,7 +519,7 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
+        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, dhcp_table, pcs, pc_members, acls, vni
     return None, None, None, None, None, None, None, None, None, None
 
 def parse_host_loopback(dpg, hname):
@@ -985,7 +1008,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     for child in root:
         if asic_name is None:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, dhcp_table, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
@@ -1000,7 +1023,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, dhcp_table, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
                 host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name, local_devices)
@@ -1254,6 +1277,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['DHCPv6_SERVER'] = dict((item, {}) for item in dhcpv6_servers)
+    results['DHCP'] = dhcp_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)

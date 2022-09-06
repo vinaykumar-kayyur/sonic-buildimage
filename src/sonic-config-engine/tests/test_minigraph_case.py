@@ -190,3 +190,27 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(len(mgmt_intf.keys()), 1)
         self.assertTrue(('eth0', 'FC00:1::32/64') in mgmt_intf.keys())
         self.assertTrue(ipaddress.IPAddress('fc00:1::1') == mgmt_intf[('eth0', 'FC00:1::32/64')]['gwaddr'])
+
+    def test_dhcp_table(self):
+            argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DHCP"'
+            expected = {
+                    'Vlan1000': {
+                        'dhcpv6_servers': [
+                            "fc02:2000::1",
+                            "fc02:2000::2"
+                        ],
+                        'dhcpv6_option|rfc6939_support': 'true'
+                        },
+                    'Vlan2000': {
+                        'dhcpv6_servers': [
+                            "fc02:2000::3",
+                            "fc02:2000::4"
+                        ],
+                        'dhcpv6_option|rfc6939_support': 'false'
+                        }
+            }
+            output = self.run_script(argument)
+            self.assertEqual(
+                output.strip(),
+                "{'Vlan1000': {'dhcpv6_option|rfc6939_support': 'true', 'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2']}, 'Vlan2000': {'dhcpv6_option|rfc6939_support': 'false', 'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4']}}" 
+            )
