@@ -12,3 +12,9 @@ Architecture: any
 Built-Using: ${misc:Built-Using}
 Depends: ${shlibs:Depends}
 Description: SONiC event service
+
+Package: sonic-rsyslog-plugin
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Depends: ${shlibs:Depends}
+Description: SONiC rsyslog plugin service

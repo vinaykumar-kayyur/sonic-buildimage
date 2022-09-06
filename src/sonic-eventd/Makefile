@@ -72,6 +72,7 @@ install:
 	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_PUBLISH_TOOL) $(DESTDIR)/usr/sbin
+	$(CP) $(RSYSLOG-PLUGIN_TARGET) $(DESTDIR)/usr/sbin
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(EVENTD_TARGET)
