@@ -162,7 +162,8 @@ To build SONiC installer image and docker images, run the following commands:
 
     ● Setting the cache method `SONIC_DPKG_CACHE_METHOD=rwcache`, speeds up the build process (after the first time) by caching non-SONiC specific build products such as the Linux kernel.
 
-    ● INCLUDE_P4RT is the name in rules/config 
+    ● If you want to enable SDN capabilities through PINS: 
+    INCLUDE_P4RT is the name in rules/config 
         `SONIC_INCLUDE_P4RT=y`
     
     You can confirm $BUILD_VARS by observing the output in command-line after starting the build process.
