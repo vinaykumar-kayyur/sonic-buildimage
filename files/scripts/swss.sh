@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEPENDENT="radv dhcp_relay"
+DEPENDENT="radv dhcp_relay bgp"
 MULTI_INST_DEPENDENT="teamd"
 
 function debug()
@@ -15,7 +15,7 @@ function lock_service_state_change()
 
     exec {LOCKFD}>${LOCKFILE}
     /usr/bin/flock -x ${LOCKFD}
-    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+    trap "/usr/bin/flock -u ${LOCKFD}" EXIT
 
     debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE}$DEV service"
 }
