@@ -36,7 +36,8 @@ class APIHelper():
             with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
                 with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
                     raw_data = p2.communicate()[0]
-                    if p2.returncode != 0:
+                    p1.wait()
+                    if p1.returncode != 0 and p2.returncode != 0:
                         raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=raw_data)
                     result = raw_data.strip()
         except subprocess.CalledProcessError:
