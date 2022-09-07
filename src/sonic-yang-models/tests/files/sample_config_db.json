@@ -1804,6 +1804,22 @@
             }
         },
 
+        "MUX_CABLE": {
+            "Ethernet4": {
+                "cable_type": "active-active",
+                "server_ipv4": "192.168.0.2/32",
+                "server_ipv6": "fc02:1000::30/128",
+                "soc_ipv4": "192.168.0.3/32",
+                "state": "auto"
+            }, 
+            "Ethernet0": {
+                "server_ipv4": "192.168.0.2/32",
+                "server_ipv6": "fc02:1000::30/128",
+                "state": "auto"
+            }
+        },
+
+
         "POLICER": {
             "everflow_static_policer": {
                 "meter_type": "bytes",
@@ -1980,6 +1996,15 @@
         "CONSOLE_SWITCH": {
             "console_mgmt": {
                 "enabled": "yes"
+            }
+        },
+	"STATIC_ROUTE": {
+            "default|20.20.20.0/24": {
+                "blackhole": "false",
+                "distance": "1",
+                "ifname": "Ethernet14",
+                "nexthop": "10.184.229.212",
+                "nexthop-vrf": "default"
             }
         }
     },
