@@ -13,14 +13,14 @@ import sys
 import syslog
 import tempfile
 import urllib.request
-import requests
 import base64
 from urllib.parse import urlparse
-from jinja2 import Template
 
 import yaml
+import requests
 from sonic_py_common import device_info
-from swsssdk import ConfigDBConnector
+from jinja2 import Template
+from swsscommon import swsscommon
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
 KUBELET_YAML = "/var/lib/kubelet/config.yaml"
@@ -270,12 +270,11 @@ users:
 
 def _get_local_ipv6():
     try:
-        config_db = ConfigDBConnector()
-        config_db.connect()
-        mgmt_ip_data = config_db.get_table('MGMT_INTERFACE')
-        for key in mgmt_ip_data.keys():
-            if key[1].find(":") >= 0:
-                return key[1].split("/")[0]
+        config_db = swsscommon.DBConnector("CONFIG_DB", 0)
+        mgmt_ip_data = swsscommon.Table(config_db, 'MGMT_INTERFACE')
+        for key in mgmt_ip_data.getKeys():
+            if key.find(":") >= 0:
+                return key.split("|")[1].split("/")[0]
         raise IOError("IPV6 not find from MGMT_INTERFACE table")
     except Exception as e:
         raise IOError(str(e))
