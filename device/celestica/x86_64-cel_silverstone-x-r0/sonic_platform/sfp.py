@@ -465,6 +465,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['specification_compliance'] = '{}'
             transceiver_info_dict['nominal_bit_rate'] = 'N/A'
             transceiver_info_dict['application_advertisement'] = 'N/A'
+            transceiver_info_dict['vendor_rev'] = 'N/A'
 
         else:
             if self.sfp_type == QSFP_TYPE:
