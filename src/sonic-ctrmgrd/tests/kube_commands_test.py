@@ -128,6 +128,9 @@ none".format(KUBE_ADMIN_CONF),
                     }
                 }
             }
+        },
+        common_test.REQ: {
+            "data": {"ca.crt": "test"}
         }
     },
     1: {
@@ -158,6 +161,9 @@ none".format(KUBE_ADMIN_CONF),
                     }
                 }
             }
+        },
+        common_test.REQ: {
+            "data": {"ca.crt": "test"}
         }
     },
     2: {
@@ -321,12 +327,13 @@ clusters:\n\
                     json.dumps(labels, indent=4)))
                 assert False
 
-    @patch("ctrmgr_tools.swsscommon.DBConnector")
-    @patch("ctrmgr_tools.swsscommon.Table")
+    @patch("kube_commands.requests.get")
+    @patch("kube_commands.swsscommon.DBConnector")
+    @patch("kube_commands.swsscommon.Table")
     @patch("kube_commands.subprocess.Popen")
-    def test_join(self, mock_subproc, mock_table, mock_conn):
+    def test_join(self, mock_subproc, mock_table, mock_conn, mock_reqget):
         self.init()
-        common_test.set_kube_mock(mock_subproc, mock_table, mock_conn)
+        common_test.set_kube_mock(mock_subproc, mock_table, mock_conn, mock_reqget)
 
         for (i, ct_data) in join_test_data.items():
             lock_file = ""
