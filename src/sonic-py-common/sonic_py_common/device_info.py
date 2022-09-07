@@ -654,3 +654,29 @@ def is_fast_reboot_enabled():
         fb_system_state = stdout.rstrip('\n')
 
     return fb_system_state
+
+
+# Check if this platform has macsec capability.
+def is_macsec_supported():
+    supported = 0
+    platform_env_conf_file_path = get_platform_env_conf_file_path()
+
+    # platform_env.conf file not present for platform
+    if platform_env_conf_file_path is None:
+        return supported
+
+    # Else open the file check for keyword - macsec_enabled -
+    with open(platform_env_conf_file_path) as platform_env_conf_file:
+        for line in platform_env_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0].lower() == 'macsec_enabled':
+                supported = tokens[1].strip()
+                break
+    return int(supported)
+
+
+def get_macsec_support_metadata():
+    macsec_support_metadata = {'MACSEC_SUPPORTED': True if is_macsec_supported() else False}
+    return macsec_support_metadata
