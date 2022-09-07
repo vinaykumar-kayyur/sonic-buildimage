@@ -52,6 +52,8 @@ def fantype_detect():
             fantype_path = os.path.join(refpgaTMC_path, filename)
             p = subprocess.run(["cat", fantype_path], capture_output=True, universal_newlines=True)
             fan_type = p.stdout
+            if fan_type[-1:] == '\n':
+                fan_type = fan_type[:-1]
             if ((fan_type == AFO) or (fan_type == AFI)):
                 return fan_type
             else:
