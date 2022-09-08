@@ -1,0 +1,5 @@
+###############################################################################
+## Monit configuration for telemetry container
+###############################################################################
+check program container_eventd with path "/usr/local/bin/events_monit_test.py"
+    every 5 cycles

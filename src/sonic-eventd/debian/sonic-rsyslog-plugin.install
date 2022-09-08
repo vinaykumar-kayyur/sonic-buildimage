@@ -1,1 +1,3 @@
-usr/sbin/ryslog_plugin
+usr/local/bin/rsyslog_plugin
+usr/local/bin/events_monit_test.py
+etc/monit/conf.d/monit_events
