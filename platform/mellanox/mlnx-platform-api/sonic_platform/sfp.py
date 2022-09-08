@@ -368,7 +368,7 @@ class SFP(NvidiaSFPCommon):
                     line_split = line.split()
                     eeprom_raw = eeprom_raw + line_split[1:]
         except subprocess.CalledProcessError as e:
-            logger.log_error("Failed to get EEPROM data for sfp {}: {}".format(self.index, e.stderr))
+            logger.log_notice("Failed to get EEPROM data for sfp {}: {}".format(self.index, e.stderr))
             return None
 
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
