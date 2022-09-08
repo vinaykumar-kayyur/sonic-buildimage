@@ -6,8 +6,6 @@
 #
 #############################################################################
 
-import subprocess
-
 
 try:
     from sonic_platform_base.component_base import ComponentBase
