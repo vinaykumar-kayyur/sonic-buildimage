@@ -192,7 +192,7 @@ class Sfp(SfpBase):
         return True
 
     def __is_host(self):
-        return subprocess.run(self.HOST_CHK_CMD, stdout=None, stderr=None) == 0
+        return subprocess.run(self.HOST_CHK_CMD) == 0
 
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])

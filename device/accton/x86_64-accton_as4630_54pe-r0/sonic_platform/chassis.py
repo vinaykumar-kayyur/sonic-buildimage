@@ -6,7 +6,6 @@
 #
 #############################################################################
 
-import os
 import sys
 import subprocess
 
@@ -98,7 +97,7 @@ class Chassis(ChassisBase):
 
 
     def __is_host(self):
-        return subprocess.run(HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
+        return subprocess.run(HOST_CHK_CMD).returncode == 0
 
     def __read_txt_file(self, file_path):
         try:
