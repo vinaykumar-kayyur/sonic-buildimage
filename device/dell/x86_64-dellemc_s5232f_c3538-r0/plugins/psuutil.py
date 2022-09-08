@@ -14,6 +14,7 @@ IPMI_PSU1_DATA_DOCKER = ["ipmitool", "raw", "0x04", "0x2d", "0x31"]
 IPMI_PSU2_DATA = ["docker", "exec", "-it", "pmon", "ipmitool", "raw", "0x04", "0x2d", "0x32"]
 IPMI_PSU2_DATA_DOCKER = ["ipmitool", "raw", "0x04", "0x2d", "0x32"]
 PSU_PRESENCE = "PSU{0}_stat"
+awk_cmd = ['awk', '{print substr($0,9,1)}']
 # Use this for older firmware
 # PSU_PRESENCE="PSU{0}_prsnt"
 
@@ -40,28 +41,28 @@ class PsuUtil(PsuBase):
     # Fetch a BMC register
     def get_pmc_register(self, reg_name):
 
-        status = 1
+        ipmi_cmd = ''
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA_DOCKER
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU2_DATA_DOCKER
         else:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-        status = p.returncode
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
+                ipmi_cmd = IPMI_PSU2_DATA
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                ipmi_sdr_list = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+                    sys.exit(0)
 
-        if status:
-            logging.error('Failed to execute ipmitool')
-            sys.exit(0)
-
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
         output = ipmi_sdr_list
 
         return output
@@ -85,28 +86,28 @@ class PsuUtil(PsuBase):
         # Until psu_status is implemented this is hardcoded temporarily
 
         psu_status = ''
-        ret_status = 1
+        ipmi_cmd = ''
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA_DOCKER
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU2_DATA_DOCKER
         else:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-        ret_status = p.returncode
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
+                ipmi_cmd = IPMI_PSU2_DATA
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                ipmi_sdr_list = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+                    sys.exit(0)
 
-        if ret_status:
-            logging.error('Failed to execute ipmitool : ')
-            sys.exit(0)
-
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
         psu_status = ipmi_sdr_list
         return (not int(psu_status, 16) > 1)
 
@@ -118,27 +119,28 @@ class PsuUtil(PsuBase):
         :return: Boolean, True if PSU is plugged, False if not
         """
         psu_status = '0'
-        ret_status = 1
+        ipmi_cmd = ''
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA_DOCKER
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU2_DATA_DOCKER
         else:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-        ret_status = p.returncode
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        ipmi_sdr_list = line[8] if len(line) > 8 else '0'
+                ipmi_cmd = IPMI_PSU2_DATA
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                ipmi_sdr_list = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+                    sys.exit(0)
 
-        if ret_status:
-            logging.error('Failed to execute ipmitool : ')
-            sys.exit(0)
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
 
         psu_status = ipmi_sdr_list
         return (int(psu_status, 16) & 1)

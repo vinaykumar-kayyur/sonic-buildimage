@@ -94,10 +94,11 @@ class PsuUtil(PsuBase):
         :param index: An integer, index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
-        p = subprocess.run(cmd, capture_output=True, universal_newlines=True)
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        psu_status = line[8] if len(line) > 8 else ''
+        ipmi_cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
+        awk_cmd = ["awk", "{print substr($0,9,1)}"]
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                psu_status = p2.communicate()[0]
+        if psu_status[-1:] == '\n':
+            psu_status = psu_status[:-1]
         return 1 if psu_status == '1' else 0

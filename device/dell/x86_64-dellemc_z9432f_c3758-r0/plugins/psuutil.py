@@ -26,6 +26,7 @@ class PsuUtil(PsuBase):
     IPMI_PSU_FAN_SPEED = ["ipmitool", "sdr", "get", "PSU{0}_Fan"]
     IPMI_FRU = ["ipmitool", "fru"]
     IPMI_FRU_DATA = ["ipmitool", "fru", "print", ""]
+    awk_cmd = ['awk', '{print substr($0,9,1)}']
 
     def __init__(self):
         PsuBase.__init__(self)
@@ -146,22 +147,22 @@ class PsuUtil(PsuBase):
         faulty
         """
         psu_status = '0'
-        
+        ipmi_cmd = ''
         if index == 1:
-            p = subprocess.run(self.IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout
+            ipmi_cmd = self.IPMI_PSU1_DATA
         elif index == 2:
-            p = subprocess.run(self.IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout
+            ipmi_cmd = self.IPMI_PSU2_DATA
         else:
             logging.error("Invalid PSU number:" + index)
-        if line[-1:] == '\n':
-            line = line[:-1]
-        psu_status = line[8] if len(line) > 8 else '0'
 
-        if cmd_status:
-            logging.error('Failed to execute ipmitool')
-        
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(self.awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                psu_status = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+        if psu_status[-1:] == '\n':
+            psu_status = psu_status[:-1]
         return (not int(psu_status, 16) > 1)
 
     def get_psu_presence(self, index):
@@ -173,21 +174,22 @@ class PsuUtil(PsuBase):
         """
         
         psu_status = '0'
-
+        ipmi_cmd = ''
         if index == 1:
-            p = subprocess.run(self.IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout
+            ipmi_cmd = self.IPMI_PSU1_DATA
         elif index == 2:
-            p = subprocess.run(self.IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-            cmd_status, line = p.returncode, p.stdout
+            ipmi_cmd = self.IPMI_PSU2_DATA
         else:
             logging.error("Invalid PSU number:" + index)
-        if line[-1:] == '\n':
-            line = line[:-1]
-        psu_status = line[8] if len(line) > 8 else '0'
 
-        if cmd_status:
-            logging.error('Failed to execute ipmitool')
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(self.awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                psu_status = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+        if psu_status[-1:] == '\n':
+            psu_status = psu_status[:-1]
 
         return (int(psu_status, 16) & 1)
 

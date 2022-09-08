@@ -4,7 +4,6 @@
 #
 
 
-import os.path
 import logging
 import sys
 import subprocess
@@ -19,6 +18,7 @@ PSU_PRESENCE = "PSU{0}_Status"
 # Use this for older firmware
 # PSU_PRESENCE="PSU{0}_prsnt"
 ipmi_sdr_list = ""
+awk_cmd = ['awk', '{print substr($0,9,1)}']
 
 
 try:
@@ -43,32 +43,28 @@ class PsuUtil(PsuBase):
     # Fetch a BMC register
     def get_pmc_register(self, reg_name):
 
-        status = 1
         global ipmi_sdr_list
-        ipmi_dev_node = "/dev/pmi0"
-        ipmi_cmd_1 = IPMI_PSU1_DATA
-        ipmi_cmd_2 = IPMI_PSU1_DATA
+        ipmi_cmd = ''
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA_DOCKER
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU2_DATA_DOCKER
         else:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-        status = p.returncode
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
-
-        if status:
-            logging.error('Failed to execute ipmitool')
-            sys.exit(0)
-
+                ipmi_cmd = IPMI_PSU2_DATA
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                ipmi_sdr_list = p2.communicate()[0]
+                p1.wait()
+                if p1.returncode != 0 and p2.returncode != 0:
+                    logging.error('Failed to execute ipmitool')
+                    sys.exit(0)
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
         output = ipmi_sdr_list
 
         return output
@@ -101,32 +97,32 @@ class PsuUtil(PsuBase):
         :param index: An integer, index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
+        ipmi_cmd = ''
         status = 0
-        ret_status = 1
+        # ret_status = 1
         global ipmi_sdr_list
-        ipmi_dev_node = "/dev/pmi0"
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA_DOCKER
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA_DOCKER, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU2_DATA_DOCKER
         else:
             if index == 1:
-                p = subprocess.run(IPMI_PSU1_DATA, capture_output=True, universal_newlines=True)
+                ipmi_cmd = IPMI_PSU1_DATA
             elif index == 2:
-                p = subprocess.run(IPMI_PSU2_DATA, capture_output=True, universal_newlines=True)
-        status = p.returncode
-        line = p.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        ipmi_sdr_list = line[8] if len(line) > 8 else ''
+                ipmi_cmd = IPMI_PSU2_DATA
+        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                ipmi_sdr_list = p2.communicate()[0]
 
         # if ret_status:
            #   print ipmi_sdr_list
            #   logging.error('Failed to execute ipmitool')
            #   sys.exit(0)
 
+        if ipmi_sdr_list[-1:] == '\n':
+            ipmi_sdr_list = ipmi_sdr_list[:-1]
         psu_status = ipmi_sdr_list
 
         if psu_status == '1':
