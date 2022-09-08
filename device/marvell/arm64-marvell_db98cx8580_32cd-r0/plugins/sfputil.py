@@ -75,6 +75,8 @@ class SfpUtil(SfpUtilBase):
             cmdstatus, status = p.returncode, p.stdout
             if cmdstatus != 0:
                 return cmdstatus
+            if status[-1:] == '\n':
+                status = status[:-1]
             status = int(status, 16)
         else:
             bus = smbus.SMBus(0)

@@ -1,4 +1,3 @@
-import os.path
 import subprocess
 
 smbus_present = 1
@@ -30,6 +29,8 @@ class PsuUtil(PsuBase):
         if smbus_present == 0:
             p = subprocess.run(["i2cget", "-y", "0", "0x41", "0xa"], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
             cmdstatus, psustatus = p.returncode, p.stdout
+            if psustatus[-1:] == '\n':
+                psustatus = psustatus[:-1]
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -54,6 +55,8 @@ class PsuUtil(PsuBase):
         if smbus_present == 0:
             p = subprocess.run(["i2cget", "-y", "0", "0x41", "0xa"], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
             cmdstatus, psustatus = p.returncode, p.stdout
+            if psustatus[-1:] == '\n':
+                psustatus = psustatus[:-1]
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
