@@ -162,9 +162,9 @@ QSFP_OPTION_VALUE_OFFSET = 192
 QSFP_OPTION_VALUE_WIDTH = 4
 
 QSFP_MODULE_UPPER_PAGE3_START = 384
-QSFP_MODULE_THRESHOLD_OFFSET = 128
+QSFP_MODULE_THRESHOLD_OFFSET = 0  # original starting from 128, SDK only provide 128 bytes on this page.
 QSFP_MODULE_THRESHOLD_WIDTH = 24
-QSFP_CHANNL_THRESHOLD_OFFSET = 176
+QSFP_CHANNL_THRESHOLD_OFFSET = 48
 QSFP_CHANNL_THRESHOLD_WIDTH = 24
 
 SFP_TEMPE_OFFSET = 96
@@ -253,6 +253,15 @@ SX_SFP_PATH_PAGE02 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/2/dat
 SX_SFP_PATH_PAGE17 = "/sys/module/sx_netdev/Ethernet{}/module/eeprom/pages/17/data"
 READ_FROM_SX_SYSFS = True
 
+PAGE_SIZE = 256
+
+PATH_PAGE = '/{}/data'
+PATH_PAGE00 = '/0/i2c-0x50/data'
+PATH_PAGE01 = '/1/data'
+PATH_PAGE02 = '/2/data'
+PATH_PAGE03 = '/3/data'
+PATH_PAGE17 = '/17/data'
+
 #variables for sdk
 REGISTER_NUM = 1
 DEVICE_ID = 1
@@ -321,9 +330,11 @@ def deinitialize_sdk_handle(sdk_handle):
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
-    def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform):
+    def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform, sysfs_list):
         SfpBase.__init__(self)
         self.index = sfp_index + 1
+        self.sdk_sysfs_page_path_header = sysfs_list[0]
+        self.sdk_sysfs_list = sysfs_list
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
         self._detect_sfp_type(sfp_type)
@@ -331,7 +342,7 @@ class SFP(SfpBase):
         self._dom_capability_detect()
         self.sdk_handle_getter = sdk_handle_getter
         self.sdk_index = sfp_index
-
+        
         # initialize SFP thermal list
         from .thermal import initialize_sfp_thermals
         initialize_sfp_thermals(platform, self._thermal_list, self.index)
@@ -375,7 +386,8 @@ class SFP(SfpBase):
                 raise OSError("Cannot detect sfp")
         else:
             try:
-                with open(SX_SFP_PATH_PAGE00.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
+                with open((self.sdk_sysfs_page_path_header + PATH_PAGE00), mode='r+b', buffering=0) as f:
+                #with open(SX_SFP_PATH_PAGE00.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
                     #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE0.format((self.index - 1)*8))
                     f.read(1)
                     presence = True
@@ -407,18 +419,32 @@ class SFP(SfpBase):
             return eeprom_raw
         else:
             try:
+                # if the data is on page0, offset indicate start of lower memory or upper memory
+                # if the data is on other page, then offset = page*256
+                page_num = offset/PAGE_SIZE 
+                if page_num == 0:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE00  #SX_SFP_PATH_PAGE00
+                else:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE.format(page_num)
+                    offset = offset - page_num * PAGE_SIZE
+                '''
                 if offset < 256:
-                    page = SX_SFP_PATH_PAGE00
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE00  #SX_SFP_PATH_PAGE00
                 elif offset < 512:
-                    page = SX_SFP_PATH_PAGE01
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE01 #SX_SFP_PATH_PAGE01
                     offset = offset - 256
                 elif offset < 768:
-                    page = SX_SFP_PATH_PAGE02
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE02 #SX_SFP_PATH_PAGE02
                     offset = offset - 512
+                elif offset < 1024:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE03
+                    offset = offset - 768
                 else:
-                    page = SX_SFP_PATH_PAGE17
-                    offset = offset - 768 # some arbitary number, just want to make this work.
-                with open(page.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE17 #SX_SFP_PATH_PAGE17
+                    offset = offset - 1024 # some arbitary number, just want to make this work.
+                '''
+                with open(page, mode='r+b', buffering=0) as f:
+                #with open(page.format((self.index - 1)*8), mode='r+b', buffering=0) as f:
                     #logger.log_error("read eeprom from file " + SX_SFP_PATH_PAGE00.format((self.index - 1)*8))
                     f.seek(offset)
                     return ["{:02x}".format(c) for c in f.read(num_bytes)]
@@ -1032,7 +1058,7 @@ class SFP(SfpBase):
 
             if self.dom_rx_tx_power_bias_supported:
                 # page 11h
-                offset = 768  # some arbitary number, just want to make this work.
+                offset = 256*17 
                 dom_data_raw = self._read_eeprom_specific_bytes(offset + QSFP_DD_CHANNL_MON_OFFSET, QSFP_DD_CHANNL_MON_WIDTH)
                 if dom_data_raw is None:
                     return transceiver_dom_info_dict
@@ -1156,9 +1182,10 @@ class SFP(SfpBase):
             if not self.dom_supported or not self.qsfp_page3_available:
                 return transceiver_dom_threshold_info_dict
 
-            # Dom Threshold data starts from offset 384
+            # Dom Threshold data starts from page03
             # Revert offset back to 0 once data is retrieved
-            offset = QSFP_MODULE_UPPER_PAGE3_START
+            # offset = QSFP_MODULE_UPPER_PAGE3_START
+            offset = 768
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return transceiver_dom_threshold_info_dict
@@ -1360,7 +1387,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 512
+                offset = 256*17
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_DD_CHANNL_RX_LOS_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     rx_los_data = int(dom_channel_monitor_raw[0], 8)
@@ -1412,7 +1439,7 @@ class SFP(SfpBase):
             return None
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 512
+                offset = 256*17
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     tx_fault_data = int(dom_channel_monitor_raw[0], 8)

@@ -11,6 +11,7 @@ try:
     from sonic_platform_base.component_base import ComponentBase
     from sonic_py_common import device_info
     from sonic_py_common.logger import Logger
+    from .utils import construct_sysfs_to_index_map
     from os import listdir
     from os.path import isfile, join
     import sys
@@ -32,6 +33,10 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 MST_DEVICE_NAME_PATTERN = '/dev/mst/mt[0-9]*_pciconf0'
 MST_DEVICE_RE_PATTERN = '/dev/mst/mt([0-9]*)_pciconf0'
 SPECTRUM1_CHIP_ID = '52100'
+
+SDK_SYSFS_PATH = "/sys/module/sx_netdev/"
+INDEX_PATH = "/sys/module/sx_netdev/{}/module/id"
+PAGE_PATH = "/sys/module/sx_netdev/{}/module/eeprom/pages/"
 
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
@@ -72,6 +77,7 @@ class Chassis(ChassisBase):
         self.reboot_cause_initialized = False
         self.sdk_handle = None
         self.deinitialize_sdk_handle = None
+        self.index_to_sysfs_map = None
         logger.log_info("Chassis loaded successfully")
 
 
@@ -118,6 +124,7 @@ class Chassis(ChassisBase):
         self.sfp_module = SFP
 
         # Initialize SFP list
+        self.index_to_sysfs_map = construct_sysfs_to_index_map(SDK_SYSFS_PATH, INDEX_PATH, PAGE_PATH)
         port_position_tuple = self._get_port_position_tuple_by_platform_name()
         self.PORT_START = port_position_tuple[0]
         self.QSFP_PORT_START = port_position_tuple[1]
@@ -126,9 +133,9 @@ class Chassis(ChassisBase):
 
         for index in range(self.PORT_START, self.PORT_END + 1):
             if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
-                sfp_module = SFP(index, 'QSFP', self.get_sdk_handle, self.platform_name)
+                sfp_module = SFP(index, 'QSFP', self.get_sdk_handle, self.platform_name, self.index_to_sysfs_map.get(index, None))
             else:
-                sfp_module = SFP(index, 'SFP', self.get_sdk_handle, self.platform_name)
+                sfp_module = SFP(index, 'SFP', self.get_sdk_handle, self.platform_name, self.index_to_sysfs_map.get(index, None))
 
             self._sfp_list.append(sfp_module)
 
