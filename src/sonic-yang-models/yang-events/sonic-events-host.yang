@@ -111,7 +111,7 @@ module sonic-events-host {
         }
 
         container event-monit-proc {
-            eventcmn:EVENT_SEVERITY_2;
+            eventcmn:EVENT_SEVERITY_2
 
             description "
                 Declares an event reported by monit for a process
@@ -123,18 +123,20 @@ module sonic-events-host {
             leaf proc_name {
                 type string;
                 description "Name of the process not running";
+                default "";
             }
 
             leaf asic_index {
                 type uint8;
                 description "ASIC index in case of multi asic platform";
+                default 0;
             }
 
             uses evtcmn:sonic-events-cmn;
         }
 
         container event-monit-status {
-            eventcmn: EVENT_SEVERITY_2;
+            eventcmn:EVENT_SEVERITY_2
 
             description "
                 Declares an event reported by monit for status check
@@ -146,11 +148,13 @@ module sonic-events-host {
             leaf entity {
                 type string;
                 description "Name of the failing entity";
+                default "";
             }
 
             leaf asic_index {
                 type uint8;
                 description "ASIC index in case of multi asic platform";
+                default 0;
             }
 
             leaf reason {
@@ -163,7 +167,7 @@ module sonic-events-host {
         }
 
         container event-platform {
-            evtcmn:EVENT_SEVERITY_2;
+            evtcmn:EVENT_SEVERITY_2
 
             description "
                 Declares an event for platform related failure.

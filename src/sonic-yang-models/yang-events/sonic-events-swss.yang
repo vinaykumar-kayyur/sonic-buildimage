@@ -25,22 +25,6 @@ module sonic-events-swss {
         "SONIC SWSS events";
 
     container sonic-events-swss {
-        container redis-generic {
-            oc-alarm-types:MAJOR
-
-            description "
-                Declares an event for a fatal error encountered by swss.
-                The asic-index of the failing process is the only param.";
-
-            leaf asic_index {
-                type uint8;
-                description "ASIC index in case of multi asic platform";
-                default 0;
-            }
-
-            uses evtcmn:sonic-events-cmn;
-        }
-
         container if-state {
             oc-alarm-types:MINOR
 
