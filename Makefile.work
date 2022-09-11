@@ -34,7 +34,7 @@
 #  *                 Default: yes
 #  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
-#  * TRANSLIB_ENABLED: Enable translib operations via the gNMI interface.
+#  * ENABLE_TRANSLIB_WRITE: Enable translib write/config operations via the gNMI interface.
 #  *                 Default: unset
 #  *                 Values: y
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
@@ -394,7 +394,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
-                           TRANSLIB_ENABLED=$(TRANSLIB_ENABLED) \
+                           ENABLE_TRANSLIB_WRITE=$(ENABLE_TRANSLIB_WRITE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
