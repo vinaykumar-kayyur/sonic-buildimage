@@ -107,19 +107,19 @@ class Fan(FanBase):
         # store "ipmitool sensor" info as a file
         #self.logger.log_warning("self_index {} psu {} status {}".format(self.index, self.is_psu_fan,self.is_get_status))
         #if self.index == 0 and self.is_psu_fan == False and self.is_get_status == False:
-        if self.index == 0 and self.is_get_status == False:
+        global all_info_list
+        if self.index == 0:
+            proc = subprocess.Popen(IPMI_SENSOR_LIST_CMD, shell=True, stdout=subprocess.PIPE)
+            out, err = proc.communicate()
             with open(FAN_STATUS_FILE, 'w') as file:
-                proc = subprocess.Popen(IPMI_SENSOR_LIST_CMD, shell=True, stdout=subprocess.PIPE)
-                out, err = proc.communicate()
                 out = out.decode()
                 file.write(out)
-                if proc.returncode != 0:
-                    sys.exit(proc.returncode)
-                all_info_list = out.split("\n")
-        else:
-            with open(FAN_STATUS_FILE, 'r') as file:
-                out = file.read()
-                all_info_list = out.split("\n")
+
+            if type(out) is bytes:
+               out = out.decode()
+            if proc.returncode != 0:
+               sys.exit(proc.returncode)
+            all_info_list = out.split("\n")
              
         #self.logger.log_warning ("Out arg")
         #print (out) 

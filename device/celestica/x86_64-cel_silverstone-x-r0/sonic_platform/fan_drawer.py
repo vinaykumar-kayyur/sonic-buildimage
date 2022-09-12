@@ -25,7 +25,7 @@ class FanDrawer(FanDrawerBase):
         FanDrawerBase.__init__(self)
         self.fantrayindex = fantray_index + 1
         for i in range(SILVERSTONEX_FANS_PER_FANTRAY):
-            self._fan_list.append(Fan(fantray_index, i))
+            self._fan_list.append(Fan(fantray_index, i, False))
 
     def get_name(self):
         """

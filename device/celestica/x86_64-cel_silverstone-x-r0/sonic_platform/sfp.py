@@ -9,7 +9,6 @@
 #############################################################################
 
 import time
-import subprocess
 from ctypes import create_string_buffer
 
 try:
@@ -261,7 +260,7 @@ class Sfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
-        except:
+        except Exception as e:
             pass
         finally:
             if sysfsfile_eeprom:
@@ -465,7 +464,6 @@ class Sfp(SfpBase):
             transceiver_info_dict['specification_compliance'] = '{}'
             transceiver_info_dict['nominal_bit_rate'] = 'N/A'
             transceiver_info_dict['application_advertisement'] = 'N/A'
-            transceiver_info_dict['vendor_rev'] = 'N/A'
 
         else:
             if self.sfp_type == QSFP_TYPE:
@@ -1029,7 +1027,6 @@ class Sfp(SfpBase):
             A Boolean, True if power-override is enabled, False if disabled
         """
         if self.sfp_type == QSFP_TYPE:
-            offset = 0
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
