@@ -184,7 +184,11 @@ static inline struct bf_pci_dev *bf_get_pci_dev(struct bf_dev_info *info) {
  * It masks the msix on/off of generating MSI-X messages.
  */
 static void bf_msix_mask_irq(struct msi_desc *desc, int32_t state) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
   u32 mask_bits = desc->masked;
+#else
+  u32 mask_bits = desc->msix_ctrl;
+#endif
   unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
                     PCI_MSIX_ENTRY_VECTOR_CTRL;
 
@@ -193,12 +197,19 @@ static void bf_msix_mask_irq(struct msi_desc *desc, int32_t state) {
   } else {
     mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
   }
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
   if (mask_bits != desc->masked) {
     writel(mask_bits, desc->mask_base + offset);
     readl(desc->mask_base);
     desc->masked = mask_bits;
   }
+#else
+  if (mask_bits != desc->msix_ctrl) {
+    writel(mask_bits, desc->mask_base + offset);
+    readl(desc->mask_base);
+    desc->msix_ctrl = mask_bits;
+  }
+#endif
 }
 
 /**
@@ -659,6 +670,13 @@ static void bf_major_cleanup(struct bf_pci_dev *bfdev, int minor) {
   cdev_del(bf_global[minor].bf_cdev);
 }
 
+static char *bf_fpga_user_devnode(struct device *dev, umode_t *mode) {
+  if (mode) {
+    *mode = (S_IWUGO | S_IRUGO);
+  }
+  return kasprintf(GFP_KERNEL, "%s", dev_name(dev));
+}
+
 static int bf_init_cdev(struct bf_pci_dev *bfdev, int minor) {
   int ret;
   ret = bf_major_init(bfdev, minor);
@@ -670,6 +688,8 @@ static int bf_init_cdev(struct bf_pci_dev *bfdev, int minor) {
     ret = -ENODEV;
     goto err_class_register;
   }
+  /* change the default device file permissions */
+  bf_class->devnode = bf_fpga_user_devnode;
   return 0;
 
 err_class_register:
@@ -1220,6 +1240,11 @@ static void bf_pci_resume(struct pci_dev *pdev) {
 }
 
 static int bf_config_intr_mode(char *intr_str) {
+  bf_intr_mode_default = BF_INTR_MODE_NONE;
+  pr_info("BF_FPGA interrupt disabled\n");
+  return 0;
+
+  /* pre coded stuff if fpga supports interrupt in future */
   if (!intr_str) {
     pr_info("BF_FPGA Use MSI interrupt by default\n");
     return 0;

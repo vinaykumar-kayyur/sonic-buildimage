@@ -3,6 +3,7 @@ include $(PLATFORM_PATH)/platform-modules-bfn.mk
 include $(PLATFORM_PATH)/platform-modules-bfn-montara.mk
 include $(PLATFORM_PATH)/platform-modules-accton.mk
 include $(PLATFORM_PATH)/platform-modules-bfn-newport.mk
+include $(PLATFORM_PATH)/platform-modules-bfn-davenport.mk
 include $(PLATFORM_PATH)/platform-modules-wnc-osw1800.mk
 include $(PLATFORM_PATH)/platform-modules-ingrasys.mk
 include $(PLATFORM_PATH)/platform-modules-netberg.mk

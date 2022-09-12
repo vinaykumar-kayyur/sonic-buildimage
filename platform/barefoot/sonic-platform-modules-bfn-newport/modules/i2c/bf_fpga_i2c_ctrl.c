@@ -98,7 +98,7 @@ fpga_i2c_controller_t *fpga_i2c_ctrl_get(int bus_id) {
   if (bus_id >= BF_I2C_FPGA_NUM_CTRL) {
     return NULL;
   } else {
-    return &fpga_i2c_ctrl[bus_id];
+    return &(fpga_i2c_ctrl[bus_id]);
   }
 }
 

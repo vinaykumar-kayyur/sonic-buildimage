@@ -187,7 +187,11 @@ static inline struct bf_pci_dev *bf_get_pci_dev(struct bf_dev_info *info) {
  * It masks the msix on/off of generating MSI-X messages.
  */
 static void bf_msix_mask_irq(struct msi_desc *desc, int32_t state) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
   u32 mask_bits = desc->masked;
+#else
+  u32 mask_bits = desc->msix_ctrl;
+#endif
   unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
                     PCI_MSIX_ENTRY_VECTOR_CTRL;
 
@@ -196,12 +200,19 @@ static void bf_msix_mask_irq(struct msi_desc *desc, int32_t state) {
   } else {
     mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
   }
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
   if (mask_bits != desc->masked) {
     writel(mask_bits, desc->mask_base + offset);
     readl(desc->mask_base);
     desc->masked = mask_bits;
   }
+#else
+  if (mask_bits != desc->msix_ctrl) {
+    writel(mask_bits, desc->mask_base + offset);
+    readl(desc->mask_base);
+    desc->msix_ctrl = mask_bits;
+  }
+#endif
 }
 
 /**
@@ -878,7 +889,7 @@ static int bf_tof3_register_device(struct device *parent,
      physical Tofino(3) device. We have not figured that out yet.
      until then, we support only one CB device per host CPU */
   bf_addr = (u32 *)((u8 *)bf_base_addr + TOFINO3_MISC_PAD_STATUS_OFFSET);
-#if 1 /* USING EMULATOR where subdevice info is not possible to have */
+#if 0 /* USING EMULATOR where subdevice info is not possible to have */
   bf_multisub_tof_unused_devid_get(); /* keep compiler happy */
   subdev_id = 0;
   if (bf_get_next_minor_no(&minor)) {
@@ -893,9 +904,13 @@ static int bf_tof3_register_device(struct device *parent,
   /* we cannot assume the order in which sub devices are probed */
   if (subdev_id == 0) {
     dev_id = bf_multisub_tof_unused_devid_get();
+    if (dev_id < 0) {
+      return -EINVAL;
+    }
     bf_tof3_info[dev_id].dev_id = dev_id; /* back reference */
     (bf_tof3_info[dev_id].minor)[subdev_id] = minor;
   } else {
+    subdev_id = 1;
     dev_id = 0; /* TBD : for Tofino with multi sub devices */
     (bf_tof3_info[dev_id].minor)[subdev_id] = minor;
   }
@@ -1036,10 +1051,10 @@ int bf_register_device(struct device *parent, struct bf_pci_dev *bfdev) {
  * sub devices using the minor number are unregistered */
 static int bf_tof3_unregister_device(struct bf_pci_dev *bfdev) {
   struct bf_dev_info *info = &bfdev->info;
-#if 1 //HACK until emulator implements efuse
+#if 0 //HACK until emulator implements efuse
   bf_return_minor_no(info->minor);
 #else
-  int j, dev_id, subdev_id, found;
+  int dev_id, subdev_id;
 
   if (!info->tof3_info) {
     printk(KERN_ERR "BF TOF3 bad info in tof3_unregister_device\n");

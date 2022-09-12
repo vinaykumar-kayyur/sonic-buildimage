@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+depmod -a
+systemctl enable bfn-davenport.service
+systemctl start bfn-davenport.service
+
+PLATFORM_NAME=x86_64-accton_as9526bf_32do-r0
+SONIC_PLATFORM_WHEEL_PY3="/usr/share/sonic/device/${PLATFORM_NAME}/sonic_platform-1.0-py3-none-any.whl"
+python3 -m pip install ${SONIC_PLATFORM_WHEEL_PY3}
+
+#DEBHELPER#
