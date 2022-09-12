@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Silverstone-x platform sensors. This script get the sensor data from BMC 
+# Silverstone-x  32x400G platform sensors. This script get the sensor data from BMC 
 # using ipmitool and display them in lm-sensor alike format.
 #
 # The following data is support:
