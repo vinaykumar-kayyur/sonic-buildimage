@@ -1,0 +1,17 @@
+[Unit]
+Description=Platform topology configuration service
+Requires=database.service
+After=database.service
+PartOf=database.service
+Before=config-setup.service
+
+[Service]
+Type=oneshot
+User=root
+RemainAfterExit=yes
+ExecStart=/usr/bin/config-topology.sh start
+ExecStop=/usr/bin/config-topology.sh stop
+
+[Install]
+WantedBy=multi-user.target
+
