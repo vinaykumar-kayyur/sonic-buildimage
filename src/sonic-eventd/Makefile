@@ -72,7 +72,7 @@ rsyslog-plugin-tests: $(RSYSLOG-PLUGIN-TEST_OBJS)
 
 install:
 	$(MKDIR) -p $(DESTDIR)/usr/sbin
-	$(MKDIR) -P $(DESTDIR)/etc/monit/conf.d
+	$(MKDIR) -p $(DESTDIR)/etc/monit/conf.d
 	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
 	$(CP) $(EVENTD_PUBLISH_TOOL) $(DESTDIR)/usr/sbin

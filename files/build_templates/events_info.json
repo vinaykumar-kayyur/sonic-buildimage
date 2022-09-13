@@ -1,0 +1,13 @@
+{
+    "yang_module": "sonic-events-host",
+    "proclist": [
+        {
+            "name": "monit",
+	    "parse_json": "monit_regex.json"
+        },
+        {
+            "name": "sshd",
+            "parse_json": "sshd_regex.json"
+        }
+    ]
+}
