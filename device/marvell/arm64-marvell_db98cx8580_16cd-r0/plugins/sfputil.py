@@ -4,6 +4,7 @@ try:
     import re
     import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -71,12 +72,9 @@ class SfpUtil(SfpUtilBase):
         status = 0
         if smbus_present == 0:
             x = ["i2cget", "-y", "0", hex(device_addr), hex(offset)]
-            p = subprocess.run(x, capture_output=True, universal_newlines=True)
-            cmdstatus, status = p.returncode, p.stdout
+            cmdstatus, status = getstatusoutput_noshell(x)
             if cmdstatus != 0:
                 return cmdstatus
-            if status[-1:] == '\n':
-                status = status[:-1]
             status = int(status, 16)
         else:
             bus = smbus.SMBus(0)

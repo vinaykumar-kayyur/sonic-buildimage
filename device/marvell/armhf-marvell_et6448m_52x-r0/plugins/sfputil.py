@@ -5,6 +5,7 @@ try:
     import glob
     import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -109,10 +110,7 @@ class SfpUtil(SfpUtilBase):
         pos = [1, 2, 4, 8]
         bit_pos = pos[prt]
         if smbus_present == 0:
-            proc = subprocess.run(['i2cget', '-y', '0', '0x41', '0x3'], capture_output=True, universal_newlines=True)  # need to verify the cpld register logic
-            cmdstatus, sfpstatus = proc.returncode, proc.stdout
-            if sfpstatus[-1:] == '\n':
-                sfpstatus = sfpstatus[:-1]
+            cmdstatus, sfpstatus = getstatusoutput_noshell(['i2cget', '-y', '0', '0x41', '0x3'])
             sfpstatus = int(sfpstatus, 16)
         else:
             bus = smbus.SMBus(0)
