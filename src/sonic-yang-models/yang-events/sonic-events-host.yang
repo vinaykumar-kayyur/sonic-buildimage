@@ -45,20 +45,29 @@ module sonic-events-host {
             uses evtcmn:sonic-events-cmn;
         }
 
+        container cpu-usage {
+            oc-alarm-types:MINOR
+
+            description "
+                Declares an event for memory usage crossing set limit
+                The parameters describe the usage & limit set.";
+            
+            uses evtcmn:sonic-events-usage;
+
+            uses evtcmn:sonic-events-cmn;
+        }
+
         container event-sshd {
             oc-alarm-types:MINOR
 
             description "
                 Declares an event reported by sshd.
-                The fail type declares the type of failure.
-                INCORRECT_PASSWORD - denotes that sshd is sending
-                wrong password to AAA to intentionally fail this login.";
+                This implies an internal system state blocks sshd from
+                creating the new user.";
 
-            leaf fail_type {
-                type enumeration {
-                    enum "INCORRECT_PASSWD";
-                }
-                description "Type of failure";
+            leaf username {
+                type string;
+                description "Name of the new user";
             }
 
             uses evtcmn:sonic-events-cmn;
@@ -110,56 +119,32 @@ module sonic-events-host {
             uses evtcmn:sonic-events-cmn;
         }
 
-        container event-monit-proc {
+        container event-down-ctr {
             eventcmn:EVENT_SEVERITY_2
 
             description "
-                Declares an event reported by monit for a process
-                that is not running.
-                Params: 
-                    Name of the process that is not running.
-                    The ASIC-index of that process.";
+                Declares an container that is expected to be up is down.
+                Reported by monit periodically.";
                
-            leaf proc_name {
+            leaf ctr_name {
                 type string;
-                description "Name of the process not running";
+                description "Name of the container not running";
                 default "";
-            }
-
-            leaf asic_index {
-                type uint8;
-                description "ASIC index in case of multi asic platform";
-                default 0;
             }
 
             uses evtcmn:sonic-events-cmn;
         }
 
-        container event-monit-status {
+        container event-stopped-ctr {
             eventcmn:EVENT_SEVERITY_2
 
             description "
-                Declares an event reported by monit for status check
-                failure for a process
-                Params: 
-                    Name of the process that is not running.
-                    The ASIC-index of that process.";
+                Declare an event at the time point of container stopping.
+                event-down-ctr fires periodically until it starts up.";
                
-            leaf entity {
+            leaf ctr-name {
                 type string;
-                description "Name of the failing entity";
-                default "";
-            }
-
-            leaf asic_index {
-                type uint8;
-                description "ASIC index in case of multi asic platform";
-                default 0;
-            }
-
-            leaf reason {
-                type string;
-                description "Human readble text explaining failure";
+                description "Name of the container";
                 default "";
             }
 
