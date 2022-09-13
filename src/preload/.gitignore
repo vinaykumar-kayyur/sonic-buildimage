@@ -1,4 +1,5 @@
-src/preload/gcovpreload/debian/*
-!src/preload/gcovpreload/debian/changelog 
-!src/preload/gcovpreload/debian/control
-!src/preload/gcovpreload/debian/rules 
+gcovpreload/debian/*
+!gcovpreload/debian/changelog 
+!gcovpreload/debian/control
+!gcovpreload/debian/rules 
+!gcovpreload/debian/libgcovpreload.postinst
