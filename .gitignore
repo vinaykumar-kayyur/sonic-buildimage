@@ -44,12 +44,6 @@ files/Aboot/boot0
 files/initramfs-tools/arista-convertfs
 files/initramfs-tools/union-mount
 
-# Subdirectories in src
-src/preload/gcovpreload/debian/*
-!src/preload/gcovpreload/debian/changelog 
-!src/preload/gcovpreload/debian/control
-!src/preload/gcovpreload/debian/rules 
-
 # Debian byproduct files
 src/**/debian/stamp-*/
 src/**/debian/*.log
