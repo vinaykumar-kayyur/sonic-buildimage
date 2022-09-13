@@ -619,9 +619,9 @@ class TestCfgGen(TestCase):
         self.assertEqual(output, '')
 
     def test_minigraph_dhcp(self):
-            argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v DHCP'
+            argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v DHCP_RELAY'
             output = self.run_script(argument)
             self.assertEqual(
                 output.strip(),
-                "{'Vlan1000': {'dhcpv6_option|rfc6939_support': 'true', 'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2']}, 'Vlan2000': {'dhcpv6_option|rfc6939_support': 'false', 'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4']}}"
+                "{'Vlan1000': {'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2']}, 'Vlan2000': {'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4']}}"
             )
