@@ -6,7 +6,7 @@
 
 import logging
 import sys
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
 
 S5296F_MAX_PSUS = 2
@@ -46,8 +46,7 @@ class PsuUtil(PsuBase):
         if dockerenv == True:
             ipmi_cmd = IPMI_PSU_DATA_DOCKER
 
-        p = subprocess.run(ipmi_cmd, capture_output=True, universal_newlines=True)
-        status, ipmi_sdr_list = p.returncode, p.stdout
+        status, ipmi_sdr_list = getstatusoutput_noshell(ipmi_cmd)
 
         if status:
             logging.error('Failed to execute:' + ipmi_sdr_list)
@@ -96,9 +95,5 @@ class PsuUtil(PsuBase):
         """
         ipmi_cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
         awk_cmd = ["awk", "{print substr($0,9,1)}"]
-        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                psu_status = p2.communicate()[0]
-        if psu_status[-1:] == '\n':
-            psu_status = psu_status[:-1]
+        cmd_status, psu_status = getstatusoutput_noshell_pipe(ipmi_cmd, awk_cmd)
         return 1 if psu_status == '1' else 0

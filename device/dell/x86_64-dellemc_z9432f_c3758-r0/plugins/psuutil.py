@@ -3,7 +3,7 @@
 # Platform-specific PSU status interface for SONiC
 #
 import logging
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
 Z9332F_MAX_PSUS = 2
 FRU_PSUL = 11
@@ -20,10 +20,10 @@ class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
     IPMI_PSU1_DATA = ["ipmitool", "raw", "0x04", "0x2d", "0x2f"]
     IPMI_PSU2_DATA = ["ipmitool", "raw", "0x04", "0x2d", "0x39"]
-    IPMI_PSU_VOUT = ["ipmitool", "sdr", "get", "PSU{0}_VOut"]
-    IPMI_PSU_POUT = ["ipmitool", "sdr", "get", "PSU{0}_POut"]
-    IPMI_PSU_COUT = ["ipmitool", "sdr", "get", "PSU{0}_COut"]
-    IPMI_PSU_FAN_SPEED = ["ipmitool", "sdr", "get", "PSU{0}_Fan"]
+    IPMI_PSU_VOUT = ["ipmitool", "sdr", "get", ""]
+    IPMI_PSU_POUT = ["ipmitool", "sdr", "get", ""]
+    IPMI_PSU_COUT = ["ipmitool", "sdr", "get", ""]
+    IPMI_PSU_FAN_SPEED = ["ipmitool", "sdr", "get", ""]
     IPMI_FRU = ["ipmitool", "fru"]
     IPMI_FRU_DATA = ["ipmitool", "fru", "print", ""]
     awk_cmd = ['awk', '{print substr($0,9,1)}']
@@ -40,51 +40,47 @@ class PsuUtil(PsuBase):
 
     def get_psu_vout(self,index):
         try:
-            self.IPMI_PSU_VOUT[3] = self.IPMI_PSU_VOUT[3].format(index)
-            p = subprocess.run(self.IPMI_PSU_VOUT, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_PSU_VOUT[3] = 'PSU' + str(index) + '_VOut'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_PSU_VOUT)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
 
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_PSU_VOUT)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_PSU_VOUT)))
     
     def get_psu_cout(self,index):
         try:
-            self.IPMI_PSU_COUT[3] = self.IPMI_PSU_COUT[3].format(index)
-            p = subprocess.run(self.IPMI_PSU_COUT, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_PSU_COUT[3] = 'PSU' + str(index) + 'POut'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_PSU_COUT)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
 
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_PSU_COUT)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_PSU_COUT)))
 
     def get_psu_pout(self,index):
         try:
-            self.IPMI_PSU_POUT[3] = self.IPMI_PSU_POUT[3].format(index)
-            p = subprocess.run(self.IPMI_PSU_POUT, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_PSU_POUT[3] = 'PSU' + str(index) + '_COut'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_PSU_POUT)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
 
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_PSU_POUT)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_PSU_POUT)))
 
     def get_psu_fan_speed(self,index):
         try:
-            self.IPMI_PSU_FAN_SPEED[3] = self.IPMI_PSU_FAN_SPEED[3].format(index)
-            p = subprocess.run(self.IPMI_PSU_FAN_SPEED, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_PSU_FAN_SPEED[3] = 'PSU' + str(index) + '_Fan'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_PSU_FAN_SPEED)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
 
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_PSU_FAN_SPEED)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_PSU_FAN_SPEED)))
 
 
     #Fetch FRU Data for given fruid
@@ -94,8 +90,7 @@ class PsuUtil(PsuBase):
         else:
             fru_id = 'FRU_PSUR'
 
-        p = subprocess.run(self.IPMI_FRU, capture_output=True, universal_newlines=True)
-        ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+        ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_FRU)
         if ret_status:
             logging.error('Failed to execute ipmitool: '+ self.IPMI_FRU)
 
@@ -113,8 +108,7 @@ class PsuUtil(PsuBase):
         Found = False
         try:
             self.IPMI_FRU_DATA[3] += str(fru_id)
-            p = subprocess.run(self.IPMI_FRU_DATA, capture_output=True, universal_newlines=True)
-            status, ipmi_fru_list = p.returncode, p.stdout
+            status, ipmi_fru_list = getstatusoutput_noshell(self.IPMI_FRU_DATA)
             if status == 0:
                 for item in ipmi_fru_list.split("\n"):
                     if reg_name == item.split(':')[0].strip(' '):
@@ -155,14 +149,10 @@ class PsuUtil(PsuBase):
         else:
             logging.error("Invalid PSU number:" + index)
 
-        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(self.awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                psu_status = p2.communicate()[0]
-                p1.wait()
-                if p1.returncode != 0 and p2.returncode != 0:
-                    logging.error('Failed to execute ipmitool')
-        if psu_status[-1:] == '\n':
-            psu_status = psu_status[:-1]
+        if ipmi_cmd != '':
+            cmd_status, psu_status = getstatusoutput_noshell_pipe(ipmi_cmd, self.awk_cmd)
+        if cmd_status:
+            logging.error('Failed to execute ipmitool')
         return (not int(psu_status, 16) > 1)
 
     def get_psu_presence(self, index):
@@ -182,14 +172,10 @@ class PsuUtil(PsuBase):
         else:
             logging.error("Invalid PSU number:" + index)
 
-        with subprocess.Popen(ipmi_cmd, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(self.awk_cmd, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                psu_status = p2.communicate()[0]
-                p1.wait()
-                if p1.returncode != 0 and p2.returncode != 0:
-                    logging.error('Failed to execute ipmitool')
-        if psu_status[-1:] == '\n':
-            psu_status = psu_status[:-1]
+        if ipmi_cmd != '':
+            cmd_status, psu_status = getstatusoutput_noshell_pipe(ipmi_cmd, self.awk_cmd)
+        if cmd_status:
+            logging.error('Failed to execute ipmitool')
 
         return (int(psu_status, 16) & 1)
 

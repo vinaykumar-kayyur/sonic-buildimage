@@ -7,7 +7,7 @@
 #
 #############################################################################
 import logging
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell
 
 try:
     from sonic_fan.fan_base import FanBase
@@ -20,9 +20,9 @@ class FanUtil(FanBase):
     NUM_FANS_PERTRAY = 2
     FANTRAY_NUM_START_IDX = 1
     FRU_FAN_START_IDX = 1
-    IPMI_FAN_PRESENCE = ["ipmitool", "sensor", "get", "FAN{0}_prsnt"]
-    IPMI_FAN_FRONT_SPEED = ["ipmitool", "sdr", "get", "Fan{0}_Front_rpm"]
-    IPMI_FAN_REAR_SPEED = ["ipmitool", "sdr", "get", "Fan{0}_Rear_rpm"]
+    IPMI_FAN_PRESENCE = ["ipmitool", "sensor", "get", ""]
+    IPMI_FAN_FRONT_SPEED = ["ipmitool", "sdr", "get", ""]
+    IPMI_FAN_REAR_SPEED = ["ipmitool", "sdr", "get", ""]
     IPMI_FRU_DATA = ["ipmitool", "fru", "print", ""]
 
     def __init__(self, log_level=logging.DEBUG):
@@ -31,45 +31,41 @@ class FanUtil(FanBase):
 
     def get_fan_status(self,fan_id):
         try:
-            self.IPMI_FAN_PRESENCE[3] = self.IPMI_FAN_PRESENCE[3].format(fan_id)
-            p = subprocess.run(self.IPMI_FAN_PRESENCE, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_FAN_PRESENCE[3] = 'FAN' + str(fan_id) + '_prsnt'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_FAN_PRESENCE)
             if ret_status == 0:
                 return(ipmi_cmd_ret.splitlines()[5].strip(' ').strip('[]'))
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_PRESENCE)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_FAN_PRESENCE)))
    
     def get_front_fan_speed(self,fan_id):
         try:
-            self.IPMI_FAN_FRONT_SPEED[3] = self.IPMI_FAN_FRONT_SPEED[3].format(fan_id)
-            p = subprocess.run(split(self.IPMI_FAN_FRONT_SPEED.format(fan_id)), capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_FAN_FRONT_SPEED[3] = 'Fan' + str(fan_id) + '_Front_rpm'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_FAN_FRONT_SPEED)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_FRONT_SPEED)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_FAN_FRONT_SPEED)))
     
     def get_rear_fan_speed(self,fan_id):
         try:
-            self.IPMI_FAN_REAR_SPEED[3] = self.IPMI_FAN_REAR_SPEED[3].format(fan_id)
-            p = subprocess.run(self.IPMI_FAN_REAR_SPEED, capture_output=True, universal_newlines=True)
-            ret_status, ipmi_cmd_ret = p.returncode, p.stdout
+            self.IPMI_FAN_REAR_SPEED[3] = 'Fan' + str(fan_id) + '_Rear_rpm'
+            ret_status, ipmi_cmd_ret = getstatusoutput_noshell(self.IPMI_FAN_REAR_SPEED)
             if ret_status == 0:
                 rdata = ipmi_cmd_ret.splitlines()[3].split(':')[1].split(' ')[1]
                 return rdata
 
         except Exception:
-            logging.error('Failed to execute : %s'%(''.join(self.IPMI_FAN_REAR_SPEED)))
+            logging.error('Failed to execute : %s'%(' '.join(self.IPMI_FAN_REAR_SPEED)))
 
 
     # Read FAN FRU info
     def get_fan_direction_from_fru(self,fru_id,reg_name):
         output = None
         try:
-            self.IPMI_FRU_DATA[3] += str(fru_id)
-            p = subprocess.run(self.IPMI_FRU_DATA, capture_output=True, universal_newlines=True)
-            status, ipmi_fru_list = p.returncode, p.stdout
+            self.IPMI_FRU_DATA[3] = str(fru_id)
+            status, ipmi_fru_list = getstatusoutput_noshell(self.IPMI_FRU_DATA)
             if status == 0:
                 for item in ipmi_fru_list.split("\n"):
                     if reg_name in item:

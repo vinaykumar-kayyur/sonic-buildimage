@@ -6,7 +6,7 @@
 
 import logging
 import sys
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
 S5224F_MAX_PSUS = 2
 IPMI_PSU_DATA = "docker exec -it pmon ipmitool sdr list"
@@ -45,10 +45,7 @@ class PsuUtil(PsuBase):
         if dockerenv == True:
             ipmi_cmd = IPMI_PSU_DATA_DOCKER
 
-        p = subprocess.run(ipmi_cmd, capture_output=True, universal_newlines=True)
-        status, ipmi_sdr_list = p.returncode, p.stdout
-        if ipmi_sdr_list[-1:] == '\n':
-            ipmi_sdr_list = ipmi_sdr_list[:-1]
+        status, ipmi_sdr_list = getstatusoutput_noshell(ipmi_cmd)
 
         if status:
             logging.error('Failed to execute:' + ipmi_sdr_list)
@@ -95,11 +92,8 @@ class PsuUtil(PsuBase):
         :param index: An integer, index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
-        proc = subprocess.run(cmd, capture_output=True, universal_newlines=True)
-        line = proc.stdout
-        if line[-1:] == '\n':
-            line = line[:-1]
-        psu_status = line[8] if len(line) > 8 else ''
+        ipmi_cmd = ["ipmitool", "raw", "0x04", "0x2d", hex(0x30 + index)]
+        awk_cmd = ['awk', '{print substr($0,9,1)}']
+        cmd_status, psu_status = getstatusoutput_noshell_pipe(ipmi_cmd, awk_cmd)
         return 1 if psu_status == '1' else 0
 

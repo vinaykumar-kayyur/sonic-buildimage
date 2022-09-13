@@ -5,7 +5,7 @@
 
 import os
 import sys
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell
 
 SENSORS_CMD = ["docker", "exec", "-i", "pmon", "/usr/bin/sensors"]
 DOCKER_SENSORS_CMD = "/usr/bin/sensors"
@@ -95,13 +95,9 @@ class PsuUtil(PsuBase):
     def get_sensor(self):
         dockerenv = self.isDockerEnv()
         if not dockerenv:
-            p = subprocess.run(SENSORS_CMD, capture_output=True, universal_newlines=True)
-            status, cmd_output = p.returncode, p.stdout
+            status, cmd_output = getstatusoutput_noshell(SENSORS_CMD)
         else:
-            p = subprocess.run(DOCKER_SENSORS_CMD, capture_output=True, universal_newlines=True)
-            status, cmd_output = p.returncode, p.stdout
-        if cmd_output[-1:] == '\n':
-            cmd_output = cmd_output[:-1]
+            status, cmd_output = getstatusoutput_noshell(DOCKER_SENSORS_CMD)
         if status:
             print('Failed to execute sensors command')
             sys.exit(0)

@@ -6,7 +6,7 @@
 
 import logging
 import sys
-import subprocess
+from sonic_py_common.general import getstatusoutput_noshell
 
 
 S5248F_MAX_PSUS = 2
@@ -48,8 +48,7 @@ class PsuUtil(PsuBase):
         if dockerenv == True:
             ipmi_cmd = IPMI_PSU_DATA_DOCKER
 
-        p = subprocess.run(ipmi_cmd, capture_output=True, universal_newlines=True)
-        status, ipmi_sdr_list = p.returncode, p.stdout
+        status, ipmi_sdr_list = getstatusoutput_noshell(ipmi_cmd)
 
         if status:
             logging.error('Failed to execute:' + ipmi_sdr_list)
