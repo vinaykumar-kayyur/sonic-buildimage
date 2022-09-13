@@ -58,7 +58,7 @@ Table of Contents
          * [VOQ Inband Interface](#voq-inband-interface) 
          * [VXLAN](#vxlan)   
          * [Virtual router](#virtual-router)  
-         * [Logger](#logger)
+         * [LOGGER](#logger)           
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)  
          * [SYSTEM_DEFAULTS table](#systemdefaults-table)
