@@ -107,7 +107,7 @@ class PsuUtil(PsuBase):
         output = None
         Found = False
         try:
-            self.IPMI_FRU_DATA[3] += str(fru_id)
+            self.IPMI_FRU_DATA[3] = str(fru_id)
             status, ipmi_fru_list = getstatusoutput_noshell(self.IPMI_FRU_DATA)
             if status == 0:
                 for item in ipmi_fru_list.split("\n"):
