@@ -1,0 +1,4 @@
+src/preload/gcovpreload/debian/*
+!src/preload/gcovpreload/debian/changelog 
+!src/preload/gcovpreload/debian/control
+!src/preload/gcovpreload/debian/rules 
