@@ -41,10 +41,11 @@ def _log_msg(lvl, pfx, msg):
 def log_err(m):
     _log_msg(syslog.LOG_ERR, "Err", m)
 
-
 def log_info(m):
     _log_msg(syslog.LOG_INFO, "Info",  m)
 
+def log_notice(m):
+    _log_msg(syslog.LOG_NOTICE, "Notice", m)
 
 def log_debug(m):
     _log_msg(syslog.LOG_DEBUG, "Debug", m)
@@ -74,11 +75,11 @@ def test_receiver(event_obj, cnt):
         rc = event_receive(sh, p)
 
         if (rc != 0):
-            log_err("Failed to receive. {}/{} rc={}".format(i, cnt, rc))
+            log_notice("Failed to receive. {}/{} rc={}".format(i, cnt, rc))
             break
 
         if test_event_key != p.key:
-            log_err("key mismatch {} != {} {}/{}".format(test_event_key,
+            log_notice("key mismatch {} != {} {}/{}".format(test_event_key,
                 p.key, i, cnt))
             break
 
@@ -89,23 +90,23 @@ def test_receiver(event_obj, cnt):
         for k, v in exp_params.items():
             if k in rcv_params:
                 if (rcv_params[k] != v):
-                    log_err("key:{} exp:{} != exist:{}".format(
+                    log_notice("key:{} exp:{} != exist:{}".format(
                         k, v, rcv_params[k]))
                     rc = -1
             else:
-                log_err("key:{} is missing", k)
+                log_notice("key:{} is missing", k)
                 rc = -1
 
         if (rc != 0):
-            log_err("params mismatch {}/{}".format(i,cnt))
+            log_notice("params mismatch {}/{}".format(i,cnt))
             break
 
         if p.missed_cnt != 0:
-            log_err("Expect missed_cnt {} == 0 {}/{}".format(p.missed_cnt,i,cnt))
+            log_notice("Expect missed_cnt {} == 0 {}/{}".format(p.missed_cnt,i,cnt))
             break
 
         if p.publish_epoch_ms == 0:
-            log_err("Expect publish_epoch_ms != 0 {}/{}".format(i,cnt))
+            log_notice("Expect publish_epoch_ms != 0 {}/{}".format(i,cnt))
             break
 
         cnt_done += 1
@@ -114,7 +115,7 @@ def test_receiver(event_obj, cnt):
     if (cnt_done == cnt):
         rc_test_receive = 0
     else:
-        log_err("test receive abort {}/{}".format(cnt_done, cnt))
+        log_notice("test receive abort {}/{}".format(cnt_done, cnt))
 
     # wait for a max of 5 secs for main thread to clear the event.
     tout = 5000 
@@ -125,7 +126,7 @@ def test_receiver(event_obj, cnt):
             time.sleep(t_sleep / 1000)
             tout -= t_sleep
         else:
-            log_err("test_receiver:Internal err: event not cleared by main")
+            log_notice("test_receiver:Internal err: event not cleared by main")
             break
 
     event_obj.set()
@@ -137,7 +138,7 @@ def publish_events(cnt):
     rc = -1
     ph = events_init_publisher(test_source)
     if not ph:
-        log_err("Failed to get publisher handle")
+        log_notice("Failed to get publisher handle")
         return rc
 
     # Sleep ASYNC_CONN_WAIT to ensure async connectivity is complete.
@@ -153,7 +154,7 @@ def publish_events(cnt):
 
         rc = event_publish(ph, test_event_tag, pd)
         if (rc != 0):
-            log_err("Failed to publish. {}/{} rc={}".format(i, cnt, rc))
+            log_notice("Failed to publish. {}/{} rc={}".format(i, cnt, rc))
             break
         log_debug("published: {}/{}".format(i+1, cnt))
 
@@ -185,12 +186,12 @@ def run_test(cnt):
 
     rc_pub = publish_events(cnt)
     if (rc_pub != 0):
-        log_err("Failed in publish_events")
+        log_notice("Failed in publish_events")
     else:
         # Wait for subscriber to complete with 1 sec timeout.
         event_sub.wait(1)
         if (rc_test_receive != 0):
-            log_err("Failed to receive events")
+            log_notice("Failed to receive events")
 
     log_debug("run_test_DONE rc_pub={} rc_test_receive={}".format(
         rc_pub, rc_test_receive))
@@ -221,7 +222,7 @@ def main():
     if(rc == 0):
         log_info("eventd test succeeded")
     else:
-        log_err("eventd monit test failed rc={}".format(rc))
+        log_notice("eventd monit test failed rc={}".format(rc))
 
 
 if __name__ == "__main__":
