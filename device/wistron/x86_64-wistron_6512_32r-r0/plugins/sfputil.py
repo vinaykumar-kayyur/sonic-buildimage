@@ -161,7 +161,30 @@ class SfpUtil(SfpUtilBase):
             return False
 
     def reset(self, port_num):
-        raise NotImplementedError
+        if port_num < self.port_start or port_num > self.port_end:
+            return False
+        if not self.get_presence(port_num):
+            return False  # Port is not present, unable to set reset
+
+        if port_num < 16:
+            reset_path = self.BASE_CPLD1_PATH + "port" + str(port_num+1) + "_reset"
+        else:
+            reset_path = self.BASE_CPLD2_PATH + "port" + str(port_num+1) + "_reset"
+
+        self.__port_to_mod_rst = reset_path
+
+        try:
+            val_file = open(self.__port_to_mod_rst, 'w')
+            val_file.write('1')
+            time.sleep(1)
+            val_file.write('0')
+            time.sleep(1)
+            val_file.close()
+            return True
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return False
+
 
     def _get_sfp_presence(self):
         port_pres = {}
