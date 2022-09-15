@@ -25,7 +25,6 @@
 try:
     import subprocess
     import os
-    from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_py_common.logger import Logger
     from . import utils
     from .device_data import DeviceDataManager
@@ -186,10 +185,11 @@ class MlxregManager:
             return False
 
         try:
-            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
-                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
-                    --set {} -y".format(self.mst_pci_device, self.slot_id, self.sdk_index, device_address, page, num_bytes, dword)
-            subprocess.check_call(cmd, shell=True, universal_newlines=True, stdout=subprocess.DEVNULL)
+            cmd = ["mlxreg", "-d", "", "--reg_name", "MCIA", "--indexes", "", "--set", "", "-y"]
+            cmd[2] = "/dev/mst/" + self.mst_pci_device
+            cmd[6] = "slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0".format(self.slot_id, self.sdk_index, device_address, page, num_bytes)
+            cmd[8] = dword
+            subprocess.check_call(cmd, universal_newlines=True, stdout=subprocess.DEVNULL)
         except subprocess.CalledProcessError as e:
             logger.log_error("Error! Unable to write data dword={} for {} port, page {} offset {}, rc = {}, err msg: {}".format(dword, self.sdk_index, page, device_address, e.returncode, e.output))
             return False
@@ -197,10 +197,11 @@ class MlxregManager:
 
     def read_mlxred_eeprom(self, offset, page, num_bytes):
         try:
-            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
-                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
-                    --get".format(self.mst_pci_device, self.slot_id, self.sdk_index, offset, page, num_bytes)
-            result = subprocess.check_output(cmd, universal_newlines=True, shell=True)
+            
+            cmd = ["mlxreg", "-d", "", "--reg_name", "MCIA", "--indexes", "", "--get"]
+            cmd[2] = "/dev/mst/" + self.mst_pci_device
+            cmd[6] = "slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0".format(self.slot_id, self.sdk_index, offset, page, num_bytes)
+            result = subprocess.check_output(cmd, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             logger.log_error("Error! Unable to read data for {} port, page {} offset {}, rc = {}, err msg: {}".format(self.sdk_index, page, offset, e.returncode, e.output))
             return None
@@ -355,11 +356,12 @@ class SFP(NvidiaSFPCommon):
             return None
 
         eeprom_raw = []
-        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
+        ethtool_cmd = ["ethtool", "-m", "", "hex", "on", "offset", "", "length", ""]
+        ethtool_cmd[2] = "sfp" + str(self.index)
+        ethtool_cmd[6] = str(offset)
+        ethtool_cmd[8] = str(num_bytes)
         try:
-            output = subprocess.check_output(ethtool_cmd,
-                                             shell=True,
-                                             universal_newlines=True)
+            output = subprocess.check_output(ethtool_cmd, universal_newlines=True)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:

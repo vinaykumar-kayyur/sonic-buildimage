@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 import os
-import pytest
 import subprocess
 import sys
 from mock import MagicMock, patch
@@ -143,7 +142,7 @@ class TestFan:
         assert subprocess.check_call.call_count == 0
         fan.get_presence = MagicMock(return_value=True)
         assert fan.set_speed(60)
-        subprocess.check_call.assert_called_with("i2cset -f -y {0} {1} {2} {3} wp".format('bus', 'addr', 'command', hex(60)), shell=True, universal_newlines=True)
+        subprocess.check_call.assert_called_with(["i2cset", "-f", "-y", "bus", "addr", "command", hex(60), "wp"], universal_newlines=True)
         subprocess.check_call = MagicMock(side_effect=subprocess.CalledProcessError('', ''))
         assert not fan.set_speed(60)
         subprocess.check_call = MagicMock()
