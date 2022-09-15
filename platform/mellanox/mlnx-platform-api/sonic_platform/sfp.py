@@ -26,6 +26,7 @@ try:
     import subprocess
     import os
     from sonic_py_common.logger import Logger
+    from sonic_py_common.general import check_output_pipe
     from . import utils
     from .device_data import DeviceDataManager
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
@@ -316,7 +317,7 @@ class SFP(NvidiaSFPCommon):
     def get_mst_pci_device(self):
         device_name = None
         try:
-            device_name = subprocess.check_output("ls /dev/mst/ | grep pciconf", universal_newlines=True, shell=True).strip()
+            device_name = check_output_pipe(["ls", "/dev/mst/"], ["grep", "pciconf"], universal_newlines=True).strip()
         except subprocess.CalledProcessError as e:
             logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
         return device_name
@@ -480,9 +481,9 @@ class SFP(NvidiaSFPCommon):
             get_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._get_lpmode(sdk_handle, {}, {}))'.format(self.sdk_index, self.slot_id)
-            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(get_lpmode_code)
+            lpm_cmd = ["docker", "exec", "pmon", "python3", "-c", get_lpmode_code]
             try:
-                output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(lpm_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -521,10 +522,10 @@ class SFP(NvidiaSFPCommon):
                          'with sfp.SdkHandleContext() as sdk_handle:' \
                          'print(sfp.SFP._reset(sdk_handle, {}, {}))' \
                          .format(self.sdk_index, self.slot_id)
-            reset_cmd = "docker exec pmon python3 -c \"{}\"".format(reset_code)
+            reset_cmd = ["docker", "exec", "pmon", "python3", "-c", reset_code]
 
             try:
-                output = subprocess.check_output(reset_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(reset_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -679,11 +680,11 @@ class SFP(NvidiaSFPCommon):
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._set_lpmode({}, sdk_handle, {}, {}))' \
                               .format('True' if lpmode else 'False', self.sdk_index, self.slot_id)
-            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(set_lpmode_code)
+            lpm_cmd = ["docker", "exec", "pmon", "python3", "-c", set_lpmode_code]
 
             # Set LPM
             try:
-                output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(lpm_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -794,9 +795,9 @@ class RJ45Port(NvidiaSFPCommon):
             get_presence_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.RJ45Port._get_presence(sdk_handle, {}))'.format(self.sdk_index)
-            presence_cmd = "docker exec pmon python3 -c \"{}\"".format(get_presence_code)
+            presence_cmd = ["docker", "exec", "pmon", "python3", "-c", get_presence_code]
             try:
-                output = subprocess.check_output(presence_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(presence_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to get presence for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
