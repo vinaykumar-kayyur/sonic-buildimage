@@ -362,7 +362,9 @@ class SFP(NvidiaSFPCommon):
         ethtool_cmd[6] = str(offset)
         ethtool_cmd[8] = str(num_bytes)
         try:
-            output = subprocess.check_output(ethtool_cmd, universal_newlines=True)
+            output = subprocess.check_output(ethtool_cmd,
+                                             universal_newlines=True,
+                                             stderr=subprocess.PIPE)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
