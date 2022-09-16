@@ -20,7 +20,7 @@ class PsuUtil(PsuBase):
             with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
                 out = p2.communicate()[0]
                 p1.wait()
-                if p1.returncode != 0 and p2.returncode != 0:
+                if p1.returncode != 0 or p2.returncode != 0:
                     sys.exit(p2.returncode)
         return out
 
