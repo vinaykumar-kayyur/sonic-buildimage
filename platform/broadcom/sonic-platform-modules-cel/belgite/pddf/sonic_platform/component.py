@@ -12,7 +12,7 @@ import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
-    from sonic_py_common.general import check_output_pipe
+    from sonic_py_common.general import getstatusoutput_noshell_pipe
     #from helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -46,7 +46,7 @@ class Component(ComponentBase):
         result = self.run_command(["i2cget", "-y", "-f", "2", "0x32", "0x19"])
         if result.strip() == "0x01":
             if self.name == "Main_BIOS":
-                version = check_output_pipe(BIOS_VERSION_PATH_CMD1, BIOS_VERSION_PATH_CMD2)
+                _, version = getstatusoutput_noshell_pipe(BIOS_VERSION_PATH_CMD1, BIOS_VERSION_PATH_CMD2)
                 bios_version = version.strip().split(" ")[1]
                 return str(bios_version)
             elif self.name == "Backup_BIOS":
@@ -55,7 +55,7 @@ class Component(ComponentBase):
                 
         elif result.strip() == "0x03":
             if self.name == "Backup_BIOS":
-                version = self.run_command(BIOS_VERSION_PATH_CMD1, BIOS_VERSION_PATH_CMD2)
+                _, version = getstatusoutput_noshell_pipe(BIOS_VERSION_PATH_CMD1, BIOS_VERSION_PATH_CMD2)
                 bios_version = version.strip().split(" ")[1]
                 return str(bios_version)
             elif self.name == "Main_BIOS":
