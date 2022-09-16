@@ -3,7 +3,6 @@
 #
 #############################################################################
 
-import sys
 import subprocess
 
 try:
@@ -12,13 +11,9 @@ try:
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_py_common import logger
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-if sys.version_info[0] < 3:
-    import commands as cmd
-else:
-    import subprocess as cmd
 
 smbus_present = 1
 
@@ -811,7 +806,7 @@ class Sfp(SfpBase):
             return False
 
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, register = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x5')
+            cmdstatus, register = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0x5'])
             if cmdstatus:
                 sonic_logger.log_warning("sfp cmdstatus i2c get failed %s" % register )
                 return False
@@ -830,7 +825,7 @@ class Sfp(SfpBase):
             setbits = register & ~mask
 
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, output = cmd.getstatusoutput('sudo i2cset -y -m 0x0f 0 0x41 0x5 %d' % setbits)
+            cmdstatus, output = getstatusoutput_noshell(['sudo', 'i2cset', '-y', '-m', '0x0f', '0', '0x41', '0x5', str(setbits)])
             if cmdstatus:
                 sonic_logger.log_warning("sfp cmdstatus i2c write failed %s" % output )
                 return False
@@ -912,7 +907,7 @@ class Sfp(SfpBase):
             return False
 
         if smbus_present == 0:  # if called from sfputil outside of pmon
-            cmdstatus, sfpstatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0x3')
+            cmdstatus, sfpstatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0x3'])
             sfpstatus = int(sfpstatus, 16)
         else:
             bus = smbus.SMBus(0)

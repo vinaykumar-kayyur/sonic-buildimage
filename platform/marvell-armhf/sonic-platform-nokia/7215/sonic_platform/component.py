@@ -9,7 +9,6 @@
 
 try:
     import os
-    import sys
     import subprocess
     import ntpath
     from sonic_platform_base.component_base import ComponentBase
@@ -131,7 +130,15 @@ class Component(ComponentBase):
             return self._get_cpld_version(self.index)
 
         if self.index == 1:
-            cmdstatus, uboot_version = cmd.getstatusoutput('grep --null-data U-Boot /dev/mtd0ro|head -1 | cut -d" " -f2-4')
+            cmd1 = ['grep', '--null-data', 'U-Boot', '/dev/mtd0ro']
+            cmd2 = ['head', '-1']
+            cmd3 = ['cut', '-d', ' ', '-f2-4']
+            with subprocess.Popen(cmd1, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+                with subprocess.Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                    with subprocess.Popen(cmd3, universal_newlines=True, stdin=p2.stdout, stdout=subprocess.PIPE) as p3:
+                        uboot_version = p3.communicate()[0].rstrip('\n')
+                        p1.wait()
+                        p2.wait()
             return uboot_version
 
     def install_firmware(self, image_path):
