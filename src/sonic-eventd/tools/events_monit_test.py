@@ -1,4 +1,4 @@
-#! /usr/bin/python -u
+#! /usr/bin/env python3
 
 from inspect import getframeinfo, stack
 from swsscommon.swsscommon import events_init_publisher, event_publish, FieldValueMap
@@ -25,11 +25,11 @@ test_event_params = {
 
 # Async connection wait time in milliseconds.
 ASYNC_CONN_WAIT = 300
-
+RECEIVE_TIMEOUT = 1000
 
 # Thread results
 rc_test_receive = -1
-
+publish_cnt = 0
 
 def _log_msg(lvl, pfx, msg):
     if lvl <= chk_log_level:
@@ -60,28 +60,32 @@ def map_dict_fvm(s, d):
 def test_receiver(event_obj, cnt):
     global rc_test_receive
 
-    sh = events_init_subscriber()
+    sh = events_init_subscriber(false, RECEIVE_TIMEOUT, null)
 
     # Sleep ASYNC_CONN_WAIT to ensure async connectivity is complete.
     time.sleep(ASYNC_CONN_WAIT/1000)
 
     exp_params = dict(test_event_params)
 
+    # Signal main thread that subscriber is ready to receive
     event_obj.set()
     cnt_done = 0
 
-    for i in range(cnt):
+    while cnt_done < cnt:
         p = event_receive_op_t()
         rc = event_receive(sh, p)
+        
+        if rc > 0 && publish_cnt < 2:
+            # ignore timeout as test code has not yet published an event yet
+            continue
 
-        if (rc != 0):
+        if rc != 0:
             log_notice("Failed to receive. {}/{} rc={}".format(i, cnt, rc))
             break
 
         if test_event_key != p.key:
-            log_notice("key mismatch {} != {} {}/{}".format(test_event_key,
-                p.key, i, cnt))
-            break
+            # received a different event than published
+            continue
 
         exp_params["index"] = str(i)
         rcv_params = {}
@@ -117,20 +121,8 @@ def test_receiver(event_obj, cnt):
     else:
         log_notice("test receive abort {}/{}".format(cnt_done, cnt))
 
-    # wait for a max of 5 secs for main thread to clear the event.
-    tout = 5000 
-    while(event_obj.is_set()):
-        # main thread yet to consume last set event
-        if tout > 0:
-            t_sleep = 100
-            time.sleep(t_sleep / 1000)
-            tout -= t_sleep
-        else:
-            log_notice("test_receiver:Internal err: event not cleared by main")
-            break
-
+    # Signal main thread that subscriber thread is done
     event_obj.set()
-
     events_deinit_subscriber(sh)
 
 
@@ -157,6 +149,7 @@ def publish_events(cnt):
             log_notice("Failed to publish. {}/{} rc={}".format(i, cnt, rc))
             break
         log_debug("published: {}/{}".format(i+1, cnt))
+        publish_cnt += 1
 
     # Sleep ASYNC_CONN_WAIT to ensure publish complete, before closing channel.
     time.sleep(ASYNC_CONN_WAIT/1000)
@@ -179,6 +172,8 @@ def run_test(cnt):
     thread_sub = threading.Thread(target=test_receiver, args=(event_sub, cnt))
     thread_sub.start()
 
+    # Wait until subscriber thread completes the async subscription
+    # Any event published prior to that could get lost
     # Subscriber would wait for ASYNC_CONN_WAIT. Wait additional 200ms
     # for signal from test_receiver as ready.
     event_sub.wait((ASYNC_CONN_WAIT + 200)/1000)
@@ -227,10 +222,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-    
-
-

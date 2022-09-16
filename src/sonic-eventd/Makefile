@@ -71,13 +71,13 @@ rsyslog-plugin-tests: $(RSYSLOG-PLUGIN-TEST_OBJS)
 	@echo ' '
 
 install:
-	$(MKDIR) -p $(DESTDIR)/usr/sbin
+	$(MKDIR) -p $(DESTDIR)/usr/bin
 	$(MKDIR) -p $(DESTDIR)/etc/monit/conf.d
-	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/sbin
-	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/sbin
-	$(CP) $(EVENTD_PUBLISH_TOOL) $(DESTDIR)/usr/sbin
-	$(CP) $(RSYSLOG-PLUGIN_TARGET) $(DESTDIR)/usr/sbin
-	$(CP) $(EVENTD_MONIT) $(DESTDIR)/usr/sbin
+	$(CP) $(EVENTD_TARGET) $(DESTDIR)/usr/bin
+	$(CP) $(EVENTD_TOOL) $(DESTDIR)/usr/bin
+	$(CP) $(EVENTD_PUBLISH_TOOL) $(DESTDIR)/usr/bin
+	$(CP) $(RSYSLOG-PLUGIN_TARGET) $(DESTDIR)/usr/bin
+	$(CP) $(EVENTD_MONIT) $(DESTDIR)/usr/bin
 	$(CP) $(EVENTD_MONIT_CONF) $(DESTDIR)/etc/monit/conf.d
 
 deinstall:
