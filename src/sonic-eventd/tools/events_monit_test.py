@@ -60,7 +60,7 @@ def map_dict_fvm(s, d):
 def test_receiver(event_obj, cnt):
     global rc_test_receive
 
-    sh = events_init_subscriber(false, RECEIVE_TIMEOUT, null)
+    sh = events_init_subscriber(False, RECEIVE_TIMEOUT, None)
 
     # Sleep ASYNC_CONN_WAIT to ensure async connectivity is complete.
     time.sleep(ASYNC_CONN_WAIT/1000)
@@ -75,19 +75,19 @@ def test_receiver(event_obj, cnt):
         p = event_receive_op_t()
         rc = event_receive(sh, p)
         
-        if rc > 0 && publish_cnt < 2:
+        if rc > 0 and publish_cnt < 2:
             # ignore timeout as test code has not yet published an event yet
             continue
 
         if rc != 0:
-            log_notice("Failed to receive. {}/{} rc={}".format(i, cnt, rc))
+            log_notice("Failed to receive. {}/{} rc={}".format(cnt_done, cnt, rc))
             break
 
         if test_event_key != p.key:
             # received a different event than published
             continue
 
-        exp_params["index"] = str(i)
+        exp_params["index"] = str(cnt_done)
         rcv_params = {}
         map_dict_fvm(p.params, rcv_params)
 
@@ -102,19 +102,19 @@ def test_receiver(event_obj, cnt):
                 rc = -1
 
         if (rc != 0):
-            log_notice("params mismatch {}/{}".format(i,cnt))
+            log_notice("params mismatch {}/{}".format(cnt_done, cnt))
             break
 
         if p.missed_cnt != 0:
-            log_notice("Expect missed_cnt {} == 0 {}/{}".format(p.missed_cnt,i,cnt))
+            log_notice("Expect missed_cnt {} == 0 {}/{}".format(p.missed_cnt, cnt_done, cnt))
             break
 
         if p.publish_epoch_ms == 0:
-            log_notice("Expect publish_epoch_ms != 0 {}/{}".format(i,cnt))
+            log_notice("Expect publish_epoch_ms != 0 {}/{}".format(cnt_done, cnt))
             break
 
         cnt_done += 1
-        log_debug("Received {}/{}".format(i+1, cnt))
+        log_debug("Received {}/{}".format(cnt_done + 1, cnt))
 
     if (cnt_done == cnt):
         rc_test_receive = 0
@@ -127,6 +127,7 @@ def test_receiver(event_obj, cnt):
 
 
 def publish_events(cnt):
+    global publish_cnt
     rc = -1
     ph = events_init_publisher(test_source)
     if not ph:
@@ -148,6 +149,7 @@ def publish_events(cnt):
         if (rc != 0):
             log_notice("Failed to publish. {}/{} rc={}".format(i, cnt, rc))
             break
+
         log_debug("published: {}/{}".format(i+1, cnt))
         publish_cnt += 1
 
