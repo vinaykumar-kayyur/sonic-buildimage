@@ -3,8 +3,8 @@
 #
 #############################################################################
 
-import os
 import sys
+import subprocess
 
 try:
     from sonic_platform_base.sfp_base import SfpBase
@@ -118,7 +118,7 @@ class Sfp(SfpBase):
     # Paths
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    HOST_CHK_CMD = ["docker"]
 
     PLATFORM = "armhf-nokia_ixs7215_52x-r0"
     HWSKU = "Nokia-7215"
@@ -186,7 +186,7 @@ class Sfp(SfpBase):
             return 'N/A'
 
     def __is_host(self):
-        return os.system(self.HOST_CHK_CMD) == 0
+        return subprocess.run(self.HOST_CHK_CMD).returncode == 0
 
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
@@ -824,7 +824,7 @@ class Sfp(SfpBase):
 
         pos = [1, 2, 4, 8]
         mask = pos[self.index-SFP_PORT_START]
-        if tx_disable == True:
+        if tx_disable is True:
             setbits = register | mask
         else:
             setbits = register & ~mask
