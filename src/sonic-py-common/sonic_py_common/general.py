@@ -72,7 +72,7 @@ def check_output_pipe(cmd1, cmd2):
     p1.wait()
     if p1.returncode != 0 or p2.returncode != 0:
         if p1.returncode != 0:
-            raise CalledProcessError(returncode=p1.returncode, cmd=cmd1, output=output)
+            raise CalledProcessError(returncode=p1.returncode, cmd=cmd1, output=p1.stdout)
         else:
             raise CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
     return output
