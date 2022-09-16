@@ -362,9 +362,7 @@ class SFP(NvidiaSFPCommon):
         ethtool_cmd[6] = str(offset)
         ethtool_cmd[8] = str(num_bytes)
         try:
-            output = subprocess.check_output(ethtool_cmd,
-                                             universal_newlines=True,
-                                             stderr=subprocess.PIPE)
+            output = subprocess.check_output(ethtool_cmd, universal_newlines=True, stderr=subprocess.PIPE)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
@@ -372,6 +370,7 @@ class SFP(NvidiaSFPCommon):
                     line_split = line.split()
                     eeprom_raw = eeprom_raw + line_split[1:]
         except subprocess.CalledProcessError as e:
+            logger.log_notice("Failed to get EEPROM data for sfp {}: {}".format(self.index, e.stderr))
             return None
 
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
