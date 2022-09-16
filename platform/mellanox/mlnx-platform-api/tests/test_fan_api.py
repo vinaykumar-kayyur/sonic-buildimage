@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 import os
+import pytest
 import subprocess
 import sys
 from mock import MagicMock, patch
