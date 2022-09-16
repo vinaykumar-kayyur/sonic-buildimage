@@ -317,7 +317,7 @@ class SFP(NvidiaSFPCommon):
     def get_mst_pci_device(self):
         device_name = None
         try:
-            device_name = check_output_pipe(["ls", "/dev/mst/"], ["grep", "pciconf"], universal_newlines=True).strip()
+            device_name = check_output_pipe(["ls", "/dev/mst/"], ["grep", "pciconf"]).strip()
         except subprocess.CalledProcessError as e:
             logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
         return device_name

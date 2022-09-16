@@ -168,20 +168,22 @@ class ONIEUpdater(object):
             self.__umount_onie_fs()
 
         cmd = "fdisk -l | grep 'ONIE boot' | awk '{print $1}'"
-        with subprocess.Popen(['fdisk', '-l'], universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(['grep', 'ONIE boot'], universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                with subprocess.Popen(['awk', '{print $1}'], universal_newlines=True, stdin=p2.stdout, stdout=subprocess.PIPE) as p3:
+        cmd1 = ['fdisk', '-l']
+        cmd2 = ['grep', 'ONIE boot']
+        cmd3 = ['awk', '{print $1}']
+        with subprocess.Popen(cmd1, universal_newlines=True, stdout=subprocess.PIPE) as p1:
+            with subprocess.Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
+                with subprocess.Popen(cmd3, universal_newlines=True, stdin=p2.stdout, stdout=subprocess.PIPE) as p3:
                     fs_path = p3.communicate()[0].rstrip('\n')
                     p1.wait()
                     p2.wait()
                     if p1.returncode != 0 and p2.returncode != 0 and p3.returncode != 0:
                         if p1.returncode != 0:
-                            returncode = p1.returncode
+                            raise subprocess.CalledProcessError(returncode=p1.returncode, cmd=cmd1, output=p1.stdout)
                         elif p2.returncode != 0:
-                            returncode = p2.returncode
+                            raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd2, output=p2.stdout)
                         elif p3.returncode != 0:
-                            returncode = p3.returncode
-                        raise subprocess.CalledProcessError(returncode=returncode, cmd=cmd, output=fs_path)
+                            raise subprocess.CalledProcessError(returncode=p3.returncode, cmd=cmd, output=fs_path)
 
         os.mkdir(fs_mountpoint)
         cmd = ["mount", "-n", "-r", "-t", "ext4", fs_path, fs_mountpoint]
