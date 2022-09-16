@@ -21,7 +21,10 @@ class PsuUtil(PsuBase):
                 out = p2.communicate()[0]
                 p1.wait()
                 if p1.returncode != 0 or p2.returncode != 0:
-                    sys.exit(p2.returncode)
+                    if p1.returncode != 0:
+                        sys.exit(p1.returncode)
+                    else:
+                        sys.exit(p2.returncode)
         return out
 
     def find_value(self, grep_string):
