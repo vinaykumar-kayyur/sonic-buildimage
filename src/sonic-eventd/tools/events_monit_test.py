@@ -23,8 +23,8 @@ test_event_params = {
     "index": "0"
 }
 
-# Async connection wait time in milliseconds.
-ASYNC_CONN_WAIT = 300
+# Async connection wait time in seconds.
+ASYNC_CONN_WAIT = 0.3
 RECEIVE_TIMEOUT = 1000
 
 # Thread results
@@ -63,7 +63,7 @@ def test_receiver(event_obj, cnt):
     sh = events_init_subscriber(False, RECEIVE_TIMEOUT, None)
 
     # Sleep ASYNC_CONN_WAIT to ensure async connectivity is complete.
-    time.sleep(ASYNC_CONN_WAIT/1000)
+    time.sleep(ASYNC_CONN_WAIT)
 
     exp_params = dict(test_event_params)
 
@@ -98,7 +98,7 @@ def test_receiver(event_obj, cnt):
                         k, v, rcv_params[k]))
                     rc = -1
             else:
-                log_notice("key:{} is missing", k)
+                log_notice("key:{} is missing".format(k))
                 rc = -1
 
         if (rc != 0):
@@ -136,7 +136,7 @@ def publish_events(cnt):
 
     # Sleep ASYNC_CONN_WAIT to ensure async connectivity is complete.
     # Messages published before connection are silently dropped by ZMQ.
-    time.sleep(ASYNC_CONN_WAIT/1000)
+    time.sleep(ASYNC_CONN_WAIT)
 
     pub_params = dict(test_event_params)
 
@@ -154,7 +154,7 @@ def publish_events(cnt):
         publish_cnt += 1
 
     # Sleep ASYNC_CONN_WAIT to ensure publish complete, before closing channel.
-    time.sleep(ASYNC_CONN_WAIT/1000)
+    time.sleep(ASYNC_CONN_WAIT)
 
     events_deinit_publisher(ph)
 
@@ -178,7 +178,7 @@ def run_test(cnt):
     # Any event published prior to that could get lost
     # Subscriber would wait for ASYNC_CONN_WAIT. Wait additional 200ms
     # for signal from test_receiver as ready.
-    event_sub.wait((ASYNC_CONN_WAIT + 200)/1000)
+    event_sub.wait(ASYNC_CONN_WAIT + 0.2)
     event_sub.clear()
 
     rc_pub = publish_events(cnt)
