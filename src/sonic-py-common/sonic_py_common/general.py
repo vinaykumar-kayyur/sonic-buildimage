@@ -30,6 +30,7 @@ def getstatusoutput_noshell(cmd):
     """
     This function implements getstatusoutput API from subprocess module
     but using shell=False to prevent shell injection.
+    Ref: https://github.com/python/cpython/blob/3.10/Lib/subprocess.py#L602
     """
     try:
         output = check_output(cmd, text=True, stderr=STDOUT)
