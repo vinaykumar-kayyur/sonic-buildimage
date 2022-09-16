@@ -10,6 +10,7 @@
 
 import sys
 import subprocess
+import time
 
 try:
     from sonic_platform_base.fan_base import FanBase
@@ -63,6 +64,14 @@ FAN_PWM_REGISTER_STEP = 0x10
 FAN1_FRU_ID = 6 # silverstoneX has no FAN FRU
 FAN_STATUS_FILE = "/var/fan_status.txt"
 SYSLOG_IDENTIFIER = 'fan.py'
+FAN_DIRECTION_INTERVAL    = 120
+FAN_SPEED_INTERVAL        =  60
+FAN_TARGET_SPEED_INTERVAL =  80
+FAN_STATUS_LED_INTERVAL   = 120
+FAN_STATUS_INTERVAL       =  90
+
+class Static:
+    is_speed_get_first = 0
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
@@ -77,6 +86,17 @@ class Fan(FanBase):
         self._api_helper = APIHelper()
         self.index = self.fan_tray_index * 2 + self.fan_index
         self.logger = logger.Logger(SYSLOG_IDENTIFIER)
+        self.presence = False
+        self.refresh_time = 0
+        self.refresh_speed_time = 0
+        self.refresh_target_speed_time = 0
+        self.refresh_status_led_time = 0
+        self.refresh_direction_time  = 0
+        self.speed = 0
+        self.target = 0
+        self.status_led = 0
+        self.direction = 0
+        
 
     def get_direction(self):
         """
@@ -85,11 +105,17 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
+        elapsed = time.time() - self.refresh_direction_time
+        if elapsed < FAN_DIRECTION_INTERVAL:
+            return self.direction
+
         direction = self.FAN_DIRECTION_EXHAUST
         status, raw_flow = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_AIR_FLOW_CMD.format(hex(self.fan_tray_index)))
         if status and raw_flow == "01":
             direction = self.FAN_DIRECTION_INTAKE
+        self.refresh_direction_time = time.time()
+        self.direction = direction
 
         return direction
 
@@ -108,7 +134,12 @@ class Fan(FanBase):
         #self.logger.log_warning("self_index {} psu {} status {}".format(self.index, self.is_psu_fan,self.is_get_status))
         #if self.index == 0 and self.is_psu_fan == False and self.is_get_status == False:
         global all_info_list
-        if self.index == 0:
+
+        elapsed = time.time() - self.refresh_speed_time
+        if elapsed < FAN_SPEED_INTERVAL:
+            return self.speed
+
+        if (Static.is_speed_get_first == 0) or (self.index == 0 and self.is_psu_fan == False):
             proc = subprocess.Popen(IPMI_SENSOR_LIST_CMD, shell=True, stdout=subprocess.PIPE)
             out, err = proc.communicate()
             with open(FAN_STATUS_FILE, 'w') as file:
@@ -120,6 +151,7 @@ class Fan(FanBase):
             if proc.returncode != 0:
                sys.exit(proc.returncode)
             all_info_list = out.split("\n")
+            Static.is_speed_get_first = 1
              
         #self.logger.log_warning ("Out arg")
         #print (out) 
@@ -153,9 +185,12 @@ class Fan(FanBase):
         #self.logger.log_warning("rom_speed[1] {}".format(rpm_speed[1]))
         rpm_speed = rpm_speed[1]
         speed = int(float(rpm_speed)/max_rpm * 100)
+        self.refresh_speed_time = time.time()
         if speed > 100:
+            self.speed = rpm_speed
             return rpm_speed
         else:
+            self.speed = speed
             return speed
 
 
@@ -172,6 +207,13 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
+
+        elapsed = time.time() - self.refresh_target_speed_time
+
+        if elapsed < FAN_TARGET_SPEED_INTERVAL:
+            return self.target
+
+
         if self.is_psu_fan == False:
             get_target_speed_cmd = IPMI_FAN_TARGET_SPEED_CMD.format(FAN_TARGET_SPEED_REG[self.fan_tray_index]) #raw speed: 0-255
             status, get_target_speed_res = self._api_helper.ipmi_raw(
@@ -183,6 +225,9 @@ class Fan(FanBase):
                 IPMI_OEM_NETFN, get_target_speed_cmd)
 
             target = int(get_target_speed_res, 16)
+
+        self.target = target
+        self.refresh_target_speed_time = time.time()
   
         return target
 
@@ -261,6 +306,11 @@ class Fan(FanBase):
             STATUS_LED_COLOR_RED = "red"
             STATUS_LED_COLOR_OFF = "off"
         """
+        elapsed = time.time() - self.refresh_status_led_time
+
+        if elapsed < FAN_STATUS_LED_INTERVAL:
+            return self.status_led
+
         fan_selector = hex(int(FAN1_LED_CMD, 16) + self.fan_tray_index)
         status, hx_color = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_GET_FAN_LED_CMD.format(fan_selector))
@@ -270,6 +320,9 @@ class Fan(FanBase):
             "01": self.STATUS_LED_COLOR_GREEN,
             "02": self.STATUS_LED_COLOR_RED,
         }.get(hx_color, "Unknown")
+ 
+        self.status_led = status_led
+        self.refresh_status_led_time = time.time()
 
         return status_led
 
@@ -291,13 +344,20 @@ class Fan(FanBase):
             bool: True if FAN is present, False if not
         """
         presence = False
+        elapsed = time.time() - self.refresh_time
+
+        if elapsed < FAN_STATUS_INTERVAL:
+            return self.presence
+
         status, raw_present = self._api_helper.ipmi_raw(
-            IPMI_OEM_NETFN, IPMI_FAN_PRESENT_CMD.format(hex(self.index // 2)))
+        IPMI_OEM_NETFN, IPMI_FAN_PRESENT_CMD.format(hex(self.index // 2)))
       
         if status and raw_present == b"00":
             presence = True
+        self.presence = presence
+        self.refresh_time = time.time()
 
-        return presence
+        return self.presence
 
     def get_model(self):
         """
