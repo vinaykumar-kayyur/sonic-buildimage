@@ -11,7 +11,7 @@
         },
         {
             "name": "systemd",
-	    "parse_json": "systemd_regex.json"
+            "parse_json": "systemd_regex.json"
         }
     ]
 }
