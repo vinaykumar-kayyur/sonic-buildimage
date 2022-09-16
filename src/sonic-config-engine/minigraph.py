@@ -400,31 +400,6 @@ def parse_dpg(dpg, hname):
             vlans[sonic_vlan_name] = vlan_attributes
             dhcp_relay_table[sonic_vlan_name] = dhcp_attributes
 
-        '''
-        dhcp = child.find(str(QName(ns, "Dhcp")))
-        dhcp_relay_table = {}
-
-        if dhcp is not None:
-            for vintf in dhcp.findall(str(QName(ns, "VlanInterface"))):
-                vintfname = vintf.find(str(QName(ns, "Name"))).text
-
-                dhcp_attributes = {}
-
-                dhcp_node = vintf.find(str(QName(ns, "Dhcpv6Relays")))
-                if dhcp_node is not None and dhcp_node.text is not None:
-                    dhcpservers = dhcp_node.text
-                    vdhcpserver_list = dhcpservers.split(';')
-                    dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
-
-                option_linklayer_addr = vintf.find(str(QName(ns, "Dhcpv6OptionRfc6939")))
-                if option_linklayer_addr is not None and option_linklayer_addr.text == "true":
-                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "true"
-                elif option_linklayer_addr is not None and option_linklayer_addr.text == "false":
-                    dhcp_attributes['dhcpv6_option|rfc6939_support'] = "false"
-
-                dhcp_relay_table[vintfname] = dhcp_attributes
-        '''
-
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
@@ -1022,7 +997,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcppv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, downstream_subrole, qos_profile, resource_type) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, downstream_subrole, qos_profile, resource_type) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):

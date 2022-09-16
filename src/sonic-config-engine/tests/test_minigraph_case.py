@@ -83,21 +83,31 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v VLAN'
         output = self.run_script(argument)
         expected = {
-                   u'Vlan1000': {
-                       u'alias': 'ab1',
-                       u'dhcp_servers': [u'192.0.0.1', u'192.0.0.2'],
-                       u'dhcpv6_servers': [u'fc02:2000::1', u'fc02:2000::2'],
-                       u'vlanid': u'1000',
-                       u'members': [u'Ethernet8']
-                       },
-                   'Vlan2000': {
-                       u'alias': 'ab2',
-                       u'dhcp_servers': ['192.0.0.3', '192.0.0.4'],
-                       u'members': ['Ethernet4'],
-                       u'dhcpv6_servers': [u'fc02:2000::3', u'fc02:2000::4'],
-                       u'vlanid': '2000'
-                       }
-                   }
+            'Vlan1000': {
+                'alias': 'ab1',
+                'dhcp_servers': [
+                    '192.0.0.1',
+                    '192.0.0.2'
+                    ],
+                'dhcpv6_servers': [
+                    'fc02:2000::1',
+                    'fc02:2000::2'
+                    ],
+                'vlanid': '1000',
+                'members': ['Ethernet8']
+                },
+            'Vlan2000': {
+                'alias': 'ab2',
+                'dhcp_servers': [
+                    '192.0.0.3',
+                    '192.0.0.4'],
+                'members': ['Ethernet4'],
+                'dhcpv6_servers': [
+                    'fc02:2000::3',
+                    'fc02:2000::4'],
+                'vlanid': '2000'
+                }
+            }
 
         self.assertEqual(
             utils.to_dict(output.strip()),
