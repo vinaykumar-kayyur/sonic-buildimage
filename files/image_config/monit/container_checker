@@ -23,7 +23,7 @@ from sonic_py_common import multi_asic, device_info
 from swsscommon import swsscommon
 
 EVENTS_PUBLISHER_SOURCE = "sonic-events-host"
-EVENTS_PUBLISHER_TAG = "event-container"
+EVENTS_PUBLISHER_TAG = "event-down-ctr"
 
 def get_expected_running_containers():
     """
