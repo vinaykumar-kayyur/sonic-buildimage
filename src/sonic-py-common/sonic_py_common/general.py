@@ -33,7 +33,7 @@ def getstatusoutput_noshell(cmd):
     Ref: https://github.com/python/cpython/blob/3.10/Lib/subprocess.py#L602
     """
     try:
-        output = check_output(cmd, text=True, stderr=STDOUT)
+        output = check_output(cmd, universal_newlines=True, stderr=STDOUT)
         exitcode = 0
     except CalledProcessError as ex:
         output = ex.output
@@ -49,15 +49,14 @@ def getstatusoutput_noshell_pipe(cmd1, cmd2):
     but using shell=False to prevent shell injection. Input command includes
     pipe command.
     """
-    with Popen(cmd1, universal_newlines=True, stdout=PIPE) as p1:
-        with Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=PIPE) as p2:
-            output = p2.communicate()[0]
-            p1.wait()
-            if p1.returncode != 0 or p2.returncode != 0:
-                return ([p1.returncode, p2.returncode], output)
+    p1 = Popen(cmd1, universal_newlines=True, stdout=PIPE)
+    p2 = Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()
+    output = p2.communicate()[0]
+    p1.wait()
     if output[-1:] == '\n':
         output = output[:-1]
-    return ([0, 0], output)
+    return ([p1.returncode, p2.returncode], output)
 
 
 def check_output_pipe(cmd1, cmd2):
@@ -66,14 +65,15 @@ def check_output_pipe(cmd1, cmd2):
     Input command includes pipe command.
     """
     cmd = ' '.join(cmd1) + ' | ' + ' '.join(cmd2)
-    with Popen(cmd1, universal_newlines=True, stdout=PIPE) as p1:
-        with Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=PIPE) as p2:
-            output = p2.communicate()[0]
-            p1.wait()
-            if p1.returncode != 0 or p2.returncode != 0:
-                if p1.returncode != 0:
-                    raise CalledProcessError(returncode=p1.returncode, cmd=cmd, output=output)
-                else:
-                    raise CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
+    p1 = Popen(cmd1, universal_newlines=True, stdout=PIPE)
+    p2 = Popen(cmd2, universal_newlines=True, stdin=p1.stdout, stdout=PIPE)
+    p1.stdout.close()
+    output = p2.communicate()[0]
+    p1.wait()
+    if p1.returncode != 0 or p2.returncode != 0:
+        if p1.returncode != 0:
+            raise CalledProcessError(returncode=p1.returncode, cmd=cmd1, output=output)
+        else:
+            raise CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
     return output
 
