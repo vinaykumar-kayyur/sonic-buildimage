@@ -1,16 +1,14 @@
-import os
 import sys
 import pytest
 import subprocess
 from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe, check_output_pipe
 
 
-def test_getstatusoutput_noshell(tmpdir):
+def test_getstatusoutput_noshell(tmp_path):
     exitcode, output = getstatusoutput_noshell(['echo', 'sonic'])
     assert (exitcode, output) == (0, 'sonic')
 
-    name = os.path.join(tmpdir, 'foo')
-    exitcode, output = getstatusoutput_noshell(['cat', name])
+    exitcode, output = getstatusoutput_noshell([sys.executable, "-c", "import sys; sys.exit(6)"])
     assert exitcode != 0
 
 def test_getstatusoutput_noshell_pipe():
