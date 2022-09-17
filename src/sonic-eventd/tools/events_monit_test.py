@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 from inspect import getframeinfo, stack
 from swsscommon.swsscommon import events_init_publisher, event_publish, FieldValueMap
