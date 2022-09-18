@@ -12,7 +12,7 @@ try:
     import subprocess
     import ntpath
     from sonic_platform_base.component_base import ComponentBase
-    from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipes
+    from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -130,10 +130,10 @@ class Component(ComponentBase):
             return self._get_cpld_version(self.index)
 
         if self.index == 1:
-            cmd1 = dict(args=['grep', '--null-data', 'U-Boot', '/dev/mtd0ro'])
-            cmd2 = dict(args=['head', '-1'])
-            cmd3 = dict(args=['cut', '-d', ' ', '-f2-4'])
-            cmdstatus, uboot_version = getstatusoutput_noshell_pipes(cmd1, cmd2, cmd3)
+            cmd1 = ['grep', '--null-data', 'U-Boot', '/dev/mtd0ro']
+            cmd2 = ['head', '-1']
+            cmd3 = ['cut', '-d', ' ', '-f2-4']
+            cmdstatus, uboot_version = getstatusoutput_noshell_pipe(cmd1, cmd2, cmd3)
             return uboot_version
 
     def install_firmware(self, image_path):
