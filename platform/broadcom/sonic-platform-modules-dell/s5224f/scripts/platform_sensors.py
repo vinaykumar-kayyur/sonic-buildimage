@@ -10,7 +10,6 @@
 #   * FAN trays
 #   * PSU
 
-import os
 import sys
 import logging
 from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
@@ -123,10 +122,10 @@ def print_temperature_sensors():
         (get_pmc_register('CPU_temp')))
 
 file = '/sys/module/ipmi_si/parameters/kipmid_max_busy_us'
-if os.path.exists(file):
+try:
     with open(file, 'w') as f:
         f.write('0\n')
-else:
+except (IOError, FileNotFoundError):
     logging.error("platform_sensors: Failed to set kipmid_max_busy_us to 0")
 ipmi_sensor_dump()
 
@@ -323,8 +322,8 @@ print ('\n    Total Power:                     ',\
     get_pmc_register('PSU_Total_watt'))
 
 file = '/sys/module/ipmi_si/parameters/kipmid_max_busy_us'
-if os.path.exists(file):
+try:
     with open(file, 'w') as f:
         f.write('1000\n')
-else:
+except (IOError, FileNotFoundError):
     logging.error("platform_sensors: Failed to set kipmid_max_busy_us to 1000")
