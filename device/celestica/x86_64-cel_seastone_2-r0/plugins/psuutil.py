@@ -1,9 +1,9 @@
-import subprocess
 import sys
 import re
 
 try:
     from sonic_psu.psu_base import PsuBase
+    from sonic_py_common.general import getstatusoutput_noshell_pipe
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -15,16 +15,12 @@ class PsuUtil(PsuBase):
         self.ipmi_sensor = ["ipmitool", "sensor"]
         PsuBase.__init__(self)
 
-    def run_command(self, cmd1_args, cmd2_args):
-        with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                out = p2.communicate()[0]
-                p1.wait()
-                if p1.returncode != 0 or p2.returncode != 0:
-                    if p1.returncode != 0:
-                        sys.exit(p1.returncode)
-                    else:
-                        sys.exit(p2.returncode)
+    def run_command(self, cmd1, cmd2):
+        exitcode, out = getstatusoutput_noshell_pipe(cmd1, cmd2)
+        if exitcode[0] != 0:
+            sys.exit(exitcode[0])
+        elif exitcode[1] != 0:
+            sys.exit(exitcode[1])
         return out
 
     def find_value(self, grep_string):
