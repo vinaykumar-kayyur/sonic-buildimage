@@ -327,7 +327,7 @@ class Chassis(ChassisBase):
 
         # Write sys led
         if smbus_present == 0:  # called from host (e.g. 'show system-health')
-            cmdstatus, value = getstatusoutput_noshell(['sudo', 'i2cset', '-y', '0', '0x41', '0x7', value])
+            cmdstatus, value = getstatusoutput_noshell(['sudo', 'i2cset', '-y', '0', '0x41', '0x7', str(value)])
             if cmdstatus:
                 sonic_logger.log_warning("  System LED set %s failed" % value)
                 return False
