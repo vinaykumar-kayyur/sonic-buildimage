@@ -43,70 +43,50 @@ def getstatusoutput_noshell(cmd):
     return exitcode, output
 
 
-def getstatusoutput_noshell_pipes(*args):
+def getstatusoutput_noshell_pipe(cmd0, *args):
     """
     This function implements getstatusoutput API from subprocess module
     but using shell=False to prevent shell injection. Input command
-    includes two or more pipe commands.
+    includes two or more commands connected by shell pipe(s).
     """
-    if len(args) < 2:
-        raise ValueError("Need at least 2 processes")
-    # Set up more arguments in every processes
-    for arg in args:
-        arg["stdout"] = PIPE
-        arg["universal_newlines"] = True
-        arg["shell"] = False
-
-    # Runs all subprocesses connecting stdins and previous arguments 
-    # to create the pipeline. Closes stdouts to avoid deadlocks.
-    # Ref: https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
-    popens = [Popen(**args[0])]
-    for i in range(1,len(args)):
-        args[i]["stdin"] = popens[i-1].stdout
-        popens.append(Popen(**args[i]))
-        popens[i-1].stdout.close()
+    popens = [Popen(cmd0, stdout=PIPE, universal_newlines=True)]
+    i = 0
+    while i < len(args):
+        popens.append(Popen(args[i], stdin=popens[i].stdout, stdout=PIPE, universal_newlines=True))
+        popens[i].stdout.close()
+        i += 1
     output = popens[-1].communicate()[0]
     if output[-1:] == '\n':
         output = output[:-1]
 
-    # Wait for the processes to terminate and return the exitcodes
     exitcodes = [0] * len(popens)
     while popens:
         last = popens.pop(-1)
         exitcodes[len(popens)] = last.wait()
+
     return (exitcodes, output)
 
 
-def check_output_pipes(*args):
+def check_output_pipe(cmd0, *args):
     """
     This function implements check_output API from subprocess module.
-    Input command includes two or more pipe command.
+    Input command includes two or more commands connected by shell pipe(s)
     """
-    if len(args) < 2:
-        raise ValueError("Needs at least 2 processes")
-    # Set up more arguments in every processes
-    for arg in args:
-        arg["stdout"] = PIPE
-        arg["universal_newlines"] = True
-        arg["shell"] = False
-
-    # Runs all subprocesses connecting stdins and previous arguments 
-    # to create the pipeline. Closes stdouts to avoid deadlocks.
-    # Ref: https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
-    popens = [Popen(**args[0])]
-    for i in range(1,len(args)):
-        args[i]["stdin"] = popens[i-1].stdout
-        popens.append(Popen(**args[i]))
-        popens[i-1].stdout.close()
+    popens = [Popen(cmd0, stdout=PIPE, universal_newlines=True)]
+    i = 0
+    while i < len(args):
+        popens.append(Popen(args[i], stdin=popens[i].stdout, stdout=PIPE, universal_newlines=True))
+        popens[i].stdout.close()
+        i += 1
     output = popens[-1].communicate()[0]
 
-    # Wait for the processes to terminate and raise an exeption if exitcode is non zero
     i = 0
+    args_list = [cmd0] + list(args)
     while popens:
         current = popens.pop(0)
         exitcode = current.wait()
         if exitcode != 0:
-            raise CalledProcessError(returncode=exitcode, cmd=args[i], output=current.stdout)
+            raise CalledProcessError(returncode=exitcode, cmd=args_list[i], output=current.stdout)
         i += 1
 
     return output
