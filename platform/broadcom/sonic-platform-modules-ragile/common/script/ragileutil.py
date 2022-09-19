@@ -1909,6 +1909,7 @@ def getsysmeminfo_detail():
     cmd1 = [log]
     cmd2 = ['-t', '17']
     cmd3 = ['grep', '-A21', "Memory Device"]  # 17
+    cmd = ' '.join(cmd1) + ' '.join(cmd2) + ' '.join(cmd3)
     # get total number
     ret1, log1 = getstatusoutput_noshell_pipe(cmd1, cmd2, cmd3)
     if ret1 != 0 or len(log1) <= 0:
@@ -2014,8 +2015,9 @@ def getusbinfo():
 
 def get_cpu_info():
     cmd1 = ["cat", "/proc/cpuinfo"]
-    cmd2 = ["grep", "processor" "-A18"]  # 17
+    cmd2 = ["grep", "processor", "-A18"]  # 17
 
+    cmd = ' '.join(cmd1) + ' '.join(cmd2)
     ret, log1 = getstatusoutput_noshell_pipe(cmd1, cmd2)
     if ret != 0 or len(log1) <= 0:
         return False, "command execution error[%s]" % cmd
