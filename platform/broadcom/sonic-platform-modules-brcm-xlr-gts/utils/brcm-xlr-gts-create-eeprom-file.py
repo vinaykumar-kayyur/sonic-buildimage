@@ -88,7 +88,7 @@ def main():
     if brcm_dev == 'b960':
         tlvinfo_data.add_tlv_str(TLV_CODE_PLATFORM_NAME, 'BCM956960K')
 
-    onie_version = getstatusoutput_noshell_pipe("cat", "/host/machine.conf"], ["grep", 'onie_version'], ["sed", 's/onie_version=//'])
+    onie_version = getstatusoutput_noshell_pipe(["cat", "/host/machine.conf"], ["grep", 'onie_version'], ["sed", 's/onie_version=//'])
     tlvinfo_data.add_tlv_str(TLV_CODE_ONIE_VERSION, onie_version)
 
     tlvinfo_header.totallen = len(tlvinfo_data.dump())+4;
