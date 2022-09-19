@@ -34,7 +34,6 @@
 
 try:
     import os
-    import commands
     import subprocess
     import logging
     import logging.config
@@ -183,7 +182,7 @@ class QFX5200_FanUtil(object):
 
         return int(ret_value)	
 
-    def write_file(text, file):
+    def write_file(self, text, file):
         with open(file, 'w') as f:
             f.write(text + '\n')
             

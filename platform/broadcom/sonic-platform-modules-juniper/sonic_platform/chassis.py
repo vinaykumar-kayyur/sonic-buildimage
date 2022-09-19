@@ -36,7 +36,6 @@
 
 try:
     import os
-    import subprocess
     import sys
     import time
     import syslog

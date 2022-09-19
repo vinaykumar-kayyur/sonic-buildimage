@@ -34,7 +34,6 @@
 
 try:
     import os
-    import commands
     import subprocess
     import logging
     import logging.config
