@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+
+#############################################################################
+# Quanta
+#
+# Sfp contains an implementation of SONiC Platform Base API and
+# provides the sfp device status which are available in the platform
+#
+#############################################################################
+
 import time
 import subprocess
 from ctypes import create_string_buffer
