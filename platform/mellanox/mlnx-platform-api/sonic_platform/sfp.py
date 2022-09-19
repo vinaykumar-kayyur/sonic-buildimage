@@ -256,6 +256,7 @@ PAGE17_OFFSET = 4352
 
 PATH_PAGE = '/{}/data'
 PATH_PAGE00 = '/0/i2c-0x50/data'
+PATH_PAGE00_A2 = '/0/i2c-0x51/data'
 PATH_PAGE01 = '/1/data'
 PATH_PAGE02 = '/2/data'
 PATH_PAGE03 = '/3/data'
@@ -386,7 +387,10 @@ class SFP(SfpBase):
             if page_num == 0:
                 page = self.sdk_sysfs_page_path_header + PATH_PAGE00
             else:
-                page = self.sdk_sysfs_page_path_header + PATH_PAGE.format(page_num)
+                if page_num == 1 and self.sfp_type == SFP_TYPE:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE00_A2
+                else:
+                    page = self.sdk_sysfs_page_path_header + PATH_PAGE.format(page_num)
                 offset = offset - page_num * PAGE_SIZE
 
             with open(page, mode='r+b', buffering=0) as f:
