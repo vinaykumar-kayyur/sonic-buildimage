@@ -1042,7 +1042,7 @@ def rjsysset(location, value):
             with open(location, 'w') as f:
                 f.write('0x'+'%02x'%value+'\n')
         except (IOError, FileNotFoundError):
-            return False, ''
+            return False, 'cannot write to file'
     return True, ''
 
 
