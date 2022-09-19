@@ -141,7 +141,6 @@ jobs:
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
               if [ $(GROUP_NAME) == broadcom ]; then
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
-                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-syncd-$(platform_rpc)-rpcv2.gz
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-saiserverv2-$(platform_rpc).gz           
               fi
             fi
