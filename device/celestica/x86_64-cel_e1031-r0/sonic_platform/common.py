@@ -46,7 +46,7 @@ class Common:
         status = False
         output = ""
         try:
-            p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if p.returncode == 0:
                 status, output = True, raw_data.strip()
