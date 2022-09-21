@@ -69,6 +69,12 @@ class Psu(PsuBase):
         else:
             return psu_voltage
 
+    def get_voltage_high_threshold(self):
+        return 12.6
+
+    def get_voltage_low_threshold(self):
+        return 11.4
+
     def get_current(self):
         """
         Retrieves present electric current supplied by PSU

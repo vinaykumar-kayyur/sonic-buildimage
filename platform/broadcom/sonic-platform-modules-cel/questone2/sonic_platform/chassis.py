@@ -95,6 +95,15 @@ class Chassis(ChassisBase):
             component = Component(index)
             self._component_list.append(component)
     
+    def initizalize_system_led(self):
+        return True
+
+    def get_status_led(self):
+        return "green"
+
+    def set_status_led(self, color):
+        return True
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
