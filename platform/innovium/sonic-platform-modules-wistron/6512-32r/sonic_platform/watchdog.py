@@ -45,7 +45,7 @@ class Watchdog(WatchdogBase):
         Turn on the watchdog timer
         """
         p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        _, _ = p.communicate()
         return 0
 
     def _disable(self):
@@ -53,7 +53,7 @@ class Watchdog(WatchdogBase):
         Turn off the watchdog timer
         """
         p = subprocess.Popen(IPMI_WDT_OFF_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        _, _ = p.communicate()
         return 0
 
     def _keepalive(self):
@@ -61,7 +61,7 @@ class Watchdog(WatchdogBase):
         Keep alive watchdog timer
         """
         p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        _, _ = p.communicate()
         return 0
 
     def _settimeout(self, seconds):
@@ -73,7 +73,7 @@ class Watchdog(WatchdogBase):
         ipmi_timeout = seconds * 10;
         cmd = IPMI_WDT_SET_TIMEOUT_CMD.format(ipmi_timeout % 256, int(ipmi_timeout / 256))
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        _, _ = p.communicate()
 
         return seconds
 

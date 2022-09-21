@@ -422,12 +422,11 @@ class Sfp(SfpBase):
             os.remove(PAUSE_EEPROM_SERVICE_STAMP)
 
             eeprom_raw_lower = [int(x, 16) for x in data_lower.split()]
-            type_code = eeprom_raw_lower[0]
-            if eeprom_raw[0] in QSFP_TYPE_CODE_LIST:
+            if eeprom_raw_lower[0] in QSFP_TYPE_CODE_LIST:
                 temp = eeprom_raw_lower[22]
                 if temp > 128:
                     return False
-            elif eeprom_raw[0] in QSFP_DD_TYPE_CODE_LIST:
+            elif eeprom_raw_lower[0] in QSFP_DD_TYPE_CODE_LIST:
                 temp = eeprom_raw_lower[14]
                 if temp > 128:
                     return False
@@ -459,7 +458,7 @@ class Sfp(SfpBase):
                 except BaseException:
                     fd.close()
             return True
-        except:
+        except Exception:
             return False
 
     def read_eeprom_buffer(self):
@@ -485,7 +484,7 @@ class Sfp(SfpBase):
                 with open(sysfs_sfp_i2c_client_eeprom_path, 'w') as fd:
                     fd.write(" ")
                     fd.close()
-            except BaseException:
+            except IOError:
                 fd.close()
 
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
@@ -1640,7 +1639,7 @@ class Sfp(SfpBase):
                 fd.write(str(0))
                 time.sleep(1)
 
-        except BaseException:
+        except IOError:
             return False
 
         return True
