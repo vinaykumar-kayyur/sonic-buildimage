@@ -26,6 +26,17 @@ start)
         # Add driver to support TLV - EEPROM
         echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
 
+        sleep 2
+        # One platform support two hwskus, auto select the correct hwsku
+        # If label is not either Questone-II or Questone-IIA, then Questone-IIA is used by default 
+        hwsku_file="/usr/share/sonic/device/x86_64-cel_questone_2-r0/default_sku"
+        hwsku=$(decode-syseeprom | grep "Label" | awk '{print $5}')
+        if [ x$hwsku = x"Questone-II" ];then
+            echo "Questone_2 t1" > $hwsku_file
+        else
+            echo "Questone_2A t1" > $hwsku_file
+        fi
+
         echo "done."
         ;;
 
