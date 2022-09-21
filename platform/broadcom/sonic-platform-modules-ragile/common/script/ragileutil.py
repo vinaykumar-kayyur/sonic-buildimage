@@ -1256,7 +1256,7 @@ def rgsysset(location, value):
             with open(location, 'w') as f:
                 f.write('0x%02x' % value + '\n')
         except (IOError, FileNotFoundError) as e:
-            return False, e
+            return False, str(e)
     return True, ''
 
 
@@ -1510,9 +1510,9 @@ def writeToEEprom(rst_arr):
     elif dealtype == "io":
         io_wr(E2_PROTECT["io_addr"], E2_PROTECT["close"])
     # deal last drivers
-    getstatusoutput_noshell(["rmmod", "at24"])
-    getstatusoutput_noshell(["modprobe", "at24"])
-    getstatusoutput_noshell(["rm", "-f", "/var/cache/sonic/decode-syseeprom/syseeprom_cache"])
+    subprocess.call(["rmmod", "at24"])
+    subprocess.call(["modprobe", "at24"])
+    subprocess.call(["rm", "-f", "/var/cache/sonic/decode-syseeprom/syseeprom_cache"])
 
 
 def get_local_eth0_mac():
@@ -2016,7 +2016,6 @@ def getusbinfo():
 def get_cpu_info():
     cmd1 = ["cat", "/proc/cpuinfo"]
     cmd2 = ["grep", "processor", "-A18"]  # 17
-
     cmd = ' '.join(cmd1) + ' '.join(cmd2)
     ret, log1 = getstatusoutput_noshell_pipe(cmd1, cmd2)
     if ret != 0 or len(log1) <= 0:

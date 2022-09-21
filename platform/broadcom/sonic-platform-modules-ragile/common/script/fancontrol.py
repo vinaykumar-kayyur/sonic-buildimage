@@ -913,7 +913,7 @@ class FanControl(object):
                     self.set_fan_max_speed()  # fan full speed
                     self.critnum += 1  # anti-shake
                     if self.critnum >= MONITOR_CONST.CRITICAL_NUM:
-                        subprocess.run(["reboot"])
+                        subprocess.call(["reboot"])
                     logger.debug(DEBUG_FANCONTROL, "crit times:%d" % self.critnum)
                 else:
                     self.critnum = 0

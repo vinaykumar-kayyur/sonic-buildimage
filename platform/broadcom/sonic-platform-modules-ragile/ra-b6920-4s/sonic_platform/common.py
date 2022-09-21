@@ -10,13 +10,13 @@ class Common:
     PMON_PLATFORM_PATH = '/usr/share/sonic/platform/'
     CONFIG_DIR = 'sonic_platform_config'
 
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    HOST_CHK_CMD = ["docker"]
 
     def __init__(self):
         (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def is_host(self):
-        return subprocess.run(self.HOST_CHK_CMD).returncode == 0
+        return subprocess.call(self.HOST_CHK_CMD) == 0
 
     def load_json_file(self, path):
         """

@@ -49,7 +49,6 @@ def check_driver():
     status, output = getstatusoutput_noshell_pipe(["lsmod"], ["grep", "rg"], ["wc", "-l"])
     #System execution error
     if status:
-        print(output)
         return False
     if output.isdigit() and int(output) > 0:
         return True
@@ -71,45 +70,45 @@ def get_pid(name):
     return ret
 
 def start_avs_ctrl():
-    cmd = ["nohup", "avscontrol.py", "start", "&"]
+    cmd = ["avscontrol.py", "start"]
     rets = get_pid("avscontrol.py")
     if len(rets) == 0:
-        getstatusoutput_noshell(cmd)
+        subprocess.Popen(cmd)
 
 def start_fan_ctrl():
     if STARTMODULE['fancontrol'] == 1:
-        cmd = ["nohup", "fancontrol.py", "start", "&"]
+        cmd = ["fancontrol.py", "start"]
         rets = get_pid("fancontrol.py")
         if len(rets) == 0:
-            getstatusoutput_noshell(cmd)
+            subprocess.Popen(cmd)
 
 def starthal_fanctrl():
     if STARTMODULE.get('hal_fanctrl',0) == 1:
-        cmd = ["nohup", "hal_fanctrl.py", "start", "&"]
+        cmd = ["hal_fanctrl.py", "start"]
         rets = get_pid("hal_fanctrl.py")
         if len(rets) == 0:
-            getstatusoutput_noshell(cmd)
+            subprocess.Popen(cmd)
 
 def starthal_ledctrl():
     if STARTMODULE.get('hal_ledctrl',0) == 1:
-        cmd = ["nohup", "hal_ledctrl.py", "start", "&"]
+        cmd = ["hal_ledctrl.py", "start"]
         rets = get_pid("hal_ledctrl.py")
         if len(rets) == 0:
-            getstatusoutput_noshell(cmd)
+            subprocess.Popen(cmd)
 
 def start_dev_monitor():
     if STARTMODULE.get('dev_monitor',0) == 1:
-        cmd = ["nohup", "dev_monitor.py", "start", "&"]
+        cmd = ["dev_monitor.py", "start"]
         rets = get_pid("dev_monitor.py")
         if len(rets) == 0:
-            getstatusoutput_noshell(cmd)
+            subprocess.Popen(cmd)
 
 def start_slot_monitor():
     if STARTMODULE.get('slot_monitor',0) == 1:
-        cmd = ["nohup", "slot_monitor.py", "start", "&"]
+        cmd = ["slot_monitor.py", "start"]
         rets = get_pid("slot_monitor.py")
         if len(rets) == 0:
-            getstatusoutput_noshell(cmd)
+            subprocess.Popen(cmd)
 
 def stop_fan_ctrl():
     u'''disable fan timer service'''
@@ -117,7 +116,7 @@ def stop_fan_ctrl():
         rets = get_pid("fancontrol.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            getstatusoutput_noshell(cmd)
+            subprocess.call(cmd)
         return True
 
 def stophal_ledctrl():
@@ -125,7 +124,7 @@ def stophal_ledctrl():
         rets = get_pid("hal_ledctrl.py")
         for ret in rets:
             cmd = ["kill", ret]
-            getstatusoutput_noshell(cmd)
+            subprocess.call(cmd)
         return True
 
 
@@ -135,7 +134,7 @@ def stop_dev_monitor():
         rets = get_pid("dev_monitor.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            getstatusoutput_noshell(cmd)
+            subprocess.call(cmd)
         return True
 
 def stop_slot_monitor():
@@ -144,7 +143,7 @@ def stop_slot_monitor():
         rets = get_pid("slot_monitor.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            getstatusoutput_noshell(cmd)
+            subprocess.call(cmd)
         return True
 
 def rm_dev(bus, loc):
@@ -183,7 +182,6 @@ def checksignaldriver(name):
     status, output = getstatusoutput_noshell_pipe(["lsmod"], ["grep", name], ["wc", "-l"])
     #System execution error
     if status:
-        print(output)
         return False
     if output.isdigit() and int(output) > 0:
         return True
@@ -194,7 +192,7 @@ def adddriver(name, delay):
     cmd = ["modprobe", name]
     if delay != 0:
         time.sleep(delay)
-    if checksignaldriver(name) is not True:
+    if not checksignaldriver(name):
         getstatusoutput_noshell(cmd)
 
 def removedriver(name, delay):
