@@ -150,7 +150,7 @@ def rm_dev(bus, loc):
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath):
         with open("/sys/bus/i2c/devices/i2c-%d/delete_device" % bus, 'w') as f:
-            f.write('0x%02x' % loc + '\n')
+            f.write('0x%02x\n' % loc)
 
 def add_dev(name, bus, loc):
     if name == "lm75":
@@ -166,7 +166,7 @@ def add_dev(name, bus, loc):
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) is False:
         with open("/sys/bus/i2c/devices/i2c-%d/new_device" % bus, 'w') as f:
-            f.write('%s 0x%02x' % (name, loc) + '\n')
+            f.write('%s 0x%02x\n' % (name, loc))
 
 def removedevs():
     devs = GLOBALCONFIG["DEVS"]

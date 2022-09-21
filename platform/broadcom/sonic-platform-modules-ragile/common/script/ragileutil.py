@@ -1183,7 +1183,7 @@ def generate_ext(cardid):
 
 
 def rgi2cget(bus, devno, address):
-    command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address]
+    command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address]
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
@@ -1195,7 +1195,7 @@ def rgi2cget(bus, devno, address):
 
 
 def rgi2cset(bus, devno, address, byte):
-    command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address, "0x"+"%02x"%byte]
+    command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address, "0x%02x"%byte]
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
@@ -1254,14 +1254,14 @@ def rgsysset(location, value):
     for i in range(retrytime):
         try:
             with open(location, 'w') as f:
-                f.write('0x%02x' % value + '\n')
+                f.write('0x%02x\n' % value)
         except (IOError, FileNotFoundError) as e:
             return False, str(e)
     return True, ''
 
 
 def rgi2cget_word(bus, devno, address):
-    command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address, 'w']
+    command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address, 'w']
     retrytime = 3
     ret_t = ""
     for i in range(retrytime):
@@ -1272,7 +1272,7 @@ def rgi2cget_word(bus, devno, address):
 
 
 def rgi2cset_word(bus, devno, address, byte):
-    command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address, "0x"+"%02x"%byte, 'w']
+    command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address, "0x%02x"%byte, 'w']
     getstatusoutput_noshell(command_line)
 
 
