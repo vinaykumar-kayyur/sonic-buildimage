@@ -3,8 +3,9 @@ import ast
 import imp
 import yaml
 import subprocess
-
+from shlex import split
 from sonic_py_common import device_info
+from sonic_py_common.general import getstatusoutput_noshell_pipe
 
 
 class Common:
@@ -37,9 +38,20 @@ class Common:
         output = ""
         try:
             p = subprocess.Popen(
-                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             raw_data, err = p.communicate()
             if err == '':
+                status, output = True, raw_data.strip()
+        except Exception:
+            pass
+        return status, output
+
+    def _run_command_pipe(self, cmd1, cmd2):
+        status = False
+        output = ""
+        try:
+            exitcodes, raw_data = getstatusoutput_noshell_pipe(cmd1, cmd2)
+            if exitcodes == [0, 0]:
                 status, output = True, raw_data.strip()
         except Exception:
             pass
@@ -77,7 +89,11 @@ class Common:
         argument = config.get('argument')
         cmd = config['command'].format(
             config['argument'][index]) if argument else config['command']
-        status, output = self._run_command(cmd)
+        if '|' in cmd:
+            cmd1, cmd2 = cmd.split('|')
+            status, output = self._run_command_pipe(split(cmd1), split(cmd2))
+        else:
+            status, output = self._run_command(cmd)
         return output if status else None
 
     def _sysfs_read(self, index, config):
@@ -124,7 +140,13 @@ class Common:
 
     def _ipmi_set(self, index, config, input):
         arg = config['argument'][index].format(input)
-        return self._run_command(config['command'].format(arg))
+        cmd = config['command'].format(arg)
+        if '|' in cmd:
+            cmd1, cmd2 = cmd.split('|')
+            status, output = self._run_command_pipe(split(cmd1), split(cmd2))
+        else:
+            status, output = self._run_command(cmd)
+        return status, output
 
     def _hex_ver_decode(self, hver, num_of_bits, num_of_points):
         ver_list = []
