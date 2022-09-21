@@ -5,7 +5,7 @@ import click
 import os
 import time
 import subprocess
-from ragileconfig import GLOBALCONFIG, GLOBALINITPARAM, GLOBALINITCOMMAND, MAC_LED_RESET, STARTMODULE, i2ccheck_params
+from ragileconfig import GLOBALCONFIG, GLOBALINITPARAM, MAC_LED_RESET, STARTMODULE, i2ccheck_params
 from ragileutil import rgpciwr, rgi2cset, io_wr
 from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
@@ -23,13 +23,6 @@ class AliasedGroup(click.Group):
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
-
-def log_os_system(cmd):
-    u'''execute shell command'''
-    status, output = subprocess.getstatusoutput(cmd)
-    if status:
-        print(output)
-    return  status, output
 
 def write_sysfs_value(reg_name, value):
     u'''write sysfs file'''
@@ -253,9 +246,6 @@ def otherinit():
             )
         if not ret:
             click.echo("%%DEVICE_I2C-INIT: init param %s failed." % index.get("name"))
-
-    for index in GLOBALINITCOMMAND:
-        log_os_system(index)
 
 def unload_driver():
     u'''remove devices and drivers'''
