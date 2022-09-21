@@ -15,7 +15,7 @@ class APIHelper():
         (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def is_host(self):
-        return subprocess.run(HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
+        return subprocess.call(HOST_CHK_CMD) == 0
 
     def pci_get_value(self, resource, offset):
         status = True
@@ -71,7 +71,7 @@ class APIHelper():
 
     def get_cpld_reg_value(self, getreg_path, register):
         with open(getreg_path, 'w') as file:
-            file.write(register)
+            file.write(register + '\n')
         with open(getreg_path, 'r') as file:
             result = file.readline()
         return result

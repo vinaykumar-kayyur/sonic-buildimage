@@ -148,14 +148,14 @@ class Common:
 
     def get_reg(self, path, reg_addr):
         with open(path, 'w') as file:
-            file.write(reg_addr)
+            file.write(reg_addr + '\n')
         with open(path, 'r') as file:
             output = file.readline().strip()
         return output
 
     def set_reg(self, path, reg_addr, value):
         with open(path, 'w') as file:
-            file.write("{0} {1}".format(reg_addr, value))
+            file.write("{0} {1}\n".format(reg_addr, value))
         return None
 
     def read_txt_file(self, path):
@@ -185,7 +185,7 @@ class Common:
         return True
 
     def is_host(self):
-        return subprocess.run(self.HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
+        return subprocess.call(self.HOST_CHK_CMD) == 0
 
     def load_json_file(self, path):
         """

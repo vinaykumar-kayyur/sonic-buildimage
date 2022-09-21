@@ -149,9 +149,11 @@ class Common:
         return class_
 
     def get_reg(self, path, reg_addr):
-        cmd = "echo {1} > {0}; cat {0}".format(path, reg_addr)
-        status, output = self._run_command(cmd)
-        return output if status else None
+        with open(path, 'w') as file:
+            file.write(reg_addr + '\n')
+        with open(path, 'r') as file:
+            output = file.readline().strip()
+        return output
 
     def read_txt_file(self, path):
         with open(path, 'r') as f:
@@ -167,7 +169,7 @@ class Common:
         return True
 
     def is_host(self):
-        return subprocess.run(self.HOST_CHK_CMD).returncode == 0
+        return subprocess.call(self.HOST_CHK_CMD) == 0
 
     def load_json_file(self, path):
         """

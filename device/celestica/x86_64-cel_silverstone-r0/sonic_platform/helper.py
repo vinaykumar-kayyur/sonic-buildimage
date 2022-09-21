@@ -14,7 +14,7 @@ class APIHelper():
         pass
 
     def is_host(self):
-        return subprocess.run(HOST_CHK_CMD, stdout=None, stderr=None).returncode == 0
+        return subprocess.call(HOST_CHK_CMD) == 0
 
     def pci_get_value(self, resource, offset):
         status = True
@@ -40,8 +40,8 @@ class APIHelper():
 
     def run_interactive_command(self, cmd):
         try:
-            subprocess.run(cmd, check=True)
-        except subprocess.CalledProcessError:
+            subprocess.call(cmd)
+        except:
             return False
         return True
 

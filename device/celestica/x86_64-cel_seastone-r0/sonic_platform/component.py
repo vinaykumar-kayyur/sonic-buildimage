@@ -52,7 +52,7 @@ class Component(ComponentBase):
     def get_register_value(self, register):
         # Retrieves the cpld register value
         with open(GETREG_PATH, 'w') as file:
-            file.write(register)
+            file.write(register + '\n')
         with open(GETREG_PATH, 'r') as file:
             raw_data = file.readline()
         return raw_data.strip()
