@@ -17,10 +17,11 @@ class PsuUtil(PsuBase):
 
     def run_command(self, cmd1, cmd2):
         exitcode, out = getstatusoutput_noshell_pipe(cmd1, cmd2)
-        if exitcode[0] != 0:
-            sys.exit(exitcode[0])
-        elif exitcode[1] != 0:
-            sys.exit(exitcode[1])
+        i = 0
+        while i < 2:
+            if exitcode[i] != 0:
+                sys.exit(exitcode[i])
+            i += 1
         return out
 
     def find_value(self, grep_string):
