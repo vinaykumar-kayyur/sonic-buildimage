@@ -243,7 +243,7 @@ function UpgradeASICFW() {
     fi
 
     if [[ "${_FW_CURRENT}" == "${_FW_AVAILABLE}" ]]; then
-        ExitSuccess "firmware is up to date"
+        LogInfo "firmware is up to date"
     else
         LogNotice "firmware upgrade is required. Installing compatible version..."
         RunCmd "${BURN_CMD} -i ${_FW_FILE}"
