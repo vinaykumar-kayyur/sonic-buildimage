@@ -62,7 +62,7 @@ jobs:
         exit 0
       fi
 
-      DOCKER_DATA_ROOT_FOR_MULTIARCH=/data/march/docker make configure PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} $args || docker image ls $image_tag
+      DOCKER_DATA_ROOT_FOR_MULTIARCH=/data/march/docker BLDENV=${{ parameters.dist }} make -f Makefile.work configure PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} $args || docker image ls $image_tag
       if [[ "$(Build.Reason)" == "PullRequest" ]];then
         exit 0
       fi
