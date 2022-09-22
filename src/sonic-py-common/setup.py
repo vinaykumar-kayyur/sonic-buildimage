@@ -29,8 +29,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'sonic-db-load = sonic_py_common:sonic_db_dump_load',
-            'sonic-db-dump = sonic_py_common:sonic_db_dump_load',
+            'sonic-db-load = sonic_py_common.sonic_db_dump_load:sonic_db_dump_load',
+            'sonic-db-dump = sonic_py_common.sonic_db_dump_load:sonic_db_dump_load',
         ],
     },
     classifiers=[
