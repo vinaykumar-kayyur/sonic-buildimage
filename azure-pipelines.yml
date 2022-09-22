@@ -28,8 +28,9 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: sonic-net/sonic-mgmt
-    endpoint: sonic-net
+    name: vadymhlushko-mlnx/sonic-mgmt
+    endpoint: vadymhlushko-mlnx
+    ref: refs/heads/master
   - repository: buildimage
     type: github
     name: sonic-net/sonic-buildimage
