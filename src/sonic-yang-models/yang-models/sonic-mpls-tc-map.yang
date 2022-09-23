@@ -30,7 +30,7 @@ module sonic-mpls-tc-map {
 
             description "MPLS_TC_TO_TC_MAP part of config_db.json";
 
-            list MPLS_TC_TO_TC_MAP {
+            list MPLS_TC_TO_TC_MAP_LIST {
 
                 key "name";
 
