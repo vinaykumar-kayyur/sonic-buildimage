@@ -7,7 +7,6 @@
 try:
     import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
-    from sonic_platform.fan_drawer import FanDrawer
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
