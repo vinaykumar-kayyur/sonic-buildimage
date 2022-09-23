@@ -7,6 +7,7 @@
 try:
     import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
+    from sonic_platform.fan_drawer import FanDrawer
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -25,6 +26,11 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
+
+    def get_revision(self):
+        val  = ord(self._eeprom.revision_str())
+        test = "{}".format(val)
+        return test
 
     def get_reboot_cause(self):
         """
