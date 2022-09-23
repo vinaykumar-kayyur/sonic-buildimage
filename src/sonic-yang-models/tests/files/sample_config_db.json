@@ -4,6 +4,24 @@
                 "Vrf_blue": {
                 }
         },
+        "DHCP_SERVER": {
+            192.0.0.8": {
+                "expireat": 1602451533.2328951,
+                "ttl": -0.001,
+                "type": "hash",
+                "value": {
+                  "NULL": "NULL"
+                }
+            },
+            192.0.0.9": {
+              "expireat": 1602451533.2352362,
+              "ttl": -0.001,
+              "type": "hash",
+              "value": {
+                "NULL": "NULL"
+              }
+          }
+        },
         "BUFFER_POOL": {
             "ingress_lossy_pool": {
                "mode": "static",
@@ -830,7 +848,7 @@
                 "role": "Int",
                 "speed": "40000",
                 "tpid": "0x8100"
-            } 
+            }
         },
         "ACL_TABLE": {
             "V4-ACL-TABLE": {
@@ -1831,7 +1849,7 @@
                 "server_ipv6": "fc02:1000::30/128",
                 "soc_ipv4": "192.168.0.3/32",
                 "state": "auto"
-            }, 
+            },
             "Ethernet0": {
                 "server_ipv4": "192.168.0.2/32",
                 "server_ipv6": "fc02:1000::30/128",
