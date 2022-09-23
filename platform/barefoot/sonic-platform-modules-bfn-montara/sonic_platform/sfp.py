@@ -101,22 +101,6 @@ class Sfp(SfpOptoeBase):
         if not EEPROM_CACHED_API_SUPPORT:
             return super().read_eeprom(offset, num_bytes)
 
-
-        # TODO: remove when memory model is verified before requesting page that may not be supported
-        #
-        # If memory model is flat - the requested page can only be 00_LOWER or 00_UPPER,
-        # SONiC Cmis implementation, CmisCdbApi constructor reads consts.CDB_SUPPORT field
-        # which is located on PAGE1 without verifying whether memory supports it or not.
-        if offset >= EEPROM_PAGE_SIZE * 2:
-            id_byte_raw = self.read_eeprom(0, 1)
-            if id_byte_raw is None:
-                return None
-            id_byte = id_byte_raw[0]
-            if id_byte == 0x18 or id_byte == 0x19 or id_byte == 0x1e:
-                eeprom_wrapper = XcvrEeprom(self.read_eeprom, None, CmisMemMap(CmisCodes))
-                if eeprom_wrapper.read(consts.FLAT_MEM_FIELD) is True:
-                    return bytearray(num_bytes)
-
         def cached_num_bytes_get(page, offset, num_bytes):
             def qsfp_cached_num_bytes_get(client):
                 return client.pltfm_mgr.pltfm_mgr_qsfp_cached_num_bytes_get(self.index, page, offset, num_bytes)
