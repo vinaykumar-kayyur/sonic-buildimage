@@ -5,22 +5,8 @@
                 }
         },
         "DHCP_SERVER": {
-            192.0.0.8": {
-                "expireat": 1602451533.2328951,
-                "ttl": -0.001,
-                "type": "hash",
-                "value": {
-                  "NULL": "NULL"
-                }
-            },
-            192.0.0.9": {
-              "expireat": 1602451533.2352362,
-              "ttl": -0.001,
-              "type": "hash",
-              "value": {
-                "NULL": "NULL"
-              }
-          }
+            "192.0.0.8": {},
+            "192.0.0.8": {}
         },
         "BUFFER_POOL": {
             "ingress_lossy_pool": {

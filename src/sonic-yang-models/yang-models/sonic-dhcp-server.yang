@@ -43,55 +43,6 @@ module sonic-dhcp-server {
                     type inet:ipv4-address;
                 }
 
-                leaf expireat {
-                    description "exire time for lease for this dhcp_server. Range with fraction-digits as 10: -922337203.6854775808 - 922337203.6854775807";
-                    type decimal64 {
-                        fraction-digits 10;
-                    }
-                }
-
-                leaf ttl {
-                    description "ttl for dhcp_server";
-                    type decimal64 {
-                        fraction-digits 4;
-                        range "-100.999 .. 100.99";
-                    }
-                }
-
-
-                leaf type {
-                    description "REVIEW: is only hash allowed?";
-                    type string {
-                        pattern 'hash';
-                    }
-                }
-
-                container value {
-                    choice values {
-                        case NULL {
-                            leaf NULL {
-                                type string {
-                                    pattern "NULL";
-                                }
-                            }
-                        }
-                        case NAME_PORT {
-                            leaf name {
-                                type string {
-                                }
-                            }
-
-                            leaf port {
-                                description "PORT where dhcp server is reachable";
-                                type leafref {
-                                    path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
-                                }
-                            }
-                        }
-                    } /* end of choice values */
-
-                }/* end of container value */
-
             }/* end of list IPS_LIST */
 
         } /* end of container DHCP_SERVER */
