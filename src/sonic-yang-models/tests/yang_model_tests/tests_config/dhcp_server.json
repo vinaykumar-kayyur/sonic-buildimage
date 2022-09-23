@@ -1,0 +1,91 @@
+{
+    "DHCP_SERVER_POSITIVE_CONFIG": {
+        "sonic-dhcp-server:sonic-dhcp-server": {
+            "sonic-dhcp-server:DHCP_SERVER": {
+                "IPS_LIST": [
+                    {
+                        "ip": "10.1.1.2",
+                        "expireat": "66578.46758",
+                        "ttl": "-0.001",
+                        "type": "hash",
+                        "value": {
+                            "name": "DHCP_SERVER",
+                            "port": "Ethernet8"
+                        }
+                    },
+                    {
+                        "ip": "10.1.9.2",
+                        "expireat": "578.867",
+                        "ttl": "-0.001",
+                        "type": "hash",
+                        "value": {
+                            "NULL": "NULL"
+                        }
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "description": "Ethernet8/1",
+                        "lanes": "45",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
+
+    "DHCP_SERVER_TYPE_PATTERN": {
+        "sonic-dhcp-server:sonic-dhcp-server": {
+            "sonic-dhcp-server:DHCP_SERVER": {
+                "IPS_LIST": [
+                    {
+                        "ip": "10.11.9.2",
+                        "expireat": "55.666",
+                        "ttl": "-0.001",
+                        "type": "hashh",
+                        "value": {
+                            "name": "DHCP_SERVER2",
+                            "port": "Ethernet4"
+                        }
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet4",
+                        "description": "Ethernet4/1",
+                        "lanes": "41",
+                        "speed": 100000
+                    }
+                ]
+            }
+        }
+    },
+
+    "DHCP_SERVER_CABLE_VALUE_CHOICE": {
+        "sonic-dhcp-server:sonic-dhcp-server": {
+            "sonic-dhcp-server:DHCP_SERVER": {
+                "IPS_LIST": [
+                    {
+                        "ip": "10.22.9.2",
+                        "expireat": "355.666",
+                        "ttl": "-0.001",
+                        "type": "hash",
+                        "value": {
+                            "name": "DHCP_SERVER2",
+                            "NULL": "NULL"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

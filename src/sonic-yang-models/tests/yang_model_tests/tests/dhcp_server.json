@@ -1,0 +1,14 @@
+{
+    "DHCP_SERVER_POSITIVE_CONFIG": {
+        "desc": "Configure DHCP_SERVER POSITIVE_CONFIGs."
+    },
+    "DHCP_SERVER_TYPE_PATTERN": {
+        "desc": "Configure DHCP_SERVER INCORRECT TYPE_PATTERN.",
+        "eStrKey": "Pattern",
+        "eStr": ["hashh"]
+    },
+    "DHCP_SERVER_CABLE_VALUE_CHOICE": {
+        "desc": "Configure DHCP_SERVER INCORRECT VALUE CHOICE.",
+        "eStr": ["choice", "value"]
+    }
+}
