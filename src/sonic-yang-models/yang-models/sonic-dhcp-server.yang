@@ -32,7 +32,7 @@ module sonic-dhcp-server {
 
             description "DHCP_SERVER part of config_db.json";
 
-            list IPS_LIST {
+            list DHCP_SERVER_LIST {
 
                 description "List of IPs in DHCP_SERVER Table";
 
@@ -43,7 +43,7 @@ module sonic-dhcp-server {
                     type inet:ipv4-address;
                 }
 
-            }/* end of list IPS_LIST */
+            } /* end of list IPS_LIST */
 
         } /* end of container DHCP_SERVER */
 
