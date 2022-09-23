@@ -68,11 +68,6 @@ module sonic-events-bgp {
                 description "IP of neighbor associated with this notification";
             }
 
-            leaf ASN {
-                type uint32;
-                description "ASN number from the notification";
-            }
-
             leaf is-sent {
                 type boolean;
                 description "true - if this notification was for sent messages; false if it was for received.";

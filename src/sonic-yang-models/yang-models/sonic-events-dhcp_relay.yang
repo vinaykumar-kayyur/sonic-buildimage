@@ -29,16 +29,7 @@ module sonic-events-dhcp-relay {
                 Declares an event for dhcp-relay discarding packet on an
                 interface due to missing IP address assigned.
                 Params:
-                    name of the interface discarding.
-                    class of the missing IP address as IPv4 or IPv6.";
-
-            leaf ip_class {
-                type enumeration {
-                    enum "IPv4";
-                    enum "IPv6";
-                }
-                description "Class of IP address missing";
-            }
+                    name of the interface discarding.";
 
             leaf ifname {
                 type leafref {
