@@ -31,15 +31,15 @@ def sonic_db_dump_load():
             args['streaming_backend'] = options.backend
         if hasattr(options, 'dbname') and options.dbname:
             if options.conntype == 'tcp':
-                args['host'] = SonicDBConfig.get_hostname(options.dbname)
-                args['port'] = SonicDBConfig.get_port(options.dbname)
-                args['db'] = SonicDBConfig.get_dbid(options.dbname)
+                args['host'] = SonicDBConfig.getDbHostname(options.dbname)
+                args['port'] = SonicDBConfig.getDbPort(options.dbname)
+                args['db'] = SonicDBConfig.getDbId(options.dbname)
                 args['unix_socket_path'] = None
             elif options.conntype == "unix_socket":
                 args['host'] = None
                 args['port'] = None
-                args['db'] = SonicDBConfig.get_dbid(options.dbname)
-                args['unix_socket_path'] = SonicDBConfig.get_socket(options.dbname)
+                args['db'] = SonicDBConfig.getDbId(options.dbname)
+                args['unix_socket_path'] = SonicDBConfig.getDbSock(options.dbname)
             else:
                 raise TypeError('redis connection type is tcp or unix_socket')
 
