@@ -99,7 +99,6 @@ remote_ctr_config = {
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
