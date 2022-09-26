@@ -44,6 +44,19 @@ prepare_installer_disk()
     umount $tmpdir
 }
 
+wait_kvm_ready()
+{
+    local count=30
+    local waiting_in_seconds=2.0
+    for ((i=1; i<=$count; i++)); do
+        sleep $waiting_in_seconds
+        echo "$(date) [$i/$count] waiting for the port $KVM_PORT ready"
+        if netstat -l | grep -q ":$KVM_PORT"; then
+          break
+        fi
+    done
+}
+
 create_disk
 prepare_installer_disk
 
@@ -69,7 +82,7 @@ fi
 
 kvm_pid=$!
 
-sleep 2.0
+wait_kvm_ready
 
 [ -d "/proc/$kvm_pid" ] || {
         echo "ERROR: kvm died."
