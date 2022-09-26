@@ -3,10 +3,6 @@
 try:
     import os
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
-    from sonic_platform_base.sonic_xcvr.mem_maps.public.cmis import CmisMemMap
-    from sonic_platform_base.sonic_xcvr.codes.public.cmis import CmisCodes
-    from sonic_platform_base.sonic_xcvr.xcvr_eeprom import XcvrEeprom
-    from sonic_platform_base.sonic_xcvr.fields import consts
     from sonic_platform.platform_thrift_client import thrift_try
     from sonic_platform.platform_thrift_client import pltfm_mgr_try
 except ImportError as e:
