@@ -278,5 +278,19 @@
 				"timestamp": "1985-04-12T23:20:50.52Z"
 			}
 		}
+	},
+	"SONIC_EVENTS_HOST_INVALID_FREELIST_INCORRECT_TIMESTAMP": {
+		"sonic-events-host:sonic-events-host": {
+			"sonic-events-host:invalid-freelist": {
+				"timestamp": "INCORRECT_TIMESTAMP"
+			}
+		}
+	},
+	"SONIC_EVENTS_HOST_INVALID_FREELIST_VALID": {
+		"sonic-events-host:sonic-events-host": {
+			"sonic-events-host:invalid-freelist": {
+				"timestamp": "1985-04-12T23:20:50.52Z"
+			}
+		}
 	}
 }

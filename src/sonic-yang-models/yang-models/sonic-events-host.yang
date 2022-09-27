@@ -160,7 +160,16 @@ module sonic-events-host {
             evtcmn:EVENT_SEVERITY_2
 
             description "
-                Declares an event for seu error.";
+                Declares an event for SEU error.";
+
+            uses evtcmn:sonic-events-cmn;
+        }
+
+        container invalid-freelist {
+            evtcmn: EVENT_SEVERITY_2
+
+            description "
+                Declares an event for invalid freelist failure.";
 
             uses evtcmn:sonic-events-cmn;
         }
