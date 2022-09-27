@@ -126,5 +126,4 @@ def construct_sysfs_to_index_map(sysfs_path, index_path, page_path):
             else:
                 raise Exception("Unexpected value in file "+ index_path.format(dirname))
 
-    print(len(sysfs_file_dict))
     return sysfs_file_dict

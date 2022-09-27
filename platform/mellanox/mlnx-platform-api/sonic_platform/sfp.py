@@ -333,7 +333,10 @@ class SFP(SfpBase):
     def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform, sysfs_list):
         SfpBase.__init__(self)
         self.index = sfp_index + 1
-        self.sdk_sysfs_page_path_header = sysfs_list[0]
+        if sysfs_list is None:
+            self.sdk_sysfs_page_path_header = ''
+        else:
+            self.sdk_sysfs_page_path_header = sysfs_list[0]
         self.sdk_sysfs_list = sysfs_list
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
