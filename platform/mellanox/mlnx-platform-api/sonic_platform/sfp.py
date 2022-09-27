@@ -399,6 +399,24 @@ class SFP(SfpBase):
         except (OSError, IOError):
             return None
 
+    # Read out any bytes from any offset via ethtool
+    def _read_eeprom_specific_bytes_via_ethtool(self, offset, num_bytes):
+        eeprom_raw = []
+        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
+        try:
+            output = subprocess.check_output(ethtool_cmd,
+                                             shell=True,
+                                             universal_newlines=True)
+            output_lines = output.splitlines()
+            first_line_raw = output_lines[0]
+            if "Offset" in first_line_raw:
+                for line in output_lines[2:]:
+                    line_split = line.split()
+                    eeprom_raw = eeprom_raw + line_split[1:]
+        except subprocess.CalledProcessError as e:
+            return None
+
+        return eeprom_raw
 
     def _detect_sfp_type(self, sfp_type):
         eeprom_raw = []
@@ -1324,7 +1342,8 @@ class SFP(SfpBase):
             return None
         elif self.sfp_type == QSFP_TYPE:
             offset = PAGE00_LOWER_MEMORY_OFFSET
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
+            #dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
+            dom_channel_monitor_raw = self._read_eeprom_specific_bytes_via_ethtool((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
                 rx_los_data = int(dom_channel_monitor_raw[0], 16)
                 rx_los_list.append(rx_los_data & 0x01 != 0)
@@ -1375,7 +1394,8 @@ class SFP(SfpBase):
             return None
         elif self.sfp_type == QSFP_TYPE:
             offset = PAGE00_LOWER_MEMORY_OFFSET
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
+            #dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
+            dom_channel_monitor_raw = self._read_eeprom_specific_bytes_via_ethtool((offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
                 tx_fault_data = int(dom_channel_monitor_raw[0], 16)
                 tx_fault_list.append(tx_fault_data & 0x01 != 0)
