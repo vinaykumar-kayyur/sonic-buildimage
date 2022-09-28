@@ -110,19 +110,10 @@ none".format(KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
             "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name none --apiserver-advertise-address FC00:2::32".format(
+            "kubeadm join --discovery-file {} --node-name none".format(
                 KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True],
-        common_test.PRE: {
-            common_test.CONFIG_DB_NO: {
-                common_test.MGMT_INTERFACE_TABLE: {
-                    "eth0|FC00:2::32/64": {
-                        "gwaddr": "fc00:2::1"
-                    }
-                }
-            }
-        },
         common_test.REQ: {
             "data": {"ca.crt": "test"}
         }
@@ -143,19 +134,10 @@ none".format(KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
             "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name none --apiserver-advertise-address FC00:2::32".format(
+            "kubeadm join --discovery-file {} --node-name none".format(
                 KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True],
-        common_test.PRE: {
-            common_test.CONFIG_DB_NO: {
-                common_test.MGMT_INTERFACE_TABLE: {
-                    "eth0|FC00:2::32/64": {
-                        "gwaddr": "fc00:2::1"
-                    }
-                }
-            }
-        },
         common_test.REQ: {
             "data": {"ca.crt": "test"}
         }
