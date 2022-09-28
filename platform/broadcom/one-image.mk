@@ -14,6 +14,7 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(DELL_S5232F_PLATFORM_MODULE) \
                                $(DELL_S5248F_PLATFORM_MODULE) \
                                $(DELL_Z9332F_PLATFORM_MODULE) \
+                               $(DELL_Z9432F_PLATFORM_MODULE) \
                                $(DELL_S5296F_PLATFORM_MODULE) \
                                $(DELL_Z9100_PLATFORM_MODULE) \
                                $(DELL_S6100_PLATFORM_MODULE) \
@@ -68,6 +69,7 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(ALPHANETWORKS_SNH60A0_320FV2_PLATFORM_MODULE) \
                                $(ALPHANETWORKS_SNH60B0_640F_PLATFORM_MODULE) \
                                $(ALPHANETWORKS_SNJ60D0_320F_PLATFORM_MODULE) \
+                               $(ALPHANETWORKS_BES2348T_PLATFORM_MODULE) \
                                $(ALPHANETWORKS_SCG60D0_484T_PLATFORM_MODULE) \
                                $(BRCM_XLR_GTS_PLATFORM_MODULE) \
                                $(DELTA_AG9032V2A_PLATFORM_MODULE) \
