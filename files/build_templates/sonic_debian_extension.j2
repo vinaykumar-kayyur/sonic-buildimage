@@ -656,8 +656,8 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 # create a trivial apt repo if any of the debs have dependencies, including between lazy debs
 if [ $(for f in $FILESYSTEM_ROOT/$PLATFORM_DIR/common/*.deb; do \
            sudo dpkg -I $f | grep "Depends:\|Pre-Depends:"; done | wc -l) -gt 0 ]; then
-    sudo dpkg-scanpackages $FILESYSTEM_ROOT/$PLATFORM_DIR/common | \
-        sudo gzip | sudo tee $FILESYSTEM_ROOT/$PLATFORM_DIR/common/Packages.gz > /dev/null
+    (cd $FILESYSTEM_ROOT/$PLATFORM_DIR/common && sudo dpkg-scanpackages . | \
+         sudo gzip | sudo tee Packages.gz > /dev/null)
 fi
 {% endif %}
 
