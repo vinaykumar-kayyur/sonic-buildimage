@@ -65,7 +65,7 @@ if [[ -d $FILESYSTEM_ROOT ]]; then
 fi
 mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
-mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
 ## ensure proc is mounted
@@ -123,6 +123,10 @@ echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt
 echo '[INFO] Install packages for building image'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
 
+if [[ $CROSS_BUILD_ENVIRON == y ]]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT dpkg --add-architecture $CONFIGURED_ARCH
+fi
+
 ## Create device files
 echo '[INFO] MAKEDEV'
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
@@ -162,7 +166,7 @@ if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
     fi
 
     echo '[INFO] Signing SONiC linux kernel image'
-    K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
+    K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
     sbsign --key $SIGNING_KEY --cert $SIGNING_CERT --output /tmp/${K##*/} ${K}
     sudo cp -f /tmp/${K##*/} ${K}
 fi
@@ -249,22 +253,53 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSIO
 # pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
-if [ "$INCLUDE_KUBERNETES" == "y" ]
-then
-    ## Install Kubernetes
-    echo '[INFO] Install kubernetes'
+install_kubernetes () {
+    local ver="$1"
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
         https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}-00
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${KUBERNETES_VERSION}-00
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${ver}
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${ver}
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${ver}
+}
+
+if [ "$INCLUDE_KUBERNETES" == "y" ]
+then
+    ## Install Kubernetes
+    echo '[INFO] Install kubernetes'
+    install_kubernetes ${KUBERNETES_VERSION}
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
 else
     echo '[INFO] Skipping Install kubernetes'
+fi
+
+if [ "$INCLUDE_KUBERNETES_MASTER" == "y" ]
+then
+    ## Install Kubernetes master
+    echo '[INFO] Install kubernetes master'
+    install_kubernetes ${MASTER_KUBERNETES_VERSION}
+    
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
+        https://packages.microsoft.com/keys/microsoft.asc | \
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
+        https://packages.microsoft.com/keys/msopentech.asc | \
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main" | \
+        sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/azure.list
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install metricsext2
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
+        https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb 
+    sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/cri-dockerd.deb
+else
+    echo '[INFO] Skipping Install kubernetes master'
 fi
 
 ## Add docker config drop-in to specify dockerd command line
@@ -309,6 +344,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python3-apt             \
     traceroute              \
     iputils-ping            \
+    arping                  \
     net-tools               \
     bsdmainutils            \
     ca-certificates         \
@@ -327,7 +363,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sysfsutils              \
     squashfs-tools          \
     grub2-common            \
-    rsyslog                 \
     screen                  \
     hping3                  \
     tcptraceroute           \
@@ -350,7 +385,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     fdisk                   \
     gpg                     \
     jq                      \
-    auditd
+    auditd                  \
+    linux-perf
+
+# default rsyslog version is 8.2110.0 which has a bug on log rate limit,
+# use backport version
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -t bullseye-backports -y install rsyslog
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
@@ -392,11 +432,17 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     systemd-sysv \
     ntp
 
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
-        grub-pc-bin
+if [[ $TARGET_BOOTLOADER == grub ]]; then
+    if [[ $CONFIGURED_ARCH == amd64 ]]; then
+        GRUB_PKG=grub-pc-bin
+    elif [[ $CONFIGURED_ARCH == arm64 ]]; then
+        GRUB_PKG=grub-efi-arm64-bin
+    fi
 
-    sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+        $GRUB_PKG
+
+    sudo mv $FILESYSTEM_ROOT/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 fi
 
 ## Disable kexec supported reboot which was installed by default
@@ -421,10 +467,16 @@ rm /files/etc/ssh/sshd_config/ClientAliveInterval
 rm /files/etc/ssh/sshd_config/ClientAliveCountMax
 touch /files/etc/ssh/sshd_config/EmptyLineHack
 rename /files/etc/ssh/sshd_config/EmptyLineHack ""
-set /files/etc/ssh/sshd_config/ClientAliveInterval 900
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
+set /files/etc/ssh/sshd_config/ClientAliveInterval 300
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 1
 ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
-set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 5 minutes"
+rm /files/etc/ssh/sshd_config/MaxAuthTries
+set /files/etc/ssh/sshd_config/MaxAuthTries 3
+rm /files/etc/ssh/sshd_config/LogLevel
+set /files/etc/ssh/sshd_config/LogLevel VERBOSE
+rm /files/etc/ssh/sshd_config/Banner
+set /files/etc/ssh/sshd_config/Banner /etc/issue
 save
 quit
 EOF
@@ -572,7 +624,7 @@ fi
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 ## Convert initrd image to u-boot format
-if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+if [[ $TARGET_BOOTLOADER == uboot ]]; then
     INITRD_FILE=initrd.img-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
     if [[ $CONFIGURED_ARCH == armhf ]]; then
         INITRD_FILE=initrd.img-${LINUX_KERNEL_VERSION}-armmp
@@ -637,7 +689,7 @@ fi
 # ALERT: This bit of logic tears down the qemu based build environment used to
 # perform builds for the ARM architecture. This must be the last step in this
 # script before creating the Sonic installer payload zip file.
-if [ $MULTIARCH_QEMU_ENVIRON == y ]; then
+if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
     # Remove qemu arm bin executable used for cross-building
     sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
     DOCKERFS_PATH=../dockerfs/
@@ -647,5 +699,5 @@ fi
 pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
+pushd $FILESYSTEM_ROOT && sudo tar czf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
 sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
