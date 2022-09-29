@@ -158,9 +158,9 @@
             "absolute_path":true,
             "file_path": "/etc/muxi/fw/8853-48cd8dq-w/components_fw/TD4_syscpld_v0b.24h.vme",
             "version": "b.24",
-            "slave_upgrade"：true,
+            "slave_upgrade": true,
             "same_with_master":true,
-            "slave_file_path":""，
+            "slave_file_path":"",
             "slave_version":""
 },
 ```
