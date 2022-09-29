@@ -757,6 +757,24 @@ class SFP(NvidiaSFPCommon):
             error_description = "Unknow SFP module status ({})".format(oper_status)
         return error_description
 
+    def get_rx_los(self):
+        """Accessing rx los is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_tx_fault(self):
+        """Accessing tx fault is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
 
 class RJ45Port(NvidiaSFPCommon):
     """class derived from SFP, representing RJ45 ports"""
