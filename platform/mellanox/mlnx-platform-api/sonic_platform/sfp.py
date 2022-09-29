@@ -402,25 +402,6 @@ class SFP(SfpBase):
         except (OSError, IOError):
             return None
 
-    # Read out any bytes from any offset via ethtool
-    def _read_eeprom_specific_bytes_via_ethtool(self, offset, num_bytes):
-        eeprom_raw = []
-        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
-        try:
-            output = subprocess.check_output(ethtool_cmd,
-                                             shell=True,
-                                             universal_newlines=True)
-            output_lines = output.splitlines()
-            first_line_raw = output_lines[0]
-            if "Offset" in first_line_raw:
-                for line in output_lines[2:]:
-                    line_split = line.split()
-                    eeprom_raw = eeprom_raw + line_split[1:]
-        except subprocess.CalledProcessError as e:
-            return None
-
-        return eeprom_raw
-
     def _detect_sfp_type(self, sfp_type):
         eeprom_raw = []
         eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
@@ -1337,48 +1318,7 @@ class SFP(SfpBase):
             A Boolean, True if SFP has RX LOS, False if not.
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
-        if not self.dom_supported:
-            return None
-
-        rx_los_list = []
-        if self.sfp_type == OSFP_TYPE:
-            return None
-        elif self.sfp_type == QSFP_TYPE:
-            offset = PAGE00_LOWER_MEMORY_OFFSET
-            #dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes_via_ethtool((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                rx_los_data = int(dom_channel_monitor_raw[0], 16)
-                rx_los_list.append(rx_los_data & 0x01 != 0)
-                rx_los_list.append(rx_los_data & 0x02 != 0)
-                rx_los_list.append(rx_los_data & 0x04 != 0)
-                rx_los_list.append(rx_los_data & 0x08 != 0)
-
-        elif self.sfp_type == QSFP_DD_TYPE:
-            # page 11h
-            if self.dom_rx_tx_power_bias_supported:
-                offset = PAGE17_OFFSET
-                dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_DD_CHANNL_RX_LOS_STATUS_WIDTH)
-                if dom_channel_monitor_raw is not None:
-                    rx_los_data = int(dom_channel_monitor_raw[0], 8)
-                    rx_los_list.append(rx_los_data & 0x01 != 0)
-                    rx_los_list.append(rx_los_data & 0x02 != 0)
-                    rx_los_list.append(rx_los_data & 0x04 != 0)
-                    rx_los_list.append(rx_los_data & 0x08 != 0)
-                    rx_los_list.append(rx_los_data & 0x10 != 0)
-                    rx_los_list.append(rx_los_data & 0x20 != 0)
-                    rx_los_list.append(rx_los_data & 0x40 != 0)
-                    rx_los_list.append(rx_los_data & 0x80 != 0)
-
-        else:
-            offset = PAGE01_OFFSET
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                rx_los_data = int(dom_channel_monitor_raw[0], 16)
-                rx_los_list.append(rx_los_data & 0x02 != 0)
-            else:
-                return None
-        return rx_los_list
+        raise NotImplementedError
 
 
     def get_tx_fault(self):
@@ -1389,49 +1329,7 @@ class SFP(SfpBase):
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
-        if not self.dom_supported:
-            return None
-
-        tx_fault_list = []
-        if self.sfp_type == OSFP_TYPE:
-            return None
-        elif self.sfp_type == QSFP_TYPE:
-            offset = PAGE00_LOWER_MEMORY_OFFSET
-            #dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes_via_ethtool((offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                tx_fault_data = int(dom_channel_monitor_raw[0], 16)
-                tx_fault_list.append(tx_fault_data & 0x01 != 0)
-                tx_fault_list.append(tx_fault_data & 0x02 != 0)
-                tx_fault_list.append(tx_fault_data & 0x04 != 0)
-                tx_fault_list.append(tx_fault_data & 0x08 != 0)
-
-        elif self.sfp_type == QSFP_DD_TYPE:
-            return None
-            # page 11h
-            if self.dom_rx_tx_power_bias_supported:
-                offset = PAGE17_OFFSET
-                dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
-                if dom_channel_monitor_raw is not None:
-                    tx_fault_data = int(dom_channel_monitor_raw[0], 8)
-                    tx_fault_list.append(tx_fault_data & 0x01 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x02 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x04 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x08 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x10 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x20 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x40 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x80 != 0)
-
-        else:
-            offset = PAGE01_OFFSET
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                tx_fault_data = int(dom_channel_monitor_raw[0], 16)
-                tx_fault_list.append(tx_fault_data & 0x04 != 0)
-            else:
-                return None
-        return tx_fault_list
+        raise NotImplementedError
 
 
     def get_tx_disable(self):
