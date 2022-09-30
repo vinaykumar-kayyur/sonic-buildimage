@@ -5,11 +5,11 @@ on:
     - labeled
     - closed
     branches:
-    - master
+    - master-test
 
 jobs:
   pre_cherry_pick:
-    if: github.event.pull_request.merged == true && contains(join(github.event.pull_request.labels.*.name, ','), 'Approved for 20')
+    if: github.event.pull_request.merged == true && ( (github.event.action == 'closed' && contains(join(github.event.pull_request.labels.*.name, ','), 'Approved for 20')) || (github.event.action == 'labeled' && startsWith(github.event.label.name, 'Approved for 20')) )
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -62,8 +62,6 @@ jobs:
         cherry_pick(){
           set -e
           local create_pr=''
-          local branch=$1
-          if [ -z $branch ];then return 0;fi
           while read label
           do
             echo label: $label
@@ -82,57 +80,57 @@ jobs:
               echo "already has tag: Cherry Pick Conflict_$branch, return"
               return 0
             fi
-
-            if [[ "$create_pr" != "1" ]];then
-              echo "Didn't find 'Approved for $branch Branch' tag."
-              return 0
-            fi
-            # Begin to cherry-pick PR
-            git cherry-pick --abort || true
-            git clean -xdff || true
-            git reset HEAD --hard || true
-            git checkout -b $branch --track origin/$branch
-            git status | grep "working tree clean"
-
-            if ! git cherry-pick $sha;then
-              echo 'cherry-pick failed.'
-              git cherry-pick --abort
-              git status | grep "working tree clean"
-              # Add label
-              gh pr edit $pr_url --add-label "Cherry Pick Conflict_$branch"
-              echo 'Add label "Cherry Pick Conflict_$branch" success'
-              gh pr comment $pr_url --body "@${author} PR conflicts with $branch branch"
-              echo 'Add commnet "@${author} PR conflicts with $branch branch"'
-            else
-              # Create PR to release branch
-              git push mssonicbld HEAD:$branch-${pr_id} -f
-              result=$(gh pr create -R ${repository} -H mssonicbld:$branch-${pr_id} -B $branch -t "[action] [PR:$pr_id] $title" -b '' 2>&1)
-              echo $result | grep "already exists" && { echo $result; return 0; }
-              echo $result | grep github.com || { echo $result; return 1; }
-              new_pr_rul=$(echo $result | grep github.com)
-              echo new_pr_rul:    $new_pr_rul
-
-              # Add label to old PR
-              gh pr edit $pr_url --add-label "Created PR to $branch Branch"
-              echo Add label Created PR to $branch Branch
-              # Add comment to old PR
-              gh pr comment $pr_url --body "Cherry-pick PR to $branch: ${new_pr_rul}"
-              echo Add comment to old PR
-
-              # Add label to new PR
-              gh pr edit $new_pr_rul --add-label "automerge"
-              echo Add label automerge to new PR
-              # Add comment to new PR
-              gh pr comment $new_pr_rul --body "Original PR: ${pr_url}"
-              echo Add comment to new PR
-            fi
           done <<< "$labels"
+
+          if [[ "$create_pr" != "1" ]];then
+            echo "Didn't find 'Approved for $branch Branch' tag."
+            return 0
+          fi
+          # Begin to cherry-pick PR
+          git cherry-pick --abort 2>/dev/null || true
+          git clean -xdff 2>/dev/null || true
+          git reset HEAD --hard || true
+          git checkout -b $branch --track origin/$branch
+          git status | grep "working tree clean"
+
+          if ! git cherry-pick $sha;then
+            echo 'cherry-pick failed.'
+            git cherry-pick --abort
+            git status | grep "working tree clean"
+            # Add label
+            gh pr edit $pr_url --add-label "Cherry Pick Conflict_$branch"
+            echo 'Add label "Cherry Pick Conflict_$branch" success'
+            gh pr comment $pr_url --body "@${author} PR conflicts with $branch branch"
+            echo 'Add commnet "@${author} PR conflicts with $branch branch"'
+          else
+            # Create PR to release branch
+            git push mssonicbld HEAD:$branch-${pr_id} -f
+            result=$(gh pr create -R ${repository} -H mssonicbld:$branch-${pr_id} -B $branch -t "[action] [PR:$pr_id] $title" -b '' 2>&1)
+            echo $result | grep "already exists" && { echo $result; return 0; }
+            echo $result | grep github.com || { echo $result; return 1; }
+            new_pr_rul=$(echo $result | grep github.com)
+            echo new_pr_rul:    $new_pr_rul
+
+            # Add label to old PR
+            gh pr edit $pr_url --add-label "Created PR to $branch Branch"
+            echo Add label Created PR to $branch Branch
+            # Add comment to old PR
+            gh pr comment $pr_url --body "Cherry-pick PR to $branch: ${new_pr_rul}"
+            echo Add comment to old PR
+
+            # Add label to new PR
+            gh pr edit $new_pr_rul --add-label "automerge"
+            echo Add label automerge to new PR
+            # Add comment to new PR
+            gh pr comment $new_pr_rul --body "Original PR: ${pr_url}"
+            echo Add comment to new PR
+          fi
         }
 
         for branch in $branches
         do
-          echo -----------------------------
+          echo -------------------------------------------
           echo Begin to parse Branch: $branch
-          cherry_pick $branch
+          cherry_pick
         done
 
