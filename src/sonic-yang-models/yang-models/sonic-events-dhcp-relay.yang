@@ -6,24 +6,36 @@ module sonic-events-dhcp-relay {
     import openconfig-alarm-types {
         prefix oc-alarm-types;
     }
+
     import sonic-events-common {
         prefix evtcmn;
         revision-date 2022-12-01;
     }
-    revision 2022-12-01 {
-        description "dhcp-relay alert events.";
+
+    import sonic-port {
+        prefix prt;
+    }
+
+    import sonic-vlan {
+        prefix vlan;
     }
 
     organization
         "SONiC";
+
     contact
         "SONiC";
+
     description
         "SONIC dhcp-relay events";
 
+    revision 2022-12-01 {
+        description "dhcp-relay alert events.";
+    }
+
     container sonic-events-dhcp-relay {
         container dhcp-relay-discard {
-            oc-alarm-types:MAJOR
+            oc-alarm-types:MAJOR;
 
             description "
                 Declares an event for dhcp-relay discarding packet on an
@@ -42,7 +54,7 @@ module sonic-events-dhcp-relay {
         }
 
         container dhcp-relay-disparity {
-            oc-alarm-types:MAJOR
+            oc-alarm-types:MAJOR;
 
             description "
                 Declares an event for disparity detected in

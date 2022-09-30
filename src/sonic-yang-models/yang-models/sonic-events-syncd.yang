@@ -6,30 +6,34 @@ module sonic-events-syncd {
     import openconfig-alarm-types {
         prefix oc-alarm-types;
     }
+
     import sonic-events-common {
         prefix evtcmn;
         revision-date 2022-12-01;
     }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC syncd events";
+
     revision 2022-12-01 {
         description "syncd alert events.";
     }
 
-    organization
-        "SONiC";
-    contact
-        "SONiC";
-    description
-        "SONIC syncd events";
-
     container sonic-events-syncd {
         container syncd_failure {
-            oc-alarm-types:MAJOR
+            oc-alarm-types:MAJOR;
 
             description "
                 Declares an event for all types of syncd failure.
                 The type of failure and the asic-index of failing syncd are
                 provided along with a human readable message to give the
-                dev debugging additional info.";}
+                dev debugging additional info.";
 
             leaf fail_type {
                 type enumeration {
@@ -45,4 +49,3 @@ module sonic-events-syncd {
         }
     }
 }
-

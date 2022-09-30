@@ -7,27 +7,35 @@ module sonic-events-bgp {
         prefix evtcmn;
         revision-date 2022-12-01; 
     }
+
     import openconfig-alarm-types {
         prefix oc-alarm-types;
     }
+
     import sonic-types {
         prefix stypes;
     }
+
+    import ietf-inet-types {
+        prefix inet;
+    } 
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONIC BGP events";
 
     revision 2022-12-01 {
         description "BGP alert events.";
     }
 
-    organization
-        "SONiC";
-    contact
-        "SONiC";
-    description
-        "SONIC BGP events";
-
     container sonic-events-bgp {
         container bgp-state {
-            oc-alarm-types:MINOR
+            oc-alarm-types:MINOR;
 
             description "
                 Declares an event for BGP state for a neighbor IP going up/down.";
@@ -46,7 +54,7 @@ module sonic-events-bgp {
         }
 
         container notification {
-            oc-alarm-types:MAJOR
+            oc-alarm-types:MAJOR;
 
             description "
                 Reports an notification.
@@ -77,7 +85,7 @@ module sonic-events-bgp {
         }
 
         container zebra-no-buff {
-            oc-alarm-types:MAJOR
+            oc-alarm-types:MAJOR;
 
             description "
                 Declares an event for zebra running out of buffer.
