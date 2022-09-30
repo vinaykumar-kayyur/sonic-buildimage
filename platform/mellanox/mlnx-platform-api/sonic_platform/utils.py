@@ -106,24 +106,3 @@ def default_return(return_value):
         return _impl
     return wrapper
 
-
-def construct_sysfs_to_index_map(sysfs_path, index_path, page_path):
-    dirnames = next(walk(sysfs_path), (None, [], None))[1]
-    
-    sysfs_file_dict = {}
-    pattern = re.compile('(Ethernet[0-9]?)')
-    for dirname in dirnames:
-        if pattern.match(dirname):
-            index = read_int_from_file(index_path.format(dirname), default=-1)
-            if index != -1:
-                sysfs_list = sysfs_file_dict.get(index, None)
-                if sysfs_list is not None:
-                    sysfs_list.append(page_path.format(dirname))
-                else:
-                    sysfs_list = []
-                    sysfs_list.append(page_path.format(dirname))
-                    sysfs_file_dict[index] = sysfs_list
-            else:
-                raise Exception("Unexpected value in file "+ index_path.format(dirname))
-
-    return sysfs_file_dict

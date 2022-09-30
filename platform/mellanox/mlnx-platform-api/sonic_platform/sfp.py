@@ -241,6 +241,7 @@ qsfp_compliance_code_tup = ('10/40G Ethernet Compliance Code', 'SONET Compliance
                             'Fibre Channel link length/Transmitter Technology',
                             'Fibre Channel transmission media', 'Fibre Channel Speed')
 
+SFP_SYSFS_PATH = "/sys/module/sx_core/asic0/module{}/eeprom/pages/"
 SFP_TYPE = "SFP"
 QSFP_TYPE = "QSFP"
 OSFP_TYPE = "OSFP"
@@ -330,14 +331,10 @@ def deinitialize_sdk_handle(sdk_handle):
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
-    def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform, sysfs_list):
+    def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform):
         SfpBase.__init__(self)
         self.index = sfp_index + 1
-        if sysfs_list is None:
-            self.sdk_sysfs_page_path_header = ''
-        else:
-            self.sdk_sysfs_page_path_header = sysfs_list[0]
-        self.sdk_sysfs_list = sysfs_list
+        self.sdk_sysfs_page_path_header = SFP_SYSFS_PATH.format(sfp_index)
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
         self._detect_sfp_type(sfp_type)
