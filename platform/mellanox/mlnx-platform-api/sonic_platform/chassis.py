@@ -33,10 +33,6 @@ MST_DEVICE_NAME_PATTERN = '/dev/mst/mt[0-9]*_pciconf0'
 MST_DEVICE_RE_PATTERN = '/dev/mst/mt([0-9]*)_pciconf0'
 SPECTRUM1_CHIP_ID = '52100'
 
-SDK_SYSFS_PATH = "/sys/module/sx_netdev/"
-INDEX_PATH = "/sys/module/sx_netdev/{}/module/id"
-PAGE_PATH = "/sys/module/sx_netdev/{}/module/eeprom/pages/"
-
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 

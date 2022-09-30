@@ -1,8 +1,5 @@
 import functools
 import subprocess
-import re
-from os import walk
-
 
 # flags to indicate whether this process is running in docker or host
 _is_host = None
@@ -105,4 +102,3 @@ def default_return(return_value):
                 return return_value
         return _impl
     return wrapper
-
