@@ -4,16 +4,11 @@ on:
     types:
     - closed
     branches:
-    - 202205
-    - 202111
-    - 202106
-    - 202012
-    - 201911
-    - 201811
+    - '20*'
 
 jobs:
   post_cherry_pick:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automerge')
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automerge') && github.event.pull_request.head.user.login == "mssonicbld" && startsWith(github.event.pull_request.title, "[action]")
     runs-on: ubuntu-latest
     steps:
     - name: Debug
@@ -30,21 +25,25 @@ jobs:
         TOKEN: ${{ secrets.TOKEN }}
       run: |
         set -e
-        pr_url=$(echo $GITHUB_CONTEXT | jq ".event.pull_request._links.html.href" | sed 's/"//g')
-        base_ref=$(echo $GITHUB_CONTEXT | jq ".base_ref" | sed 's/"//g')
+        pr_url=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request._links.html.href")
+        pr_id=$(echo $GITHUB_CONTEXT | jq -r ".event.number")
+        base_ref=$(echo $GITHUB_CONTEXT | jq -r ".base_ref")
         echo ${TOKEN} | gh auth login --with-token
-        comment=$(gh pr view $pr_url --json comments | jq -r '.comments | [.[] | select(.author.login=="mssonicbld")] | first | .body')
-        origin_pr_url=$(echo $comment | sed 's/Original PR: //')
+        title=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request.title")
+        origin_pr_id=$(echo $title | grep -Eo "\[action\] \[PR:[0-9]*\]" | grep -Eo "[0-9]*")
+        origin_pr_url=$(echo $pr_url | sed "s/$pr_id/$origin_pr_id/")
         echo =============================
         echo pr_url:        $pr_url
+        echo pr_id:         $pr_id
         echo base_ref:      $base_ref
-        echo comment:       $comment
+        echo title:         $title
+        echo origin_pr_id:  $origin_pr_id
         echo origin_pr_url: $origin_pr_url
         echo =============================
         # Add label
         if [[ "$origin_pr_url" == "" ]];then
-          echo No comment from mssonicbld
-          exit 0
+          echo original PR didn't found.
+          exit 1
         fi
         gh pr edit $origin_pr_url --add-label "Included in ${base_ref} Branch"
         gh pr edit $origin_pr_url --remove-label "Created PR to ${base_ref} Branch"
