@@ -784,8 +784,9 @@ class SFP(NvidiaSFPCommon):
         """
         if self._xcvr_api is None:
             self.refresh_xcvr_api()
-            self._xcvr_api.get_rx_los = self.get_rx_los
-            self._xcvr_api.get_tx_fault = self.get_tx_fault
+            if  self._xcvr_api is not None:
+                self._xcvr_api.get_rx_los = self.get_rx_los
+                self._xcvr_api.get_tx_fault = self.get_tx_fault
         return self._xcvr_api
 
 
