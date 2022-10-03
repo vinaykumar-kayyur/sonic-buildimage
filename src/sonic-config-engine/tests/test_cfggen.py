@@ -770,10 +770,10 @@ class TestCfgGen(TestCase):
             # SLB and BGP Monitor table does not exist
             argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "BGP_PEER_RANGE"'
             output = self.run_script(argument)
-            self.assertEqual(output.strip(), "")
+            self.assertEqual(output.strip(), "{}")
             argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "BGP_MONITORS"'
             output = self.run_script(argument)
-            self.assertEqual(output.strip(), "")
+            self.assertEqual(output.strip(), "{}")
 
             # ACL_TABLE should not contain EVERFLOW related entries
             argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "ACL_TABLE"'
