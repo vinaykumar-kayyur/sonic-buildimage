@@ -362,7 +362,8 @@ class SFP(NvidiaSFPCommon):
         ethtool_cmd[6] = str(offset)
         ethtool_cmd[8] = str(num_bytes)
         try:
-            output = subprocess.check_output(ethtool_cmd, universal_newlines=True, stderr=subprocess.PIPE)
+            output = subprocess.check_output(ethtool_cmd,
+                                             universal_newlines=True)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
@@ -370,7 +371,6 @@ class SFP(NvidiaSFPCommon):
                     line_split = line.split()
                     eeprom_raw = eeprom_raw + line_split[1:]
         except subprocess.CalledProcessError as e:
-            logger.log_notice("Failed to get EEPROM data for sfp {}: {}".format(self.index, e.stderr))
             return None
 
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
@@ -758,6 +758,38 @@ class SFP(NvidiaSFPCommon):
         else:
             error_description = "Unknow SFP module status ({})".format(oper_status)
         return error_description
+
+    def get_rx_los(self):
+        """Accessing rx los is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_tx_fault(self):
+        """Accessing tx fault is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_xcvr_api(self):
+        """
+        Retrieves the XcvrApi associated with this SFP
+
+        Returns:
+            An object derived from XcvrApi that corresponds to the SFP
+        """
+        if self._xcvr_api is None:
+            self.refresh_xcvr_api()
+            if  self._xcvr_api is not None:
+                self._xcvr_api.get_rx_los = self.get_rx_los
+                self._xcvr_api.get_tx_fault = self.get_tx_fault
+        return self._xcvr_api
 
 
 class RJ45Port(NvidiaSFPCommon):
