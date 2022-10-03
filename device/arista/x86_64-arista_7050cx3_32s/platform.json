@@ -3,7 +3,10 @@
         "name": "DCS-7050CX3-32S",
         "components": [
             {
-                "name": "Scd()"
+                "name": "Aboot()"
+            },
+            {
+                "name": "Scd(addr=0000:02:00.0)"
             },
             {
                 "name": "Ucd90120A(addr=3-004e)"
