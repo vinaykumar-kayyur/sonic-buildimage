@@ -81,7 +81,9 @@ echo '[INFO] Build host debian base system...'
 TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT
 
 # Prepare buildinfo
-sudo scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+sudo DBGOPT="${DBGOPT}" SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
+	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+
 
 sudo chown root:root $FILESYSTEM_ROOT
 
@@ -111,8 +113,28 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
+                                                       ca-certificates \
+                                                       curl \
+                                                       gnupg2 \
+                                                       software-properties-common
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+    # update ssl ca certificates for secure pem
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
+fi
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
+sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
+                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
+
+# Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
+# pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
+
 ## Note: set lang to prevent locale warnings in your chroot
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get  update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
 
 echo '[INFO] Install and setup eatmydata'
@@ -233,25 +255,6 @@ echo '[INFO] Install docker'
 ## Otherwise Docker will fail to start
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
 sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
-                                                       ca-certificates \
-                                                       curl \
-                                                       gnupg2 \
-                                                       software-properties-common
-if [[ $CONFIGURED_ARCH == armhf ]]; then
-    # update ssl ca certificates for secure pem
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
-fi
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
-sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
-sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
-                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
-
-# Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
-# pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
 install_kubernetes () {
     local ver="$1"
@@ -439,10 +442,10 @@ if [[ $TARGET_BOOTLOADER == grub ]]; then
         GRUB_PKG=grub-efi-arm64-bin
     fi
 
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -d -o dir::cache=/var/cache/apt \
         $GRUB_PKG
 
-    sudo mv $FILESYSTEM_ROOT/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
+    sudo cp $FILESYSTEM_ROOT/var/cache/apt/archives/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 fi
 
 ## Disable kexec supported reboot which was installed by default
@@ -638,7 +641,8 @@ if [[ $TARGET_BOOTLOADER == uboot ]]; then
 fi
 
 # Collect host image version files before cleanup
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+DBGOPT="${DBGOPT}" SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
+	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
@@ -657,7 +661,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
 
 ## Clean up pip cache
-sudo LANG=C chroot $FILESYSTEM_ROOT pip3 cache purge
+sudo LANG=C chroot $FILESYSTEM_ROOT pip3 cache purge || true
 
 ## Umount all
 echo '[INFO] Umount all'
