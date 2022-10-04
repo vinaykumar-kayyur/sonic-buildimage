@@ -3,10 +3,6 @@ module sonic-events-host {
     yang-version 1.1;
     prefix events-host;
 
-    import openconfig-alarm-types {
-        prefix oc-alarm-types;
-    }
-
     import sonic-events-common {
         prefix evtcmn;
         revision-date 2022-12-01;
@@ -27,7 +23,7 @@ module sonic-events-host {
 
     container sonic-events-host {
         container disk-usage {
-            oc-alarm-types:MINOR;
+            evtcmn:ALARM_SEVERITY_MINOR;
 
             description "
                 Declares an event for disk usage crossing set limit
@@ -44,7 +40,7 @@ module sonic-events-host {
         }
 
         container memory-usage {
-            oc-alarm-types:MINOR;
+            evtcmn:ALARM_SEVERITY_MINOR;
 
             description "
                 Declares an event for memory usage crossing set limit
@@ -56,8 +52,7 @@ module sonic-events-host {
         }
 
         container cpu-usage {
-            oc-alarm-types:MINOR;
-
+            evtcmn:ALARM_SEVERITY_MINOR;
             description "
                 Declares an event for cpu usage crossing set limit
                 The parameters describe the usage & limit set.";
@@ -68,7 +63,7 @@ module sonic-events-host {
         }
 
         container event-sshd {
-            oc-alarm-types:MINOR;
+            evtcmn:ALARM_SEVERITY_MINOR;
 
             description "
                 Declares and event reported by sshd.
@@ -84,7 +79,7 @@ module sonic-events-host {
         }
 
         container event-disk {
-            oc-alarm-types:MINOR;
+            evtcmn:ALARM_SEVERITY_MINOR;
 
             description "
                 Declares an event reported by disk check.
@@ -102,7 +97,7 @@ module sonic-events-host {
         }
 
         container event-kernel {
-            oc-alarm-types:MINOR;
+            evtcmn:ALARM_SEVERITY_MINOR;
 
             description "
                 Declares an event reported by kernel.

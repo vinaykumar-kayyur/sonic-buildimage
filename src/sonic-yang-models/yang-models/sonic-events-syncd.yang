@@ -3,10 +3,6 @@ module sonic-events-syncd {
     yang-version 1.1;
     prefix events-syncd;
 
-    import openconfig-alarm-types {
-        prefix oc-alarm-types;
-    }
-
     import sonic-events-common {
         prefix evtcmn;
         revision-date 2022-12-01;
@@ -26,8 +22,8 @@ module sonic-events-syncd {
     }
 
     container sonic-events-syncd {
-        container syncd_failure {
-            oc-alarm-types:MAJOR;
+        container syncd-failure {
+            evtcmn:ALARM_SEVERITY_MAJOR;
 
             description "
                 Declares an event for all types of syncd failure.

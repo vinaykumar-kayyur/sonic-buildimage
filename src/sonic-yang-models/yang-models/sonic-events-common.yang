@@ -62,4 +62,14 @@ module sonic-events-common {
         description
             "Indicates that the severity level of this type of event is 4";
     }
+
+    extension ALARM_SEVERITY_MINOR {
+        description
+            "Indicates the existence of a non-service affecting fault condition and that corrective action should be taken in order to prevent a more serious (for example, service affecting) fault. Such a severity can be reported, for example, when the detected alarm condition is not currently degrading the capacity of the resource";
+    }
+
+    extension ALARM_SEVERITY_MAJOR {
+        description
+            "Indicates that a service affecting condition has developed and an urgent corrective action is required. Such a severity can be reported, for example, when there is a severe degradation in the capability of the resource and its full capability must be restored.";
+    }
 }

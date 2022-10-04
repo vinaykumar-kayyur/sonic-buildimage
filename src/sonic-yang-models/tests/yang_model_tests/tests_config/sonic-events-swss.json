@@ -2,7 +2,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_IFNAME": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
-				"ifname": 123,
+				"ifname": "Eth",
 				"status": "up",
 				"timestamp": "1985-04-12T23:20:50.52Z"
 			}
@@ -11,7 +11,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_STATUS": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"status": "INCORRECT_STATUS",
 				"timestamp": "1985-04-12T23:20:50.52Z"
 			}
@@ -20,7 +20,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_TIMESTAMP": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"status": "down",
 				"timestamp": "INCORRECT_TIMESTAMP"
 			}
@@ -29,7 +29,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_VALID": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"status": "down",
 				"timestamp": "1985-04-12T23:20:50.52Z"
 			}
@@ -38,7 +38,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_IFNAME": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": 123,
+				"ifname": "Eth",
 				"queue_index": 0,
 				"queue_id": 0,
 				"port_id": 0,
@@ -49,7 +49,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_QUEUE_INDEX": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"queue_index": "INCORRECT_QUEUE_INDEX",
 				"queue_id": 0,
 				"port_id": 0,
@@ -60,7 +60,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_QUEUE_ID": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"queue_index": 0,
 				"queue_id": "INCORRECT_QUEUE_ID",
 				"port_id": 0,
@@ -71,7 +71,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_PORT_ID": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"queue_index": 0,
 				"queue_id": 0,
 				"port_id": "INCORRECT_PORT_ID",
@@ -82,7 +82,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_TIMESTAMP": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"queue_index": 0,
 				"queue_id": 0,
 				"port_id": 0,
@@ -93,7 +93,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_VALID": {
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
-				"ifname": "Vlan100",
+				"ifname": "Ethernet0",
 				"queue_index": 0,
 				"queue_id": 0,
 				"port_id": 0,
@@ -103,7 +103,7 @@
 	},
 	"SONIC_EVENTS_SWSS_CHK_CRM_THRESHOLD_INCORRECT_PERCENT": {
 		"sonic-events-swss:sonic-events-swss": {
-			"sonic-events-swss:chk-crm-threshold": {
+			"sonic-events-swss:chk_crm_threshold": {
 				"percent": 123,
 				"used_cnt": 0,
 				"free_cnt": 0,
@@ -113,7 +113,7 @@
 	},
 	"SONIC_EVENTS_SWSS_CHK_CRM_THRESHOLD_INCORRECT_USED_CNT": {
 		"sonic-events-swss:sonic-events-swss": {
-			"sonic-events-swss:chk-crm-threshold": {
+			"sonic-events-swss:chk_crm_threshold": {
 				"percent": 0,
 				"used_cnt": "INCORRECT_USED_CNT",
 				"free_cnt": 0,
@@ -123,7 +123,7 @@
 	},
 	"SONIC_EVENTS_SWSS_CHK_CRM_THRESHOLD_INCORRECT_FREE_CNT": {
 		"sonic-events-swss:sonic-events-swss": {
-			"sonic-events-swss:chk-crm-threshold": {
+			"sonic-events-swss:chk_crm_threshold": {
 				"percent": 0,
 				"used_cnt": 0,
 				"free_cnt": "INCORRECT_FREE_CNT",
@@ -133,7 +133,7 @@
 	},
 	"SONIC_EVENTS_SWSS_CHK_CRM_THRESHOLD_INCORRECT_TIMESTAMP": {
 		"sonic-events-swss:sonic-events-swss": {
-			"sonic-events-swss:chk-crm-threshold": {
+			"sonic-events-swss:chk_crm_threshold": {
 				"percent": 0,
 				"used_cnt": 0,
 				"free_cnt": 0,
@@ -143,7 +143,7 @@
 	},
 	"SONIC_EVENTS_SWSS_CHK_CRM_THRESHOLD_VALID": {
 		"sonic-events-swss:sonic-events-swss": {
-			"sonic-events-swss:chk-crm-threshold": {
+			"sonic-events-swss:chk_crm_threshold": {
 				"percent": 0,
 				"used_cnt": 0,
 				"free_cnt": 0,
