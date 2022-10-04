@@ -2154,6 +2154,24 @@
                     "Ethernet64/8"
                 ]
             }
+        },
+        "Ethernet512": {
+            "index": "65",
+            "lanes": "258",
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet65"
+                ]
+            }
+        },
+        "Ethernet513": {
+            "index": "66",
+            "lanes": "257",
+            "breakout_modes": {
+                "1x10G": [
+                    "Ethernet66"
+                ]
+            }
         }
     }
 }
