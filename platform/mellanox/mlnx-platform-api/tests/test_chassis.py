@@ -276,7 +276,7 @@ class TestChassis:
         #Override the dmi file
         sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
         new_dmi_file = sonic_platform.chassis.DMI_FILE
-        subprocess.run(["touch ", new_dmi_file])
+        subprocess.run(["touch", new_dmi_file])
         subprocess.run(["chmod", "-r", new_dmi_file])
         chassis = Chassis()
         rev = chassis.get_revision()
