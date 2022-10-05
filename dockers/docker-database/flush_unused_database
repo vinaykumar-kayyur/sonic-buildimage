@@ -1,8 +1,9 @@
 #!/usr/bin/python3
-import swsssdk
+from swsscommon import swsscommon
 import redis
 import subprocess
 import time
+import syslog
 
 while(True):
     output = subprocess.Popen(['sonic-db-cli', 'PING'], stdout=subprocess.PIPE, text=True).communicate()[0]
@@ -10,19 +11,22 @@ while(True):
         break
     time.sleep(1)
 
-instlists = swsssdk.SonicDBConfig.get_instancelist()
+instlists = swsscommon.SonicDBConfig.getInstanceList()
 for instname, v in instlists.items():
-    insthost = v['hostname']
-    instsocket = v['unix_socket_path']
+    insthost = v.hostname
+    instsocket = v.unixSocketPath
 
-    dblists = swsssdk.SonicDBConfig.get_dblist()
+    dblists = swsscommon.SonicDBConfig.getDbList()
     for dbname in dblists:
-        dbid = swsssdk.SonicDBConfig.get_dbid(dbname)
-        dbinst = swsssdk.SonicDBConfig.get_instancename(dbname)
+        dbid = swsscommon.SonicDBConfig.getDbId(dbname)
+        dbinst = swsscommon.SonicDBConfig.getDbInst(dbname)
 
         # this DB is on current instance, skip flush
         if dbinst == instname:
             continue
 
-        r = redis.Redis(host=insthost, unix_socket_path=instsocket, db=dbid)
-        r.flushdb()
+        try:
+            r = redis.Redis(host=insthost, unix_socket_path=instsocket, db=dbid)
+            r.flushdb()
+        except (redis.exceptions.ConnectionError):
+           syslog.syslog(syslog.LOG_INFO,"flushdb:Redis Unix Socket connection error for path {} and dbaname {}".format(instsocket, dbname))

@@ -1,9 +1,10 @@
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
 {%- if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/debian-debootstrap:armhf-stretch
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-stretch
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/debian-debootstrap:arm64-stretch
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-stretch
 {%- else -%}
-FROM debian:stretch
+FROM {{ prefix }}debian:stretch
 {%- endif %}
 
 MAINTAINER gulv@microsoft.com
@@ -17,6 +18,7 @@ RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ stre
         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian stretch-backports main" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian stretch main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian-security stretch_updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://packages.microsoft.com/debian/9/prod stretch main" >> /etc/apt/sources.list
 
 {%- if CONFIGURED_ARCH == "armhf" %}
@@ -28,7 +30,8 @@ RUN echo "deb [arch=armhf] http://deb.debian.org/debian stretch main contrib non
         echo "deb-src [arch=armhf] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=armhf] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian stretch main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list
+        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian-security stretch_updates main contrib non-free" >> /etc/apt/sources.list
 {%- elif CONFIGURED_ARCH == "arm64" %}
 RUN echo "deb [arch=arm64] http://deb.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://deb.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list && \
@@ -38,7 +41,8 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian stretch main contrib non
         echo "deb-src [arch=arm64] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo 'deb [arch=arm64] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian stretch main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list
+        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian-security stretch_updates main contrib non-free" >> /etc/apt/sources.list
 {%- endif %}
 
 ## Make apt-get non-interactive
@@ -272,9 +276,6 @@ RUN apt-get update && apt-get install -y \
         librrd8 \
         librrd-dev \
         rrdtool \
-# For smartmontools 6.6-1
-        automake1.11 \
-        libselinux1-dev \
 # For kdump-tools
         liblzo2-dev \
 # For iptables
@@ -314,9 +315,6 @@ RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confdef"
 ## do not modify the current configuration file, the new version is installed with a .dpkg-dist suffix
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confold"
-
-# For smartmontools 6.6-1
-RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux

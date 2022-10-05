@@ -28,33 +28,62 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
+    name: sonic-net/sonic-mgmt
+    endpoint: sonic-net
+  - repository: buildimage
+    type: github
+    name: sonic-net/sonic-buildimage
+    endpoint: sonic-net
+    ref: master
+
+variables:
+- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
+- template: .azure-pipelines/template-variables.yml@buildimage
+- name: CACHE_MODE
+  value: rcache
+- name: ENABLE_FIPS
+  value: y
 
 stages:
+- stage: BuildVS
+  pool: sonicbld
+  jobs:
+  - template: .azure-pipelines/azure-pipelines-build.yml
+    parameters:
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      jobGroups:
+      - name: vs
+
 - stage: Build
   pool: sonicbld
-  variables:
-  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
-  - name: CACHE_MODE
-    value: rcache
+  dependsOn: []
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
-      - name: vs
       - name: broadcom
         variables:
           swi_image: yes
       - name: mellanox
+      - name: marvell-armhf
+        pool: sonicbld-armhf
+        timeoutInMinutes: 1200
+        variables:
+          PLATFORM_ARCH: armhf
 
 - stage: Test
+  dependsOn: BuildVS
+  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues'))
   variables:
   - name: inventory
     value: veos_vtb
   - name: testbed_file
     value: vtestbed.csv
+
+# For every test job:
+# continueOnError: false means it's a required test job and will block merge if it fails
+# continueOnError: true means it's an optional test job and will not block merge even though it fails(unless a required test job depends on its result)
 
   jobs:
   - job:
@@ -84,6 +113,8 @@ stages:
 
     - script: |
         set -x
+        sudo apt-get update
+        sudo apt-get install libyang0.16 -y
         sudo dpkg -i --force-confask,confnew ../libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i ../python3-swsscommon_1.0.0_amd64.deb
         sudo docker load -i ../target/docker-sonic-vs.gz
@@ -104,11 +135,11 @@ stages:
         testResultsFiles: '**/tr.xml'
         testRunTitle: vstest
 
-  - job:
+  - job: t0_part1
     pool: sonictest
-    displayName: "kvmtest-t0"
+    displayName: "kvmtest-t0-part1"
     timeoutInMinutes: 360
-
+    continueOnError: false
     steps:
     - template: .azure-pipelines/run-test-template.yml
       parameters:
@@ -116,12 +147,50 @@ stages:
         tbname: vms-kvm-t0
         ptf_name: ptf_vms6-1
         tbtype: t0
+        section: part-1
+
+  - job: t0_part2
+    pool: sonictest
+    displayName: "kvmtest-t0-part2"
+    timeoutInMinutes: 360
+    continueOnError: false
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-01
+        tbname: vms-kvm-t0
+        ptf_name: ptf_vms6-1
+        tbtype: t0
+        section: part-2
+
+  - job:
+    pool: sonictest
+    displayName: "kvmtest-t0"
+    timeoutInMinutes: 360
+    dependsOn:
+    - t0_part1
+    - t0_part2
+    condition: always()
+    continueOnError: false
+    variables:
+      resultOfPart1: $[ dependencies.t0_part1.result ]
+      resultOfPart2: $[ dependencies.t0_part2.result ]
+
+    steps:
+    - script: |
+        if [ $(resultOfPart1) == "Succeeded" ] && [ $(resultOfPart2) == "Succeeded" ]; then
+          echo "Both job kvmtest-t0-part1 and kvmtest-t0-part2 are passed."
+          exit 0
+        else
+          echo "Either job kvmtest-t0-part1 or job kvmtest-t0-part2 failed! Please check the detailed information."
+          exit 1
+        fi
 
   - job:
     pool: sonictest-t1-lag
     displayName: "kvmtest-t1-lag"
-    timeoutInMinutes: 240
-
+    timeoutInMinutes: 360
+    continueOnError: false
     steps:
     - template: .azure-pipelines/run-test-template.yml
       parameters:
@@ -129,3 +198,31 @@ stages:
         tbname: vms-kvm-t1-lag
         ptf_name: ptf_vms6-2
         tbtype: t1-lag
+
+  - job:
+    pool: sonictest-sonic-t0
+    displayName: "kvmtest-t0-sonic"
+    timeoutInMinutes: 360
+    continueOnError: true
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-02
+        tbname: vms-kvm-t0-64-32
+        ptf_name: ptf_vms6-1
+        tbtype: t0-sonic
+        vmtype: vsonic
+
+  - job:
+    pool: sonictest-ma
+    displayName: "kvmtest-multi-asic-t1-lag"
+    timeoutInMinutes: 240
+    continueOnError: true
+    steps:
+    - template: .azure-pipelines/run-test-template.yml
+      parameters:
+        dut: vlab-08
+        tbname: vms-kvm-four-asic-t1-lag
+        ptf_name: ptf_vms6-4
+        tbtype: multi-asic-t1-lag-pr
+        image: sonic-4asic-vs.img.gz

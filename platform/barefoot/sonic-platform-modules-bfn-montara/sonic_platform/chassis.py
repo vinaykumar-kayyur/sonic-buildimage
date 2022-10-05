@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 
 try:
+    import os
     import time
     import syslog
+    import logging
+    import logging.config
+    import yaml
 
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import psu_list_get
     from sonic_platform.fan_drawer import fan_drawer_list_get
     from sonic_platform.thermal import thermal_list_get
-    from eeprom import Eeprom
+    from sonic_platform.platform_utils import file_create
+    from sonic_platform.eeprom import Eeprom
 
     from sonic_platform.platform_thrift_client import pltfm_mgr_ready
     from sonic_platform.platform_thrift_client import thrift_try
@@ -19,6 +24,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+NUM_COMPONENT = 2
 class Chassis(ChassisBase):
     """
     Platform-specific Chassis class
@@ -34,7 +40,10 @@ class Chassis(ChassisBase):
     def __init__(self):
         ChassisBase.__init__(self)
 
-        self.__eeprom = None
+        self._eeprom = Eeprom()
+        self.__tlv_bin_eeprom = self._eeprom.get_raw_data()
+        self.__tlv_dict_eeprom = self._eeprom.get_data()
+
         self.__fan_drawers = None
         self.__fan_list = None
         self.__thermals = None
@@ -44,16 +53,12 @@ class Chassis(ChassisBase):
         self.ready = False
         self.phy_port_cur_state = {}
         self.qsfp_interval = self.QSFP_CHECK_INTERVAL
+        self.__initialize_components()
 
-    @property
-    def _eeprom(self):
-        if self.__eeprom is None:
-            self.__eeprom = Eeprom()
-        return self.__eeprom
-
-    @_eeprom.setter
-    def _eeprom(self, value):
-        pass
+        with open(os.path.dirname(__file__) + "/logging.conf", 'r') as f:
+            config_dict = yaml.load(f, yaml.SafeLoader)
+            file_create(config_dict['handlers']['file']['filename'], '646')
+            logging.config.dictConfig(config_dict)
 
     @property
     def _fan_drawer_list(self):
@@ -128,13 +133,19 @@ class Chassis(ChassisBase):
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
 
+    def __initialize_components(self):
+        from sonic_platform.component import Components
+        for index in range(0, NUM_COMPONENT):
+            component = Components(index)
+            self._component_list.append(component)
+
     def get_name(self):
         """
         Retrieves the name of the chassis
         Returns:
             string: The name of the chassis
         """
-        return self._eeprom.modelstr()
+        return self._eeprom.modelstr(self.__tlv_bin_eeprom)
 
     def get_presence(self):
         """
@@ -150,7 +161,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self._eeprom.part_number_str()
+        return self._eeprom.part_number_str(self.__tlv_bin_eeprom)
 
     def get_serial(self):
         """
@@ -158,7 +169,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self._eeprom.serial_number_str()
+        return self._eeprom.serial_number_str(self.__tlv_bin_eeprom)
 
     def get_revision(self):
         """
@@ -166,7 +177,8 @@ class Chassis(ChassisBase):
         Returns:
             string: Revision number of chassis
         """
-        return self._eeprom.revision_str()
+        return self.__tlv_dict_eeprom.get(
+            "0x{:X}".format(Eeprom._TLV_CODE_LABEL_REVISION), 'N/A')
 
     def get_sfp(self, index):
         """
@@ -207,7 +219,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self._eeprom.base_mac_addr()
+        return self._eeprom.base_mac_addr(self.__tlv_bin_eeprom)
 
     def get_system_eeprom_info(self):
         """
@@ -218,7 +230,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self._eeprom.system_eeprom_info()
+        return self.__tlv_dict_eeprom
 
     def __get_transceiver_change_event(self, timeout=0):
         forever = False

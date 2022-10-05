@@ -27,6 +27,9 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform.sfp import SFP, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
 from sonic_platform.chassis import Chassis
+from sonic_platform.sfp import MlxregManager
+from tests.input_platform import output_sfp
+
 
 class TestSfp:
     @mock.patch('sonic_platform.device_data.DeviceDataManager.get_linecard_count', mock.MagicMock(return_value=8))
@@ -49,9 +52,11 @@ class TestSfp:
         assert sfp.sdk_index == 1
         assert sfp.index == 5
 
-    @mock.patch('sonic_platform.sfp.SFP._read_eeprom_specific_bytes', mock.MagicMock(return_value=None))
-    @mock.patch('sonic_platform.sfp.SFP._get_error_code')
+    @mock.patch('sonic_platform.sfp.SFP.read_eeprom', mock.MagicMock(return_value=None))
+    @mock.patch('sonic_platform.sfp.SFP.shared_sdk_handle', mock.MagicMock(return_value=2))
+    @mock.patch('sonic_platform.sfp.SFP._get_module_info')
     @mock.patch('sonic_platform.chassis.Chassis.get_num_sfps', mock.MagicMock(return_value=2))
+    @mock.patch('sonic_platform.chassis.extract_RJ45_ports_index', mock.MagicMock(return_value=[]))
     def test_sfp_get_error_status(self, mock_get_error_code):
         chassis = Chassis()
 
@@ -80,3 +85,51 @@ class TestSfp:
             description = sfp.get_error_description()
 
             assert description == expected_description
+
+    @mock.patch('sonic_platform.sfp.SFP.get_mst_pci_device', mock.MagicMock(return_value="pciconf"))
+    @mock.patch('sonic_platform.sfp.MlxregManager.write_mlxreg_eeprom', mock.MagicMock(return_value=True))
+    def test_sfp_write_eeprom(self):
+        mlxreg_mngr = MlxregManager("", 0, 0)
+        write_buffer = bytearray([1,2,3,4])
+        offset = 793
+
+        sfp = SFP(0)
+        sfp.write_eeprom(offset, 4, write_buffer)
+        MlxregManager.write_mlxreg_eeprom.assert_called_with(4, output_sfp.write_eeprom_dword1, 153, 5)
+
+        offset = 641
+        write_buffer = bytearray([1,2,3,4,5,6])
+        sfp.write_eeprom(offset, 6, write_buffer)
+        MlxregManager.write_mlxreg_eeprom.assert_called_with(6, output_sfp.write_eeprom_dword2, 129, 4)
+
+    @mock.patch('sonic_platform.sfp.SFP.get_mst_pci_device', mock.MagicMock(return_value="pciconf"))
+    @mock.patch('sonic_platform.sfp.MlxregManager.read_mlxred_eeprom', mock.MagicMock(return_value=output_sfp.read_eeprom_output))
+    def test_sfp_read_eeprom(self):
+        mlxreg_mngr = MlxregManager("", 0, 0)
+        offset = 644
+
+        sfp = SFP(0)
+        assert output_sfp.y_cable_part_number == sfp.read_eeprom(offset, 16).decode()
+        MlxregManager.read_mlxred_eeprom.assert_called_with(132, 4, 16)
+
+    @mock.patch('sonic_platform.sfp.SFP._fetch_port_status')
+    def test_is_port_admin_status_up(self, mock_port_status):
+        mock_port_status.return_value = (0, True)
+        assert SFP.is_port_admin_status_up(None, None)
+
+        mock_port_status.return_value = (0, False)
+        assert not SFP.is_port_admin_status_up(None, None)
+
+    @mock.patch('sonic_platform.sfp.SFP.get_xcvr_api')
+    def test_dummy_apis(self, mock_get_xcvr_api):
+        mock_api = mock.MagicMock()
+        mock_api.NUM_CHANNELS = 4
+        mock_get_xcvr_api.return_value = mock_api
+
+        sfp = SFP(0)
+        assert sfp.get_rx_los() == [False] * 4
+        assert sfp.get_tx_fault() == [False] * 4
+
+        mock_get_xcvr_api.return_value = None
+        assert sfp.get_rx_los() is None
+        assert sfp.get_tx_fault() is None

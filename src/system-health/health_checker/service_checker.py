@@ -51,6 +51,8 @@ class ServiceChecker(HealthChecker):
 
         self.need_save_cache = False
 
+        self.config_db = None
+
         self.load_critical_process_cache()
 
     def get_expected_running_containers(self, feature_table):
@@ -125,11 +127,11 @@ class ServiceChecker(HealthChecker):
                         self.bad_containers.add(container)
                         logger.log_error('Invalid syntax in critical_processes file of {}'.format(container))
                     continue
-
-                identifier_key = match.group(2).strip()
-                identifier_value = match.group(3).strip()
-                if identifier_key == "program" and identifier_value:
-                    critical_process_list.append(identifier_value)
+                if match.group(1) is not None:
+                    identifier_key = match.group(2).strip()
+                    identifier_value = match.group(3).strip()
+                    if identifier_key == "program" and identifier_value:
+                        critical_process_list.append(identifier_value)
 
         return critical_process_list
 
@@ -142,11 +144,11 @@ class ServiceChecker(HealthChecker):
         # Get container volumn folder
         container_folder = self._get_container_folder(container)
         if not container_folder:
-            logger.log_error('Failed to get container folder for {}'.format(container_folder))
+            logger.log_warning('Could not find MergedDir of container {}, was container stopped?'.format(container))
             return
 
         if not os.path.exists(container_folder):
-            logger.log_error('Container folder does not exist: {}'.format(container_folder))
+            logger.log_warning('MergedDir {} of container {} not found in filesystem, was container stopped?'.format(container_folder, container))
             return
 
         # Get critical_processes file path
@@ -248,9 +250,10 @@ class ServiceChecker(HealthChecker):
         Args:
             config (config.Config): Health checker configuration.
         """
-        config_db = swsscommon.ConfigDBConnector()
-        config_db.connect()
-        feature_table = config_db.get_table("FEATURE")
+        if not self.config_db:
+            self.config_db = swsscommon.ConfigDBConnector()
+            self.config_db.connect()
+        feature_table = self.config_db.get_table("FEATURE")
         expected_running_containers, self.container_feature_dict = self.get_expected_running_containers(feature_table)
         current_running_containers = self.get_current_running_containers()
 

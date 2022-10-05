@@ -7,8 +7,7 @@ import subprocess
 import yaml
 from natsort import natsorted
 
-# TODO: Replace with swsscommon
-from swsssdk import ConfigDBConnector, SonicDBConfig, SonicV2Connector
+from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
@@ -40,11 +39,16 @@ CHASSIS_INFO_SERIAL_FIELD = 'serial'
 CHASSIS_INFO_MODEL_FIELD = 'model'
 CHASSIS_INFO_REV_FIELD = 'revision'
 
+# Cacheable Objects
+sonic_ver_info = {}
+hw_info_dict = {}
 
-def get_localhost_info(field):
+def get_localhost_info(field, config_db=None):
     try:
-        config_db = ConfigDBConnector()
-        config_db.connect()
+        # TODO: enforce caller to provide config_db explicitly and remove its default value
+        if not config_db:
+            config_db = ConfigDBConnector()
+            config_db.connect()
 
         metadata = config_db.get_table('DEVICE_METADATA')
 
@@ -81,10 +85,15 @@ def get_machine_info():
 
     return machine_vars
 
-
-def get_platform():
+def get_platform(**kwargs):
     """
     Retrieve the device's platform identifier
+
+    Args:
+        config_db: a connected ConfigDBConector object.
+            If explicit None provided, this function will not read ConfigDB. This is useful before SonicDBConfig initializing.
+            If not provided, this function may implicitly ready ConfigDB.
+            Otherwise, this function will use it to read ConfigDB
 
     Returns:
         A string containing the device's platform identifier
@@ -111,8 +120,13 @@ def get_platform():
     # container in SONiC, where the /host directory is not mounted. In this
     # case the value should already be populated in Config DB so we finally
     # try reading it from there.
-
-    return get_localhost_info('platform')
+    if 'config_db' in kwargs:
+        config_db = kwargs['config_db']
+        if config_db is None:
+            return None
+    else:
+        config_db = None
+    return get_localhost_info('platform', config_db=config_db)
 
 
 def get_hwsku():
@@ -144,21 +158,22 @@ def get_platform_and_hwsku():
 
 def get_asic_conf_file_path():
     """
-    Retrieves the path to the ASIC conguration file on the device
+    Retrieves the path to the ASIC configuration file on the device
 
     Returns:
-        A string containing the path to the ASIC conguration file on success,
+        A string containing the path to the ASIC configuration file on success,
         None on failure
     """
-    asic_conf_path_candidates = []
+    def asic_conf_path_candidates():
+        yield os.path.join(CONTAINER_PLATFORM_PATH, ASIC_CONF_FILENAME)
 
-    asic_conf_path_candidates.append(os.path.join(CONTAINER_PLATFORM_PATH, ASIC_CONF_FILENAME))
+        # Note: this function is critical for is_multi_asic() and SonicDBConfig initializing
+        #   No explicit reading ConfigDB
+        platform = get_platform(config_db=None)
+        if platform:
+            yield os.path.join(HOST_DEVICE_PATH, platform, ASIC_CONF_FILENAME)
 
-    platform = get_platform()
-    if platform:
-        asic_conf_path_candidates.append(os.path.join(HOST_DEVICE_PATH, platform, ASIC_CONF_FILENAME))
-
-    for asic_conf_file_path in asic_conf_path_candidates:
+    for asic_conf_file_path in asic_conf_path_candidates():
         if os.path.isfile(asic_conf_file_path):
             return asic_conf_file_path
 
@@ -167,10 +182,10 @@ def get_asic_conf_file_path():
 
 def get_platform_env_conf_file_path():
     """
-    Retrieves the path to the PLATFORM ENV conguration file on the device
+    Retrieves the path to the PLATFORM ENV configuration file on the device
 
     Returns:
-        A string containing the path to the PLATFORM ENV conguration file on success,
+        A string containing the path to the PLATFORM ENV configuration file on success,
         None on failure
     """
     platform_env_conf_path_candidates = []
@@ -322,14 +337,17 @@ def get_sonic_version_info():
     if not os.path.isfile(SONIC_VERSION_YAML_PATH):
         return None
 
-    data = {}
+    global sonic_ver_info
+    if sonic_ver_info:
+        return sonic_ver_info
+
     with open(SONIC_VERSION_YAML_PATH) as stream:
         if yaml.__version__ >= "5.1":
-            data = yaml.full_load(stream)
+            sonic_ver_info = yaml.full_load(stream)
         else:
-            data = yaml.load(stream)
+            sonic_ver_info = yaml.load(stream)
 
-    return data
+    return sonic_ver_info
 
 def get_sonic_version_file():
     if not os.path.isfile(SONIC_VERSION_YAML_PATH):
@@ -339,13 +357,16 @@ def get_sonic_version_file():
 
 
 # Get hardware information
-def get_platform_info():
+def get_platform_info(config_db=None):
     """
     This function is used to get the HW info helper function
     """
-    from .multi_asic import get_num_asics
+    global hw_info_dict
 
-    hw_info_dict = {}
+    if hw_info_dict:
+        return hw_info_dict
+
+    from .multi_asic import get_num_asics
 
     version_info = get_sonic_version_info()
 
@@ -356,8 +377,10 @@ def get_platform_info():
     hw_info_dict['asic_count'] = get_num_asics()
 
     try:
-        config_db = ConfigDBConnector()
-        config_db.connect()
+        # TODO: enforce caller to provide config_db explicitly and remove its default value
+        if not config_db:
+            config_db = ConfigDBConnector()
+            config_db.connect()
 
         metadata = config_db.get_table('DEVICE_METADATA')["localhost"]
         switch_type = metadata.get('switch_type')
@@ -390,6 +413,10 @@ def get_chassis_info():
 
     return chassis_info_dict
 
+
+def is_yang_config_validation_enabled(config_db):
+    return get_localhost_info('yang_config_validation', config_db) == 'enable'
+
 #
 # Multi-NPU functionality
 #
@@ -415,7 +442,7 @@ def is_multi_npu():
 
 def is_voq_chassis():
     switch_type = get_platform_info().get('switch_type')
-    return True if switch_type and switch_type == 'voq' else False
+    return True if switch_type and (switch_type == 'voq' or switch_type == 'fabric') else False
 
 
 def is_packet_chassis():
@@ -442,6 +469,17 @@ def is_supervisor():
                     return True
         return False
 
+def get_device_runtime_metadata():
+    chassis_metadata = {}
+    if is_chassis():
+        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard', 
+                                                'chassis_type': 'voq' if is_voq_chassis() else 'packet'}}
+
+    port_metadata = {'ETHERNET_PORTS_PRESENT': True if get_path_to_port_config_file(hwsku=None, asic="0" if is_multi_npu() else None) else False}
+    runtime_metadata = {}
+    runtime_metadata.update(chassis_metadata)
+    runtime_metadata.update(port_metadata)
+    return {'DEVICE_RUNTIME_METADATA': runtime_metadata }
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
@@ -462,7 +500,7 @@ def get_namespaces():
     return natsorted(ns_list)
 
 
-def get_all_namespaces():
+def get_all_namespaces(config_db=None):
     """
     In case of Multi-Asic platform, Each ASIC will have a linux network namespace created.
     So we loop through the databases in different namespaces and depending on the sub_role
@@ -471,13 +509,14 @@ def get_all_namespaces():
     front_ns = []
     back_ns = []
     num_npus = get_num_npus()
-    SonicDBConfig.load_sonic_global_db_config()
 
     if is_multi_npu():
         for npu in range(num_npus):
             namespace = "{}{}".format(NPU_NAME_PREFIX, npu)
-            config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
-            config_db.connect()
+            # TODO: enforce caller to provide config_db explicitly and remove its default value
+            if not config_db:
+                config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
+                config_db.connect()
 
             metadata = config_db.get_table('DEVICE_METADATA')
             if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
