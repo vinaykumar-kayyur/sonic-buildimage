@@ -1,0 +1,9 @@
+{
+    "RESTAPI_TABLE_WITH_INCORRECT_CERT": {
+        "desc": "TABLE_WITH_INCORRECT_CERT failure.",
+        "eStrKey": "Pattern"
+    },
+    "RESTAPI_TABLE_WITH_VALID_CONFIG": {
+        "desc": "TABLE WITH VALID CONFIG."
+    }
+}
