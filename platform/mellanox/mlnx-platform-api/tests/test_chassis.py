@@ -276,12 +276,12 @@ class TestChassis:
         #Override the dmi file
         sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
         new_dmi_file = sonic_platform.chassis.DMI_FILE
-        subprocess.run(["touch", new_dmi_file])
-        subprocess.run(["chmod", "-r", new_dmi_file])
+        subprocess.call(["touch", new_dmi_file])
+        subprocess.call(["chmod", "-r", new_dmi_file])
         chassis = Chassis()
         rev = chassis.get_revision()
         sonic_platform.chassis.DMI_FILE = old_dmi_file
-        subprocess.run(["rm", "-f", new_dmi_file])
+        subprocess.call(["rm", "-f", new_dmi_file])
         assert rev == "N/A"
 
     def test_get_port_or_cage_type(self):

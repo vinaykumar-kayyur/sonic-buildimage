@@ -158,7 +158,7 @@ class SfpUtil(SfpUtilBase):
         lpm_cmd = ["docker", "exec", "syncd", "python", "/usr/share/sonic/platform/plugins/sfplpmget.py", str(port_num)]
 
         try:
-            output = subprocess.run(lpm_cmd, universal_newlines=True, capture_output=True, check=True).stdout
+            output = subprocess.check_output(lpm_cmd, universal_newlines=True)
             if 'LPM ON' in output:
                 return True
         except subprocess.CalledProcessError as e:
@@ -182,7 +182,7 @@ class SfpUtil(SfpUtilBase):
 
         # Set LPM
         try:
-            subprocess.run(lpm_cmd, check=True, universal_newlines=True, capture_output=True).stdout
+            subprocess.check_output(lpm_cmd, universal_newlines=True)
         except subprocess.CalledProcessError as e:
             print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
@@ -197,7 +197,7 @@ class SfpUtil(SfpUtilBase):
         lpm_cmd = ["docker", "exec", "syncd", "python", "/usr/share/sonic/platform/plugins/sfpreset.py", str(port_num)]
 
         try:
-            subprocess.run(lpm_cmd, check=True, universal_newlines=True, capture_output=True).stdout
+            subprocess.check_output(lpm_cmd, universal_newlines=True)
             return True
         except subprocess.CalledProcessError as e:
             print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
@@ -269,7 +269,7 @@ class SfpUtil(SfpUtilBase):
         eeprom_raw = []
         ethtool_cmd = ["ethtool", "-m", sfpname, "hex", "on", "offset", str(offset), "length", str(num_bytes)]
         try:
-            output = subprocess.run(ethtool_cmd, check=True, universal_newlines=True, capture_output=True).stdout
+            output = subprocess.check_output(ethtool_cmd, universal_newlines=True)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
