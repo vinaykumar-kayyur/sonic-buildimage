@@ -65,7 +65,7 @@ class PsuUtil(PsuBase):
         status = 0
         self.psu_status[4] = str(index-1)
         try:
-            p = subprocess.Popen(psu_status, stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(self.psu_status, stdout=subprocess.PIPE, universal_newlines=True)
             content = p.stdout.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:

@@ -16,8 +16,8 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         PsuBase.__init__(self)
-        self.psu_presence = "/sys/devices/platform/delta-ag9064-cpld.0/psu"
-        self.psu_status = "/sys/devices/platform/delta-ag9064-swpld1.0/psu"
+        self.psu_presence = "/sys/devices/platform/delta-ag9064-cpld.0/psu{}_scan"
+        self.psu_status = "/sys/devices/platform/delta-ag9064-swpld1.0/psu{}_pwr_ok"
 
     def get_num_psus(self):
         """
@@ -39,7 +39,7 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
-        self.psu_status[1] += str(index) + '_pwr_ok'
+        self.psu_status = self.psu_status.format(index)
         try:
             p = open(self.psu_status, 'r')
             content = p.readline().rstrip()
@@ -63,9 +63,9 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
         status = 0
-        self.psu_presence[1] += str(index) + '_scan'
+        self.psu_presence = self.psu_presence.format(index)
         try:
-            p = open(psu_presence, 'r')
+            p = open(self.psu_presence, 'r')
             content = p.readline().rstrip()
             reg_value = int(content, 16)
             if reg_value != 0:
