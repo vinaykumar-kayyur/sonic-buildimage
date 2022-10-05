@@ -7,7 +7,6 @@ from subprocess import Popen, PIPE
 from re import findall
 from os.path import exists
 
-INNODISK = ["iSmart", "-d"]
 NOT_AVAILABLE = "N/A"
 
 class SsdUtil(SsdBase):
