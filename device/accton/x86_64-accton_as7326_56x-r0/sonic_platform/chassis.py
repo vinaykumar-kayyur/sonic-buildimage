@@ -93,7 +93,7 @@ class Chassis(ChassisBase):
         self._watchdog = Watchdog()
 
     def __is_host(self):
-        return subprocess.run(HOST_CHK_CMD).returncode == 0
+        return subprocess.call(HOST_CHK_CMD) == 0
 
     def __read_txt_file(self, file_path):
         try:

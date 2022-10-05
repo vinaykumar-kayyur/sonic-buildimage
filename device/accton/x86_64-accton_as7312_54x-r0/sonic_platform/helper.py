@@ -14,7 +14,7 @@ class APIHelper():
         (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def is_host(self):
-        return subprocess.run(HOST_CHK_CMD).returncode == 0
+        return subprocess.call(HOST_CHK_CMD) == 0
 
     def pci_get_value(self, resource, offset):
         status = True
