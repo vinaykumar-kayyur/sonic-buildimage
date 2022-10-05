@@ -4,7 +4,7 @@ try:
     import os
     import re
     import logging
-    from subprocess import run, Popen, PIPE
+    from subprocess import call, Popen, PIPE
     from sonic_platform_base.component_base import ComponentBase
 
 except ImportError as e:
@@ -170,7 +170,7 @@ class Component(ComponentBase):
         result = False
         cmd = self.__get_cmd(image_path)
 
-        ret = run(cmd).returncode
+        ret = call(cmd)
         if ret == OS_SYSTEM_SUCCESS:
             result = True
 
@@ -180,7 +180,7 @@ class Component(ComponentBase):
         result = False
         cmd = self.__get_cmd(image_path)
 
-        ret = run(cmd).returncode
+        ret = call(cmd)
         if ret == OS_SYSTEM_SUCCESS:
             result = True
         return result
@@ -210,7 +210,7 @@ class Component(ComponentBase):
 
             if ret:
                 cmd = self.__get_cmd(image_path)
-                ret = run(cmd).returncode
+                ret = call(cmd)
                 if ret == OS_SYSTEM_SUCCESS:
                     result = True
                 else:
