@@ -417,7 +417,8 @@ class Chassis(ChassisBase):
         if regval is None:
             print("Invaild color input.")
             return False
-        ret , log = getstatusoutput_noshell(self.set_sys_led_cmd.append(regval))
+        self.set_sys_led_cmd = ["i2cset", "-f", "-y", "2", "0x33", "0xb2", regval]
+        ret , log = getstatusoutput_noshell(self.set_sys_led_cmd)
         if ret != 0:
             print("Cannot execute %s" % self.set_sys_led_cmd + regval)
             return False

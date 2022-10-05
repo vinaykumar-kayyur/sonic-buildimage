@@ -86,7 +86,7 @@ class osutil(object):
 
     @staticmethod
     def geti2cword_i2ctool(bus, addr, offset):
-        command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%addr, "0x"+"%02x"%offset, "wp"]
+        command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%addr, "0x%02x"%offset, "wp"]
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):

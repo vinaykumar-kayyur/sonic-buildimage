@@ -1041,8 +1041,8 @@ def rjsysset(location, value):
         try:
             with open(location, 'w') as f:
                 f.write('0x'+'%02x'%value+'\n')
-        except (IOError, FileNotFoundError):
-            return False, 'cannot write to file'
+        except (IOError, FileNotFoundError) as e:
+            return False, str(e)
     return True, ''
 
 
@@ -1616,7 +1616,7 @@ def getsysmeminfo():
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
-    cmd1 = split(log)
+    cmd1 = [log[0].rstrip('\n')]
     cmd2 = ["grep", "-P", "-A5", "Memory\s+Device"]
     cmd3 = ["grep", "Size"]
     cmd4 = ["grep", "-v", "Range"]
@@ -1646,7 +1646,7 @@ def getsysmeminfo_detail():
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
-    cmd1 = split(log) + ["-t", "17"]
+    cmd1 = [log[0].rstrip('\n')] + ["-t", "17"]
     cmd2 = ["grep", "-A21", "Memory Device"]  # 17
     # get total number
     ret1, log1 = getstatusoutput_noshell_pipe(cmd1, cmd2)

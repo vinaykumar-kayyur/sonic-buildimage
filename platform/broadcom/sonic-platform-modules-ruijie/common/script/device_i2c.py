@@ -70,43 +70,43 @@ def i2c_getPid(name):
     return ret
 
 def startAvscontrol():
-    cmd = ["nohup", "avscontrol.py", "start"]
+    cmd = ["avscontrol.py", "start"]
     rets = i2c_getPid("avscontrol.py")
     if len(rets) == 0:
-        subprocess.run(cmd).returncode
+        subprocess.Popen(cmd)
 
 def startFanctrol():
     if STARTMODULE['fancontrol'] == 1:
-        cmd = ["nohup", "fancontrol.py", "start"]
+        cmd = ["fancontrol.py", "start"]
         rets = i2c_getPid("fancontrol.py")
         if len(rets) == 0:
-            subprocess.run(cmd).returncode
+            subprocess.Popen(cmd)
 
 def starthal_fanctrl():
     if STARTMODULE.get('hal_fanctrl',0) == 1:
-        cmd = ["nohup", "hal_fanctrl.py", "start"]
+        cmd = ["hal_fanctrl.py", "start"]
         rets = i2c_getPid("hal_fanctrl.py")
         if len(rets) == 0:
-            subprocess.run(cmd).returncode
+            subprocess.Popen(cmd)
 
 def starthal_ledctrl():
     if STARTMODULE.get('hal_ledctrl',0) == 1:
-        cmd = ["nohup", "hal_ledctrl.py", "start"]
+        cmd = ["hal_ledctrl.py", "start"]
         rets = i2c_getPid("hal_ledctrl.py")
         if len(rets) == 0:
-            subprocess.run(cmd).returncode
+            subprocess.Popen(cmd)
 def startDevmonitor():
     if STARTMODULE.get('dev_monitor',0) == 1:
-        cmd = ["nohup", "dev_monitor.py", "start"]
+        cmd = ["dev_monitor.py", "start"]
         rets = i2c_getPid("dev_monitor.py")
         if len(rets) == 0:
-            subprocess.run(cmd).returncode
+            subprocess.Popen(cmd)
 def startSlotmonitor():
     if STARTMODULE.get('slot_monitor',0) == 1:
-        cmd = ["nohup", "slot_monitor.py", "start"]
+        cmd = ["slot_monitor.py", "start"]
         rets = i2c_getPid("slot_monitor.py")
         if len(rets) == 0:
-            subprocess.run(cmd).returncode
+            subprocess.Popen(cmd)
 
 def stopFanctrol():
     u'''disable fan timer service'''
@@ -114,7 +114,7 @@ def stopFanctrol():
         rets = i2c_getPid("fancontrol.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            subprocess.run(cmd).returncode
+            subprocess.call(cmd)
         return True
 
 def stophal_ledctrl():
@@ -122,7 +122,7 @@ def stophal_ledctrl():
         rets = i2c_getPid("hal_ledctrl.py")
         for ret in rets:
             cmd = ["kill", ret]
-            subprocess.run(cmd).returncode
+            subprocess.call(cmd)
         return True
 
 
@@ -132,7 +132,7 @@ def stopDevmonitor():
         rets = i2c_getPid("dev_monitor.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            subprocess.run(cmd).returncode
+            subprocess.call(cmd)
         return True
 
 def stopSlotmonitor():
@@ -141,7 +141,7 @@ def stopSlotmonitor():
         rets = i2c_getPid("slot_monitor.py")  #
         for ret in rets:
             cmd = ["kill", ret]
-            subprocess.run(cmd).returncode
+            subprocess.call(cmd)
         return True
 
 def removeDev(bus, loc):
@@ -149,7 +149,7 @@ def removeDev(bus, loc):
     if os.path.exists(devpath):
         file = "/sys/bus/i2c/devices/i2c-%d/delete_device" % bus
         with open(file, 'w') as f:
-            f.write('0x'+'%02x'%str(bus)+'\n')
+            f.write('0x%02x'%str(bus)+'\n')
         
 def addDev(name, bus, loc):
     if name == "lm75":
@@ -162,7 +162,6 @@ def addDev(name, bus, loc):
         if i % 10 == 0:
             click.echo("%%DEVICE_I2C-INIT: %s not found, wait 0.1 second ! i %d " % (pdevpath,i))
             
-    cmd = "echo  %s 0x%02x > /sys/bus/i2c/devices/i2c-%d/new_device" % (name, loc, bus)
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) == False:
         file = "/sys/bus/i2c/devices/i2c-%d/new_device" % bus
