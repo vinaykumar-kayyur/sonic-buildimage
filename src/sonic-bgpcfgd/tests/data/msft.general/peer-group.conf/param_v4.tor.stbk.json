@@ -7,7 +7,7 @@
     },
     "CONFIG_DB__DEVICE_NEIGHBOR_METADATA": {
         "neig_device": {
-            "type": "ToRRouter"
+            "type": "BackEndLeafRouter"
         }
     },
     "constants": {

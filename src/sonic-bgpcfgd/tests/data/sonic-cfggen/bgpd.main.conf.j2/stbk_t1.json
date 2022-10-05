@@ -1,0 +1,23 @@
+{
+    "DEVICE_METADATA": {
+        "localhost": {
+            "bgp_asn": "55555",
+            "type": "BackEndLeafRouter",
+            "storage_device": "true"
+        }
+    },
+    "LOOPBACK_INTERFACE": {
+        "Loopback0|55.55.55.55/32": {}
+    },
+    "constants": {
+        "bgp": {
+            "multipath_relax": {},
+            "graceful_restart": {
+                "enabled": true
+            },
+            "maximum_paths": {
+                "enabled": true
+            }
+        }
+    }
+}

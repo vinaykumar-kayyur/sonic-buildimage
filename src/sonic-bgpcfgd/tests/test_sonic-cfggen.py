@@ -63,6 +63,18 @@ def test_bgpd_lo_ipv6_conf_base():
              "bgpd.main.conf.j2/base.json",
              "bgpd.main.conf.j2/base.conf")
 
+def test_bgpd_main_storage_be_tor():
+    run_test("Storage BE ToR bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/stbk_t0.json",
+             "bgpd.main.conf.j2/stbk_t0.conf")
+
+def test_bgpd_main_storage_be_t1():
+    run_test("Storage BE T1 bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/stbk_t1.json",
+             "bgpd.main.conf.j2/stbk_t1.conf")
+
 def test_tsa_isolate():
     run_test("tsa/bgpd.tsa.isolate.conf.j2",
              "bgpd/tsa/bgpd.tsa.isolate.conf.j2",
