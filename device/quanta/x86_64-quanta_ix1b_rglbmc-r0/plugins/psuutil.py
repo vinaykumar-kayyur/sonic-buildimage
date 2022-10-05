@@ -7,6 +7,7 @@
 import os.path
 import subprocess
 import logging
+from sonic_py_common.general import check_output_pipe
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -27,7 +28,7 @@ def exec_cmd(cmd_args, out_file, show):
     logging.info('Run :'+cmd)
     try:
         with open(out_file, 'w') as f:
-            output = subprocess.run(cmd_args, stdout=f, universal_newlines=True, check=True).stdout
+            output = subprocess.check_output(cmd_args, stdout=f, universal_newlines=True)
             show_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info("Failed :"+cmd)
@@ -48,13 +49,8 @@ def log_os_system(cmd1_args, cmd2_args, show):
     status = 1
     output = ""
     try:
-        with subprocess.Popen(cmd1_args, universal_newlines=True, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(cmd2_args, universal_newlines=True, stdin=p1.stdout, stdout=subprocess.PIPE) as p2:
-                output = p2.communicate()[0]
-                p1.wait()
-                if p1.returncode != 0 and p2.returncode != 0:
-                    raise subprocess.CalledProcessError(returncode=p2.returncode, cmd=cmd, output=output)
-                my_log(cmd + "output:"+str(output))
+        output = check_output_pipe(cmd1_args, cmd2_args)
+        my_log(cmd + "output:"+str(output))
     except subprocess.CalledProcessError as e:
         logging.info('Failed :'+cmd)
         if show:
