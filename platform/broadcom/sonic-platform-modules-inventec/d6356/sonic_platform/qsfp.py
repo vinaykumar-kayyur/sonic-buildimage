@@ -109,7 +109,7 @@ class QSfp(SfpBase):
         return retval
 
     def __is_host(self):
-        return subprocess.run(["docker"]).returncode == 0
+        return subprocess.call(["docker"]) == 0
 
     def __get_path_to_port_config_file(self):
         host_platform_root_path = '/usr/share/sonic/device'

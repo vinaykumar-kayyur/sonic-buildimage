@@ -238,7 +238,7 @@ def system_install(boot_option):
     for addr_offset in range (0,FAN_NUM):
         addr=FAN_VPD_ADDR_BASE+addr_offset
         cmd1 = ["i2cdetect", "-y", str(FAN_VPD_CHANNEL), str(addr), str(addr)]
-        cmd2 = ["grep", str(hex(addr)).replace('0x','')]
+        cmd2 = ["grep", f'{addr:x}']
         result, _ = getstatusoutput_noshell_pipe(cmd1, cmd2)
         if( result==0 ):
             cmd="echo inv_eeprom "+str(addr)+" > /sys/bus/i2c/devices/i2c-"+FAN_VPD_CHANNEL

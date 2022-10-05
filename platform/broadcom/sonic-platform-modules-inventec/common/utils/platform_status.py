@@ -60,6 +60,6 @@ if __name__ == '__main__':
 
             # Receive thermaltrip event
             if event['ACTION'] == 'remove' and event['DEVPATH'] == '/kernel/platform_status/fan':
-                subprocess.run(["shutdown", "-h", "now"])
+                subprocess.call(["shutdown", "-h", "now"])
                 
 

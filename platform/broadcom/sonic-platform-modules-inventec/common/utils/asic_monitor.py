@@ -64,7 +64,7 @@ class BCMUtil(bcmshell):
     
     def get_platform(self):
         if self.platform is None:
-            _, self.platform = getstatusoutput_noshell(["uname", "-n"])
+            _, self.platform = getstatusoutput_noshell(["uname", "-n"]).strip()
         return self.platform
         
     def get_asic_temperature( self ):
