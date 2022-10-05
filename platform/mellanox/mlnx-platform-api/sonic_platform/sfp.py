@@ -53,6 +53,8 @@ try:
         SX_PORT_MODULE_STATUS_UNPLUGGED = 2
         SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
         SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
+        SX_PORT_ADMIN_STATUS_UP = True
+        SX_PORT_ADMIN_STATUS_DOWN = False
 except KeyError:
     pass
 
@@ -571,7 +573,7 @@ class SFP(NvidiaSFPCommon):
     @classmethod
     def is_port_admin_status_up(cls, sdk_handle, log_port):
         _, admin_state = cls._fetch_port_status(sdk_handle, log_port);
-        admin_state == SX_PORT_ADMIN_STATUS_UP
+        return admin_state == SX_PORT_ADMIN_STATUS_UP
 
 
     @classmethod
@@ -752,6 +754,38 @@ class SFP(NvidiaSFPCommon):
         else:
             error_description = "Unknow SFP module status ({})".format(oper_status)
         return error_description
+
+    def get_rx_los(self):
+        """Accessing rx los is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_tx_fault(self):
+        """Accessing tx fault is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_xcvr_api(self):
+        """
+        Retrieves the XcvrApi associated with this SFP
+
+        Returns:
+            An object derived from XcvrApi that corresponds to the SFP
+        """
+        if self._xcvr_api is None:
+            self.refresh_xcvr_api()
+            if  self._xcvr_api is not None:
+                self._xcvr_api.get_rx_los = self.get_rx_los
+                self._xcvr_api.get_tx_fault = self.get_tx_fault
+        return self._xcvr_api
 
 
 class RJ45Port(NvidiaSFPCommon):
