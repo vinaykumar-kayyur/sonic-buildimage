@@ -27,7 +27,7 @@ class SfpUtil(SfpUtilBase):
     _qsfp_ports = list(range(_port_start, ports_in_block + 1))
 
     def __init__(self):
-        subprocess.run(["modprobe", "i2c-dev"])
+        subprocess.call(["modprobe", "i2c-dev"])
         if not os.path.exists("/sys/bus/i2c/devices/0-0050"):
             with open("/sys/bus/i2c/devices/i2c-0/new_device", 'w') as file:
                 file.write("optoe2 0x50")
@@ -84,7 +84,7 @@ class SfpUtil(SfpUtilBase):
     def i2c_set(self, device_addr, offset, value):
         if smbus_present == 0:
             cmd = ["i2cset", "-y", "0", hex(device_addr), hex(offset), hex(value)]
-            subprocess.run(cmd)
+            subprocess.call(cmd)
         else:
             bus = smbus.SMBus(0)
             bus.write_byte_data(device_addr, offset, value)

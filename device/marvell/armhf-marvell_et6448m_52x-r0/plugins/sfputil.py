@@ -39,7 +39,7 @@ class SfpUtil(SfpUtilBase):
 
         # Enable optical SFP Tx
         if smbus_present == 0:
-            subprocess.run(["i2cset", "-y", "-m", "0x0f", "0", "0x41", "0x5", "0x00"])
+            subprocess.call(["i2cset", "-y", "-m", "0x0f", "0", "0x41", "0x5", "0x00"])
         else:
             bus = smbus.SMBus(0)
             DEVICE_ADDRESS = 0x41
