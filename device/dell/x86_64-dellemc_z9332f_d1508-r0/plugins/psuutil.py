@@ -42,7 +42,6 @@ class PsuUtil(PsuBase):
 
     # Fetch a BMC register
     def get_pmc_register(self, reg_name):
-        status = 1
         global ipmi_sdr_list
         ipmi_cmd = ''
         dockerenv = self.isDockerEnv()
