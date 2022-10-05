@@ -473,7 +473,7 @@ def set_device(args):
         if int(args[1])>4:
             show_set_help()
             return
-        #print( ALL_DEVICE['led']
+        #print ALL_DEVICE['led']
         for i in range(0,len(ALL_DEVICE['led'])):   
             for k in (ALL_DEVICE['led']['led'+str(i+1)]):  
                 ret, log = log_os_system("echo "+args[1]+" >"+k, 1)
@@ -505,7 +505,7 @@ def set_device(args):
             show_set_help()
             return
        
-        #print( ALL_DEVICE[args[0]]   
+        #print ALL_DEVICE[args[0]]
         for i in range(0,len(ALL_DEVICE[args[0]])):   
             for j in ALL_DEVICE[args[0]][args[0]+str(args[1])]:        
                 if j.find('tx_disable')!= -1:  
@@ -535,7 +535,7 @@ def device_traversal():
         print("============================================")
          
         for j in sorted(ALL_DEVICE[i].keys(), key=get_value):    
-            print("   "+j+":")
+            print("   "+j+":", end=' ')
             for k in (ALL_DEVICE[i][j]):
                 ret, log = log_os_system("cat "+k, 0)
                 func = k.split("/")[-1].strip()
