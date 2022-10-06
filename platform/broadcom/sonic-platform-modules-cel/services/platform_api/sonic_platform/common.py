@@ -172,6 +172,7 @@ class Common:
     def load_json_file(self, path):
         """
         Retrieves the json object from json file path
+
         Returns:
             A json object
         """
@@ -183,8 +184,10 @@ class Common:
     def get_config_path(self, config_name):
         """
         Retrieves the path to platform api config directory
+
         Args:
             config_name: A string containing the name of config file.
+
         Returns:
             A string containing the path to json file
         """
@@ -193,10 +196,12 @@ class Common:
     def get_output(self, index, config, default):
         """
         Retrieves the output for each function base on config
+
         Args:
             index: An integer containing the index of device.
             config: A dict object containing the configuration of specified function.
             default: A string containing the default output of specified function.
+
         Returns:
             A string containing the output of specified function in config
         """
@@ -246,10 +251,12 @@ class Common:
     def set_output(self, index, input, config):
         """
         Sets the output of specified function on config
+
         Args:
             config: A dict object containing the configuration of specified function.
             index: An integer containing the index of device.
             input: A string containing the input of specified function.
+
         Returns:
             bool: True if set function is successfully, False if not
         """
@@ -271,6 +278,7 @@ class Common:
         """
         Returns a nested dictionary containing all devices which have
         experienced a change at chassis level
+
         """
         event_class = self._get_class(config)
         return event_class(sfp_list).get_event(timeout)
