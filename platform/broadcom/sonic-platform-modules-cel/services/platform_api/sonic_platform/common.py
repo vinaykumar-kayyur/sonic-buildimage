@@ -3,9 +3,8 @@ import ast
 import imp
 import yaml
 import subprocess
-from shlex import split
+
 from sonic_py_common import device_info
-from sonic_py_common.general import getstatusoutput_noshell_pipe
 
 
 class Common:
@@ -38,20 +37,9 @@ class Common:
         output = ""
         try:
             p = subprocess.Popen(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if err == '':
-                status, output = True, raw_data.strip()
-        except Exception:
-            pass
-        return status, output
-
-    def _run_command_pipe(self, cmd1, cmd2):
-        status = False
-        output = ""
-        try:
-            exitcodes, raw_data = getstatusoutput_noshell_pipe(cmd1, cmd2)
-            if exitcodes == [0, 0]:
                 status, output = True, raw_data.strip()
         except Exception:
             pass
@@ -89,11 +77,7 @@ class Common:
         argument = config.get('argument')
         cmd = config['command'].format(
             config['argument'][index]) if argument else config['command']
-        if '|' in cmd:
-            cmd1, cmd2 = cmd.split('|')
-            status, output = self._run_command_pipe(split(cmd1), split(cmd2))
-        else:
-            status, output = self._run_command(cmd)
+        status, output = self._run_command(cmd)
         return output if status else None
 
     def _sysfs_read(self, index, config):
@@ -140,13 +124,7 @@ class Common:
 
     def _ipmi_set(self, index, config, input):
         arg = config['argument'][index].format(input)
-        cmd = config['command'].format(arg)
-        if '|' in cmd:
-            cmd1, cmd2 = cmd.split('|')
-            status, output = self._run_command_pipe(split(cmd1), split(cmd2))
-        else:
-            status, output = self._run_command(cmd)
-        return status, output
+        return self._run_command(config['command'].format(arg))
 
     def _hex_ver_decode(self, hver, num_of_bits, num_of_points):
         ver_list = []
@@ -171,11 +149,9 @@ class Common:
         return class_
 
     def get_reg(self, path, reg_addr):
-        with open(path, 'w') as file:
-            file.write(reg_addr + '\n')
-        with open(path, 'r') as file:
-            output = file.readline().strip()
-        return output
+        cmd = "echo {1} > {0}; cat {0}".format(path, reg_addr)
+        status, output = self._run_command(cmd)
+        return output if status else None
 
     def read_txt_file(self, path):
         with open(path, 'r') as f:
@@ -196,7 +172,6 @@ class Common:
     def load_json_file(self, path):
         """
         Retrieves the json object from json file path
-
         Returns:
             A json object
         """
@@ -208,10 +183,8 @@ class Common:
     def get_config_path(self, config_name):
         """
         Retrieves the path to platform api config directory
-
         Args:
             config_name: A string containing the name of config file.
-
         Returns:
             A string containing the path to json file
         """
@@ -220,12 +193,10 @@ class Common:
     def get_output(self, index, config, default):
         """
         Retrieves the output for each function base on config
-
         Args:
             index: An integer containing the index of device.
             config: A dict object containing the configuration of specified function.
             default: A string containing the default output of specified function.
-
         Returns:
             A string containing the output of specified function in config
         """
@@ -275,12 +246,10 @@ class Common:
     def set_output(self, index, input, config):
         """
         Sets the output of specified function on config
-
         Args:
             config: A dict object containing the configuration of specified function.
             index: An integer containing the index of device.
             input: A string containing the input of specified function.
-
         Returns:
             bool: True if set function is successfully, False if not
         """
@@ -302,7 +271,6 @@ class Common:
         """
         Returns a nested dictionary containing all devices which have
         experienced a change at chassis level
-
         """
         event_class = self._get_class(config)
         return event_class(sfp_list).get_event(timeout)
