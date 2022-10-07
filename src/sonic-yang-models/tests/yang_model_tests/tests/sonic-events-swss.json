@@ -1,7 +1,8 @@
 {
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_IFNAME": {
 		"desc": "IF_STATE_EVENT_INCORRECT_IFNAME failure.",
-		"eStrKey": "Pattern"
+		"eStrKey": "LeafRef",
+		"eStr": ["Eth"]
 	},
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_STATUS": {
 		"desc": "IF_STATE_EVENT_INCORRECT_STATUS failure.",
@@ -16,7 +17,8 @@
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_IFNAME": {
 		"desc": "PFC_STORM_EVENT_INCORRECT_IFNAME failure.",
-		"eStrKey": "Pattern"
+		"eStrKey": "LeafRef",
+		"eStr": ["Eth"]
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_QUEUE_INDEX": {
 		"desc": "PFC_STORM_EVENT_INCORRECT_QUEUE_INDEX failure.",
