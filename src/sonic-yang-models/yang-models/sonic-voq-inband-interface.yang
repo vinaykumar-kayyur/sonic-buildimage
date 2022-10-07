@@ -35,6 +35,7 @@ module sonic-voq-inband-interface {
                     description "Type of inband interface"
                     type string {
                         pattern "port";
+                        default "port";
                     }                    
                 }
             }
