@@ -12,6 +12,10 @@ module sonic-events-swss {
         prefix stypes;
     }
 
+    import sonic-port {
+        prefix port;
+    }
+
     organization
         "SONiC";
 
@@ -34,8 +38,8 @@ module sonic-events-swss {
                 The name of the flapping i/f and status are the only params.";
 
             leaf ifname {
-                type string {
-                    pattern 'Ethernet([0-9]{1,3})';
+                type leafref {
+                    path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                 }
                 description "Interface name";
             } 
@@ -56,8 +60,8 @@ module sonic-events-swss {
                 The name of the i/f facing the storm is the only param.";
 
             leaf ifname {
-                type string {
-                    pattern 'Ethernet([0-9]{1,3})';
+                type leafref {
+                    path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                 }
                 description "Interface name";
             }
