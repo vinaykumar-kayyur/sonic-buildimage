@@ -47,7 +47,7 @@
 					"dhcp_servers": [
 						"10.1.7.116"
 					],
-					"mtu": "9216",
+					"mtu": 9216,
 					"admin_status": "up"
 				},
 				{
@@ -56,7 +56,7 @@
 					"dhcp_servers": [
 						"10.1.7.116"
 					],
-					"mtu": "9216",
+					"mtu": 9216,
 					"admin_status": "up"
 				}
 			]
@@ -195,7 +195,7 @@
 					"PACKET_ACTION": "FORWARD",
 					"DST_IP": "10.1.72.0/26",
 					"SRC_IP": "10.1.0.0/15",
-					"PRIORITY": "999980",
+					"PRIORITY": 999980,
 					"IP_TYPE": "IPV4ANY"
 				},
 				{
@@ -204,7 +204,7 @@
 					"PACKET_ACTION": "FORWARD",
 					"DST_IP": "10.1.72.64/26",
 					"SRC_IP": "10.1.0.0/15",
-					"PRIORITY": "999960",
+					"PRIORITY": 999960,
 					"IP_TYPE": "IPV4ANY",
 					"INNER_ETHER_TYPE": "0x88CC"
 				},
@@ -214,7 +214,7 @@
 					"PACKET_ACTION": "FORWARD",
 					"IP_TYPE": "IP",
 					"SRC_IPV6": "2000:f500:41::/48",
-					"PRIORITY": "999980",
+					"PRIORITY": 999980,
 					"DST_IPV6": "2000:f500:43:320::/64",
 					"L4_SRC_PORT_RANGE": "653-1053"
 				}

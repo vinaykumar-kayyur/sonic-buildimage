@@ -35,7 +35,7 @@
 					"dhcp_servers": [
 						"10.1.72.116"
 					],
-					"mtu": "9216",
+					"mtu": 9216,
 					"admin_status": "up"
 				},
 				{
@@ -44,7 +44,7 @@
 					"dhcp_servers": [
 						"10.1.72.116"
 					],
-					"mtu": "9216",
+					"mtu": 9216,
 					"admin_status": "up"
 				}
 			]

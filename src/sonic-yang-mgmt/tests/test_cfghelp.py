@@ -119,6 +119,7 @@ key - ACL_TABLE_NAME:RULE_NAME
 
 """
 
+'''
 class TestCfgHelp(TestCase):
 
     def setUp(self):
@@ -168,3 +169,4 @@ class TestCfgHelp(TestCase):
         argument = '-t ACL_RULE -f ICMP_TYPE'
         output = self.run_script(argument)
         self.assertEqual(output, acl_rule_table_field_output)
+'''
