@@ -23,7 +23,7 @@ module sonic-voq-inband-interface {
 
     container sonic-voq-inband-interface {
         container VOQ_INBAND_INTERFACE {
-            description "VOQ inband interface in VOQ Chassis"
+            description "VOQ inband interface in VOQ Chassis";
             list VOQ_INBAND_INTERFACE_LIST {
                 key "name";
                 leaf name {
@@ -32,11 +32,11 @@ module sonic-voq-inband-interface {
                     }
                 }
                 leaf inband_type {
-                    description "Type of inband interface"
+                    description "Type of inband interface";
                     type string {
-                        pattern "port";
-                        default "port";
-                    }                    
+                        pattern "port";                        
+                    }
+                    default "port";                    
                 }
             }
             list VOQ_INBAND_INTERFACE_IPPREFIX_LIST {
