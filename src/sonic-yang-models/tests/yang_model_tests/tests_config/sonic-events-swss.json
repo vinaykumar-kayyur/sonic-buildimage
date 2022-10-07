@@ -2,7 +2,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_IFNAME": {
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
-			       "PORT_LIST": [
+				"PORT_LIST": [
 					{
 				 		"admin_status": "up",
 						"alias": "eth0",
@@ -24,6 +24,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_STATUS": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
 				"ifname": "Ethernet0",
@@ -33,6 +48,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_IF_STATE_INCORRECT_TIMESTAMP": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:if-state": {
 				"ifname": "Ethernet0",
@@ -44,7 +74,7 @@
 	"SONIC_EVENTS_SWSS_IF_STATE_VALID": {
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
-			       "PORT_LIST": [
+				"PORT_LIST": [
 					{
 				 		"admin_status": "up",
 						"alias": "eth0",
@@ -68,7 +98,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_IFNAME": {
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
-			       "PORT_LIST": [
+				"PORT_LIST": [
 					{
 				 		"admin_status": "up",
 						"alias": "eth0",
@@ -92,6 +122,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_QUEUE_INDEX": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
 				"ifname": "Ethernet0",
@@ -103,6 +148,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_QUEUE_ID": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
 				"ifname": "Ethernet0",
@@ -114,6 +174,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_PORT_ID": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
 				"ifname": "Ethernet0",
@@ -125,6 +200,21 @@
 		}
 	},
 	"SONIC_EVENTS_SWSS_PFC_STORM_INCORRECT_TIMESTAMP": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [
+					{
+				 		"admin_status": "up",
+						"alias": "eth0",
+						"description": "Ethernet0",
+						"lanes": 65,
+						"mtu": 9000,
+						"name": "Ethernet0",
+						"speed": 25000
+					}
+				]
+			}
+		},
 		"sonic-events-swss:sonic-events-swss": {
 			"sonic-events-swss:pfc-storm": {
 				"ifname": "Ethernet0",
@@ -138,7 +228,7 @@
 	"SONIC_EVENTS_SWSS_PFC_STORM_VALID": {
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
-			       "PORT_LIST": [
+				"PORT_LIST": [
 					{
 				 		"admin_status": "up",
 						"alias": "eth0",
