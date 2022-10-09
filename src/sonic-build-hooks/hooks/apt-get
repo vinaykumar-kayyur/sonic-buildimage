@@ -25,6 +25,6 @@ else
       dpkg-query -W -f '${Package}==${Version}\n' >> $POST_VERSION_PATH/purge-versions-deb
       chmod a+wr $POST_VERSION_PATH/purge-versions-deb
     fi
-    $REAL_COMMAND "$@"
+    run_with_retry $REAL_COMMAND "$@"
 fi
 

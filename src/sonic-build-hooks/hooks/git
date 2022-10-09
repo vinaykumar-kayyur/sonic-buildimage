@@ -45,17 +45,17 @@ get_clone_path(){
 
 main(){
     parse_config "$@"
-
-    # execute git.
-    $REAL_COMMAND "$@"
-    result=$?
+    get_clone_path "$@"
 
     # if sub command is not "clone", exit
     if [[ $MODE_CLONE != 1 ]];then
-        exit $result
+        $REAL_COMMAND "$@"
+        exit $?
+    else
+        run_with_retry $REAL_COMMAND "$@"
+        result=$?
     fi
 
-    get_clone_path "$@"
     pushd $clone_PATH &> /dev/null
     commit_latest=`$REAL_COMMAND log -n 1 | head -n 1| awk '{print$2}'`
     [ -f $version_file ] && commit=`grep $URL $version_file | awk -F== '{print$2}'`
