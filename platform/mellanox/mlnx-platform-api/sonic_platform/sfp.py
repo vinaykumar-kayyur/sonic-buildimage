@@ -1315,7 +1315,24 @@ class SFP(SfpBase):
             A Boolean, True if SFP has RX LOS, False if not.
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
-        raise NotImplementedError
+        # Provide dummy implementation due to limitation, always return false
+        if not self.dom_supported:
+            return None
+
+        rx_los_list = []
+        if self.sfp_type == OSFP_TYPE:
+            return None
+        elif self.sfp_type == QSFP_TYPE:
+            rx_los_list = [False]*4
+        elif self.sfp_type == QSFP_DD_TYPE:
+            # page 11h
+            if self.dom_rx_tx_power_bias_supported:
+                rx_los_list = [False]*8
+            else:
+                return None
+        else:
+            rx_los_list.append(False)
+        return rx_los_list
 
 
     def get_tx_fault(self):
@@ -1326,7 +1343,24 @@ class SFP(SfpBase):
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
-        raise NotImplementedError
+        # Provide dummy implementation due to limitation, always return false
+        if not self.dom_supported:
+            return None
+
+        tx_fault_list = []
+        if self.sfp_type == OSFP_TYPE:
+            return None
+        elif self.sfp_type == QSFP_TYPE:
+            tx_fault_list = [False]*4
+        elif self.sfp_type == QSFP_DD_TYPE:
+            # page 11h
+            if self.dom_rx_tx_power_bias_supported:
+                tx_fault_list = [False]*8
+            else:
+                return None
+        else:
+            tx_fault_list.append(False)
+        return tx_fault_list
 
 
     def get_tx_disable(self):
