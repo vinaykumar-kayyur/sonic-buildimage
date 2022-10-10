@@ -1,5 +1,5 @@
 module sonic-voq-inband-interface {
-    namespace "http://github.com/Azure/sonic-voq-inband-interface";
+    namespace "http://github.com/sonic-net/sonic-voq-inband-interface";
     prefix voq-inband-intf;
     yang-version 1.1;    
 
