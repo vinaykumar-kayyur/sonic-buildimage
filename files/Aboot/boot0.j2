@@ -84,6 +84,7 @@ data_path="$image_path/platform/data"
 boot_image_path="$image_path/$boot_image"
 installer_image_path="$image_path/$installer_image"
 
+boot_device=$(echo "$target_path" | cut -d '/' -f3)
 boot_config="$target_path/boot-config"
 
 cmdline_allowlist="crashkernel hwaddr_ma1 sonic_fips"
@@ -146,6 +147,11 @@ update_boot_config() {
         sed -i "s#^$key=.*\$#$key=$value#" "$boot_config"
     else
         echo "$key=$value" >> "$boot_config"
+    fi
+
+    # Ensure boot_config at flash drive
+    if [ "$boot_device" != "flash" ]; then
+        cp "$boot_config" "/mnt/flash/boot-config"
     fi
 }
 
@@ -390,7 +396,7 @@ extract_image() {
     fi
 
     ## use new reduced-size boot swi
-    local swi_boot_path="flash:$image_name/$boot_image"
+    local swi_boot_path="$boot_device:$image_name/$boot_image"
     update_boot_config SWI "$swi_boot_path"
     update_boot_config SWI_DEFAULT "$swi_boot_path"
 
@@ -413,7 +419,7 @@ extract_image_secureboot() {
     chmod a+r "$installer_image_path"
     swipath="$installer_image_path"
 
-    local swi_boot_path="flash:$image_name/$installer_image"
+    local swi_boot_path="$boot_device:$image_name/$installer_image"
     update_boot_config SWI "$swi_boot_path"
     update_boot_config SWI_DEFAULT "$swi_boot_path"
 
