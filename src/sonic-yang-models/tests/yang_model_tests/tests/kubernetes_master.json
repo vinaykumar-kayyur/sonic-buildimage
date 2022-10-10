@@ -1,0 +1,17 @@
+{
+    "KUBERNETES_MASTER_WITH_CORRECT_VALUES": {
+        "desc": "CONFIG KUBERNETES_MASTER TABLE WITH ALL THE CORRECT VALUES"
+    },
+    "KUBERNETES_MASTER_WITH_INVALID_BOOLEAN_TYPE" : {
+        "desc": "Referring invalid kubernetes_master boolean types.",
+        "eStrKey": "Pattern",
+        "eStr": ["false|true|False|True"]
+    },
+    "KUBERNETES_MASTER_INVALID_PORT": {
+        "desc": "Configure invalid PORT in kubernetes_master.",
+        "eStrKey": "InvalidValue"
+    },
+    "KUBERNETES_MASTER_INVALID_IP" : {
+        "desc": "Configure invalid IP in kubernetes_master."
+    }
+}
