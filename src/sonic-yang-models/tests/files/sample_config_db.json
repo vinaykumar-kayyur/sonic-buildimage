@@ -391,6 +391,26 @@
                 "port": "Eth18"
             }
         },
+        "DEVICE_NEIGHBOR_METADATA": {
+            "dccsw01.nw": {
+                "lo_addr": "0.0.0.0/0",
+                "mgmt_addr": "10.184.228.211/32",
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
+            },
+            "dccsw02.nw": {
+                "mgmt_addr_v6": "2a04:5555:40:a709::2/128",
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
+            },
+            "dccsw03.nw": {
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
+            }
+        },
         "MGMT_PORT": {
             "eth0": {
                 "alias": "eth0",
@@ -1798,6 +1818,27 @@
             }
         },
 
+        "PEER_SWITCH": {
+            "vlab-05": {
+                "address_ipv4":  "10.1.0.33"
+            }
+        },
+
+        "MUX_CABLE": {
+            "Ethernet4": {
+                "cable_type": "active-active",
+                "server_ipv4": "192.168.0.2/32",
+                "server_ipv6": "fc02:1000::30/128",
+                "soc_ipv4": "192.168.0.3/32",
+                "state": "auto"
+            }, 
+            "Ethernet0": {
+                "server_ipv4": "192.168.0.2/32",
+                "server_ipv6": "fc02:1000::30/128",
+                "state": "auto"
+            }
+        },
+
 
         "POLICER": {
             "everflow_static_policer": {
@@ -1924,10 +1965,28 @@
                  ]
              }
         },
+
+        "SNMP": {
+            "CONTACT": {
+                "Contact": "testuser@contoso.com"
+            },
+            "LOCATION": {
+                "Location": "SNMP Server Location"
+            }
+        },
+        "SNMP_COMMUNITY": {
+            "public": {
+                "TYPE": "RO"
+            },
+            "private": {
+                "TYPE": "RW"
+            }
+        },
+
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
-	    }
+            }
          },
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
@@ -1940,6 +1999,32 @@
             "AZURE": {
                 "default_dynamic_th": "0",
                 "over_subscribe_ratio": "0"
+            }
+        },
+
+        "CONSOLE_PORT": {
+            "1": {
+                "baud_rate": "115200",
+                "flow_control": "0",
+                "remote_device": "host-1"
+            },
+            "2": {
+                "baud_rate": "9600",
+                "flow_control": "1"
+            }
+        },
+        "CONSOLE_SWITCH": {
+            "console_mgmt": {
+                "enabled": "yes"
+            }
+        },
+	"STATIC_ROUTE": {
+            "default|20.20.20.0/24": {
+                "blackhole": "false",
+                "distance": "1",
+                "ifname": "Ethernet14",
+                "nexthop": "10.184.229.212",
+                "nexthop-vrf": "default"
             }
         }
     },
