@@ -1,7 +1,7 @@
 [submodule "sonic-swss-common"]
 	path = src/sonic-swss-common
 	url = https://github.com/liuh-80/sonic-swss-common
-    branch = dev/liuh/default_value_decorator
+    branch = dev/liuh/profile-provider
 [submodule "sonic-linux-kernel"]
 	path = src/sonic-linux-kernel
 	url = https://github.com/sonic-net/sonic-linux-kernel
@@ -31,7 +31,8 @@
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
-	url = https://github.com/sonic-net/sonic-utilities
+	url = https://github.com/liuh-80/sonic-utilities
+    branch = dev/liuh/profile-db-init
 [submodule "platform/broadcom/sonic-platform-modules-arista"]
 	path = platform/broadcom/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
