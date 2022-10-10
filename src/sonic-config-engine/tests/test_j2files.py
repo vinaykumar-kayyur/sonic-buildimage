@@ -300,7 +300,7 @@ class TestJ2Files(TestCase):
                                                             (buffer_file, 'buffers_config.j2', 'buffer-arista7800r3-48cq2-lc.json') ]:
             argument = '-m ' + self.arista7800r3_48cq2_lc_t2_minigraph + ' -p ' + port_config_ini_file + ' -t ' + template_file + ' > ' + self.output_file
             self.run_script(argument)
-
+            
             # cleanup
             cfg_file_new = os.path.join(arista_dir_path, cfg_file)
             os.remove(cfg_file_new)

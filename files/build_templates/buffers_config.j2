@@ -103,8 +103,12 @@ def
 
 {%- if voq_chassis %}
     {%- for system_port in SYSTEM_PORT %}
-    {%- set system_port_name = system_port|join("|")  %}
-    {%- if 'cpu' not  in system_port_name and 'IB' not in system_port_name and 'Rec' not in system_port_name %}
+    {% if '|' not in system_port %}
+        {%- set system_port_name = system_port|join("|")  %}
+    {% else %}
+        {%- set system_port_name = system_port  %}
+    {% endif %}
+    {%- if 'cpu' not  in system_port_name.lower() and 'IB' not in system_port_name and 'Rec' not in system_port_name %}
         {%- if SYSTEM_PORT_ALL.append(system_port_name) %}{%- endif %}
     {%- endif %}
     {%- endfor %}
