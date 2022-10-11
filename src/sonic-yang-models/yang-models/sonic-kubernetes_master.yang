@@ -36,6 +36,7 @@ module sonic-kubernetes_master {
                 leaf port {
                     description "Kubernetes api server port";
                     type inet:port-number;
+                    default 6443;
                 }
 
                 leaf disable {
