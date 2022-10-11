@@ -39,7 +39,7 @@
             }
         }
     },
-    PORT_VALID_MTU_TEST_1": {
+    "PORT_VALID_MTU_TEST_1": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
