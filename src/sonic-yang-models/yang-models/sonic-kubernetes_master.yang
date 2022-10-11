@@ -28,8 +28,9 @@ module sonic-kubernetes_master {
             container SERVER {
 
                 leaf ip {
-                    description "Kubernetes api server endpoint";
-                    type string;
+                    description "Kubernetes api server endpoint(an IP address or a DNS
+                                domain name.)";
+                    type inet:host;
                 }
 
                 leaf port {

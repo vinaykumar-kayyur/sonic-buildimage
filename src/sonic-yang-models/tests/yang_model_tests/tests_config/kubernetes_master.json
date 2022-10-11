@@ -1,9 +1,21 @@
 {
-    "KUBERNETES_MASTER_WITH_CORRECT_VALUES": {
+    "KUBERNETES_MASTER_WITH_CORRECT_VALUES_IP": {
         "sonic-kubernetes_master:sonic-kubernetes_master": {
             "sonic-kubernetes_master:KUBERNETES_MASTER": {
                 "sonic-kubernetes_master:SERVER": {
                     "ip": "192.168.122.11",
+                    "port": "6443",
+                    "disable": "False",
+                    "insecure": "True"
+                }
+            }
+        }
+    },
+    "KUBERNETES_MASTER_WITH_CORRECT_VALUES_DNS": {
+        "sonic-kubernetes_master:sonic-kubernetes_master": {
+            "sonic-kubernetes_master:KUBERNETES_MASTER": {
+                "sonic-kubernetes_master:SERVER": {
+                    "ip": "k8s.apiserver.com",
                     "port": "6443",
                     "disable": "False",
                     "insecure": "True"
@@ -39,7 +51,19 @@
         "sonic-kubernetes_master:sonic-kubernetes_master": {
             "sonic-kubernetes_master:KUBERNETES_MASTER": {
                 "sonic-kubernetes_master:SERVER": {
-                    "ip": 10,
+                    "ip": "2001:aa:aa:aa",
+                    "port": "6443",
+                    "disable": "False",
+                    "insecure": "True"
+                }
+            }
+        }
+    },
+    "KUBERNETES_MASTER_INVALID_DNS": {
+        "sonic-kubernetes_master:sonic-kubernetes_master": {
+            "sonic-kubernetes_master:KUBERNETES_MASTER": {
+                "sonic-kubernetes_master:SERVER": {
+                    "ip": "k8s@.apiserver.com",
                     "port": "6443",
                     "disable": "False",
                     "insecure": "True"
