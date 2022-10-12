@@ -383,7 +383,7 @@ class SFP(SfpBase):
             if page_num == 0:
                 page = self.sdk_sysfs_page_path_header + PATH_PAGE00
             else:
-                if page_num == 1 and self.sfp_type == SFP_TYPE:
+                if self.sfp_type == SFP_TYPE and page_num == 1:
                     page = self.sdk_sysfs_page_path_header + PATH_PAGE00_A2
                 else:
                     page = self.sdk_sysfs_page_path_header + PATH_PAGE.format(page_num)
