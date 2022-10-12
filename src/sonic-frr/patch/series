@@ -8,3 +8,4 @@
 0008-Link-local-scope-was-not-set-while-binding-socket-for-bgp-ipv6-link-local-neighbors.patch
 Disable-ipv6-src-address-test-in-pceplib.patch
 0009-ignore-route-from-default-table.patch
+0010-FRR-revert-change-in-bgp_zebra_nexthop_set.patch
