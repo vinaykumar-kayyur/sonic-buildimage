@@ -258,10 +258,6 @@ PAGE17_OFFSET = 4352
 PATH_PAGE = '/{}/data'
 PATH_PAGE00 = '/0/i2c-0x50/data'
 PATH_PAGE00_A2 = '/0/i2c-0x51/data'
-PATH_PAGE01 = '/1/data'
-PATH_PAGE02 = '/2/data'
-PATH_PAGE03 = '/3/data'
-PATH_PAGE17 = '/17/data'
 
 #variables for sdk
 REGISTER_NUM = 1
@@ -342,7 +338,7 @@ class SFP(SfpBase):
         self._dom_capability_detect()
         self.sdk_handle_getter = sdk_handle_getter
         self.sdk_index = sfp_index
-        
+
         # initialize SFP thermal list
         from .thermal import initialize_sfp_thermals
         initialize_sfp_thermals(platform, self._thermal_list, self.index)
@@ -1329,7 +1325,7 @@ class SFP(SfpBase):
             if self.dom_rx_tx_power_bias_supported:
                 rx_los_list = [False]*8
             else:
-                return None
+                return rx_los_list
         else:
             rx_los_list.append(False)
         return rx_los_list
