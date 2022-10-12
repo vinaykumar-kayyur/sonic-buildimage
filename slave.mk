@@ -92,32 +92,32 @@ export BLDENV
 
 .platform :
 ifneq ($(CONFIGURED_PLATFORM),generic)
-	$(Q)echo Build system is not configured, please run make configure
-	$(Q)exit 1
+	@echo Build system is not configured, please run make configure
+	@exit 1
 endif
 
 configure :
-	$(Q)mkdir -p $(JESSIE_DEBS_PATH)
-	$(Q)mkdir -p $(STRETCH_DEBS_PATH)
-	$(Q)mkdir -p $(BUSTER_DEBS_PATH)
-	$(Q)mkdir -p $(BULLSEYE_DEBS_PATH)
-	$(Q)mkdir -p $(FILES_PATH)
-	$(Q)mkdir -p $(JESSIE_FILES_PATH)
-	$(Q)mkdir -p $(STRETCH_FILES_PATH)
-	$(Q)mkdir -p $(BUSTER_FILES_PATH)
-	$(Q)mkdir -p $(BULLSEYE_FILES_PATH)
-	$(Q)mkdir -p $(PYTHON_DEBS_PATH)
-	$(Q)mkdir -p $(PYTHON_WHEELS_PATH)
-	$(Q)mkdir -p $(DPKG_ADMINDIR_PATH)
-	$(Q)echo $(PLATFORM) > .platform
-	$(Q)echo $(PLATFORM_ARCH) > .arch
+	@mkdir -p $(JESSIE_DEBS_PATH)
+	@mkdir -p $(STRETCH_DEBS_PATH)
+	@mkdir -p $(BUSTER_DEBS_PATH)
+	@mkdir -p $(BULLSEYE_DEBS_PATH)
+	@mkdir -p $(FILES_PATH)
+	@mkdir -p $(JESSIE_FILES_PATH)
+	@mkdir -p $(STRETCH_FILES_PATH)
+	@mkdir -p $(BUSTER_FILES_PATH)
+	@mkdir -p $(BULLSEYE_FILES_PATH)
+	@mkdir -p $(PYTHON_DEBS_PATH)
+	@mkdir -p $(PYTHON_WHEELS_PATH)
+	@mkdir -p $(DPKG_ADMINDIR_PATH)
+	@echo $(PLATFORM) > .platform
+	@echo $(PLATFORM_ARCH) > .arch
 
 distclean : .platform clean
-	$(Q)rm -f .platform
-	$(Q)rm -f .arch
+	@rm -f .platform
+	@rm -f .arch
 
 list :
-	$(Q)$(foreach target,$(SONIC_TARGET_LIST),echo $(target);)
+	@$(foreach target,$(SONIC_TARGET_LIST),echo $(target);)
 
 ###############################################################################
 ## Include other rules
@@ -177,7 +177,7 @@ endif
 # TODO(PINS): Remove when Bazel binaries are available for armhf
 ifeq ($(CONFIGURED_ARCH),armhf)
 	ifeq ($(INCLUDE_P4RT),y)
-		$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+		@echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
 	endif
 	override INCLUDE_P4RT = n
 endif
@@ -205,7 +205,7 @@ endif
 
 ifeq ($(ENABLE_ASAN),y)
 	ifneq ($(CONFIGURED_ARCH),amd64)
-		$(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+		@echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
 		override ENABLE_ASAN = n
 	endif
 endif
@@ -870,12 +870,12 @@ endif
 
 # start docker daemon
 docker-start :
-	$(Q)sudo sed -i 's/--storage-driver=vfs/--storage-driver=$(SONIC_SLAVE_DOCKER_DRIVER)/' /etc/default/docker
-	$(Q)sudo sed -i -e '/http_proxy/d' -e '/https_proxy/d' /etc/default/docker
-	$(Q)sudo bash -c "{ echo \"export http_proxy=$$http_proxy\"; \
+	@sudo sed -i 's/--storage-driver=vfs/--storage-driver=$(SONIC_SLAVE_DOCKER_DRIVER)/' /etc/default/docker
+	@sudo sed -i -e '/http_proxy/d' -e '/https_proxy/d' /etc/default/docker
+	@sudo bash -c "{ echo \"export http_proxy=$$http_proxy\"; \
 	            echo \"export https_proxy=$$https_proxy\"; \
 	            echo \"export no_proxy=$$no_proxy\"; } >> /etc/default/docker"
-	$(Q)test x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) != x"y" && sudo service docker status &> /dev/null || ( sudo service docker start &> /dev/null && ./scripts/wait_for_docker.sh 60 )
+	@test x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) != x"y" && sudo service docker status &> /dev/null || ( sudo service docker start &> /dev/null && ./scripts/wait_for_docker.sh 60 )
 
 # targets for building simple docker images that do not depend on any debian packages
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
@@ -1412,12 +1412,12 @@ SONIC_CLEAN_FILES = $(addsuffix -clean,$(addprefix $(FILES_PATH)/, \
 		   $(SONIC_MAKE_FILES)))
 
 $(SONIC_CLEAN_DEBS) :: $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB)))
-	$(Q)# remove derived or extra targets if main one is removed, because we treat them
-	$(Q)# as part of one package
-	$(Q)rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
+	@# remove derived or extra targets if main one is removed, because we treat them
+	@# as part of one package
+	@rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
 
 $(SONIC_CLEAN_FILES) :: $(FILES_PATH)/%-clean : .platform
-	$(Q)rm -f $(FILES_PATH)/$*
+	@rm -f $(FILES_PATH)/$*
 
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
@@ -1425,20 +1425,20 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
-	$(Q)rm -f $(TARGET_PATH)/$*
+	@rm -f $(TARGET_PATH)/$*
 
 SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
 		     $(SONIC_PYTHON_STDEB_DEBS)))
 $(SONIC_CLEAN_STDEB_DEBS) :: $(PYTHON_DEBS_PATH)/%-clean : .platform
-	$(Q)rm -f $(PYTHON_DEBS_PATH)/$*
+	@rm -f $(PYTHON_DEBS_PATH)/$*
 
 SONIC_CLEAN_WHEELS = $(addsuffix -clean,$(addprefix $(PYTHON_WHEELS_PATH)/, \
 		     $(SONIC_PYTHON_WHEELS)))
 $(SONIC_CLEAN_WHEELS) :: $(PYTHON_WHEELS_PATH)/%-clean : .platform
-	$(Q)rm -f $(PYTHON_WHEELS_PATH)/$*
+	@rm -f $(PYTHON_WHEELS_PATH)/$*
 
 clean-logs :: .platform
-	$(Q)rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log $(FILES_PATH)/*.log $(PYTHON_DEBS_PATH)/*.log $(PYTHON_WHEELS_PATH)/*.log
+	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log $(FILES_PATH)/*.log $(PYTHON_DEBS_PATH)/*.log $(PYTHON_WHEELS_PATH)/*.log
 
 clean :: .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC_CLEAN_TARGETS) $$(SONIC_CLEAN_STDEB_DEBS) $$(SONIC_CLEAN_WHEELS)
 
