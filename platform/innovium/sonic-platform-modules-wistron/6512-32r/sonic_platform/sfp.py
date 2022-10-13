@@ -455,7 +455,7 @@ class Sfp(SfpBase):
                         with open(sysfs_sfp_i2c_client_temp_path, 'w') as fd:
                             fd.write(temp)
                             fd.close()
-                except BaseException:
+                except IOError:
                     fd.close()
             return True
         except Exception:

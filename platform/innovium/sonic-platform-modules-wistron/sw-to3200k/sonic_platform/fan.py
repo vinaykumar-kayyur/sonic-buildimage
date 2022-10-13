@@ -70,7 +70,7 @@ class Fan(FanBase):
             for file in dirs:
                 if file.startswith("hwmon"):
                     return file
-        except BaseException:
+        except IOError:
             pass
         return ''
 

@@ -8,7 +8,6 @@
 #############################################################################
 try:
     import sys
-    import os
     import time
     import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
