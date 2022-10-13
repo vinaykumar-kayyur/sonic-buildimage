@@ -67,7 +67,7 @@ fi
 
 mountpoint_for_file() {
    local file="$1"
-   df "$file" | tail -1 | tr -s " " | cut -d ' ' -f6
+   df "$file" 2> /dev/null | tail -1 | tr -s " " | cut -d ' ' -f6
 }
 
 # extract mount point from the swi path, e.g., /mnt/flash/sonic.swi --> /mnt/flash
@@ -814,11 +814,11 @@ regular_install() {
 
     mkdir -p $image_path
 
-    info "Generating boot-config, machine.conf and cmdline"
-    write_regular_configs "$image_path"
-
     info "Installing image under $image_path"
     extract_image
+
+    info "Generating boot-config, machine.conf and cmdline"
+    write_regular_configs "$image_path"
 
     run_hooks post-install
 }
