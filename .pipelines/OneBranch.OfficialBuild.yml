@@ -195,7 +195,6 @@ stages:
             set -ex
             OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             echo "==== Building slim images"
-            echo "INCLUDE_ACMS = n" > rules/config.user
             echo "INCLUDE_MUX = n" >> rules/config.user
             echo "INCLUDE_KUBERNETES = n" >> rules/config.user
             echo "INCLUDE_MACSEC = n" >> rules/config.user
