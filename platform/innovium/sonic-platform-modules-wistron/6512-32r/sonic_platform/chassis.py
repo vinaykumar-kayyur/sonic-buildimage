@@ -25,9 +25,9 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
-GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
-GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
+HOST_CHK_CMD = ["docker"]
+GET_HWSKU_CMD = ["sonic-cfggen", "-d", "-v", "DEVICE_METADATA.localhost.hwsku"]
+GET_PLATFORM_CMD = ["sonic-cfggen", "-d", "-v", "DEVICE_METADATA.localhost.platform"]
 EEPROM_BOOT_TIME_INIT_DONE='/tmp/eeprom_init_done'
 
 class Chassis(ChassisBase):
@@ -87,7 +87,7 @@ class Chassis(ChassisBase):
             self._component_list.append(component)
 
     def __is_host(self):
-        return os.system(HOST_CHK_CMD) == 0
+        return subprocess.call(HOST_CHK_CMD) == 0
 
     def __read_txt_file(self, file_path):
         try:
@@ -152,12 +152,12 @@ class Chassis(ChassisBase):
         return (reboot_cause, description)
 
     def _get_sku_name(self):
-        p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(GET_HWSKU_CMD, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.decode().rstrip('\n')
 
     def _get_platform_name(self):
-        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(GET_PLATFORM_CMD, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.decode().rstrip('\n')
 
@@ -249,7 +249,7 @@ class Chassis(ChassisBase):
                         self._transceiver_presence[port] = 0
 
             #self._transceiver_presence = cur_presence
-            if change_event == True:
+            if change_event is True:
                 break
 
             if not forever:

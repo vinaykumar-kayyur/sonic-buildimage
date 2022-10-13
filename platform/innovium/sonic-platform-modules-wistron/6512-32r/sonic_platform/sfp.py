@@ -353,20 +353,20 @@ class Sfp(SfpBase):
         read_upper_cmd = 'ipmitool raw 0x30 0x25 0x1 0xa0 0x80 0x80 2>/dev/null'
 
         try:
-            subprocess.Popen(sel_ch_cmd, shell=True, stdout=subprocess.PIPE)
-            subprocess.Popen(sel_page_cmd.format(0), shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_ch_cmd, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0), stdout=subprocess.PIPE)
             time.sleep(0.05)
-            p = subprocess.Popen(read_lower_cmd, shell=True, stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_lower_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             # retry if error occurred
             i = 0
             while out == b'' and i < 3:
-                subprocess.Popen(desel_all_ch_cmd, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(desel_all_ch_cmd, stdout=subprocess.PIPE)
                 time.sleep(0.05)
-                subprocess.Popen(sel_ch_cmd, shell=True, stdout=subprocess.PIPE)
-                subprocess.Popen(sel_page_cmd.format(0), shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(sel_ch_cmd, stdout=subprocess.PIPE)
+                subprocess.Popen(sel_page_cmd.format(0), stdout=subprocess.PIPE)
                 time.sleep(0.05)
-                p = subprocess.Popen(read_lower_cmd, shell=True, stdout=subprocess.PIPE)
+                p = subprocess.Popen(read_lower_cmd, stdout=subprocess.PIPE)
                 out, err = p.communicate()
                 i = i + 1
             if out == b'':
@@ -375,11 +375,11 @@ class Sfp(SfpBase):
             data_lower = out.decode().strip().replace("\n", "")
 
             i = 0
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             while out == b'' and i < 3:
                 time.sleep(0.05)
-                p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+                p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
                 out, err = p.communicate()
                 i = i + 1
             if out == b'':
@@ -387,33 +387,33 @@ class Sfp(SfpBase):
 
             data_upper_page_0 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0x1), shell=True, stdout=subprocess.PIPE)
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0x1), stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             data_upper_page_1 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0x2), shell=True, stdout=subprocess.PIPE)
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0x2), stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             data_upper_page_2 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0x3), shell=True, stdout=subprocess.PIPE)
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0x3), stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             data_upper_page_3 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0x10), shell=True, stdout=subprocess.PIPE)
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0x10), stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             data_upper_page_10 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0x11), shell=True, stdout=subprocess.PIPE)
-            p = subprocess.Popen(read_upper_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0x11), stdout=subprocess.PIPE)
+            p = subprocess.Popen(read_upper_cmd, stdout=subprocess.PIPE)
             out, err = p.communicate()
             data_upper_page_11 = out.decode().strip().replace("\n", "")
 
-            subprocess.Popen(sel_page_cmd.format(0), shell=True, stdout=subprocess.PIPE)
-            subprocess.Popen(desel_ch_cmd, shell=True, stdout=subprocess.PIPE)
+            subprocess.Popen(sel_page_cmd.format(0), stdout=subprocess.PIPE)
+            subprocess.Popen(desel_ch_cmd, stdout=subprocess.PIPE)
 
             eeprom1 = data_lower + " " + data_upper_page_0
             eeprom2 = data_upper_page_1 + " " + data_upper_page_2

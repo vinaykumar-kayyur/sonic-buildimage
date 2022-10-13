@@ -10,15 +10,21 @@
 try:
     import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase
+    from shlex import split
+    from collections import namedtuple
+    from functools import reduce
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+proc_output = namedtuple('proc_output', 'stdout stderr')
+
 WDT_COMMON_ERROR = -1
-IPMI_WDT_EN_KICK_CMD = "ipmitool mc watchdog reset"
-IPMI_WDT_OFF_CMD = "ipmitool mc watchdog off"
-IPMI_WDT_SET_TIMEOUT_CMD = "ipmitool raw 0x6 0x24 0x4 0x0 0x0 0x0 {0} {1}"
-IPMI_WDT_GET_TIMEOUT_CMD = "ipmitool mc watchdog get | grep Present | awk '{print $3}'"
-IPMI_WDT_GET_STATUS_CMD = "ipmitool mc watchdog get | grep 'Timer Is' | awk '{printf $4}'"
+
+IPMI_WDT_EN_KICK_CMD = ["ipmitool", "mc", "watchdog", "reset"]
+IPMI_WDT_OFF_CMD = ["ipmitool", "mc", "watchdog", "off"]
+IPMI_WDT_SET_TIMEOUT_CMD = ["ipmitool", "raw", "0x6", "0x24", "0x4", "0x0", "0x0", "0x0"]
+#IPMI_WDT_GET_TIMEOUT_CMD = "ipmitool mc watchdog get | grep Present | awk '{print $3}'"
+#IPMI_WDT_GET_STATUS_CMD = "ipmitool mc watchdog get | grep 'Timer Is' | awk '{printf $4}'"
 
 class Watchdog(WatchdogBase):
     """
@@ -30,9 +36,31 @@ class Watchdog(WatchdogBase):
         self.armed = self._get_status()
         self.timeout = self._gettimeout()
 
+    def pipeline(self, starter_command, *commands):
+        if not commands:
+            try:
+                starter_command, *commands = starter_command.split('|')
+            except AttributeError:
+                pass
+        starter_command = self._parse(starter_command)
+        starter = subprocess.Popen(starter_command, stdout=subprocess.PIPE)
+        last_proc = reduce(self._create_pipe, map(self._parse, commands), starter)
+        return proc_output(*last_proc.communicate())
+
+    def _create_pipe(self, previous, command):
+        proc = subprocess.Popen(command, stdin=previous.stdout, stdout=subprocess.PIPE)
+        previous.stdout.close()
+        return proc
+
+    def _parse(self, cmd):
+        try:
+            return split(cmd)
+        except Exception:
+            return cmd
+
     def _get_status(self):
-        p = subprocess.Popen(IPMI_WDT_GET_STATUS_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        #IPMI_WDT_GET_STATUS_CMD
+        out, err = self.pipeline("ipmitool mc watchdog get", "grep 'Timer Is'", "awk '{print $4}'")
         status_str = out.decode().rstrip('\n')
 
         if "Running" in status_str:
@@ -44,24 +72,24 @@ class Watchdog(WatchdogBase):
         """
         Turn on the watchdog timer
         """
-        p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, shell=True, stdout=subprocess.PIPE)
-        _, _ = p.communicate()
+        p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, stdout=subprocess.PIPE)
+        out, err = p.communicate()
         return 0
 
     def _disable(self):
         """
         Turn off the watchdog timer
         """
-        p = subprocess.Popen(IPMI_WDT_OFF_CMD, shell=True, stdout=subprocess.PIPE)
-        _, _ = p.communicate()
+        p = subprocess.Popen(IPMI_WDT_OFF_CMD, stdout=subprocess.PIPE)
+        out, err = p.communicate()
         return 0
 
     def _keepalive(self):
         """
         Keep alive watchdog timer
         """
-        p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, shell=True, stdout=subprocess.PIPE)
-        _, _ = p.communicate()
+        p = subprocess.Popen(IPMI_WDT_EN_KICK_CMD, stdout=subprocess.PIPE)
+        out, err = p.communicate()
         return 0
 
     def _settimeout(self, seconds):
@@ -71,15 +99,17 @@ class Watchdog(WatchdogBase):
         @return is the actual set timeout
         """
         ipmi_timeout = seconds * 10;
-        cmd = IPMI_WDT_SET_TIMEOUT_CMD.format(ipmi_timeout % 256, int(ipmi_timeout / 256))
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        _, _ = p.communicate()
+        cmd = ["ipmitool", "raw", "0x6", "0x24", "0x4", "0x0", "0x0", "0x0"]
+        cmd.append(str(ipmi_timeout % 256))
+        cmd.append(str(int(ipmi_timeout / 256)))
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        out, err = p.communicate()
 
         return seconds
 
     def _gettimeout(self):
-        p = subprocess.Popen(IPMI_WDT_GET_TIMEOUT_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
+        #IPMI_WDT_GET_TIMEOUT_CMD
+        out, err = self.pipeline("ipmitool mc watchdog get", "grep Present", "awk '{print $3}'")
         return int(out.decode().rstrip('\n'), 10)
 
     def arm(self, seconds):

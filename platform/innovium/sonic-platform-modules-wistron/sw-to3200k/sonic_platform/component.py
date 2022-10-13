@@ -12,25 +12,22 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CPLD_ADDR_MAPPING = {
-    "CPLD1": "0-0006",
-    "CPLD2": "0-0007",
-}
-
-FPGA_ADDR_MAPPING = {
-    "MB_FPGA": "0-0030",
+    "CPLD1": "0-0061",
+    "CPLD2": "0-0062",
+    "MB_FPGA": "0-0060",
+    "FAN_CPLD" : "0-0066"
 }
 
 proc_output = namedtuple('proc_output', 'stdout stderr')
-GET_CPU_FPGA_VER_CMD = ["i2cget", "-f", "-y", "0", "0x10", "0x0"]
-#GET_BMC_VER_CMD= "ipmitool mc info | grep 'Firmware Revision' | awk '{printf $4}'"
 SYSFS_PATH = "/sys/bus/i2c/devices/"
+#GET_BMC_VER_CMD= "ipmitool mc info | grep 'Firmware Revision' | awk '{printf $4}'"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
    ("BIOS", "Basic Input/Output System"),
    ("CPLD1", "CPLD 1"),
    ("CPLD2", "CPLD 2"),
    ("MB_FPGA", "MB FPGA"),
-   ("CPU_FPGA", "CPU FPGA"),
+   ("FAN_CPLD", "FAN CPLD"),
    ("BMC", "baseboard management controller")
 ]
 
@@ -84,29 +81,6 @@ class Component(ComponentBase):
         except Exception as e:
             return None
 
-    def __get_cpld_version(self):
-        # Retrieves the CPLD firmware version
-        cpld_version = dict()
-        for cpld_name in CPLD_ADDR_MAPPING:
-            try:
-                cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
-                cpld_version_raw= int(self.__read_txt_file(cpld_path), 10)
-                cpld_version[cpld_name] = "{} {}".format("MP" if (cpld_version_raw & 0x10) else "Proto", cpld_version_raw & 0xf)
-            except Exception as e:
-                print('Get exception when read cpld')
-                cpld_version[cpld_name] = 'None'
-
-        return cpld_version
-
-    def __get_cpu_fpga_ver(self):
-        try:
-            p = subprocess.Popen(GET_CPU_FPGA_VER_CMD, stdout=subprocess.PIPE)
-            out, err = p.communicate()
-            return out.decode().rstrip('\n')
-        except Exception as e:
-            print('Get exception when read cpu fpga')
-            return 'None'
-
     def __get_bmc_version(self):
         try:
             #GET_BMC_VER_CMD
@@ -116,21 +90,19 @@ class Component(ComponentBase):
             print('Get exception when read bmc')
             return 'None'
 
-    def __get_fpga_version(self):
-        # Retrieves the fpga firmware version
-        fpga_version = dict()
-        try:
-            fpga_path = "{}{}{}".format(SYSFS_PATH, FPGA_ADDR_MAPPING['MB_FPGA'], '/version')
-            fpga_version_raw= int(self.__read_txt_file(fpga_path), 10)
-            fpga_version["MB_FPGA"] = "{} {}.{}".format("Formal" if (fpga_version_raw & 0x80) else "Test", ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
-        except Exception as e:
-            print('Get exception when read fpga')
-            fpga_version["MB_FPGA"] = 'None'
+    def __get_cpld_version(self):
+        # Retrieves the CPLD firmware version
+        cpld_version = dict()
+        for cpld_name in CPLD_ADDR_MAPPING:
+            try:
+                cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
+                cpld_version_raw= int(self.__read_txt_file(cpld_path), 10)
+                cpld_version[cpld_name] = "{}".format(hex(cpld_version_raw))
+            except Exception as e:
+                print('Get exception when read cpld')
+                cpld_version[cpld_name] = 'None'
 
-        fpga_version_raw= int(self.__get_cpu_fpga_ver(), 16)
-        fpga_version["CPU_FPGA"] = "{} {}.{}".format("Formal" if (fpga_version_raw & 0x80) else "Test", ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
-
-        return fpga_version
+        return cpld_version
 
     def get_name(self):
         """
@@ -148,7 +120,6 @@ class Component(ComponentBase):
         """
         return COMPONENT_LIST[self.index][1]
 
-
     def get_firmware_version(self):
         """
         Retrieves the firmware version of module
@@ -159,14 +130,14 @@ class Component(ComponentBase):
 
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
+        elif "BMC" in self.name:
+            fw_version = self.__get_bmc_version()
         elif "CPLD" in self.name:
             cpld_version = self.__get_cpld_version()
             fw_version = cpld_version.get(self.name)
         elif "FPGA" in self.name:
-            fpga_version = self.__get_fpga_version()
+            fpga_version = self.__get_cpld_version()
             fw_version = fpga_version.get(self.name)
-        elif "BMC" in self.name:
-            fw_version = self.__get_bmc_version()
 
         return fw_version
 
