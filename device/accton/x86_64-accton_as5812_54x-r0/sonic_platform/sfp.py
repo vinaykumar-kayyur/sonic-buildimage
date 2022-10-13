@@ -415,7 +415,8 @@ class Sfp(SfpBase):
                 for n in range(0, num_bytes):
                     eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
 
-        except BaseException:
+        except Exception as e:
+            print ('Error: ', str(e))
             eeprom.close()
             return None
 
