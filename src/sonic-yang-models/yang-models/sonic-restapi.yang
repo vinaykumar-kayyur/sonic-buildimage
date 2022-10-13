@@ -31,7 +31,7 @@ module sonic-restapi {
 
                 leaf ca_crt {
                     type string {
-                        pattern '(/[a-zA-Z0-9_-]+)*/([a-zA-Z0-9_-]+).pem';
+                        pattern '(/[a-zA-Z0-9_-]+)*/([a-zA-Z0-9_-]+).([a-z]+)';
                     }
                     description "Local path for ca_crt.";
                 }
@@ -57,6 +57,28 @@ module sonic-restapi {
                     description "Local path for server_key.";
                 }
 
+            }
+
+            container config {
+
+                leaf client_auth {
+                    type  boolean;
+                    default true;
+                    description "Enable client authentication";
+                }
+
+                leaf log_level {
+                    type string {
+                        pattern "trace|info";
+                    }
+                    description "container log level for restapi";
+                }
+
+                leaf allow_insecure {
+                    type  boolean;
+                    default false;
+                    description "Allow insecure connection";
+                }
             }
         }
     }

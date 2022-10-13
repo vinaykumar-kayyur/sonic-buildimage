@@ -1124,6 +1124,11 @@
                 "server_key": "/etc/sonic/credentials/restapiserver.key",
                 "server_crt": "/etc/sonic/credentials/restapiserver.crt",
                 "client_crt_cname": "client.sonic.net"
+            },
+	    "config": {
+                "client_auth": "true",
+                "log_level": "trace",
+                "allow_insecure": "false"
             }
          },
         "FLEX_COUNTER_TABLE": {

@@ -1421,6 +1421,11 @@ name as object key and member list as attribute.
         "server_key": "/etc/sonic/credentials/restapiserver.key",
         "server_crt": "/etc/sonic/credentials/restapiserver.crt",
         "client_crt_cname": "client.sonic.net"
+    },
+    "config": {
+        "client_auth": "true",
+        "log_level": "trace",
+        "allow_insecure": "false"
     }
 }
 ```
