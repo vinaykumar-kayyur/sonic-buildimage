@@ -13,10 +13,10 @@ def main():
 
     args = parser.parse_args()
 
-    #KEY_UP = '\x1b[A'
+    KEY_UP = '\x1b[A'
     KEY_DOWN = '\x1b[B'
-    #KEY_RIGHT = '\x1b[C'
-    #KEY_LEFT = '\x1b[D'
+    KEY_RIGHT = '\x1b[C'
+    KEY_LEFT = '\x1b[D'
 
     grub_selection = "The highlighted entry will be executed"
 
