@@ -5,7 +5,7 @@
     },
     "RESTAPI_TABLE_WITH_INCORRECT_CLIENT": {
         "desc": "RESTAPI TABLE_WITH_INCORRECT_CLIENT failure.",
-        "eStr": ["client_crt"]
+        "eStr": ["client_crt_cname"]
     },
     "RESTAPI_TABLE_WITH_VALID_CONFIG": {
         "desc": "RESTAPI TABLE WITH VALID CONFIG."

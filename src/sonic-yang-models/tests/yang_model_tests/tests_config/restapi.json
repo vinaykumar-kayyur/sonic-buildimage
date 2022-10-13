@@ -3,9 +3,9 @@
         "sonic-restapi:sonic-restapi": {
             "sonic-restapi:RESTAPI": {
                 "certs": {
-                    "ca_crt": "abcd.config",
+                    "ca_crt": "/etc/sonic/credentials/ame_root.pem",
                     "server_crt": "a/b/c",
-                    "server_key": "123",
+                    "server_key": "/etc/sonic/credentials/restapiserver.key",
                     "client_crt_cname": "client"
                 }
             }
@@ -15,9 +15,9 @@
         "sonic-restapi:sonic-restapi": {
             "sonic-restapi:RESTAPI": {
                 "certs": {
-                    "ca_crt": "abcd.config",
-                    "server_crt": "a/b/c",
-                    "server_key": "123",
+                    "ca_crt": "/etc/sonic/credentials/ame_root.pem",
+                    "server_crt": "/etc/sonic/credentials/restapiserver.crt",
+                    "server_key": "/etc/sonic/credentials/restapiserver.key",
                     "client_crt_cname": "/client"
                 }
             }
