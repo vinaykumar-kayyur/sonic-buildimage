@@ -13,8 +13,11 @@ NAMESPACE_PATH_GLOB = '/run/netns/*'
 ASIC_CONF_FILENAME = 'asic.conf'
 FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
 BACKEND_ASIC_SUB_ROLE = 'BackEnd'
+FABRIC_ASIC_SUB_ROLE = 'Fabric'
 EXTERNAL_PORT = 'Ext'
 INTERNAL_PORT = 'Int'
+INBAND_PORT = 'Inb'
+RECIRC_PORT ='Rec'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
@@ -208,6 +211,7 @@ def get_all_namespaces():
     """
     front_ns = []
     back_ns = []
+    fabric_ns = []
     num_asics = get_num_asics()
 
     if is_multi_asic():
@@ -222,8 +226,10 @@ def get_all_namespaces():
                 front_ns.append(namespace)
             elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
                 back_ns.append(namespace)
+            elif metadata['localhost']['sub_role'] == FABRIC_ASIC_SUB_ROLE:
+                fabric_ns.append(namespace)
 
-    return {'front_ns': front_ns, 'back_ns': back_ns}
+    return {'front_ns': front_ns, 'back_ns': back_ns, 'fabric_ns': fabric_ns}
 
 
 def get_namespace_list(namespace=None):
@@ -323,7 +329,7 @@ def is_port_internal(port_name, namespace=None):
 
     role = get_port_role(port_name, namespace)
 
-    if role == INTERNAL_PORT:
+    if role in [INTERNAL_PORT, INBAND_PORT, RECIRC_PORT]:
         return True
 
     return False

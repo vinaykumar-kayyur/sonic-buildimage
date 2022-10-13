@@ -19,6 +19,7 @@ Table of Contents
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
          * [COPP_TABLE](#copp_table)  
+         * [Console](#console)  
          * [CRM](#crm)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
@@ -34,8 +35,10 @@ Table of Contents
          * [Management port](#management-port)  
          * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
+         * [MUX_CABLE](#muxcable)  
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
+         * [Peer Switch](#peer-switch)  
          * [Policer](#policer)   
          * [Port](#port)   
          * [Port Channel](#port-channel)  
@@ -49,7 +52,8 @@ Table of Contents
          * [Telemetry](#telemetry)  
          * [Versions](#versions)  
          * [VLAN](#vlan)   
-         * [VLAN_MEMBER](#vlan_member)  
+         * [VLAN_MEMBER](#vlan_member)
+         * [VOQ Inband Interface](#voq-inband-interface) 
          * [VXLAN](#vxlan)   
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
@@ -686,6 +690,29 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 }
 ```
 
+### Console
+
+```
+{
+"CONSOLE_PORT": {
+    "1": {
+        "baud_rate": "115200",
+        "flow_control": "0",
+        "remote_device": "host-1"
+    },
+    "2": {
+        "baud_rate": "9600",
+        "flow_control": "1"
+    }
+  },
+"CONSOLE_SWITCH": {
+    "console_mgmt": {
+        "enabled": "yes"
+    }
+  }
+}
+```
+
 ### CRM
 
 ```
@@ -1065,6 +1092,24 @@ instead of data network.
   }
 }
 ```
+### MUX_CABLE
+
+The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_type` and `soc_ipv4` objects are optional. 
+
+```
+{
+    "MUX_CABLE": {
+        "Ethernet4": {
+            "cable_type": "active-active",
+            "server_ipv4": "192.168.0.2/32",
+            "server_ipv6": "fc02:1000::30/128",
+            "soc_ipv4": "192.168.0.3/32",
+            "state": "auto"
+        }
+    }
+}
+```
+
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
@@ -1155,6 +1200,19 @@ attributes in those objects.
             "source": "1111::1111",
             "port": "514",
             "vrf": "Vrf-Data"
+        }
+    }
+}
+```
+
+### Peer Switch
+
+Below is an exmaple of the peer switch table configuration. 
+```
+{
+    "PEER_SWITCH": {
+        "vlab-05": {
+            "address_ipv4":  "10.1.0.33"
         }
     }
 }
@@ -1491,6 +1549,20 @@ channel name as object key, and tagging mode as attributes.
 		"tagging_mode": "tagged"
 	}
   }
+}
+```
+
+### VOQ INBAND INTERFACE
+
+VOQ_INBAND_INTERFACE holds the name of the inband system port dedicated for cpu communication. At this time, only inband_type of "port" is supported
+
+```
+"VOQ_INBAND_INTERFACE": {
+    "Ethernet-IB0": {
+	   "inband_type": "port"
+	},
+	"Ethernet-IB0|3.3.3.1/32": {},
+    "Ethernet-IB0|3333::3:5/128": {}
 }
 ```
 
