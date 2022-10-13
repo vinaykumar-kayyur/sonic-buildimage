@@ -11,6 +11,18 @@
             }
         }
     },
+    "RESTAPI_TABLE_WITH_INCORRECT_CLIENT": {
+        "sonic-restapi:sonic-restapi": {
+            "sonic-restapi:RESTAPI": {
+                "certs": {
+                    "ca_crt": "abcd.config",
+                    "server_crt": "a/b/c",
+                    "server_key": "123",
+                    "client_crt_cname": "/client"
+                }
+            }
+        }
+    },
     "RESTAPI_TABLE_WITH_VALID_CONFIG": {
         "sonic-restapi:sonic-restapi": {
             "sonic-restapi:RESTAPI": {
