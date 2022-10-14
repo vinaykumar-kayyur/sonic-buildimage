@@ -1,7 +1,14 @@
 *static analysis*:
 
+*lgtm*
+
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/context:python)
+
+*Semgrep*
+
+[![Semgrep master branch](https://img.shields.io/github/workflow/status/sonic-net/sonic-buildimage/Semgrep/master?label=master&logo=github)](https://github.com/sonic-net/sonic-buildimage/actions/workflows/semgrep.yml?query=branch%3Amaster)
+[![Semgrep 202205 branch](https://img.shields.io/github/workflow/status/sonic-net/sonic-buildimage/Semgrep/202205?label=202205&logo=github)](https://github.com/sonic-net/sonic-buildimage/actions/workflows/semgrep.yml?query=branch%3A202205)
 
 
 *master builds*:
