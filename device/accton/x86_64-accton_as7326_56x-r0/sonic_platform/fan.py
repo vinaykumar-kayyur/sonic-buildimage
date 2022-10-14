@@ -221,6 +221,11 @@ class Fan(FanBase):
             A boolean value, True if device is operating properly, False if not
         """
         if self.is_psu_fan:
+            psu_path = "{}{}".format(self.cpld_path, 'psu_power_good')
+            val = self.__read_txt_file(psu_path)
+            if val is None or int(val, 10)==0:
+                return False
+
             psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_fault')
             val=self.__read_txt_file(psu_fan_path)
             if val is not None:
