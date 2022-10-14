@@ -33,6 +33,7 @@ PLATFORM_PATH := platform/$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))
 PLATFORM_CHECKOUT := platform/checkout
 PLATFORM_CHECKOUT_FILE := $(PLATFORM_CHECKOUT)/$(PLATFORM).ini
 PLATFORM_CHECKOUT_CMD := $(shell if [ -f $(PLATFORM_CHECKOUT_FILE) ]; then PLATFORM_PATH=$(PLATFORM_PATH) j2 $(PLATFORM_CHECKOUT)/template.j2 $(PLATFORM_CHECKOUT_FILE); fi)
+PLATFORM_CHECK := @ls platform | grep -q -w $(PLATFORM) || (echo "ERROR: Specified platform is not supported."; exit 1)
 
 %::
 	@echo "+++ --- Making $@ --- +++"
@@ -90,6 +91,7 @@ $(PLATFORM_PATH):
 	$(PLATFORM_CHECKOUT_CMD)
 
 configure : $(PLATFORM_PATH)
+	$(PLATFORM_CHECK)
 	$(call make_work, $@)
 
 clean reset showtag docker-cleanup sonic-slave-build sonic-slave-bash :
