@@ -336,6 +336,14 @@ else
     DEPENDENT+=" bgp"
 fi
 
+PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
+
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
+DEPENDENT="radv"
+MULTI_INST_DEPENDENT=""
+
 check_peer_gbsyncd
 check_macsec
 
