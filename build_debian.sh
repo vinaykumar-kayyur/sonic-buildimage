@@ -688,17 +688,18 @@ fi
 
 ## Create test user to test user password expire
 ## TODO: remove this before PR merge
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "test_user" -c "$DEFAULT_USERINFO" -m -s /bin/bash
+TEST_USERINFO="Test user,,,"
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "test_user" -c "$TEST_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo "test_user:test_user" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
-
 # Expire all build-in user, so they need change password during first time login
 # Keeps admin not change to keep UT and pipeline not break.
-sudo LANG=C chroot $FILESYSTEM_ROOT getent /etc/passwd | while IFS=: read -r name password uid gid gecos home shell; do
+sudo getent $FILESYSTEM_ROOT/etc/passwd | while IFS=: read -r name password uid gid gecos home shell; do
     if [ -d "$home" ] && [ "$(stat -c %u "$home")" = "$uid" ]; then
         if [ ! -z "$shell" ] && [ "$shell" != "/bin/false" ] && [ "$shell" != "/usr/sbin/nologin" ] && [ "$name" != "admin" ]; then
             sudo LANG=C chroot $FILESYSTEM_ROOT passwd --expire $name
+            echo 'expire user $name'
         fi
     fi
 done
