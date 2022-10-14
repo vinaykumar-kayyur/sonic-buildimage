@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 import subprocess
+import os
+import time
 
 from sonic_py_common import logger
 from swsscommon import swsscommon
 
 log = logger.Logger('mark_dhcp_packet')
+global lsltime
 
 
 class MarkDhcpPacket(object):
