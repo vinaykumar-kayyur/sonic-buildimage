@@ -686,6 +686,13 @@ if [ "${gid_user}" != "1000" ]; then
     die "expect gid 1000. current:${gid_user}"
 fi
 
+## Create test user to test user password expire
+## TODO: remove this before PR merge
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "test_user" -c "$DEFAULT_USERINFO" -m -s /bin/bash
+## Create password for the default user
+echo "test_user:test_user" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
+
+
 # Expire all build-in user, so they need change password during first time login
 # Keeps admin not change to keep UT and pipeline not break.
 sudo LANG=C chroot $FILESYSTEM_ROOT getent /etc/passwd | while IFS=: read -r name password uid gid gecos home shell; do
