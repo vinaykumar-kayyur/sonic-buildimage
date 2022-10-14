@@ -156,7 +156,7 @@ class Chassis(ChassisBase):
         retval = 0
         is_port_dict_updated = False
         for port_num in range(self.PORT_START, (self.PORT_END + 1)):
-            sfp = self.get_sfp(port_num)
+            sfp = self.get_sfp(iindex=port_num)
             presence = sfp.get_presence()
             if(presence and (self._global_port_pres_dict[port_num] == '0')):
                 is_port_dict_updated = True
@@ -170,7 +170,7 @@ class Chassis(ChassisBase):
 
 # check for this event change for sfp / do we need to handle timeout/sleep
 
-    def get_change_event(self, timeout=0):
+    def get_change_event(self, timeout1=0):
         """
         Returns a nested dictionary containing all devices which have
         experienced a change at chassis level
