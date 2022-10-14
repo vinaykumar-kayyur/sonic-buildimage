@@ -1,36 +1,26 @@
-From 7d0a63278aa5eedadd48db3937fa0139f3411669 Mon Sep 17 00:00:00 2001
-From: Vaibhav Hemant Dixit <vadixit@microsoft.com>
-Date: Fri, 23 Jul 2021 16:27:56 -0700
-Subject: [PATCH] [fast-reboot][patch] Restore SLB neighbors state after
- fast-reboot failure
-
----
- scripts/fast-reboot | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
-
-Index: sonic-utilities/scripts/fast-reboot
-===================================================================
---- sonic-utilities.orig/scripts/fast-reboot
-+++ sonic-utilities/scripts/fast-reboot
-@@ -36,6 +36,7 @@ EXIT_ORCHAGENT_SHUTDOWN=10
- EXIT_FILTER_FDB_ENTRIES_FAILURE=13
+diff --git a/scripts/fast-reboot b/scripts/fast-reboot
+index 00ed1a5..9a6bc33 100755
+--- a/scripts/fast-reboot
++++ b/scripts/fast-reboot
+@@ -42,6 +42,7 @@ EXIT_ORCHAGENT_SHUTDOWN=10
+ EXIT_SYNCD_SHUTDOWN=11
  EXIT_COUNTERPOLL_DELAY_FAILURE=14
  EXIT_DB_INTEGRITY_FAILURE=15
 +EXIT_HANDLE_SLB_NEIGHBORS=200
  EXIT_NO_CONTROL_PLANE_ASSISTANT=20
  EXIT_SONIC_INSTALLER_VERIFY_REBOOT=21
- 
-@@ -122,6 +123,8 @@ function clear_fast_boot()
-     common_clear
- 
-     sonic-db-cli STATE_DB DEL "FAST_REBOOT|system" &>/dev/null || /bin/true
+ EXIT_PLATFORM_FW_AU_FAILURE=22
+@@ -145,6 +146,8 @@ function clear_boot()
+     if [[ "$REBOOT_TYPE" = "fast-reboot" ]]; then
+         sonic-db-cli STATE_DB DEL "FAST_REBOOT|system" &>/dev/null || /bin/true
+     fi
 +
 +    handle_slb_neighbors restore
  }
  
- function clear_warm_boot()
-@@ -420,6 +423,32 @@ function check_warm_restart_in_progress(
-     done
+ function init_warm_reboot_states()
+@@ -488,6 +491,32 @@ function check_conflict_boot_in_fw_update() {
+     fi
  }
  
 +function handle_slb_neighbors()
@@ -62,7 +52,7 @@ Index: sonic-utilities/scripts/fast-reboot
  # main starts here
  parseOptions $@
  
-@@ -460,6 +489,8 @@ case "$REBOOT_TYPE" in
+@@ -542,6 +571,8 @@ case "$REBOOT_TYPE" in
          ;;
  esac
  
