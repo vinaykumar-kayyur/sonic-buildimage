@@ -101,7 +101,7 @@ class Chassis(ChassisBase):
                 eeprom_path = eeprom_base.format(i2c_bus_for_port)
                 i2c_bus_for_port += 1
             if index not in _sfp_port:
-                sfp_node = Sfp(index, 'QSFP', eeprom_path)
+                sfp_node = Sfp(index)
             else:
                 sfp_node = Sfp(index, 'SFP', eeprom_path)
             self._sfp_list.append(sfp_node)
