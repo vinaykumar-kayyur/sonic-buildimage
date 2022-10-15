@@ -7,7 +7,6 @@
 #############################################################################
 
 try:
-    import subprocess
     import time
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_eeprom import eeprom_dts
