@@ -89,6 +89,9 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
+        if self.get_status() == False:
+            return None
+        
         if not self.is_psu_fan:
             val = self.__read_txt_file(
                 CPLD_I2C_PATH + str(self.fan_tray_index+1) + "_direction")
@@ -179,7 +182,7 @@ class Fan(FanBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        status=self.get_presence()
+        status=self.get_status()
         if status is None:
             return  self.STATUS_LED_COLOR_OFF
 
