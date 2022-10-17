@@ -37,7 +37,7 @@ args = []
 FORCE = 0
 i2c_prefix = '/sys/bus/i2c/devices/'
 
-if DEBUG is True:
+if DEBUG == True:
     print(sys.argv[0])
     print('ARGV      :', sys.argv[1:])
 
