@@ -686,23 +686,8 @@ if [ "${gid_user}" != "1000" ]; then
     die "expect gid 1000. current:${gid_user}"
 fi
 
-## Create test user to test user password expire
-## TODO: remove this before PR merge
-TEST_USERINFO="Test user,,,"
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "test_user" -c "$TEST_USERINFO" -m -s /bin/bash
-## Create password for the default user
-echo "test_user:test_user" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
-
-# Expire all build-in user, so they need change password during first time login
-# Keeps admin not change to keep UT and pipeline not break.
-sudo getent $FILESYSTEM_ROOT/etc/passwd | while IFS=: read -r name password uid gid gecos home shell; do
-    if [ -d "$home" ] && [ "$(stat -c %u "$home")" = "$uid" ]; then
-        if [ ! -z "$shell" ] && [ "$shell" != "/bin/false" ] && [ "$shell" != "/usr/sbin/nologin" ] && [ "$name" != "admin" ]; then
-            sudo LANG=C chroot $FILESYSTEM_ROOT passwd --expire $name
-            echo 'expire user $name'
-        fi
-    fi
-done
+## Expire build-in admin user, for user change password when firsttime login.
+sudo LANG=C chroot $FILESYSTEM_ROOT passwd --expire $USERNAME
 
 # ALERT: This bit of logic tears down the qemu based build environment used to
 # perform builds for the ARM architecture. This must be the last step in this
