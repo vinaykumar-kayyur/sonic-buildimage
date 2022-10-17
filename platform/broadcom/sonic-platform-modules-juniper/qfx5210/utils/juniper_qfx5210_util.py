@@ -53,7 +53,7 @@ DEVICE_NO = {'led':4, 'fan':4,'thermal':6, 'psu':2, 'sfp':64}
 FORCE = 0
 FUNCTION_NAME = '/var/log/juniper_qfx5210_util'
 
-if DEBUG is True:
+if DEBUG == True:
     print(sys.argv[0])
     print('ARGV      :', sys.argv[1:])
 
