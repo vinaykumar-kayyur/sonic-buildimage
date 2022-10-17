@@ -875,7 +875,7 @@ def restartDockerService(force=False):
     if ret == 0:
         for tmpname in container_name:
             if tmpname not in status:
-                if force is True:
+                if force == True:
                     getstatusoutput_noshell(["docker", "restart", tmpname])
                 else:
                     getstatusoutput_noshell(["systemctl", "restart", tmpname])

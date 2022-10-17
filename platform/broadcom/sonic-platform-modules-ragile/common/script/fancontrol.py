@@ -660,7 +660,7 @@ class FanControl(object):
                 self.get_temp_status()
             )  # get inlet, outlet, hot-point temperature, CPU temperature
             ret_t += self.get_mac_status()  # get MAC highest and average temperature
-            if ledcontrol is True:
+            if ledcontrol == True:
                 ret_t += self.get_slot_status()  # get slot present status
                 ret_t += self.get_psu_status()  # get psu status
             if ret_t == 0:
