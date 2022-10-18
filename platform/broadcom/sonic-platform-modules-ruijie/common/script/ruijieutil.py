@@ -19,7 +19,6 @@ import termios
 import threading
 import click
 import mmap
-from shlex import split
 from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 from ruijieconfig import rg_eeprom, FRULISTS, MAC_DEFAULT_PARAM, MAC_AVS_PARAM, FANS_DEF, \
         FAN_PROTECT, E2_LOC, E2_PROTECT, RUIJIE_SERVICE_TAG, RUIJIE_DIAG_VERSION, \
@@ -981,7 +980,7 @@ def generate_ext(cardid):
 
 
 def rji2cget(bus, devno, address):
-    command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%str(devno), "0x"+"%02x"%str(address)]
+    command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%str(devno), "0x%02x"%str(address)]
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
@@ -993,7 +992,7 @@ def rji2cget(bus, devno, address):
 
 
 def rji2cset(bus, devno, address, byte):
-    command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%str(devno), "0x"+"%02x"%str(address), "0x"+"%02x"%str(byte)]
+    command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%str(devno), "0x%02x"%str(address), "0x%02x"%str(byte)]
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
@@ -1034,20 +1033,18 @@ def rjpciwr(pcibus , slot ,fn, bar, offset, data):
     data.close()
 
 def rjsysset(location, value):
-    command_line = "echo 0x%02x > %s" % (value, location)
     retrytime = 6
-    ret_t = ""
     for i in range(retrytime):
         try:
             with open(location, 'w') as f:
-                f.write('0x'+'%02x'%value+'\n')
+                f.write('0x%02x\n'%value)
         except (IOError, FileNotFoundError) as e:
             return False, str(e)
     return True, ''
 
 
 def rji2cgetWord(bus, devno, address):
-    command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%str(devno), "0x"+"%02x"%str(address), "w"]
+    command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%str(devno), "0x%02x"%str(address), "w"]
     retrytime = 3
     ret_t = ""
     for i in range(retrytime):
@@ -1058,7 +1055,7 @@ def rji2cgetWord(bus, devno, address):
 
 
 def rji2csetWord(bus, devno, address, byte):
-    command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%str(devno), "0x"+"%02x"%str(address), "0x"+"%x"%str(byte), "w"]
+    command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%str(devno), "0x%02x"%str(address), "0x%x"%str(byte), "w"]
     getstatusoutput_noshell(command_line)
 
 
@@ -1674,7 +1671,7 @@ def getDmiSysByType(type_t):
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
-    cmd = split(log) + ["-t", str(type_t)]
+    cmd = [log[0].rstrip('\n')] + ["-t", str(type_t)]
     # get total number
     ret1, log1 = getstatusoutput_noshell(cmd)
     if ret1 != 0 or len(log1) <= 0:

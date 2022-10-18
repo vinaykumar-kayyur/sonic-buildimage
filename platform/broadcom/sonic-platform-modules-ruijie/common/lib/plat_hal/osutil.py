@@ -99,7 +99,7 @@ class osutil(object):
 
     @staticmethod
     def seti2cword_i2ctool(bus, addr, offset, val):
-        command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%addr, "0x"+"%0x"%offset, "0x"+"%04x"%val, "wp"]
+        command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%addr, "0x%0x"%offset, "0x%04x"%val, "wp"]
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):
@@ -111,7 +111,7 @@ class osutil(object):
 
     @staticmethod
     def rji2cget_i2ctool(bus, devno, address):
-        command_line = ["i2cget", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address]
+        command_line = ["i2cget", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address]
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):
@@ -123,7 +123,7 @@ class osutil(object):
 
     @staticmethod
     def rji2cset_i2ctool(bus, devno, address, byte):
-        command_line = ["i2cset", "-f", "-y", str(bus), "0x"+"%02x"%devno, "0x"+"%02x"%address, "0x"+"%02x"%byte]
+        command_line = ["i2cset", "-f", "-y", str(bus), "0x%02x"%devno, "0x%02x"%address, "0x%02x"%byte]
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):
@@ -165,7 +165,7 @@ class osutil(object):
 
     @staticmethod
     def getdevmem(addr, digit, mask):
-        command_line = ["devmem", "0x"+"%02x"%addr, str(digit)]
+        command_line = ["devmem", "0x%02x"%addr, str(digit)]
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):

@@ -46,7 +46,7 @@ def write_sysfs_value(reg_name, value):
 
 def check_driver():
     u'''whether there is driver start with rg'''
-    status, output = getstatusoutput_noshell(["lsmod"], ["grep", "rg"], ["wc", "-l"])
+    status, output = getstatusoutput_noshell_pipe(["lsmod"], ["grep", "rg"], ["wc", "-l"])
     #System execution error
     if status: 
         return False
@@ -149,7 +149,7 @@ def removeDev(bus, loc):
     if os.path.exists(devpath):
         file = "/sys/bus/i2c/devices/i2c-%d/delete_device" % bus
         with open(file, 'w') as f:
-            f.write('0x%02x'%str(bus)+'\n')
+            f.write('0x%02x\n'%str(bus))
         
 def addDev(name, bus, loc):
     if name == "lm75":
@@ -166,7 +166,7 @@ def addDev(name, bus, loc):
     if os.path.exists(devpath) == False:
         file = "/sys/bus/i2c/devices/i2c-%d/new_device" % bus
         with open(file, 'w') as f:
-            f.write('%s 0x%02x' % (name, loc) + '\n')
+            f.write('%s 0x%02x\n' % (name, loc))
 
 def removedevs():
     devs = GLOBALCONFIG["DEVS"]
