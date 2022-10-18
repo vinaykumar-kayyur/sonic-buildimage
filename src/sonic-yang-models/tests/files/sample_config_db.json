@@ -1122,6 +1122,19 @@
 		"port": "50051"
 	    }
         },
+        "RESTAPI": {
+            "certs": {
+                "ca_crt": "/etc/sonic/credentials/ame_root.pem",
+                "server_key": "/etc/sonic/credentials/restapiserver.key",
+                "server_crt": "/etc/sonic/credentials/restapiserver.crt",
+                "client_crt_cname": "client.sonic.net"
+            },
+	    "config": {
+                "client_auth": "true",
+                "log_level": "trace",
+                "allow_insecure": "false"
+            }
+         },
         "FLEX_COUNTER_TABLE": {
             "PFCWD": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -2048,6 +2061,14 @@
                 "ifname": "Ethernet14",
                 "nexthop": "10.184.229.212",
                 "nexthop-vrf": "default"
+            }
+        },
+        "KUBERNETES_MASTER": {
+            "SERVER": {
+                "disable": "True",
+                "insecure": "False",
+                "ip": "kubernetes.apiserver.com",
+                "port": "6443"
             }
         }
     },
