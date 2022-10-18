@@ -1,5 +1,5 @@
 module sonic-events-common {
-    namespace "http://github.com/Azure/sonic-events-common";
+    namespace "http://github.com/sonic-net/sonic-events-common";
     prefix evtcmn;
     yang-version 1.1;
 
