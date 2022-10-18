@@ -65,7 +65,7 @@ class Component(ComponentBase):
     def _get_command_result_pipe(cmd1, cmd2):
         try:
             rc, result = getstatusoutput_noshell_pipe(cmd1, cmd2)
-            if rc != 0:
+            if rc != [0, 0]:
                 raise RuntimeError("Failed to execute command {} {}, return code {}, {}".format(cmd1, cmd2, rc, result))
 
         except OSError as e:
@@ -194,7 +194,7 @@ class ComponentPCIE(Component):
     COMPONENT_NAME = 'PCIe'
     COMPONENT_DESCRIPTION = 'ASIC PCIe Firmware'
     PCIE_QUERY_VERSION_COMMAND1 = ["bcmcmd", 'pciephy fw version']
-    PCIE_QUERY_VERSION_COMMAND2 = ["grep" 'FW version']
+    PCIE_QUERY_VERSION_COMMAND2 = ["grep", 'FW version']
 
     def __init__(self):
         super(ComponentPCIE, self).__init__()

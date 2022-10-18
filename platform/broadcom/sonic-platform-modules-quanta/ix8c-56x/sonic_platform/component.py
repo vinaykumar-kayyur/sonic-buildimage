@@ -65,7 +65,7 @@ class Component(ComponentBase):
     def _get_command_result_pipe(cmd1, cmd2):
         try:
             rc, result = getstatusoutput_noshell_pipe(cmd1, cmd2)
-            if rc != 0:
+            if rc != [0, 0]:
                 raise RuntimeError("Failed to execute command {} {}, return code {}, {}".format(cmd1, cmd2, rc, result))
 
         except OSError as e:
