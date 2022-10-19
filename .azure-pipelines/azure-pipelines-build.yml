@@ -78,6 +78,9 @@ jobs:
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
+          stepProperties:
+            retryCountOnTaskFailure: 2
+            
 
         - name: generic
           variables:
@@ -93,6 +96,8 @@ jobs:
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
+          stepProperties:
+            retryCountOnTaskFailure: 2
 
         - name: mellanox
           variables:
@@ -149,5 +154,6 @@ jobs:
             fi
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
+        retryCountOnTaskFailure: 0
         displayName: "Build sonic image"
       - template: check-dirty-version.yml
