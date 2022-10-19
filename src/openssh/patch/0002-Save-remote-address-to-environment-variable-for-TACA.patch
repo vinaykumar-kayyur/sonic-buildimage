@@ -1,0 +1,50 @@
+From 9d74466e845376040c8cf1340847025b9387f00f Mon Sep 17 00:00:00 2001
+From: liuh-80 <liuh@microsoft.com>
+Date: Tue, 11 Oct 2022 17:03:01 +0800
+Subject: [PATCH] Save remote address to environment variable for TACACS
+
+---
+ session.c             | 4 ++++
+ sshd.c                | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/session.c b/session.c
+index a638ceef1..7a35554bb 100644
+--- a/session.c
++++ b/session.c
+@@ -618,6 +618,10 @@ do_exec_pty(struct ssh *ssh, Session *s, const char *command)
+ 
+ 		/* Close the extra descriptor for the pseudo tty. */
+ 		close(ttyfd);
++
++        /* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
++		const char *remote_ip = ssh_remote_ipaddr(ssh);
++		setenv("SSH_REMOTE_IP", remote_ip, 1);
+ 
+ 		/* record login, etc. similar to login(1) */
+ #ifndef HAVE_OSF_SIA
+diff --git a/sshd.c b/sshd.c
+index 3ef0c1452..a19862aac 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -1738,6 +1738,8 @@ main(int ac, char **av)
+ 			break;
+ 		case 'C':
+ 			connection_info = get_connection_info(ssh, 0, 0);
++			/* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
++			setenv("SSH_REMOTE_IP", connection_info->address, 1);
+ 			if (parse_server_match_testspec(connection_info,
+ 			    optarg) == -1)
+ 				exit(1);
+@@ -2251,6 +2255,8 @@ main(int ac, char **av)
+ 	 * the socket goes away.
+ 	 */
+ 	remote_ip = ssh_remote_ipaddr(ssh);
++	/* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
++	setenv("SSH_REMOTE_IP", remote_ip, 1);
+ 
+ #ifdef SSH_AUDIT_EVENTS
+ 	audit_connection_from(remote_ip, remote_port);
+-- 
+2.35.1.windows.2
+
