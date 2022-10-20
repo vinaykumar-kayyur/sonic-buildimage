@@ -1307,8 +1307,13 @@ class SFP(SfpBase):
         Returns:
             A Boolean, True if SFP has RX LOS, False if not.
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
+
+        Known issue in this function:
+            These bytes are protected from reading due to some limitation
+            in the future will provide a dedicated sysfs for rx_los reading 
+            Currently only provide dummy implementation, always return false
         """
-        # Provide dummy implementation due to limitation, always return false
+
         if not self.dom_supported:
             return None
 
@@ -1335,8 +1340,13 @@ class SFP(SfpBase):
         Returns:
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
+
+        Known issue in this function:
+            These bytes are protected from reading due to some limitation
+            in the future will provide a dedicated sysfs for tx_fault reading
+            Currently only provide dummy implementation, always return false
         """
-        # Provide dummy implementation due to limitation, always return false
+
         if not self.dom_supported:
             return None
 
