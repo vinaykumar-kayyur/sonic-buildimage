@@ -33,7 +33,7 @@ jobs:
         pr_url=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request._links.html.href")
         repository=$(echo $GITHUB_CONTEXT | jq -r ".repository")
         labels=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request.labels[].name")
-        author=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request.base.user.login")
+        author=$(echo $GITHUB_CONTEXT | jq -r ".event.pull_request.user.login")
         branches=$(git branch -a --list 'origin/20????' | awk -F/ '{print$3}' | grep -E "202[0-9]{3}")
         if [[ $(echo $GITHUB_CONTEXT | jq -r ".event.action") == "labeled" ]];then
           labels=$(echo $GITHUB_CONTEXT | jq -r ".event.label.name")
@@ -104,8 +104,8 @@ jobs:
             echo 'Add commnet "@${author} PR conflicts with $branch branch"'
           else
             # Create PR to release branch
-            git push mssonicbld HEAD:$branch-${pr_id} -f
-            result=$(gh pr create -R ${repository} -H mssonicbld:$branch-${pr_id} -B $branch -t "[action] [PR:$pr_id] $title" -b '' 2>&1)
+            git push mssonicbld HEAD:cherry/$branch/${pr_id} -f
+            result=$(gh pr create -R ${repository} -H mssonicbld:cherry/$branch/${pr_id} -B $branch -t "[action] [PR:$pr_id] $title" -b '' 2>&1)
             echo $result | grep "already exists" && { echo $result; return 0; }
             echo $result | grep github.com || { echo $result; return 1; }
             new_pr_rul=$(echo $result | grep github.com)
