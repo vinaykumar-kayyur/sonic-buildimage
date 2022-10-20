@@ -50,6 +50,9 @@ module sonic-device_neighbor_metadata {
                     type union {
                         type inet:ipv4-prefix;
                         type inet:ipv4-address;
+                        type string {
+                            pattern "None";
+                        }
                     }
                 }
 
@@ -68,6 +71,9 @@ module sonic-device_neighbor_metadata {
                     type union {
                         type inet:ipv4-prefix;
                         type inet:ipv4-address;
+                        type string {
+                            pattern "None";
+                        }
                     }
                 }
 

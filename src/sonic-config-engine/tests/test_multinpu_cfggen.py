@@ -252,7 +252,7 @@ class TestMultiNpuCfgGen(TestCase):
         output = json.loads(self.run_script(argument))
         print(output)
         self.assertDictEqual(output, \
-            {'01T2': {'mgmt_addr': '89.139.132.40', 'hwsku': 'VM', 'type': 'SpineRouter'},
+            {'01T2': {'lo_addr': None, 'type': 'SpineRouter', 'mgmt_addr': '89.139.132.40', 'hwsku': 'VM'},
             'ASIC3': {'lo_addr_v6': '::/0', 'mgmt_addr': '0.0.0.0/0', 'hwsku': 'multi-npu-asic', 'lo_addr': '0.0.0.0/0', 'type': 'Asic', 'mgmt_addr_v6': '::/0'},
             'ASIC2': {'lo_addr_v6': '::/0', 'mgmt_addr': '0.0.0.0/0', 'hwsku': 'multi-npu-asic', 'lo_addr': '0.0.0.0/0', 'type': 'Asic', 'mgmt_addr_v6': '::/0'}})
 
