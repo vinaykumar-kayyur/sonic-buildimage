@@ -1046,7 +1046,6 @@ class Sfp(SfpBase):
             A Boolean, True if power-override is enabled, False if disabled
         """
         if self.sfp_type == QSFP_TYPE:
-            offset = 0
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
