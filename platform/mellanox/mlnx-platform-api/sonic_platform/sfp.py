@@ -546,9 +546,7 @@ class SFP(SfpBase):
 
 
     def _convert_string_to_num(self, value_str):
-        if "-inf" in value_str:
-            return 'N/A'
-        elif "Unknown" in value_str:
+        if "Unknown" in value_str:
             return 'N/A'
         elif 'dBm' in value_str:
             t_str = value_str.rstrip('dBm')
