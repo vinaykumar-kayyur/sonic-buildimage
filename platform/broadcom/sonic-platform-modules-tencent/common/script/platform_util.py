@@ -18,6 +18,28 @@ import glob
 CONFIG_DB_PATH = "/etc/sonic/config_db.json"
 
 
+__all__ = [
+    "byteTostr",
+    "getplatform_name",
+    "rji2cget",
+    "rji2cset",
+    "rjpcird",
+    "rjpciwr",
+    "rji2cgetWord",
+    "rji2csetWord",
+    "dev_file_read",
+    "dev_file_write",
+    "rj_os_system",
+    "io_rd",
+    "io_wr",
+    "exec_os_cmd",
+    "exec_os_cmd_log",
+    "write_sysfs",
+    "read_sysfs",
+    "get_value",
+    "set_value",
+]
+
 def inttostr(vl, len):
     if not isinstance(vl, int):
         raise Exception(" type error")

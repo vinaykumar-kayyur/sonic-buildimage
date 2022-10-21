@@ -12,7 +12,7 @@ import syslog
 import traceback
 
 try:
-    from platform_intf import *
+    from platform_intf import platform_get_optoe_type, platform_set_optoe_type
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
 
 except ImportError as e:

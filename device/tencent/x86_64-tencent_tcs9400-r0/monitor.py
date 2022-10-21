@@ -7,7 +7,7 @@
 import os
 import xml.etree.ElementTree as ET
 import glob
-from fru import *
+from fru import ipmifru
 from decimal import Decimal
 
 

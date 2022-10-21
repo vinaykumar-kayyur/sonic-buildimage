@@ -4,7 +4,10 @@ import click
 import os
 import time
 import syslog
-from ruijieutil import *
+from ruijieconfig import MAC_DEFAULT_PARAM, MAC_AVS_PARAM, AVS_VOUT_MODE_PARAM
+from ruijieutil import getSdkReg
+from platform_util import rji2cget, rji2cset, rji2csetWord, rji2cgetWord, write_sysfs, get_value
+
 
 AVSCTROL_DEBUG_FILE = "/etc/.avscontrol_debug_flag"
 
@@ -62,67 +65,6 @@ def debug_init():
         debuglevel = debuglevel & ~(AVSCTROLDEBUG | AVSCTROLERROR)
 
 
-def byteTostr(val):
-    strtmp = ''
-    for i in range(len(val)):
-        strtmp += chr(val[i])
-    return strtmp
-
-def readsysfs(location):
-    try:
-        locations = glob.glob(location)
-        with open(locations[0], 'rb') as fd1:
-            retval = fd1.read()
-        retval = byteTostr(retval)
-        retval = retval.rstrip('\r\n')
-        retval = retval.lstrip(" ")
-    except Exception as e:
-        return False, (str(e) + " location[%s]" % location)
-    return True, retval
-
-
-def writesysfs(location, value):
-    try:
-        if not os.path.isfile(location):
-            print(location, 'not found !')
-            return False, ("location[%s] not found !" % location)
-        with open(location, 'w') as fd1:
-            fd1.write(value)
-    except Exception as e:
-        return False, (str(e) + " location[%s]" % location)
-    return True, ("set location[%s] %s success !" % (location, value))
-
-
-def get_value(config):
-    way = config.get("gettype")
-    if way == 'sysfs':
-        return readsysfs(config.get("loc"))
-    elif way == "i2c":
-        bus = config.get("bus")
-        addr = config.get("loc")
-        offset = config.get("offset")
-        ret, val = rji2cget(bus, addr, offset)
-        if ret == True:
-            value = int(val, 16)
-        else:
-            value = val
-        return ret, value
-    return False, None
-
-
-def set_value(config, value):
-    way = config.get("gettype")
-    if way == 'sysfs':
-        loc = config.get("loc")
-        return writesysfs(loc, "0x%x" % value)
-    elif way == "i2c":
-        bus = config.get("bus")
-        addr = config.get("loc")
-        offset = config.get("offset")
-        return rji2cset(bus, addr, offset, value)
-    return False, None
-
-
 def set_avs_value_i2c(dcdc_value):
     avs_bus = MAC_DEFAULT_PARAM["bus"]
     avs_addr = MAC_DEFAULT_PARAM["devno"]
@@ -176,7 +118,7 @@ def set_avs_value_sysfs(conf, dcdc_value):
         dcdc_value = eval(formula % (dcdc_value))
     wr_val = str(dcdc_value)
     avscontrol_debug("set_avs_value_sysfs, write val: %s" % wr_val)
-    ret, msg = writesysfs(loc, wr_val)
+    ret, msg = write_sysfs(loc, wr_val)
     if ret is False:
         avscontrol_error("set_avs_value_sysfs failed, msg: %s" % msg)
     return ret

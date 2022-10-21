@@ -3,14 +3,15 @@
 
 import re
 from sys import exit, stderr
-from ruijieconfig import *
+from ruijieconfig import MANUINFO_CONF
 from monitor import status
 import mmap
 import fcntl
 import subprocess
 import signal
 import os
-from platform_util import *
+import time
+from platform_util import byteTostr
 
 
 INDENT = 4

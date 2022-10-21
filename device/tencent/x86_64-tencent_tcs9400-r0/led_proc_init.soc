@@ -3,4 +3,4 @@ led auto on
 
 led start
 
-linkscan SwPortBitMap=xe,ce
+linkscan SwPortBitMap=all

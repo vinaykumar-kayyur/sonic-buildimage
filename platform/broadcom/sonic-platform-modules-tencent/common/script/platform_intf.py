@@ -3,8 +3,16 @@
 import os
 import syslog
 import importlib.machinery
-from platform_util import *
+from platform_util import getplatform_name, dev_file_read, dev_file_write, write_sysfs, read_sysfs
 
+__all__ = [
+    "platform_reg_read",
+    "platform_reg_write",
+    "platform_set_optoe_type",
+    "platform_get_optoe_type",
+    "platform_sfp_read",
+    "platform_sfp_write",
+]
 
 CPLD = 0
 FPGA = 1

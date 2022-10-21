@@ -3,9 +3,12 @@
 import click
 import os
 import time
-from ruijieutil import *
+from ruijieconfig import DEV_MONITOR_PARAM
+from ruijieutil import waitForDocker
+from platform_util import io_rd, rji2cget, rji2cset, rjpciwr
 import syslog
 import traceback
+
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

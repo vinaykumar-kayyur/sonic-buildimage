@@ -10,8 +10,7 @@ import platform
 import syslog
 import traceback
 import glob
-from ruijieutil import *
-from ruijieconfig import *
+from ruijieconfig import PMON_SYSLOG_STATUS
 
 PMON_DEBUG_FILE = "/etc/.pmon_syslog_debug_flag"
 debuglevel = 0
@@ -232,9 +231,6 @@ class checkBase(object):
 class checkSfp(checkBase):
     def __init__(self, path, name, config):
         super(checkSfp, self).__init__(path, name, config)
-        self._path = path
-        self._name = name
-        self._config = config
 
     def getPath(self):
         super(checkSfp, self).getPath()
@@ -252,9 +248,6 @@ class checkSfp(checkBase):
 class checkSlot(checkBase):
     def __init__(self, path, name, config):
         super(checkSlot, self).__init__(path, name, config)
-        self._path = path
-        self._name = name
-        self._config = config
 
     def getPath(self):
         super(checkSlot, self).getPath()
@@ -272,9 +265,6 @@ class checkSlot(checkBase):
 class checkPSU(checkBase):
     def __init__(self, path, name, config):
         super(checkPSU, self).__init__(path, name, config)
-        self._path = path
-        self._name = name
-        self._config = config
 
     def getPath(self):
         super(checkPSU, self).getPath()
@@ -292,9 +282,6 @@ class checkPSU(checkBase):
 class checkFAN(checkBase):
     def __init__(self, path, name, config):
         super(checkFAN, self).__init__(path, name, config)
-        self._path = path
-        self._name = name
-        self._config = config
 
     def getPath(self):
         super(checkFAN, self).getPath()

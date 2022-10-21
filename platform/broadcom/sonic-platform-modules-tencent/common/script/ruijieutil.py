@@ -11,8 +11,8 @@ import sys
 import os
 import re
 import time
-from ruijieconfig import *
-from platform_util import *
+from ruijieconfig import STARTMODULE
+from platform_util import rj_os_system
 
 
 def getSdkReg(reg):

@@ -3,7 +3,7 @@
 import click
 import os
 import subprocess
-from ruijieconfig import *
+from ruijieconfig import STARTMODULE, GLOBALINITPARAM, GLOBALINITCOMMAND, GLOBALINITPARAM_PRE, GLOBALINITCOMMAND_PRE
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -169,6 +169,15 @@ def otherinit():
         log_os_system(index)
     return
 
+
+def otherinit_pre():
+    for index in GLOBALINITPARAM_PRE:
+        write_sysfs_value(index["loc"], index["value"])
+
+    for index in GLOBALINITCOMMAND_PRE:
+        log_os_system(index)
+
+
 def unload_apps():
     stopPMON_sys()
     stopDevmonitor()
@@ -179,6 +188,7 @@ def unload_apps():
 
 
 def load_apps():
+    otherinit_pre()
     startSff_temp_polling()
     starthal_fanctrl()
     starthal_ledctrl()

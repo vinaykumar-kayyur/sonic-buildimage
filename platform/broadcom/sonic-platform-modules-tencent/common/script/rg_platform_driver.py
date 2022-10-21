@@ -4,7 +4,7 @@ import click
 import os
 import subprocess
 import time
-from ruijieconfig import *
+from ruijieconfig import GLOBALCONFIG
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
