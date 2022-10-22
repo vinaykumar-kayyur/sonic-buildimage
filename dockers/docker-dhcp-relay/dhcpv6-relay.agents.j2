@@ -11,12 +11,13 @@
 {% set _dummy = relay_for_ipv6.update({'flag': False}) %}
 [program:dhcp6relay]
 command=/usr/sbin/dhcp6relay
-
 priority=3
 autostart=false
 autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
 
 {% endif %}
 {% endif %}
