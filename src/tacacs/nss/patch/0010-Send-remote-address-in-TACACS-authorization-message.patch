@@ -56,7 +56,7 @@ index 2de00a6..8cd1770 100644
 +            return 1;
 +        }
 +
-+        strncpy_s(dst, size, ssh_remote_ip, remote_ip_length);
++        strncpy(dst, ssh_remote_ip, size);
 +        if (debug) {
 +            syslog(LOG_DEBUG, "%s: remote address=%s", nssname, dst);
 +        }
