@@ -804,6 +804,14 @@ class TestCfgGen(TestCase):
             output = self.run_script(argument)
             self.assertEqual(output.strip(), "")
 
+            # SLB and BGP Monitor table does not exist
+            argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "BGP_PEER_RANGE"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), "{}")
+            argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "BGP_MONITORS"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), "{}")
+
             # ACL_TABLE should not contain EVERFLOW related entries
             argument = '-m "' + graph_file + '" -p "' + self.port_config + '" -v "ACL_TABLE"'
             output = self.run_script(argument)
@@ -903,19 +911,6 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}")
-        )
-
-    def test_minigraph_voq_inband_interface_vlan(self):
-        argument = "-j {} -m {} -p {} --var-json VOQ_INBAND_INTERFACE".format(self.macsec_profile, self.sample_graph_voq, self.voq_port_config)
-        output = self.run_script(argument)
-        output_dict = utils.to_dict(output.strip())
-        self.assertDictEqual(
-            output_dict['Vlan3094'],
-            {'inband_type': 'Vlan'}
-        )
-        self.assertDictEqual(
-            output_dict['Vlan3094|1.1.1.1/24'],
-            {}
         )
 
     def test_minigraph_voq_inband_interface_port(self):
