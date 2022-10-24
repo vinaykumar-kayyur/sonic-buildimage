@@ -216,7 +216,7 @@ startup_test_data = {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
                         "container_id": "no_change",
-                        "container_version": "20201230.11",
+                        "container_version": "20201230.10",
                         "current_owner": "no_change",
                         "remote_state": "pending",
                         "system_state": "up"
