@@ -22,7 +22,7 @@ index c3693ba3f..4123b78ee 100644
 +
 +/* Export remote IP address and port for authorization. */
 +void
-+export_remote_info(struct ssh *);
++export_remote_info(struct ssh *)
 +{
 +	const char *remote_ip = ssh_remote_ipaddr(ssh);
 +	setenv("SSH_CLIENT_IPADDR", remote_ip, 1);
