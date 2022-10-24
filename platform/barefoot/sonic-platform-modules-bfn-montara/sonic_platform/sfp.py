@@ -17,15 +17,22 @@ QSFP_TYPE = "QSFP"
 QSFP_DD_TYPE = "QSFP_DD"
 EEPROM_PAGE_SIZE = 128
 
-try:
-    from thrift.Thrift import TApplicationException
+def get_eeprom_cached_api_support():
+    try:
+        from thrift.Thrift import TApplicationException
 
-    def cached_num_bytes_get(client):
-        return client.pltfm_mgr.pltfm_mgr_qsfp_cached_num_bytes_get(1, 0, 0, 0)
-    thrift_try(cached_num_bytes_get, 1)
-    EEPROM_CACHED_API_SUPPORT = True
-except TApplicationException as e:
-    EEPROM_CACHED_API_SUPPORT = False
+        def cached_num_bytes_get(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_cached_num_bytes_get(1, 0, 0, 0)
+        thrift_try(cached_num_bytes_get, 1)
+        return True
+    except TApplicationException as e:
+        # New api is not supported, need to use old
+        pass
+    except Exception as e:
+        # syncd may not be up, service is not available at this moment
+        print(e.__doc__)
+        print(e.message)
+    return False
 
 class Sfp(SfpOptoeBase):
     """
@@ -39,7 +46,7 @@ class Sfp(SfpOptoeBase):
         self.sfp_type = QSFP_TYPE
         self.SFP_EEPROM_PATH = "/var/run/platform/sfp/"
 
-        if not EEPROM_CACHED_API_SUPPORT:
+        if not get_eeprom_cached_api_support():
             if not os.path.exists(self.SFP_EEPROM_PATH):
                 try:
                     os.makedirs(self.SFP_EEPROM_PATH)
@@ -98,7 +105,7 @@ class Sfp(SfpOptoeBase):
         if not self.get_presence():
             return None
 
-        if not EEPROM_CACHED_API_SUPPORT:
+        if not get_eeprom_cached_api_support():
             return super().read_eeprom(offset, num_bytes)
 
 
