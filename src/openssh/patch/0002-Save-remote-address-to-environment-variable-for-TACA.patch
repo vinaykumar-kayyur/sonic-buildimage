@@ -1,50 +1,89 @@
-From 9d74466e845376040c8cf1340847025b9387f00f Mon Sep 17 00:00:00 2001
+From ea2574ea6fac2feeae506d7903a6164081e66d2b Mon Sep 17 00:00:00 2001
 From: liuh-80 <liuh@microsoft.com>
-Date: Tue, 11 Oct 2022 17:03:01 +0800
+Date: Fri, 30 Sep 2022 16:57:03 +0800
 Subject: [PATCH] Save remote address to environment variable for TACACS
+ authorization.
 
 ---
- session.c             | 4 ++++
- sshd.c                | 4 ++++
- 2 files changed, 8 insertions(+)
+ auth.c    | 13 +++++++++++++
+ auth.h    |  3 +++
+ session.c |  3 +++
+ sshd.c    |  5 +++++
+ 4 files changed, 24 insertions(+)
 
+diff --git a/auth.c b/auth.c
+index c3693ba3f..4123b78ee 100644
+--- a/auth.c
++++ b/auth.c
+@@ -914,3 +914,16 @@ auth_authorise_keyopts(struct ssh *ssh, struct passwd *pw,
+ 
+ 	return 0;
+ }
++
++/* Export remote IP address and port for authorization. */
++void
++export_remote_info(struct ssh *);
++{
++	const char *remote_ip = ssh_remote_ipaddr(ssh);
++	setenv("SSH_CLIENT_IPADDR", remote_ip, 1);
++
++	const int remote_port = ssh_remote_port(ssh);
++	const char remote_port_str[32];
++	snprintf(remote_port_str, sizeof(remote_port_str), "%d", remote_port);
++	setenv("SSH_CLIENT_IPADDR_PORT", remote_port_str, 1);
++}
+\ No newline at end of file
+diff --git a/auth.h b/auth.h
+index 3cfce0eaf..3a34742b1 100644
+--- a/auth.h
++++ b/auth.h
+@@ -229,6 +229,9 @@ struct passwd *fakepw(void);
+ 
+ int	 sys_auth_passwd(struct ssh *, const char *);
+ 
++/* Export remote IP address and port for authorization. */
++void	 export_remote_info(struct ssh *);
++
+ #if defined(KRB5) && !defined(HEIMDAL)
+ krb5_error_code ssh_krb5_cc_gen(krb5_context, krb5_ccache *);
+ #endif
 diff --git a/session.c b/session.c
-index a638ceef1..7a35554bb 100644
+index a638ceef1..c615cb3d0 100644
 --- a/session.c
 +++ b/session.c
-@@ -618,6 +618,10 @@ do_exec_pty(struct ssh *ssh, Session *s, const char *command)
- 
+@@ -619,6 +619,9 @@ do_exec_pty(struct ssh *ssh, Session *s, const char *command)
  		/* Close the extra descriptor for the pseudo tty. */
  		close(ttyfd);
-+
-+        /* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
-+		const char *remote_ip = ssh_remote_ipaddr(ssh);
-+		setenv("SSH_REMOTE_IP", remote_ip, 1);
  
++		/* Export remote IP address and port for authorization. */
++		export_remote_info(ssh);
++
  		/* record login, etc. similar to login(1) */
  #ifndef HAVE_OSF_SIA
+ 		do_login(ssh, s, command);
 diff --git a/sshd.c b/sshd.c
-index 3ef0c1452..a19862aac 100644
+index 3ef0c1452..2f67a0304 100644
 --- a/sshd.c
 +++ b/sshd.c
-@@ -1738,6 +1738,8 @@ main(int ac, char **av)
+@@ -1737,6 +1737,8 @@ main(int ac, char **av)
+ 			test_flag = 2;
  			break;
  		case 'C':
++			/* Export remote IP address and port for authorization. */
++			export_remote_info(ssh);
  			connection_info = get_connection_info(ssh, 0, 0);
-+			/* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
-+			setenv("SSH_REMOTE_IP", connection_info->address, 1);
  			if (parse_server_match_testspec(connection_info,
  			    optarg) == -1)
- 				exit(1);
-@@ -2251,6 +2255,8 @@ main(int ac, char **av)
- 	 * the socket goes away.
+@@ -2252,6 +2254,9 @@ main(int ac, char **av)
  	 */
  	remote_ip = ssh_remote_ipaddr(ssh);
-+	/* If TACACS enabled, nss-tacplus will read remote IP from this environment variable and send to tacacs server. */
-+	setenv("SSH_REMOTE_IP", remote_ip, 1);
  
++	/* Export remote IP address and port for authorization. */
++	export_remote_info(ssh);
++
  #ifdef SSH_AUDIT_EVENTS
  	audit_connection_from(remote_ip, remote_port);
+ #endif
 -- 
-2.35.1.windows.2
+2.37.1.windows.1
 
