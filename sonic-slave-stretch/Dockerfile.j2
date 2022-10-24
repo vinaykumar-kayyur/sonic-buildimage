@@ -290,8 +290,6 @@ RUN apt-get update && apt-get install -y \
         python-lxml \
         libexpat1-dev
 
-# For gmock
-RUN apt-get install -y libgmock-dev -t stretch-backports
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
@@ -387,6 +385,10 @@ RUN apt-get install -y vim
 RUN apt-get install -y rsyslog
 
 RUN apt-get install -y libgtest-dev
+
+# For gmock
+RUN apt-get install -y libgmock-dev -t stretch-backports
+
 RUN apt-get install -y libarchive13 librhash0
 RUN apt-get -t stretch-backports install -y libuv1
 # Install cmake/cmake-data 3.13.2-1_bpo9+1
