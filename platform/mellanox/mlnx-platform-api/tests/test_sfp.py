@@ -111,3 +111,25 @@ class TestSfp:
         sfp = SFP(0)
         assert output_sfp.y_cable_part_number == sfp.read_eeprom(offset, 16).decode()
         MlxregManager.read_mlxred_eeprom.assert_called_with(132, 4, 16)
+
+    @mock.patch('sonic_platform.sfp.SFP._fetch_port_status')
+    def test_is_port_admin_status_up(self, mock_port_status):
+        mock_port_status.return_value = (0, True)
+        assert SFP.is_port_admin_status_up(None, None)
+
+        mock_port_status.return_value = (0, False)
+        assert not SFP.is_port_admin_status_up(None, None)
+
+    @mock.patch('sonic_platform.sfp.SFP.get_xcvr_api')
+    def test_dummy_apis(self, mock_get_xcvr_api):
+        mock_api = mock.MagicMock()
+        mock_api.NUM_CHANNELS = 4
+        mock_get_xcvr_api.return_value = mock_api
+
+        sfp = SFP(0)
+        assert sfp.get_rx_los() == [False] * 4
+        assert sfp.get_tx_fault() == [False] * 4
+
+        mock_get_xcvr_api.return_value = None
+        assert sfp.get_rx_los() is None
+        assert sfp.get_tx_fault() is None

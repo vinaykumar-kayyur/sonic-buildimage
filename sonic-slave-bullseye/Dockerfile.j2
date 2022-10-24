@@ -176,6 +176,13 @@ RUN apt-get update && apt-get install -y \
         libxml-simple-perl \
         graphviz \
         aspell \
+# For SAI meta rpc build - make rpc
+        libgetopt-long-descriptive-perl \
+        libconst-fast-perl \
+        libtemplate-perl \
+        libnamespace-autoclean-perl \
+        libmoose-perl \
+        libmoosex-aliases-perl \
 # For linux build
         bc \
         fakeroot \
@@ -397,7 +404,7 @@ RUN apt-get update && apt-get install -y \
         libboost-dev \
         libboost-program-options-dev \
         libboost-system-dev \
-        libboost-serialization-dev \
+        libboost-serialization1.74-dev \
         libboost-thread-dev \
         libboost-atomic-dev \
         libboost-chrono-dev \
