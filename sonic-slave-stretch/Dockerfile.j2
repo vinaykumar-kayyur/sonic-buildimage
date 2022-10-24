@@ -384,7 +384,7 @@ RUN apt-get install -y vim
 # Install rsyslog
 RUN apt-get install -y rsyslog
 
-RUN apt-get install -y libgtest-dev
+RUN apt-get install -y libgtest-dev -t stretch-backports
 
 # For gmock
 RUN apt-get install -y libgmock-dev -t stretch-backports
