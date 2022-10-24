@@ -19,7 +19,7 @@ index 2de00a6..8cd1770 100644
  
  #include <libtac/libtac.h>
  
-@@ -717,6 +718,51 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
+@@ -717,6 +718,52 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
      return fd;
  }
  
@@ -50,12 +50,13 @@ index 2de00a6..8cd1770 100644
 +    // Before user session created, SSHD will create environment variable SSH_REMOTE_IP.
 +    const char* ssh_remote_ip = getenv("SSH_REMOTE_IP");
 +    if (ssh_remote_ip != NULL) {
-+        if (strlen(ssh_remote_ip) >= size) {
++        int remote_ip_length = strlen(ssh_remote_ip);
++        if (remote_ip_length >= size) {
 +            // dst buffer does not have enough space.
 +            return 1;
 +        }
 +
-+        snprintf(dst, size, "%s", ssh_remote_ip);
++        strncpy(dst, ssh_remote_ip, remote_ip_length);
 +        if (debug) {
 +            syslog(LOG_DEBUG, "%s: remote address=%s", nssname, dst);
 +        }
