@@ -56,7 +56,7 @@ index 2de00a6..8cd1770 100644
 +            return 1;
 +        }
 +
-+        strncpy(dst, ssh_remote_ip, remote_ip_length);
++        strncpy_s(dst, size, ssh_remote_ip, remote_ip_length);
 +        if (debug) {
 +            syslog(LOG_DEBUG, "%s: remote address=%s", nssname, dst);
 +        }
@@ -91,7 +91,7 @@ index 2de00a6..8cd1770 100644
              continue;
          }
 -        ret = tac_author_send(tac_fd, pb->name, "", "", attr);
-+        ret = tac_author_send(tac_fd, pb->name, current_tty != NULL ? current_tty : "", remote_addr, attr);
++        ret = tac_author_send(tac_fd, pb->name, current_tty != NULL ? (char *)current_tty : "", remote_addr, attr);
          if(ret < 0) {
              if(debug)
                  syslog(LOG_WARNING, "%s: TACACS+ server %s send failed (%d) for"
