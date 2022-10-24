@@ -290,6 +290,9 @@ RUN apt-get update && apt-get install -y \
         python-lxml \
         libexpat1-dev
 
+# For gmock
+RUN apt-get install -y libgmock-dev -t stretch-backports
+
 ## Config dpkg
 ## install the configuration file if it’s currently missing
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
