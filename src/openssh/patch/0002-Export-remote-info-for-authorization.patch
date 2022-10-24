@@ -1,7 +1,7 @@
 From ea2574ea6fac2feeae506d7903a6164081e66d2b Mon Sep 17 00:00:00 2001
 From: liuh-80 <liuh@microsoft.com>
 Date: Fri, 30 Sep 2022 16:57:03 +0800
-Subject: [PATCH] Save remote address to environment variable for TACACS
+Subject: [PATCH] Export remote info for authorization.
  authorization.
 
 ---
