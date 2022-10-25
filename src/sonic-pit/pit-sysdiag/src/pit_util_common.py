@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from __future__ import print_function
-from test_case import TCBase, TestCaseCommon
 #from subprocess import PIPE, Popen
 from errcode import E
 import subprocess
@@ -8,10 +7,8 @@ import threading
 import time
 import sys
 import signal
-import syslogger
 import pexpect
 import imp
-import os
 import re
 import json
 
@@ -261,9 +258,8 @@ class remote():
                         "[ remote ] connect timeout ,PASSWORD OR HOSTNAME is wrong")
                     self.logger.log_err("FAIL!", also_print_console)
                     return ret
-        except BaseException as error:
-            print(error)
-            print('[ remote ] Error !!! ')
+        except Exception as e:
+            print('Remote error, exception: {}'.format(str(e)))
 
     def command(self, cmd, time=5, expect_list=['#', '~']):
         self.obj.sendline(cmd)
@@ -283,9 +279,8 @@ class remote():
                     else:
                         output = output[index + 2:]
             return output
-        except BaseException as error:
-            print(error)
-            print('[ remote ] Error !!! ')
+        except Exception as e:
+            print('Remote error, exception: {}'.format(str(e)))
 
     def disconnect(self):
         self.obj.close()
@@ -340,7 +335,7 @@ def ssh_command(
                 self.fail_reason.append(output)
                 self.logger.log_err("FAIL!", also_print_console)
                 return ret, output
-    except BaseException as err:
+    except Exception as err:
         output = str(err)
         ret = E.EFAIL
         return ret, output
@@ -355,8 +350,8 @@ def isIpV4AddrLegal(ipStr):
     for i in range(4):
         try:
             ip_split_list[i] = int(ip_split_list[i])
-        except BaseException:
-            print("IP invalid for not number: " + ipStr)
+        except Exception as e:
+            print("IP invalid for not number: {}, exception {}".format(ipStr, str(e)))
             return False
         if ip_split_list[i] <= 255 and ip_split_list[i] >= 0:
             pass

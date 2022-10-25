@@ -1,7 +1,5 @@
 import subprocess
-from subprocess import check_output
 import imp
-import os
 import json
 import requests
 
@@ -47,9 +45,7 @@ def load_platform_util_module(module_name):
         platform_path = "/".join([PLATFORM_ROOT_PATH, platform])
     else:
         platform_path = PLATFORM_ROOT_PATH_DOCKER
-    
-    hwsku_path = "/".join([platform_path, hwsku])
-    
+
     try:
         module_file = "/".join([platform_path, "plugins", module_name + ".py"])
         platform_util_module = imp.load_source(module_name, module_file)
@@ -71,7 +67,7 @@ def convert_unicode(input):
 def exec_cmd(cmd_str):
     output = None
     try:
-        output = check_output(cmd_str, shell=True,)
+        output = subprocess.check_output(cmd_str, shell=True,)
     except Exception as err:
         print("{} exec cmd failed.{}".format(cmd_str, err))
     return output

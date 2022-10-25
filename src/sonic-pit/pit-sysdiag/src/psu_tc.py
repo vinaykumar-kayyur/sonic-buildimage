@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 __version__ = 'v0.1.0'
 __author__  = "Pytool Lishoulei<admin@pytool.com>"
-import os
 import sys
-import json
+#import json
 import traceback
-from tabulate import tabulate
+#from tabulate import tabulate
 from test_case import TestCaseCommon
 from errcode import E
 from function import load_platform_util_module
@@ -83,14 +82,6 @@ class PSUTC(TestCaseCommon):
 
     def get_psu_count(self):
         return self.psu_count
-
-    def get_psu_attribute(self,psuid,name):
-        try:
-            return int(self.read_sysfs('/sys/s3ip/psu/psu{n}/{}'.format(psuid,name)))
-        except Exception as e:
-            self.fail_reason.append("fail to get psu{}.{}".format(psuid,name))
-            self.logger.log_err("fail to get psu{}.{}".format(psuid,name), True)
-            return 0
 
     def test_psu_info(self):
         '''
@@ -210,9 +201,7 @@ class PSUTC(TestCaseCommon):
         for psuid in range(1, self.psu_count+1):
             psu_name = "PSU%d" % psuid
 
-            psu_info = self.psu_all[psu_name]
             self.logger.log_dbg("Testing {} status".format(psu_name))
-
             try:
                 chk_ret = self.check_inputs(psu_name)
                 if chk_ret != E.OK:

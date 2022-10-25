@@ -144,13 +144,11 @@ class TestCaseCommon(TCBase):
         if not case_cfg_file:
             current_dir = os.path.dirname(__file__)
             case_cfg_file = os.path.join(current_dir, "../cases", module_name, CASE_CONFIG_JSON_FILE)
-        else:
-            case_cfg_file = case_cfg_file
         self.module_name = module_name
         self.platform_cfg_file = platform_cfg_file
         self.platform_cfg_json = None               # platform config content, json format
         self.logger = logger
-                
+
         TCBase.__init__(self, index, case_cfg_file)
         self.__read_platform_config()
 

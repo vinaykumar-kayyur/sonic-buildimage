@@ -2,20 +2,13 @@
 # -*- coding: utf-8 -*-
 __version__ = 'v0.1.0'
 __author__  = "Pytool Li<admin@pytool.com>"
-import os
-from re import T
 import sys
-import json
 import time
-import requests
 import traceback
-from tabulate import tabulate
 from test_case import TestCaseCommon
 from errcode import *
 from function import load_platform_util_module
 
-
-from function import restful_command
 
 DEFAULT_FAN_CONTROL_INTERVAL = 5  # interval for fan control command
 
@@ -120,7 +113,7 @@ class FANTC(TestCaseCommon):
                 speed_target = speed_min + ratio*(speed_max-speed_min)/100
                 speed_delta = speed_target - speed
                 if (speed_delta > (-speed_tolerance)) and (speed_delta < speed_tolerance):
-                    msg = "{} {} fan control test done, PASS"
+                    msg = "{} {} fan control test done, PASS".format(fan_name, motor_name)
                     self.logger_dbg(msg)
                 else:
                     reason = "Failed, {} {} ratio {}%, speed {}, target speed {}".format(\
@@ -300,12 +293,12 @@ class FANTC(TestCaseCommon):
                 ret = E.EFAN6001
                 continue
 
-                fan_ret = self.test_fan_motor_status(fan_name)
-                if fan_ret != E.OK:
-                    ret = fan_ret
-                    self.logger.log_err("{} speed test failed.".format(fan_name))
+            fan_ret = self.test_fan_motor_status(fan_name)
+            if fan_ret != E.OK:
+                ret = fan_ret
+                self.logger.log_err("{} speed test failed.".format(fan_name))
 
-            self.logger.log_dbg("{} fan status test done, PASS".format(fan_name))
+            #self.logger.log_dbg("{} fan status test done, PASS".format(fan_name))
 
         if ret == E.OK:
             self.logger.log_dbg("test_fan_status PASS.")
