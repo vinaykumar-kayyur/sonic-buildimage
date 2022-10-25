@@ -188,15 +188,6 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
 fi
 
-## On 201911, Upgrade systemd to fix timer elapse issue: https://github.com/systemd/systemd/issues/6680
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb -fsSL \
-    http://http.us.debian.org/debian/pool/main/s/systemd/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
-
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb -fsSL \
-    http://http.us.debian.org/debian/pool/main/s/systemd/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
-
 ## Install docker
 echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
@@ -343,7 +334,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -na
 # Install certain fundamental packages from stretch-backports in order to get
 # more up-to-date (but potentially less stable) versions
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t stretch-backports install \
-    picocom
+    picocom libsystemd0 systemd
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
