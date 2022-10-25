@@ -188,6 +188,15 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
 fi
 
+## On 201911, Upgrade systemd to fix timer elapse issue: https://github.com/systemd/systemd/issues/6680
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb -fsSL \
+    http://http.us.debian.org/debian/pool/main/s/systemd/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/libsystemd0_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
+
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb -fsSL \
+    http://http.us.debian.org/debian/pool/main/s/systemd/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/systemd_241-5~bpo9+1_${CONFIGURED_ARCH}.deb
+
 ## Install docker
 echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
