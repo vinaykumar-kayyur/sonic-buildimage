@@ -39,7 +39,7 @@ index 2de00a6..d59869b 100644
 +        return 1;
 +    }
 +
-+    char* first_part = strtok(variable, delimiters);
++    char* first_part = strtok((char *)variable, delimiters);
 +    if (first_part == NULL) {
 +        if (debug) {
 +            syslog(LOG_DEBUG, "%s: can't split %s by delimiters %s", nssname, variable, delimiters);
