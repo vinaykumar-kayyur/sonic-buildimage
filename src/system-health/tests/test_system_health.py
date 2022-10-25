@@ -425,7 +425,7 @@ def test_config():
 
     assert config.get_led_color('fault') == 'red'
     assert config.get_led_color('normal') == 'green'
-    assert config.get_led_color('booting') == 'orange_blink'
+    assert config.get_led_color('booting') == 'red'
 
     config._last_mtime  = 1
     config._config_file = 'notExistFile'
