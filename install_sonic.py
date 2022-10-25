@@ -4,6 +4,7 @@ import argparse
 import pexpect
 import sys
 import time
+import os
 
 
 def main():
@@ -12,6 +13,7 @@ def main():
     parser.add_argument('-p', type=int, default=9000, help='local port')
 
     args = parser.parse_args()
+    a = "noneuse"
 
     #KEY_UP = '\x1b[A'
     KEY_DOWN = '\x1b[B'
