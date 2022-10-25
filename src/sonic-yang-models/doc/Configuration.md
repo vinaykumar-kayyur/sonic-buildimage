@@ -28,6 +28,7 @@ Table of Contents
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [KDUMP](#kdump)  
+         * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -46,13 +47,15 @@ Table of Contents
          * [Scheduler](#scheduler)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
+         * [Restapi](#restapi)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)    
          * [Telemetry](#telemetry)  
          * [Versions](#versions)  
          * [VLAN](#vlan)   
-         * [VLAN_MEMBER](#vlan_member)  
+         * [VLAN_MEMBER](#vlan_member)
+         * [VOQ Inband Interface](#voq-inband-interface) 
          * [VXLAN](#vxlan)   
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
@@ -934,6 +937,27 @@ instance is supported in SONiC.
 
 ```
 
+### Kubernetes Master
+
+Kubernetes Master related configurations are stored in
+**KUBERNETES_MASTER** table. These configurations are used mainly
+for CTRMGR service. CTRMGR service will interactive with
+kubernetes master according to these configurations.
+
+```
+{
+    "KUBERNETES_MASTER": {
+        "SERVER": {
+            "disable": "False",
+            "insecure": "True",
+            "ip": "k8s.apiserver.com",
+            "port": "6443"
+        }
+    }
+}
+
+```
+
 ### L2 Neighbors
 
 The L2 neighbor and connection information can be configured in
@@ -1411,6 +1435,23 @@ name as object key and member list as attribute.
 }
 ```
 
+### Restapi
+```
+{
+"RESTAPI": {
+    "certs": {
+        "ca_crt": "/etc/sonic/credentials/ame_root.pem",
+        "server_key": "/etc/sonic/credentials/restapiserver.key",
+        "server_crt": "/etc/sonic/credentials/restapiserver.crt",
+        "client_crt_cname": "client.sonic.net"
+    },
+    "config": {
+        "client_auth": "true",
+        "log_level": "trace",
+        "allow_insecure": "false"
+    }
+}
+```
 
 ### Tacplus Server
 
@@ -1548,6 +1589,20 @@ channel name as object key, and tagging mode as attributes.
 		"tagging_mode": "tagged"
 	}
   }
+}
+```
+
+### VOQ INBAND INTERFACE
+
+VOQ_INBAND_INTERFACE holds the name of the inband system port dedicated for cpu communication. At this time, only inband_type of "port" is supported
+
+```
+"VOQ_INBAND_INTERFACE": {
+    "Ethernet-IB0": {
+	   "inband_type": "port"
+	},
+	"Ethernet-IB0|3.3.3.1/32": {},
+    "Ethernet-IB0|3333::3:5/128": {}
 }
 ```
 
