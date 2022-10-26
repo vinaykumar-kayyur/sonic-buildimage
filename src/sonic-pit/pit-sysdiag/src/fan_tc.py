@@ -214,7 +214,7 @@ class FANTC(TestCaseCommon):
 
     def test_fan_motor_status(self, fan_name):
         ret = E.OK
-        fan_info = self.fan_ll[fan_name]
+        fan_info = self.fan_all[fan_name]
         motor_count = fan_info["Rotors"]
 
         for motorid in range(1, motor_count+1):
