@@ -260,7 +260,6 @@ def parse_png(png, hname, dpg_ecmp_content = None):
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
                 (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype) = parse_device(device)
-                # 'lo_addr', 'mgmt_addr', 'type', 'hwsku' are must fields in config db
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku}
                 if cluster != None:
                     device_data['cluster'] = cluster
