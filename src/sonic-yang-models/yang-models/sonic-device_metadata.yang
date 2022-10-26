@@ -120,7 +120,7 @@ module sonic-device_metadata {
                 }
 
                 leaf yang_config_validation {
-                    type stypes:mode-status
+                    type stypes:mode-status;
                     default disable;
                 }
 
