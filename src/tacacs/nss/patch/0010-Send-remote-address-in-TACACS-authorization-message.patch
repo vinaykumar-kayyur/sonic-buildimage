@@ -75,7 +75,7 @@ index 2de00a6..d59869b 100644
 +        return 0;
 +    }
 +
-+    // Before user session created, SSHD will create environment variable SSH_REMOTE_IP.
++    // Before user session created, SSHD will create environment variable SSH_CLIENT_IPADDR_PORT.
 +    if (!get_environment_variable_first_part(dst, size, "SSH_CLIENT_IPADDR_PORT", " ")) {
 +        return 0;
 +    }
