@@ -120,10 +120,7 @@ module sonic-device_metadata {
                 }
 
                 leaf yang_config_validation {
-                    type enumeration {
-                        enum enable;
-                        enum disable;
-                    }
+                    type stypes:mode-status
                     default disable;
                 }
 
