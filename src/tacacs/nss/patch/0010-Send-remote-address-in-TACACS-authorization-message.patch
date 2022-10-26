@@ -19,7 +19,7 @@ index 2de00a6..d59869b 100644
  
  #include <libtac/libtac.h>
  
-@@ -717,6 +718,65 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
+@@ -717,6 +718,66 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
      return fd;
  }
  
@@ -39,7 +39,8 @@ index 2de00a6..d59869b 100644
 +        return 1;
 +    }
 +
-+    char* first_part = strtok((char *)variable, delimiters);
++    char* context = NULL;
++    char* first_part = strtok_r((char *)variable, delimiters, &context);
 +    if (first_part == NULL) {
 +        if (debug) {
 +            syslog(LOG_DEBUG, "%s: can't split %s by delimiters %s", nssname, variable, delimiters);
