@@ -111,6 +111,7 @@ class SfpUtil(SfpUtilBase):
             val_file.close()
         except IOError as e:
             print("Error: unable to access file: %s" % str(e))
+            val_file.close()
             return False
 
         if content == "1":
@@ -134,6 +135,7 @@ class SfpUtil(SfpUtilBase):
             val_file.close()
         except IOError as e:
             print("Error: unable to access file: %s" % str(e))
+            val_file.close()
             return False
 
         if content == "1":
@@ -158,6 +160,7 @@ class SfpUtil(SfpUtilBase):
             return True
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            val_file.close()
             return False
 
     def reset(self, port_num):
@@ -183,6 +186,7 @@ class SfpUtil(SfpUtilBase):
             return True
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
+            val_file.close()
             return False
 
 

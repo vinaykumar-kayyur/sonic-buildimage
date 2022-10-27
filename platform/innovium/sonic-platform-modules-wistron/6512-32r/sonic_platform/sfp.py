@@ -1700,6 +1700,7 @@ class Sfp(SfpBase):
             val_file.close()
             return True
         except IOError:
+            val_file.close()
             return False
 
     def set_power_override(self, power_override, power_set):
