@@ -2,6 +2,8 @@
 ## Configuration parameters for SONiC build system
 ###############################################################################
 
+SONIC_VS_MINIMAL = n
+
 # SONIC_CONFIG_PRINT_DEPENDENCIES - show dependencies for each invoked target.
 # Before executing rule for each target its dependencies are printed to console.
 # Uncomment next line to enable:
