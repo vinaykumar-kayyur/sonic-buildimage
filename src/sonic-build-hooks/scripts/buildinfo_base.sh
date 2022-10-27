@@ -267,6 +267,10 @@ release_apt_installation_lock()
 update_preference_deb()
 {
     local version_file="$VERSION_PATH/versions-deb"
+    [ -f $VERSION_DEB_PREFERENCE ] && rm $VERSION_DEB_PREFERENCE
+    if [ "$ENABLE_VERSION_CONTROL_DEB" != "y" ]; then
+      return
+    fi
     if [ -f "$version_file" ]; then
         rm -f $VERSION_DEB_PREFERENCE
         for pacakge_version in $(cat "$version_file"); do
