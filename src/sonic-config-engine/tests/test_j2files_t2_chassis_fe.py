@@ -11,7 +11,7 @@ import tests.common_utils as utils
 class TestJ2FilesT2ChassisFe(TestCase):
     def setUp(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
+        self.script_file = [utils.PYTHON_INTERPRETTER] + [os.path.join(self.test_dir, '..', 'sonic-cfggen')]
         self.t2_chassis_fe_minigraph = os.path.join(self.test_dir, 't2-chassis-fe-graph.xml')
         self.t2_chassis_fe_vni_minigraph = os.path.join(self.test_dir, 't2-chassis-fe-graph-vni.xml')
         self.t2_chassis_fe_pc_minigraph = os.path.join(self.test_dir, 't2-chassis-fe-graph-pc.xml')
@@ -25,23 +25,32 @@ class TestJ2FilesT2ChassisFe(TestCase):
             pass
 
     def run_script(self, argument):
-        print('CMD: sonic-cfggen ' + argument)
-        output = subprocess.check_output(self.script_file + ' ' + argument, shell=True)
+        print('CMD: sonic-cfggen ', argument)
+        write_output = False
+        if '-o' in argument:
+            write_output = True
+            output_file = argument[-1]
+            argument = argument[:-2]
+
+        output = subprocess.check_output(self.script_file + argument)
 
         if utils.PY3x:
             output = output.decode()
+        if write_output:
+            with open(output_file, 'w') as f:
+                f.write(output)
 
         return output
 
     def run_diff(self, file1, file2):
-        return subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+        _, output = getstatusoutput_noshell(['diff', '-u', file1, file2])
+        return output
 
     def run_case(self, minigraph, template, target):
         template_dir = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', "frr")
         conf_template = os.path.join(template_dir, template)
         constants = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'constants', 'constants.yml')
-        cmd_args = minigraph, self.t2_chassis_fe_port_config, constants, conf_template, template_dir, self.output_file
-        cmd = "-m %s -p %s -y %s -t %s -T %s > %s" % cmd_args
+        cmd = ["-m", minigraph, "-p", self.t2_chassis_fe_port_config, "-y", constants, "-t", conf_template, "-T", template_dir, "-o", self.output_file]
         self.run_script(cmd)
 
         original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, target)
