@@ -240,8 +240,8 @@ static ssize_t set_oom_info1(struct device *dev, struct device_attribute *da, co
 	unsigned int                val;
 
 	mutex_lock(&data->lock);
-	memset(data->eeprom1, 0xFF, EEPROM_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->eeprom1, EEPROM_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= EEPROM_DATA_SIZE) {
 		for (i=0; i < strlen(buf) ; i++) {
@@ -287,8 +287,8 @@ static ssize_t set_oom_info2(struct device *dev, struct device_attribute *da, co
 	unsigned int                val;
 
 	mutex_lock(&data->lock);
-	memset(data->eeprom2, 0xFF, EEPROM_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->eeprom2, EEPROM_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= EEPROM_DATA_SIZE) {
 		for (i = 0; i < strlen(buf) ; i++) {
@@ -333,8 +333,8 @@ static ssize_t set_oom_info3(struct device *dev, struct device_attribute *da, co
 	unsigned int                val;
 
 	mutex_lock(&data->lock);
-	memset(data->eeprom3, 0xFF, EEPROM3_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->eeprom3, EEPROM3_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= EEPROM3_DATA_SIZE) {
 		for (i = 0; i < strlen(buf) ; i++) {
@@ -414,8 +414,8 @@ static ssize_t set_t_v_e(struct device *dev, struct device_attribute *da, const 
 
 	mutex_lock(&data->lock);
 	if (attr->index == OOM_TEMP_E) {
-		memset(data->tempe, 0xFF, TEMP_DATA_SIZE);
-		memset(str, 0x0, 3);
+		memzero_explicit(data->tempe, TEMP_DATA_SIZE);
+		memzero_explicit(str, sizeof(str));
 
 		if (strlen(buf) >= TEMP_DATA_SIZE) {
 			for (i = 0; i < strlen(buf) ; i++) {
@@ -441,8 +441,8 @@ static ssize_t set_t_v_e(struct device *dev, struct device_attribute *da, const 
 			memcpy(&data->eeprom1[LOWER_PAGE_OFFSET + QSFP_DD_TEMP_OFFSET], data->tempe, TEMP_DATA_SIZE);
 	}
 	else {
-		memset(data->volte, 0xFF, VOLT_DATA_SIZE);
-		memset(str, 0x0, 3);
+		memzero_explicit(data->volte, VOLT_DATA_SIZE);
+		memzero_explicit(str, sizeof(str));
 
 		if (strlen(buf) >= VOLT_DATA_SIZE) {
 			for (i = 0; i < strlen(buf) ; i++) {
@@ -491,8 +491,8 @@ static ssize_t set_qsfp_dd_chan_mon(struct device *dev, struct device_attribute 
 	unsigned int                val;
 
 	mutex_lock(&data->lock);
-	memset(data->qsfp_dd_chan_mon, 0xFF, QSFP_DD_CHAN_MON_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->qsfp_dd_chan_mon, QSFP_DD_CHAN_MON_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= QSFP_DD_CHAN_MON_DATA_SIZE) {
 		for (i=0; i < strlen(buf) ; i++) {
@@ -541,8 +541,8 @@ static ssize_t set_qsfp_dom_bulk(struct device *dev, struct device_attribute *da
 	unsigned int                val;
 
 	mutex_lock(&data->lock);
-	memset(data->qsfp_dom_bulk, 0xFF, QSFP_DOM_BULK_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->qsfp_dom_bulk, QSFP_DOM_BULK_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= QSFP_DOM_BULK_DATA_SIZE) {
 		for (i=0; i < strlen(buf) ; i++) {

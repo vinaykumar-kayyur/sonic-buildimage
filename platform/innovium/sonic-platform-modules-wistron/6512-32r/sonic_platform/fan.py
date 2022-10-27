@@ -70,6 +70,7 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
+        direction = 0
         if self.is_psu_fan:
             # psu fan direction should be the same as fan tray
             path= "{}/fan1_direction".format(SYSFS_PATH)

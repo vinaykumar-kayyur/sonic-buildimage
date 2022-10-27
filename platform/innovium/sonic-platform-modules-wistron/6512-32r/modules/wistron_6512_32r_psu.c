@@ -262,19 +262,19 @@ static ssize_t set_value(struct device *dev, struct device_attribute *da, const 
 				goto exit_err;
 			break;
 		case PSU_MFR_ID:
-			memset(&data->mfr_id, 0x0, sizeof(data->mfr_id));
+			memzero_explicit(&data->mfr_id, sizeof(data->mfr_id));
 			strncpy(data->mfr_id, buf, sizeof(data->mfr_id) - 1);
 			break;
 		case PSU_MFR_MODEL:
-			memset(&data->mfr_model, 0x0, sizeof(data->mfr_model));
+			memzero_explicit(&data->mfr_model, sizeof(data->mfr_model));
 			strncpy(data->mfr_model, buf, sizeof(data->mfr_model) - 1);
 			break;
 		case PSU_MFR_SERIAL:
-			memset(&data->mfr_serial, 0x0, sizeof(data->mfr_serial));
+			memzero_explicit(&data->mfr_serial, sizeof(data->mfr_serial));
 			strncpy(data->mfr_serial, buf, sizeof(data->mfr_serial) - 1);
 			break;
 		case PSU_MFR_REV:
-			memset(&data->mfr_rev, 0x0, sizeof(data->mfr_rev));
+			memzero_explicit(&data->mfr_rev, sizeof(data->mfr_rev));
 			strncpy(data->mfr_rev, buf, sizeof(data->mfr_rev) - 1);
 			break;
 		default:
