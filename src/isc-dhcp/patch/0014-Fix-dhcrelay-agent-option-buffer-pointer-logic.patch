@@ -16,7 +16,7 @@ diff --git a/relay/dhcrelay.c b/relay/dhcrelay.c
 index 896e1e2e..980dacae 100644
 --- a/relay/dhcrelay.c
 +++ b/relay/dhcrelay.c
-@@ -1238,8 +1238,13 @@ strip_relay_agent_options(struct interface_info *in,
+@@ -1065,8 +1065,13 @@ strip_relay_agent_options(struct interface_info *in,
  				return (0);
  
  			if (sp != op) {
@@ -32,7 +32,7 @@ index 896e1e2e..980dacae 100644
  				op = nextop;
  			} else
  				op = sp = nextop;
-@@ -1620,8 +1620,13 @@ add_relay_agent_options(struct interface_info *ip, struct dhcp_packet *packet,
+@@ -1168,8 +1168,13 @@ add_relay_agent_options(struct interface_info *ip, struct dhcp_packet *packet,
  			end_pad = NULL;
  
  			if (sp != op) {
