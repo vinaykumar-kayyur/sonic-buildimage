@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from python_sdk_api.sx_api import *
+import inspect
 
 DEVICE_ID = 1
 SWITCH_ID = 0
@@ -117,6 +118,5 @@ def is_phy_port(log_port_id):
     return get_port_type(log_port_id) == SX_PORT_TYPE_NETWORK
 
 def is_lag(log_port_id):
-    return get_port_type(log_port_id) == SX_PORT_TYPE_LAGreturn -1
-
+    return get_port_type(log_port_id) == SX_PORT_TYPE_LAG
 
