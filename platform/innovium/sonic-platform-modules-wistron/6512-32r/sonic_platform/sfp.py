@@ -297,6 +297,8 @@ class Sfp(SfpBase):
     RESET_17_32_PATH = "/sys/bus/i2c/devices/0-0007/port{}_reset"
     PRS_1_16_PATH = "/sys/bus/i2c/devices/0-0006/port{}_present"
     PRS_17_32_PATH = "/sys/bus/i2c/devices/0-0007/port{}_present"
+    LPMODE_1_16_PATH = "/sys/bus/i2c/devices/0-0006/port{}_lpmode"
+    LPMODE_17_32_PATH = "/sys/bus/i2c/devices/0-0007/port{}_lpmode"
 
     def __init__(self, sfp_index, sfp_type):
         # Init index
@@ -1356,8 +1358,17 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        # SFP doesn't support this feature
-        return False
+        lpmode = False
+        try:
+            if self.index < 16:
+                lpmode_path=self.LPMODE_1_16_PATH.format(self.port_num)
+            else:
+                lpmode_path=self.LPMODE_17_32_PATH.format(self.port_num)
+            with open(lpmode_path, 'r') as sfp_lpmode:
+                lpmode = int(sfp_lpmode.read(), 16)
+        except IOError:
+            return False
+        return lpmode == 1
 
     def get_power_override(self):
         """
@@ -1679,8 +1690,17 @@ class Sfp(SfpBase):
         Returns:
             A boolean, True if lpmode is set successfully, False if not
         """
-        # SFP doesn't support this feature
-        return False
+        try:
+            if self.index < 16:
+                lpmode_path=self.LPMODE_1_16_PATH.format(self.port_num)
+            else:
+                lpmode_path=self.LPMODE_17_32_PATH.format(self.port_num)
+            val_file = open(lpmode_path, 'w')
+            val_file.write('1' if lpmode else '0')
+            val_file.close()
+            return True
+        except IOError:
+            return False
 
     def set_power_override(self, power_override, power_set):
         """
