@@ -11,7 +11,7 @@ from sonic_py_common.general import getstatusoutput_noshell_pipe
 class TestJ2Files(TestCase):
     def setUp(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.script_file = [utils.PYTHON_INTERPRETTER] + [os.path.join(self.test_dir, '..', 'sonic-cfggen')]
+        self.script_file = [utils.PYTHON_INTERPRETTER, os.path.join(self.test_dir, '..', 'sonic-cfggen')]
         self.simple_minigraph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
         self.port_data = os.path.join(self.test_dir, 'sample-port-data.json')
         self.ztp = os.path.join(self.test_dir, "sample-ztp.json")

@@ -46,7 +46,7 @@ class YangWrapper(object):
             self.yang_parser = sonic_yang.SonicYang(path)
             self.yang_parser.loadYangModel()
             self.test_dir = os.path.dirname(os.path.realpath(__file__))
-            self.script_file = [PYTHON_INTERPRETTER] + [os.path.join(self.test_dir, '..', 'sonic-cfggen')]
+            self.script_file = [PYTHON_INTERPRETTER, os.path.join(self.test_dir, '..', 'sonic-cfggen')]
 
     def validate(self, argument):
         """
@@ -63,7 +63,6 @@ class YangWrapper(object):
             parser.add_argument("-j", "--json", help="additional json file input, used with -p, -S and -m or -k", nargs='?', const=None)
             parser.add_argument("-o", "--output-file", help="Output file", nargs='?', const=None)
             args, unknown = parser.parse_known_args(argument)
-            print(args)
 
             print('\n    Validating yang schema')
             cmd = self.script_file + ['-m', args.minigraph]
