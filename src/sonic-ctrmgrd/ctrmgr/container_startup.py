@@ -120,7 +120,6 @@ def get_docker_id():
     cmd3 = ['cut', '-f1', '-d', '/']
     cmd4 = ['rev']
     _, output = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2, cmd3, cmd4)
-    # output = proc.communicate()[0].decode("utf-8")
     return output.strip()[:12]
 
 
