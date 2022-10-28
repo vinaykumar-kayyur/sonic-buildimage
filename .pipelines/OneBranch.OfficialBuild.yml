@@ -50,7 +50,7 @@ stages:
     BUILD_NUMBER: $(Build.BuildId)
     PLATFORM_ARCH: amd64
     PASSWORD: $(SONIC_PASSWORD)
-    BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(GROUP_NAME)'
+    BUILD_OPTIONS: 'SONIC_BUILD_JOBS=4 ENABLE_DHCP_GRAPH_SERVICE=y SHUTDOWN_BGP_ON_START=y ENABLE_PFCWD_ON_START=y SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(GROUP_NAME) ${{ variables.VERSION_CONTROL_OPTIONS }}'
     VERSION_PATH: target/sonic.version
     DOCKER_DATA_ROOT_FOR_MULTIARCCH: /data/march/docker
   jobs:
@@ -90,6 +90,10 @@ stages:
         - publish: $(System.DefaultWorkingDirectory)/target
           artifact: 'sonic-buildimage.$(GROUP_NAME)'
           displayName: "Archive sonic image"
+        - publish: $(System.DefaultWorkingDirectory)/target
+          condition: or(failed(), canceled())
+          artifact: 'sonic-buildimage.$(GROUP_NAME)$(System.JobAttempt)'
+          displayName: "Archive failed sonic image"
         - script: |
             touch target/sonic-installers
             for image in `ls target | grep -E "\.(swi|bin|raw|deb)$"`; do
@@ -184,6 +188,7 @@ stages:
       jobGroups:
         - name: vs
           script: |
+            set -ex
             OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         - name: generic
@@ -228,9 +233,11 @@ stages:
             cp target/debs/bullseye/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
         - name: barefoot
           script: |
+            set -ex
             sudo modprobe overlay
             OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
-            make $OPTIONS target/sonic-barefoot.bin target/sonic-aboot-barefoot.swi && make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-bfn-rpc.gz
+            make $OPTIONS target/sonic-barefoot.bin target/sonic-aboot-barefoot.swi
+            make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-bfn-rpc.gz
         - name: marvell-armhf
           pool: sonic-armhf
           timeoutInMinutes: 2160
