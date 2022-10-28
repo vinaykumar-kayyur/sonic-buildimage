@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 import ipaddress
-
+from shlex import join
 import tests.common_utils as utils
 import minigraph
 
@@ -27,7 +27,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
-        print('\n    Running sonic-cfggen ', argument)
+        print('\n    Running sonic-cfggen ' + join(argument))
         self.assertTrue(self.yang.validate(argument))
 
         if check_stderr:

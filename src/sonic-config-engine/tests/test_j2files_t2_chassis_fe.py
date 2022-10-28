@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import subprocess
-
+from shlex import join
 from unittest import TestCase
 import tests.common_utils as utils
 
@@ -25,7 +25,7 @@ class TestJ2FilesT2ChassisFe(TestCase):
             pass
 
     def run_script(self, argument):
-        print('CMD: sonic-cfggen ', argument)
+        print('CMD: sonic-cfggen ' + join(argument))
         write_output = False
         if '-o' in argument:
             write_output = True

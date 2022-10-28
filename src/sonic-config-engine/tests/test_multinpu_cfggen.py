@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import unittest
 import yaml
-
+from shlex import join
 import tests.common_utils as utils
 
 from unittest import TestCase
@@ -34,7 +34,7 @@ class TestMultiNpuCfgGen(TestCase):
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def run_script(self, argument, check_stderr=False):
-        print('\n    Running sonic-cfggen ', argument)
+        print('\n    Running sonic-cfggen ' + join(argument))
         self.assertTrue(self.yang.validate(argument))
         write_output = False
         if '-o' in argument:

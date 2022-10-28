@@ -1,7 +1,7 @@
 import json
 import subprocess
 import os
-
+from shlex import join
 import tests.common_utils as utils
 
 from unittest import TestCase
@@ -52,7 +52,7 @@ class TestCfgGen(TestCase):
             pass
 
     def run_script(self, argument, check_stderr=False, verbose=False):
-        print('\n    Running sonic-cfggen ', argument)
+        print('\n    Running sonic-cfggen ' + join(argument))
         self.assertTrue(self.yang.validate(argument))
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
