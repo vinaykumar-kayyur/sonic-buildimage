@@ -1,7 +1,7 @@
 import json
 import subprocess
 import os
-
+from shlex import join
 from unittest import TestCase
 
 output1="""\
@@ -126,7 +126,7 @@ class TestCfgHelp(TestCase):
         self.script_file = os.path.join(self.test_dir, '..', 'sonic-cfg-help')
 
     def run_script(self, argument):
-        print('\n    Running sonic-cfg-help ', argument)
+        print('\n    Running sonic-cfg-help ' + join(argument))
         output = subprocess.check_output([self.script_file] + argument)
 
         output = output.decode()
