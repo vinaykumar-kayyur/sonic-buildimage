@@ -1452,7 +1452,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'hostname': hostname,
         'hwsku': hwsku,
         'type': device_type,
-        'synchronous_mode': 'enable'
+        'synchronous_mode': 'enable',
+        'yang_config_validation': 'disable'
         }
     }
 
