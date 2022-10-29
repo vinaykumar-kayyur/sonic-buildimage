@@ -1,11 +1,11 @@
 from .log import log_err, log_info, log_debug
-from swsssdk import SonicV2Connector
+from swsscommon import swsscommon
 import time
 
 class StaticRouteTimer(object):
     """ This class checks the static routes and deletes those entries that have not been refreshed """
     def __init__(self):
-        self.db = SonicV2Connector()
+        self.db = swsscommon.SonicV2Connector()
         self.db.connect(self.db.APPL_DB)
         self.timer = None
         self.start = None
