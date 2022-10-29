@@ -43,7 +43,6 @@ class TestJ2Files(TestCase):
 
     def run_script(self, argument, output_file=None):
         print('CMD: sonic-cfggen ', argument)
-        write_output = False
         output = subprocess.check_output(self.script_file + argument)
 
         if utils.PY3x:

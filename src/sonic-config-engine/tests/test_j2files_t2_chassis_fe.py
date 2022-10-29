@@ -29,7 +29,7 @@ class TestJ2FilesT2ChassisFe(TestCase):
 
         if utils.PY3x:
             output = output.decode()
-        if write_output:
+        if output_file:
             with open(output_file, 'w') as f:
                 f.write(output)
 
