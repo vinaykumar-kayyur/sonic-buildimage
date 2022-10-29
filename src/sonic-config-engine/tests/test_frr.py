@@ -21,13 +21,8 @@ class TestCfgGen(TestCase):
             pass
 
 
-    def run_script(self, argument, check_stderr=False):
+    def run_script(self, argument, check_stderr=False, output_file=None):
 #        print '\n    Running sonic-cfggen ' + argument
-        write_output = False
-        if '-o' in argument:
-            write_output = True
-            output_file = argument[-1]
-            argument = argument[:-2]
 
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
@@ -36,7 +31,7 @@ class TestCfgGen(TestCase):
 
         if utils.PY3x:
             output = output.decode()
-        if write_output:
+        if output_file:
             with open(output_file, 'w') as f:
                 f.write(output)
 
@@ -58,8 +53,8 @@ class TestCfgGen(TestCase):
         template_dir = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', "frr")
         conf_template = os.path.join(template_dir, template)
         constants = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'constants', 'constants.yml')
-        cmd = ['-m', self.t0_minigraph, '-p', self.t0_port_config, '-y', constants, '-t', conf_template, '-T', template_dir, '-o', self.output_file]
-        self.run_script(cmd)
+        cmd = ['-m', self.t0_minigraph, '-p', self.t0_port_config, '-y', constants, '-t', conf_template, '-T', template_dir]
+        self.run_script(cmd, output_file=self.output_file)
 
         original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, target)
         r = filecmp.cmp(original_filename, self.output_file)

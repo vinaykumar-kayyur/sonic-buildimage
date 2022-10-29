@@ -1,6 +1,5 @@
 import os
 import subprocess
-from shlex import join
 import tests.common_utils as utils
 
 from unittest import TestCase
@@ -17,7 +16,7 @@ class TestCfgGenT2ChassisFe(TestCase):
         self.t2_chassis_fe_port_config = os.path.join(self.test_dir, 't2-chassis-fe-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
-        print('\n    Running sonic-cfggen ' + join(argument))
+        print('\n    Running sonic-cfggen ' + ' '.join(argument))
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
         else:

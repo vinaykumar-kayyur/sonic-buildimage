@@ -61,7 +61,6 @@ class YangWrapper(object):
             parser.add_argument("-p", "--port-config", help="port config file, used with -m or -k", nargs='?', const=None)
             parser.add_argument("-S", "--hwsku-config", help="hwsku config file, used with -p and -m or -k", nargs='?', const=None)
             parser.add_argument("-j", "--json", help="additional json file input, used with -p, -S and -m or -k", nargs='?', const=None)
-            parser.add_argument("-o", "--output-file", help="Output file", nargs='?', const=None)
             args, unknown = parser.parse_known_args(argument)
 
             print('\n    Validating yang schema')
@@ -77,12 +76,7 @@ class YangWrapper(object):
             if args.json is not None:
                 cmd += ['-j', args.json]
             cmd += ['--print-data']
-            if not args.output_file:
-                output = subprocess.check_output(cmd).decode()
-            else:
-                output = subprocess.check_output(cmd).decode()
-                with open(args.output_file, 'w') as f:
-                    f.write(output)
+            output = subprocess.check_output(cmd).decode()
             try:
                 self.yang_parser.loadData(configdbJson=json.loads(output))
                 self.yang_parser.validate_data_tree()

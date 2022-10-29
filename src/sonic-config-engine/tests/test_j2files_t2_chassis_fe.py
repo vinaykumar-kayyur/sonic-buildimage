@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import subprocess
-from shlex import join
 from unittest import TestCase
 import tests.common_utils as utils
 
@@ -24,14 +23,8 @@ class TestJ2FilesT2ChassisFe(TestCase):
         except OSError:
             pass
 
-    def run_script(self, argument):
-        print('CMD: sonic-cfggen ' + join(argument))
-        write_output = False
-        if '-o' in argument:
-            write_output = True
-            output_file = argument[-1]
-            argument = argument[:-2]
-
+    def run_script(self, argument, output_file=None):
+        print('CMD: sonic-cfggen ' + ' '.join(argument))
         output = subprocess.check_output(self.script_file + argument)
 
         if utils.PY3x:
@@ -50,8 +43,8 @@ class TestJ2FilesT2ChassisFe(TestCase):
         template_dir = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', "frr")
         conf_template = os.path.join(template_dir, template)
         constants = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'constants', 'constants.yml')
-        cmd = ["-m", minigraph, "-p", self.t2_chassis_fe_port_config, "-y", constants, "-t", conf_template, "-T", template_dir, "-o", self.output_file]
-        self.run_script(cmd)
+        cmd = ["-m", minigraph, "-p", self.t2_chassis_fe_port_config, "-y", constants, "-t", conf_template, "-T", template_dir]
+        self.run_script(cmd, output_file=self.output_file)
 
         original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, target)
         r = filecmp.cmp(original_filename, self.output_file)

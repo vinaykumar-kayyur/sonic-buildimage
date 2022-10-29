@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import unittest
 import yaml
-from shlex import join
 import tests.common_utils as utils
 
 from unittest import TestCase
@@ -33,15 +32,9 @@ class TestMultiNpuCfgGen(TestCase):
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
-    def run_script(self, argument, check_stderr=False):
-        print('\n    Running sonic-cfggen ' + join(argument))
+    def run_script(self, argument, check_stderr=False, output_file=None):
+        print('\n    Running sonic-cfggen ' + ' '.join(argument))
         self.assertTrue(self.yang.validate(argument))
-        write_output = False
-        if '-o' in argument:
-            write_output = True
-            output_file = argument[-1]
-            argument = argument[:-2]
-
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
         else:
@@ -49,7 +42,7 @@ class TestMultiNpuCfgGen(TestCase):
 
         if utils.PY3x:
             output = output.decode()
-        if write_output:
+        if output_file:
             with open(output_file, 'w') as f:
                 f.write(output)
 
@@ -68,8 +61,8 @@ class TestMultiNpuCfgGen(TestCase):
         template_dir = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', "frr")
         conf_template = os.path.join(template_dir, template)
         constants = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'constants', 'constants.yml')
-        cmd = ['-n', asic, '-m', self.sample_graph, '-p', port_config, '-y', constants, '-t', conf_template, '-T', template_dir, '-o', self.output_file]
-        self.run_script(cmd)
+        cmd = ['-n', asic, '-m', self.sample_graph, '-p', port_config, '-y', constants, '-t', conf_template, '-T', template_dir]
+        self.run_script(cmd, output_file=self.output_file)
 
         original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, target)
         r = filecmp.cmp(original_filename, self.output_file)
