@@ -103,6 +103,33 @@ module sonic-events-swss {
             }
 
             uses evtcmn:sonic-events-cmn;
+        },
+
+        container select-operation-failure {
+            evtcmn:ALARM_SEVERITY_MAJOR;
+
+            description "
+                Describes select operation fails due to timeout or other reason.";
+
+            leaf operation_result {
+                type string;
+                description "Select operation result.";
+            }
+
+            leaf command {
+                type string;
+            }
+
+            uses evtcmn:sonic-events-cmn;
+        }
+
+        container redis-getresponse-failed {
+            evtcmn:ALARM_SEVERITY_MAJOR;
+
+            description "
+                Describes Redis getresponse failure.";
+
+            uses evtcmn:sonic-events-cmn;
         }
     }
 }

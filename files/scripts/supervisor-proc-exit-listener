@@ -113,7 +113,7 @@ def publish_events(process_name, container_name):
     events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
     params = swsscommon.FieldValueMap()
     params["process_name"] = process_name
-    params["container_name"] = container_name
+    params["ctr_name"] = container_name
     swsscommon.event_publish(events_handle, EVENTS_PUBLISHER_TAG, params)
     swsscommon.events_deinit_publisher(events_handle)
 
