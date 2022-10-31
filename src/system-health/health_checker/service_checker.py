@@ -310,7 +310,7 @@ class ServiceChecker(HealthChecker):
             data[items[0].strip()] = items[1].strip()
         return data
 
-    def publish_events(container_name, critical_process_list):
+    def publish_events(self, container_name, critical_process_list):
         events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
         params = swsscommon.FieldValueMap()
         params["ctr_name"] = container_name
