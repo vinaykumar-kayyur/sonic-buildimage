@@ -4,6 +4,7 @@
 
 SONIC_VS_MINIMAL = n
 SONIC_MLNX_MINIMAL = n
+SONIC_INVM_MINIMAL = n
 
 # SONIC_CONFIG_PRINT_DEPENDENCIES - show dependencies for each invoked target.
 # Before executing rule for each target its dependencies are printed to console.
