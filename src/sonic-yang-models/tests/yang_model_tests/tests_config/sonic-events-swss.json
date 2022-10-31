@@ -300,5 +300,55 @@
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
         }
+    },
+    "SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_OPERATION_RESULT": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:select-operation-failure": {
+                "operation_result": 0,
+                "command": "command",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_COMMAND": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:select-operation-failure": {
+                "operation_result": "operation_result",
+                "command": 0,
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_TIMESTAMP": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:select-operation-failure": {
+                "operation_result": "operation_result",
+                "command": "command",
+                "timestamp": "INCORRECT_TIMESTAMP"
+            }
+        }
+    },
+   "SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_VALID": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:select-operation-failure": {
+                "operation_result": "operation_result",
+                "command": "command",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_SWSS_REDIS_GETRESPONSE_FAILURE_INCORRECT_TIMESTAMP": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:redis-getresponse-failure": {
+                "timestamp": "INCORRECT_TIMESTAMP"
+            }
+        }
+    },
+    "SONIC_EVENTS_SWSS_REDIS_GETRESPONSE_FAILURE_VALID": {
+        "sonic-events-swss:sonic-events-swss": {
+            "sonic-events-swss:redis-getresponse-failure": {
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
     }
 }
