@@ -262,7 +262,17 @@
     "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME": {
         "sonic-events-host:sonic-events-host": {
             "sonic-events-host:mem-threshold-exceeded": {
-                "ctr_name": 0,
+                "ctr_name": "Invalid$",
+                "mem_usage": 123456,
+                "threshold": 123456,
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME_LENGTH": {
+        "sonic-events-host:sonic-events-host": {
+            "sonic-events-host:mem-threshold-exceeded": {
+                "ctr_name": "invalid-length-for-ctr-name-too-long",
                 "mem_usage": 123456,
                 "threshold": 123456,
                 "timestamp": "1985-04-12T23:20:50.52Z"
@@ -312,7 +322,16 @@
     "SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_CTR_NAME": {
         "sonic-events-host:sonic-events-host": {
             "sonic-events-host:process-exited-unexpectedly": {
-                "ctr_name": 0,
+                "ctr_name": "Invalid$",
+                "process_name": "process_name",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_CTR_NAME_LENGTH": {
+        "sonic-events-host:sonic-events-host": {
+            "sonic-events-host:process-exited-unexpectedly": {
+                "ctr_name": "invalid-length-for-ctr-name-too-long",
                 "process_name": "process_name",
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
@@ -322,7 +341,16 @@
         "sonic-events-host:sonic-events-host": {
             "sonic-events-host:process-exited-unexpectedly": {
                 "ctr_name": "container_name",
-                "process_name": 0,
+                "process_name": "Invalid$",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_PROCESS_NAME_LENGTH": {
+        "sonic-events-host:sonic-events-host": {
+            "sonic-events-host:process-exited-unexpectedly": {
+                "ctr_name": "container_name",
+                "process_name": "invalid-length-for-process-name-too-long",
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
         }
@@ -348,7 +376,16 @@
     "SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_CTR_NAME": {
         "sonic-events-host:sonic-events-host": {
             "sonic-events-host:process-not-running": {
-                "ctr_name": 0,
+                "ctr_name": "Invalid$",
+                "process_name": "process_name",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_CTR_NAME_LENGTH": {
+        "sonic-events-host:sonic-events-host": {
+            "sonic-events-host:process-not-running": {
+                "ctr_name": "invalid-length-for-ctr-name-too-long",
                 "process_name": "process_name",
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
@@ -358,7 +395,16 @@
         "sonic-events-host:sonic-events-host": {
             "sonic-events-host:process-not-running": {
                 "ctr_name": "container_name",
-                "process_name": 0,
+                "process_name": "Invalid$",
+                "timestamp": "1985-04-12T23:20:50.52Z"
+            }
+        }
+    },
+    "SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_PROCESS_NAME_LENGTH": {
+        "sonic-events-host:sonic-events-host": {
+            "sonic-events-host:process-not-running": {
+                "ctr_name": "container_name",
+                "process_name": "invalid-length-for-process-name-too-long",
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
         }

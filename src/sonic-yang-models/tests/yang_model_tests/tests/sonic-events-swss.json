@@ -60,13 +60,19 @@
 	},
 	"SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_OPERATION_RESULT": {
 		"desc": "SELECT_OPERATION_FAILURE_EVENT_INCORRECT_OPERATION_RESULT failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["operation_result"]
+		"eStr": "Invalid select operation failure operation_result."
+	},
+	"SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_OPERATION_RESULT_LENGTH": {
+		"desc": "SELECT_OPERATION_FAILURE_EVENT_INCORRECT_OPERATION_RESULT_LENGTH failure.",
+		"eStr": "Invalid length for select operation failure operation_result."
 	},
 	"SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_COMMAND": {
 		"desc": "SELECT_OPERATION_FAILURE_EVENT_INCORRECT_COMMAND failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["command"]
+		"eStr": "Invalid select operation failure command."
+	},
+	"SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_COMMAND_LENGTH": {
+		"desc": "SELECT_OPERATION_FAILURE_EVENT_INCORRECT_COMMAND_LENGTH failure.",
+		"eStr": "Invalid length for select operation failure command."
 	},
 	"SONIC_EVENTS_SWSS_SELECT_OPERATION_FAILURE_INCORRECT_TIMESTAMP": {
 		"desc": "SELECT_OPERATION_FAILURE_EVENT_INCORRECT_TIMESTAMP failure.",

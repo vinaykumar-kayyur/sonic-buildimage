@@ -114,8 +114,11 @@
 	},
         "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME": {
 		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_CTR_NAME failure.",
-		"eStrKey": "InvalidValue",
-                "eStr": ["ctr_name"]
+                "eStr": "Invalid mem treshold exceeded ctr_name."
+	},
+	"SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME_LENGTH": {
+		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_CTR_NAME_LENGTH failure.",
+                "eStr": "Invalid length for mem treshold exceeded ctr_name."
 	},
         "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_MEM_USAGE": {
 		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_MEM_USAGE failure.",
@@ -136,13 +139,19 @@
 	},
 	"SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_CTR_NAME": {
 		"desc": "PROCESS_EXITED_UNEXPECTEDLY_EVENT_INCORRECT_CTR_NAME failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["ctr_name"]
+		"eStr": "Invalid process exited unexpectedly ctr_name."
+	},
+	"SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_CTR_NAME_LENGTH": {
+		"desc": "PROCESS_EXITED_UNEXPECTEDLY_EVENT_INCORRECT_CTR_NAME_LENGTH failure.",
+		"eStr": "Invalid length for process exited unexpectedly ctr_name."
 	},
 	"SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_PROCESS_NAME": {
 		"desc": "PROCESS_EXITED_UNEXPECTEDLY_EVENT_INCORRECT_PROCESS_NAME failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["process_name"]
+		"eStr": "Invalid process exited unexpectedly process_name."
+	},
+	"SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_PROCESS_NAME_LENGTH": {
+		"desc": "PROCESS_EXITED_UNEXPECTEDLY_EVENT_INCORRECT_PROCESS_NAME_LENGTH failure.",
+		"eStr": "Invalid length for process exited unexpectedly process_name."
 	},
 	"SONIC_EVENTS_HOST_PROCESS_EXITED_UNEXPECTEDLY_INCORRECT_TIMESTAMP": {
 		"desc": "PROCESS_EXITED_UNEXPECTEDLY_EVENT_INCORRECT_TIMESTAMP failure.",
@@ -153,13 +162,19 @@
 	},
 	"SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_CTR_NAME": {
 		"desc": "PROCESS_NOT_RUNNING_EVENT_INCORRECT_CTR_NAME failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["ctr_name"]
+		"eStr": "Invalid process not running ctr_name."
+	},
+	"SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_CTR_NAME_LENGTH": {
+		"desc": "PROCESS_NOT_RUNNING_EVENT_INCORRECT_CTR_NAME_LENGTH failure.",
+		"eStr": "Invalid length process not running ctr_name."
 	},
 	"SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_PROCESS_NAME": {
 		"desc": "PROCESS_NOT_RUNNING_EVENT_INCORRECT_PROCESS_NAME failure.",
-		"eStrKey": "InvalidValue",
-		"eStr": ["process_name"]
+		"eStr": "Invalid process not running process_name."
+	},
+	"SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_PROCESS_NAME_LENGTH": {
+		"desc": "PROCESS_NOT_RUNNING_EVENT_INCORRECT_PROCESS_NAME_LENGTH failure.",
+		"eStr": "Invalid length for process not running process_name."
 	},
 	"SONIC_EVENTS_HOST_PROCESS_NOT_RUNNING_INCORRECT_TIMESTAMP": {
 		"desc": "PROCESS_NOT_RUNNING_EVENT_INCORRECT_TIMESTAMP failure.",

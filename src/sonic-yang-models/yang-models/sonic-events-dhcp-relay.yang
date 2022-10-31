@@ -77,7 +77,7 @@ module sonic-events-dhcp-relay {
             }
 
             uses evtcmn:sonic-events-cmn;
-        },
+        }
 
         container dhcp-relay-bind-failure {
             evtcmn:ALARM_SEVERITY_MAJOR;
@@ -98,13 +98,12 @@ module sonic-events-dhcp-relay {
             leaf type {
                 type enumeration {
                     enum "local";
-                    enum "global"
+                    enum "global";
                 }
                 description "Address type";
             }
 
             uses evtcmn:sonic-events-cmn;
         }
-
     }
 }

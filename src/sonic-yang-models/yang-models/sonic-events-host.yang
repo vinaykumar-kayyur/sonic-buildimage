@@ -178,7 +178,7 @@ module sonic-events-host {
                 Declares an event for invalid freelist failure.";
 
             uses evtcmn:sonic-events-cmn;
-        },
+        }
 
         container mem-threshold-exceeded {
             evtcmn:EVENT_SEVERITY_2;
@@ -187,9 +187,19 @@ module sonic-events-host {
                 Declares an event for memory exceeding threshold failure.";
 
             leaf ctr_name {
-                type string;
+                type string {
+                    pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                        error-message "Invalid mem threshold exceeded ctr_name.";
+                        error-app-tag mem-threshold-exceeded-invalid-ctr-name;
+                    }
+                    length 1..32 {
+                        error-message "Invalid length for mem threshold exceeded ctr_name.";
+                        error-app-tag mem-threshold-exceeded-invalid-ctr-name-length;
+                    }
+                }
                 description "Container name";
             }
+
 
             leaf mem_usage {
                 type uint64;
@@ -202,7 +212,7 @@ module sonic-events-host {
             }
 
             uses evtcmn:sonic-events-cmn;
-        },
+        }
 
         container process-exited-unexpectedly {
             evtcmn:EVENT_SEVERITY_2;
@@ -211,17 +221,35 @@ module sonic-events-host {
                 Declares an event in which a critical process exits unexpectedly.";
 
             leaf process_name {
-                type string;
+                type string {
+                    pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                        error-message "Invalid process exited unexpectedly process_name.";
+                        error-app-tag process-exited-unexpectedly-invalid-process-name;
+                    }
+                    length 1..32 {
+                        error-message "Invalid length for process exited unexpectedly process_name.";
+                        error-app-tag process-exited-unexpectedly-invalid-process-name-length;
+                    }
+                }
                 description "Name of process that is exiting";
             }
 
             leaf ctr_name {
-                type string;
+                type string {
+                    pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                        error-message "Invalid process exited unexpectedly ctr_name.";
+                        error-app-tag process-exited-unexpectedly-invalid-ctr-name;
+                    }
+                    length 1..32 {
+                        error-message "Invalid length for process exited unexpectedly ctr_name.";
+                        error-app-tag process-exited-unexpectedly-invalid-ctr-name-length;
+                    }
+                }
                 description "Container name";
             }
 
             uses evtcmn:sonic-events-cmn;
-        },
+        }
 
         container process-not-running {
             evtcmn:EVENT_SEVERITY_2;
@@ -230,12 +258,30 @@ module sonic-events-host {
                 Declares an event in which a critical process exits unexpectedly.";
 
             leaf process_name {
-                type string;
-                description "Name of process that is exiting";
+                type string {
+                    pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                        error-message "Invalid process not running process_name.";
+                        error-app-tag process-not-running-invalid-process-name;
+                    }
+                    length 1..32 {
+                        error-message "Invalid length for process not running process_name.";
+                        error-app-tag process-not-running-invalid-process-name-length;
+                    }
+                }
+                description "Name of process that is not running";
             }
 
             leaf ctr_name {
-                type string;
+                type string {
+                    pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                        error-message "Invalid process not running ctr_name.";
+                        error-app-tag process-not-running-invalid-ctr-name;
+                    }
+                    length 1..32 {
+                        error-message "Invalid length for process not running ctr_name.";
+                        error-app-tag process-not-running-invalid-ctr-name-length;
+                    }
+                }
                 description "Container name";
             }
 
