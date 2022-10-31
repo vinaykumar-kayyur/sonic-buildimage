@@ -12,6 +12,8 @@ from . import utils
 SYSLOG_IDENTIFIER = 'service_checker'
 logger = Logger(log_identifier=SYSLOG_IDENTIFIER)
 
+EVENTS_PUBLISHER_SOURCE = "sonic-events-host"
+EVENTS_PUBLISHER_TAG = "process-not-running"
 
 class ServiceChecker(HealthChecker):
     """
@@ -308,6 +310,15 @@ class ServiceChecker(HealthChecker):
             data[items[0].strip()] = items[1].strip()
         return data
 
+    def publish_events(self, container_name, critical_process_list):
+        events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
+        params = swsscommon.FieldValueMap()
+        params["ctr_name"] = container_name
+        for process_name in critical_process_list:
+            params["process_name"] = process_name
+            swsscommon.event_publish(events_handle, EVENTS_PUBLISHER_TAG, params)
+        swsscommon.events_deinit_publisher(events_handle)
+
     def check_process_existence(self, container_name, critical_process_list, config, feature_table):
         """Check whether the process in the specified container is running or not.
 
@@ -332,6 +343,7 @@ class ServiceChecker(HealthChecker):
                 if process_status is None:
                     for process_name in critical_process_list:
                         self.set_object_not_ok('Process', '{}:{}'.format(container_name, process_name), "'{}' is not running".format(process_name))
+                    publish_events(container_name, critical_process_list)
                     return
 
                 process_status = self._parse_supervisorctl_status(process_status.strip().splitlines())
