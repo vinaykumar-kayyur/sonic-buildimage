@@ -136,6 +136,7 @@ module sonic-events-swss {
                         error-app-tag select-operation-failure-invalid-command-length;
                     }
                 }
+                description "Operation command.";
             }
 
             uses evtcmn:sonic-events-cmn;
