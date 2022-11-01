@@ -25,28 +25,27 @@ jobs:
         for ((i=0;i<$count;i++))
         do
           url=$(cat prs.log | jq -r ".[$i].url")
-          echo PR: $(($i+1))/$count, URL: $url
+          created_at=$(cat prs.log | jq -r ".[$i].createdAt")
+          echo PR: $(($i+1))/$count, URL: $url, createdAt: $created_at, now: $(date -u +"%FT%TZ")
           [[ "$url" == "" ]] && continue
+          [[ $created_at > $(date --date "1 hour ago" -u +"%FT%TZ") ]] && continue
           checks=$(cat prs.log | jq ".[$i].statusCheckRollup")
           checks_count=$(echo $checks | jq 'length')
           echo Checks count: $checks_count
           for ((j=0;j<$checks_count;j++))
           do
             check=$(echo $checks | jq ".[$j]")
-            status=$(echo $check | jq -r '.status')
             state=$(echo $check | jq -r '.state')
             conclusion=$(echo $check | jq -r '.conclusion')
-            # EasyCLA finish flag:  state=SUCCESS
-            # Others finish flag:   status=COMPLETED
-            if [[ "$status" != "COMPLETED" ]] && [[ "$state" != "SUCCESS" ]];then
-              echo "$url Check didn't finished."
-              echo $check | jq
-              continue 2
-            fi
+
             # EasyCLA success flag:  state=SUCCESS
             # Others success flag:   conclusion in SUCCESS,NEUTRAL
-            if [[ "$state" != "SUCCESS" ]] && [[ "$conclusion" != "SUCCESS" ]] && [[ "$conclusion" != "NEUTRAL" ]];then
-              echo "$url Check didn't pass"
+            if [[ "$state" == "SUCCESS" ]];then
+              # check pass
+            elif [[ "$conclusion" == "SUCCESS" ]] || [[ "$conclusion" == "NEUTRAL" ]];then
+              # check pass
+            else
+              echo "$url Check failed!!!"
               echo $check | jq
               continue 2
             fi
