@@ -114,11 +114,11 @@
 	},
         "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME": {
 		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_CTR_NAME failure.",
-                "eStr": "Invalid mem treshold exceeded ctr_name."
+                "eStr": "Invalid ctr_name."
 	},
 	"SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_CTR_NAME_LENGTH": {
 		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_CTR_NAME_LENGTH failure.",
-                "eStr": "Invalid length for mem treshold exceeded ctr_name."
+                "eStr": "Invalid length for ctr_name."
 	},
         "SONIC_EVENTS_HOST_MEM_THRESHOLD_EXCEEDED_INCORRECT_MEM_USAGE": {
 		"desc": "MEM_THRESHOLD_EXCEEDED_EVENT_INCORRECT_MEM_USAGE failure.",
