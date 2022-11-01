@@ -354,19 +354,5 @@
                 "timestamp": "1985-04-12T23:20:50.52Z"
             }
         }
-    },
-    "SONIC_EVENTS_SWSS_REDIS_GETRESPONSE_FAILURE_INCORRECT_TIMESTAMP": {
-        "sonic-events-swss:sonic-events-swss": {
-            "sonic-events-swss:redis-getresponse-failure": {
-                "timestamp": "INCORRECT_TIMESTAMP"
-            }
-        }
-    },
-    "SONIC_EVENTS_SWSS_REDIS_GETRESPONSE_FAILURE_VALID": {
-        "sonic-events-swss:sonic-events-swss": {
-            "sonic-events-swss:redis-getresponse-failure": {
-                "timestamp": "1985-04-12T23:20:50.52Z"
-            }
-        }
     }
 }

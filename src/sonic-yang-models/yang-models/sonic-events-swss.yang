@@ -140,14 +140,5 @@ module sonic-events-swss {
 
             uses evtcmn:sonic-events-cmn;
         }
-
-        container redis-getresponse-failure {
-            evtcmn:ALARM_SEVERITY_MAJOR;
-
-            description "
-                Describes Redis getresponse failure.";
-
-            uses evtcmn:sonic-events-cmn;
-        }
     }
 }
