@@ -26,6 +26,7 @@ jobs:
         do
           url=$(cat prs.log | jq -r ".[$i].url")
           echo PR: $(($i+1))/$count, URL: $url
+          [[ "$url" == "" ]] && continue
           checks=$(cat prs.log | jq ".[$i].statusCheckRollup")
           checks_count=$(echo $checks | jq 'length')
           echo Checks count: $checks_count
@@ -52,6 +53,6 @@ jobs:
           done
           # merge the PR
           echo ========Merging  PR========
-          gh pr merge --squash --admin -R sonic-net/sonic-buildimage $url || true
+          gh pr merge --rebase --admin -R sonic-net/sonic-buildimage $url || true
           echo ========Finished PR========
         done
