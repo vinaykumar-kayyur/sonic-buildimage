@@ -58,9 +58,6 @@ class ServiceChecker(HealthChecker):
         self.load_critical_process_cache()
 
         self.events_handle = events_init_publisher(EVENTS_PUBLISHER_SOURCE)
-
-    def __del__(self):
-        events_deinit_publisher(self.events_handle)
  
     def get_expected_running_containers(self, feature_table):
         """Get a set of containers that are expected to running on SONiC
@@ -294,7 +291,7 @@ class ServiceChecker(HealthChecker):
         self.reset()
         self.check_by_monit(config)
         self.check_services(config)
-
+        events_deinit_publisher(self.events_handle)
 
     def _parse_supervisorctl_status(self, process_status):
         """Expected input:
