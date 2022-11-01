@@ -24,7 +24,7 @@ class ServiceChecker(HealthChecker):
     CRITICAL_PROCESSES_PATH = 'etc/supervisor/critical_processes'
 
     # Command to get merged directory of a container
-    GET_CONTAINER_FOLDER_CMD = ['docker', 'inspect', '', '--format', "{{{{.GraphDriver.Data.MergedDir}}}}"]
+    GET_CONTAINER_FOLDER_CMD = ['docker', 'inspect', '', '--format', "{{.GraphDriver.Data.MergedDir}}"]
 
     # Command to query the status of monit service.
     CHECK_MONIT_SERVICE_CMD = ['systemctl', 'is-active', 'monit.service']
@@ -168,7 +168,7 @@ class ServiceChecker(HealthChecker):
         self.need_save_cache = True
 
     def _get_container_folder(self, container):
-        ServiceChecker.GET_CONTAINER_FOLDER_CMD = str(container)
+        ServiceChecker.GET_CONTAINER_FOLDER_CMD[2] = str(container)
         container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD)
         if container_folder is None:
             return container_folder
