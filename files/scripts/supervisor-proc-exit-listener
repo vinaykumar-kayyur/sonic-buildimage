@@ -155,6 +155,7 @@ def main(argv):
                         msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
                         syslog.syslog(syslog.LOG_INFO, msg)
                         publish_events(payload_headers['processname'], container_name)
+                        swsscommon.events_deinit_publisher(events_handle)
                         os.kill(os.getppid(), signal.SIGTERM)
                     else:
                         process_under_alerting[process_name]["last_alerted"] = time.time()
@@ -183,8 +184,6 @@ def main(argv):
                 process_under_alerting[process_name]["last_alerted"] = epoch_time
                 process_under_alerting[process_name]["dead_minutes"] += elapsed_mins
                 generate_alerting_message(process_name, process_under_alerting[process_name]["dead_minutes"])
-    swsscommon.events_deinit_publisher(events_handle)
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
