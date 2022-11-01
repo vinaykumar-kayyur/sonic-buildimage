@@ -31,6 +31,7 @@ from swsscommon import swsscommon
 
 EVENTS_PUBLISHER_SOURCE = "sonic-events-host"
 EVENTS_PUBLISHER_TAG = "mem-threshold-exceeded"
+events_handle = None
 
 def get_command_result(command):
     """Executes the command and return the resulting output.
@@ -59,13 +60,11 @@ def get_command_result(command):
     return command_stdout.strip()
 
 def publish_events(container_name, mem_usage_bytes, threshold_value):
-    events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
     params = swsscommon.FieldValueMap()
     params["ctr_name"] = container_name
     params["mem_usage"] = mem_usage_bytes
     params["threshold"] = threshold_value
     swsscommon.event_publish(events_handle, EVENTS_PUBLISHER_TAG, params)
-    swsscommon.events_deinit_publisher(events_handle)
 
 def check_memory_usage(container_name, threshold_value):
     """Checks the memory usage of a container and writes an alerting messages into
@@ -146,6 +145,7 @@ def get_running_container_names():
 
 
 def main():
+    global events_handle
     parser = argparse.ArgumentParser(description="Check memory usage of a container \
             and an alerting message will be written into syslog if memory usage \
             is larger than the threshold value", usage="/usr/bin/memory_checker <container_name> <threshold_value_in_bytes>")
@@ -162,13 +162,14 @@ def main():
         sys.exit(0)
 
     running_container_names = get_running_container_names()
+    events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
     if args.container_name in running_container_names:
         check_memory_usage(args.container_name, args.threshold_value)
     else:
         syslog.syslog(syslog.LOG_INFO,
                       "[memory_checker] Exits without checking memory usage since container '{}' is not running!"
                       .format(args.container_name))
-
+    swsscommon.events_deinit_publisher(events_handle)
 
 if __name__ == "__main__":
     main()
