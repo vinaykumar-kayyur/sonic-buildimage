@@ -22,7 +22,7 @@ class DeviceGlobalCfgMgr(Manager):
         self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/switch_type"),], self.on_switch_type_change)
         super(DeviceGlobalCfgMgr, self).__init__(
             common_objs,
-            [("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/switch_type"),],
+            [],
             db,
             table,
         )
