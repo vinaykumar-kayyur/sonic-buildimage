@@ -84,13 +84,21 @@ data_path="$image_path/platform/data"
 boot_image_path="$image_path/$boot_image"
 installer_image_path="$image_path/$installer_image"
 
-boot_device=$(echo "$target_path" | cut -d '/' -f3)
 boot_config="$target_path/boot-config"
 
 cmdline_allowlist="crashkernel hwaddr_ma1 sonic_fips"
 
 # for backward compatibility with the sonic_upgrade= behavior
 install="${install:-${sonic_upgrade:-}}"
+
+boot_device=
+# sets the boot device to boot from
+# By default its "flash" unless a "drive" is detected.
+if grep -q block_drive= /etc/cmdline; then
+    boot_device="drive"
+else
+    boot_device="flash"
+fi
 
 is_secureboot_enabled() {
     if $in_aboot; then
