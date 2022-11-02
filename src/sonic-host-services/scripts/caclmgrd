@@ -355,7 +355,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 nat_source_ipv6_set = acl_source_ip_map[acl_service]["ipv6"] if acl_source_ip_map and acl_source_ip_map[acl_service]["ipv6"] else { "::/0" }
 
                 for ip_protocol in self.ACL_SERVICES[acl_service]["ip_protocols"]:
-                    if self.ACL_SERVICES[acl_service]["multi_asic_ns_to_host_fwd"]:
+                    if "dst_ports" in self.ACL_SERVICES[acl_service]:
                         for dst_port in  self.ACL_SERVICES[acl_service]["dst_ports"]: 
                             for ipv4_src_ip in nat_source_ipv4_set:
                                 # IPv4 rules
