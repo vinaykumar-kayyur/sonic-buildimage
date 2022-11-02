@@ -11,8 +11,8 @@ DEFAULT_MIRROR_SECURITY_URLS=http://debian-archive.trafficmanager.net/debian-sec
 
 # The armhf does not support armhf, debian.org will be used by default
 if [ "$ARCHITECTURE" == "armhf" ]; then
-    DEFAULT_MIRROR_URLS=http://deb.debian.org/debian/,http://cdn1.packages.trafficmanager.net/snapshot/debian/latest/
-    DEFAULT_MIRROR_SECURITY_URLS=http://security.debian.org/,http://cdn1.packages.trafficmanager.net/snapshot/debian-security/latest/
+    DEFAULT_MIRROR_URLS=http://deb.debian.org/debian/,http://packages.trafficmanager.net/debian/debian/
+    DEFAULT_MIRROR_SECURITY_URLS=http://security.debian.org/,http://packages.trafficmanager.net/debian/debian-security/
 fi
 
 [ -z "$MIRROR_URLS" ] && MIRROR_URLS=$DEFAULT_MIRROR_URLS
