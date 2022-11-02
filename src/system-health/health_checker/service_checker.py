@@ -24,13 +24,13 @@ class ServiceChecker(HealthChecker):
     CRITICAL_PROCESSES_PATH = 'etc/supervisor/critical_processes'
 
     # Command to get merged directory of a container
-    GET_CONTAINER_FOLDER_CMD = 'docker inspect {} --format "{{{{.GraphDriver.Data.MergedDir}}}}"'
+    GET_CONTAINER_FOLDER_CMD = ['docker', 'inspect', '', '--format', "{{.GraphDriver.Data.MergedDir}}"]
 
     # Command to query the status of monit service.
-    CHECK_MONIT_SERVICE_CMD = 'systemctl is-active monit.service'
+    CHECK_MONIT_SERVICE_CMD = ['systemctl', 'is-active', 'monit.service']
 
     # Command to get summary of critical system service.
-    CHECK_CMD = 'monit summary -B'
+    CHECK_CMD = ['monit', 'summary', '-B']
     MIN_CHECK_CMD_LINES = 3
 
     # Expect status for different system service category.
@@ -127,11 +127,11 @@ class ServiceChecker(HealthChecker):
                         self.bad_containers.add(container)
                         logger.log_error('Invalid syntax in critical_processes file of {}'.format(container))
                     continue
-
-                identifier_key = match.group(2).strip()
-                identifier_value = match.group(3).strip()
-                if identifier_key == "program" and identifier_value:
-                    critical_process_list.append(identifier_value)
+                if match.group(1) is not None:
+                    identifier_key = match.group(2).strip()
+                    identifier_value = match.group(3).strip()
+                    if identifier_key == "program" and identifier_value:
+                        critical_process_list.append(identifier_value)
 
         return critical_process_list
 
@@ -168,7 +168,8 @@ class ServiceChecker(HealthChecker):
         self.need_save_cache = True
 
     def _get_container_folder(self, container):
-        container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD.format(container))
+        ServiceChecker.GET_CONTAINER_FOLDER_CMD[2] = str(container)
+        container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD)
         if container_folder is None:
             return container_folder
 
@@ -327,7 +328,7 @@ class ServiceChecker(HealthChecker):
                 # We are using supervisorctl status to check the critical process status. We cannot leverage psutil here because
                 # it not always possible to get process cmdline in supervisor.conf. E.g, cmdline of orchagent is "/usr/bin/orchagent",
                 # however, in supervisor.conf it is "/usr/bin/orchagent.sh"
-                cmd = 'docker exec {} bash -c "supervisorctl status"'.format(container_name)
+                cmd = ['docker', 'exec', str(container_name), 'bash', '-c', "supervisorctl status"]
                 process_status = utils.run_command(cmd)
                 if process_status is None:
                     for process_name in critical_process_list:

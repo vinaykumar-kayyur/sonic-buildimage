@@ -4,6 +4,10 @@
                 "Vrf_blue": {
                 }
         },
+        "DHCP_SERVER": {
+            "192.0.0.8": {},
+            "192.0.0.8": {}
+        },
         "BUFFER_POOL": {
             "ingress_lossy_pool": {
                "mode": "static",
@@ -328,7 +332,8 @@
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
-                "bgp_adv_lo_prefix_as_128": "true"
+                "bgp_adv_lo_prefix_as_128": "true",
+                "yang_config_validation": "disable"
             }
         },
         "VLAN": {
@@ -830,7 +835,21 @@
                 "role": "Int",
                 "speed": "40000",
                 "tpid": "0x8100"
-            } 
+            }
+        },
+        "LOGGER": {
+            "orchagent": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "syncd": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "SAI_API_LAG": {
+                "LOGLEVEL": "SAI_LOG_LEVEL_NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            }
         },
         "ACL_TABLE": {
             "V4-ACL-TABLE": {
@@ -1118,6 +1137,19 @@
 		"port": "50051"
 	    }
         },
+        "RESTAPI": {
+            "certs": {
+                "ca_crt": "/etc/sonic/credentials/ame_root.pem",
+                "server_key": "/etc/sonic/credentials/restapiserver.key",
+                "server_crt": "/etc/sonic/credentials/restapiserver.crt",
+                "client_crt_cname": "client.sonic.net"
+            },
+	    "config": {
+                "client_auth": "true",
+                "log_level": "trace",
+                "allow_insecure": "false"
+            }
+         },
         "FLEX_COUNTER_TABLE": {
             "PFCWD": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -1680,6 +1712,17 @@
             }
         },
 
+        "MPLS_TC_TO_TC_MAP": {
+           "Mpls_tc_to_tc_map1": {
+              "1": "1",
+              "3":  "2"
+            },
+           "Mpls_tc_to_tc_map2": {
+              "2": "3",
+              "4": "4"
+            }
+        },
+
         "DOT1P_TO_TC_MAP": {
            "Dot1p_to_tc_map1": {
               "1": "1",
@@ -1831,7 +1874,7 @@
                 "server_ipv6": "fc02:1000::30/128",
                 "soc_ipv4": "192.168.0.3/32",
                 "state": "auto"
-            }, 
+            },
             "Ethernet0": {
                 "server_ipv4": "192.168.0.2/32",
                 "server_ipv6": "fc02:1000::30/128",
@@ -1885,6 +1928,14 @@
                 "rrclient": "0",
                 "admin_status": "up"
             }
+        },
+
+        "VOQ_INBAND_INTERFACE": {
+            "Ethernet-IB0": {
+               "inband_type": "port"
+            },
+            "Ethernet-IB0|3.3.3.1/32": {},
+            "Ethernet-IB0|3333::3:5/128": {}
         },
 
         "PASSW_HARDENING": {
@@ -2025,6 +2076,14 @@
                 "ifname": "Ethernet14",
                 "nexthop": "10.184.229.212",
                 "nexthop-vrf": "default"
+            }
+        },
+        "KUBERNETES_MASTER": {
+            "SERVER": {
+                "disable": "True",
+                "insecure": "False",
+                "ip": "kubernetes.apiserver.com",
+                "port": "6443"
             }
         }
     },
