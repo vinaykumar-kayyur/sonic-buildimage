@@ -43,7 +43,8 @@ BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
 BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
-DPKG_ADMINDIR_PATH = /sonic/dpkg
+BUILD_WORKDIR = /sonic
+DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -84,6 +85,7 @@ export MULTIARCH_QEMU_ENVIRON
 export DOCKER_BASE_ARCH
 export CROSS_BUILD_ENVIRON
 export BLDENV
+export BUILD_WORKDIR
 
 ###############################################################################
 ## Utility rules
@@ -176,10 +178,10 @@ endif
 # Pre-built Bazel is not available for armhf, so exclude P4RT
 # TODO(PINS): Remove when Bazel binaries are available for armhf
 ifeq ($(CONFIGURED_ARCH),armhf)
-	ifeq ($(INCLUDE_P4RT),y)
-		$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
-	endif
-	override INCLUDE_P4RT = n
+ifeq ($(INCLUDE_P4RT),y)
+$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+endif
+override INCLUDE_P4RT = n
 endif
 
 ifeq ($(SONIC_INCLUDE_MACSEC),y)
@@ -204,10 +206,10 @@ endif
 
 
 ifeq ($(ENABLE_ASAN),y)
-	ifneq ($(CONFIGURED_ARCH),amd64)
-		$(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
-		override ENABLE_ASAN = n
-	endif
+ifneq ($(CONFIGURED_ARCH),amd64)
+$(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+override ENABLE_ASAN = n
+endif
 endif
 
 include $(RULES_PATH)/functions
