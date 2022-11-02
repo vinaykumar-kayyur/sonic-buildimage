@@ -42,8 +42,10 @@ jobs:
             # Others success flag:   conclusion in SUCCESS,NEUTRAL
             if [[ "$state" == "SUCCESS" ]];then
               # check pass
+              continue
             elif [[ "$conclusion" == "SUCCESS" ]] || [[ "$conclusion" == "NEUTRAL" ]];then
               # check pass
+              continue
             else
               echo "$url Check failed!!!"
               echo $check | jq
