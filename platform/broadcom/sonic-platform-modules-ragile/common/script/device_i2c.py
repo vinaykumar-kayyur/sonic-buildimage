@@ -254,8 +254,8 @@ def otherinit():
         if not ret:
             click.echo("%%DEVICE_I2C-INIT: init param %s failed." % index.get("name"))
 
-        for index in GLOBALINITCOMMAND:
-            log_os_system(index)
+    for index in GLOBALINITCOMMAND:
+        log_os_system(index)
 
 def unload_driver():
     u'''remove devices and drivers'''
