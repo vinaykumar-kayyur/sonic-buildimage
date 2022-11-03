@@ -9,7 +9,7 @@ export DISTRIBUTION=$3
 DEFAULT_MIRROR_URLS=http://debian-archive.trafficmanager.net/debian/,http://packages.trafficmanager.net/debian/debian/
 DEFAULT_MIRROR_SECURITY_URLS=http://debian-archive.trafficmanager.net/debian-security/,http://packages.trafficmanager.net/debian/debian-security/
 
-# The armhf does not support armhf, debian.org will be used by default
+# The debian-archive.trafficmanager.net does not support armhf, use debian.org instead
 if [ "$ARCHITECTURE" == "armhf" ]; then
     DEFAULT_MIRROR_URLS=http://deb.debian.org/debian/,http://packages.trafficmanager.net/debian/debian/
     DEFAULT_MIRROR_SECURITY_URLS=http://security.debian.org/,http://packages.trafficmanager.net/debian/debian-security/
