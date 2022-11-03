@@ -24,6 +24,13 @@ class AliasedGroup(click.Group):
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
 
+def log_os_system(cmd):
+    u'''execute shell command'''
+    status, output = getstatusoutput_noshell(cmd)
+    if status:
+        print(output)
+    return  status, output
+
 def write_sysfs_value(reg_name, value):
     u'''write sysfs file'''
     mb_reg_file = "/sys/bus/i2c/devices/" + reg_name
@@ -246,6 +253,9 @@ def otherinit():
             )
         if not ret:
             click.echo("%%DEVICE_I2C-INIT: init param %s failed." % index.get("name"))
+
+        for index in GLOBALINITCOMMAND:
+            log_os_system(index)
 
 def unload_driver():
     u'''remove devices and drivers'''
