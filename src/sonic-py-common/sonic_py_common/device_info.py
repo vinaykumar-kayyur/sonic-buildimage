@@ -533,17 +533,17 @@ def _valid_mac_address(mac):
 
 def run_command(cmd):
     proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (mac, err) = proc.communicate()
-    return (mac, err)
+    (out, err) = proc.communicate()
+    return (out, err)
 
 
 def run_command_pipe(cmd0, cmd1, cmd2):
-    exitcodes, mac = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2)
+    exitcodes, out = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2)
     if exitcodes == [0, 0, 0]:
         err = None
     else:
-        err = mac
-    return (mac, err)
+        err = out
+    return (out, err)
 
 
 def get_system_mac(namespace=None):
