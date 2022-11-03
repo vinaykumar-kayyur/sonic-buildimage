@@ -594,7 +594,7 @@ def get_system_mac(namespace=None):
         platform = get_platform()
         if namespace is not None:
             profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/profile.ini']
-            profile_cmd1 = ['grep', namespace, 'switchMacAddress']
+            profile_cmd1 = ['grep', str(namespace)+'switchMacAddress']
             profile_cmd2 = ['cut', '-f2', '-d', '=']
             (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
         else:
