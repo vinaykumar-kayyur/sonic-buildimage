@@ -291,7 +291,7 @@ class ServiceChecker(HealthChecker):
         self.reset()
         self.check_by_monit(config)
         self.check_services(config)
-        events_deinit_publisher(self.events_handle)
+        swsscommon.events_deinit_publisher(self.events_handle)
 
     def _parse_supervisorctl_status(self, process_status):
         """Expected input:
