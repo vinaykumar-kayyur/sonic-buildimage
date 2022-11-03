@@ -189,16 +189,16 @@ stages:
         - name: vs
           script: |
             set -ex
-            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         - name: generic
           script: |
-            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-generic.bin
         - name: broadcom
           script: |
             set -ex
-            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             echo "==== Building slim images"
             echo "INCLUDE_MUX = n" >> rules/config.user
             echo "INCLUDE_KUBERNETES = n" >> rules/config.user
@@ -227,7 +227,7 @@ stages:
         - name: mellanox
           script: |
             set -ex
-            OPTIONS="$BUILD_OPTIONS SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) SONIC_DPKG_CACHE_METHOD=wcache PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-mellanox.bin
             make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-mlnx-rpc.gz
             cp target/debs/bullseye/python-saithrift_0.9.4_amd64.deb target/python-saithrift_0.9.4_amd64.deb
@@ -235,7 +235,7 @@ stages:
           script: |
             set -ex
             sudo modprobe overlay
-            OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-barefoot.bin target/sonic-aboot-barefoot.swi
             make $OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-bfn-rpc.gz
         - name: marvell-armhf
@@ -244,5 +244,5 @@ stages:
           variables:
             PLATFORM_ARCH: armhf
           script: |
-            OPTIONS="$BUILD_OPTIONS PASSWORD=$PASSWORD"
+            OPTIONS="$(BUILD_OPTIONS) PASSWORD=$PASSWORD"
             make $OPTIONS target/sonic-marvell-armhf.bin
