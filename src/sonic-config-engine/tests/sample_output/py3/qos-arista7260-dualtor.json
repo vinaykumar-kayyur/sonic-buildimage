@@ -2236,7 +2236,7 @@
         },
         "Ethernet4|6": {
             "scheduler": "scheduler.0"
-       },
+        },
         "Ethernet8|6": {
             "scheduler": "scheduler.0"
         },
