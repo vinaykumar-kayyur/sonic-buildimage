@@ -334,7 +334,7 @@
 {# DSCP 48 is mapped to QUEUE 7 in macro generate_dscp_to_tc_map #}
 {% if (generate_dscp_to_tc_map is defined) and tunnel_qos_remap_enable %}
         "{{ port }}|7": {
-            "scheduler": "scheduler.0"
+            "scheduler": "[SCHEDULER|scheduler.0]"
         },
 {% endif %}
 {% endfor %}
