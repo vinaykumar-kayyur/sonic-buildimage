@@ -238,7 +238,7 @@ class MainServer:
                     lst = self.timer_handlers[k]
                     del self.timer_handlers[k]
                     for fn in lst:
-                        if fn[1] == None:
+                        if fn[1] is None:
                             fn[0]()
                         else:
                             fn[0](*fn[1])
