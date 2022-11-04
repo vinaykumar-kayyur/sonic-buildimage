@@ -8,6 +8,7 @@ import yaml
 import tests.common_utils as utils
 
 from unittest import TestCase
+from sonic_py_common.general import getstatusoutput_noshell
 
 
 SKU = 'multi-npu-01'
