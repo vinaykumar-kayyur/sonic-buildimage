@@ -1,44 +1,6 @@
 {
     "PORT_MEDIA_SETTINGS": {
         "1": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x55",
-                    "lane2": "0x50",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x19",
-                    "lane2": "-0x17",
-                    "lane3": "-0x15"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x7",
-                    "lane2": "-0x5",
-                    "lane3": "-0x4"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -141,44 +103,6 @@
             }
         },
         "2": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x4b",
-                    "lane2": "0x4e",
-                    "lane3": "0x4e"
-                },
-                "post1": {
-                    "lane0": "-0x14",
-                    "lane1": "-0x14",
-                    "lane2": "-0x16",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x8d",
@@ -281,44 +205,6 @@
             }
         },
         "3": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x50",
-                    "lane1": "0x50",
-                    "lane2": "0x55",
-                    "lane3": "0x55"
-                },
-                "post1": {
-                    "lane0": "-0x17",
-                    "lane1": "-0x17",
-                    "lane2": "-0x19",
-                    "lane3": "-0x19"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x7",
-                    "lane3": "-0x7"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -421,44 +307,6 @@
             }
         },
         "4": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -561,44 +409,6 @@
             }
         },
         "5": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -701,44 +511,6 @@
             }
         },
         "6": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -841,44 +613,6 @@
             }
         },
         "7": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -981,44 +715,6 @@
             }
         },
         "8": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1121,44 +817,6 @@
             }
         },
         "9": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1261,44 +919,6 @@
             }
         },
         "10": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x4e",
-                    "lane2": "0x4b",
-                    "lane3": "0x53"
-                },
-                "post1": {
-                    "lane0": "-0x15",
-                    "lane1": "-0x16",
-                    "lane2": "-0x14",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x6",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1401,44 +1021,6 @@
             }
         },
         "11": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x4b",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x15",
-                    "lane1": "-0x15",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x4",
-                    "lane1": "-0x4",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1541,44 +1123,6 @@
             }
         },
         "12": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x53",
-                    "lane2": "0x55",
-                    "lane3": "0x53"
-                },
-                "post1": {
-                    "lane0": "-0x15",
-                    "lane1": "-0x16",
-                    "lane2": "-0x15",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x6",
-                    "lane1": "-0x5",
-                    "lane2": "-0x6",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1681,44 +1225,6 @@
             }
         },
         "13": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x4e",
-                    "lane2": "0x53",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x16",
-                    "lane3": "-0x14"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1821,44 +1327,6 @@
             }
         },
         "14": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x55",
-                    "lane2": "0x4b",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x19",
-                    "lane1": "-0x19",
-                    "lane2": "-0x15",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x7",
-                    "lane1": "-0x7",
-                    "lane2": "-0x4",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -1961,44 +1429,6 @@
             }
         },
         "15": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x53",
-                    "lane2": "0x55",
-                    "lane3": "0x53"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x15",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x6",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x86",
@@ -2101,44 +1531,6 @@
             }
         },
         "16": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x4b",
-                    "lane2": "0x59",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x19",
-                    "lane1": "-0x15",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x7",
-                    "lane1": "-0x4",
-                    "lane2": "-0x8",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -2241,44 +1633,6 @@
             }
         },
         "17": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x53",
-                    "lane1": "0x53",
-                    "lane2": "0x55",
-                    "lane3": "0x55"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x15",
-                    "lane3": "-0x15"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x6",
-                    "lane3": "-0x6"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x8d",
@@ -2381,44 +1735,6 @@
             }
         },
         "18": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x15",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x15"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x4",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x4"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -2521,44 +1837,6 @@
             }
         },
         "19": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x55",
-                    "lane2": "0x50",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x19",
-                    "lane1": "-0x19",
-                    "lane2": "-0x17",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x7",
-                    "lane1": "-0x7",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -2661,44 +1939,6 @@
             }
         },
         "20": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x4b",
-                    "lane2": "0x4e",
-                    "lane3": "0x4e"
-                },
-                "post1": {
-                    "lane0": "-0x14",
-                    "lane1": "-0x14",
-                    "lane2": "-0x16",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x8d",
@@ -2801,44 +2041,6 @@
             }
         },
         "21": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x50",
-                    "lane1": "0x50",
-                    "lane2": "0x55",
-                    "lane3": "0x55"
-                },
-                "post1": {
-                    "lane0": "-0x17",
-                    "lane1": "-0x17",
-                    "lane2": "-0x19",
-                    "lane3": "-0x19"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x7",
-                    "lane3": "-0x7"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -2941,44 +2143,6 @@
             }
         },
         "22": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -3081,44 +2245,6 @@
             }
         },
         "23": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3221,44 +2347,6 @@
             }
         },
         "24": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3361,44 +2449,6 @@
             }
         },
         "25": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3501,44 +2551,6 @@
             }
         },
         "26": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3641,44 +2653,6 @@
             }
         },
         "27": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x59",
-                    "lane1": "0x59",
-                    "lane2": "0x59",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x1d",
-                    "lane1": "-0x1d",
-                    "lane2": "-0x1d",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x8",
-                    "lane1": "-0x8",
-                    "lane2": "-0x8",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3781,44 +2755,6 @@
             }
         },
         "28": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x4e",
-                    "lane2": "0x4b",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x14",
-                    "lane3": "-0x14"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -3921,44 +2857,6 @@
             }
         },
         "29": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x50",
-                    "lane2": "0x55",
-                    "lane3": "0x59"
-                },
-                "post1": {
-                    "lane0": "-0x15",
-                    "lane1": "-0x17",
-                    "lane2": "-0x19",
-                    "lane3": "-0x1d"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x4",
-                    "lane1": "-0x5",
-                    "lane2": "-0x7",
-                    "lane3": "-0x8"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -4061,44 +2959,6 @@
             }
         },
         "30": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x53",
-                    "lane2": "0x4e",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x16",
-                    "lane3": "-0x14"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -4201,44 +3061,6 @@
             }
         },
         "31": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x4e",
-                    "lane2": "0x4b",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x16",
-                    "lane2": "-0x14",
-                    "lane3": "-0x14"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -4341,44 +3163,6 @@
             }
         },
         "32": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x55",
-                    "lane2": "0x50",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x19",
-                    "lane1": "-0x19",
-                    "lane2": "-0x17",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x7",
-                    "lane1": "-0x7",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -4481,44 +3265,6 @@
             }
         },
         "33": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4e",
-                    "lane1": "0x4b",
-                    "lane2": "0x4e",
-                    "lane3": "0x4b"
-                },
-                "post1": {
-                    "lane0": "-0x16",
-                    "lane1": "-0x14",
-                    "lane2": "-0x16",
-                    "lane3": "-0x14"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x94",
@@ -4621,44 +3367,6 @@
             }
         },
         "34": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x55",
-                    "lane1": "0x50",
-                    "lane2": "0x55",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x19",
-                    "lane1": "-0x17",
-                    "lane2": "-0x19",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x7",
-                    "lane1": "-0x5",
-                    "lane2": "-0x7",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
@@ -4761,44 +3469,6 @@
             }
         },
         "35": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x4b",
-                    "lane1": "0x4b",
-                    "lane2": "0x4e",
-                    "lane3": "0x4e"
-                },
-                "post1": {
-                    "lane0": "-0x14",
-                    "lane1": "-0x14",
-                    "lane2": "-0x16",
-                    "lane3": "-0x16"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x5",
-                    "lane2": "-0x5",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x8d",
@@ -4901,44 +3571,6 @@
             }
         },
         "36": {
-            "QSFP28-Extended-*": {
-                "main": {
-                    "lane0": "0x50",
-                    "lane1": "0x55",
-                    "lane2": "0x55",
-                    "lane3": "0x50"
-                },
-                "post1": {
-                    "lane0": "-0x17",
-                    "lane1": "-0x19",
-                    "lane2": "-0x19",
-                    "lane3": "-0x17"
-                },
-                "post2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "post3": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                },
-                "pre1": {
-                    "lane0": "-0x5",
-                    "lane1": "-0x7",
-                    "lane2": "-0x7",
-                    "lane3": "-0x5"
-                },
-                "pre2": {
-                    "lane0": "0x0",
-                    "lane1": "0x0",
-                    "lane2": "0x0",
-                    "lane3": "0x0"
-                }
-            },
             "QSFP-DD-sm_media_interface": {
                 "main": {
                     "lane0": "0x89",
