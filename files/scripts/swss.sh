@@ -324,6 +324,17 @@ function check_macsec()
     fi
 }
 
+function check_ports_present()
+{
+    PORT_CONFIG_INI=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/port_config.ini
+    HWSKU_JSON=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/hwsku.json
+
+    if [[ -f $PORT_CONFIG_INI ]] || [[ -f $HWSKU_JSON ]]; then
+         return 0
+    fi
+    return 1
+}
+
 
 PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
 HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
@@ -332,15 +343,6 @@ HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
 # namespace specific services are added later in this script.
 DEPENDENT="radv"
 MULTI_INST_DEPENDENT=""
-
-check_peer_gbsyncd
-
-check_ports_present
-PORTS_PRESENT=$?
-
-if [[ $PORTS_PRESENT == 0 ]]; then
-    MULTI_INST_DEPENDENT="teamd"
-fi
 
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
@@ -352,7 +354,16 @@ else
     DEPENDENT+=" bgp"
 fi
 
+check_peer_gbsyncd
 check_macsec
+
+check_ports_present
+PORTS_PRESENT=$?
+
+if [[ $PORTS_PRESENT == 0 ]]; then
+    MULTI_INST_DEPENDENT="teamd"
+fi
+
 read_dependent_services
 
 case "$1" in
