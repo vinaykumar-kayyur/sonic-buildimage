@@ -95,7 +95,7 @@ jobs:
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-ptf-sai.gz
       else
         if [ ${{ parameters.platform }} == broadcom ]; then
-          make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz
+          make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-syncd-brcm-rpcv2.gz
           make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
         fi
         if [ ${{ parameters.dbg_image }} == true ]; then
@@ -111,7 +111,7 @@ jobs:
         if [ ${{ parameters.sync_rpc_image }} == true ]; then
           make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
           if [ ${{ parameters.platform }} == broadcom ]; then
-            make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz
+            make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-syncd-brcm-rpcv2.gz
             make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
           fi
         fi
