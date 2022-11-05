@@ -94,6 +94,10 @@ jobs:
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-ptf-sai.gz
       else
+        if [ ${{ parameters.platform }} == broadcom ]; then
+          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-syncd-${{ parameters.platform_short }}-rpcv2.gz
+          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y make target/docker-saiserverv2-${{ parameters.platform_short }}.gz
+        fi
         if [ ${{ parameters.dbg_image }} == true ]; then
           make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) INSTALL_DEBUG_TOOLS=y target/sonic-${{ parameters.platform }}.bin && \
             mv target/sonic-${{ parameters.platform }}.bin target/sonic-${{ parameters.platform }}-dbg.bin
