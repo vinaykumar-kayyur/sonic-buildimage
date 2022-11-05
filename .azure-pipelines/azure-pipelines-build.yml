@@ -129,8 +129,8 @@ jobs:
             fi
           else
             if [ $(GROUP_NAME) == broadcom ]; then
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-$(platform_rpc).gz
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-$(platform_rpc)-rpcv2.gz       
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz       
             fi          
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
@@ -146,8 +146,8 @@ jobs:
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
               if [ $(GROUP_NAME) == broadcom ]; then
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
-                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-$(platform_rpc).gz
-                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-$(platform_rpc)-rpcv2.gz
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz
               fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then
