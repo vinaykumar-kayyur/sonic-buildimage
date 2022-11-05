@@ -302,15 +302,6 @@ function check_peer_gbsyncd()
     fi
 }
 
-function check_ports_present()
-{
-    PORT_CONFIG_INI=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/port_config.ini
-    HWSKU_JSON=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/hwsku.json
-
-    if [[ -f $PORT_CONFIG_INI ]] || [[ -f $HWSKU_JSON ]]; then
-         return 0
-    fi
-    return 1
 function check_macsec()
 {
     MACSEC_STATE=`show feature status | grep macsec | awk '{print $2}'`
