@@ -129,9 +129,9 @@ jobs:
             fi
           else
             if [ $(GROUP_NAME) == broadcom ]; then
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
+              #make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
               echo BUILD_OPTIONS $BUILD_OPTIONS
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz       
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y SONIC_DPKG_CACHE_METHOD= SONIC_DPKG_CACHE_SOURCE= target/docker-syncd-brcm-rpcv2.gz       
             fi          
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
