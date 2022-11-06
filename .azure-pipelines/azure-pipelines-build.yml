@@ -129,7 +129,7 @@ jobs:
             fi
           else
             if [ $(GROUP_NAME) == broadcom ]; then
-              #make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
               echo BUILD_OPTIONS $BUILD_OPTIONS
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y SONIC_DPKG_CACHE_METHOD= SONIC_DPKG_CACHE_SOURCE= target/docker-syncd-brcm-rpcv2.gz       
             fi          
@@ -148,7 +148,8 @@ jobs:
               if [ $(GROUP_NAME) == broadcom ]; then
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
-                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-syncd-brcm-rpcv2.gz
+                echo BUILD_OPTIONS $BUILD_OPTIONS
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y SONIC_DPKG_CACHE_METHOD= SONIC_DPKG_CACHE_SOURCE= target/docker-syncd-brcm-rpcv2.gz
               fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then
