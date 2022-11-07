@@ -5,7 +5,7 @@ import subprocess
 
 from unittest import TestCase
 import tests.common_utils as utils
-from sonic_py_common.general import getstatusoutput_noshell_pipe
+from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
 
 class TestJ2Files(TestCase):
