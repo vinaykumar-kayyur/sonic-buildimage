@@ -69,16 +69,14 @@ stages:
           swi_image: yes
       - name: centec
       - name: centec-arm64
-        ${{ if not(parameters.qemuOrCrossBuild) }}:
-          pool: sonicbld-arm64
+        pool: sonicbld-arm64
         timeoutInMinutes: 2880
         variables:
           PLATFORM_ARCH: arm64
       - name: generic
       - name: innovium
       - name: marvell-armhf
-        ${{ if not(parameters.qemuOrCrossBuild) }}:
-          pool: sonicbld-armhf
+        pool: sonicbld-armhf
         timeoutInMinutes: 2880
         variables:
           PLATFORM_ARCH: armhf
