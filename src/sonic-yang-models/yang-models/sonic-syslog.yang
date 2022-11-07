@@ -36,14 +36,14 @@ module sonic-syslog {
     }
 
     typedef syslog-rate-limit-interval {
-        description "Message rate limit interval";
+        description "Message rate limit interval in second";
         type uint32 {
             range 0..2147483647;
         }
     }
 
     typedef syslog-rate-limit-burst {
-        description "Message rate limit burst";
+        description "Message rate limit burst in message count";
         type uint32 {
             range 0..2147483647;
         }
