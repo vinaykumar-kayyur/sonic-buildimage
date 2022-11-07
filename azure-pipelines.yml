@@ -63,59 +63,27 @@ stages:
       jobGroups:
         - name: barefoot
           variables:
-            docker_syncd_rpc_image: yes
-            platform_rpc: bfn
             swi_image: yes
-
         - name: broadcom
-          timeoutInMinutes: 1440
           variables:
-            dbg_image: yes
             swi_image: yes
-            raw_image: yes
-            docker_syncd_rpc_image: yes
-            platform_rpc: brcm
-
         - name: centec
-          variables:
-            dbg_image: yes
-            docker_syncd_rpc_image: yes
-            platform_rpc: centec
-
         - name: centec-arm64
           ${{ if not(parameters.qemuOrCrossBuild) }}:
             pool: sonicbld-arm64
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
-
         - name: generic
-          variables:
-            dbg_image: yes
-
         - name: innovium
-          variables:
-            dbg_image: yes
-
         - name: marvell-armhf
           ${{ if not(parameters.qemuOrCrossBuild) }}:
             pool: sonicbld-armhf
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
-
         - name: mellanox
-          variables:
-            dbg_image: yes
-            docker_syncd_rpc_image: yes
-            syncd_rpc_image: yes
-            platform_rpc: mlnx
-
         - name: nephos
-          variables:
-            dbg_image: yes
-            docker_syncd_rpc_image: yes
-            platform_rpc: nephos
 
 - stage: Test
   dependsOn: BuildVS
