@@ -494,6 +494,8 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
                            SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
+                           MIRROR_URLS=$(MIRROR_URLS) \
+                           MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
