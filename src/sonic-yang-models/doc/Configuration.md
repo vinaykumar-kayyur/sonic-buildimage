@@ -56,11 +56,12 @@ Table of Contents
          * [Versions](#versions)
          * [VLAN](#vlan)
          * [VLAN_MEMBER](#vlan_member)
-         * [VOQ Inband Interface](#voq-inband-interface)
-         * [VXLAN](#vxlan)
-         * [Virtual router](#virtual-router)
-         * [WRED_PROFILE](#wred_profile)
-         * [PASSWORD_HARDENING](#password_hardening)
+         * [VOQ Inband Interface](#voq-inband-interface) 
+         * [VXLAN](#vxlan)   
+         * [Virtual router](#virtual-router)  
+         * [LOGGER](#logger)           
+         * [WRED_PROFILE](#wred_profile)  
+         * [PASSWORD_HARDENING](#password_hardening)  
          * [SYSTEM_DEFAULTS table](#systemdefaults-table)
    * [For Developers](#for-developers)
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
@@ -832,7 +833,8 @@ instance is supported in SONiC.
         "deployment_id": "1",
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
-        "buffer_model": "traditional"
+        "buffer_model": "traditional",
+        "yang_config_validation": "disable"
     }
   }
 }
@@ -1737,6 +1739,34 @@ The packet action could be:
   }
 }
 ```
+
+### Logger
+
+In this table, the loglevel and logoutput of the components are defined. Each component
+will have the component name as its key; and LOGLEVEL and LOGOUTPUT as attributes.
+The LOGLEVEL attribute will define the verbosity of the component.
+The LOGOUTPUT attribute will define the file of printing the logs.
+
+```
+{
+    "LOGGER": {
+        "orchagent": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "syncd": {
+                "LOGLEVEL": "DEBUG",
+                "LOGOUTPUT": "STDOUT"
+            },
+            "SAI_API_LAG": {
+                "LOGLEVEL": "ERROR",
+                "LOGOUTPUT": "STDERR"
+            }
+    }
+}
+
+```
+
 ### PASSWORD_HARDENING
 
 Password Hardening, a user password is the key credential used in order to verify the user accessing the switch and acts as the first line of defense in regards to securing the switch. PASSWORD_HARDENING - support the enforce strong policies.
