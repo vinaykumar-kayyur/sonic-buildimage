@@ -61,29 +61,29 @@ stages:
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
-        - name: barefoot
-          variables:
-            swi_image: yes
-        - name: broadcom
-          variables:
-            swi_image: yes
-        - name: centec
-        - name: centec-arm64
-          ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-arm64
-          timeoutInMinutes: 2880
-          variables:
-            PLATFORM_ARCH: arm64
-        - name: generic
-        - name: innovium
-        - name: marvell-armhf
-          ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-armhf
-          timeoutInMinutes: 2880
-          variables:
-            PLATFORM_ARCH: armhf
-        - name: mellanox
-        - name: nephos
+      - name: barefoot
+        variables:
+          swi_image: yes
+      - name: broadcom
+        variables:
+          swi_image: yes
+      - name: centec
+      - name: centec-arm64
+        ${{ if not(parameters.qemuOrCrossBuild) }}:
+          pool: sonicbld-arm64
+        timeoutInMinutes: 2880
+        variables:
+          PLATFORM_ARCH: arm64
+      - name: generic
+      - name: innovium
+      - name: marvell-armhf
+        ${{ if not(parameters.qemuOrCrossBuild) }}:
+          pool: sonicbld-armhf
+        timeoutInMinutes: 2880
+        variables:
+          PLATFORM_ARCH: armhf
+      - name: mellanox
+      - name: nephos
 
 - stage: Test
   dependsOn: BuildVS
