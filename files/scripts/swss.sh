@@ -9,7 +9,9 @@ LOCKFILE="/tmp/swss-syncd-lock$DEV"
 NAMESPACE_PREFIX="asic"
 ETC_SONIC_PATH="/etc/sonic/"
 
-DEPENDENT="radv bgp"
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
+DEPENDENT="radv"
 MULTI_INST_DEPENDENT="teamd"
 
 . /usr/local/bin/asic_status.sh
@@ -28,7 +30,7 @@ function read_dependent_services()
     fi
 
     if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent ]]; then
-        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent"
+        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} $(cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent)"
     fi
 }
 
@@ -306,15 +308,31 @@ function check_peer_gbsyncd()
     fi
 }
 
+function check_macsec()
+{
+    MACSEC_STATE=`show feature status | grep macsec | awk '{print $2}'`
+
+    if [[ ${MACSEC_STATE} == 'enabled' ]]; then
+        if [ "$DEV" ]; then
+            DEPENDENT="${DEPENDENT} macsec@${DEV}"
+        else
+            DEPENDENT="${DEPENDENT} macsec"
+        fi
+    fi
+}
+
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
+    DEPENDENT+=" bgp@${DEV}"
 else
     NET_NS=""
     SONIC_DB_CLI="sonic-db-cli"
+    DEPENDENT+=" bgp"
 fi
 
 check_peer_gbsyncd
+check_macsec
 read_dependent_services
 
 case "$1" in
