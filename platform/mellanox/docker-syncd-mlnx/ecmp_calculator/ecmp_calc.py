@@ -29,7 +29,7 @@ HASH_CALC_OUTPUT_FILE = "/tmp/hash_calculator_output.json"
 
 def exec_cmd(cmd):
     """ Execute shell command """
-    return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+    return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=False).decode("utf-8")
 
 def is_mac_valid(mac):
     return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
@@ -136,7 +136,7 @@ class EcmpCalc:
             self.validate_vrf()
                         
     def validate_vrf(self):        
-        query_output = exec_cmd('/usr/bin/redis-cli -n 0 keys *VRF*').strip()
+        query_output = exec_cmd(['/usr/bin/redis-cli', '-n', '0', 'keys','*VRF*']).strip()
         vrf_entries= query_output.split('\n')
         for entry in vrf_entries:
             vrf = entry.split(':')[VRF_NAME_IDX]
@@ -273,8 +273,7 @@ class EcmpCalc:
             # INTF_TABLE:Vlan300
             entry = '{}:Vlan{}'.format(INTF_TABLE, vlan_id)
 
-        cmd = "/usr/bin/redis-cli -n 0 hget {} vrf_name".format(entry)
-        port_vrf = exec_cmd(cmd)
+        port_vrf = exec_cmd(['/usr/bin/redis-cli', '-n', '0', 'hget', entry, 'vrf_name'])
         if self.user_vrf == port_vrf.strip():
             return True
         
@@ -282,7 +281,7 @@ class EcmpCalc:
     
     # Get port-channel name for given port-channel member port
     def get_port_channel_name(self, port):        
-        query_output = exec_cmd('/usr/bin/redis-cli -n 0 keys *LAG_MEMBER_TABLE*')
+        query_output = exec_cmd(['/usr/bin/redis-cli', '-n', '0', 'keys','*LAG_MEMBER_TABLE*'])
         for line in query_output.split('\n'):
             if str(port) in line:
                 port_channel = line.split(':')[PORT_CHANNEL_IDX]
@@ -352,8 +351,7 @@ class EcmpCalc:
         with open(HASH_CALC_INPUT_FILE, "w") as outfile:
             json.dump(input_dict, outfile)
         
-        cmd = "{} -c {} -o {} -d".format(HASH_CALC_PATH, HASH_CALC_INPUT_FILE, HASH_CALC_OUTPUT_FILE)
-        out = exec_cmd(cmd)
+        out = exec_cmd([HASH_CALC_PATH, '-c', HASH_CALC_INPUT_FILE, '-o', HASH_CALC_OUTPUT_FILE, '-d'])
         self.debug_print ("Hash calculator output:\n{}".format(out))
     
         with open(HASH_CALC_OUTPUT_FILE, 'r') as openfile:
