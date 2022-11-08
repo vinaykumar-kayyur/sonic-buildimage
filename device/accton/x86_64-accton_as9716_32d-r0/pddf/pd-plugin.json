@@ -7,7 +7,7 @@
            "i2c":
            {
                "valmap-SFP28": {"1":true, "0":false },
-               "valmap-QSFP28": {"1":true, "0":false}
+               "valmap-QSFP-DD": {"1":true, "0":false}
            }
         }
     },
