@@ -279,7 +279,6 @@ def sx_fdb_uc_mac_addr_get(handle, vlan_id, mac_addr):
         key = sx_fdb_uc_mac_addr_params_t()
         key.fid_vid = vlan_id
         key.mac_addr = ether_addr(mac_addr)
-        key.entry_type = SX_FDB_UC_AGEABLE
         key.action = SX_FDB_ACTION_FORWARD
         key_p = copy_sx_fdb_uc_mac_addr_params_t_p(key)
         
@@ -294,7 +293,7 @@ def sx_fdb_uc_mac_addr_get(handle, vlan_id, mac_addr):
         data_cnt_p = copy_uint32_t_p(SX_FDB_MAX_GET_ENTRIES)
         mac_list_p = new_sx_fdb_uc_mac_addr_params_t_arr(SX_FDB_MAX_GET_ENTRIES)
         
-        rc = sx_api_fdb_uc_mac_addr_get(handle, 0, SX_ACCESS_CMD_GET_FIRST, SX_FDB_UC_AGEABLE, key_p, key_filter_p, mac_list_p, data_cnt_p)
+        rc = sx_api_fdb_uc_mac_addr_get(handle, 0, SX_ACCESS_CMD_GET_FIRST, SX_FDB_UC_ALL, key_p, key_filter_p, mac_list_p, data_cnt_p)
         if rc == SX_STATUS_ENTRY_NOT_FOUND:
             return None
         sx_check_rc(rc)
@@ -447,5 +446,3 @@ def sx_ip_addr_to_str(ip_addr):
                                  byte_arr[5], byte_arr[6], byte_arr[7], byte_arr[8], byte_arr[9], byte_arr[10],
                                  byte_arr[11], byte_arr[12], byte_arr[13], byte_arr[14], byte_arr[15])
         return socket.inet_ntop(socket.AF_INET6, dwords)
-
-

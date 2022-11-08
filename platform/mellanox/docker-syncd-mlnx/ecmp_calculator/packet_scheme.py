@@ -145,5 +145,3 @@ PACKET_SCHEME = {
         }
     }
 }
-
-    

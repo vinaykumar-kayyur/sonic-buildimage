@@ -27,29 +27,9 @@ HASH_CALC_PATH = '/usr/bin/sx_hash_calculator'
 HASH_CALC_INPUT_FILE = "/tmp/hash_calculator_input.json"
 HASH_CALC_OUTPUT_FILE = "/tmp/hash_calculator_output.json"
 
-def check_output_pipe(cmd0, *args):
-    """
-    This function implements check_output API from subprocess module.
-    Input command includes two or more commands connected by shell pipe(s)
-    """
-    popens = [subprocess.Popen(cmd0, stdout=subprocess.PIPE, universal_newlines=True)]
-    i = 0
-    while i < len(args):
-        popens.append(subprocess.Popen(args[i], stdin=popens[i].stdout, stdout=subprocess.PIPE, universal_newlines=True))
-        popens[i].stdout.close()
-        i += 1
-    output = popens[-1].communicate()[0]
-
-    i = 0
-    args_list = [cmd0] + list(args)
-    while popens:
-        current = popens.pop(0)
-        exitcode = current.wait()
-        if exitcode != 0:
-            raise subprocess.CalledProcessError(returncode=exitcode, cmd=args_list[i], output=current.stdout)
-        i += 1
-
-    return output
+def exec_cmd(cmd):
+    """ Execute shell command """
+    return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True).decode("utf-8")
 
 def is_mac_valid(mac):
     return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
@@ -62,6 +42,10 @@ def is_ip_valid(address, ip_version):
         else:
             ip = ipaddress.IPv6Address(address)
             invalid_list = ['0::0']
+
+            if ip.is_link_local:
+                print ("Link local IP {} is not valid".format(ip))
+                return False
 
         if ip in invalid_list:
             print ("IP {} is not valid".format(ip))
@@ -152,8 +136,8 @@ class EcmpCalc:
             self.validate_vrf()
                         
     def validate_vrf(self):        
-        query_output = check_output_pipe(['/usr/bin/redis-cli', '-n', '0', 'keys','*VRF*']).strip()
-        vrf_entries= query_output.split()
+        query_output = exec_cmd('/usr/bin/redis-cli -n 0 keys *VRF*').strip()
+        vrf_entries= query_output.split('\n')
         for entry in vrf_entries:
             vrf = entry.split(':')[VRF_NAME_IDX]
             if vrf == self.user_vrf:
@@ -287,26 +271,31 @@ class EcmpCalc:
             entry = '{}:{}.{}'.format(INTF_TABLE, port, vlan_id)     
         elif port_type == VLAN:
             # INTF_TABLE:Vlan300
-            entry = '{}:Vlan{}'.format(INTF_TABLE, vlan_id) 
-    
-        port_vrf = check_output_pipe(['/usr/bin/redis-cli', '-n', '0', 'hget', entry, 'vrf_name'])
+            entry = '{}:Vlan{}'.format(INTF_TABLE, vlan_id)
+
+        cmd = "/usr/bin/redis-cli -n 0 hget {} vrf_name".format(entry)
+        port_vrf = exec_cmd(cmd)
         if self.user_vrf == port_vrf.strip():
             return True
         
         return False
     
     # Get port-channel name for given port-channel member port
-    def get_port_channel_name(self, port):
-        query_output = check_output_pipe(['/usr/bin/redis-cli', '-n', '0', 'keys','*LAG_MEMBER_TABLE*'], ['grep', str(port)])
-        port_channel = query_output.split(':')[PORT_CHANNEL_IDX]
-        return port_channel
+    def get_port_channel_name(self, port):        
+        query_output = exec_cmd('/usr/bin/redis-cli -n 0 keys *LAG_MEMBER_TABLE*')
+        for line in query_output.split('\n'):
+            if str(port) in line:
+                port_channel = line.split(':')[PORT_CHANNEL_IDX]
+                return port_channel
+        
+        raise KeyError("Failed to get port-channel name for interface {}".format(port))
 
     def get_ingress_port_logical_idx(self):
         for logical_index, sonic_port_name in self.ports_map.items():
             if sonic_port_name == self.ingress_port:
                 return logical_index
 
-        raise ValueError("Failed to get logical index for interface {}".format(self.ingress_port))
+        raise KeyError("Failed to get logical index for interface {}".format(self.ingress_port))
 
     # Get index in next hop array from which packet will egress 
     def get_next_hop_index(self, ecmp_size):
@@ -362,8 +351,9 @@ class EcmpCalc:
     def call_hash_calculator(self, input_dict):
         with open(HASH_CALC_INPUT_FILE, "w") as outfile:
             json.dump(input_dict, outfile)
-    
-        out = check_output_pipe([HASH_CALC_PATH, '-c', HASH_CALC_INPUT_FILE, '-o', HASH_CALC_OUTPUT_FILE, '-d'])
+        
+        cmd = "{} -c {} -o {} -d".format(HASH_CALC_PATH, HASH_CALC_INPUT_FILE, HASH_CALC_OUTPUT_FILE)
+        out = exec_cmd(cmd)
         self.debug_print ("Hash calculator output:\n{}".format(out))
     
         with open(HASH_CALC_OUTPUT_FILE, 'r') as openfile:
@@ -487,6 +477,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-    
-
-    
