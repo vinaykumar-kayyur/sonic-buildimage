@@ -257,14 +257,11 @@ def filter_profile_tables(data, generate_profile):
         for table in tables:
             if table not in profile_tables:
                 del data[table]
-    # TODO: Enable following code after profile config related code migrated.
-    '''
     else:
         # remove profile tables
         for table in profile_tables:
             if table in data.keys():
                 del data[table]
-    '''
     
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
@@ -380,12 +377,20 @@ def main():
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, namespace=args.namespace, **db_kwargs)
 
-        if args.profile_config:
-            configdb.db_connect("PROFILE_DB")
-        else:
-            configdb.connect()
-
+        configdb.connect()
         deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
+
+        if args.profile_config:
+            # remove profile table, some data used by following code
+            filter_profile_tables(data, False)
+            
+            # create new connection to PROFILE_DB
+            if args.namespace is None:
+                configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, **db_kwargs)
+            else:
+                SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
+                configdb = ConfigDBPipeConnector(use_unix_socket_path=use_unix_sock, namespace=args.namespace, **db_kwargs)
+            configdb.db_connect("PROFILE_DB")
 
     # the minigraph file must be provided to get the mac address for backend asics
     # or switch_type chassis_packet
@@ -442,7 +447,9 @@ def main():
         template = jinja2.Template('{{' + args.var + '}}')
         print(template.render(data))
 
-    filter_profile_tables(data, args.profile_config)
+    if args.profile_config:
+        # TODO: after profile DB migration finish, remove the if check to remove profile tables from config DB
+        filter_profile_tables(data, args.profile_config)
 
     if args.var_json is not None and args.var_json in data:
         if args.key is not None:
