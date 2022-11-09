@@ -314,4 +314,3 @@ stages:
           VM_TYPE: vsonic
           SPECIFIED_PARAMS: '{\"test_pretest.py\":[\"--completeness_level=confident\",\"--allow_recover\"],\"test_posttest.py\":[\"--completeness_level=confident\",\"--allow_recover\"]}'
           MGMT_BRANCH: 202205
-          
