@@ -300,6 +300,8 @@ stages:
 
   - job: sonic_t0_testbedv2
     displayName: "kvmtest-t0-sonic by TestbedV2"
+    pool:
+      vmImage: 'ubuntu-20.04'
     timeoutInMinutes: 1080
     condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
     continueOnError: true
