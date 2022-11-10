@@ -97,11 +97,12 @@ boot_device="flash"
 if grep -q block_drive= /etc/cmdline; then
     boot_device="drive"
 
-    # ensure boot-config is up to date on flash
-    if [ "$(<"$boot_config" md5sum)" != "$(</mnt/flash/boot-config md5sum)" ]; then
-        cp "$boot_config" "/mnt/flash/boot-config"
-        reboot
+      # ensure boot-config is up to date on flash
+    if [ -f "$boot_config" ] && [ "$(<"$boot_config" md5sum)" != "$(</mnt/flash/boot-config md5sum)" ]; then
+          cp "$boot_config" "/mnt/flash/boot-config"
+          reboot
     fi
+
 fi
 
 is_secureboot_enabled() {
