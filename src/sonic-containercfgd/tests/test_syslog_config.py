@@ -53,7 +53,6 @@ def test_handle_init_data():
 def test_update_syslog_config(mock_run_cmd):
     mock_run_cmd.return_value = ""
     handler = containercfgd.SyslogHandler()
-    #handler.parse_syslog_conf = mock.MagicMock(return_value=('100', '200', '127.0.0.1'))
 
     data = {containercfgd.SYSLOG_RATE_LIMIT_INTERVAL: '100',
             containercfgd.SYSLOG_RATE_LIMIT_BURST: '200'}
@@ -77,6 +76,6 @@ def test_parse_syslog_conf():
 
     handler.SYSLOG_CONF_PATH = os.path.join(test_path, 'mock_empty_rsyslog.conf')
     interval, burst, target_ip = handler.parse_syslog_conf()
-    assert interval is '0'
-    assert burst is '0'
+    assert interval == '0'
+    assert burst == '0'
     assert target_ip is None
