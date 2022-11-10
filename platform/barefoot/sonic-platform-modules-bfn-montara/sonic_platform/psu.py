@@ -153,9 +153,6 @@ class Psu(PsuBase):
         """
         return get_metric_value(self.__sensors_get(self.__index), "curr1_input")
 
-    def g(self):
-        return self.__sensors_get(self.__index)
-
     def get_power(self):
         """
         Retrieves current energy supplied by PSU

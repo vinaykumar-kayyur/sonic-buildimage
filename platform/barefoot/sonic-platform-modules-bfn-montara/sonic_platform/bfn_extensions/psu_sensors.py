@@ -1,4 +1,4 @@
-# from netifaces import ifaddresses, AF_INET6
+from netifaces import ifaddresses, AF_INET6
 from subprocess import Popen, PIPE, DEVNULL
 import json
 import os
@@ -70,8 +70,6 @@ def get_link_local_interface():
                 return os.listdir(concrete_ether_net)[0]
 
 def get_link_local_address(link_local_interface):
-    # netifaces is not available in pmon, currently resolving this
-    return 'fe80::ff:fe00:1'
     for addr in ifaddresses(link_local_interface)[AF_INET6]:
         address = addr['addr'].split('%')[0]
         # according to rfc4291 this ipv6 address is used for link local connection
