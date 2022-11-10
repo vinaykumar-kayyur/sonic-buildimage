@@ -32,7 +32,7 @@ def test_init_data_handler():
     containercfgd.ContainerConfigDaemon.register_handler('LoadMock', mock_handler_cls)
     daemon = containercfgd.ContainerConfigDaemon()
     daemon.init_data_handler({})
-    mock_handler_instance.handle_init_data.assert_called_once
+    mock_handler_instance.handle_init_data.assert_called_once()
     containercfgd.ContainerConfigDaemon.handlers.pop('LoadMock')
 
 
