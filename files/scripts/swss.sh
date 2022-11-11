@@ -326,10 +326,6 @@ function check_ports_present()
     return 1
 }
 
-
-PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
-HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
-
 # DEPENDENT initially contains namespace independent services
 # namespace specific services are added later in this script.
 DEPENDENT="radv"
@@ -344,6 +340,9 @@ else
     SONIC_DB_CLI="sonic-db-cli"
     DEPENDENT+=" bgp"
 fi
+
+PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
 
 check_peer_gbsyncd
 check_macsec
