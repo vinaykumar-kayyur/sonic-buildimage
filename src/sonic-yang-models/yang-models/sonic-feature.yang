@@ -25,7 +25,7 @@ module sonic-feature{
     }
 
     typedef feature-scope-status {
-        description "configuration to set the feature running status true/false";
+        description "configuration to set the feature has asic scope as true/false";
         type string;
     }
 
