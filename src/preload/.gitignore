@@ -1,0 +1,5 @@
+gcovpreload/debian/*
+!gcovpreload/debian/changelog 
+!gcovpreload/debian/control
+!gcovpreload/debian/rules 
+!gcovpreload/debian/libgcovpreload.postinst

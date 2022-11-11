@@ -14,7 +14,8 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS) \
                               $(LIBYANG_PY3) \
                               $(SONIC_UTILITIES_DATA) \
                               $(SONIC_HOST_SERVICES_DATA) \
-                              $(IPROUTE2)
+                              $(IPROUTE2) \
+                              $(LIBGCOV_PRELOAD)
 
 $(DOCKER_SONIC_VS)_PYTHON_WHEELS += $(SONIC_PY_COMMON_PY3) \
                                     $(SONIC_PLATFORM_COMMON_PY3) \

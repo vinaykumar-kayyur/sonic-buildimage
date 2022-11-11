@@ -1,0 +1,5 @@
+gcovpreload (0.0.1-1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports. (Closes: #911732)
+
+ --Petter Shao <pettershao@ragilenetworks>  Wed, 07 Nov 2021 11:26:50 +0000
