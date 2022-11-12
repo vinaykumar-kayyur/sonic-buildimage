@@ -1,0 +1,52 @@
+{
+    "SYSTEM_PORT_POSITIVE_CONFIG": {
+        "sonic-system-port:sonic-system-port": {
+            "sonic-system-port:SYSTEM_PORT": {
+                "SYSTEM_PORT_LIST": [
+                    {
+                        "hostname": "host123",
+                        "asic_name": "asic0",
+                        "ifname": "Ethernet0",
+                        "core_index": "0",
+                        "core_port_index": "10",
+                        "num_voq": "8",
+                        "speed": "100000",
+                        "switch_id": "0",
+                        "system_port_id": "100"
+                    },
+                    {
+                        "hostname": "host123",
+                        "asic_name": "asic1",
+                        "ifname": "Ethernet0",
+                        "core_index": "1",
+                        "core_port_index": "20",
+                        "num_voq": "8",
+                        "speed": "100000",
+                        "switch_id": "1",
+                        "system_port_id": "200"
+                    }
+                ]
+            }
+        }
+    },
+    "SYSTEM_PORT_WRONG_SPEED_CONFIG": {
+        "sonic-system-port:sonic-system-port": {
+            "sonic-system-port:SYSTEM_PORT": {
+                "SYSTEM_PORT_LIST": [
+                    {
+                        "hostname": "host456",
+                        "asic_name": "asic0",
+                        "ifname": "Ethernet0",
+                        "core_index": "1",
+                        "core_port_index": "20",
+                        "num_voq": "8",
+                        "speed": "900000",
+                        "switch_id": "1",
+                        "system_port_id": "200"
+                    }
+                ]
+            }
+        }
+    }
+
+}
