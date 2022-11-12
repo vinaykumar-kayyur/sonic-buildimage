@@ -7,6 +7,6 @@
     {
         "tag": "alpm-parity-error",
         "regex": "ALPM (delete|insert) operation.L3_DEFIP_ALPM_(IPV4|IPV6).*encountered parity error",
-        "params": [ "operation", "ip_type" ]
+        "params": [ "operation", "ip_family:ret=(arg==\"IPV4\")and\"IPv4\"or((arg==\"IPV6\")and\"IPv6\"or\"\")" ]
     }
 ]
