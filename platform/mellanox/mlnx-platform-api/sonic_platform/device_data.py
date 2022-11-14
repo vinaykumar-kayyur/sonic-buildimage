@@ -169,6 +169,7 @@ DEVICE_DATA = {
     'x86_64-nvidia_sn5600-r0': {
         'thermal': {
             "capability": {
+                "comex_amb": False,
                 "pch_temp": True
             }
         }
