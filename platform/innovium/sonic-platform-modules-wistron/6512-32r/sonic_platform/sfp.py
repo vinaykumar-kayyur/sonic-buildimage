@@ -1774,7 +1774,6 @@ class Sfp(SfpBase):
             return False
         if self.sfp_type == QSFP_TYPE:
             try:
-                pwr_mode = self._read_eeprom_specific_bytes(QSFP_POWEROVERRIDE_OFFSET, QSFP_POWEROVERRIDE_WIDTH)
                 power_override_bit = (1 << 0) if power_override else 0
                 power_set_bit      = (1 << 1) if power_set else (1 << 3)
 
