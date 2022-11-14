@@ -179,6 +179,7 @@ stages:
             REGISTRY_PASSWD: $(REGISTRY_PASSWD)
             BUILD_NUMBER: $(Build.BuildId)
           displayName: "Publish to Docker Registry"
+        - template: .pipelines/post-build-steps.yml@acs-buildimage
         - task: ComponentGovernanceComponentDetection@0
           condition: eq(variables['PLATFORM_ARCH'], 'amd64')
         - script: |
