@@ -108,6 +108,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount
 [ -d $TRUSTED_GPG_DIR ] && [ ! -z "$(ls $TRUSTED_GPG_DIR)" ] && sudo cp $TRUSTED_GPG_DIR/* ${FILESYSTEM_ROOT}/etc/apt/trusted.gpg.d/
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
+scripts/build_mirror_config.sh files/apt $CONFIGURED_ARCH $IMAGE_DISTRO 
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
@@ -678,6 +679,7 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
+sudo cp files/image_config/resolv-config/resolv.conf $FILESYSTEM_ROOT/etc/resolv.conf
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
