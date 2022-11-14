@@ -24,8 +24,8 @@ steps:
       azcopy cp $timelinefile $PUBLISH_URL_PREFIX/buildtimelines/$relative_path/$timelinefile$SASKEY
     fi
 
-    if [ ! -f $buildlogfile ]; then
-      azcopy cp $timelinefile $PUBLISH_URL_PREFIX/buildlogs/$relative_path/$buildlogfile$SASKEY
+    if [ -f $buildlogfile ]; then
+      azcopy cp $buildlogfile $PUBLISH_URL_PREFIX/buildlogs/$relative_path/$buildlogfile$SASKEY
     fi
 
     exit 0
