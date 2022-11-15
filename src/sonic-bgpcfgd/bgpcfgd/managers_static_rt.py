@@ -104,7 +104,7 @@ class StaticRouteMgr(Manager):
         prefix = ""
 
         if '|' in key:
-             return tuple(key.split('|', 1))
+            return tuple(key.split('|', 1))
         else:
             try:
                 _ = ip_network(key)
