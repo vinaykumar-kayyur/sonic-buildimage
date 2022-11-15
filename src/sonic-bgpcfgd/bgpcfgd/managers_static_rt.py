@@ -104,15 +104,14 @@ class StaticRouteMgr(Manager):
         prefix = ""
 
         if '|' in key:
-            vrf, prefix = key.split('|', 1)
+             return tuple(key.split('|', 1))
         else:
             try:
-                type = ip_network(key)
-                log_debug("static route key {}, type {}".format(key, "ipv4" if type is IPv4Network else "ipv6"))
+                _ = ip_network(key)
                 vrf, prefix = 'default', key
             except ValueError:
                 # key in APPL_DB
-                log_debug("static route key {} is not prefix formart".format(key))
+                log_debug("static route key {} is not prefix only formart, split with ':'".format(key))
                 output = key.split(':', 1)
                 if len(output) < 2:
                     log_debug("invalid input in APPL_DB {}".format(key))
