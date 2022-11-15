@@ -4,6 +4,7 @@ from .manager import Manager
 from .template import TemplateFabric
 import socket
 from swsscommon import swsscommon
+from ipaddress import ip_network, IPv4Network
 
 class StaticRouteMgr(Manager):
     """ This class updates static routes when STATIC_ROUTE table is updated """
@@ -96,11 +97,29 @@ class StaticRouteMgr(Manager):
         Split key into vrf name and prefix.
         :param key: key to split
         :return: vrf name extracted from the key, ip prefix extracted from the key
+        key example: APPL_DB   vrf:5.5.5.0/24, 5.5.5.0/24, vrf:2001::0/64, 2001::0/64
+                     CONFIG_DB vrf|5.5.5.0/24, 5.5.5.0/24, vrf|2001::0/64, 2001::0/64
         """
-        if '|' not in key:
-            return 'default', key
+        vrf = ""
+        prefix = ""
+
+        if '|' in key:
+            vrf, prefix = key.split('|', 1)
         else:
-            return tuple(key.split('|', 1))
+            try:
+                type = ip_network(key)
+                log_debug("static route key {}, type {}".format(key, "ipv4" if type is IPv4Network else "ipv6"))
+                vrf, prefix = 'default', key
+            except ValueError:
+                # key in APPL_DB
+                log_debug("static route key {} is not prefix formart".format(key))
+                output = key.split(':', 1)
+                if len(output) < 2:
+                    log_debug("invalid input in APPL_DB {}".format(key))
+                    raise ValueError
+                vrf = output[0]
+                prefix = key[len(vrf)+1:]
+        return vrf, prefix
 
     def static_route_commands(self, ip_nh_set, cur_nh_set, ip_prefix, vrf, route_tag, cur_route_tag):
         op_cmd_list = {}
