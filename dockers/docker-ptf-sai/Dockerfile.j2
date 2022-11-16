@@ -23,7 +23,7 @@ RUN pip3 install crc16          \
 COPY \
 {% for deb in docker_ptf_sai_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
-{%- endfor -%} 
+{%- endfor -%}
 debs/
 
 RUN dpkg -i \
