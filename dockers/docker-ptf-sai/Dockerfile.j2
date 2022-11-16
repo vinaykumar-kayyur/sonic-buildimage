@@ -33,7 +33,7 @@ debs/{{ deb }}{{' '}}
 # Remove old ptf package
 RUN dpkg -r python-ptf
 
-# Install new ptf package
-RUN git clone https://github.com/p4lang/ptf.git \
-        && cd ptf                               \
-        && python3.7 setup.py install --single-version-externally-managed --record /tmp/ptf_install.txt
+# Install new ptf package not supprt in 202012 branch
+# RUN git clone https://github.com/p4lang/ptf.git \
+#         && cd ptf                               \
+#         && python3.7 setup.py install --single-version-externally-managed --record /tmp/ptf_install.txt
