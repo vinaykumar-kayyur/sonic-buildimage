@@ -15,9 +15,10 @@ module sonic-system-radius {
         prefix lag;
     }
 
-    import sonic-vlan {
-        prefix vlan;
-    }
+// Comment sonic-vlan import here until libyang back-links issue is resolved for VLAN leaf reference.
+//    import sonic-vlan {
+//        prefix vlan;
+//    }
 
     import sonic-loopback-interface {
         prefix loopback;
