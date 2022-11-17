@@ -6,6 +6,7 @@ try:
     import time
     import signal
     import syslog
+    import logging
     import threading
 
     sys.path.append(os.path.dirname(__file__))
@@ -23,6 +24,10 @@ except ImportError as e:
 class Psu(PsuBase):
     """Platform-specific PSU class"""
 
+    __lock = threading.Lock()
+    __sensors_info = None
+    __timestamp = 0
+
     sigterm = False
     sigterm_default_handler = None
     cls_inited = False
@@ -35,10 +40,6 @@ class Psu(PsuBase):
         self.__ts = 0
         # STUB IMPLEMENTATION
         self.color = ""
-
-        self.__sensors_info = None
-        self.__timestamp = 0
-        self.__lock = threading.Lock()
 
         syslog.syslog(syslog.LOG_INFO, "Created PSU #{} instance".format(self.__index))
         if not Psu.cls_inited:
@@ -55,17 +56,18 @@ class Psu(PsuBase):
         syslog.syslog(syslog.LOG_INFO, "Canceling PSU platform API calls...")
         cls.sigterm = True
 
-    def __sensors_get(self, cached=True):
-        self.__lock.acquire()
-        if time.time() > self.__timestamp + 15:
+    @classmethod
+    def __sensors_get(cls, cached=True):
+        cls.__lock.acquire()
+        if time.time() > cls.__timestamp + 15:
             # Update cache once per 15 seconds
             try:
-                self.__sensors_info = get_psu_metrics(self.__index)
-                self.__timestamp = time.time()
+                cls.__sensors_info = get_psu_metrics()
+                cls.__timestamp = time.time()
             except Exception as e:
                 logging.warning("Failed to update sensors cache: " + str(e))
-        info = self.__sensors_info
-        self.__lock.release()
+        info = cls.__sensors_info
+        cls.__lock.release()
         return info
 
     '''
@@ -125,7 +127,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        return get_metric_value(self.__sensors_get(self.__index), "in1_input")
+        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Voltage_in1_input" % self.__index)
 
     def get_current(self):
         """
@@ -134,7 +136,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        return get_metric_value(self.__sensors_get(self.__index), "curr2_input")
+        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Current_curr2_input" % self.__index)
 
     def get_input_voltage(self):
         """
@@ -143,7 +145,7 @@ class Psu(PsuBase):
             A float number, the input voltage in volts,
             e.g. 220
         """
-        return get_metric_value(self.__sensors_get(self.__index), "in0_input")
+        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Voltage_in0_input" % self.__index)
 
     def get_input_current(self):
         """
@@ -151,7 +153,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 0.8
         """
-        return get_metric_value(self.__sensors_get(self.__index), "curr1_input")
+        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Current_curr1_input" % self.__index)
 
     def get_power(self):
         """

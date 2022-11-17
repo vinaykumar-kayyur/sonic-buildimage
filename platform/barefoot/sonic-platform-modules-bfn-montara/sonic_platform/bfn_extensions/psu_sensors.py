@@ -3,11 +3,6 @@ from subprocess import Popen, PIPE, DEVNULL
 import json
 import os
 
-psu_drivers = {
-    1 : "psu_driver-i2c-7-5a",
-    2 : "psu_driver-i2c-7-59"
-}
-
 class Metric(object):
 
     def __init__(self, sensor_id, sensor_key, value, label):
@@ -54,9 +49,9 @@ class Current(Metric):
     unit = "A"
 
 def get_metric_value(metrics, name):
-    sensor_id, sensor_key = name.split("_")
+    label, sensor_id, sensor_key = name.split("_")
     for metric in metrics:
-        if metric._sensor_id == sensor_id and metric._sensor_key == sensor_key:
+        if metric._label == label and metric._sensor_id == sensor_id and metric._sensor_key == sensor_key:
             return metric._value
     return None
 
@@ -78,48 +73,55 @@ def get_link_local_address(link_local_interface):
             return address[:-1] + '1'
     return None
 
-def get_psu_metrics(index):
+def get_psu_metrics():
     link_local_interface = get_link_local_interface()
     link_local_address = get_link_local_address(link_local_interface)
 
     http_address = "http://[%s%%%s]:8080" % (link_local_address, link_local_interface)
-    args = "/api/sys/bmc/sensors/%20-A%20-u%20" + psu_drivers[index]
+    args = "/api/sys/bmc/sensors/%20-A%20-u%20"
     output = Popen("curl " + http_address + args, \
                     shell=True, stdout=PIPE, stderr=DEVNULL).stdout.read()
-    output = json.loads(output.decode())
-    fields = output["Information"]["Description"][0].strip().split("\n")
+    output = json.loads(output.decode())["Information"]["Description"][0].strip()
+    sections = output.split("\n\n")
 
     metrics = []
-    label = None
-    for field in fields[1:]:
-        if field.startswith("  "):
-            field = field.replace("  ", "")
-            field_key, field_value = field.split(": ")
-            if "_" in field_key:
-                sensor_id, sensor_key = field_key.split("_", 1)
-                if sensor_key == "input":
-                    if sensor_id.startswith("temp"):
-                        metrics.append(
-                            Temperature(sensor_id, sensor_key, field_value, label=label))
-                    elif sensor_id.startswith("in"):
-                        metrics.append(
-                            Voltage(sensor_id, sensor_key, field_value, label=label))
-                    elif sensor_id.startswith("power"):
-                        metrics.append(
-                            Power(sensor_id, sensor_key, field_value, label=label))
-                    elif sensor_id.startswith("curr"):
-                        metrics.append(
-                            Current(sensor_id, sensor_key, field_value, label=label))
-                    elif sensor_id.startswith("fan"):
-                        metrics.append(
-                            FanRpm(sensor_id, sensor_key, field_value, label=label))
-                elif sensor_key == "fault":
-                    if sensor_id.startswith("fan"):
-                        metrics.append(
-                            FanFault(sensor_id, sensor_key, field_value, label=label))
-        elif field.startswith("ERROR"):
-            syslog.syslog(syslog.LOG_INFO, field)
-        else:
-            label = field[:-1]  # strip off trailing ":" character
+    # iterating through drivers and their sensors
+    for section in sections:
+        fields = section.split("\n")
+
+        label = None
+        # iterating through sensors and their inputs
+        for field in fields[1:]: # skipping driver name
+            # parsing input sensor
+            if field.startswith("  "):
+                field = field.replace("  ", "")
+                # split sensor into name and value
+                field_key, field_value = field.split(": ")
+                if "_" in field_key:
+                    sensor_id, sensor_key = field_key.split("_", 1)
+                    if sensor_key == "input":
+                        if sensor_id.startswith("temp"):
+                            metrics.append(
+                                Temperature(sensor_id, sensor_key, field_value, label=label))
+                        elif sensor_id.startswith("in"):
+                            metrics.append(
+                                Voltage(sensor_id, sensor_key, field_value, label=label))
+                        elif sensor_id.startswith("power"):
+                            metrics.append(
+                                Power(sensor_id, sensor_key, field_value, label=label))
+                        elif sensor_id.startswith("curr"):
+                            metrics.append(
+                                Current(sensor_id, sensor_key, field_value, label=label))
+                        elif sensor_id.startswith("fan"):
+                            metrics.append(
+                                FanRpm(sensor_id, sensor_key, field_value, label=label))
+                    elif sensor_key == "fault":
+                        if sensor_id.startswith("fan"):
+                            metrics.append(
+                                FanFault(sensor_id, sensor_key, field_value, label=label))
+            elif field.startswith("ERROR"):
+                syslog.syslog(syslog.LOG_INFO, field)
+            else:
+                label = field[:-1]  # strip off trailing ":" character
 
     return metrics
