@@ -45,7 +45,7 @@ variables:
 
 stages:
 - stage: BuildVS
-  pool: sonicbld
+  pool: sonicbld-ame
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
@@ -54,7 +54,7 @@ stages:
       - name: vs
 
 - stage: Build
-  pool: sonicbld
+  pool: sonicbld-ame
   dependsOn: []
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
