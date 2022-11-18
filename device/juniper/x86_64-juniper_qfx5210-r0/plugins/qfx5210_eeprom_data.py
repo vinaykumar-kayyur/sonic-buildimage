@@ -84,8 +84,12 @@ def main():
     CPUeepromFileCmd = ['cat', '/sys/devices/pci0000:00/0000:00:1f.3/i2c-0/0-0056/eeprom']
     # Write the contents of CPU EEPROM to file
     out_file = '/etc/init.d/eeprom_qfx5210_ascii'
-    with open(out_file, 'w') as file:
-        subprocess.run(CPUeepromFileCmd, universal_newlines=True, stdout=file)
+    try:
+        with open(out_file, 'w') as file:
+            subprocess.call(CPUeepromFileCmd, universal_newlines=True, stdout=file)
+    except OSError:
+        print('Error: Execution of "%s" failed', CPUeepromFileCmd)
+        return False
 
     eeprom_ascii = '/etc/init.d/eeprom_qfx5210_ascii'
     # Read file contents in Hex format

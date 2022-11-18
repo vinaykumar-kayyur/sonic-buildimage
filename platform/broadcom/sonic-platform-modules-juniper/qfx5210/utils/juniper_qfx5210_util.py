@@ -39,6 +39,7 @@ import sys, getopt
 import binascii
 import logging
 import time
+import subprocess
 from sonic_py_common.general import getstatusoutput_noshell
 
 
@@ -129,7 +130,7 @@ def main():
     DisableWatchDogCmd = ['/usr/sbin/i2cset', '-f', '-y', '0', '0x65', '0x3', '0x04'] 
     # Disable watchdog
     try:
-        getstatusoutput_noshell(DisableWatchDogCmd)
+        subprocess.call(DisableWatchDogCmd)
     except OSError:
         print('Error: Execution of "%s" failed', DisableWatchDogCmd)
         return False
@@ -138,7 +139,7 @@ def main():
     # Invoking the script which retrieves the data from Board EEPROM and storing in file
     EEPROMDataCmd = ['python', '/usr/share/sonic/device/x86_64-juniper_qfx5210-r0/plugins/qfx5210_eeprom_data.py']
     try:
-        getstatusoutput_noshell(EEPROMDataCmd)
+        subprocess.call(EEPROMDataCmd)
     except OSError:
         print('Error: Execution of "%s" failed', EEPROMDataCmd)
         return False

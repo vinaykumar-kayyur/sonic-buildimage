@@ -587,7 +587,7 @@ class QFX5200_ThermalUtil(object):
             monitorlog_file.close()
 
             cmd = ["poweroff"]
-            subprocess.run(cmd)
+        subprocess.call(cmd)
             
         # CHECK IF ANY TEMPERATURE SENSORS is running at RED warning , IF YES, SET THE ALARM LED TO 'RED'
         elif (SensorFlag[0][10] or SensorFlag[1][10] or SensorFlag[2][10] or SensorFlag[3][10] or SensorFlag[4][10] or SensorFlag[5][10] or SensorFlag[6][10] or SensorFlag[7][10]

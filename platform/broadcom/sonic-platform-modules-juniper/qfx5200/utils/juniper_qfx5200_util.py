@@ -23,6 +23,7 @@ import commands
 import sys
 import logging
 import time
+import subprocess
 from sonic_py_common.general import getstatusoutput_noshell
 
 PROJECT_NAME = 'QFX5200-32C'
@@ -146,7 +147,7 @@ def main():
     # Enabling REFPGA	
     EnableREFFGACmd = ['busybox', 'devmem', '0xFED50011', '8', '0x53'] 
     try:
-        getstatusoutput_noshell(EnableREFFGACmd)
+        subprocess.call(EnableREFFGACmd)
     except OSError:
         print('Error: Execution of "%s" failed', EnableREFFGACmd)
         return False
@@ -197,7 +198,7 @@ def main():
     # Juniper SFP Intialization	
     JuniperSFPInitCmd = ['python', '/usr/share/sonic/device/x86_64-juniper_qfx5200-r0/plugins/qfx5200_sfp_init.py']
     try:
-        getstatusoutput_noshell(JuniperSFPInitCmd)
+        subprocess.call(JuniperSFPInitCmd)
     except OSError:
         print('Error: Execution of "%s" failed', JuniperSFPInitCmd)
         return False
@@ -206,7 +207,7 @@ def main():
     # Invoking the script which retrieves the data from CPU Board and Main Board EEPROM and storing in file	
     EEPROMDataCmd = ['python', '/usr/share/sonic/device/x86_64-juniper_qfx5200-r0/plugins/qfx5200_eeprom_data.py']
     try:
-        getstatusoutput_noshell(EEPROMDataCmd)
+        subprocess.call(EEPROMDataCmd)
     except OSError:
         print('Error: Execution of "%s" failed', EEPROMDataCmd)
         return False
