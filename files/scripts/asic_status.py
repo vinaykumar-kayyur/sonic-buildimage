@@ -17,7 +17,7 @@ except ImportError as e:
 # Constants ====================================================================
 #
 SYSLOG_IDENTIFIER = 'asic_status.py'
-CHASSIS_FABRIC_ASIC_INFO_TABLE = 'CHASSIS_FABRIC_ASIC_INFO_TABLE'
+CHASSIS_FABRIC_ASIC_INFO_TABLE = 'CHASSIS_FABRIC_ASIC_TABLE'
 SELECT_TIMEOUT_MSECS = 5000
 
 def main():
