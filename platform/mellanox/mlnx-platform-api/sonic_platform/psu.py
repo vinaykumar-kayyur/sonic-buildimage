@@ -544,9 +544,10 @@ class Psu(FixedPsu):
         """
         Retrieve the warning suppress threshold of the power on this PSU
         The value can be volatile, so the caller should call the API each time it is used.
+        On Mellanox platform, it is translated from the `warning threshold`
 
         Returns:
-            A float number, the warning threshold of the PSU in watts.
+            A float number, the warning suppress threshold of the PSU in watts.
         """
         return self._get_psu_power_threshold(Psu.AMBIENT_TEMP_WARNING_THRESHOLD)
 
