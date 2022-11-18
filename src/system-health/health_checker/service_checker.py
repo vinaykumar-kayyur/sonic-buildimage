@@ -12,6 +12,8 @@ from . import utils
 SYSLOG_IDENTIFIER = 'service_checker'
 logger = Logger(log_identifier=SYSLOG_IDENTIFIER)
 
+EVENTS_PUBLISHER_SOURCE = "sonic-events-host"
+EVENTS_PUBLISHER_TAG = "process-not-running"
 
 class ServiceChecker(HealthChecker):
     """
@@ -24,13 +26,13 @@ class ServiceChecker(HealthChecker):
     CRITICAL_PROCESSES_PATH = 'etc/supervisor/critical_processes'
 
     # Command to get merged directory of a container
-    GET_CONTAINER_FOLDER_CMD = 'docker inspect {} --format "{{{{.GraphDriver.Data.MergedDir}}}}"'
+    GET_CONTAINER_FOLDER_CMD = ['docker', 'inspect', '', '--format', "{{.GraphDriver.Data.MergedDir}}"]
 
     # Command to query the status of monit service.
-    CHECK_MONIT_SERVICE_CMD = 'systemctl is-active monit.service'
+    CHECK_MONIT_SERVICE_CMD = ['systemctl', 'is-active', 'monit.service']
 
     # Command to get summary of critical system service.
-    CHECK_CMD = 'monit summary -B'
+    CHECK_CMD = ['monit', 'summary', '-B']
     MIN_CHECK_CMD_LINES = 3
 
     # Expect status for different system service category.
@@ -55,6 +57,8 @@ class ServiceChecker(HealthChecker):
 
         self.load_critical_process_cache()
 
+        self.events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
+ 
     def get_expected_running_containers(self, feature_table):
         """Get a set of containers that are expected to running on SONiC
 
@@ -168,7 +172,8 @@ class ServiceChecker(HealthChecker):
         self.need_save_cache = True
 
     def _get_container_folder(self, container):
-        container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD.format(container))
+        ServiceChecker.GET_CONTAINER_FOLDER_CMD[2] = str(container)
+        container_folder = utils.run_command(ServiceChecker.GET_CONTAINER_FOLDER_CMD)
         if container_folder is None:
             return container_folder
 
@@ -287,7 +292,7 @@ class ServiceChecker(HealthChecker):
         self.reset()
         self.check_by_monit(config)
         self.check_services(config)
-
+        swsscommon.events_deinit_publisher(self.events_handle)
 
     def _parse_supervisorctl_status(self, process_status):
         """Expected input:
@@ -308,6 +313,13 @@ class ServiceChecker(HealthChecker):
             data[items[0].strip()] = items[1].strip()
         return data
 
+    def publish_events(self, container_name, critical_process_list):
+        params = swsscommon.FieldValueMap()
+        params["ctr_name"] = container_name
+        for process_name in critical_process_list:
+            params["process_name"] = process_name
+            swsscommon.event_publish(self.events_handle, EVENTS_PUBLISHER_TAG, params)
+
     def check_process_existence(self, container_name, critical_process_list, config, feature_table):
         """Check whether the process in the specified container is running or not.
 
@@ -327,11 +339,12 @@ class ServiceChecker(HealthChecker):
                 # We are using supervisorctl status to check the critical process status. We cannot leverage psutil here because
                 # it not always possible to get process cmdline in supervisor.conf. E.g, cmdline of orchagent is "/usr/bin/orchagent",
                 # however, in supervisor.conf it is "/usr/bin/orchagent.sh"
-                cmd = 'docker exec {} bash -c "supervisorctl status"'.format(container_name)
+                cmd = ['docker', 'exec', str(container_name), 'bash', '-c', "supervisorctl status"]
                 process_status = utils.run_command(cmd)
                 if process_status is None:
                     for process_name in critical_process_list:
                         self.set_object_not_ok('Process', '{}:{}'.format(container_name, process_name), "'{}' is not running".format(process_name))
+                    self.publish_events(container_name, critical_process_list)
                     return
 
                 process_status = self._parse_supervisorctl_status(process_status.strip().splitlines())
