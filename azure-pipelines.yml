@@ -8,6 +8,7 @@ trigger:
     include:
       - master
       - 202???
+      - pre_2022??
   paths:
     exclude:
       - .github
@@ -17,6 +18,7 @@ pr:
     include:
       - master
       - 202???
+      - pre_2022??
   paths:
     exclude:
       - .github
