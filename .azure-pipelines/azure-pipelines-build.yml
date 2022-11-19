@@ -16,9 +16,6 @@ parameters:
 - name: 'jobGroups'
   type: object
   default: ''
-- name: 'qemuOrCrossBuild'
-  type: boolean
-  default: false
 
 jobs:
 - template: azure-pipelines-image-template.yml
@@ -39,9 +36,6 @@ jobs:
       docker_syncd_rpc_image: no
       syncd_rpc_image: no
       platform_rpc: no
-      ${{ if parameters.qemuOrCrossBuild }}:
-        SONIC_SLAVE_DOCKER_DRIVER: 'vfs'
-        CACHE_MODE: 'none'
     ${{ if ne(parameters.jobGroups, '') }}:
       jobGroups: ${{ parameters.jobGroups }}
     ${{ if eq(parameters.jobGroups, '') }}:
@@ -73,8 +67,7 @@ jobs:
             platform_rpc: centec
 
         - name: centec-arm64
-          ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-arm64
+          pool: sonicbld-arm64
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
@@ -88,8 +81,7 @@ jobs:
             dbg_image: yes
 
         - name: marvell-armhf
-          ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-armhf
+          pool: sonicbld-armhf
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
@@ -144,12 +136,14 @@ jobs:
               pushd ./src/sonic-sairedis/SAI
               git stash
               popd
+              if [ $(GROUP_NAME) == broadcom ]; then
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd
+              fi
             fi
             if [ $(GROUP_NAME) == broadcom ]; then
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
-              pushd ./src/sonic-sairedis/SAI
-              git stash
-              popd 
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
               pushd ./src/sonic-sairedis/SAI
               git stash
