@@ -30,6 +30,7 @@ jobs:
       BUILD_OPTIONS: ${{ parameters.buildOptions }}
       DOCKER_DATA_ROOT_FOR_MULTIARCH: /data/march/docker
       dbg_image: no
+      asan_image: no
       swi_image: no
       raw_image: no
       docker_syncd_rpc_image: no
@@ -42,6 +43,7 @@ jobs:
         - name: vs
           variables:
             dbg_image: yes
+            asan_image: yes
 
         - name: barefoot
           variables:
@@ -50,6 +52,7 @@ jobs:
             swi_image: yes
 
         - name: broadcom
+          timeoutInMinutes: 1440
           variables:
             dbg_image: yes
             swi_image: yes
@@ -68,7 +71,7 @@ jobs:
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
-            BUILD_OPTIONS: ${{ parameters.buildOptions }} SONIC_VERSION_CONTROL_COMPONENTS=
+
         - name: generic
           variables:
             dbg_image: yes
@@ -82,7 +85,7 @@ jobs:
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
-            BUILD_OPTIONS: ${{ parameters.buildOptions }} SONIC_VERSION_CONTROL_COMPONENTS=
+
         - name: mellanox
           variables:
             dbg_image: yes
@@ -93,7 +96,7 @@ jobs:
         - name: nephos
           variables:
             dbg_image: yes
-            docker_syncd_rpc_image: no
+            docker_syncd_rpc_image: yes
             platform_rpc: nephos
 
     buildSteps:
@@ -104,6 +107,10 @@ jobs:
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
+            fi
+            if [ $(asan_image) == yes ]; then
+              make $BUILD_OPTIONS ENABLE_ASAN=y target/docker-sonic-vs.gz
+              mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
             if [ $(Build.Reason) != 'PullRequest' ];then
@@ -128,12 +135,14 @@ jobs:
               pushd ./src/sonic-sairedis/SAI
               git stash
               popd
+              if [ $(GROUP_NAME) == broadcom ]; then
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd
+              fi
             fi
             if [ $(GROUP_NAME) == broadcom ]; then
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
-              pushd ./src/sonic-sairedis/SAI
-              git stash
-              popd 
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
               pushd ./src/sonic-sairedis/SAI
               git stash
