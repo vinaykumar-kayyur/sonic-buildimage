@@ -1,4 +1,5 @@
 # The azure pipeline template for Official build, and upgrade version build
+
 parameters:
 - name: 'jobFilters'
   type: object
@@ -15,6 +16,7 @@ parameters:
 - name: 'jobGroups'
   type: object
   default: ''
+
 jobs:
 - template: azure-pipelines-image-template.yml
   parameters:
@@ -54,11 +56,13 @@ jobs:
             raw_image: yes
             docker_syncd_rpc_image: yes
             platform_rpc: brcm
+
         - name: centec
           variables:
             dbg_image: yes
             docker_syncd_rpc_image: yes
             platform_rpc: centec
+
         - name: centec-arm64
           pool: sonicbld-arm64
           timeoutInMinutes: 2880
@@ -68,9 +72,11 @@ jobs:
         - name: generic
           variables:
             dbg_image: yes
+
         - name: innovium
           variables:
             dbg_image: yes
+
         - name: marvell-armhf
           pool: sonicbld-armhf
           timeoutInMinutes: 2880
@@ -83,6 +89,7 @@ jobs:
             docker_syncd_rpc_image: yes
             syncd_rpc_image: yes
             platform_rpc: mlnx
+
         - name: nephos
           variables:
             dbg_image: yes
