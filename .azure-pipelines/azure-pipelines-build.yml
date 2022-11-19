@@ -1,5 +1,4 @@
 # The azure pipeline template for Official build, and upgrade version build
-
 parameters:
 - name: 'jobFilters'
   type: object
@@ -16,7 +15,6 @@ parameters:
 - name: 'jobGroups'
   type: object
   default: ''
-
 jobs:
 - template: azure-pipelines-image-template.yml
   parameters:
@@ -30,7 +28,6 @@ jobs:
       BUILD_OPTIONS: ${{ parameters.buildOptions }}
       DOCKER_DATA_ROOT_FOR_MULTIARCH: /data/march/docker
       dbg_image: no
-      asan_image: no
       swi_image: no
       raw_image: no
       docker_syncd_rpc_image: no
@@ -43,7 +40,6 @@ jobs:
         - name: vs
           variables:
             dbg_image: yes
-            asan_image: yes
 
         - name: barefoot
           variables:
@@ -52,51 +48,45 @@ jobs:
             swi_image: yes
 
         - name: broadcom
-          timeoutInMinutes: 1440
           variables:
             dbg_image: yes
             swi_image: yes
             raw_image: yes
             docker_syncd_rpc_image: yes
             platform_rpc: brcm
-
         - name: centec
           variables:
             dbg_image: yes
             docker_syncd_rpc_image: yes
             platform_rpc: centec
-
         - name: centec-arm64
           pool: sonicbld-arm64
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
-
+            BUILD_OPTIONS: ${{ parameters.buildOptions }} SONIC_VERSION_CONTROL_COMPONENTS=
         - name: generic
           variables:
             dbg_image: yes
-
         - name: innovium
           variables:
             dbg_image: yes
-
         - name: marvell-armhf
           pool: sonicbld-armhf
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
-
+            BUILD_OPTIONS: ${{ parameters.buildOptions }} SONIC_VERSION_CONTROL_COMPONENTS=
         - name: mellanox
           variables:
             dbg_image: yes
             docker_syncd_rpc_image: yes
             syncd_rpc_image: yes
             platform_rpc: mlnx
-
         - name: nephos
           variables:
             dbg_image: yes
-            docker_syncd_rpc_image: yes
+            docker_syncd_rpc_image: no
             platform_rpc: nephos
 
     buildSteps:
@@ -107,10 +97,6 @@ jobs:
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
-            fi
-            if [ $(asan_image) == yes ]; then
-              make $BUILD_OPTIONS ENABLE_ASAN=y target/docker-sonic-vs.gz
-              mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
             if [ $(Build.Reason) != 'PullRequest' ];then
