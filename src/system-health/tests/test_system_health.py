@@ -430,7 +430,7 @@ def test_hardware_checker():
 
     assert 'PSU 7' in checker._info
     assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'power of PSU 7 exceeds threshold but power or power_critical_threshold does not invalid'
+    assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'power of PSU 7 exceeds threshold but power or power_critical_threshold is invalid'
 
 
 def test_config():
