@@ -14,7 +14,9 @@ PYTHON3_THRIFT_0_14_1 = python3-thrift_$(THRIFT_0_14_1_VERSION)_$(CONFIGURED_ARC
 $(eval $(call add_derived_package,$(LIBTHRIFT_0_14_1),$(PYTHON3_THRIFT_0_14_1)))
 
 PYTHON_THRIFT_0_14_1 = python-thrift_$(THRIFT_0_14_1_VERSION)_$(CONFIGURED_ARCH).deb
-$(eval $(call add_derived_package,$(LIBTHRIFT_0_14_1),$(PYTHON_THRIFT_0_14_1)))
+# LIBTHRIFT_0_14_1 didn't derive PYTHON_THRIFT_0_14_1
+# Don't uncomment following line until python-thrift_* is built
+# $(eval $(call add_derived_package,$(LIBTHRIFT_0_14_1),$(PYTHON_THRIFT_0_14_1)))
 
 THRIFT_0_14_1_COMPILER = thrift-compiler_$(THRIFT_0_14_1_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBTHRIFT_0_14_1),$(THRIFT_0_14_1_COMPILER)))
