@@ -244,7 +244,7 @@
 {% if different_dscp_to_tc_map and tunnel_qos_remap_enable %}
 {% if ('type' in DEVICE_METADATA['localhost']) and (DEVICE_METADATA['localhost']['type'] == 'LeafRouter') and (port not in port_names_list_extra_queues) %}
             "dscp_to_tc_map"  : "AZURE_UPLINK",
-{% elif ('type' in DEVICE_METADATA['localhost']) and (DEVICE_METADATA['localhost']['type'] == 'ToRRouter') and (port in port_names_list_extra_queues) %}
+{% elif ('subtype' in DEVICE_METADATA['localhost']) and (DEVICE_METADATA['localhost']['subtype'] == 'DualToR') and (port in port_names_list_extra_queues) %}
             "dscp_to_tc_map"  : "AZURE_UPLINK",
 {% else %}
             "dscp_to_tc_map"  : "AZURE",
