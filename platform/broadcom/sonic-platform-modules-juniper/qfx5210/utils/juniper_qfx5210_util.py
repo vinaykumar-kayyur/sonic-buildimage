@@ -40,7 +40,6 @@ import binascii
 import logging
 import time
 import subprocess
-from sonic_py_common.general import getstatusoutput_noshell
 
 
 
