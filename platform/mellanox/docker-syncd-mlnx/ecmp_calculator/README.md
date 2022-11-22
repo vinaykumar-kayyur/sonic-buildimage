@@ -46,9 +46,6 @@ Egress port: Ethernet4
 |           |             |       |             | inner_vid   | number | QinQ                                                                             |
 |           |             |       |             | inner_pcp   | number | QinQ                                                                             |
 |           |             |       |             | inner_dei   | number | QinQ                                                                             |
-|           |             |       | arp         |             |        | Needed for arp packet                                                            |
-|           |             |       |             | spa         | string | source ip                                                                        |
-|           |             |       |             | tpa         | string | target ip                                                                        |
 |           |             |       | ipv4        |             | object |                                                                                  |
 |           |             |       |             | sip         | string |                                                                                  |
 |           |             |       |             | dip         | string |                                                                                  |

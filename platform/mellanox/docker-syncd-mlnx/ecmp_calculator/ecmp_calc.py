@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 from ecmp_calc_sdk import sx_open_sdk_connection, sx_get_active_vrids, sx_router_get_ecmp_id, \
                           sx_router_operational_ecmp_get, sx_get_router_interface, \
                           sx_port_vport_base_get, sx_router_neigh_get_mac, sx_fdb_uc_mac_addr_get, \
@@ -366,7 +365,7 @@ class EcmpCalc:
         for ip in ['sip', 'dip']:
             if ip in header and is_ip_valid(header[ip], IP_VERSION_IPV4) == False:
                 raise ValueError("Json validation failed: invalid IP {}".format(header[ip]))
-                
+
     def validate_ipv6_header(self, header):
         for ip in ['sip', 'dip']:
             if ip in header and is_ip_valid(header[ip], IP_VERSION_IPV6) == False:
@@ -389,19 +388,34 @@ class EcmpCalc:
         
         if ipv4_header and ipv6_header:
             raise ValueError("Json validation failed: IPv4 and IPv6 headers can not co-exist")
-        
-        # Verify valid IPs in header
+
         if ipv4_header:
+            # Verify valid IPs in header
             self.validate_ipv4_header(header['ipv4'])
+
             if is_outer_header:
+                if 'dip' not in header['ipv4']:
+                    raise ValueError("Json validation failed: destination IP is mandatory")
+
                 self.dst_ip = header['ipv4']['dip']
                 self.ip_version = IP_VERSION_IPV4
+
+            if 'tcp_udp' in header and 'proto' not in header['ipv4']:
+                raise ValueError("Json validation failed: transport protocol (proto) is mandatory when transport layer port exists")
+
         elif ipv6_header:
             self.validate_ipv6_header(header['ipv6'])
+
             if is_outer_header:
+                if 'dip' not in header['ipv6']:
+                    raise ValueError("Json validation failed: destination IP is mandatory")
+
                 self.dst_ip = header['ipv6']['dip']
                 self.ip_version = IP_VERSION_IPV6
-            
+
+            if 'tcp_udp' in header and 'next_header' not in header['ipv6']:
+                raise ValueError("Json validation failed: transport protocol (next_header) is mandatory when transport layer port exists")
+
         # Verify valid macs in header
         if header['layer2']:
             self.validate_layer2_header(header['layer2'])    
