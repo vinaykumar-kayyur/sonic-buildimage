@@ -43,7 +43,8 @@ BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
 BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
-DPKG_ADMINDIR_PATH = /sonic/dpkg
+BUILD_WORKDIR = /sonic
+DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -84,6 +85,7 @@ export MULTIARCH_QEMU_ENVIRON
 export DOCKER_BASE_ARCH
 export CROSS_BUILD_ENVIRON
 export BLDENV
+export BUILD_WORKDIR
 
 ###############################################################################
 ## Utility rules
@@ -135,6 +137,8 @@ export TRUSTED_GPG_URLS
 export SONIC_VERSION_CONTROL_COMPONENTS
 DEFAULT_CONTAINER_REGISTRY := $(SONIC_DEFAULT_CONTAINER_REGISTRY)
 export DEFAULT_CONTAINER_REGISTRY
+export MIRROR_URLS
+export MIRROR_SECURITY_URLS
 
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
@@ -176,10 +180,10 @@ endif
 # Pre-built Bazel is not available for armhf, so exclude P4RT
 # TODO(PINS): Remove when Bazel binaries are available for armhf
 ifeq ($(CONFIGURED_ARCH),armhf)
-	ifeq ($(INCLUDE_P4RT),y)
-		$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
-	endif
-	override INCLUDE_P4RT = n
+ifeq ($(INCLUDE_P4RT),y)
+$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+endif
+override INCLUDE_P4RT = n
 endif
 
 ifeq ($(SONIC_INCLUDE_MACSEC),y)
@@ -204,10 +208,10 @@ endif
 
 
 ifeq ($(ENABLE_ASAN),y)
-	ifneq ($(CONFIGURED_ARCH),amd64)
-		$(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
-		override ENABLE_ASAN = n
-	endif
+ifneq ($(CONFIGURED_ARCH),amd64)
+$(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+override ENABLE_ASAN = n
+endif
 endif
 
 include $(RULES_PATH)/functions
@@ -451,8 +455,10 @@ define docker-image-save
     docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):latest $(LOG)
     @echo "Saving docker image $(1):latest" $(LOG)
         docker save $(1):latest | gzip -c > $(2)
-    @echo "Removing docker image $(1):latest" $(LOG)
-    docker rmi -f $(1):latest $(LOG)
+    if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
+        @echo "Removing docker image $(1):latest" $(LOG)
+        docker rmi -f $(1):latest $(LOG)
+    fi
     $(call MOD_UNLOCK,$(1))
     @echo "Released docker image lock for $(1) save" $(LOG)
     @echo "Removing docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG)" $(LOG)
@@ -474,8 +480,10 @@ define docker-image-load
     docker load -i $(TARGET_PATH)/$(1).gz $(LOG)
     @echo "Tagging docker image $(1):latest as $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG)" $(LOG)
     docker tag $(1):latest $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(LOG)
-    @echo "Removing docker image $(1):latest" $(LOG)
-    docker rmi -f $(1):latest $(LOG)
+    if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
+        @echo "Removing docker image $(1):latest" $(LOG)
+        docker rmi -f $(1):latest $(LOG)
+    fi
     $(call MOD_UNLOCK,$(1))
     @echo "Released docker image lock for $(1) load" $(LOG)
 endef
@@ -896,6 +904,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		--label Tag=$(SONIC_IMAGE_VERSION) \
 		-f $(TARGET_DOCKERFILE)/Dockerfile.buildinfo \
 		-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
+	if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
 	scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
 	$(call docker-image-save,$*,$@)
 	# Clean up
@@ -1015,6 +1024,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 		        $($(subst -,_,$(notdir $($*.gz_PATH)))_labels) \
 			-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
+		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
 		scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
 		$(call docker-image-save,$*,$@)
 		# Clean up
@@ -1067,6 +1077,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 			--file $($*.gz_PATH)/Dockerfile-dbg \
 			-t $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH) $(LOG)
+		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
 		scripts/collect_docker_version_files.sh $(DOCKER_DBG_IMAGE_REF) $(TARGET_PATH)
 		$(call docker-image-save,$*-$(DBG_IMAGE_MARK),$@)
 		# Clean up
@@ -1214,8 +1225,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
 	export config_engine_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY2))"
 	export config_engine_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY3))"
-	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
-	export swsssdk_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY3))"
 	export platform_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export redis_dump_load_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY3))"

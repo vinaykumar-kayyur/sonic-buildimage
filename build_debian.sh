@@ -33,7 +33,7 @@ CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 ## docker engine version (with platform)
 DOCKER_VERSION=5:20.10.14~3-0~debian-$IMAGE_DISTRO
 CONTAINERD_IO_VERSION=1.5.11-1
-LINUX_KERNEL_VERSION=5.10.0-12-2
+LINUX_KERNEL_VERSION=5.10.0-18-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -108,8 +108,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount
 [ -d $TRUSTED_GPG_DIR ] && [ ! -z "$(ls $TRUSTED_GPG_DIR)" ] && sudo cp $TRUSTED_GPG_DIR/* ${FILESYSTEM_ROOT}/etc/apt/trusted.gpg.d/
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
+scripts/build_mirror_config.sh files/apt $CONFIGURED_ARCH $IMAGE_DISTRO 
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
-sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
+sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until,apt-multiple-retries} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
@@ -467,16 +468,12 @@ rm /files/etc/ssh/sshd_config/ClientAliveInterval
 rm /files/etc/ssh/sshd_config/ClientAliveCountMax
 touch /files/etc/ssh/sshd_config/EmptyLineHack
 rename /files/etc/ssh/sshd_config/EmptyLineHack ""
-set /files/etc/ssh/sshd_config/ClientAliveInterval 300
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 1
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
 ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
-set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 5 minutes"
-rm /files/etc/ssh/sshd_config/MaxAuthTries
-set /files/etc/ssh/sshd_config/MaxAuthTries 3
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
 rm /files/etc/ssh/sshd_config/LogLevel
 set /files/etc/ssh/sshd_config/LogLevel VERBOSE
-rm /files/etc/ssh/sshd_config/Banner
-set /files/etc/ssh/sshd_config/Banner /etc/issue
 save
 quit
 EOF
@@ -678,6 +675,7 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
+sudo cp files/image_config/resolv-config/resolv.conf $FILESYSTEM_ROOT/etc/resolv.conf
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
