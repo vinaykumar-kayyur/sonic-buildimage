@@ -1,0 +1,29 @@
+From a056a2d8cec783002b13c3592846e83ea1e9b5a2 Mon Sep 17 00:00:00 2001
+From: Konstantin Vasin <k.vasin@yadro.com>
+Date: Sun, 20 Nov 2022 19:22:59 +0300
+Subject: [PATCH] tune wget settings
+
+1. Consider "connection refused" a transient error and try again.
+2. Set number of tries to 3 (default is 20).
+
+Signed-off-by: Konstantin Vasin <k.vasin@yadro.com>
+---
+ functions | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/functions b/functions
+index 09d93f4..b81b547 100644
+--- a/functions
++++ b/functions
+@@ -441,7 +441,7 @@ just_get () {
+ 		error 1 NOTPREDL "%s was not pre-downloaded" "${from#null:}"
+ 	elif [ "${from#http://}" != "$from" ] || [ "${from#https://}" != "$from" ] || [ "${from#ftp://}" != "$from" ]; then
+ 		# http/https/ftp mirror
+-		if wgetprogress ${CHECKCERTIF:+"$CHECKCERTIF"} ${CERTIFICATE:+"$CERTIFICATE"} ${PRIVATEKEY:+"$PRIVATEKEY"} -O "$dest" "$from"; then
++		if wgetprogress ${CHECKCERTIF:+"$CHECKCERTIF"} ${CERTIFICATE:+"$CERTIFICATE"} ${PRIVATEKEY:+"$PRIVATEKEY"} -t 3 --retry-connrefused -O "$dest" "$from"; then
+ 			return 0
+ 		else
+ 			rm -f "$dest"
+-- 
+2.25.1
+

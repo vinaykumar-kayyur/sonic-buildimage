@@ -14,6 +14,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build source and Debian packages
 	pushd debootstrap-$(DEBOOTSTRAP_VERSION)
 	patch -p1 -i ../proc-mount.patch
+	patch -p1 -i ../tune-wget-settings.patch
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
