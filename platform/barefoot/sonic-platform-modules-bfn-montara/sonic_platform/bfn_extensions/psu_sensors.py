@@ -79,8 +79,8 @@ def get_psu_metrics():
 
     http_address = "http://[%s%%%s]:8080" % (link_local_address, link_local_interface)
     args = "/api/sys/bmc/sensors/%20-A%20-u%20"
-    output = Popen("curl " + http_address + args, \
-                    shell=True, stdout=PIPE, stderr=DEVNULL).stdout.read()
+    cmd = "curl " + http_address + args
+    output = Popen(cmd.split(), stdout=PIPE, stderr=DEVNULL).stdout.read()
     output = json.loads(output.decode())["Information"]["Description"][0].strip()
     sections = output.split("\n\n")
 
