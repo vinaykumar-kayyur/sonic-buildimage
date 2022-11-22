@@ -1,7 +1,7 @@
 [submodule "sonic-swss-common"]
 	path = src/sonic-swss-common
 	url = https://github.com/sonic-net/sonic-swss-common
-	branch = dev/liuh/mq_state_table
+	branch = dev/liuh/zmq_state_table
 [submodule "sonic-linux-kernel"]
 	path = src/sonic-linux-kernel
 	url = https://github.com/sonic-net/sonic-linux-kernel
@@ -12,7 +12,7 @@
 [submodule "sonic-swss"]
 	path = src/sonic-swss
 	url = https://github.com/liuh-80/sonic-swss
-	branch = dev/liuh/change_to_shm
+	branch = dev/liuh/change_to_zmq
 [submodule "src/p4c-bm/p4c-bm"]
 	path = platform/p4/p4c-bm/p4c-bm
 	url = https://github.com/krambn/p4c-bm
