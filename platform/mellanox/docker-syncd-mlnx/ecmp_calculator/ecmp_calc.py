@@ -132,17 +132,21 @@ class EcmpCalc:
                 
         if (vrf is not None):
             self.user_vrf = vrf
-            self.validate_vrf()
+            if not self.validate_vrf():
+                raise ValueError("VRF validation failed: VRF {} does not exist".format(self.user_vrf))
                         
     def validate_vrf(self):        
         query_output = exec_cmd(['/usr/bin/redis-cli', '-n', '0', 'keys','*VRF*']).strip()
+        if not query_output:
+            return False
+
         vrf_entries= query_output.split('\n')
         for entry in vrf_entries:
             vrf = entry.split(':')[VRF_NAME_IDX]
             if vrf == self.user_vrf:
-                return
-        
-        raise ValueError("VRF validation failed: VRF {} does not exist".format(self.user_vrf))
+                return True
+
+        return False
 
     def get_ecmp_ids(self):
         ip_addr = self.dst_ip
