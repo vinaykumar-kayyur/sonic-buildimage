@@ -44,9 +44,6 @@ class TestCfgGen(TestCase):
 
     def run_diff(self, file1, file2):
         _, output = getstatusoutput_noshell(['diff', '-u', file1, file2])
-        if utils.PY3x:
-            output = output.decode()
-
         return output
 
     def run_case(self, template, target):
