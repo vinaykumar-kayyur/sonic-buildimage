@@ -1,6 +1,6 @@
 {
     "chassis": {
-        "MSN3800": {
+        "SN5600": {
             "component": {
                 "ONIE": { },
                 "SSD": { },
@@ -8,9 +8,7 @@
                 "CPLD1": { },
                 "CPLD2": { },
                 "CPLD3": { },
-                "CPLD4": { },
-                "CPLD5": { },
-                "CPLD6": { }
+                "CPLD4": { }
             }
         }
     }
