@@ -17,6 +17,24 @@ class Psu(PddfPsu):
         PddfPsu.__init__(self, index, pddf_data, pddf_plugin_data)
         
     # Provide the functions/variables below for which implementation is to be overwritten
+    def get_voltage_high_threshold(self):
+        """
+        Retrieves the high threshold PSU voltage output
+        Returns:
+            A float number, the high threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return 14.72
+
+    def get_voltage_low_threshold(self):
+        """
+        Retrieves the low threshold PSU voltage output
+        Returns:
+            A float number, the low threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return 7.68
+
     def get_maximum_supplied_power(self):
         """
         Retrieves the maximum supplied power by PSU (or PSU capacity)
@@ -42,3 +60,20 @@ class Psu(PddfPsu):
         A string, the type of PSU (AC/DC)
         """
         return "AC"
+    
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return psu_index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
