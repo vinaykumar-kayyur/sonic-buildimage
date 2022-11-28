@@ -41,7 +41,7 @@ variables:
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - template: .azure-pipelines/template-variables.yml
 - ${{ else }}:
-  - template: .azure-pipelines/template-variables.yml@buildimage
+  - template: .azure-pipelines/template-variables.yml
 - name: CACHE_MODE
   value: rcache
 - name: ENABLE_FIPS
@@ -66,14 +66,13 @@ stages:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: broadcom
+        timeoutInMinutes: 1440
         variables:
+          dbg_image: yes
           swi_image: yes
-      - name: mellanox
-      - name: marvell-armhf
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
-        variables:
-          PLATFORM_ARCH: armhf
+          raw_image: yes
+          docker_syncd_rpc_image: yes
+          platform_rpc: brcm
 
 - stage: Test
   dependsOn: BuildVS
