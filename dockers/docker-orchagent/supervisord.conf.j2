@@ -28,6 +28,18 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
 
+[program:hbmonitord]
+command=/usr/bin/hbmonitord
+priority=1
+autostart=false
+autorestart=false
+startsecs=0
+startretries=0
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=rsyslogd:running
+
 {% set is_fabric_asic = 0 %}
 {% set orchagent_dependent_startup_wait_for = "portsyncd:running" %}
 {% if DEVICE_METADATA.localhost.switch_type %}

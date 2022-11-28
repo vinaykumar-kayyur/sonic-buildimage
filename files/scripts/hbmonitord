@@ -1,0 +1,406 @@
+#!/usr/bin/env python3
+
+"""
+    hbmonitord
+
+    Heart Beat monitor daemon for SONiC
+
+    Daemon which periodically polls registered clients to check if
+    they are respoding with acknowledgement message within an agreed
+    time interval.
+
+"""
+
+
+try:
+    import os
+    import subprocess
+    import sys
+    import time
+    import datetime
+    import socket
+    import shlex
+
+    from sonic_py_common import daemon_base
+    from swsscommon import swsscommon
+except ImportError as err:
+    raise ImportError("%s - required module not found" % str(err))
+
+VERSION = "1.0"
+
+SYSLOG_IDENTIFIER = "hbmonitord"
+# TODO replace HB_CLIENTS_STATE_TABLE with swsscommon.STATE_HB_CLIENTS_TABLE_NAME
+STATE_HB_CLIENTS_TABLE_NAME = "HB_CLIENTS_STATE_TABLE"
+
+
+class HBMonitor(daemon_base.DaemonBase):
+    """
+    Master class which represents the monitor daemon.
+    The Redis STATE_DB handle is used to store and refer to the registered clients
+    Attributes:
+        state_db: Handle to Redis State database via swsscommon lib
+    """
+    REDIS_TIMEOUT_MS = 0
+    HB_MESSAGE_SIZE = 92
+    HB_SOCK_PATH = "/tmp/hbserver"
+    HB_CLIENT_SOCK_PATH_PREFIX = "/tmp/hbclient"
+
+    def __init__(self, log_identifier):
+        super(HBMonitor, self).__init__(log_identifier)
+
+        # Open a handle to the State database
+        self.state_db = swsscommon.DBConnector("STATE_DB",
+                                              self.REDIS_TIMEOUT_MS,
+                                              False)
+        
+        self.client_state_table = swsscommon.Table(self.state_db, STATE_HB_CLIENTS_TABLE_NAME)
+
+        keys = self.client_state_table.getKeys()
+        for key in keys:
+            self.client_state_table.delete(key)
+
+        # HB Server Socket
+        self.hbs_sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+        # Dictionary of registered client
+        # key (pid + '' + client-name)
+        # value - dictionary containing corresponding client information
+        self.d_client_list = dict()
+        self.debug_verbose = False
+
+
+    ################################################################################
+    # Utils Function - Start
+    ################################################################################
+    def hbs_utils_get_client_key(self, d_client_info):
+        client_key = str(d_client_info['pid']) + "::" + str(d_client_info['client-name'])
+        return client_key
+
+    def hbs_fill_server_message(self, d_client_info):
+        message = "{:4}{:4}".format(d_client_info['version'], d_client_info['type'])
+        return message
+
+    def hbs_update_client_info_to_db(self, d_client_info):
+        client_name = str(d_client_info['client-name'])
+        pid = str(d_client_info['pid']) 
+        state = str(d_client_info['state']) 
+
+        reg_poll_interval = str(d_client_info['reg-poll-time']) 
+        reg_dead_interval = str(d_client_info['reg-dead-time']) 
+        poll_interval_tick = str(d_client_info['poll-time-tick']) 
+        dead_interval_tick = str(d_client_info['dead-time-tick']) 
+
+        num_echo_req = str(d_client_info['num-echo-req']) 
+        num_echo_ack = str(d_client_info['num-echo-ack']) 
+
+        action = str(d_client_info['action']) 
+        trace = d_client_info['trace']
+        uptime = str(d_client_info['up-ts']) 
+        downtime = str(d_client_info['down-ts']) 
+
+        tbl_key = pid + "|" + client_name
+        fvs = swsscommon.FieldValuePairs(
+            [
+                ("client-name", client_name),
+                ("pid", pid),
+                ("state", state),
+                ("poll-time", reg_poll_interval),
+                ("dead-time", reg_dead_interval),
+                ("poll-tick", poll_interval_tick),
+                ("dead-tick", dead_interval_tick),
+                ("num-echo-req", num_echo_req),
+                ("num-echo-ack", num_echo_ack),
+                ("action", action),
+                ("trace", trace),
+                ("up-timestamp", uptime),
+                ("down-timestamp", downtime),
+            ])
+        self.client_state_table.set(tbl_key, fvs)
+
+    def get_backtrace(self, pid):
+        if os.path.exists("/usr/bin/gdb"):
+            (rv, op, er) = runCommand("gdb --batch -ex \"thread apply all bt\" -p {}".format(pid))
+            if rv == 0:
+                return "\n".join(op)
+        return ""
+    ################################################################################
+    # Client Message Processing - Start
+    ################################################################################
+    def hbs_proc_msg_echo_ack(self, d_input):
+        if self.debug_verbose:
+            print("Received Echo Ack {}".format(d_input))
+
+        # Fetch the client and reset the dead-time-tick to reg-dead-time
+        # This will ensure that the client has processed the echo ack message and hence does not need to
+        # be declared as dead
+        client_key =self.hbs_utils_get_client_key(d_input)
+        d_client_info = self.d_client_list[client_key]
+
+        d_client_info['dead-time-tick'] = d_client_info['reg-dead-time']
+        d_client_info['num-echo-ack'] = d_client_info['num-echo-ack'] + 1
+        d_client_info['state'] = "alive"
+        d_client_info['up-ts'] = datetime.datetime.now()
+        d_client_info['trace'] = ""
+        self.hbs_update_client_info_to_db(d_client_info)
+
+    def hbs_proc_msg_reg(self, d_input):
+        if self.debug_verbose:
+            print("Received Reg {}".format(d_input))
+
+        # Add the client to the client list
+        client_key = self.hbs_utils_get_client_key(d_input)
+
+        if client_key not in self.d_client_list.keys():
+            # initialize the poll/dead tick with the value received from client
+            d_input['poll-time-tick'] = int(d_input['reg-poll-time'])
+            d_input['dead-time-tick'] = int(d_input['reg-dead-time'])
+
+            d_input['state'] = "init"
+            d_input['trace'] = ""
+            d_input['num-echo-req'] = 0
+            d_input['num-echo-ack'] = 0
+            d_input['down-ts'] = ""
+            d_input['up-ts'] = datetime.datetime.now()
+            self.d_client_list[client_key] = d_input
+            self.hbs_update_client_info_to_db(d_input)
+
+        else:
+            if self.debug_verbose:
+                print("Client already registered {}".format(d_input))
+
+
+    def hbs_proc_msg_dereg(self, d_input):
+        #FIXME: To be done later, if required
+        if self.debug_verbose:
+            print("Received Dereg {}".format(d_input))
+
+    def hbs_proc_msg(self, d_input):
+        if d_input['type'] == 0x4:
+            self.hbs_proc_msg_echo_ack(d_input)
+        elif d_input['type'] == 0x8:
+            self.hbs_proc_msg_reg(d_input)
+        elif d_input['type'] == 0x10:
+            self.hbs_proc_msg_dereg(d_input)
+        else:
+            pass
+
+
+    ################################################################################
+    # Utility APIs - Send/Receive/Parse Messages - Start
+    ################################################################################
+    def hbs_parse_client_message(self, msg_buf, d_output):
+        offset = 0
+        #d_output['version'] = int(msg_buf[offset:4].decode('utf-8'))
+        d_output['version'] = int.from_bytes(msg_buf[offset:4], "little")
+        if self.debug_verbose:
+            print("version read {}".format(d_output['version']))
+        offset += 4
+        d_output['client-name'] = msg_buf[offset:(offset+64)].decode('utf-8').strip()
+        if self.debug_verbose:
+            print("clientname read {}".format(d_output['client-name']))
+        offset += 64
+        d_output['pid'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("pid read {}".format(d_output['pid']))
+        offset += 4
+        d_output['type'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("type read {}".format(d_output['type']))
+        offset += 4
+        d_output['reg-poll-time'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("reg-poll-time read {}".format(d_output['reg-poll-time']))
+        offset += 4
+        d_output['reg-dead-time'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("reg-dead-time read {}".format(d_output['reg-dead-time']))
+        offset += 4
+        d_output['action'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("action read {}".format(d_output['action']))
+        offset += 4
+        d_output['signal-num'] = int.from_bytes(msg_buf[offset:(offset+4)], "little")
+        if self.debug_verbose:
+            print("signal-num read {}".format(d_output['signal-num']))
+        if self.debug_verbose:
+            print("{}".format(d_output))
+
+        self.hbs_proc_msg(d_output)
+
+    def hbs_recv(self):
+        if self.debug_verbose:
+            now = datetime.datetime.now()
+            date_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        d_output= dict()
+        try:
+            data, addr = self.hbs_sock.recvfrom(self.HB_MESSAGE_SIZE)
+        except:
+            #if self.debug_verbose:
+                #print("({}): Server Failed to receive message".format(date_str))
+            return False
+        else:
+            if self.debug_verbose:
+                print("({}): Server Data Recv: {} {}".format(date_str, data, addr))
+            self.hbs_parse_client_message(data, d_output)
+            return True
+
+    def hbs_send_echo_req(self, d_client_info):
+        d_client_info['type'] = 0x2
+        message = self.hbs_fill_server_message(d_client_info)
+        message = bytes(message, 'utf-8')
+        if self.debug_verbose:
+            now = datetime.datetime.now()
+            date_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            filename = "{}-{}-{}".format(self.HB_CLIENT_SOCK_PATH_PREFIX, d_client_info['client-name'], str(d_client_info['pid']))
+            filename = filename.replace(chr(0), "")
+            self.hbs_sock.sendto(message, filename)
+        except Exception as e:
+            if self.debug_verbose:
+                print("({}): Server Failed to send message, with error {}".format(date_str, e))
+        else:
+            if self.debug_verbose:
+                print("({}): Server Data Sent: {}".format(date_str, message))
+            d_client_info['num-echo-req'] = d_client_info['num-echo-req'] + 1
+            self.hbs_update_client_info_to_db(d_client_info)
+
+    ################################################################################
+    # Utility APIs - Send/Receive/Parse Messages - End
+    ################################################################################
+
+    ################################################################################
+    # Tick Functions - Start
+    ################################################################################
+    def hbs_tick_recv(self):
+        while True:
+            rv = self.hbs_recv()
+            if rv == False:
+                return
+
+    def hbs_tick_send(self):
+        # Iterate through all the registered client
+        # Send echo req to clients whose poll-time-tick is 0
+        for key, d_client_info in self.d_client_list.items():
+            d_client_info['poll-time-tick'] = int(d_client_info['poll-time-tick']) - 1
+            if d_client_info['poll-time-tick'] == 0:
+                self.hbs_send_echo_req(d_client_info)
+                d_client_info['poll-time-tick'] = d_client_info['reg-poll-time']
+
+    def hbs_tick_dead(self):
+        # Iterate through all the registered client
+        # Declare clients as "dead/frozen" whose dead-time-tick is 0
+        for key, d_client_info in self.d_client_list.items():
+            if d_client_info['dead-time-tick'] > 0:
+                d_client_info['dead-time-tick'] = int(d_client_info['dead-time-tick']) - 1
+            if d_client_info['dead-time-tick'] == 0 and d_client_info['state'] != "frozen":
+                d_client_info['state'] = "frozen"
+                d_client_info['down-ts'] = datetime.datetime.now()
+                self.log_error("Application detected to be in a frozen state - {}".format(d_client_info['client-name']))
+                d_client_info['trace'] = self.get_backtrace(d_client_info['pid'])
+                self.hbs_update_client_info_to_db(d_client_info)
+
+
+    ################################################################################
+    # Init APIs - Start
+    ################################################################################
+    def hbs_bind_socket(self):
+        if os.path.exists(self.HB_SOCK_PATH):
+            os.remove(self.HB_SOCK_PATH)
+        # bind the socket
+        self.hbs_sock.bind(self.HB_SOCK_PATH)
+        self.hbs_sock.setblocking(0)
+
+    def hbs_init(self):
+        self.hbs_bind_socket()
+
+    def run(self):
+        """
+        Main execution loop
+        """
+        self.log_info("Starting up...")
+
+        if not os.geteuid() == 0:
+            self.log_error("Must be root to run this daemon")
+            print("Error: Must be root to run this daemon")
+            sys.exit(1)
+
+        # Initialize HB Monitor
+        self.hbs_init()
+
+        # Server loop
+        while True:
+            self.hbs_tick_recv()
+            self.hbs_tick_send()
+            self.hbs_tick_dead()
+            time.sleep(1)
+
+# ============================= Functions =============================
+
+
+def main():
+    # Instantiate a HBMonitor object
+    hbmon = HBMonitor(SYSLOG_IDENTIFIER)
+
+    # Log all messages from INFO level and higher
+    hbmon.set_min_log_priority_info()
+
+    hbmon.run()
+
+
+def runCommand(cmd, capture_stdout=True, use_shell=False):
+    '''!
+    Execute a given command
+
+    @param cmd (str) Command to execute. Since we execute the command directly, and not within the
+                     context of the shell, the full path needs to be provided ($PATH is not used).
+                     Command parameters are simply separated by a space.
+
+    @param capture_stdout (bool) If this is True, the function capture the output of stdout and stderr,
+                           and return then a tupple with exit code, stdout, stderr
+                           If this is False, the function does not capture stdout and stderr, so
+                           they will be likely displayed on the console. We simply return the
+                           exit code of the application.
+
+    @param use_shell (bool) Execute subprocess with shell access
+
+    '''
+
+    pid = None
+    try:
+        if isinstance(cmd, list):
+            if use_shell is False:
+                shcmd = cmd
+            else:
+                shcmd = ''
+                for c in cmd:
+                    shcmd += c + ' '
+        else:
+            if use_shell is False:
+                shcmd = shlex.split(cmd)
+            else:
+                shcmd = cmd
+        if capture_stdout is True:
+            proc = subprocess.Popen(shcmd, shell=use_shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+            pid = proc.pid
+            output_stdout, output_stderr = proc.communicate()
+            list_stdout = []
+            for l in output_stdout.splitlines():
+                list_stdout.append(str(l.decode()))
+            list_stderr = []
+            for l in output_stderr.splitlines():
+                list_stderr.append(str(l.decode()))
+            return (proc.returncode, list_stdout, list_stderr)
+        else:
+            proc = subprocess.Popen(shcmd, shell=use_shell)
+            pid = proc.pid
+            proc.communicate()
+            return proc.returncode
+    except (OSError, ValueError) as e:
+        print("!Exception [%s] encountered while processing the command : %s" % (str(e), str(cmd)))
+        if capture_stdout is True:
+            return (1, None, None)
+        else:
+            return 1
+
+if __name__ == "__main__":
+    main()
