@@ -412,22 +412,6 @@ class PddfPsu(PsuBase):
         # max power is in milliwatts
         return float(p_out_max)/1000
 
-    def get_temperature(self):
-        """
-        Retrieves current temperature reading from PSU
-        Returns:
-            A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125
-        """
-        device = "PSU{}".format(self.psu_index)
-        output = self.pddf_obj.get_attr_name_output(device, "psu_temp1_input")
-        if not output:
-            return 0.0
-
-        temperature = output['status']
-
-        return float(temperature)/1000
-
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device.
