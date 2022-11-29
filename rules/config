@@ -4,21 +4,20 @@
 
 # SONIC_CONFIG_PRINT_DEPENDENCIES - show dependencies for each invoked target.
 # Before executing rule for each target its dependencies are printed to console.
-# Uncomment next line to enable:
-# SONIC_CONFIG_PRINT_DEPENDENCIES = y
+SONIC_CONFIG_PRINT_DEPENDENCIES ?= n
 
 # SONIC_CONFIG_BUILD_JOBS - set number of jobs for parallel build.
 # Corresponding -j argument will be passed to make command inside docker
 # container.
-SONIC_CONFIG_BUILD_JOBS = 1
+SONIC_CONFIG_BUILD_JOBS ?= 1
 
 # SONIC_CONFIG_MAKE_JOBS - set number of parallel make jobs per package.
 # Corresponding -j argument will be passed to make/dpkg commands that build separate packages
-SONIC_CONFIG_MAKE_JOBS = $(shell nproc)
+SONIC_CONFIG_MAKE_JOBS ?= $(shell nproc)
 
 # DEFAULT_BUILD_LOG_TIMESTAMP - add timestamp in build log
 # Supported format: simple, none
-DEFAULT_BUILD_LOG_TIMESTAMP = none
+DEFAULT_BUILD_LOG_TIMESTAMP ?= none
 
 # SONIC_USE_DOCKER_BUILDKIT - use docker buildkit for build.
 # If set to y SONiC build system will set environment variable DOCKER_BUILDKIT=1
@@ -26,76 +25,72 @@ DEFAULT_BUILD_LOG_TIMESTAMP = none
 # This options will speed up docker image build time.
 # NOTE: SONIC_USE_DOCKER_BUILDKIT will produce larger installable SONiC image
 # because of a docker bug (more details: https://github.com/moby/moby/issues/38903)
-# SONIC_USE_DOCKER_BUILDKIT = y
+SONIC_USE_DOCKER_BUILDKIT ?= n
 
 # SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD - use native dockerd for build.
 # If set to y SONiC build container will use native dockerd instead of dind for faster build.
 # Special handling of the docker image file names is needed to avoid conflicts with
 # other SONiC build jobs on the same server. This requires changes to the Dockerfile.j2 FROM statement
 # in the dockers/ and platform/ subdirs to use a variable reference instead of an explicit image name.
-# SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD = y
+SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD ?= n
 
 # SONIC_CONFIG_ENABLE_COLORS - enable colored output in build system.
-# Comment next line to disable:
-# SONIC_CONFIG_ENABLE_COLORS = y
+SONIC_CONFIG_ENABLE_COLORS ?= y
 
 # DEFAULT_USERNAME - default username for installer build
-DEFAULT_USERNAME = admin
+DEFAULT_USERNAME ?= admin
 
 # DEFAULT_PASSWORD - default password for installer build
-DEFAULT_PASSWORD = YourPaSsWoRd
+DEFAULT_PASSWORD ?= YourPaSsWoRd
 
 # ENABLE_DHCP_GRAPH_SERVICE - specify the source of minigraph to generate configuration file.
 # If set to y SONiC will get the minigraph from graph service. Graph service URL need to be
 # passed through DHCP option 225.
 # If not set (default behavior) the default minigraph built into the image will be used.
-# ENABLE_DHCP_GRAPH_SERVICE = y
+ENABLE_DHCP_GRAPH_SERVICE ?= n
 
 # ENABLE_ZTP - installs Zero Touch Provisioning support.
-# ENABLE_ZTP = y
+ENABLE_ZTP ?= n
 
-# INCLUDE_PDE - Enable platform development enviroment
-# INCLUDE_PDE = y
-# SHUTDOWN_BGP_ON_START - if set to y all bgp sessions will be in admin down state when
-# bgp service starts.
-# SHUTDOWN_BGP_ON_START = y
+# INCLUDE_PDE - Enable platform development environment
+INCLUDE_PDE ?= n
+# SHUTDOWN_BGP_ON_START - if set to y all BGP sessions will be in admin down state when
+# BGP service starts.
+SHUTDOWN_BGP_ON_START ?= n
 
 # ENABLE_PFCWD_ON_START - if set to y PFC Watchdog (PFCWD) will be enabled all server-facing ports
 # by default for TOR switch
-# ENABLE_PFCWD_ON_START = y
+ENABLE_PFCWD_ON_START ?= n
 
 # INSTALL_DEBUG_TOOLS - installs debugging tools in baseline docker
-# Uncomment next line to enable:
-# INSTALL_DEBUG_TOOLS = y
+INSTALL_DEBUG_TOOLS ?= n
 
 # SONIC_USE_PDDF_FRAMEWORK - Use PDDF generic drivers and plugins
-# Uncomment next line to enable:
-SONIC_USE_PDDF_FRAMEWORK = y
+SONIC_USE_PDDF_FRAMEWORK ?= y
 
 # SONIC_ROUTING_STACK - specify the routing-stack being elected to drive SONiC's control-plane.
 # Supported routing stacks on SONiC are:
 # routing-stacks: frr.
-SONIC_ROUTING_STACK = frr
+SONIC_ROUTING_STACK ?= frr
 
 # ENABLE_SYNCD_RPC - build docker-syncd with rpc packages for testing purposes.
-# Uncomment to enable:
-# ENABLE_SYNCD_RPC = y
+ENABLE_SYNCD_RPC ?= n
 
-# Enable Origanization Extensions - Specific to the deployment scenarios of the Organization
-ENABLE_ORGANIZATION_EXTENSIONS = y
+# Enable Organization Extensions - Specific to the deployment scenarios of the Organization
+ENABLE_ORGANIZATION_EXTENSIONS ?= y
 
-# Debugging option allows sonic debian packages to get built including symbols
+# Debugging option allows SONiC Debian packages to get built including symbols
 # information. Profiling option, disables compiler optimizations (-O0) as well
 # as includes symbols information. Given that 'profiling' option is a superset
-# of 'debugging' one, user should only enable either one option or the other --
-# if both options are enabled, the 'profiling' one will prevail.
-#SONIC_DEBUGGING_ON = y
-#SONIC_PROFILING_ON = y
+# of the 'debugging' one, user should only enable either one option or the other
+# -- if both options are enabled, the 'profiling' one will prevail.
+SONIC_DEBUGGING_ON ?= n
+SONIC_PROFILING_ON ?= n
 
 # DEFAULT_KERNEL_PROCURE_METHOD - default method for obtaining kernel
 #   build:    build kernel from source
 #   download: download pre-built kernel from Azure storage.
-DEFAULT_KERNEL_PROCURE_METHOD = build
+DEFAULT_KERNEL_PROCURE_METHOD ?= build
 
 # FRR user and group id values. These only take effect when SONIC_ROUTING_STACK is frr.
 # Note: these values match the admin uid/gid of the host's admin account. If these values
@@ -103,8 +98,8 @@ DEFAULT_KERNEL_PROCURE_METHOD = build
 # host, then either the appropriate account and group will need to be created on the host
 # manually or changes need to be made when the image is built to create the account and
 # group during installation.
-FRR_USER_UID = 300
-FRR_USER_GID = 300
+FRR_USER_UID ?= 300
+FRR_USER_GID ?= 300
 
 # DPKG cache allows the .deb files to be stored in the cache path. This allows the submodules
 # package to be cached and restored back if its commit hash is not modified and its dependencies are not modified.
@@ -119,83 +114,80 @@ SONIC_DPKG_CACHE_METHOD ?= none
 SONIC_DPKG_CACHE_SOURCE ?= /var/cache/sonic/artifacts
 
 # Default VS build memory preparation
-DEFAULT_VS_PREPARE_MEM = yes
-
+DEFAULT_VS_PREPARE_MEM ?= yes
 
 # INCLUDE_SYSTEM_TELEMETRY - build docker-sonic-telemetry for system telemetry support
-INCLUDE_SYSTEM_TELEMETRY = y
+INCLUDE_SYSTEM_TELEMETRY ?= y
 
-# INCLUDE_ICCPD - build docker-iccpd for mclag support
-INCLUDE_ICCPD = n
+# INCLUDE_ICCPD - build docker-iccpd for MCLAG support
+INCLUDE_ICCPD ?= n
 
 # INCLUDE_SFLOW - build docker-sflow for sFlow support
-INCLUDE_SFLOW = y
+INCLUDE_SFLOW ?= y
 
-# ENABLE_SFLOW_DROPMON - support of drop packets monitoring feature for sFlow deamon
-ENABLE_SFLOW_DROPMON = n
+# ENABLE_SFLOW_DROPMON - support of drop packets monitoring feature for sFlow daemon
+ENABLE_SFLOW_DROPMON ?= n
 
 # INCLUDE_MGMT_FRAMEWORK - build docker-sonic-mgmt-framework for CLI and REST server support
-INCLUDE_MGMT_FRAMEWORK = y
+INCLUDE_MGMT_FRAMEWORK ?= y
 
 # ENABLE_HOST_SERVICE_ON_START - enable sonic-host-server for mgmt-framework and/or
 # telemetry containers to access host functionality by default
-ENABLE_HOST_SERVICE_ON_START = n
+ENABLE_HOST_SERVICE_ON_START ?= n
 
 # INCLUDE_RESTAPI - build docker-sonic-restapi for configuring the switch using REST APIs
-INCLUDE_RESTAPI = n
+INCLUDE_RESTAPI ?= n
 
-# INCLUDE_NAT - build docker-nat for nat support
-INCLUDE_NAT = y
+# INCLUDE_NAT - build docker-nat for NAT support
+INCLUDE_NAT ?= y
 
 # INCLUDE_DHCP_RELAY - build and install dhcp-relay package
-INCLUDE_DHCP_RELAY = y
+INCLUDE_DHCP_RELAY ?= y
 
 # INCLUDE_P4RT - build docker-p4rt for P4RT support
-INCLUDE_P4RT = y
+INCLUDE_P4RT ?= y
 
 # ENABLE_AUTO_TECH_SUPPORT - Enable the configuration for event-driven techsupport & coredump mgmt feature
-ENABLE_AUTO_TECH_SUPPORT = y
+ENABLE_AUTO_TECH_SUPPORT ?= y
 
 # ENABLE_TRANSLIB_WRITE - Enable translib write/config operations via the gNMI interface.
-# Uncomment to enable:
-# ENABLE_TRANSLIB_WRITE = y
+ENABLE_TRANSLIB_WRITE ?= n
 
 # ENABLE_NATIVE_WRITE - Enable native write/config operations via the gNMI interface.
-# Uncomment to enable:
-# ENABLE_NATIVE_WRITE = y
+ENABLE_NATIVE_WRITE ?= n
 
-# INCLUDE_MACSEC - build docker-macsec for macsec support
-INCLUDE_MACSEC = y
+# INCLUDE_MACSEC - build docker-macsec for MACSEC support
+INCLUDE_MACSEC ?= y
 
-# INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
-# run as worker node in kubernetes cluster.
-INCLUDE_KUBERNETES = n
+# INCLUDE_KUBERNETES - if set to y Kubernetes packages are installed to be able to
+# run as worker node in Kubernetes cluster.
+INCLUDE_KUBERNETES ?= n
 
-KUBE_DOCKER_PROXY = http://172.16.1.1:3128/
+KUBE_DOCKER_PROXY ?= http://172.16.1.1:3128/
 
 # KUBERNETES_VERSION - Set to the required version.
 # K8s_GCR_IO_PAUSE_VERSION - Version of k8s universal pause container image
 # These are Used *only* when INCLUDE_KUBERNETES=y
-# NOTE: As a worker node it has to run version compatible to kubernetes master.
-#
-KUBERNETES_VERSION = 1.22.2-00
-KUBERNETES_CNI_VERSION = 0.8.7-00
-K8s_GCR_IO_PAUSE_VERSION = 3.5
+# NOTE: As a worker node it has to run version compatible to Kubernetes master.
 
-# INCLUDE_KUBERNETES_MASTER - if set to y kubernetes packages are installed o be able 
-# to run as master node in kubernetes cluster
+KUBERNETES_VERSION ?= 1.22.2-00
+KUBERNETES_CNI_VERSION ?= 0.8.7-00
+K8s_GCR_IO_PAUSE_VERSION ?= 3.5
+
+# INCLUDE_KUBERNETES_MASTER - if set to y Kubernetes packages are installed to be able
+# to run as master node in Kubernetes cluster
 INCLUDE_KUBERNETES_MASTER ?= n
 
 # MASTER_KUBERNETES_VERSION - version of k8s components
 # MASTER_PAUSE_VERSION - version of pause container image
-# MASTER_COREDNS_VERSION - version of coredns container image
-# MASTER_ETCD_VERSION = version of etcd container image
-MASTER_KUBERNETES_VERSION = 1.22.2-00
-MASTER_KUBERNETES_CONTAINER_IMAGE_VERSION = v1.22.2
-MASTER_PAUSE_VERSION = 3.5
-MASTER_COREDNS_VERSION = v1.8.4
-MASTER_ETCD_VERSION = 3.5.0-0
-MASTER_CRI_DOCKERD = 0.2.5
+# MASTER_COREDNS_VERSION - version of CoreDNS container image
+# MASTER_ETCD_VERSION - version of etcd container image
+MASTER_KUBERNETES_VERSION ?= 1.22.2-00
+MASTER_KUBERNETES_CONTAINER_IMAGE_VERSION ?= v1.22.2
+MASTER_PAUSE_VERSION ?= 3.5
+MASTER_COREDNS_VERSION ?= v1.8.4
+MASTER_ETCD_VERSION ?= 3.5.0-0
+MASTER_CRI_DOCKERD ?= 0.2.5
 
 # SONIC_ENABLE_IMAGE_SIGNATURE - enable image signature
 # To not use the auto-generated self-signed certificate, the required files to sign the image as below:
@@ -215,31 +207,31 @@ SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
 # PACKAGE_URL_PREFIX - the package url prefix
 PACKAGE_URL_PREFIX ?= https://packages.trafficmanager.net/public/packages
 
-# TRUSTED_GPG_URLS - the trusted gpgs, separated by comma
-TRUSTED_GPG_URLS = https://packages.trafficmanager.net/debian/public_key.gpg,https://packages.microsoft.com/keys/microsoft.asc
+# TRUSTED_GPG_URLS - the trusted GPG signing public keys, separated by comma
+TRUSTED_GPG_URLS ?= https://packages.trafficmanager.net/debian/public_key.gpg,https://packages.microsoft.com/keys/microsoft.asc
 
-# SONIC_VERSION_CONTROL_COMPONENTS - Valid values: none|all|components..., the components consist of one or multiple: deb,py2,py3,web,git,docker, seperated by comma
+# SONIC_VERSION_CONTROL_COMPONENTS - Valid values: none|all|components..., the components consist of one or multiple: deb,py2,py3,web,git,docker, separated by commas
 #   none  : disable the version control
 #   all   : enable the version control for all components
 #   deb   : debian packages
 #   py2   : python2 packages
-#   py3   : python3 pakcages
+#   py3   : python3 packages
 #   web   : web packages, downloaded by wget, curl
-#   git   : git repositories, donloaded by git clone
+#   git   : git repositories, downloaded by git clone
 #   docker: docker base images
 SONIC_VERSION_CONTROL_COMPONENTS ?= none
 
 # SONiC docker registry
 #
-# Set the env variable ENABLE_DOCKER_BASE_PULL = y to enable pulling sonic-slave docker from registry
+# Set the variable ENABLE_DOCKER_BASE_PULL = y to enable pulling sonic-slave docker from registry
 REGISTRY_PORT ?= 443
 REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
 
 # BUILD_MULTIASIC_KVM - if set to y multi-asic KVM images will be generated.
-BUILD_MULTIASIC_KVM = n
+BUILD_MULTIASIC_KVM ?= n
 
 # INCLUDE_MUX - build docker-mux for dual ToR (Gemini)
-INCLUDE_MUX = y
+INCLUDE_MUX ?= y
 
 # ENABLE_ASAN - enable address sanitizer
 ENABLE_ASAN ?= n
@@ -248,13 +240,13 @@ ENABLE_ASAN ?= n
 DEFAULT_CONTAINER_REGISTRY ?=
 
 # INCLUDE_BOOTCHART - install systemd-bootchart
-INCLUDE_BOOTCHART = y
+INCLUDE_BOOTCHART ?= y
 
 # ENABLE_BOOTCHART - whether to enable systemd-bootchart on boot
-ENABLE_BOOTCHART = n
+ENABLE_BOOTCHART ?= n
 
 # ENABLE_FIPS_FEATURE - support FIPS feature, only for amd64 or arm64, armhf not supported yet
-# ENABLE_FIPS - support FIPS flag, if enabled, no additional config requred for the image to support FIPS
+# ENABLE_FIPS - support FIPS flag, if enabled, no additional config required for the image to support FIPS
 ENABLE_FIPS_FEATURE ?= y
 ENABLE_FIPS ?= n
 
