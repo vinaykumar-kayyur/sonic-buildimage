@@ -54,6 +54,15 @@ def sx_open_sdk_connection():
 
     return handle_p.contents.value
 
+def sx_close_sdk_connection(handle):
+    """ Close connection to SDK
+    
+    Args:
+        SDK handle
+    """ 
+    rc = sx_api_close(handle)  
+    sx_check_rc(rc)
+
 def sx_get_active_vrids(handle):
     """ Get existing virtual router IDs
     
@@ -127,7 +136,7 @@ def sx_router_get_ecmp_id(handle, vrid, ip_prefix):
         delete_uint32_t_p(entries_cnt_p)
         delete_sx_ip_prefix_t_p(ip_prefix_p)
 
-def sx_router_operational_ecmp_get(handle, ecmp_id):
+def sx_router_ecmp_nexthops_get(handle, ecmp_id):
     """ Get next hops for a given ECMP id
     
     Args:
@@ -203,7 +212,7 @@ def sx_get_router_interface(handle, vrid, rif):
         delete_sx_router_id_t_p(vrid_p)
 
 def sx_port_vport_base_get(handle, vport):
-    """ Get SDK logical index for given vport
+    """ Get SDK logical index and vlan for given vport
     
     Args:
         handle (sx_api_handle_t): SDK handle
@@ -228,14 +237,13 @@ def sx_port_vport_base_get(handle, vport):
         delete_sx_port_log_id_t_p(logical_port_p) 
         delete_sx_vlan_id_t_p(vlan_id_p)
 
-def sx_router_neigh_get_mac(handle, rif, addr, type_ipv6=False):
+def sx_router_neigh_get_mac(handle, rif, addr):
     """ Get neighbour mac address
     
     Args:
         handle (sx_api_handle_t): SDK handle
         rif (sx_port_id_t): SDK vport id
         addr (sx_ip_addr_t): Neighbour IP address
-        type_ipv6 (bool): True for IPv6
 
     Returns:
         str : Neighbour mac address

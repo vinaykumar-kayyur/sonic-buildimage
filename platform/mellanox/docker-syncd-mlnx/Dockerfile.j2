@@ -72,9 +72,9 @@ RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/
 RUN rm -f /usr/share/sonic/templates/supervisord.conf.j2
 
 RUN mkdir -p /usr/bin/ecmp_calculator
-COPY ["ecmp_calculator/ecmp_calc_sdk.py", "/usr/bin/ecmp_calculator"]
-COPY ["ecmp_calculator/ecmp_calc.py", "/usr/bin/ecmp_calculator"]
-COPY ["ecmp_calculator/packet_scheme.py", "/usr/bin/ecmp_calculator"]
-COPY ["lib/port_utils.py", "/usr/bin/ecmp_calculator"]
+COPY ["ecmp_calculator/ecmp_calc.py", "/usr/bin"]
+COPY ["ecmp_calculator/ecmp_calc_sdk.py", "/usr/lib/ecmp_calc"]
+COPY ["ecmp_calculator/packet_scheme.py", "/usr/lib/ecmp_calc"]
+COPY ["lib/port_utils.py", "/usr/lib"]
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]

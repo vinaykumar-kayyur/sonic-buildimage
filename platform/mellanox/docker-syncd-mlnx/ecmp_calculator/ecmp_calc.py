@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 
-from ecmp_calc_sdk import sx_open_sdk_connection, sx_get_active_vrids, sx_router_get_ecmp_id, \
-                          sx_router_operational_ecmp_get, sx_get_router_interface, \
-                          sx_port_vport_base_get, sx_router_neigh_get_mac, sx_fdb_uc_mac_addr_get, \
-                          sx_lag_port_group_get, sx_make_ip_prefix_v4, sx_make_ip_prefix_v6, \
-                          sx_vlan_ports_get, sx_ip_addr_to_str, PORT, VPORT, VLAN, SX_ENTRY_NOT_FOUND
-from port_utils import sx_get_ports_map, is_lag
-from packet_scheme import PACKET_SCHEME
 import json, jsonschema
 import argparse
 import ipaddress
 import re
 import subprocess
 import pprint
+import os
 import sys
+
+usr_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+lib_path = os.path.join(usr_path, "lib")
+ecmp_lib_path = os.path.join(lib_path, "ecmp_calc")
+sys.path.append(lib_path)
+sys.path.append(ecmp_lib_path)
+
+from ecmp_calc_sdk import sx_open_sdk_connection, sx_get_active_vrids, sx_router_get_ecmp_id, \
+                                              sx_router_ecmp_nexthops_get, sx_get_router_interface, \
+                                              sx_port_vport_base_get, sx_router_neigh_get_mac, sx_fdb_uc_mac_addr_get, \
+                                              sx_lag_port_group_get, sx_make_ip_prefix_v4, sx_make_ip_prefix_v6, \
+                                              sx_vlan_ports_get, sx_ip_addr_to_str, sx_close_sdk_connection, \
+                                              PORT, VPORT, VLAN, SX_ENTRY_NOT_FOUND
+from packet_scheme import PACKET_SCHEME
+from port_utils import sx_get_ports_map, is_lag
 
 IP_VERSION_IPV4 = 1
 IP_VERSION_IPV6 = 2
@@ -108,6 +117,18 @@ class EcmpCalc:
         self.init_ports_map()
         self.get_active_vrids()
         
+    def __del__(self):
+        self.close_sdk_connection()
+        self.cleanup()
+
+    def cleanup(self):
+        for filename in [HASH_CALC_INPUT_FILE, HASH_CALC_OUTPUT_FILE]:
+            if os.path.exists(filename):
+                os.remove(filename)
+
+    def close_sdk_connection(self):
+        sx_close_sdk_connection(self.handle)
+        
     def open_sdk_connection(self):
         self.handle = sx_open_sdk_connection()
         
@@ -148,7 +169,7 @@ class EcmpCalc:
 
         return False
 
-    def get_ecmp_ids(self):
+    def get_ecmp_id(self):
         ip_addr = self.dst_ip
         ip_version = self.ip_version
         max_mask_len = IP_VERSION_MAX_MASK_LEN[self.ip_version]
@@ -175,7 +196,7 @@ class EcmpCalc:
         
         for vrid in self.ecmp_ids.keys():
             ecmp_id = self.ecmp_ids[vrid]
-            next_hops = sx_router_operational_ecmp_get(self.handle, ecmp_id)
+            next_hops = sx_router_ecmp_nexthops_get(self.handle, ecmp_id)
                         
             if len(next_hops) > 1:
                 if self.debug:
@@ -425,20 +446,14 @@ class EcmpCalc:
             self.validate_layer2_header(header['layer2'])    
                    
     def validate_outer_header(self):
-        try:
-            outer_header = self.packet['packet_info']['outer']
-        except KeyError:
+        outer_header = self.packet['packet_info'].get('outer')
+        if not outer_header:
             raise ValueError("Json validation failed: outer header is mandatory")
 
         self.validate_header(outer_header, is_outer_header=True)    
         
-    def validate_inner_header(self):
-        inner_header = None
-        try:
-            inner_header = self.packet['packet_info']['inner']
-        except KeyError:
-            pass
-        
+    def validate_inner_header(self):        
+        inner_header = self.packet['packet_info'].get('inner')
         if not inner_header:
             return
         
@@ -476,7 +491,7 @@ def main():
         
         ecmp_calc = EcmpCalc()
         ecmp_calc.validate_args(args.interface, args.packet, args.vrf, args.debug)
-        ecmp_calc.get_ecmp_ids()
+        ecmp_calc.get_ecmp_id()
         ecmp_calc.get_next_hops()
         ecmp_calc.calculate_egress_port()
         ecmp_calc.print_egress_port()
