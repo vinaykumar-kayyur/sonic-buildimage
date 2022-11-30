@@ -65,7 +65,7 @@
                 "SFLOW_COLLECTOR_LIST": [
                     {
                         "name": "collector1",
-                        "collector_ip": "10.100.12.13",
+                        "collector_ip": "2001:1:2::23",
                         "collector_vrf": "default"
                     }
                 ]
