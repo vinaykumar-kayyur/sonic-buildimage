@@ -1466,7 +1466,7 @@ SFLOW
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
 | admin_state      | Global sflow admin state                                                                |             | down      |                                           |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
-| agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name |
+| agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |
 
 SFLOW_SESSION
 
@@ -1485,7 +1485,7 @@ key - name
 | name           | Name of the Sflow collector                                                             |             |           |             |
 | collector_ip   | IPv4/IPv6 address of the Sflow collector                                                | true        |           |             |
 | collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
-| collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRFor Management VRF. |             |           |             |
+| collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
 
 ### Syslog Rate Limit
 
