@@ -205,10 +205,11 @@ MASTER_CRI_DOCKERD = 0.2.5
 # The relative path is build root folder.
 SONIC_ENABLE_IMAGE_SIGNATURE ?= n
 
-# SONIC_ENABLE_SECUREBOOT_SIGNATURE - enable SONiC kernel signing to support UEFI secureboot
+# SONIC_ENABLE_SECUREBOOT_SIGNATURE - enable SONiC kernel and Grub signing for UEFI secureboot
 # To support UEFI secureboot chain of trust requires EFI kernel to be signed as a PE binary
 #     SIGNING_KEY =
 #     SIGNING_CERT =
+#     SONIC_VENDOR_SIGNING_TOOL =
 # The absolute path should be provided.
 SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
 

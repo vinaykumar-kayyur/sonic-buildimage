@@ -1,0 +1,10 @@
+
+SPATH       := $($(GRUB2)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/grub2.mk rules/grub2.dep   
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+DEP_FILES   += $(shell git ls-files $(SPATH))
+
+$(GRUB2)_CACHE_MODE  := GIT_CONTENT_SHA 
+$(GRUB2)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
+$(GRUB2)_DEP_FILES   := $(DEP_FILES)
+

@@ -403,6 +403,23 @@ RUN apt-get update && apt-get install -y \
 # For audisp-tacplus
         libauparse-dev \
         auditd
+# For grub2
+        grub-common \
+        help2man \
+        xfonts-unifont \
+        libdevmapper-dev \
+        libsdl1.2-dev \
+        xorriso \
+        qemu-system parted \
+        libfuse-dev \
+        mtools \
+        wamerican \
+        libefiboot-dev \
+        libefivar-dev  \
+# For shim
+        gnu-efi \
+        dos2unix \
+        pesign
 
 {%- if CROSS_BUILD_ENVIRON == "y" %}
 # Arm vs. amd64 versions conflict - remove amd64 packages

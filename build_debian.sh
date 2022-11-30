@@ -35,6 +35,10 @@ DOCKER_VERSION=5:20.10.14~3-0~debian-$IMAGE_DISTRO
 CONTAINERD_IO_VERSION=1.5.11-1
 LINUX_KERNEL_VERSION=5.10.0-18-2
 
+## EFI bootloader for UEFI secureboot
+GRUB2_EFI_VERSION=2.06-3~deb11u1
+SHIM_EFI_VERSION=15.6-1~deb11u1
+
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
 PLATFORM_DIR=platform
@@ -154,8 +158,35 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
 fi
+#Secure boot grub-efi
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/grub-efi-${CONFIGURED_ARCH}-bin_${GRUB2_EFI_VERSION}_${CONFIGURED_ARCH}.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+#Secure shim
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/shim-unsigned_${SHIM_EFI_VERSION}_${CONFIGURED_ARCH}.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
-## Sign the Linux kernel
+## Sign EFI images
+sign_efi_image(){
+    image_path=$1
+    file_name=$(basename $image_path)
+
+    if [ ! -f $image_path ]; then
+        echo "Error: image to sign not found: ${image_path}"
+        exit 1
+    fi
+
+    #Check if vendor using vendor specific signing
+    if [ -n "$SONIC_VENDOR_SIGNING_TOOL" ]; then
+        echo '[INFO] Vendor Specific Signing: ${file_name}'
+        /bin/bash -c "$SONIC_VENDOR_SIGNING_TOOL --output /tmp/${file_name} ${image_path}"
+    else
+        echo '[INFO] sbsign: ${file_name}'
+        sbsign --key $SIGNING_KEY --cert $SIGNING_CERT --output /tmp/${file_name} ${image_path}
+    fi
+
+    sudo cp -f /tmp/${file_name} ${image_path}
+}
+
 if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
     if [ ! -f $SIGNING_KEY ]; then
        echo "Error: SONiC linux kernel signing key missing"
@@ -166,10 +197,17 @@ if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
        exit 1
     fi
 
-    echo '[INFO] Signing SONiC linux kernel image'
-    K=$FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
-    sbsign --key $SIGNING_KEY --cert $SIGNING_CERT --output /tmp/${K##*/} ${K}
-    sudo cp -f /tmp/${K##*/} ${K}
+    sign_efi_image $FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
+
+    #Grub2
+    sign_efi_image $FILESYSTEM_ROOT/usr/lib/grub/x86_64-efi/monolithic/grubx64.efi
+
+    #Shim artifacts
+    for efi_image in fbx64.efi  mmx64.efi  shimx64.efi
+    do
+        sign_efi_image $FILESYSTEM_ROOT/usr/lib/shim/$efi_image
+    done
+
 fi
 
 ## Update initramfs for booting with squashfs+overlay
