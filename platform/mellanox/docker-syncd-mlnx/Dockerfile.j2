@@ -71,7 +71,7 @@ RUN mkdir -p /etc/supervisor/conf.d/
 RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
 RUN rm -f /usr/share/sonic/templates/supervisord.conf.j2
 
-RUN mkdir -p /usr/bin/ecmp_calculator
+RUN mkdir -p /usr/lib/ecmp_calc
 COPY ["ecmp_calculator/ecmp_calc.py", "/usr/bin"]
 COPY ["ecmp_calculator/ecmp_calc_sdk.py", "/usr/lib/ecmp_calc"]
 COPY ["ecmp_calculator/packet_scheme.py", "/usr/lib/ecmp_calc"]
