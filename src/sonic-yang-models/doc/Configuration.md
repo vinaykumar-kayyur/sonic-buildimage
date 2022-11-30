@@ -1455,6 +1455,36 @@ name as object key and member list as attribute.
     }
 }
 ```
+### Sflow
+
+The below are the tables and their schema for SFLOW feature
+
+SFLOW
+
+| Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
+|------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
+| admin_state      | Global sflow admin state                                                                |             | down      |                                           |
+| polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
+| agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name |
+
+SFLOW_SESSION
+
+key - port
+| Field       | Description                                                                                                             | Mandatory   | Default   | Reference   |
+|-------------|-------------------------------------------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| port        | Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.                         |             |           | PORT:name   |
+| admin_state | Per port sflow admin state                                                                                              |             | up        |             |
+| sample_rate | Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets. |             |           |             |
+
+SFLOW_COLLECTOR
+
+key - name
+| Field          | Description                                                                             | Mandatory   | Default   | Reference   |
+|----------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| name           | Name of the Sflow collector                                                             |             |           |             |
+| collector_ip   | IPv4/IPv6 address of the Sflow collector                                                | true        |           |             |
+| collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
+| collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRFor Management VRF. |             |           |             |
 
 ### Syslog Rate Limit
 
