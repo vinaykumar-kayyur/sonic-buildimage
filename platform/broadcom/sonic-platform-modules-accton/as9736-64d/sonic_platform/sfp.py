@@ -14,6 +14,7 @@ import struct
 from ctypes import create_string_buffer
 
 try:
+    from sonic_py_common.logger import Logger
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -31,25 +32,6 @@ QSFP_CONTROL_WIDTH = 8
 QSFP_CONTROL_OFFSET = 86
 QSFP_POWEROVERRIDE_OFFSET = 93
 
-SFP_TYPE_CODE_LIST = [
-    0x03,  # SFP/SFP+/SFP28
-    0x0b   # DWDM-SFP/SFP+
-]
-QSFP_TYPE_CODE_LIST = [
-    0x0c, # QSFP
-    0x0d, # QSFP+ or later
-    0x11, # QSFP28 or later
-    0xE1  # QSFP28 EDFA
-]
-QSFP_DD_TYPE_CODE_LIST = [
-    0x18  # QSFP-DD Double Density 8X Pluggable Transceiver
-]
-
-SFP_TYPE = "SFP"
-QSFP_TYPE = "QSFP"
-OSFP_TYPE = "OSFP"
-QSFP_DD_TYPE = "QSFP_DD"
-
 NULL_VAL = 'N/A'
 
 
@@ -62,6 +44,7 @@ PCIE_LDB_OPTOE_DEV_CLASS_PATH = '/sys/devices/platform/pcie_ldb_fpga_device.{0}/
 PCIE_UDB_BIND_PATH = "/sys/bus/platform/drivers/pcie_udb_fpga_device/{0}"
 PCIE_LDB_BIND_PATH = "/sys/bus/platform/drivers/pcie_ldb_fpga_device/{0}"
 
+logger = Logger()
 class Sfp(SfpOptoeBase):
     """Platform-specific Sfp class"""
     HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
@@ -71,6 +54,32 @@ class Sfp(SfpOptoeBase):
     PORT_END = 66
     QSFP_PORT_START = 1
     QSFP_PORT_END = 64
+
+    SFP_TYPE_CODE_LIST = [
+        0x03,  # SFP/SFP+/SFP28
+        0x0b   # DWDM-SFP/SFP+
+    ]
+    QSFP_TYPE_CODE_LIST = [
+        0x0c, # QSFP
+        0x0d, # QSFP+ or later
+        0x11, # QSFP28 or later
+        0xe1  # QSFP28 EDFA
+    ]
+    QSFP_DD_TYPE_CODE_LIST = [
+        0x18  # QSFP-DD Double Density 8X Pluggable Transceiver
+    ]
+    OSFP_TYPE_CODE_LIST = [
+        0x19  # OSFP
+    ]
+
+    SFP_TYPE = "SFP"
+    QSFP_TYPE = "QSFP"
+    OSFP_TYPE = "OSFP"
+    QSFP_DD_TYPE = "QSFP_DD"
+
+    UPDATE_DONE = "Done"
+    EEPROM_DATA_NOT_READY = "eeprom not ready"
+    UNKNOWN_SFP_TYPE_ID = "unknow sfp ID"
 
     # Path to sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
@@ -91,13 +100,15 @@ class Sfp(SfpOptoeBase):
         self._api_helper = APIHelper()
         self._name = sfp_name
 
-        self._refresh_optoe_dev_class()
+        self.sfp_type = self.QSFP_TYPE
+        self.update_sfp_type()
+        self.refresh_optoe_dev_class()
 
     def __write_txt_file(self, file_path, value):
         try:
             reg_file = open(file_path, "w")
         except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
+            logger.log_error("Error: unable to open file: %s" % str(e))
             return False
 
         reg_file.write(str(value))
@@ -165,25 +176,19 @@ class Sfp(SfpOptoeBase):
         except (OSError, IOError):
             return None
 
-    def _detect_sfp_type(self):
-        sfp_type = QSFP_TYPE
-        eeprom_raw = []
-        eeprom_raw = self.read_eeprom(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
-        if eeprom_raw:
-            if eeprom_raw[0] in SFP_TYPE_CODE_LIST:
-                self.sfp_type = SFP_TYPE
-            elif eeprom_raw[0] in QSFP_TYPE_CODE_LIST:
-                self.sfp_type = QSFP_TYPE
-            elif eeprom_raw[0] in QSFP_DD_TYPE_CODE_LIST:
-                self.sfp_type = QSFP_DD_TYPE
-            else:
-                self.sfp_type = sfp_type
-        else:
-            self.sfp_type = sfp_type
 
-    def _refresh_optoe_dev_class(self):
-        self._detect_sfp_type()
+    def write_eeprom(self, offset, num_bytes, write_buffer):
+        try:
+            with open(self.get_eeprom_path(), mode='r+b', buffering=0) as f:
+                for i in range(num_bytes):
+                    f.seek(offset+i)
+                    f.write(write_buffer[i:i+1])
+        except (OSError, IOError):
+            return False
+        return True
 
+
+    def refresh_optoe_dev_class(self):
         if self.index < 32:
             port = "pcie_udb_fpga_device.{}".format(self.index)
             port_dev_unbind = PCIE_UDB_BIND_PATH.format("unbind")
@@ -193,17 +198,8 @@ class Sfp(SfpOptoeBase):
             port_dev_unbind = PCIE_LDB_BIND_PATH.format("unbind")
             port_dev_bind = PCIE_LDB_BIND_PATH.format("bind")
 
-        if self.sfp_type == QSFP_TYPE:
-            self._api_helper.write_txt_file(port_dev_unbind, port)
-            self._api_helper.write_txt_file(port_dev_bind, port)
-        elif self.sfp_type == SFP_TYPE:
-            self._api_helper.write_txt_file(port_dev_unbind, port)
-            self._api_helper.write_txt_file(port_dev_bind, port)
-        elif self.sfp_type == QSFP_DD_TYPE:
-            self._api_helper.write_txt_file(port_dev_unbind, port)
-            self._api_helper.write_txt_file(port_dev_bind, port)
-        else:
-            return False
+        self._api_helper.write_txt_file(port_dev_unbind, port)
+        self._api_helper.write_txt_file(port_dev_bind, port)
 
     def get_reset_status(self):
         """
@@ -247,13 +243,17 @@ class Sfp(SfpOptoeBase):
             # SFP doesn't support this feature
             return False
 
-        lpmode_path = "{}{}{}".format(FPGA_PCIE_PATH, '/module_lp_mode_', self.port_num)
-
-        val=self._api_helper.read_txt_file(lpmode_path)
-        if val is not None:
-            return int(val, 10)==1
+        if self.sfp_type == self.QSFP_DD_TYPE:
+            api = self.get_xcvr_api()
+            return api.get_lpmode()
         else:
-            return False
+            lpmode_path = "{}{}{}".format(FPGA_PCIE_PATH, '/module_lp_mode_', self.port_num)
+
+            val=self._api_helper.read_txt_file(lpmode_path)
+            if val is not None:
+                return int(val, 10)==1
+            else:
+                return False
 
     def reset(self):
         """
@@ -289,7 +289,7 @@ class Sfp(SfpOptoeBase):
         Returns:
             A boolean, True if tx_disable is set successfully, False if not
         """
-        if self.sfp_type == QSFP_TYPE:
+        if self.sfp_type == self.QSFP_TYPE:
             sysfsfile_eeprom = None
             try:
                 tx_disable_value = 0xf if tx_disable else 0x0
@@ -321,14 +321,19 @@ class Sfp(SfpOptoeBase):
             if not self.get_presence():
                 return False
 
-            lpmode_path = "{}{}{}".format(FPGA_PCIE_PATH, 'module_lp_mode_', self.port_num)
+            if self.sfp_type == self.QSFP_DD_TYPE:
+                api = self.get_xcvr_api()
+                api.set_lpmode(lpmode)
+                return True
+            else:
+                lpmode_path = "{}{}{}".format(FPGA_PCIE_PATH, 'module_lp_mode_', self.port_num)
 
-        if lpmode is True:
-            ret = self.__write_txt_file(lpmode_path, 1) #enable lpmode
-        else:
-            ret = self.__write_txt_file(lpmode_path, 0) #disable lpmode
+                if lpmode is True:
+                    ret = self.__write_txt_file(lpmode_path, 1) #enable lpmode
+                else:
+                    ret = self.__write_txt_file(lpmode_path, 0) #disable lpmode
 
-        return ret
+                return ret
 
     def _convert_raw_to_byte(self, raw, num_bytes):
         """
@@ -414,7 +419,7 @@ class Sfp(SfpOptoeBase):
             fd.close()
 
         except Exception as e:
-            print ('Error: unable to open file: ', str(e))
+            logger.log_error("Error: unable to open file: %s" % str(e))
             return False
 
         return True
@@ -471,3 +476,28 @@ class Sfp(SfpOptoeBase):
             A boolean value, True if replaceable
         """
         return True
+
+    def update_sfp_type(self):
+        """
+        Updates the sfp type
+
+        """
+        ret = self.UPDATE_DONE
+        eeprom_raw = []
+        eeprom_raw = self.read_eeprom(0, 1)
+        if eeprom_raw and hasattr(self,'sfp_type'):
+            if eeprom_raw[0] in self.SFP_TYPE_CODE_LIST:
+                self.sfp_type = self.SFP_TYPE
+            elif eeprom_raw[0] in self.QSFP_TYPE_CODE_LIST:
+                self.sfp_type = self.QSFP_TYPE
+            elif eeprom_raw[0] in self.QSFP_DD_TYPE_CODE_LIST:
+                self.sfp_type = self.QSFP_DD_TYPE
+            elif eeprom_raw[0] in self.OSFP_TYPE_CODE_LIST:
+                self.sfp_type = self.OSFP_TYPE
+            else:
+                ret = self.UNKNOWN_SFP_TYPE_ID
+        else:
+            ret = self.EEPROM_DATA_NOT_READY
+
+        return ret
+
