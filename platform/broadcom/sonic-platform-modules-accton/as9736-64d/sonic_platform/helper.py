@@ -34,19 +34,6 @@ class APIHelper():
             status = False
         return status, result
 
-    def run_command(self, cmd):
-        status = True
-        result = ""
-        try:
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
-                result = raw_data.strip()
-        except Exception:
-            status = False
-        return status, result
-
     def run_interactive_command(self, cmd):
         try:
             os.system(cmd)
