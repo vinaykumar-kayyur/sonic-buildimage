@@ -261,12 +261,12 @@ class Thermal(ThermalBase):
         """
         try:
             value = float(temperature)
-        except:
+        except Exception:
             return False
 
         try:
             self.conf.set_high_threshold(str(value))
-        except:
+        except Exception:
             return False
 
         return True
@@ -392,12 +392,12 @@ class Thermal(ThermalBase):
         """
         try:
             value = float(temperature)
-        except:
+        except Exception:
             return False
 
         try:
             self.conf.set_high_critical_threshold(str(value))
-        except:
+        except Exception:
             return False
 
         return True

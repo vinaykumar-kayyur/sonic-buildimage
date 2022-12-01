@@ -290,7 +290,7 @@ class DeviceThreshold:
 
         try:
             if temperature != NOT_AVAILABLE:
-                tmp = float(temperature)
+                float(temperature)
         except ValueError:
             raise ValueError('The parameter requires a float string. ex:\"30.1\"')
 
@@ -319,7 +319,7 @@ class DeviceThreshold:
 
         try:
             if temperature != NOT_AVAILABLE:
-                tmp = float(temperature)
+                float(temperature)
         except ValueError:
             raise ValueError('The parameter requires a float string. ex:\"30.1\"')
 
@@ -348,7 +348,7 @@ class DeviceThreshold:
 
         try:
             if temperature != NOT_AVAILABLE:
-                tmp = float(temperature)
+                float(temperature)
         except ValueError:
             raise ValueError('The parameter requires a float string. ex:\"30.1\"')
 
@@ -377,7 +377,7 @@ class DeviceThreshold:
 
         try:
             if temperature != NOT_AVAILABLE:
-                tmp = float(temperature)
+                float(temperature)
         except ValueError:
             raise ValueError('The parameter requires a float string. ex:\"30.1\"')
 

@@ -349,7 +349,7 @@ class Sfp(SfpOptoeBase):
                 for n in range(0, num_bytes):
                     eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
 
-        except BaseException:
+        except Exception:
             return None
 
         return eeprom_raw

@@ -150,8 +150,6 @@ class Psu(PsuBase):
             0: self.STATUS_LED_COLOR_AMBER
         }.get(status, self.STATUS_LED_COLOR_OFF)
 
-        return False
-
     def get_temperature(self):
         """
         Retrieves current temperature reading from PSU
