@@ -30,6 +30,8 @@
 #include <linux/delay.h>
 #include <linux/pci.h>
 #include <linux/time64.h>
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 
 /***********************************************
  *       variable define
@@ -1079,7 +1081,11 @@ static char *show_date_time(void)
     struct timespec64 tv;
     struct tm tm_val;
 
+#ifdef __STDC_LIB_EXT1__
+    memset_s(dmamem, DATETIME_LEN, 0, DATETIME_LEN);
+#else
     memset(g_datetime, 0, DATETIME_LEN);
+#endif
 
     ktime_get_real_ts64(&tv);
     time64_to_tm(tv.tv_sec, 0, &tm_val);
@@ -2511,3 +2517,4 @@ module_exit(as9736_64d_pcie_fpga_exit);
 MODULE_AUTHOR("Michael Shih <michael_shih@edge-core.com>");
 MODULE_DESCRIPTION("AS9734-64D READ EEPROM From FPGA via PCIE");
 MODULE_LICENSE("GPL");
+

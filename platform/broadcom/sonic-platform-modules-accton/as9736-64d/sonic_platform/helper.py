@@ -8,6 +8,7 @@ from sonic_py_common import device_info
 from sonic_py_common import logger
 from threading import Lock
 from typing import cast
+from sonic_py_common.general import getstatusoutput_noshell_pipe
 
 HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
 EMPTY_STRING = ""
@@ -63,11 +64,8 @@ class APIHelper():
         status = True
         result = ""
         try:
-            cmd = "ipmitool raw {} {}".format(str(netfn), str(cmd))
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
+            err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'raw', str(netfn), str(cmd)])
+            if err == [0]:
                 result = raw_data.strip()
             else:
                 status = False
@@ -79,13 +77,11 @@ class APIHelper():
         status = True
         result = ""
         try:
-            cmd = "ipmitool fru print {}".format(str(
-                id)) if not key else "ipmitool fru print {0} | grep '{1}' ".format(str(id), str(key))
-
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
+            if key == None:
+                err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)])
+            else:
+                err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)], ['grep', str(key)])
+            if err == [0] or err == [0, 0]:
                 result = raw_data.strip()
             else:
                 status = False
@@ -97,11 +93,8 @@ class APIHelper():
         status = True
         result = ""
         try:
-            cmd = "ipmitool sensor thresh '{}' {} {}".format(str(id), str(threshold_key), str(value))
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            raw_data, err = p.communicate()
-            if err == '':
+            err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'sensor', 'thresh', str(id), str(threshold_key), str(value)])
+            if err == [0]:
                 result = raw_data.strip()
             else:
                 status = False
@@ -369,3 +362,4 @@ class DeviceThreshold:
             raise ValueError('The parameter requires a float string. ex:\"30.1\"')
 
         return self.__set_data(LOW_CRIT_THRESHOLD_FIELD, temperature)
+
