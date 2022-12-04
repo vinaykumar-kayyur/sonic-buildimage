@@ -54,6 +54,9 @@ class Chassis(ChassisBase):
         self.port_start = port_cfg.get("port_start", 0)
         self.port_end = port_cfg.get("port_end", 0)
 
+        sfp_node = Sfp(self.port_start)
+        if sfp_node._get_config("port_index_start") == 1:
+            self._sfp_list.append(sfp_node)
         # Initialize SFP list
 
         # sfp.py will read eeprom contents and retrive the eeprom data.
@@ -496,7 +499,7 @@ class Chassis(ChassisBase):
 
         # Check for OIR events and return ret_dict
         for index in range(self.port_start, self.port_end + 1):
-            if self._sfp_list[index - 1].get_presence():
+            if self._sfp_list[index].get_presence():
                 current_port_dict[index] = self.STATUS_INSERTED
             else:
                 current_port_dict[index] = self.STATUS_REMOVED
