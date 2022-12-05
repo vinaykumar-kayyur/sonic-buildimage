@@ -1,6 +1,5 @@
 import os
 import struct
-import subprocess
 import json
 import fcntl
 from mmap import *
@@ -77,7 +76,7 @@ class APIHelper():
         status = True
         result = ""
         try:
-            if key == None:
+            if (key is None):
                 err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)])
             else:
                 err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)], ['grep', str(key)])
