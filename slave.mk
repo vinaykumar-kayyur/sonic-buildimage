@@ -111,6 +111,7 @@ configure :
 	$(Q)mkdir -p $(PYTHON_DEBS_PATH)
 	$(Q)mkdir -p $(PYTHON_WHEELS_PATH)
 	$(Q)mkdir -p $(DPKG_ADMINDIR_PATH)
+	$(Q)mkdir -p $(TARGET_PATH)/vcache
 	$(Q)echo $(PLATFORM) > .platform
 	$(Q)echo $(PLATFORM_ARCH) > .arch
 
@@ -180,6 +181,15 @@ endif
 # Pre-built Bazel is not available for armhf, so exclude P4RT
 # TODO(PINS): Remove when Bazel binaries are available for armhf
 ifeq ($(CONFIGURED_ARCH),armhf)
+ifeq ($(INCLUDE_P4RT),y)
+$(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
+endif
+override INCLUDE_P4RT = n
+endif
+
+# Pre-built Bazel is not available for arm64, so exclude P4RT
+# TODO(PINS): Remove when Bazel binaries are available for arm64
+ifeq ($(CONFIGURED_ARCH),arm64)
 ifeq ($(INCLUDE_P4RT),y)
 $(Q)echo "Disabling P4RT due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
 endif
@@ -396,6 +406,7 @@ $(info "INCLUDE_BOOTCHART                : "$(INCLUDE_BOOTCHART)")
 $(info "ENABLE_BOOTCHART                 : "$(ENABLE_BOOTCHART)")
 $(info "ENABLE_FIPS_FEATURE"             : "$(ENABLE_FIPS_FEATURE)")
 $(info "ENABLE_TRANSLIB_WRITE"           : "$(ENABLE_TRANSLIB_WRITE)")
+$(info "ENABLE_NATIVE_WRITE"             : "$(ENABLE_NATIVE_WRITE)")
 $(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
@@ -439,6 +450,15 @@ export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 ##
 ##     docker-swss:latest <=SAVE/LOAD=> docker-swss-<user>:<tag>
 
+# $(call docker-get-tag,tag)
+# Get the docker tag. For packages it is an image version, for other dockers it stays latest.
+#
+# $(1) => Docker name
+
+define docker-get-tag
+$(shell [ ! -z $(filter $(1).gz,$(SONIC_PACKAGES_LOCAL)) ] && echo $(SONIC_IMAGE_VERSION) || echo latest)
+endef
+
 # $(call docker-image-save,from,to)
 # Sonic docker images are always created with username as extension. During the save operation,
 # it removes the username extension from docker image and saved them as compressed tar file for SONiC image generation.
@@ -451,13 +471,13 @@ define docker-image-save
     @echo "Attempting docker image lock for $(1) save" $(LOG)
     $(call MOD_LOCK,$(1),$(DOCKER_LOCKDIR),$(DOCKER_LOCKFILE_SUFFIX),$(DOCKER_LOCKFILE_TIMEOUT))
     @echo "Obtained docker image lock for $(1) save" $(LOG)
-    @echo "Tagging docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) as $(1):latest" $(LOG)
-    docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):latest $(LOG)
-    @echo "Saving docker image $(1):latest" $(LOG)
-        docker save $(1):latest | gzip -c > $(2)
+    @echo "Tagging docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) as $(1):$(call docker-get-tag,$(1))" $(LOG)
+    docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):$(call docker-get-tag,$(1)) $(LOG)
+    @echo "Saving docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
+        docker save $(1):$(call docker-get-tag,$(1)) | gzip -c > $(2)
     if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
-        @echo "Removing docker image $(1):latest" $(LOG)
-        docker rmi -f $(1):latest $(LOG)
+        @echo "Removing docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
+        docker rmi -f $(1):$(call docker-get-tag,$(1)) $(LOG)
     fi
     $(call MOD_UNLOCK,$(1))
     @echo "Released docker image lock for $(1) save" $(LOG)
@@ -904,8 +924,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		--label Tag=$(SONIC_IMAGE_VERSION) \
 		-f $(TARGET_DOCKERFILE)/Dockerfile.buildinfo \
 		-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
+
 	if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-	scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
+	scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
+
 	$(call docker-image-save,$*,$@)
 	# Clean up
 	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
@@ -983,6 +1005,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		mkdir -p $($*.gz_PATH)/files $(LOG)
 		mkdir -p $($*.gz_PATH)/python-debs $(LOG)
 		mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
+		mkdir -p $(TARGET_PATH)/vcache/$* $($*.gz_PATH)/vcache $(LOG)
 		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
 		sudo mount --bind $($*.gz_FILES_PATH) $($*.gz_PATH)/files $(LOG)
 		sudo mount --bind $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
@@ -1024,8 +1047,11 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 		        $($(subst -,_,$(notdir $($*.gz_PATH)))_labels) \
 			-t $(DOCKER_IMAGE_REF) $($*.gz_PATH) $(LOG)
+
 		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-		scripts/collect_docker_version_files.sh $(DOCKER_IMAGE_REF) $(TARGET_PATH)
+		scripts/collect_docker_version_files.sh $* $(TARGET_PATH) $(DOCKER_IMAGE_REF) $($*.gz_PATH) $($*.gz_PATH)/Dockerfile $(LOG)
+		if [ ! -z $(filter $*.gz,$(SONIC_PACKAGES_LOCAL)) ]; then docker tag $(DOCKER_IMAGE_REF) $*:$(SONIC_IMAGE_VERSION); fi
+
 		$(call docker-image-save,$*,$@)
 		# Clean up
 		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
@@ -1054,6 +1080,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 
 		mkdir -p $($*.gz_PATH)/debs $(LOG)
 		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+		mkdir -p $(TARGET_PATH)/vcache/$*-dbg $($*.gz_PATH)/vcache $(LOG)
 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
@@ -1077,8 +1104,11 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 			--file $($*.gz_PATH)/Dockerfile-dbg \
 			-t $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH) $(LOG)
+
 		if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then docker tag $(DOCKER_IMAGE_REF) $*; fi
-		scripts/collect_docker_version_files.sh $(DOCKER_DBG_IMAGE_REF) $(TARGET_PATH)
+		scripts/collect_docker_version_files.sh $*-dbg $(TARGET_PATH) $(DOCKER_DBG_IMAGE_REF) $($*.gz_PATH)  $($*.gz_PATH)/Dockerfile-dbg $(LOG)
+		if [ ! -z $(filter $*.gz,$(SONIC_PACKAGES_LOCAL)) ]; then docker tag $(DOCKER_IMAGE_REF) $*:$(SONIC_IMAGE_VERSION); fi
+
 		$(call docker-image-save,$*-$(DBG_IMAGE_MARK),$@)
 		# Clean up
 		docker rmi -f $(DOCKER_IMAGE_REF) &> /dev/null || true
