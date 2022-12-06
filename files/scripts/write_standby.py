@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import time
 
 from sonic_py_common import logger as log
@@ -19,11 +20,15 @@ class MuxStateWriter(object):
     Class used to write standby mux state to APP DB
     """
 
-    def __init__(self):
+    def __init__(self, activeactive, activestandby, shutdown_module):
         self.config_db_connector = None
         self.appl_db_connector = None
         self.state_db_connector = None
         self.asic_db_connector = None
+        self.default_active_active_state = activeactive
+        self.default_active_standby_state = activestandby
+        self.shutdown_module = shutdown_module
+        self.is_shutdwon = (self.shutdown_module != None)
 
     @property
     def config_db(self):
@@ -94,16 +99,35 @@ class MuxStateWriter(object):
         tbl = Table(self.state_db, 'WARM_RESTART_ENABLE_TABLE')
         (status, value) = tbl.hget('system', 'enable')
 
-        return status and value == 'true' 
+        if status and value == 'true':
+            return True
 
-    def get_auto_mux_intfs(self):
+        if self.shutdown_module:
+            (status, value) = tbl.hget(self.shutdown_module, 'enable')
+            if status and value == 'true':
+                return True
+
+        return False
+
+    def get_all_mux_intfs_modes(self):
         """
-        Returns a list of all mux cable interfaces that are configured to auto-switch
+        Returns a list of all mux cable interfaces, with suggested modes
+        Setting mux initial modes is crucial to kick off the statemachines,
+        have to set the modes for all mux/gRPC ports.
         """
+        intf_modes = {}
         all_intfs = self.config_db.get_table('MUX_CABLE')
-        auto_intfs = [intf for intf, status in all_intfs.items()
-                                if status['state'].lower() == 'auto']
-        return auto_intfs
+        for intf, status in all_intfs.items():
+            state = status['state'].lower()
+            if state in ['active', 'standby']:
+                intf_modes[intf] = state
+            elif state in ['auto', 'manual']:
+                if ('soc_ipv4' in status or 'soc_ipv6' in status or
+                    ('cable_type' in status and status['cable_type'] == 'active-active')):
+                    intf_modes[intf] = self.default_active_active_state
+                else:
+                    intf_modes[intf] = self.default_active_standby_state
+        return intf_modes
 
     def tunnel_exists(self):
         """
@@ -139,24 +163,37 @@ class MuxStateWriter(object):
             # If not running on a dual ToR system, take no action
             return
 
-        if self.is_warmrestart:
+        if self.is_warmrestart and self.is_shutdwon:
             # If in warmrestart context, take no action
             logger.log_warning("Skip setting mux state due to ongoing warmrestart.")
             return
 
-        intfs = self.get_auto_mux_intfs()
-        state = 'standby'
+        modes = self.get_all_mux_intfs_modes()
         if self.wait_for_tunnel():
-            logger.log_warning("Applying {} state to interfaces {}".format(state, intfs))
+            logger.log_warning("Applying state to interfaces {}".format(modes))
             producer_state_table = ProducerStateTable(self.appl_db, 'MUX_CABLE_TABLE')
-            fvs = create_fvs(state=state)
 
-            for intf in intfs:
+            for intf, state in modes.items():
+                fvs = create_fvs(state=state)
                 producer_state_table.set(intf, fvs)
         else:
             logger.log_error("Timed out waiting for tunnel {}, mux state will not be written".format(self.tunnel_name))
 
 
 if __name__ == '__main__':
-    mux_writer = MuxStateWriter()
+    parser = argparse.ArgumentParser(description='Write initial mux state')
+    parser.add_argument('-a', '--active_active',
+                        help='state: intial state for "auto" and/or "manual" config in active-active mode, default "active"',
+                        type=str, required=False, default='active')
+    parser.add_argument('-s', '--active_standby',
+                        help='state: intial state for "auto" and/or "manual" config in active-standby mode, default "standby"',
+                        type=str, required=False, default='standby')
+    parser.add_argument('--shutdown', help='write mux state after shutdown other services, supported: mux, bgp',
+                        type=str, required=False, choices=['mux', 'bgp'], default=None)
+    args = parser.parse_args()
+    active_active_state = args.active_active
+    active_standby_state = args.active_standby
+    if args.shutdown in ['mux', 'bgp']:
+        active_active_state = "standby"
+    mux_writer = MuxStateWriter(activeactive=active_active_state, activestandby=active_standby_state, shutdown_module=args.shutdown)
     mux_writer.apply_mux_config()

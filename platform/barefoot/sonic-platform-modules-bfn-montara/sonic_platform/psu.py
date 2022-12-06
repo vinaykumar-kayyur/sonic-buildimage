@@ -4,25 +4,49 @@ try:
     import os
     import sys
     import time
+    import signal
+    import syslog
 
     sys.path.append(os.path.dirname(__file__))
 
     from .platform_thrift_client import thrift_try
 
     from sonic_platform_base.psu_base import PsuBase
+    from sonic_platform.thermal import psu_thermals_list_get
+    from platform_utils import cancel_on_sigterm
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 class Psu(PsuBase):
     """Platform-specific PSU class"""
 
+    sigterm = False
+    sigterm_default_handler = None
+    cls_inited = False
+
     def __init__(self, index):
         PsuBase.__init__(self)
         self.__index = index
+        self.__thermals = None
         self.__info = None
         self.__ts = 0
         # STUB IMPLEMENTATION
         self.color = ""
+
+        syslog.syslog(syslog.LOG_INFO, "Created PSU #{} instance".format(self.__index))
+        if not Psu.cls_inited:
+            Psu.sigterm_default_handler = signal.getsignal(signal.SIGTERM)
+            signal.signal(signal.SIGTERM, Psu.signal_handler)
+            if Psu.sigterm_default_handler:
+                syslog.syslog(syslog.LOG_INFO, "Default SIGTERM handler overridden!!")
+            Psu.cls_inited = True
+
+    @classmethod
+    def signal_handler(cls, sig, frame):
+        if cls.sigterm_default_handler:
+            cls.sigterm_default_handler(sig, frame)
+        syslog.syslog(syslog.LOG_INFO, "Canceling PSU platform API calls...")
+        cls.sigterm = True
 
     '''
     Units of returned info object values:
@@ -33,19 +57,22 @@ class Psu(PsuBase):
         fspeed - RPM
     '''
     def __info_get(self):
+        @cancel_on_sigterm
         def psu_info_get(client):
             return client.pltfm_mgr.pltfm_mgr_pwr_supply_info_get(self.__index)
 
         # Update cache once per 2 seconds
-        if self.__ts + 2 < time.time():
+        if self.__ts + 2 < time.time() and not Psu.sigterm:
             self.__info = None
             try:
                 self.__info = thrift_try(psu_info_get, attempts=1)
+            except Exception as e:
+                if "Canceling" in str(e):
+                    syslog.syslog(syslog.LOG_INFO, "{}".format(e))
             finally:
                 self.__ts = time.time()
                 return self.__info
         return self.__info
-
 
     @staticmethod
     def get_num_psus():
@@ -198,6 +225,34 @@ class Psu(PsuBase):
             integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
         return self.__index
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125
+        """
+        return self.get_thermal(0).get_temperature()
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        return self.get_thermal(0).get_high_threshold()
+
+    @property
+    def _thermal_list(self):
+        if self.__thermals is None:
+            self.__thermals = psu_thermals_list_get(self.get_name())
+        return self.__thermals
+
+    @_thermal_list.setter
+    def _thermal_list(self, value):
+        pass
 
 def psu_list_get():
     psu_list = []

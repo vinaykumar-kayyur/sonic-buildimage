@@ -10,6 +10,7 @@ from collections import defaultdict
 from lxml import etree as ET
 from lxml.etree import QName
 
+from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config
 from sonic_py_common.interface import backplane_prefix
@@ -259,14 +260,24 @@ def parse_png(png, hname, dpg_ecmp_content = None):
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
                 (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype) = parse_device(device)
-                device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku}
-                if cluster:
+                device_data = {}
+                if hwsku != None:
+                    device_data['hwsku'] = hwsku
+                if cluster != None:
                     device_data['cluster'] = cluster
-                if deployment_id:
+                if deployment_id != None:
                     device_data['deployment_id'] = deployment_id
-                if lo_prefix_v6:
+                if lo_prefix != None:
+                    device_data['lo_addr'] = lo_prefix
+                if lo_prefix_v6 != None:
                     device_data['lo_addr_v6'] = lo_prefix_v6
-                if d_subtype:
+                if mgmt_prefix != None:
+                    device_data['mgmt_addr'] = mgmt_prefix
+                if mgmt_prefix_v6 != None:
+                    device_data['mgmt_addr_v6'] = mgmt_prefix_v6
+                if d_type != None:
+                    device_data['type'] = d_type
+                if d_subtype != None:
                     device_data['subtype'] = d_subtype
                 devices[name] = device_data
 
@@ -392,13 +403,23 @@ def parse_asic_png(png, asic_name, hostname):
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
                 (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, _) = parse_device(device)
-                device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
-                if cluster:
+                device_data = {}
+                if hwsku != None:
+                    device_data['hwsku'] = hwsku
+                if cluster != None:
                     device_data['cluster'] = cluster
-                if deployment_id:
+                if deployment_id != None:
                     device_data['deployment_id'] = deployment_id
-                if lo_prefix_v6:
-                    device_data['lo_addr_v6']= lo_prefix_v6
+                if lo_prefix != None:
+                    device_data['lo_addr'] = lo_prefix
+                if lo_prefix_v6 != None:
+                    device_data['lo_addr_v6'] = lo_prefix_v6
+                if mgmt_prefix != None:
+                    device_data['mgmt_addr'] = mgmt_prefix
+                if mgmt_prefix_v6 != None:
+                    device_data['mgmt_addr_v6'] = mgmt_prefix_v6
+                if d_type != None:
+                    device_data['type'] = d_type
                 devices[name] = device_data
 
     return (neighbors, devices, port_speeds)
@@ -511,9 +532,9 @@ def parse_dpg(dpg, hname):
                 intfs_inpc.append(pcmbr_list[i])
                 pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
-                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75))), 'lacp_key': 'auto'}
             else:
-                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
+                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75))), 'lacp_key': 'auto' }
         port_nhipv4_map = {}
         port_nhipv6_map = {}
         nhg_int = ""
@@ -894,6 +915,9 @@ def parse_meta(meta, hname):
     kube_data = {}
     macsec_profile = {}
     redundancy_type = None
+    downstream_redundancy_types = None
+    qos_profile = None
+
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -938,30 +962,11 @@ def parse_meta(meta, hname):
                     macsec_profile = parse_macsec_profile(value)
                 elif name == "RedundancyType":
                     redundancy_type = value
-    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type
-
-
-def parse_system_defaults(meta):
-    system_default_values = {}
-
-    system_defaults = meta.find(str(QName(ns1, "SystemDefaults")))
-    
-    if system_defaults is None:
-        return system_default_values
-    
-    for system_default in system_defaults.findall(str(QName(ns1, "SystemDefault"))):
-        name = system_default.find(str(QName(ns1, "Name"))).text
-        value = system_default.find(str(QName(ns1, "Value"))).text
-
-        # Tunnel Qos remapping 
-        if name == "TunnelQosRemapEnabled":
-            if value.lower() == "true":
-                status = "enabled"
-            else:
-                status = "disabled"
-            system_default_values["tunnel_qos_remap"] = {"status": status}
-
-    return system_default_values
+                elif name == "DownstreamRedundancyTypes":
+                    downstream_redundancy_types = value
+                elif name == "SonicQosProfile":
+                    qos_profile = value
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile
 
 
 def parse_linkmeta(meta, hname):
@@ -988,14 +993,15 @@ def parse_linkmeta(meta, hname):
         lower_tor_hostname = ''
         auto_negotiation = None
         macsec_enabled = False
-
+        tx_power = None
+        laser_freq = None
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
             name = device_property.find(str(QName(ns1, "Name"))).text
             value = device_property.find(str(QName(ns1, "Value"))).text
             if name == "FECDisabled":
                 fec_disabled = value
-            elif name == "GeminiPeeringLink":
+            elif name in [ "GeminiPeeringLink", "LibraPeeringLink" ]:
                 has_peer_switch = True
             elif name == "UpperTOR":
                 upper_tor_hostname = value
@@ -1005,6 +1011,10 @@ def parse_linkmeta(meta, hname):
                 auto_negotiation = value
             elif name == "MacSecEnabled":
                 macsec_enabled = value
+            elif name == "TxPower":
+                tx_power = value
+            elif name == "Frequency":
+                laser_freq = value
 
         linkmetas[port] = {}
         if fec_disabled:
@@ -1018,6 +1028,11 @@ def parse_linkmeta(meta, hname):
             linkmetas[port]["AutoNegotiation"] = auto_negotiation
         if macsec_enabled:
             linkmetas[port]["MacSecEnabled"] = macsec_enabled
+        if tx_power:
+            linkmetas[port]["tx_power"] = tx_power
+        # Convert the freq in GHz
+        if laser_freq:
+            linkmetas[port]["laser_freq"] = int(float(laser_freq)*1000)
     return linkmetas
 
 def parse_macsec_profile(val_string):
@@ -1037,6 +1052,7 @@ def parse_asic_meta(meta, hname):
     switch_id = None
     switch_type = None
     max_cores = None
+    deployment_id = None
     macsec_profile = {}
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
@@ -1053,10 +1069,12 @@ def parse_asic_meta(meta, hname):
                     switch_type = value
                 elif name == "MaxCores":
                     max_cores = value
+                elif name == "DeploymentId":
+                    deployment_id = value
                 elif name == 'MacSecProfile':
                     macsec_profile = parse_macsec_profile(value)
 
-    return sub_role, switch_id, switch_type, max_cores, macsec_profile
+    return sub_role, switch_id, switch_type, max_cores, deployment_id, macsec_profile
 
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
@@ -1264,6 +1282,31 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
             (local_sub_role == BACKEND_ASIC_SUB_ROLE and peer_sub_role == FRONTEND_ASIC_SUB_ROLE)):
             bgp_sessions[peer_ip].update({'admin_status': 'up'})
 
+def select_mmu_profiles(profile, platform, hwsku):
+    """
+        Select MMU files based on the device metadata attribute - SonicQosProfile
+        if no QosProfile exists in the minigraph, then no action is needed.
+        if a profile exists in the minigraph,
+            - create a dir path to search 1 level down from the base path.
+            - if no such dir path exists, no action is needed.
+            - if a dir path exists, check for the presence of each file from
+              the copy list in the dir path and copy it over to the base path.
+    """
+    if not profile:
+        return
+
+    files_to_copy = ['pg_profile_lookup.ini', 'qos.json.j2', 'buffers_defaults_t0.j2', 'buffers_defaults_t1.j2']
+
+    path = os.path.join('/usr/share/sonic/device', platform, hwsku)
+
+    dir_path = os.path.join(path, profile)
+    if os.path.exists(dir_path):
+        for file_item in files_to_copy:
+            file_in_dir = os.path.join(dir_path, file_item)
+            if os.path.isfile(file_in_dir):
+                base_file = os.path.join(path, file_item)
+                exec_cmd("sudo cp {} {}".format(file_in_dir, base_file))
+
 ###############################################################################
 #
 # Main functions
@@ -1337,7 +1380,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     static_routes = {}
     system_defaults = {}
     macsec_profile = {}
+    downstream_redundancy_types = None
     redundancy_type = None
+    qos_profile = None
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -1368,13 +1413,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, redundancy_type) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
-            elif child.tag == str(QName(ns, "SystemDefaultsDeclaration")):
-                system_defaults = parse_system_defaults(child)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
                 (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content, static_routes, tunnel_intfs_qos_remap_config) = parse_dpg(child, asic_name)
@@ -1384,14 +1427,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (sub_role, switch_id, switch_type, max_cores, macsec_profile) = parse_asic_meta(child, asic_name)
+                (sub_role, switch_id, switch_type, max_cores, deployment_id, macsec_profile) = parse_asic_meta(child, asic_name)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
-            elif child.tag == str(QName(ns, "SystemDefaultsDeclaration")):
-                system_defaults = parse_system_defaults(child)
 
+    select_mmu_profiles(qos_profile, platform, hwsku)
     # set the host device type in asic metadata also
     device_type = [devices[key]['type'] for key in devices if key.lower() == hostname.lower()][0]
     if asic_name is None:
@@ -1408,7 +1450,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'hostname': hostname,
         'hwsku': hwsku,
         'type': device_type,
-        'synchronous_mode': 'enable'
+        'synchronous_mode': 'enable',
+        'yang_config_validation': 'disable'
         }
     }
 
@@ -1426,10 +1469,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 'ip': kube_data.get('ip', '')
             }
         }
-    
-    if len(system_defaults) > 0:
-        results['SYSTEM_DEFAULTS'] = system_defaults
-    
+
     results['PEER_SWITCH'], mux_tunnel_name, peer_switch_ip = get_peer_switch_info(linkmetas, devices)
 
     if bool(results['PEER_SWITCH']):
@@ -1438,7 +1478,22 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             print("Warning: more than one peer switch was found. Only the first will be parsed: {}".format(results['PEER_SWITCH'].keys()[0]))
 
         results['DEVICE_METADATA']['localhost']['peer_switch'] = list(results['PEER_SWITCH'].keys())[0]
+    
+    # Enable tunnel_qos_remap if downstream_redundancy_types(T1) or redundancy_type(T0) = Gemini/Libra
+    enable_tunnel_qos_map = False
+    if platform and 'kvm' in platform:
+        enable_tunnel_qos_map = False
+    elif results['DEVICE_METADATA']['localhost']['type'].lower() == 'leafrouter' and ('gemini' in str(downstream_redundancy_types).lower() or 'libra' in str(downstream_redundancy_types).lower()):
+        enable_tunnel_qos_map = True
+    elif results['DEVICE_METADATA']['localhost']['type'].lower() == 'torrouter' and ('gemini' in str(redundancy_type).lower() or 'libra' in str(redundancy_type).lower()):
+        enable_tunnel_qos_map = True
 
+    if enable_tunnel_qos_map:
+        system_defaults['tunnel_qos_remap'] = {"status": "enabled"}
+
+    if len(system_defaults) > 0:
+        results['SYSTEM_DEFAULTS'] = system_defaults
+    
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
@@ -1484,7 +1539,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
     mgmt_alias_reverse_mapping = {}
-    for key in mgmt_intf:
+    sorted_keys = natsorted(mgmt_intf.keys(), alg=natsortns.IGNORECASE, key=lambda x : "|".join(x))
+    for key in sorted_keys:
         alias = key[0]
         if alias in mgmt_alias_reverse_mapping:
             name = mgmt_alias_reverse_mapping[alias]
@@ -1591,6 +1647,14 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         macsec_enabled = linkmetas.get(alias, {}).get('MacSecEnabled')
         if macsec_enabled and 'PrimaryKey' in macsec_profile:
             port['macsec'] = macsec_profile['PrimaryKey']
+
+        tx_power = linkmetas.get(alias, {}).get('tx_power')
+        if tx_power:
+            port['tx_power'] = tx_power
+
+        laser_freq = linkmetas.get(alias, {}).get('laser_freq')
+        if laser_freq:
+            port['laser_freq'] = laser_freq
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
@@ -1727,6 +1791,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if is_storage_device:
         results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
 
+    # remove bgp monitor and slb peers for storage backend
+    if is_storage_device and 'BackEnd' in current_device['type']:
+        results['BGP_MONITORS'] = {}
+        results['BGP_PEER_RANGE'] = {}
+
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
@@ -1839,14 +1908,28 @@ def get_tunnel_entries(tunnel_intfs, tunnel_intfs_qos_remap_config, lo_intfs, tu
             break
 
     tunnels = {}
+
+    default_qos_map_for_mux_tunnel = {
+        "decap_dscp_to_tc_map": "AZURE_TUNNEL",
+        "decap_tc_to_pg_map": "AZURE_TUNNEL",
+        "encap_tc_to_dscp_map": "AZURE_TUNNEL",
+        "encap_tc_to_queue_map": "AZURE_TUNNEL"
+    }
+
     for type, tunnel_dict in tunnel_intfs.items():
         for tunnel_key, tunnel_attr in tunnel_dict.items():
             tunnel_attr['dst_ip'] = lo_addr
 
             if (tunnel_qos_remap.get('status') == 'enabled') and (mux_tunnel_name == tunnel_key) and (peer_switch_ip is not None):
                 tunnel_attr['src_ip'] = peer_switch_ip
+                # The DSCP mode must be pipe if remap is enabled
+                tunnel_attr['dscp_mode'] = "pipe"
                 if tunnel_key in tunnel_intfs_qos_remap_config[type]:
                     tunnel_attr.update(tunnel_intfs_qos_remap_config[type][tunnel_key].items())
+                # Use default value if qos remap attribute is missing
+                for k, v in default_qos_map_for_mux_tunnel.items():
+                    if k not in tunnel_attr:
+                        tunnel_attr[k] = v
 
             tunnels[tunnel_key] = tunnel_attr
 
@@ -1957,7 +2040,7 @@ def parse_asic_sub_role(filename, asic_name):
     root = ET.parse(filename).getroot()
     for child in root:
         if child.tag == str(QName(ns, "MetadataDeclaration")):
-            sub_role, _, _, _, _= parse_asic_meta(child, asic_name)
+            sub_role, _, _, _, _, _= parse_asic_meta(child, asic_name)
             return sub_role
 
 def parse_asic_switch_type(filename, asic_name):
@@ -1965,7 +2048,7 @@ def parse_asic_switch_type(filename, asic_name):
         root = ET.parse(filename).getroot()
         for child in root:
             if child.tag == str(QName(ns, "MetadataDeclaration")):
-                _, _, switch_type, _, _ = parse_asic_meta(child, asic_name)
+                _, _, switch_type, _, _, _ = parse_asic_meta(child, asic_name)
                 return switch_type
     return None
 

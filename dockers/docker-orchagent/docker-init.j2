@@ -21,7 +21,8 @@ CFGGEN_PARAMS=" \
     -t /usr/share/sonic/templates/wait_for_link.sh.j2,/usr/bin/wait_for_link.sh \
 "
 VLAN=$(sonic-cfggen $CFGGEN_PARAMS)
-
+SUBTYPE=$(sonic-cfggen -d -v "DEVICE_METADATA['localhost']['subtype']")
+SWITCH_TYPE=${SWITCH_TYPE:-`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['switch_type']"`}
 chmod +x /usr/bin/wait_for_link.sh
 
 # Executed platform specific initialization tasks.
@@ -34,10 +35,17 @@ if [ -x /usr/share/sonic/hwsku/hwsku-init ]; then
     /usr/share/sonic/hwsku/hwsku-init
 fi
 
-# Start arp_update and NDP proxy daemon when VLAN exists
-if [ "$VLAN" != "" ]; then
+# Start arp update when VLAN exists or switch type as chassis packet for backend port channel interfaces
+if [[ "$VLAN" != "" ]] || [[ "$SWITCH_TYPE" == "chassis-packet" ]]; then
     cp /usr/share/sonic/templates/arp_update.conf /etc/supervisor/conf.d/
+fi
+
+if [ "$VLAN" != "" ]; then
     cp /usr/share/sonic/templates/ndppd.conf /etc/supervisor/conf.d/
+fi
+
+if [ "$SUBTYPE" == "DualToR" ]; then
+    cp /usr/share/sonic/templates/tunnel_packet_handler.conf /etc/supervisor/conf.d/
 fi
 
 USE_PCI_ID_IN_CHASSIS_STATE_DB=/usr/share/sonic/platform/use_pci_id_chassis
