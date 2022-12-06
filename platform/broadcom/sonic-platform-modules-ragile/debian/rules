@@ -64,7 +64,7 @@ $(COMPILE_DIRS): common_build
 	cp -r $(MOD_SRC_DIR)/$@/build/*  debian/platform-modules-ragile-$@/
 
 binary: binary-indep
-	@echo "======================================================="
+	@echo "========================================================"
 
 binary-indep:
 	# Resuming debhelper scripts
