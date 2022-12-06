@@ -59,7 +59,7 @@ class QSfp(SfpBase):
     dom_tx_disable_supported = True
     calibration = 1
 
-    def __init__(self, index,qsfp_conf):
+    def __init__(self, index, qsfp_conf):
         self.__index = index
         self.__conf = qsfp_conf
         self.__api_helper = APIHelper()

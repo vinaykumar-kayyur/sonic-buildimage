@@ -42,7 +42,7 @@ logger=logging.getLogger()
 def _run_diag_command(command, verbose=False):
     cmd = ['clx_diag', command ]
     mapping_str_buffer = subprocess.check_output(cmd)
-    if verbose:
+    if verbose and (mapping_str_buffer is not None) :
         print pprint(mapping_str_buffer)
     return mapping_str_buffer
 

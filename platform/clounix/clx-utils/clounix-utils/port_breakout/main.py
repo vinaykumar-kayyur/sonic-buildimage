@@ -119,8 +119,8 @@ def get_port_config_clx(platform, hwsku):
 
 
 def get_platform():
-    machine_info = get_machine_info()
-    platform = get_platform_info(machine_info)
+    #machine_info = get_machine_info()
+    platform = get_platform_info()
     return platform
 
 
