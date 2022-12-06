@@ -22,7 +22,7 @@ from tabulate import tabulate
 import click
 
 import libpcfgparsing as PCFG
-from sonic_py_common.device_info import get_machine_info
+#from sonic_py_common.device_info import get_machine_info
 from sonic_py_common.device_info import get_platform_info
 #from swsssdk import ConfigDBConnector, SonicV2Connector
 from swsssdk import SonicV2Connector
