@@ -7,22 +7,28 @@
         "psus": [],
         "thermals": [
             {
-                "name": "Cpu temp sensor"
+                "name": "Cpu temp sensor",
+                "controllable": false
             },
             {
-                "name": "Center back"
+                "name": "Center back",
+                "controllable": false
             },
             {
-                "name": "Fap0 core0"
+                "name": "Fap0 core0",
+                "controllable": false
             },
             {
                 "name": "Fap0 core1"
+                "controllable": false
             },
             {
-                "name": "PCIE"
+                "name": "PCIE",
+                "controllable": false
             },
             {
-                "name": "Cpu SBTSI"
+                "name": "Cpu SBTSI",
+                "controllable": false
             }
         ],
         "sfps": [
