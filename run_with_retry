@@ -1,3 +1,5 @@
+#!/bin/bash
+
 run_with_retry(){
     [ $SONIC_BUILD_RETRY_COUNT -lt 0 ] && SONIC_BUILD_RETRY_COUNT=0
     [[ "$*" == "" ]] && { echo "run_with_retry: input command can't be empty." 1>&2;exit 1; }
@@ -7,4 +9,4 @@ run_with_retry(){
         "$@" && break
     done
 }
-
+run_with_retry "$@"
