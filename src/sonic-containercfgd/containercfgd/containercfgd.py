@@ -1,6 +1,5 @@
 import os
 import re
-import shlex
 import signal
 import subprocess
 import sys
@@ -29,7 +28,7 @@ def run_command(command):
     :param command: Shell command string.
     :return: Output of the shell command.
     """
-    return subprocess.check_output(shlex.split(command), text=True, stderr=subprocess.PIPE)
+    return subprocess.check_output(command, text=True, stderr=subprocess.PIPE)
 
 
 class ContainerConfigDaemon(daemon_base.DaemonBase):
@@ -150,10 +149,11 @@ class SyslogHandler:
         if os.path.exists(self.TMP_SYSLOG_CONF_PATH):
             os.remove(self.TMP_SYSLOG_CONF_PATH)
         with open(self.TMP_SYSLOG_CONF_PATH, 'w+') as f:
-            output = run_command('sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{{\\"target_ip\\": \\"{}\\", \\"container_name\\": \\"{}\\" }}"'.format(self.target_ip, container_name))
+            json_args = f'{{"target_ip": "127.0.0.1", "{self.target_ip}": "{container_name}" }}'
+            output = run_command(['sonic-cfggen', '-d', '-t', '/usr/share/sonic/templates/rsyslog-container.conf.j2', '-a', json_args])
             f.write(output)
-        run_command('cp {} {}'.format(self.TMP_SYSLOG_CONF_PATH, self.SYSLOG_CONF_PATH))
-        run_command("supervisorctl restart rsyslogd")
+        run_command(['cp', self.TMP_SYSLOG_CONF_PATH, self.SYSLOG_CONF_PATH])
+        run_command(['supervisorctl', 'restart', 'rsyslogd'])
         self.current_interval = new_interval
         self.current_burst = new_burst
 
