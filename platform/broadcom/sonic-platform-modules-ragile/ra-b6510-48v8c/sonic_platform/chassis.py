@@ -7,7 +7,7 @@
 try:
     import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
-    from rgutil.logutil import Logger
+    #from rgutil.logutil import Logger
     from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
