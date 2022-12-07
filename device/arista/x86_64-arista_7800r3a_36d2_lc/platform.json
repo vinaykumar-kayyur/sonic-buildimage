@@ -1,7 +1,17 @@
 {
     "chassis": {
         "name": "7800R3A-36DM2-LC",
-        "components": [],
+        "components": [
+            {
+                "name": "Aboot()"
+            },
+            {
+                "name": "Scd(addr=0000:00:18.7)"
+            },
+            {
+                "name": "Scd(addr=0000:08:00.0)"
+            }
+        ],
         "fans": [],
         "fan_drawers": [],
         "psus": [],
