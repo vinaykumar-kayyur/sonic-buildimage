@@ -33,7 +33,7 @@ PLATFORM_PATH := platform/$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))
 PLATFORM_CHECKOUT := platform/checkout
 PLATFORM_CHECKOUT_FILE := $(PLATFORM_CHECKOUT)/$(PLATFORM).ini
 PLATFORM_CHECKOUT_CMD := $(shell if [ -f $(PLATFORM_CHECKOUT_FILE) ]; then PLATFORM_PATH=$(PLATFORM_PATH) j2 $(PLATFORM_CHECKOUT)/template.j2 $(PLATFORM_CHECKOUT_FILE); fi)
-MAKE_WITH_RETRY := ./run_with_retry $(MAKE)
+MAKE_WITH_RETRY := ./scripts/run_with_retry $(MAKE)
 
 %::
 	@echo "+++ --- Making $@ --- +++"
