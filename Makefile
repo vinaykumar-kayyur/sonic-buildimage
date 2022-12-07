@@ -49,7 +49,7 @@ endif
 ifeq ($(NOBULLSEYE), 0)
 	$(MAKE_WITH_RETRY) BLDENV=bullseye -f Makefile.work $@
 endif
-	$(MAKE_WITH_RETRY) BLDENV=bullseye -f Makefile.work docker-cleanup
+	BLDENV=bullseye $(MAKE) -f Makefile.work docker-cleanup
 
 jessie:
 	@echo "+++ Making $@ +++"
