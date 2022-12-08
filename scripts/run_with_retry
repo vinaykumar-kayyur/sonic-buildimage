@@ -5,7 +5,12 @@ run_with_retry(){
     [[ "$*" == "" ]] && { echo "run_with_retry: input command can't be empty." 1>&2;exit 1; }
     for ((i=0; i<=$SONIC_BUILD_RETRY_COUNT; i++))
     do
-        [[ $i != 0 ]] && { echo "================================================================================================" 1>&2; echo "Waiting $SONIC_BUILD_RETRY_INTERVAL to run again, $i/$SONIC_BUILD_RETRY_COUNT" 1>&2; echo "================================================================================================" 1>&2; sleep $SONIC_BUILD_RETRY_INTERVAL; }
+        if [[ $i != 0 ]];then
+            echo "==============================================================================" 1>&2
+            echo "Waiting $SONIC_BUILD_RETRY_INTERVAL to run again, $i/$SONIC_BUILD_RETRY_COUNT" 1>&2
+            echo "==============================================================================" 1>&2
+            sleep $SONIC_BUILD_RETRY_INTERVAL
+        done
         "$@" && break
     done
 }
