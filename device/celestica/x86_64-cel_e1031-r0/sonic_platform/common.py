@@ -185,7 +185,11 @@ class Common:
         return True
 
     def is_host(self):
-        return subprocess.call(self.HOST_CHK_CMD) == 0
+        try:
+            subprocess.call(HOST_CHK_CMD, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            return False
+        return True
 
     def load_json_file(self, path):
         """

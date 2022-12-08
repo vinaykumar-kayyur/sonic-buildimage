@@ -14,7 +14,11 @@ class APIHelper():
         pass
 
     def is_host(self):
-        return subprocess.call(HOST_CHK_CMD) == 0
+        try:
+            subprocess.call(HOST_CHK_CMD, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            return False
+        return True
 
     def pci_get_value(self, resource, offset):
         status = True
