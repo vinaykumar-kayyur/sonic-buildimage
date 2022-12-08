@@ -1,17 +1,7 @@
 {
     "chassis": {
         "name": "DCS-7800-SUP1A",
-        "components": [
-            {
-                "name": "Aboot()"
-            },
-            {
-                "name": "Scd(addr=0000:00:18.7)"
-            },
-            {
-                "name": "Scd(addr=0000:08:00.0)"
-            }
-        ],
+        "components": [],
         "fans": [],
         "fan_drawers": [],
         "psus": [
