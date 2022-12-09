@@ -10,7 +10,7 @@ run_with_retry(){
             echo "Waiting $SONIC_BUILD_RETRY_INTERVAL to run again, $i/$SONIC_BUILD_RETRY_COUNT" 1>&2
             echo "==============================================================================" 1>&2
             sleep $SONIC_BUILD_RETRY_INTERVAL
-        done
+        fi
         "$@" && break
     done
 }
