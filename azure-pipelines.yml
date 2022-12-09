@@ -53,7 +53,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
@@ -169,22 +169,22 @@ stages:
     pool:
       vmImage: 'ubuntu-20.04'
     displayName: "kvmtest-t0 by TestbedV2"
-    timeoutInMinutes: 1080
+    timeoutInMinutes: 240
     condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
     continueOnError: false
     steps:
     - template: .azure-pipelines/run-test-scheduler-template.yml
       parameters:
         TOPOLOGY: t0
-        MIN_WORKER: 2
-        MAX_WORKER: 3
+        MIN_WORKER: $(T0_INSTANCE_NUM)
+        MAX_WORKER: $(T0_INSTANCE_NUM)
         MGMT_BRANCH: 202205
 
   - job: t0_2vlans_testbedv2
     pool:
       vmImage: 'ubuntu-20.04'
     displayName: "kvmtest-t0-2vlans by TestbedV2"
-    timeoutInMinutes: 1080
+    timeoutInMinutes: 240
     condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
     continueOnError: false
     steps:
@@ -192,7 +192,8 @@ stages:
       parameters:
         TOPOLOGY: t0
         TEST_SET: t0-2vlans
-        MAX_WORKER: 1
+        MIN_WORKER: $(T0_2VLANS_INSTANCE_NUM)
+        MAX_WORKER: $(T0_2VLANS_INSTANCE_NUM)
         DEPLOY_MG_EXTRA_PARAMS: "-e vlan_config=two_vlan_a"
         MGMT_BRANCH: 202205
 
@@ -245,15 +246,15 @@ stages:
     pool:
       vmImage: 'ubuntu-20.04'
     displayName: "kvmtest-t1-lag by TestbedV2"
-    timeoutInMinutes: 600
+    timeoutInMinutes: 240
     condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
     continueOnError: false
     steps:
     - template: .azure-pipelines/run-test-scheduler-template.yml
       parameters:
         TOPOLOGY: t1-lag
-        MIN_WORKER: 2
-        MAX_WORKER: 3
+        MIN_WORKER: $(T1_LAG_INSTANCE_NUM)
+        MAX_WORKER: $(T1_LAG_INSTANCE_NUM)
         MGMT_BRANCH: 202205
 
   - job:
@@ -287,6 +288,7 @@ stages:
     pool: sonictest-sonic-t0
     displayName: "kvmtest-t0-sonic"
     timeoutInMinutes: 360
+    condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_CLASSICAL_TEST, 'YES'))
 
     steps:
     - template: .azure-pipelines/run-test-template.yml
@@ -296,3 +298,38 @@ stages:
         ptf_name: ptf_vms6-1
         tbtype: t0-sonic
         vmtype: vsonic
+
+  - job: sonic_t0_testbedv2
+    displayName: "kvmtest-t0-sonic by TestbedV2"
+    pool:
+      vmImage: 'ubuntu-20.04'
+    timeoutInMinutes: 240
+    condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
+    continueOnError: false
+    steps:
+      - template: .azure-pipelines/run-test-scheduler-template.yml
+        parameters:
+          TOPOLOGY: t0-64-32
+          MIN_WORKER: $(T0_SONIC_INSTANCE_NUM)
+          MAX_WORKER: $(T0_SONIC_INSTANCE_NUM)
+          TEST_SET: t0-sonic
+          COMMON_EXTRA_PARAMS: "--neighbor_type=sonic --enable_macsec --macsec_profile=128_SCI,256_XPN_SCI"
+          VM_TYPE: vsonic
+          SPECIFIED_PARAMS: '{\"test_pretest.py\":[\"--completeness_level=confident\",\"--allow_recover\"],\"test_posttest.py\":[\"--completeness_level=confident\",\"--allow_recover\"]}'
+          MGMT_BRANCH: 202205
+
+  - job: dualtor_testbedv2
+    pool:
+      vmImage: 'ubuntu-20.04'
+    displayName: "kvmtest-dualtor-t0 by TestbedV2"
+    timeoutInMinutes: 240
+    condition: and(succeeded(), eq(variables.BUILD_IMG_RUN_TESTBEDV2_TEST, 'YES'))
+    continueOnError: false
+    steps:
+      - template: .azure-pipelines/run-test-scheduler-template.yml
+        parameters:
+          TOPOLOGY: dualtor
+          MIN_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
+          MAX_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
+          COMMON_EXTRA_PARAMS: "--disable_loganalyzer "
+          MGMT_BRANCH: 202205
