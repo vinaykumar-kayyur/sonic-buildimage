@@ -19,11 +19,11 @@
     },
     "RADIUS_SERVER_INVALID_TIMEOUT_TEST" : {
         "desc": "Radius server configuration with invalid timeout value in RADIUS_SERVER table.",
-        "eStr": "RADIUS timeout must be 1..60"
+        "eStr": "RADIUS timeout must be 1..60."
     },
     "RADIUS_SERVER_INVALID_RETRANSMIT_TEST" : {
         "desc": "Radius server configuration with invalid retransmit value in RADIUS_SERVER table.",
-        "eStr": "RADIUS retransmit must be 0..10"
+        "eStr": "RADIUS retransmit must be 0..10."
     },
     "RADIUS_SERVER_INVALID_AUTH_TYPE_TEST" : {
         "desc": "Radius server configuration with invalid auth type in RADIUS_SERVER table.",
