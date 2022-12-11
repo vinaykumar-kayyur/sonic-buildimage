@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
 from plat_hal.devicebase import devicebase
 from plat_hal.sensor import sensor
 

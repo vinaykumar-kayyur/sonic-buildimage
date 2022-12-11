@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-"""smbus2 - A drop-in replacement for smbus-cffi/smbus-python"""
+# smbus2 - A drop-in replacement for smbus-cffi/smbus-python
 # The MIT License (MIT)
 # Copyright (c) 2017 Karl-Petter Lindegaard
 #

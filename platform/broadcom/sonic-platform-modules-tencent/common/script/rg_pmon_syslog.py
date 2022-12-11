@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: UTF-8 -*-
-
 #   * onboard interval check
 #   * FAN trays
 #   * PSU

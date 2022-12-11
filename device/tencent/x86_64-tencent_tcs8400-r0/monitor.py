@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/python3
 #   * onboard temperature sensors
 #   * FAN trays
 #   * PSU

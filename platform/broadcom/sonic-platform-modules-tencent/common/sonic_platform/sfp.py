@@ -1,6 +1,4 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
+#!/usr/bin/python3
 #############################################################################
 #
 # Module contains an implementation of SONiC Platform Base API and

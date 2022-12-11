@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 import collections
 from bitarray import bitarray
 from datetime import datetime, timedelta

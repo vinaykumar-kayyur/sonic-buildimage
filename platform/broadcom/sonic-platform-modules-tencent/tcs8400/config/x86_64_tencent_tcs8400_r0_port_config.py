@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+#!/usr/bin/python3
 
 PLATFORM_INTF_OPTOE = {
     "port_num": 32,

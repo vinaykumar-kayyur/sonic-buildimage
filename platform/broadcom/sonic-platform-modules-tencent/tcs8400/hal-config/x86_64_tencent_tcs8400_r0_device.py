@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: UTF-8 -*-
 
 psu_fan_airflow = {
     "F2B": ["DPS-1300AB-6 F", "GW-CRPS1300D"],
