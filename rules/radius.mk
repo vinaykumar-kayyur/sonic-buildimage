@@ -1,5 +1,6 @@
 # libpam-radius-auth packages
 
+ifeq ($(INCLUDE_RADIUS), y)
 PAM_RADIUS_VERSION = 1.4.1-1
 
 export PAM_RADIUS_VERSION
@@ -21,4 +22,4 @@ $(LIBNSS_RADIUS)_SRC_PATH = $(SRC_PATH)/radius/nss
 SONIC_MAKE_DEBS += $(LIBNSS_RADIUS)
 
 SONIC_STRETCH_DEBS += $(LIBNSS_RADIUS)
-
+endif
