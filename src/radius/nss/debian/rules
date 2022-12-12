@@ -9,9 +9,6 @@ override_dh_fixperms:
 	chmod 755 debian/libnss-radius/usr/sbin/cache_radius
 	chmod 755 debian/libnss-radius/etc/pam_radius_auth.d
 
-override_dh_link:
-	dh_link /bin/bash /usr/bin/sonic-launch-shell
-
 override_dh_installdirs:
 	dh_installdirs
 	dh_installdirs /lib/$(DEB_HOST_MULTIARCH)/
