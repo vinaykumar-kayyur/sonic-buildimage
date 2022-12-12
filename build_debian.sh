@@ -321,6 +321,10 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
         firmware-linux-nonfree
 fi
 
+SYSLOG_PACKAGE=""
+if [ $INCLUDE_SYSLOG == y ]; then
+    SYSLOG_PACKAGE=rsyslog
+fi
 ## Pre-install the fundamental packages
 ## Note: gdisk is needed for sgdisk in install.sh
 ## Note: parted is needed for partprobe in install.sh
@@ -361,7 +365,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sysfsutils              \
     squashfs-tools          \
     grub2-common            \
-    rsyslog                 \
+    $SYSLOG_PACKAGE         \
     screen                  \
     hping3                  \
     tcptraceroute           \
@@ -467,11 +471,13 @@ EOF
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
-## Config rsyslog
-sudo augtool -r $FILESYSTEM_ROOT --autosave "
-rm /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments
-set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
-"
+if [ $INCLUDE_SYSLOG == y ]; then
+    ## Config rsyslog
+    sudo augtool -r $FILESYSTEM_ROOT --autosave "
+    rm /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments
+    set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
+    "
+fi
 
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 

@@ -27,6 +27,7 @@ link_namespace() {
 }
 {%- endif %}
 
+{% if include_syslog == "y" %}
 function updateSyslogConf()
 {
     # On multiNPU platforms, change the syslog target ip to docker0 ip to allow logs from containers
@@ -45,6 +46,8 @@ function updateSyslogConf()
         rm -rf $TMP_FILE
     fi
 }
+{%- endif %}
+
 function ebtables_config()
 {
     if [ "$DEV" ]; then
@@ -111,7 +114,9 @@ function preStartAction()
 {%- else %}
     : # nothing
 {%- endif %}
+{% if include_syslog == "y" %}
     updateSyslogConf
+{%- endif %}
 }
 
 {%- if docker_container_name == "database" %}
