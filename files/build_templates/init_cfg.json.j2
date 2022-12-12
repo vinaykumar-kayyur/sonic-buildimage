@@ -73,7 +73,7 @@
 {%- if feature in ["bgp", "swss", "pmon"] %}
             "check_up_status" : "false",
 {%- endif %}
-{%- if include_kubernetes == "y_" %}
+{%- if include_kubernetes == "y" %}
 {%- if feature in ["lldp", "pmon", "radv", "eventd", "snmp", "telemetry"] %}
             "set_owner": "kube", {% else %}
             "set_owner": "local", {% endif %} {% endif %}
