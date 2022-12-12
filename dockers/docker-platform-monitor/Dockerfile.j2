@@ -40,7 +40,8 @@ RUN pip3 install grpcio==1.39.0 \
         grpcio-tools==1.39.0
 
 # Barefoot platform vendors' sonic_platform packages import the Python 'thrift' library
-RUN pip3 install thrift==0.13.0
+RUN pip3 install thrift==0.13.0 \
+                 redfish
 
 # We install the libpci module in order to be able to do PCI transactions
 RUN pip3 install libpci
