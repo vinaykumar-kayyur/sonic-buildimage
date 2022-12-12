@@ -231,7 +231,9 @@ echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
 ## Otherwise Docker will fail to start
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
+if [ $INCLUDE_NTP == y ]; then
 sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
+fi
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
                                                        ca-certificates \
                                                        curl \
@@ -325,6 +327,11 @@ SYSLOG_PACKAGE=""
 if [ $INCLUDE_SYSLOG == y ]; then
     SYSLOG_PACKAGE=rsyslog
 fi
+NTPSTAT_PACKAGE=""
+if [ $INCLUDE_NTP == y ]; then
+    NTPSTAT_PACKAGE=ntpstat
+fi
+
 ## Pre-install the fundamental packages
 ## Note: gdisk is needed for sgdisk in install.sh
 ## Note: parted is needed for partprobe in install.sh
@@ -341,7 +348,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     vim                     \
     tcpdump                 \
     dbus                    \
-    ntpstat                 \
+    $NTPSTAT_PACKAGE        \
     openssh-server          \
     python3-apt             \
     traceroute              \
@@ -425,11 +432,16 @@ sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
 sudo LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT update-locale "LANG=en_US.UTF-8"
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -name 'en_US' -type f -exec rm -f {} +"
 
+NTP_PACKAGE=""
+if [ $INCLUDE_NTP == y ]; then
+    NTP_PACKAGE=ntpstat
+fi
+
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
     picocom \
     systemd \
-    systemd-sysv \
-    ntp
+    $NTP_PACKAGE \
+    systemd-sysv
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
@@ -537,13 +549,17 @@ sudo cp files/dhcp/sethostname6 $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+if [ $INCLUDE_NTP == y ]; then
 if [ -f files/image_config/ntp/ntp ]; then
     sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
 fi
+fi
 
+if [ $INCLUDE_NTP == y ]; then
 if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
     sudo mkdir -p $FILESYSTEM_ROOT/usr/lib/ntp/
     sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
+fi
 fi
 
 ## Version file

@@ -1,5 +1,6 @@
 # ntp package
 
+ifeq ($(INCLUDE_NTP), y)
 NTP_VERSION = 4.2.8p15+dfsg
 export NTP_VERSION
 
@@ -9,3 +10,4 @@ SONIC_MAKE_DEBS += $(NTP)
 SONIC_STRETCH_DEBS += $(NTP)
 
 export NTP
+endif

@@ -259,3 +259,9 @@ INCLUDE_SYSLOG = y
 
 # INCLUDE_RADIUS - build and install radius package
 INCLUDE_RADIUS = y
+# INCLUDE_NTP:
+#   * build ntp_*.deb from src/ntp
+#   * install ntp_*.deb
+#   * install ntp/ntpstat (build_debian.sh)
+#   * copy files from files/image_config/ntp (build_debian.sh, sonic_debian_extension.sh)
+INCLUDE_NTP = y
