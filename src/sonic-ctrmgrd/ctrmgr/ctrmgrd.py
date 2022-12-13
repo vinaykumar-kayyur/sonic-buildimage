@@ -99,6 +99,8 @@ remote_ctr_config = {
     USE_K8S_PROXY: ""
     }
 
+ENABLED_FEATURE_SET = {"telemetry", "snmp"}
+
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
     syslog.syslog(syslog.LOG_DEBUG, msg)
@@ -259,6 +261,8 @@ class MainServer:
             for subscriber in self.subscribers:
                 key, op, fvs = subscriber.pop()
                 if not key:
+                    continue
+                if subscriber.getTableName() == FEATURE_TABLE and key not in ENABLED_FEATURE_SET:
                     continue
                 log_debug("Received message : '%s'" % str((key, op, fvs)))
                 for callback in (self.callbacks
