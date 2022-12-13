@@ -1,0 +1,22 @@
+{
+    "DASH_VNET_TABLE_WITH_CORRECT_CONFIG": {
+        "desc": "DASH TABLE WITH VALID CONFIG."
+    },
+    "DASH_ENI_TABLE_WITH_CORRECT_CONFIG": {
+        "desc": "DASH TABLE WITH VALID CONFIG."
+    },
+    "DASH_MAPPING_TABLE_WITH_INCORRECT_VNI": {
+        "desc": "DASH TABLE_WITH_INCORRECT_VNI failure.",
+        "eStr": ["Value", "does not satisfy the constraint"]
+    },
+    "DASH_ROUTE_TABLE_WITH_INCORRECT_IPPREFIX": {
+        "desc": "DASH TABLE_WITH_INCORRECT_PREFIX failure.",
+        "eStr": ["Value", "does not satisfy the constraint"]
+    },
+    "DASH_MAPPING_TABLE_WITH_VALID_CONFIG": {
+        "desc": "DASH TABLE WITH VALID CONFIG."
+    },
+    "DASH_ROUTE_TABLE_WITH_VALID_CONFIG": {
+        "desc": "DASH TABLE WITH VALID CONFIG."
+    }
+}
