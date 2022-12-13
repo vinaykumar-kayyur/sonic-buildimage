@@ -265,3 +265,28 @@ INCLUDE_RADIUS = y
 #   * install ntp/ntpstat (build_debian.sh)
 #   * copy files from files/image_config/ntp (build_debian.sh, sonic_debian_extension.sh)
 INCLUDE_NTP = y
+
+# INCLUDE_LLDP - build docker-lldp for LLDP support
+INCLUDE_LLDP = y
+
+# INCLUDE_SNMP - build docker-smnp for SNMP support
+INCLUDE_DOCKER_SNMP = y
+
+# INCLUDE_TEAMD - build docker-teamd for teamd support
+INCLUDE_TEAMD = y
+
+# INCLUDE_ROUTER_ADVERTISER - build docker-radv for router advertiser support
+INCLUDE_ROUTER_ADVERTISER = y
+
+# INCLUDE_BGP - build docker-fmp-frr for BGP support
+INCLUDE_BGP = y
+
+# INCLUDE_SWSS - build docker-swss for orchagent support
+INCLUDE_SWSS = y
+
+# INCLUDE_PMON - build docker-platform-monitor
+INCLUDE_PMON = y
+
+# INCLUDE_DATABASE - build docker-database for redis db support
+INCLUDE_DATABASE = y
+
