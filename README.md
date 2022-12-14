@@ -85,7 +85,7 @@ Any server can be a build image server as long as it has:
   * Plenty of RAM (less than 8 GiB is likely to cause issues)
   * 300G of free disk space
   * KVM Virtualization Support.
-> Note: If you are in a VM, make sure you have support for nested virtualization.
+> Note: If you are using an external drive (HDD/SSD) then make sure the drive is ext4 formatted. Moreover, If you are in a VM, make sure you have support for nested virtualization.
 
 A good choice of OS for building SONiC is currently Ubuntu 20.04.
 
@@ -94,9 +94,25 @@ A good choice of OS for building SONiC is currently Ubuntu 20.04.
  * Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available:
 
 ```
-sudo apt install -y python3-pip
-sudo pip3 install j2cli
+    sudo apt install -y python3-pip
+    sudo pip3 install j2cli
 ```
+
+ * To install maven and jdk 
+```
+    sudo apt update
+    sudo apt install maven
+    sudo apt install openjdk-11-jdk-headless
+```
+
+* Install `zip, unzip, curl` using
+```sudo apt install zip unzip curl```
+
+* Install enum34
+```pip install enum34```
+
+* Install jinja2 using
+```pip3 install jinja2```
 
  * Install [Docker](https://docs.docker.com/engine/install/) and configure your system to allow running the 'docker' command without 'sudo':
     * Add current user to the docker group: `sudo gpasswd -a ${USER} docker`
@@ -107,6 +123,9 @@ sudo pip3 install j2cli
 To clone the code repository recursively:
 
     git clone --recurse-submodules https://github.com/sonic-net/sonic-buildimage.git
+
+## Add to path
+export path= “/var/$username/.local/bin:$PATH”
 
 ## Usage
 
@@ -124,6 +143,19 @@ To build SONiC installer image and docker images, run the following commands:
     # Execute make init once after cloning the repo, or after fetching remote repo with submodule updates
     make init
 
+    # Configure your build variables ($BUILD_VARS) on the command line or in the rules/config file. Following are some useful build variables
+
+    ● The default password for the admin user, `YourPaSsWoRd`, should be overridden with a local value.
+    
+
+    ● Setting the cache method `SONIC_DPKG_CACHE_METHOD=rwcache`, speeds up the build process (after the first time) by caching non-SONiC specific build products such as the Linux kernel.
+
+    ● If you want to enable SDN capabilities through PINS: 
+    INCLUDE_P4RT is the name in rules/config 
+        `SONIC_INCLUDE_P4RT=y`
+    
+    You can confirm $BUILD_VARS by observing the output in command-line after starting the build process.
+
     # Execute make configure once to configure ASIC
     make configure PLATFORM=[ASIC_VENDOR]
 
@@ -131,6 +163,7 @@ To build SONiC installer image and docker images, run the following commands:
     # Note: You can set this higher, but 4 is a good number for most cases
     # and is well-tested.
     make SONIC_BUILD_JOBS=4 all
+> Note: If the build process stops in the middle, try running the build with `SONIC_BUILD_JOBS=1`.
 
  The supported ASIC vendors are:
 
