@@ -5,6 +5,10 @@ module sonic-dash {
     namespace "http://github.com/Azure/sonic-dash";
     prefix dash;
 
+    import ietf-yang-types {
+        prefix yang;
+    }
+
     import ietf-inet-types {
         prefix inet;
     }
@@ -331,31 +335,27 @@ module sonic-dash {
                     }
                 }
 
-                list actions {
-                    key "name"
- 
-                    leaf name {
-                        type string {
-                            length 1..255;
-                        }
+                leaf action_name {
+                    type string {
+                        length 1..255;
                     }
+                }
 
-                    leaf action_type {
-                        type string {
-                            pattern "none|maprouting|direct|staticencap|appliance|4to6|mapdecap|decap|drop";
-                        }
+                leaf action_type {
+                    type string {
+                        pattern "none|maprouting|direct|staticencap|appliance|4to6|mapdecap|decap|drop";
                     }
+                }
 
-                    leaf encap_type {
-                        type string {
-                            pattern "vxlan|nvgre";
-                        }
+                leaf encap_type {
+                    type string {
+                        pattern "vxlan|nvgre";
                     }
+                }
 
-                    leaf vni {
-                        type  uint32 {
-                            range 1..16777215;
-                        }
+                leaf vni {
+                    type  uint32 {
+                        range 1..16777215;
                     }
                 }
 
@@ -385,45 +385,45 @@ module sonic-dash {
                 }
 
                 leaf vnet {
-                    when "((current()/../routing_type = 'vnet') or (current()/../routing_type = 'vnet-direct'))";
+                    when "((current()/../action_type = 'vnet') or (current()/../action_type = 'vnet-direct'))";
                     type leafref {
                         path /dash:sonic-dash/dash:DASH_VNET/dash:DASH_VNET_LIST/dash:name;
                     }
                 }
 
                 leaf appliance {
-                    when "(current()/../routing_type = 'appliance')";
+                    when "(current()/../action_type = 'appliance')";
                     type leafref {
                         path /dash:sonic-dash/dash:DASH_APPLIANCE/dash:DASH_APPLIANCE_LIST/dash:name;
                     }
                 }
 
                 leaf overlay_ip {
-                    when "((current()/../routing_type = 'vnet') or (current()/../routing_type = 'vnet-direct'))";
+                    when "((current()/../action_type = 'vnet') or (current()/../action_type = 'vnet-direct'))";
                     description "Overlay IP to use for mapping lookup, if routing_type is vnet-direct";
                     type inet:ip-address;
                 }
 
                 leaf overlay_sip {
-                    when "(current()/../routing_type = 'servicetunnel')";
+                    when "(current()/../action_type = 'servicetunnel')";
                     description "Overlay src ip for service tunnel";
                     type inet:ip-address;
                 }
 
                 leaf overlay_dip {
-                    when "(current()/../routing_type = 'servicetunnel')";
+                    when "(current()/../action_type = 'servicetunnel')";
                     description "Overlay dst ip for service tunnel";
                     type inet:ip-address;
                 }
 
                 leaf underlay_sip {
-                    when "(current()/../routing_type = 'servicetunnel')";
+                    when "(current()/../action_type = 'servicetunnel')";
                     description "Underlay src ip for service tunnel";
                     type inet:ip-address;
                 }
 
                 leaf underlay_dip{
-                    when "(current()/../routing_type = 'servicetunnel')";
+                    when "(current()/../action_type = 'servicetunnel')";
                     description "Underlay dst ip for service tunnel";
                     type inet:ip-address;
                 }
