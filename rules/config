@@ -160,8 +160,18 @@ ENABLE_AUTO_TECH_SUPPORT = y
 # Uncomment to enable:
 # ENABLE_TRANSLIB_WRITE = y
 
+# ENABLE_NATIVE_WRITE - Enable native write/config operations via the gNMI interface.
+# Uncomment to enable:
+# ENABLE_NATIVE_WRITE = y
+
 # INCLUDE_MACSEC - build docker-macsec for macsec support
 INCLUDE_MACSEC = y
+
+# INCLUDE_TEAMD - build docker-teamd for LAG protocol support
+INCLUDE_TEAMD ?= y
+
+# INCLUDE_ROUTER_ADVERTISER - build docker-router-advertiser for router advertisements support
+INCLUDE_ROUTER_ADVERTISER ?= y
 
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
@@ -224,6 +234,15 @@ TRUSTED_GPG_URLS = https://packages.trafficmanager.net/debian/public_key.gpg,htt
 #   git   : git repositories, donloaded by git clone
 #   docker: docker base images
 SONIC_VERSION_CONTROL_COMPONENTS ?= none
+
+# SONIC_VERSION_CACHE allows the .deb,.py, wget, git, docker and go files to be stored in the cache path. This allows the submodules to
+# cache standard installation package and restored back to avoid the package download every time.
+# SONIC_VERSION_CACHE - Method of deb package caching
+#	none    :  no caching
+#	cache   :  Use cache if exists else build the source and update the cache
+# SONIC_VERSION_CACHE_SOURCE - Defines the version cache location details
+SONIC_VERSION_CACHE_METHOD ?= none
+SONIC_VERSION_CACHE_SOURCE ?= $(SONIC_DPKG_CACHE_SOURCE)/vcache
 
 # SONiC docker registry
 #
