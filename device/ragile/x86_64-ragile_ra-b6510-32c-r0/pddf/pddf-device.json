@@ -4188,7 +4188,7 @@
     }
   },
 
-  "FANTRAY1_LED": {
+  "FAN1_LED": {
     "dev_info": {
       "device_type": "LED",
       "device_name": "FANTRAY_LED"
@@ -4257,7 +4257,7 @@
     }
   },
 
-  "FANTRAY2_LED": {
+  "FAN2_LED": {
     "dev_info": {
       "device_type": "LED",
       "device_name": "FANTRAY_LED"
@@ -4326,7 +4326,7 @@
     }
   },
 
-  "FANTRAY3_LED": {
+  "FAN3_LED": {
     "dev_info": {
       "device_type": "LED",
       "device_name": "FANTRAY_LED"
@@ -4395,7 +4395,7 @@
     }
   },
 
-  "FANTRAY4_LED": {
+  "FAN4_LED": {
     "dev_info": {
       "device_type": "LED",
       "device_name": "FANTRAY_LED"
@@ -4464,7 +4464,7 @@
     }
   },
 
-  "FANTRAY5_LED": {
+  "FAN5_LED": {
     "dev_info": {
       "device_type": "LED",
       "device_name": "FANTRAY_LED"

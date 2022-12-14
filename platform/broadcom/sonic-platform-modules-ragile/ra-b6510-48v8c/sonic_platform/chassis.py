@@ -7,6 +7,7 @@
 try:
     import time
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
+    from .component import Component
     #from rgutil.logutil import Logger
     from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
@@ -27,15 +28,8 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-        
-        self.enable_read = ["i2cset", "-f", "-y", "2", "0x35", "0x2a", "0x01"]
-        self.disable_read = ["i2cset", "-f", "-y", "2", "0x35", "0x2a", "0x00"]
-        self.enable_write = ["i2cset", "-f", "-y", "2", "0x35", "0x2b", "0x00"]
-        self.disable_write = ["i2cset", "-f", "-y", "2", "0x35", "0x2b", "0x01"]
-        self.enable_erase = ["i2cset", "-f", "-y", "2", "0x35", "0x2c", "0x01"]
-        self.disable_erase = ["i2cset", "-f", "-y", "2", "0x35", "0x2c", "0x00"]
-        self.read_value = ["i2cget", "-f", "-y", "2", "0x35", "0x25"]
-        self.write_value = ["i2cset", "-f", "-y", "2", "0x35", "0x21", "0x0a"]
+        for i in range(0,3):
+            self._component_list.append(Component(i))
 
     def get_revision(self):
         val  = ord(self._eeprom.revision_str())
