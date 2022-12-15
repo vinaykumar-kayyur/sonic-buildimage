@@ -71,7 +71,8 @@ typedef enum
 /** DHCP device (interface) context */
 typedef struct
 {
-    int sock;                       /** Raw socket associated with this device/interface */
+    int rx_sock;                    /** Raw socket associated with this device/interface to count rx packets */
+    int tx_sock;                    /** Raw socket associated with this device/interface to count tx packets*/
     in_addr_t ip;                   /** network address of this device (interface) */
     uint8_t mac[ETHER_ADDR_LEN];    /** hardware address of this device (interface) */
     in_addr_t giaddr_ip;            /** Gateway IP address */
