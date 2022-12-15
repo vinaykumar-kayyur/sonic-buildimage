@@ -62,7 +62,7 @@ wait_kvm_ready()
     done
 }
 
-apt-get install -y net-tools
+DEBIAN_FRONTEND=noninteractive apt-get install -qq -y net-tools
 create_disk
 prepare_installer_disk
 

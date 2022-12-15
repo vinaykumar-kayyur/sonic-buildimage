@@ -28,7 +28,7 @@ debs/{{ deb }}{{' '}}
 {% if $3 is defined %}
 {% if $3|length %}
 
-RUN apt-get update && apt-get install -f -y \
+RUN apt-get -qq update && apt-get -qq install -f -y \
 {% for dbg in $3.split(' ') -%}
 {{ dbg }}{{' '}}
 {%- endfor %}
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -f -y \
 
 
 ## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN apt-get -qq clean -y; apt-get -qq autoclean -y; apt-get -qq autoremove -y
 RUN rm -rf /debs
 
 "

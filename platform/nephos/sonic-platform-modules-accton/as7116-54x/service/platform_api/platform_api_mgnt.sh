@@ -8,7 +8,7 @@ FILES=$DEVICE/$PLATFORM/api_files
 install() {
     # Install sonic-platform package
     if [ -e $DEVICE/$PLATFORM/sonic_platform-1.0-py2-none-any.whl ]; then
-        pip install $DEVICE/$PLATFORM/sonic_platform-1.0-py2-none-any.whl
+        pip install -q $DEVICE/$PLATFORM/sonic_platform-1.0-py2-none-any.whl
     fi
 }
 
@@ -27,7 +27,7 @@ deinit() {
 
 uninstall() {
     # Uninstall sonic-platform package
-    pip uninstall -y sonic-platform >/dev/null 2>/dev/null
+    pip uninstall -q -y sonic-platform >/dev/null 2>/dev/null
 }
 
 case "$1" in

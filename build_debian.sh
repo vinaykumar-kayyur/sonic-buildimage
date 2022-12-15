@@ -10,6 +10,13 @@
 ##   PASSWORD
 ##          The password, expected by chpasswd command
 
+pkg_install_in_chroot ()
+{
+    chroot_path=$1
+    pkg_to_install=$2
+    sudo LANG=C chroot $chroot_path /bin/sh -c "DEBIAN_FRONTEND=noninteractive apt-get -qq -y install $pkg_to_install"
+}
+
 ## Default user
 [ -n "$USERNAME" ] || {
     echo "Error: no or empty USERNAME"
@@ -116,16 +123,17 @@ sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until,apt-multiple-retries} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
 ## Note: set lang to prevent locale warnings in your chroot
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c '
+    DEBIAN_FRONTEND=noninteractive apt-get -qq -y update
+    DEBIAN_FRONTEND=noninteractive apt-get -qq -y upgrade'
 
 echo '[INFO] Install and setup eatmydata'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
+pkg_install_in_chroot $FILESYSTEM_ROOT "eatmydata"
 sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
 echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
 
 echo '[INFO] Install packages for building image'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
+pkg_install_in_chroot $FILESYSTEM_ROOT "makedev psmisc"
 
 if [[ $CROSS_BUILD_ENVIRON == y ]]; then
     sudo LANG=C chroot $FILESYSTEM_ROOT dpkg --add-architecture $CONFIGURED_ARCH
@@ -144,18 +152,18 @@ fi
 ## 2. mount supports squashfs
 ## However, 'dpkg -i' plus 'apt-get install -f' will ignore the recommended dependency. So
 ## we install busybox explicitly
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox linux-base
+pkg_install_in_chroot $FILESYSTEM_ROOT "busybox linux-base"
 echo '[INFO] Install SONiC linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+    pkg_install_in_chroot $FILESYSTEM_ROOT "-f"
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+    pkg_install_in_chroot $FILESYSTEM_ROOT "-f"
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-*_${CONFIGURED_ARCH}.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
+    pkg_install_in_chroot $FILESYSTEM_ROOT "-f"
+pkg_install_in_chroot $FILESYSTEM_ROOT "acl"
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
+	pkg_install_in_chroot $FILESYSTEM_ROOT "dmidecode hdparm"
 fi
 
 ## Sign the Linux kernel
@@ -229,33 +237,32 @@ if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
 fi
 
 ## Add mtd and uboot firmware tools package
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools libubootenv-tool mtd-utils device-tree-compiler
+pkg_install_in_chroot $FILESYSTEM_ROOT "u-boot-tools libubootenv-tool mtd-utils device-tree-compiler"
 
 ## Install docker
 echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
 ## Otherwise Docker will fail to start
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
+pkg_install_in_chroot $FILESYSTEM_ROOT "apparmor"
 sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
-                                                       ca-certificates \
-                                                       curl \
-                                                       gnupg2 \
-                                                       software-properties-common
+pkg_install_in_chroot $FILESYSTEM_ROOT "apt-transport-https \
+                                        ca-certificates \
+                                        curl \
+                                        gnupg2 \
+                                        software-properties-common"
 if [[ $CONFIGURED_ARCH == armhf ]]; then
     # update ssl ca certificates for secure pem
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
 fi
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
-sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
-sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
-                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
-
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c "
+mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
+add-apt-repository \"deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable\"
+DEBIAN_FRONTEND=noninteractive apt-get -qq update
+DEBIAN_FRONTEND=noninteractive apt-get -y -qq install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
+DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove software-properties-common gnupg2 python3-gi"
 # Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
 # pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
 install_kubernetes () {
     local ver="$1"
@@ -264,10 +271,9 @@ install_kubernetes () {
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${ver}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${ver}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${ver}
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c "
+         DEBIAN_FRONTEND=noninteractive apt-get -qq update
+         DEBIAN_FRONTEND=noninteractive apt-get -y -qq install kubelet=${ver} kubectl=${ver} kubeadm=${ver}"
 }
 
 if [ "$INCLUDE_KUBERNETES" == "y" ]
@@ -275,7 +281,7 @@ then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
     install_kubernetes ${KUBERNETES_VERSION}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
+    pkg_install_in_chroot $FILESYSTEM_ROOT "kubernetes-cni=${KUBERNETES_CNI_VERSION}"
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
@@ -285,23 +291,18 @@ then
     ## Install Kubernetes master
     echo '[INFO] Install kubernetes master'
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
-    
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.microsoft.com/keys/microsoft.asc | \
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.microsoft.com/keys/msopentech.asc | \
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main" | \
-        sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/azure.list
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install metricsext2
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
+
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c "
+        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+        curl -fsSL https://packages.microsoft.com/keys/msopentech.asc | apt-key add -
+	echo \"deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main\" >/etc/apt/sources.list.d/azure.list
+        curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb 
-    sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/cri-dockerd.deb
+        DEBIAN_FRONTEND=noninteractive apt-get -qq update
+        DEBIAN_FRONTEND=noninteractive apt-get -y -qq install hyperv-daemons gnupg xmlstarlet metricsext2
+        DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove gnupg
+        DEBIAN_FRONTEND=noninteractive apt-get -y -qq install -f /tmp/cri-dockerd.deb
+        rm -f /tmp/cri-dockerd.deb"
 else
     echo '[INFO] Skipping Install kubernetes master'
 fi
@@ -323,8 +324,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
-        firmware-linux-nonfree
+    pkg_install_in_chroot $FILESYSTEM_ROOT "firmware-linux-nonfree"
 fi
 
 ## Pre-install the fundamental packages
@@ -333,8 +333,7 @@ fi
 ## Note: ca-certificates is needed for easy_install
 ## Note: don't install python-apt by pip, older than Debian repo one
 ## Note: fdisk and gpg are needed by fwutil
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    file                    \
+pkg_install_in_chroot $FILESYSTEM_ROOT "file \
     ifmetric                \
     iproute2                \
     bridge-utils            \
@@ -390,11 +389,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     gpg                     \
     jq                      \
     auditd                  \
-    linux-perf
+    linux-perf"
 
 # default rsyslog version is 8.2110.0 which has a bug on log rate limit,
 # use backport version
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -t bullseye-backports -y install rsyslog
+pkg_install_in_chroot $FILESYSTEM_ROOT "-t bullseye-backports rsyslog"
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
@@ -406,8 +405,7 @@ EOF
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    rasdaemon
+pkg_install_in_chroot $FILESYSTEM_ROOT "rasdaemon"
 fi
 
 ## Set /etc/shadow permissions to -rw-------.
@@ -430,11 +428,7 @@ sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
 sudo LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT update-locale "LANG=en_US.UTF-8"
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -name 'en_US' -type f -exec rm -f {} +"
 
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
-    picocom \
-    systemd \
-    systemd-sysv \
-    ntp
+pkg_install_in_chroot $FILESYSTEM_ROOT "picocom systemd systemd-sysv ntp"
 
 if [[ $TARGET_BOOTLOADER == grub ]]; then
     if [[ $CONFIGURED_ARCH == amd64 ]]; then
@@ -443,8 +437,7 @@ if [[ $TARGET_BOOTLOADER == grub ]]; then
         GRUB_PKG=grub-efi-arm64-bin
     fi
 
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -d -o dir::cache=/var/cache/apt \
-        $GRUB_PKG
+    pkg_install_in_chroot $FILESYSTEM_ROOT "-d -o dir::cache=/var/cache/apt $GRUB_PKG"
 
     sudo cp $FILESYSTEM_ROOT/var/cache/apt/archives/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 fi
@@ -513,23 +506,17 @@ done < files/image_config/sysctl/sysctl-net.conf
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 # Upgrade pip via PyPI and uninstall the Debian version
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python3-pip
-
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c '
+pip3 install -q --upgrade pip
+DEBIAN_FRONTEND=noninteractive apt-get -qq purge -y python3-pip
+pip3 install -q setuptools==49.6.00 wheel==0.35.1 docker==5.0.3 scapy==2.4.4'
 # For building Python packages
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setuptools==49.6.00'
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
-
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
-
-# Install scapy
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
 
 ## Note: keep pip installed for maintainance purpose
 
 # Install GCC, needed for building/installing some Python packages
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc
+pkg_install_in_chroot $FILESYSTEM_ROOT "gcc"
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -643,23 +630,24 @@ SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
 	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c 'DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove gcc'
 
 # Remove eatmydata
 sudo rm $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata $FILESYSTEM_ROOT/usr/local/bin/dpkg
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove eatmydata
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c 'DEBIAN_FRONTEND=noninteractive apt-get -qq -y remove eatmydata'
 
 ## Clean up apt
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get clean
-sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/sh -c '
+    DEBIAN_FRONTEND=noninteractive apt-get -qq -y autoremove
+    DEBIAN_FRONTEND=noninteractive apt-get -qq autoclean
+    DEBIAN_FRONTEND=noninteractive apt-get -qq clean
+    rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
 
 ## Clean up proxy
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
 
 ## Clean up pip cache
-sudo LANG=C chroot $FILESYSTEM_ROOT pip3 cache purge
+sudo LANG=C chroot $FILESYSTEM_ROOT pip3 -q cache purge
 
 ## Umount all
 echo '[INFO] Umount all'
