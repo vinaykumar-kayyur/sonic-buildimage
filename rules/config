@@ -270,7 +270,7 @@ INCLUDE_NTP = y
 INCLUDE_LLDP = y
 
 # INCLUDE_SNMP - build docker-smnp for SNMP support
-INCLUDE_DOCKER_SNMP = y
+INCLUDE_SNMP = y
 
 # INCLUDE_TEAMD - build docker-teamd for teamd support
 INCLUDE_TEAMD = y
