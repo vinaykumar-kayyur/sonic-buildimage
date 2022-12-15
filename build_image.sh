@@ -71,12 +71,12 @@ generate_onie_installer_image()
     output_file=$OUTPUT_ONIE_IMAGE
     [ -n "$1" ] && output_file=$1
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
-    rm -rf ./installer/${TARGET_PLATFORM}/platforms/
-    mkdir -p ./installer/${TARGET_PLATFORM}/platforms/
+    rm -rf ./installer/platforms/
+    mkdir -p ./installer/platforms/
     for VENDOR in `ls ./device`; do
         for PLATFORM in `ls ./device/$VENDOR | grep ^${TARGET_PLATFORM}`; do
             if [ -f ./device/$VENDOR/$PLATFORM/installer.conf ]; then
-                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/${TARGET_PLATFORM}/platforms/$PLATFORM
+                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/platforms/$PLATFORM
             fi
 
         done
@@ -191,6 +191,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $ABOOT_BOOT_IMAGE .imagehash
     rm .imagehash
     echo "SWI_VERSION=42.0.0" > version
+    echo "BUILD_DATE=$(date -d "${build_date}" -u +%Y%m%dT%H%M%SZ)" >> version
     echo "SWI_MAX_HWEPOCH=2" >> version
     echo "SWI_VARIANT=US" >> version
     zip -g $OUTPUT_ABOOT_IMAGE version

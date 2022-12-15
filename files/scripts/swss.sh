@@ -9,8 +9,6 @@ LOCKFILE="/tmp/swss-syncd-lock$DEV"
 NAMESPACE_PREFIX="asic"
 ETC_SONIC_PATH="/etc/sonic/"
 
-DEPENDENT="radv bgp"
-MULTI_INST_DEPENDENT="teamd"
 
 . /usr/local/bin/asic_status.sh
 
@@ -28,7 +26,7 @@ function read_dependent_services()
     fi
 
     if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent ]]; then
-        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent"
+        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} $(cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent)"
     fi
 }
 
@@ -297,8 +295,6 @@ stop() {
 
 function check_peer_gbsyncd()
 {
-    PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
-    HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
     GEARBOX_CONFIG=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/gearbox_config.json
 
     if [ -f $GEARBOX_CONFIG ]; then
@@ -306,15 +302,74 @@ function check_peer_gbsyncd()
     fi
 }
 
+function check_macsec()
+{
+    MACSEC_STATE=`$SONIC_DB_CLI CONFIG_DB hget 'FEATURE|macsec' state`
+
+    if [[ ${MACSEC_STATE} == 'enabled' ]]; then
+        if [ "$DEV" ]; then
+            DEPENDENT="${DEPENDENT} macsec@${DEV}"
+        else
+            DEPENDENT="${DEPENDENT} macsec"
+        fi
+    fi
+}
+
+function check_ports_present()
+{
+    PORT_CONFIG_INI=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/port_config.ini
+    HWSKU_JSON=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/hwsku.json
+
+    if [[ -f $PORT_CONFIG_INI ]] || [[ -f $HWSKU_JSON ]]; then
+         return 0
+    fi
+    return 1
+}
+
+function check_service_exists()
+{
+    systemctl list-units --full -all 2>/dev/null | grep -Fq $1
+    if [[ $? -eq 0 ]]; then
+        echo true
+        return
+    else
+        echo false
+        return
+    fi
+}
+
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
+DEPENDENT=""
+MULTI_INST_DEPENDENT=""
+
+if [[ $(check_service_exists radv) == "true" ]]; then
+    DEPENDENT="$DEPENDENT radv"
+fi
+
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
+    DEPENDENT+=" bgp@${DEV}"
 else
     NET_NS=""
     SONIC_DB_CLI="sonic-db-cli"
+    DEPENDENT+=" bgp"
 fi
 
+PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
+
 check_peer_gbsyncd
+check_macsec
+
+check_ports_present
+PORTS_PRESENT=$?
+
+if [[ $PORTS_PRESENT == 0 ]] && [[ $(check_service_exists teamd) == "true" ]]; then
+    MULTI_INST_DEPENDENT="teamd"
+fi
+
 read_dependent_services
 
 case "$1" in

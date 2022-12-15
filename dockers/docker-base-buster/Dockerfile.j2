@@ -27,13 +27,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Configure data sources for apt/dpkg
 COPY ["dpkg_01_drop", "/etc/dpkg/dpkg.cfg.d/01_drop"]
-{% if CONFIGURED_ARCH == "armhf" %}
-COPY ["sources.list.armhf", "/etc/apt/sources.list"]
-{% elif CONFIGURED_ARCH == "arm64" %}
-COPY ["sources.list.arm64", "/etc/apt/sources.list"]
-{% else %}
-COPY ["sources.list", "/etc/apt/sources.list"]
-{% endif %}
+COPY ["sources.list.{{ CONFIGURED_ARCH }}", "/etc/apt/sources.list"]
 COPY ["no_install_recommend_suggest", "/etc/apt/apt.conf.d"]
 COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 
@@ -100,7 +94,7 @@ RUN pip3 install supervisor==4.2.1
 # Add support for supervisord to handle startup dependencies
 RUN pip3 install supervisord-dependent-startup==1.4.0
 
-RUN mkdir -p /etc/supervisor /var/log/supervisor
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
 
 RUN apt-get -y purge   \
     exim4              \
@@ -123,10 +117,10 @@ RUN apt-get clean -y                     && \
     apt-get autoremove -y                && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/.cache/
 
-COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
 COPY ["root/.vimrc", "/root/.vimrc"]
 
 RUN ln /usr/bin/vim.tiny /usr/bin/vim
 
 COPY ["etc/supervisor/supervisord.conf", "/etc/supervisor/"]
+COPY ["etc/supervisor/containercfgd.conf", "/etc/supervisor/conf.d/"]

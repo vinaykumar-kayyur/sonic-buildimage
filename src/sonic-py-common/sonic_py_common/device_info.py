@@ -6,7 +6,7 @@ import subprocess
 
 import yaml
 from natsort import natsorted
-
+from sonic_py_common.general import getstatusoutput_noshell_pipe
 from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
@@ -38,6 +38,10 @@ CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
 CHASSIS_INFO_SERIAL_FIELD = 'serial'
 CHASSIS_INFO_MODEL_FIELD = 'model'
 CHASSIS_INFO_REV_FIELD = 'revision'
+
+# Cacheable Objects
+sonic_ver_info = {}
+hw_info_dict = {}
 
 def get_localhost_info(field, config_db=None):
     try:
@@ -333,14 +337,17 @@ def get_sonic_version_info():
     if not os.path.isfile(SONIC_VERSION_YAML_PATH):
         return None
 
-    data = {}
+    global sonic_ver_info
+    if sonic_ver_info:
+        return sonic_ver_info
+
     with open(SONIC_VERSION_YAML_PATH) as stream:
         if yaml.__version__ >= "5.1":
-            data = yaml.full_load(stream)
+            sonic_ver_info = yaml.full_load(stream)
         else:
-            data = yaml.load(stream)
+            sonic_ver_info = yaml.load(stream)
 
-    return data
+    return sonic_ver_info
 
 def get_sonic_version_file():
     if not os.path.isfile(SONIC_VERSION_YAML_PATH):
@@ -354,9 +361,12 @@ def get_platform_info(config_db=None):
     """
     This function is used to get the HW info helper function
     """
-    from .multi_asic import get_num_asics
+    global hw_info_dict
 
-    hw_info_dict = {}
+    if hw_info_dict:
+        return hw_info_dict
+
+    from .multi_asic import get_num_asics
 
     version_info = get_sonic_version_info()
 
@@ -403,6 +413,10 @@ def get_chassis_info():
 
     return chassis_info_dict
 
+
+def is_yang_config_validation_enabled(config_db):
+    return get_localhost_info('yang_config_validation', config_db) == 'enable'
+
 #
 # Multi-NPU functionality
 #
@@ -428,7 +442,7 @@ def is_multi_npu():
 
 def is_voq_chassis():
     switch_type = get_platform_info().get('switch_type')
-    return True if switch_type and switch_type == 'voq' else False
+    return True if switch_type and (switch_type == 'voq' or switch_type == 'fabric') else False
 
 
 def is_packet_chassis():
@@ -455,6 +469,40 @@ def is_supervisor():
                     return True
         return False
 
+# Check if this platform has macsec capability.
+def is_macsec_supported():
+    supported = 0
+    platform_env_conf_file_path = get_platform_env_conf_file_path()
+
+    # platform_env.conf file not present for platform
+    if platform_env_conf_file_path is None:
+        return supported
+
+    # Else open the file check for keyword - macsec_enabled -
+    with open(platform_env_conf_file_path) as platform_env_conf_file:
+        for line in platform_env_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0].lower() == 'macsec_enabled':
+                supported = tokens[1].strip()
+                break
+    return int(supported)
+
+
+def get_device_runtime_metadata():
+    chassis_metadata = {}
+    if is_chassis():
+        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard', 
+                                                'chassis_type': 'voq' if is_voq_chassis() else 'packet'}}
+
+    port_metadata = {'ETHERNET_PORTS_PRESENT': True if get_path_to_port_config_file(hwsku=None, asic="0" if is_multi_npu() else None) else False}
+    macsec_support_metadata = {'MACSEC_SUPPORTED': True if is_macsec_supported() else False}
+    runtime_metadata = {}
+    runtime_metadata.update(chassis_metadata)
+    runtime_metadata.update(port_metadata)
+    runtime_metadata.update(macsec_support_metadata)
+    return {'DEVICE_RUNTIME_METADATA': runtime_metadata }
 
 def get_npu_id_from_name(npu_name):
     if npu_name.startswith(NPU_NAME_PREFIX):
@@ -506,7 +554,27 @@ def _valid_mac_address(mac):
     return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
 
 
+def run_command(cmd):
+    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (out, err) = proc.communicate()
+    return (out, err)
+
+
+def run_command_pipe(cmd0, cmd1, cmd2):
+    exitcodes, out = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2)
+    if exitcodes == [0, 0, 0]:
+        err = None
+    else:
+        err = out
+    return (out, err)
+
+
 def get_system_mac(namespace=None):
+    hw_mac_entry_outputs = []
+    syseeprom_cmd = ["sudo", "decode-syseeprom", "-m"]
+    iplink_cmd0 = ["ip", 'link', 'show', 'eth0']
+    iplink_cmd1 = ['grep', 'ether']
+    iplink_cmd2 = ['awk', '{print $2}']
     version_info = get_sonic_version_info()
 
     if (version_info['asic_type'] == 'mellanox'):
@@ -523,36 +591,51 @@ def get_system_mac(namespace=None):
             if _valid_mac_address(mac):
                 return mac
 
-        hw_mac_entry_cmds = [ "sudo decode-syseeprom -m" ]
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'marvell'):
         # Try valid mac in eeprom, else fetch it from eth0
         platform = get_platform()
         machine_key = "onie_machine"
         machine_vars = get_machine_info()
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
         if machine_vars is not None and machine_key in machine_vars:
             hwsku = machine_vars[machine_key]
-            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini | grep switchMacAddress | cut -f2 -d='
+            profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini']
+            profile_cmd1 = ['grep', 'switchMacAddress']
+            profile_cmd2 = ['cut', '-f2', '-d', '=']
+            (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
         else:
-            profile_cmd = "false"
-        hw_mac_entry_cmds = ["sudo decode-syseeprom -m", profile_cmd, "ip link show eth0 | grep ether | awk '{print $2}'"]
+            profile_cmd = ["false"]
+            (mac, err) = run_command(profile_cmd)
+        hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
+        hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'cisco-8000'):
         # Try to get valid MAC from profile.ini first, else fetch it from syseeprom or eth0
         platform = get_platform()
         if namespace is not None:
-            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/profile.ini | grep ' + namespace + 'switchMacAddress | cut -f2 -d='
+            profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/profile.ini']
+            profile_cmd1 = ['grep', str(namespace)+'switchMacAddress']
+            profile_cmd2 = ['cut', '-f2', '-d', '=']
+            (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
         else:
-            profile_cmd = "false"
-        hw_mac_entry_cmds = [profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'"]
+            profile_cmd = ["false"]
+            (mac, err) = run_command(profile_cmd)
+        hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
+        hw_mac_entry_outputs.append((mac, err))
     else:
-        mac_address_cmd = "cat /sys/class/net/eth0/address"
+        mac_address_cmd = ["cat", "/sys/class/net/eth0/address"]
         if namespace is not None:
-            mac_address_cmd = "sudo ip netns exec {} {}".format(namespace, mac_address_cmd)
+            mac_address_cmd = ['sudo', 'ip', 'netns', 'exec', str(namespace)] + mac_address_cmd
+        (mac, err) = run_command(mac_address_cmd)
+        hw_mac_entry_outputs.append((mac, err))
 
-        hw_mac_entry_cmds = [mac_address_cmd]
-
-    for get_mac_cmd in hw_mac_entry_cmds:
-        proc = subprocess.Popen(get_mac_cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (mac, err) = proc.communicate()
+    for (mac, err) in hw_mac_entry_outputs:
         if err:
             continue
         mac = mac.strip()
@@ -577,17 +660,14 @@ def get_system_routing_stack():
     Returns:
         A string containing the name of the routing stack in use on the device
     """
-    command = "sudo docker ps | grep bgp | awk '{print$2}' | cut -d'-' -f3 | cut -d':' -f1"
+    cmd0 = ['sudo', 'docker', 'ps']
+    cmd1 = ['grep', 'bgp']
+    cmd2 = ['awk', '{print$2}']
+    cmd3 = ['cut', '-d', '-', '-f3']
+    cmd4 = ['cut', '-d', ':', '-f1']
 
     try:
-        proc = subprocess.Popen(command,
-                                stdout=subprocess.PIPE,
-                                shell=True,
-                                universal_newlines=True,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        result = stdout.rstrip('\n')
+        _, result = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2, cmd3, cmd4)
     except OSError as e:
         raise OSError("Cannot detect routing stack")
 
@@ -619,8 +699,8 @@ def is_warm_restart_enabled(container_name):
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
     fb_system_state = 0
-    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
-    proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+    cmd = ['sonic-db-cli', 'STATE_DB', 'get', "FAST_REBOOT|system"]
+    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
 
     if proc.returncode != 0:
