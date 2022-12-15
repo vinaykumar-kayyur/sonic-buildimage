@@ -20,6 +20,11 @@ $(eval $(call add_derived_package,$(LIBPY3_MIN),$(LIBPY3)))
 $(LIBPY3)_DEPENDS += $(LIBPY3_STD)
 $(LIBPY3)_RDEPENDS += $(LIBPY3_MIN) $(LIBPY3_STD)
 
+LIBPY3_DBG = lib$(PYTHON_PNAME)-dbg_$(PYTHON_VER)_$(CONFIGURED_ARCH).deb
+$(eval $(call add_derived_package,$(LIBPY3_MIN),$(LIBPY3_DBG)))
+$(LIBPY3_DBG)_DEPENDS += $(LIBPY3_STD)
+$(LIBPY3_DBG)_RDEPENDS += $(LIBPY3_MIN) $(LIBPY3_STD)
+
 PY3_MIN = $(PYTHON_PNAME)-minimal_$(PYTHON_VER)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBPY3_MIN),$(PY3_MIN)))
 $(PY3_MIN)_RDEPENDS += $(LIBPY3_MIN)
@@ -28,6 +33,11 @@ PY3 = $(PYTHON_PNAME)_$(PYTHON_VER)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBPY3_MIN),$(PY3)))
 $(PY3)_DEPENDS += $(PY3_MIN) $(LIBPY3_STD)
 $(PY3)_RDEPENDS += $(PY3_MIN) $(LIBPY3_STD)
+
+PY3_DBG = $(PYTHON_PNAME)-dbg_$(PYTHON_VER)_$(CONFIGURED_ARCH).deb
+$(eval $(call add_derived_package,$(LIBPY3_MIN),$(PY3_DBG)))
+$(PY3_DBG)_DEPENDS += $(PY3_MIN) $(LIBPY3_STD)
+$(PY3_DBG)_RDEPENDS += $(PY3_MIN) $(LIBPY3_STD)
 
 LIBPY3_DEV = lib$(PYTHON_PNAME)-dev_$(PYTHON_VER)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LIBPY3_MIN),$(LIBPY3_DEV)))
