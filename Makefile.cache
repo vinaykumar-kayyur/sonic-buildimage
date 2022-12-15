@@ -472,7 +472,7 @@ $(foreach pkg, $(SONIC_MAKE_DEBS) $(SONIC_DPKG_DEBS) $(SONIC_ONLINE_DEBS) $(SONI
 #  $(3)  => target file extension
 #  $(4)  => additional flags
 #
-#  It updates the _DEP_FLAGS variable if there is any change in the module flags.
+#  It updates the _DEP_FLAGS variable if there is any change in the module flags .
 
 define FLAGS_DEP_RULES
 ALL_DEP_FILES_LIST += $(foreach pkg,$(2), $(if $(filter none,$($(1)_CACHE_MODE)),$(addsuffix .$(3),$(addprefix $(pkg)/, $(1)))))
