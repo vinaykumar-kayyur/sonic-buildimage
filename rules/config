@@ -292,3 +292,6 @@ INCLUDE_DATABASE = y
 
 # INCLUDE_SSH - build openssh pakage and include files to the fsroot
 INCLUDE_SSH = y
+
+# INCLUDE_SYNCD - build docker-syncd-$(PLATFORM)
+INCLUDE_SYNCD = y
