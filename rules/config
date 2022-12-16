@@ -290,3 +290,5 @@ INCLUDE_PMON = y
 # INCLUDE_DATABASE - build docker-database for redis db support
 INCLUDE_DATABASE = y
 
+# INCLUDE_SSH - build openssh pakage and include files to the fsroot
+INCLUDE_SSH = y

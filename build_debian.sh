@@ -232,7 +232,7 @@ echo '[INFO] Install docker'
 ## Otherwise Docker will fail to start
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
 if [ $INCLUDE_NTP == y ]; then
-sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
+    sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
 fi
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
                                                        ca-certificates \
@@ -327,9 +327,18 @@ SYSLOG_PACKAGE=""
 if [ $INCLUDE_SYSLOG == y ]; then
     SYSLOG_PACKAGE=rsyslog
 fi
+
 NTPSTAT_PACKAGE=""
 if [ $INCLUDE_NTP == y ]; then
     NTPSTAT_PACKAGE=ntpstat
+fi
+
+SSH_PACKAGE=""
+if [ $INCLUDE_SSH == y ]; then
+    SSH_PACKAGE=openssh-server
+else
+    # This lib is present if fsroot, but it seems like not in dependences
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "apt-get remove -y libssh2-1"
 fi
 
 ## Pre-install the fundamental packages
@@ -349,7 +358,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     tcpdump                 \
     dbus                    \
     $NTPSTAT_PACKAGE        \
-    openssh-server          \
+    $SSH_PACKAGE            \
     python3-apt             \
     traceroute              \
     iputils-ping            \
@@ -423,9 +432,6 @@ sudo LANG=c chroot $FILESYSTEM_ROOT chmod 644 /etc/group
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/conf.d"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
 
-# Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
-sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
-
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT locale-gen "en_US.UTF-8"
@@ -443,6 +449,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     $NTP_PACKAGE \
     systemd-sysv
 
+# Next copy command was moved because in case of disabling ssh from build
+# "$FILESYSTEM_ROOT/etc/sysctl.d/" path doesn't exist until systemd is installed.
+# Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
+sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
+
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
         grub-pc-bin
@@ -453,15 +464,16 @@ fi
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
 
+if [ $INCLUDE_SSH == y ]; then
 ## Remove sshd host keys, and will regenerate on first sshd start
-sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
-sudo cp files/sshd/host-ssh-keygen.sh $FILESYSTEM_ROOT/usr/local/bin/
-sudo mkdir $FILESYSTEM_ROOT/etc/systemd/system/ssh.service.d
-sudo cp files/sshd/override.conf $FILESYSTEM_ROOT/etc/systemd/system/ssh.service.d/override.conf
-# Config sshd
-# 1. Set 'UseDNS' to 'no'
-# 2. Configure sshd to close all SSH connetions after 15 minutes of inactivity
-sudo augtool -r $FILESYSTEM_ROOT <<'EOF'
+    sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
+    sudo cp files/sshd/host-ssh-keygen.sh $FILESYSTEM_ROOT/usr/local/bin/
+    sudo mkdir $FILESYSTEM_ROOT/etc/systemd/system/ssh.service.d
+    sudo cp files/sshd/override.conf $FILESYSTEM_ROOT/etc/systemd/system/ssh.service.d/override.conf
+    # Config sshd
+    # 1. Set 'UseDNS' to 'no'
+    # 2. Configure sshd to close all SSH connetions after 15 minutes of inactivity
+    sudo augtool -r $FILESYSTEM_ROOT <<'EOF'
 touch /files/etc/ssh/sshd_config/EmptyLineHack
 rename /files/etc/ssh/sshd_config/EmptyLineHack ""
 set /files/etc/ssh/sshd_config/UseDNS no
@@ -479,9 +491,10 @@ set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliv
 save
 quit
 EOF
-# Configure sshd to listen for v4 and v6 connections
-sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
-sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+    # Configure sshd to listen for v4 and v6 connections
+    sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+    sudo sed -i 's/^#ListenAddress ::/ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
+fi
 
 if [ $INCLUDE_SYSLOG == y ]; then
     ## Config rsyslog
@@ -550,16 +563,16 @@ sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 if [ $INCLUDE_NTP == y ]; then
-if [ -f files/image_config/ntp/ntp ]; then
-    sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
-fi
+    if [ -f files/image_config/ntp/ntp ]; then
+        sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
+    fi
 fi
 
 if [ $INCLUDE_NTP == y ]; then
-if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
-    sudo mkdir -p $FILESYSTEM_ROOT/usr/lib/ntp/
-    sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
-fi
+    if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
+        sudo mkdir -p $FILESYSTEM_ROOT/usr/lib/ntp/
+        sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
+    fi
 fi
 
 ## Version file
