@@ -63,7 +63,8 @@ cgroupfs_mount() {
 	# see also https://github.com/tianon/cgroupfs-mount/blob/master/cgroupfs-mount
 	if grep -v '^#' /etc/fstab | grep -q cgroup \
 		|| [ ! -e /proc/cgroups ] \
-		|| [ ! -d /sys/fs/cgroup ]; then
+		|| [ ! -d /sys/fs/cgroup ] \
+		|| [ "$(stat -fc '%T' /sys/fs/cgroup)" = "cgroup2fs" ]; then
 		return
 	fi
 	if ! mountpoint -q /sys/fs/cgroup; then
