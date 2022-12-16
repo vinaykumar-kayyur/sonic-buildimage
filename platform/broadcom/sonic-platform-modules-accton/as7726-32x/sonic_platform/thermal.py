@@ -95,7 +95,7 @@ class Thermal(PddfThermal):
         except Exception:
             return False
 
-        # The new value can not be more than or equal to the default value.
+        # The new value can not be more than the default value.
         default_value = self.__default_threshold[HIGH_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             if value > float(default_value):
@@ -125,7 +125,7 @@ class Thermal(PddfThermal):
         except Exception:
             return False
 
-        # The new value can not be less than or equal to the default value.
+        # The new value can not be less than the default value.
         default_value = self.__default_threshold[LOW_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             if value < float(default_value):
@@ -155,7 +155,7 @@ class Thermal(PddfThermal):
         except Exception:
             return False
 
-        # The new value can not be more than or equal to the default value.
+        # The new value can not be more than the default value.
         default_value = self.__default_threshold[HIGH_CRIT_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             if value > float(default_value):
@@ -185,7 +185,7 @@ class Thermal(PddfThermal):
         except Exception:
             return False
 
-        # The new value can not be less than or equal to the default value.
+        # The new value can not be less than the default value.
         default_value = self.__default_threshold[LOW_CRIT_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             if value < float(default_value):

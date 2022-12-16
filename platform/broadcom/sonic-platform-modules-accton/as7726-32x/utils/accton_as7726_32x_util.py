@@ -403,14 +403,14 @@ def avaliable_thermals():
         "    all_thermals += psu.get_all_thermals()\n"\
         "for tmp in all_thermals:\n"\
         "    thermal_list.append(tmp.get_name())\n"\
-        "print(thermal_list)\n"
+        "print(str(thermal_list)[1:-1])\n"
 
     all_code = "{}{}".format(init_chassis_code, get_all_thermal_name_code)
 
     status, output = getstatusoutput_noshell(["docker", "exec", "pmon", "python3", "-c", all_code])
     if status != 0:
-        return []
-    return eval(output)
+        return ""
+    return output
 
 def restricted_float(x):
     global THRESHOLD_RANGE_LOW, THRESHOLD_RANGE_HIGH
@@ -470,9 +470,7 @@ def do_threshold():
     global args, init_chassis_code, looking_for_thermal_code
 
     if args.list:
-        thermal_name_list = avaliable_thermals()
-        #thermal_name_list = ['Temp sensor 1', 'Temp sensor 2']
-        print("Thermals: " + str(thermal_name_list)[1:-1])
+        print("Thermals: " + avaliable_thermals())
         return
 
     if args.thermal is None:
