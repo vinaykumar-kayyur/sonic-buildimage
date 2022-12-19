@@ -187,7 +187,7 @@ def is_host():
     return True for host and False for docker
     """
     docker_env_file = '/.dockerenv'
-    return os.path.exists(docker_env_file) == False
+    return os.path.exists(docker_env_file) is False
 
 
 def default_return(return_value, log_func=logger.log_debug):
