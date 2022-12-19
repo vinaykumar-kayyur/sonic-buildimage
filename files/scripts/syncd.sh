@@ -24,8 +24,31 @@ function startplatform() {
         debug "Starting Firmware update procedure"
         /usr/bin/mst start --with_i2cdev
         /usr/bin/mlnx-fw-upgrade.sh
-        /etc/init.d/sxdkernel start
+        /etc/init.d/sxdkernel restart
         debug "Firmware update procedure ended"
+    fi
+
+    if [[ x"$sonic_asic_platform" == x"broadcom" ]]; then
+        if [[ x"$WARM_BOOT" != x"true" ]]; then
+            . /host/machine.conf
+            if [ -n "$aboot_platform" ]; then
+                platform=$aboot_platform
+            elif [ -n "$onie_platform" ]; then
+                platform=$onie_platform
+            else 
+                platform="unknown"
+            fi
+            if [[ x"$platform" == x"x86_64-arista_720dt_48s" ]]; then
+                is_bcm0=$(ls /sys/class/net | grep bcm0)
+                if [[ "$is_bcm0" == "bcm0" ]]; then
+                    debug "stop SDK opennsl-modules ..."
+                    /etc/init.d/opennsl-modules stop
+                    debug "start SDK opennsl-modules ..."
+                    /etc/init.d/opennsl-modules start
+                    debug "started SDK opennsl-modules"
+                fi
+            fi
+        fi
     fi
 
     if [[ x"$sonic_asic_platform" == x"barefoot" ]]; then

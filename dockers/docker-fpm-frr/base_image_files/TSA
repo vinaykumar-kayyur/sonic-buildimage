@@ -10,3 +10,4 @@ then
 fi
 
 /usr/bin/TS TSA
+echo "Please execute 'config save' to preserve System mode in Maintenance after reboot or config reload"

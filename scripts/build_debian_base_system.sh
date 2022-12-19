@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[[ ! -z "${DBGOPT}" && $0 =~ ${DBGOPT} ]] && set -x 
+
 CONFIGURED_ARCH=$1
 IMAGE_DISTRO=$2
 FILESYSTEM_ROOT=$3
@@ -23,7 +25,7 @@ generate_version_file()
 
 if [ "$ENABLE_VERSION_CONTROL_DEB" != "y" ] || [ ! -d files/build/versions/host-base-image ]; then
     if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-        if [ $MULTIARCH_QEMU_ENVIRON == "y" ]; then
+        if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
             # qemu arm bin executable for cross-building
             sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
             sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
