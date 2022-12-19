@@ -763,22 +763,24 @@ $(SONIC_INSTALL_DEBS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install
 			{ while dpkg -s $(firstword $(subst _, ,$(basename $(deb)))) | grep "^Version: $(word 2, $(subst _, ,$(basename $(deb))))" &> /dev/null; do echo "waiting for $(deb) to be uninstalled" $(LOG); sleep 1; done } )
 		# put a lock here because dpkg does not allow installing packages in parallel
 		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
-ifneq ($(CROSS_BUILD_ENVIRON),y)
+
 			# apt-get install inside sonic-slave may conflict with dpkg -i
 			# add retry here
 			for (( i=1; i<=10; i++))
 			do
+ifneq ($(CROSS_BUILD_ENVIRON),y)
 			    sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break 2
+else
+			    # Relocate debian packages python libraries to the cross python virtual env location
+			    sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(if $(findstring $(LINUX_HEADERS),$*),--force-depends) $(DEBS_PATH)/$* $(LOG) && \
+			    { rm -rf tmp && mkdir tmp && dpkg -x $(DEBS_PATH)/$* tmp; } && \
+			    { sudo cp -rf tmp/usr/lib/python2*/dist-packages/* $(VIRTENV_LIB_CROSS_PYTHON2)/python2*/site-packages/ 2>/dev/null || true ;} && \
+			    { sudo cp -rf tmp/usr/lib/python3/dist-packages/* $(VIRTENV_LIB_CROSS_PYTHON3)/python3.*/site-packages/ 2>/dev/null || true;} && \
+			    rm -d $(DEBS_PATH)/dpkg_lock && break 2
+endif
 			    sleep 1
 			done
 			rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1
-else
-			# Relocate debian packages python libraries to the cross python virtual env location
-			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(if $(findstring $(LINUX_HEADERS),$*),--force-depends) $(DEBS_PATH)/$* $(LOG) && \
-			rm -rf tmp && mkdir tmp && dpkg -x $(DEBS_PATH)/$* tmp && (sudo cp -rf tmp/usr/lib/python2*/dist-packages/* $(VIRTENV_LIB_CROSS_PYTHON2)/python2*/site-packages/ 2>/dev/null || true) && \
-			(sudo cp -rf tmp/usr/lib/python3/dist-packages/* $(VIRTENV_LIB_CROSS_PYTHON3)/python3.*/site-packages/ 2>/dev/null || true) && \
-			rm -d $(DEBS_PATH)/dpkg_lock && break; } || { set +e; rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1 ; }
-endif
 		fi
 		sleep 10
 	done
