@@ -9,8 +9,8 @@ export DISTRIBUTION=$3
 DEFAULT_MIRROR_URLS=http://debian-archive.trafficmanager.net/debian/,http://packages.trafficmanager.net/debian/debian/
 DEFAULT_MIRROR_SECURITY_URLS=http://debian-archive.trafficmanager.net/debian-security/,http://packages.trafficmanager.net/debian/debian-security/
 
-DEFAULT_MIRROR_URLS=http://cdn1.packages.trafficmanager.net/snapshot/debian/20221013T073446Z/
-DEFAULT_MIRROR_SECURITY_URLS=http://cdn1.packages.trafficmanager.net/snapshot/debian-security/20221013T073446Z/
+DEFAULT_MIRROR_URLS=http://cdn1.packages.trafficmanager.net/snapshot/debian/20221219T000351Z/
+DEFAULT_MIRROR_SECURITY_URLS=http://cdn1.packages.trafficmanager.net/snapshot/debian-security/20221219T000551Z/
 
 # The debian-archive.trafficmanager.net does not support armhf, use debian.org instead
 if [ "$ARCHITECTURE" == "armhf" ]; then
