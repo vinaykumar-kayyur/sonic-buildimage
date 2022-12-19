@@ -780,7 +780,7 @@ else
 endif
 			    sleep 1
 			done
-			rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1
+			set +e; rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1
 		fi
 		sleep 10
 	done
