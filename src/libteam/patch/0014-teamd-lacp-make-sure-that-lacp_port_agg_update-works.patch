@@ -1,0 +1,65 @@
+From 4366fa242612cbb25509c64af66f1674c54a9bdf Mon Sep 17 00:00:00 2001
+From: Jiri Pirko <jiri@nvidia.com>
+Date: Wed, 7 Dec 2022 13:26:44 +0100
+Subject: [PATCH] teamd: lacp: make sure that lacp_port_agg_update() works with
+ correct unselectable state
+
+In case of checking unselectable port state, lacp_port_agg_update()
+is checking the new one during port state change. This is wrong as it
+should check the old one. Move the state setting into
+lacp_port_agg_update() and rename the function accordingly.
+
+Signed-off-by: Jiri Pirko <jiri@nvidia.com>
+---
+ teamd/teamd_runner_lacp.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 89f462a..4f422ec 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1050,7 +1050,8 @@ static bool lacp_port_mergeable(struct lacp_port *lacp_port)
+ 	       lacp_get_agg_lead(lacp_port) != lacp_port;
+ }
+ 
+-static int lacp_port_agg_update(struct lacp_port *lacp_port)
++static int lacp_port_set_state_agg_update(struct lacp_port *lacp_port,
++					  enum lacp_port_state new_state)
+ {
+ 	if (lacp_port_selected(lacp_port) &&
+ 	    (lacp_port_unselectable_state(lacp_port) ||
+@@ -1059,6 +1060,8 @@ static int lacp_port_agg_update(struct lacp_port *lacp_port)
+ 	     lacp_port_mergeable(lacp_port)))
+ 		lacp_port_agg_unselect(lacp_port);
+ 
++	lacp_port->state = new_state;
++
+ 	if (!lacp_port_selected(lacp_port) &&
+ 	    (lacp_port_selectable_state(lacp_port) &&
+ 	     lacp_port_loopback_free(lacp_port)))
+@@ -1067,6 +1070,11 @@ static int lacp_port_agg_update(struct lacp_port *lacp_port)
+ 	return lacp_selected_agg_update(lacp_port->lacp, NULL);
+ }
+ 
++static int lacp_port_agg_update(struct lacp_port *lacp_port)
++{
++	return lacp_port_set_state_agg_update(lacp_port, lacp_port->state);
++}
++
+ static const char slow_addr[ETH_ALEN] = { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x02 };
+ 
+ static int __slow_addr_add_del(struct lacp_port *lacp_port, bool add)
+@@ -1318,9 +1326,8 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
+ 		       lacp_port->tdport->ifname,
+ 		       lacp_port_state_name[lacp_port->state],
+ 		       lacp_port_state_name[new_state]);
+-	lacp_port->state = new_state;
+ 
+-	err = lacp_port_agg_update(lacp_port);
++	err = lacp_port_set_state_agg_update(lacp_port, new_state);
+ 	if (err)
+ 		return err;
+ 
+-- 
+2.14.1
+
