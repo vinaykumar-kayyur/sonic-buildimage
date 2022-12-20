@@ -61,6 +61,10 @@ REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 
 REBOOT_CAUSE_FILE_LENGTH = 1
 
+REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
+REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
+REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast|fast-reboot).*"
+
 # Global logger class instance
 logger = Logger()
 
@@ -736,6 +740,18 @@ class Chassis(ChassisBase):
         self.reboot_by_software = 'reset_sw_reset'
         self.reboot_cause_initialized = True
 
+    def _parse_warmfast_reboot_from_proc_cmdline():
+        if os.path.isfile(REBOOT_TYPE_KEXEC_FILE):
+            with open(REBOOT_TYPE_KEXEC_FILE) as cause_file:
+                cause_file_kexec = cause_file.readline()
+            m = re.search(REBOOT_TYPE_KEXEC_PATTERN_WARM, cause_file_kexec)
+            if m and m.group(1):
+                return 'warm-reboot'
+            m = re.search(REBOOT_TYPE_KEXEC_PATTERN_FAST, cause_file_kexec)
+            if m and m.group(1):
+                return 'fast-reboot'
+        return None
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
@@ -748,6 +764,14 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         #read reboot causes files in the following order
+
+        # Skip the hardware reboot cause check if reboot cause found from cmdline
+        # This is because the leftover hardware reboot cause will confuse the reboot cause determine
+        if utils.is_host():
+            reboot_cause = _parse_warmfast_reboot_from_proc_cmdline()
+            if reboot_cause:
+                return self.REBOOT_CAUSE_NON_HARDWARE, ''
+
         if not self.reboot_cause_initialized:
             self.initialize_reboot_cause()
 
