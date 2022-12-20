@@ -30,6 +30,7 @@ try:
     from .utils import extract_RJ45_ports_index
     from . import utils
     from .device_data import DeviceDataManager
+    import re
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -740,7 +741,7 @@ class Chassis(ChassisBase):
         self.reboot_by_software = 'reset_sw_reset'
         self.reboot_cause_initialized = True
 
-    def _parse_warmfast_reboot_from_proc_cmdline():
+    def _parse_warmfast_reboot_from_proc_cmdline(self):
         if os.path.isfile(REBOOT_TYPE_KEXEC_FILE):
             with open(REBOOT_TYPE_KEXEC_FILE) as cause_file:
                 cause_file_kexec = cause_file.readline()
@@ -768,7 +769,7 @@ class Chassis(ChassisBase):
         # Skip the hardware reboot cause check if reboot cause found from cmdline
         # This is because the leftover hardware reboot cause will confuse the reboot cause determine
         if utils.is_host():
-            reboot_cause = _parse_warmfast_reboot_from_proc_cmdline()
+            reboot_cause = self._parse_warmfast_reboot_from_proc_cmdline()
             if reboot_cause:
                 return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
