@@ -774,7 +774,7 @@ else
 	        { sudo cp -rf tmp/usr/lib/python3/dist-packages/* $(VIRTENV_LIB_CROSS_PYTHON3)/python3.*/site-packages/ 2>/dev/null || true;} && break
 endif
 	        sleep 1
-	        [[ $i == 100 ]] && { sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1; }
+	        [ $i -eq 100 ] && { sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1; }
 	    done
 	$(FOOTER)
 
