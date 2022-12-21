@@ -44,6 +44,24 @@ variables:
   value: y
 
 stages:
+- stage: Analysis
+  pool: sonicanalysis
+  jobs:
+  - job:
+    displayName: "Semgrep"
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      - script: |
+          set -ex
+          target_branch=origin/$(System.PullRequest.TargetBranch)
+          files_changed=$(git --no-pager diff $target_branch..HEAD --name-only --diff-filter=d)
+          python -m pip install --upgrade pip
+          pip install semgrep
+          semgrep --config auto --error $files_changed
+        displayName: 'Run Semgrep'
+
 - stage: BuildVS
   pool: sonicbld
   jobs:
