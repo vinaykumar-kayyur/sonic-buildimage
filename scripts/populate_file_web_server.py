@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sys
 import os
 import time
@@ -72,32 +74,19 @@ class Resource:
 
 # Helper functions
 
-def info_print(msg):
-    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[PRINT_LEVEL_INFO]:
-        print(msg)
+def print_msg(print_level, msg, print_in_place):
+    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[print_level]:
+        if True == print_in_place:
+            print(msg, end='\r')
+        else:
+            print(msg)
 
-def info_print_in_place(msg):
-    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[PRINT_LEVEL_INFO]:
-        print(msg, end='\r')
-
-def verbose_print(msg):
-    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[PRINT_LEVEL_VERBOSE]:
-        print(msg)
-
-def warn_print(msg):
-    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[PRINT_LEVEL_WARN]:
-        print(msg)
-
-def error_print(msg):
-    if PRINT_LEVEL_LUT[g_current_print_level] >= PRINT_LEVEL_LUT[PRINT_LEVEL_ERROR]:
-        print(msg)
-        
 def create_dir_if_not_exist(dir):
     if not os.path.exists(dir):
         try:
             os.mkdir(dir)
         except:
-            warn_print("Cannot create directory " + dir)
+            print_msg(PRINT_LEVEL_WARN, "Cannot create directory " + dir, False)
 
 def delete_file_if_exist(file):
 
@@ -105,7 +94,7 @@ def delete_file_if_exist(file):
         try:
             os.remove(file)
         except:
-            warn_print("Cannot delete " + file)
+            print_msg(PRINT_LEVEL_WARN, "Cannot delete " + file, False)
         
 # Logic functions
         
@@ -124,7 +113,7 @@ def generate_output_file(resources, dest_url_valid, dest_url, output_file_name):
                 line += resource.name + "==" + resource.hash
                 f.write(line + '\n')
     except:
-        warn_print(output_file_name + " cannot be created")
+        print_msg(PRINT_LEVEL_WARN, output_file_name + " cannot be created", False)
         return RET_CODE_CANNOT_CREATE_FILE
         
     f.close()
@@ -158,7 +147,7 @@ def upload_resource_to_server(resource_path, resource_name, user, key, server_ur
     # Check if server reports checksum, if so compare reported sum and the one
     # specified in filename
     if reported_md5 != None and reported_md5 != file_md5:
-        warn_print(f"Server reported file's chsum {reported_md5}, expected {file_md5}")
+        print_msg(PRINT_LEVEL_WARN, f"Server reported file's chsum {reported_md5}, expected {file_md5}", False)
 
     
     return RET_CODE_SUCCESS
@@ -174,7 +163,7 @@ def download_external_resouce(resource, cache_path):
         f.write(r.content)
         f.close()
     except:
-        error_print("Cannot write " + resource_path_in_cache + " to cache")
+        print_msg(PRINT_LEVEL_ERROR, "Cannot write " + resource_path_in_cache + " to cache", False)
         resource_path_in_cache = "" #report error
 
     return resource_path_in_cache
@@ -189,7 +178,7 @@ def get_resources_list(resource_files_list):
                 for line in f:
                     resource_list.append(Resource(line, file_name))
         except:
-            warn_print(file_name + " cannot be opened")
+            print_msg(PRINT_LEVEL_WARN, file_name + " cannot be opened", False)
 
     return resource_list
 
@@ -210,7 +199,7 @@ def get_resource_files_list(serach_path):
         for file in files:
             if False == filter_out_dir(subdir) and RESOURCES_FILE_NAME == file:
                 file_full_path = os.path.join(subdir, file)
-                verbose_print("Found resource file :" + file_full_path)
+                print_msg(PRINT_LEVEL_VERBOSE, "Found resource file :" + file_full_path, False)
                 resource_files_list.append(file_full_path)
 
     return resource_files_list
@@ -264,14 +253,14 @@ def main():
         if not unique_name in resource_dict.keys():
             resource_dict[unique_name] = resource
 
-    info_print("Found " + str(len(resource_files_list)) + " version files and " + str(len(resource_dict.keys())) + " unique resources")
+    print_msg(PRINT_LEVEL_INFO, "Found " + str(len(resource_files_list)) + " version files and " + str(len(resource_dict.keys())) + " unique resources", False)
     
     if args.dest != DEFAULT_INVALID_INPUT:
         upload_files_to_server = True
-        info_print("Upload files to URL - " + args.dest)
+        print_msg(PRINT_LEVEL_INFO, "Upload files to URL - " + args.dest, False)
     else:
         upload_files_to_server = False
-        info_print("Skipping files upload to server")       
+        print_msg(PRINT_LEVEL_INFO, "Skipping files upload to server", False)       
 
     #create cache directory if not exist
     create_dir_if_not_exist(args.cache)
@@ -281,7 +270,7 @@ def main():
 
         resource = resource_dict[unique_name]
 
-        verbose_print(resource)
+        print_msg(PRINT_LEVEL_VERBOSE, resource, False)
 
         resource_counter += 1.0
 
@@ -300,12 +289,12 @@ def main():
         if True == g_delete_resources_in_cache:
             delete_file_if_exist(file_in_cache)
 
-        info_print_in_place("Downloading Data. Progress " + str(int(100.0*resource_counter/len(resource_dict.keys()))) + "%") #print progress bar
+        print_msg(PRINT_LEVEL_INFO, "Downloading Data. Progress " + str(int(100.0*resource_counter/len(resource_dict.keys()))) + "%", True) #print progress bar
     
     # generate version output file as needed
     if args.output != DEFAULT_INVALID_INPUT:
         ret_val = generate_output_file(resource_dict, upload_files_to_server, args.dest, args.output)
-        info_print("Generate output file " + args.output)
+        print_msg(PRINT_LEVEL_INFO, "Generate output file " + args.output, False)
         
     return ret_val
        
