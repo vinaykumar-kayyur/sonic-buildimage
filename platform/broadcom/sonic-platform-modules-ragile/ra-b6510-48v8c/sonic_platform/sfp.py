@@ -37,6 +37,7 @@ import time
 import syslog
 import traceback
 from abc import abstractmethod
+import ast
 
 try:
     import os
@@ -102,7 +103,7 @@ class Sfp(SfpOptoeBase):
         ver = sfp_config.get("ver", None)
         if ver is None:
             self._sfplog(LOG_ERROR_LEVEL, "Get Ver Config Error!")
-        self._sfp_api = eval("SfpV%d(%d)" % (int(float(ver)), index))
+        self._sfp_api = ast.literal_eval("SfpV%d(%d)" % (int(float(ver)), index))
 
     def get_eeprom_path(self):
         return self._sfp_api._get_eeprom_path()
