@@ -35,6 +35,11 @@ typedef enum
     DHCP_MESSAGE_TYPE_COUNT
 } dhcp_message_type_t;
 
+enum
+{
+    OPTION_DHCP_MESSAGE_TYPE = 53,
+};
+
 /** packet direction */
 typedef enum
 {

@@ -245,22 +245,12 @@ static void client_packet_handler(dhcp_device_context_t *context, ssize_t buffer
                                     ethhdr->ether_shost[5] == context->mac[5]) ?
                                     DHCP_TX : DHCP_RX;
         int offset = 0;
-        int stop_dhcp_processing = 0;
         while ((offset < (dhcp_option_sz + 1)) && dhcp_option[offset] != 255) {
-            switch (dhcp_option[offset])
-            {
-            case 53:
+            if (dhcp_option[offset] == OPTION_DHCP_MESSAGE_TYPE) {
                 if (offset < (dhcp_option_sz + 2)) {
                     handle_dhcp_option_53(context, &dhcp_option[offset], dir, iphdr, dhcphdr);
                 }
-                stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
-                break;
-            default:
-                break;
-            }
-
-            if (stop_dhcp_processing == 1) {
-                break;
+                break; // break while loop since we are only interested in Option 53
             }
 
             if (dhcp_option[offset] == 0) { // DHCP Option Padding
