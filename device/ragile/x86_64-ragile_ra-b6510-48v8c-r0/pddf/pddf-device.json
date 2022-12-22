@@ -32,7 +32,7 @@
       "i2c_gpio",
       "i2c_algo_bit",
       "i2c_mux_pca9641",
-      "i2c_mux_pca954x force_create_bus=1",
+      "i2c_mux_pca954x force_create_bus=1 close_chan_force_reset=1 select_chan_check=1",
       "lm75",
       "optoe",
       "at24",
