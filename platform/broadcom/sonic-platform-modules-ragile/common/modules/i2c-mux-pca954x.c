@@ -1240,12 +1240,11 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
     struct i2c_client * new_client;
 
     if (close_chan_force_reset) {
+        data->last_chan = 0;
         ret = pca954x_do_reset(client->adapter, client, chan);
         if (ret < 0) {
             dev_warn(&client->dev, "pca954x do reset failed %d.\n", ret);
-            return ret;
         }
-        (void)pca954x_reg_write(muxc->parent, client, data->last_chan);
         return ret;
     } else {
         idle_state = READ_ONCE(data->idle_state);
