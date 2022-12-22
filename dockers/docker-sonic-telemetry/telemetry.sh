@@ -60,6 +60,8 @@ TELEMETRY_ARGS+=" --port $PORT"
 CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
 if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "false" ]; then
     TELEMETRY_ARGS+=" --allow_no_client_auth"
+else
+    TELEMETRY_ARGS+=" --client_auth $CLIENT_AUTH"
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
