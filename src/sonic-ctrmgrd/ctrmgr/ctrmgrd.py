@@ -284,6 +284,7 @@ def set_node_labels(server):
     labels["sonic_version"] = version_info['build_version']
     labels["hwsku"] = device_info.get_hwsku() if not UNIT_TESTING else "mock"
     labels["deployment_type"] = dep_type
+    labels["worker.sonic/platform"] = device_info.get_platform()
     server.mod_db_entry(STATE_DB_NAME,
             KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, labels)
 
