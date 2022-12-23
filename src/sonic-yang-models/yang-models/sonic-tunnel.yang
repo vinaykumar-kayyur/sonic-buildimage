@@ -7,21 +7,21 @@ module sonic-tunnel {
 		prefix inet;
 	}
 
-    import sonic-peer-switch {
+	import sonic-peer-switch {
 		prefix ps;
 	}
 
-    import sonic-dscp-tc-map {
+	import sonic-dscp-tc-map {
 		prefix dtm;
 	}
 
-    import sonic-tc-priority-group-map {
-        prefix tpgm;
-    }
+	import sonic-tc-priority-group-map {
+		prefix tpgm;
+	}
 
-    import sonic-tc-queue-map {
-        prefix tqm;
-    }
+	import sonic-tc-queue-map {
+		prefix tqm;
+	}
 
 	organization
 		"SONiC";
