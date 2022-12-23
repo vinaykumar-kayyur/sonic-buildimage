@@ -83,15 +83,33 @@ fi
 # get running machine from conf file
 if [ -r /etc/machine.conf ]; then
     read_conf_file "/etc/machine.conf"
+    machine_conf_path=/etc/machine.conf
 elif [ -r /host/machine.conf ]; then
     read_conf_file "/host/machine.conf"
+    machine_conf_path=/host/machine.conf
 elif [ "$install_env" != "build" ]; then
     echo "cannot find machine.conf"
     exit 1
 fi
 
+onie_running_arch=`cat $machine_conf_path | grep onie_arch | sed -n "s/^onie_arch=\(.*\)$/\1/p"`
+onie_running_switch_asic=`cat $machine_conf_path | grep onie_switch_asic | sed -n "s/^onie_switch_asic=\(.*\)$/\1/p"`
+
+# bcm aisc is broadcom
+if [ "$onie_running_switch_asic" = "bcm" ]; then
+    onie_running_switch_asic=broadcom
+fi
+
+platform_prefix=$(echo $platform | cut -d"-" -f 1)-$(echo $platform | cut -d"-" -f 2)
+onie_running_platform=$onie_running_arch-$onie_running_switch_asic
 
 echo "onie_platform: $onie_platform"
+echo "onie_running_platform: $onie_running_platform"
+
+if [ "$onie_running_platform" != "$platform_prefix" ]; then
+    echo "Error: Image file is of a different platform than running image."
+    exit 1
+fi
 
 # Get platform specific linux kernel command line arguments
 ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
@@ -100,29 +118,6 @@ ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 VAR_LOG_SIZE=4096
 
 [ -r platforms/$onie_platform ] && . platforms/$onie_platform
-
-# Verify image platform is inside devices list
-if [ "$install_env" = "onie" ]; then
-    if ! grep -Fxq "$onie_platform" platforms_asic; then
-        echo "The image you're trying to install is of a different ASIC type as the running platform's ASIC"
-        while true; do
-            read -r -p "Do you still wish to install this image? [y/n]: " input
-            case $input in
-                [Yy])
-                    echo "Force installing..."
-                    break
-                    ;;
-                [Nn])
-                    echo "Exited installation!"
-                    exit 1
-                    ;;
-                *)
-                    echo "Error: Invalid input"
-                    ;;
-            esac
-        done
-    fi
-fi
 
 # If running in ONIE
 if [ "$install_env" = "onie" ]; then
