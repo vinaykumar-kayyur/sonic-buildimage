@@ -2,7 +2,7 @@ module sonic-system-port {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-system-port";
+    namespace "http://github.com/sonic-net/sonic-system-port";
     prefix system-port;
 
     import sonic-port {
@@ -34,15 +34,21 @@ module sonic-system-port {
                 }
 
                 leaf asic_name {
-                    type string;
+                    type string {
+                        pattern "[Aa]sic[0-4]";
+                    }
                 }
 
                 leaf ifname {
-                    type string;
+                    type leafref {
+                        path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
+                    }
                 }
 
                 leaf core_index {
-                    type uint8;
+                    type uint8 {
+                        range 0..7;
+                    }
                     description "Hardware core index a port is affiliated with.";
                 }
 
@@ -52,7 +58,9 @@ module sonic-system-port {
                 }
 
                 leaf num_voq {
-                    type uint8;
+                    type uint8 {
+                        range 1..8;
+                    }
                     description "Number of VoQs associated with a port.";
                 }
 

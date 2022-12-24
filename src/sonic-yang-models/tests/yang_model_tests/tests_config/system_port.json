@@ -29,7 +29,7 @@
             }
         }
     },
-    "SYSTEM_PORT_WRONG_SPEED_CONFIG": {
+    "SYSTEM_PORT_WRONG_SPEED_PATTERN": {
         "sonic-system-port:sonic-system-port": {
             "sonic-system-port:SYSTEM_PORT": {
                 "SYSTEM_PORT_LIST": [
