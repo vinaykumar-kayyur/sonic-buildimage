@@ -145,6 +145,16 @@ jobs:
                 git stash
                 popd
               fi
+              if [ $(GROUP_NAME) == barefoot ]; then
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd 
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-saiserverv2-bfn.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd
+              fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin

@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
 
-rm -f /var/run/rsyslogd.pid
-
-supervisorctl start rsyslogd
-
-supervisorctl start saiserver
-
+. /opt/bfn/install/bin/dma_setup.sh
+# . /opt/bfn/install/bin/bf_kdrv_mod_load /opt/bfn/install
