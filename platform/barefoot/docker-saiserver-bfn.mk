@@ -1,0 +1,31 @@
+# docker image for bfn saiserver
+# Only support sai-ptfv2, set as saiserverv2 directly
+DOCKER_SAISERVER_BFN = docker-saiserverv2-bfn.gz
+$(DOCKER_SAISERVER_BFN)_PATH = $(PLATFORM_PATH)/docker-saiserver-bfn
+
+# Same dependence as syncd
+$(DOCKER_SAISERVER_BFN)_DEPENDS += $(SAISERVER)
+$(DOCKER_SAISERVER_BFN)_DEPENDS += $(BFN_SAI) $(BFN_INGRASYS_PLATFORM) $(BFN_PLATFORM) $(LIBTHRIFT_0_14_1)
+$(DOCKER_SAISERVER_BFN)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
+
+# Same dependence as ENABLE_SYNCD_RPC 
+$(DOCKER_SAISERVER_BFN)_DEPENDS += $(LIBSAITHRIFT_DEV) $(LIBTHRIFT_0_14_1_DEV)
+
+# Runtime dependency on sai is set only for syncd
+#$(SYNCD)_RDEPENDS += $(BFN_SAI) $(WNC_OSW1800_PLATFORM) $(BFN_INGRASYS_PLATFORM) $(BFN_PLATFORM)
+$(DOCKER_SAISERVER_BFN)_RDEPENDS += $(BFN_SAI) $(BFN_INGRASYS_PLATFORM) $(BFN_PLATFORM)
+
+$(DOCKER_SAISERVER_BFN)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE_BUSTER)
+SONIC_DOCKER_IMAGES += $(DOCKER_SAISERVER_BFN)
+SONIC_BUSTER_DOCKERS += $(DOCKER_SAISERVER_BFN)
+
+#Support two versions of saiserver
+$(DOCKER_SAISERVER_BFN)_CONTAINER_NAME = saiserverv2
+$(DOCKER_SAISERVER_BFN)_VERSION = 1.0.0+rpc
+$(DOCKER_SAISERVER_BFN)_PACKAGE_NAME = saiserver
+
+$(DOCKER_SAISERVER_BFN)_RUN_OPT += --privileged -t
+$(DOCKER_SAISERVER_BFN)_RUN_OPT += -v /host/machine.conf:/etc/machine.conf
+$(DOCKER_SAISERVER_BFN)_RUN_OPT += -v /var/run/docker-saiserver:/var/run/sswsyncd
+$(DOCKER_SAISERVER_BFN)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
+$(DOCKER_SAISERVER_BFN)_RUN_OPT += -v /host/warmboot:/var/warmboot

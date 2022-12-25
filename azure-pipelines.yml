@@ -65,15 +65,14 @@ stages:
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
-      - name: broadcom
+      - name: barefoot
+        timeoutInMinutes: 1440
         variables:
+          dbg_image: yes
           swi_image: yes
-      - name: mellanox
-      - name: marvell-armhf
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
-        variables:
-          PLATFORM_ARCH: armhf
+          raw_image: yes
+          docker_syncd_rpc_image: yes
+          platform_rpc: bfn
 
 - stage: Test
   dependsOn: BuildVS

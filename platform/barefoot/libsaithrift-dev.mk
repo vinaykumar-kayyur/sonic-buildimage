@@ -5,6 +5,8 @@ $(LIBSAITHRIFT_DEV)_SRC_PATH = $(SRC_PATH)/sonic-sairedis/SAI
 $(LIBSAITHRIFT_DEV)_DEPENDS += $(LIBTHRIFT_0_14_1) $(LIBTHRIFT_0_14_1_DEV) \
                                $(PYTHON3_THRIFT_0_14_1) $(THRIFT_0_14_1_COMPILER)  \
                                $(BFN_SAI)
+# Only support sai-ptf v2
+$(LIBSAITHRIFT_DEV)_BUILD_ENV = SAITHRIFTV2=true SAITHRIFT_VER=v2 GEN_SAIRPC_OPTS="--adapter_logger"
 
 #$(LIBSAIVS) $(LIBSAIVS_DEV) $(LIBSAIMETADATA) $(LIBSAIMETADATA_DEV)
 
