@@ -55,6 +55,8 @@ jobs:
   - bash: |
       set -ex
       image_tag=$(BLDENV=${{ parameters.dist }} make -f Makefile.work showtag PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} | grep sonic-slave | tail -n 1)
+      echo $image_tag
+      exit 1
       image_latest=$(echo $(echo $image_tag | awk -F: '{print$1}'):latest)
       image_branch=$(echo $(echo $image_tag | awk -F: '{print$1}'):$(Build.SourceBranchName))
       docker rmi $image_tag || true
