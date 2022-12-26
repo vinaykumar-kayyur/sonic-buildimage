@@ -61,7 +61,7 @@ stages:
   - ${{ each dist in parameters.dists }}:
     - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
       - ${{ each arch in parameters.arches }}:
-        - template: .azure-pipelines/docker-sonic-slave-template.yml@buildimage
+        - template: docker-sonic-slave-template.yml
           parameters:
             pool: sonicbld
             arch: ${{ arch }}
@@ -73,7 +73,7 @@ stages:
     - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
       - ${{ each arch in parameters.arches }}:
         - ${{ if ne(arch, 'amd64') }}:
-          - template: .azure-pipelines/docker-sonic-slave-template.yml@buildimage
+          - template: docker-sonic-slave-template.yml
             parameters:
               pool: sonicbld-${{ arch }}
               arch: ${{ arch }}
