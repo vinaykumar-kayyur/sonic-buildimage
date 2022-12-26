@@ -37,7 +37,6 @@ import time
 import syslog
 import traceback
 from abc import abstractmethod
-import ast
 
 try:
     import os
@@ -86,7 +85,6 @@ def get_sfp_config():
     dev = getplatform_name()
     return cust_sfp_cfg.get(dev, None)
 
-
 class Sfp(SfpOptoeBase):
 
     OPTOE_DRV_TYPE1 = 1
@@ -94,7 +92,7 @@ class Sfp(SfpOptoeBase):
     OPTOE_DRV_TYPE3 = 3
 
     # index must start at 1
-    def __init__(self, index):
+    def __init__(self, index, a=None, b=None):
         SfpOptoeBase.__init__(self)
         self.sfp_type = None
         sfp_config = get_sfp_config()
@@ -103,7 +101,13 @@ class Sfp(SfpOptoeBase):
         ver = sfp_config.get("ver", None)
         if ver is None:
             self._sfplog(LOG_ERROR_LEVEL, "Get Ver Config Error!")
-        self._sfp_api = ast.literal_eval("SfpV%d(%d)" % (int(float(ver)), index))
+        vers = int(float(ver))
+        if vers == 1:
+            self._sfp_api = SfpV1(index)
+        elif vers == 2:
+            self._sfp_api = SfpV2(index)
+        else:
+            self._sfplog(LOG_ERROR_LEVEL, "Get SfpVer Error!")
 
     def get_eeprom_path(self):
         return self._sfp_api._get_eeprom_path()
@@ -201,7 +205,7 @@ class Sfp(SfpOptoeBase):
         elif (class_name == 'Sff8472Api'):
             self.sfp_type = 'SFP'
             optoe_type = self.OPTOE_DRV_TYPE2
-        elif (class_name == 'Sff8636Api'):
+        elif (class_name == 'Sff8636Api' or class_name == 'Sff8436Api'):
             self.sfp_type = 'QSFP'
             optoe_type = self.OPTOE_DRV_TYPE1
 

@@ -6,37 +6,29 @@
 
 try:
     import time
-    import traceback
-    from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform_pddf_base.pddf_chassis import PddfChassis
+    from .component import Component
     from sonic_platform.sfp import *
-    from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
-    from sonic_platform.fan_drawer import FanDrawer
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.watchdog import Watchdog
-    from sonic_platform.component import Component
-    from sonic_platform.eeprom import Eeprom
-    from sonic_platform.logger import logger
-    from sonic_platform.dcdc import Dcdc
     from .sfp_config import *
-    from sonic_py_common.general import getstatusoutput_noshell
-
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-class Chassis(ChassisBase):
+class Chassis(PddfChassis):
     """
-    Platform-specific Chassis class
+    PDDF Platform-specific Chassis class
     """
+
     STATUS_INSERTED = "1"
     STATUS_REMOVED = "0"
     sfp_present_dict = {}
-    
-    def __init__(self):
-        ChassisBase.__init__(self)
-        self._dcdc_list = []
+
+    def __init__(self, pddf_data=None, pddf_plugin_data=None):
+        PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
+        for i in range(0,3):
+            self._component_list.append(Component(i))
 
         try:
+            self._sfp_list = []
             sfp_config = get_sfp_config()
             self.port_start_index = sfp_config.get("port_index_start", 0)
             self.port_num = sfp_config.get("port_num", 0)
@@ -69,37 +61,11 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-#        try:
-#            is_power_loss = False
-#            # enable read
-#            getstatusoutput_noshell(self.disable_write)
-#            getstatusoutput_noshell(self.enable_read)
-#            ret, log = getstatusoutput_noshell(self.read_value)
-#            if ret == 0 and "0x0a" in log:
-#                is_power_loss = True
-#
-#            # erase i2c and e2
-#            getstatusoutput_noshell(self.enable_erase)
-#            time.sleep(1)
-#            getstatusoutput_noshell(self.disable_erase)
-#            # clear data
-#            getstatusoutput_noshell(self.enable_write)
-#            getstatusoutput_noshell(self.disable_read)
-#            getstatusoutput_noshell(self.disable_write)
-#            getstatusoutput_noshell(self.enable_read)
-#            # enable write and set data
-#            getstatusoutput_noshell(self.enable_write)
-#            getstatusoutput_noshell(self.disable_read)
-#            getstatusoutput_noshell(self.write_value)
-#            if is_power_loss:
-#                return(self.REBOOT_CAUSE_POWER_LOSS, None)
-#        except Exception as e:
-#            logger.error(str(e))
 
         return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
     def get_change_event(self, timeout=0):
-        change_event_dict = {"fan": {}, "sfp": {}, "voltage": {}}
+        change_event_dict = {"sfp": {}}
 
         start_time = time.time()
         forever = False
@@ -137,7 +103,6 @@ class Chassis(ChassisBase):
                             time.sleep(timeout)
                         return True, change_event_dict
         except Exception as e:
-            logger.error(str(e))
             print(e)
         print("get_change_event: Should not reach here.")
         return False, change_event_dict
@@ -166,3 +131,4 @@ class Chassis(ChassisBase):
         self.sfp_present_dict = cur_sfp_present_dict
 
         return ret_dict
+
