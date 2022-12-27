@@ -55,9 +55,10 @@ jobs:
   - bash: |
       set -ex
       image_tag=$(BLDENV=${{ parameters.dist }} make -f Makefile.work showtag PLATFORM=generic PLATFORM_ARCH=${{ parameters.arch }} | grep sonic-slave | tail -n 1)
-      echo $image_tag
-      exit 1
       image_latest=$(echo $(echo $image_tag | awk -F: '{print$1}'):latest)
+      if grep ${{ parameters.arch }} ${{ parameters.pool }};then
+        image_latest=$(echo ${image_tag} | sed 's/:/-${{ parameters.arch }}:/')
+      fi
       image_branch=$(echo $(echo $image_tag | awk -F: '{print$1}'):$(Build.SourceBranchName))
       docker rmi $image_tag || true
 
@@ -74,7 +75,7 @@ jobs:
       docker push ${REGISTRY_SERVER}/${image_tag}
       docker tag ${image_tag} ${REGISTRY_SERVER}/${image_branch}
       docker push ${REGISTRY_SERVER}/${image_branch}
-      if [[ "${{ parameters.arch }}" == "amd64" ]] && [[ "$(Build.SourceBranchName)" == "master" ]];then
+      if [[ "$(Build.SourceBranchName)" == "master" ]];then
         docker tag ${image_tag} ${REGISTRY_SERVER}/${image_latest}
         docker push ${REGISTRY_SERVER}/${image_latest}
       fi
