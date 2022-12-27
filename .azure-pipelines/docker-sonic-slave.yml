@@ -67,7 +67,7 @@ stages:
             arch: ${{ arch }}
             dist: ${{ dist }}
             ${{ if ne(arch, 'amd64') }}:
-              march: march_${{ arch }}
+              march: _march_${{ arch }}
 - stage: Build_native_arm
   dependsOn: []
   jobs:
@@ -80,4 +80,4 @@ stages:
               pool: sonicbld-${{ arch }}
               arch: ${{ arch }}
               dist: ${{ dist }}
-              march: ${{ arch }}
+              march: _${{ arch }}
