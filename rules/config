@@ -278,8 +278,8 @@ INCLUDE_TEAMD = y
 # INCLUDE_ROUTER_ADVERTISER - build docker-radv for router advertiser support
 INCLUDE_ROUTER_ADVERTISER = y
 
-# INCLUDE_BGP - build docker-fmp-frr for BGP support
-INCLUDE_BGP = y
+# INCLUDE_ROUTING_STACK - build docker-fmp-frr for BGP support
+INCLUDE_ROUTING_STACK = y
 
 # INCLUDE_SWSS - build docker-swss for orchagent support
 INCLUDE_SWSS = y
