@@ -1,6 +1,10 @@
 {
     "chassis": {
         "name": "Celestica-DX010-C32",
+        "status_led": {
+            "controllable": true,
+            "colors": ["green", "off"]
+        },
         "components": [
             {
                 "name": "CPLD1"
@@ -20,34 +24,68 @@
         ],
         "fans": [
             {
-                "name": "FAN-1F"
+                "name": "FAN-1F",
+                "speed": {
+                    "controllable": false
+                },
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "red","amber", "off"]
+                }
             },
             {
-                "name": "FAN-1R"
+                "name": "FAN-1R",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-2F"
+                "name": "FAN-2F",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-2R"
+                "name": "FAN-2R",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-3F"
+                "name": "FAN-3F",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-3R"
+                "name": "FAN-3R",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-4F"
+                "name": "FAN-4F",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-4R"
+                "name": "FAN-4R",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-5F"
+                "name": "FAN-5F",
+                "speed": {
+                    "controllable": false
+                }
             },
             {
-                "name": "FAN-5R"
+                "name": "FAN-5R",
+                "speed": {
+                    "controllable": false
+                }
             }
         ],
         "fan_drawers": [
@@ -55,10 +93,16 @@
                 "name": "Drawer1",
                 "fans": [
                     {
-                        "name": "FAN-1F"
+                        "name": "FAN-1F",
+                        "speed": {
+                            "controllable": false
+                        }
                     },
                     {
-                        "name": "FAN-1R"
+                        "name": "FAN-1R",
+                        "speed": {
+                            "controllable": false
+                        }
                     }
                 ]
             },
@@ -66,10 +110,16 @@
                 "name": "Drawer2",
                 "fans": [
                     {
-                        "name": "FAN-2F"
+                        "name": "FAN-2F",
+                        "speed": {
+                            "controllable": false
+                        }
                     },
                     {
-                        "name": "FAN-2R"
+                        "name": "FAN-2R",
+                        "speed": {
+                            "controllable": false
+                        }
                     }
                 ]
             },
@@ -77,10 +127,16 @@
                 "name": "Drawer3",
                 "fans": [
                     {
-                        "name": "FAN-3F"
+                        "name": "FAN-3F",
+                        "speed": {
+                            "controllable": false
+                        }
                     },
                     {
-                        "name": "FAN-3R"
+                        "name": "FAN-3R",
+                        "speed": {
+                            "controllable": false
+                        }
                     }
                 ]
             },
@@ -88,10 +144,16 @@
                 "name": "Drawer4",
                 "fans": [
                     {
-                        "name": "FAN-4F"
+                        "name": "FAN-4F",
+                        "speed": {
+                            "controllable": false
+                        }
                     },
                     {
-                        "name": "FAN-4R"
+                        "name": "FAN-4R",
+                        "speed": {
+                            "controllable": false
+                        }
                     }
                 ]
             },
@@ -99,10 +161,16 @@
                 "name": "Drawer5",
                 "fans": [
                     {
-                        "name": "FAN-5F"
+                        "name": "FAN-5F",
+                        "speed": {
+                            "controllable": false
+                        }
                     },
                     {
-                        "name": "FAN-5R"
+                        "name": "FAN-5R",
+                        "speed": {
+                            "controllable": false
+                        }
                     }
                 ]
             }
@@ -112,40 +180,72 @@
                 "name": "PSU-1",
                 "fans": [
                     {
-                        "name": "PSU-1 FAN-1"
+                        "name": "PSU-1 FAN-1",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "controllable": false
+                        }
                     }
-                ]
+                ],
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green", "off"]
+                }
             },
             {
                 "name": "PSU-2",
                 "fans": [
                     {
-                        "name": "PSU-2 FAN-1"
+                        "name": "PSU-2 FAN-1",
+                        "speed": {
+                            "controllable": false
+                        },
+                        "status_led": {
+                            "controllable": false
+                        }
                     }
-                ]
+                ],
+                "status_led": {
+                    "controllable": true,
+                    "colors": ["green" ,"off"]
+                }
             }
         ],
         "thermals": [
             {
-                "name": "Front-panel temp sensor 1"
+                "name": "Front-panel temp sensor 1",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "Front-panel temp sensor 2"
+                "name": "Front-panel temp sensor 2",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "ASIC temp sensor"
+                "name": "ASIC temp sensor",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "Rear-panel temp sensor 1"
+                "name": "Rear-panel temp sensor 1",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             },
             {
-                "name": "Rear-panel temp sensor 2"
+                "name": "Rear-panel temp sensor 2",
+                "controllable": false,
+                "low-threshold": false,
+                "low-crit-threshold": false
             }
         ],
         "sfps": [
-            {
-                "name": "Ethernet124"
-            },
             {
                 "name": "Ethernet0"
             },
@@ -238,6 +338,9 @@
             },
             {
                 "name": "Ethernet120"
+            },
+            {
+                "name": "Ethernet124"
             }
         ]
     },

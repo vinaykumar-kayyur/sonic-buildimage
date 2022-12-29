@@ -301,7 +301,7 @@ class Sfp(SfpBase):
 
     def _convert_string_to_num(self, value_str):
         if "-inf" in value_str:
-            return 'N/A'
+            return float("-inf")
         elif "Unknown" in value_str:
             return 'N/A'
         elif 'dBm' in value_str:
@@ -764,8 +764,6 @@ class Sfp(SfpBase):
             transceiver_info_dict['encoding'] = "Not supported for CMIS cables"
             transceiver_info_dict['ext_identifier'] = str(
                 sfp_ext_identifier_data['data']['Extended Identifier']['value'])
-            transceiver_info_dict['ext_rateselect_compliance'] = "Not supported for CMIS cables"
-            transceiver_info_dict['specification_compliance'] = "Not supported for CMIS cables"
             transceiver_info_dict['cable_type'] = "Length Cable Assembly(m)"
             transceiver_info_dict['cable_length'] = str(
                 sfp_cable_len_data['data']['Length Cable Assembly(m)']['value'])
@@ -1520,7 +1518,7 @@ class Sfp(SfpBase):
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(
                     dom_control_raw, 0)
-                return ('On' == dom_control_data['data']['PowerOverride'])
+                return ('On' == dom_control_data['data']['PowerOverride']['value'])
             else:
                 return False
         else:
@@ -2039,10 +2037,11 @@ class Sfp(SfpBase):
 
                 # Write to eeprom
                 sysfsfile_eeprom = open(self._eeprom_path, "r+b")
+                sysfsfile_eeprom.read(1)
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', tx_disable_value))
-            except IOError:
-                return False
+            except IOError as e:
+                print("Error: unable to open file: %s" % str(e))
             finally:
                 if sysfsfile_eeprom is not None:
                     sysfsfile_eeprom.close()
@@ -2113,6 +2112,7 @@ class Sfp(SfpBase):
 
                 # Write to eeprom
                 sysfsfile_eeprom = open(self._eeprom_path, "r+b")
+                sysfsfile_eeprom.read(1)
                 sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', value))
             except IOError as e:
