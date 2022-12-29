@@ -766,8 +766,8 @@ class Chassis(ChassisBase):
         """
         #read reboot causes files in the following order
 
-        # Skip the hardware reboot cause check if reboot cause found from cmdline
-        # This is because the leftover hardware reboot cause will confuse the reboot cause determine
+        # To avoid the leftover hardware reboot cause confusing the reboot cause determine service
+        # Skip the hardware reboot cause check if warm/fast reboot cause found from cmdline
         if utils.is_host():
             reboot_cause = self._parse_warmfast_reboot_from_proc_cmdline()
             if reboot_cause:
