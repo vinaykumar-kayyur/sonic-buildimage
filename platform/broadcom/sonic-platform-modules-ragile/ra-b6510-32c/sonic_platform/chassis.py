@@ -24,7 +24,7 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-        for i in range(0,3):
+        for i in range(0,5):
             self._component_list.append(Component(i))
 
         try:
