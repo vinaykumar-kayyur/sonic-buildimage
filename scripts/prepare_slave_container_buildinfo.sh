@@ -21,7 +21,7 @@ cp -rf $SLAVE_DIR/buildinfo/* /usr/local/share/buildinfo/
 
 # Enable reproducible mirrors
 set_reproducible_mirrors
-apt-get update > /dev/null 2>&1
+DEBIAN_FRONTEND=noninteractive apt-get -qq update > /dev/null 2>&1
 
 # Build the slave version config
 [ -d /usr/local/share/buildinfo/versions ] && rm -rf /usr/local/share/buildinfo/versions

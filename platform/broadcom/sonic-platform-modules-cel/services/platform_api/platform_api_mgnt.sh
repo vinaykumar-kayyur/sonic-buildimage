@@ -9,12 +9,12 @@ PY3_PACK=$DEVICE/$PLATFORM/sonic_platform-1.0-py3-none-any.whl
 install() {
     # Install python3 sonic-platform package
     if [ -e $PY3_PACK ]; then
-        pip3 install $PY3_PACK
+        pip3 install -q $PY3_PACK
     fi
 
     if [ -e $DEVICE/$PLATFORM/pddf/sonic_platform-1.0-py3-none-any.whl ]; then
 	PY3_PACK=$DEVICE/$PLATFORM/pddf/sonic_platform-1.0-py3-none-any.whl
-	pip3 install $PY3_PACK
+	pip3 install -q $PY3_PACK
     fi	    
 }
 
@@ -33,7 +33,7 @@ deinit() {
 
 uninstall() {
     # Uninstall sonic-platform package
-    pip uninstall -y sonic-platform >/dev/null 2>/dev/null
+    pip uninstall -q -y sonic-platform >/dev/null 2>/dev/null
 }
 
 case "$1" in
