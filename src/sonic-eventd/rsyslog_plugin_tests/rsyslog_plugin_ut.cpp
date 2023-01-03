@@ -87,6 +87,7 @@ TEST(syslog_parser, matching_regex_timestamp) {
     event_params_t expectedDict;
     expectedDict["message"] = "test_message";
     expectedDict["other_data"] = "test_data";
+    // Adding stored year to messages as syslog don't container year
     expectedDict["timestamp"] = g_stored_year + "-07-21T02:10:00.000000Z";
 
     unique_ptr<SyslogParser> parser(new SyslogParser());
