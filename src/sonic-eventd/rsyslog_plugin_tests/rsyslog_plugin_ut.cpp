@@ -92,6 +92,7 @@ TEST(syslog_parser, matching_regex_timestamp) {
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
+    parser->m_timestampFormatter->m_storedTimestamp = "010100:00:00.000000";
     parser->m_timestampFormatter->m_storedYear = "2022";
     bool success = parser->parseMessage("Jul 21 02:10:00.000000 message test_message other_data test_data", tag, paramDict, luaState);
     EXPECT_EQ(true, success);
@@ -194,6 +195,7 @@ TEST(syslog_parser, lua_code_valid_2) {
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
 
+    parser->m_timestampFormatter->m_storedTimestamp = "010100:00:00.000000";
     parser->m_timestampFormatter->m_storedYear = "2022";
     bool success = parser->parseMessage("Dec  3 12:36:24.503424 NOTIFICATION: received from neighbor 10.10.24.216 active 6/2 (Administrative Shutdown) 0 bytes", tag, paramDict, luaState);
     EXPECT_EQ(true, success);
@@ -255,12 +257,15 @@ TEST(timestampFormatter, changeTimestampFormat) {
     vector<string> timestampTwo = { "Jan", "1", "00:00:00.000000" };
     vector<string> timestampThree = { "Dec", "31", "23:59:59.000000" }; 
 
+    formatter->m_storedTimestamp = "010100:00:00.000000";
     formatter->m_storedYear = "2022";
     string formattedTimestampOne = formatter->changeTimestampFormat(timestampOne);
     EXPECT_EQ("2022-07-20T10:09:40.230874Z", formattedTimestampOne);
 
     EXPECT_EQ("072010:09:40.230874", formatter->m_storedTimestamp);
 
+    formatter->m_storedTimestamp = "010100:00:00.000000";
+    formatter->m_storedYear = "2022";
     string formattedTimestampTwo = formatter->changeTimestampFormat(timestampTwo);
     EXPECT_EQ("2022-01-01T00:00:00.000000Z", formattedTimestampTwo);
 
