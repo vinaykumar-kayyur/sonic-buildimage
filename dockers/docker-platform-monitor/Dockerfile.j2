@@ -72,13 +72,7 @@ RUN pip3 install libpci
 # Clean up
 RUN apt-get purge -y           \
         build-essential        \
-        python3-dev         && \
-    apt-get clean -y        && \
-    apt-get autoclean -y    && \
-    apt-get autoremove -y   && \
-    rm -rf /debs               \
-           /python-wheels      \
-           ~/.cache
+        python3-dev
 
 COPY ["lm-sensors.sh", "/usr/bin/"]
 COPY ["docker-pmon.supervisord.conf.j2", "docker_init.j2", "/usr/share/sonic/templates/"]

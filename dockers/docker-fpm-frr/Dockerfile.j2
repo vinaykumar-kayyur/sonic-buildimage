@@ -39,12 +39,6 @@ RUN useradd -u ${frr_user_uid} -g ${frr_user_gid} -M -s /bin/false frr
 
 RUN chown -R ${frr_user_uid}:${frr_user_gid} /etc/frr/
 
-# Clean up
-RUN apt-get clean -y      && \
-    apt-get autoclean -y  && \
-    apt-get autoremove -y && \
-    rm -rf /debs ~/.cache /python-wheels
-
 COPY ["frr", "/usr/share/sonic/templates"]
 COPY ["docker_init.sh", "/usr/bin/"]
 COPY ["snmp.conf", "/etc/snmp/frr.conf"]

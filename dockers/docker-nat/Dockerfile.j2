@@ -31,7 +31,4 @@ COPY ["restore_nat_entries.py", "/usr/bin/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

@@ -74,12 +74,6 @@ RUN pip3  install \
 RUN rm -f /etc/apt/sources.list.d/03_stretch_af.list && apt-get update
 {%- endif %}
 
-# Clean up
-RUN apt-get clean -y; \
-    apt-get autoclean -y; \
-    apt-get autoremove -y
-RUN rm -rf /debs ~/.cache
-
 RUN mkdir -p /home/pde
 
 COPY ["bench.sh", "/usr/bin/"]

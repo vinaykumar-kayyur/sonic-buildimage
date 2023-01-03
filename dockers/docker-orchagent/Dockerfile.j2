@@ -59,11 +59,7 @@ RUN apt-get remove -y gcc
 # Clean up
 RUN apt-get purge -y          \
         build-essential       \
-        python3-dev        && \
-    apt-get clean -y       && \
-    apt-get autoclean -y   && \
-    apt-get autoremove -y  && \
-    rm -rf /debs ~/.cache
+        python3-dev
 
 COPY ["files/arp_update", "/usr/bin"]
 COPY ["arp_update.conf", "files/arp_update_vars.j2", "/usr/share/sonic/templates/"]

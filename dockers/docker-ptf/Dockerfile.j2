@@ -77,11 +77,7 @@ RUN apt-get update          \
 
 # Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
 # TODO: Clean up this step
-RUN rm -rf /debs \
-    && apt-get -y autoclean \
-    && apt-get -y autoremove \
-    && rm -rf /var/lib/apt/lists/* \
-    && wget --https-only https://bootstrap.pypa.io/pip/2.7/get-pip.py \
+RUN wget --https-only https://bootstrap.pypa.io/pip/2.7/get-pip.py \
     && python get-pip.py \
     && rm -f get-pip.py \
     && pip install setuptools \

@@ -59,12 +59,7 @@ RUN python3 -m sonic_ax_impl install
 RUN apt-get -y purge     \
         python3-dev      \
         gcc              \
-        make                && \
-    apt-get clean -y        && \
-    apt-get autoclean -y    && \
-    apt-get autoremove -y --purge && \
-    find / | grep -E "__pycache__" | xargs rm -rf && \
-    rm -rf /debs /python-wheels ~/.cache
+        make
 
 COPY ["start.sh", "/usr/bin/"]
 COPY ["snmp_yml_to_configdb.py", "/usr/bin/"]

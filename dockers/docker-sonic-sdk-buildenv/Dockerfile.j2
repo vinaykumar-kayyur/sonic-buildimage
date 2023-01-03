@@ -30,12 +30,6 @@ RUN apt-get update && \
 {{ install_python_wheels(docker_sonic_sdk_buildenv_whls.split(' ')) }}
 {% endif %}
 
-# Clean up
-RUN apt-get clean -y       && \
-    apt-get autoclean -y   && \
-    apt-get autoremove -y  && \
-    rm -rf /debs /python-wheels/
-
 LABEL com.azure.sonic.sdk.versions.base-os=$base_os_version
 LABEL com.azure.sonic.sdk.versions.database=$docker_database_version
 LABEL com.azure.sonic.sdk.versions.swss=$docker_swss_version

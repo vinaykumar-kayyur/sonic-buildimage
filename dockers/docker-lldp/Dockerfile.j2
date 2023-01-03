@@ -29,14 +29,6 @@ RUN apt-get update
 {{ install_python_wheels(docker_lldp_whls.split(' ')) }}
 {% endif %}
 
-# Clean up
-RUN apt-get clean -y            && \
-    apt-get autoclean -y        && \
-    apt-get autoremove -y       && \
-    rm -rf /debs                   \
-           /python-wheels          \
-           ~/.cache
-
 COPY ["docker-lldp-init.sh", "/usr/bin/"]
 COPY ["start.sh", "/usr/bin/"]
 COPY ["waitfor_lldp_ready.sh", "/usr/bin/"]
