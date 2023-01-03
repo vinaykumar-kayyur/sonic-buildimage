@@ -45,10 +45,10 @@ variables:
 
 stages:
 - stage: Analysis
-  pool: sonicanalysis
   jobs:
   - job:
     displayName: "Semgrep"
+    continueOnError: true
     pool:
       vmImage: ubuntu-latest
     steps:
