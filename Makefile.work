@@ -37,6 +37,9 @@
 #  * ENABLE_TRANSLIB_WRITE: Enable translib write/config operations via the gNMI interface.
 #  *                 Default: unset
 #  *                 Values: y
+#  * ENABLE_NATIVE_WRITE: Enable native write/config operations via the gNMI interface.
+#  *                 Default: unset
+#  *                 Values: y
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
@@ -50,6 +53,9 @@
 #  * ENABLE_BOOTCHART: Enable SONiC bootchart
 #  *                 Default: n
 #  *                 Values: y,n
+#  * GZ_COMPRESS_PROGRAM: Select pigz to reduce build time
+#  *                 Default: gzip
+#  *                 Values: pigz,gzip
 #
 ###############################################################################
 
@@ -137,6 +143,10 @@ ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
 endif
 
+ifneq ($(GZ_COMPRESS_PROGRAM), pigz)
+override GZ_COMPRESS_PROGRAM = gzip
+endif
+
 ifeq ($(CONFIGURED_ARCH),amd64)
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 MULTIARCH_QEMU_ENVIRON = n
@@ -172,11 +182,22 @@ ifeq ($(ENABLE_FIPS), y)
 endif
 endif
 
+SONIC_VERSION_CACHE := $(filter-out none,$(SONIC_VERSION_CACHE_METHOD))
+SONIC_OVERRIDE_BUILD_VARS += SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE)
+SONIC_OVERRIDE_BUILD_VARS += SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE)
+export SONIC_VERSION_CACHE SONIC_VERSION_CACHE_SOURCE
+$(shell test -d $(SONIC_VERSION_CACHE_SOURCE) || \
+    mkdir -p $(SONIC_VERSION_CACHE_SOURCE) && chmod -f 777 $(SONIC_VERSION_CACHE_SOURCE) 2>/dev/null )
+
 # Generate the version control build info
 $(shell \
 	SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
 	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+	DISTRO=$(BLDENV) \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
@@ -186,6 +207,7 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 	ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
 	DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
+	GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
 	j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
 
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
@@ -195,6 +217,8 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 
 PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/prepare_docker_buildinfo.sh \
 		$(SLAVE_BASE_IMAGE) \
 		$(SLAVE_DIR)/Dockerfile \
@@ -208,8 +232,7 @@ $(shell $(PREPARE_DOCKER) )
 SLAVE_BASE_TAG = $(shell \
 	cat $(SLAVE_DIR)/Dockerfile \
 		$(SLAVE_DIR)/sources.list.* \
-		$(SLAVE_DIR)/buildinfo/versions/versions-* \
-		src/sonic-build-hooks/hooks/* 2>/dev/null \
+		$(SLAVE_DIR)/buildinfo/versions/versions-* 2>/dev/null \
 	| sha1sum \
 	| awk '{print substr($$1,0,11);}')
 
@@ -218,15 +241,20 @@ SLAVE_TAG = $(shell \
 	(cat $(SLAVE_DIR)/Dockerfile.user \
 		 $(SLAVE_DIR)/Dockerfile \
 		 $(SLAVE_DIR)/buildinfo/versions/versions-* \
-		 .git/HEAD \
 	&& echo $(USER)/$(PWD)/$(CONFIGURED_PLATFORM)) \
 	| sha1sum \
 	| awk '{print substr($$1,0,11);}')
 
 COLLECT_DOCKER=DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	DBGOPT='$(DBGOPT)' \
 	scripts/collect_docker_version_files.sh \
-	$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
-		target 
+		$(SLAVE_BASE_IMAGE) \
+		target \
+		$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
+		$(SLAVE_DIR) \
+		$(SLAVE_DIR)/Dockerfile
+
 OVERLAY_MODULE_CHECK := \
     lsmod | grep -q "^overlay " &>/dev/null || \
     zgrep -q 'CONFIG_OVERLAY_FS=y' /proc/config.gz &>/dev/null || \
@@ -278,6 +306,10 @@ endif
 
 ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
+endif
+
+ifneq ($(SONIC_VERSION_CACHE_SOURCE),)
+	DOCKER_RUN += -v "$(SONIC_VERSION_CACHE_SOURCE):/vcache:rw"
 endif
 
 ifeq ($(SONIC_ENABLE_SECUREBOOT_SIGNATURE), y)
@@ -373,7 +405,10 @@ DOCKER_SLAVE_BASE_BUILD = docker build --no-cache \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
 		    --build-arg no_proxy=$(no_proxy) \
-		    $(SLAVE_DIR) $(SPLIT_LOG) $(DOCKER_BASE_LOG)
+		    --build-arg SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+		    --build-arg SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+		    $(SLAVE_DIR) \
+		    $(SPLIT_LOG) $(DOCKER_BASE_LOG)
 
 DOCKER_BASE_PULL = docker pull \
 			$(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
@@ -480,6 +515,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
                            ENABLE_TRANSLIB_WRITE=$(ENABLE_TRANSLIB_WRITE) \
+                           ENABLE_NATIVE_WRITE=$(ENABLE_NATIVE_WRITE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
@@ -497,14 +533,13 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
                            MIRROR_URLS=$(MIRROR_URLS) \
                            MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
+                           GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
 
-ifeq ($(filter clean,$(MAKECMDGOALS)),)
-COLLECT_BUILD_VERSION = { DBGOPT='$(DBGOPT)' scripts/collect_build_version_files.sh \$$?; }
-endif
+COLLECT_BUILD_VERSION = { scripts/collect_build_version_files.sh \$$?; }
 
 ifdef SOURCE_FOLDER
 	DOCKER_RUN += -v $(SOURCE_FOLDER):/var/$(USER)/src
@@ -545,7 +580,7 @@ sonic-build-hooks:
 	$(Q)pushd src/sonic-build-hooks; TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) $(MAKE) all; popd
 	$(Q)mkdir -p $(SLAVE_DIR)/buildinfo
 	$(Q)cp src/sonic-build-hooks/buildinfo/sonic-build-hooks* $(SLAVE_DIR)/buildinfo
-	$(Q)[ "$(MULTIARCH_QEMU_ENVIRON)" == y ] && scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV)
+	$(Q)if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ]; then scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV); fi
 	$(Q)scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV)
 
 sonic-slave-base-build : | sonic-build-hooks
