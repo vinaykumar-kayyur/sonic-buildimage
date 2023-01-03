@@ -259,13 +259,13 @@ TEST(timestampFormatter, changeTimestampFormat) {
 
     formatter->m_storedYear = g_stored_year;
     string formattedTimestampOne = formatter->changeTimestampFormat(timestampOne);
-    string expectedTimestampOne = g_stored_year + "-07-20T10:09:40.230874Z"
+    string expectedTimestampOne = g_stored_year + "-07-20T10:09:40.230874Z";
     EXPECT_EQ(expectedTimestampOne, formattedTimestampOne);
 
     EXPECT_EQ("072010:09:40.230874", formatter->m_storedTimestamp);
 
     string formattedTimestampTwo = formatter->changeTimestampFormat(timestampTwo);
-    string expectedTimestampTwo = g_stored_year + "-01-01T00:00:00.000000Z"
+    string expectedTimestampTwo = g_stored_year + "-01-01T00:00:00.000000Z";
     EXPECT_EQ(expectedTimestampTwo, formattedTimestampTwo);
 
     formatter->m_storedTimestamp = "010100:00:00.000000";
