@@ -1,0 +1,60 @@
+Don't reset the retry count after setting it for 60 seconds
+
+From: Saikrishna Arcot <sarcot@microsoft.com>
+Date: 2023-01-18 14:26:36 -0800
+
+After setting the retry count to some custom value, if a normal LACP
+packet comes in without a custom retry count, don't reset it back to
+that custom retry count for the first 60 seconds.
+---
+ teamd/teamd_runner_lacp.c |   22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index f58ad3b..7df3bcb 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -180,6 +180,7 @@ struct lacp {
+ 	struct lacp_port *selected_agg_lead; /* leading port of selected aggregator */
+ 	bool carrier_up;
+ 	time_t warm_start_mode_timer;
++	time_t next_retry_count_change_time;
+ 	struct {
+ 		bool active;
+ #define		LACP_CFG_DFLT_ACTIVE true
+@@ -1457,6 +1458,8 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+ 	return err;
+ }
+ 
++#define LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT 60
++
+ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+ {
+ 	int err;
+@@ -1493,13 +1496,20 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+ 					   lacp_port->partner_retry_count,
+ 					   lacpdu->v2.actor_retry_count);
+ 		lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
++		lacp_port->lacp->next_retry_count_change_time = time(NULL) + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT;
+ 	} else {
+-		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
+-			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
+-					   lacp_port->tdport->ifname,
+-					   lacp_port->partner_retry_count,
+-					   LACP_CFG_DFLT_RETRY_COUNT);
+-		lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++		time_t currentTime = time(NULL);
++		if (currentTime < lacp_port->lacp->next_retry_count_change_time) {
++			teamd_log_dbg(lacp_port->ctx, "%s: retry count changed too recently",
++					lacp_port->tdport->ifname);
++		} else {
++			if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
++				teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
++						lacp_port->tdport->ifname,
++						lacp_port->partner_retry_count,
++						LACP_CFG_DFLT_RETRY_COUNT);
++			lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++		}
+ 	}
+ 
+ 	err = lacp_port_set_state(lacp_port, PORT_STATE_CURRENT);
