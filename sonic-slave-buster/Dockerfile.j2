@@ -22,38 +22,10 @@ MAINTAINER gulv@microsoft.com
 
 COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
 
-RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian buster-backports main" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian-security buster_updates main contrib non-free" >> /etc/apt/sources.list
-
-{%- if CONFIGURED_ARCH == "armhf" and CROSS_BUILD_ENVIRON != "y" %}
-RUN echo "deb [arch=armhf] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
-        echo "deb-src [arch=armhf] http://deb.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=armhf] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=armhf] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=armhf] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian-security buster_updates main contrib non-free" >> /etc/apt/sources.list
-{%- elif CONFIGURED_ARCH == "arm64" and CROSS_BUILD_ENVIRON != "y" %}
-RUN echo "deb [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
-        echo "deb-src [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=arm64] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src [arch=arm64] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=arm64] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian-security buster_updates main contrib non-free" >> /etc/apt/sources.list
-{%- elif CROSS_BUILD_ENVIRON == "y" %}
+{%- if CROSS_BUILD_ENVIRON != "y" %}
+COPY ["sources.list.{{ CONFIGURED_ARCH }}", "/etc/apt/sources.list"]
+{%- else %}
+COPY ["sources.list.amd64", "/etc/apt/sources.list"]
 {%- if CONFIGURED_ARCH == "armhf" %}
 ARG arch=armhf
 ARG gcc_arch=arm-linux-gnueabihf
@@ -117,6 +89,7 @@ RUN apt-get update && apt-get install -y \
         curl \
         wget \
         unzip \
+        {{ GZ_COMPRESS_PROGRAM }} \
         git \
         build-essential \
         libtool \
@@ -627,7 +600,7 @@ RUN add-apt-repository \
            $(lsb_release -cs) \
            stable"
 RUN apt-get update
-RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-buster docker-ce-cli=5:18.09.5~3-0~debian-buster
+RUN apt-get install -y docker-ce=5:20.10.21~3-0~debian-buster docker-ce-cli=5:20.10.21~3-0~debian-buster
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs {{ DOCKER_EXTRA_OPTS }}\"" >> /etc/default/docker
 RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 
