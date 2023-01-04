@@ -9,7 +9,7 @@ schedules:
   branches:
     include:
     - master
-    - 202012
+    - 202???
   always: true
 - cron: "0 4 * * *"
   displayName: nightly build for release
@@ -38,7 +38,7 @@ stages:
   variables:
   - name: CACHE_MODE
     value: wcache
-  - template: azure-pipelines-repd-build-variables.yml@buildimage
+  - template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
   jobs:
   - template: azure-pipelines-build.yml
     parameters:

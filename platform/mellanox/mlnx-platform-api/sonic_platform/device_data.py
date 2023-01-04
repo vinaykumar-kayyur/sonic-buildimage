@@ -156,6 +156,10 @@ DEVICE_DATA = {
     },
     'x86_64-nvidia_sn2201-r0': {
         'thermal': {
+            'minimum_table': {
+                "unk_trust": {"-127:30": 13, "31:35": 14, "36:40": 15, "41:120": 16},
+                "unk_untrust": {"-127:15": 13, "16:20": 14, "21:25": 15, "26:30": 16, "31:35": 17, "36:40": 18, "41:120": 19},
+            },
             "capability": {
                 "comex_amb": False,
                 "cpu_amb": True
@@ -163,6 +167,12 @@ DEVICE_DATA = {
         }
     },
     'x86_64-nvidia_sn5600-r0': {
+        'thermal': {
+            "capability": {
+                "comex_amb": False,
+                "pch_temp": True
+            }
+        }
     }
 }
 
@@ -220,6 +230,11 @@ class DeviceDataManager:
     @utils.read_only_cache()
     def get_cpu_thermal_count(cls):
         return len(glob.glob('run/hw-management/thermal/cpu_core[!_]'))
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_sodimm_thermal_count(cls):
+        return len(glob.glob('/run/hw-management/thermal/sodimm*_temp_input'))
 
     @classmethod
     @utils.read_only_cache()
