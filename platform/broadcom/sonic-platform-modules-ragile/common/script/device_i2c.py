@@ -5,7 +5,7 @@ import click
 import os
 import time
 import subprocess
-from ragileconfig import GLOBALCONFIG, GLOBALINITPARAM, MAC_LED_RESET, STARTMODULE, i2ccheck_params
+from ragileconfig import *
 from ragileutil import rgpciwr, rgi2cset, io_wr
 from sonic_py_common.general import getstatusoutput_noshell, getstatusoutput_noshell_pipe
 
