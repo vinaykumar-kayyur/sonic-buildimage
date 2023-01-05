@@ -521,7 +521,7 @@ static int init_socket(dhcp_device_context_t *context, const char *intf)
         context->tx_sock = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, htons(ETH_P_ALL));
         if (context->rx_sock < 0 || context->tx_sock < 0) {
             syslog(LOG_ALERT, "socket: failed to open socket with '%s'\n", strerror(errno));
-            break;
+            exit(1);
         }
 
         struct sockaddr_ll rx_addr;
@@ -541,7 +541,7 @@ static int init_socket(dhcp_device_context_t *context, const char *intf)
         tx_addr.sll_protocol = htons(ETH_P_ALL);
         if (bind(context->tx_sock, (struct sockaddr *) &tx_addr, sizeof(tx_addr))) {
             syslog(LOG_ALERT, "bind: failed to bind to interface '%s' with '%s'\n", intf, strerror(errno));
-            break;
+            exit(1);
         }
 
         strncpy(context->intf, intf, sizeof(context->intf) - 1);
@@ -683,12 +683,12 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
     do {
         if (context == NULL) {
             syslog(LOG_ALERT, "NULL interface context pointer'\n");
-            break;
+            exit(1);
         }
 
         if (snaplen < UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) {
             syslog(LOG_ALERT, "dhcp_device_start_capture(%s): snap length is too low to capture DHCP options", context->intf);
-            break;
+            exit(1);
         }
 
         context->giaddr_ip = giaddr_ip;
@@ -696,18 +696,18 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
         context->buffer = (uint8_t *) malloc(snaplen);
         if (context->buffer == NULL) {
             syslog(LOG_ALERT, "malloc: failed to allocate memory for socket buffer '%s'\n", strerror(errno));
-            break;
+            exit(1);
         }
         context->snaplen = snaplen;
 
         if (setsockopt(context->rx_sock, SOL_SOCKET, SO_ATTACH_FILTER, &dhcp_inbound_sock_bfp, sizeof(dhcp_inbound_sock_bfp)) != 0) {
             syslog(LOG_ALERT, "setsockopt: failed to attach filter with '%s'\n", strerror(errno));
-            break;
+            exit(1);
         }
 
         if (setsockopt(context->tx_sock, SOL_SOCKET, SO_ATTACH_FILTER, &dhcp_outbound_sock_bfp, sizeof(dhcp_outbound_sock_bfp)) != 0) {
             syslog(LOG_ALERT, "setsockopt: failed to attach filter with '%s'\n", strerror(errno));
-            break;
+            exit(1);
         }
 
         update_vlan_mapping(context->intf, mConfigDbPtr);
@@ -717,7 +717,7 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
 
         if (rx_ev == NULL || tx_ev == NULL) {
             syslog(LOG_ALERT, "event_new: failed to allocate memory for libevent event '%s'\n", strerror(errno));
-            break;
+            exit(1);
         }
         event_add(rx_ev, NULL);
         event_add(tx_ev, NULL);
