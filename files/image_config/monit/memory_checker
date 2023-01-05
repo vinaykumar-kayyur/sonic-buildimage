@@ -24,6 +24,7 @@ import subprocess
 import sys
 import syslog
 import re
+import time
 
 import docker
 
@@ -66,6 +67,7 @@ def publish_events(container_name, mem_usage_bytes, threshold_value):
     params["mem_usage"] = mem_usage_bytes
     params["threshold"] = threshold_value
     swsscommon.event_publish(events_handle, EVENTS_PUBLISHER_TAG, params)
+    time.sleep(0.25) # buffer time to handle async send in event_publish
     swsscommon.events_deinit_publisher(events_handle)
 
 
