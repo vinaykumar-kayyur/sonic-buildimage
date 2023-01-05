@@ -281,8 +281,7 @@ static void read_tx_callback(int fd, short event, void *arg)
     dhcp_device_context_t *context = (dhcp_device_context_t*) arg;
     ssize_t buffer_sz;
 
-    while ((event == EV_READ) &&
-            ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT)) > 0)) {
+    while ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT)) > 0) {
         client_packet_handler(context, buffer_sz);
     }
 }
@@ -305,8 +304,7 @@ static void read_rx_callback(int fd, short event, void *arg)
     struct sockaddr_ll sll;
     socklen_t slen = sizeof sll;
 
-    while ((event == EV_READ) &&
-           ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0)) 
+    while ((buffer_sz = recvfrom(fd, context->buffer, context->snaplen, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0) 
     {
         char interfaceName[IF_NAMESIZE];
         if (if_indextoname(sll.sll_ifindex, interfaceName) == NULL) {
