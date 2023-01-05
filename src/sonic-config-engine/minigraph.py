@@ -532,9 +532,9 @@ def parse_dpg(dpg, hname):
                 intfs_inpc.append(pcmbr_list[i])
                 pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
-                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75))), 'lacp_key': 'auto'}
             else:
-                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
+                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75))), 'lacp_key': 'auto' }
         port_nhipv4_map = {}
         port_nhipv6_map = {}
         nhg_int = ""
@@ -1450,7 +1450,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'hostname': hostname,
         'hwsku': hwsku,
         'type': device_type,
-        'synchronous_mode': 'enable'
+        'synchronous_mode': 'enable',
+        'yang_config_validation': 'disable'
         }
     }
 
@@ -1789,6 +1790,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if is_storage_device:
         results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
+
+    # remove bgp monitor and slb peers for storage backend
+    if is_storage_device and 'BackEnd' in current_device['type']:
+        results['BGP_MONITORS'] = {}
+        results['BGP_PEER_RANGE'] = {}
 
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
