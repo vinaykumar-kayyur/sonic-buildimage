@@ -1,0 +1,1396 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+import os
+import sys
+import signal
+import time
+import threading 
+import hashlib
+import subprocess
+import re
+import datetime
+import syslog
+import fcntl 
+import termios  
+import binascii 
+import unicodedata
+import json
+
+from faclib.util.rest import HttpRest
+from eepromutil.fru import *
+from eepromutil.fantlv import *
+from eepromutil.onietlv import *
+from rjutil.baseutil import get_machine_info
+from rjutil.baseutil import get_platform_info
+
+MAILBOX_DIR = "/sys/bus/i2c/devices/"        # sysfs Top-level directory
+
+def getdeviceplatform():
+    x = get_platform_info(get_machine_info())
+    if x != None:
+        filepath = "/usr/share/sonic/device/" + x
+    return filepath
+
+platform = get_platform_info(get_machine_info())                   # platform Obtaining platform information       x86_64-ragile_b6520-64cq-r0
+platformpath = getdeviceplatform()                                 # platformpath Gets the mapable Docker directory    /usr/share/sonic/device/x86_64-ragile_b6520-64cq-r0
+grtd_productfile = (platform + "_e2set_config").replace("-","_")
+configfile_pre   =  "/usr/local/bin/"                              # py path
+import sys
+sys.path.append(platformpath)
+sys.path.append(configfile_pre)
+
+global  module_product
+if os.path.exists(configfile_pre + grtd_productfile + ".py"):
+    module_product  = __import__(grtd_productfile, globals(), locals(), [], -1)
+else:
+    print ("不存在配置文件，退出")
+    exit(-1)
+
+def get_var(name):
+    global  module_product
+    var_name = "module_product." + name
+    try :
+        var_value = eval(var_name)
+    except:
+        var_value = None
+    return var_value
+
+menuList      = get_var("menuList")
+ONIE_E2       = get_var("ONIE_E2")
+FAN_E2        = get_var("FAN_E2")
+DEVICE        = get_var("DEVICE")
+STARTMENUID   = get_var("STARTMENUID")
+E2_LOC        = get_var("E2_LOC")
+rg_eeprom     = "%d-%04x/eeprom" % (E2_LOC["bus"], E2_LOC["devno"])
+E2_PROTECT    = get_var("E2_PROTECT")
+FRULISTS      = get_var("FRULISTS")
+FAN_PROTECT   = get_var("FAN_PROTECT")
+BMC_E2_LOC    = get_var("BMC_E2_LOC")
+BMC_E2_PROTECT  = get_var("BMC_E2_PROTECT")
+TESTCASE      = get_var("TESTCASE")
+STARTMODULE   = get_var("STARTMODULE")
+FACE2MODULE   = get_var("FACE2MODULE")
+SLOTS_TLV_E2  = get_var("SLOTS_TLV_E2")
+SLOTS_FRU_E2  = get_var("SLOTS_FRU_E2")
+TLV_SLOTS_PROTECT  = get_var("TLV_SLOTS_PROTECT")
+FRU_SLOTS_PROTECT  = get_var("FRU_SLOTS_PROTECT")
+BMC_FRU_E2 = get_var("BMC_FRU_E2")
+
+SUCCESS_TIPS                    = "PASS"
+RETURN_KEY1       = "code"
+RETURN_KEY2       = "msg" 
+ERROR_RETURN      = {RETURN_KEY1 : -1, RETURN_KEY2 : "init error"}
+SUCCESS_RETURN    = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+ERROR_RETURN_DETAIL  = {RETURN_KEY1 : -1, RETURN_KEY2 : []}
+
+MENUID     = "menuid"
+MENUPARENT = "parentid"
+MENUVALUE  =  "value"
+CHILDID    = "childid"
+MENUITEMNAME = "name"
+MENUITEMDEAL = "deal" 
+GOBACK  = "goBack"
+GOQUIT  = "quit"
+ITEMBEFORE = 'before'
+ITEMAFTER = 'after'
+ 
+listindex=['1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+formatStringLevel1 = "%s.%s"
+SYSINFOTIPS_FORMAT = "%30s : %s"
+
+SYSLOG_IDENTIFIER = "E2SET"
+
+def log_info(msg, also_print_to_console=False):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
+    if also_print_to_console:
+        click.echo(msg)
+
+def log_debug(msg, also_print_to_console=False):
+    try:
+        syslog.openlog(SYSLOG_IDENTIFIER)
+        syslog.syslog(syslog.LOG_DEBUG, msg)
+        syslog.closelog()
+
+        if also_print_to_console:
+            click.echo(msg)
+    except Exception as e:
+        pass
+
+def log_warning(msg, also_print_to_console=False):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_WARNING, msg)
+    syslog.closelog()
+
+    if also_print_to_console:
+        click.echo(msg)
+
+def log_error(msg, also_print_to_console=False):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_ERR, msg)
+    syslog.closelog()
+
+    if also_print_to_console:
+        click.echo(msg)
+
+def test_tbd():
+    RJPRINT("待实现")
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    return RET
+
+def quit():
+    sys.exit(0)
+
+def RJPRINTLINE(x):
+   '''Keep the function and adapt later 3.x'''
+    print (x,)
+
+def RJPRINT(x,newline = True):
+   '''Keep the function and adapt later 3.x'''
+    if newline == True:
+        print (x)
+    else:
+        print (x,)
+
+def RJPRINTERR(str):
+    print("\033[0;31m%s\033[0m" % str)
+
+def getRealUrl(case, param=None):
+    http = TESTCASE.get('BMC').get('requesthttp')
+    realurl = ""
+    if param is None:
+        realurl = "%scase=%s" %(http, case)
+    else:
+        realurl = "%scase=%s&param=%s"% (http, case, param)
+    return realurl
+
+def test_bmc_func(func,param=None):
+    if param is None:
+        ret = HttpRest().Get(getRealUrl(func))
+    else:
+        ret = HttpRest().Get(getRealUrl(func,json.dumps(param)))
+    return ret
+
+def test_bmc_channel():
+   '''Testing the BMC Path'''
+    ip = TESTCASE.get('BMC').get('ip')
+    port = TESTCASE.get('BMC').get('port')
+    msg = ''
+    returncode = False
+    import socket
+    sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sk.settimeout(1)
+    try:
+      sk.connect((ip,port))
+      returncode =  True
+    except Exception:
+      msg = '到BMC通路失败,请确认'
+      returncode = False
+    sk.close()
+    return returncode, msg
+
+def getPid(name):
+    ret = []
+    for dirname in os.listdir('/proc'):
+        if dirname == 'curproc':
+            continue
+        try:
+            with open('/proc/{}/cmdline'.format(dirname), mode='rb') as fd:
+                content = fd.read()
+        except Exception:
+            continue
+        if name in content:
+            ret.append(dirname)
+    return ret
+
+def stopFanctrol():
+   '''Disable the fan timing service'''
+    if STARTMODULE['fancontrol'] == 1:
+        rets = getPid("fancontrol.py")  #
+        for ret in rets:
+            cmd = "kill "+ ret
+            os.system(cmd)
+        return True
+
+def startFanctrol():
+    if STARTMODULE['fancontrol'] == 1:
+        cmd = "nohup fancontrol.py start >/dev/null 2>&1 &"
+        rets = getPid("fancontrol.py")
+        if len(rets) == 0:
+            os.system(cmd)
+
+def test_stop_fanctrol():
+    stopFanctrol()
+    return True,""
+
+def test_start_fanctrol():
+    startFanctrol()
+    return True,""
+
+# Menu Prints a menu item with a numeric prompt in front
+def printList(_list, id):
+    try:
+        RJPRINT("****************************************")
+        for index in range(len(_list)):
+            RJPRINT(formatStringLevel1 %( listindex[index] , _list[index]["name"]))
+        if id != STARTMENUID:
+            RJPRINT("q.返回上一层")
+        else:
+            RJPRINT("q.退出")
+        RJPRINT("****************************************")
+    except Exception as e:
+        log_error(e)
+        sys.exit(-1)
+
+# Menu: Single test
+def test_signal(id):
+    startMenu(id)
+
+def dealfunc(func):
+    msg = ""
+    for i in range(0, 3):
+        ret, msg = func()
+        if ret == True:
+            return True
+        else:
+           continue
+    raise Exception(msg)
+    return False
+
+def dealchoosefunc(list):
+   '''Real menu processing items'''
+    RET = ERROR_RETURN
+    funcbefore = None
+    functest  = None
+    funcafter = None
+    param_tt = None
+    param_val = None
+    funcbeforestr = list.get(ITEMBEFORE, None)
+    functeststr = list.get(MENUITEMDEAL, None)
+    funcafterstr = list.get(ITEMAFTER, None)
+    param_tt = list.get(CHILDID, None)
+    param_val = list.get('param', None)
+
+    if funcbeforestr is not None:
+        funcbefore = eval(funcbeforestr)
+    if functeststr is not None:
+        functest = eval(functeststr)
+    if funcafterstr is not None:
+        funcafter = eval(funcafterstr)
+    try:
+        if funcbefore is not None:
+            log_debug("    测试项前置:%s " % (funcbefore))
+            dealfunc(funcbefore)
+        if functest is not None:
+            log_debug("    测试项    :%s " % (functest))
+            if param_tt is not None:
+                RET = functest(param_tt)
+            else:
+                if param_val is not None:
+                    RET = functest(param_val)
+                else:
+                    RET = functest()
+        else:
+            raise Exception("fun test is none")
+            
+    except Exception as e:
+        RJPRINT(e)
+        RJPRINT("error\n\n")
+    finally:
+        if funcafter is not None:
+            log_debug("    测试项后置:%s " % (funcafter))
+            for i in range(0, 3):
+                if funcafter() == True:
+                    break
+                else:
+                   continue
+    return RET
+
+def getch(msg):
+    ret = ""
+    fd = sys.stdin.fileno()
+    old_ttyinfo = termios.tcgetattr(fd)
+    new_ttyinfo = old_ttyinfo[:]
+    new_ttyinfo[3] &= ~termios.ICANON
+    new_ttyinfo[3] &= ~termios.ECHO
+    sys.stdout.write(msg)
+    sys.stdout.flush()
+    try:
+        termios.tcsetattr(fd, termios.TCSANOW, new_ttyinfo)
+        ret = os.read(fd, 1)
+    finally:
+        # print "try to setting"
+        termios.tcsetattr(fd, termios.TCSANOW, old_ttyinfo)
+    return ret
+
+# Menu to print
+# printMenu
+# param: list_t  Menu item list
+# id      Menu id
+
+def printMenu(list_t, id):
+    while True:
+        try:
+            printList(list_t, id)
+            test = "请选择:"
+            str= getch(test)
+            RJPRINT(" %s" % str)
+            log_debug("选择:%s" % str)
+            str = str.lstrip().lower()
+            if str == "q":
+                if id == STARTMENUID:  # Top level directory. There's no way back
+                    quit()
+                else:
+                    break
+            if str not in listindex:
+                log_debug("%s 不在菜单项中" % str);
+                RJPRINT("\n\n")
+                continue
+            else:
+                RJPRINT("=======================> %s <======================="%list_t[listindex.index(str)][MENUITEMNAME])
+                log_debug("选择的测试项为:%s id:%d" % (list_t[listindex.index(str)][MENUITEMNAME], id))
+                
+                RET = dealchoosefunc(list_t[listindex.index(str)])
+                if RET == None:
+                    RJPRINT("\n\n")
+                    continue
+                RJPRINT(" ")
+                if RET[RETURN_KEY1] == 0:
+                    RJPRINT("Test Result: Pass")
+                    log_debug("菜单测试结果:" + SUCCESS_TIPS)
+                elif RET[RETURN_KEY1] == 1:
+                    pass
+                else:
+                    RJPRINT("Test Result: Fail")
+                    log_debug("[%s]测试结果:" % list_t[listindex.index(str)][MENUITEMNAME] + 'error')
+                RJPRINT("\n\n")
+        except IndexError as d:
+            RJPRINT("\n\n非法输入\n\n")
+        except Exception as e:
+            RJPRINT(e)
+            # log_debug(e)
+            RJPRINTERR("\n\n 异常\n\n" )
+
+def getMenuFromList(list, id):
+    for key in list:
+        if key[MENUID] == id:
+            return key[MENUVALUE],True
+    return 0, False
+    
+def getParentIdMenuFromList(list, id):
+    for key in list:
+        if key[MENUID] == id:
+            return key[MENUPARENT],True
+    return -1, False
+
+# Get the menu by ID
+def startMenu(id):
+    list,code = getMenuFromList(menuList, id)
+    if code == False:
+        log_error("错误的文件结构")
+        RJPRINT("无此菜单，请确认")
+        sys.exit(1)
+    log_debug("根据ID获取到相应的菜单列表")
+    printMenu(list, id)
+
+# start
+def start():
+    global STARTMENUID
+    if STARTMENUID is None:
+        STARTMENUID = 0
+    startMenu(STARTMENUID)
+
+def rj_os_system(cmd):
+    status, output = commands.getstatusoutput(cmd)
+    return status, output
+
+def io_wr(reg_addr, reg_data):
+    '''io write'''
+    try:
+        regdata  = 0
+        regaddr  = 0
+        if type(reg_addr) == int:
+            regaddr = reg_addr
+        else:
+            regaddr = int(reg_addr, 16)
+        if type(reg_data) == int:
+            regdata = reg_data
+        else:
+            regdata = int(reg_data, 16)
+        devfile = "/dev/port"
+        fd = os.open(devfile, os.O_RDWR|os.O_CREAT)
+        os.lseek(fd, regaddr, os.SEEK_SET)
+        ret = os.write(fd, chr(regdata))
+        return True
+    except ValueError as e:
+        print (e)
+        return False
+    except Exception as e:
+        print (e)
+        return False
+    finally:
+        os.close(fd)
+    return False
+
+def rji2cset(bus, devno, address, byte):
+    command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%02x" % (
+        bus, devno, address, byte)
+    retrytime = 6
+    ret_t = ""
+    for i in range(retrytime):
+        ret, ret_t = rj_os_system(command_line)
+        if ret == 0:
+            return True, ret_t
+    return False, ret_t
+
+def rji2cget(bus, devno, address):
+    command_line = "i2cget -f -y %d 0x%02x 0x%02x " % (bus, devno, address)
+    retrytime = 6
+    ret_t = ""
+    for i in range(retrytime):
+        ret, ret_t = rj_os_system(command_line)
+        if ret == 0:
+            return True, ret_t
+        time.sleep(0.1)
+    return False, ret_t
+
+def get_fane2_sysfs(bus, loc):
+    rg_fan_e2 = "%d-%04x/fan" % (bus, loc)
+    eeprom = get_sysfs_value(rg_fan_e2)
+    return eeprom
+
+def get_pmc_register(reg_name):
+    retval = 'ERR'
+    mb_reg_file = MAILBOX_DIR + reg_name
+    if (not os.path.isfile(mb_reg_file)):
+        print (mb_reg_file,  'not found !')
+        return retval
+    try:
+        if (not os.path.isfile(mb_reg_file)):
+            print (mb_reg_file,  'not found !')
+            return retval
+        with open(mb_reg_file, 'r') as fd:
+            retval = fd.read()
+    except Exception as error:
+        log_error("Unable to open " + mb_reg_file + "file !")
+    retval = retval.rstrip('\r\n')
+    retval = retval.lstrip(" ")
+    # log_debug(retval)
+    return retval
+
+def get_sysfs_value(location):
+    pos_t = str(location)
+    name = get_pmc_register(pos_t)
+    return name
+
+def get_sys_eeprom():
+    onietlv = onie_tlv()
+    eeprom = get_sysfs_value(rg_eeprom)
+    return onietlv.decode(eeprom)    
+
+def getsyseeprombyId(id):  # Obtain the system system by ID
+    ret = get_sys_eeprom()
+    for item in ret:
+        if item["code"] == id:
+            return item
+    return None
+
+def getsysvalue(location):
+    retval = None
+    mb_reg_file = location
+    try:
+        if (not os.path.isfile(mb_reg_file)):
+            print (mb_reg_file,  'not found !')
+            return retval
+        with open(mb_reg_file, 'r') as fd:
+            retval = fd.read()
+    except Exception as error:
+        log_error("Unable to open " + mb_reg_file + "file !")
+    retval = retval.rstrip('\r\n')
+    retval = retval.lstrip(" ")
+    # log_debug(retval)
+    return retval
+
+class I2CUTIL():
+    @staticmethod
+    def getvaluefromdevice(name):
+        ret = []
+        if DEVICE == None:
+            return None
+        for item in DEVICE:
+            if item["name"] == name:
+                ret.append(item)
+        return ret
+
+    @staticmethod
+    def openFanE2Protect():
+        if FAN_PROTECT is None or len(FAN_PROTECT) <= 0:
+            return True
+        if type(FAN_PROTECT) == list: # expand 20190429
+            for item in FAN_PROTECT:
+                status, log = rji2cset(item["bus"], item["devno"],
+                         item["addr"], item["open"])
+                if status == False:
+                    return False
+        elif type(FAN_PROTECT) == dict:
+            status, log = rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
+                     FAN_PROTECT["addr"], FAN_PROTECT["open"])
+            if status == False:
+                return False
+        else:
+            return False
+        return True
+
+    @staticmethod
+    def closeFanE2Protect():
+        if FAN_PROTECT is None or len(FAN_PROTECT) <= 0:
+            return True
+        if type(FAN_PROTECT) == list: # expand 20190429
+            for item in FAN_PROTECT:
+                status, log = rji2cset(item["bus"], item["devno"],
+                         item["addr"], item["close"])
+                if status == False:
+                    return False
+        elif type(FAN_PROTECT) == dict:
+            status, log = rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
+                     FAN_PROTECT["addr"], FAN_PROTECT["close"])
+            if status == False:
+                return False
+        else:
+            return False
+        return True
+
+    @staticmethod
+    def writeToE2(bus, loc, rst_arr):
+        index = 0
+        for item in rst_arr:
+            status, log = rji2cset(bus, loc, index, ord(item))
+            if status == False:
+                return False
+            index += 1
+        return True
+    
+    @staticmethod
+    def getE2File(bus, loc):
+        return "/sys/bus/i2c/devices/%d-00%02x/eeprom" % (bus, loc)
+    
+    @staticmethod
+    def dumpValueByI2c(bus, loc):
+        str = ""
+        for i in range(256):
+            ret,val = rji2cget(bus, loc, i)
+            str += chr(int(val, 16))
+        return str
+
+def fac_fan_setmac(item):
+
+    status = I2CUTIL.openFanE2Protect()
+    if status == False:
+        return False
+    status = I2CUTIL.writeToE2(item.fanbus, item.fanloc, item.generate_fan_value())
+    if status == False:
+        return False
+    I2CUTIL.closeFanE2Protect()
+    return True
+
+def fac_fru_fan_setmac(bus,loc,value):
+   '''fan FRU setmac'''
+    status = I2CUTIL.openFanE2Protect()
+    if status == False:
+        return False
+    status = I2CUTIL.writeToE2(bus, loc, value)
+    if status == False:
+        return False
+    I2CUTIL.closeFanE2Protect()
+    return True
+
+def fac_fans_show_tlv(ret):
+    totalerr = 0
+    fans =  ret
+    for fan in fans:
+        try:
+            RJPRINT("===============fan%d ================getmessage" % (fans.index(fan)+1))
+            # eeprom = I2CUTIL.dumpValueByI2c(fan.get('bus'), fan.get('loc')) 
+            loc = "%d-%04x/fan" % (fan.get('bus'), fan.get('loc'))
+            eeprom = get_sysfs_value(loc) 
+            tlv = fan_tlv()
+            rets = tlv.decode(eeprom)
+            if len(rets) == 0:
+                totalerr -= 1
+                RJPRINT("fan E2 read error, please set fan E2 !")
+                continue
+            RJPRINT("%-15s %-5s %-5s  %-20s" % ("TLV name","Code","lens","Value"))
+            for item in rets:
+                RJPRINT("%-15s 0x%-02X   %-5s %-20s" % (item["name"],item["code"],item["lens"],item["value"]))
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+        
+    if totalerr < 0:
+        return False
+    return True
+
+def fac_fans_show_fru(ret):
+    fans =  ret
+    totalerr = 0
+    for fan in fans:
+        try:
+            RJPRINT("===============%s ================getmessage" % fan.get('name'))
+            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get('bus'), fan.get('loc')))
+            fru = ipmifru()
+            fru.decodeBin(eeprom)
+            
+            RJPRINT("=================board=================")
+            RJPRINT(fru.boardInfoArea)
+            RJPRINT("=================product=================")
+            RJPRINT(fru.productInfoArea)
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+    if totalerr <0:
+        return False
+    return True
+
+def test_fan_eeprom():
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    totalerr = 0
+    try:
+        if (fans_eeprom_show() == False):
+            totalerr -= 1
+    except Exception as e:
+        RJPRINTERR(e)
+        totalerr -= 1
+    RET[RETURN_KEY1] = totalerr
+    return RET
+
+def fans_eeprom_show():
+    ret =  I2CUTIL.getvaluefromdevice("rg_fan")
+    if ret is not None and len(ret) > 0:
+        return fac_fans_show_tlv(ret)
+    fans =  FRULISTS.get('fans', None)
+    if fans is not None and len(fans)>0:
+        return fac_fans_show_fru(fans)
+    return False
+
+def test_fan_fru_e2set(product_info,frulist):
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    fans =  frulist
+    fanfrus = {}
+    for fan in fans:
+        try:
+            RJPRINT("===============%s E2信息转换中================" % fan.get('name'))
+            # Read the NFUR information of the original fan first
+            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get('bus'), fan.get('loc')))
+            if eeprom is None:
+                raise Exception("错误")
+            fru = ipmifru()
+            fru.decodeBin(eeprom)
+            bia = fru.boardInfoArea
+            boardinfo = product_info.get("BOARD",{})
+            bia.boardManufacturer = boardinfo.get("boardManufacturer",bia.boardManufacturer)
+            bia.boardProductName  = boardinfo.get("boardProductName",bia.boardProductName)
+            bia.boardPartNumber   = boardinfo.get("boardPartNumber",bia.boardPartNumber)
+            bia.fruFileId         = boardinfo.get("fruFileId",bia.fruFileId)
+            # board extension field boardextra1 is used as the hardware version number and is not modified. The field starts from boardextra2
+            for i in range(2, 11):
+                valtmp = "boardextra%d" % i
+                if valtmp in boardinfo:
+                    setattr(bia,valtmp,boardinfo[valtmp])
+                else:
+                    break
+
+            pia = fru.productInfoArea
+            productinfo = product_info.get("PRODUCT",{})
+            pia.productManufacturer  = productinfo.get("productManufacturer",pia.productManufacturer)
+            pia.productName          = productinfo.get("productName",pia.productName)
+            pia.productPartModelName = productinfo.get("productPartModelName",pia.productPartModelName)
+            pia.productAssetTag      = productinfo.get("productAssetTag",pia.productAssetTag)
+            pia.fruFileId            = productinfo.get("fruFileId",pia.fruFileId)
+            # product Expand the fields
+            for i in range(1, 11):
+                valtmp = "productextra%d" % i
+                if valtmp in productinfo:
+                    setattr(pia,valtmp,productinfo[valtmp])
+                else:
+                    break
+            fru.recalcute()
+            # writetoE2
+            status = fac_fru_fan_setmac(fan.get('bus'), fan.get('loc'), fru.bindata)
+            if status == False:
+                RET[RETURN_KEY1] -= 1
+                RJPRINT("===========%s E2转换失败！============" % fan.get('name'))
+                continue
+            # readFanE2
+            RJPRINT("===========%s E2转换完成,显示如下:============" % fan.get('name'))
+            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get('bus'), fan.get('loc')))
+            fru = ipmifru()
+            fru.decodeBin(eeprom)
+            
+            RJPRINT("=================board=================")
+            RJPRINT(fru.boardInfoArea)
+            RJPRINT("=================product=================")
+            RJPRINT(fru.productInfoArea)
+        except Exception as e:
+            RJPRINT(str(e))
+            RET[RETURN_KEY1] -= 1
+    return RET
+
+def test_fan_tlv_e2set(product_info,fanlist):
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    totalerr = 0
+    for fan in fanlist:
+        try:
+            _value = {}
+            RJPRINT("===============fan%d E2信息转换中================" % (fanlist.index(fan)+1))
+            fantlv = fan_tlv()
+            fantlv.fanbus = fan.get('bus')
+            fantlv.fanloc = fan.get('loc')
+            fan_eeprom = get_fane2_sysfs(fantlv.fanbus,fantlv.fanloc)
+            rets = fantlv.decode(fan_eeprom)
+            if len(rets) == 0:
+                totalerr -= 1
+                RJPRINT("风扇E2解析失败，请确认是否正常烧片 !")
+                continue
+            # Obtain the fan name and ID from the configuration file
+            fantlv.typename = product_info.get("FAN_NAME")
+            fantlv.typedevtype = product_info.get("FAN_ID")
+            status = fac_fan_setmac(fantlv)
+            if status == False:
+                RJPRINT("===========fan%d E2转换失败！============" % (fanlist.index(fan)+1))
+                continue
+            RJPRINT("===========fan%d E2转换完成,显示如下:============" % (fanlist.index(fan)+1))
+            eeprom = get_fane2_sysfs(fantlv.fanbus,fantlv.fanloc)
+            rets = fantlv.decode(eeprom)
+            RJPRINT("%-15s %-5s %-5s  %-20s" % ("TLV name","Code","lens","Value"))
+            for item in rets:
+                RJPRINT("%-15s 0x%-02X   %-5s %-20s" % (item["name"],item["code"],item["lens"],item["value"]))
+            RJPRINT("")
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def test_fan_e2set(productname):
+   '''Do fan-E2 conversion based on product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    product_info = FAN_E2.get(productname,None)
+    if product_info is None:
+        RJPRINT("%s无风扇E2转换配置" % productname)
+        return RET
+    try:
+        stopFanctrol()
+        ret =  I2CUTIL.getvaluefromdevice("rg_fan")
+        if ret is not None and len(ret) > 0:
+            return test_fan_tlv_e2set(product_info,ret)
+        fans =  FRULISTS.get('fans', None)
+        if fans is not None and len(fans) > 0:
+            return test_fan_fru_e2set(product_info,fans)
+    except Exception as e:
+        RJPRINT(str(e))
+    finally:
+        startFanctrol()
+    RET[RETURN_KEY1] = -1
+    return RET
+
+def test_show_tlv_eeprom(is_sonic = True):
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    eeprom = ""
+    totalerr = 0
+    params = {}
+    try:
+        if is_sonic == True:
+            eeprom  = get_sysfs_value(rg_eeprom)
+        else:
+            loc  = BMC_E2_LOC.get("tlv",None)
+            ret = test_get_bmc_eeprom(loc)
+            if ret[RETURN_KEY1] < 0:
+                RJPRINT("读取BMC-TLV-E2失败")
+                RET[RETURN_KEY1] = -1
+                return RET
+            eeprom = ret[RETURN_KEY2]
+        onietlv = onie_tlv()
+        rets    = onietlv.decode(eeprom)
+        RJPRINT("%-20s %-5s %-5s  %-20s" % ("TLV name","Code","lens","Value"))
+        for item in rets:
+            if item["code"] == 0xfd:
+                RJPRINT("%-20s 0x%-02X   %-5s" % (item["name"],item["code"],item["lens"]))
+            else:
+                RJPRINT("%-20s 0x%-02X   %-5s %-20s" % (item["name"],item["code"],item["lens"],item["value"]))
+        RJPRINT("")
+    except Exception as e:
+        RJPRINT(str(e))
+        totalerr -= 1
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def generate_onie_tlv_value(product_info,is_sonic = True):
+   '''Generate burn files for each product'''
+    RET = {RETURN_KEY1:0, RETURN_KEY2:""}
+    _value = {}
+    params = {}
+    eeprom = ""
+    try:
+        if is_sonic == True:
+            eeprom  = get_sysfs_value(rg_eeprom)
+        else:
+            loc  = BMC_E2_LOC.get("tlv",None)
+            ret = test_get_bmc_eeprom(loc)
+            if ret[RETURN_KEY1] < 0:
+                RJPRINT("读取BMC-TLV-E2失败")
+                RET[RETURN_KEY1] = -1
+                return RET
+            eeprom = ret[RETURN_KEY2]
+        onietlv = onie_tlv()
+        rets    = onietlv.decode(eeprom)
+        if onietlv.serialnum == "":     # There is no SEMAC, only one ID is set
+            _value[onietlv.TLV_CODE_VENDOR_EXT] = onietlv.generate_ext(product_info.get("CARDID"))
+        else:
+             # The serial number, MAC, and hardware version remain the same
+            _value[onietlv.TLV_CODE_SERIAL_NUMBER]    = onietlv.serialnum
+            _value[onietlv.TLV_CODE_DEVICE_VERSION]   = onietlv.deviceversion
+            _value[onietlv.TLV_CODE_MAC_BASE]    =  onietlv.macbase
+            # Replace with the information in the configuration file
+            vendor_ext = product_info.get("RAGILE_VENDOR_EXTENSION")
+            if vendor_ext is None:
+                _value[onietlv.TLV_CODE_VENDOR_EXT] = onietlv.generate_ext(product_info.get("CARDID"))  # Generates an ID unique to ragile
+            else:
+                hwversion = str(onietlv.deviceversion)
+                new_hwversion = hwversion[0:1] + "." + hwversion[1:]
+                newstr = vendor_ext[0:16] + new_hwversion + vendor_ext[20:]
+                _value[onietlv.TLV_CODE_VENDOR_EXT] = newstr
+             
+            _value[onietlv.TLV_CODE_PRODUCT_NAME] = product_info.get("RAGILE_PRODUCTNAME")
+            _value[onietlv.TLV_CODE_PART_NUMBER]    = product_info.get("RAGILE_PART_NUMBER")
+            _value[onietlv.TLV_CODE_LABEL_REVISION] = product_info.get("RAGILE_LABEL_REVISION")
+            _value[onietlv.TLV_CODE_PLATFORM_NAME]  = product_info.get("RAGILE_PLATFORM_NAME")
+            _value[onietlv.TLV_CODE_ONIE_VERSION]   = product_info.get("RAGILE_ONIE_VERSION")
+            _value[onietlv.TLV_CODE_MAC_SIZE]       = product_info.get("RAGILE_MAC_SIZE")
+            _value[onietlv.TLV_CODE_MANUF_NAME]     = product_info.get("RAGILE_MANUF_NAME")
+            _value[onietlv.TLV_CODE_MANUF_COUNTRY]  = product_info.get("RAGILE_MANUF_COUNTRY")
+            _value[onietlv.TLV_CODE_VENDOR_NAME]    = product_info.get("RAGILE_VENDOR_NAME")
+            _value[onietlv.TLV_CODE_DIAG_VERSION]   = product_info.get("RAGILE_DIAG_VERSION")
+            _value[onietlv.TLV_CODE_SERVICE_TAG]    = product_info.get("RAGILE_SERVICE_TAG")
+            _value[onietlv.TLV_CODE_MANUF_DATE] = time.strftime(
+                '%m/%d/%Y %H:%M:%S', time.localtime())  # Automatically add setMAC time
+        rst, ret = onietlv.generate_value(_value)
+        RET[RETURN_KEY2] = rst
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def writeToEEprom(rst_arr):
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    try:
+        dealtype = E2_PROTECT.get('gettype',None)
+        if dealtype is None:
+            rst, log = rji2cset(E2_PROTECT["bus"], E2_PROTECT["devno"],
+                     E2_PROTECT["addr"], E2_PROTECT["open"])
+        elif dealtype == "io":
+            rst = io_wr(E2_PROTECT["io_addr"], E2_PROTECT["open"])
+        if rst == False:
+            RJPRINT("Write E2 protect Failed!")
+            RET[RETURN_KEY1] = -1
+            return RET
+        index = 0
+        for item in rst_arr:
+            rst, log = rji2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
+            if rst == False:
+                RJPRINT("Write E2 protect Failed!")
+                RET[RETURN_KEY1] = -1
+                return RET
+            index += 1
+        
+        if dealtype is None:
+            rji2cset(E2_PROTECT["bus"], E2_PROTECT["devno"],
+                     E2_PROTECT["addr"], E2_PROTECT["close"])
+        elif dealtype == "io":
+            io_wr(E2_PROTECT["io_addr"], E2_PROTECT["close"])
+        # Finally, the system driver is dealt with
+        os.system("rmmod at24 ")
+        os.system("modprobe at24 ")
+        os.system("rm -f /var/cache/sonic/decode-syseeprom/syseeprom_cache")
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def writeToBMCEEprom(rst_arr, loc, ep_param):
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    params = {}
+    try:
+        params["value"] = []
+        params["loc"] = loc
+        params.update(ep_param)
+        for item in rst_arr: # Item is a character, converted to ASCII
+            params["value"].append(ord(item))
+        func = "test_bmc_write_eeprom" 
+        RET = test_bmc_func(func,params)
+        if RET[RETURN_KEY1] < 0:
+            return RET
+    except Exception as e:
+        RET[RETURN_KEY2] = str(e)
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def test_get_bmc_eeprom(loc):
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    params = {}
+    eeprom = ""
+    params["loc"]  = loc
+    func = "test_bmc_read_eeprom"
+    try:
+        ret = test_bmc_func(func,params)
+        if ret[RETURN_KEY1] < 0:
+            RET[RETURN_KEY1] = -1
+            RET[RETURN_KEY2] = ret[RETURN_KEY2]
+            return RET
+        value = ret.get("value","")
+        for i in value:
+            eeprom += chr(i)
+        RET[RETURN_KEY2] = eeprom
+    except Exception as e:
+        RET[RETURN_KEY1] -= 1
+        RET[RETURN_KEY2] = str(e)
+    return RET
+
+def test_bmc_tlv_e2set(productname):
+   '''Perform TLV--E2 conversion on the BMC side according to the product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    product_info = ONIE_E2.get(productname,None)
+    if product_info is None or FACE2MODULE.get("tlvbmce2set",0) == 0:
+        RJPRINT("%s无BMC-TLV-E2转换配置" % productname)
+        return RET
+    try:
+        RJPRINT("===============BMC-TLV-E2信息转换中================")
+        # Generate the BMC ONie-E2 burn file
+        RET = generate_onie_tlv_value(product_info,is_sonic = True) # Read onie-E2 on X86 to generate burn sheets
+        if RET[RETURN_KEY1] < 0:
+            RJPRINT("生成BMC-TLV-E2烧录文件失败")
+            return RET
+        # write BMC E2
+        loc = BMC_E2_LOC.get("tlv")
+        eeprom = RET[RETURN_KEY2]
+        ep_param = {}
+        if isinstance(BMC_E2_PROTECT, dict):
+            ep_param = BMC_E2_PROTECT.get("tlv", {})
+        
+        for i in range(0,3):
+            RET = writeToBMCEEprom(eeprom, loc, ep_param)
+            if RET[RETURN_KEY1] >= 0:
+                break
+            time.sleep(3)
+        if RET[RETURN_KEY1] < 0:
+            RJPRINT("BMC-TLV-E2转换失败")
+            RJPRINT(RET[RETURN_KEY2])
+            return RET
+        RJPRINT("===========BMC-TLV-E2转换成功，信息显示如下:===========")
+        test_show_tlv_eeprom( is_sonic = False )
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def test_onie_e2set(productname):
+   '''Do the ONIE-E2 conversion based on the product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    product_info = ONIE_E2.get(productname,None)
+    if product_info is None:
+        RJPRINT("%s无ONIE-E2转换配置" % productname)
+        return RET
+    # Generate onie-E2 burn file
+    try:
+        RJPRINT("===============ONIE-E2信息转换中================")
+        RET = generate_onie_tlv_value(product_info)
+        if RET[RETURN_KEY1] < 0:
+            RJPRINT("生成ONIE-E2烧录文件失败")
+            return RET
+        # write E2
+        RET = writeToEEprom(RET[RETURN_KEY2])
+        if RET[RETURN_KEY1] < 0:
+            RJPRINT("ONIE-E2转换失败")
+            return RET
+        RJPRINT("===========ONIE-E2转换完成，信息显示如下:===========")
+        test_show_tlv_eeprom()
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def fac_init_cardidcheck():
+    onie_tlv = onietlv()
+    rest = getsyseeprombyId(onie_tlv.TLV_CODE_RJ_CARID)  # Check whether cardId are the sam
+    if rest == None:
+        print ("需要烧写bin文件")
+        return False
+    return True
+
+def fac_setmac_check():
+    # Check the CARD ID
+    if fac_init_cardidcheck() == False:
+        RJPRINTERR("\n\n板卡ID检测失败，请确认!\n\n")
+        sys.exit(-1);
+    return True
+
+def root_check():
+    if os.geteuid() != 0:
+        click.echo("请在Root权限下执行！")
+        sys.exit(1)
+
+def test_show_slots_tlv_eeprom():
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    totalerr = 0
+    slots =  FRULISTS.get('slots_tlv', [])
+    for slot in slots:
+        try:
+            RJPRINT("===============%s ================getmessage" % slot.get('name'))
+            eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            tlv = fan_tlv()
+            rets = tlv.decode(eeprom)
+            if len(rets) == 0:
+                totalerr -= 1
+                RJPRINT("子卡TLV-E2读取失败，请确认烧片是否正常 !")
+                continue
+            RJPRINT("%-15s %-5s %-5s  %-20s" % ("TLV name","Code","lens","Value"))
+            for item in rets:
+                RJPRINT("%-15s 0x%-02X   %-5s %-20s" % (item["name"],item["code"],item["lens"],item["value"]))
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+        
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def test_slots_tlv_e2set(productname):
+   '''According to the product name to do child card TLV-E2 conversion'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    totalerr = 0
+    product_info = SLOTS_TLV_E2.get(productname,None)
+    if product_info is None or FACE2MODULE.get("tlvslote2set",0) == 0:
+        RJPRINT("%s无子卡TLV-E2转换配置" % productname)
+        return RET
+    slots =  FRULISTS.get('slots_tlv', [])
+    protect = TLV_SLOTS_PROTECT
+    try:
+        for item in protect:
+            status = rji2cset(item["bus"], item["devno"], item["addr"], item["open"])
+            if status == False:
+                RJPRINT("子卡TLV-E2写保护设置失败")
+                RET[RETURN_KEY1] = -1
+                return RET
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+        return RET
+    for slot in slots:
+        try:
+            RJPRINT("===============tlv_%s E2信息转换中================" % slot.get('name'))
+            slottlv = fan_tlv()
+            slot_eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            rets = slottlv.decode(slot_eeprom)
+            if len(rets) == 0:
+                totalerr -= 1
+                RJPRINT("子卡TLV-E2解析失败，请确认是否正常烧片 !")
+                continue
+            # Get the name and ID of the subcard from the configuration file
+            slottlv.typename = product_info.get("SLOT_NAME",slottlv.typename)
+            slottlv.typedevtype = product_info.get("SLOT_ID",slottlv.typedevtype)
+            status = I2CUTIL.writeToE2(slot.get('bus'), slot.get('loc'), slottlv.generate_fan_value())
+            if status == False:
+                RJPRINT("===========%s TLV-E2转换失败！============" % slot.get('name'))
+                continue
+            RJPRINT("===========%s TLV-E2转换完成,显示如下:============" % slot.get('name'))
+            eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            rets = slottlv.decode(eeprom)
+            RJPRINT("%-15s %-5s %-5s  %-20s" % ("TLV name","Code","lens","Value"))
+            for item in rets:
+                RJPRINT("%-15s 0x%-02X   %-5s %-20s" % (item["name"],item["code"],item["lens"],item["value"]))
+            RJPRINT("")
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    for item in protect:
+        rji2cset(item["bus"], item["devno"], item["addr"], item["close"])
+    return RET
+
+def test_slots_fru_e2set(productname):
+   '''Make the FRU-E2 conversion for the sub-card according to the product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    totalerr = 0
+    product_info = SLOTS_FRU_E2.get(productname,None)
+    if product_info is None or FACE2MODULE.get("fruslote2set",0) == 0:
+        RJPRINT("%s无子卡FRU-E2转换配置" % productname)
+        return RET
+    slots =  FRULISTS.get('slots_fru', [])
+    protect = FRU_SLOTS_PROTECT
+    try:
+        for item in protect:
+            status = rji2cset(item["bus"], item["devno"], item["addr"], item["open"])
+            if status == False:
+                RJPRINT("子卡FRU-E2写保护设置失败")
+                RET[RETURN_KEY1] = -1
+                return RET
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+        return RET
+    for slot in slots:
+        try:
+            RJPRINT("===============fru_%s E2信息转换中================" % slot.get('name'))
+            slotfru = ipmifru()
+            eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            slotfru.decodeBin(eeprom)
+            # Get the name and ID of the subcard from the configuration file
+            bia = slotfru.boardInfoArea
+            bia.boardManufacturer = product_info.get("boardManufacturer",bia.boardManufacturer)
+            bia.boardProductName  = product_info.get("boardProductName",bia.boardProductName)
+            bia.boardPartNumber   = product_info.get("boardPartNumber",bia.boardPartNumber)
+            bia.fruFileId         = product_info.get("fruFileId",bia.fruFileId)
+            # board extension field boardextra1 is used as the hardware version number and is not modified. The field starts from boardextra2
+            for i in range(2, 11):
+                valtmp = "boardextra%d" % i
+                if valtmp in product_info:
+                    setattr(bia,valtmp,product_info[valtmp])
+                else:
+                    break
+            slotfru.recalcute()
+            status = I2CUTIL.writeToE2(slot.get('bus'), slot.get('loc'), slotfru.bindata)
+            if status == False:
+                RJPRINT("===========%s FRU-E2转换失败！============" % slot.get('name'))
+                continue
+            RJPRINT("===========%s FRU-E2转换完成,显示如下:============" % slot.get('name'))
+            new_eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            slotfru.decodeBin(new_eeprom)
+            RJPRINT(slotfru.boardInfoArea)
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    for item in protect:
+        rji2cset(item["bus"], item["devno"], item["addr"], item["close"])
+    return RET
+
+def test_slots_tlvtofru_e2set(productname):
+   '''Subcard TLV to FRU'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    totalerr = 0
+    product_info = SLOTS_FRU_E2.get(productname,None)
+    if product_info is None:
+        RJPRINT("%s无子卡FRU-E2转换配置" % productname)
+        return RET
+    protect = FRU_SLOTS_PROTECT
+    try:
+        for item in protect:
+            status = rji2cset(item["bus"], item["devno"], item["addr"], item["open"])
+            if status == False:
+                RJPRINT("子卡FRU-E2写保护设置失败")
+                RET[RETURN_KEY1] = -1
+                return RET
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] = -1
+        return RET
+    tlv_slots =  FRULISTS.get('slots_tlv', [])
+    fru_slots =  FRULISTS.get('slots_fru')
+    for slot in tlv_slots:
+        try:
+            RJPRINT("===============%s E2信息转换中================" % slot.get('name'))
+            slottlv = fan_tlv()
+            # Read the E2 information of the original TLV subcard
+            slot_eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc')) 
+            rets = slottlv.decode(slot_eeprom)
+            if len(rets) == 0:
+                totalerr -= 1
+                RJPRINT("子卡TLV-E2解析失败，无法进行转换，请确认是否正常烧片 !")
+                continue
+            # Generate an FRU burn file based on the configuration file and the SERIAL number and hardware version of the TLV subcard
+            slotfru = ipmifru()
+            slotfru.boardInfoArea = BoardInfoArea(name="Board Info Area")
+            slotfru.boardInfoArea.isPresent = 1
+            slotfru.boardInfoArea.boardManufacturer = product_info.get('boardManufacturer')
+            slotfru.boardInfoArea.boardProductName = product_info.get('boardProductName')
+            slotfru.boardInfoArea.boardPartNumber = product_info.get('boardPartNumber')
+            slotfru.boardInfoArea.fruFileId = product_info.get('fruFileId')
+            slotfru.boardInfoArea.boardSerialNumber = slottlv.typesn
+            slotfru.boardInfoArea.boardextra1 = slottlv.typehwinfo
+            slotfru.recalcute()
+            fru_slot_bus = fru_slots[tlv_slots.index(slot)].get('bus')
+            fru_slot_loc = fru_slots[tlv_slots.index(slot)].get('loc')
+            status = I2CUTIL.writeToE2(fru_slot_bus, fru_slot_loc, slotfru.bindata)
+            if status == False:
+                RJPRINT("===========%s E2转换失败！============" % slot.get('name'))
+                continue
+            RJPRINT("===========%s E2转换完成,显示如下:============" % slot.get('name'))
+            new_eeprom = I2CUTIL.dumpValueByI2c(fru_slot_bus, fru_slot_loc) 
+            slotfru.decodeBin(new_eeprom)
+            RJPRINT(slotfru.boardInfoArea)
+            RJPRINT("")
+        except Exception as e:
+            RJPRINT(str(e))
+            totalerr -= 1
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    for item in protect:
+        rji2cset(item["bus"], item["devno"], item["addr"], item["close"])
+    return RET
+
+def test_show_slots_fru_eeprom():
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    slots =  FRULISTS.get('slots_fru', [])
+    for slot in slots:
+        try:
+            RJPRINT("===============%s ================getmessage" % slot.get('name'))
+            eeprom = I2CUTIL.dumpValueByI2c(slot.get('bus'), slot.get('loc'))
+            if eeprom is None:
+                raise Exception("错误")
+            slote2 = ipmifru()
+            slote2.decodeBin(eeprom)
+            RJPRINT(slote2.boardInfoArea)
+        except Exception as e:
+            RJPRINT(str(e))
+            RET[RETURN_KEY1] -= 1
+            RET[RETURN_KEY2] = str(e)
+        
+    return RET
+
+def test_show_bmc_fru_eeprom():
+    RET = {RETURN_KEY1 : 0,  RETURN_KEY2 : ""}
+    try:
+        loc = BMC_E2_LOC.get("fru",None)
+        ret = test_get_bmc_eeprom(loc)
+        if ret[RETURN_KEY1] < 0 :
+            RJPRINT("读取BMC-FRU-E2失败")
+            RET[RETURN_KEY1] = -1
+            RET[RETURN_KEY2] = ret[RETURN_KEY2]
+            return RET
+        eeprom = ret[RETURN_KEY2]
+        bmcfru = ipmifru()
+        bmcfru.decodeBin(eeprom)
+        RJPRINT(bmcfru.boardInfoArea)
+    except Exception as e:
+        RJPRINT(str(e))
+        RET[RETURN_KEY1] -= 1
+        RET[RETURN_KEY2] = str(e)
+    return RET
+
+def test_bmc_fru_e2set(productname):
+   '''Perform BMC FRU-E2 conversion according to product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    product_info = BMC_FRU_E2.get(productname,None)
+    if product_info is None:
+        RJPRINT("%s无BMC FRU-E2转换配置" % productname)
+        return RET
+    RJPRINT("===============BMC-FRU-E2信息转换中================")
+    try:
+        loc = BMC_E2_LOC.get("fru",None)
+        ret = test_get_bmc_eeprom(loc)
+        if ret[RETURN_KEY1] < 0 :
+            RET[RETURN_KEY1] = -1
+            return RET
+        # Generate the BMC ONie-E2 burn file
+        eeprom = ret[RETURN_KEY2]
+        fru_size = len(eeprom)
+        bmcfru = ipmifru()
+        bmcfru.decodeBin(eeprom)
+        # Get the name and ID of the subcard from the configuration file
+        bia = bmcfru.boardInfoArea
+        bia.boardManufacturer = product_info.get("boardManufacturer",bia.boardManufacturer)
+        bia.boardProductName  = product_info.get("boardProductName",bia.boardProductName)
+        bia.boardPartNumber   = product_info.get("boardPartNumber",bia.boardPartNumber)
+        bia.fruFileId         = product_info.get("fruFileId",bia.fruFileId)
+        # board extension field boardextra1 is used as the hardware version number and is not modified. The field starts from boardextra2
+        for i in range(2, 11):
+            valtmp = "boardextra%d" % i
+            if valtmp in product_info:
+                setattr(bia,valtmp,product_info[valtmp])
+            else:
+                break
+        bmcfru.recalcute(fru_eeprom_size = fru_size)
+        #  write BMC E2
+        loc = BMC_E2_LOC.get("fru")
+        ep_param = {}
+        if isinstance(BMC_E2_PROTECT, dict):
+            ep_param = BMC_E2_PROTECT.get("fru", {})
+        for i in range(0,3):
+            RET = writeToBMCEEprom(bmcfru.bindata, loc, ep_param)
+            if RET[RETURN_KEY1] >= 0:
+                break
+            time.sleep(3)
+        if RET[RETURN_KEY1] < 0:
+            RJPRINT("BMC-FRU-E2转换失败")
+            RJPRINT(RET[RETURN_KEY2])
+            return RET
+        RJPRINT("===========BMC-FRU-E2转换成功，信息显示如下:===========")
+        RET = test_show_bmc_fru_eeprom()
+    except Exception as e:
+        RET[RETURN_KEY2] = str(e)
+        RJPRINT(RET[RETURN_KEY2])
+        RET[RETURN_KEY1] = -1
+    return RET
+
+def test_all_e2set(productname):
+   '''Convert all E2s by product name'''
+    RET = {RETURN_KEY1 : 0 , RETURN_KEY2 : ""}
+    totalerr = 0
+    # ONIE-E2 conversion
+    ret = test_onie_e2set(productname)
+    if ret[RETURN_KEY1] < 0:
+        totalerr -= 1
+
+    # fan E2 conversion
+    ret = test_fan_e2set(productname)
+    if ret[RETURN_KEY1] < 0:
+        totalerr -= 1
+
+    # Daughter card-TLV-E2 conversion
+    if FACE2MODULE.get("tlvslote2set",0) == 1:
+        ret = test_slots_tlv_e2set(productname)
+        if ret[RETURN_KEY1] < 0:
+            totalerr -= 1
+
+    # Daughter card-FRU-E2 conversion
+    if FACE2MODULE.get("fruslote2set",0) == 1:
+        ret = test_slots_fru_e2set(productname)
+        if ret[RETURN_KEY1] < 0:
+            totalerr -= 1
+
+    # BMC-TLV-E2 conversion
+    if FACE2MODULE.get("tlvbmce2set",0) == 1:
+        status, msg = test_bmc_channel()
+        if status == False:
+            RJPRINT("到BMC通路异常，无法进行BMC-TLV-E2转换，请确认！")
+            totalerr -= 1
+        else:
+            ret = test_bmc_tlv_e2set(productname)
+            if ret[RETURN_KEY1] < 0:
+                totalerr -= 1
+
+    # BMC-FRU-E2 conversion
+    if FACE2MODULE.get("frubmce2set",0) == 1:
+        status, msg = test_bmc_channel()
+        if status == False:
+            RJPRINT("到BMC通路异常，无法进行BMC-FRU-E2转换，请确认！")
+            totalerr -= 1
+        else:
+            ret = test_bmc_fru_e2set(productname)
+            if ret[RETURN_KEY1] < 0:
+                totalerr -= 1
+
+    if totalerr < 0:
+        RET[RETURN_KEY1] = -1
+    return RET
+
+# Product E2 conversion main program
+if __name__ == '__main__':
+    root_check()
+    # fac_setmac_check()  # setmac first check
+    log_info("产品E2转换主程序")
+    start()

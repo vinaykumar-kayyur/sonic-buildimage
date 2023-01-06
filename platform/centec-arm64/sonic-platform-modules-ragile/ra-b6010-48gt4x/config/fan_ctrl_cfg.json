@@ -1,0 +1,37 @@
+{
+    "Device": {
+        "Liquid": 0,
+        "Buildin": 1
+    },
+    "Thermal": {
+        "INLET_TEMP": "INLET_TEMP",
+        "OUTLET_TEMP": "OUTLET_TEMP",
+        "SWITCH_TEMP": "SWITCH_TEMP"
+    },
+    "Fans": {
+        "Fan1" : "Fantray0_Fan1",
+        "Fan2" : "Fantray0_Fan2",
+        "Fan3" : "Fantray1_Fan1",
+        "Fan4" : "Fantray1_Fan2"
+    },
+    "PID": {
+        "Pwm_Max": 100,
+        "Pwm_Min": 30,
+        "SetPoint" : 90,
+        "P": 1.5,
+        "I": 1,
+        "D": 0.3,
+        "Temp_Min": 28.0,
+        "Temp_Max": 45.0,
+        "Sensor": "SWITCH_TEMP"
+    },
+    "OpenLoop": {
+        "a": -0.06,
+        "b": 10.3,
+        "c": -142.0,
+        "fix_up": -8,
+        "pwmMax": 100,
+        "pwmMin": 30,
+        "tempMin": 25
+    }
+}

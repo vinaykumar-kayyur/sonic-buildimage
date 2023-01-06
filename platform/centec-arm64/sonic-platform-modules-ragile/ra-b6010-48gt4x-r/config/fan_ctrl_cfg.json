@@ -1,0 +1,25 @@
+{
+    "Thermal": {
+        "INLET_TEMP": "INLET_TEMP",
+        "OUTLET_TEMP": "OUTLET_TEMP",
+        "SWITCH_TEMP": "TPS53688_TEMP"
+    },
+    "Fans": {
+        "Fan1" : "Fantray0_Fan1",
+        "Fan2" : "Fantray0_Fan2",
+        "Fan3" : "Fantray1_Fan1",
+        "Fan4" : "Fantray1_Fan2"
+    },
+    "PID": {
+        "Pwm_Max": 100,
+        "Pwm_Min": 35,
+        "TargetTemperature" : 89,
+        "P": 1.176,
+        "I": 0.196,
+        "D": 0.196,
+        "Temp_Fixup": 5.0,
+        "Temp_Min": 28.0,
+        "Temp_Max": 45.0,
+        "Fall_Hyst": 2.0
+    }
+}
