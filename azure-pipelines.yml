@@ -61,11 +61,6 @@ stages:
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
-      - name: broadcom
-        variables:
-          swi_image: yes
-      - name: mellanox
-      - name: marvell-armhf
       - name: centec-arm64
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
