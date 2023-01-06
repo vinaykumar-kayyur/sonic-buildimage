@@ -62,6 +62,8 @@ stages:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: centec-arm64
+        variables:
+          PLATFORM_ARCH: arm64
 
 - stage: Test
   dependsOn: BuildVS
