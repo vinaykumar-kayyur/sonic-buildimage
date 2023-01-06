@@ -186,10 +186,12 @@ class LedControl(LedControlBase):
 
         lanes = swss.get(
             swss.APPL_DB, self.PORT_TABLE_PREFIX + port_name, 'lanes')
-        lanes_len = 0
+
         # SonicV2Connector.get() will return None when key does not exist.
         if lanes:
             lanes_len = len(lanes.split(','))
+        else:
+            lanes_len = 0
 
         # SONiC port nums are 0-based and increment by 4
         # Arista QSFP indices are 1-based and increment by 1
