@@ -66,6 +66,7 @@ stages:
           swi_image: yes
       - name: mellanox
       - name: marvell-armhf
+      - name: centec-arm64
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
         variables:
