@@ -47,7 +47,6 @@ RUN wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
  && mkdir -p /opt       \
  && cd /opt             \
  && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py \
- && apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y \
  && rm -rf /root/deps
 
 COPY ["ptf_nn_agent.conf", "/etc/supervisor/conf.d/"]

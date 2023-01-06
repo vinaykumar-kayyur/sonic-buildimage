@@ -35,8 +35,4 @@ COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["files/dsserve", "/usr/bin/"]
 RUN chmod +x /usr/bin/dsserve
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/bin/docker-init.sh"]

@@ -32,8 +32,4 @@ RUN chmod +x /usr/bin/saiserver_start.sh /usr/bin/syncd_init_common.sh
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

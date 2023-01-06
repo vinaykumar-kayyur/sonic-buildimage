@@ -25,8 +25,4 @@ dpkg_apt debs/{{ deb }}{{'; '}}
 COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

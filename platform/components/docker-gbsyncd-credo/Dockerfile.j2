@@ -33,8 +33,4 @@ COPY ["supervisord.conf.j2", "/usr/share/sonic/templates"]
 
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/bin/docker-init.sh"]

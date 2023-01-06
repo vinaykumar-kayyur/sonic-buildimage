@@ -152,10 +152,6 @@ RUN pip{% if 'py3' in whl %}3{% else %}2{% endif %} install python-wheels/{{ whl
 RUN apt-get purge -y build-essential libssl-dev swig
 RUN apt-get purge -y python-dev python3-dev
 RUN apt-get purge -y libcairo2-dev libdbus-1-dev libgirepository1.0-dev libsystemd-dev pkg-config
-RUN apt-get clean -y
-RUN apt-get autoclean -y
-RUN apt-get autoremove -y
-RUN rm -rf /debs ~/.cache
 
 RUN sed -ri 's/^(save .*$)/# \1/g;                                                      \
              s/^daemonize yes$/daemonize no/;                                           \

@@ -55,12 +55,6 @@ RUN apt-get purge -y python-pip
 {{ install_debian_packages(docker_syncd_mlnx_pydebs.split(' ')) }}
 {% endif %}
 
-## Clean up
-RUN apt-get clean -y && \
-    apt-get autoclean -y && \
-    apt-get autoremove -y && \
-    rm -rf /debs
-
 COPY ["supervisord.conf.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor/"]

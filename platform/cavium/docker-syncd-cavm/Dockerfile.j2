@@ -27,8 +27,4 @@ COPY ["critical_processes", "/etc/supervisor/"]
 
 COPY ["profile.ini", "/etc/ssw/AS7512/"]
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

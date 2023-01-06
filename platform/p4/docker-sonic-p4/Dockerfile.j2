@@ -69,8 +69,6 @@ debs/{{ deb }}{{' '}}
 ## Clean up
 RUN apt-get purge -y build-essential libssl-dev swig
 RUN apt-get purge -y python-dev python3-dev
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
 
 RUN sed -ri 's/^(save .*$)/# \1/g;                                                      \
              s/^daemonize yes$/daemonize no/;                                           \
