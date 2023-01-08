@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./debootstrap-$(DEBOOTSTRAP_VERSION) ./debootstrap*.{deb,udeb,dsc}
 
 	# Get source package
-	dget https://deb.debian.org/debian/pool/main/d/debootstrap/debootstrap_$(DEBOOTSTRAP_VERSION).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source debootstrap=$(DEBOOTSTRAP_VERSION)
 
 	# Build source and Debian packages
 	pushd debootstrap-$(DEBOOTSTRAP_VERSION)

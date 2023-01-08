@@ -31,7 +31,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf net-snmp-$(SNMPD_VERSION)
 
 	# download debian net-snmp
-	dget -u https://sonicstorage.blob.core.windows.net/debian/pool/main/n/net-snmp/net-snmp_$(SNMPD_VERSION_FULL).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source net-snmp=$(SNMPD_VERSION_FULL)
 
 	pushd net-snmp-$(SNMPD_VERSION)
 	git init
