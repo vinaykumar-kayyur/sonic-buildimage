@@ -425,7 +425,7 @@ RUN apt upgrade -y base-files libc-bin=$(dpkg-query -W -f '${Version}' libc-bin)
            texlive-font-utils rdfind llvm-11-dev libclang-11-dev sassc faketime mat2
 
        # Update doxygen with 64bit file offset patch
-       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.9.1-2.dsc && \
+       RUN dget -u https://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.9.1-2.dsc && \
            cd doxygen-1.9.1 && \
            sed -i '56 a add_definitions(-D_FILE_OFFSET_BITS=64)' CMakeLists.txt && \
            DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b && \

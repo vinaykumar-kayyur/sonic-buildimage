@@ -430,7 +430,7 @@ RUN apt-get -y build-dep openssh
        RUN apt install -y libxapian-dev yui-compressor libclang-3.9-dev texlive-extra-utils \
            texlive-font-utils  rdfind llvm-6.0-dev libclang-6.0-dev sassc
        # Update doxygen with 64bit file offset patch
-       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.8.13-10.dsc && \
+       RUN dget -u https://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.8.13-10.dsc && \
            cd doxygen-1.8.13 && \
            sed -i '56 a add_definitions(-D_FILE_OFFSET_BITS=64)' CMakeLists.txt && \
            DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b && \
