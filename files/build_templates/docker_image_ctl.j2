@@ -315,6 +315,35 @@ start() {
         source $PLATFORM_ENV_CONF
     fi
 
+    {%- if sonic_asic_platform == "broadcom" %}
+    {%- if docker_container_name == "syncd" %}
+    # Set the SYNCD_SHM_SIZE if this variable not defined
+    SYNCD_SHM_INI=/usr/share/sonic/device/profiles/syncd_shm.ini
+    BRCM_PLATFORM_COMMON_DIR=/usr/share/sonic/device/x86_64-broadcom_common
+
+    readline=$(grep '0x14e4' /proc/linux-kernel-bde)
+    bcm_chip_id=${readline#*0x14e4:0x}
+    bcm_chip_id=${chip_id::3}
+    if [ -f $BRCM_PLATFORM_COMMON_DIR/x86_64-broadcom_${bcm_chip_id}/broadcom-sonic*.config.bcm ]; then
+        COMMON_CONFIG_BCM=$(find $BRCM_PLATFORM_COMMON_DIR/x86_64-broadcom_${bcm_chip_id} -name 'broadcom-sonic*.config.bcm')
+        CHIP_NAME=${COMMON_CONFIG_BCM#*broadcom-sonic-}
+        CHIP_NAME=`echo $CHIP_NAME | awk -F. '{print $1}'`
+        echo "Get Broadcom Chip Name: [$CHIP_NAME] for bcm_chip_id: [${bcm_chip_id}] "
+    fi
+
+    if [ -z "$SYNCD_SHM_SIZE" ]; then
+        if [ -z "$CHIP_NAME" ]; then
+            echo "Cannot get Broadcom Chip Name. Skip set SYNCD_SHM_SIZE."
+        elif [ -f "$SYNCD_SHM_INI" ] && [ "$(grep -m1 "^${CHIP_NAME}=" $SYNCD_SHM_INI)" ]; then
+                SYNCD_SHM_SIZE=`grep -m1 "^${CHIP_NAME}=" $SYNCD_SHM_INI | awk -F= '{print $2}'`
+        else
+            echo "Cannot get SYNCD_SHM_SIZE for chip: [${CHIP_NAME}] in $SYNCD_SHM_INI. Skip set SYNCD_SHM_SIZE."
+        fi
+
+    fi
+    {%- endif %}
+    {%- endif %}
+
     {%- if docker_container_name == "gbsyncd" %}
     GBSYNCD_CONF=/usr/share/sonic/device/$PLATFORM/gbsyncd.ini
     GBSYNCD_PLATFORM=gbsyncd-vs
