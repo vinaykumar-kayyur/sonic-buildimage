@@ -26,7 +26,7 @@ NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 CHASSIS_STATE_DB='CHASSIS_STATE_DB'
-CHASSIS_ASIC_INFO_TABLE='CHASSIS_ASIC_TABLE'
+CHASSIS_FABRIC_ASIC_INFO_TABLE='CHASSIS_FABRIC_ASIC_TABLE'
 
 # Dictionary to cache config_db connection handle per namespace
 # to prevent duplicate connections from being opened
@@ -157,10 +157,9 @@ def get_current_namespace(pid=None):
     """
 
     net_namespace = None
-    command = ["sudo /bin/ip netns identify {}".format(os.getpid() if not pid else pid)]
+    command = ["sudo", '/bin/ip', 'netns', 'identify', "{}".format(os.getpid() if not pid else pid)]
     proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
-                            shell=True,
                             universal_newlines=True,
                             stderr=subprocess.STDOUT)
     try:
@@ -479,7 +478,7 @@ def get_asic_presence_list():
             # Get asic list from CHASSIS_ASIC_TABLE which lists only the asics
             # present based on Fabric card detection by the platform.
             db = swsscommon.DBConnector(CHASSIS_STATE_DB, 0, True)
-            asic_table = swsscommon.Table(db, CHASSIS_ASIC_INFO_TABLE)
+            asic_table = swsscommon.Table(db, CHASSIS_FABRIC_ASIC_INFO_TABLE)
             if asic_table:
                 asics_presence_list = list(asic_table.getKeys())
                 for asic in asics_presence_list:

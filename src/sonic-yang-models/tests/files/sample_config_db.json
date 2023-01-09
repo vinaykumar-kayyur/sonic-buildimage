@@ -332,7 +332,8 @@
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
-                "bgp_adv_lo_prefix_as_128": "true"
+                "bgp_adv_lo_prefix_as_128": "true",
+                "yang_config_validation": "disable"
             }
         },
         "VLAN": {
@@ -470,6 +471,22 @@
                 "source": "1111::1111",
                 "port": "514",
                 "vrf": "Vrf_blue"
+            }
+        },
+        "SYSLOG_CONFIG" : {
+            "GLOBAL": {
+                "rate_limit_interval": "5",
+                "rate_limit_burst": "100"
+            }
+        },
+        "SYSLOG_CONFIG_FEATURE" : {
+            "swss": {
+                "rate_limit_interval": "5",
+                "rate_limit_burst": "100"
+            },
+            "bgp": {
+                "rate_limit_interval": "10",
+                "rate_limit_burst": "200"
             }
         },
         "CABLE_LENGTH": {
@@ -836,6 +853,20 @@
                 "tpid": "0x8100"
             }
         },
+        "LOGGER": {
+            "orchagent": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "syncd": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "SAI_API_LAG": {
+                "LOGLEVEL": "SAI_LOG_LEVEL_NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            }
+        },
         "ACL_TABLE": {
             "V4-ACL-TABLE": {
                 "type": "L3",
@@ -1113,14 +1144,45 @@
         "TELEMETRY": {
             "certs": {
                 "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
-		"server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
-		"server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+                "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
+                "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
             },
-	    "gnmi": {
-		"client_auth": "true",
-		"log_level": "2",
-		"port": "50051"
-	    }
+            "gnmi": {
+                "client_auth": "true",
+                "log_level": "2",
+                "port": "50051"
+            }
+        },
+        "TUNNEL": {
+            "MuxTunnel0": {
+                "dscp_mode": "uniform",
+                "dst_ip": "10.1.0.32",
+                "ecn_mode": "copy_from_outer",
+                "encap_ecn_mode": "standard",
+                "ttl_mode": "pipe",
+                "tunnel_type": "IPINIP"
+            },
+            "MuxTunnel1": {
+                "dscp_mode": "pipe",
+                "dst_ip": "10.1.0.32",
+                "ecn_mode": "standard",
+                "encap_ecn_mode": "standard",
+                "ttl_mode": "uniform",
+                "tunnel_type": "IPINIP"
+            },
+            "MuxTunnel2": {
+                "tunnel_type": "IPINIP",
+                "src_ip": "10.1.0.33",
+                "dst_ip": "10.1.0.32",
+                "dscp_mode": "pipe",
+                "encap_ecn_mode": "standard",
+                "ecn_mode": "copy_from_outer",
+                "ttl_mode": "uniform",
+                "decap_dscp_to_tc_map": "Dscp_to_tc_map1",
+                "decap_tc_to_pg_map": "tc_to_pg_map1",
+                "encap_tc_to_dscp_map": "EncapTcToQueueMap",
+                "encap_tc_to_queue_map": "tc_to_q_map1"
+            }
         },
         "RESTAPI": {
             "certs": {
@@ -1242,7 +1304,8 @@
                 "collector_port": "6343"
             },
             "collector2": {
-                "collector_ip": "10.144.1.2"
+                "collector_ip": "10.144.1.2",
+                "collector_vrf": "mgmt"
             }
         },
 
@@ -1514,7 +1577,8 @@
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
-                "check_up_status": "False"
+                "check_up_status": "False",
+                "support_syslog_rate_limit": "True"
             },
             "database": {
                 "auto_restart": "always_enabled",
@@ -1524,7 +1588,8 @@
                 "high_mem_alert": "disabled",
                 "state": "always_enabled",
                 "set_owner": "local",
-                "check_up_status": "false"
+                "check_up_status": "false",
+                "support_syslog_rate_limit": "True"
             },
             "snmp": {
                 "auto_restart": "enabled",
@@ -1534,7 +1599,8 @@
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "kube",
-                "check_up_status": "true"
+                "check_up_status": "true",
+                "support_syslog_rate_limit": "True"
             },
             "swss": {
                 "auto_restart": "enabled",
@@ -1544,7 +1610,8 @@
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
-                "check_up_status": "false"
+                "check_up_status": "false",
+                "support_syslog_rate_limit": "True"
             },
             "syncd": {
                 "auto_restart": "enabled",
@@ -1554,17 +1621,19 @@
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
-                "check_up_status": "false"
+                "check_up_status": "false",
+                "support_syslog_rate_limit": "True"
             },
             "lldp": {
                 "auto_restart": "enabled",
                 "has_global_scope": "false",
-                "has_per_asic_scope": "true",
+                "has_per_asic_scope": "{% if not DEVICE_RUNTIME_METADATA['ETHERNET_PORTS_PRESENT'] or ('CHASSIS_METADATA' in DEVICE_RUNTIME_METADATA and DEVICE_RUNTIME_METADATA['CHASSIS_METADATA']['module_type'] in ['supervisor']) %}False{% else %}True{% endif %}",
                 "has_timer": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "kube",
-                "check_up_status": "false"
+                "check_up_status": "false",
+                "support_syslog_rate_limit": "True"
             },
             "dhcp_relay": {
                 "auto_restart": "enabled",
@@ -1574,7 +1643,8 @@
                 "high_mem_alert": "disabled",
                 "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
                 "set_owner": "kube",
-                "check_up_status": "true"
+                "check_up_status": "true",
+                "support_syslog_rate_limit": "True"
             }
         },
         "DHCP_RELAY": {
@@ -2070,6 +2140,12 @@
                 "ip": "kubernetes.apiserver.com",
                 "port": "6443"
             }
+        },
+        "DASH_VNET": {
+            "Vnet1": {
+               "vni": "10",
+               "guid":"guid-vnet1"
+             }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
