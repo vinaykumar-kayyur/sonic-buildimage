@@ -96,7 +96,7 @@ module sonic-telemetry_client {
                 }
 
                 leaf dst_group {
-                    must "(contains(../../TELEMETRY_CLIENT_DS_LIST/prefix, current())";
+                    must "(contains(../../TELEMETRY_CLIENT_DS_LIST/prefix, current()))";
                     type string;
                 }
 
