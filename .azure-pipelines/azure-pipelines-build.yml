@@ -163,6 +163,7 @@ jobs:
                 git stash
                 popd
               fi
+            fi
             if [ $(syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
