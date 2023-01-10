@@ -34,13 +34,13 @@ RUN apt-get update \
     libboost-atomic1.71.0
 
 COPY \
-{% for deb in docker-saiserver-mrvl_debs.split(' ') -%}
+{% for deb in docker_saiserver_mrvl_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
-{% for deb in docker_syncd_mrvl_debs.split(' ') -%}
+{% for deb in docker_saiserver_mrvl_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
