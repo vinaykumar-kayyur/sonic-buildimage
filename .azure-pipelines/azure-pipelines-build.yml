@@ -138,6 +138,12 @@ jobs:
               rm target/sonic-vs.img
             fi
           else
+            if [ $(GROUP_NAME) == mellonax ]; then
+              make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-mlnx.gz
+              pushd ./src/sonic-sairedis/SAI
+              git stash
+              popd
+            fi
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
