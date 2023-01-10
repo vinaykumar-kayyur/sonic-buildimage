@@ -82,11 +82,15 @@ RUN curl http://ftp.us.debian.org/debian/pool/main/s/scapy/python-scapy_2.4.0-2_
 RUN apt-get install -y --no-install-recommends libxml2 iptables libbsd0 protobuf-c-compiler protobuf-compiler python3-protobuf libprotobuf-c1 python3-future python3-ipaddr libnet1 pkg-config asciidoc xmlto
 
 COPY ["start.sh", "/usr/bin/"]
+COPY ["old_start.sh", "/usr/bin/"]
 COPY ["saiserver_start.sh", "/usr/bin/"]
 COPY ["files/syncd_init_common.sh", "/usr/bin/"]
-COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
-RUN chmod +x /usr/bin/saiserver_start.sh /usr/bin/syncd_init_common.sh
+RUN chmod +x /usr/bin/saiserver_start.sh /usr/bin/syncd_init_common.sh /usr/bin/old_start.sh
 COPY ["profile.ini", "portmap.ini", "/etc/sai/"]
+
+RUN mkdir -p /etc/supervisor/conf.d/
+RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
+RUN rm -f /usr/share/sonic/templates/supervisord.conf.j2
 
 COPY ["sai_2700.xml", "/usr/share/"]
 
