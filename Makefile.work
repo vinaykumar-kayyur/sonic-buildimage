@@ -608,6 +608,7 @@ init :
 	$(Q)git submodule update --init --recursive
 	$(Q)git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
 	$(Q)./scripts/init_alternate_apt_confdir.sh
+	$(Q)./scripts/check_rules_mk_files_versions.sh
 
 .ONESHELL : reset
 reset :
