@@ -20,10 +20,16 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	tar -xvzf ./thrift_$(THRIFT_VERSION).tar.gz
 	if [ -f thrift.patch/series ]; then pushd thrift-$(THRIFT_VERSION) && QUILT_PATCHES=../thrift.patch quilt push -a; [ -d .pc ] && rm -rf .pc; popd; fi
 
+	if [ $(CONFIGURED_ARCH) == armhf ]; then
+		alias python=python3
+	fi	
 	pushd thrift-$(THRIFT_VERSION)
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -d -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/
+	if [ $(CONFIGURED_ARCH) == armhf ]; then
+		unalias python
+	fi
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
