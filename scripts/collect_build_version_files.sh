@@ -23,6 +23,11 @@ mkdir -p $VERSION_SLAVE_PATH
 
 scripts/versions_manager.py merge -t $VERSION_SLAVE_PATH -b $LOG_VERSION_PATH -e $POST_VERSION_PATH
 
+## Metadata file
+if [ -f ./img_metadata.yaml ]; then
+    sudo cp ./img_metadata.yaml $VERSION_SLAVE_PATH
+fi
+
 rm -rf $BUILD_VERSION_PATH/*
 
 exit $RET

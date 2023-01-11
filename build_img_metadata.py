@@ -1,0 +1,134 @@
+#!/usr/bin/python3
+
+import os
+import os.path
+import yaml
+import re
+
+RULES_CFG_PATH = 'rules/config'
+RULES_CFG_USER_PATH = 'rules/config.user'
+IMG_METADATA_FILE = 'img_metadata.yaml'
+FEATURES_LIST_YML_FILE = 'sonic_features.yaml'
+
+DEFAULT_ENABLE_OPTION = 'y'
+DEFAULT_NOT_APPLICABLE_OPTION = 'N/A'
+FEATURE_ENABLED_OPTION = 'Enabled'
+FEATURE_DISABLED_OPTION = 'Disabled'
+FEATURE_NOT_APPLICABLE_OPTION = DEFAULT_NOT_APPLICABLE_OPTION
+
+#
+# Helper functions
+#
+
+# Get header info (version, date/time, commit/branch, kernel/distro)
+
+def get_header_info():
+    hdr_data = {}
+    hdr_data ['SONiC Software Version'] = os.environ.get('build_version')
+    hdr_data['Distribution'] = os.environ.get('debian_version')
+    hdr_data['Kernel'] = os.environ.get('kernel_version')
+    hdr_data['Build branch'] = os.environ.get('branch')
+    hdr_data['Build commit'] = os.environ.get('commit_id')
+    hdr_data['Build date'] = os.environ.get('build_date')
+
+    return hdr_data
+
+# Read config file by a given path, create dictionary
+
+def read_cfg_file(cfg_path:str, cfg_dict:dict):
+    if os.path.exists(cfg_path) is False:
+        return
+
+    #read config file
+    with open(cfg_path) as cfg_fp:
+        cfg_lines = cfg_fp.readlines()
+        for line in cfg_lines:
+            line = line.strip()
+            if line.startswith('#') or re.search("^\s*$", line):
+                #skip comments or empty lines
+                continue
+            else:
+                #strip spaces, for pairs with ?= remove '?'
+                key = line.split('=')[0].rstrip('?').strip()
+                value = line.split('=')[1].strip()
+                cfg_dict[key] = value
+
+# Get build configuration
+# read build configuration from config and config.user files
+# config.user overwrites options from config, see slave.mk
+
+def get_bld_config():
+    bld_config = {}
+
+    read_cfg_file(RULES_CFG_PATH, bld_config)
+    read_cfg_file(RULES_CFG_USER_PATH, bld_config)
+
+    return bld_config
+
+# Get features list
+# get features list and status according to build configuration
+
+def get_features_list(features_list_path:str):
+    feature_list = {}
+
+    if os.path.exists(features_list_path) is False:
+        return
+
+    with open(features_list_path) as feature_yaml:
+        feature_list = yaml.safe_load(feature_yaml)
+
+    return feature_list
+
+# Get feature status from build onfig
+
+def get_feature_status(feature: dict, build_cfg: dict):
+    status = FEATURE_ENABLED_OPTION
+
+    for option in feature['options']:
+        if option == DEFAULT_NOT_APPLICABLE_OPTION:
+            status = FEATURE_NOT_APPLICABLE_OPTION
+            break
+        cfg_val = build_cfg.get(option)
+        if cfg_val is None:
+            #if option was not found - silently continue
+            continue
+        elif cfg_val != DEFAULT_ENABLE_OPTION:
+            status = FEATURE_DISABLED_OPTION
+            break
+
+    return status
+
+# Get features configuration according to build configuration
+
+def get_features_config():
+    feature_list = get_features_list(FEATURES_LIST_YML_FILE)
+    cfg_feature_arr = []
+    build_cfg = get_bld_config()
+
+    for feature_item in feature_list:
+        feature_data = {}
+        feature_data['name'] = feature_item['feature']['name']
+        feature_data['group'] = feature_item['feature']['group']
+        feature_data['description'] = feature_item['feature']['description']
+        feature_data['status'] = get_feature_status(feature_item['feature'], build_cfg)
+        cfg_feature_arr.append(feature_data)
+
+    return cfg_feature_arr
+
+# Write build metadata into yaml file
+
+def write_matadata(path:str):
+    bld_metadata = {}
+
+    bld_metadata['Version'] = get_header_info()
+    bld_metadata['Configuration'] = get_bld_config()
+    bld_metadata['Features'] = get_features_config()
+
+    with open(path, 'w') as file:
+        yaml.dump(bld_metadata, file)
+
+def build_metadata():
+    write_matadata(IMG_METADATA_FILE)
+
+if __name__ == '__main__':
+    build_metadata()

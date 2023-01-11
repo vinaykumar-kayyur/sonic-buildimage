@@ -593,6 +593,12 @@ export build_number="${BUILD_NUMBER:-0}"
 export built_by="$USER@$BUILD_HOSTNAME"
 j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
+## Metadata file
+./build_img_metadata.py
+if [ -f ./img_metadata.yaml ]; then
+    sudo cp ./img_metadata.yaml $FILESYSTEM_ROOT/etc/sonic/
+fi
+
 ## Copy over clean-up script
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 
