@@ -1,7 +1,9 @@
 [Unit]
 Description=Platform topology configuration service
-Requires=database.service
 After=database.service
+After=database-chassis.service
+Requires=database.service
+Requires=database-chassis.service
 PartOf=database.service
 Before=config-setup.service
 
