@@ -38,6 +38,8 @@ class Psu(PsuBase):
         self.__thermals = None
         self.__info = None
         self.__ts = 0
+        self.__temperature = None
+        self.__temperature_high_threshold = None
         # STUB IMPLEMENTATION
         self.color = ""
 
@@ -59,7 +61,7 @@ class Psu(PsuBase):
     @classmethod
     def __sensors_get(cls, cached=True):
         cls.__lock.acquire()
-        if time.time() > cls.__timestamp + 15:
+        if time.time() > cls.__timestamp + 15 and not Psu.sigterm:
             # Update cache once per 15 seconds
             try:
                 cls.__sensors_info = get_psu_metrics()
@@ -96,6 +98,10 @@ class Psu(PsuBase):
                 return self.__info
         return self.__info
 
+    @cancel_on_sigterm
+    def get_metric_value(self, metric_name):
+        return get_metric_value(Psu.__sensors_get(), "PSU%d ".format(self.__index) + metric_name)
+
     @staticmethod
     def get_num_psus():
         """
@@ -127,7 +133,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Voltage_in1_input" % self.__index)
+        return self.get_metric_value("12V Output Voltage_in1_input")
 
     def get_current(self):
         """
@@ -136,7 +142,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Current_curr2_input" % self.__index)
+        return self.get_metric_value("12V Output Current_curr2_input")
 
     def get_input_voltage(self):
         """
@@ -145,7 +151,7 @@ class Psu(PsuBase):
             A float number, the input voltage in volts,
             e.g. 220
         """
-        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Voltage_in0_input" % self.__index)
+        return self.get_metric_value("Input Voltage_in0_input")
 
     def get_input_current(self):
         """
@@ -153,7 +159,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 0.8
         """
-        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Current_curr1_input" % self.__index)
+        return self.get_metric_value("Input Current_curr1_input")
 
     def get_power(self):
         """
@@ -177,6 +183,9 @@ class Psu(PsuBase):
             return client.pltfm_mgr.pltfm_mgr_pwr_supply_present_get(self.__index)
 
         status = False
+        if Psu.sigterm:
+            return status
+
         try:
             status = thrift_try(psu_present_get, attempts=1)
         except Exception as e:
@@ -267,6 +276,7 @@ class Psu(PsuBase):
         """
         return self.__index
 
+    @cancel_on_sigterm
     def get_temperature(self):
         """
         Retrieves current temperature reading from PSU
@@ -274,8 +284,11 @@ class Psu(PsuBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
-        return self.get_thermal(0).get_temperature()
+        if not Psu.sigterm:
+            self.__temperature = self.get_thermal(0).get_temperature()
+        return self.__temperature
 
+    @cancel_on_sigterm
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
@@ -283,7 +296,9 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return self.get_thermal(0).get_high_threshold()
+        if not Psu.sigterm:
+            self.__temperature_high_threshold = self.get_thermal(0).get_high_threshold()
+        return self.__temperature_high_threshold
 
     @property
     def _thermal_list(self):
