@@ -56,3 +56,19 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
+
+{% if INSTANCES %}
+{%     for redis_inst, redis_items in INSTANCES.items() %}
+{% if redis_inst == 'redis_chassis' %}
+[program: http-server]
+command=python3 /usr/local/bin/http-server
+priority=3
+autostart=true
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=rsyslogd:running
+{%- endif -%}
+{%     endfor %}
+{% endif %}
