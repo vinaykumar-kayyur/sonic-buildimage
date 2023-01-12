@@ -573,14 +573,14 @@ class VersionBuild:
                 for dist in dists:
                     versions = self._get_versions(ctype, dist)
                     common_versions = self._get_common_versions(versions)
-                    component = Component(common_versions, ctype, dist)
+                    component = Component(self.verbose, common_versions, ctype, dist)
                     components.append(component)
             else:
                 versions = self._get_versions(ctype)
                 common_versions = self._get_common_versions(versions)
-                component = Component(common_versions, ctype)
+                component = Component(self.verbose, common_versions, ctype)
                 components.append(component)
-        module = VersionModule(DEFAULT_MODULE, components)
+        module = VersionModule(self.verbose, DEFAULT_MODULE, components)
         module.overwrite(default_module, True, True)
         return module
 
