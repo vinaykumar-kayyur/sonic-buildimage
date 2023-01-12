@@ -595,8 +595,8 @@ j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/so
 
 ## Metadata file
 ./build_img_metadata.py
-if [ -f ./img_metadata.yaml ]; then
-    sudo cp ./img_metadata.yaml $FILESYSTEM_ROOT/etc/sonic/
+if [ -f ./build_metadata.yaml ]; then
+    sudo cp ./build_metadata.yaml $FILESYSTEM_ROOT/etc/sonic/
 fi
 
 ## Copy over clean-up script
