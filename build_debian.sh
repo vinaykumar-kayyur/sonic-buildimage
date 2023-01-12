@@ -594,6 +594,9 @@ export built_by="$USER@$BUILD_HOSTNAME"
 j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 ## Metadata file
+export configured_arch="${CONFIGURED_ARCH}"
+export configured_platform="${CONFIGURED_PLATFORM}"
+
 ./build_img_metadata.py
 if [ -f ./build_metadata.yaml ]; then
     sudo cp ./build_metadata.yaml $FILESYSTEM_ROOT/etc/sonic/

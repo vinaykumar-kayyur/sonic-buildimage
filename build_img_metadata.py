@@ -23,6 +23,8 @@ def get_header_info():
     hdr_data['Build_branch'] = os.environ.get('branch')
     hdr_data['Build_commit'] = os.environ.get('commit_id')
     hdr_data['Build_date'] = os.environ.get('build_date')
+    hdr_data['Architecture'] = os.environ.get('configured_arch')
+    hdr_data['Platform'] = os.environ.get('configured_platform')
 
     return hdr_data
 
