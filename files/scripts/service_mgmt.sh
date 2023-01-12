@@ -26,6 +26,22 @@ function check_fast_boot ()
     fi
 }
 
+function check_redundant_type()
+{
+    DEVICE_SUBTYPE=`$SONIC_DB_CLI CONFIG_DB hget "DEVICE_METADATA|localhost" subtype`
+    if [[ x"$DEVICE_SUBTYPE" == x"DualToR" ]]; then
+        MUX_CONFIG=`show muxcable config`
+        if [[ $MUX_CONFIG =~ .*active-active.* ]]; then 
+            ACTIVE_ACTIVE="true"
+        else
+            ACTIVE_ACTIVE="false"
+        fi
+    else
+        ACTIVE_ACTIVE="false"
+    fi
+    debug "Active-active cable type dualtor: ${ACTIVE_ACTIVE}"
+}
+
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
@@ -43,13 +59,19 @@ stop() {
 
     check_warm_boot
     check_fast_boot
+    check_redundant_type
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # For WARM/FAST boot do not perform service stop
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
-        /usr/bin/${SERVICE}.sh stop $DEV
-        debug "Stopped ${SERVICE}$DEV service..."
+        if [[ x"$SERVICE" == x"radv" ]] && [[ x"$ACTIVE_ACTIVE" == x"true" ]]; then
+	    debug "Killing Docker ${SERVICE}${DEV}..."
+            /usr/bin/${SERVICE}.sh kill $DEV
+	else
+	    /usr/bin/${SERVICE}.sh stop $DEV
+            debug "Stopped ${SERVICE}$DEV service..."
+        fi
     else
         debug "Killing Docker ${SERVICE}${DEV}..."
         /usr/bin/${SERVICE}.sh kill $DEV
