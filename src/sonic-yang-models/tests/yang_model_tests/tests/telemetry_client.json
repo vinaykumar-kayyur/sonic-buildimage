@@ -15,5 +15,9 @@
     "desc": "Configure wrong value for encoding.",
     "eStrKey" : "InvalidValue",
     "eStr": ["encoding"]
+  },
+  "DST_ADDR_INCORRECT_FORMAT": {
+    "desc": "Add dst_addr which is not in correct ip-port format.",
+    "eStrKey" : "Pattern"
   }
 }

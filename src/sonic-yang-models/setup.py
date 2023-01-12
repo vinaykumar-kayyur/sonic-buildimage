@@ -223,6 +223,7 @@ setup(
                          './cvlyang-models/sonic-system-aaa.yang',
                          './cvlyang-models/sonic-system-tacacs.yang',
                          './cvlyang-models/sonic-telemetry.yang',
+                         './cvlyang-models/sonic-telemetry_client.yang',
                          './cvlyang-models/sonic-types.yang',
                          './cvlyang-models/sonic-versions.yang',
                          './cvlyang-models/sonic-vlan.yang',
