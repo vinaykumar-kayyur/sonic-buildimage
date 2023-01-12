@@ -87,6 +87,7 @@ COPY ["saiserver_start.sh", "/usr/bin/"]
 COPY ["files/syncd_init_common.sh", "/usr/bin/"]
 RUN chmod +x /usr/bin/saiserver_start.sh /usr/bin/syncd_init_common.sh /usr/bin/old_start.sh
 COPY ["profile.ini", "portmap.ini", "/etc/sai/"]
+COPY ["supervisord.conf.j2", "/usr/share/sonic/templates/"]
 
 RUN mkdir -p /etc/supervisor/conf.d/
 RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
