@@ -317,9 +317,9 @@ start() {
 
     {%- if sonic_asic_platform == "broadcom" %}
     {%- if docker_container_name == "syncd" %}
-    # Set the SYNCD_SHM_SIZE if this variable not defined
-    SYNCD_SHM_INI=/usr/share/sonic/device/profiles/syncd_shm.ini
+    # Set the SYNCD_SHM_SIZE if this variable not defined    
     BRCM_PLATFORM_COMMON_DIR=/usr/share/sonic/device/x86_64-broadcom_common
+    SYNCD_SHM_INI=$BRCM_PLATFORM_COMMON_DIR/syncd_shm.ini
 
     readline=$(grep '0x14e4' /proc/linux-kernel-bde)
     bcm_chip_id=${readline#*0x14e4:0x}
