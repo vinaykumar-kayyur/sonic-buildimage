@@ -29,6 +29,7 @@ for pkgsrcname in \
        kdump-tools \
        libyang1 \
        lm-sensors \
+       mpdecimal \
        snmpd \
        ;do
     basevarname=$(echo $pkgsrcname"_VERSION" | tr [a-z\-] [A-Z_])
