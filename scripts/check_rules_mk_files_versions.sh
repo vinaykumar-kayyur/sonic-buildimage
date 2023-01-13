@@ -21,6 +21,7 @@ rootdir=$(pwd)
 for pkgsrcname in \
        bash \
        debootstrap \
+       hiredis \
        iptables \
        isc-dhcp \
        kdump-tools \
