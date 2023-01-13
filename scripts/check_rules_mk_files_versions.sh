@@ -30,6 +30,7 @@ for pkgsrcname in \
        libyang1 \
        lm-sensors \
        mpdecimal \
+       ntp \
        snmpd \
        ;do
     basevarname=$(echo $pkgsrcname"_VERSION" | tr [a-z\-] [A-Z_])
