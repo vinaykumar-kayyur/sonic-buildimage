@@ -112,11 +112,12 @@ static bool is_multi_instance_service(char *service_name){
          * as multi instance services as they contain strings 'database' and 'syncd' respectively
          * which are multi instance services in multi_instance_services[].
          */
-        char *token = strtok(service_name, "@");
+        char *saveptr;
+        char *token = strtok_r(service_name, "@", &saveptr);
         if (token) {
             if (strstr(token, ".service") != NULL) {
                 /* If we are here, service_name did not have '@' delimiter but contains '.service' */
-                token = strtok(service_name, ".");
+                token = strtok_r(service_name, ".", &saveptr);
             }
         }
         if (strncmp(service_name, multi_instance_services[i], strlen(service_name)) == 0) {
