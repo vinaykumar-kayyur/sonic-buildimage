@@ -23,6 +23,7 @@ for pkgsrcname in \
        debootstrap \
        hiredis \
        ifupdown2 \
+       iproute2 \
        iptables \
        isc-dhcp \
        kdump-tools \
