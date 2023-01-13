@@ -27,6 +27,7 @@ for pkgsrcname in \
        iptables \
        isc-dhcp \
        kdump-tools \
+       libyang1 \
        lm-sensors \
        snmpd \
        ;do
