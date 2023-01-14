@@ -34,6 +34,7 @@ for pkgsrcname in \
        redis \
        snmpd \
        socat \
+       thrift \
        ;do
     basevarname=$(echo $pkgsrcname"_VERSION" | tr [a-z\-] [A-Z_])
 
