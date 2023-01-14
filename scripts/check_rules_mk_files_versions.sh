@@ -32,6 +32,7 @@ for pkgsrcname in \
        mpdecimal \
        ntp \
        snmpd \
+       socat \
        ;do
     basevarname=$(echo $pkgsrcname"_VERSION" | tr [a-z\-] [A-Z_])
 
