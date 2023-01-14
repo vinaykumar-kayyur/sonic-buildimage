@@ -31,6 +31,7 @@ for pkgsrcname in \
        lm-sensors \
        mpdecimal \
        ntp \
+       redis \
        snmpd \
        socat \
        ;do
@@ -53,9 +54,9 @@ for pkgsrcname in \
 
          # next, use eval and awk to parse 'apt-cache showsrc' output and retrieve available versions from debian repositories
          # pipe result to a unique and version sort (-u and -V options) and tail to get the last version
-         eval $(echo "version=\$(apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc $pkgsrcname | awk  -F\"[' ]\" '/^Version: (1:)*$versionpattern[^0-9]*/{print \$2}' | cut -d: -f2- | sort -uV | tail -1)")
+         eval $(echo "version=\$(apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc $pkgsrcname | awk  -F\"[' ]\" '/^Version: ([15]:)*$versionpattern[^0-9]*/{print \$2}' | cut -d: -f2- | sort -uV | tail -1)")
          # previous line will be interpreted as follow (modulo package name and version changes)
-         # version=$(apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc isc-dhcp | awk  -F"[' ]" '/^Version: (1:)*4\.4\.1[^0-9]*/{print $2}' | cut -d: -f2- | sort -uV |tail -1)
+         # version=$(apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc isc-dhcp | awk  -F"[' ]" '/^Version: ([15]:)*4\.4\.1[^0-9]*/{print $2}' | cut -d: -f2- | sort -uV |tail -1)
          if [ -z "$version" ]; then
              eval echo "ERROR No candidate version in apt sources for $pkgsrcname \$$basevarname. Exiting" >&2
              exit 3
