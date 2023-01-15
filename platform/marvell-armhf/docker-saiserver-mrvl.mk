@@ -4,6 +4,8 @@ DOCKER_SAISERVER_MRVL = docker-saiserver$(SAITHRIFT_VER)-mrvl.gz
 $(DOCKER_SAISERVER_MRVL)_PATH = $(PLATFORM_PATH)/docker-saiserver-mrvl
 $(DOCKER_SAISERVER_MRVL)_DEPENDS += $(SAISERVER)
 
+$(DOCKER_SAISERVER_MRVL)_DEPENDS += $(MRVL_FPA) $(MRVL_SAI)
+
 # Use syncd_init_common.sh to init hardware platform
 SYNCD_INIT_COMMON_SCRIPT = syncd_init_common.sh
 $(SYNCD_INIT_COMMON_SCRIPT)_PATH = $(SRC_PATH)/sonic-sairedis/syncd/scripts
