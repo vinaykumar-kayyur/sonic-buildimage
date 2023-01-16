@@ -47,9 +47,9 @@ stages:
 - stage: BuildVS
   pool: sonicbld
   jobs:
-  - template: .azure-pipelines/azure-pipelines-build.yml
+  - template: .azure-pipelines/official-build-cache.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y'
       jobGroups:
       - name: vs
 
@@ -57,19 +57,15 @@ stages:
   pool: sonicbld
   dependsOn: []
   jobs:
-  - template: .azure-pipelines/azure-pipelines-build.yml
+  - template: .azure-pipelines/official-build-cache.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc)'
       jobGroups:
-      - name: broadcom
-        variables:
-          swi_image: yes
-      - name: mellanox
-      - name: marvell-armhf
-        pool: sonicbld-armhf
+      - name: centec-arm64
+        pool: sonicbld-arm64
         timeoutInMinutes: 1200
         variables:
-          PLATFORM_ARCH: armhf
+          PLATFORM_ARCH: arm64
 
 - stage: Test
   dependsOn: BuildVS
