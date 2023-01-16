@@ -6,7 +6,16 @@ parameters:
   default: ''
 - name: 'buildOptions'
   type: string
-  default: 'SONIC_CONFIG_BUILD_JOBS=1'
+  default: 'SONIC_CONFIG_BUILD_JOBS=4'
+- name: 'buildOptions'
+  type: string
+  default: 'SONIC_CONFIG_MAKE_JOBS=4'
+- name: 'buildOptions'
+  type: string
+  default: 'SONIC_DPKG_CACHE_METHOD=cache'
+- name: 'buildOptions'
+  type: string
+  default: 'ENABLE_DOCKER_BASE_PULL=y'
 - name: 'preSteps'
   type: stepList
   default: []
