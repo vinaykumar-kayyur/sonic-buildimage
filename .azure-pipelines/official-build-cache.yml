@@ -9,29 +9,10 @@ schedules:
   branches:
     include:
     - master
+    - 202012
 
 trigger: none
 pr: none
-
-parameters:
-- name: 'jobFilters'
-  type: object
-  default: ''
-- name: 'buildOptions'
-  type: string
-  default: 'SONIC_DPKG_CACHE_METHOD=cache'
-- name: 'preSteps'
-  type: stepList
-  default: []
-- name: 'postSteps'
-  type: stepList
-  default: []
-- name: 'jobGroups'
-  type: object
-  default: ''
-- name: 'qemuOrCrossBuild'
-  type: boolean
-  default: false
 
 stages:
 - stage: Build
