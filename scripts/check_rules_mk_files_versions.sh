@@ -74,8 +74,8 @@ for pkgsrcname in \
          fi
          if [ "$version" != "$(eval echo \$$basevarname\_FULL)" ]; then
              echo "WARNING $(eval echo \$$basevarname\_FULL) and latest version $version differs." >&2
-             eval backslashedfullversion=$(echo "\$(echo \$$basevarname\_FULL| sed 's/\./\\\\./g')")
-             if [ -z "$(eval "apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc $pkgsrcname | grep '^Version: \(1:\)*$backslashedfullversion$'")" ];then
+             eval backslashedfullversion=$(echo "\$(echo \$$basevarname\_FULL| sed -e 's/\./\\\\./g' -e 's/\+/\\\\+/g')")
+             if [ -z "$(eval "apt-cache -c ../../alt_apt_confdir/etc/apt/apt.conf showsrc $pkgsrcname | grep '^Version: \([15]:\)*$backslashedfullversion$'")" ];then
                  echo "WARNING No candidate version in apt sources for $(eval echo \$$basevarname\_FULL). Updating rules/$pkgsrcname.mk to use latest version $version instead." >&2
                  linenumber=$(grep -n "^$basevarname\_FULL =" ../../rules/$pkgsrcname.mk | head -$i | tail -1 | cut -d: -f1)
                  sed -i_ "$linenumber,+0s/^$basevarname\_FULL = .*/$basevarname\_FULL = $version/g" ../../rules/$pkgsrcname.mk
