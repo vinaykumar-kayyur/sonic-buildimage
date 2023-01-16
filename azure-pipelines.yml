@@ -63,7 +63,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc)'
+      buildOptions: 'USERNAME=admin SONIC_DPKG_CACHE_METHOD = cache ENABLE_DOCKER_BASE_PULL = y SONIC_BUILD_JOBS=$(nproc)'
       jobGroups:
       - name: centec-arm64
         pool: sonicbld-arm64
