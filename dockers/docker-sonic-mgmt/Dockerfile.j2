@@ -127,15 +127,21 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 ## Copy and install sonic-mgmt docker dependencies
 COPY \
-{% for deb in docker_sonic_mgmt_debs.split(' ') -%}
+{% for deb in docker_sonic_mgmt_debs.split(' ') if 'lib' not in deb -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
-{% for deb in docker_sonic_mgmt_debs.split(' ') -%}
+{% for deb in docker_sonic_mgmt_debs.split(' ') if 'sonic-gnmi' not in deb and 'lib' not in deb -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
+
+## Extract sonic-gnmi deb package and copy gnmi_cli
+RUN dpkg --fsys-tarfile debs/sonic-gnmi*.deb | tar xvg  ./usr/sbin/gnmi_cli
+RUN ls -l
+RUN ls -l ./usr/sbin
+RUN ls -l /usr/sbin
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
