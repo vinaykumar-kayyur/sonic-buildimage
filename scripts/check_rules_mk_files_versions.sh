@@ -15,6 +15,15 @@
 #   This will prevent starting a long build process condamned to fail and thus spare precious time and computing ressources.
 #   NB: This is the main purpose of this script.
 
+# TODO 2023/01/16
+# Following packages are currently not supported and have not been migrated yet to "apt-get source" & "apt-cache showsrc"
+#   ixgbe : not an official debian package
+#   libyang2 : this package is only available in the testing repo and does not work for the moment with 'apt-get source'
+#              https://udd.debian.org/lintian/?packages=libyang2 "libyang2 2.1.4-2 error source-is-missing [doc/compat_report.html]"
+#              'apt-cache showsrc' works => might be used with dget and this script rather than wget
+#   lldpd: no corresponding base version available
+#   thrift_0_14_1: no corresponding base version available / conflict name with thrift
+
 cd $(dirname $0)
 cd ..
 rootdir=$(pwd)
