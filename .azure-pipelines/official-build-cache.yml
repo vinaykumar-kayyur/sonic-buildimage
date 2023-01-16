@@ -19,12 +19,6 @@ parameters:
   default: ''
 - name: 'buildOptions'
   type: string
-  default: 'SONIC_CONFIG_BUILD_JOBS=8'
-- name: 'buildOptions'
-  type: string
-  default: 'SONIC_CONFIG_MAKE_JOBS=16'
-- name: 'buildOptions'
-  type: string
   default: 'SONIC_DPKG_CACHE_METHOD=cache'
 - name: 'preSteps'
   type: stepList
