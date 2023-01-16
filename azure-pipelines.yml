@@ -47,7 +47,7 @@ stages:
 - stage: BuildVS
   pool: sonicbld
   jobs:
-  - template: .azure-pipelines/official-build-cache.yml
+  - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y'
       jobGroups:
@@ -57,7 +57,7 @@ stages:
   pool: sonicbld
   dependsOn: []
   jobs:
-  - template: .azure-pipelines/official-build-cache.yml
+  - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc)'
       jobGroups:
