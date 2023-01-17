@@ -35,6 +35,7 @@ all:
 	@if [ ! -d ${INSTALL_SCRIPT_DIR} ]; then mkdir -p ${INSTALL_SCRIPT_DIR} ;fi
 	@if [ ! -d ${INSTALL_SERVICE_DIR} ]; then mkdir -p ${INSTALL_SERVICE_DIR} ;fi
 	@if [ ! -d ${CTC_48GT4X_PHY_DIR} ]; then mkdir -p ${CTC_48GT4X_PHY_DIR}/phy_drv ;fi
+	@if [ ! -d ${CTC_48GT4X_R_PHY_DIR} ]; then mkdir -p ${CTC_48GT4X_R_PHY_DIR}/phy_drv ;fi
 	@if [ ! -d ${INSTALL_LIB_DIR} ]; then mkdir -p ${INSTALL_LIB_DIR} ;fi
 	@if [ -d $(PWD)/lib/ ]; then cp -r $(PWD)/lib/* ${INSTALL_LIB_DIR} ;fi
 	cp -r $(app_dir)/*.so $(CTC_48GT4X_PHY_DIR)/phy_drv
