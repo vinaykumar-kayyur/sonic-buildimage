@@ -1,5 +1,5 @@
-#include <linux/kernel.h> /* Wd're doing kernel work */  
-#include <linux/module.h> /* specifically, a module */  
+#include <linux/kernel.h> /* Wd're doing kernel work */
+#include <linux/module.h> /* specifically, a module */
 #include <linux/types.h>
 #include <linux/init.h>   /* Need for the macros */
 #include <linux/moduleparam.h>
@@ -88,7 +88,7 @@ static int lpc_cpld_read(int address, u8 *val)
         LPC_CPLD_ERROR("lpc_get_device_info addr 0x%x id %d failed.\r\n", address, cpld_id);
         return -1;
     }
-    
+
     *val = inb(info->base + LPC_GET_CPLD_OFFSET(address));
     LPC_CPLD_VERBOSE("Leave info->base 0x%x, addr 0x%x, cpld_id %d, val 0x%x.\r\n", info->base, address, cpld_id, *val);
     return 0;
@@ -105,7 +105,7 @@ static int lpc_cpld_write(int address, u8 reg_val)
         LPC_CPLD_ERROR("lpc_get_device_info addr 0x%x id %d failed.\r\n", address, cpld_id);
         return -1;
     }
-    
+
     outb(reg_val, info->base + LPC_GET_CPLD_OFFSET(address));
     LPC_CPLD_VERBOSE("Leave info->base 0x%x, addr 0x%x, cpld_id %d, val 0x%x.\r\n", info->base, address, cpld_id, reg_val);
     return 0;
@@ -114,21 +114,19 @@ static int lpc_cpld_write(int address, u8 reg_val)
 static ssize_t show_cpld_version(struct device *dev, struct device_attribute *da, char *buf)
 {
     int ret, i;
-    u8 data[4];
+    u8 data[4] = {0};
     u32 index = to_sensor_dev_attr(da)->index;
 
-    memset(data, 0 ,sizeof(data));
     for (i = 0; i < 4; i++) {
         ret = lpc_cpld_read(index + i, &data[i]);
         if (ret != 0) {
-            memset(data, 0 ,sizeof(data));
-            LPC_CPLD_ERROR("get cpld version failed!\n");
-            break;
+            LPC_CPLD_ERROR("get cpld version failed, ret: %d\n", ret);
+            return -EIO;
         }
-    } 
+    }
 
     return snprintf(buf, COMMON_STR_LEN, "%02x %02x %02x %02x \n", data[0], data[1], data[2], data[3]);
-    
+
 }
 
 static ssize_t show_cpld_sysfs_value(struct device *dev, struct device_attribute *da, char *buf)
@@ -145,14 +143,14 @@ static ssize_t show_cpld_sysfs_value(struct device *dev, struct device_attribute
     return snprintf(buf, COMMON_STR_LEN, "%02x\n", data);
 }
 
-static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t 
+static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t
 count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     u8 data;
     unsigned long val;
     int err;
-    
+
     err = kstrtoul(buf, 16, &val);
     if (err)
         return err;
@@ -205,7 +203,7 @@ static int __init rg_lpc_cpld_init(void)
         return -1;
     }
 
-    status = -1;  
+    status = -1;
     status = sysfs_create_group(&pdev->dev.kobj, &lpc_cpld_base_sysfs_group);
     if (status) {
         LPC_CPLD_ERROR("sysfs_create_group failed!\n");

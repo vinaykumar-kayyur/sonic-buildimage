@@ -1,7 +1,7 @@
 cust_sfp_cfg = {
     'x86_64-ragile_ra-b6510-48v8c-r0': {
         "ver": '2.1',
-        "port_index_start": 0,
+        "port_index_start": 1,
         "port_num": 56,
         "log_level": 2,
         "eeprom_retry_times": 5,

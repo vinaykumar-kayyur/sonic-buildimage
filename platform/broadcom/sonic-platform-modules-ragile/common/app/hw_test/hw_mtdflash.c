@@ -212,7 +212,7 @@ int nand_wr_main(int argc, char **argv)
     struct mtd_dev_priv  nand_priv;
     struct erase_info_user erase;
 
-    memset(&nand_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nand_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nand_priv, 5);
     if (ret < 0) {
@@ -292,7 +292,7 @@ int nand_rd_main(int argc, char **argv)
     unsigned int nand_erasesize;
     struct mtd_dev_priv  nand_priv;
 
-    memset(&nand_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nand_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nand_priv, 3);
     if (ret < 0) {
@@ -365,7 +365,7 @@ int nand_chk_main(int argc, char **argv)
     struct erase_info_user erase;
     unsigned char *buffer;
 
-    memset(&nand_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nand_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nand_priv, 5);
     if (ret < 0) {
@@ -475,7 +475,7 @@ int nor_wr_main(int argc, char **argv)
     struct mtd_dev_priv  nor_priv;
     struct erase_info_user erase;
 
-    memset(&nor_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nor_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nor_priv, 5);
     if (ret < 0) {
@@ -555,7 +555,7 @@ int nor_rd_main(int argc, char **argv)
     unsigned int nor_erasesize;
     struct mtd_dev_priv  nor_priv;
 
-    memset(&nor_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nor_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nor_priv, 3);
     if (ret < 0) {
@@ -628,7 +628,7 @@ int nor_chk_main(int argc, char **argv)
     struct erase_info_user erase;
     unsigned char *buffer;
 
-    memset(&nor_priv, 0, sizeof(struct mtd_dev_priv));
+    memset_s(&nor_priv, sizeof(struct mtd_dev_priv), 0, sizeof(struct mtd_dev_priv));
 
     ret = mtd_arg_get(argc, argv, &nor_priv, 5);
     if (ret < 0) {

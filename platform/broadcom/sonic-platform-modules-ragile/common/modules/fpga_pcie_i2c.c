@@ -746,6 +746,47 @@ static fpga_pcie_card_info_t g_fpga_pcie_card_info[] = {
             },
         },
     },
+     /* RA-B6510-48V8C */
+    {
+        .dev_type          = 0x404a,
+        .pca9548_cfg_info  = {
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x70,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x71,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x72,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x73,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x70,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x71,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x72,
+                .cfg_offset       = 0x20,
+            },
+        },
+    },
 };
 
 extern void pca954x_hw_do_reset_func_register(void* func);

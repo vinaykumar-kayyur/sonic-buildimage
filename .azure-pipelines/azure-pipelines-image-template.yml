@@ -52,7 +52,7 @@ jobs:
       - script: |
           mkdir -p $(Build.ArtifactStagingDirectory)/target
           #mv target/* $(Build.ArtifactStagingDirectory)/target/
-          mv target/sonic-broadcom.bin $(Build.ArtifactStagingDirectory)/target/
+          mv target/sonic-$(parameters.platform).bin $(Build.ArtifactStagingDirectory)/target/
         displayName: Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)

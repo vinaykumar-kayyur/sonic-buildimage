@@ -25,20 +25,29 @@
 
 int usb_write_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
 
 int usb_read_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
 
 int usb_check_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }

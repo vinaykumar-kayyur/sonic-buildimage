@@ -376,124 +376,34 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
     {
         .dev_type          = {0x404a}, /* RA-B6510-48V8C */
         .pca9548_cfg_info  = {
-            /* psu fan */
+            /* 风扇 */
             {
-                .pca9548_reset_type = PCA9548_RESET_GPIO,
+                .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 2,
-                .pca9548_addr       = 0x70,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .gpio_attr.gpio           = 7,
-                    .gpio_attr.gpio_init      = 0,
-                    .gpio_attr.reset_on       = 1,
-                    .gpio_attr.reset_off      = 0,
-                },
-            },
-            /* sff1 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x70,
+                .pca9548_addr       = 0x77,
                 .rst_delay_b        = 0,
                 .rst_delay          = 1000,
                 .rst_delay_a        = 1000,
                 .attr = {
                     .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
                     .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(0), -1},
-                },
-            },
-            /* sff2 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x71,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
-                    .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
+                    .func_attr.cfg_offset     = {0x060d0060, -1},   /* bus:6, addr:0x0d, offset:0x60 */
                     .func_attr.umask          = {BIT(1), -1},
                 },
             },
-            /* sff3 */
+            /* 电源 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x72,
+                .pca9548_bus        = 4,
+                .pca9548_addr       = 0x77,
                 .rst_delay_b        = 0,
                 .rst_delay          = 1000,
                 .rst_delay_a        = 1000,
                 .attr = {
                     .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
                     .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(2), -1},
-                },
-            },
-            /* sff4 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x73,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
-                    .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(3), -1},
-                },
-            },
-            /* sff5 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x74,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
-                    .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(4), -1},
-                },
-            },
-            /* sff6 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x75,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
-                    .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(5), -1},
-                },
-            },
-            /* sff7 */
-            {
-                .pca9548_reset_type = PCA9548_RESET_FUNC,
-                .pca9548_bus        = 1,
-                .pca9548_addr       = 0x76,
-                .rst_delay_b        = 0,
-                .rst_delay          = 1000,
-                .rst_delay_a        = 1000,
-                .attr = {
-                    .func_attr.reset_func     = pca954x_hw_do_reset_by_i2c,
-                    .func_attr.get_umask_func = pca954x_get_umask_by_i2c,
-                    .func_attr.cfg_offset     = {CPLD_PCA9548_RESET, -1},
-                    .func_attr.umask          = {BIT(6), -1},
+                    .func_attr.cfg_offset     = {0x060d0060, -1},   /* bus:6, addr:0x0d, offset:0x60 */
+                    .func_attr.umask          = {BIT(0), -1},
                 },
             },
         },
@@ -1527,7 +1437,7 @@ static int pca954x_probe(struct i2c_client *client,
     if (IS_ERR(gpio))
         return PTR_ERR(gpio);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
-    data->idle_state = MUX_IDLE_AS_IS;
+    data->idle_state = MUX_IDLE_DISCONNECT;
 	if (device_property_read_u32(&client->dev, "idle-state", &data->idle_state)) {
 		if (device_property_read_bool(&client->dev, "i2c-mux-idle-disconnect"))
 			data->idle_state = MUX_IDLE_DISCONNECT;

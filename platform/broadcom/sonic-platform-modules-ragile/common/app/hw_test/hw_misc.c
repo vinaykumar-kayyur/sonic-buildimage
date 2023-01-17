@@ -148,28 +148,40 @@ static int mdio_arg_parse(int argc, char **argv,
 
 int reload_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
 
 int sys_info_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
 
 int mem_dump_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
 
 int cache_flush_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
@@ -713,7 +725,7 @@ int lpc_cpld_rd8_main(int argc, char **argv)
             printf("\r\n");
         }
     }
-    
+
     printf("\r\n");
 
     return 0;

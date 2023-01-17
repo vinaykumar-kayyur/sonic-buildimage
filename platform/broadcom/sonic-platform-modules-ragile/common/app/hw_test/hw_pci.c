@@ -185,7 +185,7 @@ int pci_wr_main(int argc, char **argv)
     unsigned int *ptr;
     struct stat sb;
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 6, 0);
     if (ret < 0) {
         pci_help("pci_wr");
@@ -240,7 +240,7 @@ int pci_rd_main(int argc, char **argv)
     unsigned int *ptr;
     struct stat sb;
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 6, 0);
     if (ret < 0) {
         pci_help("pci_rd");
@@ -293,7 +293,7 @@ int pci_cfg_wr_main(int argc, char **argv)
     struct pci_dev_priv pci_priv;
     char buf[16];
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 6, 1);
     if (ret < 0) {
         pci_cfg_help("pci_cfg_wr");
@@ -338,7 +338,7 @@ int pci_cfg_rd_main(int argc, char **argv)
     struct pci_dev_priv pci_priv;
     unsigned int data;
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 5, 1);
     if (ret < 0) {
         pci_cfg_help("pci_cfg_rd");
@@ -381,7 +381,7 @@ int pci_chk_main(int argc, char **argv)
     unsigned int *ptr;
     struct stat sb;
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 6, 0);
     if (ret < 0) {
         pci_help("pci_wr");
@@ -440,7 +440,7 @@ int pci_dump_main(int argc, char **argv)
     unsigned char *p;
     struct stat sb;
 
-    memset(&pci_priv, 0, sizeof(struct pci_dev_priv));
+    memset_s(&pci_priv, sizeof(struct pci_dev_priv), 0, sizeof(struct pci_dev_priv));
     ret = pci_arg_parse(argc, argv, &pci_priv, 6, 0);
     if (ret < 0) {
         pci_help("pci_dump");

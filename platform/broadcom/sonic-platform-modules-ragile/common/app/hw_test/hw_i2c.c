@@ -327,7 +327,7 @@ int i2c_wr_main(int argc, char **argv)
     int ret, fd;
     struct i2c_dev_priv i2c_priv;
 
-    memset(&i2c_priv, 0, sizeof(struct i2c_dev_priv));
+    memset_s(&i2c_priv, sizeof(struct i2c_dev_priv), 0, sizeof(struct i2c_dev_priv));
 
     ret = i2c_arg_check(argc, argv, &i2c_priv, 5);
     if (ret < 0) {
@@ -371,7 +371,7 @@ int i2c_rd_main(int argc, char **argv)
     int i, ret, fd;
     struct i2c_dev_priv i2c_priv;
 
-    memset(&i2c_priv, 0, sizeof(struct i2c_dev_priv));
+    memset_s(&i2c_priv, sizeof(struct i2c_dev_priv), 0, sizeof(struct i2c_dev_priv));
     ret = i2c_arg_check(argc, argv, &i2c_priv, 4);
     if (ret < 0) {
         i2c_help("i2c_rd");
@@ -424,7 +424,7 @@ int i2c_chk_main(int argc, char **argv)
     struct i2c_dev_priv i2c_priv;
     unsigned char *buffer;
 
-    memset(&i2c_priv, 0, sizeof(struct i2c_dev_priv));
+    memset_s(&i2c_priv, sizeof(struct i2c_dev_priv), 0, sizeof(struct i2c_dev_priv));
 
     ret = i2c_arg_check(argc, argv, &i2c_priv, 5);
     if (ret < 0) {
@@ -484,7 +484,10 @@ error_out:
 
 int i2c_reset_main(int argc, char **argv)
 {
-    printf("not support %s argc:%d, \r\n", argv[0], argc);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("not support %s argc:%d, \r\n", tmp, argc);
     return 0;
 }
 
@@ -494,7 +497,7 @@ int pca9548_rd_main(int argc, char **argv)
     int i, ret, fd;
     struct i2c_dev_priv i2c_priv;
 
-    memset(&i2c_priv, 0, sizeof(struct i2c_dev_priv));
+    memset_s(&i2c_priv, sizeof(struct i2c_dev_priv), 0, sizeof(struct i2c_dev_priv));
     ret = i2c_arg_check(argc, argv, &i2c_priv, 4);
     if (ret < 0) {
         i2c_help("pca9548_rd");
@@ -545,7 +548,7 @@ int pca9548_wr_main(int argc, char **argv)
     int ret, fd;
     struct i2c_dev_priv i2c_priv;
 
-    memset(&i2c_priv, 0, sizeof(struct i2c_dev_priv));
+    memset_s(&i2c_priv, sizeof(struct i2c_dev_priv), 0, sizeof(struct i2c_dev_priv));
 
     ret = i2c_arg_check(argc, argv, &i2c_priv, 5);
     if (ret < 0) {
