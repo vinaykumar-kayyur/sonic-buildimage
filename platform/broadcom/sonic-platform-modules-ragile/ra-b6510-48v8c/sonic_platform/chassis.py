@@ -9,7 +9,6 @@ try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from .component import Component
     from sonic_platform.sfp import *
-    from .sfp_config import *
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -24,7 +23,7 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-        for i in range(0,3):
+        for i in range(0,5):
             self._component_list.append(Component(i))
 
         try:

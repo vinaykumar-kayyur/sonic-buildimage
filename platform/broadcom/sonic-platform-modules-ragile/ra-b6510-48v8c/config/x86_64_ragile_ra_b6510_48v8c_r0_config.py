@@ -9,8 +9,9 @@ RAGILE_CARDID      = 0x0000404a
 RAGILE_PRODUCTNAME = "RA-B6510-48V8C"
 
 STARTMODULE  = {
-    "fancontrol":1,
+    "fancontrol":0,
     "avscontrol":1,
+    "macledreset":1,
     "dev_monitor":1
 }
 
@@ -263,7 +264,7 @@ MAC_DEFAULT_PARAM = {
 
 DEVICE = []
 DRIVERLISTS = []
-
+MAC_LED_RESET = {"pcibus":8, "slot":0, "fn":0, "bar":0, "offset":64, "reset":0x98}
 """
 ##
 DRIVERLISTS = [
@@ -482,3 +483,9 @@ INIT_PARAM = [
         "val": 0x80,
     },
 ]
+
+INIT_COMMAND = [
+    "i2cset -y -f 6 0x0d 0x92 0x01",
+    "i2cset -y -f 6 0x0d 0x94 0x01"
+]
+

@@ -188,10 +188,11 @@ int get_sys_val(LED_OPS_DATA *ops_ptr, uint32_t *sys_val)
                 *sys_val = (uint32_t)ret;
                 ret = 0;
         }
+
         return ret;
 }
 #endif
-
+	
 ssize_t get_status_led(struct device_attribute *da)
 {
 	int ret=0;
@@ -338,7 +339,7 @@ ssize_t set_status_led(struct device_attribute *da)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
         ret = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset));
 #else
-        ret = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->device_name, ops_ptr->swpld_addr_offset));
+		ret = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->device_name, ops_ptr->swpld_addr_offset));
 #endif
 		if (ret < 0)
 		{

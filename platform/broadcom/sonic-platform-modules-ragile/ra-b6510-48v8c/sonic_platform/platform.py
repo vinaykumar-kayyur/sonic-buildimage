@@ -5,6 +5,7 @@
 #
 #############################################################################
 
+
 try:
     from sonic_platform_pddf_base.pddf_platform import PddfPlatform
 except ImportError as e:

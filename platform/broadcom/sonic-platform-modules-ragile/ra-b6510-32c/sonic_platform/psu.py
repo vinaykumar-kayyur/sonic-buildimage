@@ -31,7 +31,33 @@ class Psu(PddfPsu):
         A string, the type of PSU (AC/DC)
         """
         return "DC"
-    
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of device
+        """
+        model = super().get_model()
+        
+        psu_model_map = {
+            # -F
+            "TCS82-100F": "PA550II-F",
+            "CSU550AP-3-500": "PA550II-F",
+            "DPS-550AB-39 A": "PA550II-F",
+            "GW-CRPS550N2C": "PA550II-F",
+            "CSU550AP-3-300": "PA550II-F",
+            "DPS-550AB-39 B": "PA550II-F",
+            # -R
+            "TCS82-100F": "PA550II-R",
+            "CSU550AP-3-501": "PA550II-R",
+            "DPS-550AB-40 A": "PA550II-R",
+            "GW-CRPS550N2RC": "PA550II-R",
+        }
+        
+        return psu_model_map.get(model, model)
+
     def runcmd(self, cmd):
         time_retry = 6
         result_msg = ""

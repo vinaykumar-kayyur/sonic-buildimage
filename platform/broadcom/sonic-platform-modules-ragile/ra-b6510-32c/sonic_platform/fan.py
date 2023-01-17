@@ -12,7 +12,6 @@ class Fan(PddfFan):
         # idx is 0-based 
         PddfFan.__init__(self, tray_idx, fan_idx, pddf_data, pddf_plugin_data, is_psu_fan, psu_index)
         self.pddf_obj = api.newapi()
-
     # Provide the functions/variables below for which implementation is to be overwritten
     # Since psu_fan airflow direction cant be read from sysfs, it is fixed as 'F2B' or 'intake'
     def get_direction(self):

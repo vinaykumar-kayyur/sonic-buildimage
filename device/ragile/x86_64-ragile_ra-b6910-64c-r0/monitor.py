@@ -5,8 +5,9 @@
 #   * PSU
 #
 import os
+import commands
+import xml.etree.ElementTree as ET
 import glob
-from lxml import etree as ET
 
 MAILBOX_DIR = "/sys/bus/i2c/devices/"
 PORTS_DIR =   "/sys/class/net/"

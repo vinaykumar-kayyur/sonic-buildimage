@@ -9,7 +9,7 @@
 
 try:
     from sonic_platform_base.component_base import ComponentBase
-    from sonic_py_common.general import getstatusoutput_noshell
+    import subprocess
     import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -22,18 +22,31 @@ def get_cpld_version(bus, i2caddr):
                           )
 
 def get_cpu_cpld_version():
-    return get_cpld_version(0, 0x0d)
+    return get_cpld_version(6, 0x0d)
+
+def get_fan_cpld_version():
+    return get_cpld_version(2, 0x0d)
 
 def get_cpld1_version():
-    return get_cpld_version(2, 0x33)
+    return get_cpld_version(8, 0x30)
 
 def get_cpld2_version():
-    return get_cpld_version(2, 0x35)
+    return get_cpld_version(8, 0x31)
+
+def get_fpga_version():
+    version = hwaccess.pci_get_value('/sys/bus/pci/devices/0000:08:00.0/resource0', 0)
+    datetime = hwaccess.pci_get_value('/sys/bus/pci/devices/0000:08:00.0/resource0',4)
+    return "%08x-%08x"%(version,datetime)
 
 COMPONENT_LIST= [
         ['CPU CPLD',
          'cpu board',
          get_cpu_cpld_version
+         ],
+
+        ['CPU FAN CPLD',
+         'cpu fan',
+         get_fan_cpld_version
          ],
 
         ['MAC1 CPLD',
@@ -44,10 +57,12 @@ COMPONENT_LIST= [
         ['MAC2 CPLD',
          'mac2 board',
          get_cpld2_version
+         ],
+        ['FPGA',
+         'fpga version',
+         get_fpga_version
          ]
     ]
-
-
 
 class Component(ComponentBase):
     """ Ragile Platform-specific Component class"""
@@ -95,12 +110,12 @@ class Component(ComponentBase):
         """
         try:
             successtips = "CPLD Upgrade succeeded!"
-            status, output = getstatusoutput_noshell(["which", "firmware_upgrade"])
+            status, output = subprocess.getstatusoutput("which firmware_upgrade")
             if status or len(output) <= 0:
                 logger.error("no upgrade tool.")
                 return False
-            cmdstr = [output, image_path, "cpld", str(self.slot), "cpld"]
-            ret, log = getstatusoutput_noshell(cmdstr)
+            cmdstr = "%s %s %s %s" % (output, image_path, "cpld", str(self.slot), "cpld")
+            ret, log = subprocess.getstatusoutput(cmdstr)
             if ret == 0 and successtips in log:
                 return True
             logger.error("upgrade failed. ret:%d, log:\n%s" % (ret, log))

@@ -1,0 +1,43 @@
+{
+    "Device": {
+        "Liquid": 0,
+        "Buildin": 0,
+        "PID": 0,
+        "OpenLoop": 1
+    },
+    "Thermal": {
+        "INLET_TEMP": "Temp_MAC_INLET_F",
+        "OUTLET_TEMP": "Temp_MAC_INLET_R",
+        "SWITCH_TEMP": "Temp_MAC_INLET_B"
+    },
+    "Fans": {
+        "Fan1" : "Fantray1_1",
+        "Fan2" : "Fantray1_2",
+        "Fan3" : "Fantray2_1",
+        "Fan4" : "Fantray2_2",
+        "Fan5" : "Fantray3_1",
+        "Fan6" : "Fantray3_2",
+        "Fan7" : "Fantray4_1",
+        "Fan8" : "Fantray4_2"
+    },
+    "PID": {
+        "Pwm_Max": 100,
+        "Pwm_Min": 30,
+        "SetPoint" : 90,
+        "P": 1.5,
+        "I": 1,
+        "D": 0.3,
+        "Temp_Min": 28.0,
+        "Temp_Max": 45.0,
+        "Sensor": "INLET_TEMP"
+    },
+    "OpenLoop": {
+        "a": -0.06,
+        "b": 10.3,
+        "c": -142.0,
+        "fix_up": -8,
+        "pwmMax": 100,
+        "pwmMin": 30,
+        "tempMin": 25
+    }
+}

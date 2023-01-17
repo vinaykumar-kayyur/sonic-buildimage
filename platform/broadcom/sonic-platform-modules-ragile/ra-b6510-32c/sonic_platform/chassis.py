@@ -9,7 +9,6 @@ try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from .component import Component
     from sonic_platform.sfp import *
-    from .sfp_config import *
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

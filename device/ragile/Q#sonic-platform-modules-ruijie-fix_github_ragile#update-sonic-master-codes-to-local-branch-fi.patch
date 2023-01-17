@@ -1,0 +1,217 @@
+From ff15dc96e6266c5bd4c33eeac13863889da29ef4 Mon Sep 17 00:00:00 2001
+From: wangxiaoyang1 <wangxiaoyang1@ruijie.com.cn>
+Date: Mon, 26 Dec 2022 15:30:38 +0800
+Subject: [PATCH] Summary:update sonic master codes to local branch fix_github
+
+BranchName: fix_github
+CAFID: N202212261236
+BUGID:
+WorkPackageName:
+The ratio of self research code(0~1):
+---
+ .../x86_64-ragile_ra-b6510-32c-r0/monitor.py  |  3 +--
+ .../platform_asic                             |  1 +
+ .../monitor.py                                |  2 +-
+ .../platform_asic                             |  1 +
+ .../plugins/fanutil.py                        |  4 ++--
+ .../x86_64-ragile_ra-b6910-64c-r0/monitor.py  |  3 +--
+ .../platform_asic                             |  1 +
+ .../plugins/fanutil.py                        | 19 ++++++++++++++++---
+ .../x86_64-ragile_ra-b6920-4s-r0/monitor.py   |  2 +-
+ .../platform_asic                             |  1 +
+ .../plugins/ssd_util.py                       |  6 +++---
+ 11 files changed, 29 insertions(+), 14 deletions(-)
+ create mode 100644 ragile/x86_64-ragile_ra-b6510-32c-r0/platform_asic
+ create mode 100644 ragile/x86_64-ragile_ra-b6510-48v8c-r0/platform_asic
+ create mode 100644 ragile/x86_64-ragile_ra-b6910-64c-r0/platform_asic
+ mode change 100755 => 100644 ragile/x86_64-ragile_ra-b6910-64c-r0/plugins/fanutil.py
+ create mode 100644 ragile/x86_64-ragile_ra-b6920-4s-r0/platform_asic
+
+diff --git a/ragile/x86_64-ragile_ra-b6510-32c-r0/monitor.py b/ragile/x86_64-ragile_ra-b6510-32c-r0/monitor.py
+index ab4d14e..fd54c13 100644
+--- a/ragile/x86_64-ragile_ra-b6510-32c-r0/monitor.py
++++ b/ragile/x86_64-ragile_ra-b6510-32c-r0/monitor.py
+@@ -5,11 +5,10 @@
+ #   * PSU
+ #
+ import os
+-import xml.etree.ElementTree as ET
+ import glob
+ from fru import *
+ from fantlv import *
+-
++from lxml import etree as ET
+ 
+ 
+ MAILBOX_DIR = "/sys/bus/i2c/devices/"
+diff --git a/ragile/x86_64-ragile_ra-b6510-32c-r0/platform_asic b/ragile/x86_64-ragile_ra-b6510-32c-r0/platform_asic
+new file mode 100644
+index 0000000..9604676
+--- /dev/null
++++ b/ragile/x86_64-ragile_ra-b6510-32c-r0/platform_asic
+@@ -0,0 +1 @@
++broadcom
+diff --git a/ragile/x86_64-ragile_ra-b6510-48v8c-r0/monitor.py b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/monitor.py
+index f9cbb31..103a2f3 100755
+--- a/ragile/x86_64-ragile_ra-b6510-48v8c-r0/monitor.py
++++ b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/monitor.py
+@@ -6,8 +6,8 @@
+ * PSU
+ """
+ import os
+-import xml.etree.ElementTree as ET
+ import glob
++from lxml import etree as ET
+ 
+ MAILBOX_DIR = "/sys/bus/i2c/devices/"
+ PORTS_DIR = "/sys/class/net/"
+diff --git a/ragile/x86_64-ragile_ra-b6510-48v8c-r0/platform_asic b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/platform_asic
+new file mode 100644
+index 0000000..9604676
+--- /dev/null
++++ b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/platform_asic
+@@ -0,0 +1 @@
++broadcom
+diff --git a/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/fanutil.py b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/fanutil.py
+index ac8069d..58c38d1 100755
+--- a/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/fanutil.py
++++ b/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/fanutil.py
+@@ -165,7 +165,7 @@ class FanUtil(FanBase):
+             print("Error: Invalid speed %d. Please provide a valid speed percentage" % val)
+             return False
+ 
+-        num_fan = self.num_fans
++        #num_fan = self.num_fans
+         if 'duty_cycle_to_pwm' not in plugin_data['FAN']:
+             print("Setting fan speed is not allowed !")
+             return False
+@@ -173,7 +173,7 @@ class FanUtil(FanBase):
+             print("setspeed nothing to do")
+             return False
+ 
+-        return True
++        #return True
+ 
+     def dump_sysfs(self):
+         return pddf_obj.cli_dump_dsysfs('fan')
+diff --git a/ragile/x86_64-ragile_ra-b6910-64c-r0/monitor.py b/ragile/x86_64-ragile_ra-b6910-64c-r0/monitor.py
+index ec0929b..432d767 100644
+--- a/ragile/x86_64-ragile_ra-b6910-64c-r0/monitor.py
++++ b/ragile/x86_64-ragile_ra-b6910-64c-r0/monitor.py
+@@ -5,9 +5,8 @@
+ #   * PSU
+ #
+ import os
+-import commands
+-import xml.etree.ElementTree as ET
+ import glob
++from lxml import etree as ET
+ 
+ MAILBOX_DIR = "/sys/bus/i2c/devices/"
+ PORTS_DIR =   "/sys/class/net/"
+diff --git a/ragile/x86_64-ragile_ra-b6910-64c-r0/platform_asic b/ragile/x86_64-ragile_ra-b6910-64c-r0/platform_asic
+new file mode 100644
+index 0000000..9604676
+--- /dev/null
++++ b/ragile/x86_64-ragile_ra-b6910-64c-r0/platform_asic
+@@ -0,0 +1 @@
++broadcom
+diff --git a/ragile/x86_64-ragile_ra-b6910-64c-r0/plugins/fanutil.py b/ragile/x86_64-ragile_ra-b6910-64c-r0/plugins/fanutil.py
+old mode 100755
+new mode 100644
+index ac8069d..b03c57e
+--- a/ragile/x86_64-ragile_ra-b6910-64c-r0/plugins/fanutil.py
++++ b/ragile/x86_64-ragile_ra-b6910-64c-r0/plugins/fanutil.py
+@@ -11,6 +11,7 @@
+ 
+ import os.path
+ import sys
++import ast
+ sys.path.append('/usr/share/sonic/platform/plugins')
+ import pddfparse
+ import json
+@@ -165,13 +166,25 @@ class FanUtil(FanBase):
+             print("Error: Invalid speed %d. Please provide a valid speed percentage" % val)
+             return False
+ 
+-        num_fan = self.num_fans
++        #num_fan = self.num_fans
+         if 'duty_cycle_to_pwm' not in plugin_data['FAN']:
+             print("Setting fan speed is not allowed !")
+             return False
+         else:
+-            print("setspeed nothing to do")
+-            return False
++            duty_cycle_to_pwm = ast.literal_eval(plugin_data['FAN']['duty_cycle_to_pwm'])
++            pwm = duty_cycle_to_pwm(val)
++            print("New Speed: %d%% - PWM value to be set is %d\n" % (val, pwm))
++
++            for i in range(1, num_fan+1):
++                attr = "fan" + str(i) + "_pwm"
++                node = pddf_obj.get_path("FAN-CTRL", attr)
++                if node is None:
++                    return False
++                try:
++                    with open(node, 'w') as f:
++                        f.write(str(pwm))
++                except IOError:
++                    return False
+ 
+         return True
+ 
+diff --git a/ragile/x86_64-ragile_ra-b6920-4s-r0/monitor.py b/ragile/x86_64-ragile_ra-b6920-4s-r0/monitor.py
+index 3aa8fd3..418179a 100644
+--- a/ragile/x86_64-ragile_ra-b6920-4s-r0/monitor.py
++++ b/ragile/x86_64-ragile_ra-b6920-4s-r0/monitor.py
+@@ -5,9 +5,9 @@
+ #   * PSU
+ #
+ import os
+-import xml.etree.ElementTree as ET
+ import glob
+ from eepromutil.fru import *
++from lxml import etree as ET
+ 
+ MAILBOX_DIR = "/sys/bus/i2c/devices/"
+ CONFIG_NAME = "dev.xml"
+diff --git a/ragile/x86_64-ragile_ra-b6920-4s-r0/platform_asic b/ragile/x86_64-ragile_ra-b6920-4s-r0/platform_asic
+new file mode 100644
+index 0000000..9604676
+--- /dev/null
++++ b/ragile/x86_64-ragile_ra-b6920-4s-r0/platform_asic
+@@ -0,0 +1 @@
++broadcom
+diff --git a/ragile/x86_64-ragile_ra-b6920-4s-r0/plugins/ssd_util.py b/ragile/x86_64-ragile_ra-b6920-4s-r0/plugins/ssd_util.py
+index b6e5d6d..268d9ab 100644
+--- a/ragile/x86_64-ragile_ra-b6920-4s-r0/plugins/ssd_util.py
++++ b/ragile/x86_64-ragile_ra-b6920-4s-r0/plugins/ssd_util.py
+@@ -7,7 +7,6 @@ from subprocess import Popen, PIPE
+ from re import findall
+ from os.path import exists
+ 
+-INNODISK = "iSmart -d {}"
+ NOT_AVAILABLE = "N/A"
+ 
+ class SsdUtil(SsdBase):
+@@ -30,7 +29,8 @@ class SsdUtil(SsdBase):
+         self.temperature = NOT_AVAILABLE
+         self.health = NOT_AVAILABLE
+ 
+-        self.ssd_info = self._execute_shell(INNODISK.format(diskdev))
++        INNODISK = ["iSmart", "-d", diskdev]
++        self.ssd_info = self._execute_shell(INNODISK)
+ 
+         self.model = self._parse_re(r'Model Name:\s*(.+?)\n', self.ssd_info)
+         self.serial = self._parse_re(r'Serial Number:\s*(.+?)\n', self.ssd_info)
+@@ -39,7 +39,7 @@ class SsdUtil(SsdBase):
+         self.health = self._parse_re(r'Health:\s*(.+?)', self.ssd_info)
+ 
+     def _execute_shell(self, cmd):
+-        process = Popen(cmd.split(), universal_newlines=True, stdout=PIPE)
++        process = Popen(cmd, universal_newlines=True, stdout=PIPE)
+         output, _ = process.communicate()
+         return output
+ 
+-- 
+2.25.1
+

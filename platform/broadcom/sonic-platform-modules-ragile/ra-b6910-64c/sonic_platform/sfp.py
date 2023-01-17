@@ -33,8 +33,8 @@ class Sfp(PddfSfp):
             print("Error: Unable to read eeprom_path: %s" % (str(e)))
             return None
 
-        return eeprom_raw
-
+        return eeprom_raw        
+        
     def write_eeprom(self, offset, num_bytes, write_buffer):
         try:
             for i in range(EEPROM_RETRY):

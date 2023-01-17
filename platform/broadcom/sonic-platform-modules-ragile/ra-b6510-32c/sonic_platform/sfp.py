@@ -41,7 +41,7 @@ from abc import abstractmethod
 try:
     import os
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
-    from .sfp_config import *
+    from sonic_platform.sfp_config import *
 
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")

@@ -25,7 +25,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Utilities',
     ],
     keywords='sonic SONiC platform PLATFORM',

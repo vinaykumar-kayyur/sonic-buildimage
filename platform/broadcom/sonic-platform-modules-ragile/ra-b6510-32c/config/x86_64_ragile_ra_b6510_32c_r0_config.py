@@ -29,7 +29,7 @@ fanloc =[ {"name":"FAN1", "location":"2-000d/fan1_pwm" ,
 
 
 STARTMODULE  = {
-                "fancontrol":1,
+                "fancontrol":0,
                 "avscontrol":1,
                 "avscontrol_restful":0,
                 "macledreset":1,
@@ -99,7 +99,7 @@ MONITOR_MAC_ERROR_SPEED    = 0XBB
 MONITOR_FAN_TOTAL_NUM      = 5
 MONITOR_MAC_UP_TEMP        = 50
 MONITOR_MAC_LOWER_TEMP     = -50
-MONITOR_MAC_MAX_TEMP       = 100   # 
+MONITOR_MAC_MAX_TEMP       = 100   #
 
 MONITOR_FALL_TEMP = 4
 MONITOR_MAC_WARNING_THRESHOLD =  100 #100
@@ -112,7 +112,7 @@ MONITOR_MAC_CRITICAL_THRESHOLD = 105  #105
 MONITOR_OUTTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_BOARDTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_CPUTEMP_CRITICAL_THRESHOLD = 100 #100
-MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80 
+MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80
 MONITOR_CRITICAL_NUM              = 3
 MONITOR_SHAKE_TIME                = 20
 MONITOR_INTERVAL                   = 60
@@ -308,4 +308,6 @@ INIT_PARAM = [
 ]
 
 INIT_COMMAND = [
+    "i2cset -y -f 6 0x0d 0x92 0x01",
+    "i2cset -y -f 6 0x0d 0x94 0x01"
 ]

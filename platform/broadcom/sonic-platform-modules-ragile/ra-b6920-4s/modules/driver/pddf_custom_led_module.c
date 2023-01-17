@@ -348,7 +348,7 @@ ssize_t set_status_led(struct device_attribute *da)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
         ret = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset));
 #else
-        ret = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->device_name, ops_ptr->swpld_addr_offset));
+		ret = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->device_name, ops_ptr->swpld_addr_offset));
 #endif
     if (ret < 0)
     {

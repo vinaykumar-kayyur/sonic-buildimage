@@ -165,7 +165,7 @@ class FanUtil(FanBase):
             print("Error: Invalid speed %d. Please provide a valid speed percentage" % val)
             return False
 
-        #num_fan = self.num_fans
+        num_fan = self.num_fans
         if 'duty_cycle_to_pwm' not in plugin_data['FAN']:
             print("Setting fan speed is not allowed !")
             return False
@@ -173,7 +173,7 @@ class FanUtil(FanBase):
             print("setspeed nothing to do")
             return False
 
-        #return True
+        return True
 
     def dump_sysfs(self):
         return pddf_obj.cli_dump_dsysfs('fan')
