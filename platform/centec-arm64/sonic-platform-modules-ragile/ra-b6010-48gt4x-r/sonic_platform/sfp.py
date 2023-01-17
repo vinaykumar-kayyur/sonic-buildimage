@@ -91,7 +91,11 @@ class Sfp(SfpBase):
         return self._get_sfputil().get_presence(self._index)
 
     def get_transceiver_info(self):
-        return self._get_sfputil().get_transceiver_info_dict(self._index)
+        # temporary solution for a sonic202111 bug
+        transceiver_info = self._get_sfputil().get_transceiver_info_dict(self._index)
+        if transceiver_info.get("vendor_rev", None) is None:
+            transceiver_info["vendor_rev"] = transceiver_info["hardware_rev"]
+        return transceiver_info
 
     def get_transceiver_bulk_status(self):
         return self._get_sfputil().get_transceiver_dom_info_dict(self._index)

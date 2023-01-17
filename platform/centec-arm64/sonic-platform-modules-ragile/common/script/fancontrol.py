@@ -211,7 +211,10 @@ class FanControl():
             self.airflow = self.doGetAirFlow()
             if self.airflow == "":
                 logger.warning("Cannot get airflow from device!")
-
+            self.pid_switch = device_json["PID"]
+            self.openloop_switch = device_json["OpenLoop"]
+            if self.pid_switch == 0 and self.openloop_switch == 0:
+                logger.warning("No PID and OpenLoop found!")
             # Init openloop
             self.openloop = OpenLoop()
             self.openloop.a = openloop_json[KEY_OPENLOOP_A]
@@ -221,6 +224,16 @@ class FanControl():
             self.openloop.pwmMax = openloop_json[KEY_OPENLOOP_PWM_MAX]
             self.openloop.pwmMin = openloop_json[KEY_OPENLOOP_PWM_MIN]
             self.openloop.tempMin = openloop_json[KEY_OPENLOOP_TEMP_MIN]
+            # Init PID
+            self.fanPid = FanPid()
+            self.fanPid.pwmMax = pid_json[KEY_PID_PWM_MAX]
+            self.fanPid.pwmMin = pid_json[KEY_PID_PWM_MIN]
+            self.fanPid.SetPoint = pid_json[KEY_PID_SETPOINT]
+            self.fanPid.P = pid_json[KEY_PID_P]
+            self.fanPid.I = pid_json[KEY_PID_I]
+            self.fanPid.D = pid_json[KEY_PID_D]
+            self.fanPid.tempMin = pid_json[KEY_PID_TEMP_MIN]
+            self.fanPid.tempMax = pid_json[KEY_PID_TEMP_MAX]
             # Init thermal setting
             for key, item in list(thermal_json.items()):
                 fanctrl_debug_log("%s %s " % (key,item))
@@ -233,6 +246,8 @@ class FanControl():
                 self.tempStatus[item] = 0
                 self.tempMissTime[item] = [0, 0]
                 self.tempCritTime[item] = [0, 0]
+                if key == self.fanPid.sensor:
+                    self.fanPid.sensor = item
 
             # Init fans setting
             for key, item in list(fan_json.items()):
@@ -247,6 +262,9 @@ class FanControl():
 
         fanctrl_debug_log("Device AirFlow: %s" % (self.airflow))
         self.updateThermal()
+        self.fanPid.last_temp = self.temps[self.fanPid.sensor]
+        for i in range(3):
+            self.fanPid.temps[i] = self.temps[self.fanPid.sensor]
         return True
 
     def setFanSpeed(self, speed):
@@ -260,6 +278,7 @@ class FanControl():
         if self.temps[KEY_INLET_TEMP] >= self.tempsMax[KEY_INLET_TEMP] or self.temps[KEY_INLET_TEMP] <= -99999:
             self.temps[KEY_INLET_TEMP] = self.tempsMax[KEY_INLET_TEMP]
         self.openloop.temp = self.temps[KEY_INLET_TEMP]
+        self.fanPid.temps[2] = self.temps[KEY_INLET_TEMP]
 
     def checkThermal(self):
         thermal_cnt = 0
@@ -330,9 +349,17 @@ class FanControl():
     def doApplyPolicy(self):
         if self.isLiquid == 1:
             return
-        openloop_pwm = int(self.openloop.calcPwm())
-        fanctrl_debug_log("OpenLoop pwm %d" % (openloop_pwm))
-        self.fan_pwm = openloop_pwm
+
+        if self.openloop_switch == 1:
+            openloop_pwm = int(self.openloop.calcPwm())
+            fanctrl_debug_log("OpenLoop pwm %d" % (openloop_pwm))
+            self.fan_pwm = max(self.fan_pwm, openloop_pwm)
+
+        if self.pid_switch == 1:
+            pid_pwm = int(self.fanPid.calcPwm())
+            fanctrl_debug_log("PID pwm %d" % (pid_pwm))
+            self.fan_pwm = max(self.fan_pwm, pid_pwm)
+
         # Check fan presence
         if self.interface.get_fan_presence() == False:
             logger.warning("Fan presence check false, set fan pwm to 100")

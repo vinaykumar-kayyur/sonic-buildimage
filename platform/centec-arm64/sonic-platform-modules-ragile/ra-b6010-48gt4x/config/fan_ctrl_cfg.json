@@ -1,7 +1,9 @@
 {
     "Device": {
         "Liquid": 0,
-        "Buildin": 1
+        "Buildin": 1,
+        "PID": 0,
+        "OpenLoop": 1
     },
     "Thermal": {
         "INLET_TEMP": "INLET_TEMP",
