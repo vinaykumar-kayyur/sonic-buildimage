@@ -484,7 +484,10 @@ error_out:
 
 int i2c_reset_main(int argc, char **argv)
 {
-    printf("not support %s argc:%d, \r\n", argv[0], argc);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("not support %s argc:%d, \r\n", tmp, argc);
     return 0;
 }
 

@@ -42,12 +42,14 @@ static int g_sys_page_size;
 void dfd_utest_print_cmd(int argc, char* argv[])
 {
     int i;
-    
+    char tmp[128];
+
     for (i = 1; i < argc; i++) {
         if (i != 1) {
             printf(" ");
         }
-        printf("%s", argv[i]);
+        snprintf(tmp, sizeof(tmp), "%s", argv[i]);
+        printf("%s", tmp);
     }
     return;
 }
@@ -57,7 +59,7 @@ void dfd_utest_print_all_help(void)
     int i, tbl_size;
 
     tbl_size = sizeof(g_dfd_unit_test) / sizeof(g_dfd_unit_test[0]);
-    
+
     for (i = 0; i < tbl_size; i++) {
         printf("%-20s\t\t\t%s\r\n", g_dfd_unit_test[i].type_str, g_dfd_unit_test[i].help_info);
     }
@@ -86,18 +88,18 @@ void dfd_utest_printf_single_help(int utest_type)
 void dfd_utest_printf_reg(uint8_t *buf, int buf_len, uint16_t offset_addr)
 {
     int i, j, tmp;
-    
+
     j = offset_addr % 16;
     tmp = j;
     offset_addr -= j;
     printf("\n            ");
-    
+
     for (i = 0; i < 16; i++) {
         printf("%2x ", i);
     }
-        
+
     for (i = 0; i < buf_len + j; i++) {
-        if ((i % 16) == 0) {           
+        if ((i % 16) == 0) {
             printf("\n0x%08x  ", offset_addr);
             offset_addr = offset_addr + 16;
         }
@@ -115,7 +117,7 @@ void dfd_utest_printf_reg(uint8_t *buf, int buf_len, uint16_t offset_addr)
 
 #define I2C_RETRIES 0x0701
 #define I2C_TIMEOUT 0x0702
-#define I2C_RDWR 0x0707 
+#define I2C_RDWR 0x0707
 
 #define I2C_SLAVE	0x0703	/* Use this slave address */
 
@@ -137,12 +139,12 @@ struct i2c_msg
 struct i2c_rdwr_ioctl_data
 {
  struct i2c_msg *msgs;
- int nmsgs; /* The number of nmsgs determines how many start signals there are. 
+ int nmsgs; /* The number of nmsgs determines how many start signals there are.
             For "single start timing", take 1 */
 };
- 
+
 #define DFD_I2C_SHORT_ADDR_TYPE 0
-#define DFD_I2C_RETRY_SLEEP_TIME        (10000)   /* 10ms */ 
+#define DFD_I2C_RETRY_SLEEP_TIME        (10000)   /* 10ms */
 #define DFD_I2C_RETRY_TIME              (50000 / DFD_I2C_RETRY_SLEEP_TIME)  /* 50ms */
 /* i2c_smbus_xfer read or write markers */
 #define I2C_SMBUS_READ	1
@@ -222,10 +224,10 @@ int32_t dfd_read_port_i2c_one_time_smbus(char *i2c_name, uint16_t dev_addr, uint
             DFD_DEBUG_ERROR("i2c_num = NULL, recv_buf = NULL\r\n");
             return -1;
     }
-    
+
     DFD_DEBUG_DBG("i2c name: %s, dev_addr: 0x%x, offset_addr: 0x%x, size: %d, addr_type: %d.\n", i2c_name, dev_addr,
         offset_addr, size, addr_type);
-    
+
     rv = 0;
     fd = open(i2c_name, O_RDWR | O_SYNC);
     if (fd < 0) {
@@ -241,10 +243,10 @@ int32_t dfd_read_port_i2c_one_time_smbus(char *i2c_name, uint16_t dev_addr, uint
     for (i = 0 ;i < size; i++) {
          data.byte = 0;
          ioctl_data.read_write = I2C_SMBUS_READ;
-         ioctl_data.command = (offset_addr + i); 
+         ioctl_data.command = (offset_addr + i);
          ioctl_data.size = I2C_SMBUS_BYTE_DATA;
          ioctl_data.data= &data;
-         
+
          rc = ioctl(fd, I2C_SMBUS, &ioctl_data);
          if (rc < 0) {
              DFD_DEBUG_ERROR("read, I2C_SMBUS failed: %d.\n", errno);
@@ -253,7 +255,7 @@ int32_t dfd_read_port_i2c_one_time_smbus(char *i2c_name, uint16_t dev_addr, uint
          }
          *(recv_buf + i) = data.byte;
      }
-  fail:     
+  fail:
      close(fd);
   err:
      return rv;
@@ -267,9 +269,9 @@ int32_t dfd_read_port_i2c_one_time_smbus(char *i2c_name, uint16_t dev_addr, uint
  * @offset_addr: offset address
  * @recv_buf: read buffer
  * @size:  the size of read buf
- * @addr_type: 0:single byte offset access 1:2 byte offset access 
+ * @addr_type: 0:single byte offset access 1:2 byte offset access
  *
- * return: return 0 or positive value on success,return negative vlaue on failure 
+ * return: return 0 or positive value on success,return negative vlaue on failure
  */
 int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t offset_addr,
                                    uint8_t *recv_buf, int32_t size, int addr_type)
@@ -279,15 +281,15 @@ int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t o
         struct i2c_rdwr_ioctl_data ioctl_data;
         struct i2c_msg msgs[2];
         uint8_t buf[2];
-    
+
         if (i2c_name == NULL || recv_buf == NULL) {
             DFD_DEBUG_ERROR("i2c_num = NULL, recv_buf = NULL\r\n");
             return -1;
         }
-        
+
         DFD_DEBUG_DBG("i2c name %s, dev_addr 0x%x, offset_addr 0x%x, size %d, addr_type %d.\n", i2c_name, dev_addr,
             offset_addr, size, addr_type);
-        
+
         rv = 0;
         fd = open(i2c_name, O_RDWR | O_SYNC);
         if (fd < 0) {
@@ -296,15 +298,15 @@ int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t o
         }
         memset(&ioctl_data, 0, sizeof(ioctl_data));
         memset(msgs, 0, sizeof(msgs));
-        memset(buf, 0, sizeof(buf)); 
-        if (ioctl(fd, I2C_SLAVE, dev_addr) < 0) {  
-          /* open failed */  
+        memset(buf, 0, sizeof(buf));
+        if (ioctl(fd, I2C_SLAVE, dev_addr) < 0) {
+          /* open failed */
             DFD_DEBUG_ERROR("%s %dioctl fail(ret:%d, errno:%s)!\r\n", __func__ , __LINE__, rv, strerror(errno));
             rv = -1;
             goto fail;
         }
-        
-         buf[0] = (uint8_t)(offset_addr);        
+
+         buf[0] = (uint8_t)(offset_addr);
          msgs[0].addr= dev_addr;
          msgs[0].len= 2;
          msgs[0].buf= buf;
@@ -314,7 +316,7 @@ int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t o
          msgs[1].buf= recv_buf;
          ioctl_data.nmsgs= 1;
          ioctl_data.msgs= msgs;
-         
+
          rv = ioctl(fd, I2C_RDWR, &ioctl_data);
         if(rv < 0) {
             DFD_DEBUG_ERROR("%s %dioctl fail(ret:%d, errno:%s)!\r\n", __func__ , __LINE__, rv, strerror(errno));
@@ -326,8 +328,8 @@ int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t o
     fail:
         close(fd);
         return rv;
-        
- 
+
+
 }
 
 /**
@@ -370,7 +372,7 @@ int32_t dfd_read_port_i2c(char *i2c_name, uint16_t dev_addr, uint16_t offset_add
  *
  * return: return 0 or positive value on success,return negative value on failure
  */
-int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t offset_addr, 
+int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t offset_addr,
                                     uint8_t *write_buf, int32_t size,int addr_type)
 {
     int32_t fd, rv;
@@ -384,7 +386,7 @@ int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t 
         DFD_DEBUG_ERROR("i2c_num = NULL \r\n");
         return -1;
     }
-    
+
     if (size <= 0) {
         DFD_DEBUG_ERROR("error:size\n");
         return -1;
@@ -403,13 +405,13 @@ int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t 
         DFD_DEBUG_ERROR("i2c open fail fd %d\n", fd);
         return -1;
     }
-    
+
     if (ioctl(fd, I2C_SLAVE_FORCE, dev_addr) < 0) {
         DFD_DEBUG_ERROR("ioctl, I2C_SLAVE failed: %d.\n", errno);
         rv = -1;
         goto fail;
      }
-    
+
     for (index = 0; index < size; index++) {
             data.byte = *(write_buf + index);
             ioctl_data.read_write = I2C_SMBUS_WRITE;
@@ -424,7 +426,7 @@ int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t 
             DFD_DEBUG_DBG("ret:%d  value:0x%02x\n", rv, data.byte);
             usleep(5000);   /* SMBUS will fail to write multiple bytes without delay, here the delay is 5ms (experience value) */
     }
-    
+
 fail:
     close(fd);
     return rv;
@@ -440,7 +442,7 @@ fail:
  *
  * return: return 0 or positive value on success,return negative value on failure
  */
-int32_t dfd_write_port_i2c(char *i2c_name, uint16_t dev_addr, uint16_t offset_addr, 
+int32_t dfd_write_port_i2c(char *i2c_name, uint16_t dev_addr, uint16_t offset_addr,
                            uint8_t *write_buf, int32_t size)
 {
     int i;
@@ -476,14 +478,14 @@ static int dfd_read_io_port(uint16_t offset_addr, uint8_t *recv_buf, int32_t siz
         printf("lseek failed ret %d.\n", ret);
         goto exit;
     }
-    
+
     ret = read(fd, recv_buf, size);
     if (ret != size) {
         printf("read failed ret %d size %d.\n", ret, size);
         ret = -1;
         goto exit;
     }
-    
+
 exit:
     close(fd);
     return ret;
@@ -505,14 +507,14 @@ static int dfd_write_io_port(uint16_t offset_addr, uint8_t *write_buf, int32_t s
         printf("lseek failed ret %d.\n", ret);
         goto exit;
     }
-    
+
     ret = write(fd, write_buf, size);
     if (ret != size) {
         printf("write failed ret %d size %d.\n", ret, size);
         ret = -1;
         goto exit;
     }
-    
+
 exit:
     close(fd);
     return ret;
@@ -609,7 +611,7 @@ int dfd_utest_i2c_rd(int argc, char* argv[])
     char *stopstring;
     int num, i2c_bus;
     char i2c_path[32];
-    
+
     if (argc != 6) {
         DFD_DEBUG_ERROR("params error\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_I2C_RD);
@@ -638,7 +640,7 @@ int dfd_utest_i2c_rd(int argc, char* argv[])
 
     dfd_utest_printf_reg(value, num, offset_addr);
 
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 
 }
@@ -652,7 +654,7 @@ int dfd_utest_i2c_wr(int argc, char* argv[])
     char i2c_path[32];
     uint8_t wr_len,i;
     uint8_t wr_value[DFD_UTEST_MAX_RD_NUM];
-    
+
     if (argc < 6) {
         DFD_DEBUG_ERROR("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_I2C_WR);
@@ -668,19 +670,19 @@ int dfd_utest_i2c_wr(int argc, char* argv[])
         wr_value[i] = strtol(argv[5+i], &stopstring, 16);
         DFD_DEBUG_DBG(" index :%d value %x\n", i , wr_value[i]);
     }
-    
+
     dfd_utest_print_cmd(argc, argv);
- 
+
     printf(":\n");
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", i2c_bus);
-    
+
     ret = dfd_write_port_i2c(i2c_path, dev_addr, offset_addr, wr_value, wr_len);
     if (ret < 0) {
         printf("failed ret %d\n", ret);
     } else {
         printf("success\n");
     }
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -691,7 +693,7 @@ int dfd_utest_io_rd(int argc, char* argv[])
     uint16_t offset_addr;
     char *stopstring;
     int num;
-    
+
     if (argc != 4) {
         DFD_DEBUG_ERROR("params error\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_IO_RD);
@@ -717,7 +719,7 @@ int dfd_utest_io_rd(int argc, char* argv[])
 
     dfd_utest_printf_reg(value, num, offset_addr);
 
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -728,7 +730,7 @@ int dfd_utest_io_wr(int argc, char* argv[])
     char *stopstring;
     int32_t wr_len,i;
     uint8_t wr_value[DFD_UTEST_MAX_RD_NUM];
-    
+
     if (argc < 4) {
         DFD_DEBUG_ERROR("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_IO_WR);
@@ -741,16 +743,16 @@ int dfd_utest_io_wr(int argc, char* argv[])
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_IO_WR);
         goto exit;
     }
-    
+
     offset_addr = strtol(argv[2], &stopstring, 16);
 
     for (i = 0; i < wr_len; i++) {
         wr_value[i] = strtol(argv[3 + i], &stopstring, 16);
         DFD_DEBUG_DBG(" index :%d value %x\n", i , wr_value[i]);
     }
-    
+
     dfd_utest_print_cmd(argc, argv);
- 
+
     printf(":\n");
     ret = dfd_write_io_port(offset_addr, wr_value, wr_len);
     if (ret < 0) {
@@ -769,7 +771,7 @@ int dfd_utest_phymem_rd(int argc, char* argv[])
     off_t offset_addr;
     char *stopstring;
     int num;
-    
+
     if (argc != 5) {
         DFD_DEBUG_ERROR("params error\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_PHYMEM_RD);
@@ -796,7 +798,7 @@ int dfd_utest_phymem_rd(int argc, char* argv[])
 
     dfd_utest_printf_reg(value, num, offset_addr);
 
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -807,7 +809,7 @@ int dfd_utest_phymem_wr(int argc, char* argv[])
     char *stopstring;
     int32_t wr_len,i;
     uint8_t wr_value[DFD_UTEST_MAX_RD_NUM];
-    
+
     if (argc < 5) {
         DFD_DEBUG_ERROR("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_PHYMEM_WR);
@@ -828,9 +830,9 @@ int dfd_utest_phymem_wr(int argc, char* argv[])
         wr_value[i] = strtol(argv[4 + i], &stopstring, 16);
         DFD_DEBUG_DBG(" index :%d value %x\n", i , wr_value[i]);
     }
-    
+
     dfd_utest_print_cmd(argc, argv);
- 
+
     printf(":\n");
     ret = dfd_process_mem(DEV_MEM_NAME, 1, width, offset_addr, wr_value, wr_len);
     if (ret < 0) {
@@ -849,13 +851,13 @@ int dfd_utest_kmem_rd(int argc, char* argv[])
     uint16_t offset_addr;
     char *stopstring;
     int num;
-    
+
     if (argc != 5) {
         DFD_DEBUG_ERROR("params error\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_KMEM_RD);
         goto exit;
     }
-    
+
     width = strtol(argv[2], &stopstring, 10);
     offset_addr = strtol(argv[3], &stopstring, 16);
     num = strtol(argv[4], &stopstring, 10);
@@ -876,7 +878,7 @@ int dfd_utest_kmem_rd(int argc, char* argv[])
 
     dfd_utest_printf_reg(value, num, offset_addr);
 
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -887,7 +889,7 @@ int dfd_utest_kmem_wr(int argc, char* argv[])
     char *stopstring;
     int32_t wr_len,i;
     uint8_t wr_value[DFD_UTEST_MAX_RD_NUM];
-    
+
     if (argc < 5) {
         DFD_DEBUG_ERROR("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_KMEM_WR);
@@ -900,7 +902,7 @@ int dfd_utest_kmem_wr(int argc, char* argv[])
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_KMEM_WR);
         goto exit;
     }
-    
+
     width = strtol(argv[2], &stopstring, 10);
     offset_addr = strtol(argv[3], &stopstring, 16);
 
@@ -908,9 +910,9 @@ int dfd_utest_kmem_wr(int argc, char* argv[])
         wr_value[i] = strtol(argv[4 + i], &stopstring, 16);
         DFD_DEBUG_DBG(" index :%d value %x\n", i , wr_value[i]);
     }
-    
+
     dfd_utest_print_cmd(argc, argv);
- 
+
     printf(":\n");
     ret = dfd_process_mem(DEV_KMEM_NAME, 1, width, offset_addr, wr_value, wr_len);
     if (ret < 0) {
@@ -928,12 +930,12 @@ static unsigned long dfd_utest_get_file_size(const char *path)
     struct stat statbuff;
 
     if (stat(path, &statbuff) < 0) {
-        filesize = -1;  
+        filesize = -1;
     } else {
-        filesize = statbuff.st_size;  
+        filesize = statbuff.st_size;
     }
 
-    return filesize; 
+    return filesize;
 }
 
 
@@ -951,7 +953,7 @@ int dfd_utest_i2c_file_wr(int argc, char* argv[])
     int len;
     int bpt;    /* byte per times*/
     int page_left;
-    
+
     if (argc != 7) {
         printf("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_I2C_FILE_WR);
@@ -966,7 +968,7 @@ int dfd_utest_i2c_file_wr(int argc, char* argv[])
 
     if ((bpt <= 0) || (bpt > DFD_UTEST_MAX_RD_NUM)) {
         bpt = DFD_UTEST_MAX_RD_NUM;
-    } 
+    }
 
     if ((bpt & (bpt - 1)) != 0) {
         printf("Bytes per times %d isn't power of two.\n",bpt);
@@ -984,7 +986,7 @@ int dfd_utest_i2c_file_wr(int argc, char* argv[])
         printf("open file[%s] fail.\n", file_name);
         goto exit;
     }
-    
+
     dfd_utest_print_cmd(argc, argv);
 
     printf(":\n");
@@ -1016,7 +1018,7 @@ int dfd_utest_i2c_file_wr(int argc, char* argv[])
         printf("success\n");
     }
 
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 
 }
@@ -1031,16 +1033,16 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
     unsigned long filesize;
     int fd, file_fd;
     uint8_t wr_buf[DFD_UTEST_MAX_WR_NUM];
-    int len, write_len;;    
+    int len, write_len;;
     int i;
 
-    
+
     if (argc != 5) {
         printf("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_SYSFS_FILE_WR);
         goto exit;
     }
-    
+
     sysfs_loc = argv[2];
     offset_addr = strtol(argv[3], &stopstring, 16);
     file_name = argv[4];
@@ -1056,7 +1058,7 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
         printf("open file[%s] fail.\n", file_name);
         goto exit;
     }
-    
+
     fd = open(sysfs_loc, O_RDWR | O_SYNC);
     if (fd < 0) {
         printf("open file[%s] fail.\n", sysfs_loc);
@@ -1078,7 +1080,7 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
         } else {
             len = filesize;
         }
-        
+
         memset(wr_buf, 0, DFD_UTEST_MAX_WR_NUM);
         len = read(file_fd, wr_buf, len);
         for (i = 0; i < DFD_I2C_RETRY_TIME; i++) {
@@ -1090,12 +1092,12 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
             }
             break;
         }
-        
+
         if(i == DFD_I2C_RETRY_TIME) {
             printf("write file[%s] fail, offset = 0x%x, len = %d,write_len =%d\n", sysfs_loc, offset_addr, len, write_len);
             ret = -1;
             goto fail;
-        }      
+        }
         offset_addr += len;
         filesize -= len;
         usleep(5000);
@@ -1103,14 +1105,14 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
 
     printf("success\n");
     close(file_fd);
-    close(fd);    
+    close(fd);
     return DFD_RV_OK;
 
 fail:
     close(file_fd);
 open_dev_err:
     close(fd);
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -1122,15 +1124,15 @@ int dfd_utest_sysfs_file_rd(int argc, char* argv[])
     char *stopstring;
     int fd;
     uint8_t rd_buf[DFD_UTEST_MAX_RD_NUM];
-    int len, read_len;;    
+    int len, read_len;;
 
-    
+
     if (argc != 5) {
         printf("Input invalid.\n");
         dfd_utest_printf_single_help(DFD_UTEST_ITEM_SYSFS_FILE_RD);
         goto exit;
     }
-    
+
     sysfs_loc = argv[2];
     offset_addr = strtol(argv[3], &stopstring, 16);
     len = strtol(argv[4], &stopstring, 10);
@@ -1139,7 +1141,7 @@ int dfd_utest_sysfs_file_rd(int argc, char* argv[])
         printf("Input num %d exceed max 256.\n", len);
         goto exit;
     }
-    
+
     fd = open(sysfs_loc, O_RDONLY);
     if (fd < 0) {
         printf("open file[%s] fail.\n", sysfs_loc);
@@ -1154,7 +1156,7 @@ int dfd_utest_sysfs_file_rd(int argc, char* argv[])
         printf("lseek failed ret %d.\n", ret);
         goto fail;
     }
-    
+
     memset(rd_buf, 0, DFD_UTEST_MAX_RD_NUM);
     read_len = read(fd, rd_buf, len);
     if (read_len != len) {
@@ -1167,7 +1169,7 @@ int dfd_utest_sysfs_file_rd(int argc, char* argv[])
 
 fail:
     close(fd);
-exit:    
+exit:
     return DFD_RV_MODE_NOTSUPPORT;
 }
 
@@ -1197,7 +1199,7 @@ void dfd_utest_cmd_main(int argc, char* argv[])
         dfd_utest_print_all_help();
         return;
     }
-    
+
     pfunc = dfd_utest_get_proc_func(argv[1]);
     if (pfunc == NULL) {
         DFD_DEBUG_DBG("utest type %s in not support.\n", utest_type_str);

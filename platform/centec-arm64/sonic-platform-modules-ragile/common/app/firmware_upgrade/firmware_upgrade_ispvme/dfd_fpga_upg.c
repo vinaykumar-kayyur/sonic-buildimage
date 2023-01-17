@@ -536,7 +536,7 @@ int dfd_fpga_upg_set_erase_p4e(dfd_pci_dev_priv_t *pci_priv, int spi_addr)
         return -1;
     }
 
-    /* write erase address */ 
+    /* write erase address */
     val = spi_addr;
     addr = pci_priv->fpga_upg_base + FPGA_UPG_ADDR_REG;
     ret = dfd_fpga_upg_write_word(pci_priv, addr, val);
@@ -1398,7 +1398,7 @@ int dfd_fpga_upgrade_dump_flash(int argc, char* argv[])
     if (strcmp(argv[5], "print") != 0) {
         is_print = 0;
         memset(filename, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
-        strncpy(filename, argv[5], (DFD_FPGA_UPGRADE_BUFF_SIZE - 1));
+        snprintf(filename, sizeof(filename), "%s", argv[5]);
         fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, S_IRWXG|S_IRWXU|S_IRWXO);
         if (fd < 0) {
             printf("open file %s fail(err:%d)!\r\n", filename, errno);

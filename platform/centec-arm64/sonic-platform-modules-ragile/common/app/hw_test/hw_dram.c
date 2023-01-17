@@ -35,7 +35,10 @@ static ulong mem_test_data2 = sizeof(ulong) == 4 ? 0xAAAAAAAAUL : 0xAAAAAAAAAAAA
 
 int dram_wr_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
@@ -78,7 +81,10 @@ int dram_rd_main(int argc, char **argv)
 
 int dram_chk_main(int argc, char **argv)
 {
-    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, argv[0]);
+    char tmp[128];
+
+    snprintf(tmp, sizeof(tmp), "%s", argv[0]);
+    printf("%s, %d, %d, %s\r\n", __FUNCTION__, __LINE__, argc, tmp);
     return 0;
 }
 
@@ -222,7 +228,7 @@ int platform_get_sys_memory_size_form_cmdline(unsigned int *sys_memory_size)
     char *start;
     char *mem_start_string;
     char mem_size_buf[FAC_MEM_SIZE_BUF_LEN];
-    
+
     /* MEMORY information area start character string */
     mem_start_string = "RAMSZ=";
     /* get the memory size from the /proc/octeon_info file */
@@ -238,7 +244,7 @@ int platform_get_sys_memory_size_form_cmdline(unsigned int *sys_memory_size)
     start = strstr(mem_size_buf, mem_start_string);
     if (start != NULL) {
         start = start + strlen(mem_start_string);
-        *sys_memory_size = strtoul(start, NULL, 10); 
+        *sys_memory_size = strtoul(start, NULL, 10);
         FAC_LOG_DBG(GRTD_LOG_DEBUG, "MEM:Mem size[%d MB]\n", *sys_memory_size);
         return FAC_TEST_OK;
     } else {
@@ -251,7 +257,7 @@ int platform_get_sys_memory_size_form_cmdline(unsigned int *sys_memory_size)
  * platform_simple_get_mem_space - get space for memory test
  * @buf: start address pointer
  * @size: space size
- * 
+ *
  * return: FAC_TEST_FAIL | FAC_TEST_OK
  */
 static int platform_simple_get_mem_space(void **buf, size_t *size)
@@ -274,32 +280,32 @@ static int platform_simple_get_mem_space(void **buf, size_t *size)
         }
         *size = wantsize;
         alignedsize = wantsize;
-        
+
         fflush(stdout);
         if (do_mlock && wantsize) {
             fflush(stdout);
-            
+
             if ((size_t) start % pagesize) {
                 aligned = (void *) ((size_t) start & pagesizemask) + pagesize;
                 alignedsize -= ((size_t) aligned - (size_t) start);
             } else {
                 aligned = start;
             }
-            
+
             FAC_LOG_DBG(GRTD_LOG_DEBUG, "trying mlock ...start[0x%lx], size[0x%x]", (ulong)start,
                 (int)alignedsize);
             /* Try mlock */
             if (mlock(aligned, alignedsize) < 0) {
                 switch(errno) {
-                case EAGAIN: 
+                case EAGAIN:
                     FAC_LOG_DBG(GRTD_LOG_ERR, "over system/pre-process limit, reducing...\n");
                     free(start);
                     start = NULL;
                     wantsize -= pagesize;
                     break;
-                case ENOMEM: 
-                    FAC_LOG_DBG(GRTD_LOG_ERR, "too many pages, reducing...\n"); 
-                    free(start); 
+                case ENOMEM:
+                    FAC_LOG_DBG(GRTD_LOG_ERR, "too many pages, reducing...\n");
+                    free(start);
                     start = NULL;
                     wantsize -= pagesize;
                     break;
@@ -309,7 +315,7 @@ static int platform_simple_get_mem_space(void **buf, size_t *size)
                     do_mlock = 0;
                     free(start);
                     start = NULL;
-                    wantsize = FAC_MEM_TEST_SIZE; 
+                    wantsize = FAC_MEM_TEST_SIZE;
                     break;
                 default:
                     FAC_LOG_DBG(GRTD_LOG_ERR, "failed for unknown reason.\n");
@@ -324,7 +330,7 @@ static int platform_simple_get_mem_space(void **buf, size_t *size)
             done_mem = 1;
         }
     }
-    
+
     if (!wantsize) {
         FAC_LOG_DBG(GRTD_LOG_ERR, "MEM ERROR:Malloc space failed\n");
         return FAC_TEST_FAIL;
@@ -339,7 +345,7 @@ static int platform_simple_get_mem_space(void **buf, size_t *size)
 }
 
 static int platform_simple_check_addrline(ulong *start, size_t size, char *desc)
-{    
+{
     ulong *p1;
     ulong j;
     size_t i;
@@ -350,14 +356,14 @@ static int platform_simple_check_addrline(ulong *start, size_t size, char *desc)
     fflush(stdout);
     for (j = 0; j < 2; j++) {
         p1 = start;
-        
+
         fflush(stdout);
         for (i = 0; i < size; i += sizeof(ulong), p1++) {
             *((volatile ulong *)p1) = ((((j + i) % 2) == 0) ? (ulong)p1 : ~((ulong)p1));
         }
-        
+
         fflush(stdout);
-        
+
         p1 = start;
         for (i = 0; i < size; i += sizeof(ulong), p1++) {
             if (*((volatile ulong *)p1) != (((j + i) % 2) == 0 ? (ulong)p1 : ~((ulong)p1))) {
@@ -372,7 +378,7 @@ static int platform_simple_check_addrline(ulong *start, size_t size, char *desc)
         }
     }
     fflush(stdout);
-    
+
     FAC_LOG_DBG(GRTD_LOG_DEBUG, "MEM:addr line check OK!\n");
     return FAC_TEST_OK;
 }
@@ -393,7 +399,7 @@ static int platform_simple_check_data(ulong *start, size_t size, char *desc)
         fflush(stdout);
         for (j = 0; j < size; j += sizeof(ulong), p1++) {
             *((volatile ulong *)p1) = data;
-        }        
+        }
         fflush(stdout);
         p1 = start;
         for (j = 0; j < size; j += sizeof(ulong), p1++) {
@@ -429,7 +435,7 @@ static int platform_simple_check_data(ulong *start, size_t size, char *desc)
             return FAC_TEST_FAIL;
         }
     }
-    fflush(stdout);    
+    fflush(stdout);
     FAC_LOG_DBG(GRTD_LOG_DEBUG, "MEM:Bus Noise Test END!\n");
     return check_error;
 }
@@ -453,13 +459,13 @@ static int platform_simple_sdram_ecc_detect()
     i = 0;
     core_num = 0;
     ecc_error = 0;
-    
+
     /* Open MTD device file */
     if ((fp = fopen("/proc/interrupts", "r")) == NULL) {
         FAC_LOG_DBG(GRTD_LOG_ERR, "Fopen  /proc/interrupts fail!\t err_no[%d]\n", errno);
         return FAC_TEST_FAIL;
     }
-    
+
     memset(file_line, 0, FAC_FILE_LINE_LEN);
     /* Find the name of the MTD device that can be used for production testing in each line of the MTD file */
     while (fgets(file_line, FAC_FILE_LINE_LEN, fp) != NULL) {
@@ -477,7 +483,7 @@ static int platform_simple_sdram_ecc_detect()
     return ecc_error;
 find:
     FAC_LOG_DBG(GRTD_LOG_DEBUG, "ECC: Get ecc info[%s]\n", file_line);
-    /* Get the number of the MTD device name that can be tested in production, 
+    /* Get the number of the MTD device name that can be tested in production,
     the device name and device partition size separator is a colon  */
     c = ':';
     if ((loc = strchr(file_line, c))!= NULL) {
@@ -490,9 +496,9 @@ find:
             FAC_LOG_DBG(GRTD_LOG_DEBUG, "ECC: cpu %d ecc error num: %d\n", i, temp);
             i++;
         }
-        
+
     }
-    
+
     fclose(fp);
     FAC_LOG_DBG(GRTD_LOG_DEBUG, "ECC: ecc error num: %d\n", ecc_error);
     return ecc_error;
@@ -524,7 +530,7 @@ int platform_simple_sys_memory_test(char *desc)
     } else {
         aligned = buf;
     }
-    
+
     /* check the address line */
     if (platform_simple_check_addrline((ulong *)aligned, alignedsize, desc) != FAC_TEST_OK) {
         FAC_LOG_DBG(GRTD_LOG_ERR, "MEM ERROR:Check address line failed!\n");
@@ -645,7 +651,7 @@ retry:
 
 /*
  * platform_free_mem_space - free the memory requested by the memory test
- * 
+ *
  * Return void:
  */
 static void platform_free_mem_space(void *buf, size_t size)
@@ -657,7 +663,7 @@ static void platform_free_mem_space(void *buf, size_t size)
 /**
  * platform_complex_sys_memory_test - memory test
  * @sdram_test: output, memory test result details
- * @kaoji: input, whether to copy the machine currently * 
+ * @kaoji: input, whether to copy the machine currently *
  * Return int: FAC_TEST_FAIL | FAC_TEST_OK
  */
 int platform_complex_sys_memory_test(char *desc, int kaoji)
