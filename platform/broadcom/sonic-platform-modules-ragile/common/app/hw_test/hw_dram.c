@@ -47,8 +47,7 @@ int dram_rd_main(int argc, char **argv)
 {
     int fd, i, ret;
     unsigned char buffer[1024];
-
-    memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
+    memset(buffer, 0, 1024);
     argc = argc;
     argv = argv;
     if ((fd = open("/dev/mem",O_RDONLY, S_IRWXU | S_IRWXG | S_IRWXO)) < 0 ) {
@@ -233,7 +232,7 @@ int platform_get_sys_memory_size_form_cmdline(unsigned int *sys_memory_size)
     /* MEMORY information area start character string */
     mem_start_string = "RAMSZ=";
     /* get the memory size from the /proc/octeon_info file */
-    memset_s(mem_size_buf, sizeof(mem_size_buf), 0, sizeof(mem_size_buf));
+    memset(mem_size_buf, 0, FAC_MEM_SIZE_BUF_LEN);
     ret = platform_devfile_read("/proc/cmdline", mem_size_buf, FAC_MEM_SIZE_BUF_LEN - 1, 0);
     if (ret) {
         FAC_LOG_DBG(GRTD_LOG_ERR, "MEM ERROR:Read mem info fail!\n");
@@ -277,7 +276,7 @@ static int platform_simple_get_mem_space(void **buf, size_t *size)
     while (!done_mem) {
         while (!start && wantsize) {
             start = (void *) malloc(wantsize);
-            memset_s(start, wantsize, 0, wantsize);
+            memset(start, 0, wantsize);
             if (!start) wantsize -= pagesize;
         }
         *size = wantsize;
@@ -468,7 +467,7 @@ static int platform_simple_sdram_ecc_detect()
         return FAC_TEST_FAIL;
     }
 
-    memset_s(file_line, sizeof(file_line), 0, sizeof(file_line));
+    memset(file_line, 0, FAC_FILE_LINE_LEN);
     /* Find the name of the MTD device that can be used for production testing in each line of the MTD file */
     while (fgets(file_line, FAC_FILE_LINE_LEN, fp) != NULL) {
         if (i == 0) {
@@ -573,7 +572,7 @@ static int platform_get_system_free_mem(size_t *free_size)
     }
 
     /* get the path of mount */
-    memset_s(mem_file_line, sizeof(mem_file_line), 0, sizeof(mem_file_line));
+    memset(mem_file_line, 0, sizeof(mem_file_line));
     while (fgets(mem_file_line, FAC_FILE_LINE_LEN, fp) != NULL) {
         FAC_LOG_DBG(GRTD_LOG_DEBUG, "meminfo file content:%s \n", mem_file_line);
         loc = strstr(mem_file_line, "MemFree:");
@@ -702,10 +701,10 @@ int platform_complex_sys_memory_test(char *desc, int kaoji)
 #endif
     ft_ddr_test_init(buf, autotest_size);
     /* init memory */
-    memset_s((char *)buf, autotest_size, 0, autotest_size);
+    memset((char *)buf, 0, autotest_size);
 
     /* Test memory */
-    memset_s((char *)desc_tmp, 128, 0, 128);
+    memset((char *)desc_tmp, 0, 128);
     for (i = 0 ; i < TETS_TOTAL_NUMBER; i++) {
         if (ft_ddr_test_fun[i].always == 0 && kaoji) {
             /* some test items are not tested in the copy machine state */
