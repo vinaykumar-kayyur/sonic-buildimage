@@ -68,10 +68,6 @@ stages:
       - name: broadcom
         variables:
           swi_image: yes
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
-        variables:
-          PLATFORM_ARCH: armhf
 
 - stage: Test
   dependsOn: BuildVS
