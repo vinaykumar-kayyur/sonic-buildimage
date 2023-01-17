@@ -68,8 +68,6 @@ stages:
       - name: broadcom
         variables:
           swi_image: yes
-      - name: mellanox
-      - name: marvell-armhf
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
         variables:
