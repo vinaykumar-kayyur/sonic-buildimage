@@ -6,7 +6,6 @@
 trigger:
   branches:
     include:
-      - master
       - 202205
   paths:
     exclude:
@@ -15,9 +14,7 @@ trigger:
 pr:
   branches:
     include:
-      - master
       - 202205
-      - bullseye
   paths:
     exclude:
       - .github
@@ -43,7 +40,7 @@ variables:
 - ${{ else }}:
   - template: .azure-pipelines/template-variables.yml@buildimage
 - name: CACHE_MODE
-  value: rcache
+  value: cache
 - name: ENABLE_FIPS
   value: y
 
