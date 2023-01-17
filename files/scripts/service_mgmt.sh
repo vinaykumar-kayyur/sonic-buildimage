@@ -39,7 +39,11 @@ function check_redundant_type()
     else
         ACTIVE_ACTIVE="false"
     fi
-    debug "Active-active cable type dualtor: ${ACTIVE_ACTIVE}"
+    CONFIG_KNOB=`$SONIC_DB_CLI CONFIG_DB hget "FEATURE|mux" kill_radv`
+    if [[ x"$CONFIG_KNOB" == x"False" ]]; then
+        ACTIVE_ACTIVE='false'
+    fi 
+    debug "DEVICE_SUBTYPE: ${DEVICE_SUBTYPE}, CONFIG_KNOB: ${CONFIG_KNOB}"
 }
 
 start() {
@@ -66,10 +70,10 @@ stop() {
     # For WARM/FAST boot do not perform service stop
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         if [[ x"$SERVICE" == x"radv" ]] && [[ x"$ACTIVE_ACTIVE" == x"true" ]]; then
-	    debug "Killing Docker ${SERVICE}${DEV}..."
+            debug "Killing Docker ${SERVICE}${DEV} for active-active dualtor device..."
             /usr/bin/${SERVICE}.sh kill $DEV
-	else
-	    /usr/bin/${SERVICE}.sh stop $DEV
+        else
+            /usr/bin/${SERVICE}.sh stop $DEV
             debug "Stopped ${SERVICE}$DEV service..."
         fi
     else
