@@ -7,7 +7,6 @@ trigger:
   branches:
     include:
       - master
-      - 202???
   paths:
     exclude:
       - .github
@@ -16,7 +15,6 @@ pr:
   branches:
     include:
       - master
-      - 202???
   paths:
     exclude:
       - .github
@@ -59,7 +57,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc)'
+      buildOptions: 'USERNAME=admin  SONIC_BUILD_JOBS=$(nproc)'
       jobGroups:
       - name: centec-arm64
         pool: sonicbld-arm64
