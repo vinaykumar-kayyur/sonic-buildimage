@@ -6,7 +6,7 @@ parameters:
   default: ''
 - name: 'buildOptions'
   type: string
-  default: 'SONIC_CONFIG_BUILD_JOBS=1'
+  default: 'SONIC_CONFIG_BUILD_JOBS=4'
 - name: 'preSteps'
   type: stepList
   default: []
