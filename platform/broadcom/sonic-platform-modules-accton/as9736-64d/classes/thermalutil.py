@@ -27,33 +27,45 @@ except ImportError as e:
 
 class ThermalUtil(object):
     """Platform-specific ThermalUtil class"""
-    THERMAL_NUM_BD_SENSOR = 5
+    THERMAL_NUM_BD_SENSOR = 11
     THERMAL_NUM_CPU_CORE = 8
     THERMAL_NUM_MAX = THERMAL_NUM_BD_SENSOR + THERMAL_NUM_CPU_CORE
-    THERMAL_NUM_1_IDX = 1 #SMB TMP75
-    THERMAL_NUM_2_IDX = 2 #UDB TMP75
-    THERMAL_NUM_3_IDX = 3 #UDB TMP422
-    THERMAL_NUM_4_IDX = 4 #LDB TMP422
-    THERMAL_NUM_5_IDX = 5 #TH4 TMP422
-    THERMAL_CPU_CORE_0_IDX = 6 #CPU Core Temp
-    THERMAL_CPU_CORE_1_IDX = 7
-    THERMAL_CPU_CORE_2_IDX = 8
-    THERMAL_CPU_CORE_3_IDX = 9
-    THERMAL_CPU_CORE_4_IDX = 10
-    THERMAL_CPU_CORE_5_IDX = 11
-    THERMAL_CPU_CORE_6_IDX = 12
-    THERMAL_CPU_CORE_7_IDX = 13
+    THERMAL_NUM_1_IDX = 1 #SMB TMP75 (0x48)
+    THERMAL_NUM_2_IDX = 2 #SMB TMP75 (0x49)
+    THERMAL_NUM_3_IDX = 3 #FCM TMP75 (0x48)
+    THERMAL_NUM_4_IDX = 4 #FCM TMP75 (0x49)
+    THERMAL_NUM_5_IDX = 5 #PDB-L TMP75 (0x48)
+    THERMAL_NUM_6_IDX = 6 #PDB-R TMP75 (0x49)
+    THERMAL_NUM_7_IDX = 7 #UDB TMP75 (0x48)
+    THERMAL_NUM_8_IDX = 8 #UDB TMP422 (0x4C)
+    THERMAL_NUM_9_IDX = 9 #LDB TMP75 (0x4C)
+    THERMAL_NUM_10_IDX = 10 #LDB TMP422 (0x4D)
+    THERMAL_NUM_11_IDX = 11 #SMB (TH4)TMP422 (0x4C)
+    THERMAL_CPU_CORE_0_IDX = 12 #CPU Core Temp
+    THERMAL_CPU_CORE_1_IDX = 13
+    THERMAL_CPU_CORE_2_IDX = 14
+    THERMAL_CPU_CORE_3_IDX = 15
+    THERMAL_CPU_CORE_4_IDX = 16
+    THERMAL_CPU_CORE_5_IDX = 17
+    THERMAL_CPU_CORE_6_IDX = 18
+    THERMAL_CPU_CORE_7_IDX = 19
 
     """ Dictionary where
         key1 = thermal id index (integer) starting from 1
         value = path to fan device file (string) """
 
     thermal_sysfspath ={
-    THERMAL_NUM_1_IDX: ["/sys/bus/i2c/devices/2-0049/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/57-0048/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_3_IDX: ["/sys/bus/i2c/devices/58-004c/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/devices/66-004d/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_5_IDX: ["/sys/bus/i2c/devices/14-004c/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_1_IDX: ["/sys/bus/i2c/devices/2-0048/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/2-0049/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_3_IDX: ["/sys/bus/i2c/devices/27-0048/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/devices/27-0049/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_5_IDX: ["/sys/bus/i2c/devices/34-0048/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_6_IDX: ["/sys/bus/i2c/devices/42-0049/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_7_IDX: ["/sys/bus/i2c/devices/57-0048/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_8_IDX: ["/sys/bus/i2c/devices/58-004c/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_9_IDX: ["/sys/bus/i2c/devices/65-004c/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_10_IDX: ["/sys/bus/i2c/devices/66-004d/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_11_IDX: ["/sys/bus/i2c/devices/14-004c/hwmon/hwmon*/temp1_input"], #SMB (TH4)TMP422 (0x4C), use for check MAC temperature
     THERMAL_CPU_CORE_0_IDX: ["/sys/class/hwmon/hwmon0/temp2_input"],
     THERMAL_CPU_CORE_1_IDX: ["/sys/class/hwmon/hwmon0/temp3_input"],
     THERMAL_CPU_CORE_2_IDX: ["/sys/class/hwmon/hwmon0/temp4_input"],

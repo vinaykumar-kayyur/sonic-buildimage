@@ -64,45 +64,94 @@ class switch(object):
 #     Fan Level 3 (Fan speed: 100%, RPM +/- 10%: 13600)
 #
 # Using Thermal sensors as below:
+#    - SMB TMP75 (0x48)
 #    - SMB TMP75 (0x49)
+#    - SMB TMP422(0x4c)
+#    - FCM TMP75 (0x48)
+#    - FCM TTMP75 (0x49)
+#    - PDB_L TMP75 (0x48)
+#    - PDB_R TMP75 (0x49)
 #    - UDB TMP75 (0x48)
 #    - UDB TMP422(0x4c)
+#    - LDB TMP75(0x4c)
 #    - LDB TMP422(0x4d)
-#    - TH4 TMP422(0x4c)
-#    - CPU core_1~9
-#    - MAC Use TMP422(0x4c)
+#    - CPU core_1~8
+#    - MAC Use SMB TMP422(0x4c)
 #
 # Raise to Fan Level 2 from Level 1 condition:
+#    - SMB TMP75 (0x48) >= 59
+#          or
 #    - SMB TMP75 (0x49) >= 59
 #          or
-#    - UDB TMP75 (0x49) >= 58
+#    - SMB TMP422(0x4c) >= 94
 #          or
-#    - UDB TMP422(0x48) >= 51
+#    - FCM TMP75 (0x48) >= 50
+#          or
+#    - FCM TMP75 (0x49) >= 50
+#          or
+#    - PDB_L TMP75 (0x48) >= 45
+#          or
+#    - PDB_R TMP75 (0x49) >= 45
+#          or
+#    - UDB TMP75 (0x48) >= 58
+#          or
+#    - UDB TMP422(0x4c) >= 51
+#          or
+#    - LDB TMP75 (0x4c) >= 54
 #          or
 #    - LDB TMP422(0x4d) >= 54
-#          or
-#    - TH4 TMP422(0x4c) >= 92
 #
 # Slow down to Fan Level 1 from Level 2 condition:
+#    - SMB TMP75 (0x48) <= 54
+#          and
 #    - SMB TMP75 (0x49) <= 54
 #          and
-#    - UDB TMP75 (0x49) <= 53
+#    - SMB TMP422(0x4c) <= 83
 #          and
-#    - UDB TMP422(0x48) <= 44
+#    - FCM TMP75 (0x48) <= 45
+#          and
+#    - FCM TMP75 (0x49) <= 45
+#          and
+#    - PDB_L TMP75 (0x48) <= 40
+#          and
+#    - PDB_R TMP75 (0x49) <= 40
+#          and
+#    - UDB TMP75 (0x48) <= 53
+#          and
+#    - UDB TMP422(0x4c) <= 44
+#          and
+#    - LDB TMP75 (0x4c) <= 47
 #          and
 #    - LDB TMP422(0x4d) <= 47
-#          and
-#    - TH4 TMP422(0x4c) <= 83
 #
 # Raise to Fan Level 3 conditions:
 #    - Fan failed
-#    - CPU core temp between 80 and 99 degree C
-#    - MAC Use TH4 TMP422(0x4c) temp between 85 and 105 degree C
+#    - Fan has removed
 #
-# Slow down to Fan Level 1(Normal state) from Level 3 condition:
-#    - CPU core temp cool down to 80 degree C
-#    - MAC Use TH4 TMP422(0x4c) temp cool down to 85 degree C
-#
+# Thermal Protect Function for Shutdown condition:
+#    - CPU core temp >= 99     (System shutdown except to CPU)
+#          or
+#    - SMB TMP75 (0x48) >= 76
+#          or
+#    - SMB TMP75 (0x49) >= 76
+#          or
+#    - SMB TMP422(0x4c) >= 105 (MAC shutdown)
+#          or
+#    - FCM TMP75 (0x48) >= 67
+#          or
+#    - FCM TMP75 (0x49) >= 67
+#          or
+#    - PDB_L TMP75 (0x48) >= 62
+#          or
+#    - PDB_R TMP75 (0x49) >= 62
+#          or
+#    - UDB TMP75 (0x48) >= 70
+#          or
+#    - UDB TMP422(0x4c) >= 61
+#          or
+#    - LDB TMP75 (0x4c) >= 67
+#          or
+#    - LDB TMP422(0x4d) >= 67
 
 fan_policy_state = 0
 fan_fail = 0
@@ -167,6 +216,8 @@ class device_monitor(object):
         global cpu_fan_policy_state
         global mac_fan_policy_state
 
+        CHECK_TIMES=3
+
         LEVEL_FAN_INIT=0
         FAN_LEVEL_1 = 1
         FAN_LEVEL_2 = 2
@@ -180,15 +231,16 @@ class device_monitor(object):
         }
 
         thermal_spec={
-            "min_to_mid_temp" : [59000, 58000, 51000, 54000, 92000],
-            "mid_to_min_temp" : [54000, 53000, 44000, 47000, 83000],
+            "min_to_mid_temp" : [59000, 59000, 50000, 50000, 45000, 45000, 58000, 51000, 54000, 54000, 94000],
+            "mid_to_min_temp" : [54000, 54000, 45000, 45000, 40000, 40000, 53000, 44000, 47000, 47000, 83000],
+            "shutdown_temp"   : [76000, 76000, 67000, 67000, 62000, 62000, 70000, 61000, 67000, 67000, 105000],
             "cpu_temp"        : [ 80000, 99000],
             "mac_temp"        : [ 85000, 105000]
         }
 
-        board_thermal_val   = [0, 0, 0, 0, 0]
-        board_thermal_or_chk_min_to_mid  = [0, 0, 0, 0, 0]
-        board_thermal_and_chk_mid_to_min = [0, 0, 0, 0, 0]
+        board_thermal_val   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        board_thermal_or_chk_min_to_mid  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        board_thermal_and_chk_mid_to_min = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         cpucore_thermal_val = [0, 0, 0, 0, 0, 0, 0, 0]
         mactemp_thermal_val = [0]
 
@@ -221,6 +273,7 @@ class device_monitor(object):
 
         board_thermal_min_to_mid = 0 #use for | operation
         board_thermal_mid_to_min = 1 #use for & operation
+        broad_thermal_need_shutdown = 0
         thermal_fan_policy_state = LEVEL_FAN_INIT
         cpu_fan_policy_state     = LEVEL_FAN_INIT
         mac_fan_policy_state     = LEVEL_FAN_INIT
@@ -256,7 +309,7 @@ class device_monitor(object):
                 return True
 
         #2-1 Board Sensors get value:
-        for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_5_IDX+1):
+        for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_11_IDX+1):
             board_thermal_val[i-1] = thermal._get_thermal_val(i)
 
             if board_thermal_val[i-1] >= thermal_spec["min_to_mid_temp"][i-1]:
@@ -268,27 +321,36 @@ class device_monitor(object):
                 board_thermal_and_chk_mid_to_min[i-1] = 1
             else:
                 board_thermal_and_chk_mid_to_min[i-1] = 0
+
+        for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_10_IDX+1): #Not include TH4-TMP422(0x4c)
+            if board_thermal_val[i-1] >= thermal_spec["shutdown_temp"][i-1]:
+                broad_thermal_need_shutdown = 1
+                break
+
         #2-2 CPU Sensors get value:
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_CPU_CORE+1):
             cpucore_thermal_val[i-1] = thermal._get_thermal_val(i + thermal.THERMAL_NUM_BD_SENSOR)
 
         #2-3 MAC Sensors get value:
-        mactemp_thermal_val[0] = board_thermal_val[thermal.THERMAL_NUM_5_IDX-1]
+        mactemp_thermal_val[0] = board_thermal_val[thermal.THERMAL_NUM_11_IDX-1]
 
         #3-1 Decide the board thermal policy:
-        for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_5_IDX+1):
-            board_thermal_min_to_mid |= board_thermal_or_chk_min_to_mid[i-1]
-            board_thermal_mid_to_min &= board_thermal_and_chk_mid_to_min[i-1]
-
-        if board_thermal_min_to_mid == 0 and board_thermal_mid_to_min == 1:
-            thermal_fan_policy_state = FAN_LEVEL_1
-        elif board_thermal_min_to_mid == 1 and board_thermal_mid_to_min == 0:
-            thermal_fan_policy_state = FAN_LEVEL_2
+        if broad_thermal_need_shutdown == 1:
+            thermal_fan_policy_state = POLICY_NEED_SHUTDOWN
         else:
-            if ori_state == FAN_LEVEL_1:
+            for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_BD_SENSOR+1):
+                board_thermal_min_to_mid |= board_thermal_or_chk_min_to_mid[i-1]
+                board_thermal_mid_to_min &= board_thermal_and_chk_mid_to_min[i-1]
+
+            if board_thermal_min_to_mid == 0 and board_thermal_mid_to_min == 1:
                 thermal_fan_policy_state = FAN_LEVEL_1
-            else:
+            elif board_thermal_min_to_mid == 1 and board_thermal_mid_to_min == 0:
                 thermal_fan_policy_state = FAN_LEVEL_2
+            else:
+                if ori_state == FAN_LEVEL_1:
+                    thermal_fan_policy_state = FAN_LEVEL_1
+                else:
+                    thermal_fan_policy_state = FAN_LEVEL_2
 
         #3-2 Decide the CPU thermal policy:
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_CPU_CORE+1):
@@ -318,24 +380,30 @@ class device_monitor(object):
             logging.debug('Monitor MAC, temperature is %d. Warning!!! Temperature is over %d', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1]/1000)
             mac_fan_policy_state = POLICY_NEED_SHUTDOWN
 
+
         #4 Condition of change fan speed by sensors policy:
         if ori_state == FAN_LEVEL_3:
-            if cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
+            if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 # Need to implement Shutdown!!!!!!!!!!!!!
-                print("shutdown happen!!")
+                print("shutdown except to CPU!!")
                 return False
 
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3:
+            elif mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
+                # Need to implement Shutdown!!!!!!!!!!!!!
+                print("MAC shutdown!!")
+                return False
+
+            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
                 current_state = FAN_LEVEL_3
 
             else:
                 current_state = FAN_LEVEL_2
 
         elif ori_state == FAN_LEVEL_2:
-            if cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN: #
+            if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 current_state = FAN_LEVEL_3
 
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3:
+            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
                 current_state = FAN_LEVEL_3
 
             elif thermal_fan_policy_state == FAN_LEVEL_1:
@@ -345,10 +413,10 @@ class device_monitor(object):
                 current_state = FAN_LEVEL_2
 
         elif ori_state == FAN_LEVEL_1:
-            if cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
+            if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 current_state = FAN_LEVEL_2
 
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3:
+            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
                 current_state = FAN_LEVEL_2
 
             elif thermal_fan_policy_state == FAN_LEVEL_2:
