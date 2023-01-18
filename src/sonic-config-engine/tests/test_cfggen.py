@@ -21,6 +21,7 @@ class TestCfgGen(TestCase):
         self.sample_graph_metadata = os.path.join(self.test_dir, 'simple-sample-graph-metadata.xml')
         self.sample_graph_pc_test = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
+        self.sample_graph_deployment_id = os.path.join(self.test_dir, 't0-sample-deployment-id.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.port_config_autoneg = os.path.join(self.test_dir, 't0-sample-autoneg-port-config.ini')
@@ -400,7 +401,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'src': '10.1.0.32'}")
+            utils.to_dict("'Tunnel-default': {'src_ip': '10.1.0.32'}")
         )
 
     def test_minigraph_default_vnet(self):
@@ -408,7 +409,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'vxlan_tunnel': 'Tunnel-default', 'scope': 'default', 'vni': 8000}")
+            utils.to_dict("'Vnet-default': {'vxlan_tunnel': 'Tunnel-default', 'scope': 'default', 'vni': 8000}")
         )
 
     def test_minigraph_bgp(self):
