@@ -1,4 +1,10 @@
 {
+    "Device": {
+        "Liquid": 0,
+        "Buildin": 1,
+        "PID": 0,
+        "OpenLoop": 1
+    },
     "Thermal": {
         "INLET_TEMP": "INLET_TEMP",
         "OUTLET_TEMP": "OUTLET_TEMP",
@@ -12,14 +18,22 @@
     },
     "PID": {
         "Pwm_Max": 100,
-        "Pwm_Min": 35,
-        "TargetTemperature" : 89,
-        "P": 1.176,
-        "I": 0.196,
-        "D": 0.196,
-        "Temp_Fixup": 5.0,
+        "Pwm_Min": 30,
+        "SetPoint" : 90,
+        "P": 1.5,
+        "I": 1,
+        "D": 0.3,
         "Temp_Min": 28.0,
         "Temp_Max": 45.0,
-        "Fall_Hyst": 2.0
+        "Sensor": "TPS53688_TEMP"
+    },
+    "OpenLoop": {
+        "a": -0.06,
+        "b": 10.3,
+        "c": -142.0,
+        "fix_up": -8,
+        "pwmMax": 100,
+        "pwmMin": 30,
+        "tempMin": 25
     }
 }

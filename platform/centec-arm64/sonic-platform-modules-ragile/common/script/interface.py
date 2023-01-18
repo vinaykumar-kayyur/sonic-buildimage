@@ -12,6 +12,9 @@ class Interface():
     def get_productname(self):
         return self.chassis.get_name()
 
+    def set_sysled(self, color):
+        return self.thermal_list[0].set_sys_led(color)
+
     # Thermal
     def get_thermal_temp_max(self, name):
         for thermal in self.thermal_list:

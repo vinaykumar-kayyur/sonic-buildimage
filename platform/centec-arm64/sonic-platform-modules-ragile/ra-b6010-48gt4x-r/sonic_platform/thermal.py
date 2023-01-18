@@ -86,3 +86,14 @@ class Thermal(ThermalBase):
         output = ctrl[self.index]
         if output.get("Status").get("Health") == "OK":
             return True
+
+    def set_sys_led(self, color):
+        playload = {}
+        led = {}
+        led_list = []
+        led["IndicatorLEDColor"] = color
+        led["LEDType"] = "sys"
+        led_list.append(led)
+        playload["LEDs"] = led_list
+        # boardsLed
+        return self.redfish.post_boardLed(playload)

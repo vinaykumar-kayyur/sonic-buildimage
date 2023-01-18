@@ -18,7 +18,7 @@ class Redfish_Api():
     BoardsUrl = '/redfish/v1/Chassis/1/Boards/'
     BoardLedUrl = "/redfish/v1/Chassis/1/Boards/{}/Actions/Oem/Ragile/Boards.SetLED"
 
-    # Maximum time in seconds that you allow the connection to the server to take. 
+    # Maximum time in seconds that you allow the connection to the server to take.
     connect_timeout = 30
     # Maximum  time  in seconds that you allow the whole operation to take
     operation_timeout = 300
@@ -50,7 +50,7 @@ class Redfish_Api():
 
     def _exec_cmd(self, cmd):
         self.redfish_log_debug("Cmd: %s" % cmd)
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         self.redfish_log_debug("Cmd return: %d" % p.returncode)
         str_stdout = p.stdout.read().decode('utf-8')
@@ -82,7 +82,7 @@ class Redfish_Api():
     def _redfish_post(self, url, playload):
         self.redfish_log_debug("post url: %s" % url)
         self.redfish_log_debug("Playload: %s" % playload)
-        
+
         playload_json = json.dumps(playload)
         result = False
         try:
@@ -138,7 +138,7 @@ class Redfish_Api():
         :type odata_id: string
         :returns: class 'redfish.rest.v1.RestResponse' or None when failed
         """
-        if odata_id is None:    
+        if odata_id is None:
             print("Get odata_id failed: odata_id is None")
             return None
         return self._redfish_get(odata_id)
@@ -230,7 +230,7 @@ class Redfish_Api():
             print("post failed: playload is None")
             return False
         return self._redfish_post(self.BoardsUrl + board_name, playload)
-    
+
     def get_boardLed(self, board_name="indicatorboard"):
         """Get boardLed info
         :board_name: name of board, default is "indicatorboard"
@@ -245,10 +245,10 @@ class Redfish_Api():
     '''
 
 '''
-if __name__ == '__main__':    
+if __name__ == '__main__':
     redfish = Redfish_Api()
 
-    ### get 
+    ### get
     # boards
     ret = redfish.get_board()
     if ret is None:
@@ -288,9 +288,9 @@ if __name__ == '__main__':
     # fanSpeed
     playload = {}
     playload["FanName"] = 'Fan0'
-    playload["FanSpeedLevelPercents"] = "70"    
+    playload["FanSpeedLevelPercents"] = "70"
     print("post fanSpeed:%s" % redfish.post_fanSpeed(playload))
-    
+
     #{"LEDs": [{"IndicatorLEDColor": "green","LEDType": "sys"},{"IndicatorLEDColor": "off","LEDType": "pwr"},{"IndicatorLEDColor": "green","LEDType": "fan"}]}
     playload = {}
     led = {}
@@ -304,5 +304,5 @@ if __name__ == '__main__':
     led_list.append(led1)
     playload["LEDs"] = led_list
     # boardsLed
-    print("post boardLed:%s" % redfish.post_boardLed(playload))    
+    print("post boardLed:%s" % redfish.post_boardLed(playload))
 '''

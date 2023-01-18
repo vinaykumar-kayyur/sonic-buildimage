@@ -4,7 +4,7 @@ import sys
 import click
 import os
 import time
-from  ragileutil import * 
+from  ragileutil import *
 import syslog
 from rest.rest import BMCMessage
 import subprocess
@@ -15,14 +15,14 @@ SYSLOG_IDENTIFIER = "sfpTempToBmc"
 
 def subprocess_os_system(cmd, timeout=1):
     slice = 0.1   # 100ms for the unit
-    retry_total_cnt  = timeout / slice 
+    retry_total_cnt  = timeout / slice
     retry_cnt = 0
     try:
-        child_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
+        child_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False,preexec_fn=os.setsid)
     except Exception as e:
         print(e)
         return child_process.returncode, ""
-        
+
     while child_process.poll() is None and retry_cnt < retry_total_cnt:
         time.sleep(slice)
         retry_cnt += 1
@@ -52,9 +52,9 @@ def getSfpMaxTemp():
     import sfputil.main
     load_platform_sfputil = sfputil.main.load_platform_sfputil()
     platform_sfputil  = sfputil.main.platform_sfputil
-    
+
     temps = []
-    
+
     for index in range(platform_sfputil.port_start, platform_sfputil.port_end + 1):
         if index in platform_sfputil.qsfp_ports:
             offset = 22
@@ -73,7 +73,7 @@ def getSfpMaxTemp():
     if len(temps) > 0:
         maxtemp = max(temps)
     return  int(maxtemp * 1000)
-    
+
 def putDataToBmc():
     # log_info("putDataToBmc")
     maxtemp = getSfpMaxTemp()
@@ -81,7 +81,7 @@ def putDataToBmc():
     # print ret
     if ret == False:
         log_warning("put sfp max temp fail",SYSLOG_IDENTIFIER)
-        
+
 def run(interval):
     index = 0
     while True:
@@ -91,7 +91,7 @@ def run(interval):
         except Exception as e:
             print(e)
 
-def strtoint(str): 
+def strtoint(str):
     value = 0
     rest_v = str.replace("0X", "").replace("0x", "")
     for index in range(len(rest_v)):
@@ -146,7 +146,7 @@ def runmacLed(interval):
 def main():
     '''device operator'''
     pass
-    
+
 @main.command()
 def start():
     interval = STARTMODULE.get("sfptempmodule_interval", 2)
@@ -162,6 +162,6 @@ def startmacreset():
 @main.command()
 def stop():
     pass
-    
+
 if __name__ == '__main__':
     main()

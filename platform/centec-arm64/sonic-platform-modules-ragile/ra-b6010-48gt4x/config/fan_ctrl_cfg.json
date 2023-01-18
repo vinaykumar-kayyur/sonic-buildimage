@@ -8,7 +8,7 @@
     "Thermal": {
         "INLET_TEMP": "INLET_TEMP",
         "OUTLET_TEMP": "OUTLET_TEMP",
-        "SWITCH_TEMP": "SWITCH_TEMP"
+        "SWITCH_TEMP": "TPS53688_TEMP"
     },
     "Fans": {
         "Fan1" : "Fantray0_Fan1",
@@ -25,7 +25,7 @@
         "D": 0.3,
         "Temp_Min": 28.0,
         "Temp_Max": 45.0,
-        "Sensor": "SWITCH_TEMP"
+        "Sensor": "TPS53688_TEMP"
     },
     "OpenLoop": {
         "a": -0.06,

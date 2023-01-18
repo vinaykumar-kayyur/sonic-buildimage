@@ -4,3 +4,5 @@ systemctl enable device_i2c.service
 systemctl start device_i2c.service
 systemctl enable privatenetwork.service
 systemctl start privatenetwork.service
+systemctl enable fancontrol.service
+systemctl start fancontrol.service

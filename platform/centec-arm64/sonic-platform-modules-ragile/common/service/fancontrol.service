@@ -1,6 +1,6 @@
 [Unit]
 Description= Fancontrol for Device.
-After=local-fs.target
+After=privatenetwork.service
 DefaultDependencies=no
 
 [Service]

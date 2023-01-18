@@ -390,6 +390,9 @@ class FanControl():
             fanctrl_debug_log("PSU status error setting LED to red")
             self.interface.set_psu_board_led("red")
 
+    def doSysLedCtrl(self):
+        self.interface.set_sysled("green")
+
 def run(interval, fanCtrol):
     loop = 0
     # waitForDocker()
@@ -448,6 +451,15 @@ def run(interval, fanCtrol):
                     logger.error('%s' % traceback.format_exc())
                     time.sleep(3)
                     continue
+
+                try:
+                    fanCtrol.doSysLedCtrl()
+                except Exception as e:
+                    logger.error('Failed: Led Control, %s' % str(e))
+                    logger.error('%s' % traceback.format_exc())
+                    time.sleep(3)
+                    continue
+
             time.sleep(interval)
             loop += interval
         except Exception as e:
