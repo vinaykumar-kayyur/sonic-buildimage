@@ -801,7 +801,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
 
 def parse_default_vxlan_decap(results, vni, lo_intfs):
     vnet ='Vnet-default'
-    vxlan_tunnel = 'Tunnel-default'
+    vxlan_tunnel = 'tunnel_v4'
 
     # Vxlan tunnel information
     lo_addr = '0.0.0.0'
