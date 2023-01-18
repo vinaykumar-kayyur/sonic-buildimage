@@ -488,19 +488,19 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_default_vxlan(self):
-        argument = ['-m', self.sample_graph_t0, '-p', self.port_config, '-v', "VXLAN_TUNNEL"]
+        argument = ['-m', self.sample_graph_deployment_id, '-p', self.port_config, '-v', "VXLAN_TUNNEL"]
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'src': '10.1.0.32'}")
+            utils.to_dict("'Tunnel-default': {'src_ip': '10.1.0.32'}")
         )
 
     def test_minigraph_default_vnet(self):
-        argument = ['-m', self.sample_graph_t0, '-p', self.port_config, '-v', "VNET"]
+        argument = ['-m', self.sample_graph_deployment_id, '-p', self.port_config, '-v', "VNET']"]
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'vxlan_tunnel': 'Tunnel-default', 'scope': 'default', 'vni': 8000}")
+            utils.to_dict("'Vnet-default': {'vxlan_tunnel': 'Tunnel-default', 'scope': 'default', 'vni': 8000}")
         )
 
     def test_minigraph_bgp(self):
