@@ -17,7 +17,7 @@ class Psu(PsuBase):
     def __init__(self, index=0):
         PsuBase.__init__(self)
         self.redfish = Redfish_Api()
-        pinf = self.redfish.get_power()
+        self.pinf = self.redfish.get_power()
         self.psu_index = index
         self._fan_list = []
         self._thermal_list = []

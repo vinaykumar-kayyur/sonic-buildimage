@@ -20,7 +20,7 @@ class Thermal(ThermalBase):
         self.index = thermal_index
         self.high_threshold = float(112)
         self.redfish = Redfish_Api()
-        pinf = self.redfish.get_thermal()
+        self.pinf = self.redfish.get_thermal()
         self.begin = time.time()
 
     def get_power_3s(self):

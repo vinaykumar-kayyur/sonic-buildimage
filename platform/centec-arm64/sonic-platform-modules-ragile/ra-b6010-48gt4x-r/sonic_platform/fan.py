@@ -20,7 +20,7 @@ class Fan(FanBase):
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
         self.redfish = Redfish_Api()
-        pinf = self.redfish.get_thermal()
+        self.pinf = self.redfish.get_thermal()
         self._fan_list = []
         FanBase.__init__(self)
         self.begin = time.time()

@@ -21,7 +21,7 @@ class FanDrawer(FanDrawerBase):
         FanDrawerBase.__init__(self)
         self.fantrayindex = fantray_index 
         self.redfish = Redfish_Api()
-        pinf = self.redfish.get_thermal()
+        self.pinf = self.redfish.get_thermal()
         self.begin = time.time()
         for i in range(self.FANS_PER_FANTRAY):
             self._fan_list.append(Fan(fantray_index, i))
