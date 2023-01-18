@@ -7,9 +7,10 @@ from sonic_py_common import device_info
 from sonic_py_common import logger
 from threading import Lock
 from typing import cast
+from sonic_py_common.general import getstatusoutput_noshell
 from sonic_py_common.general import getstatusoutput_noshell_pipe
 
-HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
+HOST_CHK_CMD = ["docker"]
 EMPTY_STRING = ""
 
 
@@ -19,7 +20,11 @@ class APIHelper():
         (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def is_host(self):
-        return os.system(HOST_CHK_CMD) == 0
+        try:
+            status, output = getstatusoutput_noshell(HOST_CHK_CMD)
+            return status == 0
+        except Exception:
+            return False
 
     def pci_get_value(self, resource, offset):
         status = True
