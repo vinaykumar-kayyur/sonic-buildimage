@@ -28,6 +28,13 @@ class Psu(PsuBase):
     __sensors_info = None
     __timestamp = 0
 
+    # When psud gets termination signal it starts processing last cycle.
+    # This cycle must be as fast as possible to be able to stop correctly,
+    # otherwise it will be killed, so the whole plugin must encounter
+    # this signal to process operations based on state, where the
+    # state is "termination signal got" and "no termination signal"
+
+    # State is "no termination signal"
     sigterm = False
     sigterm_default_handler = None
     cls_inited = False
@@ -56,11 +63,14 @@ class Psu(PsuBase):
         if cls.sigterm_default_handler:
             cls.sigterm_default_handler(sig, frame)
         syslog.syslog(syslog.LOG_INFO, "Canceling PSU platform API calls...")
+        # Changing state to "termination signal"
         cls.sigterm = True
 
     @classmethod
     def __sensors_get(cls, cached=True):
         cls.__lock.acquire()
+        # Operation may take a few seconds to process, so if state is
+        # "termination signal", plugin doesn't perform this operation
         if time.time() > cls.__timestamp + 15 and not Psu.sigterm:
             # Update cache once per 15 seconds
             try:
@@ -85,6 +95,8 @@ class Psu(PsuBase):
         def psu_info_get(client):
             return client.pltfm_mgr.pltfm_mgr_pwr_supply_info_get(self.__index)
 
+        # Operation may take a few seconds to process, so if state is
+        # "termination signal", plugin doesn't perform this operation
         # Update cache once per 2 seconds
         if self.__ts + 2 < time.time() and not Psu.sigterm:
             self.__info = None
@@ -284,6 +296,8 @@ class Psu(PsuBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
+        # Operation may take a few seconds to process, so if state is
+        # "termination signal", plugin doesn't perform this operation
         if not Psu.sigterm:
             self.__temperature = self.get_thermal(0).get_temperature()
         return self.__temperature
@@ -296,6 +310,8 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
+        # Operation may take a few seconds to process, so if state is
+        # "termination signal", plugin doesn't perform this operation
         if not Psu.sigterm:
             self.__temperature_high_threshold = self.get_thermal(0).get_high_threshold()
         return self.__temperature_high_threshold
