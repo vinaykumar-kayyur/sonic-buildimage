@@ -123,6 +123,8 @@ echo '[INFO] Install and setup eatmydata'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
 sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
 echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
+## Note: dpkg hook conflict with eatmydata
+sudo LANG=C chroot $FILESYSTEM_ROOT rm /usr/local/sbin/dpkg -f
 
 echo '[INFO] Install packages for building image'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
@@ -138,6 +140,12 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 else
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 fi
+
+## docker and mkinitramfs on target system will use pigz/unpigz automatically
+if [[ $GZ_COMPRESS_PROGRAM == pigz ]]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install pigz
+fi
+
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
 ## 1. commands such as touch
@@ -275,7 +283,6 @@ then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
     install_kubernetes ${KUBERNETES_VERSION}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
@@ -699,8 +706,8 @@ if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
 fi
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
+pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo tar czf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
+pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
 sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
