@@ -43,14 +43,12 @@ class Psu(PddfPsu):
 
         psu_model_map = {
             # -F
-            "AS13-48F8H-F-RJ": "PA550II-F",
             "CSU550AP-3-500": "PA550II-F",
             "DPS-550AB-39 A": "PA550II-F",
             "GW-CRPS550N2C": "PA550II-F",
             "CSU550AP-3-300": "PA550II-F",
             "DPS-550AB-39 B": "PA550II-F",
             # -R
-            "AS13-48F8H-R-RJ": "PA550II-R",
             "CSU550AP-3-501": "PA550II-R",
             "DPS-550AB-40 A": "PA550II-R",
             "GW-CRPS550N2RC": "PA550II-R",
@@ -128,3 +126,25 @@ class Psu(PddfPsu):
 
         return float(v_out)/1000
 
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        device_eeprom = "PSU{}-EEPROM".format(self.psu_index)
+        pddf_obj_data = self.pddf_obj.data
+
+        if device_eeprom not in pddf_obj_data.keys():
+            return "N/A"
+
+        i2cloc = pddf_obj_data[device_eeprom]['i2c']['topo_info']
+        i2cbus = int(i2cloc['parent_bus'], 16)
+        get_revision_cmd = "i2cget -f -y {} {} 0x35 w".format(i2cbus, i2cloc['dev_addr'])
+        ret_t, revision = self.runcmd(get_revision_cmd)
+        if ret_t is False:
+            return "N/A"
+        revision = int(revision, 16)
+        revision_str = "%s%s" % (chr(revision&0xff), chr((revision >> 8)&0xff))
+        return revision_str

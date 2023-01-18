@@ -229,8 +229,8 @@ class BoardInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
-        
+
+
         for i in range(1, 11):
             valtmp = "boardextra%d" % i
             if self.data[index] != chr(0xc1):
@@ -483,7 +483,7 @@ class ProductInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
+
         for i in range(1, 11):
             valtmp = "productextra%d" % i
             if self.data[index] != chr(0xc1) and index < self.size - 1:

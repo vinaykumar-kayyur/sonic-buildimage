@@ -246,8 +246,8 @@ out:
 
 static irqreturn_t ocores_isr(int irq, void *dev_id)
 {
-    struct ocores_i2c *i2c = dev_id;    
-    unsigned long flags;   
+    struct ocores_i2c *i2c = dev_id;
+    unsigned long flags;
     u8 stat;
     if (!i2c) {
         return IRQ_NONE;
@@ -395,8 +395,8 @@ static int ocores_xfer_core(struct ocores_i2c *i2c,
     unsigned long flags;
     u8 ctrl;
 
-    LPC_CPLD_I2C_DEBUG_XFER("Enter.polling %d\n", polling); 
-    LPC_CPLD_I2C_SPIN_LOCK(i2c->process_lock, flags);   
+    LPC_CPLD_I2C_DEBUG_XFER("Enter.polling %d\n", polling);
+    LPC_CPLD_I2C_SPIN_LOCK(i2c->process_lock, flags);
     ctrl = oc_getreg(i2c, OCI2C_CONTROL);
     if (polling)
         oc_setreg(i2c, OCI2C_CONTROL, ctrl & ~OCI2C_CTRL_IEN);
@@ -591,7 +591,7 @@ static void oc_debug_dump_reg(struct ocores_i2c *i2c)
             LPC_CPLD_I2C_DEBUG_DUMP("msg->buf: %p.\n", i2c->msg->buf);
             LPC_CPLD_I2C_DEBUG_DUMP("msg->addr: 0x%x.\n", i2c->msg->addr);
             LPC_CPLD_I2C_DEBUG_DUMP("msg->flags: 0x%x.\n", i2c->msg->flags);
-            LPC_CPLD_I2C_DEBUG_DUMP("msg->len: %d.\n", i2c->msg->len);            
+            LPC_CPLD_I2C_DEBUG_DUMP("msg->len: %d.\n", i2c->msg->len);
         } else {
             LPC_CPLD_I2C_DEBUG_DUMP("msg: %p is null.\n", i2c->msg);
         }
@@ -712,7 +712,7 @@ static int rg_ocores_i2c_probe(struct platform_device *pdev)
             return ret;
     }
 
-    LPC_CPLD_I2C_DEBUG_VERBOSE("data: shift[%d], width[%d], clock_khz[%d] i2c_irq_flag=%d\n", 
+    LPC_CPLD_I2C_DEBUG_VERBOSE("data: shift[%d], width[%d], clock_khz[%d] i2c_irq_flag=%d\n",
             pdata->reg_shift, pdata->reg_io_width, pdata->clock_khz, pdata->i2c_irq_flag);
 
     if (i2c->reg_io_width == 0)

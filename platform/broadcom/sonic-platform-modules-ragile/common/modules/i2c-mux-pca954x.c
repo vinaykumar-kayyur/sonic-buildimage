@@ -376,7 +376,7 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
     {
         .dev_type          = {0x404a}, /* RA-B6510-48V8C */
         .pca9548_cfg_info  = {
-            /* 风扇 */
+            /* fan */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 2,
@@ -391,7 +391,7 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(1), -1},
                 },
             },
-            /* 电源 */
+            /* psu */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 4,
@@ -1095,7 +1095,6 @@ static int pca954x_select_chan(struct i2c_mux_core *muxc, u32 chan)
 {
     struct pca954x *data = i2c_mux_priv(muxc);
     struct i2c_client *client = data->client;
-    const struct chip_desc *chip = data->chip;
     u8 regval;
     int ret = 0;
     u8 read_val;
@@ -1105,6 +1104,7 @@ static int pca954x_select_chan(struct i2c_mux_core *muxc, u32 chan)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
     regval = pca954x_regval(data, chan);
 #else
+    const struct chip_desc *chip = data->chip;
     /* we make switches look like muxes, not sure how to be smarter */
     if (chip->muxtype == pca954x_ismux)
         regval = chan | chip->enable;
@@ -1412,7 +1412,7 @@ static int pca954x_probe(struct i2c_client *client,
     struct device_node *of_node = client->dev.of_node;
     bool idle_disconnect_dt;
     struct gpio_desc *gpio;
-    int num, force, class;
+    int num;
     struct i2c_mux_core *muxc;
     struct pca954x *data;
     const struct of_device_id *match;
@@ -1485,9 +1485,8 @@ static int pca954x_probe(struct i2c_client *client,
         ret = i2c_mux_add_adapter(muxc, 0, num, 0);
 #else
         bool idle_disconnect_pd = false;
-
-        force = 0;              /* dynamic adap number */
-        class = 0;              /* no class by default */
+        int force = 0;              /* dynamic adap number */
+        int class = 0;              /* no class by default */
         if (pdata) {
             if (num < pdata->num_modes) {
                 /* force static number */

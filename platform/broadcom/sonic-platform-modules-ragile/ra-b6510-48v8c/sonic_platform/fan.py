@@ -35,3 +35,9 @@ class Fan(PddfFan):
             ret = (ret >> 8) + ((ret & mask_low) << 8)
             return int(divisor/ret)
 
+    def get_target_speed(self):
+        if self.is_psu_fan:
+            return None
+
+        return super().get_target_speed()
+
