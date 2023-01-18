@@ -1,0 +1,21 @@
+add compatibility with disable flag
+
+From: ivanekovtune-at-githedgehog <ivan@githedgehog.com>
+
+remove bgpd_bmp.so from frr.install to make this file compatible with disable flag
+---
+ debian/frr.install |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/debian/frr.install b/debian/frr.install
+index e2485fe8b..134f4f4eb 100644
+--- a/debian/frr.install
++++ b/debian/frr.install
+@@ -12,7 +12,6 @@ usr/lib/*/frr/modules/zebra_cumulus_mlag.so
+ usr/lib/*/frr/modules/dplane_fpm_nl.so
+ usr/lib/*/frr/modules/zebra_irdp.so
+ usr/lib/*/frr/modules/zebra_fpm.so
+-usr/lib/*/frr/modules/bgpd_bmp.so
+ usr/share/doc/frr/examples
+ usr/share/man/
+ usr/share/yang/

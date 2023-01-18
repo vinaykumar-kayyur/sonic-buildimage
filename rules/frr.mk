@@ -27,6 +27,7 @@ FRR_SNMP_DBG = frr-snmp-dbgsym_$(FRR_VERSION)-sonic-$(FRR_SUBVERSION)_$(CONFIGUR
 $(eval $(call add_extra_package,$(FRR),$(FRR_SNMP_DBG)))
 
 export FRR FRR_PYTHONTOOLS FRR_DBG FRR_SNMP FRR_SNMP_DBG
+export INCLUDE_FRR_BGP INCLUDE_FRR_BFD INCLUDE_FRR_PBR INCLUDE_FRR_VRRP INCLUDE_FRR_OSPF
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.

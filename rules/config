@@ -295,3 +295,10 @@ INCLUDE_SSH = y
 
 # INCLUDE_SYNCD - build docker-syncd-$(PLATFORM)
 INCLUDE_SYNCD = y
+
+# include extended build options for FRR
+INCLUDE_FRR_BGP = y
+INCLUDE_FRR_BFD = y
+INCLUDE_FRR_PBR = y
+INCLUDE_FRR_VRRP = y
+INCLUDE_FRR_OSPF = y
