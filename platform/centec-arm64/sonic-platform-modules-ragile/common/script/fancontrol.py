@@ -350,6 +350,7 @@ class FanControl():
         if self.isLiquid == 1:
             return
 
+        self.fan_pwm = 0
         if self.openloop_switch == 1:
             openloop_pwm = int(self.openloop.calcPwm())
             fanctrl_debug_log("OpenLoop pwm %d" % (openloop_pwm))

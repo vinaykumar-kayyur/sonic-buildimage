@@ -18,7 +18,7 @@ def subprocess_os_system(cmd, timeout=1):
     retry_total_cnt  = timeout / slice
     retry_cnt = 0
     try:
-        child_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False,preexec_fn=os.setsid)
+        child_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
     except Exception as e:
         print(e)
         return child_process.returncode, ""

@@ -53,7 +53,7 @@ def bmc_restful_logger(message):
         cmd = "sudo touch %s && sudo chmod +x %s" % (
             restful_logger_path, restful_logger_path)
         subprocess.Popen(
-            cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     logging.basicConfig(filename=restful_logger_path,
                         filemode='a',

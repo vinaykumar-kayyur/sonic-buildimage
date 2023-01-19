@@ -226,7 +226,7 @@ def get_sys_execute2(cmd, key_word_pass):
     # key_word_pass_flag1 = False
     key_word_pass_flag = False
     filename = "/tmp/diag_excute_out"
-    p =  Popen(cmd + "|tee %s"%filename, shell = False)
+    p =  Popen(cmd + "|tee %s"%filename, shell=True)
     p.wait()
     with open(filename, 'r') as f:
         str1 = f.read()

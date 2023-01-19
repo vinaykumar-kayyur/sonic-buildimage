@@ -50,7 +50,7 @@ class Redfish_Api():
 
     def _exec_cmd(self, cmd):
         self.redfish_log_debug("Cmd: %s" % cmd)
-        p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         self.redfish_log_debug("Cmd return: %d" % p.returncode)
         str_stdout = p.stdout.read().decode('utf-8')
