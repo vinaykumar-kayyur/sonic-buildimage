@@ -479,10 +479,10 @@ class TestCfgGenCaseInsensitive(TestCase):
         # TC2: All ports are portchanels or port alias
         expected_dataacl_ports = ['PortChannel01','Ethernet4','Ethernet8']
         self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_PORT_ALIAS']['ports']), sorted(expected_dataacl_ports))
-        # TC3: Duplicated values in port names and alias, but more falls in port names 
+        # TC3: Duplicated values in port names and alias, but all fall in port names
         expected_dataacl_ports = ['PortChannel01','Ethernet0','Ethernet1','Ethernet2','Ethernet3']
         self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_MIXED_NAME_ALIAS_1']['ports']), sorted(expected_dataacl_ports))
-        # TC4: Duplicated values in port names and alias, but more falls in port alias 
+        # TC4: Duplicated values in port names and alias, but all fall in port alias
         expected_dataacl_ports = ['PortChannel01','Ethernet0','Ethernet1','Ethernet4','Ethernet8']
         self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_MIXED_NAME_ALIAS_2']['ports']), sorted(expected_dataacl_ports))
         # TC5: Same count in port names and alias, port alias is preferred
