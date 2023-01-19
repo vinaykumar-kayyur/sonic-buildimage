@@ -139,9 +139,6 @@ debs/{{ deb }}{{' '}}
 
 ## Extract sonic-gnmi deb package and copy gnmi_cli
 RUN dpkg --fsys-tarfile debs/sonic-gnmi*.deb | tar xvg  ./usr/sbin/gnmi_cli
-RUN ls -l
-RUN ls -l ./usr/sbin
-RUN ls -l /usr/sbin
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
