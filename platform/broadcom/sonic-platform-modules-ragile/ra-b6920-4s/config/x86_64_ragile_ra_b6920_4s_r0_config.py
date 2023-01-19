@@ -8,7 +8,7 @@ RAGILE_CARDID      = 0x0000404d
 RAGILE_PRODUCTNAME = "RA-B6920-4S"
 
 STARTMODULE = {
-    "fancontrol": 0,
+    "fancontrol": 1,
     "avscontrol": 1,
     "sfptempmodule": 0,
     "sfptempmodule_interval": 3,

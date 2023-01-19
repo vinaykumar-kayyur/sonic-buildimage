@@ -9,7 +9,7 @@ RAGILE_CARDID      = 0x0000404a
 RAGILE_PRODUCTNAME = "RA-B6510-48V8C"
 
 STARTMODULE  = {
-    "fancontrol":0,
+    "fancontrol":1,
     "avscontrol":1,
     "macledreset":1,
     "dev_monitor":1

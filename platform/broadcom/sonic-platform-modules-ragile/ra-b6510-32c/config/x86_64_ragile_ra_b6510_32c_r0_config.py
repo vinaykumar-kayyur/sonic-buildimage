@@ -29,7 +29,7 @@ fanloc =[ {"name":"FAN1", "location":"2-000d/fan1_pwm" ,
 
 
 STARTMODULE  = {
-                "fancontrol":0,
+                "fancontrol":1,
                 "avscontrol":1,
                 "avscontrol_restful":0,
                 "macledreset":1,
