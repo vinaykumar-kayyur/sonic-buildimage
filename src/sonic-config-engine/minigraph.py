@@ -662,8 +662,10 @@ def parse_dpg(dpg, hname):
             # Walk through all interface names/alias to determine whether the input string is
             # port name or alias.We need this logic because there can be duplicaitons in port alias
             # and port names
-            # The input port name/alias can be either port_name or port_alias. A mix of name and alias is not
-            # accepted
+            # The input port name/alias can be either port_name or port_alias. A mix of name and alias is not accepted
+            port_name_count = 0
+            port_alias_count = 0
+            total_count = 0
             for member in aclattach:
                 member = member.strip()
                 if member in pcs or \
@@ -672,12 +674,21 @@ def parse_dpg(dpg, hname):
                     member.lower().startswith('egress_erspan') or \
                     member.lower().startswith('erspan_dscp'):
                     continue
-                if member not in port_alias_map:
-                    use_port_alias = False
-                    break
-                elif member not in port_names_map:
-                    use_port_alias = True
-                    break
+                total_count += 1
+                if member in port_alias_map:
+                    port_alias_count += 1
+                if member in port_names_map:
+                    port_name_count += 1
+            # All inputs are port alias
+            if port_alias_count == total_count:
+                use_port_alias = True
+            # All inputs are port name
+            elif port_name_count == total_count:
+                use_port_alias = False
+            # There are both port alias and port name, then port alias is preferred to keep the behavior not changed
+            else:
+                use_port_alias = True
+                print("Warning: The given port name for ACL " + aclname + " is inconsistent. It must be either port name or alias ", file=sys.stderr)
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
