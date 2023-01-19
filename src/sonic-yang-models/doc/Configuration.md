@@ -26,6 +26,9 @@ Table of Contents
          * [Device Metadata](#device-metadata)  
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [FG_NHG](#fg_nhg)
+         * [FG_NHG_MEMBER](#fg_nhg_member)
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
@@ -889,6 +892,54 @@ instance is supported in SONiC.
 
 ```
 
+
+### FG_NHG
+
+```
+"FG_NHG": {
+    "fgnhg_v4": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    },
+    "fgnhg_v6": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    }
+}
+
+```
+
+### FG_NHG_MEMBER
+
+```
+"FG_NHG_MEMBER": {
+    "200.200.200.4": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "0",
+        "link": "Ethernet8"
+    },
+    "200.200.200.5": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "1",
+        "link": "Ethernet12"
+    }
+}
+
+```
+
+### FG_NHG_PREFIX
+
+```
+"FG_NHG_PREFIX": {
+    "100.50.25.12/32": {
+	    "FG_NHG": "fgnhg_v4"
+	},
+    "fc:05::/128": {
+	    "FG_NHG": "fgnhg_v6"
+	}
+}
+
+```
 
 ### MPLS_TC_TO_TC_MAP
 ```
