@@ -657,6 +657,24 @@ def parse_dpg(dpg, hname):
             is_mirror = False
             is_mirror_v6 = False
             is_mirror_dscp = False
+            use_port_alias = False
+            use_port_name = False
+
+            # Walk through all interface names/alias to determine whether the input string is
+            # port name or alias.We need this logic because there can be duplicaitons in port alias
+            # and port names
+            port_alias_count = 0
+            port_name_count = 0
+            for member in aclattach:
+                member = member.strip()
+                if member in port_alias_map:
+                    port_alias_count += 1
+                if member in port_names_map:
+                    port_name_count += 1
+            if port_alias_count >= port_name_count:
+                use_port_alias = True
+            else:
+                use_port_name = True
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
@@ -675,9 +693,9 @@ def parse_dpg(dpg, hname):
                     else:
                         acl_intfs.append(member)
                 elif (member in port_alias_map) or (member in port_names_map):
-                    if member in port_alias_map:
+                    if use_port_alias and (member in port_alias_map):
                         acl_intf = port_alias_map[member]
-                    else:
+                    elif use_port_name and (member in port_names_map):
                         acl_intf = member
                     acl_intfs.append(acl_intf)
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
