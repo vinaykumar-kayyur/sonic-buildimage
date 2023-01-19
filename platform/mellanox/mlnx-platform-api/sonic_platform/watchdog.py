@@ -28,6 +28,18 @@ import time
 
 from sonic_platform_base.watchdog_base import WatchdogBase
 
+try:
+    from sonic_py_common.logger import Logger
+except ImportError as e:
+    raise ImportError (str(e) + "- required module not found")
+
+ Global logger class instance
+logger = Logger()
+
+# watchdog retries workaround for device missing after first install from ONIE on 24xx/2700 switches
+RETRIES = 10
+DELAY_BETWEEN_RETRIES = 1
+
 """ ioctl constants """
 IO_WRITE = 0x40000000
 IO_READ = 0x80000000
@@ -287,9 +299,17 @@ def get_watchdog():
 
     watchdog_main_device_name = None
 
-    for device in os.listdir("/dev/"):
-        if device.startswith("watchdog") and is_mlnx_wd_main(device):
-            watchdog_main_device_name = device
+    found = False
+    for iteration in range(1, RETRIES):
+        for device in os.listdir("/dev/"):
+            if device.startswith("watchdog") and is_mlnx_wd_main(device):
+                watchdog_main_device_name = device
+                found = True
+                logger.log_notice('Found watchdog device {} after {} retries with delay {}'.format(device, iteration, DELAY_BETWEEN_RETRIES))
+        if found:
+            break
+        logger.log_notice('watchdog device not fount, iteration {}, sleeping {}'.format(iteration, DELAY_BETWEEN_RETRIES))
+        time.sleep(DELAY_BETWEEN_RETRIES)
 
     if watchdog_main_device_name is None:
         return None
