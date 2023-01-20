@@ -4,6 +4,7 @@ import sys
 import json
 import traceback
 import datetime
+import shlex
 import os
 import ssl
 import subprocess
@@ -50,7 +51,7 @@ class Redfish_Api():
 
     def _exec_cmd(self, cmd):
         self.redfish_log_debug("Cmd: %s" % cmd)
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         self.redfish_log_debug("Cmd return: %d" % p.returncode)
         str_stdout = p.stdout.read().decode('utf-8')
@@ -189,7 +190,6 @@ class Redfish_Api():
             print("post_thermal failed: playload is None")
             return None
         return self._redfish_post(self.ThermalUrl, playload)
-
     def post_power(self, playload):
         """post power info
         :playload: info to post
@@ -200,7 +200,6 @@ class Redfish_Api():
             print("post_power failed: playload is None")
             return None
         return self._redfish_post(self.PowerUrl, playload)
-
     def post_thresholdSensors(self, playload):
         """post thresholdSensors info
         :playload: info to post
@@ -211,13 +210,11 @@ class Redfish_Api():
             print("post_thresholdSensors failed: playload is None")
             return None
         return self._redfish_post(self.ThresholdSensorsUrl, playload)
-
     def get_fanSpeed(self):
         """Get board led info
         :returns: class'redfish.rest.v1.RestResponse' or None when failed
         """
         return self._redfish_get(self.FanSpeedUrl)
-
     def post_board(self, playload, board_name="indicatorboard"):
         """post board info
         :board_name: name of board, default is "indicatorboard"
@@ -230,7 +227,6 @@ class Redfish_Api():
             print("post failed: playload is None")
             return False
         return self._redfish_post(self.BoardsUrl + board_name, playload)
-
     def get_boardLed(self, board_name="indicatorboard"):
         """Get boardLed info
         :board_name: name of board, default is "indicatorboard"
@@ -241,13 +237,11 @@ class Redfish_Api():
             print("get failed: board_name is None")
             return None
         return self._redfish_get(self.BoardsUrl % board_name)
-
     '''
 
 '''
 if __name__ == '__main__':
     redfish = Redfish_Api()
-
     ### get
     # boards
     ret = redfish.get_board()
@@ -255,25 +249,21 @@ if __name__ == '__main__':
         print("get failed: board")
     else:
         print("get succeeded, board:%s" % ret)
-
     ret = redfish.get_thresholdSensors()
     if ret is None:
         print("get failed: threshold")
     else:
         print("get succeeded, threshold:%s" % ret)
-
     ret = redfish.get_power()
     if ret is None:
         print("get failed: power")
     else:
         print("get succeeded, power:%s" % ret)
-
     ret = redfish.get_thermal()
     if ret is None:
         print("get failed:thermal")
     else:
         print("get succeeded,thermal:%s" % ret)
-
     # get playload
     resp = redfish.get_thresholdSensors()
     if (resp != None):
@@ -283,14 +273,12 @@ if __name__ == '__main__':
         print(resp["Name"])
     else:
         print("Failed: get_thresholdSensors")
-
     ### post
     # fanSpeed
     playload = {}
     playload["FanName"] = 'Fan0'
     playload["FanSpeedLevelPercents"] = "70"
     print("post fanSpeed:%s" % redfish.post_fanSpeed(playload))
-
     #{"LEDs": [{"IndicatorLEDColor": "green","LEDType": "sys"},{"IndicatorLEDColor": "off","LEDType": "pwr"},{"IndicatorLEDColor": "green","LEDType": "fan"}]}
     playload = {}
     led = {}
