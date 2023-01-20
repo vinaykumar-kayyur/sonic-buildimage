@@ -39,8 +39,8 @@ function check_redundant_type()
     else
         ACTIVE_ACTIVE="false"
     fi
-    CONFIG_KNOB=`$SONIC_DB_CLI CONFIG_DB hget "FEATURE|mux" kill_radv`
-    if [[ x"$CONFIG_KNOB" == x"False" ]]; then
+    CONFIG_KNOB=`$SONIC_DB_CLI CONFIG_DB hget "MUX_LINKMGR|SERVICE_MGMT" kill_radv`
+    if [[ x"$CONFIG_KNOB" != x"True" ]]; then
         ACTIVE_ACTIVE='false'
     fi 
     debug "DEVICE_SUBTYPE: ${DEVICE_SUBTYPE}, CONFIG_KNOB: ${CONFIG_KNOB}"
