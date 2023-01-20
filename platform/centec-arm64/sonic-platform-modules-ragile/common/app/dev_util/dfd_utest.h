@@ -101,4 +101,4 @@ DFD_UTEST_ITEM_ALL
 
 #endif
 
-
+#define mem_clear(data, size)  memset((data), 0, (size))
