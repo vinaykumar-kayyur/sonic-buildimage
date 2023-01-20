@@ -922,6 +922,9 @@ instance is supported in SONiC.
     },
     "QUEUE": {
         "FLEX_COUNTER_STATUS": "enable"
+    },
+    "TUNNEL": {
+        "FLEX_COUNTER_STATUS": "enable"
     }
   }
 }
