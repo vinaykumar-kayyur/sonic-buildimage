@@ -23,7 +23,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 headers = {'Content-type': 'application/json'}
-context = ssl._create_unverified_context()
+context = ssl.create_unverified_context()
 __DEBUG__ = "N"
 LOGIN_TRY_TIME = 3
 RESTRETURNKEY = "status"
