@@ -24,7 +24,6 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.sample_simple_device_desc = os.path.join(self.test_dir, 'simple-sample-device-desc.xml')
         self.sample_simple_device_desc_ipv6_only = os.path.join(self.test_dir, 'simple-sample-device-desc-ipv6-only.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
-        self.port_config_duplicated_name_alias = os.path.join(self.test_dir, 't0-sample-port-config-duplicated-name-alias.ini')
 
     def run_script(self, argument, check_stderr=False):
         print('\n    Running sonic-cfggen ' + ' '.join(argument))
@@ -472,7 +471,9 @@ class TestCfgGenCaseInsensitive(TestCase):
         """
         The test case is to verify ACL table can be bound to both port names and alias
         """
-        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config_duplicated_name_alias)
+        sample_graph = os.path.join(self.test_dir,'simple-sample-graph-case-acl-test.xml')
+        port_config_duplicated_name_alias = os.path.join(self.test_dir, 't0-sample-port-config-duplicated-name-alias.ini')
+        result = minigraph.parse_xml(sample_graph, port_config_file=port_config_duplicated_name_alias)
         # TC1: All ports are portchannels or port names
         expected_dataacl_ports = ['PortChannel01','Ethernet20','Ethernet24']
         self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_PORT_NAME']['ports']), sorted(expected_dataacl_ports))
