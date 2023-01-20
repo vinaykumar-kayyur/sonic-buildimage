@@ -45,8 +45,6 @@ class Psu(PsuBase):
         self.__thermals = None
         self.__info = None
         self.__ts = 0
-        self.__temperature = None
-        self.__temperature_high_threshold = None
         # STUB IMPLEMENTATION
         self.color = ""
 
@@ -298,9 +296,7 @@ class Psu(PsuBase):
         """
         # Operation may take a few seconds to process, so if state is
         # "termination signal", plugin doesn't perform this operation
-        if not Psu.sigterm:
-            self.__temperature = self.get_thermal(0).get_temperature()
-        return self.__temperature
+        return self.get_thermal(0).get_temperature()
 
     @cancel_on_sigterm
     def get_temperature_high_threshold(self):
@@ -312,9 +308,7 @@ class Psu(PsuBase):
         """
         # Operation may take a few seconds to process, so if state is
         # "termination signal", plugin doesn't perform this operation
-        if not Psu.sigterm:
-            self.__temperature_high_threshold = self.get_thermal(0).get_high_threshold()
-        return self.__temperature_high_threshold
+        return self.get_thermal(0).get_high_threshold()
 
     @property
     def _thermal_list(self):
