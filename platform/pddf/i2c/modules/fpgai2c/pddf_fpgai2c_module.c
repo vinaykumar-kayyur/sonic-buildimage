@@ -1,6 +1,4 @@
 /*
- * Copyright 2019 Broadcom. All rights reserved.
- * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,7 +10,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * A pddf kernel module to create I2C client for a I2CFPGA
+ * Description:
+ *   A pddf kernel module to create I2C client for an I2CFPGA
  */
 
 #include <linux/kernel.h>
@@ -117,7 +116,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 
 			if (!IS_ERR(client_ptr)) {
 				i2c_put_adapter(adapter);
-				pddf_dbg(FPGAI2C, KERN_ERR "Created %s client: 0x%x\n", device_ptr->i2c_name, client_ptr);
+				pddf_dbg(FPGAI2C, KERN_ERR "Created %s client: 0x%p\n", device_ptr->i2c_name, (void *)client_ptr);
 				add_device_table(device_ptr->i2c_name, (void*)client_ptr);
 			}
 			else {
@@ -137,7 +136,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 		client_ptr = (struct i2c_client *)get_device_table(device_ptr->i2c_name);
 		if (client_ptr)
 		{
-			pddf_dbg(FPGAI2C, KERN_ERR "Removing %s client: 0x%x\n", device_ptr->i2c_name, client_ptr);
+			pddf_dbg(FPGAI2C, KERN_ERR "Removing %s client: 0x%p\n", device_ptr->i2c_name, (void *)client_ptr);
 			i2c_unregister_device(client_ptr);
 			delete_device_table(device_ptr->i2c_name);
 		}
