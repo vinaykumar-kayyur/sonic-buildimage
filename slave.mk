@@ -378,6 +378,9 @@ endif
 # Overwrite the buildinfo in slave container
 $(shell sudo scripts/prepare_slave_container_buildinfo.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
 
+# Create a list with excluded modules that will be disabled
+$(shell ./build_exclude_cfg.py)
+
 include Makefile.cache
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
