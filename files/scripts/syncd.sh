@@ -105,6 +105,11 @@ function stopplatform1() {
     fi
 
     if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
+        # Invoke platform specific pre shutdown routine.
+        PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+        PLATFORM_PRE_SHUTDOWN="/usr/share/sonic/device/$PLATFORM/plugins/syncd_pre_shutdown.sh"
+        [ -f $PLATFORM_PRE_SHUTDOWN ] && $PLATFORM_PRE_SHUTDOWN start $DEV
+
         debug "${TYPE} shutdown syncd process ..."
         /usr/bin/docker exec -i syncd$DEV /usr/bin/syncd_request_shutdown --${TYPE}
 
