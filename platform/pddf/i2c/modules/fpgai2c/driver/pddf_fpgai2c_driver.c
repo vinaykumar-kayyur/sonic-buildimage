@@ -1,6 +1,4 @@
 /*
- * Copyright 2019 Broadcom.
- * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,7 +10,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * A pddf kernel driver module for I2C_FPGA
+ * Description:
+ *   A pddf kernel driver module for FPGA connected to the CPU by I2C bus
  */
 
 #include <linux/module.h>
