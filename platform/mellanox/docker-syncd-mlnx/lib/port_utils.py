@@ -2,25 +2,59 @@
 
 from python_sdk_api.sx_api import *
 import inspect
+import re
 
 DEVICE_ID = 1
 SWITCH_ID = 0
+PORT_TABLE = 'PORT'
+FIRST_LANE_INDEX = 0
 ETHERNET_PREFIX = 'Ethernet'
 ASIC_MAX_LANES = {SX_CHIP_TYPE_SPECTRUM: 4, SX_CHIP_TYPE_SPECTRUM2: 4, 
                   SX_CHIP_TYPE_SPECTRUM3: 8, SX_CHIP_TYPE_SPECTRUM4: 8}
 
-def sx_get_ports_map(handle):
+def get_ports_lanes_map(config_db):
+    """ Get lane number of the first lane in use by port for all existing ports.
+
+    Args:
+        config_db (ConfigDBConnector): Config DB connector
+
+    Returns:
+        dict: key is lane number of the first lane in use by port, value is SONiC port index (124 for Ethernet124)
+    """
+    lanes_map = {}
+    config_db.connect()
+
+    ports_table = config_db.get_table(PORT_TABLE)
+    if ports_table is None:
+        raise Exception("Can't read {} table".format(PORT_TABLE))
+
+    ports_table_keys = config_db.get_keys(PORT_TABLE)
+    for port in ports_table_keys:
+        port_data = ports_table.get(port)
+        if port_data is not None:
+            lanes = port_data.get('lanes')
+            first_lane = lanes.split(',')[FIRST_LANE_INDEX]
+            port_idx = re.sub(r"\D", "", port)
+            lanes_map[int(first_lane)] = int(port_idx)
+
+    return lanes_map
+
+def sx_get_ports_map(handle, config_db):
     """ Get ports map from SDK logical index to SONiC index
     
     Args:
         handle (sx_api_handle_t): SDK handle
-    
+        config_db (ConfigDBConnector): Config DB connector
+
     Returns:
-        dict : Dictionary of ports indices. Key is SDK logical index, value is SONiC index (4 for Ethernet4)
+        dict: key is SDK logical index, value is SONiC index (4 for Ethernet4)
     """         
     try:
         ports_map = {}
         
+        # Get lanes map
+        lanes_map = get_ports_lanes_map(config_db)
+
         # Get chip type
         chip_type = sx_get_chip_type(handle)
         
@@ -48,7 +82,9 @@ def sx_get_ports_map(handle):
             lane_index = get_lane_index(lane_bmap, ASIC_MAX_LANES[chip_type])
             assert lane_index != -1, "Failed to calculate port index"
             
-            sonic_index = label_port * ASIC_MAX_LANES[chip_type] + lane_index;
+            first_lane = label_port * ASIC_MAX_LANES[chip_type] + lane_index;
+            sonic_index = lanes_map[first_lane]
+
             sonic_interface = ETHERNET_PREFIX + str(sonic_index)    
             ports_map[logical_port] = sonic_interface
             
@@ -65,7 +101,7 @@ def sx_get_chip_type(handle):
         handle (sx_api_handle_t): SDK handle
     
     Returns:
-        sx_chip_types_t : Chip type
+        sx_chip_types_t: Chip type
     """       
     try:
         device_info_cnt_p = new_uint32_t_p()
@@ -95,7 +131,7 @@ def get_lane_index(lane_bmap, max_lanes):
        max_lanes (int): Max lanes in module
 
    Returns:
-       int : index of the first bit set to 1 in lane_bmap
+       int: index of the first bit set to 1 in lane_bmap
    """       
    for lane_idx in range(0, max_lanes):
        if (lane_bmap & 0x1 == 1):
