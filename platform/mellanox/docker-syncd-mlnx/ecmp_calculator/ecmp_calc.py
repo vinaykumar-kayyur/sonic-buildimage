@@ -487,7 +487,7 @@ def main():
         parser.add_argument("-i", "--interface", required=True, help="ingress interface")
         parser.add_argument("-p", "--packet", required=True, help="json file describing a packet")
         parser.add_argument("-v", "--vrf", help="VRF name")
-        parser.add_argument("-d", "--debug", default=False, action="store_true", help="flag for debug")
+        parser.add_argument("-d", "--debug", default=False, action="store_true", help="when used, debug messages will be printed to stdout")
         args = parser.parse_args()
         
         ecmp_calc = EcmpCalc()
