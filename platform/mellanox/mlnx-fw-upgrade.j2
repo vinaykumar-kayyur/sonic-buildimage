@@ -98,7 +98,6 @@ function LogWarning() {
         echo "WARNING: $*"
     fi
 
-
     if [[ "${SYSLOG_LOGGER}" = "${YES_PARAM}" ]]; then
         logger -p "WARNING" -t "${SCRIPT_NAME}" "$*"
     fi
