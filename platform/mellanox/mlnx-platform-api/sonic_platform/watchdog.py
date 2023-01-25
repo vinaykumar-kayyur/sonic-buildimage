@@ -33,7 +33,7 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
- Global logger class instance
+# Global logger class instance
 logger = Logger()
 
 # watchdog retries workaround for device missing after first install from ONIE on 24xx/2700 switches
@@ -308,7 +308,7 @@ def get_watchdog():
                 logger.log_notice('Found watchdog device {} after {} retries with delay {}'.format(device, iteration, DELAY_BETWEEN_RETRIES))
         if found:
             break
-        logger.log_notice('watchdog device not fount, iteration {}, sleeping {}'.format(iteration, DELAY_BETWEEN_RETRIES))
+        logger.log_error('watchdog device was not found, try #{}, sleeping {}'.format(iteration, DELAY_BETWEEN_RETRIES))
         time.sleep(DELAY_BETWEEN_RETRIES)
 
     if watchdog_main_device_name is None:
