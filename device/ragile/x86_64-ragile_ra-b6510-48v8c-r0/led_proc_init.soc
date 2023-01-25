@@ -1,7 +1,7 @@
 m0 load 0 0x3800 /usr/share/sonic/platform/custom_led.bin
-sleep 5
-led start
-sleep 5
-linkscan spbm=all force=all interval=250000
-sleep 5
+
 led auto on
+
+led start
+
+linkscan SwPortBitMap=xe,ce
