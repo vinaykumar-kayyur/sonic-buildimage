@@ -63,7 +63,8 @@ setup(
     ],
     install_requires = dependencies,
     data_files = [
-        ('/usr/share/sonic/templates', glob.glob('data/*')),
+        ('/usr/share/sonic/templates', glob.glob('data/*.j2')),
+        ('/etc/sonic', glob.glob('data/flags_to_keys_map.yaml'))
     ],
     setup_requires= [
         'pytest-runner',

@@ -32,9 +32,8 @@ from functools import partial
 from minigraph import minigraph_encoder, parse_xml, parse_device_desc_xml, parse_asic_sub_role, parse_asic_switch_type
 from portconfig import get_port_config, get_breakout_mode
 from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id
-from sonic_py_common import device_info
+from sonic_py_common import device_info, cleanup_common
 from swsscommon.swsscommon import ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
-
 
 PY3x = sys.version_info >= (3, 0)
 
@@ -187,8 +186,7 @@ TODO(taoyl): Current version of config db only supports BGP admin states.
                         data[table][new_key] = data[table].pop(key)
         return data
 
-
-def deep_update(dst, src):
+def deep_update(dst, src, cleanup = False):
     """ Deep update of dst dict with contest of src dict"""
     pending_nodes = [(dst, src)]
     while len(pending_nodes) > 0:
@@ -199,6 +197,12 @@ def deep_update(dst, src):
                 pending_nodes.append((node, value))
             else:
                 d[key] = value
+
+    if cleanup:
+        disabled_flags = list(cleanup_common.read_metadata_conifg(key_pattern="INCLUDE_", value_pattern="^n$"))
+        keys_list = cleanup_common.read_map(disabled_flags)
+        cleanup_common.clean_cfggen_dict(dst, keys_list)
+
     return dst
 
 # sort_data is required as it is being imported by config/config_mgmt module in sonic_utilities
@@ -428,6 +432,7 @@ def main():
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
             configdb = ConfigDBPipeConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
 
+        deep_update(data, data, cleanup=True)
         configdb.connect(False)
         configdb.mod_config(FormatConverter.output_to_db(data))
 
@@ -436,6 +441,7 @@ def main():
 
     if args.preset is not None:
         data = generate_sample_config(data, args.preset)
+        deep_update(data, data, cleanup=True)
         print(json.dumps(FormatConverter.to_serialized(data), indent=4, cls=minigraph_encoder))
 
 
