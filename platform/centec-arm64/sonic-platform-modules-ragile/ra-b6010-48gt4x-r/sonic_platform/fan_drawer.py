@@ -14,12 +14,12 @@ except ImportError as e:
 
 
 class FanDrawer(FanDrawerBase):
-    
+
     FANS_PER_FANTRAY = 2
 
     def __init__(self, fantray_index=0):
         FanDrawerBase.__init__(self)
-        self.fantrayindex = fantray_index 
+        self.fantrayindex = fantray_index
         self.redfish = Redfish_Api()
         self.pinf = self.redfish.get_thermal()
         self.begin = time.time()
@@ -31,7 +31,7 @@ class FanDrawer(FanDrawerBase):
         if self.elapsed - self.begin < 3:
             pass
         else:
-            self.pinf = self.redfish.get_thermal() 
+            self.pinf = self.redfish.get_thermal()
         self.begin = time.time()
 
     def get_name(self):

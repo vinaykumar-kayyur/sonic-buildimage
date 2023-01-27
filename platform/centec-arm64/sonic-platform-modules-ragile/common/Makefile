@@ -40,11 +40,11 @@ all:
 	@if [ -d $(PWD)/lib/ ]; then cp -r $(PWD)/lib/* ${INSTALL_LIB_DIR} ;fi
 	cp -r $(app_dir)/*.so $(CTC_48GT4X_PHY_DIR)/phy_drv
 	cp -r $(app_dir)/*.so $(CTC_48GT4X_R_PHY_DIR)/phy_drv
-	#cp -r $(app_build_dir)/module/*.ko $(INSTALL_MODULE_DIR)                                                             
+	#cp -r $(app_build_dir)/module/*.ko $(INSTALL_MODULE_DIR)
 	cp -r $(modules_build_dir)/*.ko $(INSTALL_MODULE_DIR)
 	#cp -r $(app_dir)/build/app/*  $(INSTALL_SCRIPT_DIR)
 	if [ -d $(SCRIPT_DIR) ]; then cp -r $(SCRIPT_DIR)/*  $(INSTALL_SCRIPT_DIR) ;fi
-	if [ -d $(SERVICE_DIR) ]; then cp -r $(SERVICE_DIR)/*  $(INSTALL_SERVICE_DIR) ;fi    
+	if [ -d $(SERVICE_DIR) ]; then cp -r $(SERVICE_DIR)/*  $(INSTALL_SERVICE_DIR) ;fi
 	@if [ -d $(INSTALL_SCRIPT_DIR) ]; then chmod +x $(INSTALL_SCRIPT_DIR)/* ;fi
 clean:
 	rm -rf $(SUB_BUILD_DIR)

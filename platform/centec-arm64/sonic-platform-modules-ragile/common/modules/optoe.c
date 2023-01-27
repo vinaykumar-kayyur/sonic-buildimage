@@ -181,6 +181,8 @@ struct optoe_platform_data {
 #define OPTOE_WRITE_OP 1
 #define OPTOE_EOF 0  /* used for access beyond end of device */
 
+#define mem_clear(data, size) memset((data), 0, (size))
+
 struct optoe_data {
 	struct optoe_platform_data chip;
 	int use_smbus;
@@ -208,7 +210,6 @@ struct optoe_data {
 
 	struct i2c_client *client[];
 };
-
 
 /*
  * This parameter is to help this driver avoid blocking other drivers out
@@ -314,7 +315,7 @@ static ssize_t optoe_eeprom_read(struct optoe_data *optoe,
 	unsigned long timeout, read_time;
 	int status, i;
 
-	memset(msg, 0, sizeof(msg));
+	mem_clear(msg, sizeof(msg));
 
 	switch (optoe->use_smbus) {
 	case I2C_SMBUS_I2C_BLOCK_DATA:
@@ -504,7 +505,6 @@ static ssize_t optoe_eeprom_write(struct optoe_data *optoe,
 	return -ETIMEDOUT;
 }
 
-
 static ssize_t optoe_eeprom_update_client(struct optoe_data *optoe,
 				char *buf, loff_t off,
 				size_t count, int opcode)
@@ -550,7 +550,6 @@ static ssize_t optoe_eeprom_update_client(struct optoe_data *optoe,
 		count -= status;
 		retval += status;
 	}
-
 
 	if (page > 0) {
 		/* return the page register to page 0 (why?) */
@@ -789,7 +788,6 @@ static ssize_t optoe_bin_read(struct file *filp, struct kobject *kobj,
 	return optoe_read_write(optoe, buf, off, count, OPTOE_READ_OP);
 }
 
-
 static ssize_t optoe_bin_write(struct file *filp, struct kobject *kobj,
 		struct bin_attribute *attr,
 		char *buf, loff_t off, size_t count)
@@ -999,7 +997,6 @@ static int optoe_probe(struct i2c_client *client,
 			goto exit;
 		}
 	}
-
 
 	/*
 	 * Make room for two i2c clients

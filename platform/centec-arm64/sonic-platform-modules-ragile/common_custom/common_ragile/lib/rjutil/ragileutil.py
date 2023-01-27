@@ -20,10 +20,11 @@ from ragileconfig import *
 from fruutil import fru
 import subprocess
 import pexpect
+import shlex
 
 SYSLOG_IDENTIFIER = "UTILTOOL"
 
-def rj_os_system(cmd):
+def os_system(cmd):
     status, output = subprocess.getstatusoutput(cmd)
     return status, output
 
@@ -112,14 +113,14 @@ def password_command(cmd, password, exec_timeout=30):
             i = child.expect([pexpect.TIMEOUT, newkey, 'password: ',"refused",pexpect.EOF],timeout=30)
             # If the login times out, print an error message and exit.
             if i == 0: # Timeout
-                msg = '与BMC连接超时'
+                msg = 'connect to BMC timeout'
                 continue
             # no public key
             if i == 1:
                 child.sendline ('yes')
                 i = child.expect([pexpect.TIMEOUT, 'password: '],timeout=30)
                 if i == 0: # Timeout
-                    msg = '与BMC连接超时'
+                    msg = 'connect to BMC timeout'
                     continue
                 if i == 1:# Go below and enter the logic of the password
                     i = 2
@@ -129,15 +130,15 @@ def password_command(cmd, password, exec_timeout=30):
                 if i == 0:
                     return True,child.before
                 if i == 1:
-                    msg = str(child.before)+"\nBMC执行命令超时"
+                    msg = str(child.before)+"\nBMC run commands timeout"
                     return False,msg
             if i == 3: # BMC Connection refused
-                msg =  '连接BMC失败'
+                msg =  'connect to BMC failed'
                 continue
             if i == 4:
                 msg = child.before
         except Exception as e:
-            msg = str(child.before)+"\n连接BMC失败"
+            msg = str(child.before)+"\nconnect to BMC failed"
 
     return False,msg
 
@@ -150,7 +151,7 @@ def password_command_realtime(ssh_header, ssh_cmd, password,key_words, exec_time
     key_word_exit = key_words.get("key_word_exit")
 
     if None in [key_word_end,key_word_pass]:
-        print ("缺少参数")
+        print ("Missing parameters")
         return False
 
     newkey = 'continue connecting'
@@ -164,13 +165,13 @@ def password_command_realtime(ssh_header, ssh_cmd, password,key_words, exec_time
         i = child.expect([pexpect.TIMEOUT,newkey, 'password: ',"refused",pexpect.EOF],timeout=30)
         # If the login times out, print an error message and exit.
         if i == 0: # Timeout
-            msg = '与BMC连接超时'
+            msg = 'connect to BMC timeout'
         # no public key
         if i == 1:
             child.sendline ('yes')
             i = child.expect([pexpect.TIMEOUT, 'password: '],timeout=30)
             if i == 0: # Timeout
-                msg = '与BMC连接超时'
+                msg = 'connect to BMC timeout'
             if i == 1:# Go below and enter the logic of the password
                 i = 2
 
@@ -210,12 +211,12 @@ def password_command_realtime(ssh_header, ssh_cmd, password,key_words, exec_time
                             return key_word_pass_flag
 
         if i == 3: # BMC Connection refused
-            msg =  '连接BMC失败'
+            msg =  'connect to BMC failed'
         if i == 4:
             msg = child.before
     except Exception as e:
         print (e)
-        msg = str(child.before)+"\n连接出错"
+        msg = str(child.before)+"\nconnect to BMC error"
         print (msg)
 
     return False
@@ -226,7 +227,8 @@ def get_sys_execute2(cmd, key_word_pass):
     # key_word_pass_flag1 = False
     key_word_pass_flag = False
     filename = "/tmp/diag_excute_out"
-    p =  Popen(cmd + "|tee %s"%filename, shell=True)
+    cmd = cmd + "|tee %s" % filename
+    p =  Popen(shlex.split(cmd), shell=False)
     p.wait()
     with open(filename, 'r') as f:
         str1 = f.read()
@@ -243,12 +245,12 @@ RETURN_KEY1       = "code"
 RETURN_KEY2       = "msg"
 DEBUG             = False
 
-def rji2cget(bus, devno, address):
+def rgi2cget(bus, devno, address):
     command_line = "i2cget -f -y %d 0x%02x 0x%02x " % (bus, devno, address)
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
-        ret, ret_t = rj_os_system(command_line)
+        ret, ret_t = os_system(command_line)
         if ret == 0:
             return True, ret_t
         time.sleep(0.1)
@@ -280,13 +282,13 @@ def pci_read(pcibus, slot,  fn , bar, offset):
 # Run the DMI command to obtain the BIOS information
 ###########################################
 def getDmiSysByType(type_t):
-    ret, log = rj_os_system("which dmidecode ")
+    ret, log = os_system("which dmidecode ")
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
     cmd = log + " -t %s" % type_t
     # Get the total first
-    ret1, log1 = rj_os_system(cmd)
+    ret1, log1 = os_system(cmd)
     if ret != 0 or len(log1) <= 0:
         return False, "Command error[%s]" % cmd
     its = log1.replace("\t", "").strip().split("\n")

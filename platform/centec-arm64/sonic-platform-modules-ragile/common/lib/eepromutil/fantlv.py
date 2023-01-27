@@ -1,11 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import collections
-from bitarray import bitarray
-from datetime import datetime, timedelta
-import sys
-
-
 class FantlvException(Exception):
     def __init__(self,  message='fantlverror', code=-100):
         err = 'errcode: {0} message:{1}'.format(code, message)
@@ -13,13 +7,13 @@ class FantlvException(Exception):
         self.code = code
         self.message = message
 
-class fan_tlv():
+class fan_tlv(object):
     HEAD_INFO = "\x01\x7e\x01\xf1"
-    VERSION = 0x01                       # Version number defined by the E2PROM file. The initial version is 0x01
-    FLAG = 0x7E                       # The new E2PROM is identified as 0x7E
-    HW_VER = 0X01                       # It consists of a major version number and a revised version
-    TYPE = 0xf1                       # Hardware type definition information
-    TLV_LEN = 00                        # Effective data length（16bit）
+    VERSION = 0x01                    # E2PROM file init version is 0x01
+    FLAG = 0x7E                       # new version E2PROM mark as 0x7E
+    HW_VER = 0X01                     # consists of master version and revised version
+    TYPE = 0xf1                       # hardware type define
+    TLV_LEN = 00                      # vaild data length(16bit)
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
 
@@ -71,8 +65,9 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        for index in str:
-            s.append(index)
+        if str is not None:
+            for index in range(len(str)):
+                s.append(str[index])
         return s
 
     def str_to_hex(self,rest_v):
@@ -86,7 +81,7 @@ class fan_tlv():
         if len_t % 2 != 0:
             return 0
         ret = ""
-        for t in range(0, len_t / 2):
+        for t in range(0, int(len_t / 2)):
             ret += chr(int(s[2 * t:2 * t + 2], 16))
         return ret
 
@@ -97,7 +92,7 @@ class fan_tlv():
         bin_buffer[2] = chr(self.HW_VER)
         bin_buffer[3] = chr(self.TYPE)
 
-        temp_t = "%08x" % self.typedevtype  # Let's deal with devType first
+        temp_t = "%08x" % self.typedevtype  # handle devtype first
         typedevtype_t = self.hex_to_str(temp_t)
         total_len = len(self.typename) + len(self.typesn) + \
             len(self.typehwinfo) + len(typedevtype_t) + 8
@@ -130,15 +125,11 @@ class fan_tlv():
                    len(typedevtype_t)] = self.strtoarr(typedevtype_t)
         index_start = index_start + 2 + len(typedevtype_t)
 
-        crcs = fan_tlv.fancrc(''.join(bin_buffer[0:index_start]))  # Two byte check
+        crcs = fan_tlv.fancrc(''.join(bin_buffer[0:index_start]))  # 2bytes checking
         bin_buffer[index_start] = chr(crcs >> 8)
         bin_buffer[index_start + 1] = chr(crcs & 0x00ff)
         # printvalue(bin_buffer)
         return bin_buffer
-
-    def encode(self):
-        e = []
-        # Add the head
 
     def decode(self, e2):
         if e2[0:4] != self.HEAD_INFO:
@@ -153,7 +144,7 @@ class fan_tlv():
         tlv_index = self._FAN_TLV_HDR_LEN
         tlv_end = self._FAN_TLV_HDR_LEN + self.TLV_LEN
 
-        # Judgment checksum
+        # check sum
         if len(e2) < self._FAN_TLV_HDR_LEN + self.TLV_LEN + 2:
             raise FantlvException("Fan tlv eeprom len error!", -2)
         sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
@@ -168,8 +159,6 @@ class fan_tlv():
                 e2[tlv_index:tlv_index + 2 + ord(e2[tlv_index + 1])])
             tlv_index += ord(e2[tlv_index + 1]) + 2
             ret.append(s)
-        # Computing checksum
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
 
         return ret
 
@@ -207,7 +196,7 @@ class fan_tlv():
                     value += "%02X" % (ord(c),)
                 self._typedevtype = int(value,16)
         except Exception as e:
-            print (e)
+            print(e)
         return {"name": name, "code": ord(t[0]), "value": value,"lens": _len}
 
     def __str__(self):

@@ -1,10 +1,21 @@
-#!/usr/bin/python
 # -*- coding: UTF-8 -*-
-
+# -------------------------------------------------------------------------
+# Name:        ragileutil
+# Purpose:     common configuration and api
+#
+# Author:      rd
+#
+# Created:     02/07/2018
+# Copyright:   (c) rd 2018
+# -------------------------------------------------------------------------
 import sys
+
+if sys.version_info >= (3, 0):
+    import subprocess as commands
+else:
+    import commands
 import os
 import re
-import subprocess
 import syslog
 import time
 import binascii
@@ -13,19 +24,176 @@ import termios
 import threading
 import click
 import mmap
-from ragileconfig import *
-# from fruutil import fru
-from tabulate import tabulate
-import readline
+from ragileconfig import (
+    rg_eeprom,
+    FRULISTS,
+    MAC_DEFAULT_PARAM,
+    MAC_AVS_PARAM,
+    FANS_DEF,
+    FAN_PROTECT,
+    E2_LOC,
+    E2_PROTECT,
+    RAGILE_SERVICE_TAG,
+    RAGILE_DIAG_VERSION,
+    STARTMODULE,
+    RAGILE_CARDID,
+    RAGILE_PRODUCTNAME,
+    RAGILE_PART_NUMBER,
+    RAGILE_LABEL_REVISION,
+    RAGILE_MAC_SIZE,
+    RAGILE_MANUF_NAME,
+    RAGILE_MANUF_COUNTRY,
+    RAGILE_VENDOR_NAME,
+    MAILBOX_DIR,
+)
+
 try:
-    from eepromutil.fru import *
-except:
+    from eepromutil.fru import ipmifru
+except Exception or SystemExit:
     pass
 
 import logging.handlers
 import shutil
 import gzip
 import glob
+
+__all__ = [
+    "MENUID",
+    "MENUPARENT",
+    "MENUVALUE",
+    "CHILDID",
+    "MENUITEMNAME",
+    "MENUITEMDEAL",
+    "GOBACK",
+    "GOQUIT",
+    "file_name",
+    "CRITICAL",
+    "FATAL",
+    "ERROR",
+    "WARNING",
+    "WARN",
+    "INFO",
+    "DEBUG",
+    "NOTSET",
+    "levelNames",
+    "TLV_INFO_ID_STRING",
+    "TLV_INFO_VERSION",
+    "TLV_INFO_LENGTH",
+    "TLV_INFO_LENGTH_VALUE",
+    "TLV_CODE_PRODUCT_NAME",
+    "TLV_CODE_PART_NUMBER",
+    "TLV_CODE_SERIAL_NUMBER",
+    "TLV_CODE_MAC_BASE",
+    "TLV_CODE_MANUF_DATE",
+    "TLV_CODE_DEVICE_VERSION",
+    "TLV_CODE_LABEL_REVISION",
+    "TLV_CODE_PLATFORM_NAME",
+    "TLV_CODE_ONIE_VERSION",
+    "TLV_CODE_MAC_SIZE",
+    "TLV_CODE_MANUF_NAME",
+    "TLV_CODE_MANUF_COUNTRY",
+    "TLV_CODE_VENDOR_NAME",
+    "TLV_CODE_DIAG_VERSION",
+    "TLV_CODE_SERVICE_TAG",
+    "TLV_CODE_VENDOR_EXT",
+    "TLV_CODE_CRC_32",
+    "_TLV_DISPLAY_VENDOR_EXT",
+    "TLV_CODE_RJ_CARID",
+    "_TLV_INFO_HDR_LEN",
+    "SYSLOG_IDENTIFIER",
+    "log_info",
+    "log_debug",
+    "log_warning",
+    "log_error",
+    "CompressedRotatingFileHandler",
+    "SETMACException",
+    "checkinput",
+    "checkinputproduct",
+    "getInputSetmac",
+    "fan_tlv",
+    "AVSUTIL",
+    "I2CUTIL",
+    "BMC",
+    "getSdkReg",
+    "getfilevalue",
+    "get_sysfs_value",
+    "write_sysfs_value",
+    "RJPRINTERR",
+    "strtoint",
+    "inttostr",
+    "str_to_hex",
+    "hex_to_str",
+    "str_to_bin",
+    "bin_to_str",
+    "get_mac_temp",
+    "get_mac_temp_sysfs",
+    "restartDockerService",
+    "wait_dhcp",
+    "wait_sdk",
+    "wait_docker",
+    "getTLV_BODY",
+    "_crc32",
+    "printvalue",
+    "generate_value",
+    "getsyseeprombyId",
+    "fac_init_cardidcheck",
+    "isValidMac",
+    "util_setmac",
+    "getInputCheck",
+    "getrawch",
+    "upper_input",
+    "changeTypeValue",
+    "astrcmp",
+    "generate_ext",
+    "rgi2cget",
+    "rgi2cset",
+    "rgpcird",
+    "rgpciwr",
+    "rgsysset",
+    "rgi2cget_word",
+    "rgi2cset_word",
+    "fan_setmac",
+    "checkfansninput",
+    "checkfanhwinput",
+    "util_show_fanse2",
+    "get_fane2_sysfs",
+    "util_show_fane2",
+    "getPid",
+    "fac_fans_setmac_tlv",
+    "fac_fan_setmac_fru",
+    "fac_fans_setmac",
+    "fac_fan_setmac",
+    "writeToEEprom",
+    "get_local_eth0_mac",
+    "getonieversion",
+    "createbmcMac",
+    "fac_board_setmac",
+    "ipmi_set_mac",
+    "getInputValue",
+    "bmc_setmac",
+    "closeProtocol",
+    "checkSdkMem",
+    "getch",
+    "get_raw_input",
+    "getsysvalue",
+    "get_pmc_register",
+    "decoder",
+    "decode_eeprom",
+    "get_sys_eeprom",
+    "getCardId",
+    "getsysmeminfo",
+    "getsysmeminfo_detail",
+    "getDmiSysByType",
+    "gethwsys",
+    "getsysbios",
+    "searchDirByName",
+    "getUsbLocation",
+    "getusbinfo",
+    "get_cpu_info",
+    "get_version_config_info",
+    "io_rd",
+    "io_wr",
+]
 
 MENUID = "menuid"
 MENUPARENT = "parentid"
@@ -38,7 +206,7 @@ GOQUIT = "quit"
 
 file_name = "/etc/init.d/opennsl-modules-3.16.0-5-amd64"
 ##########################################################################
-# Error log level
+# ERROR LOG LEVEL
 ##########################################################################
 CRITICAL = 50
 FATAL = CRITICAL
@@ -50,28 +218,28 @@ DEBUG = 10
 NOTSET = 0
 
 levelNames = {
-    CRITICAL: 'CRITICAL',
-    ERROR: 'ERROR',
-    WARNING: 'WARNING',
-    INFO: 'INFO',
-    DEBUG: 'DEBUG',
-    NOTSET: 'NOTSET',
-    'CRITICAL': CRITICAL,
-    'ERROR': ERROR,
-    'WARN': WARNING,
-    'WARNING': WARNING,
-    'INFO': INFO,
-    'DEBUG': DEBUG,
-    'NOTSET': NOTSET,
+    CRITICAL: "CRITICAL",
+    ERROR: "ERROR",
+    WARNING: "WARNING",
+    INFO: "INFO",
+    DEBUG: "DEBUG",
+    NOTSET: "NOTSET",
+    "CRITICAL": CRITICAL,
+    "ERROR": ERROR,
+    "WARN": WARNING,
+    "WARNING": WARNING,
+    "INFO": INFO,
+    "DEBUG": DEBUG,
+    "NOTSET": NOTSET,
 }
 
 TLV_INFO_ID_STRING = "TlvInfo\x00"
 TLV_INFO_VERSION = 0x01
 TLV_INFO_LENGTH = 0x00
-TLV_INFO_LENGTH_VALUE = 0xba
+TLV_INFO_LENGTH_VALUE = 0xBA
 
 ##########################################################################
-# eeprom Information index definition
+# eeprom info
 ##########################################################################
 TLV_CODE_PRODUCT_NAME = 0x21
 TLV_CODE_PART_NUMBER = 0x22
@@ -99,8 +267,8 @@ SYSLOG_IDENTIFIER = "UTILTOOL"
 
 # ========================== Syslog wrappers ==========================
 
+
 def log_info(msg, also_print_to_console=False):
-    # msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_INFO, msg)
     syslog.closelog()
@@ -111,7 +279,6 @@ def log_info(msg, also_print_to_console=False):
 
 def log_debug(msg, also_print_to_console=False):
     try:
-        # msg = msg.decode('utf-8').encode('gb2312')
         syslog.openlog(SYSLOG_IDENTIFIER)
         syslog.syslog(syslog.LOG_DEBUG, msg)
         syslog.closelog()
@@ -123,7 +290,6 @@ def log_debug(msg, also_print_to_console=False):
 
 
 def log_warning(msg, also_print_to_console=False):
-    # msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_WARNING, msg)
     syslog.closelog()
@@ -133,7 +299,6 @@ def log_warning(msg, also_print_to_console=False):
 
 
 def log_error(msg, also_print_to_console=False):
-    # msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
@@ -141,7 +306,7 @@ def log_error(msg, also_print_to_console=False):
     if also_print_to_console:
         click.echo(msg)
 
-# bmc-console.log bmc_feed_watchdog.log log compression
+
 class CompressedRotatingFileHandler(logging.handlers.RotatingFileHandler):
     def doRollover(self):
         """
@@ -162,211 +327,65 @@ class CompressedRotatingFileHandler(logging.handlers.RotatingFileHandler):
             if os.path.exists(dfn):
                 os.remove(dfn)
             # These two lines below are the only new lines. I commented out the os.rename(self.baseFilename, dfn) and
-            # replaced it with these two lines.
-            with open(self.baseFilename, 'rb') as f_in, gzip.open(dfn, 'wb') as f_out:
+            #  replaced it with these two lines.
+            with open(self.baseFilename, "rb") as f_in, gzip.open(dfn, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
-        self.mode = 'w'
+        self.mode = "w"
         self.stream = self._open()
 
 
 class SETMACException(Exception):
-    def __init__(self, param='错误', errno="-1"):
-        err = "setmac出错[%s]: %s" % (errno, param)
+    def __init__(self, param="ERROR", errno="-1"):
+        err = "Setmac fail[%s]: %s" % (errno, param)
         Exception.__init__(self, err)
         self.param = param
         self.errno = errno
 
+
 def checkinput(b):
     if b.isdigit() == False:
-        raise Exception("非法数字")
-    if int(b) > 0xff or int(b) < 100:
-        raise Exception("不在区间内")
+        raise Exception("Ivalid Number")
+    if int(b) > 0xFF or int(b) < 0:
+        raise Exception("Out of area")
+
 
 def checkinputproduct(b):
-    if b.isalnum() ==False:
-        raise Exception("非法字符串")
+    if b.isalnum() == False:
+        raise Exception("Invalid string")
+
 
 def getInputSetmac(val):
     bia = val.boardInfoArea
     pia = val.productInfoArea
     if bia != None:
-        a = raw_input("[板卡区]产品序列号:")
+        a = raw_input("[Board Card]Product Serial Number:")
         if len(a) != 13:
-            raise Exception("序列号长度不对")
+            raise Exception("Invalid Serial Number length")
         checkinputproduct(a)
         bia.boardSerialNumber = a
-        b = raw_input("[板卡区]产品版本号:(从100-255)")
+        b = raw_input("[Board Card]Product Version:(from 1-255)")
         checkinput(b)
         b = "%0x" % int(b)
         bia.boardextra1 = b.upper()
     if pia != None:
-        a = raw_input("[产品区]产品序列号:")
+        a = raw_input("[Product Area]Product Serial Number:")
         if len(a) != 13:
-            raise Exception("序列号长度不对")
+            raise Exception("Invalid Serial Number")
         checkinputproduct(a)
         pia.productSerialNumber = a
-        b = raw_input("[产品区]产品版本号:(从100-255)")
+        b = raw_input("[Product Area]Product Version:(from 1-255)")
         checkinput(b)
         b = "%0x" % int(b)
         pia.productVersion = b.upper()
     return val
 
-'''
-class FruUtil():
-    def test(self):
-        ret = fru.E2Util.decodeBinName("/sys/bus/i2c/devices/4-0051/eeprom")
-        bia = ret.boardInfoArea
-        pia = ret.productInfoArea
-        print bia
-        print pia
-    
-    def setmac_InputBoardArea(self, bia):
-        if bia != None:
-            a = raw_input("[板卡区]产品序列号:")
-            bia.boardSerialNumber = a
-            b = raw_input("[板卡区]产品版本号:(从1-255)")
-            bia.boardextra1 = b.upper()
-        return bia
-    
-    def getInputSetmac(self, val):
-        bia = val.boardInfoArea
-        pia = val.productInfoArea
-        if bia != None:
-            a = raw_input("[板卡区]产品序列号:")
-            bia.boardSerialNumber = a
-            b = raw_input("[板卡区]产品版本号:(从1-255)")
-            bia.boardextra1 = b.upper()
-        if pia != None:
-            a = raw_input("[产品区]产品序列号:")
-            pia.productSerialNumber = a
-            b = raw_input("[产品区]产品版本号:(从1-255)")
-            pia.productVersion = b.upper()
-            if pia.productExtra2 != None:
-                b = raw_input("[产品区]MAC地址:")
-                pia.productExtra2 = fru.E2Util.encodeMac(b.upper())
 
-            if pia.productExtra3 != None:
-                b = raw_input("[产品区]MAC数量:")
-                pia.productExtra3 = fru.E2Util.encodeMacLen(b)
-        result = fru.E2Util.generateBinBySetMac(bia, pia)
-        return result
-    
-    def globalsetmac(self, type1):
-        msg  = type1[0]
-        fruMsg = self.getfruMsg(msg['bus'], msg['loc'])
-        result = self.getInputSetmac(fruMsg)
-        I2CUTIL.writeToE2(msg['bus'], msg['loc'], result.bindata)
-    
-    def dumpValueByI2c(self, bus, loc):
-        str = ""
-        for i in range(256):
-            ret,val = rji2cget(bus, loc, i)
-            str += chr(strtoint(val))
-        return str
-    
-    def fansetmac(self, vals):
-        x = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for item in x:
-            fruMsg = self.getfruMsg(item['bus'], item['loc'])
-            print "%s:"% item['name']
-            result = self.getInputSetmac(fruMsg)
-            I2CUTIL.writeToE2(item['bus'], item['loc'], result.bindata)
-        pass
-    
-    def getsyseepromDict(self):
-        ret = get_sys_eeprom()
-        ret_t = {}
-        for item in ret:
-            ret_t[item['code']] = item['value']
-        return ret_t
-    
-    def cpufrusetmac(self, vals):
-        msg  = vals[0]
-        fruMsg = self.getfruMsg(msg['bus'], msg['loc'])
-        bia = fruMsg.boardInfoArea
-        pia = fruMsg.productInfoArea
-        
-        bia = self.setmac_InputBoardArea(bia)
-        sysee = self.getsyseepromDict()
-        pia.productName = sysee[33]
-        pia.productPartModelName = sysee[34]
-        pia.productVersion = sysee[38]
-        pia.productSerialNumber = sysee[35]
-        pia.productExtra2 = fru.E2Util.encodeMac(sysee[36].replace(":",""))
-        pia.productExtra3 = fru.E2Util.encodeMacLen(sysee[42])
-        result = fru.E2Util.generateBinBySetMac(bia, pia)
-        I2CUTIL.writeToE2(msg['bus'], msg['loc'], result.bindata)
-        pass 
-        
-    def slotmac(self, vals):
-        x = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for item in x:
-            fruMsg = self.getfruMsg(item['bus'], item['loc'])
-            print "%s:"% item['name']
-            result = self.getInputSetmac(fruMsg)
-            I2CUTIL.writeToE2(item['bus'], item['loc'], result.bindata)
-        pass
-
-    def showmac(self, type):
-        vals = [ elem  for elem in FRULISTS if type == elem["E2TYPE"]]
-        val_ts = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for val in val_ts:
-            print "####################%s####################" % val["name"]
-            filename = I2CUTIL.getE2File(val['bus'], val['loc'])
-            ret = FruUtil.fru_decode_eeprom(filename)
-            head = ["key","value"]
-            if ret.boardInfoArea!= None:
-                print "=================board================="
-                print tabulate(ret.boardInfoArea.todict().items(), head, tablefmt="simple")
-             
-            if ret.productInfoArea!= None:
-                print"=================product================="
-                print tabulate(ret.productInfoArea.todict().items(), head, tablefmt="simple")
-
-    def setmac(self, type1):
-        vals = [ elem  for elem in FRULISTS if (type1 == elem["E2TYPE"] and elem["CANRESET"] == '1' )]
-        if len(vals) <= 0:
-            return None
-        if type1 == "8" or type1 == "A":
-            I2CUTIL.openFanE2Protect()
-            self.fansetmac(vals)
-            I2CUTIL.closeFanE2Protect()
-            return
-        elif type1 == "6":
-            return  self.slotmac(vals)
-        elif type1 == "4":
-            return self.cpufrusetmac(vals)
-        else:
-            return self.globalsetmac(vals)
-
-    def getfruMsg(self, bus, loc):
-        filename = I2CUTIL.getE2File(bus, loc)
-        ret = FruUtil.fru_decode_eeprom(filename)
-        return ret
-        
-    def getfruMsgByI2C(self, bus,loc):
-        retval = self.dumpValueByI2c(bus,loc)
-        return FruUtil.fru_decode_eepromByValue(retval)
-        
-    @staticmethod
-    def fru_getdefault_eeprom(product, type1):
-        return fru.E2Util.defaultBinByConfig(product,type1)
-    
-    @staticmethod
-    def fru_decode_eeprom(filename):
-        return fru.E2Util.decodeBinName(filename)
-    
-    @staticmethod
-    def fru_decode_eepromByValue(val):
-        return fru.E2Util.decodeBinByValue(val)
-'''
-
-class fan_tlv():
-    VERSION = 0x01                       # E2PROM version number of the file definition,the initial version is0x01
-    FLAG = 0x7E                       # new version E2PROM Identified as 0x7E
-    HW_VER = 0X01                       # consists of a major version number and a revised version
-    TYPE = 0xf1                       # hardware type definition information
-    TLV_LEN = 00                        # effective data length（16bit）
+class fan_tlv(object):
+    VERSION = 0x01  # E2PROM Version, start from 0x01
+    FLAG = 0x7E     # New E2PROM version flag is 0x7E
+    HW_VER = 0x01   # compose by master version and fixed version
+    TYPE = 0xF1     # hw type defination
+    TLV_LEN = 00    # data length (16bit)
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
 
@@ -418,21 +437,27 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        for index in str:
-            s.append(index)
+        if str is not None:
+            for index in range(len(str)):
+                s.append(str[index])
         return s
 
     def generate_fan_value(self):
-        bin_buffer = [chr(0xff)] * 256
+        bin_buffer = [chr(0xFF)] * 256
         bin_buffer[0] = chr(self.VERSION)
         bin_buffer[1] = chr(self.FLAG)
         bin_buffer[2] = chr(self.HW_VER)
         bin_buffer[3] = chr(self.TYPE)
 
-        temp_t = "%08x" % self.typedevtype  # do devtype first
+        temp_t = "%08x" % self.typedevtype  # handle devtype first
         typedevtype_t = hex_to_str(temp_t)
-        total_len = len(self.typename) + len(self.typesn) + \
-            len(self.typehwinfo) + len(typedevtype_t) + 8
+        total_len = (
+            len(self.typename)
+            + len(self.typesn)
+            + len(self.typehwinfo)
+            + len(typedevtype_t)
+            + 8
+        )
 
         bin_buffer[4] = chr(total_len >> 8)
         bin_buffer[5] = chr(total_len & 0x00FF)
@@ -440,37 +465,36 @@ class fan_tlv():
         index_start = 6
         bin_buffer[index_start] = chr(self._FAN_TLV_TYPE_NAME)
         bin_buffer[index_start + 1] = chr(len(self.typename))
-        bin_buffer[index_start + 2: index_start + 2 +
-                   len(self.typename)] = self.strtoarr(self.typename)
+        bin_buffer[
+            index_start + 2 : index_start + 2 + len(self.typename)
+        ] = self.strtoarr(self.typename)
         index_start = index_start + 2 + len(self.typename)
 
         bin_buffer[index_start] = chr(self._FAN_TLV_TYPE_SN)
         bin_buffer[index_start + 1] = chr(len(self.typesn))
-        bin_buffer[index_start + 2:index_start + 2 +
-                   len(self.typesn)] = self.strtoarr(self.typesn)
+        bin_buffer[
+            index_start + 2 : index_start + 2 + len(self.typesn)
+        ] = self.strtoarr(self.typesn)
         index_start = index_start + 2 + len(self.typesn)
 
         bin_buffer[index_start] = chr(self._FAN_TLV_TYPE_HW_INFO)
         bin_buffer[index_start + 1] = chr(len(self.typehwinfo))
-        bin_buffer[index_start + 2:index_start + 2 +
-                   len(self.typehwinfo)] = self.strtoarr(self.typehwinfo)
+        bin_buffer[
+            index_start + 2 : index_start + 2 + len(self.typehwinfo)
+        ] = self.strtoarr(self.typehwinfo)
         index_start = index_start + 2 + len(self.typehwinfo)
 
         bin_buffer[index_start] = chr(self._FAN_TLV_TYPE_DEV_TYPE)
         bin_buffer[index_start + 1] = chr(len(typedevtype_t))
-        bin_buffer[index_start + 2:index_start + 2 +
-                   len(typedevtype_t)] = self.strtoarr(typedevtype_t)
+        bin_buffer[
+            index_start + 2 : index_start + 2 + len(typedevtype_t)
+        ] = self.strtoarr(typedevtype_t)
         index_start = index_start + 2 + len(typedevtype_t)
 
-        crcs = fan_tlv.fancrc(''.join(bin_buffer[0:index_start]))  # 2 Byte test
+        crcs = fan_tlv.fancrc("".join(bin_buffer[0:index_start]))  # check 2bytes
         bin_buffer[index_start] = chr(crcs >> 8)
-        bin_buffer[index_start + 1] = chr(crcs & 0x00ff)
-        # printvalue(bin_buffer)
+        bin_buffer[index_start + 1] = chr(crcs & 0x00FF)
         return bin_buffer
-
-    def encode(self):
-        e = []
-        # Add the head
 
     def decode(self, e2):
         ret = []
@@ -483,25 +507,23 @@ class fan_tlv():
         tlv_index = self._FAN_TLV_HDR_LEN
         tlv_end = self._FAN_TLV_HDR_LEN + self.TLV_LEN
 
-        # Judgment checksum
+        # check checksum
         if len(e2) < self._FAN_TLV_HDR_LEN + self.TLV_LEN + 2:
             self._dstatus = -2
             return ret
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
-        readcrc = ord(e2[self._FAN_TLV_HDR_LEN + self.TLV_LEN]
-                      ) << 8 | ord(e2[self._FAN_TLV_HDR_LEN + self.TLV_LEN + 1])
+        sumcrc = fan_tlv.fancrc(e2[0 : self._FAN_TLV_HDR_LEN + self.TLV_LEN])
+        readcrc = ord(e2[self._FAN_TLV_HDR_LEN + self.TLV_LEN]) << 8 | ord(
+            e2[self._FAN_TLV_HDR_LEN + self.TLV_LEN + 1]
+        )
         if sumcrc != readcrc:
             self._dstatus = -1
             return ret
         else:
             self._dstatus = 0
         while (tlv_index + 2) < len(e2) and tlv_index < tlv_end:
-            s = self.decoder(
-                e2[tlv_index:tlv_index + 2 + ord(e2[tlv_index + 1])])
+            s = self.decoder(e2[tlv_index : tlv_index + 2 + ord(e2[tlv_index + 1])])
             tlv_index += ord(e2[tlv_index + 1]) + 2
             ret.append(s)
-        # Computing checksum
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
 
         return ret
 
@@ -518,57 +540,66 @@ class fan_tlv():
             value = ""
             if ord(t[0]) == self._FAN_TLV_TYPE_NAME:
                 name = "Product Name"
-                value = str(t[2:2 + ord(t[1])])
+                value = str(t[2 : 2 + ord(t[1])])
                 self._typename = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_SN:
                 name = "serial Number"
-                value = str(t[2:2 + ord(t[1])])
+                value = str(t[2 : 2 + ord(t[1])])
                 self._typesn = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_HW_INFO:
                 name = "hardware info"
-                value = str(t[2:2 + ord(t[1])])
+                value = str(t[2 : 2 + ord(t[1])])
                 self._typehwinfo = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_DEV_TYPE:
                 name = "dev type"
-                value = str(t[2:2 + ord(t[1])])
+                value = str(t[2 : 2 + ord(t[1])])
                 value = str_to_hex(value)
                 self._typedevtype = value
                 value = "0x08%x" % value
         except Exception as e:
-            print (e)
+            print(e)
         return {"name": name, "code": ord(t[0]), "value": value}
 
     def __str__(self):
-        formatstr = "VERSION     : 0x%02x  \n" \
-                    "   FLAG     : 0x%02x  \n" \
-                    " HW_VER     : 0x%02x  \n" \
-                    "   TYPE     : 0x%02x  \n" \
-                    "typename    : %s      \n" \
-                    "typesn      : %s      \n" \
-                    "typehwinfo  : %s      \n"
-        return formatstr % (self.VERSION, self.FLAG, self.HW_VER, self.TYPE, self.typename, self.typesn, self.typehwinfo)
+        formatstr = (
+            "VERSION     : 0x%02x  \n"
+            "   FLAG     : 0x%02x  \n"
+            " HW_VER     : 0x%02x  \n"
+            "   TYPE     : 0x%02x  \n"
+            "typename    : %s      \n"
+            "typesn      : %s      \n"
+            "typehwinfo  : %s      \n"
+        )
+        return formatstr % (
+            self.VERSION,
+            self.FLAG,
+            self.HW_VER,
+            self.TYPE,
+            self.typename,
+            self.typesn,
+            self.typehwinfo,
+        )
 
 
-class AVSUTIL():
+class AVSUTIL:
     @staticmethod
     def mac_avs_chip(bus, devno, loc, open, close, loop, protectaddr, level, loopaddr):
-        ret = -1
-        # Close the protection
-        rji2cset(bus, devno, protectaddr, open)
-        rji2cset(bus, devno, loopaddr, loop)
-        rji2csetWord(bus, devno, loc, level)
-        ret, value = rji2cgetWord(bus, devno, loc)
+        # disable protection
+        rgi2cset(bus, devno, protectaddr, open)
+        rgi2cset(bus, devno, loopaddr, loop)
+        rgi2cset_word(bus, devno, loc, level)
+        ret, value = rgi2cget_word(bus, devno, loc)
         if strtoint(value) == level:
             ret = 0
-        # Open the protection
-        rji2cset(bus, devno, protectaddr, close)
+        # enable protection
+        rgi2cset(bus, devno, protectaddr, close)
         if ret == 0:
             return True
         return False
 
     @staticmethod
     def macPressure_adj(macavs, avs_param, mac_def_param):
-        # Determine if it is in range
+        # check whether it within range
         max_adj = max(avs_param.keys())
         min_adj = min(avs_param.keys())
         type = mac_def_param["type"]
@@ -583,29 +614,38 @@ class AVSUTIL():
                 level = mac_def_param["default"]
             else:
                 level = macavs
-        ret = AVSUTIL.mac_avs_chip(mac_def_param["bus"], mac_def_param["devno"], mac_def_param["addr"], mac_def_param["open"],
-                                   mac_def_param["close"], mac_def_param["loop"], mac_def_param["protectaddr"], avs_param[level], mac_def_param["loopaddr"])
+        ret = AVSUTIL.mac_avs_chip(
+            mac_def_param["bus"],
+            mac_def_param["devno"],
+            mac_def_param["addr"],
+            mac_def_param["open"],
+            mac_def_param["close"],
+            mac_def_param["loop"],
+            mac_def_param["protectaddr"],
+            avs_param[level],
+            mac_def_param["loopaddr"],
+        )
         return ret
 
     @staticmethod
     def mac_adj():
         macavs = 0
-        cpldavs = 0
         name = MAC_DEFAULT_PARAM["sdkreg"]
         ret, status = getSdkReg(name)
         if ret == False:
             return False
         status = strtoint(status)
-        # Shift operation
+        # shift operation
         if MAC_DEFAULT_PARAM["sdktype"] != 0:
-            status = (
-                status >> MAC_DEFAULT_PARAM["macregloc"]) & MAC_DEFAULT_PARAM["mask"]
+            status = (status >> MAC_DEFAULT_PARAM["macregloc"]) & MAC_DEFAULT_PARAM[
+                "mask"
+            ]
         macavs = status
         ret = AVSUTIL.macPressure_adj(macavs, MAC_AVS_PARAM, MAC_DEFAULT_PARAM)
         return ret
 
 
-class I2CUTIL():
+class I2CUTIL:
     @staticmethod
     def getvaluefromdevice(name):
         ret = []
@@ -616,28 +656,36 @@ class I2CUTIL():
 
     @staticmethod
     def openFanE2Protect():
-        rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
-                 FAN_PROTECT["addr"], FAN_PROTECT["open"])
+        rgi2cset(
+            FAN_PROTECT["bus"],
+            FAN_PROTECT["devno"],
+            FAN_PROTECT["addr"],
+            FAN_PROTECT["open"],
+        )
 
     @staticmethod
     def closeFanE2Protect():
-        rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
-                 FAN_PROTECT["addr"], FAN_PROTECT["close"])
+        rgi2cset(
+            FAN_PROTECT["bus"],
+            FAN_PROTECT["devno"],
+            FAN_PROTECT["addr"],
+            FAN_PROTECT["close"],
+        )
 
     @staticmethod
     def writeToFanE2(bus, loc, rst_arr):
         index = 0
         for item in rst_arr:
-            rji2cset(bus, loc, index, ord(item))
+            rgi2cset(bus, loc, index, ord(item))
             index += 1
-            
+
     @staticmethod
     def writeToE2(bus, loc, rst_arr):
         index = 0
         for item in rst_arr:
-            rji2cset(bus, loc, index, ord(item))
+            rgi2cset(bus, loc, index, ord(item))
             index += 1
-    
+
     @staticmethod
     def getE2File(bus, loc):
         return "/sys/bus/i2c/devices/%d-00%02x/eeprom" % (bus, loc)
@@ -656,13 +704,14 @@ class BMC():
                     Singleton._instance = object.__new__(cls)
         return Singleton._instance
 
-# The internal interface
+
+#  Internal interface
 
 
 def getSdkReg(reg):
     try:
         cmd = "bcmcmd -t 1 'getr %s ' < /dev/null" % reg
-        ret, result = rj_os_system(cmd)
+        ret, result = os_system(cmd)
         result_t = result.strip().replace("\r", "").replace("\n", "")
         if ret != 0 or "Error:" in result_t:
             return False, result
@@ -670,13 +719,13 @@ def getSdkReg(reg):
         rt = re.findall(patt, result_t, re.S)
         test = re.findall("=(.*)", rt[0][0])[0]
     except Exception as e:
-        return False, 'getsdk register error'
+        return False, "getsdk register error"
     return True, test
 
 
 def getfilevalue(location):
     try:
-        with open(location, 'r') as fd:
+        with open(location, "r") as fd:
             value = fd.read()
         return True, value.strip()
     except Exception as e:
@@ -690,13 +739,12 @@ def get_sysfs_value(location):
 
 
 def write_sysfs_value(reg_name, value):
-    retval = 'ERR'
     fileLoc = MAILBOX_DIR + reg_name
     try:
         if not os.path.isfile(fileLoc):
-            print (fileLoc,  'not found !')
+            print(fileLoc, "not found !")
             return False
-        with open(fileLoc, 'w') as fd:
+        with open(fileLoc, "w") as fd:
             fd.write(value)
     except Exception as error:
         log_error("Unable to open " + fileLoc + "file !")
@@ -708,23 +756,25 @@ def RJPRINTERR(str):
     print("\033[0;31m%s\033[0m" % str)
 
 
-def strtoint(str):  # The hexadecimal string is converted to int, such as"4040"/"0x4040"/"0X4040" = 16448
+def strtoint(str):  # convert Hex string to int such as "4040"/"0x4040"/"0X4040" = 16448
     value = 0
     rest_v = str.replace("0X", "").replace("0x", "")
     for index in range(len(rest_v)):
         value |= int(rest_v[index], 16) << ((len(rest_v) - index - 1) * 4)
     return value
 
-def inttostr(vl,len): # Convert int to string,such as 0x3030 = 00
+
+def inttostr(vl, len):  # convert int to string such as 0x3030 = 00
     if type(vl) != int:
         raise Exception(" type error")
     index = 0
     ret_t = ""
     while index < len:
-        ret = 0xff & (vl >> index * 8)
+        ret = 0xFF & (vl >> index * 8)
         ret_t += chr(ret)
-        index += 1;
+        index += 1
     return ret_t
+
 
 def str_to_hex(rest_v):
     value = 0
@@ -738,62 +788,63 @@ def hex_to_str(s):
     if len_t % 2 != 0:
         return 0
     ret = ""
-    for t in range(0, len_t / 2):
-        ret += chr(int(s[2 * t:2 * t + 2], 16))
+    for t in range(0, int(len_t / 2)):
+        ret += chr(int(s[2 * t : 2 * t + 2], 16))
     return ret
 
 
 def str_to_bin(s):
-    return ' '.join([bin(ord(c)).replace('0b', '') for c in s])
+    return " ".join([bin(ord(c)).replace("0b", "") for c in s])
 
 
 def bin_to_str(s):
-    return ''.join([chr(i) for i in [int(b, 2) for b in s.split(' ')]])
+    return "".join([chr(i) for i in [int(b, 2) for b in s.split(" ")]])
 
 
-def getMacTemp():
+def get_mac_temp():
     result = {}
-    # waitForDocker()
-    # Run the command twice in a row and take the second time
-    ret, log = rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
-    ret, log = rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
+    # wait_docker()
+    # exec twice, get the second result
+    os_system('bcmcmd -t 1 "show temp" < /dev/null')
+    ret, log = os_system('bcmcmd -t 1 "show temp" < /dev/null')
     if ret:
         return False, result
     else:
-        # Parse the read information
+        # decode obtained info
         logs = log.splitlines()
         for line in logs:
             if "average" in line:
-                b = re.findall(r'\d+.\d+', line)
+                b = re.findall(r"\d+.\d+", line)
                 result["average"] = b[0]
             elif "maximum" in line:
-                b = re.findall(r'\d+.\d+', line)
+                b = re.findall(r"\d+.\d+", line)
                 result["maximum"] = b[0]
     return True, result
 
-def getMacTemp_sysfs(mactempconf):
+
+def get_mac_temp_sysfs(mactempconf):
     try:
         temp = -1000000
         temp_list = []
         mac_temp_loc = mactempconf.get("loc", [])
-        mac_temp_flag = mactempconf.get("flag",None)
-        if mac_temp_flag is not None: # Determine the MAC temperature label
-            gettype = mac_temp_flag.get('gettype')
-            okbit = mac_temp_flag.get('okbit')
-            okval = mac_temp_flag.get('okval')
+        mac_temp_flag = mactempconf.get("flag", None)
+        if mac_temp_flag is not None:  # check mac temperature vaild flag
+            gettype = mac_temp_flag.get("gettype")
+            okbit = mac_temp_flag.get("okbit")
+            okval = mac_temp_flag.get("okval")
             if gettype == "io":
-                io_addr = mac_temp_flag.get('io_addr')
+                io_addr = mac_temp_flag.get("io_addr")
                 val = io_rd(io_addr)
                 if val is None:
                     raise Exception("get mac_flag by io failed.")
             else:
-                bus = mac_temp_flag.get('bus')
-                loc = mac_temp_flag.get('loc')
-                offset = mac_temp_flag.get('offset')
-                ind, val = rji2cget(bus, loc, offset)
+                bus = mac_temp_flag.get("bus")
+                loc = mac_temp_flag.get("loc")
+                offset = mac_temp_flag.get("offset")
+                ind, val = rgi2cget(bus, loc, offset)
                 if ind is not True:
                     raise Exception("get mac_flag by i2c failed.")
-            val_t = (int(val,16) & (1<< okbit)) >> okbit
+            val_t = (int(val, 16) & (1 << okbit)) >> okbit
             if val_t != okval:
                 raise Exception("mac_flag invalid, val_t:%d." % val_t)
         for loc in mac_temp_loc:
@@ -810,37 +861,48 @@ def getMacTemp_sysfs(mactempconf):
         return False, temp
     return True, temp
 
+
 def restartDockerService(force=False):
-    container_name = ["database","snmp","syncd","swss","dhcp_relay","radv","teamd","pmon"]
-    ret, status = rj_os_system("docker ps")
-    if ret == 0 :
+    container_name = [
+        "database",
+        "snmp",
+        "syncd",
+        "swss",
+        "dhcp_relay",
+        "radv",
+        "teamd",
+        "pmon",
+    ]
+    ret, status = os_system("docker ps")
+    if ret == 0:
         for tmpname in container_name:
-            if (tmpname not in status):
-                if (force == True):
-                    rj_os_system("docker restart %s"%tmpname)
+            if tmpname not in status:
+                if force == True:
+                    os_system("docker restart %s" % tmpname)
                 else:
-                    rj_os_system("systemctl restart %s"%tmpname)
+                    os_system("systemctl restart %s" % tmpname)
 
 
-def waitForDhcp(timeout):
+def wait_dhcp(timeout):
     time_cnt = 0
     while True:
         try:
-            ret, status = rj_os_system("systemctl status dhcp_relay.service")
-            if (ret == 0 and "running" in status)  or "SUCCESS" in status:
+            ret, status = os_system("systemctl status dhcp_relay.service")
+            if (ret == 0 and "running" in status) or "SUCCESS" in status:
                 break
             else:
                 sys.stdout.write(".")
                 sys.stdout.flush()
                 time_cnt = time_cnt + 1
                 if time_cnt > timeout:
-                    raise Exception("waitForDhcp timeout")
+                    raise Exception("wait_dhcp timeout")
                 time.sleep(1)
         except Exception as e:
             return False
     return True
 
-def waitForSdk(sdk_fpath ,timeout):
+
+def wait_sdk(sdk_fpath, timeout):
     time_cnt = 0
     while True:
         try:
@@ -851,31 +913,32 @@ def waitForSdk(sdk_fpath ,timeout):
                 sys.stdout.flush()
                 time_cnt = time_cnt + 1
                 if time_cnt > timeout:
-                    raise Exception("waitForSdk timeout")
+                    raise Exception("wait_sdk timeout")
                 time.sleep(1)
         except Exception as e:
             return False
     return True
 
-def waitForDocker(need_restart=False,timeout=180):
-    sdkcheck_params = STARTMODULE.get("sdkcheck",{})
-    if sdkcheck_params.get("checktype") == "file": # Judge by file
+
+def wait_docker(need_restart=False, timeout=180):
+    sdkcheck_params = STARTMODULE.get("sdkcheck", {})
+    if sdkcheck_params.get("checktype") == "file":  # pass file check
         sdk_fpath = sdkcheck_params.get("sdk_fpath")
-        return waitForSdk(sdk_fpath,timeout)
-    return waitForDhcp(timeout)
+        return wait_sdk(sdk_fpath, timeout)
+    return wait_dhcp(timeout)
 
 
 def getTLV_BODY(type, productname):
     x = []
     temp_t = ""
     if type == TLV_CODE_MAC_BASE:
-        arr = productname.split(':')
+        arr = productname.split(":")
         for tt in arr:
             temp_t += chr(int(tt, 16))
     elif type == TLV_CODE_DEVICE_VERSION:
         temp_t = chr(productname)
     elif type == TLV_CODE_MAC_SIZE:
-        temp_t = chr(productname >> 8) + chr(productname & 0x00ff)
+        temp_t = chr(productname >> 8) + chr(productname & 0x00FF)
     else:
         temp_t = productname
     x.append(chr(type))
@@ -886,16 +949,19 @@ def getTLV_BODY(type, productname):
 
 
 def _crc32(v):
-    return '0x%08x' % (binascii.crc32(v) & 0xffffffff)  # Take the octet data %x of CRC32 to return hexadecimal
+    return "0x%08x" % (
+        binascii.crc32(v) & 0xFFFFFFFF
+    )  # get 8 bytes of crc32 %x return hex
+
 
 def printvalue(b):
     index = 0
     for i in range(0, len(b)):
         if index % 16 == 0:
-            print (" ")
-        print ("%02x " % ord(b[i]),)
+            print(" ")
+        print("%02x " % ord(b[i]))
         index += 1
-    print ("\n")
+    print("\n")
 
 
 def generate_value(_t):
@@ -915,17 +981,17 @@ def generate_value(_t):
 
     ret.append(chr(0xFE))
     ret.append(chr(0x04))
-    s = _crc32(''.join(ret))
+    s = _crc32("".join(ret))
     for t in range(0, 4):
-        ret.append(chr(int(s[2 * t + 2:2 * t + 4], 16)))
+        ret.append(chr(int(s[2 * t + 2 : 2 * t + 4], 16)))
     totallen = len(ret)
-    if (totallen < 256):
+    if totallen < 256:
         for left_t in range(0, 256 - totallen):
             ret.append(chr(0x00))
     return (ret, True)
 
 
-def getsyseeprombyId(id):  # Obtain the system system by ID
+def getsyseeprombyId(id):
     ret = get_sys_eeprom()
     for item in ret:
         if item["code"] == id:
@@ -934,17 +1000,17 @@ def getsyseeprombyId(id):  # Obtain the system system by ID
 
 
 def fac_init_cardidcheck():
-    rest = getsyseeprombyId(TLV_CODE_RJ_CARID)  # Check whether cardId are the same
-    if rest == None:
-        print ("需要烧写bin文件")
+    rest = getsyseeprombyId(TLV_CODE_RJ_CARID)  # check cardId same or not
+    if rest is None:
+        print("need to program write bin file")
         return False
     else:
-        rest_v = rest['value']
+        rest_v = rest["value"]
         value = strtoint(rest_v)
         if value == RAGILE_CARDID:
-            log_debug("板卡ID检测通过")
+            log_debug("check card ID pass")
         else:
-            log_debug("板卡ID有误")
+            log_debug("check card ID error")
             return False
     return True
 
@@ -954,51 +1020,74 @@ def isValidMac(mac):
         return True
     return False
 
-# network card setmac
+
+#  Internet cardsetmac
 
 
 def util_setmac(eth, mac):
     rulefile = "/etc/udev/rules.d/70-persistent-net.rules"
     if isValidMac(mac) == False:
-        return False, "MAC非法"
-    ifconfigcmd = "ifconfig eth0 down"
-    log_debug(ifconfigcmd)
-    ret, status = rj_os_system(ifconfigcmd)
-    if ret:
-        return False, "软件停用eth0出错"
+        return False, "MAC invaild"
+    cmd = "ethtool -e %s | grep 0x0010 | awk '{print \"0x\"$13$12$15$14}'" % eth
+    ret, log = os_system(cmd)
+    log_debug(log)
+    magic = ""
+    if ret == 0 and len(log):
+        magic = log
+    macs = mac.upper().split(":")
+
+    # chage ETH0 to value after setmac
     ifconfigcmd = "ifconfig eth0 hw ether %s" % mac
     log_debug(ifconfigcmd)
-    ret, status = rj_os_system(ifconfigcmd)
+    ret, status = os_system(ifconfigcmd)
     if ret:
-        return False, "软件设置网卡MAC出错"
-    ifconfigcmd = "ifconfig eth0 up"
-    log_debug(ifconfigcmd)
-    ret, status = rj_os_system(ifconfigcmd)
-    if ret:
-        return False, "软件启用eth0出错"
+        raise SETMACException("software set  Internet card MAC error")
+    index = 0
+    for item in macs:
+        cmd = "ethtool -E %s magic %s offset %d value 0x%s" % (eth, magic, index, item)
+        log_debug(cmd)
+        index += 1
+        ret, log = os_system(cmd)
+        if ret != 0:
+            raise SETMACException("set hardware Internet card MAC error")
+    # get value after setting
+    cmd_t = "ethtool -e eth0 offset 0 length 6"
+    ret, log = os_system(cmd_t)
+    m = re.split(":", log)[-1].strip().upper()
+    mac_result = m.upper().split(" ")
+
+    for ind, s in enumerate(macs):
+        if s != mac_result[ind]:
+            RJPRINTERR("MAC comparison error")
     if os.path.exists(rulefile):
         os.remove(rulefile)
-    print ("MGMT MAC【%s】" % mac)
+    print("MGMT MAC[%s]" % mac)
     return True
 
 
 def getInputCheck(tips):
-    err = 0
     str = raw_input(tips)
-    if astrcmp(str, "y") or astrcmp(str, "ye") or astrcmp(str, "yes") or astrcmp(str, ""):
+    if (
+        astrcmp(str, "y")
+        or astrcmp(str, "ye")
+        or astrcmp(str, "yes")
+        or astrcmp(str, "")
+    ):
         return True
     else:
         return False
 
+
 def getrawch():
-  fd = sys.stdin.fileno()
-  old_settings = termios.tcgetattr(fd)
-  try:
-    tty.setraw(sys.stdin.fileno())
-    ch = sys.stdin.read(1)
-  finally:
-    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-  return ch
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
 
 def upper_input(tips):
     sys.stdout.write(tips)
@@ -1007,124 +1096,70 @@ def upper_input(tips):
     while True:
         ch = getrawch().upper()
         if ch == "\r" or ch == "\n":
-          print
-          return "".join(passwd)
-        elif ch == '\b' or ord(ch) == 127:
+            return "".join(passwd)
+        elif ch == "\b" or ord(ch) == 127:
             if passwd:
                 del passwd[-1]
-                sys.stdout.write('\b \b')
+                sys.stdout.write("\b \b")
         else:
-          sys.stdout.write(ch)
-          passwd.append(ch)
+            sys.stdout.write(ch)
+            passwd.append(ch)
 
-def changeTypeValueLiquid(_value, type1, tips, example):
-    if type1 == TLV_CODE_PRODUCT_NAME:
-        while True:
-            print ("请确认 (1)前后进风/(2)液冷集中供电/(3)液冷非集中供电:" ,)
-            option = raw_input()
-            if option == "1":
-                _value[type1] = example + "-F-RJ"
-                print ("确认该产品为前后进风设备,产品名称:%s"%_value[type1])
-                break
-            elif option == "2":
-                _value[type1] = example + "-LC-RJ"
-                print ("确认该产品为液冷集中供电设备,产品名称:%s"%_value[type1])
-                break
-            elif option == "3":
-                _value[type1] = example + "-LD-RJ"
-                print ("确认该产品为液冷非集中供电设备,产品名称:%s"%_value[type1])
-                break
-            else:
-                print ("输入错误,请认真核对")
-        return True
-    print ("请输入【%s】如(%s):" % (tips, example),)
-    name = upper_input("")
-    if type1 == TLV_CODE_MAC_BASE:
-        if len(name) != 12:
-            raise Exception("MAC地址长度不对,请认真核对")
-            return False
-        release_mac = ""
-        for i in range(len(name) / 2):
-            if i == 0:
-                release_mac += name[i * 2:i * 2 + 2]
-            else:
-                release_mac += ":" + name[i * 2:i * 2 + 2]
-        if isValidMac(release_mac) == True:
-            _value[type1] = release_mac
-        else:
-            raise Exception("MAC地址非法,请认真核对")
-            return False
-    elif type1 == TLV_CODE_DEVICE_VERSION:
-        if name.isdigit():
-            _value[type1] = int(name)
-        else:
-            raise Exception("版本号非数字,请认真核对")
-    elif type1 == TLV_CODE_MAC_SIZE:
-        if name.isdigit():
-            _value[type1] = int(name, 16)
-        else:
-            raise Exception("版本号非数字,请认真核对")
-    elif type1 == TLV_CODE_SERIAL_NUMBER:
-        if name.isalnum() == False:
-            raise Exception("序列号非法字符串,请认真核对")
-        elif len(name) != 13:
-            raise Exception("序列号长度不对,请认真核对")
-        else:
-            _value[type1] = name
-    elif type1 == TLV_CODE_VENDOR_EXT:
-        _value[type1] = name
-    else:
-        _value[type1] = name
-    return True
 
 def changeTypeValue(_value, type1, tips, example):
     if type1 == TLV_CODE_PRODUCT_NAME:
         while True:
-            print ("请确认 (1)前后进风/(2)后前进风:",)
+            print(
+                "please check  (1)air from forward to backward/(2)air from backward to forward:"
+            )
             option = raw_input()
             if option == "1":
                 _value[type1] = example + "-F-RJ"
-                print ("确认该产品为前后进风设备,产品名称:%s"%_value[type1])
+                print(
+                    "check Product is air from forward to backward device,Product Name:%s"
+                    % _value[type1]
+                )
                 break
             elif option == "2":
                 _value[type1] = example + "-R-RJ"
-                print ("确认该产品为后前进风设备,产品名称:%s"%_value[type1])
+                print(
+                    "check Product is air from backward to forward device,Product Name:%s"
+                    % _value[type1]
+                )
                 break
             else:
-                print ("输入错误,请认真核对")
+                print("input incorrect, check please")
         return True
-    print ("请输入【%s】如(%s):" % (tips, example),)
+    print("Please input[%s]such as(%s):" % (tips, example))
     name = upper_input("")
     if type1 == TLV_CODE_MAC_BASE:
         if len(name) != 12:
-            raise SETMACException("MAC地址长度不对,请认真核对")
-            return False
+            raise SETMACException("MAC address length incorrect, check please")
         release_mac = ""
-        for i in range(len(name) / 2):
+        for i in range(int(len(name) / 2)):
             if i == 0:
-                release_mac += name[i * 2:i * 2 + 2]
+                release_mac += name[i * 2 : i * 2 + 2]
             else:
-                release_mac += ":" + name[i * 2:i * 2 + 2]
+                release_mac += ":" + name[i * 2 : i * 2 + 2]
         if isValidMac(release_mac) == True:
             _value[type1] = release_mac
         else:
-            raise SETMACException("MAC地址非法,请认真核对")
-            return False
+            raise SETMACException("MAC address invaild, check please")
     elif type1 == TLV_CODE_DEVICE_VERSION:
         if name.isdigit():
             _value[type1] = int(name)
         else:
-            raise SETMACException("版本号非数字,请认真核对")
+            raise SETMACException("Version is not number, check please")
     elif type1 == TLV_CODE_MAC_SIZE:
         if name.isdigit():
             _value[type1] = int(name, 16)
         else:
-            raise SETMACException("版本号非数字,请认真核对")
+            raise SETMACException("Version is not number, check please")
     elif type1 == TLV_CODE_SERIAL_NUMBER:
         if name.isalnum() == False:
-            raise SETMACException("序列号非法字符串,请认真核对")
+            raise SETMACException("Serial Number invaild string, check please")
         elif len(name) != 13:
-            raise SETMACException("序列号长度不对,请认真核对")
+            raise SETMACException("Serial Number length incorrect, check please")
         else:
             _value[type1] = name
     elif type1 == TLV_CODE_VENDOR_EXT:
@@ -1132,7 +1167,6 @@ def changeTypeValue(_value, type1, tips, example):
     else:
         _value[type1] = name
     return True
-# Compare strings regardless of size
 
 
 def astrcmp(str1, str2):
@@ -1143,39 +1177,36 @@ def generate_ext(cardid):
     s = "%08x" % cardid
     ret = ""
     for t in range(0, 4):
-        ret += chr(int(s[2 * t:2 * t + 2], 16))
+        ret += chr(int(s[2 * t : 2 * t + 2], 16))
     ret = chr(0x01) + chr(len(ret)) + ret
     return ret
 
 
-def rji2cget(bus, devno, address, word=None):
-    if word == None:
-        command_line = "i2cget -f -y %d 0x%02x 0x%02x " % (bus, devno, address)
-    else:
-        command_line = "i2cget -f -y %d 0x%02x 0x%02x %s" % (bus, devno, address, word)
+def rgi2cget(bus, devno, address):
+    command_line = "i2cget -f -y %d 0x%02x 0x%02x " % (bus, devno, address)
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
-        ret, ret_t = rj_os_system(command_line)
+        ret, ret_t = os_system(command_line)
         if ret == 0:
             return True, ret_t
         time.sleep(0.1)
     return False, ret_t
 
 
-def rji2cset(bus, devno, address, byte):
-    command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%02x" % (
-        bus, devno, address, byte)
+def rgi2cset(bus, devno, address, byte):
+    command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%02x" % (bus, devno, address, byte)
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
-        ret, ret_t = rj_os_system(command_line)
+        ret, ret_t = os_system(command_line)
         if ret == 0:
             return True, ret_t
     return False, ret_t
 
-def rjpcird(pcibus , slot , fn, bar,  offset):
-    '''read pci register'''
+
+def rgpcird(pcibus, slot, fn, bar, offset):
+    """read pci register"""
     if offset % 4 != 0:
         return
     filename = "/sys/bus/pci/devices/0000:%02x:%02x.%x/resource%d" % (int(pcibus), int(slot), int(fn), int(bar))
@@ -1191,8 +1222,8 @@ def rjpcird(pcibus , slot , fn, bar,  offset):
     return "0x%08x" % val
 
 
-def rjpciwr(pcibus , slot ,fn, bar, offset, data):
-    '''write pci register'''
+def rgpciwr(pcibus, slot, fn, bar, offset, data):
+    """write pci register"""
     ret = inttostr(data, 4)
     filename = "/sys/bus/pci/devices/0000:%02x:%02x.%x/resource%d" % (int(pcibus), int(slot), int(fn), int(bar))
     with open(filename, "r+") as file:
@@ -1207,75 +1238,92 @@ def rjpciwr(pcibus , slot ,fn, bar, offset, data):
         data.close()
 
 
-def rjsysset(location, value):
+def rgsysset(location, value):
     command_line = "echo 0x%02x > %s" % (value, location)
     retrytime = 6
     ret_t = ""
     for i in range(retrytime):
-        ret, ret_t = rj_os_system(command_line)
+        ret, ret_t = os_system(command_line)
         if ret == 0:
             return True, ret_t
     return False, ret_t
 
 
-def rji2cgetWord(bus, devno, address):
+def rgi2cget_word(bus, devno, address):
     command_line = "i2cget -f -y %d 0x%02x 0x%02x w" % (bus, devno, address)
     retrytime = 3
     ret_t = ""
     for i in range(retrytime):
-        ret, ret_t = rj_os_system(command_line)
+        ret, ret_t = os_system(command_line)
         if ret == 0:
             return True, ret_t
     return False, ret_t
 
 
-def rji2csetWord(bus, devno, address, byte):
-    command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%x w" % (
-        bus, devno, address, byte)
-    rj_os_system(command_line)
+def rgi2cset_word(bus, devno, address, byte):
+    command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%x w" % (bus, devno, address, byte)
+    os_system(command_line)
 
 
 def fan_setmac():
-    rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
-             FAN_PROTECT["addr"], FAN_PROTECT["open"])
-    rji2cset(FAN_PROTECT["bus"], FAN_PROTECT["devno"],
-             FAN_PROTECT["addr"], FAN_PROTECT["close"])
+    rgi2cset(
+        FAN_PROTECT["bus"],
+        FAN_PROTECT["devno"],
+        FAN_PROTECT["addr"],
+        FAN_PROTECT["open"],
+    )
+    rgi2cset(
+        FAN_PROTECT["bus"],
+        FAN_PROTECT["devno"],
+        FAN_PROTECT["addr"],
+        FAN_PROTECT["close"],
+    )
 
 
 def checkfansninput(fan_sn, fansntemp):
     if fan_sn in fansntemp:
-        RJPRINTERR("存在相同序列号，请重新输入！")
+        RJPRINTERR("exist same Serial Number, please input again")
         return False
-    if(len(fan_sn) != 13):
-        RJPRINTERR("序列号长度错误，请重新输入！")
+    if len(fan_sn) != 13:
+        RJPRINTERR("Serial Number length incorrect, please input again")
         return False
     return True
 
-# Check the input hardware version number
 
-
+# check hw version
 def checkfanhwinput(hw):
     if len(hw) != 4:
-        RJPRINTERR("硬件版本号长度不正确,请重新输入！")
+        RJPRINTERR("hardware version length incorrect, please input again")
         return False
     if hw.find(".") != 1:
-        RJPRINTERR("硬件版本号不正确,请重新输入！")
+        RJPRINTERR("hardware version incorrect, please input again")
         return False
     return True
 
 
 def util_show_fanse2(fans):
     formatstr = "%-8s  %-20s  %-20s  %-20s %-20s"
-    print (formatstr % ("id", "名称", "硬件版本号", "序列号", "时间"))
-    print (formatstr % ("------", "---------------", "---------------", "---------------", "----"))
+    print(formatstr % ("id", "Name", "hardware version", "Serial Number", "Time"))
+    print(
+        formatstr
+        % ("------", "---------------", "---------------", "---------------", "----")
+    )
     for fan in fans:
         # print fan.dstatus
         if fan.dstatus < 0:
-            print ("%-8s" % ("风扇%d" % (fans.index(fan) + 1)),)
-            RJPRINTERR("  解析e2出错")
+            print("%-8s" % ("FAN%d" % (fans.index(fan) + 1)))
+            RJPRINTERR("  decode e2 error")
         else:
-            print (formatstr % ("风扇%d" % (fans.index(fan) + 1), fan.typename.replace(chr(0x00), ""),
-                               fan.typehwinfo.replace(chr(0x00), ""), fan.typesn.replace(chr(0x00), ""), fan.fandecodetime))
+            print(
+                formatstr
+                % (
+                    "FAN%d" % (fans.index(fan) + 1),
+                    fan.typename.replace(chr(0x00), ""),
+                    fan.typehwinfo.replace(chr(0x00), ""),
+                    fan.typesn.replace(chr(0x00), ""),
+                    fan.fandecodetime,
+                )
+            )
 
 
 def get_fane2_sysfs(bus, loc):
@@ -1285,14 +1333,14 @@ def get_fane2_sysfs(bus, loc):
 
 
 def util_show_fane2():
-    ret = sorted(I2CUTIL.getvaluefromdevice("rg_fan"))    
-    if len(ret) <=0:
+    ret = sorted(I2CUTIL.getvaluefromdevice("rg_fan"))
+    if len(ret) <= 0:
         return None
     fans = []
     for index in range(len(ret)):
-        t1 = (int(round(time.time() * 1000)))
+        t1 = int(round(time.time() * 1000))
         eeprom = get_fane2_sysfs(ret[index]["bus"], ret[index]["loc"])
-        t2 = (int(round(time.time() * 1000)))
+        t2 = int(round(time.time() * 1000))
         fane2 = fan_tlv()
         fane2.fandecodetime = t2 - t1
         fane2.decode(eeprom)
@@ -1302,11 +1350,11 @@ def util_show_fane2():
 
 def getPid(name):
     ret = []
-    for dirname in os.listdir('/proc'):
-        if dirname == 'curproc':
+    for dirname in os.listdir("/proc"):
+        if dirname == "curproc":
             continue
         try:
-            with open('/proc/{}/cmdline'.format(dirname), mode='rb') as fd:
+            with open("/proc/{}/cmdline".format(dirname), mode="rb") as fd:
                 content = fd.read()
         except Exception:
             continue
@@ -1314,8 +1362,9 @@ def getPid(name):
             ret.append(dirname)
     return ret
 
+
 def fac_fans_setmac_tlv(ret):
-    if len(ret) <=0:
+    if len(ret) <= 0:
         return None
     fans = []
     fansntemp = []
@@ -1329,9 +1378,9 @@ def fac_fans_setmac_tlv(ret):
         fane2.fanloc = item["loc"]
         log_debug("decode eeprom success")
 
-        print ("风扇【%d】-【%s】setmac" % ((index + 1), FANS_DEF[fane2.typedevtype]))
+        print("Fan[%d]-[%s]setmac" % ((index + 1), FANS_DEF[fane2.typedevtype]))
         while True:
-            print ("请输入[%s]:" % "序列号",)
+            print("Please input[%s]:" % "Serial Number")
             fan_sn = raw_input()
             if checkfansninput(fan_sn, fansntemp) == False:
                 continue
@@ -1340,7 +1389,7 @@ def fac_fans_setmac_tlv(ret):
             fane2.typesn = fan_sn + chr(0x00)
             break
         while True:
-            print ("请输入[%s]:" % "硬件版本号",)
+            print("Please input[%s]:" % "hardware version")
             hwinfo = raw_input()
             if checkfanhwinput(hwinfo) == False:
                 continue
@@ -1350,100 +1399,106 @@ def fac_fans_setmac_tlv(ret):
         log_debug(fane2.typedevtype)
         fane2.typename = FANS_DEF[fane2.typedevtype] + chr(0x00)
         fans.append(fane2)
-        print ("\n")
-    print ("\n*******************************\n")
+        print("\n")
+    print("\n*******************************\n")
 
     util_show_fanse2(fans)
-    if getInputCheck("确认是否输入正确（Yes/No):") == True:
+    if getInputCheck("check input correctly or not(Yes/No):") == True:
         for fan in fans:
             log_debug("ouput fan")
             fac_fan_setmac(fan)
     else:
-        print ("setmac退出")
+        print("setmac quit")
         return False
 
 
 def fac_fan_setmac_fru(ret):
-    fans =  FRULISTS.get('fans')
-    
+    fans = FRULISTS.get("fans")
+
     fanfrus = {}
     newfrus = {}
-    
+
     # getmsg
     try:
         for fan in fans:
-            print ("===============%s ================getmessage" % fan.get('name'))
-            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get('bus'), fan.get('loc')))
+            print("===============%s ================getmessage" % fan.get("name"))
+            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get("bus"), fan.get("loc")))
             fru = ipmifru()
             fru.decodeBin(eeprom)
-            fanfrus[fan.get('name')] = fru
+            fanfrus[fan.get("name")] = fru
     except Exception as e:
-        print (str(e))
+        print(str(e))
         return False
-    
+
     # setmsg
     for fan in fans:
-        print ("===============%s ================setmac" % fan.get('name'))
-        fruold = fanfrus.get(fan.get('name'))
+        print("===============%s ================setmac" % fan.get("name"))
+        fruold = fanfrus.get(fan.get("name"))
         newfru = getInputSetmac(fruold)
         newfru.recalcute()
-        newfrus[fan.get('name')] = newfru
+        newfrus[fan.get("name")] = newfru
     # writemsg
     for fan in fans:
-        print ("===============%s ================writeToE2" % fan.get('name'))
-        ret_t = newfrus.get(fan.get('name'))
+        print("===============%s ================writeToE2" % fan.get("name"))
+        ret_t = newfrus.get(fan.get("name"))
         I2CUTIL.openFanE2Protect()
-        I2CUTIL.writeToFanE2(fan.get('bus'), fan.get('loc'), ret_t.bindata)
+        I2CUTIL.writeToFanE2(fan.get("bus"), fan.get("loc"), ret_t.bindata)
         I2CUTIL.closeFanE2Protect()
     # check
     try:
         for fan in fans:
-            print ("===============%s ================getmessage" % fan.get('name'))
-            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get('bus'), fan.get('loc')))
+            print("===============%s ================getmessage" % fan.get("name"))
+            eeprom = getsysvalue(I2CUTIL.getE2File(fan.get("bus"), fan.get("loc")))
             fru = ipmifru()
             fru.decodeBin(eeprom)
     except Exception as e:
-        print (str(e))
+        print(str(e))
         return False
     return True
 
+
 def fac_fans_setmac():
-    ret =  I2CUTIL.getvaluefromdevice("rg_fan")
+    ret = I2CUTIL.getvaluefromdevice("rg_fan")
     if ret is not None and len(ret) > 0:
         return fac_fans_setmac_tlv(ret)
-    fans =  FRULISTS.get('fans', None)
-    if fans is not None and len(fans)>0:
+    fans = FRULISTS.get("fans", None)
+    if fans is not None and len(fans) > 0:
         return fac_fan_setmac_fru(ret)
     return False
 
-def fac_fan_setmac(item):
 
+def fac_fan_setmac(item):
     I2CUTIL.openFanE2Protect()
     I2CUTIL.writeToFanE2(item.fanbus, item.fanloc, item.generate_fan_value())
     I2CUTIL.closeFanE2Protect()
 
-    pass
-
 
 def writeToEEprom(rst_arr):
-    dealtype = E2_PROTECT.get('gettype',None)
-    bus = E2_PROTECT.get('bus', None)
-    if (dealtype is None) and (bus is not None):
-        rji2cset(E2_PROTECT["bus"], E2_PROTECT["devno"],
-                 E2_PROTECT["addr"], E2_PROTECT["open"])
+    dealtype = E2_PROTECT.get("gettype", None)
+    if dealtype is None:
+        rgi2cset(
+            E2_PROTECT["bus"],
+            E2_PROTECT["devno"],
+            E2_PROTECT["addr"],
+            E2_PROTECT["open"],
+        )
     elif dealtype == "io":
         io_wr(E2_PROTECT["io_addr"], E2_PROTECT["open"])
     index = 0
     for item in rst_arr:
-        rji2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
+        rgi2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
         index += 1
-    
-    if (dealtype is None) and (bus is not None):
-        rji2cset(E2_PROTECT["bus"], E2_PROTECT["devno"],
-                 E2_PROTECT["addr"], E2_PROTECT["close"])
+
+    if dealtype is None:
+        rgi2cset(
+            E2_PROTECT["bus"],
+            E2_PROTECT["devno"],
+            E2_PROTECT["addr"],
+            E2_PROTECT["close"],
+        )
     elif dealtype == "io":
         io_wr(E2_PROTECT["io_addr"], E2_PROTECT["close"])
-    # Finally, the system driver is dealt with
+    # deal last drivers
     os.system("rmmod at24 ")
     os.system("modprobe at24 ")
     os.system("rm -f /var/cache/sonic/decode-syseeprom/syseeprom_cache")
@@ -1451,25 +1506,27 @@ def writeToEEprom(rst_arr):
 
 def get_local_eth0_mac():
     cmd = "ifconfig eth0 |grep HWaddr"
-    print (rj_os_system(cmd))
+    print(os_system(cmd))
+
 
 def getonieversion():
-    if not os.path.isfile('/host/machine.conf'):
+    if not os.path.isfile("/host/machine.conf"):
         return ""
     machine_vars = {}
-    with open('/host/machine.conf') as machine_file:
+    with open("/host/machine.conf") as machine_file:
         for line in machine_file:
-            tokens = line.split('=')
+            tokens = line.split("=")
             if len(tokens) < 2:
                 continue
             machine_vars[tokens[0]] = tokens[1].strip()
     return machine_vars.get("onie_version")
 
-def createbmcMac(cpumac , num = 2):
-    bcmvalue =  strtoint(cpumac[cpumac.rindex(":")+ 1:len(cpumac)]) + num
-    # bmcmac = 
+
+def createbmcMac(cpumac, num=2):
+    bcmvalue = strtoint(cpumac[cpumac.rindex(":") + 1 : len(cpumac)]) + num
+    # bmcmac =
     t = cpumac.split(":")
-    t[5] = "%02x" %  bcmvalue
+    t[5] = "%02x" % bcmvalue
     bmcmac = ":".join(t)
     return bmcmac.upper()
 
@@ -1477,49 +1534,55 @@ def createbmcMac(cpumac , num = 2):
 def fac_board_setmac():
     _value = {}
     # default value
-    _value[TLV_CODE_VENDOR_EXT] = generate_ext(RAGILE_CARDID)  # Generates an ID unique to RAGILE
+    _value[TLV_CODE_VENDOR_EXT] = generate_ext(RAGILE_CARDID)  # generate id
     _value[TLV_CODE_PRODUCT_NAME] = RAGILE_PRODUCTNAME
-    _value[TLV_CODE_PART_NUMBER]    = RAGILE_PART_NUMBER
+    _value[TLV_CODE_PART_NUMBER] = RAGILE_PART_NUMBER
     _value[TLV_CODE_LABEL_REVISION] = RAGILE_LABEL_REVISION
-    _value[TLV_CODE_PLATFORM_NAME]  = platform
-    _value[TLV_CODE_ONIE_VERSION]   = getonieversion()
-    _value[TLV_CODE_MAC_SIZE]       = RAGILE_MAC_SIZE
-    _value[TLV_CODE_MANUF_NAME]     = RAGILE_MANUF_NAME
-    _value[TLV_CODE_MANUF_COUNTRY]  = RAGILE_MANUF_COUNTRY
-    _value[TLV_CODE_VENDOR_NAME]    = RAGILE_VENDOR_NAME
-    _value[TLV_CODE_DIAG_VERSION]   = RAGILE_DIAG_VERSION
-    _value[TLV_CODE_SERVICE_TAG]    = RAGILE_SERVICE_TAG
+    _value[TLV_CODE_PLATFORM_NAME] = platform
+    _value[TLV_CODE_ONIE_VERSION] = getonieversion()
+    _value[TLV_CODE_MAC_SIZE] = RAGILE_MAC_SIZE
+    _value[TLV_CODE_MANUF_NAME] = RAGILE_MANUF_NAME
+    _value[TLV_CODE_MANUF_COUNTRY] = RAGILE_MANUF_COUNTRY
+    _value[TLV_CODE_VENDOR_NAME] = RAGILE_VENDOR_NAME
+    _value[TLV_CODE_DIAG_VERSION] = RAGILE_DIAG_VERSION
+    _value[TLV_CODE_SERVICE_TAG] = RAGILE_SERVICE_TAG
     try:
-        if (RAGILE_CARDID in [0x00004065]):
-            changeTypeValueLiquid(_value, TLV_CODE_PRODUCT_NAME, "产品名称", RAGILE_PRODUCTNAME)
-        elif (RAGILE_CARDID in [0x00004066,0x00004087,0x00004088]):
-            changeTypeValue(_value, TLV_CODE_PRODUCT_NAME, "产品名称", RAGILE_PRODUCTNAME)
-        else:
+        if 0x00004052 == RAGILE_CARDID:
             _value[TLV_CODE_PRODUCT_NAME] = RAGILE_PRODUCTNAME + "-RJ"
+        elif 0x00004051 == RAGILE_CARDID or 0x00004050 == RAGILE_CARDID:
+            changeTypeValue(
+                _value, TLV_CODE_PRODUCT_NAME, "Product name", RAGILE_PRODUCTNAME
+            )
 
-        changeTypeValue(_value, TLV_CODE_SERIAL_NUMBER,
-                        "SN", "0000000000000")  # Add serial number
-        changeTypeValue(_value, TLV_CODE_DEVICE_VERSION,
-                        "硬件版本号", "101")  # Hardware Version number
-        changeTypeValue(_value, TLV_CODE_MAC_BASE,
-                        "MAC地址", "58696cfb2108")  # MAC address
+        changeTypeValue(
+            _value, TLV_CODE_SERIAL_NUMBER, "SN", "0000000000000"
+        )  # add serial number
+        changeTypeValue(
+            _value, TLV_CODE_DEVICE_VERSION, "hardware version", "101"
+        )  # hardware version
+        changeTypeValue(
+            _value, TLV_CODE_MAC_BASE, "MAC address", "58696cfb2108"
+        )  # MAC address
         _value[TLV_CODE_MANUF_DATE] = time.strftime(
-            '%m/%d/%Y %H:%M:%S', time.localtime())  # automatically add setmac time
+            "%m/%d/%Y %H:%M:%S", time.localtime()
+        )  # add setmac time
         rst, ret = generate_value(_value)
-        if util_setmac("eth0", _value[TLV_CODE_MAC_BASE]) == True:  # set network card IP
-            writeToEEprom(rst)  # write value to e2 
+        if (
+            util_setmac("eth0", _value[TLV_CODE_MAC_BASE]) == True
+        ):  #  set  Internet cardIP
+            writeToEEprom(rst)  # write to e2
             # set BMC MAC
-            if FACTESTMODULE.__contains__("bmcsetmac") and FACTESTMODULE['bmcsetmac'] == 1:
+            if "bmcsetmac" in FACTESTMODULE and FACTESTMODULE["bmcsetmac"] == 1:
                 bmcmac = createbmcMac(_value[TLV_CODE_MAC_BASE])
                 if ipmi_set_mac(bmcmac) == True:
-                    print("BMC  MAC【%s】"%bmcmac)
+                    print("BMC  MAC[%s]" % bmcmac)
                 else:
                     print("SET BMC MAC FAILED")
                     return False
         else:
             return False
     except SETMACException as e:
-        # print e
+        # print(e)
         RJPRINTERR("\n\n%s\n\n" % e)
         return False
     except ValueError as e:
@@ -1533,8 +1596,8 @@ def ipmi_set_mac(mac):
     cmdset = "ipmitool raw 0x0c 0x01 0x01 0x05"
     for ind in range(len(macs)):
         cmdset += " 0x%02x" % int(macs[ind], 16)
-    rj_os_system(cmdinit)
-    ret, status = rj_os_system(cmdset)
+    os_system(cmdinit)
+    ret, status = os_system(cmdset)
     if ret:
         RJPRINTERR("\n\n%s\n\n" % status)
         return False
@@ -1542,7 +1605,7 @@ def ipmi_set_mac(mac):
 
 
 def getInputValue(title, tips):
-    print ("请输入【%s】如(%s):" % (title, tips),)
+    print("Please input[%s]such as(%s):" % (title, tips))
     name = raw_input()
 
     return name
@@ -1550,41 +1613,42 @@ def getInputValue(title, tips):
 
 def bmc_setmac():
     tips = "BMC MAC"
-    print ("请输入你要改的值[%s]:" % tips,)
+    print("Please input value you want to change[%s]:" % tips)
     name = raw_input()
     if len(name) != 12:
-        RJPRINTERR("\nMAC地址非法,请重新输入\n")
+        RJPRINTERR("\nMAC address invaild, try again\n")
         return False
     release_mac = ""
-    for i in range(len(name) / 2):
+    for i in range(int(len(name) / 2)):
         if i == 0:
-            release_mac += name[i * 2:i * 2 + 2]
+            release_mac += name[i * 2 : i * 2 + 2]
         else:
-            release_mac += ":" + name[i * 2:i * 2 + 2]
+            release_mac += ":" + name[i * 2 : i * 2 + 2]
     if isValidMac(release_mac) == True:
         if ipmi_set_mac(release_mac) == True:
             return True
     else:
-        RJPRINTERR("\nMAC地址非法,请重新输入\n")
+        RJPRINTERR("\nMAC address invaild, try again\n")
     return False
 
 
 def closeProtocol():
-    # close LLDP
-    log_info("关闭LLDP")
+    # disable LLDP
+    log_info("disable LLDP")
     sys.stdout.write(".")
     sys.stdout.flush()
-    rj_os_system("systemctl stop lldp.service")
-    log_info("关闭网关边界服务")
+    os_system("systemctl stop lldp.service")
+    log_info("disable lldp service")
     sys.stdout.write(".")
     sys.stdout.flush()
-    rj_os_system("systemctl stop bgp.service")
-    log_info("关闭生成树")
+    os_system("systemctl stop bgp.service")
+    log_info("disable bgp service")
     sys.stdout.write(".")
     sys.stdout.flush()
-    # ret, status = rj_os_system('bcmcmd "port ce,xe stp=disable"')
+    # ret, status = os_system('bcmcmd "port ce,xe stp=disable"')
 
-# detection SDK memory must be 256M
+
+# check SDK memory must be 256M
 
 
 def checkSdkMem():
@@ -1600,12 +1664,13 @@ def checkSdkMem():
         return
     with open(file_name, "w") as f:
         f.write(file_data)
-    print ("修订SDK内存为256，需要重启生效")
-    rj_os_system("sync")
-    rj_os_system("reboot")
+    print("change SDK memory to 256, reboot required")
+    os_system("sync")
+    os_system("reboot")
+
 
 ##########################################################################
-# The window receives a character setting
+# receives a character setting
 ##########################################################################
 
 
@@ -1626,130 +1691,134 @@ def getch(msg):
         termios.tcsetattr(fd, termios.TCSANOW, old_ttyinfo)
     return ret
 
+
 def get_raw_input():
-    ret=""
-    fd=sys.stdin.fileno()
-    old_ttyinfo=termios.tcgetattr(fd)
-    new_ttyinfo=old_ttyinfo[:]
+    ret = ""
+    fd = sys.stdin.fileno()
+    old_ttyinfo = termios.tcgetattr(fd)
+    new_ttyinfo = old_ttyinfo[:]
     new_ttyinfo[3] &= ~termios.ICANON
     new_ttyinfo[3] &= ~termios.ECHO
     try:
-        termios.tcsetattr(fd,termios.TCSANOW,new_ttyinfo)
-        ret=raw_input("")
+        termios.tcsetattr(fd, termios.TCSANOW, new_ttyinfo)
+        ret = raw_input("")
     except Exception as e:
-        print (e)
+        print(e)
     finally:
-        termios.tcsetattr(fd,termios.TCSANOW,old_ttyinfo)
+        termios.tcsetattr(fd, termios.TCSANOW, old_ttyinfo)
     return ret
 
 
 def getsysvalue(location):
     retval = None
     mb_reg_file = location
-    if (not os.path.isfile(mb_reg_file)):
-        print (mb_reg_file,  'not found !')
+    if not os.path.isfile(mb_reg_file):
+        print(mb_reg_file, "not found !")
         return retval
     try:
-        if (not os.path.isfile(mb_reg_file)):
-            print (mb_reg_file,  'not found !')
+        if not os.path.isfile(mb_reg_file):
+            print(mb_reg_file, "not found !")
             return retval
-        with open(mb_reg_file, 'r') as fd:
+        with open(mb_reg_file, "r") as fd:
             retval = fd.read()
     except Exception as error:
         log_error("Unable to open " + mb_reg_file + "file !")
-    retval = retval.rstrip('\r\n')
+    retval = retval.rstrip("\r\n")
     retval = retval.lstrip(" ")
     # log_debug(retval)
     return retval
 
-# Get file value
+
+# get file value
 
 
 def get_pmc_register(reg_name):
-    retval = 'ERR'
+    retval = "ERR"
     mb_reg_file = MAILBOX_DIR + reg_name
     filepath = glob.glob(mb_reg_file)
-    if(len(filepath) == 0):
-        return "%s %s  notfound"% (retval , mb_reg_file)
-    mb_reg_file = filepath[0]        # If multiple matching paths are found, the first matching path is selected by default.
-    if (not os.path.isfile(mb_reg_file)):
-        return "%s %s  notfound"% (retval , mb_reg_file)
+    if len(filepath) == 0:
+        return "%s %s  notfound" % (retval, mb_reg_file)
+    mb_reg_file = filepath[0]
+    if not os.path.isfile(mb_reg_file):
+        return "%s %s  notfound" % (retval, mb_reg_file)
     try:
-        with open(mb_reg_file, 'r') as fd:
+        with open(mb_reg_file, "r") as fd:
             retval = fd.read()
     except Exception as error:
         pass
-    retval = retval.rstrip('\r\n')
+    retval = retval.rstrip("\r\n")
     retval = retval.lstrip(" ")
     return retval
 
-# According to RAGILE rule analysis EEPROM
+
+# decode EEPROM
 
 
 def decoder(s, t):
     if ord(t[0]) == TLV_CODE_PRODUCT_NAME:
         name = "Product Name"
-        value = str(t[2:2 + ord(t[1])])
+        value = str(t[2 : 2 + ord(t[1])])
     elif ord(t[0]) == TLV_CODE_PART_NUMBER:
         name = "Part Number"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_SERIAL_NUMBER:
         name = "Serial Number"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_MAC_BASE:
         name = "Base MAC Address"
         value = ":".join([binascii.b2a_hex(T) for T in t[2:8]]).upper()
     elif ord(t[0]) == TLV_CODE_MANUF_DATE:
         name = "Manufacture Date"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_DEVICE_VERSION:
         name = "Device Version"
         value = str(ord(t[2]))
     elif ord(t[0]) == TLV_CODE_LABEL_REVISION:
         name = "Label Revision"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_PLATFORM_NAME:
         name = "Platform Name"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_ONIE_VERSION:
         name = "ONIE Version"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_MAC_SIZE:
         name = "MAC Addresses"
         value = str((ord(t[2]) << 8) | ord(t[3]))
     elif ord(t[0]) == TLV_CODE_MANUF_NAME:
         name = "Manufacturer"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_MANUF_COUNTRY:
         name = "Manufacture Country"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_VENDOR_NAME:
         name = "Vendor Name"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_DIAG_VERSION:
         name = "Diag Version"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_SERVICE_TAG:
         name = "Service Tag"
-        value = t[2:2 + ord(t[1])]
+        value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_VENDOR_EXT:
         name = "Vendor Extension"
         value = ""
         if _TLV_DISPLAY_VENDOR_EXT:
-            value = t[2:2 + ord(t[1])]
+            value = t[2 : 2 + ord(t[1])]
     elif ord(t[0]) == TLV_CODE_CRC_32 and len(t) == 6:
         name = "CRC-32"
-        value = "0x%08X" % (((ord(t[2]) << 24) | (
-            ord(t[3]) << 16) | (ord(t[4]) << 8) | ord(t[5])),)
+        value = "0x%08X" % (
+            ((ord(t[2]) << 24) | (ord(t[3]) << 16) | (ord(t[4]) << 8) | ord(t[5])),
+        )
     elif ord(t[0]) == TLV_CODE_RJ_CARID:
         name = "rj_cardid"
         value = ""
-        for c in t[2:2 + ord(t[1])]:
+        for c in t[2 : 2 + ord(t[1])]:
             value += "%02X" % (ord(c),)
     else:
         name = "Unknown"
         value = ""
-        for c in t[2:2 + ord(t[1])]:
+        for c in t[2 : 2 + ord(t[1])]:
             value += "0x%02X " % (ord(c),)
     return {"name": name, "code": ord(t[0]), "value": value}
 
@@ -1760,15 +1829,14 @@ def decode_eeprom(e):
     tlv_end = _TLV_INFO_HDR_LEN + total_len
     ret = []
     while (tlv_index + 2) < len(e) and tlv_index < tlv_end:
-        rt = decoder(None, e[tlv_index:tlv_index + 2 + ord(e[tlv_index + 1])])
+        rt = decoder(None, e[tlv_index : tlv_index + 2 + ord(e[tlv_index + 1])])
         ret.append(rt)
         if ord(e[tlv_index]) == TLV_CODE_CRC_32:
             break
         tlv_index += ord(e[tlv_index + 1]) + 2
     for item in ret:
-        if item['code'] == TLV_CODE_VENDOR_EXT:
-            rt = decoder(None, item["value"]
-                         [0: 0 + 2 + ord(item["value"][0 + 1])])
+        if item["code"] == TLV_CODE_VENDOR_EXT:
+            rt = decoder(None, item["value"][0 : 0 + 2 + ord(item["value"][0 + 1])])
             ret.append(rt)
     return ret
 
@@ -1777,61 +1845,65 @@ def get_sys_eeprom():
     eeprom = get_sysfs_value(rg_eeprom)
     return decode_eeprom(eeprom)
 
-# get catd ID
+
+# get card ID
 def getCardId():
     ret = get_sys_eeprom()
     for item in ret:
-        if item['code'] == TLV_CODE_RJ_CARID:
-            return item.get('value',None)
+        if item["code"] == TLV_CODE_RJ_CARID:
+            return item.get("value", None)
     return None
 
+
 # ====================================
-# do shell command
+# execute shell command
 # ====================================
-def rj_os_system(cmd):
-    status, output = subprocess.getstatusoutput(cmd)
+def os_system(cmd):
+    status, output = commands.getstatusoutput(cmd)
     return status, output
 
+
 ###########################################
-# Run the DMI command to obtain the number of memory slots and slots
+# get memory slot and number via DMI command
 ###########################################
 def getsysmeminfo():
-    ret, log = rj_os_system("which dmidecode ")
+    ret, log = os_system("which dmidecode ")
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
-    cmd = log + "|grep -P -A5 \"Memory\s+Device\"|grep Size|grep -v Range"
-    # Get the total first
+    cmd = log + '|grep -P -A5 "Memory\s+Device"|grep Size|grep -v Range'
+    # get total number first
     result = []
-    ret1, log1 = rj_os_system(cmd)
-    if ret == 0 and len(log1):
+    ret1, log1 = os_system(cmd)
+    if ret1 == 0 and len(log1):
         log1 = log1.lstrip()
         arr = log1.split("\n")
-        total = len(arr)  # Total number of slots
+        # total = len(arr)  # total slot number
         for i in range(len(arr)):
             val = re.sub("\D", "", arr[i])
             if val == "":
                 val = arr[i].lstrip()
-                val = re.sub('Size:', '', val).lstrip()
+                val = re.sub("Size:", "", val).lstrip()
             # print val
             result.append({"slot": i + 1, "size": val})
         return True, result
     return False, "error"
 
+
 ###########################################
-# Run the DMI command to obtain the number of memory slots and slots
-# return value contains multiple arrays
+# get memory slot and number via DMI command
+# return various arrays
 ###########################################
 def getsysmeminfo_detail():
-    ret, log = rj_os_system("which dmidecode ")
+    ret, log = os_system("which dmidecode ")
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
-    cmd = log + " -t 17 | grep  -A21 \"Memory Device\""  # 17
-    # Get the total first
-    ret1, log1 = rj_os_system(cmd)
-    if ret != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
+    cmd = log + ' -t 17 | grep  -A21 "Memory Device"'  # 17
+    # get total number
+    ret1, log1 = os_system(cmd)
+    if ret1 != 0 or len(log1) <= 0:
+        return False, "command execution error[%s]" % cmd
     result_t = log1.split("--")
     mem_rets = []
     for item in result_t:
@@ -1847,18 +1919,18 @@ def getsysmeminfo_detail():
 
 
 ###########################################
-# Run the DMI command to obtain the BIOS information
+# get BIOS info via DMI command
 ###########################################
 def getDmiSysByType(type_t):
-    ret, log = rj_os_system("which dmidecode ")
+    ret, log = os_system("which dmidecode ")
     if ret != 0 or len(log) <= 0:
         error = "cmd find dmidecode"
         return False, error
     cmd = log + " -t %s" % type_t
-    # Get the total first
-    ret1, log1 = rj_os_system(cmd)
-    if ret != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
+    # get total number
+    ret1, log1 = os_system(cmd)
+    if ret1 != 0 or len(log1) <= 0:
+        return False, "command execution error[%s]" % cmd
     its = log1.replace("\t", "").strip().split("\n")
     ret = {}
     for it in its:
@@ -1872,8 +1944,9 @@ def getDmiSysByType(type_t):
 def gethwsys():
     return getDmiSysByType(1)
 
+
 ###########################################
-# Run the DMI command to obtain the BIOS information
+# get BIOS info via DMI command
 
 
 def getsysbios():
@@ -1900,17 +1973,18 @@ def getUsbLocation():
     if len(result) <= 0:
         return False, usbpath
     for item in result:
-        with open(os.path.join(item, "removable"), 'r') as fd:
+        with open(os.path.join(item, "removable"), "r") as fd:
             value = fd.read()
-            if value.strip() == "1":  # USB flash drive is found
+            if value.strip() == "1":  # U-Disk found
                 usbpath = item
                 break
-    if usbpath == "":  # No flash drive was found
+    if usbpath == "":  # no U-Disk found
         log_debug("no usb found")
         return False, usbpath
     return True, usbpath
 
-# Judge USB file lookup
+
+# judge USB file
 def getusbinfo():
     ret, path = getUsbLocation()
     if ret == False:
@@ -1918,17 +1992,24 @@ def getusbinfo():
     str = os.path.join(path, "size")
     ret, value = getfilevalue(str)
     if ret == True:
-        return True, {"id": os.path.basename(path), "size": float(value) * 512 / 1024 / 1024 / 1024}
+        return (
+            True,
+            {
+                "id": os.path.basename(path),
+                "size": float(value) * 512 / 1024 / 1024 / 1024,
+            },
+        )
     else:
         return False, "Err"
+
 
 def get_cpu_info():
     cmd = "cat /proc/cpuinfo |grep processor -A18"  # 17
 
-    ret, log1 = rj_os_system(cmd)
+    ret, log1 = os_system(cmd)
     if ret != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
-    result_t = log1.split("\n\n")
+        return False, "command execution error[%s]" % cmd
+    result_t = log1.split("--")
     mem_rets = []
     for item in result_t:
         its = item.replace("\t", "").strip().split("\n")
@@ -1940,9 +2021,11 @@ def get_cpu_info():
                 ret[key] = value
         mem_rets.append(ret)
     return True, mem_rets
-# Reading file contents
+
+
+#  read file
 def get_version_config_info(attr_key, file_name=None):
-    if file_name == None:
+    if file_name is None:
         version_conf_filename = "/root/version.json"
     else:
         version_conf_filename = file_name
@@ -1950,7 +2033,7 @@ def get_version_config_info(attr_key, file_name=None):
         return None
     with open(version_conf_filename) as rjconf_file:
         for line in rjconf_file:
-            tokens = line.split('=')
+            tokens = line.split("=")
             if len(tokens) < 2:
                 continue
             if tokens[0] == attr_key:
@@ -1958,34 +2041,30 @@ def get_version_config_info(attr_key, file_name=None):
     return None
 
 
-def io_rd(reg_addr, len =1):
-    '''io read'''
-    try: 
-        regaddr = 0
-        if type(reg_addr) == int:
-            regaddr = reg_addr
-        else:
-            regaddr = int(reg_addr, 16)
-        devfile = "/dev/port"
-        fd = os.open(devfile, os.O_RDWR|os.O_CREAT)
-        os.lseek(fd, regaddr, os.SEEK_SET)
-        str = os.read(fd, len)
-        return "".join(["%02x"% ord(item) for item in str])
-    except ValueError: 
-        return None
+def io_rd(reg_addr, size=1):
+    path = "/dev/port"
+    ret = ""
+    fd = None
+    try:
+        reg_addr = int(reg_addr)
+        fd = os.open(path, os.O_RDWR|os.O_CREAT)
+        for i in range(size):
+            os.lseek(fd, reg_addr+i, os.SEEK_SET)
+            ret+="{:02x}".format(ord(os.read(fd, 1).decode('latin-1')))
+        return ret
     except Exception as e:
-        print (e)
+        print(str(e))
         return None
     finally:
-        os.close(fd)
-    return None
-    
+        if fd: os.close(fd)
+
 
 def io_wr(reg_addr, reg_data):
-    '''io write'''
+    u"""io write"""
+    fd = None
     try:
-        regdata  = 0
-        regaddr  = 0
+        regdata = 0
+        regaddr = 0
         if type(reg_addr) == int:
             regaddr = reg_addr
         else:
@@ -1995,17 +2074,15 @@ def io_wr(reg_addr, reg_data):
         else:
             regdata = int(reg_data, 16)
         devfile = "/dev/port"
-        fd = os.open(devfile, os.O_RDWR|os.O_CREAT)
+        fd = os.open(devfile, os.O_RDWR | os.O_CREAT)
         os.lseek(fd, regaddr, os.SEEK_SET)
-        ret = os.write(fd, chr(regdata))
+        os.write(fd, regdata.to_bytes(2, 'little'))
         return True
     except ValueError as e:
-        print (e)
+        print(e)
         return False
     except Exception as e:
-        print (e)
+        print(e)
         return False
     finally:
-        os.close(fd)
-    return False
-    
+        if fd: os.close(fd)

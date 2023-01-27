@@ -4,6 +4,9 @@
 #include<linux/kernel.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 /* debug switch level */
 typedef enum {
@@ -46,7 +49,7 @@ typedef enum dfd_cpld_id {
     CPLD_ADDR_MAX,
 } dfd_cpld_addr_t;
 
-typedef struct  dfd_dev_head_info_s {
+typedef struct dfd_dev_head_info_s {
     uint8_t   ver;                       /* The version number defined by the E2PROM file, the initial version is 0x01  */
     uint8_t   flag;                      /* The new version of E2PROM is identified as 0x7E */
     uint8_t   hw_ver;                    /* It consists of two parts: the main version number and the revised version */
@@ -54,7 +57,7 @@ typedef struct  dfd_dev_head_info_s {
     int16_t   tlv_len;                   /* Effective data length (16 bits) */
 } dfd_dev_head_info_t;
 
-typedef enum dfd_intf_e{    
+typedef enum dfd_intf_e{
     DFD_INTF_GET_FAN_HW_VERSION,
     DFD_INTF_GET_FAN_STATUS,
     DFD_INTF_GET_FAN_SPEED_LEVEL,
@@ -66,7 +69,7 @@ typedef enum dfd_intf_e{
     DFD_INTF_GET_FAN_SUB_NUM,
     DFD_INTF_GET_FAN_FAIL_BITMAP,
 }dfd_intf_t;
-    
+
 typedef struct dfd_dev_tlv_info_s {
     uint8_t  type;                       /* the type of data */
     uint8_t  len;                        /* the length of data */

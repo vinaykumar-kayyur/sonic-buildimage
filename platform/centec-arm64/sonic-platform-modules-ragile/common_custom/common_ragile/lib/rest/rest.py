@@ -18,12 +18,12 @@ import base64
 import subprocess
 import imp
 import pexpect
+import ast
 from logutil.logutil import *
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 headers = {'Content-type': 'application/json'}
-context = ssl._create_unverified_context()
 __DEBUG__ = "N"
 LOGIN_TRY_TIME = 3
 RESTRETURNKEY = "status"
@@ -38,55 +38,43 @@ def d_print(debug_info):
 class BMCMessage():
     _session = None
     _diagToBmcCmdPrefix = "/usr/local/bin/rj_rawcmd_cli diag cmd "
-    _sessionFile = "bmcsession"  
+    _sessionFile = "bmcsession"
     BMC_LOGIN_PATH = "/login"
     BMC_URLPRE_PATH = "http://240.1.1.1:8080"
-    FANS_PRE_STRING = "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan" 
+    FANS_PRE_STRING = "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan"
     FANS_STATE_STRING = "/xyz/openbmc_project/state/fan0"
     FANS_PATH = "/xyz/openbmc_project/sensors/fan_tach/enumerate"
     FAN_FRU_PATH = "/xyz/openbmc_project/inventory/system/chassis/motherboard/enumerate"
     SENSORS_PATH = "/xyz/openbmc_project/sensors/enumerate"
     BMC_STATE_PATH = '/xyz/openbmc_project/state/bmc0'
-    
+
     def getBmcUrl(self, name):
         return self.BMC_URLPRE_PATH + name
-    
+
     def getBmcValue(self, path):
         return self.bmcget(self.getBmcUrl(path));
-      
+
     @property
     def getSessionConfigfile(self):
         filename = self._sessionFile
         direct = os.path.dirname(os.path.realpath(__file__))
         filename = os.path.join(direct, filename)
         return filename
-    
+
     def saveSessionToFile(self):
-        configfile = self.getSessionConfigfile
-        with open(configfile, 'wb') as f:
-            pickle.dump(self.session.cookies, f)
-      
-    @property
-    def getsessionvalue(self):
-        configfile = self.getSessionConfigfile;
-        if os.path.exists(configfile) == False:
-            d_print("file no exists")
-            return False
-        self.session = requests.session()
-        self.session.keep_alive = False
-        with open(configfile, 'rb') as f:
-            self.session.cookies.update(pickle.load(f))
-        return True
+        try:
+            cookies_dict = requests.utils.dict_from_cookiejar(self.session.cookies)
+            cookies_str = json.dumps(cookies_dict)
+            configfile = self.getSessionConfigfile
+            with open(configfile, 'w') as f:
+                f.write(cookies_str)
+        except Exception as e:
+            bmc_restful_logger("saveSessionToFile,Exception:%s" %str(e))
 
     def __init__(self):
         d_print("bmcmessage init...")
         self.session = requests.session()
         self.session.keep_alive = False
-        #if self.getsessionvalue == False:
-        #    d_print("init value...")
-        #    self.login_times()
-        #if self.getsessionvalue == False:
-        #    raise Exception("connect failed")
         pass
 
     def __del__(self):
@@ -122,7 +110,7 @@ class BMCMessage():
         except Exception as e:
             bmc_restful_logger("data:%s,bmcput:%s,Exception:%s" %(data,url,str(e)))
             return 0
-      
+
     def bmcpost(self, url, data,maytimeout=120):
         d_print(url)
         d_print(data)
@@ -130,7 +118,7 @@ class BMCMessage():
         request = data
         data_json = json.dumps(request)
         d_print(data_json)
-        
+
         for i in range(3):
             try:
                 response = self.session.post(
@@ -148,7 +136,7 @@ class BMCMessage():
     def postSffTemp(self, data):
         url = "/xyz/openbmc_project/sensors/temperature/ODM_SSF_Temp/attr/Scale"
         return self.bmcput(self.getBmcUrl(url), data)
-        
+
     def isNeedLogin(self, val):
         if RESTRETURNKEY in json.loads(val) and json.loads(val)[RESTRETURNKEY] == "error" and json.loads(val)['data']['description'] == 'Login required':
             return True
@@ -202,39 +190,39 @@ class BMCMessage():
 
             d_print("dict:")
             d_print(dict_t)
-            
+
             fanPresentKey = "Fan%dPresent" % (int(ret[3:4]))
             fanStateKey = "Fan%dState" % (int(ret[3:4]))
             fanAirFlow = "Fan%dAirFlow"% (int(ret[3:4]))
             fanMotor1= "Fan%dMotor1"% (int(ret[3:4]))
             fanMotor2= "Fan%dMotor2"% (int(ret[3:4]))
-            
+
             ret_ttt = False
             if fan_state != None  and fan_state.get(fanPresentKey, None) == "xyz.openbmc_project.State.ODM_Fan.CurrentState.Ready":
-                dict_t["Present"] = True 
+                dict_t["Present"] = True
             else:
                 dict_t["Present"] = False
-            
+
             if fan_state != None and fan_state.get(fanStateKey, None) == "xyz.openbmc_project.State.ODM_Fan.CurrentState.Ready":
-                dict_t["Running"] = True 
+                dict_t["Running"] = True
             else:
                 dict_t["Running"] = False
-            
+
             if fan_state.get(fanMotor1, None) == "xyz.openbmc_project.State.ODM_Fan.CurrentState.Ready" and fan_state.get(fanMotor2, None) == "xyz.openbmc_project.State.ODM_Fan.CurrentState.Ready":
                 ret_ttt =  True
-            
+
             airflowtmp = fan_state.get(fanAirFlow, "").split('.')[-1]
             if airflowtmp == "NA":
                 dict_t["AirFlow"] = None
             else:
                 dict_t["AirFlow"]= airflowtmp
             dict_t["Status"]= ret_ttt
-            
-            dict_t["PN"] = dict_t.get("Model", None) 
+
+            dict_t["PN"] = dict_t.get("Model", None)
             dict_t["SN"] = dict_t.get("SerialNumber", None)
             dict_t["Speed"] = dict_t.get("Value", None)
             dict_t["LowThd"] = dict_t.get("CriticalLow", None)
-            dict_t["HighThd"] = dict_t.get("CriticalHigh", None) 
+            dict_t["HighThd"] = dict_t.get("CriticalHigh", None)
             result[ret] = dict_t
         return collections.OrderedDict(sorted(result.items(), key=lambda t: t[0]))
 
@@ -265,7 +253,7 @@ class BMCMessage():
 
     def getPsuNum(self):
         return len(self.getPsuValues())
-    
+
     def getPsuMsg(self):
         PSU_FAN_PATH = "/xyz/openbmc_project/sensors/fan_tach/enumerate"
         PSU_FRU_PATH = "/xyz/openbmc_project/inventory/system/chassis/motherboard/enumerate"
@@ -273,7 +261,7 @@ class BMCMessage():
         STATE_STR = "xyz.openbmc_project.State.ODM_PSU.CurrentState.Ready"
         STATE_TRUE = 'xyz.openbmc_project.State.ODM_PSU.CurrentState.True'
         PSU_PRE_STR ="/xyz/openbmc_project/inventory/system/chassis/motherboard/powersupply"
-         
+
         psuNums = self.bmcget(self.getBmcUrl(PSU_FAN_PATH))
         if psuNums == None:
             return None
@@ -344,8 +332,8 @@ class BMCMessage():
     def getSensorsInputNumsByIndex(self, index):
         name = self.getSensorsFullName(index)
         return self.getSensorsinputNumByName(name)
- 
-    def getsensorLists(self):  
+
+    def getsensorLists(self):
         ret_t = self.bmcget(self.getBmcUrl(self.SENSORS_PATH))
         bmcstate = self.bmcget(self.getBmcUrl(self.BMC_STATE_PATH))
         #lc1 = ["Dvdd0v8_V1","Dvdd0v8_C1","Avdd0v8_V1","Avdd0v8_C1","Cq1v2_V1","Cq1v2_C1","Cq1v8_V1","Cq1v8_C1","ODM_Cq3v3_V1","ODM_Cq3v3_C1","ODM_Cq5v0_V1","ODM_Cq5v0_C1","ODM_Cq3v3Qs_V11","ODM_Cq3v3Qs_C11","ODM_Cq3v3Qs_V21","ODM_Cq3v3Qs_C21","ODM_LC1_Temp"]
@@ -375,7 +363,7 @@ class BMCMessage():
             ret_tmp["Type"] = typename
             ret_tmp["CriticalLow"] = self.getFinalValueByType(typename, ret_tmp.get("CriticalLow", 0))
             ret_tmp["LowThd"] = ret_tmp.get("CriticalLow", 0)
-            ret_tmp["CriticalHigh"] = self.getFinalValueByType(typename, ret_tmp.get("CriticalHigh", 0)) 
+            ret_tmp["CriticalHigh"] = self.getFinalValueByType(typename, ret_tmp.get("CriticalHigh", 0))
             ret_tmp["HighThd"] = ret_tmp.get("CriticalHigh", 0)
             ret_tmp["Value"] = self.getFinalValueByType(typename, ret_tmp.get("Value", 0))
             if result.__contains__(psus):
@@ -416,7 +404,7 @@ class BMCMessage():
             return "voltage"
         elif name == "SWITCH_CCORE" or name == "SWITCH_CANALOG":
             return "amp"
-        else: 
+        else:
             return "voltage"
         return None
 
@@ -435,20 +423,20 @@ class BMCMessage():
             return "voltage"
         elif "POWER" in name:
             return "power"
-        else: 
+        else:
             return "voltage"
         return None
 
     def getFinalValueByType(self, inputtype, value):
         if inputtype == "voltage" or inputtype == "temperature" or inputtype == "power" or inputtype == "wattage" or inputtype == "amp":
-            return float(value) / 1000  
+            return float(value) / 1000
         else:
             return value
 
     def getDealValueByType(self, inputtype, value):
         inputtype = self.getSensorInputType(inputtype)
         if inputtype == "voltage" or inputtype == "temperature" or inputtype == "power" or inputtype == "wattage" or inputtype == "amp":
-            return float(value) / 1000  
+            return float(value) / 1000
         else:
             return value
 
@@ -496,7 +484,7 @@ class x86Message(MonitorMessage):
     MAILBOX_DIR = "/sys/bus/i2c/devices/"
     PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
     module_product    = None
-    
+
     def __init__(self):
         platform = Osutil.get_platform_info(Osutil.get_machine_info())
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, platform])
@@ -549,11 +537,11 @@ class x86Message(MonitorMessage):
             return (psu_status & (1 << bit)) >> bit
         else:
             return value_t;
-                        
+
     def getFanFru(self, name):
         print (name)
         return self.getFanStatus(name)
-        # ret = RedisUtil.grtFanFruValue(name)   
+        # ret = RedisUtil.grtFanFruValue(name)
         # return self.bmcget(RedisUtil.getRedisPreValue(ret))
 
     def tlve2set(self,bin_data):
@@ -573,11 +561,11 @@ class x86Message(MonitorMessage):
         _value[boardTLV._TLV_CODE_VENDOR_NAME]    = self.module_product.RAGILE_VENDOR_NAME
         _value[boardTLV._TLV_CODE_DIAG_VERSION]   = self.module_product.RAGILE_DIAG_VERSION
         _value[boardTLV._TLV_CODE_SERVICE_TAG]    = self.module_product.RAGILE_SERVICE_TAG
-        _value[boardTLV._TLV_CODE_MANUF_DATE] =time.strftime('%m/%d/%Y %H:%M:%S', time.localtime())  # 自动添加setmac时
+        _value[boardTLV._TLV_CODE_MANUF_DATE] =time.strftime('%m/%d/%Y %H:%M:%S', time.localtime())
         _value[boardTLV._TLV_CODE_PRODUCT_NAME]   = bin_data.get(boardTLV._TLV_CODE_PRODUCT_NAME)
         _value[boardTLV._TLV_CODE_SERIAL_NUMBER]  = bin_data.get(boardTLV._TLV_CODE_SERIAL_NUMBER)
         _value[boardTLV._TLV_CODE_DEVICE_VERSION]= bin_data.get(boardTLV._TLV_CODE_DEVICE_VERSION)
-        _value[boardTLV._TLV_CODE_MAC_BASE] = bin_data.get(boardTLV._TLV_CODE_MAC_BASE)  
+        _value[boardTLV._TLV_CODE_MAC_BASE] = bin_data.get(boardTLV._TLV_CODE_MAC_BASE)
         rst, ret = boardTLV().generate_value(_value)
         boardTLV().writeToEEprom(rst , self.module_product.E2_LOC)
 
@@ -593,7 +581,7 @@ class x86Message(MonitorMessage):
     def dumpValueByI2c(self, bus, loc):
         str = ""
         for i in range(256):
-            ret,val = Osutil.rji2cget(bus, loc, i)
+            ret,val = Osutil.rgi2cget(bus, loc, i)
             str += chr(Osutil.strtoint(val))
         return str
 
@@ -625,7 +613,7 @@ class x86Message(MonitorMessage):
         return boardTLV().getcardName(name)
 
     def getTLVcardidBin(self):
-        return boardTLV().generate_e2_cardid(self.module_product.RAGILE_CARDID) 
+        return boardTLV().generate_e2_cardid(self.module_product.RAGILE_CARDID)
 
     def resetTLVe2(self):
         cardidbin = self.getTLVcardidBin()
@@ -869,7 +857,7 @@ class boardTLV():
     def writeToEEprom(self,rst_arr , E2_LOC):
         index = 0
         for item in rst_arr:
-            Osutil.rji2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
+            Osutil.rgi2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
             index += 1
         os.system("rmmod at24 ")
         os.system("modprobe at24 ")
@@ -884,7 +872,7 @@ class Osutil():
     def writeToE2(bus, loc, rst_arr):
         index = 0
         for item in rst_arr:
-            Osutil.rji2cset(bus, loc, index, ord(item))
+            Osutil.rgi2cset(bus, loc, index, ord(item))
             index += 1
     @staticmethod
     def strtoint(str):  # The hexadecimal string is converted to int, "4040"/"0x4040"/"0X4040" = 16448
@@ -898,7 +886,7 @@ class Osutil():
     def astrcmp(str1,str2):
         return str1.lower()==str2.lower()
     @staticmethod
-    def rj_os_system(cmd):
+    def os_system(cmd):
         status, output = subprocess.getstatusoutput(cmd)
         if status:
             log_error('Failed :%s msg:%s status:%s'%(cmd,output,status))
@@ -916,20 +904,20 @@ class Osutil():
         return  status, output
 
     @staticmethod
-    def rji2cset(bus, devno, address, byte):
+    def rgi2cset(bus, devno, address, byte):
         command_line = "i2cset -f -y %d 0x%02x 0x%02x 0x%02x" % (
             bus, devno, address, byte)
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):
-            ret, ret_t = Osutil.rj_os_system(command_line)
+            ret, ret_t = Osutil.os_system(command_line)
             if ret == 0:
                 return True, ret_t
         log_error('command_line:%s ret :%d ret_t:%s'%(command_line,ret,ret_t))
         return False, ret_t
 
     @staticmethod
-    def rji2cget(bus, devno, address, word=None):
+    def rgi2cget(bus, devno, address, word=None):
         if word == None:
             command_line = "i2cget -f -y %d 0x%02x 0x%02x " % (bus, devno, address)
         else:
@@ -937,7 +925,7 @@ class Osutil():
         retrytime = 6
         ret_t = ""
         for i in range(retrytime):
-            ret, ret_t = Osutil.rj_os_system(command_line)
+            ret, ret_t = Osutil.os_system(command_line)
             if ret == 0:
                 return True, ret_t
             time.sleep(0.1)
@@ -953,27 +941,27 @@ class Osutil():
     def seteth0mac(eth, mac):
         rulefile = "/etc/udev/rules.d/70-persistent-net.rules"
         if Osutil.isValidMac(mac) == False:
-            return False, "MAC非法"
+            return False, "MAC invalid"
 
         # Temporarily change the local ETH0 to the value after setMAC
         ifconfigcmd = "ifconfig eth0 down"
         log_debug(ifconfigcmd,SYSLOG_IDENTIFIER)
-        ret, status = Osutil.rj_os_system(ifconfigcmd)
+        ret, status = Osutil.os_system(ifconfigcmd)
         if ret:
-            return False, "软件停用eth0出错"
+            return False, "stop eth0 error"
         ifconfigcmd = "ifconfig eth0 hw ether %s" % mac
         log_debug(ifconfigcmd,SYSLOG_IDENTIFIER)
-        ret, status = Osutil.rj_os_system(ifconfigcmd)
+        ret, status = Osutil.os_system(ifconfigcmd)
         if ret:
-            return False, "软件设置网卡MAC出错"
+            return False, "set eth0 MAC error"
         ifconfigcmd = "ifconfig eth0 up"
         log_debug(ifconfigcmd,SYSLOG_IDENTIFIER)
-        ret, status = Osutil.rj_os_system(ifconfigcmd)
+        ret, status = Osutil.os_system(ifconfigcmd)
         if ret:
-            return False, "软件启用eth0出错"
+            return False, "start eth0 error"
         if os.path.exists(rulefile):
             os.remove(rulefile)
-        print ("MGMT MAC【%s】" % mac)
+        print ("MGMT MAC[%s]" % mac)
         return True, "success"
 
     @staticmethod
@@ -1008,7 +996,7 @@ class Osutil():
             stdout = proc.communicate()[0]
             proc.wait()
             platform = stdout.rstrip('\n')
-    
+
             proc = subprocess.Popen([Osutil.SONIC_CFGGEN_PATH, '-d', '-v', Osutil.HWSKU_KEY],
                                     stdout=subprocess.PIPE,
                                     shell=False,
@@ -1053,7 +1041,7 @@ class DeviceMessage():
         param["index"] = index
         paramtmp = strtmp % str(param)
         ret_info = BMCMessage().send_diag_cmd_t_bmc(paramtmp)
-        ret_dict = eval(ret_info[0])
+        ret_dict = ast.literal_eval(ret_info[0])
         if ret_dict.get("status") == "ok":
             return ret_dict.get('ret_info')
         else:
@@ -1070,7 +1058,7 @@ class DeviceMessage():
         param1.append(param)
         paramtmp = strtmp % str(param1)
         ret_info = BMCMessage().send_diag_cmd_t_bmc(paramtmp)
-        ret_dict = eval(ret_info[0])
+        ret_dict = ast.literal_eval(ret_info[0])
         if ret_dict.get("status") == "ok":
             return True
         else:
@@ -1109,7 +1097,7 @@ class DeviceMessage():
         return x86Message().getcardid();
 
     def getproductname(self, readtype):
-        '''Read the product name  0 is read from configs，1 is read from tlv'''
+        '''Read the product name  0 is read from configs, 1 is read from tlv'''
         if readtype == 0:
             return x86Message().getproductname()
         elif readtype == 1:
@@ -1131,10 +1119,10 @@ class DeviceMessage():
 
     def getFanStatus(self, name):
         return self.message.getFanStatus(name)
-    
+
     def getFanFru(self, name):
         return self.message.getFanFru(name)
-    
+
     def getFanAll(self):
         return self.message.getFansMsg()
 
@@ -1143,7 +1131,7 @@ class DeviceMessage():
 
     def getPsuValue(self, index):
         return self.message.getPsuValue(index)
-    
+
     def getPsuPresence(self, index):
         return self.message.getPsuPresence(index)
 
@@ -1182,10 +1170,10 @@ class DeviceMessage():
 
     def getSensorInputType(self, name):
         return self.message.getSensorInputType(name)
-    
+
     def getRealUnitByType(self, name):
         return self.message.getRealUnitByType(name)
-        
+
     def getDealValueByType(self, name, value):
         return self.message.getDealValueByType(name, value)
 
@@ -1193,14 +1181,14 @@ class DeviceMessage():
         return Osutil.seteth0mac(eth, mac)
 
     def getDmiSysByType(self, type_t):
-        ret, log = Osutil.rj_os_system("which dmidecode ")
+        ret, log = Osutil.os_system("which dmidecode ")
         if ret != 0 or len(log) <= 0:
             error = "cmd find dmidecode"
             return False, error
         cmd = log + " -t %s" % type_t
-        ret1, log1 = Osutil.rj_os_system(cmd)
+        ret1, log1 = Osutil.os_system(cmd)
         if ret != 0 or len(log1) <= 0:
-            return False, "命令执行出错[%s]" % cmd
+            return False, "run commands error[%s]" % cmd
         its = log1.replace("\t", "").strip().split("\n")
         ret = {}
         for it in its:

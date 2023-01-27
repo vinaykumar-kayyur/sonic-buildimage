@@ -1,4 +1,4 @@
-#include <linux/module.h>   
+#include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sysfs.h>
 #include <linux/slab.h>
@@ -26,11 +26,10 @@
 #define PLATFORM_CARDTYPE_RETRY_CNT      (10)
 #define PLATFORM_CARDTYPE_RETRY_TIMES    (1000)
 
-
 int debuglevel = 0;
 module_param(debuglevel, int, S_IRUGO | S_IWUSR);
 
-static int dfd_my_type = 0; 
+static int dfd_my_type = 0;
 module_param(dfd_my_type, int, S_IRUGO | S_IWUSR);
 
 int g_common_debug_error = 0;
@@ -56,7 +55,6 @@ module_param(dfd_my_type_i2c_addr, int, S_IRUGO | S_IWUSR);
         printk(KERN_ERR "[RAGILE_COMMON][ERROR][func:%s line:%d]\r\n"fmt, __func__, __LINE__, ## args); \
     } \
 } while (0)
-
 
 static int32_t dfd_i2c_read(char *dev, uint32_t addr, uint32_t offset_addr, unsigned char *
 buf, int32_t size)
@@ -100,7 +98,6 @@ buf, int32_t size)
     return rv;
 }
 
-
 static int dfd_tlvinfo_get_cardtype(void)
 {
     char i2c_path[16] = {0};
@@ -136,7 +133,7 @@ static int dfd_tlvinfo_get_cardtype(void)
     tlv_type.main_type = TLV_CODE_VENDOR_EXT;
     tlv_type.ext_type = DFD_TLVINFO_EXT_TLV_TYPE_DEV_TYPE;
     len = sizeof(buf);
-    memset(buf, 0, len);
+    mem_clear(buf, len);
     ret = dfd_tlvinfo_get_e2prom_info(eeprom, DFD_E2PROM_MAX_LEN, &tlv_type, buf, &len);
     if (ret) {
         DBG_ERROR("dfd_tlvinfo_get_e2prom_info failed ret %d.\n", ret);
@@ -145,7 +142,7 @@ static int dfd_tlvinfo_get_cardtype(void)
     for (ret = 0; ret < 4; ret++) {
         DBG_DEBUG("buf 0x%02x.\n", buf[ret]);
     }
-    
+
     cardtype = ntohl(*((uint32_t *)buf));
     DBG_DEBUG("cardtype 0x%x.\n", cardtype);
     return cardtype;
@@ -169,7 +166,7 @@ int dfd_get_my_card_type(void)
 
     cnt = PLATFORM_CARDTYPE_RETRY_CNT;
     while (cnt--) {
-        type = __dfd_get_my_card_type();    
+        type = __dfd_get_my_card_type();
         if (type < 0) {
             RAGILE_COMMON_DEBUG_ERROR("__dfd_get_my_card_type fail cnt %d, ret %d.\n", cnt, type);
             msleep(PLATFORM_CARDTYPE_RETRY_TIMES);
@@ -178,8 +175,6 @@ int dfd_get_my_card_type(void)
         RAGILE_COMMON_DEBUG_VERBOSE("success to get type 0x%x.\n", type);
         break;
     }
-
-    
 
     dfd_my_type = type;
     return dfd_my_type;
@@ -194,7 +189,7 @@ static int __init ragile_common_init(void)
     ret = dfd_get_my_card_type();
     if (ret <= 0) {
         RAGILE_COMMON_DEBUG_ERROR("dfd_get_my_card_type failed, ret %d.\n", ret);
-        printk(KERN_ERR "Warning: Device type get failed, please check the TLV-EEPROM!\n");   
+        printk(KERN_ERR "Warning: Device type get failed, please check the TLV-EEPROM!\n");
         return -1;
     }
 
@@ -213,4 +208,3 @@ module_exit(ragile_common_exit);
 MODULE_DESCRIPTION("ragile Platform Support");
 MODULE_AUTHOR("tangjiamiao <support@ragilenetworks.com>");
 MODULE_LICENSE("GPL");
-

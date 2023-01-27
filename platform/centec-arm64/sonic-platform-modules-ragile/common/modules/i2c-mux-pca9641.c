@@ -16,7 +16,6 @@
  * warranty of any kind, whether express or implied.
  */
 
-
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -93,20 +92,20 @@
 
 typedef struct i2c_muxs_struct_flag
 {
-	int nr; 
-	char name[48]; 
-	struct mutex	update_lock; 
-	int flag; 
+	int nr;
+	char name[48];
+	struct mutex	update_lock;
+	int flag;
 }i2c_mux_flag;
 
 i2c_mux_flag pca_flag = {
 	.flag = -1,
 };
 
-int pca9641_setmuxflag(int nr, int flag) 
+int pca9641_setmuxflag(int nr, int flag)
 {
 	if (pca_flag.nr == nr) {
-	    pca_flag.flag = flag;		
+	    pca_flag.flag = flag;
 	}
 	return 0;
 }
@@ -120,7 +119,6 @@ module_param(g_debug, int, S_IRUGO | S_IWUSR);
         printk(KERN_ERR "[pca9641][VER][func:%s line:%d]\r\n"fmt, __func__, __LINE__, ## args); \
     } \
 } while (0)
-
 
 /* arbitration timeouts, in jiffies */
 #define ARB_TIMEOUT	(HZ / 8)	/* 125 ms until forcing bus ownership */
@@ -152,7 +150,6 @@ static const struct of_device_id pca9541_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, pca9541_of_match);
 #endif
-
 
 /*
  * Write to chip register. Don't use i2c_transfer()/i2c_smbus_xfer()
@@ -463,7 +460,6 @@ static int pca9641_arbitrate(struct i2c_client *client)
    return 0;
 }
 
-
 int pca9641_select_chan(struct i2c_mux_core *muxc, u32 chan)
 {
 	struct pca9541 *data = i2c_mux_priv(muxc);
@@ -550,7 +546,6 @@ static int pca9541_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	struct i2c_adapter *adap = client->adapter;
-	struct pca954x_platform_data *pdata = dev_get_platdata(&client->dev);
     struct i2c_mux_core *muxc;
 	struct pca9541 *data;
 	int force;
@@ -604,12 +599,12 @@ static int pca9541_probe(struct i2c_client *client,
                  pca9641_select_chan, pca9641_release_chan);
     if (!muxc)
         return -ENOMEM;
-    
+
     data = i2c_mux_priv(muxc);
     data->client = client;
-    
+
     i2c_set_clientdata(client, muxc);
-    
+
     ret = i2c_mux_add_adapter(muxc, force, 0, 0);
     if (ret)
         return ret;

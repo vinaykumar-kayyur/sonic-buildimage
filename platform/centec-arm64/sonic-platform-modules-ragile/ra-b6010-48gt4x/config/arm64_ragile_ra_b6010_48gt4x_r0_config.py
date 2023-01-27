@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-from  ragilecommon import *
+from ragilecommon import *
 from collections import OrderedDict
 PCA9548START  = -1
 PCA9548BUSEND = -2
@@ -48,7 +48,7 @@ E2_PROTECT = {}
 
 
 CPLDVERSIONS = [
-        {"bus":2, "devno":0x0d, "name":"CPU底板CPLD"},
+        {"bus":2, "devno":0x0d, "name":"CPU_CPLD"},
 		{"bus":3, "devno":0x30, "name":"MAC_BOARD_CPLD_1"},
 ]
 
@@ -65,7 +65,7 @@ DRIVERLISTS = [
         {"name":"rtc-pcf85063", "delay":0},
         {"name":"i2c_mux_pca954x", "delay":0}, # force_deselect_on_exit=1
         {"name":"ragile_common dfd_my_type=0x4099", "delay":0},
-        {"name":"firmware_driver", "delay":0},
+        #{"name":"firmware_driver", "delay":0},
         {"name":"rg_cpld", "delay":0},
         #{"name":"spi-gpio", "delay":0},
         #{"name":"rg_spi_gpio", "delay":0},

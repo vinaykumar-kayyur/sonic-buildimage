@@ -1,14 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
-
-import sys
 import click
 import os
-import subprocess
 import time
-import mmap
-from  ragileconfig import *
-from  ragileutil   import rjpciwr, rj_os_system
+from ragileconfig import GLOBALCONFIG, GLOBALINITPARAM, GLOBALINITCOMMAND, MAC_LED_RESET, STARTMODULE, i2ccheck_params
+from ragileutil import rgpciwr, os_system, rgi2cset, io_wr
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -24,20 +20,19 @@ class AliasedGroup(click.Group):
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
-   
+
 def log_os_system(cmd):
-    '''execute shell command'''
-    status, output = rj_os_system(cmd)
+    u'''execute shell command'''
+    status, output = os_system(cmd)
     if status:
-        print (output)
+        print(output)
     return  status, output
 
 def write_sysfs_value(reg_name, value):
-    '''write sysfs files'''
-    retval = 'ERR'
+    u'''write sysfs file'''
     mb_reg_file = "/sys/bus/i2c/devices/" + reg_name
     if (not os.path.isfile(mb_reg_file)):
-        print (mb_reg_file,  'not found !')
+        print(mb_reg_file,  'not found !')
         return False
     try:
         with open(mb_reg_file, 'w') as fd:
@@ -47,23 +42,23 @@ def write_sysfs_value(reg_name, value):
     return True
 
 def check_driver():
-    '''determine whether there is a driver starting with rg'''
+    u'''whether there is driver start with rg'''
     status, output = log_os_system("lsmod | grep rg | wc -l")
-    # System execution error
-    if status: 
+    #System execution error
+    if status:
         return False
     if output.isdigit() and int(output) > 0:
         return True
     else:
         return False
 
-def getPid(name):
+def get_pid(name):
     ret = []
     for dirname in os.listdir('/proc'):
         if dirname == 'curproc':
             continue
         try:
-            with open('/proc/{}/cmdline'.format(dirname), mode='rb') as fd:
+            with open('/proc/{}/cmdline'.format(dirname), mode='r') as fd:
                 content = fd.read()
         except Exception:
             continue
@@ -71,133 +66,74 @@ def getPid(name):
             ret.append(dirname)
     return ret
 
-def startAvscontrol():
-    cmd = "nohup avscontrol.py start >/dev/null 2>&1 &"
-    rets = getPid("avscontrol.py")
-    if len(rets) == 0:
-        os.system(cmd)
-    pass
+def start_avs_ctrl():
+    if STARTMODULE.get("avscontrol", 0) == 1:
+        cmd = "nohup avscontrol.py start >/dev/null 2>&1 &"
+        rets = get_pid("avscontrol.py")
+        if len(rets) == 0:
+            os.system(cmd)
 
-def startFanctrol():
-    if STARTMODULE['fancontrol'] == 1:
+def stop_avs_ctrl():
+    if STARTMODULE.get('avscontrol', 0) == 1:
+        rets = get_pid("avscontrol.py")  #
+        for ret in rets:
+            cmd = "kill "+ ret
+            os.system(cmd)
+        return True
+
+def start_fan_ctrl():
+    if STARTMODULE.get('fancontrol', 0) == 1:
         cmd = "nohup fancontrol.py start >/dev/null 2>&1 &"
-        rets = getPid("fancontrol.py")
+        rets = get_pid("fancontrol.py")
         if len(rets) == 0:
             os.system(cmd)
 
-def starthal_fanctrl():
-    if STARTMODULE.get('hal_fanctrl',0) == 1:
-        cmd = "nohup hal_fanctrl.py start >/dev/null 2>&1 &"
-        rets = getPid("hal_fanctrl.py")
-        if len(rets) == 0:
-            os.system(cmd)
-
-def starthal_ledctrl():
-    if STARTMODULE.get('hal_ledctrl',0) == 1:
-        cmd = "nohup hal_ledctrl.py start >/dev/null 2>&1 &"
-        rets = getPid("hal_ledctrl.py")
-        if len(rets) == 0:
-            os.system(cmd)
-
-def startDevmonitor():
-    if STARTMODULE.get('dev_monitor',0) == 1:
-        cmd = "nohup dev_monitor.py start >/dev/null 2>&1 &"
-        rets = getPid("dev_monitor.py")
-        if len(rets) == 0:
-            os.system(cmd)
-
-def startSlotmonitor():
-    if STARTMODULE.get('slot_monitor',0) == 1:
-        cmd = "nohup slot_monitor.py start >/dev/null 2>&1 &"
-        rets = getPid("slot_monitor.py")
-        if len(rets) == 0:
-            os.system(cmd)
-
-def stopFanctrol():
-    '''disable the fan timing service'''
-    if STARTMODULE['fancontrol'] == 1:
-        rets = getPid("fancontrol.py")  #
+def stop_fan_ctrl():
+    u'''disable fan timer service'''
+    if STARTMODULE.get('fancontrol', 0) == 1:
+        rets = get_pid("fancontrol.py")  #
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
         return True
 
-def stophal_fanctrl():
-    if STARTMODULE.get('hal_fanctrl',0) == 1:
-        rets = getPid("hal_fanctrl.py")
-        for ret in rets:
-            cmd = "kill "+ ret
-            os.system(cmd)
-        return True
-
-def stophal_ledctrl():
-    if STARTMODULE.get('hal_ledctrl',0) == 1:
-        rets = getPid("hal_ledctrl.py")
-        for ret in rets:
-            cmd = "kill "+ ret
-            os.system(cmd)
-        return True
-
-
-def stopSlotmonitor():
-    '''disable the slot timing service'''
-    if STARTMODULE.get('slot_monitor',0) == 1:
-        rets = getPid("slot_monitor.py")  #
-        for ret in rets:
-            cmd = "kill "+ ret
-            os.system(cmd)
-        return True
-
-def removeDev(bus, loc):
+def rm_dev(bus, loc):
     cmd = "echo  0x%02x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (loc, bus)
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath):
         log_os_system(cmd)
-        
-def addDev(name, bus, loc):
+
+def add_dev(name, bus, loc):
     if name == "lm75":
         time.sleep(0.1)
     pdevpath = "/sys/bus/i2c/devices/i2c-%d/" % (bus)
-    for i in range(1, 100):# Wait a maximum of 10 seconds for the generation of the bus
-        if os.path.exists(pdevpath) == True: 
+    for i in range(1, 100):#wait for mother-bus generation, maximum wait time is 10s
+        if os.path.exists(pdevpath) == True:
             break
         time.sleep(0.1)
         if i % 10 == 0:
             click.echo("%%DEVICE_I2C-INIT: %s not found, wait 0.1 second ! i %d " % (pdevpath,i))
-            
+
     cmd = "echo  %s 0x%02x > /sys/bus/i2c/devices/i2c-%d/new_device" % (name, loc, bus)
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) == False:
         os.system(cmd)
-    
-def removeQSFP():
-    '''add SFP based on all configurations'''
-    qsfpconfig = GLOBALCONFIG["QSFP"]
-    for bus in range(qsfpconfig["endbus"], qsfpconfig["startbus"] - 1, -1):
-        removeDev(bus , 0x50)
-        removeDev(bus , 0x51)
-        
-def addQSFP():
-    qsfpconfig = GLOBALCONFIG["QSFP"]
-    for bus in range(qsfpconfig["startbus"], qsfpconfig["endbus"] + 1):
-        addDev("rg_sff", bus , 0x50)
-        addDev("rg_sff", bus , 0x51)
-        
+
 def removedevs():
     devs = GLOBALCONFIG["DEVS"]
     for index in range(len(devs)-1, -1, -1 ):
-        removeDev(devs[index]["bus"] , devs[index]["loc"])
-        
+        rm_dev(devs[index]["bus"] , devs[index]["loc"])
+
 def adddevs():
     devs = GLOBALCONFIG["DEVS"]
     for dev in range(0, devs.__len__()):
-        addDev(devs[dev]["name"], devs[dev]["bus"] , devs[dev]["loc"])
+        add_dev(devs[dev]["name"], devs[dev]["bus"] , devs[dev]["loc"])
 
 def checksignaldriver(name):
     modisexistcmd = "lsmod | grep %s | wc -l" % name
     status, output = log_os_system(modisexistcmd)
-    # System execution error
-    if status: 
+    #System execution error
+    if status:
         return False
     if output.isdigit() and int(output) > 0:
         return True
@@ -218,39 +154,37 @@ def removedriver(name, delay):
         log_os_system(cmd)
 
 def removedrivers():
-    '''remove all drivers'''
-    if GLOBALCONFIG == None:
+    u'''remove all drivers'''
+    if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
-    if drivers == None:
+    if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
-        return 
+        return
     for index in range(len(drivers)-1, -1, -1 ):
         delay = 0
         name = ""
-        if type(drivers[index]) == dict and drivers[index].__contains__("delay"):
+        if type(drivers[index]) == dict and "delay" in drivers[index]:
             name = drivers[index].get("name")
             delay = drivers[index]["delay"]
         else:
             name = drivers[index]
-        if name == "i2c_mux_pca954x":
-            continue
         removedriver(name, delay)
 
 def adddrivers():
-    '''add drivers'''
-    if GLOBALCONFIG == None:
+    u'''add drivers'''
+    if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
-    if drivers == None:
+    if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
-        return 
+        return
     for index in range(0 ,len(drivers)):
         delay = 0
         name = ""
-        if type(drivers[index]) == dict and drivers[index].__contains__("delay"):
+        if type(drivers[index]) == dict and "delay" in drivers[index]:
             name = drivers[index].get("name")
             delay = drivers[index]["delay"]
         else:
@@ -266,18 +200,16 @@ def otherinit():
 
     for index in GLOBALINITCOMMAND:
         log_os_system(index)
-    
+
 def unload_driver():
-    '''unload the device and driver'''
-    stopFanctrol()  # stop the fan control service
-    stophal_fanctrl() # stop the hal_fan control service
-    stophal_ledctrl() # stop the LED control service
-    removeQSFP()    # remove optical Modules
+    u'''remove devices and drivers'''
+    stop_avs_ctrl() # disable avs-control
+    stop_fan_ctrl() # disable fan-control service
     removedevs()    # remove other devices
     removedrivers() # remove drivers
 
 def reload_driver():
-    '''reload the device and driver'''
+    u'''reload devices and drivers'''
     removedevs()    # remove other devices
     removedrivers() # remove drivers
     time.sleep(1)
@@ -295,9 +227,9 @@ def i2c_check(bus,retrytime = 6):
             time.sleep(1)
     except Exception as e:
         click.echo("%%DEVICE_I2C-HA: %s" % str(e))
-    return 
+    return
 
-def MacLedSet(data):
+def set_mac_leds(data):
     '''write pci register'''
     pcibus = MAC_LED_RESET.get("pcibus")
     slot = MAC_LED_RESET.get("slot")
@@ -305,31 +237,25 @@ def MacLedSet(data):
     bar = MAC_LED_RESET.get("bar")
     offset = MAC_LED_RESET.get("offset")
     val = MAC_LED_RESET.get(data, None)
-    if val == None:
-        click.echo("%%DEVICE_I2C-INIT: MacLedSet wrong input")
+    if val is None:
+        click.echo("%%DEVICE_I2C-INIT: set_mac_leds wrong input")
         return
-    rjpciwr(pcibus, slot, fn, bar, offset, val)
+    rgpciwr(pcibus, slot, fn, bar, offset, val)
 
 def load_driver():
-    '''load the device and driver'''
-    adddrivers();
-    adddevs();
-    if STARTMODULE.get("i2ccheck",0) == 1: # i2c HA
+    u'''load devices and drivers'''
+    adddrivers()
+    adddevs()
+    if STARTMODULE.get("i2ccheck",0) == 1: #i2c HA
         busend = i2ccheck_params.get("busend")
         retrytime = i2ccheck_params.get("retrytime")
         i2c_check(busend,retrytime)
-    addQSFP()       # adding an Optical Module eeprom
-    startFanctrol() # open the fan
-    starthal_fanctrl() # open the fan control
-    starthal_ledctrl() # open the LED control
-    if STARTMODULE['avscontrol'] == 1:
-        startAvscontrol() # avs pressure adjusting
-    startDevmonitor() # pluggable device driver monitoring
-    startSlotmonitor() # Initialization monitoring of cable card insertion and removal
-    otherinit();    # Others and the optical module Initializes 
-    if STARTMODULE.get("macledreset",0) == 1:
-        MacLedSet("reset")
-    
+    start_fan_ctrl() # enable fan
+    start_avs_ctrl() # avs voltage-adjustment
+    otherinit();    # other initialization, QSFP initialization
+    if STARTMODULE.get("macledreset", 0) == 1:
+        set_mac_leds("reset")
+
 @click.group(cls=AliasedGroup, context_settings=CONTEXT_SETTINGS)
 def main():
     '''device operator'''
@@ -355,5 +281,5 @@ def restart():
     load_driver()
 
 if __name__ == '__main__':
-    '''device_i2c operation'''
+    u'''device_i2c operation'''
     main()

@@ -119,4 +119,3 @@ extern std::string getFRUValue(const std::string& section,
 int dfd_tlvinfo_get_e2prom_info(u_int8_t *eeprom, u_int32_t size, dfd_tlv_type_t *tlv_type, u_int8_t* buf, u_int8_t *buf_len);
 
 #endif /* endif DFD_OPENBMC_TLVEEPROM_H */
-

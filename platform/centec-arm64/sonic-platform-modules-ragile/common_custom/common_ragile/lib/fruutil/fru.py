@@ -34,7 +34,7 @@ def p_print(prompt):
 
 class E2Exception(Exception):
 
-    def __init__(self,  message='e2异常', code=-100):
+    def __init__(self,  message='e2 error', code=-100):
         self.code = code
         self.message = message
 
@@ -116,14 +116,14 @@ class BoardInfoArea(BaseArea):
     def todict(self):
         dic = collections.OrderedDict()
         dic["boardversion"]= ord(self.boardversion)
-        dic["boardlength"]= self.size 
-        dic["boardlanguage"]=self.language 
-        dic["boardmfg_date"]=self.getMfgRealData() 
-        dic["boardManufacturer"]=self.boardManufacturer 
-        dic["boardProductName"]=self.boardProductName 
-        dic["boardSerialNumber"]=self.boardSerialNumber  
-        dic["boardPartNumber"]=self.boardPartNumber  
-        dic["boardfruFileId"]=self.fruFileId 
+        dic["boardlength"]= self.size
+        dic["boardlanguage"]=self.language
+        dic["boardmfg_date"]=self.getMfgRealData()
+        dic["boardManufacturer"]=self.boardManufacturer
+        dic["boardProductName"]=self.boardProductName
+        dic["boardSerialNumber"]=self.boardSerialNumber
+        dic["boardPartNumber"]=self.boardPartNumber
+        dic["boardfruFileId"]=self.fruFileId
         dic["boardextra1"]= int(self.boardextra1,16)
         return dic
 
@@ -316,17 +316,17 @@ class ProductInfoArea(BaseArea):
     def todict(self):
         dic = collections.OrderedDict()
         dic["productversion"]= ord(self.areaversion)
-        dic["productlength"]= self.size 
-        dic["productlanguage"]=self.language 
-        dic["productManufacturer"]=self.productManufacturer 
-        dic["productName"]=self.productName 
-        dic["productPartModelName"]=self.productPartModelName 
+        dic["productlength"]= self.size
+        dic["productlanguage"]=self.language
+        dic["productManufacturer"]=self.productManufacturer
+        dic["productName"]=self.productName
+        dic["productPartModelName"]=self.productPartModelName
         dic["productVersion"]= int(self.productVersion, 16)
-        dic["productSerialNumber"]=self.productSerialNumber  
-        dic["productAssetTag"]=self.productAssetTag 
+        dic["productSerialNumber"]=self.productSerialNumber
+        dic["productAssetTag"]=self.productAssetTag
         dic["productfruFileId"]= self.fruFileId
         dic["productExtra1"]=self.productExtra1
-        dic["productExtra2"]=E2Util.decodeMac(self.productExtra2) 
+        dic["productExtra2"]=E2Util.decodeMac(self.productExtra2)
         dic["productExtra3"]= E2Util.decodeMacLen(self.productExtra3)
         return dic
 
@@ -362,14 +362,14 @@ class ProductInfoArea(BaseArea):
         self.productSerialNumber = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode productSerialNumber:%s" % self.productSerialNumber)
-    
-        
+
+
         templen = E2Util.decodeLength(self.data[index])
         self.productAssetTag = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode productAssetTag:%s" % self.productAssetTag)
-        
-        
+
+
         templen = E2Util.decodeLength(self.data[index])
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
@@ -982,7 +982,7 @@ class E2Util():
                 retval = fd.read()
         except Exception:
             print ("open file error")
-            return 
+            return
         return E2Util.decodeBinByValue(retval)
 
 
@@ -1035,10 +1035,10 @@ class E2Util():
     @staticmethod
     def getConfig(filename):
         return E2Config(filename)
-    
-    
+
+
     @staticmethod
-    def getdefaultconfig():        
+    def getdefaultconfig():
         filename = CONFIG_FILE
         dir = os.path.dirname(os.path.realpath(__file__))
         if filename in os.listdir(dir):
@@ -1163,11 +1163,11 @@ class E2Util():
         mins = seconds / 60
         m = int(round(mins))
         return m
-    
+
     @staticmethod
     def mfgToTime(val):
         starttime = datetime(1996, 1, 1, 0, 0, 0)
-        
+
 
     @staticmethod
     def getTimeFormat():
@@ -1267,11 +1267,11 @@ def main(arg):
 
     productParts = conf.getProductSections(producttype)
     print ("productParts", productParts)
-    print ("产品名称: %s" % conf.getProductName(producttype))
+    print ("prudct name: %s" % conf.getProductName(producttype))
     if len(productParts) <= 0:
-        print ("没有配置项")
+        print ("product config not found")
     for part in productParts:
-        print ("    生成文件: %s" % conf.getPartBinName(part))
+        print ("    generate file: %s" % conf.getPartBinName(part))
         E2Util.createpartbin(part)
 
 

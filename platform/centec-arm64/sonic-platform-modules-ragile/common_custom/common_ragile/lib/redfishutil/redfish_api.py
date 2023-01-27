@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import shlex
 import sys
 import json
 import traceback
 import datetime
-import shlex
 import os
 import ssl
 import subprocess

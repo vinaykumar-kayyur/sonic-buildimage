@@ -43,6 +43,7 @@
 #include "tpm_tis_core.h"
 
 #define MAX_SPI_FRAMESIZE 64
+#define mem_clear(data, size) memset((data), 0, (size))
 
 struct tpm_tis_spi_phy {
 	struct tpm_tis_data priv;
@@ -75,7 +76,7 @@ static int tpm_tis_spi_transfer(struct tpm_tis_data *data, u32 addr, u16 len,
 		phy->iobuf[2] = addr >> 8;
 		phy->iobuf[3] = addr;
 
-		memset(&spi_xfer, 0, sizeof(spi_xfer));
+		mem_clear(&spi_xfer, sizeof(spi_xfer));
 		spi_xfer.tx_buf = phy->iobuf;
 		spi_xfer.rx_buf = phy->iobuf;
 		spi_xfer.len = 4;

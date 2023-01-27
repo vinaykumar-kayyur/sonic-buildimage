@@ -36,6 +36,9 @@
  */
 
 #include <linux/version.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(4,0,36)
 #include <linux/device.h>
@@ -87,9 +90,6 @@ struct chip_desc {
 		pca954x_isswi
 	} muxtype;
 };
-
-
-
 
 struct pca954x {
 	const struct chip_desc *chip;
@@ -216,7 +216,7 @@ static u8 pca954x_regval(struct pca954x *data, u8 chan)
 		return 1 << chan;
 }
  static int pca954x_setmuxflag(struct i2c_client *client, int flag)
- {	 
+ {
 	 struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
 	 pca9641_setmuxflag(adap->nr, flag);
 	 return 0;
@@ -226,7 +226,6 @@ static int pca954x_select_chan(struct i2c_mux_core *muxc, u32 chan)
 {
 	struct pca954x *data = i2c_mux_priv(muxc);
 	struct i2c_client *client = data->client;
-	const struct chip_desc *chip = data->chip;
 	u8 regval;
 	int ret = 0;
     regval = pca954x_regval(data, chan);
@@ -242,7 +241,6 @@ static int pca954x_select_chan(struct i2c_mux_core *muxc, u32 chan)
 
 	return ret;
 }
-
 
 typedef void  (*pca954x_hw_do_reset_func_t)(int busid, int addr);
 pca954x_hw_do_reset_func_t g_notify_to_do_reset = NULL;
@@ -278,7 +276,6 @@ static int pca954x_hw_do_reset(int busid, int addr)
 #define DFD_PUB_CARDTYPE_FILE   "/sys/module/ragile_common/parameters/dfd_my_type"
 #define DFD_MAX_PRODUCT_NUM     (32)
 
-
 #define I2C_RETRY_TIMES         5
 #define I2C_RETRY_WAIT_TIMES    10      /*delay 10ms*/
 
@@ -298,7 +295,6 @@ void pca954x_hw_do_reset_by_i2c(int addr, u8 value);
 u8 pca954x_get_umask_by_i2c(int addr);
 void pca954x_hw_do_reset_by_lpc(int io_port, u8 value);
 u8 pca954x_get_umask_by_lpc(int io_port);
-
 
 typedef struct func_attr_s {
     int cfg_offset[PCA9548_MAX_CPLD_LAYER];
@@ -1246,7 +1242,7 @@ static int dfd_get_my_dev_type_by_file(void)
     }
     /* fs = get_fs(); */
     /* set_fs(KERNEL_DS); */
-    memset(buf, 0, DFD_PID_BUF_LEN);
+    mem_clear(buf, DFD_PID_BUF_LEN);
     pos = 0;
     kernel_read(fp, buf, DFD_PRODUCT_ID_LENGTH + 1, &pos);
     if (pos < 0) {
@@ -1254,7 +1250,7 @@ static int dfd_get_my_dev_type_by_file(void)
         goto exit;
     }
 
-    card_type = simple_strtoul(buf, NULL, 10); 
+    card_type = simple_strtoul(buf, NULL, 10);
     PCA954X_DEBUG("card_type 0x%x.\n", card_type);
 
 exit:
@@ -1417,7 +1413,7 @@ static int pca954x_do_gpio_reset(pca9548_cfg_info_t *cfg_info, struct i2c_adapte
     } else {
         PCA954X_DEBUG("pca9548_reset_type invalid, pca954x_do_gpio_reset failed.\n");
     }
-    
+
     return ret;
 }
 
@@ -1529,7 +1525,7 @@ static int pca954x_reset_i2c_read(uint32_t bus, uint32_t addr, uint32_t offset_a
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
@@ -1572,7 +1568,7 @@ static int pca954x_reset_i2c_write(uint32_t bus, uint32_t dev_addr, uint32_t off
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
@@ -1927,16 +1923,14 @@ static int pca954x_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
-	struct pca954x_platform_data *pdata = dev_get_platdata(&client->dev);
 	struct device_node *of_node = client->dev.of_node;
 	bool idle_disconnect_dt;
 	struct gpio_desc *gpio;
-	int num, force, class;
+	int num;
 	struct i2c_mux_core *muxc;
 	struct pca954x *data;
 	const struct of_device_id *match;
 	int ret;
-
 
 	if (!i2c_check_functionality(adap, I2C_FUNC_SMBUS_BYTE))
 		return -ENODEV;
@@ -2057,7 +2051,6 @@ static struct i2c_driver pca954x_driver = {
 };
 
 module_i2c_driver(pca954x_driver);
-
 
 #else
 #include <linux/device.h>
@@ -2181,7 +2174,7 @@ static int pca954x_reg_write(struct i2c_adapter *adap,
 	return ret;
 }
 
-static int pca954x_setmuxflag(struct i2c_adapter *adap, int flag) 
+static int pca954x_setmuxflag(struct i2c_adapter *adap, int flag)
 {
     pca9641_setmuxflag(adap->nr, flag);
     return 0;
@@ -3210,7 +3203,7 @@ static int dfd_get_my_dev_type_by_file(void)
     }
     fs = get_fs();
     set_fs(KERNEL_DS);
-    memset(buf, 0, DFD_PID_BUF_LEN);
+    mem_clear(buf, DFD_PID_BUF_LEN);
     pos = 0;
     vfs_read(fp, buf, DFD_PRODUCT_ID_LENGTH + 1, &pos);
     if (pos < 0) {
@@ -3218,7 +3211,7 @@ static int dfd_get_my_dev_type_by_file(void)
         goto exit;
     }
 
-    card_type = simple_strtoul(buf, NULL, 10); 
+    card_type = simple_strtoul(buf, NULL, 10);
     PCA954X_DEBUG("card_type 0x%x.\n", card_type);
 
 exit:
@@ -3491,7 +3484,7 @@ static int pca954x_reset_i2c_read(uint32_t bus, uint32_t addr, uint32_t offset_a
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
@@ -3534,7 +3527,7 @@ static int pca954x_reset_i2c_write(uint32_t bus, uint32_t dev_addr, uint32_t off
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
@@ -3657,7 +3650,7 @@ int pca954x_hw_do_reset_new(struct i2c_adapter *adap,
     } else {
         ret = pca954x_hw_do_reset(adap->nr, client->addr);
     }
-    
+
     if (ret < 0) {
         PCA954X_DEBUG("pca954x_hw_do_reset failed.\n");
     }
@@ -3695,7 +3688,7 @@ static int pca954x_deselect_mux(struct i2c_adapter *adap,
 	data->last_chan = 0;
 
 	ret = pca954x_reg_write(adap, client, data->last_chan);
-	
+
     if (ret < 0) {
         new_client =(struct i2c_client *) client;
         dev_warn(&new_client->dev, "pca954x close chn failed, do reset.\n");
@@ -3724,7 +3717,6 @@ static int pca954x_probe(struct i2c_client *client,
 	int num, force, class;
 	struct pca954x *data;
 	int ret;
-
 
 	if (!i2c_check_functionality(adap, I2C_FUNC_SMBUS_BYTE))
 		return -ENODEV;

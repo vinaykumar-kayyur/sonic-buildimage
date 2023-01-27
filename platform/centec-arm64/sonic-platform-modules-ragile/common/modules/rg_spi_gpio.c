@@ -28,7 +28,6 @@
 
 #define EE_SPI_BUS_NUM	    1
 
-
 static struct spi_gpio_platform_data tpm_spi_gpio_data = {
 	.sck		= GPIO_TPM_CLK,
 	.mosi		= GPIO_TPM_DI,
@@ -75,10 +74,9 @@ static int __init tpm_devices_init(void)
 	}
     printk(KERN_INFO "enter tpm_devices_init. \n");
 
-	spi_new_device(master, &tpm_info); 
+	spi_new_device(master, &tpm_info);
 	return 0 ;
 }
-
 
 static void __exit tpm_devices_exit(void)
 {
@@ -91,4 +89,3 @@ module_exit(tpm_devices_exit);
 MODULE_DESCRIPTION("ragile spi gpio  device Support");
 MODULE_AUTHOR("support@ragilenetworks.com");
 MODULE_LICENSE("GPL");
-

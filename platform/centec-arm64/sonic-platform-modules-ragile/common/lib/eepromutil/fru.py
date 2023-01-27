@@ -1,9 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import collections
 from bitarray import bitarray
 from datetime import datetime, timedelta
 import sys
+
+__all__ = ["FruException", "FruUtil", "BaseArea", "BoardInfoArea", "ProductInfoArea",
+           "MultiRecordArea", "Field", "ipmifru"]
 
 __DEBUG__ = "N"
 
@@ -226,8 +229,8 @@ class BoardInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
-        
+
+
         for i in range(1, 11):
             valtmp = "boardextra%d" % i
             if self.data[index] != chr(0xc1):
@@ -238,7 +241,6 @@ class BoardInfoArea(BaseArea):
                 d_print("decode boardextra%d:%s" % (i, tmpval))
             else:
                 break
-        pass
 
     def recalcute(self):
         d_print("boardInfoArea version:%x" % ord(self.boardversion))
@@ -481,7 +483,7 @@ class ProductInfoArea(BaseArea):
         self.fruFileId = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode fruFileId:%s" % self.fruFileId)
-        
+
         for i in range(1, 11):
             valtmp = "productextra%d" % i
             if self.data[index] != chr(0xc1) and index < self.size - 1:
@@ -595,7 +597,7 @@ class ProductInfoArea(BaseArea):
         self.data += chr(FruUtil.getTypeLength(self.fruFileId))
         self.data += self.fruFileId
 
-        # To determine whether an extension field exists, the extension field must be in order
+        # whether the extended field exists or not
         for i in range(1, 11):
             valtmp = "productextra%d" % i
             if hasattr(self, valtmp):
@@ -627,7 +629,7 @@ class MultiRecordArea(BaseArea):
     pass
 
 
-class Field():
+class Field(object):
 
     def __init__(self, fieldType="ASCII", fieldData=""):
         self.fieldData = fieldData
