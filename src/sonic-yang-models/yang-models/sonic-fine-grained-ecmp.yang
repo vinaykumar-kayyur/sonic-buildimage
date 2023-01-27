@@ -5,9 +5,9 @@ module sonic-fine-grained-ecmp {
     namespace "http://github.com/Azure/sonic-fine-grained-ecmp";
     prefix sfgecmp;
 
- 	import ietf-inet-types {
-		prefix inet;
-	}   
+    import ietf-inet-types {
+        prefix inet;
+    }   
 
     import sonic-types {
         prefix stypes;
@@ -24,7 +24,6 @@ module sonic-fine-grained-ecmp {
 
     revision 2023-01-19 {
         description "Initial revision.";
-        reference "https://github.com/sonic-net/SONiC/blob/master/doc/ecmp/fine_grained_next_hop_hld.md";
     }
 
 
