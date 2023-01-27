@@ -1,0 +1,387 @@
+
+module sonic-isis {
+
+    namespace "http://github.com/Azure/sonic-isis";
+
+    prefix "s-isis";
+
+    import sonic-types {
+        prefix stypes;
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "Intermediate System to Intermediate System Protocol";
+
+    revision 2023-03-16 {
+        description "Initial revision.";
+    }
+
+    grouping isis-authentication {
+        leaf authentication_key {
+            type string {
+                length "1..254";
+            }
+            must "(../authentication_type or not(../authentication_key))" {
+                error-message
+                    "If authentication_key is specified, then authentication_type must also be specified.";
+            }
+            description
+                "Authentication password.";
+        }
+
+        leaf authentication_type {
+            type stypes:authentication-type;
+            must "(../authentication_key or not(../authentication_type))" {
+                error-message
+                    "If authentication_type is specified, then authentication_key must also be specified.";
+            }
+            description
+                "This grouping defines keychain configuration type.";
+        }
+    }
+
+    container sonic-isis {
+
+        container ISIS_GLOBAL {
+
+            list ISIS_GLOBAL_LIST {
+
+                max-elements "1";
+
+                key "instance";
+
+                leaf instance {
+                    type string;
+                    description
+                        "The identifier for this instance of IS-IS. Area-tag";
+                }
+
+                leaf net { 
+                    type stypes:net-address; 
+                    description
+                        "IS-IS OSI network entity title (NET) address.";
+                }
+
+                leaf level_capability {
+                    type stypes:level-capability;
+                    default "level-1-2";
+                    description
+                        "IS-IS level capability (level-1, level-2, level-1-2).";
+                  }
+
+                leaf dynamic_hostname {
+                    type boolean;
+                    default "true";
+                    description
+                        "Dynamic hostname support for IS-IS.";
+                }
+
+                leaf attach_send {
+                    type boolean;
+                    default "true";
+                    description
+                        "For an L1 or L2 router, attached bits are sent in an LSP when set to true.";
+                }
+
+                leaf attach_receive_ignore {
+                    type boolean;
+                    default "false";
+                    description
+                        "For an L1 router, attached bits received in an LSP create a default route when set to false";
+                }
+
+                leaf set_overload_bit {
+                    type boolean;
+                    default "false";
+                    description
+                        "Administratively enable the overload bit.";
+                }
+
+                leaf lsp_mtu_size {
+                    type uint16 {
+                        range "128..4352";
+                    }
+                    default "1497";
+                    description
+                        "LSP MTU.";
+                }
+
+                leaf spf_init_delay {
+                    type uint16 {
+                        range "0..60000";
+                    }
+                    units "msec";
+                    must "../spf_short_delay and ../spf_long_delay and ../spf_hold_down and ../spf_time_to_learn or not(../spf_init_delay)" {
+                        error-message
+                            "SPF init delay must only be specified if all other SPF parameters are specified";
+                    }
+                    description
+                        "Delay used during QUIET state";
+                }
+
+                leaf spf_short_delay {
+                    type uint16 {
+                        range "0..60000";
+                    }
+                    units "msec";
+                    must "../spf_init_delay and ../spf_long_delay and ../spf_hold_down and ../spf_time_to_learn or not(../spf_short_delay)" {
+                        error-message
+                            "SPF short delay must only be specified if all other SPF parameters are specified";
+                    }
+                    description
+                        "Delay used during SHORT_WAIT state";
+                }
+
+                leaf spf_long_delay {
+                    type uint16 {
+                        range "0..60000";
+                    }
+                    units "msec";
+                    must "../spf_init_delay and ../spf_short_delay and ../spf_hold_down and ../spf_time_to_learn or not(../spf_long_delay)" {
+                        error-message
+                            "SPF long delay must only be specified if all other SPF parameters are specified";
+                    }
+                    description
+                        "Delay used during LONG_WAIT state";
+                }
+
+                leaf spf_hold_down {
+                    type uint16 {
+                        range "0..60000";
+                    }
+                    units "msec";
+                    must "../spf_init_delay and ../spf_short_delay and ../spf_long_delay and ../spf_time_to_learn or not(../spf_hold_down)" {
+                        error-message
+                            "SPF hold down must only be specified if all other SPF parameters are specified";
+                    }
+                    description
+                        "Period of time without IGP events before considering IGP stable";
+                }
+
+                leaf spf_time_to_learn {
+                    type uint16 {
+                        range "0..60000";
+                    }
+                    units "msec";
+                    must "../spf_init_delay and ../spf_short_delay and ../spf_long_delay and ../spf_hold_down or not(../spf_time_to_learn)" {
+                        error-message
+                            "SPF time_to_learn must only be specified if all other SPF parameters are specified";
+                    }
+                    description
+                        "Maximum time needed to learn all of the events related to a failure";
+                }
+
+                leaf log_adjacency_changes {
+                    type boolean;
+                    default "false";
+                    description
+                        "Log changes to this instance's IS-IS adjacencies.";
+                }
+
+            } // list ISIS_GLOBAL_LIST
+
+        } // container ISIS_GLOBAL
+
+        container ISIS_LEVEL {
+
+            list ISIS_LEVEL_LIST {
+
+                description
+                    "Configuration parameters related to a particular level within the
+                    IS-IS protocol instance";
+
+                key "instance level_number";
+
+                leaf instance {
+                    type string;
+                    description
+                        "The identifier for this instance of IS-IS. Area-tag";
+                }
+
+                leaf level_number {
+                    type stypes:level-number;
+                    description
+                        "IS-IS level number.";
+                }
+
+                leaf lsp_refresh_interval {
+                    type uint16;
+                    units "seconds";
+                    default "900";
+                    description
+                        "LSP refresh interval.";
+                }
+
+                leaf lsp_maximum_lifetime {
+                    type uint16 {
+                        range "350..65535";
+                    }
+                    units "seconds";
+                    must "(. >= ../lsp_refresh_interval + 300)" {
+                        error-message
+                            "lsp_maximum_lifetime must be at least 300 seconds greater than lsp_refresh_interval";
+                    }
+                    default "1200";
+                    description
+                        "Maximum LSP lifetime.";
+                }
+
+                leaf lsp_generation_interval {
+                    type uint16 {
+                        range "1..120";
+                    }
+                    units "seconds";
+                    must "(. < ../lsp_refresh_interval)" {
+                        error-message
+                            "lsp_generation_interval must be greater than lsp_refresh_interval";
+                    }
+                    default "30";
+                    description
+                        "Minimum time before an LSP retransmissions.";
+                }
+
+                leaf spf_minimum_interval {
+                    type uint16 {
+                        range "1..120";
+                    }
+                    units "seconds";
+                    default "1";
+                    description
+                        "Minimum time between consecutive SPFs.";
+                }
+
+            } // list ISIS_LEVEL_LIST
+
+        } // container ISIS_LEVEL
+
+        container ISIS_INTERFACE {
+
+            list ISIS_INTERFACE_LIST {
+
+                description
+                    "Configuration parameters related to a particular interface within the
+                    IS-IS protocol instance";
+
+                key "instance ifname";
+
+                leaf instance {
+                    type string;
+                    description
+                        "The identifier for this instance of IS-IS. Area-tag";
+                }
+
+                leaf ifname {
+                    type string;
+                    description
+                        "Interface for which IS-IS configuration is to be applied.";
+                }
+
+                leaf ipv4_routing_instance {
+                    type string;
+                    description
+                        "Routing IS-IS IPv4 traffic over this interface for the given instance.";
+                }
+                leaf ipv6_routing_instance {
+                    type string;
+                    description
+                        "Routing IS-IS IPv6 traffic over this interface for the given instance.";
+                }
+
+                leaf passive {
+                    type boolean;
+                    default "false";
+                    description
+                        "When set to true, the referenced interface is a passive interface
+                        such that it is not eligible to establish adjacencies with other
+                        systems, but is advertised into the IS-IS topology.";
+                }
+
+                leaf hello_padding {
+                    type boolean; 
+                    default "true";
+                    description
+                        "When true, padding is added to IS-IS hello PDUs.";
+                }
+
+                leaf network_type {
+                    type stypes:network-type;
+                    description
+                        "IS-IS interface type (point-to-point).";
+                }
+
+                leaf enable_bfd {
+                    type boolean;
+                    default "false";
+                    description
+                        "Monitor IS-IS peers on this interface.";
+                }
+
+                leaf bfd_profile {
+                    type string;
+                    description
+                        "Set BFD to use a pre-configured profile.";
+                }
+
+                leaf metric {
+                    type uint32 {
+                        range "0..16777215";
+                    }
+                    default "0";
+                    description
+                        "The metric value of this interface.";
+                }
+
+                leaf csnp_interval {
+                    type uint16 {
+                        range "1..600";
+                    }
+                    units "seconds";
+                    default "10";
+                    description
+                        "Complete Sequence Number PDU (CSNP) generation interval.";
+                }
+
+                leaf psnp_interval {
+                    type uint16 {
+                        range "1..120";
+                    }
+                    units "seconds";
+                    default "2";
+                    description
+                        "Partial Sequence Number PDU (PSNP) generation interval.";
+                }
+
+                leaf hello_interval {
+                    type uint32 {
+                        range "1..600";
+                    }
+                    units "seconds";
+                    default "3";
+                    description
+                        "Hello interval between consecutive hello messages. Interval will depend on multiplier.";
+                }
+
+                leaf hello_multiplier {
+                    type uint16 {
+                        range "2..100";
+                    }
+                    default "10";
+                    description
+                        "Multiplier for the hello holding time.";
+                }
+
+                uses isis-authentication; 
+
+            }  // list ISIS_INTERFACE
+
+        } // container ISIS_INTERFACE
+
+    } // container sonic-isis
+
+} //module sonic-isis

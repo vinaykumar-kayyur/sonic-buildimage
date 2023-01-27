@@ -327,4 +327,51 @@ module sonic-types {
     }
     {% else %}
     {% endif %}
+
+    typedef net-address {
+        type string {
+            pattern "[a-fA-F0-9]{2}(\\.[a-fA-F0-9]{4}){3,9}\\.[a-fA-F0-9]{2}";
+        }
+        description
+            "An IS-IS OSI NET address.
+             An example NET address looks something like 49.0001.0143.0438.00.";
+    }
+    
+    typedef level-number {
+        type enumeration {
+            enum "level-1";
+            enum "level-2";
+        }
+        description
+            "This type defines IS-IS level options for level specific configurations.";
+    }
+
+    typedef level-capability {
+        type union {
+            type level-number;
+            type enumeration {
+                enum "level-1-2";
+            }
+        }
+        description
+            "This type defines all IS-IS level options capable of being configured.";
+    }
+
+    typedef network-type {
+        type enumeration {
+            enum "point-to-point";
+        }
+        description
+            "Configure a circuit to operate as point-to-point
+             else the circuit defaults to broadcast.";
+    }
+
+    typedef authentication-type {
+        type enumeration { 
+            enum "clear";
+            enum "md5";
+        }
+        description 
+            "IS-IS authentication key encrypt type";
+    } 
 }
