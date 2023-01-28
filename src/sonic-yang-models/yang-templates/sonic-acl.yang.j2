@@ -270,12 +270,14 @@ module sonic-acl {
 				}
 
 				leaf BTH_OPCODE {
+				        description "RoCEv2 BTH OPCODE field";
 					type string {
 						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
 					}
 				}
 
 				leaf AETH_SYNDROME {
+				        description "RoCEv2 AETH SYNDROME field";
 					type string {
 						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
 					}
