@@ -105,3 +105,9 @@ class Sfp(SfpBase):
 
     def get_transceiver_change_event(self, timeout):
         return self._get_sfputil().get_transceiver_change_event(timeout)
+
+    def get_transceiver_status(self):
+        return None
+
+    def get_transceiver_pm(self):
+        return None
