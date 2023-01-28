@@ -28,8 +28,8 @@ else
 	PKG_CACHE_PATH=/sonic/target/vcache/${IMAGENAME}
 fi
 PKG_CACHE_FILE_NAME=${PKG_CACHE_PATH}/cache.tgz
-$SUDO chown $USER $(dirname $PKG_CACHE_PATH)
-mkdir -p ${PKG_CACHE_PATH}
+$SUDO mkdir -p ${PKG_CACHE_PATH}
+$SUDO chown $USER $PKG_CACHE_PATH
 
 . ${BUILDINFO_PATH}/scripts/utils.sh
 
