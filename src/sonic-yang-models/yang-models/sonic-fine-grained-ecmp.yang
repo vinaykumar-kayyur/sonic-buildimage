@@ -9,9 +9,9 @@ module sonic-fine-grained-ecmp {
         prefix inet;
     }
 
-	import sonic-portchannel {
-		prefix lag;
-	}
+    import sonic-portchannel {
+        prefix lag;
+    }
 
     import sonic-port {
         prefix port;
