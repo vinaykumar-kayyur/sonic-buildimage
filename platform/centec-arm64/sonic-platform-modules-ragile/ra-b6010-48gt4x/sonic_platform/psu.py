@@ -111,6 +111,7 @@ class Psu(PsuBase):
         return None
 
     def get_status_led(self):
+        return "BuildIn"
         self.get_power_3s()
         ctrl = self.pinf["PowerSupplies"]
         output = ctrl[self.psu_index]
