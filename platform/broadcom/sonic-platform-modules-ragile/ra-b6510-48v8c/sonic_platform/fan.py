@@ -45,6 +45,10 @@ class Fan(PddfFan):
         if self.is_psu_fan:
             return "N/A"
 
+        presence_status = self.get_presence()
+        if presence_status is False:
+            return "N/A"
+
         led_device_name = "FANTRAY{}".format(self.fantray_index) + "_LED"
 
         if led_device_name not in self.pddf_obj.data.keys():
