@@ -289,6 +289,7 @@ libssl1.1==1.1.1n-0+deb10u3
 libstdc++-8-dev==8.3.0-6
 libsynctex2==2018.20181218.49446-1
 libtacacs+1==4.0.4.27a-3
+libtasn1-6==4.13-3+deb10u1
 libtcl8.6==8.6.9+dfsg-2
 libteam-utils==1.28-1
 libteam5==1.28-1
@@ -302,7 +303,7 @@ libthai-data==0.1.28-2
 libthai0==0.1.28-2
 libthrift-0.11.0==0.11.0-4
 libtie-ixhash-perl==1.23-2
-libtiff5==4.1.0+git191117-2~deb10u4
+libtiff5==4.1.0+git191117-2~deb10u5
 libtimedate-perl==2.3000-2+deb10u1
 libtinfo6==6.1+20181013-2+deb10u3
 libtk8.6==8.6.9-2
