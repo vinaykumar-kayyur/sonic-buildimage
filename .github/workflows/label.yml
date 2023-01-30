@@ -20,7 +20,7 @@ on:
 
 jobs:
   label:
-    if: github.repository == 'sonic-net/sonic-buildimage'
+    if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/labeler@main

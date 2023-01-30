@@ -6,7 +6,7 @@ on:
 
 jobs:
   automerge_scan:
-    if: github.repository == 'sonic-net/sonic-buildimage'
+    if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
     - name: Debug
