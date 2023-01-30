@@ -14,6 +14,8 @@
  *   A pddf kernel module to create I2C client for an I2CFPGA
  */
 
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -35,7 +37,7 @@ EXPORT_SYMBOL(pddf_fpgai2c_data);
 
 static ssize_t do_device_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
 static ssize_t store_pddf_fpgai2c_data(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
-ssize_t show_pddf_fpgai2c_data(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t show_pddf_fpgai2c_data(struct device *dev, struct device_attribute *da, char *buf);
 
 extern void *get_device_table(char *name);
 extern void delete_device_table(char *name);
@@ -75,7 +77,6 @@ static ssize_t store_pddf_fpgai2c_data(struct device *dev, struct device_attribu
 
     return count;
 }
-EXPORT_SYMBOL(store_pddf_fpgai2c_data);
 
 ssize_t show_pddf_fpgai2c_data(struct device *dev, struct device_attribute *da, char *buf)
 {
@@ -89,7 +90,6 @@ ssize_t show_pddf_fpgai2c_data(struct device *dev, struct device_attribute *da, 
 
     return ret;
 }
-EXPORT_SYMBOL(show_pddf_fpgai2c_data);
 
 static ssize_t do_device_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
@@ -152,7 +152,11 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 
 free_data:
 	/*TODO: free the device_ptr->data is dynamically allocated*/
+#ifdef __STDC_LIB_EXT1__
+	memset_s(device_ptr, sizeof(NEW_DEV_ATTR), 0 , sizeof(NEW_DEV_ATTR));
+#else
 	memset(device_ptr, 0 , sizeof(NEW_DEV_ATTR));
+#endif
 
 	return count;
 }
