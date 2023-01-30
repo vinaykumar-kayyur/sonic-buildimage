@@ -15,7 +15,12 @@ RUN echo "deb http://packages.trafficmanager.net/snapshot/debian/20230101T000234
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+COPY ["faketime_0.9.7-2_amd64.deb","/root"]
+COPY ["libfaketime_0.9.7-2_amd64.deb","/root"]
+RUN dpkg -i /root/faketime_0.9.7-2_amd64.deb /root/libfaketime_0.9.7-2_amd64.deb
+RUN rm /root/faketime_0.9.7-2_amd64.deb /root/libfaketime_0.9.7-2_amd64.deb
+
+RUN faketime "2022-11-01" apt-get update && apt-get install -y \
         apt-utils \
         default-jre-headless \
         openssh-server \
@@ -319,7 +324,7 @@ RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /
 ENV PATH /usr/share/depot_tools:$PATH
 
 # Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
-RUN apt-get update
+RUN faketime "2022-11-01" apt-get update
 RUN apt-get install -y \
            apt-transport-https \
            ca-certificates \
@@ -331,7 +336,7 @@ RUN add-apt-repository \
            "deb [arch=amd64] https://download.docker.com/linux/debian \
            $(lsb_release -cs) \
            stable"
-RUN apt-get update
+RUN faketime "2022-11-01" apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
 
