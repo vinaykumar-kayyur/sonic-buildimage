@@ -166,9 +166,8 @@ class EcmpCalc:
         vrf_table = Table(self.appl_db, VRF_TABLE)
         vrf_table_keys = vrf_table.getKeys()
 
-        for key in vrf_table_keys:
-            if key == self.user_vrf:
-                return True
+        if self.user_vrf in vrf_table_keys:
+            return True
 
         return False
 
@@ -314,7 +313,7 @@ class EcmpCalc:
         lag_member_table_keys = lag_member_table.getKeys()
 
         for key in lag_member_table_keys:
-            if str(port) in key:
+            if port in key:
                 port_channel = key.split(':')[PORT_CHANNEL_IDX]
                 return port_channel
         
