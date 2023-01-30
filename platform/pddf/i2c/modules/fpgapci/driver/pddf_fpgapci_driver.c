@@ -22,6 +22,8 @@
 *   read/write functions defined separately in another kernel module.
 *
 ************************************************************************/
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 #include <linux/kobject.h>
 #include <linux/kdev_t.h>
 #include <linux/list.h>
@@ -90,8 +92,11 @@ static int pddf_pci_add_adapter(struct pci_dev *dev)
 
     total_i2c_pci_bus = pddf_fpga_ops_data.virt_i2c_ch;
     pddf_dbg(FPGA, KERN_INFO "[%s] total_i2c_pci_bus=%d\n", __FUNCTION__, total_i2c_pci_bus);
-
-	memset (&i2c_pci_adap, 0, sizeof(i2c_pci_adap));
+#ifdef __STDC_LIB_EXT1__
+    memset_s(&i2c_pci_adap, sizeof(i2c_pci_adap), 0, sizeof(i2c_pci_adap));
+#else
+	memset(&i2c_pci_adap, 0, sizeof(i2c_pci_adap));
+#endif
 
 	for (i = 0 ; i < total_i2c_pci_bus; i ++) {
 

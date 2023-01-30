@@ -20,6 +20,8 @@
 *   A sample i2c driver algorithms for Xilinx Corporation Device 7021 FPGA adapters
 *
 *********************************************************************************/
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -338,8 +340,11 @@ static int adap_data_init(struct i2c_adapter *adap, int i2c_ch_index)
              __FUNCTION__, i2c_ch_index, pci_privdata->max_fpga_i2c_ch, I2C_PCI_MAX_BUS);
         return -1;
     }
-
-    memset (&fpgalogic_i2c[i2c_ch_index], 0, sizeof(fpgalogic_i2c[0]));
+#ifdef __STDC_LIB_EXT1__
+    memset_s(&fpgalogic_i2c[i2c_ch_index], sizeof(fpgalogic_i2c[0]), 0, sizeof(fpgalogic_i2c[0]));
+#else
+    memset(&fpgalogic_i2c[i2c_ch_index], 0, sizeof(fpgalogic_i2c[0]));
+#endif
     /* Initialize driver's itnernal data structures */
     fpgalogic_i2c[i2c_ch_index].reg_shift = 0; /* 8 bit registers */
     fpgalogic_i2c[i2c_ch_index].reg_io_width = 1; /* 8 bit read/write */
