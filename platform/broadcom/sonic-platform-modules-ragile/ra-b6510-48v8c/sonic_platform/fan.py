@@ -28,9 +28,11 @@ class Fan(PddfFan):
         if self.is_psu_fan:
             return super().get_speed_rpm()
         else:
+            ret = super().get_speed_rpm()
+            if ret == 0 or ret == 0xffff:
+                return 0
             divisor = 15000000
             mask_low = 0xff
-            ret = super().get_speed_rpm()
             # revert ret
             ret = (ret >> 8) + ((ret & mask_low) << 8)
             return int(divisor/ret)
@@ -40,6 +42,45 @@ class Fan(PddfFan):
             return None
 
         return super().get_target_speed()
+
+    def get_speed_tolerance(self):
+        """
+        Retrieves the speed tolerance of the fan
+
+        Returns:
+            An integer, the percentage of variance from target speed which is
+                 considered tolerable
+        """
+        # Fix the speed vairance to 10 percent. If it changes based on platforms, overwrite
+        # this value in derived pddf fan class
+        return 30
+
+
+    def get_speed(self):
+        """
+        Retrieves the speed of fan as a percentage of full speed
+
+        Returns:
+            An integer, the percentage of full fan speed, in the range 0 (off)
+                 to 100 (full speed)
+        """
+        if self.is_psu_fan:
+            return super().get_speed()
+        # TODO This calculation should change based on MAX FAN SPEED
+        speed_rpm = self.get_speed_rpm()
+        max_speed = int(self.plugin_data['FAN']['FAN_MAX_SPEED'])
+        speed_percentage = round((speed_rpm*100)/max_speed)
+        if speed_percentage > 100:
+            speed_percentage = 100
+        return speed_percentage
+
+    def get_status(self):
+        if self.is_psu_fan:
+            return super().get_status()
+
+        speed_rpm = self.get_speed_rpm()
+        status = True if (speed_rpm >= 3000) else False
+        return status
 
     def get_status_led(self):
         if self.is_psu_fan:
