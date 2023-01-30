@@ -16,6 +16,7 @@
  * A pddf kernel module to manage various LEDs of a switch
  */
 
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <linux/kobject.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
@@ -415,8 +416,11 @@ static int load_led_ops_data(struct device_attribute *da, LED_STATUS state)
     memcpy(ops_ptr->data[state].attr_devname, ptr->attr_devname, sizeof(ops_ptr->data[state].attr_devname));
     memcpy(ops_ptr->attr_devtype, ptr->attr_devtype, sizeof(ops_ptr->attr_devtype));
     memcpy(ops_ptr->attr_devname, ptr->attr_devname, sizeof(ops_ptr->attr_devname));
-
+#ifdef __STDC_LIB_EXT1__
+    memset_s(ops_ptr->data[state].reg_values, sizeof(ops_ptr->data[state].reg_values), 0xff, sizeof(ops_ptr->data[state].reg_values));
+#else
     memset(ops_ptr->data[state].reg_values, 0xff, sizeof(ops_ptr->data[state].reg_values));
+#endif
     value_ptr = kzalloc(sizeof(ops_ptr->data[state].value), GFP_KERNEL);
     if (value_ptr) {
        memcpy(value_ptr, ops_ptr->data[state].value, sizeof(ops_ptr->data[state].value));
