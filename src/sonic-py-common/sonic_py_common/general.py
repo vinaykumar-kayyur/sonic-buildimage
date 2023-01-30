@@ -1,5 +1,4 @@
 import sys
-from subprocess import Popen, STDOUT, PIPE, CalledProcessError, check_output
 
 def load_module_from_source(module_name, file_path):
     """
@@ -23,4 +22,3 @@ def load_module_from_source(module_name, file_path):
     sys.modules[module_name] = module
 
     return module
-
