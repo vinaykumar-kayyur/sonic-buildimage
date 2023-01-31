@@ -863,7 +863,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi
 		# Use pip instead of later setup.py to install dependencies into user home
-		python$($*_PYTHON_VERSION) $(BUILD_WORKDIR)/scripts/get_py_depend.py | xargs -i pip$($*_PYTHON_VERSION) install {} $(LOG)
+		python$($*_PYTHON_VERSION) $(BUILD_WORKDIR)/scripts/get_py_depend.py | xargs -i pip$($*_PYTHON_VERSION) install {}
 ifneq ($(CROSS_BUILD_ENVIRON),y)
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)

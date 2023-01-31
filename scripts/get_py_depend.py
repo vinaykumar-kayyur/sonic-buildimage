@@ -2,8 +2,6 @@
 
 import setuptools
 from distutils import core
-import os
-import json
 
 def setup(**kwargs):
         ret=[]
