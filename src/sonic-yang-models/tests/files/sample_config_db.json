@@ -314,6 +314,14 @@
                 "PACKET_ACTION": "DROP",
                 "IP_TYPE": "IPv4ANY",
                 "SRC_IP": "1.1.1.1/32"
+            },
+            "DATAACL|RULE1": {
+                "PRIORITY": "999",
+                "PACKET_ACTION": "FORWARD",
+                "IP_TYPE": "IPv4ANY",
+                "SRC_IP": "1.1.1.1/32",
+                "BTH_OPCODE": "0x11/0xbf",
+                "AETH_SYNDROME": "0x60/0x60"
             }
         },
         "DEVICE_METADATA": {
@@ -1234,6 +1242,10 @@
             "FLOW_CNT_ROUTE": {
                 "FLEX_COUNTER_STATUS": "enable",
                 "POLL_INTERVAL": "10000"
+            },
+            "TUNNEL": {
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             }
         },
         "FLOW_COUNTER_ROUTE_PATTERN": {
@@ -2072,7 +2084,9 @@
                  "matches": [
                      "IN_PORTS",
                      "OUT_PORTS",
-                     "SRC_IP"
+                     "SRC_IP",
+                     "BTH_OPCODE",
+                     "AETH_SYNDROME"
                  ],
                  "actions": [
                      "PACKET_ACTION",
