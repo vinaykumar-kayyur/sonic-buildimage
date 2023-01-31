@@ -79,7 +79,7 @@ class Fan(PddfFan):
             return super().get_status()
 
         speed_rpm = self.get_speed_rpm()
-        status = True if (speed_rpm >= 3000) else False
+        status = True if (speed_rpm >= 1000) else False
         return status
 
     def get_status_led(self):
@@ -97,7 +97,7 @@ class Fan(PddfFan):
             if self.get_status():
                 return self.STATUS_LED_COLOR_GREEN
             else:
-                return self.STATUS_LED_COLOR_OFF
+                return self.STATUS_LED_COLOR_RED
 
         device_name = self.pddf_obj.data[led_device_name]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())

@@ -39,5 +39,11 @@
         "pwmMax": 100,
         "pwmMin": 30,
         "tempMin": 25
+    },
+    "FanLed": {
+        "Fantray1": {"bus":2, "devno":13, "addr":59, "green":9, "red":10},
+        "Fantray2": {"bus":2, "devno":13, "addr":60, "green":9, "red":10},
+        "Fantray3": {"bus":2, "devno":13, "addr":61, "green":9, "red":10},
+        "Fantray4": {"bus":2, "devno":13, "addr":62, "green":9, "red":10}
     }
 }

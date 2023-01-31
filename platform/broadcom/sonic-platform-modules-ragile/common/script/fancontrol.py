@@ -11,7 +11,7 @@ import traceback
 import glob
 from interface import Interface
 import logging.handlers
-from ragileutil import CompressedRotatingFileHandler
+from ragileutil import CompressedRotatingFileHandler, rgi2cset
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -30,6 +30,7 @@ DEBUG_FILE = "/etc/fancontrol_debug"
 FAN_CTRL_CFG_FILE = "/usr/local/bin/fan_ctrl_cfg.json"
 KEY_THERMAL = "Thermal"
 KEY_FAN = "Fans"
+KEY_FAN_LED = "FanLed"
 KEY_PID = "PID"
 KEY_OPEN_LOOP = "OpenLoop"
 KEY_DEVICE = "Device"
@@ -152,8 +153,10 @@ class FanControl():
 
         self.fans = {}
         self.fanStatus = {}
-        self.fanErrTime = {}
-        self.fanLowTime = {}
+        self.fanStatusNokCnt = {}
+        self.fanLedStatus = {}
+        self.fanTrayLedStatus = {}
+        self.fan_led_json = {}
 
         self.fanPid = None
         self.openloop = None
@@ -202,6 +205,7 @@ class FanControl():
                     return False
             thermal_json = cfg_json[KEY_THERMAL]
             fan_json = cfg_json[KEY_FAN]
+            self.fan_led_json = cfg_json[KEY_FAN_LED]
             pid_json = cfg_json[KEY_PID]
             openloop_json = cfg_json[KEY_OPEN_LOOP]
             device_json = cfg_json[KEY_DEVICE]
@@ -254,8 +258,8 @@ class FanControl():
             for key, item in list(fan_json.items()):
                 self.fans[key] = item
                 self.fanStatus[key] = 0
-                self.fanErrTime[key] = [0, 0]
-                self.fanLowTime[key] = [0, 0]
+                self.fanStatusNokCnt[key] = 0
+                self.fanLedStatus[item] = "green"
 
         else:
             logger.error('%s is not a file' % FAN_CTRL_CFG_FILE)
@@ -314,32 +318,18 @@ class FanControl():
         fan_error_cnt = 0
         for key, item in list(self.fans.items()):
             speed = self.interface.get_fan_speed_rpm(item)
-            # Cannot get fan max rpm from pddf, fix it!
-            # rpm_max = self.interface.get_fan_rpm_max()
-            # if self.fan_pwm == 100 and speed < rpm_max * 0.7:
-            #     if self.fanStatus[key] & STATUS_BAD_FAN != 0:
-            #         self.fanErrTime[key][0] = time.time()
-            #     else:
-            #         self.fanErrTime[key][1] = time.time()
-
-            #     self.fanStatus[key] = self.fanStatus[key] | STATUS_BAD_FAN
-            #     if self.fanErrTime[key][1] - self.fanErrTime[key][0] >= 30:
-            #         logger.warning("%s PWM is %d but Speed %d <= %d RPM" % (item, self.fan_pwm, speed, rpm_max * 0.7))
-            # else:
-            #     self.fanStatus[key] = self.fanStatus[key] & ~(STATUS_BAD_FAN)
-
             if speed < 1000:
-                if self.fanStatus[key] & STATUS_LOW_FAN != 0:
-                    self.fanLowTime[key][0] = time.time()
-                else:
-                    self.fanLowTime[key][1] = time.time()
                 self.fanStatus[key] = self.fanStatus[key] | STATUS_LOW_FAN
-                if self.fanLowTime[key][1] - self.fanLowTime[key][0] > 30:
+                self.fanStatusNokCnt[key] += 1
+                if self.fanStatusNokCnt[key] > 6:
+                    self.fanLedStatus[item] = "red"
                     logger.warning("%s Speed %d <= %d RPM" % (item, speed, 1000))
             else:
                 self.fanStatus[key] = self.fanStatus[key] & ~(STATUS_LOW_FAN)
+                self.fanStatusNokCnt[key] = 0
+                self.fanLedStatus[item] = "green"
 
-            fanctrl_debug_log("%s speed %d RPM" % (key, speed))
+            fanctrl_debug_log("%s speed %d RPM, led status %s" % (key, speed, self.fanLedStatus[item]))
 
             if self.fanStatus[key] != 0:
                 fan_error_cnt = fan_error_cnt + 1
@@ -391,6 +381,24 @@ class FanControl():
             fanctrl_debug_log("PSU status error setting LED to red")
             self.interface.set_psu_board_led("red")
 
+    def doFanLocLedCtrl(self):
+        # Init fan led setting
+        for key, item in list(self.fan_led_json.items()):
+            self.fanTrayLedStatus[key] = "green"
+
+        for key, item in list(self.fans.items()):
+            fantray = item.split("_")[0]
+            if self.fanLedStatus[item] == "red":
+                self.fanTrayLedStatus[fantray] = "red"
+
+        for key, item in list(self.fan_led_json.items()):
+            rgi2cset(item.get("bus"), item.get("devno"),
+                item.get("addr"), item.get(self.fanTrayLedStatus[key]))
+            fanctrl_debug_log("fanTray:%s, rgi2cset %d 0x%02x 0x%02x 0x%02x" %
+                (key, item.get("bus"), item.get("devno"), item.get("addr"),
+                item.get(self.fanTrayLedStatus[key])))
+
+
 def run(interval, fanCtrol):
     loop = 0
     # waitForDocker()
@@ -434,13 +442,12 @@ def run(interval, fanCtrol):
                     time.sleep(3)
                     continue
 
-                # try:
-                #     fanCtrol.doBoardFanLedCtrl()
-                # except Exception as e:
-                #     logger.error('Failed: Led Control, %s' % str(e))
-                #     logger.error('%s' % traceback.format_exc())
-                #     time.sleep(3)
-                #     continue
+                try:
+                    fanCtrol.doFanLocLedCtrl()
+                except Exception as e:
+                    logger.error('Failed: Led Control, %s' % str(e))
+                    logger.error('%s' % traceback.format_exc())
+
 
                 # try:
                 #     fanCtrol.doBoardPsuLedCtrl()
