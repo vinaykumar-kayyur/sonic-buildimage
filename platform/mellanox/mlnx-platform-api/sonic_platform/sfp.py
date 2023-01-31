@@ -564,6 +564,7 @@ class SFP(SfpBase):
                 self.dom_supported = False
                 self.dom_temp_supported = False
                 self.dom_volt_supported = False
+                self.second_application_list = False
                 self.dom_rx_power_supported = False
                 self.dom_tx_power_supported = False
                 self.dom_tx_bias_power_supported = False
@@ -622,7 +623,7 @@ class SFP(SfpBase):
         else:
             return 'N/A'
 
-    @refresh_sfp_type(refresh_dom_capability=False)
+    @refresh_sfp_type()
     def get_transceiver_info(self):
         """
         Retrieves transceiver info of this SFP
