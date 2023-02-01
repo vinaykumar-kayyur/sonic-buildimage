@@ -140,6 +140,9 @@ autorestart=unexpected
 stdout_logfile=syslog
 stderr_logfile=syslog
 startsecs=10
+{% if IS_MODULAR_CHASSIS == 1 %}
+stopwaitsecs=90
+{% endif %}
 dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 {% endif %}
