@@ -865,7 +865,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 ifneq ($(CROSS_BUILD_ENVIRON),y)
 		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
 		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
-		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) $(BUILD_WORKDIR)/scripts/get_py_depend.py | xargs -i pip$($*_PYTHON_VERSION) install {}; python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
+		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) $(BUILD_WORKDIR)/scripts/get_py_depend.py | xargs -i pip$($*_PYTHON_VERSION) install {}; python$($*_PYTHON_VERSION) setup.py test; fi $(LOG)
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 else
 		{
