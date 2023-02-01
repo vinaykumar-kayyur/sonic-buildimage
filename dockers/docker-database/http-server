@@ -109,7 +109,6 @@ class HttpServer():
             syslog.syslog(syslog.LOG_INFO, 'start_http_server is not set, exiting...')
 
 def main():
-    #import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser(description='Python3 HTTP Server')
     parser.add_argument('--config-file', help='HTTP Server config yaml file', default=None)
     args = parser.parse_args()
