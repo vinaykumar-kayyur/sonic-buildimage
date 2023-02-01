@@ -86,6 +86,7 @@
                 ],
                 "tpid": "0x8100",
                 "mtu": "9100",
+                "mode": "access",
                 "lacp_key": "auto"
             },
             "PortChannel0004": {
@@ -96,6 +97,7 @@
                 ],
                 "tpid": "0x9200",
                 "mtu": "9100",
+                "mode": "trunk",
                 "lacp_key": "auto"
             },
             "PortChannel2": {

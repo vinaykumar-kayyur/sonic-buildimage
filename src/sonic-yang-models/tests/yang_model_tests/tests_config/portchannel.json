@@ -9,6 +9,7 @@
                         "description": "Ethernet0",
                         "lanes": "65",
                         "mtu": 9000,
+                        "mode": "access",
                         "name": "Ethernet0",
                         "tpid": "0x8100",
                         "speed": 25000
@@ -28,6 +29,7 @@
                         "mtu": "9100",
                         "tpid": "0x8100",
                         "lacp_key": "auto",
+                        "mode": "access",
                         "name": "PortChannel0001"
                     }
                 ]

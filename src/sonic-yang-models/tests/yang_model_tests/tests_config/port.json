@@ -29,6 +29,7 @@
                         "description": "Ethernet8",
                         "fec": "rs",
                         "lanes": "65",
+                        "mode": "access",
                         "mtu": 9000,
                         "pfc_asym": "on",
                         "name": "Ethernet8",
@@ -64,6 +65,51 @@
                         "lanes": "65",
                         "speed": 25000,
                         "mtu": 9216
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_VALID_MODE_TEST_1": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 25000,
+                        "mode": "access"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_VALID_MODE_TEST_2": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 25000,
+                        "mode": "trunk"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_VALID_MODE_TEST_3": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 25000,
+                        "mode": "routed"
                     }
                 ]
             }
