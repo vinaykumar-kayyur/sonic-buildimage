@@ -11,7 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description='test_login cmdline parser')
     parser.add_argument('-u', default="admin", help='login user name')
     parser.add_argument('-P', default="YourPaSsWoRd", help='login password')
-    parser.add_argument('-P2', default="Test@2022", help='new password')
+    parser.add_argument('-N', default="Test@2022", help='new password')
     parser.add_argument('-p', type=int, default=9000, help='local port')
 
     args = parser.parse_args()
@@ -57,15 +57,15 @@ def main():
                 p.sendline(args.P)
                 p.expect(passwd_change_prompt[1])
                 # send new password
-                p.sendline(args.P2)
+                p.sendline(args.N)
                 p.expect(passwd_change_prompt[2])
                 # retype new password
-                p.sendline(args.P2)
+                p.sendline(args.N)
                 time.sleep(1)
                 # Restore default password
                 p.sendline('passwd {}'.format(args.u))
                 p.expect(passwd_change_prompt[0])
-                p.sendline(args.P2)
+                p.sendline(args.N)
                 p.expect(passwd_change_prompt[1])
                 p.sendline(args.P)
                 p.expect(passwd_change_prompt[2])
