@@ -26,7 +26,7 @@ index f58ad3b..7df3bcb 100644
  	return err;
  }
  
-+#define LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT 60
++#define LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS 60
 +
  static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
  {
@@ -35,7 +35,7 @@ index f58ad3b..7df3bcb 100644
  					   lacp_port->partner_retry_count,
  					   lacpdu->v2.actor_retry_count);
  		lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
-+		lacp_port->lacp->next_retry_count_change_time = time(NULL) + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT;
++		lacp_port->lacp->next_retry_count_change_time = time(NULL) + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS;
  	} else {
 -		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
 -			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
