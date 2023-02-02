@@ -585,6 +585,12 @@ export build_number="${BUILD_NUMBER:-0}"
 export built_by="$USER@$BUILD_HOSTNAME"
 j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
+# Default users info
+export username="${USERNAME}"
+export password="$(sudo grep ^${USERNAME} $FILESYSTEM_ROOT/etc/shadow | cut -d: -f2)"
+j2 files/build_templates/default_users.json.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/default_users.json
+sudo LANG=c chroot $FILESYSTEM_ROOT chmod 600 /etc/sonic/default_users.json
+
 ## Copy over clean-up script
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 

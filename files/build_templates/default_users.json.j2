@@ -1,0 +1,5 @@
+{%- set users_dict = {
+                        username: {"password": password}
+                     }
+-%}
+{{ users_dict | tojson(indent=4) }}
