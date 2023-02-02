@@ -38,6 +38,7 @@ def set_del_test(mgr, op, args, expected_ret, expected_cmds):
 
 def test_set_del():
     mgr = constructor()
+    mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
     set_del_test(
         mgr,
         "SET",
@@ -47,7 +48,9 @@ def test_set_del():
         True,
         [
             ["route-map FROM_SDN_SLB_ROUTES_RM permit 100",
-             " set community 1234:1234"]
+             " set as-path prepend 65100 65100",
+             " set community 1234:1234",
+             " set origin incomplete"]
         ]
     )
 
