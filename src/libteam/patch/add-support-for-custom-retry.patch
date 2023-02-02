@@ -250,7 +250,7 @@ index 82b8b86..f58ad3b 100644
 +struct lacp_state_retry_count_info {
 +	struct teamd_workq workq;
 +	struct lacp *lacp;
-+    uint8_t retry_count;
++	uint8_t retry_count;
 +};
 +
 +static int lacp_state_retry_count_work(struct teamd_context *ctx,
@@ -270,7 +270,7 @@ index 82b8b86..f58ad3b 100644
 +	teamd_log_dbg(ctx, "Retry count manually changed from %u to %u",
 +		       lacp->cfg.retry_count,
 +		       info->retry_count);
-+    lacp->cfg.retry_count = info->retry_count;
++	lacp->cfg.retry_count = info->retry_count;
 +	ms = lacp->cfg.retry_count * 3 * 60 * 1000;
 +	ms_to_timespec(&ts, ms);
 +	err = teamd_loop_callback_timer_set(lacp->ctx,
@@ -278,15 +278,15 @@ index 82b8b86..f58ad3b 100644
 +						lacp, NULL, &ts);
 +	if (err) {
 +		teamd_log_err("Failed to set retry count timeout timer.");
-+        // Switch back to default now
-+        lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++		// Switch back to default now
++		lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
 +		return err;
 +	}
 +	teamd_loop_callback_enable(ctx,
 +					LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp);
 +
 +	teamd_for_each_tdport(tdport, lacp->ctx) {
-+        struct lacp_port* lacp_port;
++		struct lacp_port* lacp_port;
 +
 +		lacp_port = lacp_port_get(lacp, tdport);
 +		if (lacp_port_selected(lacp_port)) {
