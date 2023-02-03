@@ -44,13 +44,20 @@ function updateSyslogConf()
     fi
     CONTAINER_NAME="$DOCKERNAME"
     TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
+    failed="true"
     {%- if docker_container_name == "database" %}
     python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
     {%- else %}
-    sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+    sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"
+    if [ "$?" -eq "0" ]; then
+      sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+      failed="false"
+    fi
     {%- endif %}
-    docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
-    rm -rf $TMP_FILE
+    if [ "$failed" == "true"]; then
+      docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
+    fi
+#    rm -rf $TMP_FILE
 }
 function ebtables_config()
 {
