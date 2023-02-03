@@ -2,7 +2,7 @@ module sonic-telemetry_client {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-telemetry_client";
+    namespace "http://github.com/sonic-net/sonic-telemetry_client";
     prefix telemetry_client;
 
     import ietf-inet-types {
@@ -127,6 +127,7 @@ module sonic-telemetry_client {
                 leaf report_interval {
                     type uint64;
                     description "report_interval unit ms";
+                    default 5000;
                 }
 
                 leaf report_type {
