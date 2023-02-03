@@ -83,9 +83,10 @@ module sonic-portchannel {
                
                leaf mode {
                    description "PortChannel Modes values will be from "routed|access|trunk. Default val is routed.";
-                    type string {
-                        length 1..255;
+                   type string {
+                       pattern "routed|access|trunk";
                     }
+                    default "routed";
 
                 }
 

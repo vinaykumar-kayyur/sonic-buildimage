@@ -20,13 +20,19 @@
         "desc": "PORT_VALID_MTU_TEST_2 no failure."
     },
     "PORT_VALID_MODE_TEST_1": {
-        "desc": "PORT_VALID_MODE_TEST_1 no failure."
+        "desc": "PORT_VALID_MODE_TEST_1 no failure.",
+        "eStrKey" : "Pattern",
+        "eStr": ["routed|access|trunk"]
     },
     "PORT_VALID_MODE_TEST_2": {
-        "desc": "PORT_VALID_MODE_TEST_2 no failure."
+        "desc": "PORT_VALID_MODE_TEST_2 no failure.",
+        "eStrKey" : "Pattern",
+        "eStr": ["routed|access|trunk"]
     },
     "PORT_VALID_MODE_TEST_3": {
-        "desc": "PORT_VALID_MODE_TEST_3 no failure."
+        "desc": "PORT_VALID_MODE_TEST_3 no failure.",
+        "eStrKey" : "Pattern",
+        "eStr": ["routed|access|trunk"]
     },
     "PORT_VALID_AUTONEG_TEST_1": {
         "desc": "PORT_VALID_AUTONEG_TEST_1 no failure."
