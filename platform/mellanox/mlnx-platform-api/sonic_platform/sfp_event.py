@@ -335,7 +335,6 @@ class sfp_event:
         port_cnt_p = new_uint32_t_p()
         uint32_t_p_assign(port_cnt_p, 0)
         label_port_list = []
-        label_port = None
         module_state = 0
 
         rc = sx_lib_host_ifc_recv(fd_p, pkt, pkt_size_p, recv_info_p)
@@ -368,14 +367,17 @@ class sfp_event:
             rc = sx_api_port_device_get(self.handle, 1, 0, None,  port_cnt_p)
             if rc != SX_STATUS_SUCCESS:
                 logger.log_error("Failed to get logical port number")
+                status = False
             else:
                 port_cnt = uint32_t_p_value(port_cnt_p)
                 port_attributes_list = new_sx_port_attributes_t_arr(port_cnt)
                 rc = sx_api_port_device_get(self.handle, 1, 0, port_attributes_list,  port_cnt_p)
                 if rc != SX_STATUS_SUCCESS:
                     logger.log_error("Failed to get logical port attributes")
+                    status = False
                 else:
                     for i in range(port_list_size):
+                        label_port = None
                         logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
                         for j in range(port_cnt):
                             port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,j)
