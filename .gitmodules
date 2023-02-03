@@ -78,6 +78,9 @@
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
 	url = https://github.com/sonic-net/sonic-mgmt-framework
+[submodule "src/sonic-telemetry"]
+	path = src/sonic-telemetry
+	url = https://github.com/sonic-net/sonic-gnmi
 [submodule "Switch-SDK-drivers"]
 	path = platform/mellanox/sdk-src/sx-kernel/Switch-SDK-drivers
 	url = https://github.com/Mellanox/Switch-SDK-drivers
@@ -114,6 +117,3 @@
 [submodule "src/dhcprelay"]
 	path = src/dhcprelay
 	url = https://github.com/sonic-net/sonic-dhcp-relay.git
-[submodule "src/sonic-gnmi"]
-	path = src/sonic-gnmi
-	url = https://github.com/sonic-net/sonic-gnmi.git
