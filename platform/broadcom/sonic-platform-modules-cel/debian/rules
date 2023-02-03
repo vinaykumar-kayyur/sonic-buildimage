@@ -30,6 +30,17 @@ override_dh_auto_build:
                        fi; \
                        continue; \
                 fi; \
+                if [ $$mod = "silverstone-v2" ]; then \
+                       cd $(MOD_SRC_DIR); \
+                       if [ -d $(MOD_SRC_DIR)/$${mod}/pddf ]; then \
+                               cd $(MOD_SRC_DIR)/$${mod}/pddf; \
+                               if [ -f sonic_platform_setup.py ]; then \
+                                       python3 sonic_platform_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/pddf; \
+                                       echo "Finished makig pddf whl package for $$mod"; \
+                               fi; \
+                       fi; \
+                       continue; \
+                fi; \
 		cd $(MOD_SRC_DIR)/$${mod}; \
 		python3 setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/modules; \
 	done)
