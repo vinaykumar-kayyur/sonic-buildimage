@@ -121,11 +121,10 @@ jobs:
                 start=$(date --date="$(ls -dl /proc/$pid --time-style full-iso | awk '{print$6,$7}')" +%s)
                 time_s=$(($now-$start))
                 if [[ $time_s -gt $(DOCKER_BUILD_TIMEOUT) ]]; then
-                do
                   echo =========== $(date +%F%T) $time_s &>> target/daemon.log
                   ps $pid &>> target/daemon.log
                   sudo kill $pid
-                done
+                fi
               done
             done
           ) &
