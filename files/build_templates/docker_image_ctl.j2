@@ -53,7 +53,7 @@ function updateSyslogConf()
       failed="false"
     fi
     {%- endif %}
-    if [ "$failed" == "true"]; then
+    if [ "$failed" == "false"]; then
       docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
     fi
 #    rm -rf $TMP_FILE
