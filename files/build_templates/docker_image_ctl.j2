@@ -51,6 +51,7 @@ function updateSyslogConf()
     sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE 2>&1
     if [ $? -ne 0 ]; then
       echo "$CONTAINER_NAME conf gen failed. return code is $?" >> /tmp/chunangli.log
+      sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  >> /tmp/chunangli.log 2>&1
       failed="true"
     fi
     {%- endif %}
@@ -58,6 +59,7 @@ function updateSyslogConf()
       echo "$CONTAINER_NAME conf gen success. falg is $failed. Exec copy." >> /tmp/chunangli.log
       docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
     fi
+    echo "--------------------------------------------------" >> /tmp/chunangli.log
 #    rm -rf $TMP_FILE
 }
 function ebtables_config()
