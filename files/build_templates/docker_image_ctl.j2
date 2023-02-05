@@ -55,7 +55,7 @@ function updateSyslogConf()
       failed="true"
     fi
     {%- endif %}
-    if [ "$failed" == "false"]; then
+    if [ "$failed" == "false" ]; then
       echo "$CONTAINER_NAME conf gen success. falg is $failed. Exec copy." >> /tmp/chunangli.log
       docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
     fi
