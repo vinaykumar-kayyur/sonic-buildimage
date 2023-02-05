@@ -51,7 +51,6 @@ def get_port_max_width(handle):
 
     limits = rm_resources_t()
     modes = rm_modes_t()
-
     rm_chip_limits_get(chip_type, limits)
     max_width = limits.port_map_width_max
 
