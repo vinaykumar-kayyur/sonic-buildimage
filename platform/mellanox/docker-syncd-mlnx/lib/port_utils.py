@@ -9,8 +9,6 @@ SWITCH_ID = 0
 PORT_TABLE = 'PORT'
 FIRST_LANE_INDEX = 0
 ETHERNET_PREFIX = 'Ethernet'
-ASIC_MAX_LANES = {SX_CHIP_TYPE_SPECTRUM: 4, SX_CHIP_TYPE_SPECTRUM2: 4, 
-                  SX_CHIP_TYPE_SPECTRUM3: 8, SX_CHIP_TYPE_SPECTRUM4: 8}
 
 def get_ports_lanes_map(config_db):
     """ Get lane number of the first lane in use by port for all existing ports.
@@ -39,6 +37,30 @@ def get_ports_lanes_map(config_db):
 
     return lanes_map
 
+def get_port_max_width(handle):
+    """ Get max number of lanes in port according to chip type
+
+    Args:
+        handle (sx_api_handle_t): SDK handle
+
+    Returns:
+        int: max lanes in port
+    """
+    # Get chip type
+    chip_type = sx_get_chip_type(handle)
+
+    limits = rm_resources_t()
+    modes = rm_modes_t()
+
+    rm_chip_limits_get(chip_type, limits)
+    max_width = limits.port_map_width_max
+
+    # SPC2 ports have 8 lanes but SONiC is using 4
+    if chip_type == SX_CHIP_TYPE_SPECTRUM2:
+        max_width = 4
+
+    return max_width
+
 def sx_get_ports_map(handle, config_db):
     """ Get ports map from SDK logical index to SONiC index
     
@@ -55,8 +77,8 @@ def sx_get_ports_map(handle, config_db):
         # Get lanes map
         lanes_map = get_ports_lanes_map(config_db)
 
-        # Get chip type
-        chip_type = sx_get_chip_type(handle)
+        # Get max number of lanes in port
+        port_max_width = get_port_max_width(handle)
         
         # Get ports count
         port_cnt_p = new_uint32_t_p()
@@ -79,10 +101,10 @@ def sx_get_ports_map(handle, config_db):
                 continue
             
             # Calculate sonic index (sonic index=4 for Ethernet4)
-            lane_index = get_lane_index(lane_bmap, ASIC_MAX_LANES[chip_type])
+            lane_index = get_lane_index(lane_bmap, port_max_width)
             assert lane_index != -1, "Failed to calculate port index"
             
-            first_lane = label_port * ASIC_MAX_LANES[chip_type] + lane_index;
+            first_lane = label_port * port_max_width + lane_index;
             sonic_index = lanes_map[first_lane]
 
             sonic_interface = ETHERNET_PREFIX + str(sonic_index)    
