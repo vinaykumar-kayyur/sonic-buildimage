@@ -1,0 +1,11 @@
+[Unit]
+Description=Platform db98cx8540-16cd Service
+After=rc-local.service
+Before=getty.target
+
+[Service]
+ExecStart=/usr/local/bin/db98cx8540-16cd-init.sh
+StandardOutput=tty
+
+[Install]
+WantedBy=multi-user.target
