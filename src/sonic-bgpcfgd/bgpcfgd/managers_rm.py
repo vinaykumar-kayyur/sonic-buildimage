@@ -74,14 +74,15 @@ class RouteMapMgr(Manager):
 
     def __update_rm(self, rm, data):
         cmds = []
-        cmds.append("route-map %s permit 100" % ("%s_RM" % rm))
-        bgp_asn = \
-            self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)['localhost']['bgp_asn']
-        cmds.append(" set as-path prepend %s %s" % (bgp_asn, bgp_asn))
-        cmds.append(" set community %s" % data["community_id"])
-        cmds.append(" set origin incomplete")
-
-        log_debug("BGPRouteMapMgr:: update route-map %s community %s origin incomplete as-path prepend %s %s" % \
-                  ("%s_RM" % rm, data["community_id"], bgp_asn, bgp_asn))
-        self.cfg_mgr.push_list(cmds)
+        if rm is "FROM_SDN_SLB_ROUTES":
+            cmds.append("route-map %s permit 100" % ("%s_RM" % rm))
+            bgp_asn = \
+                self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)['localhost']['bgp_asn']
+            cmds.append(" set as-path prepend %s %s" % (bgp_asn, bgp_asn))
+            cmds.append(" set community %s" % data["community_id"])
+            cmds.append(" set origin incomplete")
+            log_debug("BGPRouteMapMgr:: update route-map %s community %s origin incomplete as-path prepend %s %s" % \
+                      ("%s_RM" % rm, data["community_id"], bgp_asn, bgp_asn))
+        if cmds:
+            self.cfg_mgr.push_list(cmds)
         log_debug("BGPRouteMapMgr::Done")
