@@ -51,7 +51,9 @@ def get_port_max_width(handle):
 
     limits = rm_resources_t()
     modes = rm_modes_t()
-    rm_chip_limits_get(chip_type, limits)
+
+    rc = rm_chip_limits_get(chip_type, limits)
+    sx_check_rc(rc)
     max_width = limits.port_map_width_max
 
     # SPC2 ports have 8 lanes but SONiC is using 4
@@ -72,6 +74,8 @@ def sx_get_ports_map(handle, config_db):
     """         
     try:
         ports_map = {}
+        port_attributes_list = None
+        port_cnt_p = None
         
         # Get lanes map
         lanes_map = get_ports_lanes_map(config_db)
