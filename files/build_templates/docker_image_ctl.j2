@@ -50,13 +50,11 @@ function updateSyslogConf()
     {%- else %}
     sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
     if [ $? -ne 0 ]; then
-      echo "Error: Execute sonic-cfggen failed."
-      failed="true"
+      echo "Error: Execute sonic-cfggen -d failed. Execute without '-d'."
+      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
     fi
     {%- endif %}
-    if [ "$failed" == "false" ]; then
-      docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
-    fi
+    docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
     rm -rf $TMP_FILE
 }
 function ebtables_config()
