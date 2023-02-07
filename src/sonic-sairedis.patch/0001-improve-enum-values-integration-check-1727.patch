@@ -1,23 +1,23 @@
 diff -r -u SAI/meta/checkenumlock.sh SAI.1/meta/checkenumlock.sh
---- SAI/meta/checkenumlock.sh	2023-02-07 04:53:00.256474789 +0000
-+++ SAI.1/meta/checkenumlock.sh	2023-02-07 04:52:38.020691884 +0000
-@@ -30,7 +30,6 @@
+--- SAI/meta/checkenumlock.sh	2023-02-07 07:31:33.894833251 +0000
++++ SAI.1/meta/checkenumlock.sh	2023-02-07 07:34:53.942895402 +0000
+@@ -30,6 +30,7 @@
  mkdir temp
  
  git --work-tree=temp/ checkout origin/master inc
--git --work-tree=temp/ checkout origin/master experimental
++git --work-tree=temp/ checkout origin/master experimental
  
  echo "Checking for possible enum values shift (current branch vs origin/master) ..."
  
 diff -r -u SAI/meta/checkheaders.pl SAI.1/meta/checkheaders.pl
---- SAI/meta/checkheaders.pl	2023-02-07 04:53:00.256474789 +0000
-+++ SAI.1/meta/checkheaders.pl	2023-02-07 04:52:38.020691884 +0000
+--- SAI/meta/checkheaders.pl	2023-02-07 07:31:33.894833251 +0000
++++ SAI.1/meta/checkheaders.pl	2023-02-07 07:34:53.942895402 +0000
 @@ -149,7 +149,7 @@
  
      my ($fhb, $bin) = tempfile( SUFFIX => '.bin', UNLINK => 1  );
  
--    system("gcc $src -I. -I '$dir'/../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
-+    system("gcc $src -I. -I ../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
+-    system("gcc $src -I. -I ../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
++    system("gcc $src -I. -I '$dir'/../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
  
      close $fhs;
      close $fhb;
