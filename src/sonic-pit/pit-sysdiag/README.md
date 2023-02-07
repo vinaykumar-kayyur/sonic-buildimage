@@ -1,18 +1,19 @@
-# `sysdiag` 设计说明
-`sysdiag`是一套交换机软硬件测试工具集，目的是对交换机进行健康检查，生成测试报告，并支持环境类测试、研发测试和生产测试等。
+# `sysdiag` Design specification
 
-`sysdiag`的设计理念是：
+`sysdiag`is a set of tools for testing switch hardware and software. Objective is perform health testing on a switch, generate test reports. It support environment test, development test and manufacturing test.
 
- * 测试项通用化，不依赖某硬件平台或特殊场景；
- * 测试项的具体测试流程需大家认可；
- * 测试项测试过程中需要输入的内容均采用读配置文件的形式；
- * 测试项中涉及平台数据获取的调用，均可通过`plugins`下的模块；
+`sysdiag` Design basics
 
-由于每个平台硬件设计的差异，可以通过平台层的配置文件做隔离。
+ * Standard test cases, hardware independent and deploy scenario independent;
+ * Loggic of each test case is approved by all the users;
+ * All inputs needed by a specific test case is read from corresponding configuration file;
+ * All platform is manged via platform plugins(Stage 1, already supported) or platform APIs(Stage 2).
 
-### 1 整体架构
+Due to the differences in the hardware design of each platform, it can be isolated through the configuration file of the platform layer.
 
-`sysdiag`整体架构如下图。`sysdiag`包括两部分`test_cases`和`tools`，其中`test_cases`是测试项集合，`tools`是平台工具。
+### 1 Architecture
+
+`sysdiag` overall architecture is shown in figure bellow. sysdiag include `test_cases`, i.e collection of all test cases, and `tools`, i.e collection of platform control tools.
 
 ```json
       ┌───────────────────────────────────────────────────────────┐
@@ -40,23 +41,23 @@ space    │                                 │ │                 │
          └─────────────────────────────────┘ └─────────────────┘
 ```
 
-### 2 `plugins`中间抽象层接口设计
-`plugins`是`SONiC`下的平台抽象层，`sysdiag`可以利用并扩充此模块提供的接口作为平台数据来源。
-下面列举的`plugins`模块属于硬件平台下的通用组件，如果`sysdiag`需要访问下面模块以外的信息，可以通过通用的第三方工具或者`nos`下的文件接口，比如：
+### 2 `plugins` middle layer of abstraction
+`plugins` is platform abstraction layer in SONiC, `sysdiag` utilize these modules to control platform hardware.
+Example listed below are `plugins` that are generic(platform indepedent). In the cases where `sysdiag` want to access information except bellow items, platform specific tools or sysfs case be used.
 
-* `CPU`：`/proc/cpuinfo`或者`dmidecode`
-* `memory`：`/proc/meminfo`或者`dmidecode`
-* `SSD`：`mmc-util`或者`smartctl`
+* `CPU`：`/proc/cpuinfo` or `dmidecode`
+* `memory`：`/proc/meminfo` or `dmidecode`
+* `SSD`：`mmc-util` or `smartctl`
 * `RTC`：`/sys/class/rtc/rtc0/*`
 
 
 
 #### 2.1 `sfputil.py`
-`sfputil.py`用于光模块访问控制。测试过程中主要关注光模块`IO`状态、光模块`EEPROM`读写等。需要实现的接口如下：
+`sfputil.py` is used to access SFP/QSFP/OSFP modules. Test cases focus on I/O status of optic modules and EEPROM read/write of the optic modules. Required methods are listed below:
 
 ``` python
 class SfpUtil(SfpUtilBase):
-    # 获取sfp端口列表
+    # Get sfp port list
     @property
     def sfp_port_list(self):
         '''
@@ -65,7 +66,7 @@ class SfpUtil(SfpUtilBase):
         '''
         return LIST
 
-    # 获取qsfp端口列表
+    # Get QSFP port list
     @property 
     def qsfp_ports(self):
         '''
@@ -74,7 +75,7 @@ class SfpUtil(SfpUtilBase):
         '''
         return LIST
 
-    # 获取光模块端口与eeprom映射字典
+    # Get sysfs path map of the switch, return a dict for all ports, key is port number
     @property
     def port_to_eeprom_mapping(self):
         '''
@@ -86,76 +87,87 @@ class SfpUtil(SfpUtilBase):
         '''
         return DICT
 
-    # 获取光模块presence
+    # Get optic module presence status
     def get_presence(self, port_index):
         return True/False
 
-    # 获取光模块qsfp interrupt
+    # Get QSFP module interrupt status
     def get_interrupt(self, port_index):
         return True/False
 
-    # 获取光模块qsfp low power mode
+    # Get QSFP module low power mode
     def get_low_power_mode(self, port_index):
         return True/False
     def set_low_power_mode(self, port_index, enable):
         return True/False
 
-    # 获取光模块qsfp reset
+    # Get QSFP module reset pin status
     def get_reset(self, port_index):
         return True/False
+
     def reset(self, port_index):
         return True/False
 
-    # 获取光模块sfp tx fault
+    # Get SFP/QSFP tx fault
     def get_tx_fault(self, port_index):
         return True/False
 
-    # 获取光模块sfp rx los
+    # Get SFP/QSFP rx los
     def get_rx_los(self, port_index):
         return True/False
 
-    # 获取光模块sfp tx disable
+    # Get SFP/QSFP tx disable
     def get_tx_disable(self, port_index):
         return True/False
+
     def set_tx_disable(self, port_index, enable):
         return True/False
 
-    # Eload支持low speed signals monitor/control，需要实现set/get接口
+    # Eload support low speed signals monitor/control
     # For sfp
     def get_eload_tx_disable(self, port_index):
         return True/False
+
     def set_eload_tx_fault(self, port_index, enable):
         return True/False
+
     def set_eload_rx_los(self, port_index, enable):
         return True/False
-    def set_eload_presence(self, port_index, enable): # sfp set mod_abs, qsfp set modprs
+
+    # SFP port set mod_abs pin while QSFP port set modprs pin
+    def set_eload_presence(self, port_index, enable):
         return True/False
+
     # For qsfp
     def get_eload_low_power_mode(self, port_index):
         return True/False
+
     def get_eload_reset_changed(self, port_index):
         '''
             when set eload modprstL high, port cpld will reset qsfp;
             we need call below function to check wether reset changed or not
         '''
         return True/False
+
     def set_eload_interrupt(self, port_index, enable):
         return True/False
+
     # eload power setting
     def set_eload_power(self, port_index, value):
         return True/False
+
     # eload insertion counter
     def get_eload_insertion_counter(self, port_index):
         return integer
 
-    # 获取光模块在位状态记录
+    # Get port SFP/QSFP plugin/out records
     def get_plug_record(self):
         '''
-        由于cpld中光模块在位状态记录是读清的，所以该接口需要一次性把数值拿出来。
-        返回字典，key=physical port index(integer), value=True if plug happend else False,
+        present bit in CPLD logic is set to clear_on_read, so we shoudl read all ports' presence data.
+        return dict, key=physical port index(integer), value=True if plug happend else False.
         @return DICT {
-            1: False, # 端口没有发生在位状态变化
-            2: True,  # 端口发生过在位状态变化
+            1: False,
+            2: True,
         }
         ''' 
         return {
@@ -163,30 +175,29 @@ class SfpUtil(SfpUtilBase):
             2:False,
         }
 
-    # 光模块事件上报
+    # SFP/QSFP change events
     def get_transceiver_change_event(self, timeout=0):
         return DICT
 ```
 
-`sysdiag`测试项可以通过`sfputil.py`获取硬件平台下的端口形态配置，并对光模块进行诊断。
+`sysdiag`may obtain port layout by `sfputil.py` then run tranceiver tests.
 
 
 #### 2.2 `fanutil.py`
 `fanutil.py`主要实现风扇访问控制，支持转速查看、占空比设置等。需要实现接口如下：
+`fanutil.py` implements fan control, support fan speed, pwm settings, etc. It should implements the following methods:
 
 ```python
 class FanUtil(object):
     def __init__(self):
         pass
 
-    # 获取设备支持的风扇数量
     def get_num_fans(self):
         """
         Retrieves the number of FANs supported on the device
         """
         return FAN_NUM
     
-    # 获取风扇在位状态
     def get_fan_presence(self, index):
         """
         Retrieves the presence status of FAN defined by 1-based index <index>
@@ -195,7 +206,6 @@ class FanUtil(object):
         """
         return True/False
     
-    # 获取风扇信息
     def get_all(self):
         """
         Retrieves the FANs information
@@ -217,36 +227,34 @@ class FanUtil(object):
                     }
             }
 
-    # 修改风扇转速
+    # Set fan speed
     def set_speed(self, fan, pwm):
         # @fan: fan index;
         # @pwm: pwm value [0 ~ 100];
         return True/False
 
-    # 设置风扇强制全速(最高优先级)
+    # Set fan speed to full speed, highest priority
     def set_full_speed(self, enable):
         return True/False
 
-    # 设置风扇控制模式(auto/manual)
+    # Set fan control mode(auto/manual)
     def set_mode(self, mode):
         return True/False
 
 ```
 
 #### 2.3 `psuutil.py`
-`psuuti.py`主要实现`PSU`状态获取。
+`psuuti.py`implement PSU information access.
 
 ```python
 class PsuUtil(PsuBase):
     
-    # 获取设备支持的PSU数量
     def get_num_psus(self):
         """
         Retrieves the number of PSUs supported on the device
         """
         return PSU_NUM
 
-    # 获取PSU状态
     def get_psu_status(self, index):
         """
         Retrieves the operational status of PSU
@@ -255,7 +263,6 @@ class PsuUtil(PsuBase):
         """
         return True/False
     
-    # 获取PSU信息
     def get_all(self):
         return {
             "Number": PSU_NUM,
@@ -264,12 +271,12 @@ class PsuUtil(PsuBase):
                     "InputType": "AC" or "DC",
                     "InputStatus": True/False,
                     "OutputStatus": True/False,
-                    "AirFlow": "F2B",               # 'N/A'
-                    "SN": "serial_number_example",  # 'N/A'
-                    "PN": "part_number_exampple",   # 'N/A'
-                    "Vendor": "Vendor_name",        # 'N/A'
-                    "HwVersion": "1.0",             # 硬件版本信息，'N/A'
-                    "FwVersion": "1.0",             # 固件版本信息，'N/A'
+                    "AirFlow": "F2B",
+                    "SN": "serial_number_example",
+                    "PN": "part_number_exampple",
+                    "Vendor": "Vendor_name",
+                    "HwVersion": "1.0",
+                    "FwVersion": "1.0",
                     "Fan": {
                         "Value": 1100,
                         "LowThd": 100,
@@ -321,7 +328,6 @@ class PsuUtil(PsuBase):
             }
         }
 
-    # 设置PSU风扇转速(PSU FAN的最低转速修改)
     def set_psu_fan_speed(self, psu_index, pwm):
         """
         set psu fan speed.
@@ -333,20 +339,18 @@ class PsuUtil(PsuBase):
 ```
 
 #### 2.4 `sensorutil.py`
-`sensorutil.py` 主要实现`sensor`的访问。接口如下：
+`sensorutil.py` implements `sensor` information access. It should implements methods as below:
 ```python
 class SensorUtil(object):
     def __init__(self):
         pass
 
-    # 获取设备支持的sensor数量
     def get_num_sensors(self):
         """
         Retrieves the number of Sensors supported on the device
         """
         return SENSOR_NUM
 
-    # 获取所有sensor状态
     def get_all(self):
         return {
             "EMC1403-I2C-3-5C":{
@@ -404,14 +408,13 @@ class SensorUtil(object):
 ```
 
 #### 2.5 `fwmgrutil.py`
-`fwmgrutil.py` 主要实现固件版本查看、固件升级刷新，`FRU`读写访问等功能。接口如下：
+`fwmgrutil.py` implements firmware version get, firmware upgrade, firmware refresh for logical devices, such as CPLD, FPGA, PCIe, and system components such as BIOS, UBoot and BMC os. It should implements below methods:
 
 ```python
 class FwMgrUtil(object):
     def __init__(self):
         pass
 
-    # 固件版本查看接口
     def get_fw_version(self):
         """
         Retrieves all firmwares' version on the device
@@ -437,7 +440,6 @@ class FwMgrUtil(object):
             },
         }
 
-    # 获取下次启动Flash以及Flash主备切换
     # BIOS
     def get_bios_current_boot_flash(self):
         return "master"/"slave"
@@ -468,107 +470,105 @@ class FwMgrUtil(object):
     def set_bmc_next_boot_flash(self, flash):
         return True/False
 
-    # 固件更新
     def firmware_upgrade(self, fw_type, fw_path, fw_extr=None):
         """
-        	@fw_type: firmware type, should be one of the strings:'bios', 'uboot', 'bmc', 'cpld', .etc.
-        	@fw_path: target firmware file
-        	@fw_extra OPTIONAL, extra information string, for fw_type 'BIOS'/'Uboot'/'BMC', value should be one of 'master'/'slave'/'both'
-        	@return: Boolean
+        @fw_type: firmware type, should be one of the strings:'bios', 'uboot', 'bmc', 'cpld', .etc.
+        @fw_path: target firmware file
+        @fw_extra OPTIONAL, extra information string, for fw_type 'BIOS'/'Uboot'/'BMC', value should be one of 'master'/'slave'/'both'
+        @return: Boolean
         """
         return True/False
 
     def firmware_refresh(self, fw_type, fw_path, fw_extra=None):
         return True/False
 
-    # 获取FRU列表
+    # Get FRU name list of system components, such as system, switch board, power board, fan board, etc.
     def get_frus(self):
         """
-        	Retrieves all FRU names on the device
-        	@return: LIST
+        Retrieves all FRU names on the device
+        @return: LIST
         """
         return FRU_NAME_LIST  # ['sys', 'smb', 'pdb']
 
-    # 获取FRU内容
+    # Get FRU information of a given system component
     def read_fru(self, fru_name):
         """
-        	Read the FRU content.
-        	@fru_name: string, the name of FRU
-        	@return: TUPLE,(status, output), status=True if FRU acceed success,
-        			output=string of the FRU content.
+        Read the FRU content.
+        @fru_name: string, the name of FRU
+        @return: TUPLE,(status, output), status=True if FRU acceed success,
+                 output=string of the FRU content.
         """
         return statue, content
-	
-    # 烧录FRU
+
+    # Burn FRU info into EEPROM of a system components
     def program_fru(self, fru_name, fru_bin_file):
         """
-        	program the FRU
-        	@fru_name: the name of FRU
-        	@fru_bin_file: the file of FRU raw binary.
-        	@return: True if programed success.
+        program the FRU
+        @fru_name: the name of FRU
+        @fru_bin_file: the file of FRU raw binary.
+        @return: True if programed success.
         """
         return True/False
 ```
 
 #### 2.6 `led_control.py`
-`led_control.py`主要实现前面板`LEDs`和端口`LEDs`的亮灭控制，具体判断需要肉眼观察。接口如下：
+`led_control.py` implements front panel ports' `LEDs` and device's system `LEDs` controls. It should implements methods bellow:
 
 ```python
 class LedControl(LedControlBase):
     # 设置panel sys led
     def set_sys_led(self, color):
         """
-        	@color: string，should be one of "red"/'green'/'yellow' , hardware supported color
+        @color: string，should be one of "red"/'green'/'yellow' , hardware supported color
         """
         return True/False
 
-    # 设置panel power led
+    # Set panel power led
     def set_power_led(self, color):
         return True/False
 
-    # 设置panel fan led
+    # Set system fan led
     def set_fan_led(self, color):
         return True/False
 
-    # 设置panel bmc led
+    # Set system bmc led if applicable
     def set_bmc_led(self, color):
         return True/False
 
-    # 设置port leds
+    # Set front panel port leds
     def set_port_led(self, color):
         return True/False
 
-    # 设置 fan module led
+    # Set fan module led
     def set_fan_module_led(self, color):
         return True/False
 
-    # 设置 psu module led
+    # Set psu module led
     def set_psu_module_led(self, color):
         return True/False
 
-    # 设置panel location led
+    # Set system location led
     def set_location_led(self, color):
         return True/False
 
-    # 获取支持的LEDs列表
+    # Get supported components name list of LED control
     def get_leds(self):
         return LED_NAME_LIST #['sys', 'power', 'fan', 'port']
 
 ```
 
 #### 2.7 `mgmtport.py`
-`mgmtport.py`主要实现管理网口`eth0`的访问控制，接口如下：
+`mgmtport.py` implements control of management ethernet port, usually eth0. It implements methods bellow:
 
 ```python
 class MgmtPortUtil(object):
     def __init__(self):
         pass
 
-    # 获取管理口状态信息
     def get_all(self):
         """
-        	Retrieves the management port running status
-        	@return: DICT
+        Retrieves the management port running status
+        @return: DICT
         """
         return {
             "Link": True/False,
@@ -579,22 +579,24 @@ class MgmtPortUtil(object):
         }
 
 ```
-管理口的管理如果在`CPU`侧，`CPU`可以直接通过读写`PHY`寄存器的形式管理管理网口；如果在`BMC`侧，则需要通过`restful`接口控制。
+
+For Host side, `sysdiag` may access management interface by read/write registers.
+For BMC side, `sysdiag` may access mangement interface through RESTful APIs.
 
 #### 2.8 `bmcutil.py`
-`bmcutil.py`主要实现`BMC`侧的访问控制以及`BMC`系统的`diag`测试。
+`bmcutil.py` implements BMC control and BMC diagnostic. It should implements methods listed below:
 
 ```python
 class BmcUtil(object):
     def __init__(self):
         pass
 
-    # 执行BMC diag测试
     def run_bmc_diag(self, case=None):
         """
-        	Run bmc test cases
-        	@case: case name; if not specified case name, then run all cases.
-        	@return: TUPLE (status, output), status=Boolean, output=string of case returned.
+        Run bmc test cases
+
+        @case: case name; if not specified case name, then run all cases.
+        @return: TUPLE (status, output), status=Boolean, output=string of case returned.
         """
         if not case:
             test_all()
@@ -602,23 +604,22 @@ class BmcUtil(object):
             test_one(case)
         return (status, output)
 
-    # 重启BMC
     def reboot_bmc(self):
         return True/False
 
-    # 执行BMC系统下的command
+    # Exec commands on BMC side
     def exec_raw_cmd(self, command):
         """
-        	Run command under BMC OS 
-        	@command: command string,
-        	@return: TUPLE (status, output), status=Boolean, output=string of case returned.
+        Run command under BMC OS 
+        @command: command string,
+        @return: TUPLE (status, output), status=Boolean, output=string of case returned.
         """
         return (status, output)
 
 ```
 
-#### 2.9 `fruidutil.py` FRU读写工具
-`fruidutil.py`用于fru信息的读取和写入，重构.c 文件的output file给出的相关命令,fru文件需要先从 src 目录放到 /usr/local/bin 目录下：
+#### 2.9 `fruidutil.py` FRU read/write tool
+`fruidutil.py` implements FRU info read/write.
 
 ``` Shell
 
@@ -646,7 +647,7 @@ OPTIONS:
 ```
 
 #### 2.10 `syseeprom-write.py` 
-`syseeprom-write.py`用于syseeprom信息的写入：
+`syseeprom-write.py` read/write sys-eeprom information.
 
 ``` Shell
 
@@ -662,8 +663,8 @@ OPTIONS:
 ```
 
 
-### 3 `sysdiag` 实现
-`sysdiag`目录结构如下：
+### 3 `sysdiag` implementation
+`sysdiag` source tree:
 
 ```shell
 .
@@ -706,25 +707,26 @@ OPTIONS:
     ├── ...
 ```
 
-其中，所有测试项的实现代码`**_tc.py`都在目录`src/`下。
-`test_case.py`为定义的基础类，实现基本的测试项功能定义。
-`sysdiag.py`是运行测试的主程序，主要实现输入参数解析、测试项的创建及执行、输出测试结果。
+All test cases implementation file end with subfix`_tc.py` are placed under directory src.
+`test_case.py` defines test case base class.
+`sysdiag.py` defines main function, parse options, create test case and run test cases per user's input, generate test result per test case and conclude a final result.
 
-`cases/`目录是`sysdiag`的所有测试用例`**_tc`的通用配置。
-`config/`目录是`sysdiag`的平台`platform`测试配置。
-各配置文件说明如下：
+Directory `cases/` contains all the configuration file for each test case.
+Direcotry `config/` contains all the configuration file per platform.
+Confiugration file detail:
 
-* 测试项配置：
 
-  * `config.json`：此文件为测试项的描述，可参考Ali设计。
+* Test case configuration:
+
+  * `config.json`: This file describe test case, reference Alibaba design doc.
 
     ```json
     {
-        "name": "tlv-eeprom-test",               //测试项名称
-        "description": "Test system TLV EEPROM", //测试项功能描述
-        "type": "auto",                          //测试类型，自动化测试
-        "tags": ["production", "delivery"],      //测试标签，属于生产测试和交付测试共同
-        "expectation": {                         //期望的结果
+        "name": "tlv-eeprom-test",               // Test case name
+        "description": "Test system TLV EEPROM", // Test case functional description
+        "type": "auto",                          // Test case type, e.g automation test
+        "tags": ["manufacture", "delivery"],     // Test case scenario, manufacture, acceptant test
+        "expectation": {                         // Result expectation
             "override": "enable",
             "Serial Number": {
                 "type": "string",
@@ -743,13 +745,13 @@ OPTIONS:
 
     
 
-* 平台配置：
+* Platform configuration:
 
-  * `platform_config.json`：此文件描述了平台测试项内容，包括哪些测试项，如下
+  * `platform_config.json`: this file defines test cases full set supported by this platform
 
     ```json
     {
-    	"test_cases": [                    //待测试项列表，说明该平台需要测试的内容
+        "test_cases": [                    // supported test cases
             "i2c_tc",
             "emmc_tc",
             "tlv_eeprom_tc",
@@ -759,51 +761,35 @@ OPTIONS:
             "replaceable_eeprom_write_tc",
             "slot_eeprom_read_tc",
             "slot_eeprom_write_tc"
-    	]
+        ]
     }
     ```
     
-    * `case_config.json`：此文件描述了平台测试项的具体配置详情，比如`i2c`设备拓扑，举例如下：
+    * `case_config.json`: this file defines test case specific variables, such as i2c topo
   
       ```json
       {
-      	"i2c":{
-      		"CTRL_CPLD" : {
-      			"bus" : 2,
-      			"address" : "0x0d",
-      			"register" : "0x0F",
-      			"flag" : "rw"
-      		},
-      		"PORT1_CPLD" : {
-      			"bus" : 3,
-      			"address" : "0x30",
-      			"register" : "0x0F",
-      			"flag" : "rw"
-      		},
-      		"PORT2_CPLD" : {
-      			"bus" : 4,
-      			"address" : "0x31",
-      			"register" : "0x0F",
-      			"flag" : "rw"
-      		}
-      	},
+          "fan_info":{
+              "count":6,
+              "ratio_target": [10,80,20],
+              "speed_tolerance": 1000,
+              "speed_max": 20000,
+              "speed_min": 0,
+              "motor_count": 2
+          }
       }
       ```
 
 
+#### 3.1 `syslogger` Log utility
+It defines class `SysLogger`, log file defaults to `/var/log/sysdiag.log`, log file size `20MB` each, rotate and keeps 5 backup file at most.
 
-
-
-#### 3.1 `syslogger`日志类
-定义了日志类`SysLogger`，默认打印日志到`/var/log/sysdiag.log`中，文件大小`20M`，超过之后轮转，只保留5份日志。
-
-提供`log_dbg`、`log_info`、`log_warn`、`log_err`、`log_crit` 5种级别打印。默认只输出到日志中，可以追加参数`True`同步打印到终端。
-
+Log levels are `log_dbg`、`log_info`、`log_warn`、`log_err`、`log_crit`. By default, log only to log file and print to console is an option.
  
 
-#### 3.2 主类`sysdiag`
+#### 3.2 Main class `sysdiag`
 
-`CLI`界面使用说明如下：
+`CLI` command line description
 
 ```shell
 $ sysdiag -h
@@ -844,30 +830,35 @@ OPTIONS:
 ```
 
 
+Class `SysDiag` defines the user interfaces and main processing logic of the `pit-sysdiag`. It get users' input, parse options and arguments, then decide which kind of test to run, run all the cases, generate final results.
 
-首先定义了`SysDiag`运行类。该类接收用户输入`sys.argv`，根据输入参数，决定下一步测试动作。
+First, `parse_opts_and_args()` is used to parse options and arguments, supports options like -d/-l/-s, etc.
 
-第二步，解析输入参数`parse_opts_and_args()`；支持的输入参数有`-d/-l/-s`等。
+Next step, it generate a list of test cases interpreted from options and arguments. Then loads test cases with `imp.load_source` and `getattr` method to instantiate each test case, then link them in a list, i.e `self.test_case_list`.
 
-第三步，根据参数生成测试类列表`generate_test_case_list()`；这一步使用`imp.load_source()`、`getattr（）`来实现测试类的实例化，并把实例化的类加入测试列表`self.test_case_list`中。
+Then comes the main loop, it iterates over all the test case instances, invokes `run()` method, with each case instance may generate its own result in a JSON file.
 
-第四步，执行测试`run()`。根据用户输入的参数，决定是执行生产测试项还是交付测试项，还是只执行单项测试。
-
-第五步，生成测试总结果`generate_final_result()`。
-
+Finally, after all cases in the list finish running, all test case result will be collected to generate a final result, also store in a JSON file with a call to method `generate_final_result()`.
 
 
-#### 3.3 `test_case` 设计
-`test_case.py`文件定义了`class TCBase`基类，此类主要实现对测试项配置文件`config.json`的解析，执行具体测试过程，生成测试结果。
+#### 3.3 `test_case` Design
+`test_case.py` defines the base class `TCBase`. This class implements read test case configuration file, i.e `config.json`, parse it, then execute the test logic, generate a test result.
 
-成员函数有：
 
-* `def __init__(self, index, case_cfg_file)`：构造函数，索引和配置文件路径，构造函数会根据传入的配置文件路径，解析出里面的`json`内容，并提供`get_tc_*()` `API`；
+##### Methods of class `TCBase`:
+* `def __init__(self, index, case_cfg_file)`:
+  The constructor.
+  `@index` the index of the test case
+  `@case_cfg_file` the configuration file of the test case
+  It will load config file and initialize everything, provides date for methods `get_tc_xxx` APIs.
 
-* **`def run_test(self, *argv):`**：需要用户实现的具体测试过程，并返回测试结果状态码；
+* `def run_test(self, *argv):`:
+  User should override this method, as each test case's testing logic is placed here
 
-* `def generate_result(self, code):`：已经设计好的格式化测试结果。
+* `def generate_result(self, code):`:
+  Generic method, for generating test result for each test.
 
+  e.g.
   ```python
   def generate_result(self, code):
       result = "Pass" if code==E.OK else "Fail"
@@ -876,82 +867,79 @@ OPTIONS:
       return msg, err
   ```
 
-* `def generate_result_dict(self,code)`：已经设计好的`json`格式测试结果返回函数。
+* `def generate_result_dict(self,code)`:
+  Generic method, generates the result with a dict, with some pre-defined keys.
 
-特别说明，`run_test()`函数，是测试过程的具体实现，额外还需要实现对测试结果的赋值，用于测试结果输出打印。
+Note that, `run_test()` should also return an error code, which is used by `sysdiag` loop, to obtain the result directly.
 
-* `self.fail_reason = [*, *, *]`，测试失败的原因列表。
-* `return`：返回测试结果状态码，`E.OK`表示成功，其他值失败。
+* `self.fail_reason = [*, *, *]`
+  This is a list of stirngs, holds the fail reason messages if there is any, or empty list if all test cases passed.
 
-
-
-`test_case.py`文件还定义了测试类`class TestCaseCommon`，继承自`TCBase`，主要增加了对平台配置文件`case_config.json`的解析。`TestCaseCommon`是每个`test_case`实现时需要继承的基础类，用户需要根据构造函数需要传入指定参数。
-
-* `TestCaseCommon`：
-
-  构造函数：`__init__(self, index, module_name, logger, platform_cfg_file, case_cfg_file=None)`，构造函数会自动加载平台配置文件中的`json`内容。
-
-  参数说明：
-
-  * `@index`： 测试项索引，每个测试项都会分配一个ID；
-  * `@module_name`： 测试项名称，**此名称和测试项配置目录名一致**；
-  * `@logger`： 日志打印类，可以直接传值第4章的`logger`；
-  * `@platform_cfg_file`：平台下的测试项详细配置文件，` config/platform/***/case_config.json`
-  * `@case_cfg_file`： 测试项的配置文件， 缺省状态下会直接访问`cases/${module_name}/config.json`
+* `return`: return an error code, E.OK for success.
 
 
+`test_case.py` defines class `TestCaseCommon`, inherit from `TCBase`, it load and parse `$platform/case_cofnig.json` file.
 
-文件命名和类名定义约束：
 
-1. 测试项`py`文件命名，请按格式`xxxx_tc.py`，`xxxx`指定测试项名称，例如风扇测试项`fan_tc.py`；
+##### Class `TestCaseCommon` methods:
 
-2. 测试项中类名定义请按格式`class XXXXTC(TestCaseCommon)`，其中`TC`是`testcase`的缩写，`XXXX`是测试项文件名去掉中间连接线`_`之后的单词大写，例如风扇测试项`fan_tc.py`中类定义为`class FANTC(TestCaseCommon)`，
+* `def __init__(self, index, module_name, logger, platform_cfg_file, case_cfg_file=None)`:
+  The constructor.
+  `@index`: index of a test case, used for sorting or managing test sequence.
+  `@module_name`: test case name
+  `@logger`: logging facility
+  `@platform_cfg_file`: platform specific config file, i.e `config/platform/$platfor_name/case_config.json`
+  `@case_cfg_file`: test case config file, defaults to `cases/$module_name/config.json`
 
-3. 测试类构造函数传值时，`module_name`的赋值和测试项配置目录名一致，例如风扇测试项的构造函数实现如下，其中`MODULE_NAME="fan_tc"`，`fan_tc`即是`config/cases/fan_tc/case_config.json`中的测试项配置目录名称。
+
+File naming and class naming rules:
+
+1. Test case file name should be `xxxx_tc.py`, where `xxxx` is test case name. e.g. `fan_tc.py` for fan test.
+
+2. Test case class name should be `class XXXXTC(TestCaseCommon), where `TC` for 'TestCase', 'XXXX' should be the same as 'xxxx'(the file name) except in Capital format. e.g. `fan_tc.py` contains a class `FANTC(TestCaseCommon)`.
+
+3. `moduole_name` should be the same as test case file name without `.py` subfix. e.g. `MODULE_NAME="fan_tc"` is defined in `fan_tc.py`, then `fan_tc` is test case name in `config/cases/$test_case_name/case_config.json`.
 
    ```
    class FANTC(TestCaseCommon):
-   	def __init__(self, index, logger, platform_cfg_file, case_cfg_file=None):
-   		MODULE_NAME = "fan_tc"
-   		TestCaseCommon.__init__(self, index, MODULE_NAME, logger, platform_cfg_file, case_cfg_file)
+       def __init__(self, index, logger, platform_cfg_file, case_cfg_file=None):
+           MODULE_NAME = "fan_tc"
+           TestCaseCommon.__init__(self, index, MODULE_NAME, logger, platform_cfg_file, case_cfg_file)
    ```
 
-   
+ 
+An example: how to implement a test case `i2c` test.
 
-举个例子，如何实现一个`i2c`测试项。
+Step 1) What
+Check if all the I2C devices in the system are functional.
 
-首先分析需求，`i2c`测试，需要访问验证`i2c bus`下的从设备（涉及`cpld`、`sfp eerpom`、`fru`、`rtc`等）是否工作正常，对于`cpld`可以通过读写测试寄存器验证，其他设备可以读测试。
+Step 2) How to
+Access all the devices under i2c buses, check the status of each device, test read/write function. For devices not writable, do read-only test. Devices of interest may be `CPLD`, `SFP EEPROM`, `FRU`, `RTC`, etc.
 
-基于需要，`i2c`测试类继承`TestCaseCommon`，并需要实现接口`run_test()`。
+Step 3) Implementation in derived test case, i.e `class I2CTC(TestCaseCommon)' in `i2c_tc.py`, put the logic in Step 2 into method `run_test()`.
 
-并且，`i2c`测试还需要该平台下的`i2c`拓扑，故在`config/platform/*/case_config.json`中增加`i2c`配置如下：
+Addtionally, `i2c` test case require I2C topo of the platform, so we add configuration in to file `config/platform/*/case_config.json` as follow:
 
 ```json
 {
-	"i2c":{
-		"CTRL_CPLD" : {
-			"bus" : 2,
-			"address" : "0x0d",
-			"register" : "0x0F",
-			"flag" : "rw"
-		},
-		"PORT1_CPLD" : {
-			"bus" : 3,
-			"address" : "0x30",
-			"register" : "0x0F",
-			"flag" : "rw"
-		},
-		"PORT2_CPLD" : {
-			"bus" : 4,
-			"address" : "0x31",
-			"register" : "0x0F",
-			"flag" : "rw"
-		}
-	}
+    "i2c":{
+        "CTRL_CPLD" : {
+            "bus" : 2,
+            "address" : "0x0d",
+            "register" : "0x0F",
+            "flag" : "rw"
+        },
+        "PORT1_CPLD" : {
+            "bus" : 3,
+            "address" : "0x30",
+            "register" : "0x0F",
+            "flag" : "rw"
+        },
+    ...
 }
 ```
 
-定义`i2c`测试类如下：
+class `i2c` defined as:
 
 ```python
 class I2CTC(TestCaseCommon):
@@ -966,7 +954,7 @@ class I2CTC(TestCaseCommon):
             self.i2c_devices = None
 ```
 
-并实现`i2c rw`函数如下，遍历访问设备，对于读写失败的设备，记录失败原因到`fail_reason`列表中。
+Implement method `i2c_device_rw_test` as: iterate over all devices, access them, log failed cases with failed_reason string and append this failed_reason string in self.failed_reason list.
 
 ```python
 def i2c_device_rw_test(self, also_print_console=False):
@@ -975,14 +963,13 @@ def i2c_device_rw_test(self, also_print_console=False):
     '''
 ```
 
-`run_test`函数中调用`i2c_device_rw_test`即可；
+`run_test` simply invoke `i2c_device_rw_test`.
 
 
 
-#### 3.4 错误码定义
-文件`errorcode.py`，错误码定义采用枚举定义的方法，定义常见的错误类型。
+#### 3.4 Error code definition
+File `errorcode.py` defines all the error code used in `pit-sysdiag`, examples:
 
-如下：
 ```python
 class E(Enum):
     OK = 0           # pass
@@ -991,9 +978,9 @@ class E(Enum):
     EUSB1001 = 1001  # usb write error
     ...
 ```
-测试项`xxxx_tc.py`直接引入该模块。
+Each test case may import errorcode directly.
 
-#### 3.5 测试项`xxxx_tc.py`实现参考
+#### 3.5 Test caase `xxxx_tc.py` reference implementation
 
 ```python
 from test_case import TestCaseCommon
@@ -1018,7 +1005,7 @@ class XXXXTC(TestCaseCommon):
         else:
             return E.OK
     
-    # 必须实现的函数
+    # Mandatory
     def run_test(self, *argv):
         ret = self.test_a()
         if ret != E.OK:
