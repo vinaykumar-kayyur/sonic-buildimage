@@ -21,13 +21,10 @@ TC_TAG_VALID_LIST = [TC_TAG_A, TC_TAG_M, TC_TAG_P, TC_TAG_D, TC_TAG_R, TC_TAG_U]
 
 class TCBase(object):
     def __init__(self, index, case_cfg_file):
-        # self.logger = logger().getlogger()
         self.case_cfg_file = case_cfg_file
         self.config = []
         self.case_index = index
-        #self.case_name = case_name
         self.values = []
-        #self.success = True
         self.fail_reason = []
         self.__parse_config_json()
 
@@ -36,7 +33,6 @@ class TCBase(object):
             with open(self.case_cfg_file, 'r') as f:
                 self.config = json.load(f, object_pairs_hook=OrderedDict)
         except IOError as e:
-            self.logger.log_err(str(e))
             raise SystemExit(1)
 
     def set_index(self, index):
@@ -146,7 +142,7 @@ class TestCaseCommon(TCBase):
             case_cfg_file = os.path.join(current_dir, "../cases", module_name, CASE_CONFIG_JSON_FILE)
         self.module_name = module_name
         self.platform_cfg_file = platform_cfg_file
-        self.platform_cfg_json = None               # platform config content, json format
+        self.platform_cfg_json = None
         self.logger = logger
 
         TCBase.__init__(self, index, case_cfg_file)

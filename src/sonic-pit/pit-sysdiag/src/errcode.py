@@ -62,7 +62,7 @@ class E(IntEnum):
     EMEM4003 = 4003                       # memory ecc happened
     EMEM4004 = 4004                       # free memory is too small
     EMEM4005 = 4005                       # memmory stress test eeror
-    
+
     EPSU5000 = 5000                       # PSU error
     EPSU5001 = 5001                       # PSU vendor info not matched
     EPSU5002 = 5002                       # PSU input voltage out of threshold
@@ -195,10 +195,8 @@ class E(IntEnum):
 
     EFWVERSION27001 = 27001               # bios version not match
     EFWVERSION27002 = 27002               # pit version not match
-    # sonic node running version is lower than sonic node baseline version.
-    EFWVERSION27003 = 27003
-    # pit node running version is lower than sonic node baseline version.
-    EFWVERSION27004 = 27004
+    EFWVERSION27003 = 27003               # sonic node running version is lower than sonic node baseline version.
+    EFWVERSION27004 = 27004               # pit node running version is lower than sonic node baseline version.
 
     ENET28001 = 28001  # link speed not match
     ENET28002 = 28002  # ping test loss packet
@@ -235,8 +233,7 @@ class E(IntEnum):
     ESNAKE34003 = 34003  # snake port pkt conut fail.
 
     ESSH35001 = 35001   # [ remote ] connect fail ,PASSWORD OR HOSTNAME is wrong
-    # [ remote ] connect timeout ,PASSWORD OR HOSTNAME is wrong
-    ESSH35002 = 35002
+    ESSH35002 = 35002   # [ remote ] connect timeout ,PASSWORD OR HOSTNAME is wrong
     ESSH35003 = 35003   # [ remote ] connect fail ,EOF ERROR
 
     EUPG36001 = 36001   # save master running version fail or upgrade test firmware fail

@@ -3,9 +3,7 @@
 __version__ = 'v0.1.0'
 __author__  = "Pytool Lishoulei<admin@pytool.com>"
 import sys
-#import json
 import traceback
-#from tabulate import tabulate
 from test_case import TestCaseCommon
 from errcode import E
 from function import load_platform_util_module
@@ -229,8 +227,6 @@ class PSUTC(TestCaseCommon):
         return ret
 
     def check_inputs(self, psu_name):
-        #j = json.dumps(psu_info, sort_keys=True, indent=4, separators=(',', ': '))
-        #print j
         ret = E.OK
         psu_info = self.psu_all[psu_name]
         psu_inputs = psu_info["Inputs"]
