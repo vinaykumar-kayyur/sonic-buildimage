@@ -74,7 +74,7 @@ class RouteMapMgr(Manager):
 
     def __update_rm(self, rm, data):
         cmds = []
-        if rm is "FROM_SDN_SLB_ROUTES":
+        if rm == "FROM_SDN_SLB_ROUTES":
             cmds.append("route-map %s permit 100" % ("%s_RM" % rm))
             bgp_asn = \
                 self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)['localhost']['bgp_asn']
