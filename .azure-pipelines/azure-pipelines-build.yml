@@ -102,6 +102,8 @@ jobs:
     buildSteps:
       - template: template-skipvstest.yml
       - bash: |
+          patch -p1 < 0001-update-main-cpp.patch
+          patch -p1 < 0002-update-orch-h.patch
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
