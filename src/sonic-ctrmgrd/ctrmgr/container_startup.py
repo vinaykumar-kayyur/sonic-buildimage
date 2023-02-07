@@ -4,11 +4,11 @@ import argparse
 import datetime
 import inspect
 import json
-import subprocess
 import syslog
 import time
 
 from swsscommon import swsscommon
+from sonic_py_common.general import getstatusoutput_noshell_pipe
 
 # DB field names
 SET_OWNER = "set_owner"
@@ -28,7 +28,6 @@ UNIT_TESTING = 0
 
 def debug_msg(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
@@ -114,9 +113,12 @@ def get_docker_id():
     # Read the container-id
     # Note: This script runs inside the context of container
     #
-    cmd = 'cat /proc/self/cgroup | grep -e ":memory:" | rev | cut -f1 -d\'/\' | rev'
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    output = proc.communicate()[0].decode("utf-8")
+    cmd0 = ['cat', '/proc/self/cgroup']
+    cmd1 = ['grep', '-e', ":memory:"]
+    cmd2 = ['rev']
+    cmd3 = ['cut', '-f1', '-d', '/']
+    cmd4 = ['rev']
+    _, output = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2, cmd3, cmd4)
     return output.strip()[:12]
 
 
@@ -227,15 +229,6 @@ def container_up(feature, owner, version):
 
         if check_version_blocked(state_db, feature, version):
             do_freeze(feature, "This version is marked disabled. Exiting ...")
-            return
-
-        if not instance_higher(feature, state_data[VERSION], version):
-            # TODO: May Remove label <feature_name>_<version>_enabled
-            # Else kubelet will continue to re-deploy every 5 mins, until
-            # master removes the lable to un-deploy.
-            #
-            do_freeze(feature, "bail out as current deploy version {} is not higher".
-                    format(version))
             return
 
         update_data(state_db, feature, { VERSION: version })
