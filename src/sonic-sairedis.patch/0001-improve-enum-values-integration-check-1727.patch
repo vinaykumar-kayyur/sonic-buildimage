@@ -1,0 +1,8 @@
+diff -r SAI/meta/checkenumlock.sh SAI.1/meta/checkenumlock.sh
+33d32
+< git --work-tree=temp/ checkout origin/master experimental
+diff -r SAI/meta/checkheaders.pl SAI.1/meta/checkheaders.pl
+152c152
+<     system("gcc $src -I. -I '$dir'/../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
+---
+>     system("gcc $src -I. -I ../experimental -I '$dir' -o $bin") == 0 or die "gcc failed! $!";
