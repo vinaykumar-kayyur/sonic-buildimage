@@ -1,7 +1,8 @@
-diff -r -u SAI/meta/checkenumlock.sh SAI.1/meta/checkenumlock.sh
---- SAI/meta/checkenumlock.sh	2023-02-07 07:31:33.894833251 +0000
-+++ SAI.1/meta/checkenumlock.sh	2023-02-07 07:34:53.942895402 +0000
-@@ -30,6 +30,7 @@
+Index: sonic-sairedis/SAI/meta/checkenumlock.sh
+===================================================================
+--- sonic-sairedis.orig/SAI/meta/checkenumlock.sh
++++ sonic-sairedis/SAI/meta/checkenumlock.sh
+@@ -30,6 +30,7 @@ rm -rf temp
  mkdir temp
  
  git --work-tree=temp/ checkout origin/master inc
@@ -9,10 +10,11 @@ diff -r -u SAI/meta/checkenumlock.sh SAI.1/meta/checkenumlock.sh
  
  echo "Checking for possible enum values shift (current branch vs origin/master) ..."
  
-diff -r -u SAI/meta/checkheaders.pl SAI.1/meta/checkheaders.pl
---- SAI/meta/checkheaders.pl	2023-02-07 07:31:33.894833251 +0000
-+++ SAI.1/meta/checkheaders.pl	2023-02-07 07:34:53.942895402 +0000
-@@ -149,7 +149,7 @@
+Index: sonic-sairedis/SAI/meta/checkheaders.pl
+===================================================================
+--- sonic-sairedis.orig/SAI/meta/checkheaders.pl
++++ sonic-sairedis/SAI/meta/checkheaders.pl
+@@ -149,7 +149,7 @@ sub GetValues
  
      my ($fhb, $bin) = tempfile( SUFFIX => '.bin', UNLINK => 1  );
  
