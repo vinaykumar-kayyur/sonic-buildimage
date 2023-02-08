@@ -3,7 +3,7 @@ from swsscommon import swsscommon
 from .log import log_err, log_debug
 
 ROUTE_MAPS = ["FROM_SDN_SLB_ROUTES"]
-FIXED_DEPLOYMENT_ID = '2'
+FROM_SDN_SLB_DEPLOYMENT_ID = '2'
 
 class RouteMapMgr(Manager):
     """This class add route-map when BGP_PROFILE_TABLE in APPL_DB is updated"""
@@ -76,9 +76,9 @@ class RouteMapMgr(Manager):
         if not 'deployment_id_asn_map' in self.constants:
             log_err("BGPRouteMapMgr:: 'deployment_id_asn_map' key is not found in constants")
             return None
-        if FIXED_DEPLOYMENT_ID in self.constants['deployment_id_asn_map']:
-            return self.constants['deployment_id_asn_map'][FIXED_DEPLOYMENT_ID]
-        log_err("BGPRouteMapMgr:: deployment id %s is not found in constants" % (FIXED_DEPLOYMENT_ID))
+        if FROM_SDN_SLB_DEPLOYMENT_ID in self.constants['deployment_id_asn_map']:
+            return self.constants['deployment_id_asn_map'][FROM_SDN_SLB_DEPLOYMENT_ID]
+        log_err("BGPRouteMapMgr:: deployment id %s is not found in constants" % (FROM_SDN_SLB_DEPLOYMENT_ID))
         return None
 
     def __update_rm(self, rm, data):
