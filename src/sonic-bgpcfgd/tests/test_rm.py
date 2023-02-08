@@ -3,13 +3,23 @@ from bgpcfgd.directory import Directory
 from bgpcfgd.managers_rm import RouteMapMgr
 from swsscommon import swsscommon
 
+
+test_rm_constants = {
+    "deployment_id_asn_map": {
+        "1": 12345,
+        "2": 12346,
+        "3": 12347,
+        "4": 12348,
+    }
+}
+
 def constructor():
     cfg_mgr = MagicMock()
 
     common_objs = {
         'directory': Directory(),
         'cfg_mgr':   cfg_mgr,
-        'constants': {},
+        'constants': test_rm_constants,
     }
 
     mgr = RouteMapMgr(common_objs, "APPL_DB", "BGP_PROFILE_TABLE")
@@ -38,7 +48,6 @@ def set_del_test(mgr, op, args, expected_ret, expected_cmds):
 
 def test_set_del():
     mgr = constructor()
-    mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
     set_del_test(
         mgr,
         "SET",
@@ -48,7 +57,7 @@ def test_set_del():
         True,
         [
             ["route-map FROM_SDN_SLB_ROUTES_RM permit 100",
-             " set as-path prepend 65100 65100",
+             " set as-path prepend 12346 12346",
              " set community 1234:1234",
              " set origin incomplete"]
         ]

@@ -3,7 +3,7 @@ from swsscommon import swsscommon
 from .log import log_err, log_debug
 
 ROUTE_MAPS = ["FROM_SDN_SLB_ROUTES"]
-
+FIXED_DEPLOYMENT_ID = '2'
 
 class RouteMapMgr(Manager):
     """This class add route-map when BGP_PROFILE_TABLE in APPL_DB is updated"""
@@ -72,12 +72,23 @@ class RouteMapMgr(Manager):
             return False
         return True
 
+    def __read_asn(self):
+        if not 'deployment_id_asn_map' in self.constants:
+            log_err("BGPRouteMapMgr:: 'deployment_id_asn_map' key is not found in constants")
+            return None
+        if FIXED_DEPLOYMENT_ID in self.constants['deployment_id_asn_map']:
+            return self.constants['deployment_id_asn_map'][FIXED_DEPLOYMENT_ID]
+        log_err("BGPRouteMapMgr:: deployment id %s is not found in constants" % (FIXED_DEPLOYMENT_ID))
+        return None
+
     def __update_rm(self, rm, data):
         cmds = []
         if rm == "FROM_SDN_SLB_ROUTES":
             cmds.append("route-map %s permit 100" % ("%s_RM" % rm))
-            bgp_asn = \
-                self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)['localhost']['bgp_asn']
+            bgp_asn = self.__read_asn()
+            if bgp_asn is None or bgp_asn is '':
+                log_debug("BGPRouteMapMgr:: update route-map %s, but asn is not found in constants" % ("%s_RM" % rm))
+                return
             cmds.append(" set as-path prepend %s %s" % (bgp_asn, bgp_asn))
             cmds.append(" set community %s" % data["community_id"])
             cmds.append(" set origin incomplete")
