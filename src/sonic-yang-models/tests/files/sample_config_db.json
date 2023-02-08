@@ -1185,9 +1185,9 @@
         },
         "GNMI": {
             "certs": {
-                "ca_crt": "/etc/sonic/telemetry/dsmsroot.cer",
-                "server_crt": "/etc/sonic/telemetry/streamingtelemetryserver.cer",
-                "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
+                "ca_crt": "/etc/sonic/credentials/dsmsroot.cer",
+                "server_crt": "/etc/sonic/credentials/server.cer",
+                "server_key": "/etc/sonic/credentials/server.key"
             },
             "gnmi": {
                 "client_auth": "true",
