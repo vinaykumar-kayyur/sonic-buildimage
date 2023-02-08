@@ -87,7 +87,8 @@ def read_map(keys, path = None):
 
     values = []
     for key in keys:
-        values.extend(map[key])
+        if key in map:
+            values.extend(map[key])
 
     # remove empty strings
     values = list(filter(None, values))
