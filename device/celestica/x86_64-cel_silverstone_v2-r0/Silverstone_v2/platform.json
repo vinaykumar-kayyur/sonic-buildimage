@@ -1,4 +1,5 @@
 {
+    "interfaces": {},
     "Ethernet0": {
         "index": "1,1,1,1",
         "default_brkout_mode": "1x100G[40G]",
