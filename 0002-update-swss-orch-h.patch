@@ -1,5 +1,5 @@
---- sonic-buildimage-2/src/sonic-swss/orchagent/orch.h	2023-02-06 20:31:45.221907997 +0800
-+++ sonic-buildimage-1/src/sonic-swss/orchagent/orch.h	2023-02-06 20:36:44.334766612 +0800
+--- sonic-buildimage-one/src/sonic-swss/orchagent/orch.h	2023-02-08 15:12:59.842183729 +0800
++++ sonic-buildimage-two/src/sonic-swss/orchagent/orch.h	2023-02-08 15:15:05.759154842 +0800
 @@ -40,6 +40,7 @@ const char state_db_key_delimiter  = '|'
  #define NPS_PLATFORM_SUBSTRING  "nephos"
  #define MRVL_PLATFORM_SUBSTRING "marvell"

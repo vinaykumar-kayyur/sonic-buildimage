@@ -1,5 +1,5 @@
---- sonic-buildimage-2/src/sonic-swss/orchagent/main.cpp	2023-02-06 20:31:45.217907986 +0800
-+++ sonic-buildimage-1/src/sonic-swss/orchagent/main.cpp	2023-02-06 20:36:21.274700424 +0800
+--- sonic-buildimage-one/src/sonic-swss/orchagent/main.cpp	2023-02-08 15:12:59.842183729 +0800
++++ sonic-buildimage-two/src/sonic-swss/orchagent/main.cpp	2023-02-08 15:15:05.767154906 +0800
 @@ -569,7 +569,9 @@ int main(int argc, char **argv)
      attr.value.u64 = gSwitchId;
      attrs.push_back(attr);
@@ -17,12 +17,12 @@
          }
 +        else if (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING))
 +        {
-+            attr.value.u64 = (8 * SAI_REDIS_DEFAULT_SYNC_OPERATION_RESPONSE_TIMEOUT);
++            attr.value.u64 = (10 * SAI_REDIS_DEFAULT_SYNC_OPERATION_RESPONSE_TIMEOUT);
 +        }
  
          attr.id = SAI_REDIS_SWITCH_ATTR_SYNC_OPERATION_RESPONSE_TIMEOUT;
          status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
-@@ -607,7 +613,7 @@ int main(int argc, char **argv)
+@@ -607,11 +613,16 @@ int main(int argc, char **argv)
      }
      SWSS_LOG_NOTICE("Create a switch, id:%" PRIu64, gSwitchId);
  
@@ -31,3 +31,12 @@
      {
          /* Set syncd response timeout back to the default value */
          attr.id = SAI_REDIS_SWITCH_ATTR_SYNC_OPERATION_RESPONSE_TIMEOUT;
+         attr.value.u64 = SAI_REDIS_DEFAULT_SYNC_OPERATION_RESPONSE_TIMEOUT;
++        /* centec platform set 3X default timeout*/
++        if (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING))
++        {
++            attr.value.u64 = (3 * SAI_REDIS_DEFAULT_SYNC_OPERATION_RESPONSE_TIMEOUT);
++        }
+         status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
+ 
+         if (status != SAI_STATUS_SUCCESS)
