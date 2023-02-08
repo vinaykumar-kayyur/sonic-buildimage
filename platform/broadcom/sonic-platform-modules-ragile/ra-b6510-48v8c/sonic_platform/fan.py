@@ -24,6 +24,27 @@ class Fan(PddfFan):
         """
         return self.FAN_DIRECTION_EXHAUST
 
+    def get_presence(self):
+        if not self.is_psu_fan:
+            return super().get_presence()
+        # psu-fan get_presence
+        status = 0
+        device = "PSU{}".format(self.fans_psu_index)
+        output = self.pddf_obj.get_attr_name_output(device, "psu_present")
+        if not output:
+            return False
+
+        mode = output['mode']
+        status = output['status']
+
+        vmap = self.plugin_data['PSU']['psu_present'][mode]['valmap']
+
+        if status.rstrip('\n') in vmap:
+            return vmap[status.rstrip('\n')]
+        else:
+            return False
+
+
     def get_speed_rpm(self):
         if self.is_psu_fan:
             return super().get_speed_rpm()
