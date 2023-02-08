@@ -51,7 +51,8 @@ jobs:
     postSteps:
       - script: |
           mkdir -p $(Build.ArtifactStagingDirectory)/target
-          mv target/* $(Build.ArtifactStagingDirectory)/target/
+          #mv target/* $(Build.ArtifactStagingDirectory)/target/
+          mv target/*.bin $(Build.ArtifactStagingDirectory)/target/
         displayName: Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)

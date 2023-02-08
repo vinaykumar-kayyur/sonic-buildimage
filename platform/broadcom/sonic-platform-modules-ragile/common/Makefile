@@ -11,13 +11,10 @@ SCRIPT_DIR = $(PWD)/script
 SERVICE_DIR = $(PWD)/service
 DEPMOD_CONF_DIR = $(PWD)/depmod_conf
 
-KBUILD_EXTRA_SYMBOLS += $(DIR_KERNEL_SRC)/Module.symvers
-export KBUILD_EXTRA_SYMBOLS
-
 INSTALL_MODULE_DIR = $(SUB_BUILD_DIR)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
 INSTALL_SCRIPT_DIR = $(SUB_BUILD_DIR)/usr/local/bin
 INSTALL_SERVICE_DIR = $(SUB_BUILD_DIR)/lib/systemd/system
-INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3.7/dist-packages
+INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3.9/dist-packages
 INSTALL_DEPMOD_CONF  = $(SUB_BUILD_DIR)/etc/depmod.d
 
 all:

@@ -11,9 +11,9 @@
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 
-#include <fpga_i2c_ocores.h>
-#include <fpga_pcie_i2c.h>
-#include <fpga_reg_defs.h>
+#include "fpga_i2c_ocores.h"
+#include "fpga_pcie_i2c.h"
+#include "fpga_reg_defs.h"
 
 #include <linux/i2c-mux.h>
 #include <linux/i2c-mux.h>
@@ -742,6 +742,47 @@ static fpga_pcie_card_info_t g_fpga_pcie_card_info[] = {
             {
                 .pca9548_bus      = 12,
                 .pca9548_addr     = 0x73,
+                .cfg_offset       = 0x20,
+            },
+        },
+    },
+     /* RA-B6510-48V8C */
+    {
+        .dev_type          = 0x404a,
+        .pca9548_cfg_info  = {
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x70,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x71,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x72,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 12,
+                .pca9548_addr     = 0x73,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x70,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x71,
+                .cfg_offset       = 0x20,
+            },
+            {
+                .pca9548_bus      = 13,
+                .pca9548_addr     = 0x72,
                 .cfg_offset       = 0x20,
             },
         },

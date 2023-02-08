@@ -7,6 +7,10 @@ PCA9548BUSEND = -2
 RAGILE_CARDID      = 0x0000404c
 RAGILE_PRODUCTNAME = "RA-B6910-64C"
 
+STARTMODULE  = {
+    "fancontrol":1,
+}
+
 fanlevel = {
     "tips": ["LOW", "MEDIUM", "HIGH"],
     "level": [75, 150, 255],

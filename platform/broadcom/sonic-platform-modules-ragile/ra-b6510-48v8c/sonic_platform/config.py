@@ -2,7 +2,6 @@
 
 PSU_FAN_AIRFLOW = {
     "CSU550AP-3-300": "F2B",
-    "AS-40FAN-01-F-RJ": "F2B",
     "CSU550AP-3-500": "F2B",
     "DPS-550AB-39 A": "F2B",
     "DPS-1300AB-6 S": "F2B",
@@ -13,10 +12,8 @@ PSU_FAN_AIRFLOW = {
 }
 
 FAN_AIRFLOW = {
-    "AS-80FAN-01-F-RJ": "F2B",
-    "AS-40FAN-01-F-RJ": "F2B",
-    "AS-80FAN-01-R-RJ": "B2F",
-    "AS-40FAN-01-R-RJ": "B2F",
+    "M1HFAN I-F": "F2B",
+    "M1HFAN I-R": "B2F",
 }
 
 psutypedecode = {
