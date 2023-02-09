@@ -481,8 +481,6 @@ showtag:
 init :
 	@git submodule update --init --recursive
 	@git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
-	@patch -p1 < 0001-update-main-cpp.patch
-	@patch -p1 < 0002-update-orch-h.patch
 
 .ONESHELL : reset
 reset :
