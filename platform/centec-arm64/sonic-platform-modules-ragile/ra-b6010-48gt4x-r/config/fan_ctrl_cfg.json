@@ -11,13 +11,11 @@
         "SWITCH_TEMP": "TPS53688_TEMP"
     },
     "Fans": {
-        "Fan1" : "Fantray0_Fan1",
-        "Fan2" : "Fantray0_Fan2",
-        "Fan3" : "Fantray1_Fan1",
-        "Fan4" : "Fantray1_Fan2"
+        "Fan1" : "Fantray1_1",
+        "Fan2" : "Fantray2_1"
     },
     "PID": {
-        "Pwm_Max": 100,
+        "Pwm_Max": 99,
         "Pwm_Min": 30,
         "SetPoint" : 90,
         "P": 1.5,
@@ -32,8 +30,11 @@
         "b": 10.3,
         "c": -142.0,
         "fix_up": -8,
-        "pwmMax": 100,
+        "pwmMax": 99,
         "pwmMin": 30,
         "tempMin": 25
+    },
+    "FanError": {
+        "Fan_Pwmmax":99
     }
 }

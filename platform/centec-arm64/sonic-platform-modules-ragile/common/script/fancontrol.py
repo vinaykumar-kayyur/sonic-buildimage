@@ -33,6 +33,9 @@ KEY_FAN = "Fans"
 KEY_PID = "PID"
 KEY_OPEN_LOOP = "OpenLoop"
 KEY_DEVICE = "Device"
+KEY_FAN_ERROR = "FanError"
+
+KEY_FANERROR_PWM_MAX = "Fan_Pwmmax"
 
 KEY_INLET_TEMP = "INLET_TEMP"
 KEY_OUTLET_TEMP = "OUTLET_TEMP"
@@ -142,6 +145,7 @@ class FanControl():
         self.error_time = 0
         self.low_time = 0
         self.fan_pwm = 40
+        self.fanerr_pwmmax = 0
         self.interface = Interface()
         self.temps = {}
         self.tempsMax = {}
@@ -176,9 +180,9 @@ class FanControl():
                 tmp = productName.split("-")
                 fanairflow = tmp[-1]
                 if fanairflow == "R":
-                    return "B2F"
+                    return "exhaust"
                 else:
-                    return "F2B"
+                    return "intake"
         elif self.isBuildin == 0:
             return self.interface.get_airflow()
 
@@ -195,7 +199,7 @@ class FanControl():
                 logger.error('Load config file %s failed' % FAN_CTRL_CFG_FILE)
                 return False
 
-            cfg_keys = [KEY_THERMAL, KEY_FAN, KEY_PID, KEY_OPEN_LOOP, KEY_DEVICE]
+            cfg_keys = [KEY_THERMAL, KEY_FAN, KEY_PID, KEY_OPEN_LOOP, KEY_DEVICE, KEY_FAN_ERROR]
             for key in cfg_keys:
                 if key not in cfg_json:
                     logger.error('Key %s not present in cfg file' % key)
@@ -205,6 +209,11 @@ class FanControl():
             pid_json = cfg_json[KEY_PID]
             openloop_json = cfg_json[KEY_OPEN_LOOP]
             device_json = cfg_json[KEY_DEVICE]
+            fan_error_json = cfg_json[KEY_FAN_ERROR]
+
+            #init fanerror
+            self.fanerr_pwmmax = fan_error_json["Fan_Pwmmax"]
+
             # Get Airflow
             self.isBuildin = device_json["Buildin"]
             self.isLiquid = device_json["Liquid"]
@@ -364,9 +373,9 @@ class FanControl():
         # Check fan presence
         if self.interface.get_fan_presence() == False:
             logger.warning("Fan presence check false, set fan pwm to 100")
-            self.fan_pwm = 100
+            self.fan_pwm = self.fanerr_pwmmax
         if self.fan_status != 0 or self.status != 0:
-            self.fan_pwm = 100
+            self.fan_pwm = self.fanerr_pwmmax
         fanctrl_debug_log("Fan Speed set to %d pwm" % self.fan_pwm)
         for i in range(3):
             ret = self.setFanSpeed(self.fan_pwm)
