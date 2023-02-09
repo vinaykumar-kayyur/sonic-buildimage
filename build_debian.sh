@@ -440,7 +440,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -na
 
 NTP_PACKAGE=""
 if [ $INCLUDE_NTP == y ]; then
-    NTP_PACKAGE=ntpstat
+    NTP_PACKAGE=ntp
 fi
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
