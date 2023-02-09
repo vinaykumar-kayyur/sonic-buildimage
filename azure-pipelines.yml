@@ -67,3 +67,4 @@ stages:
         timeoutInMinutes: 1200
         variables:
           PLATFORM_ARCH: arm64
+
