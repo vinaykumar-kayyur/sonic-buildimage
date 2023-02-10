@@ -622,6 +622,7 @@ write_platform_specific_cmdline() {
         read_system_eeprom
     fi
     if in_array "$platform" "rook"; then
+        # Currently applies to Alhambra, Blackhawk, Gardena and Mineral
         cmdline_add libata.force=1.00:noncq
     fi
     if in_array "$platform" "crow" "magpie"; then
