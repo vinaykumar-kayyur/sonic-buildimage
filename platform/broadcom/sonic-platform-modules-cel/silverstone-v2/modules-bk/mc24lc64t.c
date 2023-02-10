@@ -1,5 +1,5 @@
 /*
- * mc24lc64t.c - driver for Microchip 24LC64T(TLV Eeprom)
+ * mc24lc64t.c - driver for Microchip 24LC64T
  *
  * Copyright (C) 2017 Celestica Corp.
  *
@@ -18,7 +18,7 @@
 #include <linux/delay.h>
 #include <linux/jiffies.h>
 
-#define EEPROM_SIZE 8192  //mc24lt64t eeprom size in bytes.
+#define EEPROM_SIZE 256  //mc24lt64t eeprom size in bytes.
 
 struct mc24lc64t_data {
         struct mutex            update_lock;
@@ -70,6 +70,7 @@ exit:
 
         return status;
 }
+
 
 static ssize_t mc24lc64t_write (struct file *filp, struct kobject *kobj,
                             struct bin_attribute *bin_attr,
@@ -169,7 +170,5 @@ static struct i2c_driver mc24lc64t_driver = {
 module_i2c_driver(mc24lc64t_driver);
 
 MODULE_AUTHOR("Abhisit Sangjan <asang@celestica.com>");
-MODULE_VERSION("2.0.0");
 MODULE_DESCRIPTION("Microchip 24LC64T Driver");
 MODULE_LICENSE("GPL");
-
