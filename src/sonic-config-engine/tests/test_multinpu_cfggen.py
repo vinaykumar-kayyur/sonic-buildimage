@@ -464,7 +464,9 @@ class TestMultiNpuCfgGen(TestCase):
         )
         shutil.copy2(buffer_template, device_config_dir)
         # asic1 - mix of front end and back end ports
-        argument = ["-m", minigraph, "-p", port_config_ini_asic1, "-n", "asic1", "-t", device_buffer_template]
+        argument = "-m {} -p {} -n asic1 -t {}".format(
+            minigraph, port_config_ini_asic1, device_buffer_template
+        )
         output = json.loads(self.run_script(argument, check_stderr=True))
         os.remove(os.path.join(device_config_dir, "buffers_config.j2"))
         self.assertDictEqual(
