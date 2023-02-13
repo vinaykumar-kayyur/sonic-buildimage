@@ -115,7 +115,7 @@ jobs:
             do
               sleep 120
               now=$(date +%s)
-              pids=$(ps aux | grep -v grep | grep -E "^.{,100}docker build" | awk '{print$2}')
+              pids=$(ps -C docker -o pid,etime,args | grep "docker build" | cut -d" " -f1)
               for pid in $pids
               do
                 start=$(date --date="$(ls -dl /proc/$pid --time-style full-iso | awk '{print$6,$7}')" +%s)
