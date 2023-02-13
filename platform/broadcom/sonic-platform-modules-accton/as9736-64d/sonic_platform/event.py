@@ -53,7 +53,7 @@ class SfpEvent:
                     port_dict[i+1] = '0'
                 else:
                     # clear bitmap if refresh_optoe_dev_class() failed
-                    if sfp._refresh_optoe_dev_class() is False:
+                    if sfp.refresh_optoe_dev_class() is False:
                         bitmap = bitmap & ~(1 << i)
                         continue
 
