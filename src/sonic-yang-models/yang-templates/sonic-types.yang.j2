@@ -2,7 +2,7 @@ module sonic-types {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-head";
+    namespace "http://github.com/sonic-net/sonic-head";
     prefix sonic-types;
 
     description "SONiC type for yang Models of SONiC OS";
@@ -117,6 +117,12 @@ module sonic-types {
         }
     }
 
+    typedef loopback_action {
+        type string {
+            pattern "drop|forward";
+        }
+    }
+
     typedef admin_mode {
         type enumeration {
             enum enabled;
@@ -136,13 +142,17 @@ module sonic-types {
             enum CR;
             enum CR2;
             enum CR4;
+            enum CR8;
             enum SR;
             enum SR2;
             enum SR4;
+            enum SR8;
             enum LR;
             enum LR4;
+            enum LR8;
             enum KR;
             enum KR4;
+            enum KR8;
             enum CAUI;
             enum GMII;
             enum SFI;
@@ -249,6 +259,77 @@ module sonic-types {
     typedef hostname {
         type string {
             length 1..63;
+        }
+    }
+
+    typedef vnid_type {
+        type uint32 {
+             range "1..16777215";
+        }
+        description
+            "VXLAN Network Identifier";
+    }
+
+    typedef tc_type {
+        type uint8 {
+            range "0..15" {
+                error-message "Invalid Traffic Class";
+                error-app-tag tc-invalid;
+            }
+        }
+    }
+
+    typedef process_name {
+        type string {
+            pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                error-message "Invalid process_name.";
+                error-app-tag invalid-process-name;
+            }
+            length 1..32 {
+                error-message "Invalid length for process_name.";
+                error-app-tag invalid-process-name-length;
+            }
+        }
+    }
+
+    typedef ctr_name {
+        type string {
+            pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                error-message "Invalid ctr_name.";
+                error-app-tag invalid-ctr-name;
+            }
+            length 1..32 {
+                error-message "Invalid length for ctr_name.";
+                error-app-tag invalid-ctr-name-length;
+            }
+        }
+    }
+
+    typedef hash-field {
+        description "Represents native hash field";
+        type enumeration {
+            enum IN_PORT;
+            enum DST_MAC;
+            enum SRC_MAC;
+            enum ETHERTYPE;
+            enum VLAN_ID;
+            enum IP_PROTOCOL;
+            enum DST_IP;
+            enum SRC_IP;
+            enum L4_DST_PORT;
+            enum L4_SRC_PORT;
+            enum INNER_DST_MAC;
+            enum INNER_SRC_MAC;
+            enum INNER_ETHERTYPE;
+            enum INNER_IP_PROTOCOL;
+            enum INNER_DST_IP;
+            enum INNER_DST_IPV4;
+            enum INNER_DST_IPV6;
+            enum INNER_SRC_IP;
+            enum INNER_SRC_IPV4;
+            enum INNER_SRC_IPV6;
+            enum INNER_L4_DST_PORT;
+            enum INNER_L4_SRC_PORT;
         }
     }
 

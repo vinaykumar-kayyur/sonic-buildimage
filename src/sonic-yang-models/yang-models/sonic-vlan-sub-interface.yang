@@ -2,7 +2,7 @@ module sonic-vlan-sub-interface {
 
     yang-version 1.1;
 
-    namespace  "http://github.com/Azure/sonic-vlan-sub-interface";
+    namespace  "http://github.com/sonic-net/sonic-vlan-sub-interface";
 
     prefix vlan-sub-interface;
 
@@ -64,6 +64,11 @@ module sonic-vlan-sub-interface {
                     type leafref {
                         path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                     }
+                }
+
+                leaf loopback_action {
+                    description "Packet action when a packet ingress and gets routed on the same IP interface";
+                    type stypes:loopback_action;
                 }
             }
 

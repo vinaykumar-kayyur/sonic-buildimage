@@ -23,10 +23,11 @@
 #############################################################################
 
 try:
+    import ctypes
     import subprocess
     import os
-    from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_py_common.logger import Logger
+    from sonic_py_common.general import check_output_pipe
     from . import utils
     from .device_data import DeviceDataManager
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
@@ -53,6 +54,8 @@ try:
         SX_PORT_MODULE_STATUS_UNPLUGGED = 2
         SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
         SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
+        SX_PORT_ADMIN_STATUS_UP = True
+        SX_PORT_ADMIN_STATUS_DOWN = False
 except KeyError:
     pass
 
@@ -79,6 +82,8 @@ QSFP_TYPE_CODE_LIST = [
 QSFP_DD_TYPE_CODE_LIST = [
     '18' # QSFP-DD Double Density 8X Pluggable Transceiver
 ]
+
+RJ45_TYPE = "RJ45"
 
 #variables for sdk
 REGISTER_NUM = 1
@@ -122,11 +127,42 @@ CPU_MASK = PORT_TYPE_MASK & (PORT_TYPE_CPU << PORT_TYPE_OFFSET)
 SFP_STATUS_INSERTED = '1'
 
 # SFP constants
-SFP_PAGE_SIZE = 256
-SFP_UPPER_PAGE_OFFSET = 128
-SFP_VENDOR_PAGE_START = 640
+SFP_PAGE_SIZE = 256          # page size of page0h
+SFP_UPPER_PAGE_OFFSET = 128  # page size of other pages
 
-BYTES_IN_DWORD = 4
+# SFP sysfs path constants
+SFP_PAGE0_PATH = '0/i2c-0x50/data'
+SFP_A2H_PAGE0_PATH = '0/i2c-0x51/data'
+SFP_EEPROM_ROOT_TEMPLATE = '/sys/module/sx_core/asic0/module{}/eeprom/pages'
+
+# SFP type constants
+SFP_TYPE_CMIS = 'cmis'
+SFP_TYPE_SFF8472 = 'sff8472'
+SFP_TYPE_SFF8636 = 'sff8636'
+
+# SFP stderr
+SFP_EEPROM_NOT_AVAILABLE = 'Input/output error'
+
+# SFP EEPROM limited bytes
+limited_eeprom = {
+    SFP_TYPE_CMIS: {
+        'write': {
+            0: [26, (31, 36), (126, 127)],
+            16: [(0, 128)]
+        }
+    },
+    SFP_TYPE_SFF8472: {
+        'write': {
+            0: [110, (114, 115), 118, 127]
+        }
+    },
+    SFP_TYPE_SFF8636: {
+        'write': {
+            0: [(86, 88), 93, (98, 99), (100, 106), 127],
+            3: [(230, 241), (242, 251)]
+        }
+    }
+}
 
 # Global logger class instance
 logger = Logger()
@@ -153,72 +189,6 @@ def deinitialize_sdk_handle(sdk_handle):
          logger.log_warning("Sdk handle is none")
          return False
 
-class MlxregManager:
-    def __init__(self, mst_pci_device, slot_id, sdk_index):
-        self.mst_pci_device = mst_pci_device
-        self.slot_id = slot_id
-        self.sdk_index = sdk_index
-
-    def construct_dword(self, write_buffer):
-        if len(write_buffer) == 0:
-            return None
-
-        used_bytes_in_dword = len(write_buffer) % BYTES_IN_DWORD
-
-        res = "dword[0]=0x"
-        for idx, x in enumerate(write_buffer):
-            word = hex(x)[2:]
-
-            if (idx > 0) and (idx % BYTES_IN_DWORD) == 0:
-                res += ",dword[{}]=0x".format(str((idx + 1)//BYTES_IN_DWORD))
-            res += word.zfill(2)
-
-        if used_bytes_in_dword > 0:
-            res += (BYTES_IN_DWORD - used_bytes_in_dword) * "00"
-        return res
-
-    def write_mlxreg_eeprom(self, num_bytes, dword, device_address, page):
-        if not dword:
-            return False
-
-        try:
-            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
-                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
-                    --set {} -y".format(self.mst_pci_device, self.slot_id, self.sdk_index, device_address, page, num_bytes, dword)
-            subprocess.check_call(cmd, shell=True, universal_newlines=True, stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError as e:
-            logger.log_error("Error! Unable to write data for {} port, page {} offset {}, rc = {}, err msg: {}".format(self.sdk_index, page, device_address, e.returncode, e.output))
-            return False
-        return True
-
-    def read_mlxred_eeprom(self, offset, page, num_bytes):
-        try:
-            cmd = "mlxreg -d /dev/mst/{} --reg_name MCIA --indexes \
-                    slot_index={},module={},device_address={},page_number={},i2c_device_address=0x50,size={},bank_number=0 \
-                    --get".format(self.mst_pci_device, self.slot_id, self.sdk_index, offset, page, num_bytes)
-            result = subprocess.check_output(cmd, universal_newlines=True, shell=True)
-        except subprocess.CalledProcessError as e:
-            logger.log_error("Error! Unable to write data for {} port, page {} offset {}, rc = {}, err msg: {}".format(self.sdk_index, page, device_address, e.returncode, e.output))
-            return None
-        return result
-
-    def parse_mlxreg_read_output(self, read_output, num_bytes):
-        res = ""
-        dword_num = num_bytes // BYTES_IN_DWORD
-        used_bytes_in_dword = num_bytes % BYTES_IN_DWORD
-        arr = [value for value in read_output.split('\n') if value[0:5] == "dword"]
-        for i in range(dword_num):
-            dword = arr[i].split()[2]
-            res += dword[2:]
-
-        if used_bytes_in_dword > 0:
-            # Cut needed info and insert into final hex string
-            # Example: 3 bytes : 0x12345600
-            #                      ^    ^
-            dword = arr[dword_num].split()[2]
-            res += dword[2 : 2 + used_bytes_in_dword * 2]
-
-        return bytearray.fromhex(res) if res else None
 
 class SdkHandleContext(object):
     def __init__(self):
@@ -232,7 +202,44 @@ class SdkHandleContext(object):
         deinitialize_sdk_handle(self.sdk_handle)
 
 
-class SFP(SfpOptoeBase):
+class NvidiaSFPCommon(SfpOptoeBase):
+    def __init__(self, sfp_index):
+        super(NvidiaSFPCommon, self).__init__()
+        self.index = sfp_index + 1
+        self.sdk_index = sfp_index
+
+    @property
+    def sdk_handle(self):
+        if not SFP.shared_sdk_handle:
+            SFP.shared_sdk_handle = initialize_sdk_handle()
+            if not SFP.shared_sdk_handle:
+                logger.log_error('Failed to open SDK handle')
+        return SFP.shared_sdk_handle
+
+    @classmethod
+    def _get_module_info(self, sdk_handle, sdk_index):
+        """
+        Get error code of the SFP module
+
+        Returns:
+            The error code fetch from SDK API
+        """
+        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
+        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
+
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
+        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
+
+        rc = sx_mgmt_phy_module_info_get(sdk_handle, module_id_info_list, 1, module_info_list)
+        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
+
+        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
+        return mod_info.module_state.oper_state, mod_info.module_state.error_type
+
+
+class SFP(NvidiaSFPCommon):
     """Platform-specific SFP class"""
     shared_sdk_handle = None
     SFP_MLNX_ERROR_DESCRIPTION_LONGRANGE_NON_MLNX_CABLE = 'Long range for non-Mellanox cable or module'
@@ -247,13 +254,11 @@ class SFP(SfpOptoeBase):
     SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
     SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
 
-    def __init__(self, sfp_index, slot_id=0, linecard_port_count=0, lc_name=None):
-        super(SFP, self).__init__()
+    def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
+        super(SFP, self).__init__(sfp_index)
+        self._sfp_type = sfp_type
 
         if slot_id == 0: # For non-modular chassis
-            self.index = sfp_index + 1
-            self.sdk_index = sfp_index
-
             from .thermal import initialize_sfp_thermal
             self._thermal_list = initialize_sfp_thermal(sfp_index)
         else: # For modular chassis
@@ -268,16 +273,18 @@ class SFP(SfpOptoeBase):
 
         self.slot_id = slot_id
         self.mst_pci_device = self.get_mst_pci_device()
+        self._sfp_type_str = None
 
     # get MST PCI device name
     def get_mst_pci_device(self):
         device_name = None
         try:
-            device_name = subprocess.check_output("ls /dev/mst/ | grep pciconf", universal_newlines=True, shell=True).strip()
+            device_name = check_output_pipe(["ls", "/dev/mst/"], ["grep", "pciconf"]).strip()
         except subprocess.CalledProcessError as e:
             logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
         return device_name
 
+    '''
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -285,12 +292,14 @@ class SFP(SfpOptoeBase):
             if not SFP.shared_sdk_handle:
                 logger.log_error('Failed to open SDK handle')
         return SFP.shared_sdk_handle
+    '''
 
     def reinit(self):
         """
         Re-initialize this SFP object when a new SFP inserted
         :return:
         """
+        self._sfp_type_str = None
         self.refresh_xcvr_api()
 
     def get_presence(self):
@@ -300,33 +309,8 @@ class SFP(SfpOptoeBase):
         Returns:
             bool: True if device is present, False if not
         """
-        eeprom_raw = self.read_eeprom(0, 1)
-
+        eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
-
-    # Read out any bytes from any offset
-    def _read_eeprom_specific_bytes(self, offset, num_bytes):
-        if offset + num_bytes > SFP_VENDOR_PAGE_START:
-            logger.log_error("Error mismatch between page size and bytes to read (offset: {} num_bytes: {}) ".format(offset, num_bytes))
-            return None
-
-        eeprom_raw = []
-        ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
-        try:
-            output = subprocess.check_output(ethtool_cmd,
-                                             shell=True,
-                                             universal_newlines=True)
-            output_lines = output.splitlines()
-            first_line_raw = output_lines[0]
-            if "Offset" in first_line_raw:
-                for line in output_lines[2:]:
-                    line_split = line.split()
-                    eeprom_raw = eeprom_raw + line_split[1:]
-        except subprocess.CalledProcessError as e:
-            return None
-
-        eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
-        return bytearray(eeprom_raw)
 
     # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
@@ -335,43 +319,37 @@ class SFP(SfpOptoeBase):
         Returns:
             bytearray, if raw sequence of bytes are read correctly from the offset of size num_bytes
             None, if the read_eeprom fails
-        Example:
-            mlxreg -d /dev/mst/mt52100_pciconf0 --reg_name MCIA --indexes slot_index=0,module=1,device_address=148,page_number=0,i2c_device_address=0x50,size=16,bank_number=0 -g
-            Sending access register...
-            Field Name            | Data
-            ===================================
-            status                | 0x00000000
-            slot_index            | 0x00000000
-            module                | 0x00000001
-            l                     | 0x00000000
-            device_address        | 0x00000094
-            page_number           | 0x00000000
-            i2c_device_address    | 0x00000050
-            size                  | 0x00000010
-            bank_number           | 0x00000000
-            dword[0]              | 0x43726564
-            dword[1]              | 0x6f202020
-            dword[2]              | 0x20202020
-            dword[3]              | 0x20202020
-            dword[4]              | 0x00000000
-            dword[5]              | 0x00000000
-            ....
-        16 bytes to read from dword -> 0x437265646f2020202020202020202020 -> Credo
         """
-        # recalculate offset and page. Use 'ethtool' if there is no need to read vendor pages
-        if offset < SFP_VENDOR_PAGE_START:
-            return self._read_eeprom_specific_bytes(offset, num_bytes)
-        else:
-            page = (offset - SFP_PAGE_SIZE) // SFP_UPPER_PAGE_OFFSET + 1
-            # calculate offset per page
-            device_address = (offset - SFP_PAGE_SIZE) % SFP_UPPER_PAGE_OFFSET + SFP_UPPER_PAGE_OFFSET
+        return self._read_eeprom(offset, num_bytes)
 
-        if not self.mst_pci_device:
+    def _read_eeprom(self, offset, num_bytes, log_on_error=True):
+        """Read eeprom specfic bytes beginning from a random offset with size as num_bytes
+
+        Args:
+            offset (int): read offset
+            num_bytes (int): read size
+            log_on_error (bool, optional): whether log error when exception occurs. Defaults to True.
+
+        Returns:
+            bytearray: the content of EEPROM
+        """
+        _, page, page_offset = self._get_page_and_page_offset(offset)
+        if not page:
             return None
 
-        mlxreg_mngr = MlxregManager(self.mst_pci_device, self.slot_id, self.sdk_index)
-        read_output = mlxreg_mngr.read_mlxred_eeprom(device_address, page, num_bytes)
-        return mlxreg_mngr.parse_mlxreg_read_output(read_output, num_bytes)
+        try:
+            with open(page, mode='rb', buffering=0) as f:
+                f.seek(page_offset)
+                content = f.read(num_bytes)
+                if ctypes.get_errno() != 0:
+                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+        except (OSError, IOError) as e:
+            if log_on_error:
+                logger.log_warning(f'Failed to read sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, \
+                    size={num_bytes}, offset={offset}, error = {e}')
+            return None
+
+        return bytearray(content)
 
     # write eeprom specfic bytes beginning from offset with size as num_bytes
     def write_eeprom(self, offset, num_bytes, write_buffer):
@@ -387,21 +365,28 @@ class SFP(SfpOptoeBase):
             logger.log_error("Error mismatch between buffer length and number of bytes to be written")
             return False
 
-        # recalculate offset and page
-        if offset < SFP_PAGE_SIZE:
-            page = 0
-            device_address = offset
-        else:
-            page = (offset - SFP_PAGE_SIZE) // SFP_UPPER_PAGE_OFFSET + 1
-            # calculate offset per page
-            device_address = (offset - SFP_PAGE_SIZE) % SFP_UPPER_PAGE_OFFSET + SFP_UPPER_PAGE_OFFSET
-
-        if not self.mst_pci_device:
+        page_num, page, page_offset = self._get_page_and_page_offset(offset)
+        if not page:
             return False
 
-        mlxreg_mngr = MlxregManager(self.mst_pci_device, self.slot_id, self.sdk_index)
-        dword = mlxreg_mngr.construct_dword(write_buffer)
-        return mlxreg_mngr.write_mlxreg_eeprom(num_bytes, dword, device_address, page)
+        try:
+            if self._is_write_protected(page_num, page_offset, num_bytes):
+                # write limited eeprom is not supported
+                raise IOError('write limited bytes')
+
+            with open(page, mode='r+b', buffering=0) as f:
+                f.seek(page_offset)
+                ret = f.write(write_buffer[0:num_bytes])
+                if ret != num_bytes:
+                    raise IOError(f'write return code = {ret}')
+                if ctypes.get_errno() != 0:
+                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+        except (OSError, IOError) as e:
+            data = ''.join('{:02x}'.format(x) for x in write_buffer)
+            logger.log_error(f'Failed to write EEPROM data sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, size={num_bytes}, \
+                offset={offset}, data = {data}, error = {e}')
+            return False
+        return True
 
     @classmethod
     def mgmt_phy_mod_pwr_attr_get(cls, power_attr_type, sdk_handle, sdk_index, slot_id):
@@ -434,9 +419,9 @@ class SFP(SfpOptoeBase):
             get_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._get_lpmode(sdk_handle, {}, {}))'.format(self.sdk_index, self.slot_id)
-            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(get_lpmode_code)
+            lpm_cmd = ["docker", "exec", "pmon", "python3", "-c", get_lpmode_code]
             try:
-                output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(lpm_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -475,10 +460,10 @@ class SFP(SfpOptoeBase):
                          'with sfp.SdkHandleContext() as sdk_handle:' \
                          'print(sfp.SFP._reset(sdk_handle, {}, {}))' \
                          .format(self.sdk_index, self.slot_id)
-            reset_cmd = "docker exec pmon python3 -c \"{}\"".format(reset_code)
+            reset_cmd = ["docker", "exec", "pmon", "python3", "-c", reset_code]
 
             try:
-                output = subprocess.check_output(reset_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(reset_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -509,7 +494,7 @@ class SFP(SfpOptoeBase):
 
 
     @classmethod
-    def is_port_admin_status_up(cls, sdk_handle, log_port):
+    def _fetch_port_status(cls, sdk_handle, log_port):
         oper_state_p = new_sx_port_oper_state_t_p()
         admin_state_p = new_sx_port_admin_state_t_p()
         module_state_p = new_sx_port_module_state_t_p()
@@ -517,11 +502,18 @@ class SFP(SfpOptoeBase):
         assert rc == SXD_STATUS_SUCCESS, "sx_api_port_state_get failed, rc = %d" % rc
 
         admin_state = sx_port_admin_state_t_p_value(admin_state_p)
+        oper_state = sx_port_oper_state_t_p_value(oper_state_p)
 
         delete_sx_port_oper_state_t_p(oper_state_p)
         delete_sx_port_admin_state_t_p(admin_state_p)
         delete_sx_port_module_state_t_p(module_state_p)
 
+        return oper_state, admin_state
+
+
+    @classmethod
+    def is_port_admin_status_up(cls, sdk_handle, log_port):
+        _, admin_state = cls._fetch_port_status(sdk_handle, log_port);
         return admin_state == SX_PORT_ADMIN_STATUS_UP
 
 
@@ -626,11 +618,11 @@ class SFP(SfpOptoeBase):
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._set_lpmode({}, sdk_handle, {}, {}))' \
                               .format('True' if lpmode else 'False', self.sdk_index, self.slot_id)
-            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(set_lpmode_code)
+            lpm_cmd = ["docker", "exec", "pmon", "python3", "-c", set_lpmode_code]
 
             # Set LPM
             try:
-                output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                output = subprocess.check_output(lpm_cmd, universal_newlines=True)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -660,27 +652,6 @@ class SFP(SfpOptoeBase):
         """
         return True
 
-    def _get_error_code(self):
-        """
-        Get error code of the SFP module
-
-        Returns:
-            The error code fetch from SDK API
-        """
-        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
-        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
-
-        module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
-        module_id_info.module_id = self.sdk_index
-        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
-
-        rc = sx_mgmt_phy_module_info_get(self.sdk_handle, module_id_info_list, 1, module_info_list)
-        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
-
-        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
-        return mod_info.module_state.oper_state, mod_info.module_state.error_type
-
     @classmethod
     def _get_error_description_dict(cls):
         return {0: cls.SFP_ERROR_DESCRIPTION_POWER_BUDGET_EXCEEDED,
@@ -701,12 +672,12 @@ class SFP(SfpOptoeBase):
         Get error description
 
         Args:
-            error_code: The error code returned by _get_error_code
+            error_code: The error code returned by _get_module_info
 
         Returns:
             The error description
         """
-        oper_status, error_code = self._get_error_code()
+        oper_status, error_code = self._get_module_info(self.sdk_handle, self.sdk_index)
         if oper_status == SX_PORT_MODULE_STATUS_INITIALIZING:
             error_description = self.SFP_STATUS_INITIALIZING
         elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED:
@@ -724,3 +695,406 @@ class SFP(SfpOptoeBase):
         else:
             error_description = "Unknow SFP module status ({})".format(oper_status)
         return error_description
+
+    def _get_eeprom_path(self):
+        return SFP_EEPROM_ROOT_TEMPLATE.format(self.sdk_index)
+
+    def _get_page_and_page_offset(self, overall_offset):
+        """Get EEPROM page and page offset according to overall offset
+
+        Args:
+            overall_offset (int): Overall read offset
+
+        Returns:
+            tuple: (<page_num>, <page_path>, <page_offset>)
+        """
+        eeprom_path = self._get_eeprom_path()
+        if not os.path.exists(eeprom_path):
+            logger.log_error(f'EEPROM file path for sfp {self.sdk_index} does not exist')
+            return None, None, None
+
+        if overall_offset < SFP_PAGE_SIZE:
+            return 0, os.path.join(eeprom_path, SFP_PAGE0_PATH), overall_offset
+
+        if self._get_sfp_type_str(eeprom_path) == SFP_TYPE_SFF8472:
+            page1h_start = SFP_PAGE_SIZE * 2
+            if overall_offset < page1h_start:
+                return -1, os.path.join(eeprom_path, SFP_A2H_PAGE0_PATH), overall_offset - SFP_PAGE_SIZE
+        else:
+            page1h_start = SFP_PAGE_SIZE
+
+        page_num = (overall_offset - page1h_start) // SFP_UPPER_PAGE_OFFSET + 1
+        page = f'{page_num}/data'
+        offset = (overall_offset - page1h_start) % SFP_UPPER_PAGE_OFFSET
+        return page_num, os.path.join(eeprom_path, page), offset
+
+    def _get_sfp_type_str(self, eeprom_path):
+        """Get SFP type by reading first byte of EEPROM
+
+        Args:
+            eeprom_path (str): EEPROM path
+
+        Returns:
+            str: SFP type in string
+        """
+        if self._sfp_type_str is None:
+            page = os.path.join(eeprom_path, SFP_PAGE0_PATH)
+            try:
+                with open(page, mode='rb', buffering=0) as f:
+                    id_byte_raw = bytearray(f.read(1))
+                    id = id_byte_raw[0]
+                    if id == 0x18 or id == 0x19 or id == 0x1e:
+                        self._sfp_type_str = SFP_TYPE_CMIS
+                    elif id == 0x11 or id == 0x0D:
+                        # in sonic-platform-common, 0x0D is treated as sff8436,
+                        # but it shared the same implementation on Nvidia platforms,
+                        # so, we treat it as sff8636 here.
+                        self._sfp_type_str = SFP_TYPE_SFF8636
+                    elif id == 0x03:
+                        self._sfp_type_str = SFP_TYPE_SFF8472
+                    else:
+                        logger.log_error(f'Unsupported sfp type {id}')
+            except (OSError, IOError) as e:
+                # SFP_EEPROM_NOT_AVAILABLE usually indicates SFP is not present, no need
+                # print such error information to log
+                if SFP_EEPROM_NOT_AVAILABLE not in str(e):
+                    logger.log_error(f'Failed to get SFP type, index={self.sdk_index}, error={e}')
+                return None
+        return self._sfp_type_str
+
+    def _is_write_protected(self, page, page_offset, num_bytes):
+        """Check if the EEPROM read/write operation hit limitation bytes
+
+        Args:
+            page (str): EEPROM page path
+            page_offset (int): EEPROM page offset
+            num_bytes (int): read/write size
+
+        Returns:
+            bool: True if the limited bytes is hit
+        """
+        eeprom_path = self._get_eeprom_path()
+        limited_data = limited_eeprom.get(self._get_sfp_type_str(eeprom_path))
+        if not limited_data:
+            return False
+
+        access_type = 'write'
+        limited_data = limited_data.get(access_type)
+        if not limited_data:
+            return False
+
+        limited_ranges = limited_data.get(page)
+        if not limited_ranges:
+            return False
+
+        access_begin = page_offset
+        access_end = page_offset + num_bytes - 1
+        for limited_range in limited_ranges:
+            if isinstance(limited_range, int):
+                if access_begin <= limited_range <= access_end:
+                    return True
+            else: # tuple
+                if not (access_end < limited_range[0] or access_begin > limited_range[1]):
+                    return True
+
+        return False
+
+    def get_rx_los(self):
+        """Accessing rx los is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_tx_fault(self):
+        """Accessing tx fault is not supproted, return all False
+
+        Returns:
+            list: [False] * channels
+        """
+        api = self.get_xcvr_api()
+        return [False] * api.NUM_CHANNELS if api else None
+
+    def get_xcvr_api(self):
+        """
+        Retrieves the XcvrApi associated with this SFP
+
+        Returns:
+            An object derived from XcvrApi that corresponds to the SFP
+        """
+        if self._xcvr_api is None:
+            self.refresh_xcvr_api()
+            if self._xcvr_api is not None:
+                self._xcvr_api.get_rx_los = self.get_rx_los
+                self._xcvr_api.get_tx_fault = self.get_tx_fault
+        return self._xcvr_api
+
+
+class RJ45Port(NvidiaSFPCommon):
+    """class derived from SFP, representing RJ45 ports"""
+
+    def __init__(self, sfp_index):
+        super(RJ45Port, self).__init__(sfp_index)
+        self.sfp_type = RJ45_TYPE
+
+    @classmethod
+    def _get_presence(cls, sdk_handle, sdk_index):
+        """Class level method to get low power mode.
+
+        Args:
+            sdk_handle: SDK handle
+            sdk_index (integer): SDK port index
+            slot_id (integer): Slot ID
+
+        Returns:
+            [boolean]: True if low power mode is on else off
+        """
+        oper_status, _ = cls._get_module_info(sdk_handle, sdk_index)
+        return print(oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the device
+        For RJ45 ports, it always return True
+
+        Returns:
+            bool: True if device is present, False if not
+        """
+        if utils.is_host():
+            # To avoid performance issue,
+            # call class level method to avoid initialize the whole sonic platform API
+            get_presence_code = 'from sonic_platform import sfp;\n' \
+                              'with sfp.SdkHandleContext() as sdk_handle:' \
+                              'print(sfp.RJ45Port._get_presence(sdk_handle, {}))'.format(self.sdk_index)
+            presence_cmd = ["docker", "exec", "pmon", "python3", "-c", get_presence_code]
+            try:
+                output = subprocess.check_output(presence_cmd, universal_newlines=True)
+                return 'True' in output
+            except subprocess.CalledProcessError as e:
+                print("Error! Unable to get presence for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
+                return False
+        else:
+            oper_status, _ = self._get_module_info(self.sdk_handle, self.sdk_index);
+            return (oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
+
+    def get_transceiver_info(self):
+        """
+        Retrieves transceiver info of this port.
+        For RJ45, all fields are N/A
+
+        Returns:
+            A dict which contains following keys/values :
+        ================================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        type                       |1*255VCHAR     |type of SFP
+        vendor_rev                 |1*255VCHAR     |vendor revision of SFP
+        serial                     |1*255VCHAR     |serial number of the SFP
+        manufacturer               |1*255VCHAR     |SFP vendor name
+        model                      |1*255VCHAR     |SFP model name
+        connector                  |1*255VCHAR     |connector information
+        encoding                   |1*255VCHAR     |encoding information
+        ext_identifier             |1*255VCHAR     |extend identifier
+        ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
+        cable_length               |INT            |cable length in m
+        mominal_bit_rate           |INT            |nominal bit rate by 100Mbs
+        specification_compliance   |1*255VCHAR     |specification compliance
+        vendor_date                |1*255VCHAR     |vendor date
+        vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement
+        ================================================================================
+        """
+        transceiver_info_keys = ['manufacturer',
+                                 'model',
+                                 'vendor_rev',
+                                 'serial',
+                                 'vendor_oui',
+                                 'vendor_date',
+                                 'connector',
+                                 'encoding',
+                                 'ext_identifier',
+                                 'ext_rateselect_compliance',
+                                 'cable_type',
+                                 'cable_length',
+                                 'specification_compliance',
+                                 'nominal_bit_rate',
+                                 'application_advertisement']
+        transceiver_info_dict = dict.fromkeys(transceiver_info_keys, 'N/A')
+        transceiver_info_dict['type'] = self.sfp_type
+
+        return transceiver_info_dict
+
+    def get_lpmode(self):
+        """
+        Retrieves the lpmode (low power mode) status of this SFP
+
+        Returns:
+            A Boolean, True if lpmode is enabled, False if disabled
+        """
+        return False
+
+    def reset(self):
+        """
+        Reset SFP and return all user module settings to their default state.
+
+        Returns:
+            A boolean, True if successful, False if not
+
+        refer plugins/sfpreset.py
+        """
+        return False
+
+    def set_lpmode(self, lpmode):
+        """
+        Sets the lpmode (low power mode) of SFP
+
+        Args:
+            lpmode: A Boolean, True to enable lpmode, False to disable it
+            Note  : lpmode can be overridden by set_power_override
+
+        Returns:
+            A boolean, True if lpmode is set successfully, False if not
+        """
+        return False
+
+    def get_error_description(self):
+        """
+        Get error description
+
+        Args:
+            error_code: Always false on SN2201
+
+        Returns:
+            The error description
+        """
+        return False
+
+    def get_transceiver_bulk_status(self):
+        """
+        Retrieves transceiver bulk status of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        RX LOS                     |BOOLEAN        |RX lost-of-signal status,
+                                   |               |True if has RX los, False if not.
+        TX FAULT                   |BOOLEAN        |TX fault status,
+                                   |               |True if has TX fault, False if not.
+        Reset status               |BOOLEAN        |reset status,
+                                   |               |True if SFP in reset, False if not.
+        LP mode                    |BOOLEAN        |low power mode status,
+                                   |               |True in lp mode, False if not.
+        TX disable                 |BOOLEAN        |TX disable status,
+                                   |               |True TX disabled, False if not.
+        TX disabled channel        |HEX            |disabled TX channles in hex,
+                                   |               |bits 0 to 3 represent channel 0
+                                   |               |to channel 3.
+        Temperature                |INT            |module temperature in Celsius
+        Voltage                    |INT            |supply voltage in mV
+        TX bias                    |INT            |TX Bias Current in mA
+        RX power                   |INT            |received optical power in mW
+        TX power                   |INT            |TX output power in mW
+        ========================================================================
+        """
+        transceiver_dom_info_dict = {}
+
+        dom_info_dict_keys = ['temperature',    'voltage',
+                              'rx1power',       'rx2power',
+                              'rx3power',       'rx4power',
+                              'rx5power',       'rx6power',
+                              'rx7power',       'rx8power',
+                              'tx1bias',        'tx2bias',
+                              'tx3bias',        'tx4bias',
+                              'tx5bias',        'tx6bias',
+                              'tx7bias',        'tx8bias',
+                              'tx1power',       'tx2power',
+                              'tx3power',       'tx4power',
+                              'tx5power',       'tx6power',
+                              'tx7power',       'tx8power'
+                             ]
+        transceiver_dom_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
+
+        return transceiver_dom_info_dict
+
+
+    def get_transceiver_threshold_info(self):
+        """
+        Retrieves transceiver threshold info of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        temphighalarm              |FLOAT          |High Alarm Threshold value of temperature in Celsius.
+        templowalarm               |FLOAT          |Low Alarm Threshold value of temperature in Celsius.
+        temphighwarning            |FLOAT          |High Warning Threshold value of temperature in Celsius.
+        templowwarning             |FLOAT          |Low Warning Threshold value of temperature in Celsius.
+        vcchighalarm               |FLOAT          |High Alarm Threshold value of supply voltage in mV.
+        vcclowalarm                |FLOAT          |Low Alarm Threshold value of supply voltage in mV.
+        vcchighwarning             |FLOAT          |High Warning Threshold value of supply voltage in mV.
+        vcclowwarning              |FLOAT          |Low Warning Threshold value of supply voltage in mV.
+        rxpowerhighalarm           |FLOAT          |High Alarm Threshold value of received power in dBm.
+        rxpowerlowalarm            |FLOAT          |Low Alarm Threshold value of received power in dBm.
+        rxpowerhighwarning         |FLOAT          |High Warning Threshold value of received power in dBm.
+        rxpowerlowwarning          |FLOAT          |Low Warning Threshold value of received power in dBm.
+        txpowerhighalarm           |FLOAT          |High Alarm Threshold value of transmit power in dBm.
+        txpowerlowalarm            |FLOAT          |Low Alarm Threshold value of transmit power in dBm.
+        txpowerhighwarning         |FLOAT          |High Warning Threshold value of transmit power in dBm.
+        txpowerlowwarning          |FLOAT          |Low Warning Threshold value of transmit power in dBm.
+        txbiashighalarm            |FLOAT          |High Alarm Threshold value of tx Bias Current in mA.
+        txbiaslowalarm             |FLOAT          |Low Alarm Threshold value of tx Bias Current in mA.
+        txbiashighwarning          |FLOAT          |High Warning Threshold value of tx Bias Current in mA.
+        txbiaslowwarning           |FLOAT          |Low Warning Threshold value of tx Bias Current in mA.
+        ========================================================================
+        """
+        transceiver_dom_threshold_info_dict = {}
+
+        dom_info_dict_keys = ['temphighalarm',    'temphighwarning',
+                              'templowalarm',     'templowwarning',
+                              'vcchighalarm',     'vcchighwarning',
+                              'vcclowalarm',      'vcclowwarning',
+                              'rxpowerhighalarm', 'rxpowerhighwarning',
+                              'rxpowerlowalarm',  'rxpowerlowwarning',
+                              'txpowerhighalarm', 'txpowerhighwarning',
+                              'txpowerlowalarm',  'txpowerlowwarning',
+                              'txbiashighalarm',  'txbiashighwarning',
+                              'txbiaslowalarm',   'txbiaslowwarning'
+                             ]
+        transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
+
+        return transceiver_dom_threshold_info_dict
+
+    def get_reset_status(self):
+        """
+        Retrieves the reset status of SFP
+
+        Returns:
+            A Boolean, True if reset enabled, False if disabled
+
+        for QSFP, originally I would like to make use of Initialization complete flag bit
+        which is at Page a0 offset 6 bit 0 to test whether reset is complete.
+        However as unit testing was carried out I find this approach may fail because:
+            1. we make use of ethtool to read data on I2C bus rather than to read directly
+            2. ethtool is unable to access I2C during QSFP module being reset
+        In other words, whenever the flag is able to be retrived, the value is always be 1
+        As a result, it doesn't make sense to retrieve that flag. Just treat successfully
+        retrieving data as "data ready".
+        for SFP it seems that there is not flag indicating whether reset succeed. However,
+        we can also do it in the way for QSFP.
+        """
+        return False
+
+    def read_eeprom(self, offset, num_bytes):
+        return None
+
+    def reinit(self):
+        """
+        Nothing to do for RJ45. Just provide it to avoid exception
+        :return:
+        """
+        return

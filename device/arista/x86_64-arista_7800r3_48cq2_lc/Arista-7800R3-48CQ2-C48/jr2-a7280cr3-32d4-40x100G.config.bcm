@@ -1,4 +1,5 @@
 soc_family.BCM8869X=BCM8869X
+system_ref_core_clock_khz=1600000
 
 dpp_db_path=/usr/share/bcm/db
 custom_feature_ucode_path=u_code_db2pem.txt
@@ -6,7 +7,7 @@ system_headers_mode=1
 suppress_unknown_prop_warnings=1
 l4_protocols_load_balancing_enable=1
 fabric_logical_port_base=512
-trunk_group_max_members=128
+trunk_group_max_members=16
 num_olp_tm_ports.BCM8869X=1
 
 # nif
@@ -762,10 +763,10 @@ tdma_timeout_usec.BCM8869X=1000000
 tslam_timeout_usec.BCM8869X=1000000
 
 appl_enable_intr_init.BCM8869X=1
-polled_irq_mode.BCM8869X=1
+polled_irq_mode.BCM8869X=0
 polled_irq_delay.BCM8869X=1000
 
-bcm_stat_interval.BCM8869X=1000
+bcm_stat_interval.BCM8869X=1000000
 
 mem_cache_enable_ecc.BCM8869X=1
 mem_cache_enable_parity.BCM8869X=1
@@ -792,3 +793,4 @@ dma_desc_aggregator_buff_size_kb.BCM8869X=100
 dma_desc_aggregator_timeout_usec.BCM8869X=1000
 dma_desc_aggregator_enable_specific_MDB_LPM.BCM8869X=1
 dma_desc_aggregator_enable_specific_MDB_FEC.BCM8869X=1
+sai_pfc_dlr_init_capability=0 

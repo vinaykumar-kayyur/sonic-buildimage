@@ -18,14 +18,20 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MFT_NAME = mft-$(MFT_VERSION)-$(MFT_REVISION)-x86_64-deb
+ifeq ($(CONFIGURED_ARCH), amd64)
+MFT_ARCH = x86_64
+else
+MFT_ARCH = $(CONFIGURED_ARCH)
+endif
+
+MFT_NAME = mft-$(MFT_VERSION)-$(MFT_REVISION)-$(MFT_ARCH)-deb
 MFT_TGZ = $(MFT_NAME).tgz
 
 SRC_DEB = kernel-mft-dkms_$(MFT_VERSION)-$(MFT_REVISION)_all.deb
-MOD_DEB = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_amd64.deb
+MOD_DEB = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_$(CONFIGURED_ARCH).deb
 
-MAIN_TARGET = mft_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
-DERIVED_TARGETS = $(MOD_DEB) mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
+MAIN_TARGET = mft_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = $(MOD_DEB) mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
 
 DKMS_BMDEB = /var/lib/dkms/kernel-mft-dkms/$(MFT_VERSION)/bmdeb
 DKMS_TMP := $(shell mktemp -u -d -t dkms.XXXXXXXXXX)
@@ -35,7 +41,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	wget -O $(MFT_TGZ) http://www.mellanox.com/downloads/MFT/$(MFT_TGZ)
 	tar xzf $(MFT_TGZ)
 
-ifneq (,$(findstring bullseye,$(DEST)))
 	pushd $(MFT_NAME)/SDEBS
 
 	# put a lock here because dpkg does not allow installing packages in parallel
@@ -47,8 +52,8 @@ ifneq (,$(findstring bullseye,$(DEST)))
 
 	popd
 
-	sudo dkms build kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a amd64
-	sudo dkms mkbmdeb kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a amd64
+	sudo dkms build kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a $(CONFIGURED_ARCH)
+	sudo dkms mkbmdeb kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a $(CONFIGURED_ARCH)
 
 	# w/a: remove dependencies
 	mkdir -p $(DKMS_TMP)/DEBIAN
@@ -63,7 +68,6 @@ ifneq (,$(findstring bullseye,$(DEST)))
 	popd
 
 	rm -rf $(DKMS_TMP)
-endif
 
 	# fix timestamp because we do not actually build tools, only kernel
 	touch $(MFT_NAME)/DEBS/*.deb

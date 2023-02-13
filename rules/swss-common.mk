@@ -9,9 +9,9 @@ $(LIBSWSSCOMMON)_VERSION = $(LIBSWSSCOMMON_VERSION)
 $(LIBSWSSCOMMON)_NAME = $(LIBSWSSCOMMON_NAME)
 $(LIBSWSSCOMMON)_DEPENDS += $(LIBHIREDIS_DEV) $(LIBNL3_DEV) $(LIBNL_GENL3_DEV) \
                             $(LIBNL_ROUTE3_DEV) $(LIBNL_NF3_DEV) \
-                            $(LIBNL_CLI_DEV)
+                            $(LIBNL_CLI_DEV) $(LIBYANG_DEV) $(LIBYANG) 
 $(LIBSWSSCOMMON)_RDEPENDS += $(LIBHIREDIS) $(LIBNL3) $(LIBNL_GENL3) \
-                             $(LIBNL_ROUTE3) $(LIBNL_NF3) $(LIBNL_CLI)
+                             $(LIBNL_ROUTE3) $(LIBNL_NF3) $(LIBNL_CLI) $(LIBYANG) 
 SONIC_DPKG_DEBS += $(LIBSWSSCOMMON)
 
 LIBSWSSCOMMON_DEV = $(LIBSWSSCOMMON_NAME)-dev_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
@@ -31,6 +31,9 @@ LIBSWSSCOMMON_DBG = $(LIBSWSSCOMMON_NAME)-dbg_$(LIBSWSSCOMMON_VERSION)_$(CONFIGU
 $(LIBSWSSCOMMON_DBG)_DEPENDS += $(LIBSWSSCOMMON)
 $(LIBSWSSCOMMON_DBG)_RDEPENDS += $(LIBSWSSCOMMON)
 $(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(LIBSWSSCOMMON_DBG)))
+
+SONIC_DB_CLI = sonic-db-cli_$(LIBSWSSCOMMON_VERSION)_$(CONFIGURED_ARCH).deb
+$(eval $(call add_derived_package,$(LIBSWSSCOMMON),$(SONIC_DB_CLI)))
 
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
