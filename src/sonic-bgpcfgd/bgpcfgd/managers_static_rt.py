@@ -41,7 +41,12 @@ class StaticRouteMgr(Manager):
         intf_list   = arg_list(data['ifname']) if 'ifname' in data else None
         dist_list   = arg_list(data['distance']) if 'distance' in data else None
         nh_vrf_list = arg_list(data['nexthop-vrf']) if 'nexthop-vrf' in data else None
+        bfd_enable  = arg_list(data['bfd']) if 'bfd' in data else None
         route_tag   = self.ROUTE_ADVERTISE_DISABLE_TAG if 'advertise' in data and data['advertise'] == "false" else self.ROUTE_ADVERTISE_ENABLE_TAG 
+
+        # bfd enabled route would be handled in staticroutebfd, skip here
+        if bfd_enable and bfd_enable[0].lower() == "true":
+            return True
 
         try:
             ip_nh_set = IpNextHopSet(is_ipv6, bkh_list, nh_list, intf_list, dist_list, nh_vrf_list)
