@@ -16,7 +16,7 @@ class PSUTC(TestCaseCommon):
     __SENSORUTIL_CLASS_NAME = "SensorUtil"
 
     def __init__(self, index, logger, platform_cfg_file, case_cfg_file=None):
-        MODULE_NAME = "psu_tc" # this param specified the case config dirictory
+        MODULE_NAME = "psu_tc"
         TestCaseCommon.__init__(self, index, MODULE_NAME, logger, platform_cfg_file, case_cfg_file)
         self.psu_util = None
         self.sensor_util = None

@@ -19,7 +19,7 @@ class FANTC(TestCaseCommon):
     __SENSORUTIL_CLASS_NAME = "SensorUtil"
 
     def __init__(self, index, logger, platform_cfg_file, case_cfg_file=None):
-        MODULE_NAME = "fan_tc" # this param specified the case config dirictory
+        MODULE_NAME = "fan_tc"
         TestCaseCommon.__init__(self, index, MODULE_NAME, logger, platform_cfg_file, case_cfg_file)
 
         self.fan_util = None
@@ -297,8 +297,6 @@ class FANTC(TestCaseCommon):
             if fan_ret != E.OK:
                 ret = fan_ret
                 self.logger.log_err("{} speed test failed.".format(fan_name))
-
-            #self.logger.log_dbg("{} fan status test done, PASS".format(fan_name))
 
         if ret == E.OK:
             self.logger.log_dbg("test_fan_status PASS.")
