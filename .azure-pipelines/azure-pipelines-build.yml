@@ -138,7 +138,7 @@ jobs:
               rm target/sonic-vs.img
             fi
           else
-            if [ $(GROUP_NAME) == mellonax ]; then
+            if [ $(GROUP_NAME) == mellanox ]; then
               make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-mlnx.gz
             fi
             if [ $(dbg_image) == yes ]; then
