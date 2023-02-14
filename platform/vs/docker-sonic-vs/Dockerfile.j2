@@ -1,6 +1,8 @@
 FROM docker-config-engine-buster-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
+
+COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 ## Make apt-get non-interactive
@@ -203,6 +205,8 @@ RUN touch /etc/quagga/zebra.conf
 
 # disable integrated vtysh config
 RUN rm /etc/frr/frr.conf
+
+COPY ["frr/zebra.conf", "/etc/frr/"]
 
 # Create /var/warmboot/teamd folder for teammgrd
 RUN mkdir -p /var/warmboot/teamd

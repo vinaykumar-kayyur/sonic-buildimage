@@ -56,10 +56,10 @@ generate_kvm_image()
         exit 1
     }
 
-    gzip $KVM_IMAGE_DISK
+    $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK
 
     [ -r $KVM_IMAGE_DISK.gz ] || {
-        echo "Error : gzip $KVM_IMAGE_DISK failed!"
+        echo "Error : $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK failed!"
         exit 1
     }
 
@@ -71,12 +71,12 @@ generate_onie_installer_image()
     output_file=$OUTPUT_ONIE_IMAGE
     [ -n "$1" ] && output_file=$1
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
-    rm -rf ./installer/${TARGET_PLATFORM}/platforms/
-    mkdir -p ./installer/${TARGET_PLATFORM}/platforms/
+    rm -rf ./installer/platforms/
+    mkdir -p ./installer/platforms/
     for VENDOR in `ls ./device`; do
         for PLATFORM in `ls ./device/$VENDOR | grep ^${TARGET_PLATFORM}`; do
             if [ -f ./device/$VENDOR/$PLATFORM/installer.conf ]; then
-                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/${TARGET_PLATFORM}/platforms/$PLATFORM
+                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/platforms/$PLATFORM
             fi
 
         done
@@ -147,10 +147,10 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
         exit 1
     }
 
-    gzip $OUTPUT_RAW_IMAGE
+    $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE
 
     [ -r $OUTPUT_RAW_IMAGE.gz ] || {
-        echo "Error : gzip $OUTPUT_RAW_IMAGE failed!"
+        echo "Error : $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE failed!"
         exit 1
     }
 
