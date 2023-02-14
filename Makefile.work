@@ -50,6 +50,7 @@
 #  * ENABLE_BOOTCHART: Enable SONiC bootchart
 #  *                 Default: n
 #  *                 Values: y,n
+#  * INCLUDE_PIT: Include PIT(Platform Integration Test) package
 #
 ###############################################################################
 
@@ -410,6 +411,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_ENABLE_BOOTCHART=$(ENABLE_BOOTCHART) \
                            ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
+                           SONIC_INCLUDE_PIT=$(INCLUDE_PIT) \
                            SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 

@@ -256,3 +256,6 @@ ENABLE_FIPS ?= n
 
 # SONIC_SLAVE_DOCKER_DRIVER - set the sonic slave docker storage driver
 SONIC_SLAVE_DOCKER_DRIVER ?= vfs
+
+# INCLUDE_PIT - Build PIT(Platform Integration Test) option, default to NOT
+INCLUDE_PIT ?= n
