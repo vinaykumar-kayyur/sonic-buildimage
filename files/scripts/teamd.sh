@@ -32,7 +32,7 @@ function validate_restore_count()
 
 function check_fast_boot ()
 {
-    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB GET "FAST_REBOOT|system"`
+    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB GET "FAST_RESTART_ENABLE_TABLE|system"`
     if [[ ${SYSTEM_FAST_REBOOT} == "enable" ]]; then
         FAST_BOOT="true"
     else
