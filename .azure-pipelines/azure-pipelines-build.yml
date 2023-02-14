@@ -168,7 +168,7 @@ jobs:
                 popd
               fi
             fi
-            if [ $(GROUP_NAME) == mellonax ]; then
+            if [ $(GROUP_NAME) == mellanox ]; then
               make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-mlnx.gz
             fi            
             if [ $(syncd_rpc_image) == yes ]; then
