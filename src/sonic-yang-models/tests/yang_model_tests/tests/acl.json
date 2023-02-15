@@ -26,11 +26,6 @@
         "desc": "Configure non-existing ACL_TABLE in ACL_RULE.",
         "eStrKey" : "LeafRef"
     },
-    "ACL_RULE_IP_TYPE_SRC_IPV6_MISMATCH": {
-        "desc": "Configure IP_TYPE as ipv4any and SRC_IPV6 in ACL_RULE.",
-        "eStrKey" : "When",
-        "eStr": ["IP_TYPE"]
-    },
     "ACL_RULE_ARP_TYPE_DST_IPV6_MISMATCH": {
         "desc": "Configure IP_TYPE as ARP and DST_IPV6 in ACL_RULE.",
         "eStrKey" : "When",
