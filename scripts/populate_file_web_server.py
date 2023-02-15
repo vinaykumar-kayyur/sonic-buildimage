@@ -70,8 +70,6 @@ class Resource:
         ret_val += "Full URL: " + self.url
         return ret_val
 
-
-
 # Helper functions
 
 def print_msg(print_level, msg, print_in_place=False):
@@ -84,12 +82,11 @@ def print_msg(print_level, msg, print_in_place=False):
 def create_dir_if_not_exist(dir):
     if not os.path.exists(dir):
         try:
-            os.mkdir(dir)
+            os.makedirs(dir)
         except:
             print_msg(PRINT_LEVEL_WARN, "Cannot create directory " + dir)
 
 def delete_file_if_exist(file):
-
     if os.path.exists(file):
         try:
             os.remove(file)
@@ -99,7 +96,6 @@ def delete_file_if_exist(file):
 # Logic functions
         
 def generate_output_file(resources, dest_url_valid, dest_url, output_file_name):
-
     try:
         with open(output_file_name, 'w') as f:
             for unique_name in resources.keys():
@@ -116,12 +112,9 @@ def generate_output_file(resources, dest_url_valid, dest_url, output_file_name):
         print_msg(PRINT_LEVEL_WARN, output_file_name + " cannot be created")
         return RET_CODE_CANNOT_CREATE_FILE
         
-    f.close()
-        
     return RET_CODE_SUCCESS
 
 def upload_resource_to_server(resource_path, resource_name, user, key, server_url):
-
     url_full_path = server_url + "/" + resource_name
 
     try:
@@ -153,7 +146,6 @@ def upload_resource_to_server(resource_path, resource_name, user, key, server_ur
     return RET_CODE_SUCCESS
 
 def download_external_resouce(resource, cache_path):
-    
     resource_path_in_cache = cache_path + os.sep + resource.get_unique_name()
 
     r = requests.get(resource.get_url(), allow_redirects=True)
@@ -169,7 +161,6 @@ def download_external_resouce(resource, cache_path):
     return resource_path_in_cache
 
 def get_resources_list(resource_files_list):
-
     resource_list = list()
 
     for file_name in resource_files_list:
@@ -205,7 +196,6 @@ def get_resource_files_list(serach_path):
     return resource_files_list
 
 def parse_args():
-
     parser = argparse.ArgumentParser(description='Various pre-steps for build compilation')
 
     parser.add_argument('-s', '--source', default=".",
@@ -233,7 +223,6 @@ def parse_args():
     return parser.parse_args()
 
 def main():
-    
     global g_current_print_level 
     ret_val = RET_CODE_SUCCESS
     resource_counter = 0.0
@@ -297,7 +286,6 @@ def main():
         print_msg(PRINT_LEVEL_INFO, "Generate output file " + args.output)
         
     return ret_val
-       
 
 #    Entry function                                                
 if __name__ == '__main__':
@@ -305,4 +293,3 @@ if __name__ == '__main__':
     ret_val = main()
 
     sys.exit(ret_val)
-
