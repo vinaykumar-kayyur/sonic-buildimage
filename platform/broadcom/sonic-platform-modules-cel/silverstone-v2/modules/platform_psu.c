@@ -107,7 +107,8 @@ static int pmbus_probe(struct i2c_client *client,
 {	
 
 	int ret = -1;
-	ret = pmbus_do_probe(client, id, &dps1300_info);
+	//ret = pmbus_do_probe(client, id, &dps1300_info);
+        ret = pmbus_do_probe(client, &dps1300_info);
 	printk(KERN_WARNING "pmbus_do_probe ret:%d.\n", ret);
 	//dps1300_init_debugfs(data, client);
 	return ret;
@@ -126,7 +127,7 @@ static struct i2c_driver dps1300_driver = {
            .name = "platform_psu",
            },
     .probe = pmbus_probe,
-    .remove = pmbus_do_remove,
+    //.remove = pmbus_do_remove,
     .id_table = dps1300_id,
 };
 

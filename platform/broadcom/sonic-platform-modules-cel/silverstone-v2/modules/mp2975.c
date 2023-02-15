@@ -772,7 +772,8 @@ static int mp2975_probe(struct i2c_client *client,
 	if (ret)
 		return ret;
 
-	return pmbus_do_probe(client, id, info);
+	//return pmbus_do_probe(client, id, info);
+        return pmbus_do_probe(client, info);
 }
 
 static const struct i2c_device_id mp2975_id[] = {
@@ -794,7 +795,7 @@ static struct i2c_driver mp2975_driver = {
 		.of_match_table = of_match_ptr(mp2975_of_match),
 	},
 	.probe = mp2975_probe,
-	.remove = pmbus_do_remove,
+//	.remove = pmbus_do_remove,
 	.id_table = mp2975_id,
 };
 

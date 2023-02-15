@@ -14,7 +14,8 @@
 #include <linux/err.h>
 #include <linux/slab.h>
 #include <linux/i2c.h>
-#include <linux/i2c/pmbus.h>
+//#include <linux/i2c/pmbus.h>
+#include <linux/pmbus.h>
 #include <linux/gpio/driver.h>
 #include "pmbus.h"
 
@@ -610,7 +611,8 @@ static int ucd9000_probe(struct i2c_client *client,
 
 	ucd9000_probe_gpio(client, mid, data);
 
-	ret = pmbus_do_probe(client, mid, info);
+	//ret = pmbus_do_probe(client, mid, info);
+        ret = pmbus_do_probe(client, info);
 	if (ret)
 		return ret;
 
@@ -629,7 +631,7 @@ static struct i2c_driver ucd9000_driver = {
 		.of_match_table = of_match_ptr(ucd9000_of_match),
 	},
 	.probe = ucd9000_probe,
-	.remove = pmbus_do_remove,
+	//.remove = pmbus_do_remove,
 	.id_table = ucd9000_id,
 };
 

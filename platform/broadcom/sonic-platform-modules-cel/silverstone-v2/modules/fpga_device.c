@@ -79,9 +79,10 @@
 #include <linux/interrupt.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
-#include <linux/i2c/pca954x.h>
+//#include <linux/i2c/pca954x.h>
 #include "fpga_i2c_ocores.h"
 #include "fpga_xcvr.h"
+#include "pca954x.h"
 
 #define MOD_VERSION "2.0.0"
 #define DRV_NAME "cls-switchboard"

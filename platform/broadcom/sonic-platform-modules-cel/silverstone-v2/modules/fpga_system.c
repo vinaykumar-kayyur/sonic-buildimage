@@ -253,7 +253,8 @@ static int cls_fpga_probe(struct platform_device *pdev)
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (res) {
 		/* use devm_ioremap_resource to map whole fpga res again will be conflict*/
-		fpga->base = ioremap_nocache(res->start, res->end - res->start);
+		//fpga->base = ioremap_nocache(res->start, res->end - res->start);
+                fpga->base = ioremap(res->start, res->end - res->start);
 		if (IS_ERR(fpga->base)){
 			ret = PTR_ERR(fpga->base);
 			goto mem_unmap;

@@ -22,6 +22,7 @@
 #include <linux/module.h>
 #include "pmbus.h"
 
+
 #define TPS536C7_PROT_VR12_5MV		0x01 /* VR12.0 mode, 5-mV DAC */
 #define TPS536C7_PROT_VR12_5_10MV	0x02 /* VR12.5 mode, 10-mV DAC */
 #define TPS536C7_PROT_VR13_10MV		0x04 /* VR13.0 mode, 10-mV DAC */
@@ -102,7 +103,8 @@ static int tps536c7_probe(struct i2c_client *client,
 
 	memcpy(info, &tps536c7_info, sizeof(*info));
 
-	return pmbus_do_probe(client, id, info);
+	//return pmbus_do_probe(client, id, info);
+          return pmbus_do_probe(client, info);
 }
 
 static const struct i2c_device_id tps536c7_id[] = {
@@ -124,7 +126,7 @@ static struct i2c_driver tps536c7_driver = {
 		.of_match_table = of_match_ptr(tps536c7_of_match),
 	},
 	.probe = tps536c7_probe,
-	.remove = pmbus_do_remove,
+	//.remove = pmbus_do_remove,
 	.id_table = tps536c7_id,
 };
 

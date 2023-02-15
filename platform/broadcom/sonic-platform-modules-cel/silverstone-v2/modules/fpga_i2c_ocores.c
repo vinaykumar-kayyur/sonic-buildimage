@@ -24,7 +24,7 @@
 #include <linux/i2c.h>
 #include <linux/interrupt.h>
 #include <linux/wait.h>
-#include <linux/i2c-xiic.h>
+#include <linux/platform_data/i2c-xiic.h>
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/of.h>
@@ -1553,7 +1553,8 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	if (pdata) {
 		/* add in known devices to the bus */
 		for (i = 0; i < pdata->num_devices; i++)
-			i2c_new_device(&i2c->adap, pdata->devices + i);
+			//i2c_new_device(&i2c->adap, pdata->devices + i);
+                          i2c_new_client_device(&i2c->adap, pdata->devices + i);
 	}
 	return 0;
 
@@ -1594,6 +1595,7 @@ static const struct of_device_id xiic_of_match[] = {
 MODULE_DEVICE_TABLE(of, xiic_of_match);
 #endif
 
+/*
 static int __maybe_unused xiic_i2c_runtime_suspend(struct device *dev)
 {
 	struct xiic_i2c *i2c = dev_get_drvdata(dev);
@@ -1602,7 +1604,10 @@ static int __maybe_unused xiic_i2c_runtime_suspend(struct device *dev)
 
 	return 0;
 }
+*/
 
+
+/*
 static int __maybe_unused xiic_i2c_runtime_resume(struct device *dev)
 {
 	struct xiic_i2c *i2c = dev_get_drvdata(dev);
@@ -1616,11 +1621,14 @@ static int __maybe_unused xiic_i2c_runtime_resume(struct device *dev)
 
 	return 0;
 }
+*/
 
+/*
 static const struct dev_pm_ops xiic_dev_pm_ops = {
 	SET_RUNTIME_PM_OPS(xiic_i2c_runtime_suspend,
 			   xiic_i2c_runtime_resume, NULL)
 };
+*/
 
 static struct platform_driver xiic_i2c_driver = {
 	.probe   = xiic_i2c_probe,
@@ -1628,7 +1636,7 @@ static struct platform_driver xiic_i2c_driver = {
 	.driver  = {
 		.name = DRIVER_NAME,
 		.of_match_table = of_match_ptr(xiic_of_match),
-		.pm = &xiic_dev_pm_ops,
+//		.pm = &xiic_dev_pm_ops,
 	},
 };
 
