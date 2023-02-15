@@ -1,0 +1,23 @@
+steps:
+- script: |
+    (
+      while true
+      do
+        sleep 120
+        now=$(date +%s)
+        pids=$(ps -C docker -o pid,etime,args | grep "docker build" | cut -d" " -f1)
+        for pid in $pids
+        do
+          start=$(date --date="$(ls -dl /proc/$pid --time-style full-iso | awk '{print$6,$7}')" +%s)
+          time_s=$(($now-$start))
+          if [[ $time_s -gt $(DOCKER_BUILD_TIMEOUT) ]]; then
+            echo =========== $(date +%F%T) $time_s &>> target/daemon.log
+            ps $pid &>> target/daemon.log
+            sudo kill $pid
+          fi
+        done
+      done
+    ) &
+    daemon_pid=$!
+    ps $daemon_pid
+    echo "##vso[task.setvariable variable=DAEMON_PID]$daemon_pid"
