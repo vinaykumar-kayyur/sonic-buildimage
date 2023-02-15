@@ -2,38 +2,11 @@ import subprocess
 import imp
 import json
 import requests
+from sonic_py_common.device_info import get_platform_and_hwsku
 
 
 PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
 PLATFORM_ROOT_PATH_DOCKER = "/usr/share/sonic/platform"
-
-SONIC_CFGGEN_PATH = "/usr/local/bin/sonic-cfggen"
-HWSKU_KEY = "DEVICE_METADATA['localhost']['hwsku']"
-PLATFORM_KEY = "DEVICE_METADATA['localhost']['platform']"
-
-
-def get_platform_and_hwsku():
-    try:
-        proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
-                                stdout=subprocess.PIPE,
-                                shell=False,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0].decode()
-        proc.wait()
-        platform = stdout.rstrip("\n")
-        # platform = platform.lower().rstrip("-r0")
-
-        proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
-                                stdout=subprocess.PIPE,
-                                shell=False,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0].decode()
-        proc.wait()
-        hwsku = stdout.rstrip("\n")
-    except OSError as e:
-        raise OSError("Cannot detect platform")
-
-    return (platform, hwsku)
 
 
 def load_platform_util_module(module_name):
@@ -62,15 +35,6 @@ def convert_unicode(input):
         return input.encode("utf-8")
     else:
         return input
-
-
-def exec_cmd(cmd_str):
-    output = None
-    try:
-        output = subprocess.check_output(cmd_str, shell=True,)
-    except Exception as err:
-        print("{} exec cmd failed.{}".format(cmd_str, err))
-    return output
 
 
 def run_command(cmd):

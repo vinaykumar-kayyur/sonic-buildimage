@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from __future__ import print_function
-#from subprocess import PIPE, Popen
 from errcode import E
 import subprocess
 import threading
@@ -11,79 +10,7 @@ import pexpect
 import imp
 import re
 import json
-
-# from threading import Lock, Thread
-PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
-PLATFORM_ROOT_PATH_DOCKER = "/usr/share/sonic/platform"
-
-SONIC_CFGGEN_PATH = "/usr/local/bin/sonic-cfggen"
-HWSKU_KEY = "DEVICE_METADATA['localhost']['hwsku']"
-PLATFORM_KEY = "DEVICE_METADATA['localhost']['platform']"
-
-
-def get_platform_and_hwsku():
-    try:
-        proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
-                                stdout=subprocess.PIPE,
-                                shell=False,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        platform = stdout.decode().rstrip("\n")
-
-        proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
-                                stdout=subprocess.PIPE,
-                                shell=False,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        hwsku = stdout.decode().rstrip("\n")
-    except OSError as e:
-        raise OSError("Cannot detect platform")
-
-    return (platform, hwsku)
-
-
-def load_platform_util_module(module_name):
-    platform_util_module = None
-
-    (platform, hwsku) = get_platform_and_hwsku()
-    platform_path = ''
-    if len(platform) != 0:
-        platform_path = "/".join([PLATFORM_ROOT_PATH, platform])
-    else:
-        platform_path = PLATFORM_ROOT_PATH_DOCKER
-
-    try:
-        module_file = "/".join([platform_path, "plugins", module_name + ".py"])
-        platform_util_module = imp.load_source(module_name, module_file)
-    except IOError as e:
-        return None
-
-    return platform_util_module
-
-
-def run_command(cmd):
-    proc = subprocess.Popen(cmd, shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    if err and proc.returncode != 0:
-        return proc.returncode, err
-    return 0, out.decode().rstrip('\n')
-
-
-def execute_cmd(cmdlist):
-    for cmd in cmdlist:
-        proc = Popen(cmd, stdin=PIPE, shell=True,
-                     stderr=sys.stderr,
-                     close_fds=True,
-                     stdout=sys.stdout,
-                     universal_newlines=True,
-                     bufsize=1)
-        proc.communicate()
-        signal.signal(signal.SIGINT, quit)
-    return proc.returncode
+from sonic_py_common.device_info import get_platform_and_hwsku
 
 
 def execute_cmd_return_match(cmd, pattern, linemode=True):

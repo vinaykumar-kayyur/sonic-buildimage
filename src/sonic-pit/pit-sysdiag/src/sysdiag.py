@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-from function import get_platform_and_hwsku, run_command
+from function import run_command
+from sonic_py_common.device_info import get_platform_and_hwsku
 import imp
 import inspect
 import os
