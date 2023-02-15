@@ -156,7 +156,7 @@ module sonic-mirror-session {
 
                 leaf src_port {
                     type string {
-                        length 1..256;
+                        length 1..2048;
                     }
                     description
                         "Source port configuration for mirroring. Can be configured for both SPAN/ERSPAN.
