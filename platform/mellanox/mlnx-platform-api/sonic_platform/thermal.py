@@ -125,7 +125,7 @@ THERMAL_NAMING_RULE = {
             "temperature": "sodimm{}_temp_input",
             "high_threshold": "sodimm{}_temp_max",
             "high_critical_threshold": "sodimm{}_temp_crit",
-            "type": "indexable",
+            "type": "indexable"
         }
     ],
     'linecard thermals': {
