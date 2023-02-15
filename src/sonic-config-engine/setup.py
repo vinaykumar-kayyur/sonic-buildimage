@@ -1,5 +1,6 @@
 import glob
 import sys
+import pip
 
 from setuptools import setup
 
@@ -9,8 +10,11 @@ dependencies = [
     'ipaddress==1.0.23',
     'lxml==4.9.1',
     'netaddr==0.8.0',
-    'pyyaml==5.4.1',
-    'sonic-py-common',
+    'pyyaml==5.4.1'
+]
+
+sonic_dependencies = [
+    'sonic-py-common'
 ]
 
 if sys.version_info.major == 3:
@@ -20,7 +24,9 @@ if sys.version_info.major == 3:
         # Python3 has enum module and so pyangbind should be installed outside
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
-        'Jinja2>=2.10',
+        'Jinja2>=2.10'
+    ]
+    sonic_dependencies += [
         'sonic-yang-mgmt>=1.0',
         'sonic-yang-models>=1.0'
     ]
@@ -49,6 +55,9 @@ if sys.version_info.major == 3:
     py_modules += [
         'sonic_yang_cfg_generator'
     ]
+
+if pip.main(["show"] + sonic_dependencies) != 0:
+    exit(1)
 
 setup(
     name = 'sonic-config-engine',
