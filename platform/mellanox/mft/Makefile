@@ -73,4 +73,13 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	touch $(MFT_NAME)/DEBS/*.deb
 	mv $(MFT_NAME)/DEBS/*.deb $(DEST)
 
+	FWTRACE_CFG = ./fwtrace_cfg
+	MFT_CFG = /etc/mft/fwtrace_cfg
+
+	if [ ! -d $(MFT_CFG) ]; then \
+		mkdir -p $(MFT_CFG); \
+	fi
+
+	cp $(FWTRACE_CFG)/* $(MFT_CFG)
+
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
