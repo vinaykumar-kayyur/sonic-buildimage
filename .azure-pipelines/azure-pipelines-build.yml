@@ -74,7 +74,7 @@ jobs:
 
         - name: centec-arm64
           ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-arm64
+            pool: sonicbld
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
@@ -89,7 +89,7 @@ jobs:
 
         - name: marvell-armhf
           ${{ if not(parameters.qemuOrCrossBuild) }}:
-            pool: sonicbld-armhf
+            pool: sonicbld
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
