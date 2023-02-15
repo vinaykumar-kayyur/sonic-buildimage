@@ -1,4 +1,4 @@
-scripts:
-- script: |
+steps:
+- bash: |
     ps $(DAEMON_PID)
     sudo kill $(DAEMON_PID) || true
