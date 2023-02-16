@@ -803,7 +803,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/bios/
 for MLNX_BIOS_ARCHIVE in $MLNX_BIOS_ARCHIVES; do
     sudo cp $files_path/$MLNX_BIOS_ARCHIVE $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/bios/
     # Link old BIOS location to not break existing automation/scripts
-    sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/$MLNX_BIOS_ARCHIVE $FILESYSTEM_ROOT/etc/mlnx/bios/$MLNX_BIOS_ARCHIVE
+    sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/bios/$MLNX_BIOS_ARCHIVE $FILESYSTEM_ROOT/etc/mlnx/bios/$MLNX_BIOS_ARCHIVE
 done
 fi
 
@@ -814,9 +814,9 @@ declare -rA FW_FILE_MAP=( \
 )
 sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/asic/
 for fw_file_name in ${!FW_FILE_MAP[@]}; do
-    sudo cp $files_path/$fw_file_name $FILESYSTEM_ROOT/$PLATFORM_DIR/${FW_FILE_MAP[$fw_file_name]}
+    sudo cp $files_path/$fw_file_name $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/asic/${FW_FILE_MAP[$fw_file_name]}
     # Link old FW location to not break existing automation/scripts
-    sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/${FW_FILE_MAP[$fw_file_name]} $FILESYSTEM_ROOT/etc/mlnx/${FW_FILE_MAP[$fw_file_name]}
+    sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/asic/${FW_FILE_MAP[$fw_file_name]} $FILESYSTEM_ROOT/etc/mlnx/${FW_FILE_MAP[$fw_file_name]}
 done
 sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/etc/mlnx/issu-version
 sudo cp $files_path/$MLNX_FFB_SCRIPT $FILESYSTEM_ROOT/usr/bin/mlnx-ffb.sh
