@@ -1,5 +1,6 @@
 steps:
 - script: |
+    set -x
     # kill daemon process
     ps $(PIPELINE_WATCHDOG_DAEMON_PID)
     sudo kill $(PIPELINE_WATCHDOG_DAEMON_PID)
