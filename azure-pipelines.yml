@@ -42,6 +42,8 @@ variables:
   value: rcache
 - name: ENABLE_FIPS
   value: y
+- name: DOCKER_DATA_ROOT_FOR_MULTIARCH
+  value: /data/march/docker
 
 stages:
 - stage: BuildVS
