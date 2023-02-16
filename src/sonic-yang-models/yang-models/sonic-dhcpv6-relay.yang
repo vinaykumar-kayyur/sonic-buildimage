@@ -43,12 +43,6 @@ module sonic-dhcpv6-relay {
 						description "Set rfc6939 for the relay";
 						type boolean;
 				}
-        
-				leaf vlanid {
-					type uint16 {
-						range 1..4094;
-					}
-				}
 			}
 			/* end of VLAN_LIST */
 		}
