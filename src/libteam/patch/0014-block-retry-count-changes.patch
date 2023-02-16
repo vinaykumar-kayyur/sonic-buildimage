@@ -7,11 +7,11 @@ After setting the retry count to some custom value, if a normal LACP
 packet comes in without a custom retry count, don't reset it back to
 that custom retry count for the first 60 seconds.
 ---
- teamd/teamd_runner_lacp.c |   22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ teamd/teamd_runner_lacp.c |   40 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 30 insertions(+), 10 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index f58ad3b..7df3bcb 100644
+index 4b77692..5a55bd5 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -180,6 +180,7 @@ struct lacp {
@@ -22,7 +22,7 @@ index f58ad3b..7df3bcb 100644
  	struct {
  		bool active;
  #define		LACP_CFG_DFLT_ACTIVE true
-@@ -1457,6 +1458,8 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+@@ -1457,9 +1458,12 @@ static int lacpdu_send(struct lacp_port *lacp_port)
  	return err;
  }
  
@@ -31,30 +31,52 @@ index f58ad3b..7df3bcb 100644
  static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
  {
  	int err;
-@@ -1493,13 +1496,20 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
- 					   lacp_port->partner_retry_count,
- 					   lacpdu->v2.actor_retry_count);
- 		lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
-+		lacp_port->lacp->next_retry_count_change_time = time(NULL) + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS;
++	struct timespec monotonic_time = {0};
+ 
+ 	if (!lacpdu_check(lacpdu)) {
+ 		teamd_log_warn("malformed LACP PDU came.");
+@@ -1489,18 +1493,34 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+ 		}
+ 		if (lacp_port->partner_retry_count != lacpdu->v2.actor_retry_count) {
+ 			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
+-					lacp_port->tdport->ifname,
+-					lacp_port->partner_retry_count,
+-					lacpdu->v2.actor_retry_count);
+-			lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
+-		}
++					   lacp_port->tdport->ifname,
++					   lacp_port->partner_retry_count,
++					   lacpdu->v2.actor_retry_count);
++            lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
++            if (clock_gettime(CLOCK_MONOTONIC, &monotonic_time)) {
++                err = errno;
++                teamd_log_err("%s: unable to get current time: %s", lacp_port->tdport->ifname, strerror(err));
++                return -err;
++            }
++            lacp_port->lacp->next_retry_count_change_time = monotonic_time.tv_sec + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS;
++        }
  	} else {
--		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
+ 		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
 -			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
--					   lacp_port->tdport->ifname,
--					   lacp_port->partner_retry_count,
--					   LACP_CFG_DFLT_RETRY_COUNT);
--		lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
-+		time_t currentTime = time(NULL);
-+		if (currentTime < lacp_port->lacp->next_retry_count_change_time) {
-+			teamd_log_dbg(lacp_port->ctx, "%s: retry count changed too recently",
-+					lacp_port->tdport->ifname);
-+		} else {
-+			if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
+-					lacp_port->tdport->ifname,
+-					lacp_port->partner_retry_count,
+-					LACP_CFG_DFLT_RETRY_COUNT);
+-			lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++			if (clock_gettime(CLOCK_MONOTONIC, &monotonic_time)) {
++				err = errno;
++				teamd_log_err("%s: unable to get current time: %s", lacp_port->tdport->ifname, strerror(err));
++				return -err;
++			}
++			if (monotonic_time.tv_sec < lacp_port->lacp->next_retry_count_change_time) {
++				teamd_log_dbg(lacp_port->ctx, "%s: retry count changed too recently",
++						lacp_port->tdport->ifname);
++			} else {
 +				teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
 +						lacp_port->tdport->ifname,
 +						lacp_port->partner_retry_count,
 +						LACP_CFG_DFLT_RETRY_COUNT);
-+			lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
-+		}
++				lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++			}
+ 		}
  	}
  
- 	err = lacp_port_set_state(lacp_port, PORT_STATE_CURRENT);
