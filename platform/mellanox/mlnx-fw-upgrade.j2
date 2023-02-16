@@ -332,15 +332,15 @@ function UpgradeFWFromImage() {
         ExitSuccess "firmware is up to date"
     fi
 
-    # /host/image-<version>/platform/fw/asic is now the new location for FW binaries.
+    # /host/image-<version>/platform/fw is now the new location for FW binaries.
     # Prefere this path and if it does not exist use squashfs as a fallback.
-    local -r _NEXT_IMAGE_FW_BIN_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/platform/fw/"
+    local -r _PLATFORM_FW_BIN_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/platform/fw/"
 
-    if [[ -d "${_NEXT_IMAGE_FW_BIN_PATH}" ]]; then
-        LogInfo "Using FW binaries from ${_NEXT_IMAGE_FW_BIN_PATH}"
+    if [[ -d "${_PLATFORM_FW_BIN_PATH}" ]]; then
+        LogInfo "Using FW binaries from ${_PLATFORM_FW_BIN_PATH}"
 
-        UpgradeASICFW "${_NEXT_IMAGE_FW_BIN_PATH}/asic"
-        UpgradeCPLDFW "${_NEXT_IMAGE_FW_BIN_PATH}/cpld/${ONIE_MACHINE#mlnx_}_cpld.tar.gz"
+        UpgradeASICFW "${_PLATFORM_FW_BIN_PATH}/asic"
+        UpgradeCPLDFW "${_PLATFORM_FW_BIN_PATH}/cpld/${ONIE_MACHINE#mlnx_}_cpld.tar.gz"
     else
         FS_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
         FS_MOUNTPOINT="/tmp/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
