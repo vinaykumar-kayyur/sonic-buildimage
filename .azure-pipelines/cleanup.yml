@@ -2,8 +2,9 @@ steps:
 - script: |
     set -x
     # kill daemon process
-    ps $(PIPELINE_WATCHDOG_DAEMON_PID)
-    sudo kill $(PIPELINE_WATCHDOG_DAEMON_PID)
+    ps $(cat /tmp/azp_daemon_kill_docker_pid)
+    sudo kill $(cat /tmp/azp_daemon_kill_docker_pid)
+    rm /tmp/azp_daemon_kill_docker_pid
 
     if sudo [ -f /var/run/march/docker.pid ] ; then
         pid=`sudo cat /var/run/march/docker.pid` ; sudo kill $pid
