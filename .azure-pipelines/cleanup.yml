@@ -15,4 +15,5 @@ steps:
         pid=`sudo cat dockerfs/var/run/docker.pid` ; sudo kill $pid
     fi
     sudo rm -rf $(ls -A1)
+  condition: always()
   displayName: "Clean Workspace"
