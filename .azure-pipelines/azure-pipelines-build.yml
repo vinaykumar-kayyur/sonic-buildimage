@@ -141,6 +141,9 @@ jobs:
             if [ $(GROUP_NAME) == mellanox ]; then
               make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-mlnx.gz
             fi
+            if [ $(GROUP_NAME) == marvell-armhf ]; then 
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y PLATFORM_ARCH=armhf target/docker-saiserverv2-mrvl.gz
+            fi
             if [ $(dbg_image) == yes ]; then
               make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
