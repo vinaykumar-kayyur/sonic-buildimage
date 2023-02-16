@@ -286,12 +286,12 @@ function UpgradeFWFromImage() {
 
     # /host/image-<version>/platform/fw/asic is now the new location for FW binaries.
     # Prefere this path and if it does not exist use squashfs as a fallback.
-    local -r _NEXT_IMAGE_FW_BIN_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/platform/fw/asic/"
+    local -r _PLATFORM_FW_BIN_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/platform/fw/asic/"
 
-    if [[ -d "${_NEXT_IMAGE_FW_BIN_PATH}" ]]; then
-        LogInfo "Using FW binaries from ${_NEXT_IMAGE_FW_BIN_PATH}"
+    if [[ -d "${_PLATFORM_FW_BIN_PATH}" ]]; then
+        LogInfo "Using FW binaries from ${_PLATFORM_FW_BIN_PATH}"
 
-        UpgradeFW "${_NEXT_IMAGE_FW_BIN_PATH}"
+        UpgradeFW "${_PLATFORM_FW_BIN_PATH}"
     else
         local -r _FS_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
         local -r _FS_MOUNTPOINT="/tmp/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
