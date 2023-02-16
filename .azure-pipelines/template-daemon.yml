@@ -21,3 +21,4 @@ steps:
     daemon_pid=$!
     ps $daemon_pid
     echo "##vso[task.setvariable variable=DAEMON_PID]$daemon_pid"
+  displayName: start daemon to kill hang docker
