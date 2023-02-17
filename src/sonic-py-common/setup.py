@@ -1,11 +1,26 @@
 from setuptools import setup
+import sys
+import subprocess
 
 dependencies = [
     'natsort==6.2.1', # 6.2.1 is the last version which supports Python 2
     'pyyaml',
 ]
 
-setup(
+def setup_fake(**kwargs):
+    install_list = ['requires', 'tests_require', 'install_requires' ]
+    for keyword in install_list:
+        packages = kwargs.get(keyword)
+        if packages:
+            for package in packages:
+                r = subprocess.call([sys.executable, '-m', 'pip', 'show', package.split("==")[0]])
+                if r != 0:
+                    sys.stderr.write("\033[33mPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\033[0m\n")
+                    sys.stderr.write("\033[33mThen install other dependencies from Pypi\033[0m\n")
+                    exit(1)
+    setup(**kwargs)
+
+setup_fake(
     name='sonic-py-common',
     version='1.0',
     description='Common Python libraries for SONiC',

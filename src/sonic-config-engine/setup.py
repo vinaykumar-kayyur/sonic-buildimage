@@ -1,5 +1,6 @@
 import glob
 import sys
+import subprocess
 
 from setuptools import setup
 
@@ -50,7 +51,20 @@ if sys.version_info.major == 3:
         'sonic_yang_cfg_generator'
     ]
 
-setup(
+def setup_fake(**kwargs):
+    install_list = ['requires', 'tests_require', 'install_requires' ]
+    for keyword in install_list:
+        packages = kwargs.get(keyword)
+        if packages:
+            for package in packages:
+                r = subprocess.call([sys.executable, '-m', 'pip', 'show', package.split("==")[0]])
+                if r != 0:
+                    sys.stderr.write("\033[33mPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\033[0m\n")
+                    sys.stderr.write("\033[33mThen install other dependencies from Pypi\033[0m\n")
+                    exit(1)
+    setup(**kwargs)
+
+setup_fake(
     name = 'sonic-config-engine',
     version = '1.0',
     description = 'Utilities for generating SONiC configuration files',
