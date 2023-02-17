@@ -171,7 +171,7 @@ index 82b8b86..4b77692 100644
  	}
  
 +	if (lacpdu->version_number == 0xf1) {
-+		if (lacpdu->v2.actor_retry_count < 3) {
++		if (lacpdu->v2.actor_retry_count < LACP_CFG_DFLT_RETRY_COUNT) {
 +			teamd_log_err("%s: retry count from partner (%u) out of its limits.", lacp_port->tdport->ifname, lacpdu->v2.actor_retry_count);
 +			return -EINVAL;
 +		}
