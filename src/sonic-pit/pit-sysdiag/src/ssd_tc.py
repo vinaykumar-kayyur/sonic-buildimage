@@ -3,16 +3,8 @@ import re
 import subprocess
 from test_case import TestCaseCommon
 from errcode import *
+from function import run_command
 import traceback
-
-
-def run_command(cmd):
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    if proc.returncode == 0:
-        if err:
-            out += err
-    return proc.returncode, out.decode().rstrip('\n')
 
 
 class SSDTC(TestCaseCommon):

@@ -41,7 +41,6 @@ class MEMORYTC(TestCaseCommon):
                 if ":" in item:
                     key = item.split(":")[0].strip()
                     value = item.split(":")[1].strip()
-                    #self.logger.log_info("%-30s: %s" % (key, value), True)
                     if key == 'Part Number' and value != 'NO DIMM':
                         pn_list.append(value)
                     if key == 'Manufacturer' and value != 'NO DIMM':
