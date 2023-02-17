@@ -1483,7 +1483,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
         """
         self.pubsub = self.get_redis_client(self.db_name).pubsub()
         self.pubsub.psubscribe("__keyspace@{}__:*".format(self.get_dbid(self.db_name)))
-        self.sub_thread = threading.Thread(target=listen_thread, args=(self, 0.01))
+        self.sub_thread = threading.Thread(target=self.listen_thread, args=(0.01,))
         self.sub_thread.start()
 
     @staticmethod
