@@ -12,6 +12,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	wget --no-check-certificate https://github.com/CumulusNetworks/ifupdown2/archive/$(IFUPDOWN2_VERSION).tar.gz
 	tar -z -f $(IFUPDOWN2_VERSION).tar.gz -x
 	pushd ./ifupdown2-$(IFUPDOWN2_VERSION)
+	find ../patch/ -type f -name '*.patch' -print0 | sort -z | xargs -t -0 -n 1 patch -p1 -i
 
 	# Build source and Debian packages
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
