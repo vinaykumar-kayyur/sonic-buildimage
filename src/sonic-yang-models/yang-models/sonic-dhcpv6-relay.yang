@@ -34,15 +34,15 @@ module sonic-dhcpv6-relay {
 					type string;
 				}
 
-                                leaf-list dhcpv6_servers {
-                                        description "Configure the dhcp v6 servers";
-                                        type inet:ipv6-address;
-                                }
+				leaf-list dhcpv6_servers {
+						description "Configure the dhcp v6 servers";
+						type inet:ipv6-address;
+				}
 
-                                leaf rfc6939_support {
-                                        description "Set rfc6939 for the relay";
-                                        type boolean;
-                                }
+				leaf rfc6939_support {
+						description "Set rfc6939 for the relay";
+						type boolean;
+				}
 			}
 			/* end of VLAN_LIST */
 		}
