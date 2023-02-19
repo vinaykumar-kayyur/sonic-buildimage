@@ -1,6 +1,13 @@
 {% if MGMT_INTERFACE %}
+{% for (name, prefix) in MGMT_INTERFACE|pfx_filter %}
+{% if (prefix|ipv6) %}
 net.ipv6.conf.eth0.accept_ra_defrtr = 0
 net.ipv6.conf.eth0.accept_ra = 0
+{% else %}
+net.ipv6.conf.eth0.accept_ra_defrtr = 1
+net.ipv6.conf.eth0.accept_ra = 1
+{% endif %}
+{% endfor %}
 {% else %}
 net.ipv6.conf.eth0.accept_ra_defrtr = 1
 net.ipv6.conf.eth0.accept_ra = 1
