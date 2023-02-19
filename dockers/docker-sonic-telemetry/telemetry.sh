@@ -22,27 +22,27 @@ export CVL_SCHEMA_PATH=/usr/sbin/schema
 if [ -n "$CERTS" ]; then
     SERVER_CRT=$(echo $CERTS | jq -r '.server_crt')
     SERVER_KEY=$(echo $CERTS | jq -r '.server_key')
-    if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
+    if [ -z $SERVER_CRT ] || [ $SERVER_CRT == "null" ] || [ -z $SERVER_KEY ] || [ $SERVER_KEY == "null"  ]; then
         TELEMETRY_ARGS+=" --insecure"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
 
     CA_CRT=$(echo $CERTS | jq -r '.ca_crt')
-    if [ ! -z $CA_CRT ]; then
+    if [ ! -z $CA_CRT ] && [ $CA_CRT != "null" ]; then
         TELEMETRY_ARGS+=" --ca_crt $CA_CRT"
     fi
 elif [ -n "$X509" ]; then
     SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
     SERVER_KEY=$(echo $X509 | jq -r '.server_key')
-    if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
+    if [ -z $SERVER_CRT ] || [ $SERVER_CRT == "null" ] || [ -z $SERVER_KEY ] || [ $SERVER_KEY == "null"  ]; then
         TELEMETRY_ARGS+=" --insecure"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
 
     CA_CRT=$(echo $X509 | jq -r '.ca_crt')
-    if [ ! -z $CA_CRT ]; then
+    if [ ! -z $CA_CRT ] && [ $CA_CRT != "null" ]; then
         TELEMETRY_ARGS+=" --ca_crt $CA_CRT"
     fi
 else
@@ -58,12 +58,12 @@ fi
 TELEMETRY_ARGS+=" --port $PORT"
 
 CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
-if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "false" ]; then
+if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "null" ] || [ $CLIENT_AUTH == "false" ]; then
     TELEMETRY_ARGS+=" --allow_no_client_auth"
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [ ! -z $LOG_LEVEL ]; then
+if [ ! -z $LOG_LEVEL ] && [ $LOG_LEVEL != "null" ]; then
     TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
 else
     TELEMETRY_ARGS+=" -v=2"
