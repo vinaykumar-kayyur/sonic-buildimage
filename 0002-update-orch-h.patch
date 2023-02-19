@@ -1,0 +1,10 @@
+--- sonic-buildimage-2/src/sonic-swss/orchagent/orch.h	2023-02-06 20:31:45.221907997 +0800
++++ sonic-buildimage-1/src/sonic-swss/orchagent/orch.h	2023-02-06 20:36:44.334766612 +0800
+@@ -40,6 +40,7 @@ const char state_db_key_delimiter  = '|'
+ #define NPS_PLATFORM_SUBSTRING  "nephos"
+ #define MRVL_PLATFORM_SUBSTRING "marvell"
+ #define CISCO_8000_PLATFORM_SUBSTRING "cisco-8000"
++#define CENTEC_PLATFORM_SUBSTRING "centec"
+ 
+ #define CONFIGDB_KEY_SEPARATOR "|"
+ #define DEFAULT_KEY_SEPARATOR  ":"

@@ -6,7 +6,7 @@ parameters:
   default: ''
 - name: 'buildOptions'
   type: string
-  default: 'SONIC_CONFIG_BUILD_JOBS=1'
+  default: 'SONIC_CONFIG_BUILD_JOBS=4'
 - name: 'preSteps'
   type: stepList
   default: []
@@ -102,6 +102,8 @@ jobs:
     buildSteps:
       - template: template-skipvstest.yml
       - bash: |
+          patch -p1 < 0001-update-main-cpp.patch
+          patch -p1 < 0002-update-orch-h.patch
           (
             while true
             do
