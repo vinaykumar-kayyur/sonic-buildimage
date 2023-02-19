@@ -37,7 +37,7 @@ def do_avs_ctrl():
             and STARTMODULE["avscontrol_restful"] == 1
         ):
             try:
-                # for alibmc rest.py has define get_macrov_value function
+                # for rest.py has define get_macrov_value function
                 get_macrov_value = getattr(BMCMessage(), "get_macrov_value", None)
                 if callable(get_macrov_value):
                     macrov_value = int(get_macrov_value())

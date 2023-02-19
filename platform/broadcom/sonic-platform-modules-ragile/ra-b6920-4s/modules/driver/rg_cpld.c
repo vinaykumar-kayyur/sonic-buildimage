@@ -161,7 +161,7 @@ count)
     }
     mutex_lock(&data->update_lock);
     val = (u8)val;
-    DBG_DEBUG("pos: 0x%02x count = %ld, data = 0x%02x\n", attr->index, count, val);
+    DBG_DEBUG("pos: 0x%02x count = %ld, data = 0x%02lx\n", attr->index, count, val);
     i2c_smbus_write_byte_data(client, attr->index, val);
     mutex_unlock(&data->update_lock);
 

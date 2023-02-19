@@ -25,10 +25,11 @@
 #include <linux/log2.h>
 #include <linux/hwmon.h>
 #include <linux/hwmon-sysfs.h>
-#include <lpc_cpld_i2c_ocores.h>
+#include "lpc_cpld_i2c_ocores.h"
 #include <linux/spinlock.h>
 #include <linux/delay.h>
 #include <linux/jiffies.h>
+#include <linux/version.h>
 
 #define OCORES_FLAG_POLL BIT(0)
 
@@ -245,8 +246,8 @@ out:
 
 static irqreturn_t ocores_isr(int irq, void *dev_id)
 {
-    struct ocores_i2c *i2c = dev_id;    
-    unsigned long flags;   
+    struct ocores_i2c *i2c = dev_id;
+    unsigned long flags;
     u8 stat;
     if (!i2c) {
         return IRQ_NONE;
@@ -394,8 +395,8 @@ static int ocores_xfer_core(struct ocores_i2c *i2c,
     unsigned long flags;
     u8 ctrl;
 
-    LPC_CPLD_I2C_DEBUG_XFER("Enter.polling %d\n", polling); 
-    LPC_CPLD_I2C_SPIN_LOCK(i2c->process_lock, flags);   
+    LPC_CPLD_I2C_DEBUG_XFER("Enter.polling %d\n", polling);
+    LPC_CPLD_I2C_SPIN_LOCK(i2c->process_lock, flags);
     ctrl = oc_getreg(i2c, OCI2C_CONTROL);
     if (polling)
         oc_setreg(i2c, OCI2C_CONTROL, ctrl & ~OCI2C_CTRL_IEN);
@@ -590,7 +591,7 @@ static void oc_debug_dump_reg(struct ocores_i2c *i2c)
             LPC_CPLD_I2C_DEBUG_DUMP("msg->buf: %p.\n", i2c->msg->buf);
             LPC_CPLD_I2C_DEBUG_DUMP("msg->addr: 0x%x.\n", i2c->msg->addr);
             LPC_CPLD_I2C_DEBUG_DUMP("msg->flags: 0x%x.\n", i2c->msg->flags);
-            LPC_CPLD_I2C_DEBUG_DUMP("msg->len: %d.\n", i2c->msg->len);            
+            LPC_CPLD_I2C_DEBUG_DUMP("msg->len: %d.\n", i2c->msg->len);
         } else {
             LPC_CPLD_I2C_DEBUG_DUMP("msg: %p is null.\n", i2c->msg);
         }
@@ -711,7 +712,7 @@ static int rg_ocores_i2c_probe(struct platform_device *pdev)
             return ret;
     }
 
-    LPC_CPLD_I2C_DEBUG_VERBOSE("data: shift[%d], width[%d], clock_khz[%d] i2c_irq_flag=%d\n", 
+    LPC_CPLD_I2C_DEBUG_VERBOSE("data: shift[%d], width[%d], clock_khz[%d] i2c_irq_flag=%d\n",
             pdata->reg_shift, pdata->reg_io_width, pdata->clock_khz, pdata->i2c_irq_flag);
 
     if (i2c->reg_io_width == 0)
@@ -768,8 +769,13 @@ static int rg_ocores_i2c_probe(struct platform_device *pdev)
     /* add in known devices to the bus */
     if (pdata) {
         LPC_CPLD_I2C_DEBUG_VERBOSE("i2c device %d.\n", pdata->num_devices);
-        for (i = 0; i < pdata->num_devices; i++)
+        for (i = 0; i < pdata->num_devices; i++) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+            i2c_new_client_device(&i2c->adap, pdata->devices + i);
+#else
             i2c_new_device(&i2c->adap, pdata->devices + i);
+#endif
+        }
     }
 
     oc_debug_sysfs_init(pdev);
