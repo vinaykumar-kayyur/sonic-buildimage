@@ -699,15 +699,15 @@ def is_warm_restart_enabled(container_name):
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
-    state_db = SonicV2Connector(host='127.0.0.1')
-    state_db.connect(state_db.STATE_DB, False)
+    fb_system_state = 0
+    cmd = ['sonic-db-cli', 'STATE_DB', 'get', "FAST_REBOOT|system"]
+    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = proc.communicate()
 
-    TABLE_NAME_SEPARATOR = '|'
-    prefix = 'FAST_REBOOT' + TABLE_NAME_SEPARATOR
+    if proc.returncode != 0:
+        log.log_error("Error running command '{}'".format(cmd))
+    elif stdout:
+        fb_system_state = stdout.rstrip('\n')
 
-    _hash = '{}{}'.format(prefix, 'system')
-    fb_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
-    fb_enable_state = True if fb_system_state == "true" else False
-    
-    state_db.close(state_db.STATE_DB)
+    fb_system_state = True if fb_system_state == "enable" else False
     return fb_enable_state
