@@ -1,2 +1,3 @@
 program:telemetry
 program:dialout
+program:certificate_rollover_checker

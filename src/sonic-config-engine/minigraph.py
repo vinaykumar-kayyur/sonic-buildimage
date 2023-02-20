@@ -1882,9 +1882,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'log_level': '2'
         },
         'certs': {
-            'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
-            'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
-            'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
+            'server_crt': '/etc/sonic/credentials/streamingtelemetryserver.cer',
+            'server_key': '/etc/sonic/credentials/streamingtelemetryserver.key',
+            'ca_crt': '/etc/sonic/credentials/dsmsroot.cer'
         }
     }
     results['RESTAPI'] = {
