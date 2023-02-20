@@ -42,6 +42,8 @@ variables:
   value: rcache
 - name: ENABLE_FIPS
   value: y
+- name: DOCKER_DATA_ROOT_FOR_MULTIARCH
+  value: /data/march/docker
 
 stages:
 - stage: BuildVS
@@ -66,10 +68,15 @@ stages:
           swi_image: yes
       - name: mellanox
       - name: marvell-armhf
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
+        pool: sonicbld
+        timeoutInMinutes: 2880
         variables:
           PLATFORM_ARCH: armhf
+      - name: centec-arm64
+        pool: sonicbld
+        timeoutInMinutes: 2880
+        variables:
+          PLATFORM_ARCH: arm64
 
 - stage: Test
   dependsOn: BuildVS
