@@ -1,8 +1,10 @@
 import glob
 import sys
+import subprocess
 
 from setuptools import setup
 
+sonic_dependencies = ['sonic-py-common', 'sonic-yang-mgmt', 'sonic-yang-models']
 # Common dependencies for Python 2 and 3
 dependencies = [
     'bitarray==1.5.3',
@@ -49,6 +51,12 @@ if sys.version_info.major == 3:
     py_modules += [
         'sonic_yang_cfg_generator'
     ]
+
+for package in sonic_dependencies:
+    r = subprocess.call([sys.executable, '-m', 'show', package.split("==")[0]], stdout=sys.stderr.fileno())
+    if r != 0:
+        sys.stderr.write("Please build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\n")
+        exit(1)
 
 setup(
     name = 'sonic-config-engine',
