@@ -8,5 +8,8 @@
     },
     "VRF_TEST_WITH_FALLBACK": {
         "desc": "Configure VRF with fallback in VRF table."
+    },
+    "VRF_TEST_WITH_VNI": {
+        "desc": "Configure VRF with VNI in VRF table."
     }
 }
