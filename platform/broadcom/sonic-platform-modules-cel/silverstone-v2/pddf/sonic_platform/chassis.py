@@ -7,6 +7,7 @@
 try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     import sys
+    import helper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -24,6 +25,7 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
+        self._api_helper = helper.APIHelper()
 
     def get_sfp(self, index):
         """
@@ -67,10 +69,8 @@ class Chassis(PddfChassis):
             REBOOT_CAUSE_NON_HARDWARE = "Non-Hardware"
         """
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
-        sw_reboot_cause = self._api_helper.read_txt_file(
-            reboot_cause_path) or "Unknown"
-        hw_reboot_cause = self._api_helper.get_cpld_reg_value(
-            GETREG_PATH, RESET_REGISTER)
+        sw_reboot_cause = self._api_helper.read_txt_file(reboot_cause_path) or "Unknown"
+        hw_reboot_cause = self._api_helper.get_cpld_reg_value(GETREG_PATH, RESET_REGISTER)
 
         prev_reboot_cause = {
             '0x11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
@@ -82,7 +82,6 @@ class Chassis(PddfChassis):
         }.get(hw_reboot_cause, (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Unknown reason'))
 
         if sw_reboot_cause != 'Unknown':
-            prev_reboot_cause = (
-                self.REBOOT_CAUSE_NON_HARDWARE, sw_reboot_cause)
+            prev_reboot_cause = (self.REBOOT_CAUSE_NON_HARDWARE, sw_reboot_cause)
 
         return prev_reboot_cause

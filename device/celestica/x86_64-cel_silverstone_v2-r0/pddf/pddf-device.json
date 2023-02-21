@@ -28,21 +28,16 @@
                 "pddf_xcvr"
             ]
         },
-        "std_perm_kos":
-        [
-            "i2c_ismt",
-            "i2c-i801"
-        ],
-
         "std_kos":
         [
             "lpc_ich",
-            "i2c_dev",
+            "i2c-dev",
             "ipmi_devintf",
             "ipmi_si",
             "i2c_mux_pca954x",
             "optoe",
-            "mc24lc64t"
+	    "at24",
+	    "i2c-i801"
         ],
 
         "pddf_kos":
@@ -56,11 +51,6 @@
             "pddf_fpgai2c_driver",
             "pddf_xcvr_module",
             "pddf_xcvr_driver_module"
-        ],
-
-        "custom_kos":
-        [
-            "pddf_custom_fpga_algo"
         ]
     },
 
@@ -71,8 +61,7 @@
         {
             "CONTROLLERS":
             [ 
-                { "dev_name":"i2c-0", "dev":"SMBUS0" },
-                { "dev_name":"pcie-0", "dev":"PCIE0" }
+                { "dev_name":"i2c-0", "dev":"SMBUS0" }
             ]
         }
     },
@@ -95,7 +84,7 @@
         "dev_info": {"device_type": "EEPROM", "device_name": "EEPROM1", "device_parent": "SMBUS0"},
         "i2c":
         {
-            "topo_info": {"parent_bus": "0x0", "dev_addr": "0x56", "dev_type": "24lc64t"},
+            "topo_info": {"parent_bus": "0x0", "dev_addr": "0x56",  "dev_type": "24c64"},
             "dev_attr": {"access_mode": "BLOCK"},
             "attr_list": [
                 {"attr_name": "eeprom"}
@@ -1893,38 +1882,43 @@
         "dev_info": { "device_type":"LED", "device_name":"SYS_LED"},
         "dev_attr": { "index":"0", "flag": "ro"},
         "bmc": {
-                   "ipmitool" : {
-                           "attr_list":
-                            [
-                                     { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                                     { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                                     { "attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                                     { "attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"},
-                                     { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x04"},
-                                     { "attr_name":"green_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x05"},
-                                     { "attr_name":"green_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x06"},
-                                     { "attr_name":"both_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x07"},
-                                     { "attr_name":"both_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x08"},
-                                     { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x09"}
-                           ]
-                   }
-              }
+            "ipmitool" : {
+                "attr_list":
+                [
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"},
+                    { "attr_name":"green_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x04"},
+                    { "attr_name":"green_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x05"},
+                    { "attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x06"},
+                    { "attr_name":"alternate_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x07"},
+                    { "attr_name":"alternate_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x08"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x00", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x09"}
+                    ]
+               }
+        }
     },
     "ALARM_LED":
     {
         "dev_info": { "device_type":"LED", "device_name":"ALARM_LED"},
         "dev_attr": { "index":"0", "flag": "ro"},
         "bmc": {
-                   "ipmitool" : {
-                           "attr_list":
-                           [
-                                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                                    { "attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                                    { "attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"},
-                                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x04"}
-                           ]
-                   }
+            "ipmitool" : {
+                "attr_list":
+                [
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"},
+                    { "attr_name":"green_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x04"},
+                    { "attr_name":"green_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x05"},
+                    { "attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x06"},
+                    { "attr_name":"alternate_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x07"},
+                    { "attr_name":"alternate_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x08"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x01", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x09"}
+                ]
+           }
         }
     },
     "FANTRAY1_LED":
@@ -1935,10 +1929,10 @@
             "ipmitool" : {
                 "attr_list":
                 [
-                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x04", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
                 ]
             }
         }
@@ -1951,10 +1945,10 @@
             "ipmitool" : {
                 "attr_list":
                 [
-                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x05", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
                 ]
             }
         }
@@ -1967,10 +1961,10 @@
             "ipmitool" : {
                 "attr_list":
                 [
-                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x06", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
                 ]
             }
         }
@@ -1983,10 +1977,58 @@
             "ipmitool" : {
                 "attr_list":
                 [
-                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
-                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
-                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
-                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x0B 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x07", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                ]
+            }
+        }
+    },
+    "FANTRAY5_LED":
+    {
+        "dev_info": { "device_type":"LED", "device_name":"FANTRAY5_LED"},
+        "dev_attr": { "index":"4", "flag": "ro"},
+        "bmc": {
+            "ipmitool" : {
+                "attr_list":
+                [
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x08", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x08", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x08", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x08", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                ]
+            }
+        }
+    },
+    "FANTRAY6_LED":
+    {
+        "dev_info": { "device_type":"LED", "device_name":"FANTRAY6_LED"},
+        "dev_attr": { "index":"5", "flag": "ro"},
+        "bmc": {
+            "ipmitool" : {
+                "attr_list":
+                [
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x09", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x09", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x09", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x09", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
+                ]
+            }
+        }
+    },
+    "FANTRAY7_LED":
+    {
+        "dev_info": { "device_type":"LED", "device_name":"FANTRAY7_LED"},
+        "dev_attr": { "index":"6", "flag": "ro"},
+        "bmc": {
+            "ipmitool" : {
+                "attr_list":
+                [
+                    { "attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x0a", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x00"},
+                    { "attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x0a", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x01"},
+                    { "attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x0a", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x02"},
+                    { "attr_name":"unknown", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x02 0x0a", "raw": "1", "type":"mask", "mask" : "0xff", "descr" :"OFF", "value" : "0x03"}
                 ]
             }
         }
