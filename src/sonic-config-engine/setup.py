@@ -1,6 +1,5 @@
 import glob
 import sys
-import subprocess
 
 from sonic_py_common import secure_setup
 
