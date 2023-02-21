@@ -1445,6 +1445,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
     def __init__(self, ns_attrs = None):
         super(ExtConfigDBConnector, self).__init__()
         self.nosort_attrs = ns_attrs if ns_attrs is not None else {}
+        self.sub_thread_running = False
     def raw_to_typed(self, raw_data, table = ''):
         if len(raw_data) == 0:
             raw_data = None
@@ -1470,21 +1471,26 @@ class ExtConfigDBConnector(ConfigDBConnector):
                 syslog.syslog(syslog.LOG_ERR, '[bgp cfgd] Failed handling config DB update with exception:' + str(e))
                 logging.exception(e)
 
-    def listen_thread(self, sleep_time):
-        while True:
-            msg = self.pubsub.get_message()
+    def listen_thread(self, timeout):
+        self.sub_thread_running = True
+        sub_key_space = "__keyspace@{}__:*".format(self.get_dbid(self.db_name))
+        self.pubsub.psubscribe(sub_key_space)
+        while self.sub_thread_running:
+            msg = self.pubsub.get_message(timeout, True)
             if msg:
                 self.sub_msg_handler(msg)
 
-            time.sleep(sleep_time)
+        self.pubsub.punsubscribe(sub_key_space)
 
     def listen(self):
         """Start listen Redis keyspace events and will trigger corresponding handlers when content of a table changes.
         """
         self.pubsub = self.get_redis_client(self.db_name).pubsub()
-        self.pubsub.psubscribe("__keyspace@{}__:*".format(self.get_dbid(self.db_name)))
         self.sub_thread = threading.Thread(target=self.listen_thread, args=(0.01,))
         self.sub_thread.start()
+
+    def stop_listen(self):
+        self.sub_thread_running = False
 
     @staticmethod
     def get_table_key(table, key):
@@ -3785,7 +3791,7 @@ class BGPConfigDaemon:
         self.subscribe_all()
         self.config_db.listen()
     def stop(self):
-        self.config_db.sub_thread.stop()
+        self.config_db.stop_listen()
         if self.config_db.sub_thread.is_alive():
             self.config_db.sub_thread.join()
 
