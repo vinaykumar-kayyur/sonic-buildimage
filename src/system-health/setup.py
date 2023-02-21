@@ -1,6 +1,6 @@
-from setuptools import setup
 import sys
 import subprocess
+from sonic_py_common import secure_setup
 
 dependencies = [
     'natsort',
@@ -8,20 +8,7 @@ dependencies = [
     'docker'
 ]
 
-def setup_fake(**kwargs):
-    install_list = ['requires', 'tests_require', 'install_requires' ]
-    for keyword in install_list:
-        packages = kwargs.get(keyword)
-        if packages:
-            for package in packages:
-                r = subprocess.call([sys.executable, '-m', 'pip', 'show', package.split("==")[0]])
-                if r != 0:
-                    sys.stderr.write("\033[33mPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\033[0m\n")
-                    sys.stderr.write("\033[33mThen install other dependencies from Pypi\033[0m\n")
-                    exit(1)
-    setup(**kwargs)
-
-setup_fake(
+secure_setup(
     name='system-health',
     version='1.0',
     description='SONiC system health package',
