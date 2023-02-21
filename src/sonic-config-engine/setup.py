@@ -1,7 +1,7 @@
 import glob
 import sys
 
-from sonic_py_common import secure_setup
+from sonic_py_common.secure_setup import secure_setup
 
 # Common dependencies for Python 2 and 3
 dependencies = [
