@@ -1,4 +1,4 @@
-from sonic_py_common import secure_setup
+from sonic_py_common.secure_setup import secure_setup
 
 dependencies = [
     'natsort==6.2.1', # 6.2.1 is the last version which supports Python 2
