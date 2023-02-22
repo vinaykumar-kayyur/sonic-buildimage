@@ -32,7 +32,6 @@ $(DOCKER_FPM_FRR)_RUN_OPT += --privileged -t
 $(DOCKER_FPM_FRR)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_FPM_FRR)_RUN_OPT += -v /etc/timezone:/etc/timezone:ro
 $(DOCKER_FPM_FRR)_RUN_OPT += -v /etc/localtime:/etc/localtime:ro
-
 $(DOCKER_FPM_FRR)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 
 $(DOCKER_FPM_FRR)_BASE_IMAGE_FILES += vtysh:/usr/bin/vtysh
