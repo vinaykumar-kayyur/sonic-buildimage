@@ -56,6 +56,7 @@ stages:
       name: SetVersions
       displayName: 'Set snapshot versions'
 - stage: Build
+  dependsOn: Prepare
   variables:
     - name: CACHE_MODE
       value: none
