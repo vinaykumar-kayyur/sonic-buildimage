@@ -17,6 +17,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)#
 #    8/27/2019:Jostar create for as9716_32d thermal plan
+#    2/20/2023:Jostar modify to add kick fan-wdt
 # ------------------------------------------------------------------
 
 try:
@@ -28,6 +29,7 @@ try:
     import logging.handlers
     import time
     from sonic_platform import platform
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -328,10 +330,10 @@ class device_monitor(object):
 
         fan_dir = platform_chassis.get_fan(1).get_direction()
 
-        if fan_dir == "INTAKE":  # AFI
+        if fan_dir == "intake":   # AFI
             fan_thermal_spec = afi_thermal_spec
             fan_policy = fan_policy_b2f
-        elif fan_dir == "EXHAUST":          # AFO
+        elif fan_dir == "exhaust": # AFO
             fan_thermal_spec = afo_thermal_spec
             fan_policy = fan_policy_f2b
         else:
@@ -358,7 +360,7 @@ class device_monitor(object):
         ori_state = fan_policy_state
         current_state = fan_policy_state
 
-        if fan_dir == "INTAKE":  # AFI
+        if fan_dir == "intake":  # AFI
             for i in range(THERMAL_NUM_MAX):
                 if ori_state == LEVEL_FAN_MID:
                     if thermal_val[i] >= fan_thermal_spec["mid_to_max_temp"][i]:
@@ -502,16 +504,39 @@ def main(argv):
 
     global platform_chassis
     platform_chassis = platform.Platform().get_chassis()
-    status, output = subprocess.getstatusoutput('i2cset -f -y 17 0x66 0x33 0x0')
+    #status, output = subprocess.getstatusoutput('i2cset -f -y 17 0x66 0x33 0x0')
+    #if status:
+    #    print("Warning: Fan speed watchdog could not be disabled")
+    cmd_str = ["i2cset", "-y", "-f", "17", "0x66", "0x33", "0x1"]
+    status, output = getstatusoutput_noshell(cmd_str)
     if status:
-        print("Warning: Fan speed watchdog could not be disabled")
+        print("Warning: Fan speed watchdog could not be enabled")   
+    
+    cmd_str = ["i2cset", "-y", "-f", "17", "0x66", "0x31", "0xF0"]
+    status, output = getstatusoutput_noshell(cmd_str)
+    if status:
+        print("Warning: Fan speed watchdog timer could not be disabled")
+    
 
     as9716_32d_set_fan_speed(100)
     monitor = device_monitor(log_file, log_level)
-    # Loop forever, doing something useful hopefully:
+    cmd_kick = ["i2cset", "-y", "-f", "17", "0x66", "0x31", "0xF0"] #kick WDT
+    cmd_check_wdt = ["i2cget",  "-y", "-f", "17", "0x66", "0x33"]
     while True:
         monitor.manage_fans()
+        getstatusoutput_noshell(cmd_kick)
         time.sleep(10)
+        
+        status, output = getstatusoutput_noshell(cmd_check_wdt)
+        if status is not None:
+            val= int(output,16)
+            if (val & 0x1) == 0:
+                logging.warning('Detect Fan-WDT disable')
+                logging.warning('Try to enable Fan-WDT')
+                cmd_str = ["i2cset", "-y", "-f", "17", "0x66", "0x33", "0x1"]
+                getstatusoutput_noshell(cmd_str)
+                cmd_str = ["i2cset", "-y", "-f", "17", "0x66", "0x31", "0xF0"]
+                getstatusoutput_noshell(cmd_str)
 
 
 if __name__ == '__main__':

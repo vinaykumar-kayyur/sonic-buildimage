@@ -26,6 +26,15 @@ class Psu(PddfPsu):
         """
         return float(self.PLATFORM_PSU_CAPACITY)
 
+    def get_capacity(self):
+        """
+        Gets the capacity (maximum output power) of the PSU in watts
+
+        Returns:
+            An integer, the capacity of PSU
+        """
+        return (self.PLATFORM_PSU_CAPACITY)
+
     def get_type(self):
         """
         Gets the type of the PSU
@@ -34,3 +43,32 @@ class Psu(PddfPsu):
         """
         return "DC"
 
+    def get_name(self):
+        return "PSU-{}".format(self.psu_index)
+
+    def get_voltage_high_threshold(self):
+        """
+        Retrieves the high threshold PSU voltage output
+        Returns:
+            A float number, the high threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return 14.72
+
+    def get_voltage_low_threshold(self):
+        """
+        Retrieves the low threshold PSU voltage output
+        Returns:
+            A float number, the low threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return 7.68
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return 'N/A'
