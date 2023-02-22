@@ -1,3 +1,4 @@
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <linux/module.h>
 #include <linux/jiffies.h>
 #include <linux/i2c.h>
@@ -9,6 +10,7 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
+#include <linux/string.h>
 #include "pddf_psu_defs.h"
 
 ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *da, char *buf);
@@ -193,9 +195,13 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
     char buffer[32]={0};
     
     for (i = 0; i < ARRAY_SIZE(models); i++) {
+#ifdef __STDC_LIB_EXT1__
+        memset_s(data.serial_number, sizeof(data.serial_number), 0, sizeof(data.serial_number));
+        memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
+#else
         memset(data.serial_number, 0, sizeof(data.serial_number));
         memset(buffer, 0, sizeof(buffer));
-
+#endif
         status = pddf_psu_read_block(client, models[i].offset,
                                            buffer, models[i].length);
         if (status < 0) {
@@ -245,7 +251,11 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
     int i, status;
     
     for (i = 0; i < ARRAY_SIZE(models); i++) {
+#ifdef __STDC_LIB_EXT1__        
+        memset_s(data.model_name, sizeof(data.model_name), 0, sizeof(data.model_name));
+#else
         memset(data.model_name, 0, sizeof(data.model_name));
+#endif
 
         status = pddf_psu_read_block(client, models[i].offset,
                                            data.model_name, models[i].length);
@@ -302,8 +312,13 @@ ssize_t pddf_get_custom_psu_fan_dir(struct device *dev, struct device_attribute 
     int i, status;
     char buffer[32]={0};
     for (i = 0; i < ARRAY_SIZE(models); i++) {
+#ifdef __STDC_LIB_EXT1__          
+        memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
+        memset_s(data.fan_dir, sizeof(data.fan_dir), 0, sizeof(data.fan_dir));
+#else
         memset(buffer, 0, sizeof(buffer));
         memset(data.fan_dir, 0, sizeof(data.fan_dir));
+#endif        
 
         status = pddf_psu_read_block(client, models[i].offset,
                                            buffer, models[i].length);
