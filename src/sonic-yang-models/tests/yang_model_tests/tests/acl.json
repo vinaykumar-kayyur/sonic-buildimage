@@ -26,19 +26,9 @@
         "desc": "Configure non-existing ACL_TABLE in ACL_RULE.",
         "eStrKey" : "LeafRef"
     },
-    "ACL_RULE_ARP_TYPE_DST_IPV6_MISMATCH": {
-        "desc": "Configure IP_TYPE as ARP and DST_IPV6 in ACL_RULE.",
-        "eStrKey" : "When",
-        "eStr": ["IP_TYPE"]
-    },
     "ACL_RULE_WRONG_L4_SRC_PORT_RANGE": {
         "desc": "Configure l4_src_port_range as 99999-99999 in ACL_RULE",
         "eStrKey" : "Pattern"
-    },
-    "ACL_RULE_ARP_TYPE_ICMPV6_CODE_MISMATCH": {
-        "desc": "Configure IP_TYPE as ARP and ICMPV6_CODE in ACL_RULE.",
-        "eStrKey" : "When",
-        "eStr": ["IP_TYPE"]
     },
     "ACL_RULE_WRONG_INNER_ETHER_TYPE": {
         "desc": "Configure INNER_ETHER_TYPE as 0x080C in ACL_RULE.",
