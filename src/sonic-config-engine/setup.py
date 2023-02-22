@@ -53,7 +53,7 @@ if sys.version_info.major == 3:
     ]
 
 for package in sonic_dependencies:
-    r = subprocess.call([sys.executable, '-m', 'show', package.split("==")[0]], stdout=sys.stderr.fileno())
+    r = subprocess.call([sys.executable, '-m', 'pip', 'show', package], stdout=sys.stderr.fileno())
     if r != 0:
         sys.stderr.write("Please build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\n")
         exit(1)
