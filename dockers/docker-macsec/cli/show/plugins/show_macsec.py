@@ -264,7 +264,7 @@ def cache_find(cache: dict, target: MACsecAppMeta) -> MACsecAppMeta:
 @click.option('--dump-file', is_flag=True, required=False, default=False, help="store show output to a file")
 @multi_asic_util.multi_asic_click_options
 def macsec(interface_name, dump_file, namespace, display, profile):
-    if interface_name is not None and profile is not None:
+    if interface_name is not None and profile:
         click.echo('Interface name is not valid with profile option')
         return
     MacsecContext(namespace, display).show(interface_name, dump_file, profile)
