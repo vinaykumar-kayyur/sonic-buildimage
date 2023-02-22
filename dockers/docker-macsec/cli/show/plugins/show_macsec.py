@@ -175,6 +175,11 @@ class MACsecProfile(MACsecCfgMeta):
 
     def dump_str(self, cache = None) -> str:
         buffer = self.get_header()
+
+        # Don't display the primary and fallback CAK
+        if 'primary_cak' in self.cfgMeta: del self.cfgMeta['primary_cak']
+        if 'fallback_cak' in self.cfgMeta: del self.cfgMeta['fallback_cak']
+
         t_buffer = tabulate(sorted(self.cfgMeta.items(), key=lambda x: x[0]))
         t_buffer = "\n".join(["\t" + line for line in t_buffer.splitlines()])
         buffer += t_buffer
