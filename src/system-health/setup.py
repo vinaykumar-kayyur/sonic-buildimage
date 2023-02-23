@@ -6,6 +6,16 @@ dependencies = [
     'docker'
 ]
 
+# sonic module dependencies.
+sonic_dependencies = ['sonic_py_common']
+
+for package in sonic_dependencies:
+    try:
+        __import__(package)
+    except ImportError:
+        print("\nPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage")
+        raise
+
 setup(
     name='system-health',
     version='1.0',
