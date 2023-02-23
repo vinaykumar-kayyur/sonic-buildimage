@@ -1445,7 +1445,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
     def __init__(self, ns_attrs = None):
         super(ExtConfigDBConnector, self).__init__()
         self.nosort_attrs = ns_attrs if ns_attrs is not None else {}
-        self.sub_thread_running = False
+        self.__listen_thread_running = False
     def raw_to_typed(self, raw_data, table = ''):
         if len(raw_data) == 0:
             raw_data = None
@@ -1472,10 +1472,10 @@ class ExtConfigDBConnector(ConfigDBConnector):
                 logging.exception(e)
 
     def listen_thread(self, timeout):
-        self.sub_thread_running = True
+        self.__listen_thread_running = True
         sub_key_space = "__keyspace@{}__:*".format(self.get_dbid(self.db_name))
         self.pubsub.psubscribe(sub_key_space)
-        while self.sub_thread_running:
+        while self.__listen_thread_running:
             msg = self.pubsub.get_message(timeout, True)
             if msg:
                 self.sub_msg_handler(msg)
@@ -1490,7 +1490,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
         self.sub_thread.start()
 
     def stop_listen(self):
-        self.sub_thread_running = False
+        self.__listen_thread_running = False
 
     @staticmethod
     def get_table_key(table, key):
