@@ -4,7 +4,9 @@ import subprocess
 
 from setuptools import setup
 
+# sonic module dependencies.
 sonic_dependencies = ['sonic-py-common', 'sonic-yang-mgmt', 'sonic-yang-models']
+
 # Common dependencies for Python 2 and 3
 dependencies = [
     'bitarray==1.5.3',
@@ -53,10 +55,11 @@ if sys.version_info.major == 3:
     ]
 
 for package in sonic_dependencies:
-    r = subprocess.call([sys.executable, '-m', 'pip', 'show', package], stdout=sys.stderr.fileno())
-    if r != 0:
-        sys.stderr.write("Please build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage\n")
-        exit(1)
+    try:
+        __import__(package)
+    except ImportError:
+        print("\nPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage")
+        raise
 
 setup(
     name = 'sonic-config-engine',
