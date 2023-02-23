@@ -328,7 +328,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}")
+            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}")
         )
 
     def test_minigraph_portchannel_with_more_member(self):
@@ -336,7 +336,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'members': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124'], 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}"))
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}"))
 
     def test_minigraph_portchannel_members(self):
         argument = ['-m', self.sample_graph_pc_test, '-p', self.port_config, '-v', "PORTCHANNEL_MEMBER.keys()|list"]
@@ -889,16 +889,16 @@ class TestCfgGen(TestCase):
             json.loads(self.run_script(argument)),
             {
                 "linecard-1|Asic0|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "0", "speed": "1000", "core_index": "0", "system_port_id": "1" },
-                "linecard-1|Asic0|Ethernet1/1": { "core_port_index": "1", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "2" },
-                "linecard-1|Asic0|Ethernet1/2": { "core_port_index": "2", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "3" },
-                "linecard-1|Asic0|Ethernet1/3": { "core_port_index": "3", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "4" },
-                "linecard-1|Asic0|Ethernet1/4": { "core_port_index": "4", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "5" },
+                "linecard-1|Asic0|Ethernet0": { "core_port_index": "1", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "2" },
+                "linecard-1|Asic0|Ethernet4": { "core_port_index": "2", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "3" },
+                "linecard-1|Asic0|Ethernet8": { "core_port_index": "3", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "4" },
+                "linecard-1|Asic0|Ethernet12": { "core_port_index": "4", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "5" },
                 "linecard-2|Asic0|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "2", "speed": "1000", "core_index": "0", "system_port_id": "256" },
-                "linecard-2|Asic0|Ethernet1/5": { "core_port_index": "1", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "0", "system_port_id": "257" },
-                "linecard-2|Asic0|Ethernet1/6": { "core_port_index": "2", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "1", "system_port_id": "258" },
+                "linecard-2|Asic0|Ethernet0": { "core_port_index": "1", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "0", "system_port_id": "257" },
+                "linecard-2|Asic0|Ethernet4": { "core_port_index": "2", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "1", "system_port_id": "258" },
                 "linecard-2|Asic1|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "4", "speed": "1000", "core_index": "0", "system_port_id": "259" },
-                "linecard-2|Asic1|Ethernet1/7": { "core_port_index": "1", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "0", "system_port_id": "260" },
-                "linecard-2|Asic1|Ethernet1/8": { "core_port_index": "2", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "1", "system_port_id": "261" }
+                "linecard-2|Asic1|Ethernet8": { "core_port_index": "1", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "0", "system_port_id": "260" },
+                "linecard-2|Asic1|Ethernet12": { "core_port_index": "2", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "1", "system_port_id": "261" }
             }
         )
 
@@ -958,6 +958,14 @@ class TestCfgGen(TestCase):
                 "pfc_asym": "off",
                 "admin_status": "up"
             })
+
+        argument = ["-j", self.macsec_profile, "-m", self.sample_graph_voq, "-p", self.voq_port_config, "--var-json", "INTERFACE"]
+        output = self.run_script(argument)
+        output_dict = utils.to_dict(output.strip())
+        self.assertDictEqual(
+            output_dict['Ethernet-Rec0'],
+            {}
+        )
 
     def test_minigraph_dhcp(self):
         argument = ['-m', self.sample_graph_simple_case, '-p', self.port_config, '-v', 'DHCP_RELAY']
