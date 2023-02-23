@@ -652,12 +652,12 @@ tslam_timeout_usec=1000000
 
 ### Interrupts
 appl_enable_intr_init=1
-polled_irq_mode=1
+polled_irq_mode=0
 # reduce CPU load, configure delay 100ms
 polled_irq_delay=1000
 
 # reduce the CPU load over adapter (caused by counter thread)
-bcm_stat_interval=1000
+bcm_stat_interval=1000000
 
 # shadow memory
 mem_cache_enable_ecc=1
@@ -1002,3 +1002,4 @@ serdes_tx_taps_36=nrz:-8:89:-29:0:0:0
 xflow_macsec_secure_chan_to_num_secure_assoc_encrypt=2
 xflow_macsec_secure_chan_to_num_secure_assoc_decrypt=4
 sai_pfc_dlr_init_capability=0
+sai_disable_srcmacqedstmac_ctrl=1

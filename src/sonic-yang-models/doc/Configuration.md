@@ -43,6 +43,7 @@ Table of Contents
          * [Scheduler](#scheduler)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
+         * [Sflow](#sflow)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)    
@@ -54,10 +55,11 @@ Table of Contents
          * [Virtual router](#virtual-router)  
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)
+         * [RADIUS](#radius)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
-
+ 
 
 
 # Introduction																																									
@@ -876,17 +878,24 @@ instance is supported in SONiC.
 
 ```
 {
-"FLEX_COUNTER_TABLE": {
-    "PFCWD": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "PORT": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "QUEUE": {
-        "FLEX_COUNTER_STATUS": "enable"
-    }
-  }
+	"FLEX_COUNTER_TABLE": {
+		"PFCWD": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
+		},
+		"QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"TUNNEL": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		}
+	}
 }
 
 ```
@@ -1331,6 +1340,68 @@ name as object key and member list as attribute.
 }
 ```
 
+### Sflow
+
+The below are the tables and their schema for SFLOW feature
+
+SFLOW
+
+| Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
+|------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
+| admin_state      | Global sflow admin state                                                                |             | down      |                                           |
+| polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
+| agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |
+
+SFLOW_SESSION
+
+key - port
+| Field       | Description                                                                                                             | Mandatory   | Default   | Reference   |
+|-------------|-------------------------------------------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| port        | Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.                         |             |           | PORT:name   |
+| admin_state | Per port sflow admin state                                                                                              |             | up        |             |
+| sample_rate | Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets. |             |           |             |
+
+SFLOW_COLLECTOR
+
+key - name
+| Field          | Description                                                                             | Mandatory   | Default   | Reference   |
+|----------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| name           | Name of the Sflow collector                                                             |             |           |             |
+| collector_ip   | IPv4/IPv6 address of the Sflow collector                                                | true        |           |             |
+| collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
+| collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
+
+### Syslog Rate Limit
+
+Host side configuration:
+
+```
+{
+"SYSLOG_CONFIG": {
+    "GLOBAL": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    }
+  }
+}
+```
+
+Container side configuration:
+
+```
+{
+"SYSLOG_CONFIG_FEATURE": {
+    "bgp": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    },
+    "pmon": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    }
+  }
+}
+```
 
 ### Tacplus Server
 
@@ -1642,6 +1713,29 @@ The method could be:
     }
 }
 ```
+
+### RADIUS
+
+The RADIUS and RADIUS_SERVER tables define RADIUS config paramerters. RADIUS table carries global configuration while RADIUS_SERVER table carries per server configuration.
+
+```
+"RADIUS": {
+    "global": {
+       "auth_type": "pap",
+       "timeout": "5"
+    }
+}
+
+"RADIUS_SERVER": {
+    "192.168.1.2": {
+       "priority": "4",
+       "retransmit": "2",
+       "timeout": "5"
+    }
+}
+
+```
+
 
 For Developers
 ==============

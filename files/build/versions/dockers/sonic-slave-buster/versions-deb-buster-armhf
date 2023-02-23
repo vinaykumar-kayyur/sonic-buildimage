@@ -99,11 +99,11 @@ libunicode-linebreak-perl==0.0.20190101-1
 libxapian-dev==1.4.11-1
 libxslt1-dev==1.1.32-2.2~deb10u2
 libyaml-tiny-perl==1.73-1
-linux-compiler-gcc-8-arm==4.19.260-1
+linux-compiler-gcc-8-arm==4.19.269-1
 llvm-6.0==1:6.0.1-10
 llvm-6.0-dev==1:6.0.1-10
 llvm-6.0-runtime==1:6.0.1-10
-nodejs==14.21.1-deb-1nodesource1
+nodejs==14.21.3-deb-1nodesource1
 ps2eps==1.68+binaryfree-2
 rdfind==1.4.1-1
 sassc==3.5.0-1

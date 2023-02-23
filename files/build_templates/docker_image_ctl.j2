@@ -495,6 +495,7 @@ start() {
         -v mlnx_sdk_socket:/var/run/sx_sdk \
         -v mlnx_sdk_ready:/tmp \
         -v /dev/shm:/dev/shm:rw \
+        -v /var/log/sai_failure_dump:/var/log/sai_failure_dump:rw \
         -e SX_API_SOCKET_FILE=/var/run/sx_sdk/sx_api.sock \
 {%- elif docker_container_name == "pmon" %}
         -v /var/run/hw-management:/var/run/hw-management:rw \
@@ -593,6 +594,17 @@ stop() {
     {%- endif %}
 }
 
+kill() {
+    {%- if docker_container_name == "database" %}
+    docker kill $DOCKERNAME
+    if [ "$DEV" ]; then
+        ip netns delete "$NET_NS"
+    fi
+    {%- else %}
+    /usr/local/bin/container kill $DOCKERNAME
+    {%- endif %}
+}
+
 DOCKERNAME={{docker_container_name}}
 OP=$1
 DEV=$2 # namespace/device number to operate on
@@ -620,7 +632,7 @@ fi
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
 
 case "$1" in
-    start|wait|stop)
+    start|wait|stop|kill)
         $1
         ;;
     *)

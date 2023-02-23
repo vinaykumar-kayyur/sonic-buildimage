@@ -100,8 +100,28 @@ jobs:
             platform_rpc: nephos
 
     buildSteps:
-      - template: template-skipvstest.yml
+      - template: .azure-pipelines/template-skipvstest.yml@buildimage
+      - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
+          (
+            while true
+            do
+              sleep 120
+              now=$(date +%s)
+              pids=$(ps aux | grep -v grep | grep -E "^.{,100}docker build" | awk '{print$2}')
+              for pid in $pids
+              do
+                start=$(date --date="$(ls -dl /proc/$pid --time-style full-iso | awk '{print$6,$7}')" +%s)
+                time_s=$(($now-$start))
+                if [[ $time_s -gt $(DOCKER_BUILD_TIMEOUT) ]]; then
+                  echo =========== $(date +%F%T) $time_s &>> target/daemon.log
+                  ps $pid &>> target/daemon.log
+                  sudo kill $pid
+                fi
+              done
+            done
+          ) &
+          daemon_pid=$!
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
@@ -130,16 +150,25 @@ jobs:
               make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).raw
             fi
             if [ $(docker_syncd_rpc_image) == yes ]; then
+              # workaround for issue in rules/sairedis.dep, git ls-files will list un-exist files for cache
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
               if [ $(GROUP_NAME) == broadcom ]; then
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
               fi
-            fi
+              if [ $(GROUP_NAME) == marvell-armhf ]; then 
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y PLATFORM_ARCH=armhf target/docker-saiserverv2-mrvl.gz
+              fi
+              if [ $(GROUP_NAME) == mellanox ]; then
+                make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-mlnx.gz
+              fi 
+            fi           
             if [ $(syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
               mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
             fi
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
+          sudo kill $daemon_pid
         displayName: "Build sonic image"
-      - template: check-dirty-version.yml
+      - template: .azure-pipelines/check-dirty-version.yml@buildimage
