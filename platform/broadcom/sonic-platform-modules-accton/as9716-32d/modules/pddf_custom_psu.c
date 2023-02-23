@@ -1,4 +1,5 @@
 #define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
 #include <linux/i2c.h>
@@ -10,7 +11,6 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 #include <linux/dmi.h>
-#include <linux/string.h>
 #include "pddf_psu_defs.h"
 
 ssize_t pddf_show_custom_psu_v_out(struct device *dev, struct device_attribute *da, char *buf);
