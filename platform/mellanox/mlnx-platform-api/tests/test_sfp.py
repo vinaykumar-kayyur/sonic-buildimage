@@ -28,7 +28,7 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
-from sonic_platform.sfp import SFP, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
+from sonic_platform.sfp import SFP, RJ45Port, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
 from sonic_platform.chassis import Chassis
 
 
@@ -207,9 +207,18 @@ class TestSfp:
         assert page == '/tmp/1/data'
         assert page_offset is 0
 
-    @mock.patch('sonic_platform.utils.read_int_from_file')
-    def test_get_presence(self, mock_read_int):
+    @mock.patch('sonic_platform.sfp.SFP._read_eeprom')
+    def test_sfp_get_presence(self, mock_read):
         sfp = SFP(0)
+        mock_read.return_value = None
+        assert not sfp.get_presence()
+
+        mock_read.return_value = 0
+        assert sfp.get_presence()
+
+    @mock.patch('sonic_platform.utils.read_int_from_file')
+    def test_rj45_get_presence(self, mock_read_int):
+        sfp = RJ45Port(0)
         mock_read_int.return_value = 0
         assert not sfp.get_presence()
         mock_read_int.assert_called_with('/sys/module/sx_core/asic0/module0/present')

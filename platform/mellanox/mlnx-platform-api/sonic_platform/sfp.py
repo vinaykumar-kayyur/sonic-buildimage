@@ -217,17 +217,6 @@ class NvidiaSFPCommon(SfpOptoeBase):
         self.index = sfp_index + 1
         self.sdk_index = sfp_index
 
-    def get_presence(self):
-        """
-        Retrieves the presence of the device
-
-        Returns:
-            bool: True if device is present, False if not
-        """
-        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_PRESENT
-        present = utils.read_int_from_file(file_path)
-        return present == 1
-
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -301,6 +290,16 @@ class SFP(NvidiaSFPCommon):
         """
         self._sfp_type_str = None
         self.refresh_xcvr_api()
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the device
+
+        Returns:
+            bool: True if device is present, False if not
+        """
+        eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
+        return eeprom_raw is not None
 
     # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
@@ -615,6 +614,17 @@ class RJ45Port(NvidiaSFPCommon):
     def __init__(self, sfp_index):
         super(RJ45Port, self).__init__(sfp_index)
         self.sfp_type = RJ45_TYPE
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the device
+
+        Returns:
+            bool: True if device is present, False if not
+        """
+        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_PRESENT
+        present = utils.read_int_from_file(file_path)
+        return present == 1
 
     def get_transceiver_info(self):
         """
