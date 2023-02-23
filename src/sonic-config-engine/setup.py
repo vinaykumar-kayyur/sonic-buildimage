@@ -1,6 +1,5 @@
 import glob
 import sys
-import subprocess
 
 from setuptools import setup
 
