@@ -52,11 +52,12 @@ function updateSyslogConf()
     date >> /tmp/chunangli.log
     docker ps >> /tmp/chunangli.log
     sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
-#    if [ $? -ne 0 ]; then
+    if [ $? -ne 0 ]; then
 #      echo "Error: Execute sonic-cfggen -d failed. Execute without '-d'."
+      sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }" >> /tmp/chunangli.log
 #      echo "Error: Execute sonic-cfggen -d failed." >> /tmp/chunangli.log
 #      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
-#    fi
+    fi
     {%- endif %}
     echo "---------------------------END-------------------------------" >> /tmp/chunangli.log
     docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
