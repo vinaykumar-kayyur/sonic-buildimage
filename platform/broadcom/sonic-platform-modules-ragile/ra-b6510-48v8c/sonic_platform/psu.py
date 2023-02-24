@@ -39,6 +39,9 @@ class Psu(PddfPsu):
         Returns:
             string: Model/part number of device
         """
+        if self.get_presence() is False:
+            return "N/A"
+
         model = super().get_model()
 
         psu_model_map = {
@@ -63,12 +66,12 @@ class Psu(PddfPsu):
         while time_retry:
             try:
                 val, result_msg = subprocess.getstatusoutput(cmd)
-                if val is False:
+                if val != 0:
                     time_retry -=1
                     time.sleep(time_delay)
                     continue
                 else:
-                    return val, result_msg
+                    return True, result_msg
             except Exception as e:
                 time_retry -= 1
                 result_msg = str(e)
@@ -126,6 +129,20 @@ class Psu(PddfPsu):
 
         return float(v_out)/1000
 
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+
+        Returns:
+            string: Serial number of device
+        """
+        if self.get_presence() is False:
+            return "N/A"
+
+        return super().get_serial()
+
+
     def get_revision(self):
         """
         Retrieves the hardware revision of the device
@@ -133,6 +150,8 @@ class Psu(PddfPsu):
         Returns:
             string: Revision value of device
         """
+        if self.get_presence() is False:
+            return "N/A"
         device_eeprom = "PSU{}-EEPROM".format(self.psu_index)
         pddf_obj_data = self.pddf_obj.data
 
