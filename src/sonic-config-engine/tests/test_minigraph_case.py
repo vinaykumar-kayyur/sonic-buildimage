@@ -158,7 +158,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}")
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto'}}")
         )
 
     def test_minigraph_console_mgmt_feature(self):
@@ -466,6 +466,29 @@ class TestCfgGenCaseInsensitive(TestCase):
             everflow_dscp_entry['ports'].sort(),
             expected_ports.sort()
         )
+
+    def test_minigraph_acl_attach_to_ports(self):
+        """
+        The test case is to verify ACL table can be bound to both port names and alias
+        """
+        sample_graph = os.path.join(self.test_dir,'simple-sample-graph-case-acl-test.xml')
+        port_config_duplicated_name_alias = os.path.join(self.test_dir, 't0-sample-port-config-duplicated-name-alias.ini')
+        result = minigraph.parse_xml(sample_graph, port_config_file=port_config_duplicated_name_alias)
+        # TC1: All ports are portchannels or port names
+        expected_dataacl_ports = ['PortChannel01','Ethernet20','Ethernet24']
+        self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_PORT_NAME']['ports']), sorted(expected_dataacl_ports))
+        # TC2: All ports are portchanels or port alias
+        expected_dataacl_ports = ['PortChannel01','Ethernet4','Ethernet8']
+        self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_PORT_ALIAS']['ports']), sorted(expected_dataacl_ports))
+        # TC3: Duplicated values in port names and alias, but all fall in port names
+        expected_dataacl_ports = ['PortChannel01','Ethernet0','Ethernet1','Ethernet2','Ethernet3']
+        self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_MIXED_NAME_ALIAS_1']['ports']), sorted(expected_dataacl_ports))
+        # TC4: Duplicated values in port names and alias, but all fall in port alias
+        expected_dataacl_ports = ['PortChannel01','Ethernet0','Ethernet1','Ethernet4','Ethernet8']
+        self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_MIXED_NAME_ALIAS_2']['ports']), sorted(expected_dataacl_ports))
+        # TC5: Same count in port names and alias, port alias is preferred
+        expected_dataacl_ports = ['Ethernet0']
+        self.assertEqual(sorted(result['ACL_TABLE']['DATAACL_MIXED_NAME_ALIAS_3']['ports']), sorted(expected_dataacl_ports))
 
     def test_parse_device_desc_xml_mgmt_interface(self):
         # Regular device_desc.xml with both IPv4 and IPv6 mgmt address
