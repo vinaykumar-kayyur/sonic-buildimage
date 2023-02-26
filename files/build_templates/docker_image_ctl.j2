@@ -48,18 +48,16 @@ function updateSyslogConf()
     python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
     {%- else %}
 
-    sudo echo "---------------------------$CONTAINER_NAME-----------------------------------" >> /tmp/chunangli.log
-    sudo date >> /tmp/chunangli.log
-    sudo docker ps >> /tmp/chunangli.log
+    echo "chunangli---------------------------$CONTAINER_NAME------START---------------------------"
+    echo docker ps
     sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
     if [ $? -ne 0 ]; then
       echo "Error: Execute sonic-cfggen -d failed. Execute without '-d'."
-      sudo sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }" >> /tmp/chunangli.log 2>&1
 #      echo "Error: Execute sonic-cfggen -d failed." >> /tmp/chunangli.log
 #      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
     fi
     {%- endif %}
-    sudo echo "---------------------------END-------------------------------" >> /tmp/chunangli.log
+    sudo echo "chunangli----------------------$CONTAINER_NAME-----END-------------------------------"
     docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
     rm -rf $TMP_FILE
 }
