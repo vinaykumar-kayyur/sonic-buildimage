@@ -386,7 +386,7 @@ do
 done
 
 # init SFP0/1 EEPROM
-echo "sff8436 0x50" > /sys/bus/i2c/devices/i2c-45/new_device
-echo "sff8436 0x50" > /sys/bus/i2c/devices/i2c-46/new_device
+echo "optoe2 0x50" > /sys/bus/i2c/devices/i2c-45/new_device
+echo "optoe2 0x50" > /sys/bus/i2c/devices/i2c-46/new_device
 
 mac_vdd_init
