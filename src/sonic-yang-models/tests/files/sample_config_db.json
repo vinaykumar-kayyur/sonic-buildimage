@@ -1116,6 +1116,10 @@
             "FLOW_CNT_ROUTE": {
                 "FLEX_COUNTER_STATUS": "enable",
                 "POLL_INTERVAL": "10000"
+            },
+            "TUNNEL": {
+                "FLEX_COUNTER_STATUS": "enable",
+                "POLL_INTERVAL": "10000"
             }
         },
         "FLOW_COUNTER_ROUTE_PATTERN": {
@@ -1229,6 +1233,19 @@
         "TACPLUS_SERVER": {
             "192.168.1.1": {
                 "timeout": "10"
+            }
+        },
+        "RADIUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "RADIUS_SERVER": {
+            "192.168.1.2": {
+                "priority": "4",
+                "retransmit": "2",
+                "timeout": "5"
             }
         },
         "NAT_BINDINGS": {
@@ -1891,8 +1908,24 @@
                      "LAG"
                  ]
              }
-         },
+        },
 
+        "SNMP": {
+            "CONTACT": {
+                "Contact": "testuser@contoso.com"
+            },
+            "LOCATION": {
+                "Location": "SNMP Server Location"
+            }
+        },
+        "SNMP_COMMUNITY": {
+            "public": {
+                "TYPE": "RO"
+            },
+            "private": {
+                "TYPE": "RW"
+            }
+        },
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
                 "mtu": "1024",
