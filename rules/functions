@@ -206,3 +206,31 @@ define generate_manifest
         mv $($(1).gz_PATH)/manifest.common.json $($(1).gz_PATH)/manifest.json
     fi
 endef
+
+###############################################################################
+## Switch off feature testing when functionality doesn't include to build
+## Disable some tests from sonic-utilities
+###############################################################################
+define disable_unused_tests
+    if [ $INCLUDE_NTP == n ]; then
+        DISABLED_TESTS+=("not NTP")
+    fi
+
+    if [ $INCLUDE_RADIUS == n ]; then
+        DISABLED_TESTS+=("not RADIUS")
+    fi
+
+    if [ $INCLUDE_SNMP == n ]; then
+        DISABLED_TESTS+=("not SNMP")
+    fi
+
+    # Generate string with disabling tests
+    # E.g: "not NTP and not RADIUS and not SNMP"
+    delimiter=" and "
+    printf -v joined_array "%s${delimiter}" "${DISABLED_TESTS[@]}"
+    joined_array=${joined_array%${delimiter}}
+
+    if test -n "$DISABLED_TESTS"; then
+        export PYTEST_ADDOPTS+="-k \"${joined_array}\" "
+    fi
+endef
