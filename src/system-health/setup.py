@@ -1,14 +1,14 @@
 from setuptools import setup
 import pkg_resources
 
+# sonic module dependencies.
+sonic_dependencies = ['sonic-py-common']
+
 dependencies = [
     'natsort',
     'sonic_py_common',
     'docker'
 ]
-
-# sonic module dependencies.
-sonic_dependencies = ['sonic-py-common']
 
 for package in sonic_dependencies:
     try:
