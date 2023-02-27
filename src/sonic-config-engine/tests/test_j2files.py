@@ -636,6 +636,15 @@ class TestJ2Files(TestCase):
             self.run_script(argument, output_file=self.output_file)
             assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
+    def test_dns_template_render(self):
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'resolv-config', 'resolv.conf.j2')
+        static_dns_conf = os.path.join(self.test_dir, "data", "dns", "static_dns.json")
+        expected = os.path.join(self.test_dir, "data", "dns", "resolv.conf")
+
+        argument = ['-j', static_dns_conf, '-t', conf_template]
+        self.run_script(argument, output_file=self.output_file)
+        assert utils.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
+
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
         try:
