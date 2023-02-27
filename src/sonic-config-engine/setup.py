@@ -2,6 +2,7 @@ import glob
 import sys
 
 from setuptools import setup
+import pkg_resources
 
 # sonic module dependencies.
 sonic_dependencies = ['sonic-py-common', 'sonic-yang-mgmt', 'sonic-yang-models']
@@ -55,10 +56,11 @@ if sys.version_info.major == 3:
 
 for package in sonic_dependencies:
     try:
-        __import__(package)
-    except ImportError:
-        print("\nPlease build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage")
-        raise
+        pkg_resources.get_distribution(package)
+    except pkg_resources.DistributionNotFound:
+        print(package+" is not found!")
+        print("Please build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage")
+        exit(1)
 
 setup(
     name = 'sonic-config-engine',
