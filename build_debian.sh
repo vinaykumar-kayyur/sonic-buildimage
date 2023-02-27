@@ -267,8 +267,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common
 
 install_kubernetes () {
     local ver="$1"
+    gpg_file_link="https://sonicstorage.blob.core.windows.net/packages/kubernetes/apt-key.gpg?sp=r&st=2023-02-27T09:10:05Z&se=2033-02-27T17:10:05Z&spr=https&sv=2021-06-08&sr=b&sig=CuokQMUe8%2FvIr%2FW5ddfaYwRnm5QQys2PghPrLgRZKI4%3D"
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+        $gpg_file_link | \
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
