@@ -3,7 +3,7 @@ module sonic-chassis-module {
     yang-version 1.1;
 
     namespace  "http://github.com/sonic-net/sonic-chassis-module";
-    
+    prefix chassis_mod;
     import sonic-types {
         prefix stypes;
     }
