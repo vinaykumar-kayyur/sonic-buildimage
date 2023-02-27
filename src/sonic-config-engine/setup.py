@@ -5,7 +5,7 @@ from setuptools import setup
 import pkg_resources
 
 # sonic module dependencies.
-sonic_dependencies = ['sonic-py-common', 'sonic-yang-mgmt', 'sonic-yang-models']
+sonic_dependencies = ['sonic-py-common']
 
 # Common dependencies for Python 2 and 3
 dependencies = [
@@ -28,6 +28,7 @@ if sys.version_info.major == 3:
         'sonic-yang-mgmt>=1.0',
         'sonic-yang-models>=1.0'
     ]
+    sonic_dependencies += ['sonic-yang-mgmt', 'sonic-yang-models']
 else:
     # Python 2-only dependencies
     dependencies += [
