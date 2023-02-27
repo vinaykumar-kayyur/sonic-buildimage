@@ -20,6 +20,18 @@
     "FG_NHG_PREFIX_TEST": {
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG_PREFIX": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name": "group2",
+                        "bucket_size": 20,
+                        "match_mode": "route-based"
+                    }
+                ],
                 "FG_NHG_PREFIX_LIST": [
                     {
                         "ip_prefix": "10.0.0.0/24",
@@ -36,6 +48,18 @@
     "FG_NHG_MEMBER_TEST": {
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name": "group2",
+                        "bucket_size": 20,
+                        "match_mode": "route-based"
+                    }
+                ],
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
@@ -119,6 +143,18 @@
     "FG_NHG_PREFIX_TEST_MISSING_FG_NHG_REF": {
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG_PREFIX": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name": "group2",
+                        "bucket_size": 20,
+                        "match_mode": "route-based"
+                    }
+                ],
                 "FG_NHG_PREFIX_LIST": [
                     {
                         "ip_prefix": "10.0.0.0/24"
@@ -130,6 +166,18 @@
     "FG_NHG_MEMBER_TEST_MISSING_BANK": {
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name": "group2",
+                        "bucket_size": 20,
+                        "match_mode": "route-based"
+                    }
+                ],
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
