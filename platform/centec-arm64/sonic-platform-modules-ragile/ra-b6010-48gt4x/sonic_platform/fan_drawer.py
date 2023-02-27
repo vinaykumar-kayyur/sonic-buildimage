@@ -15,7 +15,7 @@ except ImportError as e:
 
 class FanDrawer(FanDrawerBase):
 
-    FANS_PER_FANTRAY = 2
+    FANS_PER_FANTRAY = 1
 
     def __init__(self, fantray_index=0):
         FanDrawerBase.__init__(self)
@@ -35,13 +35,14 @@ class FanDrawer(FanDrawerBase):
         self.begin = time.time()
 
     def get_name(self):
-        return "FanTray{}".format(self.fantrayindex)
+        return "FanTray{}".format(self.fantrayindex+1)
 
     def get_presence(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
         output = ctrl[self.fantrayindex]
-        if output.get("Status").get("Status").get("State") == "Enabled":
+        state = output.get("Status").get("Status").get("State")
+        if state == "Enabled" or state == "UnavailableOffline":
             return True
 
     def get_status(self):

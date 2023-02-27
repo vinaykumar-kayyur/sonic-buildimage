@@ -16,7 +16,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_FAN_TRAY = 2
-NUM_FAN = 4
+NUM_FAN = 2
 NUM_THERMAL = 5
 NUM_PORT    = 52
 NUM_PSU = 2

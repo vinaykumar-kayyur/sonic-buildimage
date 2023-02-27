@@ -11,7 +11,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-FAN_NAME_LIST = ["Fan1", "Fan2"]
+FAN_NAME_LIST = ["1", "2"]
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
@@ -36,28 +36,28 @@ class Fan(FanBase):
     def get_speed_pwm(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         speed = output.get("Oem").get("Ragile").get("FanSpeedLevelPercents")
         return int(speed)
 
     def get_speed_rpm(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         speed = output.get("Reading")
         return int(speed)
 
     def get_high_critical_threshold(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         high = output.get("UpperThresholdFatal")
         return int(high)
 
     def get_low_critical_threshold(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         low = output.get("LowerThresholdFatal")
         return int(low)
 
@@ -71,7 +71,7 @@ class Fan(FanBase):
     def get_status_led(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         led = output.get("Oem").get("Ragile").get("IndicatorLEDColor")
         return led
 
@@ -87,28 +87,25 @@ class Fan(FanBase):
         return self.redfish.post_boardLed(playload)
 
     def get_direction(self):
-        self.get_power_3s()
-        ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
-        airflow = output.get("Oem").get("Ragile").get("AirFlow")
-        return airflow
+        return "intake"
 
     def get_name(self):
         fan_name = FAN_NAME_LIST[self.fan_index]
-        return "Fantray{}_{}".format(self.fan_tray_index, fan_name)
+        return "Fantray{}_{}".format(self.fan_tray_index+1, fan_name)
 
     def get_presence(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
-        if output.get("Status").get("Status").get("State") == "Enabled":
+        output = ctrl[self.fan_tray_index]
+        state = output.get("Status").get("Status").get("State")
+        if state == "Enabled" or state == "UnavailableOffline":
             return True
         return False
 
     def get_status(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         if output.get("Status").get("Status").get("Health") == "OK":
             return True
         return False
@@ -116,20 +113,25 @@ class Fan(FanBase):
     def get_high_critical_threshold(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         high = output.get("UpperThresholdFatal")
         return high
 
     def get_low_critical_threshold(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
+        output = ctrl[self.fan_tray_index]
         low = output.get("LowerThresholdFatal")
         return low
 
     def get_speed(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_index]
-        speed = output.get("Oem").get("Ragile").get("FanSpeedLevelPercents")
-        return speed
+        output = ctrl[self.fan_tray_index]
+        speed = output.get("Reading")
+        speed_percentage = round((speed*100)/17500)
+        if speed_percentage > 100:
+            speed_percentage = 100
+            return speed_percentage
+        else:
+            return speed_percentage

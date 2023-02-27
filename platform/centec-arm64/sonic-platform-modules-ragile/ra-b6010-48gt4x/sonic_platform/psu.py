@@ -32,13 +32,7 @@ class Psu(PsuBase):
         self.begin = time.time()
 
     def get_presence(self):
-        self.get_power_3s()
-        ctrl = self.pinf["PowerSupplies"]
-        output = ctrl[self.psu_index]
-        if output.get("Status").get("State") == "Enabled":
-            return True
-        else:
-            return False
+        return True
 
     def get_powergood_status(self):
         self.get_power_3s()
