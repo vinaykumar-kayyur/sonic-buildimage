@@ -15,20 +15,20 @@
     "FG_NHG_MEMBER_TEST_INVALID_IP": {
         "desc": "Fine-grained ECMP next-hop member configuration with invalid IP value in FG_NHG_MEMBER_LIST table.",
         "eStrKey" : "InvalidValue",
-        "eStr": "next_hop_ip"
+        "eStr": ["next_hop_ip"]
     },
     "FG_NHG_PREFIX_TEST_INVALID_PREFIX":{
         "desc": "Fine-grained ECMP prefix configuration with invalid prefix value in FG_NHG_PREFIX_LIST table.",
         "eStrKey" : "InvalidValue",
-        "eStr": "ip_prefix"
+        "eStr": ["ip_prefix"]
     },
     "FG_NHG_MEMBER_TEST_MISSING_FG_NHG_REF": {
         "desc": "Fine-grained ECMP next-hop member configuration with missing FG_NHG reference in FG_NHG_MEMBER_LIST table.",
-        "eStr": "Missing reference"
+        "eStr": "Missing required element \"FG_NHG\" in \"FG_NHG_MEMBER_LIST\". "
     },
     "FG_NHG_PREFIX_TEST_MISSING_FG_NHG_REF": {
         "desc": "Fine-grained ECMP prefix configuration with missing FG_NHG reference in FG_NHG_PREFIX_LIST table.",
-        "eStr": "Missing reference"
+        "eStr": "Missing required element \"FG_NHG\" in \"FG_NHG_PREFIX_LIST\". "
     },
     "FG_NHG_MEMBER_TEST_MISSING_BANK": {
         "desc": "Fine-grained ECMP next-hop member configuration with missing bank in FG_NHG_MEMBER_LIST table.",
