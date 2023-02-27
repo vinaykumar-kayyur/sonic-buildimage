@@ -652,11 +652,13 @@ It currently allows user to administratively bring down a line-card or fabric-ca
 
 ```
 {
-    "CHASSIS_MODULE|LINE-CARD0": {
-        "admin_status": "down"
-    },
-    "CHASSIS_MODULE|FABRIC-CARD1": {
-        "admin_status": "down"
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
     }
 }
 
