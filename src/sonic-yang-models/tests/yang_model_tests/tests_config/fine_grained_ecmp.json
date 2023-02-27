@@ -1,0 +1,44 @@
+{
+    "VALID_FINE_GRAINED_ECMP":{
+        "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp":{
+            "sonic-fine-grained-ecmp:FG_NHG":{
+                "FG_NHG_LIST":[
+                    {
+                        "name":"fgnhg_v4",
+                        "bucket_size": "120",
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name":"fgnhg_v6",
+                        "bucket_size": "120",
+                        "match_mode": "nexthop-based"
+                    }
+                ],
+                "FG_NHG_PREFIX_LIST":[
+                    {
+                        "ip_prefix":"100.50.25.12/32",
+                        "FG_NHG": "fgnhg_v4"
+                    },
+                    {
+                        "ip_prefix":"fc:05::/128",
+                        "FG_NHG": "fgnhg_v6"
+                    }
+                ],
+                "FG_NHG_MEMBER_LIST":[
+                    {
+                        "next_hop_ip":"200.200.200.4",
+                        "FG_NHG": "fgnhg_v4",
+                        "bank": "0",
+                        "link": "Ethernet8"
+                    },
+                    {
+                        "next_hop_ip":"200.200.200.5",
+                        "FG_NHG": "fgnhg_v4",
+                        "bank": "1",
+                        "link": "Ethernet12"
+                    }
+                ]
+            }
+        }
+    }
+}
