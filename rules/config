@@ -228,7 +228,7 @@ SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
 SECURE_UPGRADE_DEV_SIGNING_KEY = /sonic/your/private/key/path/private_key.pem
 SECURE_UPGRADE_DEV_SIGNING_CERT =  /sonic/your/certificate/path/cert.pem
 SECURE_UPGRADE_MODE = "no_sign"
-SECURE_UPGRADE_PROD_SIGNING_TOOL ?= none
+SECURE_UPGRADE_PROD_SIGNING_TOOL ?=
 # PACKAGE_URL_PREFIX - the package url prefix
 PACKAGE_URL_PREFIX ?= https://packages.trafficmanager.net/public/packages
 

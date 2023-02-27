@@ -30,11 +30,11 @@ while getopts 'l:c:p:k:s:e:hv' flag; do
     s) LOCAL_SIGN_FILE="${OPTARG}" ;;
     e) LOCAL_EXTRACT_CERT="${OPTARG}" ;;
     v) VERBOSE='true' ;;
-    h) print_usage
+    h) usage
        exit 1 ;;
   esac
 done
-if [ $OPTIND -eq 1 ]; then echo "no options were pass"; print_usage; exit 1 ;fi
+if [ $OPTIND -eq 1 ]; then echo "no options were pass"; usage; exit 1 ;fi
 
 if [ -z ${LINUX_KERNEL_VERSION} ]; then
     echo "ERROR: LINUX_KERNEL_VERSION arg1 is empty"
@@ -76,10 +76,9 @@ if [ ! -f ${LOCAL_EXTRACT_CERT} ]; then
 fi
 
 if [ ! -d "$KERNEL_MODULES_DIR" ]; then
-  # If the user do not provide a KERNEL_MODULES_DIR, the script is going to search in the script call path for Kernel modules.
-  KERNEL_MODULES_DIR="./"
-  echo "KERNEL_MODULES_DIR set to default path: $KERNEL_MODULES_DIR"
-
+    # If the user do not provide a KERNEL_MODULES_DIR, the script is going to search in the script call path for Kernel modules.
+    KERNEL_MODULES_DIR="./"
+    echo "KERNEL_MODULES_DIR set to default path: $KERNEL_MODULES_DIR"
 fi
 
 # find all the kernel modules.
