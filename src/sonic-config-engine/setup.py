@@ -54,7 +54,7 @@ if sys.version_info.major == 3:
     ]
 
 for package in dependencies:
-    if package.find("sonic") == -1:
+    if "sonic" not in package:
         continue
     try:
         package_dist = pkg_resources.get_distribution(package.split(">=")[0])
@@ -62,7 +62,7 @@ for package in dependencies:
         print(package + " is not found!", file=sys.stderr)
         print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
         exit(1)
-    if package.find(">=") != -1:
+    if ">=" in package:
         if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
             continue
         print(package + " version not match!", file=sys.stderr)
