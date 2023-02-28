@@ -198,23 +198,23 @@
                     }
                 ]
             },
+            "sonic-port:sonic-port": {
+                "sonic-port:PORT": {
+                    "PORT_LIST": [
+                        {
+                            "admin_status": "up",
+                            "alias": "eth0",
+                            "description": "Ethernet0",
+                            "lanes": "65",
+                            "mtu": "9000",
+                            "name": "Ethernet1",
+                            "tpid": "0x8100",
+                            "speed": "25000"
+                        }
+                    ]
+                }
+            },
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
-                "sonic-port:sonic-port": {
-                    "sonic-port:PORT": {
-                        "PORT_LIST": [
-                            {
-                                "admin_status": "up",
-                                "alias": "eth0",
-                                "description": "Ethernet0",
-                                "lanes": "65",
-                                "mtu": "9000",
-                                "name": "Ethernet1",
-                                "tpid": "0x8100",
-                                "speed": "25000"
-                            }
-                        ]
-                    }
-                },
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
