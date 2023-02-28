@@ -2,9 +2,7 @@ from __future__ import print_function
 from setuptools import setup
 import sys
 import pkg_resources
-
-# sonic module dependencies.
-sonic_dependencies = ['sonic-py-common']
+from packaging import version
 
 dependencies = [
     'natsort',
@@ -12,12 +10,19 @@ dependencies = [
     'docker'
 ]
 
-for package in sonic_dependencies:
+for package in dependencies:
+    if package.find("sonic") == -1:
+        continue
     try:
-        pkg_resources.get_distribution(package)
+        package_dist = pkg_resources.get_distribution(package.split(">=")[0])
     except pkg_resources.DistributionNotFound:
         print(package + " is not found!", file=sys.stderr)
         print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
+        exit(1)
+    if package.find(">=") != -1:
+        if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
+            continue
+        print(package + " version not match!", file=sys.stderr)
         exit(1)
 
 setup(
