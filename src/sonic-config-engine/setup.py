@@ -1,11 +1,10 @@
+from __future__ import print_function
 import glob
 import sys
 
 from setuptools import setup
 import pkg_resources
-
-# sonic module dependencies.
-sonic_dependencies = ['sonic-py-common']
+from packaging import version
 
 # Common dependencies for Python 2 and 3
 dependencies = [
@@ -28,7 +27,6 @@ if sys.version_info.major == 3:
         'sonic-yang-mgmt>=1.0',
         'sonic-yang-models>=1.0'
     ]
-    sonic_dependencies += ['sonic-yang-mgmt', 'sonic-yang-models']
 else:
     # Python 2-only dependencies
     dependencies += [
@@ -55,12 +53,19 @@ if sys.version_info.major == 3:
         'sonic_yang_cfg_generator'
     ]
 
-for package in sonic_dependencies:
+for package in dependencies:
+    if package.find("sonic") == -1:
+        continue
     try:
-        pkg_resources.get_distribution(package)
+        package_dist = pkg_resources.get_distribution(package.split(">=")[0])
     except pkg_resources.DistributionNotFound:
-        sys.stderr.write(package + " is not found!\n")
-        sys.stderr.write("Please build and install SONiC python wheels dependencies from sonic-buildimage\n")
+        print(package + " is not found!", file=sys.stderr)
+        print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
+        exit(1)
+    if package.find(">=") != -1:
+        if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
+            continue
+        print(package + " version not match!", file=sys.stderr)
         exit(1)
 
 setup(
