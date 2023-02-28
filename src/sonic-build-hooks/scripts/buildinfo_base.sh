@@ -248,7 +248,7 @@ run_pip_command()
 
     $REAL_COMMAND "${parameters[@]}"
     local result=$?
-    if [ "$result" !=0 ]; then
+    if [ "$result" != 0 ]; then
         echo "Failed to run the command with constraint, try to install with the original command" 1>&2
         $REAL_COMMAND "$@"
         result=$?
