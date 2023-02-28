@@ -1,4 +1,5 @@
 from setuptools import setup
+import sys
 import pkg_resources
 
 # sonic module dependencies.
@@ -14,8 +15,8 @@ for package in sonic_dependencies:
     try:
         pkg_resources.get_distribution(package)
     except pkg_resources.DistributionNotFound:
-        print(package+" is not found!")
-        print("Please build and install SONiC python wheels dependencies from github.com/sonic-net/sonic-buildimage")
+        sys.stderr.write(package + " is not found!\n")
+        sys.stderr.write("Please build and install SONiC python wheels dependencies from sonic-buildimage\n")
         exit(1)
 
 setup(
