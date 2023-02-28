@@ -2,7 +2,6 @@ from __future__ import print_function
 from setuptools import setup
 import sys
 import pkg_resources
-from packaging import version
 
 dependencies = [
     'natsort',
@@ -18,11 +17,6 @@ for package in dependencies:
     except pkg_resources.DistributionNotFound:
         print(package + " is not found!", file=sys.stderr)
         print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
-        exit(1)
-    if ">=" in package:
-        if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
-            continue
-        print(package + " version not match!", file=sys.stderr)
         exit(1)
 
 setup(

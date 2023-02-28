@@ -4,7 +4,6 @@ import sys
 
 from setuptools import setup
 import pkg_resources
-from packaging import version
 
 # Common dependencies for Python 2 and 3
 dependencies = [
@@ -24,8 +23,8 @@ if sys.version_info.major == 3:
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
         'Jinja2>=2.10',
-        'sonic-yang-mgmt>=1.0',
-        'sonic-yang-models>=1.0'
+        'sonic-yang-mgmt',
+        'sonic-yang-models'
     ]
 else:
     # Python 2-only dependencies
@@ -61,11 +60,6 @@ for package in dependencies:
     except pkg_resources.DistributionNotFound:
         print(package + " is not found!", file=sys.stderr)
         print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
-        exit(1)
-    if ">=" in package:
-        if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
-            continue
-        print(package + " version not match!", file=sys.stderr)
         exit(1)
 
 setup(
