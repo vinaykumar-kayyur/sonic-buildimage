@@ -44,7 +44,7 @@ def getstatusoutput_noshell(cmd):
     return exitcode, output
 
 
-def getstatusoutput_noshell_pipe(cmd0, return_cmd=True, *args):
+def getstatusoutput_noshell_pipe(cmd0, *args, return_cmd=True):
     """
     This function implements getstatusoutput API from subprocess module
     but using shell=False to prevent shell injection. Input command
