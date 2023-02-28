@@ -55,13 +55,11 @@ function check_warm_boot()
 function check_fast_reboot()
 {
     debug "Checking if fast-reboot is enabled..."
-    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB GET "FAST_RESTART_ENABLE_TABLE|system"`
-    if [[ ${SYSTEM_FAST_REBOOT} == "enable" ]]; then
+    FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${FAST_REBOOT}" == x"true" ]]; then
        debug "Fast-reboot is enabled..."
-       FAST_REBOOT='true'
     else
        debug "Fast-reboot is disabled..."
-       FAST_REBOOT='false'
     fi
 }
 
@@ -113,7 +111,7 @@ function finalize_warm_boot()
 function finalize_fast_reboot()
 {
     debug "Finalizing fast-reboot..."
-    sonic-db-cli STATE_DB SET "FAST_RESTART_ENABLE_TABLE|system" "disable" &>/dev/null
+    sonic-db-cli STATE_DB hset "FAST_RESTART_ENABLE_TABLE|system" "enable" "false" &>/dev/null
 }
 
 function stop_control_plane_assistant()
@@ -172,7 +170,7 @@ if [[ -n "${list}" ]]; then
     debug "Some components didn't finish reconcile: ${list} ..."
 fi
 
-if [ ${FAST_REBOOT} == "true" ]; then
+if [ x"${FAST_REBOOT}" == x"true" ]; then
     finalize_fast_reboot
 fi
 finalize_warm_boot

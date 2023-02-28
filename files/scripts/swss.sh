@@ -60,8 +60,8 @@ function check_warm_boot()
 
 function check_fast_boot()
 {
-    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB GET "FAST_RESTART_ENABLE_TABLE|system"`
-    if [[ ${SYSTEM_FAST_REBOOT} == "enable" ]]; then
+    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${SYSTEM_FAST_REBOOT}" == x"true" ]]; then
         FAST_BOOT="true"
     else
         FAST_BOOT="false"
@@ -286,7 +286,7 @@ stop() {
     # be restarted.
     if [[ x"$FAST_BOOT" != x"true" ]]; then
         debug "Clearing FAST_RESTART_ENABLE_TABLE flag..."
-        sonic-db-cli STATE_DB SET "FAST_RESTART_ENABLE_TABLE|system" "disable"
+        sonic-db-cli STATE_DB hset "FAST_RESTART_ENABLE_TABLE|system" "enable" "false"
     fi
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
