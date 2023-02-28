@@ -59,9 +59,9 @@ def getstatusoutput_noshell_pipe(cmd0, *args, return_cmd=True):
 
     while True:
         if return_cmd:
-            output = popens[-1].communicate()[0]
+            output = popens[-1].communicate()[0].rstrip('\n')
             break
-        output = popens[-1].communicate()[0].rstrip('\n')
+        output = popens[-1].stdout.readline()
         if output == '' and popens[-1].poll() is not None:
             break
         if output:
