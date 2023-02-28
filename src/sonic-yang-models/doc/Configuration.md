@@ -17,7 +17,7 @@ Table of Contents
          * [Buffer queue](#buffer-queue)  
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
-         * [Cable length](#cable-length)
+         * [Cable length](#cable-length)  
          * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
