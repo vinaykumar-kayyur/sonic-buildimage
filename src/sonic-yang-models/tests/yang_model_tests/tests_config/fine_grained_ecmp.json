@@ -48,15 +48,22 @@
         }
     },
     "FG_NHG_MEMBER_TEST": {
-        "sonic-portchannel:PORTCHANNEL:PORTCHANNEL_LIST": [
-            {
-                "name": "PortChannel",
-                "admin_status": "up"
-            },{
-                "name": "PortChannel2",
-                "admin_status": "up"
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": "9000",
+                        "name": "Ethernet1",
+                        "tpid": "0x8100",
+                        "speed": "25000"
+                    }
+                ]
             }
-        ],
+        },
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG": {
                 "FG_NHG_LIST": [
@@ -78,19 +85,19 @@
                         "next_hop_ip": "10.0.0.1",
                         "FG_NHG": "group1",
                         "bank": 1,
-                        "link": "PortChannel"
+                        "link": "Ethernet1"
                     },
                     {
                         "next_hop_ip": "10.0.0.2",
                         "FG_NHG": "group1",
                         "bank": 2,
-                        "link": "PortChannel2"
+                        "link": "Ethernet1"
                     },
                     {
                         "next_hop_ip": "10.1.0.1",
                         "FG_NHG": "group2",
                         "bank": 3,
-                        "link": "PortChannel1"
+                        "link": "Ethernet1"
                     }
                 ]
             }
@@ -141,18 +148,29 @@
         }
     },
     "FG_NHG_MEMBER_TEST_MISSING_FG_NHG_REF": {
-        "sonic-portchannel:PORTCHANNEL:PORTCHANNEL_LIST":[
-            {
-                "name": "PortChannel1",
-                "admin_status": "up"
-            }],
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": "9000",
+                        "name": "Ethernet1",
+                        "tpid": "0x8100",
+                        "speed": "25000"
+                    }
+                ]
+            }
+        },
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
                         "bank": 1,
-                        "link": "PortChannel1"
+                        "link": "Ethernet1"
                     }
                 ]
             }
@@ -181,6 +199,22 @@
                 ]
             },
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
+                "sonic-port:sonic-port": {
+                    "sonic-port:PORT": {
+                        "PORT_LIST": [
+                            {
+                                "admin_status": "up",
+                                "alias": "eth0",
+                                "description": "Ethernet0",
+                                "lanes": "65",
+                                "mtu": "9000",
+                                "name": "Ethernet1",
+                                "tpid": "0x8100",
+                                "speed": "25000"
+                            }
+                        ]
+                    }
+                },
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
@@ -239,13 +273,13 @@
                         "next_hop_ip": "10.0.0.2",
                         "FG_NHG": "group1",
                         "bank": 2,
-                        "link": "Ethernet2"
+                        "link": "Ethernet1"
                     },
                     {
                         "next_hop_ip": "10.0.0.1",
                         "FG_NHG": "group1",
                         "bank": 3,
-                        "link": "Ethernet3"
+                        "link": "Ethernet1"
                     }
                 ]
             }
