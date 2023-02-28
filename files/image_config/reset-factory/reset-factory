@@ -98,8 +98,12 @@ reset_users()
     echo "Restore default users passwords"
     for user in ${default_users[@]}
     do
+       # Restore default password
        user_pass=$(jq -r '.[$user].password' --arg user "${user}" $DEFAULT_USERS_FILE)
        echo "$user:$user_pass" | chpasswd -e
+       # Check if we need to expire password
+       expire=$(jq -r '.[$user].expire' --arg user "${user}" $DEFAULT_USERS_FILE)
+       [ "${expire}" == "true" ] && passwd -e ${user}
     done
 }
 
