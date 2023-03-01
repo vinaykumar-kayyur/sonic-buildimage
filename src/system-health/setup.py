@@ -4,15 +4,16 @@ import sys
 import pkg_resources
 from packaging import version
 
+# sonic_dependencies, version requirement only supports '>='
+sonic_dependencies = ['sonic-py-common']
+
 dependencies = [
     'natsort',
-    'sonic_py_common',
     'docker'
 ]
 
-for package in dependencies:
-    if "sonic" not in package:
-        continue
+dependencies += sonic_dependencies
+for package in sonic_dependencies:
     try:
         package_dist = pkg_resources.get_distribution(package.split(">=")[0])
     except pkg_resources.DistributionNotFound:

@@ -6,6 +6,9 @@ from setuptools import setup
 import pkg_resources
 from packaging import version
 
+# sonic_dependencies, version requirement only supports '>='
+sonic_dependencies = ['sonic-py-common']
+
 # Common dependencies for Python 2 and 3
 dependencies = [
     'bitarray==1.5.3',
@@ -13,7 +16,6 @@ dependencies = [
     'lxml==4.9.1',
     'netaddr==0.8.0',
     'pyyaml==5.4.1',
-    'sonic-py-common',
 ]
 
 if sys.version_info.major == 3:
@@ -24,6 +26,8 @@ if sys.version_info.major == 3:
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
         'Jinja2>=2.10',
+    ]
+    sonic_dependencies += [
         'sonic-yang-mgmt>=1.0',
         'sonic-yang-models>=1.0'
     ]
@@ -53,9 +57,8 @@ if sys.version_info.major == 3:
         'sonic_yang_cfg_generator'
     ]
 
-for package in dependencies:
-    if "sonic" not in package:
-        continue
+dependencies += sonic_dependencies
+for package in sonic_dependencies:
     try:
         package_dist = pkg_resources.get_distribution(package.split(">=")[0])
     except pkg_resources.DistributionNotFound:
