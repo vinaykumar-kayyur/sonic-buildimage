@@ -42,6 +42,14 @@
                     {
                         "ip_prefix": "10.1.0.0/24",
                         "FG_NHG": "group2"
+                    },
+                    {
+                        "ip_prefix": "fe80::/64",
+                        "FG_NHG": "group1"
+                    },
+                    {
+                        "ip_prefix": "::/0",
+                        "FG_NHG": "group2"
                     }
                 ]
             }
@@ -97,6 +105,18 @@
                         "next_hop_ip": "10.1.0.1",
                         "FG_NHG": "group2",
                         "bank": 3,
+                        "link": "Ethernet1"
+                    },
+                    {
+                        "next_hop_ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+                        "FG_NHG": "group1",
+                        "bank": 4,
+                        "link": "Ethernet1"
+                    },
+                    {
+                        "next_hop_ip": "2001:db8::1",
+                        "FG_NHG": "group2",
+                        "bank": 5,
                         "link": "Ethernet1"
                     }
                 ]
