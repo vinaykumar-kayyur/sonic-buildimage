@@ -140,6 +140,7 @@ static struct sock_fprog dhcp_inbound_sock_bfp = {
 
 static uint8_t *rx_recv_buffer = NULL;
 static uint8_t *tx_recv_buffer = NULL;
+static uint32_t snap_length;
 
 /** Aggregate device of DHCP interfaces. It contains aggregate counters from
     all interfaces
@@ -291,8 +292,8 @@ static void client_packet_handler(dhcp_device_context_t *context, uint8_t *buffe
             }
         }
     } else {
-        syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
-            context->intf, buffer_sz);
+        syslog(LOG_WARNING, "read_callback(%s %s): read length (%ld) is too small to capture DHCP options",
+               context->intf, dir == DHCP_TX ? "TX" : "RX", buffer_sz);
     }
 }
 
@@ -342,7 +343,7 @@ static void read_tx_callback(int fd, short event, void *arg)
     socklen_t slen = sizeof sll;
     dhcp_device_context_t *context = NULL;
 
-    while ((buffer_sz = recvfrom(fd, tx_recv_buffer, sizeof(tx_recv_buffer), MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0) 
+    while ((buffer_sz = recvfrom(fd, tx_recv_buffer, snap_length, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0) 
     {
         char interfaceName[IF_NAMESIZE];
         if (if_indextoname(sll.sll_ifindex, interfaceName) == NULL) {
@@ -352,7 +353,7 @@ static void read_tx_callback(int fd, short event, void *arg)
         std::string intf(interfaceName);
         context = interface_to_dev_context(devices, intf);
         if (context) {
-            client_packet_handler(context, rx_recv_buffer, buffer_sz, DHCP_TX);
+            client_packet_handler(context, tx_recv_buffer, buffer_sz, DHCP_TX);
         }
     }
 }
@@ -373,10 +374,10 @@ static void read_rx_callback(int fd, short event, void *arg)
     auto devices = (std::unordered_map<std::string, struct intf*> *)arg;
     ssize_t buffer_sz;
     struct sockaddr_ll sll;
-    socklen_t slen = sizeof sll;
+    socklen_t slen = sizeof(sll);
     dhcp_device_context_t *context = NULL;
 
-    while ((buffer_sz = recvfrom(fd, rx_recv_buffer, sizeof(rx_recv_buffer), MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0) 
+    while ((buffer_sz = recvfrom(fd, rx_recv_buffer, snap_length, MSG_DONTWAIT, (struct sockaddr *)&sll, &slen)) > 0) 
     {
         char interfaceName[IF_NAMESIZE];
         if (if_indextoname(sll.sll_ifindex, interfaceName) == NULL) {
@@ -609,6 +610,7 @@ static int init_socket()
 
 static void init_recv_buffers(int snaplen)
 {
+    snap_length = snaplen;
     rx_recv_buffer = (uint8_t *) malloc(snaplen);
     if (rx_recv_buffer == NULL) {
         syslog(LOG_ALERT, "malloc: failed to allocate memory for socket rx buffer '%s'\n", strerror(errno));

@@ -68,7 +68,6 @@ void dhcp_devman_shutdown()
         auto inf = it->second;
         dhcp_device_shutdown(inf->dev_context);
         it = intfs.erase(it);
-        free(inf->dev_context);
         free(inf);
     }
 }
@@ -169,7 +168,7 @@ int dhcp_devman_start_capture(size_t snaplen, struct event_base *base)
 
     if ((dhcp_num_south_intf == 1) && (dhcp_num_north_intf >= 1)) {
         rv = dhcp_device_start_capture(snaplen, base, dual_tor_mode ? loopback_ip : vlan_ip);
-        if (rv == 0) {
+        if (rv != 0) {
             syslog(LOG_ALERT, "Capturing DHCP packets on interface failed");
             exit(1);
         }
