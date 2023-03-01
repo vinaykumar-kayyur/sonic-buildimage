@@ -986,3 +986,12 @@ class Sfp(SfpBase):
             error_description = self.SFP_STATUS_OK
 
         return error_description
+
+    def get_transceiver_status(self):
+        raise NotImplementedError
+
+    def get_transceiver_pm(self):
+        raise NotImplementedError
+
+    def get_xcvr_api(self):
+        return None
