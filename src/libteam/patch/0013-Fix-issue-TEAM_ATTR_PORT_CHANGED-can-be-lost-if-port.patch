@@ -1,0 +1,91 @@
+From 7a3fae5e366bac127cebd2afcfb1a96c59be743b Mon Sep 17 00:00:00 2001
+From: Stephen Sun <stephens@nvidia.com>
+Date: Wed, 1 Mar 2023 03:14:10 +0000
+Subject: [PATCH 13/13] Fix issue: TEAM_ATTR_PORT_CHANGED can be lost if port
+ change handler is called recursively
+
+The flag TEAM_ATTR_PORT_CHANGED is maintained by kernel team driver:
+- a flag "changed" is maintained in struct team_port struct
+- the flag is set by __team_port_change_send once relevant information is updated, including port linkup (together with speed, duplex), adding or removing
+- the flag is cleared by team_nl_fill_one_port_get once the updated information has been notified to user space via RTNL
+
+In the userspace, the change flag is maintained by libteam in struct team_port.
+The team daemon calles port_priv_change_handler_func on receiving port change event.
+The logic in port_priv_change_handler_func
+1. creates the port if it did not exist, which triggers port add event and eventually calls lacp_port_added callback.
+2. triggers port change event if team_port->changed is true, which eventually calls lw_ethtool_event_watch_port_changed to update port state for link watch ethtool.
+3. removes the port if team_port->removed is removed
+
+In lacp_port_added, it calles team_refresh to refresh ifinfo, port info, and option info from the kernel via RTNL.
+In this step, port_priv_change_handler_func is called recursively.
+- In the inner call, it won't get TEAM_ATTR_PORT_CHANGED flag because kernel has already notified that.
+- As a result, team_port->changed flag is cleared in the libteam.
+- The port change event won't be triggered from either inner or outer call of port_priv_change_handler_func.
+
+If the port has been up when the port is being added to the team device, the "port up" information is carried in the outer call but will be lost.
+
+In case the flag TEAM_ATTR_PORT_CHANGED is set only in the inner call, function port_priv_change_handler_func can be called in the inner call.
+However, it will fail to fetch "enable" options because option_list_init has not be called.
+
+Fix:
+Do not call check_call_change_handlers when parsing RTNL function is called from another check_call_change_handlers recursively.
+
+Signed-off-by: Stephen Sun <stephens@nvidia.com>
+---
+ libteam/ports.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/libteam/ports.c b/libteam/ports.c
+index 9ebf30f..0bd7cc0 100644
+--- a/libteam/ports.c
++++ b/libteam/ports.c
+@@ -128,6 +128,12 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *port_attrs[TEAM_ATTR_PORT_MAX + 1];
+ 	int i;
+ 	uint32_t team_ifindex = 0;
++	/*
++	 * In case get_port_list is being called from check_call_change_handlers recursively,
++	 * there can be some attributes which have not been consumed by callbacks.
++	 * In this case, we should only merge the new attributes into the existing ones without clearing them
++	 */
++	bool recursive = (th->change_handler.pending_type_mask & TEAM_PORT_CHANGE) ? true : false;
+ 
+ 	genlmsg_parse(nlh, 0, attrs, TEAM_ATTR_MAX, NULL);
+ 	if (attrs[TEAM_ATTR_TEAM_IFINDEX])
+@@ -140,7 +146,8 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 		return NL_SKIP;
+ 
+ 	if (!th->msg_recv_started) {
+-		port_list_cleanup_last_state(th);
++		if (!recursive)
++			port_list_cleanup_last_state(th);
+ 		th->msg_recv_started = true;
+ 	}
+ 	nla_for_each_nested(nl_port, attrs[TEAM_ATTR_LIST_PORT], i) {
+@@ -165,7 +172,8 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 			if (!port)
+ 				return NL_SKIP;
+ 		}
+-		port->changed = port_attrs[TEAM_ATTR_PORT_CHANGED] ? true : false;
++                if (!port->changed || !recursive)
++			port->changed = port_attrs[TEAM_ATTR_PORT_CHANGED] ? true : false;
+ 		port->linkup = port_attrs[TEAM_ATTR_PORT_LINKUP] ? true : false;
+ 		port->removed = port_attrs[TEAM_ATTR_PORT_REMOVED] ? true : false;
+ 		if (port_attrs[TEAM_ATTR_PORT_SPEED])
+@@ -196,6 +204,13 @@ static int get_port_list(struct team_handle *th)
+ 	if (err)
+ 		return err;
+ 
++	/*
++	 * Do not call check_call_change_handlers if this is called recursively to avoid racing conditions
++	 * It will be called by the outer call
++	 */
++	if (th->change_handler.pending_type_mask & TEAM_PORT_CHANGE)
++		return 0;
++
+ 	return check_call_change_handlers(th, TEAM_PORT_CHANGE);
+ 
+ nla_put_failure:
+-- 
+2.30.2
+
