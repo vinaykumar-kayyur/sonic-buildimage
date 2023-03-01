@@ -231,16 +231,16 @@
             }
         },
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
+            "sonic-fine-grained-ecmp:FG_NHG": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    }
+                ]
+            },
             "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
-                "sonic-fine-grained-ecmp:FG_NHG": {
-                    "FG_NHG_LIST": [
-                        {
-                            "name": "group1",
-                            "bucket_size": 10,
-                            "match_mode": "nexthop-based"
-                        }
-                    ]
-                },
                 "FG_NHG_MEMBER_LIST": [
                     {
                         "next_hop_ip": "10.0.0.1",
