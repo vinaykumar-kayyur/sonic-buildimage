@@ -152,6 +152,6 @@ jobs:
             fi
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
-          sudo kill $daemon_pid
+          sudo kill $daemon_pid 2&> /dev/null
         displayName: "Build sonic image"
       - template: .azure-pipelines/check-dirty-version.yml@buildimage
