@@ -109,8 +109,8 @@ module sonic-fine-grained-ecmp {
 
                 leaf FG_NHG{
                     type leafref {
-						path "/sfgecmp:sonic-fine-grained-ecmp/sfgecmp:FG_NHG/sfgecmp:FG_NHG_LIST/sfgecmp:name";
-					}
+                        path "/sfgecmp:sonic-fine-grained-ecmp/sfgecmp:FG_NHG/sfgecmp:FG_NHG_LIST/sfgecmp:name";
+                    }
                     mandatory true;
                     description "Fine Grained next-hop group name";
                 }
@@ -135,8 +135,8 @@ module sonic-fine-grained-ecmp {
 
                 leaf FG_NHG{
                     type leafref {
-						path "/sfgecmp:sonic-fine-grained-ecmp/sfgecmp:FG_NHG/sfgecmp:FG_NHG_LIST/sfgecmp:name";
-					}
+                        path "/sfgecmp:sonic-fine-grained-ecmp/sfgecmp:FG_NHG/sfgecmp:FG_NHG_LIST/sfgecmp:name";
+                }
                     mandatory true;
                     description "Fine Grained next-hop group name";
                 }

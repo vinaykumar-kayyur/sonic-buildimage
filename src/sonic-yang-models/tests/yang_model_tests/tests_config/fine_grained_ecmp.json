@@ -103,6 +103,72 @@
             }
         }
     },
+    "FG_NHG_MEMBER_MULTI_LINK_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": "9000",
+                        "name": "Ethernet1",
+                        "tpid": "0x8100",
+                        "speed": "25000"
+                    },
+                    {
+                        "admin_status": "up",
+                        "alias": "eth1",
+                        "description": "Ethernet1",
+                        "lanes": "65",
+                        "mtu": "9000",
+                        "name": "Ethernet2",
+                        "tpid": "0x8100",
+                        "speed": "25000"
+                    }
+                ]
+            }
+        },
+        "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
+            "sonic-fine-grained-ecmp:FG_NHG": {
+                "FG_NHG_LIST": [
+                    {
+                        "name": "group1",
+                        "bucket_size": 10,
+                        "match_mode": "nexthop-based"
+                    },
+                    {
+                        "name": "group2",
+                        "bucket_size": 20,
+                        "match_mode": "route-based"
+                    }
+                ]
+            },
+            "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
+                "FG_NHG_MEMBER_LIST": [
+                    {
+                        "next_hop_ip": "10.0.0.1",
+                        "FG_NHG": "group1",
+                        "bank": 1,
+                        "link": "Ethernet1"
+                    },
+                    {
+                        "next_hop_ip": "10.0.0.2",
+                        "FG_NHG": "group1",
+                        "bank": 2,
+                        "link": "Ethernet2"
+                    },
+                    {
+                        "next_hop_ip": "10.1.0.1",
+                        "FG_NHG": "group2",
+                        "bank": 3,
+                        "link": "Ethernet1"
+                    }
+                ]
+            }
+        }
+    },    
     "FG_NHG_TEST_DUPLICATE_NAME": {
         "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
             "sonic-fine-grained-ecmp:FG_NHG": {
@@ -142,6 +208,45 @@
                     {
                         "ip_prefix": "invalid_prefix",
                         "FG_NHG": "group1"
+                    }
+                ]
+            }
+        }
+    },
+    "FG_NHG_MEMBER_TEST_INVALID_LINK": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": "9000",
+                        "name": "Ethernet1",
+                        "tpid": "0x8100",
+                        "speed": "25000"
+                    }
+                ]
+            }
+        },
+        "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
+            "sonic-fine-grained-ecmp:FG_NHG_MEMBER": {
+                "sonic-fine-grained-ecmp:FG_NHG": {
+                    "FG_NHG_LIST": [
+                        {
+                            "name": "group1",
+                            "bucket_size": 10,
+                            "match_mode": "nexthop-based"
+                        }
+                    ]
+                },
+                "FG_NHG_MEMBER_LIST": [
+                    {
+                        "next_hop_ip": "10.0.0.1",
+                        "FG_NHG": "group1",
+                        "bank": 1,
+                        "link": "invalidLink"
                     }
                 ]
             }
@@ -220,24 +325,6 @@
                         "next_hop_ip": "10.0.0.1",
                         "FG_NHG": "group1",
                         "link": "Ethernet1"
-                    }
-                ]
-            }
-        }
-    },
-    "FG_NHG_TEST_DUPLICATE_ENTRY": {
-        "sonic-fine-grained-ecmp:sonic-fine-grained-ecmp": {
-            "sonic-fine-grained-ecmp:FG_NHG": {
-                "FG_NHG_LIST": [
-                    {
-                        "name": "group1",
-                        "bucket_size": 16,
-                        "match_mode": "nexthop-based"
-                    },
-                    {
-                        "name": "group1",
-                        "bucket_size": 8,
-                        "match_mode": "nexthop-based"
                     }
                 ]
             }
