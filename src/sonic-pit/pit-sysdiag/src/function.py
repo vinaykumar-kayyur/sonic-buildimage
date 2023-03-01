@@ -38,7 +38,7 @@ def convert_unicode(input):
 
 
 def run_command(cmd):
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if err and proc.returncode != 0:
         return proc.returncode, err
@@ -46,7 +46,7 @@ def run_command(cmd):
 
 
 def restful_command(cmd):
-    url = "http://240.1.1.1:8080/api/hw/rawcmd"
+    url = "https://240.1.1.1:8080/api/hw/rawcmd"
     data = json.dumps({
         "Command" : cmd
     })
