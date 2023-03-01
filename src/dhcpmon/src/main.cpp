@@ -121,8 +121,6 @@ int main(int argc, char **argv)
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(basename(argv[0]), LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
 
-    dhcp_devman_init();
-
     for (i = 1; i < argc;) {
         if ((argv[i] == NULL) || (argv[i][0] != '-')) {
             break;
