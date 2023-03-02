@@ -65,6 +65,8 @@ stages:
         variables:
           swi_image: yes
       - name: mellanox
+        variables:
+          dbg_image: yes
       - name: marvell-armhf
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
