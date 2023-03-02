@@ -117,6 +117,7 @@ int main(int argc, char **argv)
     int max_unhealthy_count = dhcpmon_default_unhealthy_max_count;
     size_t snaplen = dhcpmon_default_snaplen;
     int make_daemon = 0;
+    bool debug_mode = false;
 
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(basename(argv[0]), LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
@@ -159,6 +160,10 @@ int main(int argc, char **argv)
             max_unhealthy_count = atoi(argv[i + 1]);
             i += 2;
             break;
+        case 'D':
+            debug_mode = true;
+            i += 1;
+            break;
         default:
             fprintf(stderr, "%s: %c: Unknown option\n", basename(argv[0]), argv[i][1]);
             usage(basename(argv[0]));
@@ -170,7 +175,7 @@ int main(int argc, char **argv)
     }
 
     if ((dhcp_mon_init(window_interval, max_unhealthy_count) == 0) &&
-        (dhcp_mon_start(snaplen) == 0)) {
+        (dhcp_mon_start(snaplen, debug_mode) == 0)) {
 
         rv = EXIT_SUCCESS;
 

@@ -65,6 +65,8 @@ std::unordered_map<std::string, std::string> vlan_map;
 /* interface to port-channel mapping */
 std::unordered_map<std::string, std::string> portchan_map;
 
+/* interface to mgmt port mapping */
+std::unordered_map<std::string, std::string> mgmt_map;
 
 /** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
  * This program is obtained using the following command tcpdump:
@@ -174,7 +176,7 @@ void update_vlan_mapping(std::shared_ptr<swss::DBConnector> db_conn) {
 /** update ethernet interface to port-channel map
  *  PORTCHANNEL_MEMBER|PortChannel101|Ethernet112
  */
-void update_portchannel_list(std::shared_ptr<swss::DBConnector> db_conn) {
+void update_portchannel_mapping(std::shared_ptr<swss::DBConnector> db_conn) {
     auto match_pattern = std::string("PORTCHANNEL_MEMBER|*");
     auto keys = db_conn->keys(match_pattern);
     for (auto &itr : keys) {
@@ -184,6 +186,16 @@ void update_portchannel_list(std::shared_ptr<swss::DBConnector> db_conn) {
         auto interface = itr.substr(second + 1);
         portchan_map[interface] = portchannel;
         syslog(LOG_INFO, "add <%s, %s> into interface port-channel map\n", interface.c_str(), portchannel.c_str());
+    }
+}
+
+/** update interface to mgmt map
+ */
+void update_mgmt_mapping() {
+    auto mgmt = dhcp_devman_get_mgmt_dev();
+    if (mgmt) {
+        auto name = std::string(mgmt->intf);
+        mgmt_map[name] = name;
     }
 }
 
@@ -317,7 +329,10 @@ static dhcp_device_context_t *interface_to_dev_context(std::unordered_map<std::s
         }
         else {
             // mgmt interface check
-            return find_device_context(devices, ifname);
+            auto mgmt = mgmt_map.find(ifname);
+            if (mgmt != mgmt_map.end()) {
+                return find_device_context(devices, mgmt->second);
+            }
         }
     }
     return NULL;
@@ -759,7 +774,8 @@ int dhcp_device_start_capture(size_t snaplen, struct event_base *base, in_addr_t
         init_recv_buffers(snaplen);
 
         update_vlan_mapping(mConfigDbPtr);
-        update_portchannel_list(mConfigDbPtr);
+        update_portchannel_mapping(mConfigDbPtr);
+        update_mgmt_mapping();
 
         for (auto &itr : intfs) {
             itr.second->dev_context->snaplen = snaplen;
