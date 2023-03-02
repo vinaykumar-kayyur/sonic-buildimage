@@ -104,8 +104,6 @@ jobs:
       - bash: |
           patch -p1 < 0001-update-swss-main-cpp.patch
           patch -p1 < 0002-update-swss-orch-h.patch
-          cp 0001-mm-fix-exec-activate_mm-vs-TLB-shootdown-and-lazy-tl.patch src/sonic-linux-kernel/patch/
-          patch -p1 < 0004-update-kernel-patch.patch
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
