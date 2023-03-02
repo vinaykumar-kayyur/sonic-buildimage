@@ -46,7 +46,7 @@ bool dual_tor_sock = false;
 static void usage(const char *prog)
 {
     printf("Usage: %s -id <south interface> {-iu <north interface>}+ -im <mgmt interface> [-u <loopback interface>]"
-            "[-w <snapshot window in sec>] [-c <unhealthy status count>] [-s <snap length>] [-d]\n", prog);
+            "[-w <snapshot window in sec>] [-c <unhealthy status count>] [-s <snap length>] [-D] [-d]\n", prog);
     printf("where\n");
     printf("\tsouth interface: is a vlan interface,\n");
     printf("\tnorth interface: is a TOR-T1 interface,\n");
@@ -57,6 +57,7 @@ static void usage(const char *prog)
            "(default %d),\n",
            dhcpmon_default_unhealthy_max_count);
     printf("\tsnap length: snap length of packet capture (default %ld),\n", dhcpmon_default_snaplen);
+    printf("\t-D: debug mode: print counter to syslog\n");
     printf("\t-d: daemonize %s.\n", prog);
 
     exit(EXIT_SUCCESS);
