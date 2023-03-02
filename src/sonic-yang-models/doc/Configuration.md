@@ -1365,7 +1365,9 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet56"
         ],
-        "mtu": "9100"
+        "mtu": "9100",
+        "fallback": "false",
+        "fast_rate": "true"
     }
   }
 }
@@ -1938,3 +1940,5 @@ Incremental Configuration by Subscribing to ConfigDB
 Detail instruction to be added. A sample could be found in this
 [PR](https://github.com/Azure/sonic-buildimage/pull/861) that
 implemented dynamic configuration for BGP.
+=======
+# SONiC Configuration Database Manual
