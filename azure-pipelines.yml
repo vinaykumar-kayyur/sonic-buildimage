@@ -63,6 +63,7 @@ stages:
       jobGroups:
       - name: broadcom
         variables:
+          dbg_image: yes
           swi_image: yes
       - name: mellanox
         variables:
@@ -71,6 +72,7 @@ stages:
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
         variables:
+          dbg_image: yes
           PLATFORM_ARCH: armhf
 
 - stage: Test
