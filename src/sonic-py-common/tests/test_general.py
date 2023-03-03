@@ -18,6 +18,9 @@ def test_getstatusoutput_noshell_pipe():
     exitcode, output = getstatusoutput_noshell_pipe([sys.executable, "-c", "import sys; sys.exit(6)"], [sys.executable, "-c", "import sys; sys.exit(8)"])
     assert exitcode == [6, 8]
 
+    exitcode, output = getstatusoutput_noshell_pipe(['echo', 'sonic'], ['awk', '{print $1}'], return_cmd=False)
+    assert (exitcode, output) == ([0, 0], '')
+
 def test_check_output_pipe():
     output = check_output_pipe(['echo', 'sonic'], ['awk', '{print $1}'])
     assert output == 'sonic\n'

@@ -1,5 +1,4 @@
 import sys
-import click
 from subprocess import Popen, STDOUT, PIPE, CalledProcessError, check_output
 
 
@@ -44,7 +43,7 @@ def getstatusoutput_noshell(cmd):
     return exitcode, output
 
 
-def getstatusoutput_noshell_pipe(cmd0, *args, return_cmd=True):
+def getstatusoutput_noshell_pipe(cmd0, *args, **kwargs):
     """
     This function implements getstatusoutput API from subprocess module
     but using shell=False to prevent shell injection. Input command
@@ -57,6 +56,7 @@ def getstatusoutput_noshell_pipe(cmd0, *args, return_cmd=True):
         popens[i].stdout.close()
         i += 1
 
+    return_cmd = kwargs.get('return_cmd', True)
     while True:
         if return_cmd:
             output = popens[-1].communicate()[0].rstrip('\n')
@@ -65,7 +65,7 @@ def getstatusoutput_noshell_pipe(cmd0, *args, return_cmd=True):
         if output == '' and popens[-1].poll() is not None:
             break
         if output:
-            click.echo(output.rstrip('\n'))
+            print(output.rstrip('\n'))
 
     exitcodes = [0] * len(popens)
     while popens:
