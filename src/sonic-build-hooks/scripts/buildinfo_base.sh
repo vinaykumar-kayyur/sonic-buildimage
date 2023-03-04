@@ -177,6 +177,12 @@ download_packages()
                 continue
             fi
 
+            # Skip to use the proxy, if the url contains credential
+            local has_credential=$(check_if_url_contains_credential $url)
+            if [ "$has_credential" == y ]; then
+                continue
+            fi
+
             if [ "$ENABLE_VERSION_CONTROL_WEB" == y ]; then
                 local version=
                 local filename=$(echo $url | awk -F"/" '{print $NF}' | cut -d? -f1 | cut -d# -f1)
@@ -204,9 +210,7 @@ download_packages()
                 real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
             fi
 
-            if [ $(check_if_url_contains_credential $url) == "n" ]; then
-                echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
-            fi
+            echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
         fi
     done
 
