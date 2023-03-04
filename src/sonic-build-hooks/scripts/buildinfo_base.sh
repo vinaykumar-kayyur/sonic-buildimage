@@ -85,6 +85,17 @@ check_if_url_exist()
     fi
 }
 
+check_if_url_contains_credential()
+{
+    local url=$1
+    # Check if contains the blob sas key
+    if echo "$url" | grep -qE "https://.*\.blob\.core..*\?.*sig="; then
+        echo y
+    else
+        echo n
+    fi
+}
+
 get_version_cache_option()
 {
 	#SONIC_VERSION_CACHE="cache"
@@ -193,7 +204,9 @@ download_packages()
                 real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
             fi
 
-            echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
+            if [ $(check_if_url_contains_credential $url) == "n" ]; then
+                echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
+            fi
         fi
     done
 
