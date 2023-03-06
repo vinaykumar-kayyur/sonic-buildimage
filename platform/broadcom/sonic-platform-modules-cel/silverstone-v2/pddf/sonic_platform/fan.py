@@ -1,5 +1,3 @@
-import os
-
 try:
     from sonic_platform_pddf_base.pddf_fan import PddfFan
     from . import helper
