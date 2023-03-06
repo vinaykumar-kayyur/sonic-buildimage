@@ -36,11 +36,10 @@ class APIHelper(object):
         status = True
         result = ""
         try:
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
-            if err == '':
-                result = raw_data.strip()
+            if err.decode("utf-8") == "":
+                result = raw_data.decode("utf-8").strip()
         except Exception:
             status = False
         return status, result
@@ -89,16 +88,15 @@ class APIHelper(object):
         return result if status else None
 
     @staticmethod
-    def ipmi_raw(netfn, cmd):
+    def ipmi_raw(cmd):
         status = True
         result = ""
         try:
-            cmd = "ipmitool raw {} {}".format(str(netfn), str(cmd))
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd = "ipmitool raw {}".format(str(cmd))
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
-            if err == '':
-                result = raw_data.strip()
+            if err.decode("utf-8") == "":
+                result = raw_data.decode("utf-8").strip()
             else:
                 status = False
         except Exception:
@@ -106,12 +104,12 @@ class APIHelper(object):
         return status, result
 
     @staticmethod
-    def ipmi_fru_id(id, key=None):
+    def ipmi_fru_id(key_id, key=None):
         status = True
         result = ""
         try:
             cmd = "ipmitool fru print {}".format(str(
-                id)) if not key else "ipmitool fru print {0} | grep '{1}' ".format(str(id), str(key))
+                key_id)) if not key else "ipmitool fru print {0} | grep '{1}' ".format(str(key_id), str(key))
 
             p = subprocess.Popen(
                 cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
