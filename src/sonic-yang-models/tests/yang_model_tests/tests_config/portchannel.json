@@ -22,15 +22,14 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1",
                         "mtu": "9100",
                         "tpid": "0x8100",
                         "lacp_key": "auto",
                         "mode": "access",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "fast_rate": "false",
+                        "fallback" : "false"
                     }
                 ]
             }
@@ -57,9 +56,6 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1024",
                         "mtu": "9100",
                         "name": "PortChannel0001"
@@ -89,9 +85,6 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1025",
                         "mtu": "9100",
                         "name": "PortChannel0001"
@@ -122,6 +115,36 @@
                         "mtu": "9100",
                         "tpid": "0x9500",
                         "name": "PortChannel0001"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_CHANNEL_INVALID_FALLBACK": {
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "mtu": "9100",
+                        "tpid": "0x9100",
+                        "name": "PortChannel0001",
+                        "fallback": "enabled"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_CHANNEL_INVALID_FAST_RATE": {
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "mtu": "9100",
+                        "tpid": "0x9100",
+                        "name": "PortChannel0001",
+                        "fast_rate": "TRUE"
                     }
                 ]
             }
@@ -305,9 +328,6 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001"
@@ -352,9 +372,6 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001"
@@ -398,9 +415,6 @@
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "members": [
-                            "Ethernet0"
-                        ],
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001"

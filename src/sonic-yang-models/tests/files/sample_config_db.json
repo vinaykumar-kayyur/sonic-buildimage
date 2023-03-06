@@ -2,11 +2,16 @@
     "SAMPLE_CONFIG_DB_JSON": {
         "VRF": {
                 "Vrf_blue": {
+                    "vni" : "100"
                 }
         },
         "DHCP_SERVER": {
             "192.0.0.8": {},
             "192.0.0.8": {}
+        },
+        "DNS_NAMESERVER": {
+            "1.1.1.1": {},
+            "fe80:1000:2000:3000::1": {}
         },
         "BUFFER_POOL": {
             "ingress_lossy_pool": {
@@ -81,9 +86,6 @@
             "PortChannel0003": {
                 "admin_status": "up",
                 "min_links": "1",
-                "members": [
-                    "Ethernet1"
-                ],
                 "tpid": "0x8100",
                 "mtu": "9100",
                 "mode": "access",
@@ -92,9 +94,6 @@
             "PortChannel0004": {
                 "admin_status": "up",
                 "min_links": "1",
-                "members": [
-                    "Ethernet2"
-                ],
                 "tpid": "0x9200",
                 "mtu": "9100",
                 "mode": "trunk",
@@ -103,22 +102,17 @@
             "PortChannel2": {
                 "admin_status": "up",
                 "min_links": "1",
-                "members": [
-                    "Ethernet12"
-                ],
                 "tpid": "0x9200",
                 "mtu": "9100",
                 "lacp_key": "auto"
             },
             "PortChannel42": {
                 "admin_status": "up",
-                "members": [
-                    "Ethernet-BP0",
-                    "Ethernet-BP4"
-                ],
                 "min_links": "2",
                 "mtu": "9100",
-                "tpid": "0x8100"
+                "tpid": "0x8100",
+                "fast_rate": "false",
+                "fallback" : "true"
             }
         },
         "PORTCHANNEL_INTERFACE": {
@@ -324,6 +318,28 @@
                 "SRC_IP": "1.1.1.1/32",
                 "BTH_OPCODE": "0x11/0xbf",
                 "AETH_SYNDROME": "0x60/0x60"
+            }
+        },
+        "SWITCH_HASH": {
+            "GLOBAL": {
+                "ecmp_hash": [
+                    "DST_IP",
+                    "SRC_IP",
+                    "IP_PROTOCOL",
+                    "L4_DST_PORT",
+                    "L4_SRC_PORT",
+                    "INNER_DST_IP",
+                    "INNER_SRC_IP"
+                ],
+                "lag_hash": [
+                    "DST_IP",
+                    "SRC_IP",
+                    "IP_PROTOCOL",
+                    "L4_DST_PORT",
+                    "L4_SRC_PORT",
+                    "INNER_DST_IP",
+                    "INNER_SRC_IP"
+                ]
             }
         },
         "DEVICE_METADATA": {
@@ -1163,6 +1179,18 @@
                 "port": "50051"
             }
         },
+        "GNMI": {
+            "certs": {
+                "ca_crt": "/etc/sonic/credentials/dsmsroot.cer",
+                "server_crt": "/etc/sonic/credentials/server.cer",
+                "server_key": "/etc/sonic/credentials/server.key"
+            },
+            "gnmi": {
+                "client_auth": "true",
+                "log_level": "2",
+                "port": "50052"
+            }
+        },
         "TUNNEL": {
             "MuxTunnel0": {
                 "dscp_mode": "uniform",
@@ -1350,6 +1378,80 @@
             },
             "accounting": {
                 "login": "local"
+            }
+        },
+        "SYSTEM_PORT": {
+            "host227-4|asic0|Cpu0": {
+                "core_index": "0",
+                "core_port_index": "0",
+                "num_voq": "8",
+                "speed": "10000",
+                "switch_id": "0",
+                "system_port_id": "1"
+            },
+            "host227-4|asic0|Ethernet0": {
+                "core_index": "1",
+                "core_port_index": "1",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "0",
+                "system_port_id": "2"
+            },
+            "host227-4|asic0|Ethernet4": {
+                "core_index": "1",
+                "core_port_index": "2",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "0",
+                "system_port_id": "3"
+            },
+            "host227-4|asic1|Cpu0": {
+                "core_index": "0",
+                "core_port_index": "0",
+                "num_voq": "8",
+                "speed": "10000",
+                "switch_id": "0",
+                "system_port_id": "41"
+            },
+            "host227-4|asic1|Ethernet8": {
+                "core_index": "0",
+                "core_port_index": "1",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "2",
+                "system_port_id": "42"
+            },
+            "host227-4|asic1|Ethernet12": {
+                "core_index": "0",
+                "core_port_index": "2",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "2",
+                "system_port_id": "43"
+            },
+            "host227-5|asic0|Cpu0": {
+                "core_index": "0",
+                "core_port_index": "0",
+                "num_voq": "8",
+                "speed": "10000",
+                "switch_id": "0",
+                "system_port_id": "81"
+            },
+            "host227-5|asic0|Ethernet0": {
+                "core_index": "1",
+                "core_port_index": "1",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "4",
+                "system_port_id": "82"
+            },
+            "host227-5|asic0|Ethernet4": {
+                "core_index": "1",
+                "core_port_index": "2",
+                "num_voq": "8",
+                "speed": "100000",
+                "switch_id": "4",
+                "system_port_id": "83"
             }
         },
         "TACPLUS": {
@@ -1935,11 +2037,7 @@
                 "direction": "RX",
                 "type": "SPAN",
                 "dst_port": "Ethernet2",
-                "src_port": [
-                    "Ethernet3",
-                    "Ethernet4"
-                ]
-
+                "src_port": "Ethernet3,Ethernet4"
             }
         },
 
@@ -2121,6 +2219,10 @@
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
+            },
+            "mux_tunnel_egress_acl":
+            {
+                "status": "enabled"
             }
          },
         "LOSSLESS_TRAFFIC_PATTERN": {
@@ -2175,6 +2277,46 @@
                "vni": "10",
                "guid":"guid-vnet1"
              }
+        },
+        "FG_NHG": {
+            "nhg1": {
+                "bucket_size": "16",
+                "match_mode": "nexthop-based"
+            },
+            "nhg2": {
+                "bucket_size": "32",
+                "match_mode": "route-based"
+            }
+        },
+        "FG_NHG_PREFIX": {
+            "10.0.0.0/24": {
+                "FG_NHG": "nhg1"
+            },
+            "192.168.0.0/16": {
+                "FG_NHG": "nhg2"
+            }
+        },
+        "FG_NHG_MEMBER": {
+            "192.168.1.1": {
+                "FG_NHG": "nhg1",
+                "bank": "0",
+                "link": "Ethernet1"
+            },
+            "192.168.1.2": {
+                "FG_NHG": "nhg1",
+                "bank": "0",
+                "link": "Ethernet2"
+            },
+            "10.0.0.1": {
+                "FG_NHG": "nhg2",
+                "bank": "1",
+                "link": "PortChannel42"
+            },
+            "10.0.0.2": {
+                "FG_NHG": "nhg2",
+                "bank": "1",
+                "link": "PortChannel2"
+            }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
