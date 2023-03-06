@@ -246,13 +246,13 @@ bmc_update_dynamic()
 
 		pwr_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/power_mode"
 		pwr_mode=$(cat $pwr_path | awk '{printf $1}')
-		if [ $pwr_mode -ne ${port_pre_mode[$port]} ]; then
+		if [[ $pwr_mode -ne ${port_pre_mode[$port]} ]]; then
 			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 93 $pwr_mode
-			port_pre_mode[$port] = $pwr_mode
+			port_pre_mode[$port]=$pwr_mode
 		else
 			pwr=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x1 26)
 			pwr=$(echo $pwr | awk '{printf $1}')
-			if [ $pwr != "" ];then
+			if [ "$pwr" != "" ];then
 				pwr=$( printf "%d" 0x$pwr )
 				echo $pwr > $pwr_path
 			fi
@@ -285,13 +285,13 @@ bmc_update_dynamic()
 		fi
 		pwr_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/power_mode"
 		pwr_mode=$(cat $pwr_path | awk '{printf $1}')
-		if [ $pwr_mode -ne ${port_pre_mode[$port]} ]; then
+		if [[ $pwr_mode -ne ${port_pre_mode[$port]} ]]; then
 			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 26 $pwr_mode
-			port_pre_mode[$port] = $pwr_mode
+			port_pre_mode[$port]=$pwr_mode
 		else
 			pwr=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x1 26)
 			pwr=$(echo $pwr | awk '{printf $1}')
-			if [ $pwr != "" ];then
+			if [ "$pwr" != "" ];then
 				pwr=$( printf "%d" 0x$pwr )
 				echo $pwr > $pwr_path
 			fi
@@ -353,7 +353,7 @@ bmc_update_dynamic()
 
 		grid_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/grid"
 		grid_val=$(cat $grid_path | awk '{printf $1}')
-		if [ $grid_val -ne ${port_pre_grid[$port]} ]; then
+		if [[ $grid_val -ne ${port_pre_grid[$port]} ]]; then
 			if [ ${port_sfp_type[$port]} -eq 24 ];then
 				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
 				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x80 $grid_val 1>>/dev/null 2>>/dev/null
@@ -363,14 +363,14 @@ bmc_update_dynamic()
 			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
 			grid=$(ipmitool raw 0x30 0x25 0x1 0xa0 1 0x80)
 			grid=$(echo $grid | awk '{printf $1}')
-			if [ $grid != "" ];then
+			if [ "$grid" != "" ];then
 				grid=$( printf "%d" 0x$grid )
 				echo $grid > $grid_path
 			fi
 		fi
 		outp_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/output_power"
 		outp_val=$(cat $outp_path | awk '{printf $1}')
-		if [ $outp_val -ne ${port_pre_outp[$port]} ]; then
+		if [[ $outp_val -ne ${port_pre_outp[$port]} ]]; then
 			if [ ${port_sfp_type[$port]} -eq 24 ];then
 				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
 				outp_b1=$(echo $(((outp_val & 0xff00) >> 8)))
@@ -383,7 +383,7 @@ bmc_update_dynamic()
 			outp=$(ipmitool raw 0x30 0x25 0x1 0xa0 2 0xc8)
 			outp_h=$(echo $outp | awk '{printf $1}')
 			outp_l=$(echo $outp | awk '{printf $2}')
-			if [ $outp != "" ];then
+			if [ "$outp" != "" ];then
 				outp_h=$( printf "%d" 0x$outp_h )
 				outp_l=$( printf "%d" 0x$outp_l )
 				outp=$((outp_h << 8 | out_p_l))
@@ -392,7 +392,7 @@ bmc_update_dynamic()
 		fi
 		freq_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/freq"
 		freq_val=$(cat $freq_path | awk '{printf $1}')
-		if [ $freq_val -ne ${port_pre_freq[$port]} ]; then
+		if [[ $freq_val -ne ${port_pre_freq[$port]} ]]; then
 			if [ ${port_sfp_type[$port]} -eq 24 ];then
 				#workaround for turn on/off lpmode in setting laser freq
 				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x0  1>>/dev/null 2>>/dev/null
@@ -414,7 +414,7 @@ bmc_update_dynamic()
 			freq=$(ipmitool raw 0x30 0x25 0x1 0xa0 2 0x88)
 			freq_h=$(echo $freq | awk '{printf $1}')
 			freq_l=$(echo $freq | awk '{printf $2}')
-			if [ $freq != "" ];then
+			if [ "$freq" != "" ];then
 				freq_h=$( printf "%d" 0x$freq_h )
 				freq_l=$( printf "%d" 0x$freq_l )
 				freq=$((freq_h << 8 | out_p_l))
@@ -589,14 +589,14 @@ bmc_qsfp_eeprom_read()
 		#get temperature
 		if [ $sfp_type -eq 24 ];then
 			temp=$(echo $eeprom_part1 | awk '{printf $15}')
-			if [ $temp != "" ];then
+			if [ "$temp" != "" ];then
 				temp=$( printf "%d" 0x$temp )
 				temp_path="/sys/bus/i2c/devices/0-00"${port_map[$1]}"/temp"
 				echo $temp > $temp_path
 			fi
 		elif [ $sfp_type -eq 17 ];then
 			temp=$(echo $eeprom_part1 | awk '{printf $23}')
-			if [ $temp != "" ];then
+			if [ "$temp" != "" ];then
 				temp=$( printf "%d" 0x$temp )
 				temp_path="/sys/bus/i2c/devices/0-00"${port_map[$1]}"/temp"
 				echo $temp > $temp_path
@@ -607,7 +607,7 @@ bmc_qsfp_eeprom_read()
 		lpmod_path="/sys/bus/i2c/devices/0-00"${port_map[$1]}"/lp_mode"
 		if [ $sfp_type -eq 24 ];then
 			lpmod=$(echo $eeprom_part1 | awk '{printf $27}')
-			if [ $lpmod != "" ];then
+			if [ "$lpmod" != "" ];then
 				state=$((lpmod&0x10))
 				if [ $state -eq 16 ];then
 					echo 1 > $lpmod_path
@@ -617,7 +617,7 @@ bmc_qsfp_eeprom_read()
 			fi
 		elif [ $sfp_type -eq 17 ];then
 			lpmod=$(echo $eeprom_part1 | awk '{printf $93}')
-			if [ $lpmod != "" ];then
+			if [ "$lpmod" != "" ];then
 				state=$((lpmod&0x02))
 				if [ $state -eq 2 ];then
 					echo 1 > $lpmod_path
