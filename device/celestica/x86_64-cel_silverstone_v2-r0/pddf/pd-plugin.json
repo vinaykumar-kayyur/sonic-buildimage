@@ -1,36 +1,25 @@
 {
     "PSU":
     {
-        "psu_present": 
-        {
-            "bmc": 
-            {
-                "valmap": { "1":true, "0":false }
-            }
-        },
-
-        "psu_power_good": 
+        "psu_present":
         {
             "bmc":
             {
-                "valmap": { "0": true, "8":false }
+                "valmap": { "0":true, "1":false}
             }
         },
-
         "psu_fan_dir":
         {
             "bmc":
             {
-                "valmap": { "B2F":"INTAKE", "F2B":"EXHAUST" }
+                "valmap": { "1":"INTAKE", "0":"EXHAUST" }
             }
         },
-
         "psu_led_color":
         {
-            "colmap": {"green":"green", "red":"amber"}
+            "colmap": {"green":"green", "red":"red"}
         },
-
-        "PSU_FAN_MAX_SPEED":"18000"
+        "PSU_FAN_MAX_SPEED":"29000"
     },
 
     "FAN":
@@ -39,32 +28,32 @@
         {
             "bmc":
             {
-                "valmap": { "B2F":"INTAKE", "F2B":"EXHAUST" }
+                "valmap": { "1":"INTAKE", "0":"EXHAUST" }
             }
         },
 
         "present":
         {
-            "bmc":
+            "i2c":
             {
                 "valmap": {"1":true, "0":false}
             },
             "bmc":
             {
-               "valmap": {"ok":true, "na":false}
+               "valmap": {"0":true, "1":false}
             }
         },
-        
+
         "fan_master_led_color":
         {
-            "colmap": {"green":"green", "red":"amber"}
+            "colmap": {"green":"green", "amber":"amber", "red": "red", "off": "off"}
         },
-
-        "duty_cycle_to_pwm": "lambda dc: ((dc*255.0)/100)",
-
-        "pwm_to_duty_cycle": "lambda pwm: ((pwm*100.0)/256)",
-
-        "FAN_MAX_RPM_SPEED":"24000"
+        "FAN_MAX_RPM_SPEED":
+        {
+            "0": {"Front": "30200", "Rear": "32000"},
+            "1": {"Front": "28000", "Rear": "32000"}
+        },
+        "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)"
     }
 
 }
