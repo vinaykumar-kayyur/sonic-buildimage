@@ -156,7 +156,7 @@ bmc_qsfp_eeprom_read()
 			elif [ $sfp_type -eq 17 ];then
 				bmc_write 0x50 93 $pwr_mode
 			fi
-			port_pre_mode[$port] = $pwr_mode
+			port_pre_mode[$port]=$pwr_mode
 		fi
     else
         bmc_write $i2cmux_dev 0x00 0x0
