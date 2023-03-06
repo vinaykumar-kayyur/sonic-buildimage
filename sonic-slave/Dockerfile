@@ -332,12 +332,11 @@ RUN apt-get install -y \
            gnupg2 \
            software-properties-common
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-RUN add-apt-repository \
-           "deb [arch=amd64] https://download.docker.com/linux/debian \
-           $(lsb_release -cs) \
-           stable"
-RUN faketime "2022-11-01" apt-get update
+RUN echo "deb [arch={{ CONFIGURED_ARCH }}] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list
+
+RUN apt-get update -o Dir::Etc::sourcelist="sources.list.d/docker.list"
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
+RUN rm /etc/apt/sources.list.d/docker.list
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
 
 # Remove the stale cert and refresh the certs
