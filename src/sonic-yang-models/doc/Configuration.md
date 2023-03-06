@@ -1,3 +1,4 @@
+
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -26,7 +27,11 @@ Table of Contents
          * [Device Metadata](#device-metadata)  
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [FG_NHG](#fg_nhg)  
+         * [FG_NHG_MEMBER](#fg_nhg_member)  
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
+         * [Hash](#hash)  
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -50,12 +55,13 @@ Table of Contents
          * [Syslog Rate Limit](#syslog-rate-limit)  
          * [Sflow](#sflow)  
          * [Restapi](#restapi)  
+         * [System Port](#system-port)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)    
-         * [Telemetry](#telemetry)    
-         * [Telemetry_client](#telemetry_client)    
-         * [Tunnel](#tunnel)    
+         * [Telemetry](#telemetry)  
+         * [Telemetry_client](#telemetry_client)  
+         * [Tunnel](#tunnel)
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
@@ -65,7 +71,9 @@ Table of Contents
          * [LOGGER](#logger)           
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)  
-         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)  
+         * [RADIUS](#radius)  
+         * [Static DNS](#static-dns)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
@@ -889,6 +897,57 @@ instance is supported in SONiC.
 
 ```
 
+### FG_NHG
+
+The FG_NHG table provides information on Next Hop Groups, including a specified Hash Bucket Size (bucket_size) and match mode for each group.
+
+```
+"FG_NHG": {
+    "fgnhg_v4": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    },
+    "fgnhg_v6": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    }
+}
+```
+
+### FG_NHG_MEMBER
+
+The FG_NHG_MEMBER table provides information about the members of a next hop group, including the group name (FG_NHG), the index at which redistribution is performed (bank), and the link associated with the next-hop-ip (link).
+
+```
+"FG_NHG_MEMBER": {
+    "200.200.200.4": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "0",
+        "link": "Ethernet8"
+    },
+    "200.200.200.5": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "1",
+        "link": "Ethernet12"
+    }
+}
+```
+
+### FG_NHG_PREFIX
+
+The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desired, and Fine Grained next-hop group name.
+
+```
+"FG_NHG_PREFIX": {
+    "100.50.25.12/32": {
+	    "FG_NHG": "fgnhg_v4"
+	},
+    "fc:05::/128": {
+	    "FG_NHG": "fgnhg_v6"
+	}
+}
+```
+
 
 ### MPLS_TC_TO_TC_MAP
 ```
@@ -913,19 +972,78 @@ instance is supported in SONiC.
 
 ```
 {
-"FLEX_COUNTER_TABLE": {
-    "PFCWD": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "PORT": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "QUEUE": {
-        "FLEX_COUNTER_STATUS": "enable"
-    }
-  }
+	"FLEX_COUNTER_TABLE": {
+		"PFCWD": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
+		},
+		"QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"TUNNEL": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		}
+	}
 }
 
+```
+
+### Hash
+
+Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.  
+The configuration is applied globally for each ECMP and LAG on a switch.
+
+***ECMP/LAG HASH***
+
+```
+{
+    "SWITCH_HASH": {
+        "GLOBAL": {
+            "ecmp_hash": [
+                "DST_MAC",
+                "SRC_MAC",
+                "ETHERTYPE",
+                "IP_PROTOCOL",
+                "DST_IP",
+                "SRC_IP",
+                "L4_DST_PORT",
+                "L4_SRC_PORT",
+                "INNER_DST_MAC",
+                "INNER_SRC_MAC",
+                "INNER_ETHERTYPE",
+                "INNER_IP_PROTOCOL",
+                "INNER_DST_IP",
+                "INNER_SRC_IP",
+                "INNER_L4_DST_PORT",
+                "INNER_L4_SRC_PORT"
+            ],
+            "lag_hash": [
+                "DST_MAC",
+                "SRC_MAC",
+                "ETHERTYPE",
+                "IP_PROTOCOL",
+                "DST_IP",
+                "SRC_IP",
+                "L4_DST_PORT",
+                "L4_SRC_PORT",
+                "INNER_DST_MAC",
+                "INNER_SRC_MAC",
+                "INNER_ETHERTYPE",
+                "INNER_IP_PROTOCOL",
+                "INNER_DST_IP",
+                "INNER_SRC_IP",
+                "INNER_L4_DST_PORT",
+                "INNER_L4_SRC_PORT"
+            ]
+        }
+    }
+}
 ```
 
 ### KDUMP
@@ -1360,7 +1478,9 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet56"
         ],
-        "mtu": "9100"
+        "mtu": "9100",
+        "fallback": "false",
+        "fast_rate": "true"
     }
   }
 }
@@ -1516,6 +1636,49 @@ Container side configuration:
     "pmon": {
         "rate_limit_interval": "300",
         "rate_limit_burst": "20000"
+    }
+  }
+}
+```
+
+### System Port
+Every port on the system requires a global representation, known as a System Port,
+and is listed in this table.
+
+```
+{
+"SYSTEM_PORT": {
+    "host227-4|asic0|Ethernet0": {
+        "core_index": "1",
+        "core_port_index": "1",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "0",
+        "system_port_id": "1"
+    },
+    "host227-4|asic0|Ethernet4": {
+        "core_index": "1",
+        "core_port_index": "2",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "0",
+        "system_port_id": "2"
+    },
+    "host227-5|asic0|Ethernet0": {
+        "core_index": "1",
+        "core_port_index": "1",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "4",
+        "system_port_id": "80"
+    },
+    "host227-5|asic0|Ethernet4": {
+        "core_index": "1",
+        "core_port_index": "2",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "4",
+        "system_port_id": "81"
     }
   }
 }
@@ -1803,6 +1966,7 @@ table allow to change properties of a virtual router. Attributes:
     packets with IP options
 -   'l3_mc_action' contains packet action. Defines the action for
     unknown L3 multicast packets
+-   'vni' contains L3 VNI value. VNI associated Virtual router instance.
 
 The packet action could be:
 
@@ -1824,7 +1988,8 @@ The packet action could be:
 	'src_mac': '02:04:05:06:07:08',
 	'ttl_action': 'copy',
 	'ip_opt_action': 'deny',
-	'l3_mc_action': 'drop'
+	'l3_mc_action': 'drop',
+	'vni': '100'
 }
 ```
 
@@ -1995,6 +2160,41 @@ The default value of flags in `SYSTEM_DEFAULTS` table can be set in `init_cfg.js
 If the values in `config_db.json` is changed by user, it will not be rewritten back by `init_cfg.json` as `config_db.json` is loaded after `init_cfg.json` in [docker_image_ctl.j2](https://github.com/Azure/sonic-buildimage/blob/master/files/build_templates/docker_image_ctl.j2)
 
 For the flags that can be changed by reconfiguration, we can update entries in `minigraph.xml`, and parse the new values in to config_db with minigraph parser at reloading minigraph. If there are duplicated entries in `init_cfg.json` and `minigraph.xml`, the values in `minigraph.xml` will overwritten the values defined in `init_cfg.json`.
+
+### RADIUS
+
+The RADIUS and RADIUS_SERVER tables define RADIUS configuration parameters. RADIUS table carries global configuration while RADIUS_SERVER table carries per server configuration.
+
+```
+   "RADIUS": {
+       "global": {
+              "auth_type": "pap",
+              "timeout": "5"
+        }
+    }
+    
+    "RADIUS_SERVER": {
+        "192.168.1.2": {
+               "priority": "4",
+               "retransmit": "2",
+               "timeout": "5"
+        }
+    }
+```
+
+### Static DNS
+
+The DNS_NAMESERVER table introduces static DNS nameservers configuration.
+
+```json
+{
+	"DNS_NAMESERVER": {
+		"1.1.1.1": {},
+		"fe80:1000:2000:3000::1": {}
+	},
+}
+```
+
 #### 5.2.3 Update value directly in db memory
 
 For Developers

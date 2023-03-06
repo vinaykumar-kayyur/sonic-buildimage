@@ -532,9 +532,9 @@ def parse_dpg(dpg, hname):
                 intfs_inpc.append(pcmbr_list[i])
                 pc_members[(pcintfname, pcmbr_list[i])] = {}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
-                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75))), 'lacp_key': 'auto'}
+                pcs[pcintfname] = {'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75))), 'lacp_key': 'auto'}
             else:
-                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75))), 'lacp_key': 'auto' }
+                pcs[pcintfname] = {'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75))), 'lacp_key': 'auto' }
         port_nhipv4_map = {}
         port_nhipv6_map = {}
         nhg_int = ""
@@ -657,6 +657,40 @@ def parse_dpg(dpg, hname):
             is_mirror = False
             is_mirror_v6 = False
             is_mirror_dscp = False
+            use_port_alias = True
+
+            # Walk through all interface names/alias to determine whether the input string is
+            # port name or alias.We need this logic because there can be duplicaitons in port alias
+            # and port names
+            # The input port name/alias can be either port_name or port_alias. A mix of name and alias is not accepted
+            port_name_count = 0
+            port_alias_count = 0
+            total_count = 0
+            for member in aclattach:
+                member = member.strip()
+                if member in pcs or \
+                    member in vlans or \
+                    member.lower().startswith('erspan') or \
+                    member.lower().startswith('egress_erspan') or \
+                    member.lower().startswith('erspan_dscp'):
+                    continue
+                total_count += 1
+                if member in port_alias_map:
+                    port_alias_count += 1
+                if member in port_names_map:
+                    port_name_count += 1
+            # All inputs are port alias
+            if port_alias_count == total_count:
+                use_port_alias = True
+            # All inputs are port name
+            elif port_name_count == total_count:
+                use_port_alias = False
+            # There are both port alias and port name, then port alias is preferred to keep the behavior not changed
+            else:
+                use_port_alias = True
+                # For CTRLPLANE ACL, both counters are 0
+                if (port_alias_count != 0) and (port_name_count != 0):
+                    print("Warning: The given port name for ACL " + aclname + " is inconsistent. It must be either port name or alias ", file=sys.stderr)
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
@@ -674,11 +708,15 @@ def parse_dpg(dpg, hname):
                         acl_intfs.extend(vlan_member_list[member])
                     else:
                         acl_intfs.append(member)
-                elif member in port_alias_map:
+                elif use_port_alias and (member in port_alias_map):
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
                     if port_alias_map[member] in intfs_inpc:
                         print("Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface", file=sys.stderr)
+                elif (not use_port_alias) and (member in port_names_map):
+                    acl_intfs.append(member)
+                    if member in intfs_inpc:
+                        print("Warning: ACL " + aclname + " is attached to a LAG member interface " + member + ", instead of LAG interface", file=sys.stderr)
                 elif member.lower().startswith('erspan') or member.lower().startswith('egress_erspan') or member.lower().startswith('erspan_dscp'):
                     if 'dscp' in member.lower():
                         is_mirror_dscp = True
@@ -1206,7 +1244,7 @@ def filter_acl_table_for_backend(acls, vlan_members):
                              }
     return filter_acls
 
-def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role, device_type, is_storage_device, vlan_members):
+def filter_acl_table_bindings(acls, neighbors, port_channels, pc_members, sub_role, device_type, is_storage_device, vlan_members):
     if device_type == 'BackEndToRRouter' and is_storage_device:
         return filter_acl_table_for_backend(acls, vlan_members)
 
@@ -1225,8 +1263,8 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role, device_t
    
     # Get the front panel port channel.
     for port_channel_intf in port_channels:
-        backend_port_channel = any(lag_member in backplane_port_list \
-                                   for lag_member in port_channels[port_channel_intf]['members'])
+        backend_port_channel = any(lag_member[1] in backplane_port_list \
+                                   for lag_member in list(pc_members.keys()) if lag_member[0] == port_channel_intf)
         if not backend_port_channel:
             front_port_channel_intf.append(port_channel_intf)
 
@@ -1396,6 +1434,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             docker_routing_config_mode = child.text
 
     (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
+    
+    port_names_map.update(ports)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -1626,6 +1666,20 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if port_name in mgmt_alias_reverse_mapping.keys():
             continue
 
+        port_default_speed =  port_speeds_default.get(port_name, None)
+        port_png_speed = port_speed_png[port_name]
+
+        if switch_type == 'voq':
+            # when the port speed is changes from 400g to 100g 
+            # update the port lanes, use the first 4 lanes of the 400G port to support 100G port
+            if port_default_speed == '400000' and port_png_speed == '100000':
+                port_lanes =  ports[port_name].get('lanes', '').split(',')
+                # check if the 400g port has only 8 lanes
+                if len(port_lanes) != 8:
+                    continue
+                updated_lanes = ",".join(port_lanes[:4])
+                ports[port_name]['lanes'] = updated_lanes
+
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
@@ -1709,23 +1763,29 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if inband_port in ports.keys():
             ports[inband_port]['admin_status'] = 'up'
 
-    # bring up the recirc port for voq chassis
+    # bring up the recirc port for voq chassis, Set it as routed interface
     for port, port_attributes in ports.items():
         port_role = port_attributes.get('role', None)
         if port_role == 'Rec':
             ports[port]['admin_status'] = 'up'
+
+            #Add the Recirc ports to the INTERFACES table to make it routed intf
+            results['INTERFACE'].update({port : {}})
 
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
 
     if port_config_file:
         port_set = set(ports.keys())
-        for (pc_name, mbr_map) in list(pcs.items()):
+        for (pc_name, pc_member) in list(pc_members.keys()):
             # remove portchannels that contain ports not existing in port_config.ini
             # when port_config.ini exists
-            if not set(mbr_map['members']).issubset(port_set):
-                print("Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name, file=sys.stderr)
+            if (pc_name, pc_member) in pc_members and pc_member not in port_set:
+                print("Warning: ignore '%s' as at least one of its member interfaces ('%s') is not in the port_config.ini" % (pc_name, pc_member), file=sys.stderr)
                 del pcs[pc_name]
+                pc_mbr_del_keys = [f for f in list(pc_members.keys()) if f[0] == pc_name]
+                for pc_mbr_del_key in pc_mbr_del_keys:
+                    del pc_members[pc_mbr_del_key]
 
     # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
     for pc in pcs.values():
@@ -1829,7 +1889,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
-    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role, current_device['type'], is_storage_device, vlan_members)
+    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'], is_storage_device, vlan_members)
     results['FEATURE'] = {
         'telemetry': {
             'state': 'enabled'
@@ -2064,6 +2124,7 @@ def parse_asic_meta_get_devices(root):
 
     return local_devices
 
+port_names_map = {}
 port_alias_map = {}
 port_alias_asic_map = {}
 
