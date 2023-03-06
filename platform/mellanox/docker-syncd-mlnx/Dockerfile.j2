@@ -32,7 +32,6 @@ RUN apt-get update && \
 	python-dev \
         python3-pip  \
         python3-dev \
-        python-is-python3 \
 {%- if ENABLE_ASAN == "y" %}
         libasan6 \
 {%- endif %}
