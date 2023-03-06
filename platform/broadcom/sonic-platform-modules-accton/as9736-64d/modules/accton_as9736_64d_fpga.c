@@ -147,6 +147,9 @@
 #define PCIE_FPGA_I2C_CONTROL_RTC0_CONFIG_0       0x2050
 #define PCIE_FPGA_I2C_CONTROL_RTC0_CONFIG_1       0x2054
 #define PCIE_FPGA_I2C_CONTROL_RTC0_STATUS_0       0x2060
+    #define RTC0_STATUS_0_DONE                    0x1
+    #define RTC0_STATUS_0_ERROR                   0x2
+    #define RTC0_STATUS_0_BUSY                    0x4
 
 /* I2C RTC Data Block */
 #define PCIE_FPGA_I2C_RTC_WRITE_DATA_REG_0        0x5000
@@ -1779,6 +1782,27 @@ static int get_port_present_status(struct bin_attribute *attr)
     return present;
 }
 
+static int get_filter_unpresent_case(struct bin_attribute *attr)
+{
+    int present = 0;
+    int err_cnt = 0;
+
+    while(err_cnt < 2)
+    {
+        msleep(400);   /*delay 0.4 second*/
+        present = get_port_present_status(attr);
+
+        if(present) {
+            err_cnt++;
+            continue;
+        } else {       /*unpresent*/
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static ssize_t
 sfp_eeprom_read(struct file *filp, struct kobject *kobj,
              struct bin_attribute *attr,
@@ -1871,6 +1895,10 @@ sfp_eeprom_read(struct file *filp, struct kobject *kobj,
     return count;
 
 exit_err:
+    if( (state == RTC0_STATUS_0_ERROR) &&
+        (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
+        return -ENXIO;
+    }
     pcie_err("%s ERROR(%d): Port%d pcie get done status failed!!", show_date_time(), state, pdata->port_num);
 
     return -EBUSY;
@@ -1946,6 +1974,10 @@ static ssize_t sfp_bin_read(struct file *filp, struct kobject *kobj,
     return retval;
 
 exit_err:
+    if( (state == RTC0_STATUS_0_ERROR) &&
+        (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
+        return -ENXIO;
+    }
     pcie_err("%s ERROR(%d): Port%d pcie get done status failed!!", show_date_time(), state, pdata->port_num);
 
     return -EBUSY;
@@ -1992,6 +2024,10 @@ sfp_eeprom_write(struct bin_attribute *attr, char *buf, loff_t off, size_t count
     return count;
 
 exit_err:
+    if( (state == RTC0_STATUS_0_ERROR) &&
+        (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
+        return -ENXIO;
+    }
     pcie_err("%s ERROR(%d): Port%d pcie set failed!!", show_date_time(), state, pdata->port_num);
 
     return -EBUSY;
