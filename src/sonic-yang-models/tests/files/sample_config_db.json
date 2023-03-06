@@ -2213,7 +2213,16 @@
                 "TYPE": "RW"
             }
         },
-
+        "SNMP_USER": {
+            "testuser": {
+                "SNMP_USER_TYPE": "Priv",
+                "SNMP_USER_PERMISSION": "RO",
+                "SNMP_USER_AUTH_TYPE": "SHA",
+                "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                "SNMP_USER_ENCRYPTION_TYPE": "AES",
+                "SNMP_USER_ENCRYPTION_PASSWORD": "encr_pass"
+            }
+        },
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
