@@ -52,7 +52,7 @@ def set_port_admin_status_by_log_port(handle, log_port, admin_status):
 def get_log_ports(handle, sfp_module):
     port_cnt_p = new_uint32_t_p()
     uint32_t_p_assign(port_cnt_p, 0)
-    rc = sx_api_port_device_get(handle, 1, 0, None,  port_cnt_p)
+    rc = sx_api_port_device_get(handle, DEVICE_ID, SWITCH_ID, None,  port_cnt_p)
 
     assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
     port_cnt = uint32_t_p_value(port_cnt_p)
