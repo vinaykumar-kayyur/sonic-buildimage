@@ -140,10 +140,15 @@ check_warm_boot
 
 if [[ x"${WARM_BOOT}" != x"true" ]]; then
     debug "warmboot is not enabled ..."
-    exit 0
+    if [[ x"${FAST_BOOT}" != x"true" ]]; then
+	    debug "fastboot is not enabled ..."
+	    exit 0
+    fi
 fi
 
-restore_counters_folder
+if [[ x"${WARM_BOOT}" == x"true" ]]; then
+    restore_counters_folder
+fi
 
 get_component_list
 
@@ -160,10 +165,12 @@ for i in `seq 60`; do
     sleep 5
 done
 
-stop_control_plane_assistant
+if [[ x"${WARM_BOOT}" == x"true" ]]; then
+   stop_control_plane_assistant
+fi
 
 # Save DB after stopped control plane assistant to avoid extra entries
-debug "Save in-memory database after warm reboot ..."
+debug "Save in-memory database after warm/fast reboot ..."
 config save -y
 
 if [[ -n "${list}" ]]; then
@@ -173,4 +180,6 @@ fi
 if [ x"${FAST_REBOOT}" == x"true" ]; then
     finalize_fast_reboot
 fi
-finalize_warm_boot
+if [ x"${WARM_BOOT}" == x"true" ]; then
+    finalize_warm_boot
+fi
