@@ -146,7 +146,7 @@ if [[ x"${WARM_BOOT}" != x"true" ]]; then
     fi
 fi
 
-if [[ x"${WARM_BOOT}" == x"true" ]]; then
+if [[ (x"${WARM_BOOT}" == x"true") && (x"${FAST_BOOT}" != x"true") ]]; then
     restore_counters_folder
 fi
 
@@ -165,7 +165,7 @@ for i in `seq 60`; do
     sleep 5
 done
 
-if [[ x"${WARM_BOOT}" == x"true" ]]; then
+if [[ (x"${WARM_BOOT}" == x"true") && (x"${FAST_BOOT}" != x"true") ]]; then
    stop_control_plane_assistant
 fi
 
@@ -179,6 +179,8 @@ fi
 
 if [ x"${FAST_REBOOT}" == x"true" ]; then
     finalize_fast_reboot
-else
+fi
+
+if [ x"${WARM_REBOOT}" == x"true" ]; then
     finalize_warm_boot
 fi
