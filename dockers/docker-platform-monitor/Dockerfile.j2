@@ -50,6 +50,7 @@ RUN pip2 install thrift==0.13.0
 RUN pip3 install thrift==0.13.0
 
 # We install the libpci module in order to be able to do PCI transactions
+RUN pip2 install libpci
 RUN pip3 install libpci
 
 {% if docker_platform_monitor_debs.strip() -%}
