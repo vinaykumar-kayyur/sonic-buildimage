@@ -52,6 +52,17 @@ function check_warm_boot()
     WARM_BOOT=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
 }
 
+function check_fast_reboot()
+{
+    debug "Checking if fast-reboot is enabled..."
+    FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${FAST_REBOOT}" == x"true" ]]; then
+       debug "Fast-reboot is enabled..."
+    else
+       debug "Fast-reboot is disabled..."
+    fi
+}
+
 
 function wait_for_database_service()
 {
@@ -97,6 +108,12 @@ function finalize_warm_boot()
     sudo config warm_restart disable
 }
 
+function finalize_fast_reboot()
+{
+    debug "Finalizing fast-reboot..."
+    sonic-db-cli STATE_DB hset "FAST_RESTART_ENABLE_TABLE|system" "enable" "false" &>/dev/null
+}
+
 function stop_control_plane_assistant()
 {
     if [[ -x ${ASSISTANT_SCRIPT} ]]; then
@@ -118,6 +135,7 @@ function restore_counters_folder()
 
 wait_for_database_service
 
+check_fast_reboot
 check_warm_boot
 
 if [[ x"${WARM_BOOT}" != x"true" ]]; then
@@ -152,4 +170,7 @@ if [[ -n "${list}" ]]; then
     debug "Some components didn't finish reconcile: ${list} ..."
 fi
 
+if [ x"${FAST_REBOOT}" == x"true" ]; then
+    finalize_fast_reboot
+fi
 finalize_warm_boot
