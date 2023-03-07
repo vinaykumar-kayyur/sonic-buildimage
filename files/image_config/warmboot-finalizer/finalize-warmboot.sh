@@ -141,8 +141,8 @@ check_warm_boot
 if [[ x"${WARM_BOOT}" != x"true" ]]; then
     debug "warmboot is not enabled ..."
     if [[ x"${FAST_BOOT}" != x"true" ]]; then
-    	debug "fastboot is not enabled ..."
-	exit(0)
+	    debug "fastboot is not enabled ..."
+	    exit 0
     fi
 fi
 
