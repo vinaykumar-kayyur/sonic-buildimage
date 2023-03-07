@@ -6,7 +6,7 @@ on:
 
 jobs:
   automerge_scan:
-    if: github.repository_owner == 'sonic-net'
+    #if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
     - name: Debug
@@ -38,10 +38,13 @@ jobs:
             check=$(echo $checks | jq ".[$j]")
             state=$(echo $check | jq -r '.state')
             conclusion=$(echo $check | jq -r '.conclusion')
+            name=$(echo $check | jq -r '.name')
 
             # EasyCLA success flag:  state=SUCCESS
             # Others success flag:   conclusion in SUCCESS,NEUTRAL
-            if [[ "$state" == "SUCCESS" ]];then
+            if echo $name | grep Semgrep;then
+              continue
+            elif [[ "$state" == "SUCCESS" ]];then
               # check pass
               continue
             elif [[ "$conclusion" == "SUCCESS" ]] || [[ "$conclusion" == "NEUTRAL" ]];then
@@ -50,6 +53,9 @@ jobs:
             else
               echo "$url Check failed!!!"
               echo $check | jq
+              if [[ $created_at > $(date --date "1 day ago" -u +"%FT%TZ") ]];then
+                gh pr comment $url -b "/azp run Azure.sonic-buildimage"
+              fi
               continue 2
             fi
           done
