@@ -43,6 +43,11 @@ module sonic-dhcpv6-relay {
                                         description "Set rfc6939 for the relay";
                                         type boolean;
                                 }
+
+				leaf interface_id {
+				    	description "Enable interface ID insertion in relayed messages";
+				    	type boolean;
+				}
 			}
 			/* end of VLAN_LIST */
 		}
