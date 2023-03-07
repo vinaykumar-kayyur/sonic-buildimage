@@ -69,7 +69,7 @@
     },
     "SNMP_USER_AUTH_NO_PRIV_INVALID_AUTH_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type AuthNoPriv with invalid auth password",
-        "eStr": "Invalid snmp user auth password (Valid chars are ASCII printable except \":\" and\"@\")"
+        "eStr": "Invalid snmp user authentication password (Valid chars are ASCII printable except \":\" and\"@\")"
     },
     "SNMP_USER_PRIV_TEST": {
         "desc": "Load SNMP user with user type Priv"
@@ -88,7 +88,7 @@
     },
     "SNMP_USER_PRIV_INVALID_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with invalid encryption password",
-        "eStr": "Invalid snmp user auth password (Valid chars are ASCII printable except \":\" and\"@\")"
+        "eStr": "Invalid snmp user encryption password (Valid chars are ASCII printable except \":\" and\"@\")"
     },
     "SNMP_USER_PRIV_SHORT_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with short encryption password",

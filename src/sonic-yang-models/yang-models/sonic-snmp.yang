@@ -77,7 +77,6 @@ module sonic-snmp {
           "List of users.";
 
         leaf name {
-          mandatory true;
           type string {
               length "4..32";
               pattern '[^ @,\\' +"']*" {
@@ -85,7 +84,7 @@ module sonic-snmp {
               }
           }
           description
-            "Index into the user list which must be the user name.";
+            "Name defining the SNMP User.";
         }
 
         leaf SNMP_USER_TYPE {
@@ -124,7 +123,7 @@ module sonic-snmp {
           type string {
               length "8..64";
               pattern '[^ @:]*' {
-                  error-message 'Invalid snmp user auth password (Valid chars are ASCII printable except ":" and"@")';
+                  error-message 'Invalid snmp user authentication password (Valid chars are ASCII printable except ":" and"@")';
               }
           }
           description
