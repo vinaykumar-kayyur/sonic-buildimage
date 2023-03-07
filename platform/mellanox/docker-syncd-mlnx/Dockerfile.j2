@@ -41,7 +41,7 @@ RUN apt-get update && \
 RUN pip3 install --upgrade pip
 RUN apt-get purge -y python-pip
 
-RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py \&& python2 get-pip.pyp
+RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 
 {% if docker_syncd_mlnx_debs.strip() -%}
 # Copy locally-built Debian package dependencies
