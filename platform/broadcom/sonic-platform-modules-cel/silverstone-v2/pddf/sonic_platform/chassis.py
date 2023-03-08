@@ -7,6 +7,7 @@
 try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     import sys
+    import syslog
     from . import helper
     from . import component
 except ImportError as e:
@@ -90,3 +91,63 @@ class Chassis(PddfChassis):
             prev_reboot_cause = (self.REBOOT_CAUSE_NON_HARDWARE, sw_reboot_cause)
 
         return prev_reboot_cause
+
+    # def get_reboot_cause(self):
+    #     """
+    #     Retrieves the cause of the previous reboot
+    #
+    #     Returns:
+    #         A tuple (string, string) where the first element is a string
+    #         containing the cause of the previous reboot. This string must be
+    #         one of the predefined strings in this class. If the first string
+    #         is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
+    #         to pass a description of the reboot cause.
+    #     """
+    #     hw_reboot_cause = ""
+    #     import os
+    #     if os.path.exists('/sys/class/watchdog/watchdog0/bootstatus'):
+    #         try:
+    #             with open("/sys/class/watchdog/watchdog0/bootstatus", "r") as f:
+    #                 hw_reboot_cause = f.read().strip('\n')
+    #             if hw_reboot_cause == "32":
+    #                 reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+    #                 description = 'Hardware Watchdog Reset'
+    #                 return (reboot_cause, description)
+    #         except Exception as e:
+    #             raise Exception('Error while trying to find the HW reboot cause - {}'.format(str(e)))
+    #
+    #     elif os.path.exists('/sys/class/watchdog/watchdog0/reboot_reason'):
+    #         try:
+    #             with open("/sys/class/watchdog/watchdog0/reboot_reason", "r") as f:
+    #                 hw_reboot_cause = f.read().strip('\n')
+    #
+    #             if hw_reboot_cause == "2":
+    #                 reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+    #                 description = 'Hardware Watchdog Reset'
+    #                 return (reboot_cause, description)
+    #         except Exception as e:
+    #             raise Exception('Error while trying to find the HW reboot cause - {}'.format(str(e)))
+    #
+    #     else:
+    #         syslog.syslog(syslog.LOG_INFO, "Watchdog is not supported on this platform")
+    #
+    #     reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+    #     description = 'Unknown reason'
+    #     return (reboot_cause, description)
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        try:
+            if self._watchdog is None:
+                from .watchdog import Watchdog
+                # Create the watchdog Instance
+                self._watchdog = Watchdog()
+
+        except Exception as E:
+            syslog.syslog(syslog.LOG_ERR, "Fail to load watchdog due to {}".format(E))
+        return self._watchdog
