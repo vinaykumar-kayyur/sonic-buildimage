@@ -1,4 +1,4 @@
-
+=======
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -19,6 +19,7 @@ Table of Contents
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
+         * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
@@ -60,7 +61,6 @@ Table of Contents
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)    
          * [Telemetry](#telemetry)  
-         * [Telemetry_client](#telemetry_client)  
          * [Tunnel](#tunnel)
          * [Versions](#versions)  
          * [VLAN](#vlan)   
@@ -646,6 +646,25 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
         "Ethernet56": "40m"
     }
   }
+}
+
+```
+
+### Chassis Module
+
+CHASSIS_MODULE table holds the list and configuration of linecard and fabric modules in a SONiC chassis.
+It currently allows user to administratively bring down a line-card or fabric-card
+
+```
+{
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
+    }
 }
 
 ```
@@ -1754,31 +1773,6 @@ and is listed in this table.
             "client_auth": "true",
             "log_level": "2",
             "port": "50051"
-        }
-    }
-}
-```
-
-### Telemetry_client
-
-```
-{
-  "TELEMETRY_CLIENT": {
-        "Global": {
-            "encoding": "JSON_IETF",
-            "retry_interval": "30",
-            "src_ip": "30.57.185.38",
-            "unidirectional": "true"
-        },
-        "DestinationGroup_HS": {
-            "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
-        },
-        "Subscription_HS_RDMA": {
-            "dst_group": "HS",
-            "path_target": "COUNTERS_DB",
-            "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
-            "report_interval": "5000",
-            "report_type": "periodic"
         }
     }
 }
