@@ -28,10 +28,6 @@ class Psu(PddfPsu):
         Get PSU1/2 Status by bmc command
         return: True or False
         """
-        # Presence detected
-        # Failure detected
-        # Power Supply AC lost
-        # Config Error
         status_cmd = "ipmitool sdr get PSU%d_Status" % self.psu_index
         res_status, result = self.helper.run_command(status_cmd)
         if res_status:
@@ -58,3 +54,4 @@ class Psu(PddfPsu):
                 return "N/A"
             rev = rev + chr(int(data, 16))
         return rev.strip()
+
