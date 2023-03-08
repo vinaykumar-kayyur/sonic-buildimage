@@ -62,6 +62,7 @@
       }
     },
     "duty_cycle_to_pwm": "lambda dc: dc*255/100",
-    "pwm_to_duty_cycle": "lambda pwm: pwm*100/255"
+    "pwm_to_duty_cycle": "lambda pwm: pwm*100/255",
+    "FAN_MAX_SPEED": "22500"
   }
 }

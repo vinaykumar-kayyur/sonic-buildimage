@@ -1,43 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+########################################################################
+# Ragile
 #
-# pcie_base.py
+# Module contains a platform specific implementation of SONiC Platform
+# Base PCIe class
 #
-# Abstract base class for implementing platform-specific
-#  PCIE functionality for SONiC
-#
+########################################################################
 
 try:
-    import abc
-    from sonic_pcie import PcieUtil
+    from sonic_platform_base.sonic_pcie.pcie_common import PcieUtil
 except ImportError as e:
-    raise ImportError (str(e) + " - required module not found")
-
-class PcieBase(object): 
-    def __init__(self, path):
-       """
-         Constructor
-         Args:
-           pcieutil file and config file path
-        """
-    self.pcie_util = PcieUtil(path)
+    raise ImportError(str(e) + "- required module not found")
 
 
-    @abc.abstractmethod
-    def get_pcie_device(self):
-        """
-         get current device pcie info
-        
-          Returns:
-            A list including pcie device info
-         """
-        return self.pcie_util.get_pcie_device()
+class Pcie(PcieUtil):
+    """Ragile Platform-specific Pcie class"""
 
-
-    @abc.abstractmethod
-    def get_pcie_check(self):
-        """
-         Check Pcie device with config file
-         Returns:
-            A list including pcie device and test result info
-        """
-        return self.pcie_util.get_pcie_check()
+    def __init__(self, platform_path):
+        PcieUtil.__init__(self, platform_path)
 

@@ -7,8 +7,11 @@ INSTALL_DIR = $(SUB_BUILD_DIR)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
 INSTALL_SCRIPT_DIR = $(SUB_BUILD_DIR)/usr/local/bin
 INSTALL_SERVICE_DIR = $(SUB_BUILD_DIR)/lib/systemd/system/
 
-KBUILD_EXTRA_SYMBOLS += $(DIR_KERNEL_SRC)/Module.symvers
+ifeq "5.10.0" "$(word 1, $(sort 5.10.0 $(KERNEL_VERSION)))"
+KBUILD_EXTRA_SYMBOLS += $(PWD)/../../../pddf/i2c/Module.symvers.PDDF
 export KBUILD_EXTRA_SYMBOLS
+endif
+
 
 all:
 	$(MAKE) -C $(KBUILD_OUTPUT) M=$(DIR_KERNEL_SRC) modules

@@ -225,24 +225,6 @@ static ssize_t show_sysfs_15_value(struct device *dev,
 	return snprintf(buf, PSU_SIZE, "%s\n", smbud_buf);
 }
 
-static ssize_t show_sysfs_13_value(struct device *dev, struct device_attribute *da, char *buf)
-{
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);
-    struct psu_data *data = i2c_get_clientdata(client);
-    int ret;
-    u8  smbud_buf[PSU_SIZE];
-
-    memset(smbud_buf, 0, PSU_SIZE);
-    mutex_lock(&data->update_lock);
-    ret = platform_i2c_smbus_read_i2c_block_data(client, attr->index, 13, smbud_buf);
-    if (ret < 0) {
-        DBG_ERROR("Failed to read psu \n");
-    }
-    mutex_unlock(&data->update_lock);
-    return snprintf(buf, PSU_SIZE, "%s\n", smbud_buf);
-}
-
 static int psu_detect(struct i2c_client *new_client,
 		      struct i2c_board_info *info)
 {

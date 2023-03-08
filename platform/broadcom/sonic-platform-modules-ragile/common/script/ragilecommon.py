@@ -304,7 +304,7 @@ fanloc = {"name": "fanset", "location": "0-0032/fan_speed_set"}
 
 ####================================Adaption-Area================================
 #### RAGILE_COMMON common configuration head
-#### “platform”    specific configuration head
+#### "platform"    specific configuration head
 ####
 PCA9548START = 11
 PCA9548BUSEND = 74

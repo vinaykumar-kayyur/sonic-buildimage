@@ -11,6 +11,11 @@ PSU_FAN_AIRFLOW = {
     "DPS-550AB-40 A": "B2F",
 }
 
+FAN_AIRFLOW = {
+    "M1HFAN I-F": "F2B",
+    "M1HFAN I-R": "B2F",
+}
+
 psutypedecode = {
     0x00: "N/A",
     0x01: "AC",

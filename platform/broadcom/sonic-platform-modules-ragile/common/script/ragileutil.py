@@ -382,11 +382,11 @@ def getInputSetmac(val):
 
 
 class fan_tlv(object):
-    VERSION = 0x01  # E2PROM Version，start from 0x01
-    FLAG = 0x7E  # New E2PROM version flag is 0x7E
-    HW_VER = 0x01  # compose by master version and fixed version
-    TYPE = 0xF1  # hw type defination
-    TLV_LEN = 00  # data length (16bit)
+    VERSION = 0x01  # E2PROM Version, start from 0x01
+    FLAG = 0x7E     # New E2PROM version flag is 0x7E
+    HW_VER = 0x01   # compose by master version and fixed version
+    TYPE = 0xF1     # hw type defination
+    TLV_LEN = 00    # data length (16bit)
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
 
@@ -1295,10 +1295,10 @@ def fan_setmac():
 
 def checkfansninput(fan_sn, fansntemp):
     if fan_sn in fansntemp:
-        RJPRINTERR("exist same Serial Number，please input again")
+        RJPRINTERR("exist same Serial Number, please input again")
         return False
     if len(fan_sn) != 13:
-        RJPRINTERR("Serial Number length incorrect，please input again")
+        RJPRINTERR("Serial Number length incorrect, please input again")
         return False
     return True
 
@@ -1416,7 +1416,7 @@ def fac_fans_setmac_tlv(ret):
     print("\n*******************************\n")
 
     util_show_fanse2(fans)
-    if getInputCheck("check input correctly or not（Yes/No):") == True:
+    if getInputCheck("check input correctly or not(Yes/No):") == True:
         for fan in fans:
             log_debug("ouput fan")
             fac_fan_setmac(fan)
