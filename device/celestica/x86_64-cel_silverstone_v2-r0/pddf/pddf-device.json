@@ -5,7 +5,7 @@
     "num_fantrays": 7,
     "num_fans_pertray": 2,
     "num_ports": 32,
-    "num_temps": 16,
+    "num_temps": 14,
     "num_component": 10,
     "pddf_dev_types":
     {
@@ -1635,10 +1635,8 @@
                     {"attr_name":"psu_v_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_VIn", "field_pos":"3", "mult":"1000"},
                     {"attr_name":"psu_i_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_CIn", "field_pos":"3", "mult":"1000"},
                     {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"ipmitool sensor reading PSU1_Fan", "raw":"0", "field_name":"PSU1_Fan", "field_pos":"3", "mult": "1"},
-                    {"attr_name":"psu_temp1", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp2", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp3", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"3", "mult":"1000"}
-
+                    {"attr_name":"psu_temp1_input", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"3", "mult":"1000"},
+                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"ipmitool sensor get PSU1_Temp1 | grep 'Upper Critical'", "raw":"0", "field_name":"Upper Critical", "separator":":", "field_pos":"2", "mult":"1000"}
                 ]
             }
         }
@@ -1664,9 +1662,8 @@
                     {"attr_name":"psu_v_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_VIn", "field_pos":"3", "mult":"1000"},
                     {"attr_name":"psu_i_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_CIn", "field_pos":"3", "mult":"1000"},
                     {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"ipmitool sensor reading PSU2_Fan", "raw":"0", "field_name":"PSU2_Fan", "field_pos":"3", "mult": "1"},
-                    {"attr_name":"psu_temp1", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp2", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp3", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"3", "mult":"1000"}
+                    {"attr_name":"psu_temp1_input", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"3", "mult":"1000"},
+                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"ipmitool sensor get PSU2_Temp1 | grep 'Upper Critical'", "raw":"0", "field_name":"Upper Critical", "separator":":", "field_pos":"2", "mult":"1000"}
                 ]
             }
         }
@@ -1743,16 +1740,16 @@
     "TEMP1":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"TEMP_CPU"},
+        "dev_attr": {"display_name":"PSU1_TEMP2"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_CPU", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_CPU", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_CPU", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_CPU", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_CPU", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp2'", "raw":"0", "field_name":"PSU1_Temp2", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp2'", "raw":"0", "field_name":"PSU1_Temp2", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp2'", "raw":"0", "field_name":"PSU1_Temp2", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp2'", "raw":"0", "field_name":"PSU1_Temp2", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp2'", "raw":"0", "field_name":"PSU1_Temp2", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1760,16 +1757,16 @@
     "TEMP2":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"TEMP_SW_Internal"},
+        "dev_attr": {"display_name":"PSU1_TEMP3"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_Internal", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_Internal", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_Internal", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_Internal", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_Internal", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp3'", "raw":"0", "field_name":"PSU1_Temp3", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp3'", "raw":"0", "field_name":"PSU1_Temp3", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp3'", "raw":"0", "field_name":"PSU1_Temp3", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp3'", "raw":"0", "field_name":"PSU1_Temp3", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp3'", "raw":"0", "field_name":"PSU1_Temp3", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1777,16 +1774,16 @@
     "TEMP3":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"TEMP_FB_U17"},
+        "dev_attr": {"display_name":"PSU2_TEMP2"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_FB_U17", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_FB_U17", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_FB_U17", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_FB_U17", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_FB_U17", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp2'", "raw":"0", "field_name":"PSU2_Temp2", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp2'", "raw":"0", "field_name":"PSU2_Temp2", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp2'", "raw":"0", "field_name":"PSU2_Temp2", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp2'", "raw":"0", "field_name":"PSU2_Temp2", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp2'", "raw":"0", "field_name":"PSU2_Temp2", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1794,16 +1791,16 @@
     "TEMP4":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"TEMP_SW_U16"},
+        "dev_attr": {"display_name":"PSU2_TEMP3"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_U16", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_U16", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_U16", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_U16", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_SW_U16", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp3'", "raw":"0", "field_name":"PSU2_Temp3", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp3'", "raw":"0", "field_name":"PSU2_Temp3", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp3'", "raw":"0", "field_name":"PSU2_Temp3", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp3'", "raw":"0", "field_name":"PSU2_Temp3", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp3'", "raw":"0", "field_name":"PSU2_Temp3", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1811,16 +1808,16 @@
     "TEMP5":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"SW_XP3R3V_R"},
+        "dev_attr": {"display_name":"TEMP_CPU"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_R", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_R", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_R", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_R", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_R", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_CPU'", "raw":"0", "field_name":"TEMP_CPU", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_CPU'", "raw":"0", "field_name":"TEMP_CPU", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_CPU'", "raw":"0", "field_name":"TEMP_CPU", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_CPU'", "raw":"0", "field_name":"TEMP_CPU", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_CPU'", "raw":"0", "field_name":"TEMP_CPU", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1828,16 +1825,16 @@
     "TEMP6":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"SW_XP3R3V_L"},
+        "dev_attr": {"display_name":"TEMP_SW_Internal"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_L", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_L", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_L", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_L", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP3R3V_L", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_Internal'", "raw":"0", "field_name":"TEMP_SW_Internal", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_Internal'", "raw":"0", "field_name":"TEMP_SW_Internal", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_Internal'", "raw":"0", "field_name":"TEMP_SW_Internal", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_Internal'", "raw":"0", "field_name":"TEMP_SW_Internal", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_Internal'", "raw":"0", "field_name":"TEMP_SW_Internal", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1845,16 +1842,16 @@
     "TEMP7":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"SW_XP1R8V"},
+        "dev_attr": {"display_name":"TEMP_FB_U17"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP1R8V", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP1R8V", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP1R8V", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP1R8V", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"SW_XP1R8V", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_FB_U17'", "raw":"0", "field_name":"TEMP_FB_U17", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_FB_U17'", "raw":"0", "field_name":"TEMP_FB_U17", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_FB_U17'", "raw":"0", "field_name":"TEMP_FB_U17", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_FB_U17'", "raw":"0", "field_name":"TEMP_FB_U17", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_FB_U17'", "raw":"0", "field_name":"TEMP_FB_U17", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1862,16 +1859,16 @@
     "TEMP8":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU1_Temp1"},
+        "dev_attr": {"display_name":"TEMP_SW_U16"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_U16'", "raw":"0", "field_name":"TEMP_SW_U16", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_U16'", "raw":"0", "field_name":"TEMP_SW_U16", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_U16'", "raw":"0", "field_name":"TEMP_SW_U16", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_U16'", "raw":"0", "field_name":"TEMP_SW_U16", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_SW_U16'", "raw":"0", "field_name":"TEMP_SW_U16", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1879,16 +1876,16 @@
     "TEMP9":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU1_Temp2"},
+        "dev_attr": {"display_name":"SW_XP3R3V_R"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp2", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_R'", "raw":"0", "field_name":"SW_XP3R3V_R", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_R'", "raw":"0", "field_name":"SW_XP3R3V_R", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_R'", "raw":"0", "field_name":"SW_XP3R3V_R", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_R'", "raw":"0", "field_name":"SW_XP3R3V_R", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_R'", "raw":"0", "field_name":"SW_XP3R3V_R", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1896,16 +1893,16 @@
     "TEMP10":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU1_Temp3"},
+        "dev_attr": {"display_name":"SW_XP3R3V_L"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU1_Temp3", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_L'", "raw":"0", "field_name":"SW_XP3R3V_L", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_L'", "raw":"0", "field_name":"SW_XP3R3V_L", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_L'", "raw":"0", "field_name":"SW_XP3R3V_L", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_L'", "raw":"0", "field_name":"SW_XP3R3V_L", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP3R3V_L'", "raw":"0", "field_name":"SW_XP3R3V_L", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1913,16 +1910,16 @@
     "TEMP11":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU2_Temp1"},
+        "dev_attr": {"display_name":"SW_XP1R8V"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP1R8V'", "raw":"0", "field_name":"SW_XP1R8V", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP1R8V'", "raw":"0", "field_name":"SW_XP1R8V", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP1R8V'", "raw":"0", "field_name":"SW_XP1R8V", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP1R8V'", "raw":"0", "field_name":"SW_XP1R8V", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'SW_XP1R8V'", "raw":"0", "field_name":"SW_XP1R8V", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1930,16 +1927,16 @@
     "TEMP12":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU2_Temp2"},
+        "dev_attr": {"display_name":"XP0R8V_Temp"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp2", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'XP0R8V_Temp'", "raw":"0", "field_name":"XP0R8V_Temp", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'XP0R8V_Temp'", "raw":"0", "field_name":"XP0R8V_Temp", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'XP0R8V_Temp'", "raw":"0", "field_name":"XP0R8V_Temp", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'XP0R8V_Temp'", "raw":"0", "field_name":"XP0R8V_Temp", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'XP0R8V_Temp'", "raw":"0", "field_name":"XP0R8V_Temp", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1947,16 +1944,16 @@
     "TEMP13":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"PSU2_Temp3"},
+        "dev_attr": {"display_name":"TEMP_DIMMA0"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"PSU2_Temp3", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMA0'", "raw":"0", "field_name":"TEMP_DIMMA0", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMA0'", "raw":"0", "field_name":"TEMP_DIMMA0", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMA0'", "raw":"0", "field_name":"TEMP_DIMMA0", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMA0'", "raw":"0", "field_name":"TEMP_DIMMA0", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMA0'", "raw":"0", "field_name":"TEMP_DIMMA0", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
@@ -1964,50 +1961,16 @@
     "TEMP14":
     {
         "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"XP0R8V_Temp"},
-        "bmc": {
-            "ipmitool" : {
-                "attr_list":
-                [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"XP0R8V_Temp", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"XP0R8V_Temp", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"XP0R8V_Temp", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"XP0R8V_Temp", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"XP0R8V_Temp", "field_pos":"9"}
-                ]
-            }
-        }
-    },
-    "TEMP15":
-    {
-        "dev_info": {"device_type":"TEMP_SENSOR"},
-        "dev_attr": {"display_name":"TEMP_DIMMA0"},
-        "bmc": {
-            "ipmitool" : {
-                "attr_list":
-                [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMA0", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMA0", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMA0", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMA0", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMA0", "field_pos":"9"}
-                ]
-            }
-        }
-    },
-    "TEMP16":
-    {
-        "dev_info": {"device_type":"TEMP_SENSOR"},
         "dev_attr": {"display_name":"TEMP_DIMMB0"},
         "bmc": {
             "ipmitool" : {
                 "attr_list":
                 [
-                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMB0", "field_pos":"6"},
-                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMB0", "field_pos":"7"},
-                    {"attr_name":"temp1_input", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMB0", "field_pos":"2"},
-                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMB0", "field_pos":"8"},
-                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"ipmitool sensor", "raw":"0", "field_name":"TEMP_DIMMB0", "field_pos":"9"}
+                    {"attr_name":"temp1_low_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMB0'", "raw":"0", "field_name":"TEMP_DIMMB0", "separator":"|", "field_pos":"6"},
+                    {"attr_name":"temp1_low_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMB0'", "raw":"0", "field_name":"TEMP_DIMMB0", "separator":"|", "field_pos":"7"},
+                    {"attr_name":"temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMB0'", "raw":"0", "field_name":"TEMP_DIMMB0", "separator":"|", "field_pos":"2"},
+                    {"attr_name":"temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMB0'", "raw":"0", "field_name":"TEMP_DIMMB0", "separator":"|", "field_pos":"8"},
+                    {"attr_name":"temp1_high_crit_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'TEMP_DIMMB0'", "raw":"0", "field_name":"TEMP_DIMMB0", "separator":"|", "field_pos":"9"}
                 ]
             }
         }
