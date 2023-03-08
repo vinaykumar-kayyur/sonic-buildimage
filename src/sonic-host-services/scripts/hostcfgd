@@ -215,6 +215,8 @@ class AaaCfg(object):
             cmd = "sed -e {0} {1} > {1}.new; mv -f {1} {1}.old; mv -f {1}.new {1}".format(' -e '.join(operations), filename)
             os.system(cmd)
 
+        self.check_file_not_empty(filename)
+
     def modify_conf_file(self):
         auth = self.auth_default.copy()
         auth.update(self.auth)
