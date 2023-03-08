@@ -104,6 +104,12 @@ function stopplatform1() {
         debug "Stopped pmon service"
     fi
 
+    # Invoke platform specific pre shutdown routine.
+    PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+    PLATFORM_PRE_SHUTDOWN="/usr/share/sonic/device/$PLATFORM/plugins/syncd_request_pre_shutdown"
+    [ -f $PLATFORM_PRE_SHUTDOWN ] && \
+        /usr/bin/docker exec -i syncd$DEV /usr/share/sonic/platform/plugins/syncd_request_pre_shutdown --${TYPE}
+
     debug "${TYPE} shutdown syncd process ..."
     /usr/bin/docker exec -i syncd$DEV /usr/bin/syncd_request_shutdown --${TYPE}
 

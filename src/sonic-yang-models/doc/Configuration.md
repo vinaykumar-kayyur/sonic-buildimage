@@ -18,6 +18,7 @@ Table of Contents
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
+         * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
@@ -26,6 +27,9 @@ Table of Contents
          * [Device Metadata](#device-metadata)  
          * [Device neighbor metada](#device-neighbor-metada)  
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [FG_NHG](#fg_nhg)  
+         * [FG_NHG_MEMBER](#fg_nhg_member)  
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
          * [KDUMP](#kdump)  
@@ -645,6 +649,25 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 
 ```
 
+### Chassis Module
+
+CHASSIS_MODULE table holds the list and configuration of linecard and fabric modules in a SONiC chassis.
+It currently allows user to administratively bring down a line-card or fabric-card
+
+```
+{
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
+    }
+}
+
+```
+
 ### COPP_TABLE
 
 ```
@@ -890,6 +913,57 @@ instance is supported in SONiC.
   }
 }
 
+```
+
+### FG_NHG
+
+The FG_NHG table provides information on Next Hop Groups, including a specified Hash Bucket Size (bucket_size) and match mode for each group.
+
+```
+"FG_NHG": {
+    "fgnhg_v4": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    },
+    "fgnhg_v6": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    }
+}
+```
+
+### FG_NHG_MEMBER
+
+The FG_NHG_MEMBER table provides information about the members of a next hop group, including the group name (FG_NHG), the index at which redistribution is performed (bank), and the link associated with the next-hop-ip (link).
+
+```
+"FG_NHG_MEMBER": {
+    "200.200.200.4": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "0",
+        "link": "Ethernet8"
+    },
+    "200.200.200.5": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "1",
+        "link": "Ethernet12"
+    }
+}
+```
+
+### FG_NHG_PREFIX
+
+The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desired, and Fine Grained next-hop group name.
+
+```
+"FG_NHG_PREFIX": {
+    "100.50.25.12/32": {
+	    "FG_NHG": "fgnhg_v4"
+	},
+    "fc:05::/128": {
+	    "FG_NHG": "fgnhg_v6"
+	}
+}
 ```
 
 
@@ -1422,7 +1496,9 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet56"
         ],
-        "mtu": "9100"
+        "mtu": "9100",
+        "fallback": "false",
+        "fast_rate": "true"
     }
   }
 }
@@ -1883,6 +1959,7 @@ table allow to change properties of a virtual router. Attributes:
     packets with IP options
 -   'l3_mc_action' contains packet action. Defines the action for
     unknown L3 multicast packets
+-   'vni' contains L3 VNI value. VNI associated Virtual router instance.
 
 The packet action could be:
 
@@ -1904,7 +1981,8 @@ The packet action could be:
 	'src_mac': '02:04:05:06:07:08',
 	'ttl_action': 'copy',
 	'ip_opt_action': 'deny',
-	'l3_mc_action': 'drop'
+	'l3_mc_action': 'drop',
+	'vni': '100'
 }
 ```
 

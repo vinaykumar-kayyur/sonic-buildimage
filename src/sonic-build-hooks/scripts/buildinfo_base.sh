@@ -28,8 +28,7 @@ else
 	PKG_CACHE_PATH=/sonic/target/vcache/${IMAGENAME}
 fi
 PKG_CACHE_FILE_NAME=${PKG_CACHE_PATH}/cache.tgz
-$SUDO mkdir -p ${PKG_CACHE_PATH}
-$SUDO chown $USER $PKG_CACHE_PATH
+mkdir -p ${PKG_CACHE_PATH}
 
 . ${BUILDINFO_PATH}/scripts/utils.sh
 
@@ -249,6 +248,11 @@ run_pip_command()
 
     $REAL_COMMAND "${parameters[@]}"
     local result=$?
+    if [ "$result" != 0 ]; then
+        echo "Failed to run the command with constraint, try to install with the original command" 1>&2
+        $REAL_COMMAND "$@"
+        result=$?
+    fi
     rm $tmp_version_file
     return $result
 }
