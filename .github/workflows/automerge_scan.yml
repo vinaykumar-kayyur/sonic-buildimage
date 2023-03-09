@@ -30,6 +30,9 @@ jobs:
           echo PR: $(($i+1))/$count, URL: $url, createdAt: $created_at, now: $(date -u +"%FT%TZ")
           [[ "$url" == "" ]] && continue
           [[ $created_at > $(date --date "1 hour ago" -u +"%FT%TZ") ]] && continue
+          # only check automerge PR.
+          cat prs.log | jq -r ".[$i].labels[].name" | grep automerge || continue
+
           checks=$(cat prs.log | jq ".[$i].statusCheckRollup")
           checks_count=$(echo $checks | jq 'length')
           echo Checks count: $checks_count
