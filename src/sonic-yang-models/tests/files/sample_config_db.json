@@ -110,7 +110,8 @@
                 "mtu": "9100",
                 "tpid": "0x8100",
                 "fast_rate": "false",
-                "fallback" : "true"
+                "fallback" : "true",
+                "mode": "routed"
             }
         },
         "PORTCHANNEL_INTERFACE": {
@@ -606,7 +607,8 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x8100",
-                "admin_status": "up"
+                "admin_status": "up",
+                "mode" : "routed"
             },
             "Ethernet9": {
                 "alias": "Eth3/2",
