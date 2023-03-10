@@ -29,12 +29,12 @@
                         "description": "Ethernet8",
                         "fec": "rs",
                         "lanes": "65",
-                        "mode": "routed",
                         "mtu": 9000,
                         "pfc_asym": "on",
                         "name": "Ethernet8",
                         "tpid": "0x8100",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode":"routed"
                     }
                 ]
             }
@@ -78,8 +78,10 @@
                         "name": "Ethernet8",
                         "alias": "eth8",
                         "lanes": "65",
-                        "mode" : "access",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode" : "access"
+
+
                     }
                 ]
             }
@@ -93,8 +95,9 @@
                         "name": "Ethernet8",
                         "alias": "eth8",
                         "lanes": "65",
-                        "mode":  "routed",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode":  "routed"
+
                     }
                 ]
             }
@@ -108,8 +111,9 @@
                         "name": "Ethernet8",
                         "alias": "eth8",
                         "lanes": "65",
-                        "mode": "trunk",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
+
                     }
                 ]
             }

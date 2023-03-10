@@ -19,8 +19,8 @@
         "eStrKey" : "Pattern",
         "eStr": ["0x8100|0x9100|0x9200|0x88a8|0x88A8"]
     },
-    "PORT_CHANNEL_MODE_PATTERN": {
-        "desc": "CORRECT PORTCHANNEL OF PORT_CHANNEL TABLE.",
+    "PORT_CHANNEL_VALID_MODE": {
+        "desc": "CORRECT VALUE OF MODE IN PORT_CHANNEL TABLE.",
         "eStrKey" : "Pattern",
         "eStr": ["routed|access|trunk"]
     },
