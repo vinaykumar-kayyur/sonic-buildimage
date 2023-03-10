@@ -114,6 +114,14 @@
          "desc": "PORT_INVALID_MUX_CABLE_TEST non-boolean values, expect fail",
          "eStrKey": "InvalidValue"
      },
+     "PORT_VALID_CHANNEL_NUMBER": {
+         "desc": "PORT_VALID_CHANNEL_NUMBER no failure."
+     },
+     "PORT_INVALID_CHANNEL_NUMBER": {
+         "desc": "Out of range channel number",
+         "eStrKey": "Range",
+         "eStr": "0..8"
+     },
      "PORT_VALID_MULTIASIC_TEST": {
          "desc": "PORT_VALID_MULTIASIC_TEST no failure."
      },

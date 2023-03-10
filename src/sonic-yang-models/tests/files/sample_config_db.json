@@ -558,6 +558,7 @@
                 "admin_status": "up",
                 "autoneg": "on",
                 "adv_speeds": "all",
+		"channel": 1,
                 "adv_interface_types": "all"
             },
             "Ethernet3": {
@@ -566,6 +567,7 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x88A8",
+		"channel": 4,
                 "admin_status": "up"
             },
             "Ethernet4": {
@@ -574,6 +576,7 @@
                 "description": "",
                 "speed": "11100",
                 "tpid": "0x9100",
+		"channel": 7,
                 "admin_status": "up"
             },
             "Ethernet5": {
