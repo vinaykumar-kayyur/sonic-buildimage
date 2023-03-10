@@ -17,6 +17,26 @@ class Fan(PddfFan):
         # idx is 0-based 
         PddfFan.__init__(self, tray_idx, fan_idx, pddf_data, pddf_plugin_data, is_psu_fan, psu_index)
 
+    # Provide the functions/variables below for which implementation is to be overwritten
+    # Since psu_fan airflow direction cant be read from sysfs, it is fixed as 'F2B' or 'intake'
+    def get_direction(self):
+        """
+        Retrieves the direction of fan
+
+        Returns:
+            A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
+            depending on fan direction
+        """
+        direction = 'N/A'
+        if self.is_psu_fan:
+            direction = self.FAN_DIRECTION_EXHAUST
+        else:
+            direction = super().get_direction()
+            if direction is not None and len(direction) > 0:
+                return direction
+
+        return direction
+
     def get_name(self):
         """
         Retrieves the name of the device
@@ -28,9 +48,6 @@ class Fan(PddfFan):
             else "PSU-{} FAN-{}".format(self.fans_psu_index, self.fan_index)
 
         return fan_name
-
-
-
 
     def get_model(self):
         """
