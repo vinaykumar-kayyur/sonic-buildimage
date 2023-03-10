@@ -8,8 +8,8 @@
                         "alias": "eth0",
                         "description": "Ethernet0",
                         "lanes": "65",
+                        "mode" :  "routed",
                         "mtu": 9000,
-                        "mode": "access",
                         "name": "Ethernet0",
                         "tpid": "0x8100",
                         "speed": 25000
@@ -26,7 +26,7 @@
                         "mtu": "9100",
                         "tpid": "0x8100",
                         "lacp_key": "auto",
-                        "mode": "access",
+                        "mode":  "routed",
                         "name": "PortChannel0001",
                         "fast_rate": "false",
                         "fallback" : "false"
@@ -114,6 +114,20 @@
                         "admin_status": "up",
                         "mtu": "9100",
                         "tpid": "0x9500",
+                        "name": "PortChannel0001"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_CHANNEL_MODE_PATTERN": {
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "mtu": "9100",
+                        "mode": "routed",
                         "name": "PortChannel0001"
                     }
                 ]
