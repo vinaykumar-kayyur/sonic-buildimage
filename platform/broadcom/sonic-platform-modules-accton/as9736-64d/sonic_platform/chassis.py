@@ -130,7 +130,7 @@ class Chassis(ChassisBase):
             string: The name of the device
         """
 
-        return self._api_helper.hwsku
+        return self._eeprom.get_modelstr()
 
     def get_presence(self):
         """
@@ -267,3 +267,13 @@ class Chassis(ChassisBase):
             return False
         else:
             return self._api_helper.write_txt_file(SYSLED_FNODE, mode)
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return self._eeprom.get_lb_revision()
+

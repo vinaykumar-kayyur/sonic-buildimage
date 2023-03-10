@@ -58,6 +58,8 @@ class Thermal(ThermalBase):
         self.index = thermal_index
         self.is_psu = is_psu
         self.psu_index = psu_index
+        self.min_temperature = None
+        self.max_temperature = None
 
         if self.is_psu:
             psu_i2c_bus = PSU_HWMON_I2C_MAPPING[psu_index]["num"]
@@ -231,7 +233,15 @@ class Thermal(ThermalBase):
             temp_file = "temp{}_input".format(self.ss_index)
         else:
             temp_file = self.psu_hwmon_path + "psu_temp1_input"
-        return self.__get_temp(temp_file)
+
+        current = self.__get_temp(temp_file)
+        if self.min_temperature is None or current < self.min_temperature:
+            self.min_temperature = current
+
+        if self.max_temperature is None or current > self.max_temperature:
+            self.max_temperature = current
+
+        return current
 
     def get_high_threshold(self):
         """
@@ -401,3 +411,24 @@ class Thermal(ThermalBase):
             return False
 
         return True
+
+    def get_minimum_recorded(self):
+        """ Retrieves the minimum recorded temperature of thermal
+        Returns: A float number, the minimum recorded temperature of thermal in Celsius
+        up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.min_temperature is None:
+            self.get_temperature()
+
+        return self.min_temperature
+
+    def get_maximum_recorded(self):
+        """ Retrieves the maximum recorded temperature of thermal
+        Returns: A float number, the maximum recorded temperature of thermal in Celsius
+        up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.max_temperature is None:
+            self.get_temperature()
+
+        return self.max_temperature
+

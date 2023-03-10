@@ -45,6 +45,7 @@ PCIE_UDB_BIND_PATH = "/sys/bus/platform/drivers/pcie_udb_fpga_device/{0}"
 PCIE_LDB_BIND_PATH = "/sys/bus/platform/drivers/pcie_ldb_fpga_device/{0}"
 
 logger = Logger()
+
 class Sfp(SfpOptoeBase):
     """Platform-specific Sfp class"""
     HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
@@ -66,7 +67,8 @@ class Sfp(SfpOptoeBase):
         0xe1  # QSFP28 EDFA
     ]
     QSFP_DD_TYPE_CODE_LIST = [
-        0x18  # QSFP-DD Double Density 8X Pluggable Transceiver
+        0x18, # QSFP-DD Double Density 8X Pluggable Transceiver
+        0x1E  # QSFP+ or later with CMIS
     ]
     OSFP_TYPE_CODE_LIST = [
         0x19  # OSFP
@@ -500,4 +502,192 @@ class Sfp(SfpOptoeBase):
             ret = self.EEPROM_DATA_NOT_READY
 
         return ret
+
+    def validate_eeprom_sfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(0, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        return True
+
+    def validate_eeprom_qsfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        return True
+
+    def validate_eeprom_cmis(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 95)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 94):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[94]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(258, 126)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 125):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[125]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(640, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        return True
+
+    def validate_eeprom(self):
+        id_byte_raw = self.read_eeprom(0, 1)
+        if id_byte_raw is None:
+            return None
+
+        id = id_byte_raw[0]
+        if id in self.QSFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_qsfp()
+        elif id in self.SFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_sfp()
+        elif id in self.QSFP_DD_TYPE_CODE_LIST:
+            return self.validate_eeprom_cmis()
+        else:
+            return False
+
+    def validate_temperature(self):
+        temperature = self.get_temperature()
+        if temperature is None:
+            return None
+
+        threshold_dict = self.get_transceiver_threshold_info()
+        if threshold_dict is None:
+            return None
+
+        if isinstance(temperature, float) is not True:
+            return True
+
+        if isinstance(threshold_dict['temphighalarm'], float) is not True:
+            return True
+
+        return threshold_dict['temphighalarm'] > temperature
+
+    def get_error_description(self):
+        """
+        Retrives the error descriptions of the SFP module
+        Returns:
+            String that represents the current error descriptions of vendor specific errors
+            In case there are multiple errors, they should be joined by '|',
+            like: "Bad EEPROM|Unsupported cable"
+        """
+        if not self.get_presence():
+            return self.SFP_STATUS_UNPLUGGED
+
+        err_stat = self.SFP_STATUS_BIT_INSERTED
+
+        status = self.validate_eeprom()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_BAD_EEPROM)
+
+        status = self.validate_temperature()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_HIGH_TEMP)
+
+        if err_stat is self.SFP_STATUS_BIT_INSERTED:
+            return self.SFP_STATUS_OK
+        else:
+            err_desc = ''
+            cnt = 0
+            for key in self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT:
+                if (err_stat & key) != 0:
+                    if cnt > 0:
+                        err_desc = err_desc + "|"
+                        cnt = cnt + 1
+                    err_desc = err_desc + self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT[key]
+
+            return err_desc
 

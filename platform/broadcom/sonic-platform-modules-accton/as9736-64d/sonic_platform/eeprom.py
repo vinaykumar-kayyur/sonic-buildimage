@@ -18,6 +18,7 @@ TLV_PRODUCT_NAME='0x21'
 TLV_PART_NUMBER='0x22'
 TLV_SERIAL_NUMBER='0x23'
 TLV_BASE_MAC_ADDRESS='0x24'
+TLV_CODE_LABEL_REVISION='0x27'
 
 class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
@@ -138,3 +139,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_modelstr(self):
         return self._eeprom.get(TLV_PRODUCT_NAME, NULL)
+
+    def get_lb_revision(self):
+        return self._eeprom.get(TLV_CODE_LABEL_REVISION, NULL)
+

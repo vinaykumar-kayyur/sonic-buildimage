@@ -277,3 +277,18 @@ class Psu(PsuBase):
             bool: True if it is replaceable.
         """
         return True
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        revision_path = "{}{}".format(self.hwmon_path, 'psu_mfr_revision')
+        revision=self._api_helper.read_txt_file(revision_path)
+        if revision is not None:
+            return revision
+        else:
+            return 'N/A'
+
