@@ -1448,8 +1448,8 @@ optional attributes.
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
-            "tx_power": "-27.3",
-            "mode" :   "routed"
+            "tx_power": "-27.3"
+        
 
 
         }
@@ -1482,8 +1482,8 @@ name as object key and member list as attribute.
         ],
         "mtu": "9100",
         "fallback": "false",
-        "fast_rate": "true",
-        "mode" : "routed"
+        "fast_rate": "true"
+        
 
     }
   }
