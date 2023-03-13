@@ -191,7 +191,7 @@ class Sfp(PddfSfp):
         elif id in self.SFP_TYPE_CODE_LIST:
             return self.__validate_eeprom_sfp()
         elif id in self.QSFP_DD_TYPE_CODE_LIST:
-            return self.validate_eeprom_cmis()
+            return self.__validate_eeprom_cmis()
         else:
             return False
 
