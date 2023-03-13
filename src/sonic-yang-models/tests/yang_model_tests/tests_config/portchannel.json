@@ -26,15 +26,10 @@
                         "mtu": "9100",
                         "tpid": "0x8100",
                         "lacp_key": "auto",
-<<<<<<< HEAD
                         "name": "PortChannel0001",
                         "fast_rate": "false",
                         "fallback" : "false",
                         "mode" :  "routed"
-=======
-                        "mode": "access",
-                        "name": "PortChannel0001"
->>>>>>> a88fed66e (Port & Port Channel configurations for yang model)
                     }
                 ]
             }

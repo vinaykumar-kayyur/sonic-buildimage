@@ -29,7 +29,6 @@
                         "description": "Ethernet8",
                         "fec": "rs",
                         "lanes": "65",
-                        "mode": "access",
                         "mtu": 9000,
                         "pfc_asym": "on",
                         "name": "Ethernet8",
@@ -71,7 +70,7 @@
             }
         }
     },
-    "PORT_VALID_MODE_TEST_1": {
+    "PORT_VALID_MODE_INVLAID_TEST": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
@@ -80,53 +79,7 @@
                         "alias": "eth8",
                         "lanes": "65",
                         "speed": 25000,
-<<<<<<< HEAD
-                        "mode" : "access"
-
-
-=======
-                        "mode": "access"
->>>>>>> a88fed66e (Port & Port Channel configurations for yang model)
-                    }
-                ]
-            }
-        }
-    },
-    "PORT_VALID_MODE_TEST_2": {
-        "sonic-port:sonic-port": {
-            "sonic-port:PORT": {
-                "PORT_LIST": [
-                    {
-                        "name": "Ethernet8",
-                        "alias": "eth8",
-                        "lanes": "65",
-                        "speed": 25000,
-<<<<<<< HEAD
-                        "mode":  "routed"
-
-=======
-                        "mode": "trunk"
->>>>>>> a88fed66e (Port & Port Channel configurations for yang model)
-                    }
-                ]
-            }
-        }
-    },
-    "PORT_VALID_MODE_TEST_3": {
-        "sonic-port:sonic-port": {
-            "sonic-port:PORT": {
-                "PORT_LIST": [
-                    {
-                        "name": "Ethernet8",
-                        "alias": "eth8",
-                        "lanes": "65",
-                        "speed": 25000,
-<<<<<<< HEAD
-                        "mode": "trunk"
-
-=======
-                        "mode": "routed"
->>>>>>> a88fed66e (Port & Port Channel configurations for yang model)
+                        "mode" : "off"
                     }
                 ]
             }

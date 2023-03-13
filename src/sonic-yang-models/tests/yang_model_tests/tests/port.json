@@ -19,30 +19,10 @@
     "PORT_VALID_MTU_TEST_2": {
         "desc": "PORT_VALID_MTU_TEST_2 no failure."
     },
-    "PORT_VALID_MODE_TEST_1": {
-<<<<<<< HEAD
+    "PORT_VALID_MODE_INVLAID_TEST": {
         "desc": "PORT_VALID_MODE_TEST_1 no failure.",
         "eStrKey" : "Pattern",
         "eStr": ["routed|access|trunk"]
-    },
-    "PORT_VALID_MODE_TEST_2": {
-        "desc": "PORT_VALID_MODE_TEST_2 no failure.",
-        "eStrKey" : "Pattern",
-        "eStr": ["routed|access|trunk"]
-    },
-    "PORT_VALID_MODE_TEST_3": {
-        "desc": "PORT_VALID_MODE_TEST_3 no failure.",
-        "eStrKey" : "Pattern",
-        "eStr": ["routed|access|trunk"]
-=======
-        "desc": "PORT_VALID_MODE_TEST_1 no failure."
-    },
-    "PORT_VALID_MODE_TEST_2": {
-        "desc": "PORT_VALID_MODE_TEST_2 no failure."
-    },
-    "PORT_VALID_MODE_TEST_3": {
-        "desc": "PORT_VALID_MODE_TEST_3 no failure."
->>>>>>> a88fed66e (Port & Port Channel configurations for yang model)
     },
     "PORT_VALID_AUTONEG_TEST_1": {
         "desc": "PORT_VALID_AUTONEG_TEST_1 no failure."
