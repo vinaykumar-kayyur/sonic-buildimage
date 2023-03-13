@@ -121,7 +121,7 @@
             }
         }
     },
-    "PORT_CHANNEL_VALID_MODE": {
+    "PORT_CHANNEL_INVALID_MODE": {
         "sonic-portchannel:sonic-portchannel": {
             "sonic-portchannel:PORTCHANNEL": {
                 "PORTCHANNEL_LIST": [
@@ -130,7 +130,7 @@
                         "mtu": "9100",
                         "tpid" :  "0x9100",
                         "name": "PortChannel0001",
-                        "mode": "routed"
+                        "mode": "off"
 
                     }
                 ]
