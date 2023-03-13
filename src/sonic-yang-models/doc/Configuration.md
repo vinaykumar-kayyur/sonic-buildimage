@@ -902,9 +902,9 @@ instance is supported in SONiC.
         "fc02:2000::2",
         "fc02:2000::3",
         "fc02:2000::4"
-    ]"
+    ],
     "rfc6939_support": "true",
-    "interface_id": "true",
+    "interface_id": "true"
 }
 
 ```
