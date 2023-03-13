@@ -1,3 +1,4 @@
+=======
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -18,6 +19,7 @@ Table of Contents
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
+         * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
@@ -644,6 +646,25 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
         "Ethernet56": "40m"
     }
   }
+}
+
+```
+
+### Chassis Module
+
+CHASSIS_MODULE table holds the list and configuration of linecard and fabric modules in a SONiC chassis.
+It currently allows user to administratively bring down a line-card or fabric-card
+
+```
+{
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
+    }
 }
 
 ```
@@ -1425,7 +1446,9 @@ optional attributes.
             "speed": "40000",
             "link_training": "off",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "mode" : "routed"
+            
         },
         "Ethernet1": {
             "index": "1",
@@ -1438,7 +1461,6 @@ optional attributes.
             "link_training": "on",
             "laser_freq": "191300",
             "tx_power": "-27.3"
-
         },
         "Ethernet63": {
             "index": "63",
@@ -1449,9 +1471,6 @@ optional attributes.
             "speed": "40000",
             "laser_freq": "191300",
             "tx_power": "-27.3"
-        
-
-
         }
     }
 }
@@ -1482,9 +1501,8 @@ name as object key and member list as attribute.
         ],
         "mtu": "9100",
         "fallback": "false",
-        "fast_rate": "true"
-        
-
+        "fast_rate": "true",
+        "mode" : "routed"
     }
   }
 }
@@ -2190,3 +2208,5 @@ Incremental Configuration by Subscribing to ConfigDB
 Detail instruction to be added. A sample could be found in this
 [PR](https://github.com/Azure/sonic-buildimage/pull/861) that
 implemented dynamic configuration for BGP.
+
+
