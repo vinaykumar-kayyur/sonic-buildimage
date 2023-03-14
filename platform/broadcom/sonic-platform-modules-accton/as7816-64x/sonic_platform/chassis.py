@@ -7,6 +7,7 @@
 #############################################################################
 
 try:
+    import sys
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from .event import SfpEvent
     from .helper import APIHelper
