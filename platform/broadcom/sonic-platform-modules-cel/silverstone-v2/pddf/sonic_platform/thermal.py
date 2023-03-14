@@ -1,14 +1,9 @@
 try:
     from sonic_platform_pddf_base.pddf_thermal import PddfThermal
     from . import helper
-    import os
-    import time
 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-Sensor_List_Info = "/tmp/sensor_info.log"
-Sensor_Info_Update_Period_Secs = 5
 
 
 class Thermal(PddfThermal):
@@ -16,34 +11,8 @@ class Thermal(PddfThermal):
 
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None, is_psu_thermal=False, psu_index=0):
         self.helper = helper.APIHelper()
-        self.__refresh_sensor_list_info()
         PddfThermal.__init__(self, index, pddf_data, pddf_plugin_data, is_psu_thermal=is_psu_thermal,
                              psu_index=psu_index)
-
-    def __refresh_sensor_list_info(self):
-        """
-        refresh the sensor list informal in sensor_info.log.
-        The refresh interval is 5 seconds
-        """
-        if not os.path.exists(Sensor_List_Info):
-            self.__write_sensor_list_info()
-
-        with open(Sensor_List_Info, "r") as f:
-            log_time = f.readline()
-        if time.time() - float(log_time.strip()) > Sensor_Info_Update_Period_Secs:
-            self.__write_sensor_list_info()
-
-    def __write_sensor_list_info(self):
-        """
-        Write the log of the command 'ipmitool sensor list' in sensor_info.log
-        """
-        status, info = self.helper.run_command("ipmitool sensor list")
-        if not status:
-            print("Fail! Can't get sensor list info by command: ipmitool sensor list")
-            return False
-        with open(Sensor_List_Info, "w") as f:
-            f.write("%s\n%s" % (str(time.time()), info))
-        return True
 
     def get_high_critical_threshold(self):
         """
@@ -68,9 +37,8 @@ class Thermal(PddfThermal):
             else:
                 return float(attr_value / 1000)
         else:
-            with open(Sensor_List_Info, "r") as f:
+            with open("/tmp/sensor_info.log", "r") as f:
                 info = f.readlines()
             for line in info:
                 if "PSU%d_Temp1" % self.thermals_psu_index in line:
                     return float(line.split("|")[8])
-
