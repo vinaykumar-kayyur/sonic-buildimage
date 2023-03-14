@@ -70,7 +70,7 @@
             }
         }
     },
-    "PORT_VALID_MODE_INVLAID_TEST": {
+    "PORT_INVLAID_MODE_TEST": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
                 "PORT_LIST": [
