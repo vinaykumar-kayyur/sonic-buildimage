@@ -18,7 +18,7 @@ def log_info(msg):
 
 def run_command(cmd, return_cmd=False):
    log_info("executing cmd =  {}".format(cmd))
-   proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+   proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
    out, err = proc.communicate()
    if return_cmd:
        if err:
@@ -31,24 +31,21 @@ def _get_device_type():
     """
     Get device type
     """
-    command = "{} -m -v DEVICE_METADATA.localhost.type".format(SONIC_CFGGEN_PATH)
-    device_type = run_command(command, return_cmd=True)
+    device_type = run_command([SONIC_CFGGEN_PATH, '-m', '-v', 'DEVICE_METADATA.localhost.type'], return_cmd=True)
     return device_type
 
 def _is_storage_device():
     """
     Check if the device is a storage device or not
     """
-    command = "{} -d -v DEVICE_METADATA.localhost.storage_device".format(SONIC_CFGGEN_PATH)
-    storage_device = run_command(command, return_cmd=True)
+    storage_device = run_command([SONIC_CFGGEN_PATH, '-d', '-v', 'DEVICE_METADATA.localhost.storage_device'], return_cmd=True)
     return storage_device == "true"
 
 def _is_acl_table_present():
     """
     Check if acl table exists
     """
-    command = "{} -d -v ACL_TABLE.DATAACL".format(SONIC_CFGGEN_PATH)
-    acl_table = run_command(command, return_cmd=True)
+    acl_table = run_command([SONIC_CFGGEN_PATH, '-d', '-v', 'ACL_TABLE.DATAACL'], return_cmd=True)
     return (acl_table != "Unknown" and bool(acl_table))
 
 def _is_switch_table_present():
@@ -79,9 +76,9 @@ def load_backend_acl(device_type):
     # this acl needs to be loaded only on a storage backend ToR. acl load will fail if the switch table isn't present
     if _is_storage_device() and _is_acl_table_present() and _is_switch_table_present():
         if os.path.isfile(BACKEND_ACL_TEMPLATE_FILE):
-            run_command("sudo {} -d -t {},{}".format(SONIC_CFGGEN_PATH, BACKEND_ACL_TEMPLATE_FILE, BACKEND_ACL_FILE))
+            run_command(['sudo', SONIC_CFGGEN_PATH, '-d', '-t', '{},{}'.format(BACKEND_ACL_TEMPLATE_FILE, BACKEND_ACL_FILE)])
         if os.path.isfile(BACKEND_ACL_FILE):
-            run_command("acl-loader update incremental {}".format(BACKEND_ACL_FILE))
+            run_command(['acl-loader', 'update', 'incremental', BACKEND_ACL_FILE])
     else:
         log_info("Skipping backend acl load - conditions not met")
 
