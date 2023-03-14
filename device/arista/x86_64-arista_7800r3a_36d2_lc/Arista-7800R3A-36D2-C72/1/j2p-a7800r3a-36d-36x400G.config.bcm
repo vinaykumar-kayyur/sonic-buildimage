@@ -1,4 +1,5 @@
 soc_family=BCM8885X
+system_ref_core_clock_khz=1600000
 
 dpp_db_path=/usr/share/bcm/db
 
@@ -267,17 +268,6 @@ tm_port_header_type_in_202=INJECTED_2_PP
 tm_port_header_type_out_202=ETH
 tm_port_header_type_in_203=INJECTED_2_PP
 tm_port_header_type_out_203=ETH
-
-### SAT
-## Enable SAT Interface. 0 - Disable, 1 - Enable (Default) 
-sat_enable=1
-ucode_port_218=SAT:core_0.218
-tm_port_header_type_out_218=CPU
-tm_port_header_type_in_218=INJECTED_2
-ucode_port_219=SAT:core_1.219
-tm_port_header_type_out_219=CPU
-tm_port_header_type_in_219=INJECTED_2
-port_init_speed_sat=400000
 
 ### RCY
 sai_recycle_port_lane_base=0
@@ -651,12 +641,12 @@ tslam_timeout_usec=1000000
 
 ### Interrupts
 appl_enable_intr_init=1
-polled_irq_mode=1
+polled_irq_mode=0
 # reduce CPU load, configure delay 100ms
 polled_irq_delay=1000
 
 # reduce the CPU load over adapter (caused by counter thread)
-bcm_stat_interval=1000
+bcm_stat_interval=1000000
 
 # shadow memory
 mem_cache_enable_ecc=1
@@ -1000,3 +990,4 @@ serdes_tx_taps_36=nrz:-7:85:-25:0:0:0
 
 xflow_macsec_secure_chan_to_num_secure_assoc_encrypt=2
 xflow_macsec_secure_chan_to_num_secure_assoc_decrypt=4
+sai_pfc_dlr_init_capability=0

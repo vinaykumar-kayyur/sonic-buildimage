@@ -15,6 +15,7 @@
 
 #include "dhcp_mon.h"
 #include "dhcp_devman.h"
+#include "events.h"
 
 /** DHCP device/interface state */
 typedef struct
@@ -29,6 +30,8 @@ typedef struct
 static int window_interval_sec = 18;
 /** dhcp_unhealthy_max_count max count of consecutive unhealthy statuses before reporting to syslog */
 static int dhcp_unhealthy_max_count = 10;
+/** dhcpmon debug mode control flag */
+static bool debug_on = false;
 /** libevent base struct */
 static struct event_base *base;
 /** libevent timeout event struct */
@@ -39,6 +42,8 @@ static struct event *ev_sigint;
 static struct event *ev_sigterm;
 /** libevent SIGUSR1 signal event struct */
 static struct event *ev_sigusr1;
+
+event_handle_t g_events_handle;
 
 /** DHCP monitor state data for aggregate device for mgmt device */
 static dhcp_mon_state_t state_data[] = {
@@ -95,7 +100,15 @@ static void check_dhcp_relay_health(dhcp_mon_state_t *state_data)
     {
     case DHCP_MON_STATUS_UNHEALTHY:
         if (++state_data->count > dhcp_unhealthy_max_count) {
-            syslog(LOG_ALERT, state_data->msg, state_data->count * window_interval_sec, context->intf);
+            auto duration = state_data->count * window_interval_sec;
+            std::string vlan(context->intf);
+            syslog(LOG_ALERT, state_data->msg, duration, context->intf);
+            if (state_data->check_type == DHCP_MON_CHECK_POSITIVE) {
+                event_params_t params = {
+                    { "vlan", vlan },
+                    { "duration", std::to_string(duration) }};
+                event_publish(g_events_handle, "dhcp-relay-disparity", &params);
+            }
             dhcp_devman_print_status(context, DHCP_COUNTERS_SNAPSHOT);
             dhcp_devman_print_status(context, DHCP_COUNTERS_CURRENT);
         }
@@ -132,6 +145,11 @@ static void timeout_callback(evutil_socket_t fd, short event, void *arg)
     }
 
     dhcp_devman_update_snapshot(NULL);
+
+    if (debug_on) {
+        dhcp_devman_print_status(NULL, DHCP_COUNTERS_SNAPSHOT);
+        dhcp_devman_print_status(NULL, DHCP_COUNTERS_CURRENT);
+    }
 }
 
 /**
@@ -179,6 +197,8 @@ int dhcp_mon_init(int window_sec, int max_count)
             break;
         }
 
+        g_events_handle = events_init_publisher("sonic-events-dhcp-relay");
+
         rv = 0;
     } while (0);
 
@@ -203,16 +223,19 @@ void dhcp_mon_shutdown()
     event_free(ev_sigusr1);
 
     event_base_free(base);
+
+    events_deinit_publisher(g_events_handle);
 }
 
 /**
- * @code dhcp_mon_start(snaplen);
+ * @code dhcp_mon_start(snaplen, debug_mode);
  *
  * @brief start monitoring DHCP Relay
  */
-int dhcp_mon_start(size_t snaplen)
+int dhcp_mon_start(size_t snaplen, bool debug_mode)
 {
     int rv = -1;
+    debug_on = debug_mode;
 
     do
     {
@@ -245,7 +268,6 @@ int dhcp_mon_start(size_t snaplen)
             syslog(LOG_ERR, "Could not start libevent dispatching loop!\n");
             break;
         }
-
         rv = 0;
     } while (0);
 

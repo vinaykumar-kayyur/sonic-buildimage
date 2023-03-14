@@ -7,7 +7,7 @@ module sonic-acl {
 
 	yang-version 1.1;
 
-	namespace "http://github.com/Azure/sonic-acl";
+	namespace "http://github.com/sonic-net/sonic-acl";
 	prefix acl;
 
 	import ietf-inet-types {
@@ -266,6 +266,20 @@ module sonic-acl {
 					when "(/acl:sonic-acl/acl:ACL_TABLE/acl:ACL_TABLE_LIST[ACL_TABLE_NAME=current()/../acl:ACL_TABLE_NAME]/acl:type = 'L2')";
 					type uint8 {
 						range "0..1";
+					}
+				}
+
+				leaf BTH_OPCODE {
+				        description "RoCEv2 BTH OPCODE field";
+					type string {
+						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
+					}
+				}
+
+				leaf AETH_SYNDROME {
+				        description "RoCEv2 AETH SYNDROME field";
+					type string {
+						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
 					}
 				}
 			}

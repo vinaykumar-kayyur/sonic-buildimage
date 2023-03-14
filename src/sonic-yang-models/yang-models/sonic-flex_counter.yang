@@ -2,7 +2,7 @@ module sonic-flex_counter {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-flex_counter";
+    namespace "http://github.com/sonic-net/sonic-flex_counter";
     prefix flex_counter;
 
     import ietf-inet-types {
@@ -217,6 +217,19 @@ module sonic-flex_counter {
 
             container FLOW_CNT_ROUTE {
                 /* ROUTE_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+                leaf FLEX_COUNTER_DELAY_STATUS {
+                    type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
+            }
+
+            container TUNNEL {
+                /* TUNNEL_STAT_COUNTER_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
                     type flex_status;
                 }
