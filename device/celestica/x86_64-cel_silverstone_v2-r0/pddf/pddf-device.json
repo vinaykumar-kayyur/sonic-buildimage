@@ -1628,15 +1628,15 @@
                     {"attr_name":"psu_serial_num", "bmc_cmd":"ipmitool fru print 3", "raw": "0", "field_name":"Board Serial", "separator":": ","field_pos":"2"},
                     {"attr_name":"psu_mfr_id", "bmc_cmd":"ipmitool fru print 3", "raw": "0", "field_name":"Board Mfg", "separator":": ", "field_pos":"2"},
                     {"attr_name":"psu_fan_dir", "bmc_cmd":"ipmitool raw 0x3a 0x62 0x07", "type": "raw","raw": "1"},
-                    {"attr_name":"psu_p_out", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU1_POut", "field_pos":"3", "mult":"1000000"},
-                    {"attr_name":"psu_v_out", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_VOut", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_i_out", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_COut", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_p_in", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU1_PIn", "field_pos":"3", "mult":"1000000"},
-                    {"attr_name":"psu_v_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_VIn", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_i_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_CIn", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"ipmitool sensor reading PSU1_Fan", "raw":"0", "field_name":"PSU1_Fan", "field_pos":"3", "mult": "1"},
-                    {"attr_name":"psu_temp1_input", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU1_Temp1", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"ipmitool sensor get PSU1_Temp1 | grep 'Upper Critical'", "raw":"0", "field_name":"Upper Critical", "separator":":", "field_pos":"2", "mult":"1000"}
+                    {"attr_name":"psu_p_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_POut'", "raw": "0", "field_name":"PSU1_POut", "separator": "|", "field_pos":"2", "mult":"1000000"},
+                    {"attr_name":"psu_v_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_VOut'", "raw":"0", "field_name":"PSU1_VOut", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_i_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_COut'", "raw":"0", "field_name":"PSU1_COut", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_p_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_PIn'", "raw": "0", "field_name":"PSU1_PIn", "separator": "|", "field_pos":"2", "mult":"1000000"},
+                    {"attr_name":"psu_v_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_VIn'", "raw":"0", "field_name":"PSU1_VIn", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_i_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_CIn'", "raw":"0", "field_name":"PSU1_CIn", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Fan'", "raw":"0", "field_name":"PSU1_Fan", "separator": "|", "field_pos":"2", "mult": "1"},
+                    {"attr_name":"psu_temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp1'", "raw":"0", "field_name":"PSU1_Temp1", "separator": "|","field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU1_Temp1'", "raw":"0", "field_name":"PSU1_Temp1", "separator":"|", "field_pos":"9", "mult":"1000"}
                 ]
             }
         }
@@ -1655,15 +1655,15 @@
                     {"attr_name":"psu_serial_num", "bmc_cmd":"ipmitool fru print 4", "raw": "0", "field_name":"Board Serial", "separator":": ","field_pos":"2"},
                     {"attr_name":"psu_mfr_id", "bmc_cmd":"ipmitool fru print 4", "raw": "0", "field_name":"Board Mfg", "separator":": ", "field_pos":"2"},
                     {"attr_name":"psu_fan_dir", "bmc_cmd":"ipmitool raw 0x3a 0x62 0x08", "type": "raw","raw": "1"},
-                    {"attr_name":"psu_p_out", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU2_POut", "field_pos":"3", "mult":"1000000"},
-                    {"attr_name":"psu_v_out", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_VOut", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_i_out", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_COut", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_p_in", "bmc_cmd":"ipmitool sdr", "raw": "0", "field_name":"PSU2_PIn", "field_pos":"3", "mult":"11000000"},
-                    {"attr_name":"psu_v_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_VIn", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_i_in", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_CIn", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"ipmitool sensor reading PSU2_Fan", "raw":"0", "field_name":"PSU2_Fan", "field_pos":"3", "mult": "1"},
-                    {"attr_name":"psu_temp1_input", "bmc_cmd":"ipmitool sdr", "raw":"0", "field_name":"PSU2_Temp1", "field_pos":"3", "mult":"1000"},
-                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"ipmitool sensor get PSU2_Temp1 | grep 'Upper Critical'", "raw":"0", "field_name":"Upper Critical", "separator":":", "field_pos":"2", "mult":"1000"}
+                    {"attr_name":"psu_p_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_POut'", "raw": "0", "field_name":"PSU2_POut", "separator": "|", "field_pos":"2", "mult":"1000000"},
+                    {"attr_name":"psu_v_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_VOut'", "raw":"0", "field_name":"PSU2_VOut", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_i_out", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_COut'", "raw":"0", "field_name":"PSU2_COut", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_p_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_PIn'", "raw": "0", "field_name":"PSU2_PIn", "separator": "|", "field_pos":"2", "mult":"1000000"},
+                    {"attr_name":"psu_v_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_VIn'", "raw":"0", "field_name":"PSU2_VIn", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_i_in", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_CIn'", "raw":"0", "field_name":"PSU2_CIn", "separator": "|", "field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_fan1_speed_rpm", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Fan'", "raw":"0", "field_name":"PSU2_Fan", "separator": "|", "field_pos":"2", "mult": "1"},
+                    {"attr_name":"psu_temp1_input", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp1'", "raw":"0", "field_name":"PSU2_Temp1", "separator": "|","field_pos":"2", "mult":"1000"},
+                    {"attr_name":"psu_temp1_high_threshold", "bmc_cmd":"cat /tmp/sensor_info.log | grep 'PSU2_Temp1'", "raw":"0", "field_name":"PSU2_Temp1", "separator":"|", "field_pos":"9", "mult":"1000"}
                 ]
             }
         }
