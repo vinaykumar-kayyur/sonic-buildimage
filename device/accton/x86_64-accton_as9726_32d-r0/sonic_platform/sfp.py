@@ -6,10 +6,11 @@
 #
 #############################################################################
 
+import os
 import sys
 import time
 import struct
-import subprocess
+
 from ctypes import create_string_buffer
 
 try:
@@ -250,7 +251,8 @@ QSFP_TYPE_CODE_LIST = [
     '11'  # QSFP28 or later
 ]
 QSFP_DD_TYPE_CODE_LIST = [
-    '18'  # QSFP-DD Double Density 8X Pluggable Transceiver
+    '18',  # QSFP-DD Double Density 8X Pluggable Transceiver
+    '1E'  # QSFP+ or later with CMIS
 ]
 
 SFP_TYPE = "SFP"
@@ -309,7 +311,7 @@ class Sfp(SfpBase):
         return True
 
     def __is_host(self):
-        return subprocess.call(self.HOST_CHK_CMD) == 0
+        return os.system(self.HOST_CHK_CMD) == 0
 
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
@@ -365,7 +367,8 @@ class Sfp(SfpBase):
                 for n in range(0, num_bytes):
                     eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
 
-        except BaseException:
+        except Exception as e:
+            print ('Error: ', str(e))
             eeprom.close()
             return None
 
@@ -1501,37 +1504,20 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self._port_num > 32: 
+        if self._port_num > 32:
             # SFP doesn't support this feature
             return False
+
+        if self._port_num <= 16:
+            lpmode_path = "{}{}{}".format(CPLD2_I2C_PATH, '/module_lpmode_', self._port_num)
         else:
-            try:
-                eeprom = None
-    
-                if not self.get_presence():
-                    return False
-                # Write to eeprom
-                port_to_i2c_mapping = SFP_I2C_START + self._index
-                port_eeprom_path = I2C_EEPROM_PATH.format(port_to_i2c_mapping)
-    
-                eeprom = open(port_eeprom_path, "rb")
-                eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
-                lpmode = ord(eeprom.read(1))
-    
-                if ((lpmode & 0x3) == 0x3):
-                    return True  # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
-                else:
-                    # High Power Mode if one of the following conditions is matched:
-                    # 1. "Power override" bit is 0
-                    # 2. "Power override" bit is 1 and "Power set" bit is 0
-                    return False
-            except IOError as e:
-                print("Error: unable to open file: %s" % str(e))
-                return False
-            finally:
-                if eeprom is not None:
-                    eeprom.close()
-                    time.sleep(0.01)
+            lpmode_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_lpmode_', self._port_num)
+
+        val=self._api_helper.read_txt_file(lpmode_path)
+        if val is not None:
+            return int(val, 10)==0
+        else:
+            return False
 
     def get_power_set(self):        
 
@@ -1743,7 +1729,7 @@ class Sfp(SfpBase):
                 if sfpd_obj is None:
                     return default
 
-                if dom_tx_bias_power_supported:
+                if self.dom_tx_bias_power_supported:
                     dom_tx_bias_raw = self._read_eeprom_specific_bytes(
                         (offset + QSFP_DD_TX_BIAS_OFFSET), QSFP_DD_TX_BIAS_WIDTH)
                     if dom_tx_bias_raw is not None:
@@ -2094,12 +2080,17 @@ class Sfp(SfpBase):
             if not self.get_presence():
                 return False
 
-            if lpmode is True:
-                self.set_power_override(True, True)
+            if self._port_num <= self.CPLD2_PORT_END:
+                lpmode_path = "{}{}{}".format(CPLD2_I2C_PATH, 'module_lpmode_', self._port_num)
             else:
-                self.set_power_override(True, False)
+                lpmode_path = "{}{}{}".format(CPLD3_I2C_PATH, 'module_lpmode_', self._port_num)
 
-            return True
+        if lpmode is True:
+            ret = self.__write_txt_file(lpmode_path, 0) #enable lpmode
+        else:
+            ret = self.__write_txt_file(lpmode_path, 1) #disable lpmode
+
+        return ret
 
     def set_power_override(self, power_override, power_set):
         """
@@ -2157,7 +2148,7 @@ class Sfp(SfpBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        name = sfputil_helper.logical[self._index] or "Unknown"
         return name
 
     def get_presence(self):
@@ -2206,10 +2197,12 @@ class Sfp(SfpBase):
 
     def get_position_in_parent(self):
         """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
         Returns:
-            Temp return 0
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
-        return 0
+        return self.port_num
 
     def is_replaceable(self):
         """
@@ -2218,3 +2211,191 @@ class Sfp(SfpBase):
             A boolean value, True if replaceable
         """
         return True
+
+    def validate_eeprom_sfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(0, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        return True
+
+    def validate_eeprom_qsfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        return True
+
+    def validate_eeprom_cmis(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 95)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 94):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[94]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(258, 126)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 125):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[125]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(640, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        return True
+
+    def validate_eeprom(self):
+        id_byte_raw = self.read_eeprom(0, 1)
+        if id_byte_raw is None:
+            return None
+
+        id = id_byte_raw[0]
+        if id in QSFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_qsfp()
+        elif id in SFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_sfp()
+        elif id in QSFP_DD_TYPE_CODE_LIST:
+            return self.validate_eeprom_cmis()
+        else:
+            return False
+
+    def validate_temperature(self):
+        temperature = self.get_temperature()
+        if temperature is None:
+            return None
+
+        threshold_dict = self.get_transceiver_threshold_info()
+        if threshold_dict is None:
+            return None
+
+        if isinstance(temperature, float) is not True:
+            return True
+
+        if isinstance(threshold_dict['temphighalarm'], float) is not True:
+            return True
+
+        return threshold_dict['temphighalarm'] > temperature
+
+    def get_error_description(self):
+        """
+        Retrives the error descriptions of the SFP module
+        Returns:
+            String that represents the current error descriptions of vendor specific errors
+            In case there are multiple errors, they should be joined by '|',
+            like: "Bad EEPROM|Unsupported cable"
+        """
+        if not self.get_presence():
+            return self.SFP_STATUS_UNPLUGGED
+
+        err_stat = self.SFP_STATUS_BIT_INSERTED
+
+        status = self.validate_eeprom()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_BAD_EEPROM)
+
+        status = self.validate_temperature()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_HIGH_TEMP)
+
+        if err_stat is self.SFP_STATUS_BIT_INSERTED:
+            return self.SFP_STATUS_OK
+        else:
+            err_desc = ''
+            cnt = 0
+            for key in self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT:
+                if (err_stat & key) != 0:
+                    if cnt > 0:
+                        err_desc = err_desc + "|"
+                        cnt = cnt + 1
+                    err_desc = err_desc + self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT[key]
+
+            return err_desc
