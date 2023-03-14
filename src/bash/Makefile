@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf .pc
 	rm -rf bash-$(BASH_VERSION_MAJOR)
 
-	dget -u https://launchpad.net/debian/+archive/primary/+sourcefiles/bash/$(BASH_VERSION_FULL)/bash_$(BASH_VERSION_FULL).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source bash=$(BASH_VERSION_FULL)
 
 	# Apply plugin suport patches
 	quilt push -a

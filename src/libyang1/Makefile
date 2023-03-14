@@ -2,16 +2,6 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-LIBYANG_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/liby/libyang
-
-DSC_FILE = libyang_$(LIBYANG1_FULLVERSION).dsc
-ORIG_FILE = libyang_$(LIBYANG1_VERSION).orig.tar.gz
-DEBIAN_FILE = libyang_$(LIBYANG1_FULLVERSION).debian.tar.xz
-
-DSC_FILE_URL = $(LIBYANG_URL)/$(DSC_FILE)
-ORIG_FILE_URL = $(LIBYANG_URL)/$(ORIG_FILE)
-DEBIAN_FILE_URL = $(LIBYANG_URL)/$(DEBIAN_FILE)
-
 MAIN_TARGET = $(LIBYANG1)
 DERIVED_TARGETS = $(LIBYANG1_DEV) $(LIBYANG1_DBG) $(LIBYANG1_CPP) $(LIBYANG1_CPP_DEV) $(LIBYANG1_CPP_DBG) $(YANG_TOOLS) $(LIBYANG1_TOOLS) $(LIBYANG1_TOOLS_DBG)
 
@@ -20,10 +10,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -fr ./libyang-$(LIBYANG1_VERSION)
 
 	# download debian libyang
-	wget -NO "$(DSC_FILE)" $(DSC_FILE_URL)
-	wget -NO "$(ORIG_FILE)" $(ORIG_FILE_URL)
-	wget -NO "$(DEBIAN_FILE)" $(DEBIAN_FILE_URL)
-	dpkg-source -x libyang_$(LIBYANG1_FULLVERSION).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source libyang=$(LIBYANG1_VERSION_FULL)
 
 	pushd libyang-$(LIBYANG1_VERSION)
 	sed -i 's/set(LIBYANG_MAJOR_SOVERSION 1)/set(LIBYANG_MAJOR_SOVERSION 2)/' CMakeLists.txt

@@ -13,7 +13,7 @@ DERIVED_TARGETS = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb \
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf lm-sensors-$(LM_SENSORS_VERSION)
-	dget -u http://deb.debian.org/debian/pool/main/l/lm-sensors/lm-sensors_$(LM_SENSORS_VERSION_FULL).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source lm-sensors=1:$(LM_SENSORS_VERSION_FULL)
 	pushd lm-sensors-$(LM_SENSORS_VERSION)
 
 	# Initialize as git repository

@@ -10,7 +10,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./isc-dhcp-$(ISC_DHCP_VERSION)
 
 	# Get isc-dhcp release, debian files
-	dget http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_$(ISC_DHCP_VERSION_FULL).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source isc-dhcp=$(ISC_DHCP_VERSION_FULL)
+
 	pushd ./isc-dhcp-$(ISC_DHCP_VERSION)
 
 	# Create a git repository here for stg to apply patches

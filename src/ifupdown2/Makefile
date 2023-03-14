@@ -9,8 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./ifupdown2-$(IFUPDOWN2_VERSION) ./$(IFUPDOWN2_VERSION).tar.gz
 
 	# Get ifupdown2 release
-	wget --no-check-certificate https://github.com/CumulusNetworks/ifupdown2/archive/$(IFUPDOWN2_VERSION).tar.gz
-	tar -z -f $(IFUPDOWN2_VERSION).tar.gz -x
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source ifupdown2=$(IFUPDOWN2_VERSION_FULL)
 	pushd ./ifupdown2-$(IFUPDOWN2_VERSION)
 
 	git init

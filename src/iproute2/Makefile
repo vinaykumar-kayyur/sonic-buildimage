@@ -8,10 +8,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
 	rm -rf iproute2-$(IPROUTE2_VERSION)
 
-	wget -O iproute2_$(IPROUTE2_VERSION).orig.tar.xz http://deb.debian.org/debian/pool/main/i/iproute2/iproute2_$(IPROUTE2_VERSION).orig.tar.xz
-	wget -O iproute2_$(IPROUTE2_VERSION_FULL).dsc http://deb.debian.org/debian/pool/main/i/iproute2/iproute2_$(IPROUTE2_VERSION_FULL).dsc
-	wget -O iproute2_$(IPROUTE2_VERSION_FULL).debian.tar.xz http://deb.debian.org/debian/pool/main/i/iproute2/iproute2_$(IPROUTE2_VERSION_FULL).debian.tar.xz
-	dpkg-source -x iproute2_$(IPROUTE2_VERSION_FULL).dsc
+	apt-get -c ../../alt_apt_confdir/etc/apt/apt.conf source iproute2=$(IPROUTE2_VERSION_FULL)
 
 	pushd iproute2-$(IPROUTE2_VERSION)
 
