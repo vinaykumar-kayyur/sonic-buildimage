@@ -11,25 +11,37 @@ except ImportError as e:
 class Psu(PddfPsu):
     """PDDF Platform-Specific PSU class"""
     
-    PLATFORM_PSU_CAPACITY = 1200
-
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
         PddfPsu.__init__(self, index, pddf_data, pddf_plugin_data)
         
     # Provide the functions/variables below for which implementation is to be overwritten
-    def get_maximum_supplied_power(self):
-        """
-        Retrieves the maximum supplied power by PSU (or PSU capacity)
-        Returns:
-            A float number, the maximum power output in Watts.
-            e.g. 1200.1
-        """
-        return float(self.PLATFORM_PSU_CAPACITY)
+    def get_name(self):
+        return "PSU-{}".format(self.psu_index)
 
-    def get_type(self):
+    def get_revision(self):
         """
-        Gets the type of the PSU
+        Retrieves the hardware revision of the device
+
         Returns:
-        A string, the type of PSU (AC/DC)
+            string: Revision value of device
         """
-        return "AC"
+        return 'N/A'
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        threshold = super().get_temperature_high_threshold()
+
+        for psu_thermal_idx in range(self.num_psu_thermals):
+            try:
+                tmp = self._thermal_list[psu_thermal_idx].get_high_threshold()
+                if threshold > tmp or threshold == 0.0:
+                    threshold = tmp
+            except Exception:
+                pass
+
+        return threshold
