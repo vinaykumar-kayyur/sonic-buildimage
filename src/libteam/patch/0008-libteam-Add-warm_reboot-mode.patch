@@ -1,7 +1,7 @@
-From 4136762b92ce30a19451c1b69dfbbbd4469727d5 Mon Sep 17 00:00:00 2001
+From cdc7eb674bb779b9e5181921e4c7c2b2f0a0db41 Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
 Date: Tue, 3 Mar 2020 13:04:57 -0800
-Subject: [PATCH 08/11] Reimplement Warm-Reboot procedure'
+Subject: [PATCH] [libteam]: Reimplement Warm-Reboot procedure'
 
 ---
  libteam/ifinfo.c          |   6 +-
@@ -62,7 +62,7 @@ index 9ebf30f..0bd7cc0 100644
  		th->msg_recv_started = true;
  	}
  	nla_for_each_nested(nl_port, attrs[TEAM_ATTR_LIST_PORT], i) {
-@@ -165,7 +172,8 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+@@ -165,7 +172,9 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
  			if (!port)
  				return NL_SKIP;
  		}
