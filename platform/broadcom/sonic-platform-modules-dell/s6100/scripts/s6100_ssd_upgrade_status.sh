@@ -36,6 +36,7 @@ if [ -e $SSD_FW_UPGRADE/GPIO7_pending_upgrade ]; then
 fi
 
 echo "$0 `date` SSD FW upgrade logs post reboot." >> $SSD_UPGRADE_LOG
+logger -p user.crit -t DELL_S6100_SSD_MON "SSD FW upgrade logs post reboot."
 
 SSD_UPGRADE_STATUS1=`io_rd_wr.py --set --val 06 --offset 210; io_rd_wr.py --set --val 09 --offset 211; io_rd_wr.py --get --offset 212`
 SSD_UPGRADE_STATUS1=$(echo "$SSD_UPGRADE_STATUS1" | awk '{print $NF}')
@@ -71,11 +72,14 @@ elif [ $SSD_FW_VERSION == "s210506g" ] || [ $SSD_FW_VERSION == "s16425cg" ]; the
         rm -rf $SSD_FW_UPGRADE/GPIO7_*
         touch $SSD_FW_UPGRADE/GPIO7_high
         systemctl start --no-block s6100-ssd-monitor.timer
+        logger -p user.crit -t DELL_S6100_SSD_MON "SSD FW upgraded already."
         if [ $SSD_UPGRADE_STATUS1 == "0" ]; then
             if [ $SSD_MODEL  == "3IE" ];then
                 echo "$0 `date` SSD FW upgraded from S141002C to S210506G in first mp_64." >> $SSD_UPGRADE_LOG
+                logger -p user.crit -t DELL_S6100_SSD_MON "SSD FW upgraded from S141002C to S210506G"
             else
                 echo "$0 `date` SSD FW upgraded from S16425c1 to S16425cG in first mp_64." >> $SSD_UPGRADE_LOG
+                logger -p user.crit -t DELL_S6100_SSD_MON "SSD FW upgraded from S16425c1 to S16425cG"
             fi
         elif [ $SSD_MODEL == "3IE3" ] && [ $SSD_UPGRADE_STATUS2 == "1" ]; then
             rm -rf $SSD_FW_UPGRADE/GPIO7_*
@@ -93,6 +97,7 @@ else
         touch $SSD_FW_UPGRADE/GPIO7_pending_upgrade
 
         echo "$0 `date` SSD upgrade didn’t happen." >> $SSD_UPGRADE_LOG
+        logger -p user.crit -t DELL_S6100_SSD_MON "No SSD upgrade attempted."
 
     elif [ $SSD_UPGRADE_STATUS1 == "1" ]; then
         rm -rf $SSD_FW_UPGRADE/GPIO7_*
