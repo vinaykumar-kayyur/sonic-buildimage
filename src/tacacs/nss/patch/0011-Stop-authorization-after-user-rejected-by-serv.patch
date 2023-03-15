@@ -1,0 +1,29 @@
+From f971f48f4e92f0dfbaf02799f0f7515e31a6ec9e Mon Sep 17 00:00:00 2001
+From: liuh <liuh@microsoft.com>
+Date: Wed, 15 Mar 2023 16:36:52 +0800
+Subject: [PATCH] Stop authorization after user rejected by server.
+
+---
+ nss_tacplus.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/nss_tacplus.c b/nss_tacplus.c
+index 048745a..de26306 100644
+--- a/nss_tacplus.c
++++ b/nss_tacplus.c
+@@ -866,7 +866,12 @@ lookup_tacacs_user(struct pwbuf *pb)
+                     " invalid (%d)", nssname,
+                     tac_ntop(tac_srv[srvr].addr->ai_addr), pb->name,
+                     arep.status);
++
++            if (arep.status == TAC_PLUS_AUTHOR_STATUS_FAIL) {
++                done = 1; /* break out of loop after server reject user */
++            }
+         }
++
+         if(arep.msg)
+             free(arep.msg);
+         if(arep.attr) /* free returned attributes */
+-- 
+2.39.0.windows.2
+
