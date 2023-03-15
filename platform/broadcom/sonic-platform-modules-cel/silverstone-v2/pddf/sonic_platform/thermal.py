@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# @Company ：Celestica
+# @Time    : 2023/3/6 09:32
+# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Author  : jiang tao
+
 try:
     from sonic_platform_pddf_base.pddf_thermal import PddfThermal
     from . import helper
