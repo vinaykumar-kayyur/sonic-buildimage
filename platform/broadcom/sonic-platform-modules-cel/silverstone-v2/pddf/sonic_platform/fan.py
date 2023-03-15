@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# @Company ：Celestica
+# @Time    : 2023/2/18 15:43
+# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Author  : jiang tao
 try:
     from sonic_platform_pddf_base.pddf_fan import PddfFan
     from . import helper
@@ -74,7 +79,6 @@ class Fan(PddfFan):
         Set fans status led
         return: True/False
         """
-        result = False
         if self.is_psu_fan:
             raise NotImplementedError
         else:
@@ -89,7 +93,8 @@ class Fan(PddfFan):
             }
             color_data = color_dict.get(color.lower())
             if not color_data:
-                print("Fail! Can't set fan%s status led to %s.Cause fan doesn't have this module" % (self.fantray_index, color))
+                print("Fail! Can't set fan%s status led to %s.Cause fan doesn't have this module"
+                      % (self.fantray_index, color))
                 return False
             set_color_cmd = Set_Led_Color.format(hex(self.fantray_index + 3), color_data)
             status, result = self.helper.ipmi_raw(set_color_cmd)
@@ -130,4 +135,3 @@ class Fan(PddfFan):
             if not status:
                 print("Fail! Set Fan%d speed=%d fail!" % (self.fantray_index, speed))
         return status
-
