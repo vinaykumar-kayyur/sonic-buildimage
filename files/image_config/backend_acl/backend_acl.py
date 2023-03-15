@@ -84,7 +84,7 @@ def load_backend_acl(device_type):
 
 def main():
     device_type = _get_device_type()
-    if device_type == "Unknown" or device_type != "BackEndToRRouter":
+    if device_type != "BackEndToRRouter":
         log_info("Skipping backend acl load on unsupported device type: {}".format(device_type))
         return
 
