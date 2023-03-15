@@ -640,7 +640,7 @@ class SFP(NvidiaSFPCommon):
             return False
 
         if not lpmode and down_port_list:
-            print('Notice: Be aware you exit LPM mode but still port is in admin down state')
+            print('Notice: Be aware you exit low power mode but still port is in admin down state')
 
         sdk_lpmode = SX_MGMT_PHY_MOD_PWR_MODE_LOW_E if lpmode else SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E
         cls._set_lpmode_raw(sdk_handle,
