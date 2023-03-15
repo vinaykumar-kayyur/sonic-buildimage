@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# @Company ：Celestica
+# @Time    : 2023/3/10 10:11
+# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Author  : jiang tao
 try:
     from sonic_platform_pddf_base.pddf_psu import PddfPsu
     import re
