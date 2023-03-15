@@ -1,16 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-#
-
+# @Company ：Celestica
 # @Time   : 2023/3/3 17:09
 # @Mail   : J_Talong@163.com yajiang@celestica.com
 # @Author : jiang tao
-#############################################################################
-# Celestica
-#
-# Component contains an implementation of SONiC Platform Base API and
-# provides the components firmware management function
-#
-#############################################################################
 try:
     from sonic_platform_base.component_base import ComponentBase
     from . import helper
