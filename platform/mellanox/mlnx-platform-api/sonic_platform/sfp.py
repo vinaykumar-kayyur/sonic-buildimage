@@ -540,19 +540,24 @@ class SFP(NvidiaSFPCommon):
         assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
 
         port_cnt = uint32_t_p_value(port_cnt_p)
-        log_port_list = []
+        up_port_list = []
+        down_port_list = []
         for i in range(0, port_cnt):
             port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list, i)
             if not cls.is_nve(int(port_attributes.log_port)) \
                and not cls.is_cpu(int(port_attributes.log_port)) \
                and port_attributes.port_mapping.module_port == sdk_index \
-               and port_attributes.port_mapping.slot == slot_id \
-               and cls.is_port_admin_status_up(sdk_handle, port_attributes.log_port):
-                log_port_list.append(port_attributes.log_port)
+               and port_attributes.port_mapping.slot == slot_id:
+            
+                if cls.is_port_admin_status_up(sdk_handle, port_attributes.log_port):
+                    up_port_list.append(port_attributes.log_port)
+                else:
+                    down_port_list.append(port_attributes.log_port)
 
         delete_sx_port_attributes_t_arr(port_attributes_list)
         delete_uint32_t_p(port_cnt_p)
-        return log_port_list
+
+        return up_port_list, down_port_list
 
 
     @classmethod
@@ -582,25 +587,14 @@ class SFP(NvidiaSFPCommon):
 
 
     @classmethod
-    def _set_lpmode_raw(cls, sdk_handle, sdk_index, slot_id, ports, attr_type, power_mode):
+    def _set_lpmode_raw(cls, sdk_handle, sdk_index, slot_id, attr_type, power_mode):
         result = False
         # Check if the module already works in the same mode
         admin_pwr_mode, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(attr_type, sdk_handle, sdk_index, slot_id)
         if (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E and oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E) \
            or (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E and admin_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E):
             return True
-        try:
-            # Bring the port down
-            for port in ports:
-                cls.set_port_admin_status_by_log_port(sdk_handle, port, SX_PORT_ADMIN_STATUS_DOWN)
-            # Set the desired power mode
-            result = cls.mgmt_phy_mod_pwr_attr_set(sdk_handle, sdk_index, slot_id, attr_type, power_mode)
-        finally:
-            # Bring the port up
-            for port in ports:
-                cls.set_port_admin_status_by_log_port(sdk_handle, port, SX_PORT_ADMIN_STATUS_UP)
-
-        return result
+        return cls.mgmt_phy_mod_pwr_attr_set(sdk_handle, sdk_index, slot_id, attr_type, power_mode)
 
 
     def set_lpmode(self, lpmode):
@@ -626,6 +620,9 @@ class SFP(NvidiaSFPCommon):
             # Set LPM
             try:
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                for line in output.splitlines():
+                    if line.startswith('Error') or line.startswith('Notice'):
+                        print('\n' + line)
                 return 'True' in output
             except subprocess.CalledProcessError as e:
                 print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
@@ -636,12 +633,19 @@ class SFP(NvidiaSFPCommon):
 
     @classmethod
     def _set_lpmode(cls, lpmode, sdk_handle, sdk_index, slot_id):
-        log_port_list = cls.get_logical_ports(sdk_handle, sdk_index, slot_id)
+        up_port_list, down_port_list = cls.get_logical_ports(sdk_handle, sdk_index, slot_id)
+        if up_port_list and lpmode:
+            print('Error: Please put port in admin down state before entering low power mode')
+            logger.log_error('Please put port in admin down state before entering low power mode')
+            return False
+
+        if not lpmode and down_port_list:
+            print('Notice: Be aware you exit LPM mode but still port is in admin down state')
+
         sdk_lpmode = SX_MGMT_PHY_MOD_PWR_MODE_LOW_E if lpmode else SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E
         cls._set_lpmode_raw(sdk_handle,
                             sdk_index,
                             slot_id,
-                            log_port_list,
                             SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E,
                             sdk_lpmode)
         logger.log_info("{} low power mode for module {}, slot {}".format("Enabled" if lpmode else "Disabled", sdk_index, slot_id))
