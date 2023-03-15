@@ -1,23 +1,27 @@
-#############################################################################
-# PDDF
-# Module contains an implementation of SONiC Chassis API
-#
-#############################################################################
+#!/usr/bin/env python
+# @Company ：Celestica
+# @Time    : 2023/3/2 10:19
+# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Author  : jiang tao
 
 try:
-    from sonic_platform_pddf_base.pddf_chassis import PddfChassis
+    import os
     import sys
+    import time
     import syslog
     from . import helper
     from . import component
+    from .watchdog import Watchdog
+    from sonic_platform_pddf_base.pddf_chassis import PddfChassis
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
-PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-GETREG_PATH = "/sys/devices/platform/sys_cpld/getreg"
-RESET_REGISTER = "0xA106"
+GET_REBOOT_CAUSE = "0x3a 0x64 0x00 0x01 0x06"
+
+Sensor_List_Info = "/tmp/sensor_info.log"
+Sensor_Info_Update_Period_Secs = 60
 
 
 class Chassis(PddfChassis):
@@ -26,12 +30,38 @@ class Chassis(PddfChassis):
     """
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
+        self.helper = helper.APIHelper()
+        self.__refresh_sensor_list_info()
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-        self._api_helper = helper.APIHelper()
 
         for index in range(self.platform_inventory['num_component']):
             component_obj = component.Component(index)
             self._component_list.append(component_obj)
+
+    def __refresh_sensor_list_info(self):
+        """
+        refresh the sensor list informal in sensor_info.log.
+        The refresh interval is 60 seconds
+        """
+        if not os.path.exists(Sensor_List_Info):
+            self.__write_sensor_list_info()
+
+        with open(Sensor_List_Info, "r") as f:
+            log_time = f.readline()
+        if time.time() - float(log_time.strip()) > Sensor_Info_Update_Period_Secs:
+            self.__write_sensor_list_info()
+
+    def __write_sensor_list_info(self):
+        """
+        Write the log of the command 'ipmitool sensor list' in sensor_info.log
+        """
+        status, info = self.helper.run_command("ipmitool sensor list")
+        if not status:
+            print("Fail! Can't get sensor list info by command: ipmitool sensor list")
+            return False
+        with open(Sensor_List_Info, "w") as f:
+            f.write("%s\n%s" % (str(time.time()), info))
+        return True
 
     def get_sfp(self, index):
         """
@@ -75,15 +105,15 @@ class Chassis(PddfChassis):
             REBOOT_CAUSE_NON_HARDWARE = "Non-Hardware"
         """
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
-        sw_reboot_cause = self._api_helper.read_txt_file(reboot_cause_path) or "Unknown"
-        hw_reboot_cause = self._api_helper.get_cpld_reg_value(GETREG_PATH, RESET_REGISTER)
+        sw_reboot_cause = self.helper.read_txt_file(reboot_cause_path) or "Unknown"
+        status, hw_reboot_cause = self.helper.ipmi_raw(GET_REBOOT_CAUSE)
 
         prev_reboot_cause = {
-            '0x11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
-            '0x22': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is soft-set CPU warm reset"),
-            '0x33': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU cold reset"),
-            '0x44': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU warm reset"),
-            '0x66': (self.REBOOT_CAUSE_WATCHDOG, "The last reset is watchdog reset"),
+            '11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
+            '22': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is soft-set CPU warm reset"),
+            '33': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU cold reset"),
+            '44': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU warm reset"),
+            '66': (self.REBOOT_CAUSE_WATCHDOG, "The last reset is watchdog reset"),
 
         }.get(hw_reboot_cause, (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Unknown reason'))
 
@@ -92,48 +122,6 @@ class Chassis(PddfChassis):
 
         return prev_reboot_cause
 
-    # def get_reboot_cause(self):
-    #     """
-    #     Retrieves the cause of the previous reboot
-    #
-    #     Returns:
-    #         A tuple (string, string) where the first element is a string
-    #         containing the cause of the previous reboot. This string must be
-    #         one of the predefined strings in this class. If the first string
-    #         is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
-    #         to pass a description of the reboot cause.
-    #     """
-    #     hw_reboot_cause = ""
-    #     import os
-    #     if os.path.exists('/sys/class/watchdog/watchdog0/bootstatus'):
-    #         try:
-    #             with open("/sys/class/watchdog/watchdog0/bootstatus", "r") as f:
-    #                 hw_reboot_cause = f.read().strip('\n')
-    #             if hw_reboot_cause == "32":
-    #                 reboot_cause = self.REBOOT_CAUSE_WATCHDOG
-    #                 description = 'Hardware Watchdog Reset'
-    #                 return (reboot_cause, description)
-    #         except Exception as e:
-    #             raise Exception('Error while trying to find the HW reboot cause - {}'.format(str(e)))
-    #
-    #     elif os.path.exists('/sys/class/watchdog/watchdog0/reboot_reason'):
-    #         try:
-    #             with open("/sys/class/watchdog/watchdog0/reboot_reason", "r") as f:
-    #                 hw_reboot_cause = f.read().strip('\n')
-    #
-    #             if hw_reboot_cause == "2":
-    #                 reboot_cause = self.REBOOT_CAUSE_WATCHDOG
-    #                 description = 'Hardware Watchdog Reset'
-    #                 return (reboot_cause, description)
-    #         except Exception as e:
-    #             raise Exception('Error while trying to find the HW reboot cause - {}'.format(str(e)))
-    #
-    #     else:
-    #         syslog.syslog(syslog.LOG_INFO, "Watchdog is not supported on this platform")
-    #
-    #     reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
-    #     description = 'Unknown reason'
-    #     return (reboot_cause, description)
     def get_watchdog(self):
         """
         Retreives hardware watchdog device on this chassis
@@ -142,12 +130,12 @@ class Chassis(PddfChassis):
             An object derived from WatchdogBase representing the hardware
             watchdog device
         """
+
         try:
+
             if self._watchdog is None:
-                from .watchdog import Watchdog
                 # Create the watchdog Instance
                 self._watchdog = Watchdog()
-
         except Exception as E:
             syslog.syslog(syslog.LOG_ERR, "Fail to load watchdog due to {}".format(E))
         return self._watchdog
