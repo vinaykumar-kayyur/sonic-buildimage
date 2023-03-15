@@ -1,18 +1,12 @@
 #!/usr/bin/env python
+# @Company ：Celestica
+# @Time    : 2023/3/9 16:19
+# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Author  : jiang tao
 
-#############################################################################
-#
-# Watchdog contains an implementation of SONiC Platform Base Watchdog API
-#
-#############################################################################
-import ctypes
 import fcntl
 import os
-import subprocess
-import time
 import array
-import syslog
-import click
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -57,10 +51,7 @@ watchdog = 0
 
 
 class Watchdog(WatchdogBase):
-    # watchdog = None
-
     def __init__(self):
-        # global watchdog
         self.watchdog = None
         self.wdt_main_dev_name = self._get_wdt()
         if self.wdt_main_dev_name is None:
@@ -93,7 +84,8 @@ class Watchdog(WatchdogBase):
         wdt_main_dev_name = wdt_main_dev_list[0]
         return wdt_main_dev_name
 
-    def _read_file(self, file_path):
+    @staticmethod
+    def _read_file(file_path):
         """
         Read text file
         """
@@ -122,7 +114,7 @@ class Watchdog(WatchdogBase):
         req = array.array('h', [WDIOS_DISABLECARD])
         fcntl.ioctl(self.watchdog, WDIOC_SETOPTIONS, req, False)
 
-    def _keepalive(self):
+    def _keep_alive(self):
         """
         Keep alive watchdog timer
         """
@@ -130,7 +122,7 @@ class Watchdog(WatchdogBase):
             self.watchdog = os.open(self.watchdog_device_path, os.O_RDWR)
         fcntl.ioctl(self.watchdog, WDIOC_KEEPALIVE)
 
-    def _settimeout(self, seconds):
+    def _set_timeout(self, seconds):
         """
         Set watchdog timer timeout
         @param seconds - timeout in seconds
@@ -142,28 +134,21 @@ class Watchdog(WatchdogBase):
         fcntl.ioctl(self.watchdog, WDIOC_SETTIMEOUT, req, True)
         return int(req[0])
 
-    def _gettimeout(self, timeout_path):
+    def _get_timeout(self):
         """
         Get watchdog timeout
         @return watchdog timeout
         """
-        # req = array.array('I', [0])
-        # fcntl.ioctl(self.watchdog, WDIOC_GETTIMEOUT, req, True)
+        return int(self._read_file(self.timeout_path))
 
-        # return int(req[0])
-        return int(self._read_file(self.time_left))
-
-    def _gettimeleft(self):
+    def _get_time_left(self):
         """
         Get time left before watchdog timer expires
         @return time left in seconds
         """
-        # req = array.array('I', [0])
-        # fcntl.ioctl(self.watchdog, WDIOC_GETTIMELEFT, req, True)
-        # return int(req[0])
         return int(self._read_file(self.time_left))
 
-    #################################################################
+    # Watchdog Base API #
 
     def arm(self, seconds):
         """
@@ -184,16 +169,15 @@ class Watchdog(WatchdogBase):
 
         try:
             if self.timeout != seconds:
-                self.timeout = self._settimeout(seconds)
+                self.timeout = self._set_timeout(seconds)
 
             if self.armed:
-                self._keepalive()
+                self._keep_alive()
             else:
                 self._enable()
                 self.armed = True
             ret = self.timeout
-        except IOError as e:
-            click.echo("arm-error-%s" % str(e))
+        except IOError:
             pass
 
         return ret
@@ -233,15 +217,15 @@ class Watchdog(WatchdogBase):
             watchdog timer. If the watchdog is not armed, returns -1.
         """
 
-        timeleft = WDT_COMMON_ERROR
+        time_left = WDT_COMMON_ERROR
 
         if self.armed:
             try:
-                timeleft = self._gettimeleft()
+                time_left = self._get_time_left()
             except IOError:
                 pass
 
-        return timeleft
+        return time_left
 
     def __del__(self):
         """
