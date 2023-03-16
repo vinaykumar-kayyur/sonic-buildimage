@@ -8,9 +8,10 @@ setup(
     description='SONiC platform API implementation on Celestica Platforms based on PDDF',
     license='Apache 2.0',
     author='SONiC Team',
-    author_email='linuxnetdev@microsoft.com',
+    author_email='yajiang@celestica.com',
     url='https://github.com/Azure/sonic-buildimage',
-    packages=['sonic_platform'],
+    packages=['sonic_platform',
+             'sonic_pcie'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Plugins',
