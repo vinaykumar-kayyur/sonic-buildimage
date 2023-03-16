@@ -90,6 +90,8 @@ class Thermal(PddfThermal):
         self.__conf = DeviceThreshold(self.get_name())
         # Default threshold.
         self.__default_threshold = DEFAULT_THRESHOLD[self.get_name()]
+        self.min_temperature = None
+        self.max_temperature = None
 
     # Provide the functions/variables below for which implementation is to be overwritten
     def get_name(self):
@@ -108,6 +110,19 @@ class Thermal(PddfThermal):
 
         if get_temp is not None:
             return True if get_temp else False
+
+    def get_temperature(self):
+        current = super().get_temperature()
+
+        if self.min_temperature is None or \
+            current < self.min_temperature:
+            self.min_temperature = current
+
+        if self.max_temperature is None or \
+           current > self.max_temperature:
+            self.max_temperature = current
+
+        return current
 
     def set_high_threshold(self, temperature):
         try:
@@ -244,3 +259,27 @@ class Thermal(PddfThermal):
             string: Serial number of device
         """
         return 'N/A'
+
+    def get_minimum_recorded(self):
+        """
+        Retrieves the minimum recorded temperature of thermal
+        Returns:
+            A float number, the minimum recorded temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.min_temperature is None:
+            self.get_temperature()
+
+        return self.min_temperature
+
+    def get_maximum_recorded(self):
+        """
+        Retrieves the maximum recorded temperature of thermal
+        Returns:
+            A float number, the maximum recorded temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.min_temperature is None:
+            self.get_temperature()
+
+        return self.max_temperature

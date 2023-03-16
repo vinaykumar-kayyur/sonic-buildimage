@@ -6,8 +6,10 @@
 #############################################################################
 
 try:
-    import subprocess
+    import os
+    import json
     from sonic_platform_base.component_base import ComponentBase
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -16,12 +18,12 @@ CPLD_ADDR_MAPPING = {
     "MB_CPLD1": ['20', '0x61'],
     "MB_CPLD2": ['21', '0x62'],
     "FAN_CPLD": ['17', '0x66'],
-    "CPU_CPLD": ['0',  '0x65']
+    "CPU_CPLD": ['0', '0x65']
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
-   ("FPGA",     "FPGA(0x60)"),
+   ("FPGA", "FPGA(0x60)"),
    ("MB_CPLD1", "Mainboard CPLD(0x62)"),
    ("MB_CPLD2", "Mainboard CPLD(0x64)"),
    ("FAN_CPLD", "Fan board CPLD(0x66)"),
@@ -52,8 +54,8 @@ class Component(ComponentBase):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
         for cpld_name in CPLD_ADDR_MAPPING:
-            cmd = "i2cget -f -y {0} {1} 0x1".format(CPLD_ADDR_MAPPING[cpld_name][0], CPLD_ADDR_MAPPING[cpld_name][1])
-            status, value = subprocess.getstatusoutput(cmd)
+            cmd = ["i2cget", "-f", "-y", CPLD_ADDR_MAPPING[cpld_name][0], CPLD_ADDR_MAPPING[cpld_name][1], "0x1"]
+            status, value = getstatusoutput_noshell(cmd)
             if not status:
                 cpld_version_raw = value.rstrip()
                 cpld_version[cpld_name] = "{}".format(int(cpld_version_raw,16))
@@ -100,7 +102,7 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        ret = subprocess.call(["tar", "-C", "/tmp", "-xzf", image_path ] )
+        ret, output = getstatusoutput_noshell(["tar", "-C", "/tmp", "-xzf", image_path ])
         if ret != 0 :
             print("Installation failed because of wrong image package")
             return False
@@ -117,12 +119,12 @@ class Component(ComponentBase):
                 continue
             if self.name == item['id'] and item['path'] and item.get('cpu'):
                 print( "Find", item['id'], item['path'], item['cpu'] )
-                ret = subprocess.call(["/tmp/run_install.sh", item['id'], item['path'], item['cpu'] ])
+                ret, output = getstatusoutput_noshell(["/tmp/run_install.sh", item['id'], item['path'], item['cpu'] ])
                 if ret==0:
                     break
             elif self.name == item['id'] and item['path']:
                 print( "Find", item['id'], item['path'] )
-                ret = subprocess.call(["/tmp/run_install.sh", item['id'], item['path'] ])
+                ret, output = getstatusoutput_noshell(["/tmp/run_install.sh", item['id'], item['path'] ])
                 if ret==0:
                     break
 
@@ -130,15 +132,6 @@ class Component(ComponentBase):
             return True
         else :
             return False
-
-    def update_firmware(self, image_path):
-        return False
-
-    def get_available_firmware_version(self, image_path):
-        return 'N/A'
-
-    def get_firmware_update_notification(self, image_path):
-        return "None"
 
     def get_presence(self):
         """
@@ -191,4 +184,3 @@ class Component(ComponentBase):
             bool: True if it is replaceable.
         """
         return False
-

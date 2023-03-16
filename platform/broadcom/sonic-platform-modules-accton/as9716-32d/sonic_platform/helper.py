@@ -58,6 +58,49 @@ class APIHelper():
             return False
         return True
 
+    def ipmi_raw(self, netfn, cmd):
+        status = True
+        result = ""
+        try:
+            err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'raw', str(netfn), str(cmd)])
+            if err == [0]:
+                result = raw_data.strip()
+            else:
+                status = False
+        except Exception:
+            status = False
+        return status, result
+
+    def ipmi_fru_id(self, id, key=None):
+        status = True
+        result = ""
+        try:
+            if (key is None):
+                err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)])
+            else:
+                err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'fru', 'print', str(id)], ['grep', str(key)])
+            if err == [0] or err == [0, 0]:
+                result = raw_data.strip()
+            else:
+                status = False
+        except Exception:
+            status = False
+        return status, result
+
+    def ipmi_set_ss_thres(self, id, threshold_key, value):
+        status = True
+        result = ""
+        try:
+            err, raw_data = getstatusoutput_noshell_pipe(['ipmitool', 'sensor', 'thresh', str(id), str(threshold_key), str(value)])
+            if err == [0]:
+                result = raw_data.strip()
+            else:
+                status = False
+        except Exception:
+            status = False
+        return status, result
+
+
 class FileLock:
     """
     Due to pmon docker not installing the py-filelock, this class 
