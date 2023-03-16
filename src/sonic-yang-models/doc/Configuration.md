@@ -29,6 +29,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [FABRIC_PORT](#fabric-port)
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
@@ -982,6 +983,26 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 	    "FG_NHG": "fgnhg_v6"
 	}
 }
+```
+
+
+### FABRIC_PORT
+```
+{
+"FABRIC_PORT": {
+    "Fabric0": {
+        "alias": "Fabric0",
+        "isolateStatus": "False",
+        "lanes": "0"
+    },
+    "Fabric1": {
+        "alias": "Fabric1",
+        "isolateStatus": "False",
+        "lanes": "1"
+    }
+  }
+}
+
 ```
 
 
