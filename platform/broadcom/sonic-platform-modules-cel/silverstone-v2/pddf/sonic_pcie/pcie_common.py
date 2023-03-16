@@ -31,7 +31,7 @@ class PcieUtil(PcieBase):
 
     # load the config file
     def load_config_file(self):
-        config_file = self.config_path + "/" + "pcie.yaml"
+        config_file = self.config_path + "/plugins/" + "pcie.yaml"
         try:
             with open(config_file) as conf_file:
                 self.conf_info = yaml.load(conf_file)
