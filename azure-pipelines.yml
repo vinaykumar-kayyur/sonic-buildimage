@@ -37,11 +37,8 @@ resources:
     ref: master
 
 variables:
-- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
-- ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-  - template: .azure-pipelines/template-variables.yml
-- ${{ else }}:
-  - template: .azure-pipelines/template-variables.yml@buildimage
+- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
+- template: .azure-pipelines/template-variables.yml@buildimage
 - name: CACHE_MODE
   value: rcache
 - name: ENABLE_FIPS
@@ -59,6 +56,8 @@ stages:
 
 - stage: Build
   pool: sonicbld
+  variables:
+    INSTALL_DEBUG_TOOLS: y
   dependsOn: []
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
@@ -67,10 +66,13 @@ stages:
       jobGroups:
       - name: broadcom
         variables:
-          swi_image: yes
           docker_syncd_rpc_image: yes
           platform_rpc: brcm
+          swi_image: yes
       - name: mellanox
+        variables:
+          docker_syncd_rpc_image: yes
+          platform_rpc: mlnx
       - name: marvell-armhf
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
