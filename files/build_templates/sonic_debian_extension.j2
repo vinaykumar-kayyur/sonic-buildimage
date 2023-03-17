@@ -78,6 +78,10 @@ fi
 # Update apt's snapshot of its repos
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get update
 
+# Install efitools to support secure upgrade
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install efitools
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install mokutil
+
 # Apply environtment configuration files
 sudo cp $IMAGE_CONFIGS/environment/environment $FILESYSTEM_ROOT/etc/
 sudo cp $IMAGE_CONFIGS/environment/motd $FILESYSTEM_ROOT/etc/
@@ -604,6 +608,11 @@ j2 files/build_templates/config-chassisdb.service.j2 | sudo tee $FILESYSTEM_ROOT
 sudo cp $IMAGE_CONFIGS/config-chassisdb/config-chassisdb $FILESYSTEM_ROOT/usr/bin/config-chassisdb
 echo "config-chassisdb.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-chassisdb.service
+
+# Copy backend-acl script and service file
+sudo cp $IMAGE_CONFIGS/backend_acl/backend-acl.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/backend-acl.service
+sudo cp $IMAGE_CONFIGS/backend_acl/backend_acl.py $FILESYSTEM_ROOT/usr/bin/backend_acl.py
+echo "backend-acl.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
