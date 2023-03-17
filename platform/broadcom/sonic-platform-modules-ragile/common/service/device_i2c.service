@@ -1,6 +1,6 @@
 [Unit]
-Description= ragile Global Initialize I2c drivers.
-After=pddf-platform-init.service
+Description= Ruijie Global Initialize I2c drivers.
+After=local-fs.target
 Before=pmon.service
 DefaultDependencies=no
 

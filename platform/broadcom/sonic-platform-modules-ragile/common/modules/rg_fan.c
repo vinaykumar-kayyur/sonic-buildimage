@@ -2,7 +2,7 @@
  * rg_fan.c - A driver for control rg_fan base on rg_fan.c
  *
  * Copyright (c) 1998, 1999  Frodo Looijaard <frodol@dds.nl>
- * Copyright (c) 2019  <support@ragile.com>
+ * Copyright (c) 2019  <sonic_rd@ruijie.com.cn>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -261,6 +261,6 @@ static struct i2c_driver rg_fan_driver = {
 };
 
 module_i2c_driver(rg_fan_driver);
-MODULE_AUTHOR("support <support@ragile.com>");
-MODULE_DESCRIPTION("ragile fan driver");
+MODULE_AUTHOR("sonic_rd <sonic_rd@ruijie.com.cn>");
+MODULE_DESCRIPTION("ruijie fan driver");
 MODULE_LICENSE("GPL");
