@@ -18,17 +18,17 @@ class Interface():
     # Thermal
     def get_thermal_temp_max(self, name):
         for thermal in self.thermal_list:
-            if name == thermal.get_name():
+            if name == thermal.get_real_name():
                 return thermal.get_high_threshold()
 
     def get_thermal_temp_min(self, name):
         for thermal in self.thermal_list:
-            if name == thermal.get_name():
+            if name == thermal.get_real_name():
                 return thermal.get_low_threshold()
 
     def get_thermal_temp(self, name):
         for thermal in self.thermal_list:
-            if name == thermal.get_name():
+            if name == thermal.get_real_name():
                 return thermal.get_temperature()
     # Fans
     def set_fan_speed_pwm(self, speed):

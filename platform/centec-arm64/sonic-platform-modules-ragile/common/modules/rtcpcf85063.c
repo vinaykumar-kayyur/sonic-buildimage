@@ -231,20 +231,20 @@ static int pcf85063_probe(struct i2c_client *client,
 }
 
 static const struct i2c_device_id pcf85063_id[] = {
-	{ "pcf85063", 0 },
+	{ "rtcpcf85063", 0 },
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, pcf85063_id);
 
 static const struct of_device_id pcf85063_of_match[] = {
-	{ .compatible = "nxp,pcf85063" },
+	{ .compatible = "nxp,rtcpcf85063" },
 	{}
 };
 MODULE_DEVICE_TABLE(of, pcf85063_of_match);
 
 static struct i2c_driver pcf85063_driver = {
 	.driver		= {
-		.name	= "rtc-pcf85063",
+		.name	= "rtcpcf85063",
 		.of_match_table = of_match_ptr(pcf85063_of_match),
 	},
 	.probe		= pcf85063_probe,

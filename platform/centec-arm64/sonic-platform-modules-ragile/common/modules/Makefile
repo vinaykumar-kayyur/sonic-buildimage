@@ -12,12 +12,13 @@ obj-m += ragile_platform.o
 obj-m += i2c-mux-pca9641.o
 obj-m += i2c-mux-pca954x.o
 obj-m += ragile_common.o
-obj-m += rtc-pcf85063.o
+obj-m += rtcpcf85063.o
 #obj-m += tpm_tis_core.o
 #obj-m += rg_spi_gpio.o
 #obj-m += spi-gpio.o
 #obj-m += tpm_tis_spi.o
 obj-m += optoe.o
+obj-m += rg_at24.o
 
 all :
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(PWD) modules
