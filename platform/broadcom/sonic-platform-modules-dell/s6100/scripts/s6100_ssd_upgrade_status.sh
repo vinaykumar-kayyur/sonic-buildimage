@@ -23,14 +23,19 @@ SMART_CMD=`smartctl -a /dev/sda`
 SSD_FW_VERSION=$(echo "$iSMART_CMD" | grep "FW Version" | awk '{print $NF}')
 SSD_FW_VERSION=${SSD_FW_VERSION,,}
 SSD_MODEL=$(echo "$iSMART_CMD" | grep "Model" | awk '{print $NF}')
+logger -p user.crit -t DELL_S6100_SSD_MON "SSD Model = $SSD_MODEL ; FWVERSION = $SSD_FW_VERSION"
 
 if [ -e $SSD_FW_UPGRADE/GPIO7_pending_upgrade ]; then
     if [ $SSD_MODEL == "3IE" ] && [ $SSD_FW_VERSION == "s141002c" ]; then
         # If SSD Firmware is not upgraded
+        logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is running older firmware. Do not power-cycle/reboot this unit."
+        logger -p user.crit -t DELL_S6100_SSD_MON "soft-/fast-/warm-reboot is allowed."
         exit 0
     fi
     if [ $SSD_FW_VERSION == "s16425c1" ] || [ $SSD_FW_VERSION == "s16425cq" ]; then
         # If SSD Firmware is not upgraded
+        logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is running older firmware. Do not power-cycle/reboot this unit."
+        logger -p user.crit -t DELL_S6100_SSD_MON "soft-/fast-/warm-reboot is allowed."
         exit 0
     fi
 fi
@@ -43,6 +48,7 @@ SSD_UPGRADE_STATUS1=$(echo "$SSD_UPGRADE_STATUS1" | awk '{print $NF}')
 
 SSD_UPGRADE_STATUS2=`io_rd_wr.py --set --val 06 --offset 210; io_rd_wr.py --set --val 0A --offset 211; io_rd_wr.py --get --offset 212`
 SSD_UPGRADE_STATUS2=$(echo "$SSD_UPGRADE_STATUS2" | awk '{print $NF}')
+logger -p user.crit -t DELL_S6100_SSD_MON "SSD Status REG1 = $SSD_UPGRADE_STATUS1 ; REG2 = $SSD_UPGRADE_STATUS2"
 
 if [ $SSD_UPGRADE_STATUS1 == "2" ]; then
     rm -rf $SSD_FW_UPGRADE/GPIO7_*
