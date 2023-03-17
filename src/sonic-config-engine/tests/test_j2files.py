@@ -638,7 +638,7 @@ class TestJ2Files(TestCase):
 
 
     def test_buffers_edgezone_aggregator_render_template(self):
-        self._test_buffers_render_template('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D108C8', 'sample-arista-7260-t0-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t0.json')
+        self._test_buffers_render_template('arista', 'x86_64-arista_7060_cx32s', 'Arista-7060CX-32S-D48C8', 'sample-arista-7060-t0-minigraph.xml', 'buffers.json.j2', 'buffer-arista7060-t0.json')
 
 
     def tearDown(self):
