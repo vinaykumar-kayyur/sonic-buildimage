@@ -13,3 +13,4 @@ obj-m += lpc_dbg.o
 obj-m += lpc_cpld_i2c_ocores.o
 obj-m += rg-i2c-algo-bit.o
 obj-m += rg-i2c-gpio.o
+obj-m += rg_at24.o

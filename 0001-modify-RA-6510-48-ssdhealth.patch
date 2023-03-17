@@ -1,0 +1,120 @@
+From 1b0de1587b63fb79db438b1a62c350db8ce26d0c Mon Sep 17 00:00:00 2001
+From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
+Date: Fri, 24 Feb 2023 11:34:57 +0800
+Subject: [PATCH] modify RA 6510-48 ssdhealth fix psu get_model fix show
+ platform fan/psustatus Signed-off-by: pettershao-ragilenetworks
+ <pettershao@ragilenetworks.com>
+
+---
+ .../plugins/ssd_util.py                       |  2 +-
+ .../ra-b6510-48v8c/sonic_platform/fan.py      | 21 +++++++++++++++++
+ .../ra-b6510-48v8c/sonic_platform/psu.py      | 23 +++++++++++++++++--
+ 3 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/device/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/ssd_util.py b/device/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/ssd_util.py
+index c532804f6..e92782a09 100755
+--- a/device/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/ssd_util.py
++++ b/device/ragile/x86_64-ragile_ra-b6510-48v8c-r0/plugins/ssd_util.py
+@@ -64,7 +64,7 @@ class SsdUtil(SsdBase):
+         self.model_attr = {
+              "ER2-GD"       : { "temperature" : "\n190\s+(.+?)\n", "remainingLife" : "\n202\s+(.+?)\n" },
+              "AF2MA31DTDLT" : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n202\s+(.+?)\n" },
+-             "SSDSCKKB"     : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n233\s+(.+?)\n" },
++             "SSDSCK"       : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n233\s+(.+?)\n" },
+              "SM619GXC"     : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n169\s+(.+?)\n" },
+              "MZNLH"        : { "temperature" : "\n190\s+(.+?)\n", "remainingLife" : "\n245\s+(.+?)\n" },
+              "IM2S3134N"    : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n231\s+(.+?)\n" }
+diff --git a/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/fan.py b/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/fan.py
+index f37900d28..ea8c4cb6b 100644
+--- a/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/fan.py
++++ b/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/fan.py
+@@ -24,6 +24,27 @@ class Fan(PddfFan):
+         """
+         return self.FAN_DIRECTION_EXHAUST
+ 
++    def get_presence(self):
++        if not self.is_psu_fan:
++            return super().get_presence()
++        # psu-fan get_presence
++        status = 0
++        device = "PSU{}".format(self.fans_psu_index)
++        output = self.pddf_obj.get_attr_name_output(device, "psu_present")
++        if not output:
++            return False
++
++        mode = output['mode']
++        status = output['status']
++
++        vmap = self.plugin_data['PSU']['psu_present'][mode]['valmap']
++
++        if status.rstrip('\n') in vmap:
++            return vmap[status.rstrip('\n')]
++        else:
++            return False
++
++
+     def get_speed_rpm(self):
+         if self.is_psu_fan:
+             return super().get_speed_rpm()
+diff --git a/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/psu.py b/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/psu.py
+index f25b24f14..89eaf4898 100644
+--- a/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/psu.py
++++ b/platform/broadcom/sonic-platform-modules-ragile/ra-b6510-48v8c/sonic_platform/psu.py
+@@ -39,6 +39,9 @@ class Psu(PddfPsu):
+         Returns:
+             string: Model/part number of device
+         """
++        if self.get_presence() is False:
++            return "N/A"
++
+         model = super().get_model()
+ 
+         psu_model_map = {
+@@ -63,12 +66,12 @@ class Psu(PddfPsu):
+         while time_retry:
+             try:
+                 val, result_msg = subprocess.getstatusoutput(cmd)
+-                if val is False:
++                if val != 0:
+                     time_retry -=1
+                     time.sleep(time_delay)
+                     continue
+                 else:
+-                    return val, result_msg
++                    return True, result_msg
+             except Exception as e:
+                 time_retry -= 1
+                 result_msg = str(e)
+@@ -126,6 +129,20 @@ class Psu(PddfPsu):
+ 
+         return float(v_out)/1000
+ 
++
++    def get_serial(self):
++        """
++        Retrieves the serial number of the device
++
++        Returns:
++            string: Serial number of device
++        """
++        if self.get_presence() is False:
++            return "N/A"
++
++        return super().get_serial()
++
++
+     def get_revision(self):
+         """
+         Retrieves the hardware revision of the device
+@@ -133,6 +150,8 @@ class Psu(PddfPsu):
+         Returns:
+             string: Revision value of device
+         """
++        if self.get_presence() is False:
++            return "N/A"
+         device_eeprom = "PSU{}-EEPROM".format(self.psu_index)
+         pddf_obj_data = self.pddf_obj.data
+ 
+-- 
+2.25.1
+
