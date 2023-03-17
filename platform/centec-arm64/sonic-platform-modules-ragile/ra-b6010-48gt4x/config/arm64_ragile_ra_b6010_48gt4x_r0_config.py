@@ -5,17 +5,17 @@ from collections import OrderedDict
 PCA9548START  = -1
 PCA9548BUSEND = -2
 
-RAGILE_CARDID      = 0x00004099
+RAGILE_CARDID      = 0x00004065
 RAGILE_PRODUCTNAME = "RA-B6010-48GT4X"
-RAGILE_PART_NUMBER    = "RJ000001"
+RAGILE_PART_NUMBER    = "01016994"
 RAGILE_LABEL_REVISION = "R01"
-RAGILE_ONIE_VERSION   = "2018.05"
+RAGILE_ONIE_VERSION   = "2018.05-rc1"
 RAGILE_MAC_SIZE       = 3
 RAGILE_MANUF_NAME     = "Ragile"
-RAGILE_MANUF_COUNTRY  = "CHN"
+RAGILE_MANUF_COUNTRY  = "USA"
 RAGILE_VENDOR_NAME    = "Ragile"
 RAGILE_DIAG_VERSION   = "0.1.0.15"
-RAGILE_SERVICE_TAG    = "www.Ragile.com"
+RAGILE_SERVICE_TAG    = "www.ragilenetworks.com"
 
 LOCAL_LED_CONTROL = {
     "CLOSE":{},
@@ -64,8 +64,8 @@ DRIVERLISTS = [
         {"name":"i2c_mux", "delay":0},
         {"name":"rtcpcf85063", "delay":0},
         {"name":"i2c_mux_pca954x", "delay":0}, # force_deselect_on_exit=1
-        {"name":"ragile_common dfd_my_type=0x4099", "delay":0},
-        #{"name":"firmware_driver", "delay":0},
+        {"name":"ragile_common dfd_my_type=0x4065", "delay":0},
+        {"name":"firmware_driver", "delay":0},
         {"name":"rg_cpld", "delay":0},
         {"name":"rg_at24", "delay":0},
         #{"name":"spi-gpio", "delay":0},

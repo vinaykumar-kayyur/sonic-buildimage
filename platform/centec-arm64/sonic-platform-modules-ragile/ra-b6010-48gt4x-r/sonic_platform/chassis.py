@@ -69,13 +69,11 @@ class Chassis(ChassisBase):
         name = ''
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return ''
 
         e = sys_eeprom.read_eeprom()
         name = sys_eeprom.modelstr(e)
         if name is None:
-            self.log_error('syseeprom name is error.')
             return ''
         return name
 
@@ -96,13 +94,11 @@ class Chassis(ChassisBase):
         model = ''
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return ''
 
         e = sys_eeprom.read_eeprom()
         model = sys_eeprom.modelnumber(e)
         if model is None:
-            self.log_error('syseeprom model number is error.')
             return ''
         return model
 
@@ -116,13 +112,11 @@ class Chassis(ChassisBase):
         serial_number = ''
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return ''
 
         e = sys_eeprom.read_eeprom()
         serial_number = sys_eeprom.serial_number_str(e)
         if serial_number is None:
-            self.log_error('syseeprom serial number is error.')
             return ''
 
         return serial_number
@@ -137,13 +131,11 @@ class Chassis(ChassisBase):
         device_version = ''
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return ''
 
         e = sys_eeprom.read_eeprom()
         device_version = sys_eeprom.deviceversion(e)
         if device_version is None:
-            self.log_error('syseeprom serial number is error.')
             return ''
 
         return device_version
@@ -212,13 +204,11 @@ class Chassis(ChassisBase):
         base_mac = ''
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return ''
 
         e = sys_eeprom.read_eeprom()
         base_mac = sys_eeprom.base_mac_addr(e)
         if base_mac is None:
-            self.log_error('syseeprom base mac is error.')
             return ''
 
         return base_mac.upper()
@@ -238,13 +228,11 @@ class Chassis(ChassisBase):
         sys_eeprom_dict = dict()
         sys_eeprom = self.get_eeprom()
         if sys_eeprom is None:
-            self.log_error('syseeprom is not inited.')
             return {}
 
         e = sys_eeprom.read_eeprom()
         if sys_eeprom._TLV_HDR_ENABLED:
             if not sys_eeprom.is_valid_tlvinfo_header(e):
-                self.log_error('syseeprom tlv header error.')
                 return {}
             total_len = (e[9] << 8) | e[10]
             tlv_index = sys_eeprom._TLV_INFO_HDR_LEN
@@ -255,7 +243,6 @@ class Chassis(ChassisBase):
 
         while (tlv_index + 2) < len(e) and tlv_index < tlv_end:
             if not sys_eeprom.is_valid_tlv(e[tlv_index:]):
-                self.log_error("Invalid TLV field starting at EEPROM offset %d" % tlv_index)
                 break
 
             tlv = e[tlv_index:tlv_index + 2 + e[tlv_index + 1]]

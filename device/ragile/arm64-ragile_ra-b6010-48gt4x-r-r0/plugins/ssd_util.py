@@ -15,7 +15,7 @@ except ImportError as e:
 
 HEALTH_CMD = "cat /sys/kernel/debug/mmc0/mmc0:0001/ext_csd | cut -c 537-538"
 SERIAL_CMD = "cat /sys/bus/mmc/devices/mmc0\\:0001/serial"
-FIRWARE_CMD = "cat /sys/bus/mmc/devices/mmc0\\:0001/name"
+FIRMWARE_CMD = "cat /sys/kernel/debug/mmc0/mmc0:0001/ext_csd | cut -c 509-522"
 NOT_AVAILABLE = "N/A"
 
 class SsdUtil(SsdBase):
@@ -37,7 +37,7 @@ class SsdUtil(SsdBase):
             self.health = NOT_AVAILABLE
 
         try:
-            self.firmware = self._execute_shell(FIRWARE_CMD)
+            self.firmware = self._execute_shell(FIRMWARE_CMD)
         except Exception as e:
             self.firmware = NOT_AVAILABLE
 
