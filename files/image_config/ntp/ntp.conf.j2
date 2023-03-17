@@ -30,8 +30,10 @@ config -#}
     {% set aoptions = '' -%}
 
     {# Authentication key -#}
-    {% if config.key -%}
-        {% set soptions = soptions ~ ' key ' ~ config.key -%}
+    {% if global.authentication == 'enabled' -%}
+        {% if config.key -%}
+            {% set soptions = soptions ~ ' key ' ~ config.key -%}
+        {% endif -%}
     {% endif -%}
 
     {# Aggressive polling -#}
