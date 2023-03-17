@@ -20,12 +20,13 @@ KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
 MODULE_DIRS := as7712-32x as5712-54x as7816-64x as7716-32x as7716-32xb as7312-54x
-MODULE_DIRS += as7326-56x as6712-32x as7726-32x as4630-54pe as4630-54te minipack as5812-54x
+MODULE_DIRS += as7326-56x as6712-32x as7726-32x as4630-54pe as4630-54te as4630-54npe minipack as5812-54x
 MODULE_DIRS += as5835-54x as9716-32d as9726-32d as5835-54t as7312-54xs as7315-27xb as5812-54t
 MODULE_DIR := modules
 UTILS_DIR := utils
 SERVICE_DIR := service
 CONF_DIR := conf
+UDEV_DIR := udev
 
 %:
 	dh $@ --with systemd,python3 --buildsystem=pybuild
@@ -69,9 +70,15 @@ binary-indep:
 		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} $(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
 		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} usr/local/bin; \
 		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} lib/systemd/system; \
+		if [ -d $(MOD_SRC_DIR)/$${mod}/$(UDEV_DIR) ]; then \
+		     dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} etc/udev/rules.d; \
+		fi; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(MODULE_DIR)/*.ko debian/$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
 		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
+		if [ -f $(MOD_SRC_DIR)/$${mod}/$(UDEV_DIR)/* ]; then \
+                     cp $(MOD_SRC_DIR)/$${mod}/$(UDEV_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/etc/udev/rules.d/; \
+		fi; \
 		$(PYTHON3) $${mod}/setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
 	done)
 	# Resuming debhelper scripts
