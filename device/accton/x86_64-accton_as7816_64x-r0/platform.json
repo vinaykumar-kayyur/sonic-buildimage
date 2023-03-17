@@ -4,7 +4,7 @@
         "thermal_manager":false,
         "status_led": {
             "controllable": true,
-            "colors": ["green", "red", "off"]
+            "colors": ["STATUS_LED_COLOR_GREEN", "STATUS_LED_COLOR_RED", "STATUS_LED_COLOR_OFF"]
         },
         "components": [
             {
@@ -234,7 +234,7 @@
                 "name": "PSU-1",
                 "status_led": {
                     "controllable": true,
-                    "colors": ["green", "amber", "off"]
+                    "colors": ["STATUS_LED_COLOR_GREEN", "STATUS_LED_COLOR_AMBER", "STATUS_LED_COLOR_OFF"]
                 },
                 "fans": [
                     {
@@ -254,7 +254,7 @@
                 "name": "PSU-2",
                 "status_led": {
                     "controllable": true,
-                    "colors": ["green", "amber", "off"]
+                    "colors": ["STATUS_LED_COLOR_GREEN", "STATUS_LED_COLOR_AMBER", "STATUS_LED_COLOR_OFF"]
                 },
                 "fans": [
                     {
