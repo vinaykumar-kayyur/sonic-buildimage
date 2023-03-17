@@ -63,10 +63,10 @@ if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "false" ]; then
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [ ! -z $LOG_LEVEL ]; then
-    TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
-else
+if [ -z $LOG_LEVEL ] || [ $LOG_LEVEL == "null" ]; then
     TELEMETRY_ARGS+=" -v=2"
+else
+    TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
