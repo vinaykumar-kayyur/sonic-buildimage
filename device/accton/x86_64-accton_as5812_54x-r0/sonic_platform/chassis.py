@@ -174,6 +174,9 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_eeprom()
 
+    def get_revision(self):
+        return self._eeprom.get_revision()
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot

@@ -12,6 +12,7 @@ import glob
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
+    from .helper import DeviceThreshold
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -52,6 +53,9 @@ class Thermal(ThermalBase):
         self.index = thermal_index
         self.is_psu = is_psu
         self.psu_index = psu_index
+        self.min_temperature = None
+        self.max_temperature = None
+
 
         if self.is_psu:
             psu_i2c_bus = PSU_HWMON_I2C_MAPPING[psu_index]["num"]
@@ -62,13 +66,48 @@ class Thermal(ThermalBase):
             psu_i2c_addr = PSU_CPLD_I2C_MAPPING[psu_index]["addr"]
             self.cpld_path = PSU_I2C_PATH.format(psu_i2c_bus, psu_i2c_addr)
 
+        self.conf = DeviceThreshold(self.get_name())
+        # Default thresholds
+        self.default_threshold = {
+            THERMAL_NAME_LIST[0] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '80.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[1] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '80.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[2] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '80.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            PSU_THERMAL_NAME_LIST[0] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '80.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            PSU_THERMAL_NAME_LIST[1] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '80.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            }
+        }
+
+
         # Set hwmon path
         i2c_path = {
             0: "61-0048/hwmon/hwmon*/", 
             1: "62-0049/hwmon/hwmon*/", 
             2: "63-004a/hwmon/hwmon*/"
         }.get(self.index, None)
-
         self.hwmon_path = "{}/{}".format(SYSFS_PATH, i2c_path)
         self.ss_key = THERMAL_NAME_LIST[self.index]
         self.ss_index = 1
@@ -122,7 +161,57 @@ class Thermal(ThermalBase):
         else:
             temp_file = self.psu_hwmon_path + "psu_temp1_input"
 
+        current = self.__get_temp(temp_file)
+        if self.min_temperature is None or current < self.min_temperature:
+            self.min_temperature = current
+
+        if self.max_temperature is None or current > self.max_temperature:
+            self.max_temperature = current
+
+        return current
         return self.__get_temp(temp_file)
+
+    def get_high_critical_threshold(self):
+        """
+        Retrieves the high critical threshold temperature of thermal
+
+        Returns:
+            A float number, the high critical threshold temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        value = self.conf.get_high_critical_threshold()
+        if value != self.conf.NOT_AVAILABLE:
+            return float(value)
+
+        default_value = self.default_threshold[self.get_name()][self.conf.HIGH_CRIT_THRESHOLD_FIELD]
+        if default_value != self.conf.NOT_AVAILABLE:
+            return float(default_value)
+
+        raise NotImplementedError
+
+    def set_high_critical_threshold(self, temperature):
+        """
+        Sets the critical high threshold temperature of thermal
+
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
+            e.g. 30.125
+
+        Returns:
+            A boolean, True if threshold is set successfully, False if not
+        """
+        try:
+            value = float(temperature)
+        except:
+            return False
+
+        try:
+            self.conf.set_high_critical_threshold(str(value))
+        except:
+            return False
+
+        return True
+
 
     def get_high_threshold(self):
         """
@@ -131,11 +220,15 @@ class Thermal(ThermalBase):
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        if self.is_psu:
-            return 80
+        value = self.conf.get_high_threshold()
+        if value != self.conf.NOT_AVAILABLE:
+            return float(value)
 
-        temp_file = "temp{}_max".format(self.ss_index)
-        return self.__get_temp(temp_file)
+        default_value = self.default_threshold[self.get_name()][self.conf.HIGH_THRESHOLD_FIELD]
+        if default_value != self.conf.NOT_AVAILABLE:
+            return float(default_value)
+
+        raise NotImplementedError
 
     def set_high_threshold(self, temperature):
         """
@@ -146,11 +239,18 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        temp_file = "temp{}_max".format(self.ss_index)
-        temperature = temperature *1000
-        self.__set_threshold(temp_file, temperature)
-        
+        try:
+            value = float(temperature)
+        except:
+            return False
+
+        try:
+            self.conf.set_high_threshold(str(value))
+        except:
+            return False
+
         return True
+
 
     def get_name(self):
         """
@@ -232,3 +332,24 @@ class Thermal(ThermalBase):
             A boolean value, True if replaceable, False if not
         """
         return False
+
+    def get_minimum_recorded(self):
+        """ Retrieves the minimum recorded temperature of thermal
+        Returns: A float number, the minimum recorded temperature of thermal in Celsius
+        up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.min_temperature is None:
+            self.get_temperature()
+
+        return self.min_temperature
+
+    def get_maximum_recorded(self):
+        """ Retrieves the maximum recorded temperature of thermal
+        Returns: A float number, the maximum recorded temperature of thermal in Celsius
+        up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.max_temperature is None:
+            self.get_temperature()
+
+        return self.max_temperature
+

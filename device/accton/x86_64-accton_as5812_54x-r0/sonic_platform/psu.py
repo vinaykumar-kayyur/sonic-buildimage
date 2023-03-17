@@ -81,6 +81,15 @@ class Psu(PsuBase):
         else:
             return 0
 
+    def get_revision(self):
+        rev_path = "{}{}".format(self.hwmon_path, 'psu_revision')
+        rev_val = self._api_helper.read_txt_file(rev_path)
+        if rev_val is not None:
+            return rev_val
+        else:
+            return "N/A"
+
+
     def get_current(self):
         """
         Retrieves present electric current supplied by PSU
@@ -164,7 +173,7 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return False #Not supported
+        return self._thermal_list[0].get_high_threshold() #Not supported
 
     def get_voltage_high_threshold(self):
         """
@@ -261,3 +270,17 @@ class Psu(PsuBase):
             bool: True if it is replaceable.
         """
         return True
+
+    def get_maximun_supplied_power(self):
+        """
+        Retrieves maximun supplied power by PSU
+        Returns:
+        A float number, the power in watts, e.g. 302.6
+        """
+        pout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_p_out_max')
+        val=self._api_helper.read_txt_file(pout_path)
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
+

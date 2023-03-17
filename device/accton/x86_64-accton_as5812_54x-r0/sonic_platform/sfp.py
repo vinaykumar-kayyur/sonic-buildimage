@@ -220,7 +220,7 @@ qsfp_compliance_code_tup = (
 )
 
 info_dict_keys = [
-    'type', 'hardware_rev', 'serial', 'manufacturer',
+    'type', 'vendor_rev', 'serial', 'manufacturer',
     'model', 'connector', 'encoding', 'ext_identifier',
     'ext_rateselect_compliance', 'cable_type', 'cable_length',
     'nominal_bit_rate', 'specification_compliance', 'vendor_date',
@@ -261,7 +261,8 @@ QSFP_TYPE_CODE_LIST = [
     '11'  # QSFP28 or later
 ]
 QSFP_DD_TYPE_CODE_LIST = [
-    '18'  # QSFP-DD Double Density 8X Pluggable Transceiver
+    '18',  # QSFP-DD Double Density 8X Pluggable Transceiver
+    '1E'  # QSFP+ or later with CMIS
 ]
 
 SFP_TYPE = "SFP"
@@ -600,7 +601,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardware_rev               |1*255VCHAR     |hardware version of SFP
+        vendor_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -676,7 +677,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['type'] = sfp_type_data['data']['type']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
 
         elif self.sfp_type == QSFP_TYPE:
@@ -819,7 +820,7 @@ class Sfp(SfpBase):
                 sfp_vendor_name_data['data']['Vendor Name']['value'])
             transceiver_info_dict['model'] = str(
                 sfp_vendor_pn_data['data']['Vendor PN']['value'])
-            transceiver_info_dict['hardware_rev'] = str(
+            transceiver_info_dict['vendor_rev'] = str(
                 sfp_vendor_rev_data['data']['Vendor Rev']['value'])
             transceiver_info_dict['serial'] = str(
                 sfp_vendor_sn_data['data']['Vendor SN']['value'])
@@ -894,7 +895,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
             transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
@@ -1798,7 +1799,7 @@ class Sfp(SfpBase):
                 if sfpd_obj is None:
                     return default
 
-                if dom_tx_bias_power_supported:
+                if self.dom_tx_bias_power_supported:
                     dom_tx_bias_raw = self._read_eeprom_specific_bytes(
                         (offset + QSFP_DD_TX_BIAS_OFFSET), QSFP_DD_TX_BIAS_WIDTH)
                     if dom_tx_bias_raw is not None:
@@ -2326,3 +2327,191 @@ class Sfp(SfpBase):
             A boolean value, True if replaceable
         """
         return True
+
+    def validate_eeprom_sfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(0, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        return True
+
+    def validate_eeprom_qsfp(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 96)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 63):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[63]:
+                return False
+
+        checksum_test = 0
+        for i in range(64, 95):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[95]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        return True
+
+    def validate_eeprom_cmis(self):
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(128, 95)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 94):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[94]:
+                return False
+
+        api = self.get_xcvr_api()
+        if api is None:
+            return False
+
+        if api.is_flat_memory():
+            return True
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(258, 126)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 125):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[125]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(384, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        checksum_test = 0
+        eeprom_raw = self.read_eeprom(640, 128)
+        if eeprom_raw is None:
+            return None
+
+        for i in range(0, 127):
+            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+        else:
+            if checksum_test != eeprom_raw[127]:
+                return False
+
+        return True
+
+    def validate_eeprom(self):
+        id_byte_raw = self.read_eeprom(0, 1)
+        if id_byte_raw is None:
+            return None
+
+        id = id_byte_raw[0]
+        if id in QSFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_qsfp()
+        elif id in SFP_TYPE_CODE_LIST:
+            return self.validate_eeprom_sfp()
+        elif id in QSFP_DD_TYPE_CODE_LIST:
+            return self.validate_eeprom_cmis()
+        else:
+            return False
+
+    def validate_temperature(self):
+        temperature = self.get_temperature()
+        if temperature is None:
+            return None
+
+        threshold_dict = self.get_transceiver_threshold_info()
+        if threshold_dict is None:
+            return None
+
+        if isinstance(temperature, float) is not True:
+            return True
+
+        if isinstance(threshold_dict['temphighalarm'], float) is not True:
+            return True
+
+        return threshold_dict['temphighalarm'] > temperature
+
+    def get_error_description(self):
+        """
+        Retrives the error descriptions of the SFP module
+        Returns:
+            String that represents the current error descriptions of vendor specific errors
+            In case there are multiple errors, they should be joined by '|',
+            like: "Bad EEPROM|Unsupported cable"
+        """
+        if not self.get_presence():
+            return self.SFP_STATUS_UNPLUGGED
+
+        err_stat = self.SFP_STATUS_BIT_INSERTED
+
+        status = self.validate_eeprom()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_BAD_EEPROM)
+
+        status = self.validate_temperature()
+        if status is not True:
+            err_stat = (err_stat | self.SFP_ERROR_BIT_HIGH_TEMP)
+
+        if err_stat is self.SFP_STATUS_BIT_INSERTED:
+            return self.SFP_STATUS_OK
+        else:
+            err_desc = ''
+            cnt = 0
+            for key in self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT:
+                if (err_stat & key) != 0:
+                    if cnt > 0:
+                        err_desc = err_desc + "|"
+                        cnt = cnt + 1
+                    err_desc = err_desc + self.SFP_ERROR_BIT_TO_DESCRIPTION_DICT[key]
+
+            return err_desc
