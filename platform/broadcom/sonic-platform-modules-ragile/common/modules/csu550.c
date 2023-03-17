@@ -2,7 +2,7 @@
  * csu550.c - A driver for pmbus
  *
  * Copyright (c) 2010, 2011 Ericsson AB.
- * Copyright (c) 2019  <support@ragile.com>
+ * Copyright (c) 2019  <sonic_rd@ruijie.com.cn>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,6 +204,6 @@ static struct i2c_driver pmbus_driver = {
 
 module_i2c_driver(pmbus_driver);
 
-MODULE_AUTHOR("support <support@ragile.com>");
-MODULE_DESCRIPTION("ragile psupmbus driver");
+MODULE_AUTHOR("sonic_rd <sonic_rd@ruijie.com.cn>");
+MODULE_DESCRIPTION("ruijie psupmbus driver");
 MODULE_LICENSE("GPL");

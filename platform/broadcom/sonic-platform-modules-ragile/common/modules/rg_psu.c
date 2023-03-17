@@ -1,7 +1,7 @@
 /*
  * rg_cpld.c - A driver for pmbus psu
  *
- * Copyright (c) 2019  <support@ragile.com>
+ * Copyright (c) 2019  <sonic_rd@ruijie.com.cn>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -335,6 +335,6 @@ static struct i2c_driver rg_psu_driver = {
 
 module_i2c_driver(rg_psu_driver);
 
-MODULE_AUTHOR("support <support@ragile.com>");
-MODULE_DESCRIPTION("ragile pmbus psu driver");
+MODULE_AUTHOR("sonic_rd <sonic_rd@ruijie.com.cn>");
+MODULE_DESCRIPTION("ruijie pmbus psu driver");
 MODULE_LICENSE("GPL");
