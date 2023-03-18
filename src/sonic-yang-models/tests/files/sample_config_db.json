@@ -616,7 +616,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "mode" : "routed"
+                "mode" : "routed",
                 "channel": "6"
 
             },
