@@ -170,20 +170,8 @@ class FanUtil(FanBase):
             print("Setting fan speed is not allowed !")
             return False
         else:
-            duty_cycle_to_pwm = eval(plugin_data['FAN']['duty_cycle_to_pwm'])
-            pwm = duty_cycle_to_pwm(val)
-            print("New Speed: %d%% - PWM value to be set is %d\n" % (val, pwm))
-
-            for i in range(1, num_fan+1):
-                attr = "fan" + str(i) + "_pwm"
-                node = pddf_obj.get_path("FAN-CTRL", attr)
-                if node is None:
-                    return False
-                try:
-                    with open(node, 'w') as f:
-                        f.write(str(pwm))
-                except IOError:
-                    return False
+            print("setspeed nothing to do")
+            return False
 
         return True
 
