@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <debug_ispvme.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 /** 
  * firmware_upgrade_debug:handle debug switch
  *  
@@ -36,7 +37,7 @@ int firmware_upgrade_debug(void)
         return DEBUG_IGNORE;
     }
     
-    memset(debug_info, 0, DEBUG_INFO_LEN);
+    mem_clear(debug_info, DEBUG_INFO_LEN);
     size = fread(debug_info, DEBUG_INFO_LEN - 1, 1, fp);
     if (size < 0) {
         fclose(fp);

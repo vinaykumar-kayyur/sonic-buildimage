@@ -16,6 +16,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <dirent.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 #if 0
 #include <ssa/lib/ssa_dfd_intf.h>
 #include <autoconf.h>
@@ -114,7 +116,7 @@ int drv_get_my_dev_type(void)
         return RA_B6010_48GT4X;	/* Avoid B6510 to obtain different device types */
     }
 
-	memset(rbuf, 0, DFD_TYPE_BUFF_SIZE);
+	mem_clear(rbuf, DFD_TYPE_BUFF_SIZE);
 	type = 0;
     read_len = read(fd, rbuf, DFD_TYPE_BUFF_SIZE - 1);
 	if (read_len > 0) {
@@ -195,7 +197,7 @@ static int firmware_check_file_is_dir(char *dir, char *file_name)
         return -1;
     }
 
-    memset(tmp, 0, FIRMWARE_FILE_DIR_LEN);
+    mem_clear(tmp, FIRMWARE_FILE_DIR_LEN);
     snprintf(tmp, FIRMWARE_FILE_DIR_LEN - 1, "%s/%s", dir, file_name);
     ret = stat(tmp, &buf);
     if (ret < 0) {
@@ -281,7 +283,7 @@ static int firmware_parse_file_name(char *name, name_info_t *info)
         return firmware_error_type(FIRMWARE_ACTION_CHECK, info);
     }
 
-    memset(slot, 0, FIRMWARE_NAME_LEN);
+    mem_clear(slot, FIRMWARE_NAME_LEN);
     strncpy(slot, start,
             ((tmp - start > FIRMWARE_NAME_LEN - 1) ? FIRMWARE_NAME_LEN - 1 : tmp - start));
 
@@ -333,7 +335,7 @@ static int firmware_check_file_info(name_info_t *info)
     dbg_print(is_debug_on, "Check file info.\n");
 
     /* get card name */
-    memset(card_name, 0, FIRMWARE_NAME_LEN);
+    mem_clear(card_name, FIRMWARE_NAME_LEN);
     ret = firmware_get_card_name(card_name, FIRMWARE_NAME_LEN);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Failed to get card name.(%s)\n", info->card_name);
@@ -468,7 +470,7 @@ static int firmware_upgrade_file(char *dir, char *file_name)
     char *argv[2];
     char tmp_file[FIRMWARE_FILE_DIR_LEN];
 
-    memset(&info, 0, sizeof(name_info_t));
+    mem_clear(&info, sizeof(name_info_t));
     ret = firmware_parse_file_name(file_name, &info);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Failed to parse file name: %s\n", file_name);
@@ -490,7 +492,7 @@ static int firmware_upgrade_file(char *dir, char *file_name)
     }
 
     /* get the information of upgrade file */
-    memset(tmp_file, 0, FIRMWARE_FILE_DIR_LEN);
+    mem_clear(tmp_file, FIRMWARE_FILE_DIR_LEN);
     if (dir != NULL) {
         snprintf(tmp_file, FIRMWARE_FILE_DIR_LEN - 1, "%s/%s", dir, file_name);
     } else {
@@ -571,7 +573,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
     name_info_t info;
     char tmp[FIRMWARE_FILE_DIR_LEN];
 
-	memset(&info, 0, sizeof(name_info_t));
+	mem_clear(&info, sizeof(name_info_t));
 	
     info.slot = strtoul(argv[3], NULL, 10);
     strncpy(info.chip_name, argv[4], FIRMWARE_NAME_LEN - 1);
@@ -588,7 +590,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
         }
         else if(is_vme_file(argv[1]) == 0){ /* bin upgrade file */
             dbg_print(is_debug_on, "bin file\n");
-            memset(tmp, 0, FIRMWARE_FILE_DIR_LEN);
+            mem_clear(tmp, 0, FIRMWARE_FILE_DIR_LEN);
             snprintf(tmp, FIRMWARE_FILE_DIR_LEN, "firmware_upgrade_bin %s %s %s %s", argv[1], argv[2], argv[3], argv[4]);
             ret = system(tmp);
         }
@@ -728,9 +730,14 @@ static int firmware_upgrade_read_chip(int argc, char *argv[])
 static int firmware_upgrade_test_fpga(int argc, char *argv[])
 {
     int ret;
+    char tmp1[128];
+    char tmp2[128];
+
     if ((strcmp(argv[1], FIRMWARE_FPGA_NAME) != 0)
         || (strcmp(argv[2], FIRMWARE_FPGA_TEST) != 0)) {
-        printf( "fpga test:Failed to Input ERR Parm, argv[1]:%s, agrv[2]:%s\n", argv[1], argv[2]);
+        snprintf(tmp1, sizeof(tmp1), "%s", argv[1]);
+        snprintf(tmp2, sizeof(tmp2), "%s", argv[2]);
+        printf( "fpga test:Failed to Input ERR Parm, argv[1]:%s, agrv[2]:%s\n", tmp1,tmp2);
         return FIRMWARE_FAILED;
     }
     ret = dfd_fpga_upgrade_test();
@@ -742,10 +749,14 @@ static int firmware_upgrade_test_chip(int argc, char *argv[])
     int ret,dev_type,slot;
     int err_ret=0;
     firmware_card_info_t *hw_info;
-        
+    char tmp1[128];
+    char tmp2[128];
+
     if ((strcmp(argv[1], FIRMWARE_CPLD_NAME) != 0)
         || (strcmp(argv[2], FIRMWARE_CPLD_TEST) != 0)) {
-        printf( "gpio test:Failed to Input ERR Parm, argv[1]:%s, agrv[2]:%s\n", argv[1], argv[2]);
+        snprintf(tmp1, sizeof(tmp1), "%s", argv[1]);
+        snprintf(tmp2, sizeof(tmp2), "%s", argv[2]);
+        printf( "gpio test:Failed to Input ERR Parm, argv[1]:%s, agrv[2]:%s\n", tmp1, tmp2);
         return FIRMWARE_FAILED;
     }
         

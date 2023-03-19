@@ -34,7 +34,7 @@
 #include "dfd_fpga_debug.h"
 
 #define DFD_FPGA_FAC_MODE_CONFIG_FILE            "/tmp/.factory_disabale_cli_tty" 
-
+#define mem_clear(data, size) memset((data), 0, (size))
 #if 1
 #define DFD_FPGA_PKT_SEND_PKT_TO_FRAME
 #endif
@@ -61,7 +61,7 @@ static unsigned int littel_endian_byte_to_word32(uint8_t *byte_buf, int len)
 
     word = 0;
     
-    memset(tmp_buf, 0, 4);
+    mem_clear(tmp_buf, 4);
     memcpy(tmp_buf, byte_buf, len < 4 ? len : 4);
 
     word = tmp_buf[0] | (tmp_buf[1] << 8) | (tmp_buf[2] << 16) | (tmp_buf[3] << 24);
@@ -79,7 +79,7 @@ static int littel_endian_word32_to_byte(uint8_t *byte_buf, int len, unsigned int
         return -1;
     }
 
-    memset(tmp_buf, 0, 4);
+    mem_clear(tmp_buf, 4);
     tmp_buf[0] = word & 0xff;
     tmp_buf[1] = (word >> 8) & 0xff;
     tmp_buf[2] = (word >> 16) & 0xff;

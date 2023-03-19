@@ -23,7 +23,7 @@
 
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(a)       (sizeof(a) /sizeof((a)[0]))
-
+#define mem_clear(data, size) memset((data), 0, (size))
 /* Debug switch storage of dfd module */
 int g_dfd_fpga_debug = 0x0;
 
@@ -83,7 +83,7 @@ void dfd_fpga_debug_init(void)
     FILE *fp;
     char buf[10];
 
-    memset(buf, 0, sizeof(buf));
+    mem_clear(buf, sizeof(buf));
     fp = fopen(DFD_DEBUG_FILE, "r");
     if (fp != NULL) {
         if (fgets(buf, sizeof(buf), fp) != NULL) {

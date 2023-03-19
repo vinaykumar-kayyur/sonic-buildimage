@@ -29,6 +29,7 @@
 #include "dfd_fpga_pkt.h"
 #include "dfd_fpga_debug.h"
 
+#define mem_clear(data, size) memset((data), 0, (size))
 typedef struct dfd_fpga_upg_node_s {
     int sslot;              /* Expansion card slot number */
     int extype;             /* Expansion card type */
@@ -994,7 +995,7 @@ int dfd_fpga_upgrade_test(void)
     }
     pci_priv = current_pci_priv;
 
-    memset(wbuf, 0, DFD_FPGA_SPI_SECTOR_SIZE);
+    mem_clear(wbuf, DFD_FPGA_SPI_SECTOR_SIZE);
     /* get random data */
     for (j = 0; j < DFD_FPGA_SPI_SECTOR_SIZE; j++) {
         num = rand() % 256;
@@ -1006,7 +1007,7 @@ int dfd_fpga_upgrade_test(void)
     }
 
     for (i = 0; i < DFD_FPGA_UPGRADE_BUFF_SIZE; i++) {
-        memset(rbuf, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+        mem_clear(rbuf, DFD_FPGA_UPGRADE_BUFF_SIZE);
         /* write data first */
         ret = dfd_fpga_upg_write(pci_priv, offset, &wbuf[i * DFD_FPGA_UPGRADE_BUFF_SIZE], len);
         if (ret) {
@@ -1110,7 +1111,7 @@ static int dfd_fpga_upgrade_do_upgrade_onetime(dfd_pci_dev_priv_t *pci_priv, int
         }
 #endif
 
-        memset(wbuf, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+        mem_clear(wbuf, DFD_FPGA_UPGRADE_BUFF_SIZE);
         read_len = read(fd, wbuf, len);
         i++;
         if ((read_len > 0) && (read_len <= len)) {
@@ -1126,7 +1127,7 @@ static int dfd_fpga_upgrade_do_upgrade_onetime(dfd_pci_dev_priv_t *pci_priv, int
 
             /* go back to read data */
             for (retry = 0; retry < FPGA_RETRY_TIMES; retry++) { /*retry 3 times*/
-                memset(rbuf, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+                mem_clear(rbuf, DFD_FPGA_UPGRADE_BUFF_SIZE);
                 ret = dfd_fpga_upg_read(pci_priv, offset, rbuf, read_len);
                 res = memcmp(rbuf, wbuf, read_len);
                 if (ret || res) {
@@ -1268,7 +1269,7 @@ static int dfd_fpga_upgrade_do_upgrade_onetime_all(dfd_pci_dev_priv_t *pci_priv,
     offset = 0;
     while(1) {
         len = DFD_FPGA_UPGRADE_BUFF_SIZE;
-        memset(wbuf, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+        mem_clear(wbuf, DFD_FPGA_UPGRADE_BUFF_SIZE);
         read_len = read(fd, wbuf, len);
         i++;
         if ((read_len > 0) && (read_len <= len)) {
@@ -1283,7 +1284,7 @@ static int dfd_fpga_upgrade_do_upgrade_onetime_all(dfd_pci_dev_priv_t *pci_priv,
             }
 
             /* go back to read data */
-            memset(rbuf, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+            mem_clear(rbuf, DFD_FPGA_UPGRADE_BUFF_SIZE);
             ret = dfd_fpga_upg_read(pci_priv, offset, rbuf, read_len);
             if (ret) {
                 DFD_ERROR("fpga upg read offset 0x%x len %d failed ret %d.\n", offset, read_len, ret);
@@ -1363,6 +1364,7 @@ int dfd_fpga_upgrade_dump_flash(int argc, char* argv[])
     char *stopstring;
     int ret, fd;
     char filename[DFD_FPGA_UPGRADE_BUFF_SIZE];
+    char tmp[DFD_FPGA_UPGRADE_BUFF_SIZE];
     char is_print;
     char buf[DFD_FPGA_UPGRADE_BUFF_SIZE];
     dfd_pci_dev_priv_t *pci_priv;
@@ -1385,11 +1387,12 @@ int dfd_fpga_upgrade_dump_flash(int argc, char* argv[])
 
     if (strcmp(argv[5], "print") != 0) {
         is_print = 0;
-        memset(filename, 0, DFD_FPGA_UPGRADE_BUFF_SIZE);
+        mem_clear(filename, DFD_FPGA_UPGRADE_BUFF_SIZE);
         strncpy(filename, argv[5], (DFD_FPGA_UPGRADE_BUFF_SIZE - 1));
         fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, S_IRWXG|S_IRWXU|S_IRWXO);
         if (fd < 0) {
-            printf("open file %s fail(err:%d)!\r\n", filename, errno);
+            snprintf(tmp, sizeof(tmp), "%s", filename);
+            printf("open file %s fail(err:%d)!\r\n", tmp, errno);
             ret = -DFD_RV_DEV_FAIL;
             goto exit;
         }
@@ -1405,7 +1408,7 @@ int dfd_fpga_upgrade_dump_flash(int argc, char* argv[])
     len = DFD_FPGA_UPGRADE_BUFF_SIZE;
     printf("cnt %d.\n", cnt);
     for (i = 0; i < cnt; i++) {
-        memset(buf, 0, len);
+        mem_clear(buf, len);
         addr = offset + i * DFD_FPGA_UPGRADE_BUFF_SIZE;
         if (i == (cnt - 1)) {
             dlen = size - len * i;
