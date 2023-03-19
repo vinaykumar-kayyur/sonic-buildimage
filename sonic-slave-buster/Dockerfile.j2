@@ -502,7 +502,17 @@ RUN pip3 install nose==1.3.7
 RUN pip2 install mockredispy==2.9.3
 RUN pip3 install mockredispy==2.9.3
 
-# Fix CVE-2021-23437
+# Fix CVE-2021-23437, need to build and install libjpeg-dev for armhf for pillow 9.4.0
+{%- if CONFIGURED_ARCH == "armhf" %}
+RUN TMP_DIR=$(mktemp -d) && \
+    cd $TMP_DIR && \
+    apt-get install -y nasm && \
+    apt-get source libjpeg-turbo && \
+    cd $(ls -d libjpeg-turbo*/) && \
+    dpkg-buildpackage -rfakeroot -b -us -uc > $TMP_DIR/libjpeg-dev.log && \
+    dpkg -i $TMP_DIR/libjpeg*-dev*.deb && \
+    rm -rf $TMP_DIR
+{%- endif %}
 RUN pip3 install pillow==9.4.0
 
 # For Python 2 unit tests, we need 'mock'. The last version of 'mock'
