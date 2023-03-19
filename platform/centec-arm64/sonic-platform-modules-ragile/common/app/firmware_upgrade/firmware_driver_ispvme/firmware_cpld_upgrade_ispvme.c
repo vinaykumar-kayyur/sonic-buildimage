@@ -23,7 +23,6 @@
 
 /* TCK clock MAX 16MHz */
 #define    TCK_DELAY                         (current_fmw_cpld->tck_delay)
-#define mem_clear(data, size) memset((data), 0, (size))
 #if 0
 static firmware_cpld_t default_fmw_cpld;
 #endif
@@ -154,7 +153,7 @@ int fmw_cpld_set_gpio_info(firmware_upg_gpio_info_t *info)
         dev_debug(firmware_debug(), "g_set_gpio_info_func is null.\n");
         return -1;
     }
-    
+
     return g_set_gpio_info_func(info);
 }
 

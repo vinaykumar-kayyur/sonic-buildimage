@@ -18,26 +18,24 @@
 #include <ctype.h>
 #include <debug_ispvme.h>
 
-#define mem_clear(data, size) memset((data), 0, (size))
-/** 
+/**
  * firmware_upgrade_debug:handle debug switch
- *  
+ *
  * analyse file /tmp/firmware_upgrade_debug,return the information correspoding to debug
- *  
- * return:return DEBUG_OFF when debug off,return DEBUG_ON when debug on,return DEBUG_IGNORE in other cases 
+ *
+ * return:return DEBUG_OFF when debug off,return DEBUG_ON when debug on,return DEBUG_IGNORE in other cases
  */
 int firmware_upgrade_debug(void)
 {
     int size;
     FILE *fp;
-    char debug_info[DEBUG_INFO_LEN];
+    char debug_info[DEBUG_INFO_LEN] = {0};
 
     fp = fopen(DEBUG_FILE, "r");
     if (fp == NULL) {
         return DEBUG_IGNORE;
     }
-    
-    mem_clear(debug_info, DEBUG_INFO_LEN);
+
     size = fread(debug_info, DEBUG_INFO_LEN - 1, 1, fp);
     if (size < 0) {
         fclose(fp);

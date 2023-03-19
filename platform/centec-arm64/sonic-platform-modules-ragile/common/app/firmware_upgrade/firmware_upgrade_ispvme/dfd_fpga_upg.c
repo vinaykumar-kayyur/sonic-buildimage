@@ -29,7 +29,6 @@
 #include "dfd_fpga_pkt.h"
 #include "dfd_fpga_debug.h"
 
-#define mem_clear(data, size) memset((data), 0, (size))
 typedef struct dfd_fpga_upg_node_s {
     int sslot;              /* Expansion card slot number */
     int extype;             /* Expansion card type */
@@ -529,7 +528,7 @@ int dfd_fpga_upg_set_erase_p4e(dfd_pci_dev_priv_t *pci_priv, int spi_addr)
         return -1;
     }
 
-    /* write erase address */ 
+    /* write erase address */
     val = spi_addr;
     addr = pci_priv->fpga_upg_base + FPGA_UPG_ADDR_REG;
     ret = dfd_fpga_upg_write_word(pci_priv, addr, val);

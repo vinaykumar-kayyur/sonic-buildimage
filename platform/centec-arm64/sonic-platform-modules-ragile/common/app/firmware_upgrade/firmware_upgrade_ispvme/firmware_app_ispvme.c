@@ -4,7 +4,7 @@
 /*
  * firmware_app.c
 
- * firmware upgrade 
+ * firmware upgrade
  * v1.0    support <support@ragile.com> 2013-10-25  Initial version.
  */
 #include <sys/stat.h>
@@ -17,7 +17,6 @@
 #include <string.h>
 #include <dirent.h>
 
-#define mem_clear(data, size) memset((data), 0, (size))
 #if 0
 #include <ssa/lib/ssa_dfd_intf.h>
 #include <autoconf.h>
@@ -87,7 +86,7 @@ static int dfd_my_type = 0;
 static int is_vme_file(char *file_name)
 {
     char *tmp;
-    
+
     tmp = strchr(file_name, '.');
     if (strcmp(tmp, ".bin") == 0) {
         return 0;
@@ -122,7 +121,7 @@ int drv_get_my_dev_type(void)
 	if (read_len > 0) {
 		type = strtoul(rbuf, NULL, 0);
 	}
-	close(fd); 
+	close(fd);
 
     dfd_my_type = type;
 
@@ -541,7 +540,7 @@ static int firmware_upgrade_set_gpio_info(int slot)
 		ret = -1;
 		goto gpio_info_err;
 	}
-	
+
 	gpio_info = &(hw_info->gpio_info[slot]);
     cmd_info.size = sizeof(firmware_upg_gpio_info_t);
     cmd_info.data = (void *)gpio_info;
@@ -553,7 +552,7 @@ static int firmware_upgrade_set_gpio_info(int slot)
 
 gpio_info_err:
 	if (ret < 0) {
-		dbg_print(is_debug_on, "Failed due to:set gpio info.\n");	
+		dbg_print(is_debug_on, "Failed due to:set gpio info.\n");
 	}
 
 	close(fd);
@@ -574,7 +573,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
     char tmp[FIRMWARE_FILE_DIR_LEN];
 
 	mem_clear(&info, sizeof(name_info_t));
-	
+
     info.slot = strtoul(argv[3], NULL, 10);
     strncpy(info.chip_name, argv[4], FIRMWARE_NAME_LEN - 1);
 
@@ -590,7 +589,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
         }
         else if(is_vme_file(argv[1]) == 0){ /* bin upgrade file */
             dbg_print(is_debug_on, "bin file\n");
-            mem_clear(tmp, 0, FIRMWARE_FILE_DIR_LEN);
+            mem_clear(tmp, FIRMWARE_FILE_DIR_LEN);
             snprintf(tmp, FIRMWARE_FILE_DIR_LEN, "firmware_upgrade_bin %s %s %s %s", argv[1], argv[2], argv[3], argv[4]);
             ret = system(tmp);
         }
@@ -598,7 +597,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
             dbg_print(is_debug_on, "unknow file\n");
             return FIRMWARE_FAILED;
         }
-    } 
+    }
     else if (strcmp(argv[2], FIRMWARE_FPGA_NAME) == 0) {  /* FPGA upgrade */
         info.type = FIRMWARE_FPGA;
         ret = dfd_fpga_upgrade_do_upgrade(argv[1]);
@@ -606,7 +605,7 @@ static int firmware_upgrade_one_file(int argc, char *argv[])
         dbg_print(is_debug_on, "Failed to get upgrade type: %s.\n", argv[2]);
         return ERR_FW_UPGRADE;
     }
-	
+
 upgrade_err:
     if (ret != FIRMWARE_SUCCESS){
         dbg_print(is_debug_on, "Failed to upgrade: %s.\n", argv[1]);
@@ -759,19 +758,19 @@ static int firmware_upgrade_test_chip(int argc, char *argv[])
         printf( "gpio test:Failed to Input ERR Parm, argv[1]:%s, agrv[2]:%s\n", tmp1, tmp2);
         return FIRMWARE_FAILED;
     }
-        
+
     dev_type = drv_get_my_dev_type();            /* get the type of card first */
     if (dev_type < 0) {
         printf("gpio test:drv_get_my_dev_type failed ret 0x%x.\n", dev_type);
         return FIRMWARE_FAILED;
     }
-    
+
     hw_info = firmware_get_card_info(dev_type);    /* get the detail information of card */
     if (hw_info == NULL) {
         printf( "gpio test:card type 0x%x don't support firmware.\n", dev_type);
         return FIRMWARE_FAILED;
-    }    
-    
+    }
+
     for(slot = 0; slot < hw_info->slot_num; slot++){
         ret = firmware_upgrade_set_gpio_info(slot);    /* set GPIO information */
         if(ret < 0){
@@ -810,7 +809,7 @@ int main(int argc, char *argv[])
         dbg_print(is_debug_on, "failed to init dfd ret %d.", ret);
         return ERR_FW_UPGRADE;
     }
-#endif 
+#endif
     /* dump fpga flash operation */
     if (argc == 6) {
         if (strcmp(argv[1], "fpga_dump_flash") == 0) {
@@ -833,8 +832,8 @@ int main(int argc, char *argv[])
                 printf("|      CPLD Upgrade failed!      |\n");
             else if(strcmp(argv[2], FIRMWARE_FPGA_NAME) == 0)
                 printf("|      FPGA Upgrade failed!      |\n");
-            else                           
-                printf("|   Failed to get upgrade type!  |\n");   
+            else
+                printf("|   Failed to get upgrade type!  |\n");
             printf("+================================+\n");
             dbg_print(is_debug_on, "Failed to upgrade a firmware file: %s.\n", argv[1]);
             return ret;
