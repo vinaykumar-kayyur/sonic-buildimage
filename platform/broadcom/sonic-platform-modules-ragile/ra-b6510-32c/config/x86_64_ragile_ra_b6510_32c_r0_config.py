@@ -635,7 +635,14 @@ PMON_SYSLOG_STATUS = {
         ],
         "nochangedmsgflag": 1,
         "nochangedmsgtime": 60,
-        "noprintfirsttimeflag": 0
+        "noprintfirsttimeflag": 0,
+        "alias": {
+            "fan1": "FAN1",
+            "fan2": "FAN2",
+            "fan3": "FAN3",
+            "fan4": "FAN4",
+            "fan5": "FAN5"
+        }
     },
     "psus": {
         "present": {"path": ["/sys/wb_plat/psu/*/present"], "ABSENT": 0},
@@ -645,7 +652,11 @@ PMON_SYSLOG_STATUS = {
         ],
         "nochangedmsgflag": 1,
         "nochangedmsgtime": 60,
-        "noprintfirsttimeflag": 0
+        "noprintfirsttimeflag": 0,
+        "alias": {
+            "psu1": "PSU1",
+            "psu2": "PSU2"
+        }
     }
 }
 

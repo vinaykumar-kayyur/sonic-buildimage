@@ -613,12 +613,12 @@ devices = {
                 "Rotor1_config": {
                     "name": "Rotor1",
                     "Set_speed": {"bus": 2, "addr": 0x0d, "offset": 0x18, "way": "i2c"},
-                    "Running": {"loc": "/sys/wb_plat/fan/fan4/motor1/status", "way": "sysfs", "mask": 0x01, "is_runing": 1},
-                    "HwAlarm": {"loc": "/sys/wb_plat/fan/fan4/motor1/status", "way": "sysfs", "mask": 0x01, "no_alarm": 1},
+                    "Running": {"loc": "/sys/wb_plat/fan/fan5/motor1/status", "way": "sysfs", "mask": 0x01, "is_runing": 1},
+                    "HwAlarm": {"loc": "/sys/wb_plat/fan/fan5/motor1/status", "way": "sysfs", "mask": 0x01, "no_alarm": 1},
                     "SpeedMin": threshold.FAN_SPEED_MIN,
                     "SpeedMax": threshold.FRONT_FAN_SPEED_MAX,
                     "Speed": {
-                        "value": {"loc": "/sys/wb_plat/fan/fan4/motor1/speed", "way": "sysfs"},
+                        "value": {"loc": "/sys/wb_plat/fan/fan5/motor1/speed", "way": "sysfs"},
                         "Min": threshold.FAN_SPEED_MIN,
                         "Max": threshold.FRONT_FAN_SPEED_MAX,
                         "Unit": Unit.Speed,
@@ -627,12 +627,12 @@ devices = {
                 "Rotor2_config": {
                     "name": "Rotor2",
                     "Set_speed": {"bus": 2, "addr": 0x0d, "offset": 0x18, "way": "i2c"},
-                    "Running": {"loc": "/sys/wb_plat/fan/fan4/motor0/status", "way": "sysfs", "mask": 0x01, "is_runing": 1},
-                    "HwAlarm": {"loc": "/sys/wb_plat/fan/fan4/motor0/status", "way": "sysfs", "mask": 0x01, "no_alarm": 1},
+                    "Running": {"loc": "/sys/wb_plat/fan/fan5/motor0/status", "way": "sysfs", "mask": 0x01, "is_runing": 1},
+                    "HwAlarm": {"loc": "/sys/wb_plat/fan/fan5/motor0/status", "way": "sysfs", "mask": 0x01, "no_alarm": 1},
                     "SpeedMin": threshold.FAN_SPEED_MIN,
                     "SpeedMax": threshold.REAR_FAN_SPEED_MAX,
                     "Speed": {
-                        "value": {"loc": "/sys/wb_plat/fan/fan4/motor0/speed", "way": "sysfs"},
+                        "value": {"loc": "/sys/wb_plat/fan/fan5/motor0/speed", "way": "sysfs"},
                         "Min": threshold.FAN_SPEED_MIN,
                         "Max": threshold.REAR_FAN_SPEED_MAX,
                         "Unit": Unit.Speed,
