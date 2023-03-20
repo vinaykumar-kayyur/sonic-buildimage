@@ -28,20 +28,17 @@ resources:
   repositories:
   - repository: sonic-mgmt
     type: github
-    name: Azure/sonic-mgmt
-    endpoint: build
+    name: sonic-net/sonic-mgmt
+    endpoint: sonic-net
   - repository: buildimage
     type: github
-    name: Azure/sonic-buildimage
-    endpoint: build
+    name: sonic-net/sonic-buildimage
+    endpoint: sonic-net
     ref: master
 
 variables:
-- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml
-- ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-  - template: .azure-pipelines/template-variables.yml
-- ${{ else }}:
-  - template: .azure-pipelines/template-variables.yml@buildimage
+- template: .azure-pipelines/azure-pipelines-repd-build-variables.yml@buildimage
+- template: .azure-pipelines/template-variables.yml@buildimage
 - name: CACHE_MODE
   value: rcache 
 
@@ -75,6 +72,7 @@ stages:
 
 - stage: Test
   dependsOn: BuildVS
+  condition: and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues'))
   variables:
   - name: inventory
     value: veos_vtb
