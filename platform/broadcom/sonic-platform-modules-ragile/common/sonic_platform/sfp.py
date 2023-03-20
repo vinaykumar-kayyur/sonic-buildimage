@@ -96,9 +96,10 @@ class Sfp(SfpOptoeBase):
         try:
             if transceiver_info["vendor_rev"] is not None:
                 transceiver_info["hardware_rev"] = transceiver_info["vendor_rev"]
-            return transceiver_info
-        except Exception as e:
+        except BaseException:
             print(traceback.format_exc())
+            return None
+        return transceiver_info
 
     def reset(self):
         if self.get_presence() is False:
@@ -143,14 +144,12 @@ class Sfp(SfpOptoeBase):
 
         if self.sfp_type == 'QSFP-DD':
             return SfpOptoeBase.set_lpmode(self, lpmode)
-        elif self.sfp_type == 'QSFP':
+        if self.sfp_type == 'QSFP':
             if lpmode:
                 return self._xcvr_api.set_power_override(True, lpmode)
-            else:
-                return self._xcvr_api.set_power_override(False, lpmode)
-        else:
-            self._sfplog(LOG_WARNING_LEVEL, 'SFP does not support lpmode')
-            return False
+            return self._xcvr_api.set_power_override(False, lpmode)
+        self._sfplog(LOG_WARNING_LEVEL, 'SFP does not support lpmode')
+        return False
 
     def set_optoe_write_max(self, write_max):
         """
@@ -167,13 +166,13 @@ class Sfp(SfpOptoeBase):
         class_name = self._xcvr_api.__class__.__name__
         optoe_type = None
         # set sfp_type
-        if class_name == 'CmisApi':
+        if 'CmisApi' in class_name:
             self.sfp_type = 'QSFP-DD'
             optoe_type = self.OPTOE_DRV_TYPE3
-        elif class_name == 'Sff8472Api':
+        elif 'Sff8472Api' in class_name:
             self.sfp_type = 'SFP'
             optoe_type = self.OPTOE_DRV_TYPE2
-        elif (class_name == 'Sff8636Api' or class_name == 'Sff8436Api'):
+        elif ('Sff8636Api' in class_name or 'Sff8436Api' in class_name):
             self.sfp_type = 'QSFP'
             optoe_type = self.OPTOE_DRV_TYPE1
         # set optoe driver
@@ -192,7 +191,7 @@ class Sfp(SfpOptoeBase):
                     syslog.syslog(syslog.LOG_ERR, msg)
                 syslog.closelog()
 
-            except Exception as e:
+            except BaseException:
                 print(traceback.format_exc())
 
 
@@ -226,11 +225,10 @@ class SfpCust():
                         result = result[::-1].zfill(num_bytes)[::-1]
                     if result is not None:
                         return bytearray(result)
-                    else:
-                        time.sleep(self.eeprom_retry_break_sec)
-                        continue
+                    time.sleep(self.eeprom_retry_break_sec)
+                    continue
 
-        except Exception as e:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
         return None
 
@@ -244,8 +242,9 @@ class SfpCust():
                 break
 
             return ret
-        except Exception as e:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
 
     @abstractmethod
     def set_optoe_type(self, optoe_type):
@@ -285,7 +284,7 @@ class SfpCust():
                     syslog.syslog(syslog.LOG_ERR, msg)
                 syslog.closelog()
 
-            except Exception as e:
+            except BaseException:
                 print(traceback.format_exc())
 
 
@@ -310,9 +309,13 @@ class SfpV1(SfpCust):
         try:
             dev_id, offset, offset_bit = self._get_sfp_cpld_info(self.presence_cpld)
             ret, info = platform_reg_read(0, dev_id, offset, 1)
+            if (ret is False
+                    or info is None):
+                return False
             return info[0] & (1 << offset_bit) == self.presence_val_is_present
-        except Exception as err:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
 
     def read_eeprom(self, offset, num_bytes):
         try:
@@ -331,7 +334,7 @@ class SfpV1(SfpCust):
                 if len(eeprom_raw) < num_bytes:
                     eeprom_raw = eeprom_raw[::-1].zfill(num_bytes)[::-1]
                 return bytearray(eeprom_raw)
-        except Exception as e:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
         return None
 
@@ -345,18 +348,19 @@ class SfpV1(SfpCust):
                 else:
                     val_list.append(write_buffer)
                 ret, info = platform_sfp_write(self._port_id, offset, val_list)
-                if ret is False:
+                if (ret is False
+                        or info is None):
                     time.sleep(self.eeprom_retry_break_sec)
                     continue
                 return True
-        except Exception as e:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
 
         return False
 
     def set_optoe_type(self, optoe_type):
         ret, info = platform_get_optoe_type(self._port_id)
-        if info != optoe_type:
+        if ret is True and info != optoe_type:
             try:
                 ret, _ = platform_set_optoe_type(self._port_id, optoe_type)
             except Exception as err:
@@ -386,7 +390,7 @@ class SfpV1(SfpCust):
                 self._sfplog(LOG_ERROR_LEVEL, "platform_reg_write error!")
                 return False
 
-        except Exception as err:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
             return False
 
@@ -452,8 +456,9 @@ class SfpV2(SfpCust):
                 if sysfs_data != "":
                     result = int(sysfs_data, 16)
             return result == self.presence_val_is_present
-        except Exception as err:
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
 
     def set_reset(self, reset):
         return True
@@ -463,11 +468,13 @@ class SfpV2(SfpCust):
             self._sfplog(LOG_ERROR_LEVEL, "dev_class_path is None!")
             return False
         try:
-            dc_file = open(self.dev_class_path, "r+")
-            dc_file_val = dc_file.read(1)
-            if int(dc_file_val) != optoe_type:
-                dc_str = "%s" % str(optoe_type)
-                dc_file.write(dc_str)
-                dc_file.close()
-        except Exception as err:
+            with open(self.dev_class_path, "r+") as dc_file:
+                dc_file_val = dc_file.read(1)
+                if int(dc_file_val) != optoe_type:
+                    dc_str = "%s" % str(optoe_type)
+                    dc_file.write(dc_str)
+                    # dc_file.close()
+        except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
+        return True

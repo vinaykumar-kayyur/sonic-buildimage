@@ -132,8 +132,6 @@ def debug_init():
 
 
 def main():
-    with open(sfp_temperature_file, 'w') as sfp_f:
-        pass
     while True:
         debug_init()
         temperature = 0
