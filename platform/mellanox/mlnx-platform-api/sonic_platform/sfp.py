@@ -551,8 +551,7 @@ class SFP(NvidiaSFPCommon):
 
     @classmethod
     def _set_lpmode(cls, lpmode, sdk_handle, sdk_index, slot_id):
-        print('\nNotice: please set port admin status to down before setting power mode, \
-              ignore this message if already set')
+        print('\nNotice: please set port admin status to down before setting power mode, ignore this message if already set')
         sdk_lpmode = SX_MGMT_PHY_MOD_PWR_MODE_LOW_E if lpmode else SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E
         cls._set_lpmode_raw(sdk_handle,
                             sdk_index,
