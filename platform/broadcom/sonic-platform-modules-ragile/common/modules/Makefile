@@ -7,9 +7,7 @@ KERNEL_SRC ?=  /lib/modules/$(KVERSION)
 module_out_put_dir := $(PWD)/build
 export module_out_put_dir
 
-ifeq ($(KVERSION),5.10.0-8-2-amd64)
 KERNEL_MODULES_SRC = $(PWD)/linux-5.10
-endif
 
 PLAT_SYSFS_DIR = $(PWD)/plat_sysfs
 INTEL_SPI = $(PWD)/intel_spi
