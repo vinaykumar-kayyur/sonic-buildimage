@@ -209,7 +209,7 @@ class Sfp(SfpOptoeBase):
             A boolean, True if successful, False if not
         """
         # Check for invalid port_num
-        if self.port_num < 49: #Copper port, no sysfs
+        if self.port_num < 53:
             return False
 
         reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
