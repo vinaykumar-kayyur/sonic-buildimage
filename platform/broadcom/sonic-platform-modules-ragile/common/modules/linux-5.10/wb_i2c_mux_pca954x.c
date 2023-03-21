@@ -383,7 +383,7 @@ static int pca954x_reset_i2c_read(uint32_t bus, uint32_t addr, uint32_t offset_a
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
@@ -422,7 +422,7 @@ static int pca954x_reset_i2c_write(uint32_t bus, uint32_t dev_addr, uint32_t off
     int rv;
 
     rv = 0;
-    memset(i2c_path, 0, 32);
+    mem_clear(i2c_path, sizeof(i2c_path));
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", bus);
     fp = filp_open(i2c_path, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {

@@ -11,6 +11,9 @@
 
 #include <linux/bitops.h>
 #include <linux/regulator/driver.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 /*
  * Registers

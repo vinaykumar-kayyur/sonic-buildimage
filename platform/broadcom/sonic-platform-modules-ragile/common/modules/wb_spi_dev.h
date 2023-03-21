@@ -1,6 +1,8 @@
 #ifndef __WB_SPI_DEV_H__
 #define __WB_SPI_DEV_H__
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #define SPI_DEV_NAME_MAX_LEN (64)
 
 typedef struct spi_dev_device_s {

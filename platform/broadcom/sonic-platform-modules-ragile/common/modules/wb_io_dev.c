@@ -160,7 +160,7 @@ static ssize_t io_dev_read(struct file *file, char __user *buf, size_t count, lo
         count = sizeof(buf_tmp);
     }
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     read_len = io_dev_read_tmp(wb_io_dev, *offset, buf_tmp, count);
     if (read_len < 0) {
         IO_DEV_DEBUG_ERROR("io_dev_read_tmp failed, ret:%d.\n", read_len);
@@ -267,7 +267,7 @@ static ssize_t io_dev_write(struct file *file, const char __user *buf, size_t co
         count = sizeof(buf_tmp);
     }
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     if (access_ok(buf, count)) {
         IO_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write conut %lu.\n",
             buf, *offset, count);

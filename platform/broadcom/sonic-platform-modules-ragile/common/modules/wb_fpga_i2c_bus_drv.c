@@ -183,7 +183,7 @@ static int little_endian_dword_to_buf(uint8_t *buf, int len, uint32_t dword)
         return -1;
     }
 
-    memset(tmp_buf, 0, sizeof(tmp_buf));
+    mem_clear(tmp_buf, sizeof(tmp_buf));
     tmp_buf[0] = dword & 0xff;
     tmp_buf[1] = (dword >> 8) & 0xff;
     tmp_buf[2] = (dword >> 16) & 0xff;
@@ -280,7 +280,7 @@ static int fpga_reg_write_32(fpga_i2c_dev_t *fpga_i2c, uint32_t addr, uint32_t v
     int ret;
     uint8_t buf[FPGA_REG_WIDTH];
 
-    memset(buf, 0, sizeof(buf));
+    mem_clear(buf, sizeof(buf));
     little_endian_dword_to_buf(buf, sizeof(buf), val);
     ret = fpga_device_write(fpga_i2c, addr, buf, sizeof(buf));
     if (ret < 0) {
@@ -299,7 +299,7 @@ static int fpga_reg_read_32(fpga_i2c_dev_t *fpga_i2c, uint32_t addr, uint32_t *v
     int ret;
     uint8_t buf[FPGA_REG_WIDTH];
 
-    memset(buf, 0, sizeof(buf));
+    mem_clear(buf, sizeof(buf));
     ret = fpga_device_read(fpga_i2c, addr, buf, sizeof(buf));
     if (ret < 0) {
         FPGA_I2C_ERROR("fpga reg read failed, dev name: %s, offset: 0x%x, ret: %d\n",
@@ -718,7 +718,7 @@ static int fpga_i2c_xfer(struct i2c_adapter *adap,
     ret = 0;
     i2c_addr_desc = &fpga_i2c->i2c_addr_desc;
     i2c_addr_desc->reg_addr_len = 0;
-    memset(i2c_addr_desc->read_reg_addr , 0, sizeof(i2c_addr_desc->read_reg_addr));
+    mem_clear(i2c_addr_desc->read_reg_addr, sizeof(i2c_addr_desc->read_reg_addr));
 
     for (i = 0; ret == 0 && i < num; i++) {
         pmsg = &msgs[i];

@@ -60,7 +60,7 @@ static long firmware_cpld_ioctl(struct file *file, unsigned int cmd, unsigned lo
     firmware_cpld_t *cpld_info;
 
     /* Get device private data */
-    memset(&cmd_info, 0, sizeof(cmd_info_t));
+    mem_clear(&cmd_info, sizeof(cmd_info_t));
     frm_dev = (firmware_device_t *)file->private_data;
     cpld_info = NULL;
     if (frm_dev != NULL) {
@@ -80,7 +80,7 @@ static long firmware_cpld_ioctl(struct file *file, unsigned int cmd, unsigned lo
         if (copy_from_user(&cmd_info, argp, sizeof(cmd_info_t))) {
             return -EFAULT;
         }
-        memset(chip_name, 0, FIRMWARE_NAME_LEN);
+        mem_clear(chip_name, FIRMWARE_NAME_LEN);
         ret = fmw_cpld_upg_get_chip_name(frm_dev->chain, cpld_info, chip_name, FIRMWARE_NAME_LEN);
         if (ret != FIRMWARE_SUCCESS) {
             FIRMWARE_DRIVER_DEBUG_ERROR("Failed to get chip name.\n");
@@ -124,7 +124,7 @@ static long firmware_cpld_ioctl(struct file *file, unsigned int cmd, unsigned lo
         if (copy_from_user(&cmd_info, argp, sizeof(cmd_info_t))) {
             return -EFAULT;
         }
-        memset(version, 0, FIRMWARE_NAME_LEN);
+        mem_clear(version, FIRMWARE_NAME_LEN);
         ret = fmw_cpld_upg_get_version(frm_dev->chain, cpld_info, version, FIRMWARE_NAME_LEN);
         if (ret != FIRMWARE_SUCCESS) {
             FIRMWARE_DRIVER_DEBUG_ERROR("Failed to get version.\n");
@@ -170,7 +170,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
         return -1;
     }
 
-    memset(cpld_info, 0, sizeof(firmware_cpld_t));
+    mem_clear(cpld_info, sizeof(firmware_cpld_t));
     ret = 0;
     ret += of_property_read_string(dev->of_node, "type", (const char **)&name);
     ret += of_property_read_u32(dev->of_node, "tdi", &cpld_info->tdi);
@@ -196,14 +196,14 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
     cpld_info->gpio_en_info_num = 0;
     /* Enable through GPIO */
     for (i = 0; i < FIRMWARE_EN_INFO_MAX; i++) {
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_gpio_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &cpld_info->gpio_en_info[i].en_gpio);
         if(ret != 0) {
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_level_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &cpld_info->gpio_en_info[i].en_level);
         if(ret != 0) {
@@ -240,7 +240,7 @@ static int firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *cpl
     firmware_upgrade_device = dev->platform_data;
     jtag_upg_device = firmware_upgrade_device->upg_type.jtag;
 
-    memset(cpld_info, 0, sizeof(firmware_cpld_t));
+    mem_clear(cpld_info, sizeof(firmware_cpld_t));
 
     strncpy(cpld_info->type, firmware_upgrade_device->type, sizeof(cpld_info->type) - 1);
     cpld_info->tdi = jtag_upg_device.tdi;

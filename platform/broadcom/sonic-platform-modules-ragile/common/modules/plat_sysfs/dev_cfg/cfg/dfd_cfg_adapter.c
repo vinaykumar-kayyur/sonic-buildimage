@@ -10,6 +10,7 @@
 #include "../include/dfd_cfg_file.h"
 #include "../include/dfd_cfg.h"
 #include "../include/dfd_cfg_adapter.h"
+#include "../../dev_sysfs/include/sysfs_common.h"
 
 char *g_dfd_i2c_dev_mem_str[DFD_I2C_DEV_MEM_END] = {
     ".bus",

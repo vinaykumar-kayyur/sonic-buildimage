@@ -2,6 +2,7 @@
 #include <linux/slab.h>
 
 #include "../include/dfd_cfg_listnode.h"
+#include "../../dev_sysfs/include/sysfs_common.h"
 
 void *lnode_find_node(lnode_root_t *root, int key)
 {

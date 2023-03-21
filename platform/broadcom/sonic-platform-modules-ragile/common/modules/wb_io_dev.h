@@ -1,6 +1,8 @@
 #ifndef __WB_IO_DEV_H__
 #define __WB_IO_DEV_H__
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #define IO_DEV_NAME_MAX_LEN (64)
 
 typedef struct io_dev_device_s {

@@ -11,6 +11,9 @@
 #include <linux/mtd/partitions.h>
 #include <linux/spi/eeprom.h>
 #include <linux/spi/flash.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define DEFAULT_GPIO_SCK        (67)
 #define DEFAULT_GPIO_MISO       (32)
@@ -93,7 +96,7 @@ static void wb_spi_gpio_table_devid_name_set(void) {
     size = sizeof(gpiod_lookup_table_devid);
     wb_spi_gpio_device.id = bus;
 
-    memset(gpiod_lookup_table_devid, 0, size);
+    mem_clear(gpiod_lookup_table_devid, size);
     switch (bus) {
     case PLATFORM_DEVID_NONE:
         snprintf(gpiod_lookup_table_devid, size, "%s", wb_spi_gpio_device.name);

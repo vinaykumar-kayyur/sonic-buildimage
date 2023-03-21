@@ -1,6 +1,8 @@
 #ifndef __WB_I2C_DEV_H__
 #define __WB_I2C_DEV_H__
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #define I2C_DEV_NAME_MAX_LEN (64)
 
 typedef struct i2c_dev_device_s {

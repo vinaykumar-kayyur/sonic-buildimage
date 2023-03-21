@@ -19,7 +19,7 @@ int fw_upgrade_debug(void)
         return DEBUG_IGNORE;
     }
 
-    memset(debug_info, 0, DEBUG_INFO_LEN);
+    mem_clear(debug_info, DEBUG_INFO_LEN);
     size = fread(debug_info, DEBUG_INFO_LEN - 1, 1, fp);
     if (size < 0) {
         fclose(fp);

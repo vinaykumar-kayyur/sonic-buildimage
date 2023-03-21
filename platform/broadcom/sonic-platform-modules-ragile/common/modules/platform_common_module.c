@@ -134,7 +134,7 @@ static int dfd_tlvinfo_get_cardtype(void)
     tlv_type.main_type = TLV_CODE_VENDOR_EXT;
     tlv_type.ext_type = DFD_TLVINFO_EXT_TLV_TYPE_DEV_TYPE;
     len = sizeof(buf);
-    memset(buf, 0, len);
+    mem_clear(buf, len);
     ret = dfd_tlvinfo_get_e2prom_info(eeprom, DFD_E2PROM_MAX_LEN, &tlv_type, buf, &len);
     if (ret) {
         DBG_ERROR("dfd_tlvinfo_get_e2prom_info failed ret %d.\n", ret);

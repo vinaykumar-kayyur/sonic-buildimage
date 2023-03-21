@@ -16,7 +16,7 @@ void dfd_debug_set_init(void)
     FILE *fp;
     char buf[10];
 
-    memset(buf, 0, sizeof(buf));
+    mem_clear(buf, sizeof(buf));
     fp = fopen(DFD_DEBUGP_DEBUG_FILE, "r");
     if (fp != NULL) {
 

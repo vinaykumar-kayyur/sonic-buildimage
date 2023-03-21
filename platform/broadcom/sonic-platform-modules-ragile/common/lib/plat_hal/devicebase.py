@@ -6,6 +6,7 @@
 #
 #######################################################
 import subprocess
+import shlex
 from plat_hal.osutil import osutil
 from plat_hal.baseutil import baseutil
 
@@ -52,10 +53,15 @@ class devicebase(object):
         return eeprom
 
     def exec_os_cmd(self, cmd):
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        return proc.returncode, stdout
+        cmds = cmd.split('|')
+        procs = []
+        for i, c in enumerate(cmds):
+            stdin = None if i == 0 else procs[i-1].stdout
+            p = subprocess.Popen(shlex.split(c), stdin=stdin, stdout=subprocess.PIPE, shell=False, stderr=subprocess.STDOUT)
+            procs.append(p)
+        for proc in procs:
+            proc.wait()
+        return procs[-1].returncode, self.byteTostr(procs[-1].communicate()[0])
 
     def get_value(self, config):
         '''

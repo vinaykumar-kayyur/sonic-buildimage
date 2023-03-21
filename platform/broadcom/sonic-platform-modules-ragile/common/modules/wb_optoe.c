@@ -125,7 +125,9 @@
 #include <linux/sysfs.h>
 #include <linux/jiffies.h>
 #include <linux/i2c.h>
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #ifdef EEPROM_CLASS
 #include <linux/eeprom_class.h>
 #endif
@@ -313,7 +315,7 @@ static ssize_t optoe_eeprom_read(struct optoe_data *optoe,
 	unsigned long timeout, read_time;
 	int status, i;
 
-	memset(msg, 0, sizeof(msg));
+	mem_clear(msg, sizeof(msg));
 
 	switch (optoe->use_smbus) {
 	case I2C_SMBUS_I2C_BLOCK_DATA:

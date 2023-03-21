@@ -10,6 +10,7 @@
 
 #include "../include/dfd_cfg_file.h"
 #include "../include/dfd_module.h"
+#include "../../dev_sysfs/include/sysfs_common.h"
 
 struct getdents_callback {
     struct dir_context ctx;
@@ -41,7 +42,7 @@ int kfile_open(char *fname, kfile_ctrl_t *kfile_ctrl)
         ret = KFILE_RV_MALLOC_FAIL;
         goto close_fp;
     }
-    memset(kfile_ctrl->buf, 0, kfile_ctrl->size);
+    mem_clear(kfile_ctrl->buf, kfile_ctrl->size);
 
     pos = 0;
     ret = kernel_read(filp, kfile_ctrl->buf, kfile_ctrl->size, &pos);
@@ -88,7 +89,7 @@ int kfile_gets(char *buf, int buf_size, kfile_ctrl_t *kfile_ctrl)
         return KFILE_RV_INPUT_ERR;
     }
 
-    memset(buf, 0, buf_size);
+    mem_clear(buf, buf_size);
     for (i = 0; i < buf_size; i++) {
 
         if (kfile_ctrl->pos >= kfile_ctrl->size) {
@@ -123,7 +124,7 @@ int kfile_read(int32_t addr, char *buf, int buf_size, kfile_ctrl_t *kfile_ctrl)
         return KFILE_RV_ADDR_ERR;
     }
 
-    memset(buf, 0, buf_size);
+    mem_clear(buf, buf_size);
 
     kfile_ctrl->pos = addr;
     for (i = 0; i < buf_size; i++) {
@@ -153,7 +154,7 @@ static int kfile_filldir_one(struct dir_context *ctx, const char * name, int len
             buf->found = 0;
             return -1;
         }
-        memset(buf->match_name, 0 , buf->dir_len);
+        mem_clear(buf->match_name, buf->dir_len);
         memcpy(buf->match_name, name, len);
         buf->found = 1;
         result = -1;

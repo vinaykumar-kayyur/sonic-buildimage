@@ -4,6 +4,7 @@ import sys
 import os
 import re
 import subprocess
+import shlex
 import time
 import mmap
 import glob
@@ -348,17 +349,21 @@ def io_wr(reg_addr, reg_data):
 
 
 def exec_os_cmd(cmd):
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
-    stdout = proc.communicate()[0]
-    proc.wait()
-    stdout = typeTostr(stdout)
-    return proc.returncode, stdout
+    cmds = cmd.split('|')
+    procs = []
+    for i, c in enumerate(cmds):
+        stdin = None if i == 0 else procs[i-1].stdout
+        p = subprocess.Popen(shlex.split(c), stdin=stdin, stdout=subprocess.PIPE, shell=False, stderr=subprocess.STDOUT)
+        procs.append(p)
+    for proc in procs:
+        proc.wait()
+    return procs[-1].returncode, typeTostr(procs[-1].communicate()[0])
 
 
 def exec_os_cmd_log(cmd):
-    proc = subprocess.Popen((cmd), stdin=subprocess.PIPE, shell=True, stderr=sys.stderr, close_fds=True,
+    proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, shell=False, stderr=sys.stderr, close_fds=True,
                             stdout=sys.stdout, universal_newlines=True, bufsize=1)
-
+    proc.wait()
     stdout = proc.communicate()[0]
     stdout = typeTostr(stdout)
     return proc.returncode, stdout

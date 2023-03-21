@@ -21,6 +21,9 @@
 #include <linux/spi/spi.h>
 #include <linux/nvmem-provider.h>
 #include <linux/eeprom_93xx46.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define OP_START	0x4
 #define OP_WRITE	(OP_START | 0x1)
@@ -172,7 +175,7 @@ static int eeprom_93xx46_ew(struct eeprom_93xx46_dev *edev, int is_on)
 			is_on ? "en" : "ds", cmd_addr, bits);
 
 	spi_message_init(&m);
-	memset(&t, 0, sizeof(t));
+	mem_clear(&t, sizeof(t));
 
 	t.tx_buf = &cmd_addr;
 	t.len = 2;
@@ -225,7 +228,7 @@ eeprom_93xx46_write_word(struct eeprom_93xx46_dev *edev,
 	dev_dbg(&edev->spi->dev, "write cmd 0x%x\n", cmd_addr);
 
 	spi_message_init(&m);
-	memset(t, 0, sizeof(t));
+	mem_clear(t, sizeof(t));
 
 	t[0].tx_buf = (char *)&cmd_addr;
 	t[0].len = 2;
@@ -317,7 +320,7 @@ static int eeprom_93xx46_eral(struct eeprom_93xx46_dev *edev)
 	dev_dbg(&edev->spi->dev, "eral cmd 0x%04x, %d bits\n", cmd_addr, bits);
 
 	spi_message_init(&m);
-	memset(&t, 0, sizeof(t));
+	mem_clear(&t, sizeof(t));
 
 	t.tx_buf = &cmd_addr;
 	t.len = 2;

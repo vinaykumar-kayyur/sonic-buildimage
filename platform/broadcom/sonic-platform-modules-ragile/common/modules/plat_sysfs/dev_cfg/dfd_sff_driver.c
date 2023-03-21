@@ -26,7 +26,7 @@ ssize_t dfd_get_sff_cpld_info(unsigned int sff_index, int cpld_reg_type, char *b
         return ret;
     }
 
-    memset(buf, 0 , len);
+    mem_clear(buf, len);
     return (ssize_t)snprintf(buf, len, "%d\n", value);
 }
 
@@ -40,7 +40,7 @@ ssize_t dfd_get_sff_dir_name(unsigned int sff_index, char *buf, int buf_len)
         return -DFD_RV_INVALID_VALUE;
     }
 
-    memset(buf, 0, buf_len);
+    mem_clear(buf, buf_len);
 
     key = DFD_CFG_KEY(DFD_CFG_ITEM_SFF_DIR_NAME, sff_index, 0);
     sff_dir_name = dfd_ko_cfg_get_item(key);

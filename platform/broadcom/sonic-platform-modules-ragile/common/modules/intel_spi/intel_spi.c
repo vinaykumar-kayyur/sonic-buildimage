@@ -862,7 +862,7 @@ static void intel_spi_fill_partition(struct intel_spi *ispi,
 	u64 end;
 	int i;
 
-	memset(part, 0, sizeof(*part));
+	mem_clear(part, sizeof(*part));
 
 	/* Start from the mandatory descriptor region */
 	part->size = 4096;

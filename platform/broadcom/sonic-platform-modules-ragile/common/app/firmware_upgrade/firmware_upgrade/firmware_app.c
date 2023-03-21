@@ -188,7 +188,7 @@ int firmware_check_chip_verison(int fd, name_info_t *info)
     char version[FIRMWARE_NAME_LEN + 1];
 
     dbg_print(is_debug_on, "Check chip version.\n");
-    memset(version, 0, FIRMWARE_NAME_LEN);
+    mem_clear(version, FIRMWARE_NAME_LEN);
     cmd_info.size = FIRMWARE_NAME_LEN;
     cmd_info.data = (void *) version;
 
@@ -296,7 +296,7 @@ static int firmware_upgrade(char *file_name, name_info_t *info)
     unsigned long crc;
 
     dbg_print(is_debug_on, "Upgrade firmware: %s.\n", file_name);
-    memset(dev_file_name, 0, FIRMWARE_NAME_LEN);
+    mem_clear(dev_file_name, FIRMWARE_NAME_LEN);
     ret = firmware_get_dev_file_name(info, dev_file_name, FIRMWARE_NAME_LEN - 1);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Error: Failed to get dev file name.\n");
@@ -350,7 +350,7 @@ static int firmware_upgrade(char *file_name, name_info_t *info)
     }
 
     /* Gets the contents of the upgrade file */
-    memset(upg_buf, 0, upg_size + 1);
+    mem_clear(upg_buf, upg_size + 1);
     ret = firmware_get_file_info(file_name, upg_buf, upg_size);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Error: Failed to read file info: %s.\n", file_name);
@@ -432,7 +432,7 @@ static int firmware_upgrade_test(char *file_name, name_info_t *info)
     unsigned long crc;
 
     dbg_print(is_debug_on, "Upgrade firmware test: %s.\n", file_name);
-    memset(dev_file_name, 0, FIRMWARE_NAME_LEN);
+    mem_clear(dev_file_name, FIRMWARE_NAME_LEN);
     ret = firmware_get_dev_file_name(info, dev_file_name, FIRMWARE_NAME_LEN - 1);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Error: Failed to get dev file name.\n");
@@ -480,7 +480,7 @@ static int firmware_upgrade_test(char *file_name, name_info_t *info)
     }
 
     /* Gets the contents of the upgrade file */
-    memset(upg_buf, 0, upg_size + 1);
+    mem_clear(upg_buf, upg_size + 1);
     ret = firmware_get_file_info(file_name, upg_buf, upg_size);
     if (ret != FIRMWARE_SUCCESS) {
         dbg_print(is_debug_on, "Error: Failed to read file info: %s.\n", file_name);
@@ -620,7 +620,7 @@ static int firmware_upgrade_parse_kv(const char *key, const char *value, name_in
             dbg_print(is_debug_on, "Error: '%s' is too long for a chipname.\n", value);
             return firmware_error_type(FIRMWARE_ACTION_CHECK, info);
         }
-        memset(info->chip_name, 0, sizeof(info->chip_name));
+        mem_clear(info->chip_name, sizeof(info->chip_name));
          snprintf(info->chip_name, sizeof(info->chip_name) - 1, "%s", value);
     } else if (strcmp(key, FILEHEADER_VERSION) == 0) {
         /* version */
@@ -628,7 +628,7 @@ static int firmware_upgrade_parse_kv(const char *key, const char *value, name_in
             dbg_print(is_debug_on, "Error: '%s' is too long for a version.\n", value);
             return firmware_error_type(FIRMWARE_ACTION_CHECK, info);
         }
-        memset(info->version, 0, sizeof(info->version));
+        mem_clear(info->version, sizeof(info->version));
         snprintf(info->version, sizeof(info->version) - 1, "%s", value);
     } else if (strcmp(key, FILEHEADER_FILETYPE) == 0) {
         /* file type */
@@ -720,7 +720,7 @@ static int firmware_upgrade_read_header( char *file_name, name_info_t *info)
         return firmware_error_type(FIRMWARE_ACTION_CHECK, info);
     }
 
-    memset(header_buffer, 0, sizeof(header_buffer));
+    mem_clear(header_buffer, sizeof(header_buffer));
     len = fread(header_buffer, MAX_HEADER_SIZE - 1, 1, fp);
     fclose(fp);
     if (len < 0) {
@@ -737,10 +737,10 @@ static int firmware_upgrade_read_header( char *file_name, name_info_t *info)
     charp += strlen("FILEHEADER(\n");
 
     dbg_print(is_debug_on, "File parse start.\n");
-    memset(info, 0, sizeof(name_info_t));
+    mem_clear(info, sizeof(name_info_t));
     ret = 0;
     charn = charp;
-    memset(header_key, 0, sizeof(header_key));
+    mem_clear(header_key, sizeof(header_key));
     while (*charn != ')') {
         charn = strpbrk(charp, "=,)\n");
         if (charn == NULL) {
@@ -753,12 +753,12 @@ static int firmware_upgrade_read_header( char *file_name, name_info_t *info)
         }
         switch (*charn) {
         case '=':
-            memset(header_key, 0, sizeof(header_key));
+            mem_clear(header_key, sizeof(header_key));
             memcpy(header_key, charp, charn - charp);
             break;
         case '\n':
         case ',':
-            memset(header_var, 0, sizeof(header_var));
+            mem_clear(header_var, sizeof(header_var));
             memcpy(header_var, charp, charn - charp);
             dbg_print(is_debug_on, "Parser: %s = %s .\n", header_key, header_var);
             firmware_upgrade_parse_kv(header_key, header_var, info);

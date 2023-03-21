@@ -171,7 +171,7 @@ static int sensor_in_sub_single_create_kobj_and_attrs(struct kobject *parent, un
     }
     curr_sensor = &g_sensor.in[index];
     SENSOR_DBG("create sensor in%d ...\n", index);
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "in%d", index);
     curr_sensor->obj = wb_plat_kobject_create(name, parent);
     if (!curr_sensor->obj) {
@@ -218,7 +218,7 @@ static int sensor_temp_sub_single_create_kobj_and_attrs(struct kobject *parent, 
     }
     curr_sensor = &g_sensor.temp[index];
     SENSOR_DBG("create sensor temp%d ...\n", index);
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "temp%d", index);
     curr_sensor->obj = wb_plat_kobject_create(name, parent);
     if (!curr_sensor->obj) {

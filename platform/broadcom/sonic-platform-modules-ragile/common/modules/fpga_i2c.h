@@ -4,6 +4,10 @@
 #include <linux/i2c.h>
 #include <linux/device.h>
 #include <linux/kallsyms.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
+
 #if 0
 
 #define FPGA_I2C_EXT_9548_ADDR        (0x00)

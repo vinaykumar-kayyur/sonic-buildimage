@@ -6,6 +6,9 @@
 
 #ifndef __FIRMWARE_UPGRADE_DEBUG_H__
 #define __FIRMWARE_UPGRADE_DEBUG_H__
+#include <string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define DEBUG_INFO_LEN  20
 #define DEBUG_FILE      "/tmp/.firmware_upgrade_debug"

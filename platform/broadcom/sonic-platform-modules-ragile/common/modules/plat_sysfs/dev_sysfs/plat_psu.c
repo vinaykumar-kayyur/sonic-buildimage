@@ -169,7 +169,7 @@ static int psuindex_single_temp_create_kobj_and_attrs(struct psu_obj_t * curr_ps
     PSU_DBG("create psu_index:%d, temp%d ...\n", curr_psu->obj->index, temp_index);
 
     curr_temp = &curr_psu->temp[temp_index];
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "temp%d", temp_index);
     curr_temp->obj = wb_plat_kobject_create(name, &curr_psu->obj->kobj);
     if (!curr_temp->obj) {
@@ -304,7 +304,7 @@ static int psu_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned
 
     curr_psu = &g_psu.psu[index-1];
     PSU_DBG("create psu%d ...\n", index);
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "%s%d",PSU_SYSFS_NAME, index);
     curr_psu->obj = wb_plat_kobject_create(name, parent);
     if (!curr_psu->obj) {
@@ -375,7 +375,7 @@ static void psu_sub_remove(void)
        }
        kfree(g_psu.psu);
     }
-    memset(&g_psu, 0, sizeof(struct psu_t));
+    mem_clear(&g_psu, sizeof(struct psu_t));
     return ;
 }
 

@@ -106,11 +106,14 @@
 #include <linux/platform_device.h>
 #include <linux/platform_data/itco_wdt.h>
 #include <linux/pm_runtime.h>
+#include <linux/string.h>
 
 #if IS_ENABLED(CONFIG_I2C_MUX_GPIO) && defined CONFIG_DMI
 #include <linux/gpio/machine.h>
 #include <linux/platform_data/i2c-mux-gpio.h>
 #endif
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 /* I801 SMBus address offsets */
 #define SMBHSTSTS(p)	(0 + (p)->smba)
@@ -1242,7 +1245,7 @@ static void dmi_check_onboard_device(u8 type, const char *name,
 		if (strcasecmp(name, dmi_devices[i].name))
 			continue;
 
-		memset(&info, 0, sizeof(struct i2c_board_info));
+		mem_clear(&info, sizeof(struct i2c_board_info));
 		info.addr = dmi_devices[i].i2c_addr;
 		strlcpy(info.type, dmi_devices[i].i2c_type, I2C_NAME_SIZE);
 		i2c_new_client_device(adap, &info);
@@ -1397,7 +1400,7 @@ static void register_dell_lis3lv02d_i2c_device(struct i801_priv *priv)
 		return;
 	}
 
-	memset(&info, 0, sizeof(struct i2c_board_info));
+	mem_clear(&info, sizeof(struct i2c_board_info));
 	info.addr = dell_lis3lv02d_devices[i].i2c_addr;
 	strlcpy(info.type, "lis3lv02d", I2C_NAME_SIZE);
 	i2c_new_client_device(&priv->adapter, &info);
@@ -1413,7 +1416,7 @@ static void i801_probe_optional_slaves(struct i801_priv *priv)
 	if (apanel_addr) {
 		struct i2c_board_info info;
 
-		memset(&info, 0, sizeof(struct i2c_board_info));
+		mem_clear(&info, sizeof(struct i2c_board_info));
 		info.addr = apanel_addr;
 		strlcpy(info.type, "fujitsu_apanel", I2C_NAME_SIZE);
 		i2c_new_client_device(&priv->adapter, &info);
@@ -1536,7 +1539,7 @@ static int i801_add_mux(struct i801_priv *priv)
 	mux_config = priv->mux_drvdata;
 
 	/* Prepare the platform data */
-	memset(&gpio_data, 0, sizeof(struct i2c_mux_gpio_platform_data));
+	mem_clear(&gpio_data, sizeof(struct i2c_mux_gpio_platform_data));
 	gpio_data.parent = priv->adapter.nr;
 	gpio_data.values = mux_config->values;
 	gpio_data.n_values = mux_config->n_values;
@@ -1706,7 +1709,7 @@ static void i801_add_tco(struct i801_priv *priv)
 	if (!(tco_ctl & TCOCTL_EN))
 		return;
 
-	memset(tco_res, 0, sizeof(tco_res));
+	mem_clear(tco_res, sizeof(tco_res));
 	/*
 	 * Always populate the main iTCO IO resource here. The second entry
 	 * for NO_REBOOT MMIO is filled by the SPT specific function.

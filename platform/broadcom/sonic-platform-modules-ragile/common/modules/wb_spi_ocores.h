@@ -1,6 +1,8 @@
 #ifndef __WB_SPI_OCORES_H__
 #define __WB_SPI_OCORES_H__
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #define SPI_OCORES_DEV_NAME_MAX_LEN (64)
 
 typedef struct spi_ocores_device_s {

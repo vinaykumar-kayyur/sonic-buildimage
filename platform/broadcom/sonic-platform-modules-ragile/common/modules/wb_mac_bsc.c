@@ -27,6 +27,9 @@
 #include <linux/hwmon-sysfs.h>
 #include <linux/err.h>
 #include <linux/mutex.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define MAC_TEMP_INVALID    (99999999)
 
@@ -236,7 +239,7 @@ static int wb_i2c_read_one_time(struct i2c_client *client, u8 *recv_buf, int siz
         return -1;
     }
 
-    memset(msgs, 0, sizeof(msgs));
+    mem_clear(msgs, sizeof(msgs));
 
     msgs[0].buf = recv_buf;
     msgs[0].len = size;
@@ -267,7 +270,7 @@ static int wb_i2c_write_one_time(struct i2c_client *client, u8 *write_buf, int s
         return -1;
     }
 
-    memset(msgs, 0, sizeof(msgs));
+    mem_clear(msgs, sizeof(msgs));
 
     msgs[0].len = size;
     msgs[0].buf = write_buf;

@@ -7,6 +7,7 @@
 #include "../include/dfd_cfg.h"
 #include "../include/dfd_cfg_info.h"
 #include "../include/dfd_cfg_file.h"
+#include "../../dev_sysfs/include/sysfs_common.h"
 
 #define DFD_HWMON_NAME                                "hwmon"
 #define DFD_GET_CPLD_VOLATGE_CODE_VALUE(value)        ((value >> 4)& 0xfff)
@@ -336,19 +337,19 @@ static int dfd_2key_info_get_buf(info_ctrl_t *info_ctrl, uint8_t *buf, int buf_l
         return -DFD_RV_TYPE_ERR;
     }
 
-    memset(buf_tmp, 0 , sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     rv = kfile_iterate_dir(info_ctrl->fpath, DFD_HWMON_NAME, buf_tmp, INFO_BUF_MAX_LEN);
     if (rv < 0) {
         DBG_DEBUG(DBG_ERROR, "dir patch:%s ,can find name %s dir \n",
             info_ctrl->fpath, DFD_HWMON_NAME);
         return -DFD_RV_NO_NODE;
     }
-    memset(temp_fpath, 0 , sizeof(temp_fpath));
+    mem_clear(temp_fpath, sizeof(temp_fpath));
     snprintf(temp_fpath, sizeof(temp_fpath), "%s%s/%s",
         info_ctrl->fpath, buf_tmp, info_ctrl->str_cons);
     DBG_DEBUG(DBG_VERBOSE, "match ok path = %s \n", temp_fpath);
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
 
     read_bytes = dfd_read_info(info_ctrl->src, temp_fpath, info_ctrl->addr, info_ctrl->len, buf_tmp);
     if (read_bytes <= 0) {
@@ -520,7 +521,7 @@ static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hw
             return -DFD_RV_DEV_NOTSUPPORT;
         }
         DBG_DEBUG(DBG_VERBOSE, "get cpld voltage ok, value:%d\n", value);
-        memset(buf_tmp, 0 ,sizeof(buf_tmp));
+        mem_clear(buf_tmp, sizeof(buf_tmp));
         snprintf(buf_tmp, sizeof(buf_tmp), "%d\n", value);
         buf_real_len = strlen(buf_tmp);
         if(buf_len <= buf_real_len) {
@@ -562,7 +563,7 @@ int dfd_info_get_sensor(uint32_t key, char *buf, int buf_len, info_hwmon_buf_f p
         DBG_DEBUG(DBG_ERROR, "key_path info error, key=0x%08x\n", key);
         return -DFD_RV_DEV_NOTSUPPORT;
     }
-    memset(buf, 0 , buf_len);
+    mem_clear(buf, buf_len);
 
     if (key_info_ctrl->mode == INFO_CTRL_MODE_SRT_CONS) {
         snprintf(buf, buf_len, "%s\n", key_info_ctrl->str_cons);

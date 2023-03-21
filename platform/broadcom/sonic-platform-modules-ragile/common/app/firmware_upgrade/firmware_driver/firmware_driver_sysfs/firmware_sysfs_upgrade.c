@@ -7,6 +7,7 @@
 #include <linux/uaccess.h>
 #include <firmware_sysfs.h>
 #include <firmware_sysfs_upgrade.h>
+#include <firmware_upgrade.h>
 
 static int firmware_file_read(const char *path, uint32_t addr, uint8_t *val, size_t size)
 {
@@ -95,8 +96,8 @@ static int firmware_file_do_work(char *path, uint32_t addr, uint32_t value, uint
         return -1;
     }
     ret = 0;
-    memset(read_value, 0, sizeof(read_value));
-    memset(write_value, 0, sizeof(write_value));
+    mem_clear(read_value, sizeof(read_value));
+    mem_clear(write_value, sizeof(write_value));
     ret = firmware_file_read(path, addr, read_value, width);
     if (ret < 0) {
         FIRMWARE_DRIVER_DEBUG_ERROR("firmware sysfs read.\r\n");

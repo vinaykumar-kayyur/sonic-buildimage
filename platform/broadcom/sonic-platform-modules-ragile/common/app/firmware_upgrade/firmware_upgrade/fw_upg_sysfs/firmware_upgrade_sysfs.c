@@ -44,7 +44,7 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
         if (size % dev_info->per_len) {
             dbg_print(is_debug_on, "firmware sysfs upgrade size[%u] is width[%u] mismatch, ret %d.\n",
                     size, dev_info->per_len, ret);
-            goto exit;
+            return FIRMWARE_FAILED;
         }
         len = dev_info->per_len;
     } else {
@@ -56,14 +56,14 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
     reread_buf = (uint8_t *) malloc(len);
     if (reread_buf == NULL) {
         dbg_print(is_debug_on, "Error: Failed to malloc memory for read back data buf, len=%u.\n", len);
-        ret = -1;
-        goto exit;
+        return FIRMWARE_FAILED;
     }
 
     sysfs_fd = open(dev_info->sysfs_name, O_RDWR | O_SYNC);
     if (sysfs_fd < 0) {
         dbg_print(is_debug_on, "open file[%s] fail.\n", dev_info->sysfs_name);
-        goto err;
+        free(reread_buf);
+        return FIRMWARE_FAILED;
     }
 
     offset_addr = dev_base;
@@ -79,7 +79,9 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
             ret = lseek(sysfs_fd, offset_addr, SEEK_SET);
             if (ret < 0) {
                 dbg_print(is_debug_on, "lseek file[%s offset=%u] fail.\n", dev_info->sysfs_name, offset_addr);
-                goto fail;
+                close(sysfs_fd);
+                free(reread_buf);
+                return FIRMWARE_FAILED;
             }
             write_len = write(sysfs_fd, buf + buf_offset, len);
             if (write_len != len) {
@@ -91,18 +93,21 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
             break;
         }
 
-        if(i == FW_SYSFS_RETRY_TIME) {
+        if (i == FW_SYSFS_RETRY_TIME) {
             dbg_print(is_debug_on, "write file[%s] fail, offset = 0x%x, len = %u, write_len =%u\n",
                 dev_info->sysfs_name, offset_addr, len, write_len);
-            ret = -1;
-            goto fail;
+            close(sysfs_fd);
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
 
-        memset(reread_buf, 0, len);
+        mem_clear(reread_buf, len);
         ret = lseek(sysfs_fd, offset_addr, SEEK_SET);
         if (ret < 0) {
             dbg_print(is_debug_on, "reread lseek file[%s offset=%u] fail.\n", dev_info->sysfs_name, offset_addr);
-            goto fail;
+            close(sysfs_fd);
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
 
         for (i = 0; i < FW_SYSFS_RETRY_TIME; i++) {
@@ -118,7 +123,9 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
         if (i == FW_SYSFS_RETRY_TIME) {
             dbg_print(is_debug_on, "reread file[%s] fail, offset = 0x%x, reread_len = %u, len = %u\n",
                 dev_info->sysfs_name, offset_addr, reread_len, len);
-            goto fail;
+            close(sysfs_fd);
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
 
         /* Check data */
@@ -149,7 +156,9 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
             }
             dbg_print(is_debug_on, "\n");
 
-            goto fail;
+            close(sysfs_fd);
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
         offset_addr += len;
         buf_offset += len;
@@ -160,14 +169,6 @@ int firmware_upgrade_sysfs_program(firmware_dev_file_info_t *dev_info, uint32_t 
     dbg_print(is_debug_on, "firmware upgrade sysfs success.\n");
     close(sysfs_fd);
     return FIRMWARE_SUCCESS;
-
-fail:
-    close(sysfs_fd);
-err:
-    free(reread_buf);
-exit:
-    dbg_print(is_debug_on, "firmware upgrade sysfs fail.\n");
-    return FIRMWARE_FAILED;
 }
 
 /* sysfs upgrade function */
@@ -223,7 +224,7 @@ exit:
 /* sysfs upgrade test function */
 int firmware_upgrade_sysfs_test(int fd, name_info_t *info)
 {
-    int ret = 0;
+    int ret, rv;
     firmware_dev_file_info_t dev_info;
     uint8_t *data_buf;
     uint8_t num;
@@ -262,32 +263,23 @@ int firmware_upgrade_sysfs_test(int fd, name_info_t *info)
     ret = ioctl(fd, FIRMWARE_SYSFS_INIT, NULL);
     if (ret < 0) {
         dbg_print(is_debug_on, "init dev logic faile\n");
-        goto exit;
+        free(data_buf);
+        return FIRMWARE_FAILED;
     }
 
     ret = firmware_upgrade_sysfs_program(&dev_info, dev_info.test_base, data_buf, dev_info.test_size);
+    /* disable upgrade access */
+    rv = ioctl(fd, FIRMWARE_SYSFS_FINISH,NULL);
+    if (rv < 0) {
+        dbg_print(is_debug_on, "close dev logic en failed.\n");
+    }
+    free(data_buf);
+
     if (ret < 0) {
         dbg_print(is_debug_on, "init dev logic faile\n");
-        goto fail;
+        return FIRMWARE_FAILED;
     }
 
     dbg_print(is_debug_on, "firmware upgrade sysfs success.\n");
-    /* disable upgrade access */
-    ret = ioctl(fd, FIRMWARE_SYSFS_FINISH,NULL);
-    if (ret < 0) {
-        dbg_print(is_debug_on, "close dev logic en failed.\n");
-    }
-    free(data_buf);
     return FIRMWARE_SUCCESS;
-
-fail:
-    /* disable upgrade access */
-    ret = ioctl(fd, FIRMWARE_SYSFS_FINISH, NULL);
-    if (ret < 0) {
-        dbg_print(is_debug_on, "close dev logic en failed.\n");
-    }
-exit:
-    dbg_print(is_debug_on, "firmware upgrade sysfs fail.\n");
-    free(data_buf);
-    return FIRMWARE_FAILED;
 }

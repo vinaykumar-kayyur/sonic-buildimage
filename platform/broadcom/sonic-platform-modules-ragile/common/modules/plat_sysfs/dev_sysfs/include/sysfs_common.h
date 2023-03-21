@@ -1,6 +1,10 @@
 #ifndef _SYSFS_COMMON_H_
 #define _SYSFS_COMMON_H_
 
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
+
 #define DIR_NAME_MAX_LEN        (64)
 
 #define WB_SYSFS_DEV_ERROR         "no_support"

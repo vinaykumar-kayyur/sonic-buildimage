@@ -1,5 +1,8 @@
 #ifndef __WB_PCIE_DEV_H__
 #define __WB_PCIE_DEV_H__
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define UPG_TYPE 'U'
 #define GET_FPGA_UPG_CTL_BASE              _IOR(UPG_TYPE, 0, int)

@@ -215,7 +215,7 @@ static void sff_sub_remove(void)
        }
        kfree(g_sff.sff);
     }
-    memset(&g_sff, 0, sizeof(struct sff_t));
+    mem_clear(&g_sff, sizeof(struct sff_t));
     return ;
 }
 

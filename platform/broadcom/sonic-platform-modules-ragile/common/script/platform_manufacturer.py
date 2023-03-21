@@ -4,13 +4,14 @@ import re
 import mmap
 import fcntl
 import subprocess
+import shlex
 import signal
 import os
 import time
 import sys
+import ast
 from platform_config import MANUINFO_CONF
 from monitor import status
-from platform_util import byteTostr
 
 
 INDENT = 4
@@ -25,26 +26,9 @@ g_meminfo_cache = {}
 g_exphy_cache = {}
 
 
-def exec_os_cmd(cmd, timeout=10):
-    try:
-        start_time = time.time()
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT,
-                                close_fds=True, preexec_fn=os.setsid)
-        while True:
-            if proc.poll() is not None:
-                break
-            if timeout <= 0:
-                continue
-            if (time.time() - start_time) > timeout:
-                try:
-                    os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-                except Exception as e:
-                    return -1, "run command %s %d sec timeout, msg: %s" % (cmd, timeout, str(e))
-                return -1, "run command %s %d sec timeout" % (cmd, timeout)
-            time.sleep(0.01)
-        return proc.returncode, byteTostr(proc.stdout.read()).strip()
-    except Exception as e:
-        return -1, str(e)
+def exec_os_cmd(cmd, timeout = None):
+    status, output = subprocess.getstatusoutput(cmd)
+    return status, output
 
 
 def exphyfwsplit():
@@ -274,7 +258,7 @@ def get_bcm5387_version(params):
 
 
 def get_func_value(funcname, params):
-    ret = eval(funcname)(params)
+    ret = ast.literal_eval(funcname)(params)
     return ret
 
 
@@ -507,7 +491,7 @@ class VersionHunter:
 
         if self.precheck:
             try:
-                ret = eval(self.precheck.get("funcname"))(self.precheck.get("params"))
+                ret = ast.literal_eval(self.precheck.get("funcname"))(self.precheck.get("params"))
                 if ret is not True:
                     return
             except Exception as e:

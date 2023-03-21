@@ -550,7 +550,7 @@ static int ucd9000_probe(struct i2c_client *client)
     block_buffer[ret] = '\0';
     dev_info(&client->dev, "Device ID %s\n", block_buffer);
 
-    memset(wb_device_name, 0, sizeof(wb_device_name));
+    mem_clear(wb_device_name, sizeof(wb_device_name));
     snprintf(wb_device_name, sizeof(wb_device_name), "wb_%s", block_buffer);
 
     for (mid = ucd9000_id; mid->name[0]; mid++) {

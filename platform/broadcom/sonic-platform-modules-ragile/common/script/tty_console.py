@@ -3,10 +3,11 @@
 
 import logging.handlers
 import subprocess
+import shlex
 import time
 import sys
 import os
-from platform_util import CompressedRotatingFileHandler
+from platform_util import CompressedRotatingFileHandler, exec_os_cmd
 
 console_file = "/dev/ttyS1"
 console_logfile = "/var/log/bmc-console.log"
@@ -29,13 +30,6 @@ fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 fh.setFormatter(formatter)
 logger.addHandler(fh)
-
-
-def exec_os_cmd(cmd):
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
-    stdout = proc.communicate()[0]
-    proc.wait()
-    return proc.returncode, stdout.decode()
 
 
 def tty_system_cmd(cmd, print_log=True):

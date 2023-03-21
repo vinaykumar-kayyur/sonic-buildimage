@@ -144,7 +144,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
         return -1;
     }
 
-    memset(sysfs_info, 0, sizeof(firmware_sysfs_t));
+    mem_clear(sysfs_info, sizeof(firmware_sysfs_t));
     ret = 0;
     ret += of_property_read_string(dev->of_node, "type", (const char **)&name);
 
@@ -233,14 +233,14 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
     sysfs_info->gpio_en_info_num = 0;
     /* Enable through GPIO */
     for (i = 0; i < FIRMWARE_EN_INFO_MAX; i++) {
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_gpio_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &sysfs_info->gpio_en_info[i].en_gpio);
         if(ret != 0) {
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_level_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &sysfs_info->gpio_en_info[i].en_level);
         if(ret != 0) {
@@ -253,7 +253,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
     /* Enable through register */
     for (i = 0; i < FIRMWARE_EN_INFO_MAX; i++) {
         firmware_logic_dev_en_point = &sysfs_info->logic_dev_en_info[i];
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_dev_%d", i);
         ret = 0;
         ret += of_property_read_string(dev->of_node, buf, (const char **)&name);
@@ -264,7 +264,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
         }
         strncpy(firmware_logic_dev_en_point->dev_name, name, FIRMWARE_DEV_NAME_LEN - 1);
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_addr_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->addr);
         if (ret != 0) {
@@ -272,7 +272,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_mask_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->mask);
         if (ret != 0) {
@@ -280,7 +280,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_en_val_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->en_val);
         if (ret != 0) {
@@ -288,7 +288,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_dis_val_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->dis_val);
         if (ret != 0) {
@@ -296,7 +296,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t 
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_width_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->width);
         if (ret != 0) {
@@ -330,7 +330,7 @@ static int firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t *sy
     firmware_upgrade_device = dev->platform_data;
     sysfs_upg_device = firmware_upgrade_device->upg_type.sysfs;
 
-    memset(sysfs_info, 0, sizeof(firmware_sysfs_t));
+    mem_clear(sysfs_info, sizeof(firmware_sysfs_t));
     strncpy(sysfs_info->type, firmware_upgrade_device->type, sizeof(sysfs_info->type) - 1);
     sysfs_info->chain = firmware_upgrade_device->chain;
     sysfs_info->chip_index = firmware_upgrade_device->chip_index;

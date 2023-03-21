@@ -50,7 +50,7 @@ static int dfd_deal_hwmon_buf(uint8_t *buf, int buf_len, uint8_t *buf_new, int *
     DBG_DEBUG(DBG_VERBOSE, "exp:%d, decimal:%d, original value:%d, divisor:%d, result :%d, mod:%d\n",
         exp, decimal, org_value, divisor, div_result, div_mod);
 
-    memset(fmt_str, 0, sizeof(fmt_str));
+    mem_clear(fmt_str, sizeof(fmt_str));
     if (org_value < 0) {
         snprintf(fmt_str, sizeof(fmt_str), "-%%d.%%0%dd\n",exp);
     } else {
@@ -105,7 +105,7 @@ static int dfd_get_sensor_info(uint8_t main_dev_id, uint8_t dev_index, uint8_t s
         main_dev_id, dev_index, sensor_index, sensor_attr, key);
 
     pfunc = dfd_deal_hwmon_buf;
-    memset(buf, 0 , PAGE_SIZE);
+    mem_clear(buf, PAGE_SIZE);
     rv = dfd_info_get_sensor(key, buf, PAGE_SIZE, pfunc);
     return rv;
 }

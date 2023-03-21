@@ -67,7 +67,7 @@ static int transfer_read(struct spi_dev_info *spi_dev, u8 *buf, uint32_t regaddr
     struct spi_transfer xfer[2];
 
     i = 0;
-    memset(tx_buf, 0, sizeof(tx_buf));
+    mem_clear(tx_buf, sizeof(tx_buf));
     tx_buf[i++] = OP_READ;
 
     switch (spi_dev->addr_bus_width) {
@@ -90,7 +90,7 @@ static int transfer_read(struct spi_dev_info *spi_dev, u8 *buf, uint32_t regaddr
         return -EINVAL;
     }
 
-    memset(xfer, 0, sizeof(xfer));
+    mem_clear(xfer, sizeof(xfer));
     spi_message_init(&m);
     xfer[0].tx_buf = tx_buf;
     xfer[0].len = spi_dev->addr_bus_width + 1;
@@ -117,7 +117,7 @@ static int transfer_write(struct spi_dev_info *spi_dev, u8 *buf, uint32_t regadd
     struct spi_transfer xfer ;
 
     i = 0;
-    memset(tx_buf, 0, sizeof(tx_buf));
+    mem_clear(tx_buf, sizeof(tx_buf));
     tx_buf[i++] = OP_WRITE;
     switch (spi_dev->addr_bus_width) {
     case WIDTH_4Byte:
@@ -141,7 +141,7 @@ static int transfer_write(struct spi_dev_info *spi_dev, u8 *buf, uint32_t regadd
 
     memcpy(tx_buf + i, buf, count);
 
-    memset(&xfer, 0, sizeof(xfer));
+    mem_clear(&xfer, sizeof(xfer));
     spi_message_init(&m);
     xfer.tx_buf = tx_buf;
     xfer.len = count + i;
@@ -209,7 +209,7 @@ static int device_read(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *b
     rd_len = (tmp == 0) ? count : count + data_width - tmp;
     per_len = (rd_len > max_per_len) ? (max_per_len) : (rd_len);
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     for (i = 0; i < rd_len; i += per_len) {
         ret = transfer_read(spi_dev, val + i, offset + i, per_len);
         if (ret < 0) {
@@ -246,7 +246,7 @@ static int device_write(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *
             data_width, offset, count);
         return -EINVAL;
     }
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
 
     if (data_width == WIDTH_1Byte) {
         memcpy(val, buf, count);
@@ -325,7 +325,7 @@ static ssize_t spi_dev_write(struct file *file, const char __user *buf,
         return -EINVAL;
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     if (copy_from_user(val, buf, count)) {
         SPI_DEV_ERROR("copy_from_user error.\n");
         return -EFAULT;

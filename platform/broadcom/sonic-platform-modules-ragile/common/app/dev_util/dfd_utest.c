@@ -218,7 +218,7 @@ int32_t dfd_read_port_i2c_one_time_smbus(char *i2c_name, uint16_t dev_addr, uint
      int rv;
      int i;
 
-    memset(&ioctl_data, 0, sizeof(struct i2c_smbus_ioctl_data));
+    mem_clear(&ioctl_data, sizeof(struct i2c_smbus_ioctl_data));
     if (i2c_name == NULL || recv_buf == NULL) {
             DFD_DEBUG_ERROR("i2c_num = NULL, recv_buf = NULL\r\n");
             return -1;
@@ -284,9 +284,9 @@ int32_t dfd_read_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t o
             DFD_DEBUG_ERROR("i2c open fail fd %d\n", fd);
             return -1;
         }
-        memset(&ioctl_data, 0, sizeof(ioctl_data));
-        memset(msgs, 0, sizeof(msgs));
-        memset(buf, 0, sizeof(buf));
+        mem_clear(&ioctl_data, sizeof(ioctl_data));
+        mem_clear(msgs, sizeof(msgs));
+        mem_clear(buf, sizeof(buf));
         if (ioctl(fd, I2C_SLAVE, dev_addr) < 0) {
 
             DFD_DEBUG_ERROR("%s %dioctl fail(ret:%d, errno:%s)!\r\n", __func__ , __LINE__, rv, strerror(errno));
@@ -359,9 +359,9 @@ int32_t dfd_write_port_i2c_one_time(char *i2c_name, uint16_t dev_addr, uint16_t 
     }
     DFD_DEBUG_DBG("i2c name %s, dev_addr 0x%x, offset_addr 0x%x, size %d, addr_type %d\n",i2c_name, dev_addr,
         offset_addr, size, addr_type);
-    memset(&ioctl_data, 0, sizeof(ioctl_data));
-    memset(addr_buf, 0, sizeof(addr_buf));
-    memset(write_buf_tmp, 0, sizeof(write_buf_tmp));
+    mem_clear(&ioctl_data, sizeof(ioctl_data));
+    mem_clear(addr_buf, sizeof(addr_buf));
+    mem_clear(write_buf_tmp, sizeof(write_buf_tmp));
 
     rv = 0;
 
@@ -570,9 +570,9 @@ int32_t dfd_i2c_gen_read_one_time(char *i2c_path, uint32_t dev_addr, uint32_t ad
         DFD_DEBUG_ERROR("i2c open fail fd:%d\n", fd);
         return -1;
     }
-    memset(&ioctl_data, 0, sizeof(ioctl_data));
-    memset(msgs, 0, sizeof(msgs));
-    memset(buf, 0, sizeof(buf));
+    mem_clear(&ioctl_data, sizeof(ioctl_data));
+    mem_clear(msgs, sizeof(msgs));
+    mem_clear(buf, sizeof(buf));
 
     i = 0;
 
@@ -669,14 +669,14 @@ int dfd_utest_i2c_gen_rd(int argc, char* argv[])
     dfd_utest_print_cmd(argc, argv);
     printf(":\n");
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", i2c_bus);
-    memset(tmp_value, 0, sizeof(tmp_value));
+    mem_clear(tmp_value, sizeof(tmp_value));
     ret = dfd_i2c_gen_read(i2c_path, dev_addr, addr_bitwidth, offset_addr, tmp_value, rd_len);
     if (ret < 0) {
         printf("read failed. ret:%d\n", ret);
         goto exit;
     }
 
-    memset(rd_value, 0, sizeof(rd_value));
+    mem_clear(rd_value, sizeof(rd_value));
     if (data_bitwidth == WIDTH_1Byte) {
         memcpy(rd_value, tmp_value, rd_len);
     } else {
@@ -706,9 +706,9 @@ int32_t dfd_i2c_gen_write_one_time(char *i2c_path, uint32_t dev_addr, uint32_t a
         DFD_DEBUG_ERROR("i2c open fail fd %d\n", fd);
         return -1;
     }
-    memset(&ioctl_data, 0, sizeof(ioctl_data));
-    memset(msgs, 0, sizeof(msgs));
-    memset(buf, 0, sizeof(buf));
+    mem_clear(&ioctl_data, sizeof(ioctl_data));
+    mem_clear(msgs, sizeof(msgs));
+    mem_clear(buf, sizeof(buf));
 
     i = 0;
 
@@ -864,7 +864,7 @@ int dfd_utest_i2c_rd(int argc, char* argv[])
     dfd_utest_print_cmd(argc, argv);
     printf(":\n");
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", i2c_bus);
-    memset(value, 0, sizeof(value));
+    mem_clear(value, sizeof(value));
     ret = dfd_read_port_i2c(i2c_path, dev_addr, offset_addr, value, num);
     if (ret < 0) {
         printf("failed ret %d\n", ret);
@@ -944,7 +944,7 @@ int dfd_utest_io_rd(int argc, char* argv[])
 
     dfd_utest_print_cmd(argc, argv);
     printf(":\n");
-    memset(value, 0, sizeof(value));
+    mem_clear(value, sizeof(value));
     ret = dfd_read_io_port(offset_addr, value, num);
     if (ret < 0) {
         printf("failed ret %d\n", ret);
@@ -1024,7 +1024,7 @@ int dfd_utest_phymem_rd(int argc, char* argv[])
 
     dfd_utest_print_cmd(argc, argv);
     printf(":\n");
-    memset(value, 0, sizeof(value));
+    mem_clear(value, sizeof(value));
     ret = dfd_process_mem(DEV_MEM_NAME, 0, width, offset_addr, value, num);
     if (ret < 0) {
         printf("failed ret %d\n", ret);
@@ -1105,7 +1105,7 @@ int dfd_utest_kmem_rd(int argc, char* argv[])
 
     dfd_utest_print_cmd(argc, argv);
     printf(":\n");
-    memset(value, 0, sizeof(value));
+    mem_clear(value, sizeof(value));
     ret = dfd_process_mem(DEV_KMEM_NAME, 0, width, offset_addr, value, num);
     if (ret < 0) {
         printf("failed ret %d\n", ret);
@@ -1228,7 +1228,7 @@ int dfd_utest_i2c_file_wr(int argc, char* argv[])
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", i2c_bus);
 
     while (filesize > 0) {
-        memset(wr_buf, 0, DFD_UTEST_MAX_RDWR_NUM);
+        mem_clear(wr_buf, DFD_UTEST_MAX_RDWR_NUM);
         len = bpt;
         if (offset_addr & (bpt - 1)) {
             page_left = bpt - (offset_addr & (bpt - 1));
@@ -1329,7 +1329,7 @@ int dfd_utest_sysfs_file_upg(int argc, char* argv[])
             len = filesize;
         }
 
-        memset(wr_buf, 0, DFD_UTEST_MAX_RDWR_NUM);
+        mem_clear(wr_buf, DFD_UTEST_MAX_RDWR_NUM);
         for (i = 0; i < DFD_I2C_RETRY_TIME; i++) {
             len = read(file_fd, wr_buf, len);
             if (len < 0) {
@@ -1369,7 +1369,7 @@ int dfd_utest_sysfs_file_upg(int argc, char* argv[])
             goto fail;
         }
 
-        memset(reread_buf, 0, DFD_UTEST_MAX_RDWR_NUM);
+        mem_clear(reread_buf, DFD_UTEST_MAX_RDWR_NUM);
         for (i = 0; i < DFD_I2C_RETRY_TIME; i++) {
             reread_len = read(fd, reread_buf, reback_len);
             if (reread_len != reback_len) {
@@ -1505,7 +1505,7 @@ int dfd_utest_sysfs_file_wr(int argc, char* argv[])
             len = filesize;
         }
 
-        memset(wr_buf, 0, DFD_UTEST_MAX_RDWR_NUM);
+        mem_clear(wr_buf, DFD_UTEST_MAX_RDWR_NUM);
         for (i = 0; i < DFD_I2C_RETRY_TIME; i++) {
             len = read(file_fd, wr_buf, len);
             if (len < 0) {
@@ -1593,7 +1593,7 @@ int dfd_utest_sysfs_file_rd(int argc, char* argv[])
         goto fail;
     }
 
-    memset(rd_buf, 0, DFD_UTEST_MAX_RDWR_NUM);
+    mem_clear(rd_buf, DFD_UTEST_MAX_RDWR_NUM);
     read_len = read(fd, rd_buf, len);
     if (read_len != len) {
         printf("read failed read_len %d len %d.\n", read_len, len);
@@ -1634,7 +1634,7 @@ int dfd_utest_msr_rd(int argc, char* argv[])
         goto exit;
     }
 
-    memset(msr_file_name, 0, sizeof(memset));
+    mem_clear(msr_file_name, sizeof(msr_file_name));
     sprintf(msr_file_name, "/dev/cpu/%u/msr", cpu_index);
 
     fd = open(msr_file_name, O_RDONLY);
@@ -1705,7 +1705,7 @@ int dfd_utest_sysfs_data_wr(int argc, char* argv[])
     sysfs_loc = argv[2];
     offset = strtol(argv[3], &stopstring, 16);
     len = argc - 4;
-    memset(wr_buf, 0, sizeof(wr_buf));
+    mem_clear(wr_buf, sizeof(wr_buf));
     for (i = 0; i < len; i++) {
         wr_buf[i] = strtol(argv[4 + i], &stopstring, 16);
         DFD_DEBUG_DBG("index :%d value %x\n", i , wr_buf[i]);

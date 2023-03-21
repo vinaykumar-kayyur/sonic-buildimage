@@ -336,7 +336,7 @@ static inline u32 oc_spi_getreg_16(struct spioc *spioc, int reg)
     int i;
 
     pos = spioc->base_addr + (reg << spioc->reg_shift);
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     oc_spi_reg_read(spioc, pos, buf_tmp, REG_IO_WIDTH_2);
 
     value = 0;
@@ -356,7 +356,7 @@ static inline u32 oc_spi_getreg_32(struct spioc *spioc, int reg)
     int i;
 
     pos = spioc->base_addr + (reg << spioc->reg_shift);
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     oc_spi_reg_read(spioc, pos, buf_tmp, REG_IO_WIDTH_4);
 
     value = 0;
@@ -376,7 +376,7 @@ static inline u32 oc_spi_getreg_16be(struct spioc *spioc, int reg)
 
     pos = spioc->base_addr + (reg << spioc->reg_shift);
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     oc_spi_reg_read(spioc, pos, buf_tmp, REG_IO_WIDTH_2);
 
     value = 0;
@@ -397,7 +397,7 @@ static inline u32 oc_spi_getreg_32be(struct spioc *spioc, int reg)
 
     pos = spioc->base_addr + (reg << spioc->reg_shift);
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     oc_spi_reg_read(spioc, pos, buf_tmp, REG_IO_WIDTH_4);
 
     value = 0;

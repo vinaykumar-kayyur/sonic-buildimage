@@ -238,7 +238,7 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
         count = sizeof(buf_tmp);
     }
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     read_len = pci_dev_read_tmp(wb_pci_dev, *offset, buf_tmp, count);
     if (read_len < 0) {
         PCIE_DEV_DEBUG_ERROR("pci_dev_read_tmp failed, ret:%d.\n", read_len);
@@ -329,7 +329,7 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
         count = sizeof(buf_tmp);
     }
 
-    memset(buf_tmp, 0, sizeof(buf_tmp));
+    mem_clear(buf_tmp, sizeof(buf_tmp));
     if (access_ok(buf, count)) {
         PCIE_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write conut %lu.\n",
             buf, *offset, count);

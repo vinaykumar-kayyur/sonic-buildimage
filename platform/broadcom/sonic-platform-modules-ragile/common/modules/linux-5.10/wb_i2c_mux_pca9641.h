@@ -1,6 +1,10 @@
 #ifndef __WB_I2C_MUX_PCA9641_H__
 #define __WB_I2C_MUX_PCA9641_H__
 
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
+
 typedef enum pca9641_reset_type_s {
     PCA9641_RESET_NONE = 0,
     PCA9641_RESET_I2C = 1,

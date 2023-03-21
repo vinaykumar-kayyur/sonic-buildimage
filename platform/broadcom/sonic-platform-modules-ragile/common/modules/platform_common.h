@@ -4,6 +4,9 @@
 #include<linux/kernel.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 typedef enum {
     DBG_START,

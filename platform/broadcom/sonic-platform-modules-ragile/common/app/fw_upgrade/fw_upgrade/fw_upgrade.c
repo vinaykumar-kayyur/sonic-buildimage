@@ -1285,7 +1285,7 @@ static int read_single_bmc_flash(flash_info_t* info, uint32_t start_addr, int re
     ret = 0;
     fd = 0;
     if (!is_print) {
-        memset(filename, 0, MAX_FILENAME_LENGTH);
+        mem_clear(filename, MAX_FILENAME_LENGTH);
         snprintf(filename, MAX_FILENAME_LENGTH, "/tmp/image-bmc%d", info->cs);
         fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, S_IRWXG|S_IRWXU|S_IRWXO);
         if (fd < 0) {
@@ -1489,6 +1489,7 @@ static int program_flash_main(int argc, char* argv[])
 {
     int cs, erase_way, ret;
     char *stopstring;
+    char tmp[128];
 
     if (argc != 5) {
         printf("Input invalid.\n");
@@ -1498,7 +1499,8 @@ static int program_flash_main(int argc, char* argv[])
 
     cs = strtol(argv[3], &stopstring, 10);
     if ((strlen(stopstring) != 0) || cs < 0 || cs > 2) {
-        printf("Incorrect chip select %s\n", argv[3]);
+        snprintf(tmp, sizeof(tmp), "%s", argv[3]);
+        printf("Incorrect chip select %s\n", tmp);
         help();
         return -1;
     }
@@ -1508,7 +1510,8 @@ static int program_flash_main(int argc, char* argv[])
     } else if (strcmp(argv[4], "block") == 0) {
         erase_way = BLOCK_ERASE;
     } else {
-        printf("Incorrect erase type %s\n", argv[4]);
+        snprintf(tmp, sizeof(tmp), "%s", argv[4]);
+        printf("Incorrect erase type %s\n", tmp);
         help();
         return -1;
     }
@@ -1523,6 +1526,7 @@ static int read_bmc_flash_main(int argc, char* argv[])
     int cs, ret, read_size, is_print;
     uint32_t start_addr;
     char *stopstring;
+    char tmp[128];
 
     if (argc != 6) {
         printf("Input invalid.\n");
@@ -1532,7 +1536,8 @@ static int read_bmc_flash_main(int argc, char* argv[])
 
     cs = strtol(argv[2], &stopstring, 10);
     if ((strlen(stopstring) != 0) || cs < 0 || cs > 1) {
-        printf("Incorrect chip select %s\n", argv[2]);
+        snprintf(tmp, sizeof(tmp), "%s", argv[2]);
+        printf("Incorrect chip select %s\n", tmp);
         help();
         return -1;
     }

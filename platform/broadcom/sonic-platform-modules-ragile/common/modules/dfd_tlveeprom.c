@@ -381,7 +381,7 @@ int parse_tlv_eeprom(u_int8_t *eeprom, u_int32_t size)
     }
 
     for (i = 0; i < TLV_CODE_NUM; i++) {
-        memset((void *)&decode_value, 0, sizeof(tlv_decode_value_t));
+        mem_clear((void *)&decode_value, sizeof(tlv_decode_value_t));
         ret = tlvinfo_decode_tlv(eeprom, tlv_code_list[i].m_code, &decode_value);
         if (!ret) {
             DBG_ERROR("No found type: %s\n", tlv_code_list[i].m_name);
@@ -494,7 +494,7 @@ int dfd_tlvinfo_get_e2prom_info(u_int8_t *eeprom, u_int32_t size, dfd_tlv_type_t
         return -1;
     }
 
-    memset((void *)&decode_value, 0, sizeof(tlv_decode_value_t));
+    mem_clear((void *)&decode_value, sizeof(tlv_decode_value_t));
     ret = dfd_parse_tlv_eeprom(eeprom, size, tlv_type->main_type, &decode_value);
     if (ret) {
         DBG_ERROR("dfd_parse_tlv_eeprom failed ret %d.\n", ret);

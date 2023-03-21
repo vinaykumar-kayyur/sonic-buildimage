@@ -2,6 +2,8 @@
 #ifndef __DFD_UTEST_H__
 #define __DFD_UTEST_H__
 
+#include <string.h>
+
 extern int g_dfd_debug_sw;
 extern int g_dfd_debugpp_sw;
 
@@ -20,6 +22,8 @@ extern int g_dfd_debugpp_sw;
             ##args);  \
     }                                                   \
 } while (0)
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 typedef enum dfd_rv_s {
     DFD_RV_OK               = 0,

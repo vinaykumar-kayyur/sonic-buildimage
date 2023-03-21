@@ -10,7 +10,9 @@
 #define INTEL_SPI_H
 
 #include <linux/platform_data/intel-spi.h>
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 struct intel_spi;
 struct resource;
 

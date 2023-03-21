@@ -72,7 +72,7 @@ static int transfer_read(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t 
 
     i = 0;
 
-    memset(offset_buf, 0, sizeof(offset_buf));
+    mem_clear(offset_buf, sizeof(offset_buf));
 
     switch (i2c_dev->addr_bus_width) {
     case WIDTH_4Byte:
@@ -100,7 +100,7 @@ static int transfer_read(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t 
     }
 
     if (adap->algo->master_xfer) {
-        memset(msgs, 0, sizeof(msgs));
+        mem_clear(msgs, sizeof(msgs));
         msgs[0].addr = i2c_dev->i2c_addr;
         msgs[0].flags = 0;
         msgs[0].len = i2c_dev->addr_bus_width;
@@ -190,7 +190,7 @@ static int transfer_write(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t
 
     i = 0;
 
-    memset(offset_buf, 0, sizeof(offset_buf));
+    mem_clear(offset_buf, sizeof(offset_buf));
 
     switch (i2c_dev->addr_bus_width) {
     case WIDTH_4Byte:
@@ -220,7 +220,7 @@ static int transfer_write(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t
     }
 
     if (adap->algo->master_xfer) {
-        memset(msgs, 0, sizeof(msgs));
+        mem_clear(msgs, sizeof(msgs));
 
         msgs[0].addr = i2c_dev->i2c_addr;
         msgs[0].flags = 0;
@@ -349,7 +349,7 @@ static int device_read(struct platform_i2c_dev_info *i2c_dev, uint32_t offset, u
     rd_len = (tmp == 0) ? count : count + width - tmp;
     per_len = (rd_len > max_per_len) ? (max_per_len) : (rd_len);
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     for (i = 0; i < rd_len; i += per_len) {
         ret = transfer_read(i2c_dev, val + i, offset + i, per_len);
         if (ret < 0) {
@@ -403,7 +403,7 @@ static int device_write(struct platform_i2c_dev_info *i2c_dev, uint32_t offset, 
         return -EINVAL;
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
 
     if (width == WIDTH_1Byte) {
         memcpy(val, buf, count);
@@ -481,7 +481,7 @@ static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t c
         return -EINVAL;
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     if (copy_from_user(val, buf, count)) {
         I2C_DEV_DEBUG_ERROR("copy_from_user error.\r\n");
         return -EFAULT;

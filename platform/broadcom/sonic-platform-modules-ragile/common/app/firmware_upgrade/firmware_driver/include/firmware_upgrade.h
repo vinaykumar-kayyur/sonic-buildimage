@@ -1,9 +1,13 @@
 #ifndef __FIRMWARE_UPGRADE_H__
 #define __FIRMWARE_UPGRADE_H__
 
+#include <linux/string.h>
+
 #define TYPE_LEN         (10)
 #define DEV_NAME_LEN     (64)
 #define ENABLE_NUM       (16)
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 typedef struct firmware_jtag_device_s {
     uint32_t tdi;

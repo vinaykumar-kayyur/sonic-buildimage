@@ -36,7 +36,7 @@ static int get_mtdnum_from_name(char *name, int *mtdnum)
         return -FIRWMARE_MTD_PART_INFO_ERR;
     }
 
-    memset(buf, 0, sizeof(buf));
+    mem_clear(buf, sizeof(buf));
     while(fgets(buf, sizeof(buf), fp)) {
         if (strstr(buf, name) != NULL) {
             start = strstr(buf, key_w);
@@ -175,7 +175,8 @@ static int firmware_upgrade_mtd_block(int mtd_fd, uint32_t offset,
         }
         if (i == FW_SYSFS_RETRY_TIME) {
             dbg_print(is_debug_on, "Error: upgrade mtd fail, offset = 0x%x, size = %d\n", offset, size);
-            goto failed;
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
 
         usleep(FW_SYSFS_RETRY_SLEEP_TIME);
@@ -198,7 +199,8 @@ static int firmware_upgrade_mtd_block(int mtd_fd, uint32_t offset,
         }
         if (i == FW_SYSFS_RETRY_TIME) {
             dbg_print(is_debug_on, "Error: reread mtd fail, offset = 0x%x size = %d\n", offset, size);
-            goto failed;
+            free(reread_buf);
+            return FIRMWARE_FAILED;
         }
 
         /* Check data */
@@ -228,17 +230,13 @@ static int firmware_upgrade_mtd_block(int mtd_fd, uint32_t offset,
         }
         dbg_print(is_debug_on, "\n");
 
-        goto failed;
+        free(reread_buf);
+        return FIRMWARE_FAILED;
     }
 
     free(reread_buf);
     dbg_print(is_debug_on, "firmware upgrade mtd block offset[0x%.8x] success.\n", offset);
     return FIRMWARE_SUCCESS;
-
-failed:
-    free(reread_buf);
-    dbg_print(is_debug_on, "firmware upgrade mtd block offset[0x%.8x] fail.\n", offset);
-    return FIRMWARE_FAILED;
 }
 
 /*
@@ -267,7 +265,7 @@ static int firmware_upgrade_mtd_program(firmware_mtd_info_t *dev_info,
         return FIRMWARE_FAILED;
     }
 
-    memset(dev_mtd, 0, sizeof(dev_mtd));
+    mem_clear(dev_mtd, sizeof(dev_mtd));
     snprintf(dev_mtd, sizeof(dev_mtd) - 1, "/dev/mtd%d", mtdnum);
 
     mtd_fd = open(dev_mtd, O_SYNC | O_RDWR);
@@ -390,7 +388,7 @@ failed:
  */
 int firmware_upgrade_mtd_test(int fd, name_info_t *info)
 {
-    int ret;
+    int ret, rv;
     firmware_mtd_info_t dev_info;
     uint8_t *data_buf;
     uint8_t num;
@@ -429,30 +427,20 @@ int firmware_upgrade_mtd_test(int fd, name_info_t *info)
     ret = ioctl(fd, FIRMWARE_SYSFS_INIT, NULL);
     if (ret < 0) {
         dbg_print(is_debug_on, "init dev logic faile\n");
-        goto err;
+        free(data_buf);
+        return FIRMWARE_FAILED;
     }
 
     ret = firmware_upgrade_mtd_program(&dev_info, dev_info.test_base, data_buf, dev_info.test_size);
+    /* disable upgrade access */
+    rv = ioctl(fd, FIRMWARE_SYSFS_FINISH, NULL);
+    if (rv < 0) {
+        dbg_print(is_debug_on, "close dev logic en failed.\n");
+    }
+    free(data_buf);
     if (ret < 0) {
         dbg_print(is_debug_on, "Error:mtd device program failed, ret=%d.\n", ret);
-        goto failed;
+        return FIRMWARE_FAILED;
     }
-
-    /* disable upgrade access */
-    ret = ioctl(fd, FIRMWARE_SYSFS_FINISH, NULL);
-    if (ret < 0) {
-        dbg_print(is_debug_on, "close dev logic en failed.\n");
-    }
-    free(data_buf);
     return FIRMWARE_SUCCESS;
-
-failed:
-    /* disable upgrade access */
-    ret = ioctl(fd, FIRMWARE_SYSFS_FINISH,NULL);
-    if (ret < 0) {
-        dbg_print(is_debug_on, "close dev logic en failed.\n");
-    }
-err:
-    free(data_buf);
-    return FIRMWARE_FAILED;
 }

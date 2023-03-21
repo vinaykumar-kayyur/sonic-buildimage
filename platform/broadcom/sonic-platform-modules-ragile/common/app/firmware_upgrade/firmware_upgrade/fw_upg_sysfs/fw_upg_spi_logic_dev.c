@@ -792,7 +792,7 @@ static int firmware_upgreade_fpga_onetime(firmware_spi_logic_upg_t *upg_priv,
 
         /* Read back the data and compare the correctness of the data */
         for (retry = 0; retry < FPGA_UPG_RETRY_TIMES; retry++) { /*retry 3 times*/
-            memset(rbuf, 0, len);
+            mem_clear(rbuf, len);
             ret = firmware_fpga_upg_read(upg_priv, flash_addr, rbuf, len);
             res = memcmp(rbuf, buf + offset, len);
             if (ret || res) {
@@ -868,7 +868,7 @@ int firmware_upgrade_spi_logic_dev(int fd, uint8_t *buf, uint32_t size, name_inf
     }
 
     /* Gets the current logical device information */
-    memset(&current_upg_priv, 0, sizeof(firmware_spi_logic_upg_t));
+    mem_clear(&current_upg_priv, sizeof(firmware_spi_logic_upg_t));
     ret = firmware_upgrade_get_spi_logic_info(fd, &current_upg_priv);
     if (ret < 0) {
         dbg_print(is_debug_on, "Error:firmware_upgrade_get_spi_logic_info failed ret %d.\n", ret);
@@ -923,7 +923,7 @@ int firmware_fpga_upgrade_test(firmware_spi_logic_upg_t *current_upg_priv)
         ret = -FW_SPI_FLASH_NOT_SUPPORT_TEST;
         goto exit;
     }
-    memset(wbuf, 0, current_upg_priv->test_size);
+    mem_clear(wbuf, current_upg_priv->test_size);
     /* Get random data */
     for (j = 0; j < current_upg_priv->test_size; j++) {
         num = rand() % 256;
@@ -971,7 +971,7 @@ int firmware_upgrade_spi_logic_dev_test(int fd, name_info_t *info)
     }
 
     /* Gets the current logical device information */
-    memset(&current_upg_priv, 0, sizeof(firmware_spi_logic_upg_t));
+    mem_clear(&current_upg_priv, sizeof(firmware_spi_logic_upg_t));
     ret = firmware_upgrade_get_spi_logic_info(fd, &current_upg_priv);
     if (ret < 0) {
         dbg_print(is_debug_on, "Error:firmware_upgrade_get_spi_logic_info failed ret %d.\n", ret);
@@ -1071,7 +1071,7 @@ static int firmware_fpga_dump_read(int fd, uint32_t offset, uint8_t *buf, uint32
     }
 
     /* Gets the current logical device information */
-    memset(&current_upg_priv, 0, sizeof(firmware_spi_logic_upg_t));
+    mem_clear(&current_upg_priv, sizeof(firmware_spi_logic_upg_t));
     ret = firmware_upgrade_get_spi_logic_info(fd, &current_upg_priv);
     if (ret < 0) {
         dbg_print(is_debug_on, "Error:firmware_upgrade_get_spi_logic_info failed ret %d.\n", ret);
@@ -1136,7 +1136,7 @@ int firmware_upgrade_spi_logic_dev_dump(char *dev_name, uint32_t offset,
         goto free_dev_fd;
     }
 
-    memset(buf, 0, len);
+    mem_clear(buf, len);
     ret = firmware_fpga_dump_read(dev_fd, offset, buf, len);
     if (ret < 0) {
         dbg_print(is_debug_on, "addr 0x%x read 0x%x failed ret:%d\n", offset, len, ret);
@@ -1146,7 +1146,7 @@ int firmware_upgrade_spi_logic_dev_dump(char *dev_name, uint32_t offset,
     dbg_print(is_debug_on, "dump data succeeded. offset:0x%x, len:0x%x\n", offset, len);
 
     if (strcmp(record_file, "print") != 0) {      /* record dump data on 'record_file' */
-        memset(save_file, 0, FIRMWARE_LOGIC_DEV_NAME_LEN);
+        mem_clear(save_file, FIRMWARE_LOGIC_DEV_NAME_LEN);
         strncpy(save_file, record_file, FIRMWARE_LOGIC_DEV_NAME_LEN - 1);
         file_fd = open(save_file, O_RDWR|O_CREAT|O_TRUNC, S_IRWXG|S_IRWXU|S_IRWXO);
         if (file_fd < 0) {

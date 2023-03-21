@@ -104,7 +104,7 @@ static int slot_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigne
 
     curr_slot = &g_slot.slot[index-1];
     SLOT_DBG("create slot%d ...\n", index);
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "%s%d",SLOT_SYSFS_NAME, index);
     curr_slot->obj = wb_plat_kobject_create(name, parent);
     if (!curr_slot->obj) {
@@ -175,7 +175,7 @@ static void slot_sub_remove(void)
        }
        kfree(g_slot.slot);
     }
-    memset(&g_slot, 0, sizeof(struct slot_t));
+    mem_clear(&g_slot, sizeof(struct slot_t));
     return ;
 }
 

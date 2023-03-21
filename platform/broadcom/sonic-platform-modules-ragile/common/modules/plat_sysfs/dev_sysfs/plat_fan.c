@@ -247,7 +247,7 @@ static int fanindex_single_motor_create_kobj_and_attrs(struct fan_obj_t * curr_f
     FAN_DBG("create fan_index:%d, motor%d ...\n", curr_fan->obj->index, motor_index);
 
     curr_motor = &curr_fan->motor[motor_index];
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "motor%d", motor_index);
     curr_motor->obj = wb_plat_kobject_create(name, &curr_fan->obj->kobj);
     if (!curr_motor->obj) {
@@ -386,7 +386,7 @@ static int fan_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned
     }
     curr_fan = &g_fan.fan[index-1];
     FAN_DBG("create fan%d ...\n", index);
-    memset(name, 0, sizeof(name));
+    mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "fan%d", index);
     curr_fan->obj = wb_plat_kobject_create(name, parent);
     if (!curr_fan->obj) {
@@ -461,7 +461,7 @@ static void fan_sub_remove(void)
        }
        kfree(g_fan.fan);
     }
-    memset(&g_fan, 0, sizeof(struct fan_t));
+    mem_clear(&g_fan, sizeof(struct fan_t));
     return ;
 }
 

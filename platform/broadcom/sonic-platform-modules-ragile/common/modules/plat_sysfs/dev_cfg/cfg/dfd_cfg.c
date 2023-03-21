@@ -11,6 +11,7 @@
 #include "../include/dfd_cfg_info.h"
 #include "../include/dfd_cfg_adapter.h"
 #include "../include/dfd_cfg.h"
+#include "../../dev_sysfs/include/sysfs_common.h"
 
 #ifdef DFD_CFG_ITEM
 #undef DFD_CFG_ITEM
@@ -224,7 +225,7 @@ static int dfd_ko_cfg_add_str_item(int key, char *str, int line_num)
             DBG_DEBUG(DBG_ERROR, "line%d: kmalloc str[%lu] fail\n", line_num, strlen(str));
             return -1;
         }
-        memset(str_cfg, 0, DFD_CFG_STR_MAX_LEN);
+        mem_clear(str_cfg, DFD_CFG_STR_MAX_LEN);
         strncpy(str_cfg, str, DFD_CFG_STR_MAX_LEN - 1);
 
         rv = lnode_insert_node(&dfd_ko_cfg_list_root, key, str_cfg);
@@ -238,7 +239,7 @@ static int dfd_ko_cfg_add_str_item(int key, char *str, int line_num)
         }
     } else {
         DBG_DEBUG(DBG_WARN, "line%d: replace string item[%s->%s], key=0x%08x\n", line_num, str_cfg, str, key);
-        memset(str_cfg, 0, DFD_CFG_STR_MAX_LEN);
+        mem_clear(str_cfg, DFD_CFG_STR_MAX_LEN);
         strncpy(str_cfg, str, DFD_CFG_STR_MAX_LEN - 1);
     }
 
@@ -319,7 +320,7 @@ static int dfd_ko_cfg_add_i2c_dev_item(int key, dfd_i2c_dev_mem_t member, int va
             DBG_DEBUG(DBG_ERROR, "line%d: kmalloc i2c_dev fail\n", line_num);
             return -1;
         }
-        memset(i2c_dev_cfg, 0, sizeof(dfd_i2c_dev_t));
+        mem_clear(i2c_dev_cfg, sizeof(dfd_i2c_dev_t));
 
         dfd_ko_cfg_set_i2c_dev_mem_value(i2c_dev_cfg, member, value);
         rv = lnode_insert_node(&dfd_ko_cfg_list_root, key, i2c_dev_cfg);
@@ -432,7 +433,7 @@ static void dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_t *info_ctrl, info_ctrl
         info_ctrl->pola = dfd_ko_cfg_get_enum_value_by_str(g_info_pola_str, INFO_POLA_END, buf_val);
         break;
     case INFO_CTRL_MEM_FPATH:
-        memset(info_ctrl->fpath, 0, sizeof(info_ctrl->fpath));
+        mem_clear(info_ctrl->fpath, sizeof(info_ctrl->fpath));
         strncpy(info_ctrl->fpath, buf_val, sizeof(info_ctrl->fpath) - 1);
         break;
     case INFO_CTRL_MEM_ADDR:
@@ -445,7 +446,7 @@ static void dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_t *info_ctrl, info_ctrl
         dfd_ko_cfg_get_value_from_char(buf_val, &(info_ctrl->bit_offset), line_num);
         break;
     case INFO_CTRL_MEM_STR_CONS:
-        memset(info_ctrl->str_cons, 0, sizeof(info_ctrl->str_cons));
+        mem_clear(info_ctrl->str_cons, sizeof(info_ctrl->str_cons));
         strncpy(info_ctrl->str_cons, buf_val, sizeof(info_ctrl->str_cons) - 1);
         break;
     case INFO_CTRL_MEM_INT_EXTRA1:
@@ -473,7 +474,7 @@ static int dfd_ko_cfg_add_info_ctrl_item(int key, info_ctrl_mem_t member, char *
             DBG_DEBUG(DBG_ERROR, "line%d: kmalloc info_ctrl fail\n", line_num);
             return -1;
         }
-        memset(info_ctrl_cfg, 0, sizeof(info_ctrl_t));
+        mem_clear(info_ctrl_cfg, sizeof(info_ctrl_t));
 
         dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_cfg, member, buf_val, line_num);
         rv = lnode_insert_node(&dfd_ko_cfg_list_root, key, info_ctrl_cfg);
@@ -634,7 +635,7 @@ static int dfd_ko_cfg_analyse_config_file(char *fpath)
             break;
         }
 
-        (void)memset(config_line, 0, sizeof(config_line));
+        (void)mem_clear(config_line, sizeof(config_line));
 
     }
     kfile_close(&kfile_ctrl);
@@ -709,7 +710,7 @@ static int dfd_get_my_dev_type_by_file(void)
         DBG_DEBUG(DBG_VERBOSE, "open file fail!\n");
         return -1;
     }
-    memset(buf, 0, DFD_PID_BUF_LEN);
+    mem_clear(buf, DFD_PID_BUF_LEN);
     pos = 0;
     ret = kernel_read(fp, buf, DFD_PRODUCT_ID_LENGTH + 1, &pos);
     if (ret < 0) {
@@ -785,7 +786,7 @@ static int dfd_ko_cfg_init(void)
     while (kfile_gets(file_name, sizeof(file_name), &kfile_ctrl) > 0) {
 
         dfd_ko_cfg_del_space_lf_cr(file_name);
-        memset(fpath, 0, sizeof(fpath));
+        mem_clear(fpath, sizeof(fpath));
         snprintf(fpath, sizeof(fpath), "%s%s.cfg", DFD_KO_CFG_FILE_DIR, file_name);
         DBG_DEBUG(DBG_VERBOSE, ">>>>start parsing config file[%s]\n", fpath);
 

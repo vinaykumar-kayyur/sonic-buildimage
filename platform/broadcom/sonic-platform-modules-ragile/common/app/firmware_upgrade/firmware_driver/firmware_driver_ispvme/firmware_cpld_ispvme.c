@@ -160,7 +160,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
         return -1;
     }
 
-    memset(cpld_info, 0, sizeof(firmware_cpld_t));
+    mem_clear(cpld_info, sizeof(firmware_cpld_t));
     ret = 0;
     ret += of_property_read_string(dev->of_node, "type", (const char **)&name);
     ret += of_property_read_u32(dev->of_node, "tdi", &cpld_info->tdi);
@@ -186,14 +186,14 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
     cpld_info->gpio_en_info_num = 0;
     /* Enable through GPIO */
     for (i = 0; i < FIRMWARE_EN_INFO_MAX; i++) {
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_gpio_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &cpld_info->gpio_en_info[i].en_gpio);
         if(ret != 0) {
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_level_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &cpld_info->gpio_en_info[i].en_level);
         if(ret != 0) {
@@ -206,7 +206,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
     /* Enable through register */
     for (i = 0; i < FIRMWARE_EN_INFO_MAX; i++) {
         firmware_logic_dev_en_point = &cpld_info->logic_dev_en_info[i];
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_dev_%d", i);
         ret = 0;
         ret += of_property_read_string(dev->of_node, buf, (const char **)&name);
@@ -217,7 +217,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
         }
         strncpy(firmware_logic_dev_en_point->dev_name, name, FIRMWARE_DEV_NAME_LEN - 1);
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_addr_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->addr);
         if (ret != 0) {
@@ -225,7 +225,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_mask_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->mask);
         if (ret != 0) {
@@ -233,7 +233,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_en_val_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->en_val);
         if (ret != 0) {
@@ -241,7 +241,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_dis_val_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->dis_val);
         if (ret != 0) {
@@ -249,7 +249,7 @@ static int of_firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *
             break;
         }
 
-        memset(buf, 0, sizeof(buf));
+        mem_clear(buf, sizeof(buf));
         snprintf(buf, sizeof(buf) - 1, "en_logic_width_%d", i);
         ret = of_property_read_u32(dev->of_node, buf, &firmware_logic_dev_en_point->width);
         if (ret != 0) {
@@ -289,7 +289,7 @@ static int firmware_upgrade_config_init(struct device *dev, firmware_cpld_t *cpl
     firmware_upgrade_device = dev->platform_data;
     jtag_upg_device = firmware_upgrade_device->upg_type.jtag;
 
-    memset(cpld_info, 0, sizeof(firmware_cpld_t));
+    mem_clear(cpld_info, sizeof(firmware_cpld_t));
     strncpy(cpld_info->type, firmware_upgrade_device->type, sizeof(cpld_info->type) - 1);
     cpld_info->tdi = jtag_upg_device.tdi;
     cpld_info->tck = jtag_upg_device.tck;

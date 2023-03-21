@@ -86,7 +86,7 @@ static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, siz
 
     i = 0;
 
-    memset(offset_buf, 0, sizeof(offset_buf));
+    mem_clear(offset_buf, sizeof(offset_buf));
 
     switch (i2c_dev->addr_bus_width) {
     case WIDTH_4Byte:
@@ -109,7 +109,7 @@ static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, siz
     }
 
     if (adap->algo->master_xfer) {
-        memset(msgs, 0, sizeof(msgs));
+        mem_clear(msgs, sizeof(msgs));
         msgs[0].addr = client->addr;
         msgs[0].flags = 0;
         msgs[0].len = i2c_dev->addr_bus_width;
@@ -162,7 +162,7 @@ static int transfer_write(struct i2c_client *client, u8 *buf, loff_t regaddr, si
 
     i = 0;
 
-    memset(offset_buf, 0, sizeof(offset_buf));
+    mem_clear(offset_buf, sizeof(offset_buf));
 
     switch (i2c_dev->addr_bus_width) {
     case WIDTH_4Byte:
@@ -187,7 +187,7 @@ static int transfer_write(struct i2c_client *client, u8 *buf, loff_t regaddr, si
     memcpy(offset_buf + i2c_dev->addr_bus_width, buf, count);
 
     if (adap->algo->master_xfer) {
-        memset(msgs, 0, sizeof(msgs));
+        mem_clear(msgs, sizeof(msgs));
 
         msgs[0].addr = client->addr;
         msgs[0].flags = 0;
@@ -291,7 +291,7 @@ static int device_read(struct i2c_dev_info *i2c_dev, uint32_t offset, uint8_t *b
     rd_len = (tmp == 0) ? count : count + width - tmp;
     per_len = (rd_len > max_per_len) ? (max_per_len) : (rd_len);
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     for (i = 0; i < rd_len; i += per_len) {
         ret = transfer_read(i2c_dev->client, val + i, offset + i, per_len);
         if (ret < 0) {
@@ -365,7 +365,7 @@ static int device_write(struct i2c_dev_info *i2c_dev, uint32_t offset, uint8_t *
         return -EINVAL;
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
 
     if (width == WIDTH_1Byte) {
         memcpy(val, buf, count);
@@ -414,7 +414,7 @@ static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, l
         count = sizeof(val);
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     read_len = device_read(i2c_dev, (uint32_t)*offset, val, count);
     if (read_len < 0) {
         I2C_DEV_DEBUG_ERROR("i2c dev read failed, dev name:%s, offset:0x%x, len:%lu.\n",
@@ -472,7 +472,7 @@ static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t c
         count = sizeof(val);
     }
 
-    memset(val, 0, sizeof(val));
+    mem_clear(val, sizeof(val));
     if (access_ok(buf, count)) {
         I2C_DEV_DEBUG_DMESG("user space write, buf: %p, offset: %lld, write conut %lu.\n",
             buf, *offset, count);
