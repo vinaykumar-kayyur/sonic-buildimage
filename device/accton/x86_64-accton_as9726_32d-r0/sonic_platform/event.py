@@ -43,14 +43,14 @@ class SfpEvent:
         bitmap = 0
         for sfp in self._sfp_list:
             modpres = sfp.get_presence()
-            i=sfp.port_num-1
+            i=sfp._port_num-1
             if modpres:
                 bitmap = bitmap | (1 << i)
 
         changed_ports = self.sfp_change_event_data['present'] ^ bitmap
         if changed_ports:
             for sfp in self._sfp_list:
-                i=sfp.port_num-1
+                i=sfp._port_num-1
                 if (changed_ports & (1 << i)):
                     if (bitmap & (1 << i)) == 0:
                         port_dict[i+1] = '0'

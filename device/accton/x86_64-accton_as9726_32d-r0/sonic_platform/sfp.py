@@ -2202,7 +2202,7 @@ class Sfp(SfpBase):
         Returns:
             integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
-        return self.port_num
+        return self._port_num
 
     def is_replaceable(self):
         """
