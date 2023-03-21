@@ -56,6 +56,10 @@
 #  * GZ_COMPRESS_PROGRAM: Select pigz to reduce build time
 #  *                 Default: gzip
 #  *                 Values: pigz,gzip
+#  * UNATTENDED: Don't wait for interactive input from terminal, setting this
+#  *             value to anything will enable it
+#  *             Default: unset
+#  *             Value: y
 #
 ###############################################################################
 
@@ -305,6 +309,21 @@ ifdef SONIC_BUILD_QUIETER
 	DOCKER_RUN += -e "SONIC_BUILD_QUIETER=$(SONIC_BUILD_QUIETER)"
 endif
 
+# Mount the Signing key and Certificate in the slave container
+ifneq ($(SECURE_UPGRADE_DEV_SIGNING_KEY),)
+    DOCKER_RUN += -v $(SECURE_UPGRADE_DEV_SIGNING_KEY):$(SECURE_UPGRADE_DEV_SIGNING_KEY):ro
+endif
+ifneq ($(SECURE_UPGRADE_DEV_SIGNING_CERT),)
+    DOCKER_RUN += -v $(SECURE_UPGRADE_DEV_SIGNING_CERT):$(SECURE_UPGRADE_DEV_SIGNING_CERT):ro
+endif
+# Mount the Signing prod tool in the slave container
+$(info "SECURE_UPGRADE_PROD_SIGNING_TOOL": "$(SECURE_UPGRADE_PROD_SIGNING_TOOL)")
+ifneq ($(SECURE_UPGRADE_PROD_SIGNING_TOOL),)
+	SECURE_UPGRADE_PROD_SIGNING_TOOL_DST = /sonic/scripts/$(shell basename -- $(SECURE_UPGRADE_PROD_SIGNING_TOOL))
+	DOCKER_RUN += -v $(SECURE_UPGRADE_PROD_SIGNING_TOOL):$(SECURE_UPGRADE_PROD_SIGNING_TOOL_DST):ro
+	SECURE_UPGRADE_PROD_SIGNING_TOOL := $(SECURE_UPGRADE_PROD_SIGNING_TOOL_DST)
+endif
+
 ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
 endif
@@ -486,6 +505,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            INCLUDE_KUBERNETES=$(INCLUDE_KUBERNETES) \
                            KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
+                           KUBERNETES_CNI_VERSION=$(KUBERNETES_CNI_VERSION) \
                            K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
                            INCLUDE_KUBERNETES_MASTER=$(INCLUDE_KUBERNETES_MASTER) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
@@ -495,6 +515,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            MDEBUG=$(MDEBUG) \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
+			   CHANGE_DEFAULT_PASSWORD=$(CHANGE_DEFAULT_PASSWORD) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
                            SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
                            VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
@@ -520,6 +541,10 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
                            SONIC_ENABLE_SECUREBOOT_SIGNATURE=$(SONIC_ENABLE_SECUREBOOT_SIGNATURE) \
+                           SECURE_UPGRADE_MODE=$(SECURE_UPGRADE_MODE) \
+                           SECURE_UPGRADE_DEV_SIGNING_KEY=$(SECURE_UPGRADE_DEV_SIGNING_KEY) \
+                           SECURE_UPGRADE_DEV_SIGNING_CERT=$(SECURE_UPGRADE_DEV_SIGNING_CERT) \
+                           SECURE_UPGRADE_PROD_SIGNING_TOOL=$(SECURE_UPGRADE_PROD_SIGNING_TOOL) \
                            SONIC_DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
                            ENABLE_HOST_SERVICE_ON_START=$(ENABLE_HOST_SERVICE_ON_START) \
                            SLAVE_DIR=$(SLAVE_DIR) \
@@ -555,6 +580,7 @@ endif
 
 export MIRROR_URLS
 export MIRROR_SECURITY_URLS
+export SONIC_VERSION_CONTROL_COMPONENTS
 
 %:: | sonic-build-hooks
 ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
@@ -610,23 +636,28 @@ init :
 
 .ONESHELL : reset
 reset :
-	$(Q)echo && echo -n "Warning! All local changes will be lost. Proceed? [y/N]: "
-	$(Q)read ans && (
-	    if [ $$ans == y ]; then
-	        echo "Resetting local repository. Please wait...";
-	        sudo rm -rf fsroot*;
-	        if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ] && [[ "$(CONFIGURED_ARCH)" == "armhf" || "$(CONFIGURED_ARCH)" ==  "arm64" ]]; then
-	            echo "Stopping march $(CONFIGURED_ARCH) docker"
-	            sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
-	            sudo rm -f /var/run/march/docker.pid || true
-	        fi
-	        git clean -xfdf;
-	        git reset --hard;
-	        git submodule foreach --recursive 'git clean -xfdf || true';
-	        git submodule foreach --recursive 'git reset --hard || true';
-	        git submodule foreach --recursive 'git remote update || true';
-	        git submodule update --init --recursive;
-	        echo "Reset complete!";
-	    else
-	        echo "Reset aborted";
-	    fi )
+	$(Q)echo && (
+	if [ -z "$(UNATTENDED)" ]; then
+	   echo -n "Warning! All local changes will be lost. Proceed? [y/N]: "
+	   @read ans
+	else
+	   ans=y
+	fi
+	if [ $$ans == y ]; then
+	    echo "Resetting local repository. Please wait...";
+	    sudo rm -rf fsroot*;
+	    if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ] && [[ "$(CONFIGURED_ARCH)" == "armhf" || "$(CONFIGURED_ARCH)" ==  "arm64" ]]; then
+	        echo "Stopping march $(CONFIGURED_ARCH) docker"
+	        sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
+	        sudo rm -f /var/run/march/docker.pid || true
+	    fi
+	    git clean -xfdf;
+	    git reset --hard;
+	    git submodule foreach --recursive 'git clean -xfdf || true';
+	    git submodule foreach --recursive 'git reset --hard || true';
+	    git submodule foreach --recursive 'git remote update || true';
+	    git submodule update --init --recursive;
+	    echo "Reset complete!";
+	else
+	    echo "Reset aborted";
+	fi )
