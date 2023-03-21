@@ -170,10 +170,6 @@ if [[ (x"${WARM_BOOT}" == x"true") && (x"${FAST_REBOOT}" != x"true") ]]; then
    stop_control_plane_assistant
 fi
 
-# Save DB after stopped control plane assistant to avoid extra entries
-debug "Save in-memory database after warm/fast reboot ..."
-config save -y
-
 if [[ -n "${list}" ]]; then
     debug "Some components didn't finish reconcile: ${list} ..."
 fi
@@ -185,3 +181,7 @@ fi
 if [ x"${WARM_BOOT}" == x"true" ]; then
     finalize_warm_boot
 fi
+
+# Save DB after stopped control plane assistant to avoid extra entries
+debug "Save in-memory database after warm/fast reboot ..."
+config save -y
