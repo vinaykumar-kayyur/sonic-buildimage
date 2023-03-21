@@ -89,6 +89,7 @@ JOIN_LATENCY = "join_latency_on_boot_seconds"
 JOIN_RETRY = "retry_join_interval_seconds"
 LABEL_RETRY = "retry_labels_update_seconds"
 TAG_IMAGE_LATEST = "tag_latest_image_on_wait_seconds"
+TAG_RETRY = "retry_tag_latest_seconds"
 USE_K8S_PROXY = "use_k8s_as_http_proxy"
 
 remote_ctr_config = {
@@ -96,6 +97,7 @@ remote_ctr_config = {
     JOIN_RETRY: 10,
     LABEL_RETRY: 2,
     TAG_IMAGE_LATEST: 30,
+    TAG_RETRY: 5,
     USE_K8S_PROXY: ""
     }
 
@@ -151,9 +153,6 @@ def init():
         with open(SONIC_CTR_CONFIG, "r") as s:
             d = json.load(s)
             remote_ctr_config.update(d)
-    if UNIT_TESTING:
-        remote_ctr_config[TAG_IMAGE_LATEST] = 0
-
 
 class MainServer:
     """ Implements main io-loop of the application
@@ -437,55 +436,6 @@ class RemoteServerHandler:
             log_debug("kube_join_master failed retry after {} seconds @{}".
                     format(remote_ctr_config[JOIN_RETRY], self.start_time))
 
-
-def tag_latest_image(server, feat, docker_id, image_ver):
-    res = 1
-    if not UNIT_TESTING:
-        status = os.system("docker ps |grep {} >/dev/null".format(docker_id))
-        if status:
-            syslog.syslog(syslog.LOG_ERR,
-                    "Feature {}:{} is not stable".format(feat, image_ver))
-        else:
-            image_item = os.popen("docker inspect {} |jq -r .[].Image".format(docker_id)).read().strip()
-            if image_item:
-                image_id = image_item.split(":")[1][:12]
-                image_info = os.popen("docker images |grep {}".format(image_id)).read().split()
-                if image_info:
-                    image_rep = image_info[0]
-                    res = os.system("docker tag {} {}:latest".format(image_id, image_rep))
-                    if res != 0:
-                        syslog.syslog(syslog.LOG_ERR,
-                                "Failed to tag {}:{} to latest".format(image_rep, image_ver))
-                    else:
-                        syslog.syslog(syslog.LOG_INFO,
-                                "Successfully tag {}:{} to latest".format(image_rep, image_ver))
-                        feat_status = os.popen("docker inspect {} |jq -r .[].State.Running".format(feat)).read().strip()
-                        if feat_status:
-                            if feat_status == 'true':
-                                os.system("docker stop {}".format(feat))
-                                syslog.syslog(syslog.LOG_ERR,
-                                        "{} should not run, stop it".format(feat))
-                            os.system("docker rm {}".format(feat))
-                            syslog.syslog(syslog.LOG_INFO,
-                                        "Delete previous {} container".format(feat))
-                else:
-                    syslog.syslog(syslog.LOG_ERR,
-                            "Failed to docker images |grep {} to get image repo".format(image_id))
-            else:
-                syslog.syslog(syslog.LOG_ERR,
-                        "Failed to inspect container:{} to get image id".format(docker_id))
-    else:
-        server.mod_db_entry(STATE_DB_NAME,
-                FEATURE_TABLE, feat, {"tag_latest": "true"})
-        res = 0
-    if res:
-        log_debug("failed to tag {}:{} to latest".format(feat, image_ver))
-    else:
-        log_debug("successfully tag {}:{} to latest".format(feat, image_ver))
-
-    return res
-
-
 #
 # Feature changes
 #
@@ -587,8 +537,7 @@ class FeatureTransitionHandler:
             # Tag latest
             start_time = datetime.datetime.now() + datetime.timedelta(
                     seconds=remote_ctr_config[TAG_IMAGE_LATEST])
-            self.server.register_timer(start_time, tag_latest_image, (
-                    self.server,
+            self.server.register_timer(start_time, self.do_tag_latest, (
                     key, 
                     self.st_data[key][ST_FEAT_CTR_ID],
                     self.st_data[key][ST_FEAT_CTR_VER]))
@@ -607,7 +556,18 @@ class FeatureTransitionHandler:
                     self.st_data[key][ST_FEAT_OWNER],
                     remote_state)
         return
+    
+    def do_tag_latest(self, feat, docker_id, image_ver):
+        ret = kube_commands.tag_latest(feat, docker_id, image_ver)
+        if ret != 0:
+            # Tag latest failed. Retry after an interval
+            self.start_time = datetime.datetime.now()
+            self.start_time += datetime.timedelta(
+                    seconds=remote_ctr_config[TAG_RETRY])
+            self.server.register_timer(self.start_time, self.do_tag_latest, (feat, docker_id, image_ver))
 
+            log_debug("Tag latest as local failed retry after {} seconds @{}".
+                    format(remote_ctr_config[TAG_RETRY], self.start_time))
 
 #
 # Label re-sync

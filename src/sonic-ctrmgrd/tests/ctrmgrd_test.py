@@ -311,16 +311,16 @@ feature_test_data = {
                     }
                 }
             }
-        },
-        common_test.POST: {
-            common_test.STATE_DB_NO: {
-                common_test.FEATURE_TABLE: {
-                    "snmp": {
-                        "tag_latest": "true"
-                    }
-                }
-            }
-        }
+        }#,
+        # common_test.POST: {
+        #     common_test.STATE_DB_NO: {
+        #         common_test.FEATURE_TABLE: {
+        #             "snmp": {
+        #                 "tag_latest": "true"
+        #             }
+        #         }
+        #     }
+        # }
     }
 }
 
