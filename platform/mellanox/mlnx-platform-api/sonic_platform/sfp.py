@@ -481,85 +481,6 @@ class SFP(NvidiaSFPCommon):
 
         return rc == SX_STATUS_SUCCESS
 
-
-    @classmethod
-    def is_nve(cls, port):
-        return (port & NVE_MASK) != 0
-
-
-    @classmethod
-    def is_cpu(cls, port):
-        return (port & CPU_MASK) != 0
-
-
-    @classmethod
-    def _fetch_port_status(cls, sdk_handle, log_port):
-        oper_state_p = new_sx_port_oper_state_t_p()
-        admin_state_p = new_sx_port_admin_state_t_p()
-        module_state_p = new_sx_port_module_state_t_p()
-        rc = sx_api_port_state_get(sdk_handle, log_port, oper_state_p, admin_state_p, module_state_p)
-        assert rc == SXD_STATUS_SUCCESS, "sx_api_port_state_get failed, rc = %d" % rc
-
-        admin_state = sx_port_admin_state_t_p_value(admin_state_p)
-        oper_state = sx_port_oper_state_t_p_value(oper_state_p)
-
-        delete_sx_port_oper_state_t_p(oper_state_p)
-        delete_sx_port_admin_state_t_p(admin_state_p)
-        delete_sx_port_module_state_t_p(module_state_p)
-
-        return oper_state, admin_state
-
-
-    @classmethod
-    def is_port_admin_status_up(cls, sdk_handle, log_port):
-        _, admin_state = cls._fetch_port_status(sdk_handle, log_port);
-        return admin_state == SX_PORT_ADMIN_STATUS_UP
-
-
-    @classmethod
-    def set_port_admin_status_by_log_port(cls, sdk_handle, log_port, admin_status):
-        rc = sx_api_port_state_set(sdk_handle, log_port, admin_status)
-        if SX_STATUS_SUCCESS != rc:
-            logger.log_error("sx_api_port_state_set failed, rc = %d" % rc)
-
-        return SX_STATUS_SUCCESS == rc
-
-
-    @classmethod
-    def get_logical_ports(cls, sdk_handle, sdk_index, slot_id):
-        # Get all the ports related to the sfp, if port admin status is up, put it to list
-        port_cnt_p = new_uint32_t_p()
-        uint32_t_p_assign(port_cnt_p, 0)
-        rc = sx_api_port_device_get(sdk_handle, DEVICE_ID, SWITCH_ID, None,  port_cnt_p)
-
-        assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
-        port_cnt = uint32_t_p_value(port_cnt_p)
-        port_attributes_list = new_sx_port_attributes_t_arr(port_cnt)
-
-        rc = sx_api_port_device_get(sdk_handle, DEVICE_ID , SWITCH_ID, port_attributes_list,  port_cnt_p)
-        assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
-
-        port_cnt = uint32_t_p_value(port_cnt_p)
-        up_port_list = []
-        down_port_list = []
-        for i in range(0, port_cnt):
-            port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list, i)
-            if not cls.is_nve(int(port_attributes.log_port)) \
-               and not cls.is_cpu(int(port_attributes.log_port)) \
-               and port_attributes.port_mapping.module_port == sdk_index \
-               and port_attributes.port_mapping.slot == slot_id:
-            
-                if cls.is_port_admin_status_up(sdk_handle, port_attributes.log_port):
-                    up_port_list.append(port_attributes.log_port)
-                else:
-                    down_port_list.append(port_attributes.log_port)
-
-        delete_sx_port_attributes_t_arr(port_attributes_list)
-        delete_uint32_t_p(port_cnt_p)
-
-        return up_port_list, down_port_list
-
-
     @classmethod
     def mgmt_phy_mod_pwr_attr_set(cls, sdk_handle, sdk_index, slot_id, power_attr_type, admin_pwr_mode):
         result = False
@@ -585,10 +506,8 @@ class SFP(NvidiaSFPCommon):
 
         return result
 
-
     @classmethod
     def _set_lpmode_raw(cls, sdk_handle, sdk_index, slot_id, attr_type, power_mode):
-        result = False
         # Check if the module already works in the same mode
         admin_pwr_mode, oper_pwr_mode = cls.mgmt_phy_mod_pwr_attr_get(attr_type, sdk_handle, sdk_index, slot_id)
         if (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E and oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E) \
@@ -630,18 +549,10 @@ class SFP(NvidiaSFPCommon):
         else:
             return self._set_lpmode(lpmode, self.sdk_handle, self.sdk_index, self.slot_id)
 
-
     @classmethod
     def _set_lpmode(cls, lpmode, sdk_handle, sdk_index, slot_id):
-        up_port_list, down_port_list = cls.get_logical_ports(sdk_handle, sdk_index, slot_id)
-        if up_port_list and lpmode:
-            print('Error: Please put port in admin down state before entering low power mode')
-            logger.log_error('Please put port in admin down state before entering low power mode')
-            return False
-
-        if not lpmode and down_port_list:
-            print('Notice: Be aware you exit low power mode but still port is in admin down state')
-
+        print('\nNotice: please set port admin status to down before setting power mode, \
+              ignore this message if already set')
         sdk_lpmode = SX_MGMT_PHY_MOD_PWR_MODE_LOW_E if lpmode else SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E
         cls._set_lpmode_raw(sdk_handle,
                             sdk_index,
