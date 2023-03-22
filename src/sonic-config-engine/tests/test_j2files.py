@@ -485,8 +485,44 @@ class TestJ2Files(TestCase):
 
         assert match, diff
 
+    def _test_buffers_profile_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
+        file_exist, dir_exist = self.create_machine_conf(platform, vendor)
+        dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
+        buffers_file = os.path.join(dir_path, buffer_template)
+        port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
+
+        # copy buffers_config.j2 to the SKU directory to have all templates in one directory
+        buffers_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
+        shutil.copy2(buffers_config_file, dir_path)
+
+        minigraph = os.path.join(self.test_dir, minigraph)
+        argument = '-P -m ' + minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ',profile-db --print-data > ' + self.output_file
+        self.run_script(argument)
+
+        # cleanup
+        buffers_config_file_new = os.path.join(dir_path, 'buffers_config.j2')
+        os.remove(buffers_config_file_new)
+        self.remove_machine_conf(file_exist, dir_exist)
+
+        out_file_dir = os.path.join(self.test_dir, 'sample_output_profile', utils.PYvX_DIR)
+        expected_files = [expected, self.modify_cable_len(expected, out_file_dir)]
+        match = False
+        diff = ''
+        for out_file in expected_files:
+            sample_output_file = os.path.join(out_file_dir, out_file)
+            if utils.cmp(sample_output_file, self.output_file):
+                match = True
+                break
+            else:
+                diff = diff + str(self.run_diff(sample_output_file, self.output_file))
+
+        os.remove(os.path.join(out_file_dir, expected_files[1]))
+
+        assert match, diff
+
     def test_buffers_dell6100_render_template(self):
         self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
+        self._test_buffers_profile_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json')
 
     def test_buffers_mellanox2410_render_template(self):
         self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2410.json')
