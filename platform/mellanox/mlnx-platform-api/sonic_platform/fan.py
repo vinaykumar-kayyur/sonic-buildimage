@@ -145,6 +145,7 @@ class PsuFan(MlnxFan):
         self.psu_i2c_bus_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_bus'.format(self.index))
         self.psu_i2c_addr_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_addr'.format(self.index))
         self.psu_i2c_command_path = os.path.join(CONFIG_PATH, 'fan_command')
+        self.psu_fan_dir_path = os.path.join(FAN_PATH, "psu{}_fan_dir".format(self.index))
 
     def get_direction(self):
         """
@@ -165,7 +166,17 @@ class PsuFan(MlnxFan):
                 1 stands for forward, in other words intake
                 0 stands for reverse, in other words exhaust
         """
-        return self.FAN_DIRECTION_NOT_APPLICABLE
+        if not os.path.exists(self.psu_fan_dir_path) or not self.get_presence():
+            return self.FAN_DIRECTION_NOT_APPLICABLE
+
+        fan_dir = utils.read_int_from_file(self.psu_fan_dir_path)
+        if fan_dir == FAN_DIR_VALUE_INTAKE:
+            return FanBase.FAN_DIRECTION_INTAKE
+        elif fan_dir == FAN_DIR_VALUE_EXHAUST:
+            return FanBase.FAN_DIRECTION_EXHAUST
+        else:
+            logger.log_error("Got wrong value {} for PSU fan direction {}".format(fan_dir, self.psu_fan_dir_path))
+            return FanBase.FAN_DIRECTION_NOT_APPLICABLE
 
     def get_status(self):
         """
