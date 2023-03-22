@@ -32,6 +32,7 @@ Table of Contents
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [FABRIC_MONITOR](#fabric-monitor)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
          * [KDUMP](#kdump)  
@@ -982,6 +983,21 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 	    "FG_NHG": "fgnhg_v6"
 	}
 }
+```
+
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
 ```
 
 
