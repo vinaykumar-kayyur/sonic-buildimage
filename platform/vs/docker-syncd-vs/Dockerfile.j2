@@ -13,7 +13,7 @@ RUN apt-get update
 RUN apt-get install -f -y libcap2-bin
 
 # Copy locally-built Debian package dependencies
-{{ copy_files("debs/", docker_sonic_vs_debs.split(' '), "/debs/") }}
+{{ copy_files("debs/", docker_syncd_vs_debs.split(' '), "/debs/") }}
 
 # Install locally-built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(docker_syncd_vs_debs.split(' ')) }}
