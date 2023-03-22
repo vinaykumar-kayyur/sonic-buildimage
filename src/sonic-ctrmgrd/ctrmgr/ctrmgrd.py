@@ -54,6 +54,16 @@ ST_FEAT_SYS_STATE = "system_state"
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
+MODE_KUBE = "kube"
+MODE_LOCAL = "local"
+OWNER_KUBE = "kube"
+OWNER_LOCAL = "local"
+OWNER_NONE = "none"
+REMOTE_READY = "ready"
+REMOTE_PENDING = "pending"
+REMOTE_STOPPED = "stopped"
+REMOTE_NONE = "none"
+
 remote_connected = False
 
 dflt_cfg_ser = {
@@ -462,7 +472,9 @@ class FeatureTransitionHandler:
         # There after only called upon changes in either that requires action
         #
         if not is_systemd_active(feat):
-            # Nothing todo, if system state is down
+            # Restart the service manually when kube upgrade happens to decrease the down time
+            if set_owner == MODE_KUBE and ct_owner == OWNER_NONE and remote_state == REMOTE_STOPPED:
+                restart_systemd_service(self.server, feat, OWNER_KUBE)
             return
 
         label_add = set_owner == "kube"
@@ -545,10 +557,13 @@ class FeatureTransitionHandler:
             log_debug("try to tag latest label after {} seconds @{}".format(
                     remote_ctr_config[TAG_IMAGE_LATEST], start_time))
 
-        if (not init) and (
-                (old_remote_state == remote_state) or (remote_state != "pending")):
-            # no change or nothing to do.
-            return
+        if (not init):
+            if (old_remote_state == remote_state):
+            # if no remote state change, do nothing.
+                return
+            if (remote_state not in (REMOTE_PENDING, REMOTE_STOPPED)):
+            # if remote state not in pending or stopped, do nothing.
+                return
 
         if key in self.cfg_data:
             log_debug("{} init={} old_remote_state={} remote_state={}".format(key, init, old_remote_state, remote_state))
