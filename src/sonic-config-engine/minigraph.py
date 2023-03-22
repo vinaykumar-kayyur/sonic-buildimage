@@ -66,7 +66,7 @@ class minigraph_encoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def exec_cmd(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
     outs, errs = p.communicate()
 
 def get_peer_switch_info(link_metadata, devices):
@@ -1332,7 +1332,7 @@ def select_mmu_profiles(profile, platform, hwsku):
             file_in_dir = os.path.join(dir_path, file_item)
             if os.path.isfile(file_in_dir):
                 base_file = os.path.join(path, file_item)
-                exec_cmd("sudo cp {} {}".format(file_in_dir, base_file))
+                exec_cmd(["sudo", "cp", file_in_dir, base_file])
 
 ###############################################################################
 #
