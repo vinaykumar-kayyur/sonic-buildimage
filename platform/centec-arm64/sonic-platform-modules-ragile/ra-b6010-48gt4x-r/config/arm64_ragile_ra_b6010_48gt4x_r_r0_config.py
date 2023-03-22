@@ -62,11 +62,12 @@ DRIVERLISTS = [
         {"name":"i2c_algo_bit","delay":0},
         {"name":"spi-bitbang", "delay":0},
         {"name":"i2c_mux", "delay":0},
-        {"name":"rtc-pcf85063", "delay":0},
+        {"name":"rtcpcf85063", "delay":0},
         {"name":"i2c_mux_pca954x", "delay":0}, # force_deselect_on_exit=1
         {"name":"ragile_common dfd_my_type=0x4065", "delay":0},
         {"name":"firmware_driver", "delay":0},
         {"name":"rg_cpld", "delay":0},
+        {"name":"rg_at24", "delay":0},
         #{"name":"spi-gpio", "delay":0},
         #{"name":"rg_spi_gpio", "delay":0},
         #{"name":"tpm_tis_core", "delay":0},
@@ -75,10 +76,11 @@ DRIVERLISTS = [
 ]
 
 DEVICE = [
-        {"name":"pcf85063","bus":1,"loc":0x51 },
+        {"name":"rtcpcf85063","bus":1,"loc":0x51 },
+        {"name":"rg_24c02","bus":1,"loc":0x56 },
         {"name":"rg_cpld","bus":3,"loc":0x30 },
-        {"name":"24c02","bus":5,"loc":0x50 },
-        {"name":"24c02","bus":5,"loc":0x57 },
+        {"name":"rg_24c02","bus":5,"loc":0x50 },
+        {"name":"rg_24c02","bus":5,"loc":0x57 },
 ]
 
 INIT_PARAM = [

@@ -66,7 +66,16 @@ class Chassis(ChassisBase):
         Returns:
             string: The name of the chassis
         """
-        return self._eeprom.modelstr()
+        name = ''
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return ''
+
+        e = sys_eeprom.read_eeprom()
+        name = sys_eeprom.modelstr(e)
+        if name is None:
+            return ''
+        return name
 
     def get_presence(self):
         """
@@ -82,20 +91,62 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self._eeprom.part_number_str()
+        model = ''
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return ''
+
+        e = sys_eeprom.read_eeprom()
+        model = sys_eeprom.modelnumber(e)
+        if model is None:
+            return ''
+        return model
+
+    def get_serial_number(self):
+        """
+        Retrieves the hardware serial number for the chassis
+
+        Returns:
+            A string containing the hardware serial number for this chassis.
+        """
+        serial_number = ''
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return ''
+
+        e = sys_eeprom.read_eeprom()
+        serial_number = sys_eeprom.serial_number_str(e)
+        if serial_number is None:
+            return ''
+
+        return serial_number
 
     def get_revision(self):
-        val  = ord(self._eeprom.revision_str())
-        test = "{}".format(val)
-        return test
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        device_version = ''
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return ''
+
+        e = sys_eeprom.read_eeprom()
+        device_version = sys_eeprom.deviceversion(e)
+        if device_version is None:
+            return ''
+
+        return device_version
 
     def get_serial(self):
         """
-        Retrieves the serial number of the chassis
+        Retrieves the serial number of the chassis (Service tag)
         Returns:
             string: Serial number of chassis
         """
-        return self._eeprom.serial_number_str()
+        return self.get_serial_number()
 
     def get_status(self):
         """
@@ -106,6 +157,38 @@ class Chassis(ChassisBase):
         """
         return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
+    def initizalize_system_led(self):
+        return True
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        return 'green'
+
+    def set_status_led(self, color):
+        return False
 ##############################################
 # Chassis methods
 ##############################################
@@ -118,16 +201,17 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self._eeprom.base_mac_addr()
+        base_mac = ''
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return ''
 
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
+        e = sys_eeprom.read_eeprom()
+        base_mac = sys_eeprom.base_mac_addr(e)
+        if base_mac is None:
+            return ''
 
-        Returns:
-            A string containing the hardware serial number for this chassis.
-        """
-        return self._eeprom.serial_number_str()
+        return base_mac.upper()
 
     def get_system_eeprom_info(self):
         """
@@ -141,7 +225,44 @@ class Chassis(ChassisBase):
                   '0x24':'001c0f000fcd0a', '0x25':'02/03/2018 16:22:00',
                   '0x26':'01', '0x27':'REV01', '0x28':'AG9064-C2358-16G'}
         """
-        return self._eeprom.system_eeprom_info()
+        sys_eeprom_dict = dict()
+        sys_eeprom = self.get_eeprom()
+        if sys_eeprom is None:
+            return {}
+
+        e = sys_eeprom.read_eeprom()
+        if sys_eeprom._TLV_HDR_ENABLED:
+            if not sys_eeprom.is_valid_tlvinfo_header(e):
+                return {}
+            total_len = (e[9] << 8) | e[10]
+            tlv_index = sys_eeprom._TLV_INFO_HDR_LEN
+            tlv_end = sys_eeprom._TLV_INFO_HDR_LEN + total_len
+        else:
+            tlv_index = sys_eeprom.eeprom_start
+            tlv_end = sys_eeprom._TLV_INFO_MAX_LEN
+
+        while (tlv_index + 2) < len(e) and tlv_index < tlv_end:
+            if not sys_eeprom.is_valid_tlv(e[tlv_index:]):
+                break
+
+            tlv = e[tlv_index:tlv_index + 2 + e[tlv_index + 1]]
+            name, value = sys_eeprom.decoder(None, tlv)
+            sys_eeprom_dict[name] = value
+
+            if e[tlv_index] == sys_eeprom._TLV_CODE_QUANTA_CRC or \
+                    e[tlv_index] == sys_eeprom._TLV_CODE_CRC_32:
+                break
+            tlv_index += e[tlv_index + 1] + 2
+
+        return sys_eeprom_dict
+
+    def get_thermal_manager(self):
+        """
+        Retrieves thermal manager class on this chassis
+        :return: A class derived from ThermalManagerBase representing the
+        specified thermal manager. ThermalManagerBase is returned as default
+        """
+        return False
 
     def get_reboot_cause(self):
         """
@@ -154,6 +275,52 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         return (None, None)
+
+    def get_module(self, index):
+        """
+        Retrieves module represented by (0-based) index <index>
+
+        Args:
+            index: An integer, the index (0-based) of the module to
+            retrieve
+
+        Returns:
+            An object dervied from ModuleBase representing the specified
+            module
+        """
+        module = None
+
+        try:
+            if self.get_num_modules():
+                module = self._module_list[index]
+        except IndexError:
+            sys.stderr.write("Module index {} out of range (0-{})\n".format(
+                             index, len(self._module_list)-1))
+
+        return module
+
+    def get_fan_drawer(self, index):
+        """
+        Retrieves fan drawers represented by (0-based) index <index>
+
+        Args:
+            index: An integer, the index (0-based) of the fan drawer to
+            retrieve
+
+        Returns:
+            An object dervied from FanDrawerBase representing the specified fan
+            drawer
+        """
+        fan_drawer = None
+
+        try:
+            if self.get_num_fan_drawers():
+                fan_drawer = self._fan_drawer_list[index]
+        except IndexError:
+            sys.stderr.write("Fan drawer index {} out of range (0-{})\n".format(
+                             index, len(self._fan_drawer_list)-1))
+
+        return fan_drawer
 
     def get_change_event(self, timeout=0):
         """
@@ -277,10 +444,3 @@ class Chassis(ChassisBase):
                 pass
                 #self._sfp_list[int(index)].check_sfp_optoe_type()
         return ret_dict
-
-    def get_num_psus(self):
-        return len(self._psu_list)
-
-    def get_psu(self, psu_index):
-        return self._psu_list[psu_index]
-

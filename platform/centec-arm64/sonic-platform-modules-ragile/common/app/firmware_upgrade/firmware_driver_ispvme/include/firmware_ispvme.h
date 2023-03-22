@@ -5,7 +5,9 @@
 #include <linux/platform_device.h>
 
 #include <asm/ioctl.h>
+#include <linux/string.h>
 
+#define mem_clear(data, size) memset((data), 0, (size))
 #define dev_debug(debug, fmt, arg...)  \
     if (debug == 1) { do{printk(KERN_ERR fmt,##arg);} while(0); }
 

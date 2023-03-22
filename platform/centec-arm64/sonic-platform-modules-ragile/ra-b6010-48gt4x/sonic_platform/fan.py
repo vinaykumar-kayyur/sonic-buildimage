@@ -20,18 +20,16 @@ class Fan(FanBase):
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
         self.redfish = Redfish_Api()
-        self.pinf = self.redfish.get_thermal()
+        self.pinf = {}
         self._fan_list = []
         FanBase.__init__(self)
         self.begin = time.time()
 
     def get_power_3s(self):
         self.elapsed = time.time()
-        if self.elapsed - self.begin < 3:
-            pass
-        else:
+        if not self.pinf or self.elapsed - self.begin >= 3:
+            self.begin = time.time()
             self.pinf = self.redfish.get_thermal()
-        self.begin = time.time()
 
     def get_speed_pwm(self):
         self.get_power_3s()
@@ -93,6 +91,48 @@ class Fan(FanBase):
         fan_name = FAN_NAME_LIST[self.fan_index]
         return "Fantray{}_{}".format(self.fan_tray_index+1, fan_name)
 
+    def get_model(self):
+        """
+        Retrieves the part number of the FAN
+        Returns:
+            string: Part number of FAN
+        """
+        return 'N/A'
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return 'N/A'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the FAN
+        Returns:
+            string: Serial number of FAN
+        """
+        return 'N/A'
+
     def get_presence(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]
@@ -135,3 +175,21 @@ class Fan(FanBase):
             return speed_percentage
         else:
             return speed_percentage
+
+    def get_speed_tolerance(self):
+        """
+        Retrieves the speed tolerance of the fan
+        Returns:
+            An integer, the percentage of variance from target speed which is
+        considered tolerable
+        """
+        return 30
+
+    def get_target_speed(self):
+        """
+        Retrieves the target (expected) speed of the fan
+        Returns:
+            An integer, the percentage of full fan speed, in the range 0 (off)
+                 to 100 (full speed)
+        """
+        return self.get_speed_pwm()

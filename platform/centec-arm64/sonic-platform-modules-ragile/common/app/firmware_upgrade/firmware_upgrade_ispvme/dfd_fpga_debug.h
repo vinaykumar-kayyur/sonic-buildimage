@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define DFD_DEBUG_FILE                 "/sbin/.dfd_debug_flag"
 
@@ -12,6 +13,7 @@
 #define DFD_DEBUG_SET_ALL              "0xf"
 #define DFD_DEBUG_SET_DBG              "0xd"
 #define DFD_DEBUG_SET_FLOCK            "0xe"
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define DFD_DEBUG_CHECK(type)      (g_dfd_fpga_debug & (1U << (type)))
 
@@ -41,7 +43,7 @@
         printf("[%s-%s]:<File:%s, Func:%s, Line:%d>\n" fmt, "DFD", "flock_vbose", \
             __FILE__, __FUNCTION__, __LINE__, ##args);  \
     }                                                   \
-} while (0)                              
+} while (0)
 
 #define DFD_DBG(fmt, args...) do {                     \
         if (DFD_DEBUG_CHECK(DFD_DBG_DBG)) {               \

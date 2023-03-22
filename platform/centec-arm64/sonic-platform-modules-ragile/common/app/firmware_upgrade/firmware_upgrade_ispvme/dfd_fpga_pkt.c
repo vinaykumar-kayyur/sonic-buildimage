@@ -33,8 +33,7 @@
 #include "dfd_fpga_pkt.h"
 #include "dfd_fpga_debug.h"
 
-#define DFD_FPGA_FAC_MODE_CONFIG_FILE            "/tmp/.factory_disabale_cli_tty" 
-
+#define DFD_FPGA_FAC_MODE_CONFIG_FILE            "/tmp/.factory_disabale_cli_tty"
 #if 1
 #define DFD_FPGA_PKT_SEND_PKT_TO_FRAME
 #endif
@@ -42,7 +41,7 @@
 void dfd_fpga_pkt_print(uint8_t *buf, int buf_len)
 {
     int i;
-    
+
     for (i = 0; i < buf_len; i++) {
         if ((i % 16) == 0) {
             DFD_DBG("\n");
@@ -60,8 +59,8 @@ static unsigned int littel_endian_byte_to_word32(uint8_t *byte_buf, int len)
     unsigned int word;
 
     word = 0;
-    
-    memset(tmp_buf, 0, 4);
+
+    mem_clear(tmp_buf, 4);
     memcpy(tmp_buf, byte_buf, len < 4 ? len : 4);
 
     word = tmp_buf[0] | (tmp_buf[1] << 8) | (tmp_buf[2] << 16) | (tmp_buf[3] << 24);
@@ -79,12 +78,12 @@ static int littel_endian_word32_to_byte(uint8_t *byte_buf, int len, unsigned int
         return -1;
     }
 
-    memset(tmp_buf, 0, 4);
+    mem_clear(tmp_buf, 4);
     tmp_buf[0] = word & 0xff;
     tmp_buf[1] = (word >> 8) & 0xff;
     tmp_buf[2] = (word >> 16) & 0xff;
     tmp_buf[3] = (word >> 24) & 0xff;
-    
+
     memcpy(byte_buf, tmp_buf, 4);
 
     return 0;
@@ -130,7 +129,7 @@ int dfd_fpga_pci_read(dfd_pci_dev_priv_t *pci_priv, int offset, uint8_t *buf, in
     struct stat sb;
     int i;
     int len, align;
-    
+
     if ((pci_priv == NULL) || (buf == NULL)) {
         DFD_ERROR("pci_prive or read buf is null.\n");
         return -1;
@@ -163,13 +162,13 @@ int dfd_fpga_pci_read(dfd_pci_dev_priv_t *pci_priv, int offset, uint8_t *buf, in
         close(fd);
         return -1;
     }
-    
+
     align = pci_priv->align;
     len = rd_len;
     ret = 0;
     i = 0;
     ptr_data = ptr + offset;
-    
+
     while((i < len) && (ret == 0)){
         if (align == 4) {
             data = *((volatile unsigned int *)(ptr_data + i));
@@ -183,7 +182,7 @@ int dfd_fpga_pci_read(dfd_pci_dev_priv_t *pci_priv, int offset, uint8_t *buf, in
     munmap(ptr, sb.st_size);
     close(fd);
     return ret;
-    
+
 }
 
 /**
@@ -242,7 +241,7 @@ int dfd_fpga_pci_write(dfd_pci_dev_priv_t *pci_priv, int offset, uint8_t *buf, i
     ret = 0;
     i = 0;
     ptr_data = ptr + offset;
-    
+
     while((i < len) && (ret == 0)){
         if (align == 4) {
             data = littel_endian_byte_to_word32(buf + i,len - i);
@@ -256,13 +255,13 @@ int dfd_fpga_pci_write(dfd_pci_dev_priv_t *pci_priv, int offset, uint8_t *buf, i
     munmap(ptr, sb.st_size);
     close(fd);
     return ret;
-    
+
 }
 
 /**
  * dfd_fpga_read_word -provide FPGA read register interface (address must be four-byte aligned)
  * @addr: address (four-byte alignment)
- * @val:  the returned number of reading 
+ * @val:  the returned number of reading
  * return: return 0 if success,else return failure
  */
 int dfd_fpga_read_word(dfd_pci_dev_priv_t *pci_priv, int addr, int *val)
@@ -309,8 +308,8 @@ int dfd_fpga_write_word(dfd_pci_dev_priv_t *pci_priv, int addr, int val)
     littel_endian_word32_to_byte(tmp, DFD_FPGA_PKT_WORD_LEN, val);
     for (i = 0; i < DFD_FPGA_PKT_WORD_LEN; i++) {
         DFD_VERBOS("tmp[%d]: 0x%x.\n", i, tmp[i]);
-    }   
-    
+    }
+
     ret = dfd_fpga_pci_write(pci_priv, addr, tmp, DFD_FPGA_PKT_WORD_LEN);
     if (ret) {
         DFD_ERROR("dfd_fpga_pci_write addr 0x%x failed ret %d.\n", addr, ret);

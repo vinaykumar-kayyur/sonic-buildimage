@@ -3,6 +3,7 @@
 
 #include <sys/ioctl.h>
 #include <debug_ispvme.h>
+#include <string.h>
 
 /* Agreement with PKG_MGMT module */
 #define ERR_FW_CHECK_CPLD_UPGRADE    (440 - 256)
@@ -16,6 +17,8 @@
 
 #define FIRMWARE_ACTION_CHECK        0
 #define FIRMWARE_ACTION_UPGRADE      1
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 #define dbg_print(debug, fmt, arg...)  \
     if (debug == DEBUG_APP_ON || debug == DEBUG_ALL_ON) \
@@ -52,7 +55,7 @@
                    .pin = p,  \
                    .val = v,  \
                    .dir = d, \
-              }, 
+              },
 
 enum firmware_type_s {
     FIRMWARE_CPLD = 0,
@@ -96,14 +99,14 @@ typedef struct firmware_upg_gpio_info_s {
 typedef struct firmware_card_info_s {
     int dev_type;                          /* the type of card */
 	int slot_num;
-	char card_name[FIRMWARE_CARD_NAME_MAX_LEN]; 
+	char card_name[FIRMWARE_CARD_NAME_MAX_LEN];
     firmware_upg_gpio_info_t gpio_info[FIRMWARE_MAX_CARD_SLOT_NUM];                        /* private data */
 } firmware_card_info_t;
 
 typedef enum card_type_e {
     RA_B6010_48GT4X     = 0X4065,
     RA_B6010_48GT4X_R   = 0X4065,
-} card_type_t;	
+} card_type_t;
 
 extern firmware_card_info_t* firmware_get_card_info(int dev_type);
 extern int dfd_fpga_upgrade_do_upgrade(char* upg_file);

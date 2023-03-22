@@ -3,7 +3,7 @@
  */
 /*
  * dfd_debug.c
- * 
+ *
  * Function:Device framework driver debugging interface
  *
  * History
@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include <errno.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
@@ -23,7 +23,6 @@
 
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(a)       (sizeof(a) /sizeof((a)[0]))
-
 /* Debug switch storage of dfd module */
 int g_dfd_fpga_debug = 0x0;
 
@@ -36,7 +35,7 @@ int g_dfd_fpga_debug = 0x0;
  */
 static int dfd_fpga_pkt_debug_set(int type, int enable)
 {
-  
+
     if (type >= DFD_DBG_CNT || type < 0) {
         DFD_ERROR("unknow dfd debug type=%d\n", type);
         return -1;
@@ -74,16 +73,15 @@ void dfd_fpga_open_debug(int val)
         (void)dfd_fpga_pkt_debug_set(DFD_FLOCK_DBG_VBOSE, 0);
         (void)dfd_fpga_pkt_debug_set(DFD_DBG_DBG, 0);
     }
-    
+
     return;
 }
 
 void dfd_fpga_debug_init(void)
 {
     FILE *fp;
-    char buf[10];
+    char buf[10] = {0};
 
-    memset(buf, 0, sizeof(buf));
     fp = fopen(DFD_DEBUG_FILE, "r");
     if (fp != NULL) {
         if (fgets(buf, sizeof(buf), fp) != NULL) {
@@ -114,7 +112,7 @@ void dfd_fpga_debug_init(void)
                 (void)dfd_fpga_pkt_debug_set(DFD_FLOCK_DBG_VBOSE, 1);
             }
         }
-        
+
         fclose(fp);
     }
 

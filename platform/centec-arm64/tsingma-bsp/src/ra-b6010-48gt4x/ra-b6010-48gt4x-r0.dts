@@ -169,11 +169,6 @@
 
 		imux1:i2c@0 { 
 			reg = <0>; 
-			eeprom@56 { 
-				compatible = "at24,24c02";
-				reg = <0x56>;
-				pagesize = <32>; 
-			};
 		};
 		imux2:i2c@1 { 
 			#address-cells = <1>;
