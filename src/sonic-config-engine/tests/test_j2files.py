@@ -273,7 +273,7 @@ class TestJ2Files(TestCase):
         assert utils.cmp(sample_output_file, self.output_file)
 
     def test_buffers_dell6100_render_template(self):
-        self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json') 
+        self._test_buffers_render_template('dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100', 'sample-dell-6100-t0-minigraph.xml', 'buffers.json.j2', 'buffers-dell6100.json', copy_files=True) 
 
     def test_buffers_mellanox2700_render_template(self):
         # Mellanox buffer template rendering for single ingress pool mode
@@ -314,9 +314,26 @@ class TestJ2Files(TestCase):
             assert utils.cmp(config_sample_output_file, config_test_output)
             os.remove(config_test_output)
 
-    def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected):
+    def copy_mmu_templates(self, dir_path, revert=False):
+        files_to_copy = ['pg_profile_lookup.ini', 'qos.json.j2', 'buffers_defaults_t0.j2', 'buffers_defaults_t1.j2']
+
+        for file_name in files_to_copy:
+            src_file = os.path.join(dir_path, file_name)
+            dst_file = os.path.join(self.test_dir, file_name)
+
+            if not revert:
+                shutil.copy2(src_file, dst_file)
+            else:
+                shutil.copy2(dst_file, src_file)
+                os.remove(dst_file)
+
+    def _test_buffers_render_template(self, vendor, platform, sku, minigraph, buffer_template, expected, copy_files=False):
         file_exist, dir_exist = self.create_machine_conf(platform, vendor)
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, sku)
+
+        if copy_files:
+            self.copy_mmu_templates(dir_path, revert=False)
+
         buffers_file = os.path.join(dir_path, buffer_template)
         port_config_ini_file = os.path.join(dir_path, 'port_config.ini')
 
@@ -346,6 +363,8 @@ class TestJ2Files(TestCase):
                 diff = diff + str(self.run_diff(sample_output_file, self.output_file))
 
         os.remove(os.path.join(out_file_dir, expected_files[1]))
+        if copy_files:
+            self.copy_mmu_templates(dir_path, revert=True)
 
         assert match, diff
 
