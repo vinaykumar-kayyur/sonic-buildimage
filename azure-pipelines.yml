@@ -56,8 +56,6 @@ stages:
 
 - stage: Build
   pool: sonicbld
-  variables:
-    INSTALL_DEBUG_TOOLS: y
   dependsOn: []
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
@@ -66,11 +64,13 @@ stages:
       jobGroups:
       - name: broadcom
         variables:
+          dbg_image: yes
+          swi_image: yes
           docker_syncd_rpc_image: yes
           platform_rpc: brcm
-          swi_image: yes
       - name: mellanox
         variables:
+          dbg_image: yes
           docker_syncd_rpc_image: yes
           platform_rpc: mlnx
       - name: marvell-armhf
