@@ -1,0 +1,17 @@
+diff --git a/lib/thread.c b/lib/thread.c
+old mode 100644
+new mode 100755
+index b1224c02e..6ce085f11
+--- a/lib/thread.c
++++ b/lib/thread.c
+@@ -1358,8 +1358,10 @@ static void do_thread_cancel(struct thread_master *master)
+ 
+ 		if (list) {
+ 			thread_list_del(list, thread);
++			list = NULL;
+ 		} else if (thread_array) {
+ 			thread_array[thread->u.fd] = NULL;
++			thread_array = NULL;
+ 		}
+ 
+ 		if (thread->ref)
