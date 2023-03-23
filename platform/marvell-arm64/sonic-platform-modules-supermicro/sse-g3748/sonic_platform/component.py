@@ -80,15 +80,3 @@ class Component(ComponentBase):
             cmdstatus, onie_version = cmd.getstatusoutput('grep ^onie_version /host/machine.conf | cut -f2 -d"="')
             return onie_version
 
-    def install_firmware(self, image_path):
-        """
-        Installs firmware to the component
-
-        Args:
-            image_path: A string, path to firmware image
-
-        Returns:
-            A boolean, True if install was successful, False if not
-        """
-        return False
-

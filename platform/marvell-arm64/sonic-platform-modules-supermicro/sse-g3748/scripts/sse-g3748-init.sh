@@ -162,7 +162,6 @@ i2c_io_exp_init() {
 # Install kernel drivers required for i2c bus access
 load_kernel_drivers
 #entropy setting
-#python /etc/entropy.py
 
 # LOGIC to enumerate SFP eeprom devices - send 0x50 to kernel i2c driver - initialize devices
 # the mux may be enumerated at number 4 or 5 so we check for the mux and skip if needed
@@ -172,35 +171,30 @@ echo pca9548 ${I2C_ADDR_MUX_9548_CH0} > ${PATH_I2C_1_DEVICE}/new_device
 ismux_bus=$(i2cdetect -l|grep mux|cut -f1)
 
 # Enumerate the SFP eeprom device on each mux channel
-#echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/new_device
+
 for mux in ${ismux_bus}
 do
     if [[ "${mux}" != "i2c-8" ]] && [[ "${mux}" != "i2c-9" ]]; then
         echo optoe2 ${I2C_ADDR_QSFP_EEPROM} > /sys/class/i2c-adapter/${mux}/new_device
 	mux_num=$(echo ${mux} | cut -b5)
-	#sleep 1
 	chmod 644 /sys/class/i2c-adapter/${mux}/${mux_num}-0050/eeprom
     fi
 
     if [ "${mux}" == "i2c-8" ]; then
         # Enumerate fan eeprom devices
         echo eeprom 0x56 > /sys/class/i2c-adapter/i2c-8/new_device
-        #sleep 1
         chmod 644 /sys/class/i2c-adapter/i2c-8/8-0056/eeprom
 
         echo eeprom 0x57 > /sys/class/i2c-adapter/i2c-8/new_device
-        #sleep 1
         chmod 644 /sys/class/i2c-adapter/i2c-8/8-0057/eeprom
     fi
 
     if [ "${mux}" == "i2c-9" ]; then
         # Enumerate fan eeprom devices
         echo eeprom 0x56 > /sys/class/i2c-adapter/i2c-9/new_device
-        #sleep 1
         chmod 644 /sys/class/i2c-adapter/i2c-9/9-0056/eeprom
 
         echo eeprom 0x57 > /sys/class/i2c-adapter/i2c-9/new_device
-        #sleep 1
         chmod 644 /sys/class/i2c-adapter/i2c-9/9-0057/eeprom
     fi
 done
@@ -209,40 +203,24 @@ done
 echo  pcf8563 0x51 > /sys/bus/i2c/devices/i2c-0/new_device
 # Enumerate system eeprom
 echo 24c02 0x54 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0054/eeprom
 
 # Enumerate PD eeprom
 echo 24c02 0x52 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0052/eeprom
 
 # Enumerate AC5X eeprom
 echo 24c64 0x53 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0053/eeprom
 
 # Enumerate temperature sensors
 echo lm75 0x48 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0048/eeprom
 
 echo lm75 0x49 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0049/eeprom
 
 # Enumerate gpio
 echo gpio 0x22 > /sys/class/i2c-adapter/i2c-1/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-1/1-0022/
 echo gpio 0x20 > /sys/class/i2c-adapter/i2c-1/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-1/1-0020/
 
 # Enumerate cpld
 echo cpld 0x66 > /sys/class/i2c-adapter/i2c-0/new_device
-#sleep 1
-#chmod 644 /sys/class/i2c-adapter/i2c-0/0-0066/eeprom
 
 sleep 1
 chmod 644 /sys/class/i2c-adapter/i2c-0/0-0054/eeprom
