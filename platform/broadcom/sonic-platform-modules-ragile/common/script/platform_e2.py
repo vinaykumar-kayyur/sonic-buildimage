@@ -26,6 +26,55 @@ class AliasedGroup(click.Group):
         return None
 
 
+class ExtraFunc(object):
+    @staticmethod
+    def decode_mac(encodedata):
+        if encodedata is None:
+            return None
+        ret = ":".join("%02x" % ord(data) for data in encodedata)
+        return ret.upper()
+
+    @staticmethod
+    def decode_mac_number(encodedata):
+        if encodedata is None:
+            return None
+        return (ord(encodedata[0]) << 8) | (ord(encodedata[1]) & 0x00ff)
+
+    @staticmethod
+    @staticmethod
+    def fru_decode_mac_number(params):
+        ipmi_fru = params.get("fru")
+        area = params.get("area")
+        field = params.get("field")
+        area_info = getattr(ipmi_fru, area, None)
+        if area_info is not None:
+            raw_mac_number = getattr(area_info, field, None)
+            mac_number = decode_mac_number(raw_mac_number)
+            ipmi_fru.setValue(area, field, mac_number)
+
+    @staticmethod
+    def fru_decode_mac(params):
+        ipmi_fru = params.get("fru")
+        area = params.get("area")
+        field = params.get("field")
+        area_info = getattr(ipmi_fru, area, None)
+        if area_info is not None:
+            raw_mac = getattr(area_info, field, None)
+            decoded_mac = decode_mac(raw_mac)
+            ipmi_fru.setValue(area, field, decoded_mac)
+
+    @staticmethod
+    def fru_decode_hw(params):
+        ipmi_fru = params.get("fru")
+        area = params.get("area")
+        field = params.get("field")
+        area_info = getattr(ipmi_fru, area, None)
+        if area_info is not None:
+            raw_hw = getattr(area_info, field, None)
+            decode_hw = str(int(raw_hw, 16))
+            ipmi_fru.setValue(area, field, decode_hw)
+
+
 def set_onie_value(params):
     onie = params.get("onie")
     field = params.get("field")
@@ -133,56 +182,10 @@ def fantlv_eeprom_show(eeprom, e2_decode=None):
 
 def run_func(funcname, params):
     try:
-        eval(funcname)(params)
+        func = getattr(ExtraFunc, funcname)
+        func(params)
     except Exception as e:
         print(str(e))
-
-
-def decode_mac(encodedata):
-    if encodedata is None:
-        return None
-    ret = ":".join("%02x" % ord(data) for data in encodedata)
-    return ret.upper()
-
-
-def fru_decode_mac(params):
-    ipmi_fru = params.get("fru")
-    area = params.get("area")
-    field = params.get("field")
-    area_info = getattr(ipmi_fru, area, None)
-    if area_info is not None:
-        raw_mac = getattr(area_info, field, None)
-        decoded_mac = decode_mac(raw_mac)
-        ipmi_fru.setValue(area, field, decoded_mac)
-
-
-def decode_mac_number(encodedata):
-    if encodedata is None:
-        return None
-    return (ord(encodedata[0]) << 8) | (ord(encodedata[1]) & 0x00ff)
-
-
-def fru_decode_mac_number(params):
-    ipmi_fru = params.get("fru")
-    area = params.get("area")
-    field = params.get("field")
-    area_info = getattr(ipmi_fru, area, None)
-    if area_info is not None:
-        raw_mac_number = getattr(area_info, field, None)
-        mac_number = decode_mac_number(raw_mac_number)
-        ipmi_fru.setValue(area, field, mac_number)
-
-
-def fru_decode_hw(params):
-    ipmi_fru = params.get("fru")
-    area = params.get("area")
-    field = params.get("field")
-    area_info = getattr(ipmi_fru, area, None)
-    if area_info is not None:
-        raw_hw = getattr(area_info, field, None)
-        decode_hw = str(int(raw_hw, 16))
-        ipmi_fru.setValue(area, field, decode_hw)
-
 
 def set_fru_value(params):
     ipmi_fru = params.get("fru")

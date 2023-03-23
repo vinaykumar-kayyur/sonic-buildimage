@@ -6,7 +6,7 @@ import syslog
 import glob
 import click
 from platform_config import MAC_DEFAULT_PARAM
-from platform_util import getSdkReg, write_sysfs, get_value
+from platform_util import getSdkReg, write_sysfs, get_value, get_format_value
 
 
 AVSCTROL_DEBUG_FILE = "/etc/.avscontrol_debug_flag"
@@ -78,7 +78,7 @@ def set_avs_value_sysfs(conf, dcdc_value):
     avscontrol_debug("set_avs_value_sysfs, loc: %s, origin dcdc value: %s, formula: %s" %
                      (sysfs_loc, dcdc_value, formula))
     if formula is not None:
-        dcdc_value = eval(formula % (dcdc_value))
+        dcdc_value = get_format_value(formula % (dcdc_value))
     wr_val = str(dcdc_value)
     avscontrol_debug("set_avs_value_sysfs, write val: %s" % wr_val)
     ret, log = write_sysfs(sysfs_loc, wr_val)

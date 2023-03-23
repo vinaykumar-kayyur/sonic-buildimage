@@ -56,7 +56,11 @@ class temp(sensor):
             if fix_type == "func":
                 func_name = self.fix_value.get("func_name")
                 func_param = self.fix_value.get("func_param")
-                value = eval(func_name)(func_param, origin_value)
+                func = getattr(self, func_name)
+                if func is None:
+                    platform_hal_temp_debug("function %s, not defined" % func_name)
+                    return None
+                value = func(func_param, origin_value)
                 return value
 
             if fix_type == "config":
@@ -115,7 +119,7 @@ class temp(sensor):
                 if self.format is None:
                     self.__Value = int(max_val)
                 else:
-                    self.__Value = eval(self.format % max_val)
+                    self.__Value = self.get_format_value(self.format % max_val)
             else:
                 ret, val = self.get_value(self.ValueConfig)
                 if ret is False or val is None:
@@ -123,7 +127,7 @@ class temp(sensor):
                 if self.format is None:
                     self.__Value = int(val)
                 else:
-                    self.__Value = eval(self.format % val)
+                    self.__Value = self.get_format_value(self.format % val)
         except Exception:
             return None
         if self.fix_value is not None and self.__Value != self.temp_invalid and self.__Value != self.temp_error:

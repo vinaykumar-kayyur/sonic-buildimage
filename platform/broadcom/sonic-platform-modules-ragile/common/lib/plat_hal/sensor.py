@@ -122,7 +122,7 @@ class sensor(devicebase):
             if self.format is None:
                 self.__Value = int(val)
             else:
-                self.__Value = eval(self.format % val)
+                self.__Value = self.get_format_value(self.format % val)
             self.__Value = round(float(self.__Value), 3)
         except Exception:
             return None
@@ -138,7 +138,7 @@ class sensor(devicebase):
             if self.format is None:
                 self.__Min = self.Min_config
             else:
-                self.__Min = eval(self.format % self.Min_config)
+                self.__Min = self.get_format_value(self.format % self.Min_config)
             self.__Min = round(float(self.__Min), 3)
         except Exception:
             return None
@@ -154,7 +154,7 @@ class sensor(devicebase):
             if self.format is None:
                 self.__Max = self.Max_config
             else:
-                self.__Max = eval(self.format % self.Max_config)
+                self.__Max = self.get_format_value(self.format % self.Max_config)
             self.__Max = round(float(self.__Max), 3)
         except Exception:
             return None
@@ -170,7 +170,7 @@ class sensor(devicebase):
             if self.format is None:
                 self.__Low = self.Low_config
             else:
-                self.__Low = eval(self.format % self.Low_config)
+                self.__Low = self.get_format_value(self.format % self.Low_config)
         except Exception:
             return None
         return self.__Low
@@ -185,7 +185,7 @@ class sensor(devicebase):
             if self.format is None:
                 self.__High = self.High_config
             else:
-                self.__High = eval(self.format % self.High_config)
+                self.__High = self.get_format_value(self.format % self.High_config)
         except Exception:
             return None
         return self.__High

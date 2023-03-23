@@ -1,1 +1,0 @@
-SAI_INIT_CONFIG_FILE=/usr/share/sonic/hwsku/th4-b6930-64qc_64x400G.config.yml

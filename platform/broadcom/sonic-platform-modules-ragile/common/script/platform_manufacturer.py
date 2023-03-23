@@ -9,7 +9,6 @@ import signal
 import os
 import time
 import sys
-import ast
 from platform_config import MANUINFO_CONF
 from monitor import status
 
@@ -68,16 +67,6 @@ def exphyfwsplit():
     return
 
 
-def get_exphy_fw(phyid):
-    exphyfwsplit()
-    if phyid not in g_exphy_cache:
-        return "ERR %s not found." % phyid
-    fw_version = g_exphy_cache.get(phyid).get("fw_version")
-    ret = g_exphy_cache.get(phyid).get("status")
-    msg = "%s    %s" % (fw_version, ret)
-    return msg
-
-
 def lshwmemorysplit():
     # improve performance
     global g_meminfo_cache
@@ -126,21 +115,6 @@ def get_extra_value(funcname, itemid, key):
         if item.get("id") == itemid:
             return item.get(key, "NA")
     return "NA"
-
-
-def get_memory_value(params):
-    root_key = params.get("root_key")
-    sub_key = params.get("sub_key")
-    lshwmemorysplit()
-    return g_meminfo_cache.get(root_key, {}).get(sub_key, "NA")
-
-
-def get_memory_bank_value(params):
-    lshwmemorysplit()
-    bank = params.get("bankid")
-    if g_meminfo_cache.get(bank, {}):
-        return True
-    return False
 
 
 def io_wr(reg_addr, reg_data):
@@ -231,34 +205,9 @@ def deal_itmes(item_list):
             io_wr(io_addr, wr_value)
 
 
-def get_bcm5387_version(params):
-    version = ""
-    try:
-        ret, msg = add_5387_driver()
-        if ret is False:
-            raise Exception(msg)
-
-        before_deal_list = params.get("before", [])
-        deal_itmes(before_deal_list)
-
-        ret, version = exec_os_cmd(params["get_version"])
-        if ret != 0:
-            version = "ERR " + version
-
-        after_deal_list = params.get("after", [])
-        deal_itmes(after_deal_list)
-
-    except Exception as e:
-        version = "ERR %s" % (str(e))
-    finally:
-        finally_deal_list = params.get("finally", [])
-        deal_itmes(finally_deal_list)
-        remove_5387_driver()
-    return version
-
-
 def get_func_value(funcname, params):
-    ret = ast.literal_eval(funcname)(params)
+    func = getattr(ExtraFunc, funcname)
+    ret = func(params)
     return ret
 
 
@@ -383,6 +332,58 @@ def sort_key(e):
     return e.arrt_index
 
 
+class ExtraFunc(object):
+    @staticmethod
+    def get_bcm5387_version(params):
+        version = ""
+        try:
+            ret, msg = add_5387_driver()
+            if ret is False:
+                raise Exception(msg)
+
+            before_deal_list = params.get("before", [])
+            deal_itmes(before_deal_list)
+
+            ret, version = exec_os_cmd(params["get_version"])
+            if ret != 0:
+                version = "ERR " + version
+
+            after_deal_list = params.get("after", [])
+            deal_itmes(after_deal_list)
+
+        except Exception as e:
+            version = "ERR %s" % (str(e))
+        finally:
+            finally_deal_list = params.get("finally", [])
+            deal_itmes(finally_deal_list)
+            remove_5387_driver()
+        return version
+
+    @staticmethod
+    def get_memory_value(params):
+        root_key = params.get("root_key")
+        sub_key = params.get("sub_key")
+        lshwmemorysplit()
+        return g_meminfo_cache.get(root_key, {}).get(sub_key, "NA")
+
+    @staticmethod
+    def get_memory_bank_value(params):
+        lshwmemorysplit()
+        bank = params.get("bankid")
+        if g_meminfo_cache.get(bank, {}):
+            return True
+        return False
+
+    @staticmethod
+    def get_exphy_fw(phyid):
+        exphyfwsplit()
+        if phyid not in g_exphy_cache:
+            return "ERR %s not found." % phyid
+        fw_version = g_exphy_cache.get(phyid).get("fw_version")
+        ret = g_exphy_cache.get(phyid).get("status")
+        msg = "%s    %s" % (fw_version, ret)
+        return msg
+
 class CallbackSet:
     def cpld_format(self, blist):
         if isinstance(blist, str):
@@ -491,7 +492,7 @@ class VersionHunter:
 
         if self.precheck:
             try:
-                ret = ast.literal_eval(self.precheck.get("funcname"))(self.precheck.get("params"))
+                ret = get_func_value(self.precheck.get("funcname"), self.precheck.get("params"))
                 if ret is not True:
                     return
             except Exception as e:

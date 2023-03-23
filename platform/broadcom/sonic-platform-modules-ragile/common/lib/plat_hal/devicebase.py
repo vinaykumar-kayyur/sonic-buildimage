@@ -7,8 +7,110 @@
 #######################################################
 import subprocess
 import shlex
+import ast
 from plat_hal.osutil import osutil
 from plat_hal.baseutil import baseutil
+
+class CodeVisitor(ast.NodeVisitor):
+
+    def __init__(self):
+        self.value = None
+
+    def get_value(self):
+        return self.value
+
+    def get_op_value(self, node):
+        if isinstance(node, ast.Call):       # node is func call
+            value = self.visit_Call(node)
+        elif isinstance(node, ast.BinOp):    # node is BinOp
+            value = self.visit_BinOp(node)
+        elif isinstance(node, ast.UnaryOp):  # node is UnaryOp
+            value = self.visit_UnaryOp(node)
+        elif isinstance(node, ast.Num):      # node is Num Constant
+            value = node.n
+        elif isinstance(node, ast.Str):      # node is Str Constant
+            value = node.s
+        else:
+            raise NotImplementedError("Unsupport operand type: %s" % type(node))
+        return value
+
+    def visit_UnaryOp(self, node):
+        '''
+        node.op: operand type, only support ast.UAdd/ast.USub
+        node.operand: only support ast.Call/ast.Constant(ast.Num/ast.Str)/ast.BinOp/ast.UnaryOp
+        '''
+
+        operand_value = self.get_op_value(node.operand)
+        if isinstance(node.op, ast.UAdd):
+            self.value = operand_value
+        elif isinstance(node.op, ast.USub):
+            self.value = 0 - operand_value
+        else:
+            raise NotImplementedError("Unsupport arithmetic methods %s" % type(node.op))
+        return self.value
+
+    def visit_BinOp(self, node):
+        '''
+        node.left: left operand,  only support ast.Call/ast.Constant(ast.Num)/ast.BinOp
+        node.op: operand type, only support ast.Add/ast.Sub/ast.Mult/ast.Div
+        node.right: right operan, only support ast.Call/ast.Constant(ast.Num/ast.Str)/ast.BinOp
+        '''
+        left_value = self.get_op_value(node.left)
+        right_value = self.get_op_value(node.right)
+
+        if isinstance(node.op, ast.Add):
+            self.value = left_value + right_value
+        elif isinstance(node.op, ast.Sub):
+            self.value = left_value - right_value
+        elif isinstance(node.op, ast.Mult):
+            self.value = left_value * right_value
+        elif isinstance(node.op, ast.Div):
+            self.value = left_value / right_value
+        else:
+            raise NotImplementedError("Unsupport arithmetic methods %s" % type(node.op))
+        return self.value
+
+    def visit_Call(self, node):
+        '''
+        node.func.id: func name, only support 'float', 'int', 'str'
+        node.args: func args list,only support ast.Constant(ast.Num/ast.Str)/ast.BinOp/ast.Call
+        str/float only support one parameter, eg: float(XXX), str(xxx)
+        int support one or two parameters, eg: int(xxx) or int(xxx, 16)
+        xxx can be ast.Call/ast.Constant(ast.Num/ast.Str)/ast.BinOp
+        '''
+        calc_tuple = ("float", "int", "str")
+
+        if node.func.id not in calc_tuple:
+            raise NotImplementedError("Unsupport function call type: %s" % node.func.id)
+
+        args_val_list = []
+        for item in node.args:
+            ret = self.get_op_value(item)
+            args_val_list.append(ret)
+
+        if node.func.id == "str":
+            if len(args_val_list) != 1:
+                raise TypeError("str() takes 1 positional argument but %s were given" % len(args_val_list))
+            value = str(args_val_list[0])
+            self.value = value
+            return value
+
+        if node.func.id == "float":
+            if len(args_val_list) != 1:
+                raise TypeError("float() takes 1 positional argument but %s were given" % len(args_val_list))
+            value = float(args_val_list[0])
+            self.value = value
+            return value
+        # int
+        if len(args_val_list) == 1:
+            value = int(args_val_list[0])
+            self.value = value
+            return value
+        if len(args_val_list) == 2:
+            value = int(args_val_list[0], args_val_list[1])
+            self.value = value
+            return value
+        raise TypeError("int() takes 1 or 2 arguments (%s given)" % len(args_val_list))
 
 
 class devicebase(object):
@@ -244,3 +346,10 @@ class devicebase(object):
     def command(self, cmd):
         ret, output = osutil.command(cmd)
         return ret, output
+
+    def get_format_value(self, format_str):
+        ast_obj = ast.parse(format_str, mode='eval')
+        visitor = CodeVisitor()
+        visitor.visit(ast_obj)
+        ret = visitor.get_value()
+        return ret
