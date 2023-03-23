@@ -1,0 +1,99 @@
+--- platform/marvell-arm64/sonic_fit.its
++++ platform/marvell-arm64/sonic_fit.its
+@@ -5,9 +5,9 @@
+     #address-cells = <1>;
+   
+     images {
+-        kernel@0 {
++        kernel_falcon {
+             description = "Linux Kernel";
+-            data = /incbin/("/boot/vmlinuz-4.9.0-9-2-arm64");
++            data = /incbin/("/boot/vmlinuz-4.19.0-12-2-arm64");
+             type = "kernel";
+             arch = "arm64";
+             os = "linux";
+@@ -18,7 +18,7 @@
+                 algo = "sha1";
+             };
+         };
+-        fdt@0 {
++        fdt_falcon {
+             description = "Flattened Device Tree blob";
+             data = /incbin/("/boot/armada-7020-comexpress.dtb");
+             type = "flat_dt";
+@@ -28,9 +28,9 @@
+                 algo = "sha1";
+             };
+         };
+-        ramdisk@0 {
++        ramdisk_falcon {
+             description = "ramdisk";
+-            data = /incbin/("/boot/initrd.img-4.9.0-9-2-arm64");
++            data = /incbin/("/boot/initrd.img-4.19.0-12-2-arm64");
+             type = "ramdisk";
+             arch = "arm64";
+             os = "linux";
+@@ -39,14 +39,60 @@
+                 algo = "sha1";
+             };
+         };
++        kernel_ac5x {
++            description = "Linux Kernel for AC5x";
++            data = /incbin/("/boot/vmlinuz-4.19.0-12-2-arm64");
++            type = "kernel";
++            arch = "arm64";
++            os = "linux";
++            compression = "none";
++            load = <0x2 0x2080000>;
++            entry = <0x2 0x2080000>;
++            hash@1 {
++                algo = "sha1";
++            };
++        };
++        fdt_ac5x {
++            description = "Flattened Device Tree blob for AC5x";
++            data = /incbin/("/boot/ac5x.dtb");
++            type = "flat_dt";
++            arch = "arm64";
++            compression = "none";
++            load = <0x2 0x1000000>;
++            hash@1 {
++                algo = "sha1";
++            };
++        };
++        ramdisk_ac5x {
++            description = "ramdisk for AC5x";
++            data = /incbin/("/boot/initrd.img-4.19.0-12-2-arm64");
++            type = "ramdisk";
++            arch = "arm64";
++            os = "linux";
++            compression = "gzip";
++            load = <0x2 0x6000000>;
++            entry = <0x2 0x6000000>;
++            hash@1 {
++                algo = "sha1";
++            };
++        };
+     };
+     configurations {
+         default = "conf@1";
+         conf@1 {
+             description = "Boot Linux kernel with FDT blob + ramdisk";
+-            kernel = "kernel@0";
+-            fdt = "fdt@0";
+-            ramdisk = "ramdisk@0";
++            kernel = "kernel_falcon";
++            fdt = "fdt_falcon";
++            ramdisk = "ramdisk_falcon";
++            hash@1 {
++                algo = "sha1";
++            };
++        };
++        conf_ac5x {
++            description = "Boot Linux kernel with FDT blob + ramdisk for RD_AC5x";
++            kernel = "kernel_ac5x";
++            fdt = "fdt_ac5x";
++            ramdisk = "ramdisk_ac5x";
+             hash@1 {
+                 algo = "sha1";
+             };

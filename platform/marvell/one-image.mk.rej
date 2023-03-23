@@ -1,0 +1,7 @@
+--- platform/marvell/one-image.mk
++++ platform/marvell/one-image.mk
+@@ -11,3 +11,4 @@ else
+ $(SONIC_ONE_IMAGE)_DOCKERS = $(SONIC_INSTALL_DOCKER_IMAGES)
+ endif
+ SONIC_INSTALLERS += $(SONIC_ONE_IMAGE)
++$(SONIC_ONE_IMAGE)_INSTALLS += $(LINUX_KERNEL_MOD)

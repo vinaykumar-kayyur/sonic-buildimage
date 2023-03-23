@@ -1,0 +1,6 @@
+Thu Mar 23 07:25:05 PDT 2023
+INFO: sonic-buildimage ...
+CMD: cd .
+INFO: URL https://github.com/Marvell-OpenNOS//sonic-buildimage/pull/50.diff
+INFO: patch -p1 < 50.diff
+ERROR: Patch sonic-buildimage 50 has failures, try manually
