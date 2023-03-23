@@ -1,0 +1,30 @@
+diff --git a/zebra/main.c b/zebra/main.c
+old mode 100644
+new mode 100755
+index 6a5bdfed7..c799a3dbc
+--- a/zebra/main.c
++++ b/zebra/main.c
+@@ -187,11 +187,6 @@ static void sigint(void)
+ 	if (zrouter.lsp_process_q)
+ 		work_queue_free_and_null(&zrouter.lsp_process_q);
+ 
+-	vrf_terminate();
+-
+-	ns_walk_func(zebra_ns_early_shutdown, NULL, NULL);
+-	zebra_ns_notify_close();
+-
+ 	access_list_reset();
+ 	prefix_list_reset();
+ 	/*
+@@ -219,6 +214,11 @@ int zebra_finalize(struct thread *dummy)
+ {
+ 	zlog_info("Zebra final shutdown");
+ 
++	vrf_terminate();
++
++	ns_walk_func(zebra_ns_early_shutdown, NULL, NULL);
++	zebra_ns_notify_close();
++
+ 	/* Final shutdown of ns resources */
+ 	ns_walk_func(zebra_ns_final_shutdown, NULL, NULL);
+ 
