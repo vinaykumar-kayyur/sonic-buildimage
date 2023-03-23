@@ -57,3 +57,4 @@ class StaticRouteTimer(object):
                 time.sleep(self.DEFAULT_SLEEP)
                 if time.time() - self.start >= self.DEFAULT_TIMER:
                     self.alarm()
+
