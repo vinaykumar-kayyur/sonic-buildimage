@@ -7,5 +7,12 @@ Standards-Version: 3.9.3
 
 Package: platform-modules-midstone-200i
 Architecture: amd64
-Depends: linux-image-4.19.0-12-2-amd64-unsigned
+Description: kernel modules for platform devices
+
+Package: platform-modules-midstone-100x
+Architecture: amd64
+Description: kernel modules for platform devices
+
+Package: platform-modules-silverstone-x
+Architecture: amd64
 Description: kernel modules for platform devices
