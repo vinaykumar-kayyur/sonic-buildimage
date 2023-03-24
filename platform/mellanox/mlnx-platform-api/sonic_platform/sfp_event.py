@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2019-2022 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 '''
 listen to the SDK for the SFP change event and return to chassis.
 '''
@@ -7,14 +23,19 @@ import sys, errno
 import os
 import time
 import select
-if 'MLNX_PLATFORM_API_UNIT_TESTING' not in os.environ:
-    from python_sdk_api.sx_api import *
-else:
-    from mock import MagicMock
-    class MockSxFd(object):
-        fd = 99
-    new_sx_fd_t_p = MagicMock(return_value=MockSxFd())
-    new_sx_user_channel_t_p = MagicMock()
+
+from .device_data import DeviceDataManager
+try:
+    if 'PLATFORM_API_UNIT_TESTING' not in os.environ:
+        from python_sdk_api.sx_api import *
+    else:
+        from mock import MagicMock
+        class MockSxFd(object):
+            fd = 99
+        new_sx_fd_t_p = MagicMock(return_value=MockSxFd())
+        new_sx_user_channel_t_p = MagicMock()
+except KeyError:
+    pass
 from sonic_py_common.logger import Logger
 from .sfp import SFP
 
@@ -29,6 +50,7 @@ SDK_SFP_STATE_IN  = 0x1
 SDK_SFP_STATE_OUT = 0x2
 SDK_SFP_STATE_ERR = 0x3
 SDK_SFP_STATE_DIS = 0x4
+SDK_SFP_STATE_UNKNOWN = 0x5
 
 # SFP status used in this file only, will not expose to XCVRD
 # STATUS_ERROR will be mapped to different status according to the error code
@@ -113,13 +135,17 @@ class sfp_event:
     SX_OPEN_TIMEOUT = 5
     SELECT_TIMEOUT = 1
 
-    def __init__(self):
+    def __init__(self, rj45_port_list=None):
         self.swid = 0
         self.handle = None
 
         # Allocate SDK fd and user channel structures
         self.rx_fd_p = new_sx_fd_t_p()
         self.user_channel_p = new_sx_user_channel_t_p()
+        if rj45_port_list:
+            self.RJ45_port_set = set(rj45_port_list)
+        else:
+            self.RJ45_port_set = set()
 
     def initialize(self):
         swid_cnt_p = None
@@ -236,7 +262,8 @@ class sfp_event:
         found = 0
 
         try:
-            read, _, _ = select.select([self.rx_fd_p.fd], [], [], timeout)
+            read, _, _ = select.select([self.rx_fd_p.fd], [], [], float(timeout) / 1000)
+            print(read)
         except select.error as err:
             rc, msg = err
             if rc == errno.EAGAIN or rc == errno.EINTR:
@@ -247,6 +274,7 @@ class sfp_event:
         for fd in read:
             if fd == self.rx_fd_p.fd:
                 success, port_list, module_state, error_type = self.on_pmpe(self.rx_fd_p)
+                print('success = ', success)
                 if not success:
                     logger.log_error("failed to read from {}".format(fd))
                     break
@@ -304,11 +332,9 @@ class sfp_event:
         pkt = new_uint8_t_arr(pkt_size)
         recv_info_p = new_sx_receive_info_t_p()
         pmpe_t = sx_event_pmpe_t()
-        port_attributes_list = new_sx_port_attributes_t_arr(64)
         port_cnt_p = new_uint32_t_p()
-        uint32_t_p_assign(port_cnt_p,64)
+        uint32_t_p_assign(port_cnt_p, 0)
         label_port_list = []
-        label_port = None
         module_state = 0
 
         rc = sx_lib_host_ifc_recv(fd_p, pkt, pkt_size_p, recv_info_p)
@@ -317,39 +343,66 @@ class sfp_event:
             status = False
         else:
             status = True
+            unknown = False
             pmpe_t = recv_info_p.event_info.pmpe
             port_list_size = pmpe_t.list_size
             logical_port_list = pmpe_t.log_port_list
             module_state = pmpe_t.module_state
             error_type = pmpe_t.error_type
             module_id = pmpe_t.module_id
+            slot_id = pmpe_t.slot_id  # For non-modular chassis, it should return 0
 
             if module_state == SDK_SFP_STATE_ERR:
                 logger.log_error("Receive PMPE error event on module {}: status {} error type {}".format(module_id, module_state, error_type))
             elif module_state == SDK_SFP_STATE_DIS:
-                logger.log_info("Receive PMPE disable event on module {}: status {}".format(module_id, module_state))
+                logger.log_notice("Receive PMPE disable event on module {}: status {}".format(module_id, module_state))
             elif module_state == SDK_SFP_STATE_IN or module_state == SDK_SFP_STATE_OUT:
-                logger.log_info("Receive PMPE plug in/out event on module {}: status {}".format(module_id, module_state))
+                logger.log_notice("Receive PMPE plug in/out event on module {}: status {}".format(module_id, module_state))
+            elif module_state == SDK_SFP_STATE_UNKNOWN:
+                unknown = True
             else:
                 logger.log_error("Receive PMPE unknown event on module {}: status {}".format(module_id, module_state))
-            for i in range(port_list_size):
-                logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
-                rc = sx_api_port_device_get(self.handle, 1 , 0, port_attributes_list,  port_cnt_p)
+
+            # Call sx_api_port_device_get with port_cnt_p=0, SDK will return the logical port number
+            rc = sx_api_port_device_get(self.handle, 1, 0, None,  port_cnt_p)
+            if rc != SX_STATUS_SUCCESS:
+                logger.log_error("Failed to get logical port number")
+                status = False
+            else:
                 port_cnt = uint32_t_p_value(port_cnt_p)
+                port_attributes_list = new_sx_port_attributes_t_arr(port_cnt)
+                rc = sx_api_port_device_get(self.handle, 1, 0, port_attributes_list,  port_cnt_p)
+                if rc != SX_STATUS_SUCCESS:
+                    logger.log_error("Failed to get logical port attributes")
+                    status = False
+                else:
+                    for i in range(port_list_size):
+                        label_port = None
+                        logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
+                        for j in range(port_cnt):
+                            port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,j)
+                            if port_attributes.log_port == logical_port:
+                                label_port = slot_id * DeviceDataManager.get_linecard_max_port_count() + port_attributes.port_mapping.module_port
+                                break
 
-                for i in range(port_cnt):
-                    port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,i)
-                    if port_attributes.log_port == logical_port:
-                        label_port = port_attributes.port_mapping.module_port
-                        break
+                        if label_port is not None:
+                            label_port_list.append(label_port)
+                delete_sx_port_attributes_t_arr(port_attributes_list)
 
-                if label_port is not None:
-                    label_port_list.append(label_port)
+            if unknown:
+                SFP_ports_with_unknown_event = set(label_port_list) - self.RJ45_port_set
+                if SFP_ports_with_unknown_event:
+                    logger.log_error("Receive PMPE unknown event on module {}: status {}".format(module_id, module_state))
+                else:
+                    # For RJ45 ports, we treat unknown as disconnect
+                    module_state = SDK_SFP_STATE_DIS
 
         delete_uint32_t_p(pkt_size_p)
         delete_uint8_t_arr(pkt)
         delete_sx_receive_info_t_p(recv_info_p)
-        delete_sx_port_attributes_t_arr(port_attributes_list)
         delete_uint32_t_p(port_cnt_p)
+
+        if not label_port_list:
+            logger.log_error('Dropping PMPE event due to label port not found')
 
         return status, label_port_list, module_state, error_type

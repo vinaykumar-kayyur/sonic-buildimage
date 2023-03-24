@@ -3,10 +3,10 @@
 try:
     import os
     import time
-    import sys
     import re
     import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 

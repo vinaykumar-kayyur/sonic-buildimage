@@ -4,7 +4,7 @@
 #
 #  SPDX-License-Identifier:     GPL-2.0
 
-MEM=3072
+MEM=8192
 DISK=$1
 ONIE_RECOVERY_ISO=$2
 INSTALLER=$3
@@ -36,7 +36,7 @@ create_disk()
 
 prepare_installer_disk()
 {
-    fallocate -l 2048M $INSTALLER_DISK
+    fallocate -l 4096M $INSTALLER_DISK
 
     mkfs.vfat $INSTALLER_DISK
 
@@ -49,6 +49,19 @@ prepare_installer_disk()
     umount $tmpdir
 }
 
+wait_kvm_ready()
+{
+    local count=30
+    local waiting_in_seconds=2.0
+    for ((i=1; i<=$count; i++)); do
+        sleep $waiting_in_seconds
+        echo "$(date) [$i/$count] waiting for the port $KVM_PORT ready"
+        if netstat -l | grep -q ":$KVM_PORT"; then
+          break
+        fi
+    done
+}
+
 apt-get install -y net-tools
 create_disk
 prepare_installer_disk
@@ -59,13 +72,19 @@ free -m
 if [[ "$vs_build_prepare_mem" == "yes" ]]; then
     # Force o.s. to drop cache and compact memory so that KVM can get 2G memory
     bash -c 'echo 1 > /proc/sys/vm/drop_caches'
-    bash -c 'echo 1 > /proc/sys/vm/compact_memory'
+    # Not all kernels support compact_memory
+    if [[ -w '/proc/sys/vm/compact_memory' ]]
+    then	    
+        bash -c 'echo 1 > /proc/sys/vm/compact_memory'
+    fi
     free -m
 fi
 
 kvm_log=$(mktemp)
 trap on_exit EXIT
 trap on_error ERR
+
+echo "Installing SONiC"
 
 /usr/bin/kvm -m $MEM \
     -name "onie" \
@@ -80,7 +99,35 @@ trap on_error ERR
 
 kvm_pid=$!
 
-sleep 2.0
+wait_kvm_ready
+
+[ -d "/proc/$kvm_pid" ] || {
+        echo "ERROR: kvm died."
+        cat $kvm_log
+        exit 1
+}
+
+echo "to kill kvm:  sudo kill $kvm_pid"
+
+./install_sonic.py
+
+kill $kvm_pid
+
+echo "Booting up SONiC"
+
+/usr/bin/kvm -m $MEM \
+    -name "onie" \
+    -device e1000,netdev=onienet \
+    -netdev user,id=onienet,hostfwd=:0.0.0.0:3041-:22 \
+    -vnc 0.0.0.0:0 \
+    -vga std \
+    -snapshot \
+    -drive file=$DISK,media=disk,if=virtio,index=0 \
+    -serial telnet:127.0.0.1:$KVM_PORT,server > $kvm_log 2>&1 &
+
+kvm_pid=$!
+
+wait_kvm_ready
 
 [ -d "/proc/$kvm_pid" ] || {
         echo "ERROR: kvm died."

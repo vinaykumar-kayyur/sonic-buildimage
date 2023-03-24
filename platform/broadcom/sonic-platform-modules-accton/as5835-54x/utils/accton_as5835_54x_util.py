@@ -128,6 +128,8 @@ def driver_check():
 
 kos = [
 'modprobe i2c_dev',
+'modprobe i2c_i801',
+'modprobe i2c_ismt',
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
 'modprobe accton_as5835_54x_cpld'  ,
 'modprobe ym2651y'                  ,
@@ -282,9 +284,21 @@ def device_install():
                 print(output)
                 if FORCE == 0:
                     return status
+                    
+    # set all pca954x idle_disconnect
+    cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
+    status, output = log_os_system(cmd, 1)
+    if status:
+        print(output)
+        if FORCE == 0:
+            return status                    
 
     for i in range(49, 55): #Set qsfp port to normal state
         log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)
+    for i in range(1, 39): #Set disable tx_disable to sfp port
+        log_os_system("echo 0 > /sys/bus/i2c/devices/3-0061/module_tx_disable_" + str(i), 1)
+    for i in range(39, 49): #Set disable tx_disable to sfp port
+        log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_tx_disable_" + str(i), 1)
 
     for i in range(0,len(sfp_map)):
         if i < qsfp_start:
@@ -371,8 +385,6 @@ def do_sonic_platform_clean():
             return status
         else:
             print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
-
-    return
 
 def do_install():
     print("Checking system....")

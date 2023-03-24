@@ -251,6 +251,7 @@ psample_task(struct work_struct *work)
     unsigned long flags;
     struct list_head *list_ptr, *list_next;
     psample_pkt_t *pkt;
+    struct psample_metadata md = {0};
 
     spin_lock_irqsave(&psample_work->lock, flags);
     list_for_each_safe(list_ptr, list_next, &psample_work->pkt_list) {
@@ -267,12 +268,13 @@ psample_task(struct work_struct *work)
                     pkt->meta.trunc_size, pkt->meta.src_ifindex, 
                     pkt->meta.dst_ifindex, pkt->meta.sample_rate);
 
+            md.trunc_size = pkt->meta.trunc_size;
+            md.in_ifindex = pkt->meta.src_ifindex;
+            md.out_ifindex = pkt->meta.dst_ifindex;
             psample_sample_packet(pkt->group, 
                                   pkt->skb, 
-                                  pkt->meta.trunc_size,
-                                  pkt->meta.src_ifindex,
-                                  pkt->meta.dst_ifindex,
-                                  pkt->meta.sample_rate);
+                                  pkt->meta.sample_rate,
+                                  &md);
             g_psample_stats.pkts_f_psample_mod++;
  
             dev_kfree_skb_any(pkt->skb);
@@ -302,7 +304,7 @@ psample_rx_cb(struct sk_buff *skb)
     cbd = NGKNET_SKB_CB(skb);
     netif = cbd->priv;
     filt_src = cbd->filt;
-    filt = cbd->filt_cb;
+    filt = netif->filt_cb;
 
     if (!cbd || !netif || !filt_src) {
         printk("%s: cbd(0x%p) or priv(0x%p) or filter src(0x%p) is NULL\n", 
@@ -429,8 +431,9 @@ psample_rx_cb(struct sk_buff *skb)
 PSAMPLE_FILTER_CB_PKT_HANDLED:
     /* if sample reason only, consume pkt. else pass through */
     rv = psample_meta_sample_reason(skb->data, cbd->pmd);
-    if (rv) {
+    if (PSAMPLE_PKT_HANDLED == rv) {
         g_psample_stats.pkts_f_handled++;
+        dev_kfree_skb_any(skb);
         return NULL;
     }
     g_psample_stats.pkts_f_pass_through++;
@@ -462,8 +465,12 @@ psample_netif_create_cb(struct net_device *dev)
 
     psample_netif->dev = dev;
     psample_netif->id = netif->id;
-    /* FIXME: port is not saved in ngknet_private, need to get from metadata?? */
-    //psample_netif->port = netif->port;
+    /*Application has encoded the port in netif user data 0 & 1 */
+    if (netif->type == NGKNET_NETIF_T_PORT)
+    {
+        psample_netif->port = netif->user_data[0];
+        psample_netif->port |= netif->user_data[1] << 8;
+    }
     psample_netif->vlan = netif->vlan;
     psample_netif->sample_rate = PSAMPLE_RATE_DFLT;
     psample_netif->sample_size = PSAMPLE_SIZE_DFLT;
@@ -623,13 +630,12 @@ psample_proc_rate_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_rate_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_rate_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_rate_write,
-    release:    single_release,
+struct proc_ops psample_proc_rate_file_ops = {
+    proc_open:       psample_proc_rate_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_write:      psample_proc_rate_write,
+    proc_release:    single_release,
 };
 
 /*
@@ -722,13 +728,12 @@ psample_proc_size_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_size_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_size_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_size_write,
-    release:    single_release,
+struct proc_ops psample_proc_size_file_ops = {
+    proc_open:       psample_proc_size_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_write:      psample_proc_size_write,
+    proc_release:    single_release,
 };
 
 /*
@@ -763,13 +768,12 @@ psample_proc_map_open(struct inode * inode, struct file * file)
     return single_open(file, psample_proc_map_show, NULL);
 }
 
-struct file_operations psample_proc_map_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_map_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      NULL,
-    release:    single_release,
+struct proc_ops psample_proc_map_file_ops = {
+    proc_open:       psample_proc_map_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_write:      NULL,
+    proc_release:    single_release,
 };
 
 /*
@@ -829,13 +833,12 @@ psample_proc_debug_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_debug_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_debug_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_debug_write,
-    release:    single_release,
+struct proc_ops psample_proc_debug_file_ops = {
+    proc_open:       psample_proc_debug_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_write:      psample_proc_debug_write,
+    proc_release:    single_release,
 };
 
 static int
@@ -891,13 +894,12 @@ psample_proc_stats_write(struct file *file, const char *buf,
 
     return count;
 }
-struct file_operations psample_proc_stats_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_stats_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_stats_write,
-    release:    single_release,
+struct proc_ops psample_proc_stats_file_ops = {
+    proc_open:       psample_proc_stats_open,
+    proc_read:       seq_read,
+    proc_lseek:     seq_lseek,
+    proc_write:      psample_proc_stats_write,
+    proc_release:    single_release,
 };
 
 int psample_cleanup(void)

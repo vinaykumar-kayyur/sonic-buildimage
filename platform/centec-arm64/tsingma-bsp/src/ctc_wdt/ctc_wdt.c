@@ -1,3 +1,4 @@
+/*
 /* drivers/char/watchdog/ctc-wdt.c
  *
  * Watchdog driver for CTC TSINGMA, based on ARM SP805 watchdog module
@@ -290,6 +291,12 @@ static int ctc_wdt_probe(struct amba_device *adev, const struct amba_id *id)
 	if (IS_ERR(wdt->regmap_base))
 		return PTR_ERR(wdt->regmap_base);
 
+	/* reset wdt module */
+	regmap_write(wdt->regmap_base,
+		     offsetof(struct SysCtl_regs, SysWdtResetCtl), 0x3);
+	regmap_write(wdt->regmap_base,
+		     offsetof(struct SysCtl_regs, SysWdtResetCtl), 0x0);
+
 	/*
 	 * TsingMa SoC wdt reference clock  is obtained by clockSub frequency
 	 * division,which is 500Mhz.So we need to set the frequency division
@@ -338,14 +345,14 @@ err:
 	return ret;
 }
 
-static int ctc_wdt_remove(struct amba_device *adev)
+static void ctc_wdt_remove(struct amba_device *adev)
 {
 	struct ctc_wdt *wdt = amba_get_drvdata(adev);
 
 	watchdog_unregister_device(&wdt->wdd);
 	watchdog_set_drvdata(&wdt->wdd, NULL);
 
-	return 0;
+	return;
 }
 
 static int __maybe_unused ctc_wdt_suspend(struct device *dev)

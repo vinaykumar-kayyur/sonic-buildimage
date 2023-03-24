@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import time
-import swsssdk
+from swsscommon import swsscommon
 
 # ALPHA defines the size of the window over which we calculate the average value. ALPHA is 2/(N+1) where N is the interval(window size)
 # In this case we configure the window to be 10s. This way if we have a huge 1s spike in traffic,
@@ -17,29 +17,39 @@ def enable_counter_group(db, name):
         info = {}
         info['FLEX_COUNTER_STATUS'] = 'enable'
         db.mod_entry("FLEX_COUNTER_TABLE", name, info)
+    else:
+        entry_info.update({"FLEX_COUNTER_DELAY_STATUS":"false"})
+        db.mod_entry("FLEX_COUNTER_TABLE", name, entry_info)
 
 def enable_rates():
     # set the default interval for rates
-    counters_db = swsssdk.SonicV2Connector()
+    counters_db = swsscommon.SonicV2Connector()
     counters_db.connect('COUNTERS_DB')
     counters_db.set('COUNTERS_DB', 'RATES:PORT', 'PORT_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
     counters_db.set('COUNTERS_DB', 'RATES:PORT', 'PORT_ALPHA', DEFAULT_ALPHA)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
     counters_db.set('COUNTERS_DB', 'RATES:RIF', 'RIF_ALPHA', DEFAULT_ALPHA)
+    counters_db.set('COUNTERS_DB', 'RATES:TRAP', 'TRAP_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
+    counters_db.set('COUNTERS_DB', 'RATES:TRAP', 'TRAP_ALPHA', DEFAULT_ALPHA)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_SMOOTH_INTERVAL', DEFAULT_SMOOTH_INTERVAL)
+    counters_db.set('COUNTERS_DB', 'RATES:TUNNEL', 'TUNNEL_ALPHA', DEFAULT_ALPHA)
 
 
 def enable_counters():
-    db = swsssdk.ConfigDBConnector()
+    db = swsscommon.ConfigDBConnector()
     db.connect()
-    enable_counter_group(db, 'PORT')
-    enable_counter_group(db, 'RIF')
-    enable_counter_group(db, 'QUEUE')
-    enable_counter_group(db, 'PFCWD')
-    enable_counter_group(db, 'PG_WATERMARK')
-    enable_counter_group(db, 'PG_DROP')
-    enable_counter_group(db, 'QUEUE_WATERMARK')
-    enable_counter_group(db, 'BUFFER_POOL_WATERMARK')
-    enable_counter_group(db, 'PORT_BUFFER_DROP')
+    default_enabled_counters = ['PORT', 'RIF', 'QUEUE', 'PFCWD', 'PG_WATERMARK', 'PG_DROP', 
+                                'QUEUE_WATERMARK', 'BUFFER_POOL_WATERMARK', 'PORT_BUFFER_DROP', 'ACL']
+    
+    # Enable those default counters
+    for key in default_enabled_counters:
+        enable_counter_group(db, key)
+
+    # Set FLEX_COUNTER_DELAY_STATUS to false for those non-default counters
+    keys = db.get_keys('FLEX_COUNTER_TABLE')
+    for key in keys:
+        if key not in default_enabled_counters:
+            enable_counter_group(db, key)
     enable_rates()
 
 

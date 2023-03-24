@@ -1,12 +1,12 @@
 {
     "options": [
     {
-        "key": "sfp_init_tx_en",
-        "stringval": "yes"
+        "key": "module_direct_ipc_ue",
+        "stringval": "no"
     },
     {
         "key": "midplane_subnet",
-        "stringval": "10.0.5.0"
+        "stringval": "10.6.0.0/16"
     },
     {
         "key": "midplane_monitor",
@@ -27,6 +27,22 @@
     {
         "key": "sonic_bdb_mode",
         "intval": 0
+    },
+    { 
+      "key": "update_asic_pvt",
+      "intval": 10
+    },
+    {
+      "key": "amd_pcon",
+      "intval": 4
+    },
+    {
+      "key": "enable_firmware_update",
+      "intval": 0
+    },
+    {
+      "key": "sonic_log_level",
+      "stringval": "error"
     }
     ]
 }

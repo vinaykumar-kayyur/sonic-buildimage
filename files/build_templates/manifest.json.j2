@@ -1,3 +1,11 @@
+{%- if version_suffix %}
+{#- append build metadata suffix to the version #}
+{%- if '+' in version %}
+{%- set version = version + '.' + version_suffix %}
+{%- else %}
+{%- set version = version + '+' + version_suffix %}
+{%- endif %}
+{%- endif %}
 {
     "version": "1.0.0",
     "package": {
@@ -20,6 +28,9 @@
         "fast-shutdown": {
             "after": {{ fast_shutdown_after.split()|json if fast_shutdown_after is defined else [] }},
             "before": {{ fast_shutdown_before.split()|json if fast_shutdown_before is defined else [] }}
+        },
+        "syslog": {
+            "support-rate-limit": {{ support_rate_limit if support_rate_limit else 'true' }}
         }
     },
     "container": {
@@ -29,6 +40,7 @@
     },
     "cli": {
         "config": "{{ config_cli_plugin|default('') }}",
-        "show": "{{ show_cli_plugin|default('') }}"
+        "show": "{{ show_cli_plugin|default('') }}",
+        "clear": "{{ clear_cli_plugin|default('') }}"
     }
 }

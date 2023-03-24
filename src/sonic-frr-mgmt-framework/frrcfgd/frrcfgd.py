@@ -5,7 +5,7 @@ import subprocess
 import time
 import syslog
 import os
-from swsssdk import ConfigDBConnector
+from swsscommon.swsscommon import ConfigDBConnector
 import socket
 import threading
 import queue
@@ -1445,6 +1445,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
     def __init__(self, ns_attrs = None):
         super(ExtConfigDBConnector, self).__init__()
         self.nosort_attrs = ns_attrs if ns_attrs is not None else {}
+        self.__listen_thread_running = False
     def raw_to_typed(self, raw_data, table = ''):
         if len(raw_data) == 0:
             raw_data = None
@@ -1469,12 +1470,28 @@ class ExtConfigDBConnector(ConfigDBConnector):
             except Exception as e:
                 syslog.syslog(syslog.LOG_ERR, '[bgp cfgd] Failed handling config DB update with exception:' + str(e))
                 logging.exception(e)
+
+    def listen_thread(self, timeout):
+        self.__listen_thread_running = True
+        sub_key_space = "__keyspace@{}__:*".format(self.get_dbid(self.db_name))
+        self.pubsub.psubscribe(sub_key_space)
+        while self.__listen_thread_running:
+            msg = self.pubsub.get_message(timeout, True)
+            if msg:
+                self.sub_msg_handler(msg)
+
+        self.pubsub.punsubscribe(sub_key_space)
+
     def listen(self):
         """Start listen Redis keyspace events and will trigger corresponding handlers when content of a table changes.
         """
         self.pubsub = self.get_redis_client(self.db_name).pubsub()
-        self.pubsub.psubscribe(**{"__keyspace@{}__:*".format(self.get_dbid(self.db_name)): self.sub_msg_handler})
-        self.sub_thread = self.pubsub.run_in_thread(sleep_time = 0.01)
+        self.sub_thread = threading.Thread(target=self.listen_thread, args=(0.01,))
+        self.sub_thread.start()
+
+    def stop_listen(self):
+        self.__listen_thread_running = False
+
     @staticmethod
     def get_table_key(table, key):
         return table + '&&' + key
@@ -1636,7 +1653,9 @@ class IpNextHop:
         self.interface = '' if if_name is None else if_name
         self.tag = 0 if tag is None else int(tag)
         self.nh_vrf = '' if vrf is None else vrf
-        if self.blackhole != 'true' and self.is_zero_ip() and len(self.interface.strip()) == 0:
+        if not self.is_portchannel():
+            self.is_ip_valid()
+        if self.blackhole != 'true' and self.is_zero_ip() and not self.is_portchannel() and len(self.interface.strip()) == 0:
             syslog.syslog(syslog.LOG_ERR, 'Mandatory attribute not found for nexthop')
             raise ValueError
     def __eq__(self, other):
@@ -1652,8 +1671,15 @@ class IpNextHop:
     def __str__(self):
         return 'AF %d BKH %s IP %s TRACK %d INTF %s TAG %d DIST %d VRF %s' % (
                 self.af, self.blackhole, self.ip, self.track, self.interface, self.tag, self.distance, self.nh_vrf)
+    def is_ip_valid(self):
+        socket.inet_pton(self.af, self.ip)
     def is_zero_ip(self):
-        return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
+        try:
+            return sum([x for x in socket.inet_pton(self.af, self.ip)]) == 0
+        except socket.error:
+            return False
+    def is_portchannel(self):
+        return True if self.ip.startswith('PortChannel') else False
     def get_arg_list(self):
         arg = lambda x: '' if x is None else x
         num_arg = lambda x: '' if x is None or x == 0 else str(x)
@@ -3765,7 +3791,7 @@ class BGPConfigDaemon:
         self.subscribe_all()
         self.config_db.listen()
     def stop(self):
-        self.config_db.sub_thread.stop()
+        self.config_db.stop_listen()
         if self.config_db.sub_thread.is_alive():
             self.config_db.sub_thread.join()
 

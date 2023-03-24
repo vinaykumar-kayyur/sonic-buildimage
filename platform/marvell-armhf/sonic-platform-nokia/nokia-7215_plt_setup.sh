@@ -10,12 +10,6 @@ fw_uboot_env_cfg()
     if [ "$PLATFORM" = "armhf-nokia_ixs7215_52x-r0" ]; then
 	# Ixs7215 / IPD6448M board Uboot ENV offset
         FW_ENV_DEFAULT='/dev/mtd0 0x00100000 0x10000 0x10000'
-
-        demo_part=$(sgdisk -p /dev/sda | grep -e "SONiC-OS")
-        if [ -z "$demo_part" ]; then
-            # ET6448M Board - For Backward compatibility
-            FW_ENV_DEFAULT='/dev/mtd0 0x00500000 0x80000 0x100000 8'
-        fi
     else
         FW_ENV_DEFAULT='/dev/mtd0 0x00500000 0x80000 0x100000 8'
     fi
@@ -31,7 +25,6 @@ main()
     fw_uboot_env_cfg
     echo "Nokia-IXS7215: /dev/mtd0 FW_ENV_DEFAULT"
 
-    python /etc/entropy.py &
     /bin/sh /etc/inband_mgmt.sh
 }
 

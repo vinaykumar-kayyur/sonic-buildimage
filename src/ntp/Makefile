@@ -10,15 +10,15 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Get ntp release, debian files
 	wget http://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION).orig.tar.xz
-	wget http://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION)-4.debian.tar.xz
+	wget http://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION)-1.debian.tar.xz
 
 	# UnTar ntp release
 	xzcat ntp_$(NTP_VERSION).orig.tar.xz | tar -xvf -
 
-	pushd ./ntp-4.2.8p12
+	pushd ./ntp-4.2.8p15
 
 	# UnTar debian files
-	xzcat ../ntp_$(NTP_VERSION)-4.debian.tar.xz | tar -xvf -
+	xzcat ../ntp_$(NTP_VERSION)-1.debian.tar.xz | tar -xvf -
 
 	# Add the additional patch
 	cp ../patch/bug1970-UNLINK_EXPR_SLIST_empty_list.patch debian/patches/
@@ -38,8 +38,21 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# and go into learning mode.
 	sed -i 's/\/usr\/sbin\/ntpd {/\/usr\/sbin\/ntpd flags=(attach_disconnected complain) {/' debian/apparmor-profile
 
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	sed -i 's/dh_auto_configure \--/dh_auto_configure -- --with-yielding-select=yes /g' debian/rules 
+	echo ". $(CONFIG_SITE)" > fix.ntp.cross-config.$(CONFIGURED_ARCH)
+	echo "unset with_openssl_libdir" >> fix.ntp.cross-config.$(CONFIGURED_ARCH)
+	echo "unset with_openssl_incdir" >> fix.ntp.cross-config.$(CONFIGURED_ARCH)
+	rm -f cross-config.cache
+	ln -s /etc/dpkg-cross/cross-config.cache cross-config.cache
+endif
+
 	# Build source and Debian packages with the symbols
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	CONFIG_SITE=`pwd`/fix.ntp.cross-config.$(CONFIGURED_ARCH) dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+else
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+endif
 
 	popd
 

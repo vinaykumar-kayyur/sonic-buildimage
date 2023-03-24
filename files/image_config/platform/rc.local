@@ -126,6 +126,9 @@ migrate_nos_configuration()
         # remove nos-config-part from cmdline
         sed -r -i.bak "s/nos-config-part=[^[:space:]]+//" /host/grub/grub.cfg
 
+        # remove ssd-upgrader-part from cmdline
+        sed -r -i.bak "s/ssd-upgrader-part=[^[:space:]]+//" /host/grub/grub.cfg
+
         # Mount the previous NOS's partition
         NOS_DIR=/mnt/nos_migration
         MG_GZFILE=$NOS_DIR/minigraph.xml.gz.base64.txt
@@ -191,14 +194,24 @@ value_extract() {
 
 program_console_speed()
 {
-    speed=$(cat /proc/cmdline | grep -Eo 'console=ttyS[0-9]+,[0-9]+' | cut -d "," -f2)
+    speed=$(cat /proc/cmdline | grep -Eo 'console=tty(S|AMA)[0-9]+,[0-9]+' | cut -d "," -f2)
     if [ -z "$speed" ]; then
         CONSOLE_SPEED=9600
     else
         CONSOLE_SPEED=$speed
     fi
 
-    sed -i "s|\-\-keep\-baud .* %I| $CONSOLE_SPEED %I|g" /lib/systemd/system/serial-getty@.service
+    # Set correct baud rate in getty service
+    # First boot will find keep-baud argument with multiple baud rates as per Debian convention
+    # Subsequent boots may have new baud rate without finding keep-baud argument
+    grep agetty /lib/systemd/system/serial-getty@.service |grep keep-baud
+    if [ $? = 0 ]; then
+        sed -i "s|\-\-keep\-baud .* %I| $CONSOLE_SPEED %I|g" /lib/systemd/system/serial-getty@.service
+    else
+        sed -i "s|u' .* %I|u' $CONSOLE_SPEED %I|g" /lib/systemd/system/serial-getty@.service
+    fi
+
+    # Reload systemd config
     systemctl daemon-reload
 }
 
@@ -227,10 +240,9 @@ if [ ! -e /host/machine.conf ]; then
         grub_installation_needed="TRUE"
     fi
 
+    migrate_nos_configuration
     umount /mnt/onie-boot
 fi
-
-migrate_nos_configuration
 
 . /host/machine.conf
 
@@ -284,7 +296,20 @@ if [ -f $FIRST_BOOT_FILE ]; then
     fi
 
     if [ -d /host/image-$SONIC_VERSION/platform/$platform ]; then
-        dpkg -i /host/image-$SONIC_VERSION/platform/$platform/*.deb
+        if [ -f /host/image-$SONIC_VERSION/platform/common/Packages.gz ]; then
+            # Use only the trivial repo and apt to support lazy package dependencies
+            mv /etc/apt/sources.list /etc/apt/sources.list.rc-local
+            echo "deb [trusted=yes] file:///host/image-$SONIC_VERSION/platform/common /" > /etc/apt/sources.list.d/sonic_debian_extension.list
+            LANG=C DEBIAN_FRONTEND=noninteractive apt-get update
+            LANG=C DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Path=$PATH:/usr/local/bin -y install /host/image-$SONIC_VERSION/platform/$platform/*.deb
+            # Cleanup
+            rm -f /etc/apt/sources.list.d/sonic_debian_extension.list
+            rm -f /var/lib/apt/lists/_host_image-${SONIC_VERSION}_platform_common_Packages.lz4
+            # This is first boot so there should be no package lists or indices to restore, just the sources
+            mv /etc/apt/sources.list.rc-local /etc/apt/sources.list
+        else
+            dpkg -i /host/image-$SONIC_VERSION/platform/$platform/*.deb
+        fi
     fi
 
     sync
@@ -293,7 +318,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     # we now install a grub for SONiC.
     if [ -n "$onie_platform" ] && [ -n  "$grub_installation_needed" ]; then
 
-        grub_bin=$(ls /host/image-$SONIC_VERSION/platform/x86_64-grub/grub-pc-bin*.deb 2> /dev/null)
+        grub_bin=$(ls /host/image-$SONIC_VERSION/platform/grub/grub*.deb 2> /dev/null)
         if [ -z "$grub_bin" ]; then
             log_migration "Unable to locate grub package !"
             firsttime_exit
@@ -375,7 +400,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     mkdir -p /var/platform
 
     # Kdump tools configuration
-    sed -i -e "s/__PLATFORM__/$platform/g" /etc/default/kdump-tools
+    [ -f /etc/default/kdump-tools ] && sed -i -e "s/__PLATFORM__/$platform/g" /etc/default/kdump-tools
 
     firsttime_exit
 fi

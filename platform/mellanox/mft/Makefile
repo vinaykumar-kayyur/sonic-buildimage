@@ -1,22 +1,50 @@
+#
+# Copyright (c) 2016-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 .ONESHELL:
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MFT_NAME = mft-$(MFT_VERSION)-$(MFT_REVISION)-x86_64-deb
+ifeq ($(CONFIGURED_ARCH), amd64)
+MFT_ARCH = x86_64
+else
+MFT_ARCH = $(CONFIGURED_ARCH)
+endif
+
+MFT_NAME = mft-$(MFT_VERSION)-$(MFT_REVISION)-$(MFT_ARCH)-deb
 MFT_TGZ = $(MFT_NAME).tgz
 
-SRC_DEB = kernel-mft-dkms_$(MFT_VERSION)-$(MFT_REVISION)_all.deb
-MOD_DEB = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_amd64.deb
+ifeq ($(MFT_FROM_INTERNAL),y)
+MFT_TGZ_URL = $(MLNX_MFT_INTERNAL_SOURCE_BASE_URL)$(MFT_TGZ)
+else
+MFT_TGZ_URL = http://www.mellanox.com/downloads/MFT/$(MFT_TGZ)
+endif
 
-MAIN_TARGET = mft_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
-DERIVED_TARGETS = $(MOD_DEB) mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
+SRC_DEB = kernel-mft-dkms_$(MFT_VERSION)-$(MFT_REVISION)_all.deb
+MOD_DEB = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_$(CONFIGURED_ARCH).deb
+
+MAIN_TARGET = mft_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = $(MOD_DEB) mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
 
 DKMS_BMDEB = /var/lib/dkms/kernel-mft-dkms/$(MFT_VERSION)/bmdeb
 DKMS_TMP := $(shell mktemp -u -d -t dkms.XXXXXXXXXX)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf $(MFT_NAME)
-	wget -O $(MFT_TGZ) http://www.mellanox.com/downloads/MFT/$(MFT_TGZ)
+	wget -O $(MFT_TGZ) $(MFT_TGZ_URL)
 	tar xzf $(MFT_TGZ)
 
 	pushd $(MFT_NAME)/SDEBS
@@ -30,8 +58,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	popd
 
-	sudo dkms build kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a amd64
-	sudo dkms mkbmdeb kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a amd64
+	sudo dkms build kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a $(CONFIGURED_ARCH)
+	sudo dkms mkbmdeb kernel-mft-dkms/$(MFT_VERSION) -k $(KVERSION) -a $(CONFIGURED_ARCH)
 
 	# w/a: remove dependencies
 	mkdir -p $(DKMS_TMP)/DEBIAN

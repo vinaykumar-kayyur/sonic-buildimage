@@ -51,6 +51,18 @@ def test_bgpd_main_conf_voq_chassis():
              "bgpd.main.conf.j2/voq_chassis.json",
              "bgpd.main.conf.j2/voq_chassis.conf")
 
+def test_bgpd_main_conf_packet_chassis():
+    run_test("Chassi packet bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/packet_chassis.json",
+             "bgpd.main.conf.j2/packet_chassis.conf")
+
+def test_bgpd_lo_ipv6_conf_base():
+    run_test("IPv6 Loopback bgpd.main.conf.j2",
+             "bgpd/bgpd.main.conf.j2",
+             "bgpd.main.conf.j2/base.json",
+             "bgpd.main.conf.j2/base.conf")
+
 def test_tsa_isolate():
     run_test("tsa/bgpd.tsa.isolate.conf.j2",
              "bgpd/tsa/bgpd.tsa.isolate.conf.j2",
@@ -75,17 +87,17 @@ def test_common_functions():
              "common/functions.conf.json",
              "common/functions.conf")
 
-def test_staticd_default_route():
-    run_test("staticd.default_route.conf.j2",
-             "staticd/staticd.default_route.conf.j2",
-             "staticd/staticd.default_route.conf.json",
-             "staticd/staticd.default_route.conf")
-
 def test_staticd_loopback_route():
     run_test("staticd.loopback_route.conf.j2",
              "staticd/staticd.loopback_route.conf.j2",
              "staticd/staticd.loopback_route.conf.json",
              "staticd/staticd.loopback_route.conf")
+
+def test_staticd_loopback_ipv6_128_route():
+    run_test("staticd.loopback_ipv6_128_route.conf.j2",
+             "staticd/staticd.loopback_route.conf.j2",
+             "staticd/staticd.loopback_ipv6_128_route.conf.json",
+             "staticd/staticd.loopback_ipv6_128_route.conf")
 
 def test_staticd():
     run_test("staticd.conf.j2",

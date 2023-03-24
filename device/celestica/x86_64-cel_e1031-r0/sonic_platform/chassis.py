@@ -24,7 +24,6 @@ NUM_COMPONENT = 3
 RESET_REGISTER = "0x112"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/previous-reboot-cause.txt"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/previous-reboot-cause.txt"
-HOST_CHK_CMD = "docker > /dev/null 2>&1"
 STATUS_LED_PATH = "/sys/devices/platform/e1031.smc/master_led"
 
 
@@ -236,17 +235,10 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        sfp = None
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
 
-        try:
-            # The index will start from 1
-            sfp = self._sfp_list[index-1]
-        except IndexError:
-            print("SFP index {} out of range (1-{})\n".format(
-                index, len(self._sfp_list)))
-        return sfp
+        return super(Chassis, self).get_sfp(index - 1)
 
     ##############################################################
     ################## ThermalManager methods ####################

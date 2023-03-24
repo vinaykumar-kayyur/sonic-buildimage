@@ -3,10 +3,10 @@
 try:
     import os
     import time
-    import sys
     import re
     import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -205,8 +205,8 @@ class SfpUtil(SfpUtilBase):
 
     def i2c_set(self, device_addr, offset, value):
         if smbus_present == 0:
-            cmd = "i2cset -y 0 " + hex(device_addr) + " " + hex(offset) + " " + hex(value)
-            os.system(cmd)
+            cmd = ["i2cset", "-y", "0", hex(device_addr), hex(offset), hex(value)]
+            subprocess.call(cmd)
         else:
             bus = smbus.SMBus(0)
             bus.write_byte_data(device_addr, offset, value)

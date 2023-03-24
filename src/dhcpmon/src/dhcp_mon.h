@@ -17,12 +17,10 @@
  *
  * @param window_sec time interval between health checks
  * @param max_count max count of consecutive unhealthy statuses before reporting to syslog
- * @param dhcpv4    flag indicating dhcpv4 is enabled
- * @param dhcpv6    flag indicating dhcpv6 is enabled
  *
  * @return 0 upon success, otherwise upon failure
  */
-int dhcp_mon_init(int window_sec, int max_count, bool dhcpv4, bool dhcpv6);
+int dhcp_mon_init(int window_sec, int max_count);
 
 /**
  * @code dhcp_mon_shutdown();
@@ -34,15 +32,16 @@ int dhcp_mon_init(int window_sec, int max_count, bool dhcpv4, bool dhcpv6);
 void dhcp_mon_shutdown();
 
 /**
- * @code dhcp_mon_start(snaplen);
+ * @code dhcp_mon_start(snaplen, debug);
  *
  * @brief start monitoring DHCP Relay
  *
  * @param snaplen       packet capture length
+ * @param debug         turn on debug or not
  *
  * @return 0 upon success, otherwise upon failure
  */
-int dhcp_mon_start(size_t snaplen);
+int dhcp_mon_start(size_t snaplen, bool debug);
 
 /**
  * @code dhcp_mon_stop();

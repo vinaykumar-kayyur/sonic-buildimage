@@ -7,17 +7,13 @@
 ########################################################################
 
 try:
-    import sys
+    import os
     from sonic_platform_base.psu_base import PsuBase
     from sonic_py_common import logger
     from sonic_platform.eeprom import Eeprom
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-if sys.version_info[0] < 3:
-    import commands as cmd
-else:
-    import subprocess as cmd
 
 smbus_present = 1
 try:
@@ -39,6 +35,34 @@ class Psu(PsuBase):
         # PSU eeprom
         self.eeprom = Eeprom(is_psu=True, psu_index=self.index)
 
+    def _write_sysfs_file(self, sysfs_file, value):
+        rv = 'ERR'
+
+        if (not os.path.isfile(sysfs_file)):
+            return rv
+        try:
+            with open(sysfs_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except Exception as e:
+            rv = 'ERR'
+
+        return rv
+
+    def _read_sysfs_file(self, sysfs_file):
+        rv = 'ERR'
+
+        if (not os.path.isfile(sysfs_file)):
+            return rv
+        try:
+            with open(sysfs_file, 'r') as fd:
+                rv = fd.read()
+        except Exception as e:
+            rv = 'ERR'
+
+        rv = rv.rstrip('\r\n')
+        rv = rv.lstrip(" ")
+        return rv
+
     def get_name(self):
         """
         Retrieves the name of the device
@@ -57,7 +81,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:  # if called from psuutil outside of pmon
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -85,7 +109,6 @@ class Psu(PsuBase):
         """
         return self.eeprom.modelstr()
 
-
     def get_serial(self):
         """
         Retrieves the serial number of the PSU
@@ -95,6 +118,14 @@ class Psu(PsuBase):
         """
         return self.eeprom.serial_number_str()
 
+    def get_revision(self):
+        """
+        Retrieves the HW revision of the PSU
+
+        Returns:
+            string: HW revision of PSU
+        """
+        return self.eeprom.part_number_str()
 
     def get_part_number(self):
         """
@@ -114,7 +145,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
             sonic_logger.log_warning("PMON psu-smbus - presence = 0 ")
         else:
@@ -143,7 +174,7 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -190,7 +221,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -234,3 +265,53 @@ class Psu(PsuBase):
         # The firmware running in the PSU controls the LED
         # and the PSU LED state cannot be changed from CPU.
         return False
+
+    def get_status_master_led(self):
+        """
+        Gets the state of the front panel PSU status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings.
+        """
+        if (not os.path.isfile("/sys/class/gpio/psuLedGreen/value") or
+            not os.path.isfile("/sys/class/gpio/psuLedAmber/value")):
+            return None
+
+        green = self._read_sysfs_file("/sys/class/gpio/psuLedGreen/value")
+        amber = self._read_sysfs_file("/sys/class/gpio/psuLedAmber/value")
+        if green == "ERR" or amber == "ERR":
+            return None
+        if green == "1":
+            return self.STATUS_LED_COLOR_GREEN
+        elif amber == "1":
+            return self.STATUS_LED_COLOR_AMBER
+        else:
+            return None
+
+    def set_status_master_led(self, color):
+        """
+        Sets the state of the front panel PSU status LED
+
+        Returns:
+            bool: True if status LED state is set successfully, False if
+                  not
+        """
+        if (not os.path.isfile("/sys/class/gpio/psuLedGreen/value") or
+            not os.path.isfile("/sys/class/gpio/psuLedAmber/value")):
+            return False
+
+        if color == self.STATUS_LED_COLOR_GREEN:
+            rvg = self._write_sysfs_file("/sys/class/gpio/psuLedGreen/value", 1)
+            if rvg != "ERR":
+                rva = self._write_sysfs_file("/sys/class/gpio/psuLedAmber/value", 0)
+        elif color == self.STATUS_LED_COLOR_AMBER:
+            rvg = self._write_sysfs_file("/sys/class/gpio/psuLedGreen/value", 0)
+            if rvg != "ERR":
+                rva = self._write_sysfs_file("/sys/class/gpio/psuLedAmber/value", 1)
+        else:
+            return False
+
+        if rvg == "ERR" or rva == "ERR":
+            return False
+
+        return True

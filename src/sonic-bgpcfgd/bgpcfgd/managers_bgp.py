@@ -8,6 +8,7 @@ from .log import log_warn, log_err, log_info, log_debug, log_crit
 from .manager import Manager
 from .template import TemplateFabric
 from .utils import run_command
+from .managers_device_global import DeviceGlobalCfgMgr
 
 
 class BGPPeerGroupMgr(object):
@@ -23,6 +24,7 @@ class BGPPeerGroupMgr(object):
         tf = common_objs['tf']
         self.policy_template = tf.from_file(base_template + "policies.conf.j2")
         self.peergroup_template = tf.from_file(base_template + "peer-group.conf.j2")
+        self.device_global_cfgmgr = DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)
 
     def update(self, name, **kwargs):
         """
@@ -56,14 +58,15 @@ class BGPPeerGroupMgr(object):
         """
         try:
             pg = self.peergroup_template.render(**kwargs)
+            tsa_rm = self.device_global_cfgmgr.check_state_and_get_tsa_routemaps(pg)
         except jinja2.TemplateError as e:
             log_err("Can't render peer-group template: '%s': %s" % (name, str(e)))
             return False
 
         if kwargs['vrf'] == 'default':
-            cmd = ('router bgp %s\n' % kwargs['bgp_asn']) + pg
+            cmd = ('router bgp %s\n' % kwargs['bgp_asn']) + pg + tsa_rm
         else:
-            cmd = ('router bgp %s vrf %s\n' % (kwargs['bgp_asn'], kwargs['vrf'])) + pg
+            cmd = ('router bgp %s vrf %s\n' % (kwargs['bgp_asn'], kwargs['vrf'])) + pg + tsa_rm
         self.update_entity(cmd, "Peer-group for peer '%s'" % name)
         return True
 
@@ -125,6 +128,9 @@ class BGPPeerMgrBase(Manager):
         if self.check_deployment_id:
             deps.append(("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/deployment_id"))
 
+        if self.peer_type == 'internal':    
+            deps.append(("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME, "Loopback4096"))
+
         super(BGPPeerMgrBase, self).__init__(
             common_objs,
             deps,
@@ -160,11 +166,17 @@ class BGPPeerMgrBase(Manager):
         print_data = vrf, nbr, data
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
         #
-        lo0_ipv4 = self.get_lo0_ipv4()
+        lo0_ipv4 = self.get_lo_ipv4("Loopback0|")
         if lo0_ipv4 is None:
             log_warn("Loopback0 ipv4 address is not presented yet")
             return False
         #
+        if self.peer_type == 'internal':
+            lo4096_ipv4 = self.get_lo_ipv4("Loopback4096|")
+            if lo4096_ipv4 is None:
+                log_warn("Loopback4096 ipv4 address is not presented yet")
+                return False
+
         if "local_addr" not in data:
             log_warn("Peer %s. Missing attribute 'local_addr'" % nbr)
         else:
@@ -299,15 +311,15 @@ class BGPPeerMgrBase(Manager):
         self.cfg_mgr.push(cmd)
         return True
 
-    def get_lo0_ipv4(self):
+    def get_lo_ipv4(self, loopback_str):
         """
         Extract Loopback0 ipv4 address from the Directory
         :return: ipv4 address for Loopback0, None if nothing found
         """
         loopback0_ipv4 = None
         for loopback in self.directory.get_slot("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME).keys():
-            if loopback.startswith("Loopback0|"):
-                loopback0_prefix_str = loopback.replace("Loopback0|", "")
+            if loopback.startswith(loopback_str):
+                loopback0_prefix_str = loopback.replace(loopback_str, "")
                 loopback0_ip_str = loopback0_prefix_str[:loopback0_prefix_str.find('/')]
                 if TemplateFabric.is_ipv4(loopback0_ip_str):
                     loopback0_ipv4 = loopback0_ip_str

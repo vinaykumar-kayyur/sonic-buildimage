@@ -3,11 +3,11 @@
 #
 # common functions used by "syncd" scipts (syncd.sh, gbsyncd.sh, etc..)
 # scripts using this must provide implementations of the following functions:
-# 
+#
 # startplatform
 # waitplatform
 # stopplatform1 and stopplatform2
-# 
+#
 # For examples of these, see gbsyncd.sh and syncd.sh.
 #
 
@@ -25,7 +25,7 @@ function lock_service_state_change()
 
     exec {LOCKFD}>${LOCKFILE}
     /usr/bin/flock -x ${LOCKFD}
-    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+    trap "/usr/bin/flock -u ${LOCKFD}" EXIT
 
     debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE}$DEV service"
 }
@@ -45,6 +45,15 @@ function check_warm_boot()
         WARM_BOOT="true"
     else
         WARM_BOOT="false"
+    fi
+}
+
+function check_fast_boot()
+{
+    if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+        FAST_BOOT="true"
+    else
+        FAST_BOOT="false"
     fi
 }
 
@@ -140,10 +149,14 @@ stop() {
 
     lock_service_state_change
     check_warm_boot
+    check_fast_boot
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     if [[ x"$WARM_BOOT" == x"true" ]]; then
         TYPE=warm
+    elif [[ x"$FAST_BOOT" == x"true" ]]; then
+        TYPE=fast
     else
         TYPE=cold
     fi
