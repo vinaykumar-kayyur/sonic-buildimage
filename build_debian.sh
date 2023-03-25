@@ -721,7 +721,9 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y re
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get clean
-sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
+sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
+# remove /usr/share/doc except copyright files
+sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'find /usr/share/doc ! -name "copyright" -xtype f,l -delete && find /usr/share/doc -type d -empty -delete'
 
 ## Clean up proxy
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
