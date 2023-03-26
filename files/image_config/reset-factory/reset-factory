@@ -71,7 +71,7 @@ error_cleanup()
 clear_sonic_dir()
 {
     EXCLUDE_LIST="${CONFIG_DB_JSON}\|/etc/sonic/sonic-environment"
-    find $SONIC_OVERLAY_UPPERDIR -mindepth 1 | grep -ve ${EXCLUDE_LIST} | xargs rm -rf
+    find $SONIC_OVERLAY_UPPERDIR -type f | grep -ve ${EXCLUDE_LIST} | xargs rm -rf
     # remount root
     mount -o remount /
 }
@@ -88,7 +88,7 @@ reset_users()
     default_users=$(jq -r '. | keys[]' $DEFAULT_USERS_FILE)
     EXCLUDE_LIST=$(echo $default_users | tr ' ' '|')
     # Get non-default user accounts
-    other_users=$(getent passwd | awk -F:  '($3>=1000 && $3<=6000) {print $1}' | grep -E -v $EXCLUDE_LIST)
+    other_users=$(getent passwd | awk -F:  '($3>=1000 && $3<=60000) {print $1}' | grep -E -v $EXCLUDE_LIST)
     echo "Remove non-default users"
     for user in ${other_users[@]}
     do
