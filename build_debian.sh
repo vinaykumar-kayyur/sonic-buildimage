@@ -333,7 +333,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
-        firmware-linux-nonfree
+        firmware-misc-nonfree
 fi
 
 ## Pre-install the fundamental packages
