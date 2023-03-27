@@ -7,7 +7,7 @@
 
 #define DIR_NAME_MAX_LEN        (64)
 
-#define WB_SYSFS_DEV_ERROR         "no_support"
+#define WB_SYSFS_DEV_ERROR         "NA"
 /* sysfs directory name */
 #define FAN_SYSFS_NAME          "fan"
 #define PSU_SYSFS_NAME          "psu"

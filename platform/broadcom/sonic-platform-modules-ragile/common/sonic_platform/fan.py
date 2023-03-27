@@ -281,11 +281,7 @@ class Fan(FanBase):
             if psu_status_dict["InputStatus"] is False:
                 pwm = 0
             else:
-                psu_pwm = int(self.int_case.get_psu_fan_speed_pwm(self.name))
-                if psu_pwm == 0:  # psu fan not control
-                    pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
-                else:
-                    pwm = psu_pwm
+                pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
         return int(pwm)
 
     def get_vendor(self):

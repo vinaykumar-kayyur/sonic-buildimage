@@ -133,7 +133,7 @@ class checktype():
     def getValue(location, bit, data_type, coefficient=1, addend=0):
         try:
             value_t = get_pmc_register(location)
-            if value_t.startswith("ERR"):
+            if value_t.startswith("ERR") or value_t.startswith("NA"):
                 return value_t
             if data_type == 1:
                 return float('%.1f' % ((float(value_t) / 1000) + addend))

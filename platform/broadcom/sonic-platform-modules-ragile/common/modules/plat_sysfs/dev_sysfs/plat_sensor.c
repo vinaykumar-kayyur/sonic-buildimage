@@ -52,7 +52,7 @@ static ssize_t sensor_voltage_show(struct switch_obj *obj, struct switch_attribu
 {
     unsigned int in_index;
     int ret;
-    struct switch_device_attribute  *in_attr;
+    struct switch_device_attribute *in_attr;
 
     check_p(g_drv);
     check_p(g_drv->get_voltage_info);
@@ -72,7 +72,7 @@ static ssize_t sensor_temp_show(struct switch_obj *obj, struct switch_attribute 
 {
     unsigned int temp_index;
     int ret;
-    struct switch_device_attribute  *temp_attr;
+    struct switch_device_attribute *temp_attr;
 
     check_p(g_drv);
     check_p(g_drv->get_temp_info);
@@ -146,30 +146,12 @@ static struct attribute_group sensor_in_attr_group = {
     .attrs = sensor_in_attrs,
 };
 
-static int sensor_root_create(void)
-{
-    g_sensor_obj = wb_plat_kobject_create("sensor", NULL);
-    if (!g_sensor_obj) {
-        return -ENOMEM;
-    }
-    if (sysfs_create_group(&g_sensor_obj->kobj, &sensor_root_attr_group) != 0) {
-        wb_plat_kobject_delete(&g_sensor_obj);
-        SENSOR_ERR("create sensor dir attrs error!\n");
-        return -EBADRQC;
-    }
-    return 0;
-}
-
 static int sensor_in_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned int index)
 {
     char name[DIR_NAME_MAX_LEN];
     struct sensor_in_t *curr_sensor;
 
-    if (index >= g_sensor.in_number) {
-        SENSOR_ERR("sensor in number = %d, in%d error.\n", g_sensor.in_number, index);
-        return -EINVAL;
-    }
-    curr_sensor = &g_sensor.in[index];
+    curr_sensor = &g_sensor.in[index - 1];
     SENSOR_DBG("create sensor in%d ...\n", index);
     mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "in%d", index);
@@ -189,22 +171,17 @@ static int sensor_in_sub_single_create_kobj_and_attrs(struct kobject *parent, un
 
 }
 
-static int sensor_in_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void sensor_in_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
     struct sensor_in_t *curr_in;
 
-    if (index >= g_sensor.in_number) {
-        SENSOR_ERR("in number = %d, in%d error.\n", g_sensor.in_number, index);
-        return -EINVAL;
-    }
-    curr_in = &g_sensor.in[index];
+    curr_in = &g_sensor.in[index - 1];
     if (curr_in->obj) {
         sysfs_remove_group(&curr_in->obj->kobj, &sensor_in_attr_group);
         wb_plat_kobject_delete(&curr_in->obj);
+        SENSOR_DBG("delete in%d.\n", index);
     }
-
-    SENSOR_DBG("delete in%d.\n", index);
-    return 0;
+    return;
 }
 
 static int sensor_temp_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned int index)
@@ -212,11 +189,7 @@ static int sensor_temp_sub_single_create_kobj_and_attrs(struct kobject *parent, 
     char name[DIR_NAME_MAX_LEN];
     struct sensor_temp_t *curr_sensor;
 
-    if (index >= g_sensor.temp_number) {
-        SENSOR_ERR("sensor temp number = %d, temp%d error.\n", g_sensor.temp_number, index);
-        return -EINVAL;
-    }
-    curr_sensor = &g_sensor.temp[index];
+    curr_sensor = &g_sensor.temp[index - 1];
     SENSOR_DBG("create sensor temp%d ...\n", index);
     mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "temp%d", index);
@@ -236,44 +209,36 @@ static int sensor_temp_sub_single_create_kobj_and_attrs(struct kobject *parent, 
 
 }
 
-static int sensor_temp_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void sensor_temp_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
     struct sensor_temp_t *curr_temp;
 
-    if (index >= g_sensor.temp_number) {
-        SENSOR_ERR("temp number = %d, temp%d error.\n", g_sensor.temp_number, index);
-        return -EINVAL;
-    }
-    curr_temp = &g_sensor.temp[index];
+    curr_temp = &g_sensor.temp[index - 1];
     if (curr_temp->obj) {
         sysfs_remove_group(&curr_temp->obj->kobj, &sensor_temp_attr_group);
         wb_plat_kobject_delete(&curr_temp->obj);
+        SENSOR_DBG("delete temp%d.\n", index);
     }
-
-    SENSOR_DBG("delete temp%d.\n", index);
-    return 0;
+    return;
 }
 
 static int sensor_temp_sub_create_kobj_and_attrs(struct kobject *parent, int temp_num)
 {
     unsigned int temp_index, i;
-    if (temp_num <= 0) {
-        SENSOR_ERR("sensor number = %d error.\n", temp_num);
-        return -EINVAL;
-    }
+
     g_sensor.temp = kzalloc(sizeof(struct sensor_temp_t) * temp_num, GFP_KERNEL);
     if (!g_sensor.temp ) {
         SENSOR_ERR("kzalloc g_sensor.temp error, temp number = %d.\n", temp_num);
         return -ENOMEM;
     }
-    for (temp_index = 0; temp_index < temp_num; temp_index++) {
+    for (temp_index = 1; temp_index <= temp_num; temp_index++) {
         if (sensor_temp_sub_single_create_kobj_and_attrs(parent, temp_index) != 0 ) {
             goto error;
         }
     }
     return 0;
 error:
-    for (i = 0; i < temp_index; i++) {
+    for (i = temp_index - 1; i > 0; i--) {
         sensor_temp_sub_single_remove_kobj_and_attrs(i);
     }
 
@@ -287,24 +252,21 @@ error:
 static int sensor_in_sub_create_kobj_and_attrs(struct kobject *parent, int in_num)
 {
     unsigned int in_index, i;
-    if (in_num <= 0) {
-        SENSOR_ERR("sensor number = %d error.\n", in_num);
-        return -EINVAL;
-    }
+
     g_sensor.in = kzalloc(sizeof(struct sensor_in_t) * in_num, GFP_KERNEL);
-    if (!g_sensor.in ) {
+    if (!g_sensor.in) {
         SENSOR_ERR("kzalloc g_sensor.in error, in number = %d.\n", in_num);
         return -ENOMEM;
     }
 
-    for (in_index = 0; in_index < in_num; in_index++) {
+    for (in_index = 1; in_index <= in_num; in_index++) {
         if (sensor_in_sub_single_create_kobj_and_attrs(parent, in_index) != 0 ) {
             goto error;
         }
     }
     return 0;
 error:
-    for (i = 0; i < in_index; i++) {
+    for (i = in_index - 1; i > 0; i--) {
         sensor_in_sub_single_remove_kobj_and_attrs(i);
     }
 
@@ -322,7 +284,6 @@ static int sensor_temp_sub_create(void)
     check_p(g_drv->get_dev_number);
     temp_num = g_drv->get_dev_number(WB_MAIN_DEV_MAINBOARD, WB_MINOR_DEV_TEMP);
     g_sensor.temp_number = temp_num;
-
     if (temp_num <= 0) {
         SENSOR_DBG("Warning:sensor temp number = %d \n", temp_num);
         return 0;
@@ -347,86 +308,64 @@ static int sensor_in_sub_create(void)
     return ret;
 }
 
-static int temp_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void temp_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
     struct sensor_temp_t * curr_temp;
 
-    if (index >= g_sensor.temp_number) {
-        SENSOR_ERR("temp number = %d, temp%d error.\n", g_sensor.temp_number, index);
-        return -EINVAL;
-    }
-    curr_temp = &g_sensor.temp[index];
+    curr_temp = &g_sensor.temp[index - 1];
     if (curr_temp->obj) {
         sysfs_remove_group(&curr_temp->obj->kobj, &sensor_temp_attr_group);
         wb_plat_kobject_delete(&curr_temp->obj);
+        SENSOR_DBG("delete sensor temp%d.\n", index);
     }
-
-    SENSOR_DBG("delete sensor temp%d.\n", index);
-    return 0;
+    return;
 }
 
-static int in_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void in_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
     struct sensor_in_t * curr_in;
 
-    if (index >= g_sensor.in_number) {
-        SENSOR_ERR("in number = %d, in%d error.\n", g_sensor.in_number, index);
-        return -EINVAL;
-    }
-    curr_in = &g_sensor.in[index];
+    curr_in = &g_sensor.in[index - 1];
     if (curr_in->obj) {
         sysfs_remove_group(&curr_in->obj->kobj, &sensor_in_attr_group);
         wb_plat_kobject_delete(&curr_in->obj);
+        SENSOR_DBG("delete sensor in%d.\n", index);
     }
-
-    SENSOR_DBG("delete sensor in%d.\n", index);
-    return 0;
+    return;
 }
 
 static void sensor_temp_sub_remove(void)
 {
     unsigned int temp_index;
+
     if (g_sensor.temp) {
-       for (temp_index = 0; temp_index < g_sensor.temp_number; temp_index++) {
-           if (g_sensor.temp[temp_index].obj) {
-               temp_sub_single_remove_kobj_and_attrs(temp_index);
-           }
+       for (temp_index = g_sensor.temp_number; temp_index > 0; temp_index--) {
+           temp_sub_single_remove_kobj_and_attrs(temp_index);
        }
        kfree(g_sensor.temp);
+       g_sensor.temp = NULL;
     }
-    g_sensor.temp = NULL;
-    return ;
+    return;
 }
 
 static void sensor_in_sub_remove(void)
 {
     unsigned int in_index;
+
     if (g_sensor.in) {
-       for (in_index = 0; in_index < g_sensor.in_number; in_index++) {
-           if (g_sensor.in[in_index].obj) {
-               in_sub_single_remove_kobj_and_attrs(in_index);
-           }
+       for (in_index = g_sensor.in_number; in_index > 0; in_index--) {
+           in_sub_single_remove_kobj_and_attrs(in_index);
        }
        kfree(g_sensor.in);
+       g_sensor.in = NULL;
     }
-    g_sensor.in = NULL;
-    return ;
+    return;
 }
 
 static void sensor_sub_remove(void)
 {
     sensor_temp_sub_remove();
     sensor_in_sub_remove();
-}
-
-static void sensor_root_remove(void)
-{
-    if (g_sensor_obj) {
-        sysfs_remove_group(&g_sensor_obj->kobj, &sensor_root_attr_group);
-        wb_plat_kobject_delete(&g_sensor_obj);
-    }
-
-    return ;
 }
 
 static int sensor_sub_create(void)
@@ -447,6 +386,33 @@ in_err:
     sensor_temp_sub_remove();
 temp_err:
     return ret;
+}
+static void sensor_root_remove(void)
+{
+    if (g_sensor_obj) {
+        sysfs_remove_group(&g_sensor_obj->kobj, &sensor_root_attr_group);
+        wb_plat_kobject_delete(&g_sensor_obj);
+        SENSOR_DBG("delete sensor root success\n");
+    }
+
+    return;
+}
+
+static int sensor_root_create(void)
+{
+    g_sensor_obj = wb_plat_kobject_create("sensor", NULL);
+    if (!g_sensor_obj) {
+        SENSOR_ERR("wb_plat_kobject_create sensor error!\n");
+        return -ENOMEM;
+    }
+
+    if (sysfs_create_group(&g_sensor_obj->kobj, &sensor_root_attr_group) != 0) {
+        wb_plat_kobject_delete(&g_sensor_obj);
+        SENSOR_ERR("create sensor dir attrs error!\n");
+        return -EBADRQC;
+    }
+    SENSOR_DBG("wb_plat_kobject_create sensor directory and attribute success.\n");
+    return 0;
 }
 
 static int wb_sensor_init(void)
@@ -479,7 +445,7 @@ static void wb_sensor_exit(void)
     sensor_sub_remove();
     sensor_root_remove();
     SENSOR_INFO("sensor_exit ok.\n");
-    return ;
+    return;
 }
 
 module_init(wb_sensor_init);

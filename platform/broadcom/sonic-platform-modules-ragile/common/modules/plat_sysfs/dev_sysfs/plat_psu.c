@@ -137,34 +137,21 @@ static struct attribute_group psu_temp_attr_group = {
 static void psuindex_single_temp_remove_kobj_and_attrs(struct psu_obj_t * curr_psu, unsigned int temp_index)
 {
 
-    struct temp_obj_t * curr_temp; /* point to temp0 temp1...*/
+    struct temp_obj_t *curr_temp; /* point to temp0 temp1...*/
 
-    if (curr_psu == NULL) {
-        PSU_ERR("psu remove attrs failed, curr_psu is NULL.\n");
-        return ;
-    }
-
-    if (temp_index + 1 > curr_psu->temp_number) {
-        PSU_ERR("params error. temp index:%d.\n", temp_index);
-        return ;
-    }
     curr_temp = &curr_psu->temp[temp_index];
-
     if (curr_temp->obj) {
         sysfs_remove_group(&curr_temp->obj->kobj, &psu_temp_attr_group);
         wb_plat_kobject_delete(&curr_temp->obj);
+        PSU_DBG("delete psu:%d temp%d.\n", curr_psu->obj->index, temp_index);
     }
-
-    PSU_DBG("delete psu:%d temp%d.\n", curr_psu->obj->index, temp_index);
-    return ;
+    return;
 }
 
 static int psuindex_single_temp_create_kobj_and_attrs(struct psu_obj_t * curr_psu, unsigned int temp_index)
 {
     char name[DIR_NAME_MAX_LEN];
-    struct temp_obj_t * curr_temp; /* point to temp0 temp1...*/
-
-    check_p(curr_psu);
+    struct temp_obj_t *curr_temp; /* point to temp0 temp1...*/
 
     PSU_DBG("create psu_index:%d, temp%d ...\n", curr_psu->obj->index, temp_index);
 
@@ -190,25 +177,23 @@ static int psuindex_temp_create_kobj_and_attrs(struct psu_obj_t * curr_psu, int 
 {
     int temp_index, i;
 
-    check_p(curr_psu);
-
     curr_psu->temp = kzalloc(sizeof(struct temp_obj_t) * temp_num, GFP_KERNEL);
     if (!curr_psu->temp) {
         PSU_ERR("kzalloc temp error, psu index = %d, temp number = %d.\n", curr_psu->obj->index, temp_num);
         return -ENOMEM;
     }
     curr_psu->temp_number = temp_num;
-    for(temp_index = 0; temp_index < temp_num; temp_index++) {
-        if(psuindex_single_temp_create_kobj_and_attrs(curr_psu, temp_index) != 0 ) {
+    for (temp_index = 0; temp_index < temp_num; temp_index++) {
+        if (psuindex_single_temp_create_kobj_and_attrs(curr_psu, temp_index) != 0) {
             goto temp_error;
         }
     }
     return 0;
 temp_error:
-    for(i = 0; i < temp_index; i++) {
+    for (i = temp_index - 1; i >= 0; i--) {
         psuindex_single_temp_remove_kobj_and_attrs(curr_psu, i);
     }
-    if(curr_psu->temp) {
+    if (curr_psu->temp) {
         kfree(curr_psu->temp);
         curr_psu->temp = NULL;
     }
@@ -219,25 +204,19 @@ static void psuindex_temp_remove_kobj_and_attrs(struct psu_obj_t * curr_psu, int
 {
     unsigned int temp_index;
 
-    if (temp_num < 0 || curr_psu == NULL) {
-        PSU_ERR("params error.temp number = %d \n", temp_num);
-        return ;
-    }
-
-    for(temp_index = 0; temp_index < temp_num; temp_index++) {
+    for (temp_index = temp_num - 1; temp_index >= 0; temp_index--) {
         psuindex_single_temp_remove_kobj_and_attrs(curr_psu, temp_index);
     }
-    return ;
+    return;
 }
 
 static int psu_temp_create(void)
 {
     int psu_num, temp_num;
     unsigned int psu_index, i;
-    struct psu_obj_t * curr_psu;     /* point to psu1 psu2...*/
+    struct psu_obj_t *curr_psu;     /* point to psu1 psu2...*/
 
     check_p(g_drv->get_dev_number);
-
     temp_num = g_drv->get_dev_number(WB_MAIN_DEV_PSU, WB_MINOR_DEV_TEMP);
     if (temp_num <= 0) {
         PSU_INFO("psu temp_num:%d, don't need creat temp directory.\n", temp_num);
@@ -253,7 +232,7 @@ static int psu_temp_create(void)
     }
     return 0;
 error:
-    for(i = 1; i < psu_index; i++) {
+    for(i = psu_index - 1; i > 0; i--) {
         curr_psu = &g_psu.psu[i - 1];
         temp_num = curr_psu->temp_number;
         psuindex_temp_remove_kobj_and_attrs(curr_psu, temp_num);
@@ -264,9 +243,10 @@ error:
 static void psu_temp_remove(void)
 {
     unsigned int psu_index;
-    struct psu_obj_t * curr_psu;
+    struct psu_obj_t *curr_psu;
+
     if (g_psu.psu) {
-       for(psu_index = 1; psu_index <= g_psu.psu_number; psu_index++) {
+       for (psu_index = g_psu.psu_number; psu_index > 0; psu_index--) {
            curr_psu = &g_psu.psu[psu_index - 1];
            if (curr_psu->temp) {
                psuindex_temp_remove_kobj_and_attrs(curr_psu,curr_psu->temp_number);
@@ -276,31 +256,26 @@ static void psu_temp_remove(void)
            }
        }
     }
-    return ;
+    return;
 }
 
-static int psu_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void psu_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
-    struct psu_obj_t * curr_psu;
+    struct psu_obj_t *curr_psu;
 
-    if (index > g_psu.psu_number) {
-        PSU_ERR("psu number = %d, psu%d error.\n", g_psu.psu_number, index);
-        return -EINVAL;
-    }
-    curr_psu = &g_psu.psu[index-1];
+    curr_psu = &g_psu.psu[index - 1];
     if (curr_psu->obj) {
         sysfs_remove_group(&curr_psu->obj->kobj, &psu_attr_group);
         wb_plat_kobject_delete(&curr_psu->obj);
+        PSU_DBG("delete psu%d.\n", index);
     }
-
-    PSU_DBG("delete psu%d.\n", index);
-    return 0;
+    return;
 }
 
 static int psu_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned int index)
 {
     char name[DIR_NAME_MAX_LEN];
-    struct psu_obj_t * curr_psu;
+    struct psu_obj_t *curr_psu;
 
     curr_psu = &g_psu.psu[index-1];
     PSU_DBG("create psu%d ...\n", index);
@@ -331,14 +306,14 @@ static int psu_sub_create_kobj_and_attrs(struct kobject *parent, int psu_num)
         return -ENOMEM;
     }
 
-    for(psu_index = 1; psu_index <= psu_num; psu_index++) {
-        if(psu_sub_single_create_kobj_and_attrs(parent, psu_index) != 0 ) {
+    for (psu_index = 1; psu_index <= psu_num; psu_index++) {
+        if (psu_sub_single_create_kobj_and_attrs(parent, psu_index) != 0) {
             goto error;
         }
     }
     return 0;
 error:
-    for(i = 1; i < psu_index; i++) {
+    for(i = psu_index - 1; i > 0; i--) {
         psu_sub_single_remove_kobj_and_attrs(i);
     }
     if(g_psu.psu) {
@@ -368,10 +343,8 @@ static void psu_sub_remove(void)
     unsigned int psu_index;
 
     if (g_psu.psu) {
-       for (psu_index = 1; psu_index <= g_psu.psu_number; psu_index++) {
-           if (g_psu.psu[psu_index-1].obj) {
-               psu_sub_single_remove_kobj_and_attrs(psu_index);
-           }
+       for (psu_index = g_psu.psu_number; psu_index > 0; psu_index--) {
+           psu_sub_single_remove_kobj_and_attrs(psu_index);
        }
        kfree(g_psu.psu);
     }
@@ -382,16 +355,18 @@ static void psu_sub_remove(void)
 static int psu_root_create(void)
 {
     g_psu_obj = wb_plat_kobject_create(PSU_SYSFS_NAME, NULL);
-    if (!g_psu_obj)
+    if (!g_psu_obj) {
+        PSU_ERR("wb_plat_kobject_create psu error!\n");
         return -ENOMEM;
+    }
 
     if (sysfs_create_group(&g_psu_obj->kobj, &psu_root_attr_group) != 0) {
         wb_plat_kobject_delete(&g_psu_obj);
         PSU_ERR("create psu dir attrs error!\n");
         return -EBADRQC;
     }
+    PSU_DBG("wb_plat_kobject_create psu directory and attribute success.\n");
     return 0;
-
 }
 
 static void psu_root_remove(void)
@@ -399,9 +374,9 @@ static void psu_root_remove(void)
     if (g_psu_obj) {
         sysfs_remove_group(&g_psu_obj->kobj, &psu_root_attr_group);
         wb_plat_kobject_delete(&g_psu_obj);
+        PSU_DBG("delete psu root success\n");
     }
-
-    return ;
+    return;
 }
 
 static int wb_psu_init(void)

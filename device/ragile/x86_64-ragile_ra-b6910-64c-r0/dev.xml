@@ -79,12 +79,69 @@
             <property name="out_power"     location="/sys/bus/i2c/devices/8-005b/hwmon/*/power2_input"  type="5"/>
     	</psu> 
     </psus> 
+    <dcdcs>
+        <dcdc id="MAC_BOARD_VDD3V3" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD1V2_MAC" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD_CORE" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD_ANALOG" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_QSFP_3V3" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD5.0V" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD1.8V" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_TEST1.24V" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_ZSFP3.3V" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD3V3_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+    </dcdcs>
     <cpus location="/sys/class/hwmon/hwmon0"/>
-    <ports_rx>
-		<mgmt_rx id="mgmt" sender="eth0" >
-    		<property name="mgmt" location="/eth0/statistics/rx_packets" type="4"/>
-		</mgmt_rx> 
-    </ports_rx> 
     <decode>
 	<fanpresent>
         <code key="0" value="ABSENT"/>

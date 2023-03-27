@@ -195,31 +195,466 @@
             <property name="fan_speed"     location="/sys/bus/i2c/devices/26-0058/hwmon/*/fan1_input" />
             <property name="in_power"      location="/sys/bus/i2c/devices/26-0058/hwmon/*/power1_input"  type="5"/>
             <property name="out_power"     location="/sys/bus/i2c/devices/26-0058/hwmon/*/power2_input"  type="5"/>
-
-            <property name="in_current"    location="/sys/bus/i2c/devices/7-0058/hwmon/*/curr1_input" type="1" />
-            <property name="in_voltage"    location="/sys/bus/i2c/devices/7-0058/hwmon/*/in1_input"  type="1"/>
-            <property name="out_voltage"    location="/sys/bus/i2c/devices/7-0058/hwmon/*/in2_input" type="1" />
-            <property name="out_current"    location="/sys/bus/i2c/devices/7-0058/hwmon/*/curr2_input" type="1" />
-            <property name="temp"    location="/sys/bus/i2c/devices/7-0058/hwmon/*/temp1_input" type="1"/>
-            <property name="fan_speed"     location="/sys/bus/i2c/devices/26-0058/hwmon/*/fan1_input" />
-            <property name="in_power"      location="/sys/bus/i2c/devices/26-0058/hwmon/*/power1_input"  type="5"/>
-            <property name="out_power"     location="/sys/bus/i2c/devices/26-0058/hwmon/*/power2_input"  type="5"/>
         </psu> 
     </psus> 
     <slots>
         <slot id="slot1" >
-            <property name="present" location="/sys/devices/pci0000:00/0000:00:1f.0/slot_present" type="3" bit="4" decode="slotpresent" default="1"/>
+            <property name="present" location="/sys/wb_plat/slot/slot1/present" type="4" bit="4" decode="slotpresent" default="1"/>
+            <property name="slot" e2type="fru"    location="/sys/bus/i2c/devices/3-0056/eeprom" />
         </slot>    
         <slot id="slot2" >
-            <property name="present" location="/sys/devices/pci0000:00/0000:00:1f.0/slot_present" type="3" bit="5" decode="slotpresent" default="1"/>
+            <property name="present" location="/sys/wb_plat/slot/slot2/present" type="4" bit="5" decode="slotpresent" default="1"/>
+            <property name="slot" e2type="fru"    location="/sys/bus/i2c/devices/4-0056/eeprom" />
         </slot>    
         <slot id="slot3" >
-            <property name="present" location="/sys/devices/pci0000:00/0000:00:1f.0/slot_present" type="3" bit="6" decode="slotpresent" default="1"/>
+            <property name="present" location="/sys/wb_plat/slot/slot3/present" type="4" bit="6" decode="slotpresent" default="1"/>
+            <property name="slot" e2type="fru"    location="/sys/bus/i2c/devices/5-0056/eeprom" />
         </slot>    
         <slot id="slot4" >
-            <property name="present" location="/sys/devices/pci0000:00/0000:00:1f.0/slot_present" type="3" bit="7" decode="slotpresent" default="1"/>
-        </slot>    
-    </slots>     
+            <property name="present" location="/sys/wb_plat/slot/slot4/present" type="4" bit="7" decode="slotpresent" default="1"/>
+            <property name="slot" e2type="fru"    location="/sys/bus/i2c/devices/6-0056/eeprom" />
+        </slot>
+    </slots>
+    <dcdcs>
+        <dcdc id="X86_BOARD_P5V_AUX_IN" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="X86_BOARD_P1V7_IN" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="X86_BOARD_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="X86_BOARD_P3V3_STBY_IN" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD1v8" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_SW_VDD1v2" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD1v2_MAC" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD_CORE" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD3v3_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD3v3_CLK" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in11/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in11/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in11/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD5V_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in12/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in12/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in12/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD2v5" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in13/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in13/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in13/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDDO" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in14/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in14/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in14/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_BC_PVDD" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in15/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in15/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in15/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_VDD3v3" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in16/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in16/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in16/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="MAC_BOARD_ANLGOUT" >
+            <property name="dcdc_input" location="/sys/wb_plat/sensor/in17/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/sensor/in17/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/sensor/in17/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD3v3_QSFP_1" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD3v3_QSFP_2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD1v8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD3v3_CLK" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD5v0" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD3v7_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD1v2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD3v3" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_DVDD_0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_VDD1V8_CPLD" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in11/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in11/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in11/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT1_AVDD0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot1/in12/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot1/in12/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot1/in12/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD3v3_QSFP_1" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD3v3_QSFP_2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD1v8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD3v3_CLK" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD5v0" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD3v7_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD1v2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD3v3" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_DVDD_0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_VDD1V8_CPLD" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in11/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in11/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in11/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT2_AVDD0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot2/in12/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot2/in12/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot2/in12/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD3v3_QSFP_1" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD3v3_QSFP_2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD1v8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD3v3_CLK" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD5v0" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD3v7_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD1v2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD3v3" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_DVDD_0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_VDD1V8_CPLD" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in11/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in11/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in11/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT3_AVDD0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot3/in12/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot3/in12/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot3/in12/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD3v3_QSFP_1" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in1/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in1/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in1/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD3v3_QSFP_2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in2/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in2/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in2/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD1v8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in3/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in3/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in3/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_TEST1v24" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in4/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in4/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in4/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD3v3_CLK" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in5/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in5/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in5/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD5v0" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in6/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in6/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in6/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD3v7_CLK_MCU" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in7/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in7/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in7/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD1v2" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in8/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in8/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in8/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD3v3" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in9/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in9/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in9/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_DVDD_0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in10/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in10/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in10/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_VDD1V8_CPLD" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in11/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in11/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in11/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+        <dcdc id="SLOT4_AVDD0V8" >
+            <property name="dcdc_input" location="/sys/wb_plat/slot/slot4/in12/in_input" type="6" />
+            <property name="dcdc_max"   location="/sys/wb_plat/slot/slot4/in12/in_max" type="6" />
+            <property name="dcdc_min"   location="/sys/wb_plat/slot/slot4/in12/in_min" type="6" />
+            <property name="dcdc_unit"   gettype="config" value="V" />
+        </dcdc>
+    </dcdcs>
+    <mactemps>
+        <mactemp id="MAC_DIE_0" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp1_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_1" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp2_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_2" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp3_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_3" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp4_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_4" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp5_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_5" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp6_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_6" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp7_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_7" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp8_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_8" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp9_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_9" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp10_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_10" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp11_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_11" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp12_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_12" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp13_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_13" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp14_input"  type="1"/>
+        </mactemp>
+        <mactemp id="MAC_DIE_14" >
+            <property name="temp_input" location="/sys/bus/i2c/devices/27-0044/hwmon/hwmon*/temp15_input"  type="1"/>
+        </mactemp>
+    </mactemps>
+
     <cpus location="/sys/class/hwmon/hwmon0"/>
     <decode>
     <fanpresent>

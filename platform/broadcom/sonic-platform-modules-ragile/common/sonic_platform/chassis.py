@@ -221,6 +221,12 @@ class Chassis(ChassisBase):
         """
         return False
 
+    def initizalize_system_led(self):
+        return True
+
+    def set_status_led(self, color):
+        return False
+
     def get_status_led(self):
         """
         Gets the state of the system LED
@@ -510,3 +516,5 @@ class Chassis(ChassisBase):
                 ret_dict[name] = status
         self.voltage_status_dict = current_voltage_status_dict
         return ret_dict
+
+

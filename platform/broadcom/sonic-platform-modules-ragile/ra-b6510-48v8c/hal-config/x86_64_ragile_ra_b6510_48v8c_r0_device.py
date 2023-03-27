@@ -260,6 +260,7 @@ devices = {
         {
             "name": "SWITCH_TEMP",
             "temp_id": "TEMP1",
+            "api_name": "ASIC_TEMP",
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/3-0044/hwmon/hwmon*/temp99_input", "way": "sysfs"},
                 "Min": -30000,

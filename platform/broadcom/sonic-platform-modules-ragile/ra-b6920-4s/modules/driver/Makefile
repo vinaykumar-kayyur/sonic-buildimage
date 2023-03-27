@@ -6,9 +6,6 @@ EXTRA_CFLAGS+= -I$(MODULES_DIR)
 EXTRA_CFLAGS+= -I$(MODULES_DIR)/linux-5.10
 EXTRA_CFLAGS+= -I$(FIRMWARE_UPGRADE_PATH)
 
-obj-m := wb_cpld.o
-obj-m += wb_lpc_cpld.o
-
 obj-m += wb_lpc_drv_device.o
 obj-m += wb_io_dev_device.o
 obj-m += wb_platform_i2c_dev_device.o

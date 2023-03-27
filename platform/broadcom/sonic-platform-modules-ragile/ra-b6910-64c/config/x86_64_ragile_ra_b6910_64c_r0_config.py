@@ -16,54 +16,61 @@ STARTMODULE = {
 DEV_MONITOR_PARAM = {
     "polling_time": 10,
     "psus": [
-        {"name": "psu1",
-         "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x51, "presentbit": 0, "okval": 0},
-         "device": [
-             {"id": "psu1pmbus", "name": "wb_dps550", "bus": 7, "loc": 0x58, "attr": "hwmon"},
-             {"id": "psu1frue2", "name": "wb_24c02", "bus": 7, "loc": 0x50, "attr": "eeprom"},
-         ],
-         },
-        {"name": "psu2",
-         "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x51, "presentbit": 4, "okval": 0},
-         "device": [
-             {"id": "psu2pmbus", "name": "wb_dps550", "bus": 8, "loc": 0x5b, "attr": "hwmon"},
-             {"id": "psu2frue2", "name": "wb_24c02", "bus": 8, "loc": 0x53, "attr": "eeprom"},
-         ],
-         },
+        {
+            "name": "psu1",
+            "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x51, "presentbit": 0, "okval": 0},
+            "device": [
+                {"id": "psu1pmbus", "name": "wb_dps550", "bus": 7, "loc": 0x58, "attr": "hwmon"},
+                {"id": "psu1frue2", "name": "wb_24c02", "bus": 7, "loc": 0x50, "attr": "eeprom"},
+            ],
+        },
+        {
+            "name": "psu2",
+            "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x51, "presentbit": 4, "okval": 0},
+            "device": [
+                {"id": "psu2pmbus", "name": "wb_dps550", "bus": 8, "loc": 0x5b, "attr": "hwmon"},
+                {"id": "psu2frue2", "name": "wb_24c02", "bus": 8, "loc": 0x53, "attr": "eeprom"},
+            ],
+        },
     ],
     "fans": [
-        {"name": "fan1",
-         "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 0, "okval": 0},
-         "device": [
-             {"id": "fan1frue2", "name": "wb_24c02", "bus": 3, "loc": 0x53, "attr": "eeprom"},
-         ],
-         },
-        {"name": "fan2",
-         "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 1, "okval": 0},
-         "device": [
-             {"id": "fan2frue2", "name": "wb_24c02", "bus": 4, "loc": 0x53, "attr": "eeprom"},
-         ],
-         },
-        {"name": "fan3",
-         "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 2, "okval": 0},
-         "device": [
-             {"id": "fan2frue2", "name": "wb_24c02", "bus": 5, "loc": 0x53, "attr": "eeprom"},
-         ],
-         },
+        {
+            "name": "fan1",
+            "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 0, "okval": 0},
+            "device": [
+                {"id": "fan1frue2", "name": "wb_24c02", "bus": 3, "loc": 0x53, "attr": "eeprom"},
+            ],
+        },
+        {
+            "name": "fan2",
+            "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 1, "okval": 0},
+            "device": [
+                {"id": "fan2frue2", "name": "wb_24c02", "bus": 4, "loc": 0x53, "attr": "eeprom"},
+            ],
+        },
+        {
+            "name": "fan3",
+            "present": {"gettype": "i2c", "bus": 2, "loc": 0x37, "offset": 0x30, "presentbit": 2, "okval": 0},
+            "device": [
+                {"id": "fan2frue2", "name": "wb_24c02", "bus": 5, "loc": 0x53, "attr": "eeprom"},
+            ],
+        },
     ],
     "others": [
-        {"name": "eeprom",
-         "device": [
-             {"id": "eeprom_1", "name": "wb_24c02", "bus": 2, "loc": 0x57, "attr": "eeprom"},
-         ],
-         },
-        {"name": "lm75",
-         "device": [
-             {"id": "lm75_1", "name": "wb_lm75", "bus": 2, "loc": 0x48, "attr": "hwmon"},
-             {"id": "lm75_2", "name": "wb_lm75", "bus": 2, "loc": 0x49, "attr": "hwmon"},
-             {"id": "lm75_3", "name": "wb_lm75", "bus": 2, "loc": 0x4a, "attr": "hwmon"},
-         ],
-         },
+        {
+            "name": "eeprom",
+            "device": [
+                {"id": "eeprom_1", "name": "wb_24c02", "bus": 2, "loc": 0x57, "attr": "eeprom"},
+            ],
+        },
+        {
+            "name": "lm75",
+            "device": [
+                {"id": "lm75_1", "name": "wb_lm75", "bus": 2, "loc": 0x48, "attr": "hwmon"},
+                {"id": "lm75_2", "name": "wb_lm75", "bus": 2, "loc": 0x49, "attr": "hwmon"},
+                {"id": "lm75_3", "name": "wb_lm75", "bus": 2, "loc": 0x4a, "attr": "hwmon"},
+            ],
+        },
     ],
 }
 
@@ -208,7 +215,7 @@ MANUINFO_CONF = {
     "cpld1_desc": {
         "key": "Description",
         "parent": "cpld1",
-        "config": "MAC_CPLD-A",
+        "config": "MAC_CPLDA",
         "arrt_index": 3,
     },
     "cpld1_version": {
@@ -244,7 +251,7 @@ MANUINFO_CONF = {
     "cpld2_desc": {
         "key": "Description",
         "parent": "cpld2",
-        "config": "MAC_CPLD-B",
+        "config": "MAC_CPLDB",
         "arrt_index": 3,
     },
     "cpld2_version": {
@@ -280,7 +287,7 @@ MANUINFO_CONF = {
     "cpld3_desc": {
         "key": "Description",
         "parent": "cpld3",
-        "config": "CONNECT_CPLD-A",
+        "config": "CONNECT_CPLDA",
         "arrt_index": 3,
     },
     "cpld3_version": {
@@ -559,7 +566,12 @@ PMON_SYSLOG_STATUS = {
         ],
         "nochangedmsgflag": 1,
         "nochangedmsgtime": 60,
-        "noprintfirsttimeflag": 0
+        "noprintfirsttimeflag": 0,
+        "alias": {
+            "fan1": "FAN1",
+            "fan2": "FAN2",
+            "fan3": "FAN3"
+        }
     },
     "psus": {
         "present": {"path": ["/sys/wb_plat/psu/*/present"], "ABSENT": 0},
@@ -569,7 +581,11 @@ PMON_SYSLOG_STATUS = {
         ],
         "nochangedmsgflag": 1,
         "nochangedmsgtime": 60,
-        "noprintfirsttimeflag": 0
+        "noprintfirsttimeflag": 0,
+        "alias": {
+            "psu1": "PSU1",
+            "psu2": "PSU2"
+        }
     }
 }
 
@@ -691,7 +707,6 @@ DRIVERLISTS = [
     {"name": "wb_platform_i2c_dev", "delay": 0},
     {"name": "wb_platform_i2c_dev_device", "delay": 0},
     {"name": "wb_i2c_dev", "delay": 0},
-    {"name": "wb_cpld", "delay": 0},
     {"name": "wb_pmbus_core", "delay": 0},
     {"name": "wb_csu550", "delay": 0},
     {"name": "wb_isl68137", "delay": 0},
@@ -705,6 +720,7 @@ DRIVERLISTS = [
     {"name": "plat_fan", "delay": 0},
     {"name": "plat_psu", "delay": 0},
     {"name": "plat_sff", "delay": 0},
+    {"name": "plat_sensor", "delay": 0},
 ]
 
 DEVICE = [
@@ -712,13 +728,6 @@ DEVICE = [
     {"name": "wb_lm75", "bus": 2, "loc": 0x49},
     {"name": "wb_lm75", "bus": 2, "loc": 0x4a},
     {"name": "wb_24c02", "bus": 2, "loc": 0x57},
-    {"name": "wb_cpld", "bus": 0, "loc": 0x0d},
-    {"name": "wb_cpld", "bus": 0, "loc": 0x32},
-    {"name": "wb_cpld", "bus": 1, "loc": 0x34},
-    {"name": "wb_cpld", "bus": 1, "loc": 0x36},
-    {"name": "wb_cpld", "bus": 2, "loc": 0x33},
-    {"name": "wb_cpld", "bus": 2, "loc": 0x35},
-    {"name": "wb_cpld", "bus": 2, "loc": 0x37},
     {"name": "wb_24c02", "bus": 3, "loc": 0x53},
     {"name": "wb_24c02", "bus": 4, "loc": 0x53},
     {"name": "wb_24c02", "bus": 5, "loc": 0x53},
@@ -740,10 +749,12 @@ INIT_PARAM_PRE = [
 ]
 INIT_COMMAND_PRE = []
 
-INIT_PARAM = [
-    {"loc": "1-0034/sfp_enable", "value": "01"},
-    {"loc": "2-0035/sfp_enable2", "value": "ff"},
-    {"loc": "2-0033/mac_led", "value": "ff"},
+INIT_PARAM = []
+
+INIT_COMMAND = [
+    "i2cset -y -f 1 0x34 0xa1 0x01",  #sfp_enable
+    "i2cset -y -f 2 0x35 0xa0 0xff",  #sfp_enable2
+    "i2cset -y -f 2 0x33 0xa0 0xff",  #mac_led
 ]
 
 WARM_UPGRADE_PARAM = {}
@@ -792,7 +803,7 @@ UPGRADE_SUMMARY = {
 
         "TEST": {
             "cpld": [
-                {"chain": 1, "file": "/etc/.upgrade_test/ra_b6910_64c_cpld_test_header.vme", "display_name": "CPLD"},
+                {"chain": 1, "file": "/etc/.upgrade_test/cpld_test_header.vme", "display_name": "CPLD"},
             ],
         },
     },

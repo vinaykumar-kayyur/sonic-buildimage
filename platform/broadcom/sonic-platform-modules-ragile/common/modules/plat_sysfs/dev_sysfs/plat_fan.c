@@ -210,40 +210,22 @@ static struct attribute_group motor_attr_group = {
 
 static void fanindex_single_motor_remove_kobj_and_attrs(struct fan_obj_t * curr_fan, unsigned int motor_index)
 {
+    struct motor_obj_t *curr_motor; /* point to motor0 motor1...*/
 
-    struct motor_obj_t * curr_motor; /* point to motor0 motor1...*/
-
-    if (curr_fan == NULL) {
-        FAN_ERR("fan remove attrs failed, curr_fan is NULL.\n");
-        return ;
-    }
-
-    if (motor_index + 1 > curr_fan->motor_number) {
-        FAN_ERR("params error. motor index:%d.\n", motor_index);
-        return ;
-    }
     curr_motor = &curr_fan->motor[motor_index];
-
     if (curr_motor->obj) {
         sysfs_remove_group(&curr_motor->obj->kobj, &motor_attr_group);
         wb_plat_kobject_delete(&curr_motor->obj);
+        FAN_DBG("delete fan:%d motor%d.\n", curr_fan->obj->index, motor_index);
     }
-
-    FAN_DBG("delete fan:%d motor%d.\n", curr_fan->obj->index, motor_index);
-    return ;
+    return;
 }
 
 static int fanindex_single_motor_create_kobj_and_attrs(struct fan_obj_t * curr_fan, unsigned int motor_index)
 {
-    char name[8];
-    struct motor_obj_t * curr_motor; /* point to motor0 motor1...*/
+    char name[DIR_NAME_MAX_LEN];
+    struct motor_obj_t *curr_motor; /* point to motor0 motor1...*/
 
-    check_p(curr_fan);
-
-    if (motor_index + 1 > curr_fan->motor_number) {
-        FAN_ERR("motor number = %d, motor%d error.\n", curr_fan->motor_number, motor_index);
-        return -EINVAL;
-    }
     FAN_DBG("create fan_index:%d, motor%d ...\n", curr_fan->obj->index, motor_index);
 
     curr_motor = &curr_fan->motor[motor_index];
@@ -268,22 +250,20 @@ static int fanindex_motor_create_kobj_and_attrs(struct fan_obj_t * curr_fan, int
 {
     int motor_index, i;
 
-    check_p(curr_fan);
-
     curr_fan->motor = kzalloc(sizeof(struct motor_obj_t) * motor_num, GFP_KERNEL);
     if (!curr_fan->motor) {
         FAN_ERR("kzalloc motor error, fan index = %d, motor number = %d.\n", curr_fan->obj->index, motor_num);
         return -ENOMEM;
     }
     curr_fan->motor_number = motor_num;
-    for(motor_index = 0; motor_index < motor_num; motor_index++) {
-        if(fanindex_single_motor_create_kobj_and_attrs(curr_fan, motor_index) != 0 ) {
+    for (motor_index = 0; motor_index < motor_num; motor_index++) {
+        if (fanindex_single_motor_create_kobj_and_attrs(curr_fan, motor_index) != 0) {
             goto motor_error;
         }
     }
     return 0;
 motor_error:
-    for(i = 0; i < motor_index; i++) {
+    for(i = motor_index - 1; i >= 0; i--) {
         fanindex_single_motor_remove_kobj_and_attrs(curr_fan, i);
     }
     if(curr_fan->motor) {
@@ -293,26 +273,21 @@ motor_error:
     return -EBADRQC;
 }
 
-static void fanindex_motor_remove_kobj_and_attrs(struct fan_obj_t * curr_fan, int motor_num)
+static void fanindex_motor_remove_kobj_and_attrs(struct fan_obj_t *curr_fan, int motor_num)
 {
-    unsigned int motor_index;
+    int motor_index;
 
-    if (motor_num < 0 || curr_fan == NULL) {
-        FAN_ERR("params error.motor number = %d \n", motor_num);
-        return ;
-    }
-
-    for(motor_index = 0; motor_index < motor_num; motor_index++) {
+    for (motor_index = motor_num - 1; motor_index >= 0; motor_index--) {
         fanindex_single_motor_remove_kobj_and_attrs(curr_fan, motor_index);
     }
-    return ;
+    return;
 }
 
 static int fan_motor_create(void)
 {
     int fan_num, motor_num;
     unsigned int fan_index, i;
-    struct fan_obj_t * curr_fan;     /* point to fan1 fan2...*/
+    struct fan_obj_t *curr_fan;     /* point to fan1 fan2...*/
 
     check_p(g_drv->get_dev_number);
 
@@ -323,15 +298,15 @@ static int fan_motor_create(void)
     }
 
     fan_num = g_fan.fan_number;
-    for(fan_index = 1; fan_index <= fan_num; fan_index++) {
+    for (fan_index = 1; fan_index <= fan_num; fan_index++) {
         curr_fan = &g_fan.fan[fan_index - 1];
-        if(fanindex_motor_create_kobj_and_attrs(curr_fan, motor_num) != 0) {
+        if (fanindex_motor_create_kobj_and_attrs(curr_fan, motor_num) != 0) {
             goto error;
         }
     }
     return 0;
 error:
-    for(i = 1; i < fan_index; i++) {
+    for (i = fan_index - 1; i > 0; i--) {
         curr_fan = &g_fan.fan[i - 1];
         motor_num = curr_fan->motor_number;
         fanindex_motor_remove_kobj_and_attrs(curr_fan, motor_num);
@@ -342,49 +317,41 @@ error:
 static void fan_motor_remove(void)
 {
     unsigned int fan_index;
-    struct fan_obj_t * curr_fan;
+    struct fan_obj_t *curr_fan;
+
     if (g_fan.fan) {
-       for(fan_index = 1; fan_index <= g_fan.fan_number; fan_index++) {
+       for (fan_index = g_fan.fan_number; fan_index > 0; fan_index--) {
            curr_fan = &g_fan.fan[fan_index - 1];
            if (curr_fan->motor) {
-               fanindex_motor_remove_kobj_and_attrs(curr_fan,curr_fan->motor_number);
+               fanindex_motor_remove_kobj_and_attrs(curr_fan, curr_fan->motor_number);
                kfree(curr_fan->motor);
                curr_fan->motor = NULL;
                curr_fan->motor_number = 0;
            }
        }
     }
-    return ;
+    return;
 }
 
-static int fan_sub_single_remove_kobj_and_attrs(unsigned int index)
+static void fan_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
-    struct fan_obj_t * curr_fan;
+    struct fan_obj_t *curr_fan;
 
-    if (index > g_fan.fan_number) {
-        FAN_ERR("fan number = %d, fan%d error.\n", g_fan.fan_number, index);
-        return -EINVAL;
-    }
-    curr_fan = &g_fan.fan[index-1];
+    curr_fan = &g_fan.fan[index - 1];
     if (curr_fan->obj) {
         sysfs_remove_group(&curr_fan->obj->kobj, &fan_attr_group);
         wb_plat_kobject_delete(&curr_fan->obj);
+        FAN_DBG("delete fan%d.\n", index);
     }
-
-    FAN_DBG("delete fan%d.\n", index);
-    return 0;
+    return;
 }
 
 static int fan_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned int index)
 {
-    char name[8];
-    struct fan_obj_t * curr_fan;
+    char name[DIR_NAME_MAX_LEN];
+    struct fan_obj_t *curr_fan;
 
-    if (index > g_fan.fan_number) {
-        FAN_ERR("fan number = %d, fan%d error.\n", g_fan.fan_number, index);
-        return -EINVAL;
-    }
-    curr_fan = &g_fan.fan[index-1];
+    curr_fan = &g_fan.fan[index - 1];
     FAN_DBG("create fan%d ...\n", index);
     mem_clear(name, sizeof(name));
     snprintf(name, sizeof(name), "fan%d", index);
@@ -407,27 +374,23 @@ static int fan_sub_create_kobj_and_attrs(struct kobject *parent, int fan_num)
 {
     unsigned int fan_index, i;
 
-    if(fan_num < 0) {
-        FAN_ERR("fan number = %d error.\n", fan_num);
-        return -EINVAL;
-    }
     g_fan.fan = kzalloc(sizeof(struct fan_obj_t) * fan_num, GFP_KERNEL);
     if (!g_fan.fan) {
         FAN_ERR("kzalloc fan.fan error, fan number = %d.\n", fan_num);
         return -ENOMEM;
     }
 
-    for(fan_index = 1; fan_index <= fan_num; fan_index++) {
+    for (fan_index = 1; fan_index <= fan_num; fan_index++) {
         if(fan_sub_single_create_kobj_and_attrs(parent, fan_index) != 0 ) {
             goto error;
         }
     }
     return 0;
 error:
-    for(i = 1; i < fan_index; i++) {
+    for (i = fan_index - 1; i > 0; i--) {
         fan_sub_single_remove_kobj_and_attrs(i);
     }
-    if(g_fan.fan) {
+    if (g_fan.fan) {
         kfree(g_fan.fan);
         g_fan.fan = NULL;
     }
@@ -454,30 +417,30 @@ static void fan_sub_remove(void)
     unsigned int fan_index;
 
     if (g_fan.fan) {
-       for (fan_index = 1; fan_index <= g_fan.fan_number; fan_index++) {
-           if (g_fan.fan[fan_index-1].obj) {
-               fan_sub_single_remove_kobj_and_attrs(fan_index);
-           }
+       for (fan_index = g_fan.fan_number; fan_index > 0; fan_index--) {
+           fan_sub_single_remove_kobj_and_attrs(fan_index);
        }
        kfree(g_fan.fan);
     }
     mem_clear(&g_fan, sizeof(struct fan_t));
-    return ;
+    return;
 }
 
 static int fan_root_create(void)
 {
     g_fan_obj = wb_plat_kobject_create("fan", NULL);
-    if (!g_fan_obj)
+    if (!g_fan_obj) {
+        FAN_ERR("wb_plat_kobject_create fan error!\n");
         return -ENOMEM;
+    }
 
     if (sysfs_create_group(&g_fan_obj->kobj, &fan_root_attr_group) != 0) {
         wb_plat_kobject_delete(&g_fan_obj);
         FAN_ERR("create fan dir attrs error!\n");
         return -EBADRQC;
     }
+    FAN_DBG("wb_plat_kobject_create fan directory and attribute success.\n");
     return 0;
-
 }
 
 static void fan_root_remove(void)
@@ -485,9 +448,10 @@ static void fan_root_remove(void)
     if (g_fan_obj) {
         sysfs_remove_group(&g_fan_obj->kobj, &fan_root_attr_group);
         wb_plat_kobject_delete(&g_fan_obj);
+        FAN_DBG("delete fan root success\n");
     }
 
-    return ;
+    return;
 }
 
 static int fan_init(void)

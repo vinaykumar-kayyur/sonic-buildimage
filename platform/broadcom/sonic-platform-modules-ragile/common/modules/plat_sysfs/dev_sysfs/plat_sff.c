@@ -88,20 +88,21 @@ static struct attribute_group sff_attr_group = {
 
 static int sff_sub_single_create_attrs(unsigned int index)
 {
-    struct sff_obj_t * curr_sff;
+    struct sff_obj_t *curr_sff;
 
     curr_sff = &g_sff.sff[index-1];
     if (sysfs_create_group(&curr_sff->sff_obj->kobj, &sff_attr_group) != 0) {
+        SFF_ERR("create sff%d dir attrs error!\n", index);
         wb_plat_kobject_delete(&curr_sff->sff_obj);
         return -EBADRQC;
     }
-
+    SFF_DBG("create sff%d dir attrs ok!\n", index);
     return 0;
 }
 
 static int sff_sub_single_create_kobj(struct kobject *parent, unsigned int index)
 {
-    struct sff_obj_t * curr_sff;
+    struct sff_obj_t *curr_sff;
     char sff_dir_name[DIR_NAME_MAX_LEN];
     int ret;
 
@@ -112,7 +113,7 @@ static int sff_sub_single_create_kobj(struct kobject *parent, unsigned int index
         return -ENOSYS;
     }
 
-    curr_sff = &g_sff.sff[index-1];
+    curr_sff = &g_sff.sff[index - 1];
 
     curr_sff->sff_obj = wb_plat_kobject_create(sff_dir_name, parent);
     if (!curr_sff->sff_obj) {
@@ -128,9 +129,9 @@ static int sff_sub_single_create_kobj(struct kobject *parent, unsigned int index
 
 static void sff_sub_single_remove_kobj_and_attrs(unsigned int index)
 {
-    struct sff_obj_t * curr_sff;
+    struct sff_obj_t *curr_sff;
 
-    curr_sff = &g_sff.sff[index-1];
+    curr_sff = &g_sff.sff[index - 1];
     /* remove sff dir and attr */
     if (curr_sff->sff_obj) {
         SFF_DBG("delete sff%d attrs.\n", curr_sff->sff_obj->index);
@@ -157,7 +158,6 @@ static int sff_sub_single_create_kobj_and_attrs(struct kobject *parent, unsigned
         SFF_ERR("sff index:%d, create sff attr error.\n", index);
         return ret;
     }
-
     return 0;
 }
 
@@ -178,7 +178,7 @@ static int sff_sub_create_kobj_and_attrs(struct kobject *parent, int sff_num)
     }
     return 0;
 error:
-    for (i = 1; i < sff_index; i++) {
+    for (i = sff_index - 1; i > 0; i--) {
         sff_sub_single_remove_kobj_and_attrs(i);
     }
     if (g_sff.sff) {
@@ -210,7 +210,7 @@ static void sff_sub_remove(void)
     unsigned int sff_index;
 
     if (g_sff.sff) {
-       for (sff_index = 1; sff_index <= g_sff.sff_number; sff_index++) {
+       for (sff_index = g_sff.sff_number; sff_index > 0; sff_index--) {
            sff_sub_single_remove_kobj_and_attrs(sff_index);
        }
        kfree(g_sff.sff);
@@ -223,6 +223,7 @@ static int sff_xcvr_create(void)
 {
     g_sff_obj = wb_plat_kobject_create(SFF_SYSFS_NAME, NULL);
     if (!g_sff_obj) {
+        SFF_ERR("wb_plat_kobject_create sff error!\n");
         return -ENOMEM;
     }
 
@@ -232,6 +233,7 @@ static int sff_xcvr_create(void)
         SFF_ERR("create sff dir attrs error!\n");
         return -EBADRQC;
     }
+    SFF_DBG("wb_plat_kobject_create sff directory and attribute success.\n");
     return 0;
 }
 
@@ -240,9 +242,10 @@ static void sff_xcvr_remove(void)
     if (g_sff_obj) {
         sysfs_remove_group(&g_sff_obj->kobj, &sff_xcvr_attr_group);
         wb_plat_kobject_delete(&g_sff_obj);
+        SFF_DBG("delete sff root success\n");
     }
 
-    return ;
+    return;
 }
 
 static int wb_sff_init(void)

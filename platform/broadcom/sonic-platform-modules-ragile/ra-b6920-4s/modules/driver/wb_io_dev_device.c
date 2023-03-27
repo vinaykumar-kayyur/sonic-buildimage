@@ -33,14 +33,14 @@ static io_dev_device_t io_dev_device_data0 = {
 
 static io_dev_device_t io_dev_device_data1 = {
     .io_dev_name = "cpld1",
-    .io_base = 0x900,
+    .io_base = 0xb00,
     .io_len = 0x100,
     .indirect_addr = 0,
 };
 
 static io_dev_device_t io_dev_device_data2 = {
     .io_dev_name = "cpld2",
-    .io_base = 0xb00,
+    .io_base = 0x900,
     .io_len = 0x100,
     .indirect_addr = 0,
 };

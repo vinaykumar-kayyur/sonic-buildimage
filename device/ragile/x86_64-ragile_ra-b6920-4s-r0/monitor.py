@@ -133,7 +133,7 @@ class checktype():
     def getValue(location, bit, data_type, coefficient=1, addend=0):
         try:
             value_t = get_pmc_register(location)
-            if value_t.startswith("ERR"):
+            if value_t.startswith("ERR") or value_t.startswith("NA"):
                 return value_t
             if data_type == 1:
                 return float('%.1f' % ((float(value_t) / 1000) + addend))
@@ -282,6 +282,15 @@ class status():
                     prob_t.update(psuval)
                     continue
 
+                if ret.get("name") == "slot" and ret.get('e2type') == 'fru':
+                    slotval = checktype.getslotfruValue( ret["location"])
+                    if isinstance(slotval, str) and slotval.startswith("ERR"):
+                        prob_t['errcode'] = -1
+                        prob_t['errmsg'] = slotval
+                        break
+                    prob_t.update(slotval)
+                    continue
+
                 if ret.get("gettype") == "config":
                     prob_t[ret["name"]] = ret["value"]
                     continue
@@ -375,6 +384,13 @@ class status():
         _filename = status.getFileName()
        # _filename = "/usr/local/bin/" + status.getFileName()
         _tagname = "psu"
+        status.getETValue(ret, _filename, _tagname)
+
+    @staticmethod
+    def checkSlot(ret):
+        _filename = status.getFileName()
+       # _filename = "/usr/local/bin/" + status.getFileName()
+        _tagname = "slot"
         status.getETValue(ret, _filename, _tagname)
 
     @staticmethod

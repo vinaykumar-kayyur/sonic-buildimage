@@ -157,7 +157,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         #The sff number starts from 1
-        presence_path = "/sys/rg_plat/sff/sff%d/present" % (port_num + 1)
+        presence_path = "/sys/wb_plat/sff/sff%d/present" % (port_num + 1)
 
         try:
             with open(presence_path, "rb") as data:

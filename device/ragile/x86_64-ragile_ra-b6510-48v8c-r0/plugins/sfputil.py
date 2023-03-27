@@ -156,7 +156,7 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        presence_path = "/sys/rg_plat/sff/sff%d/present" % port_num
+        presence_path = "/sys/wb_plat/sff/sff%d/present" % port_num
 
         try:
             with open(presence_path, "rb") as data:
