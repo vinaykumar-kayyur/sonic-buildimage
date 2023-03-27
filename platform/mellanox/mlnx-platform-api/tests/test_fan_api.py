@@ -131,6 +131,8 @@ class TestFan:
         assert fan.get_direction() == Fan.FAN_DIRECTION_INTAKE
         mock_read_int.return_value = FAN_DIR_VALUE_EXHAUST
         assert fan.get_direction() == Fan.FAN_DIRECTION_EXHAUST
+        mock_read_int.return_value = -1 # invalid value
+        assert fan.get_direction() == Fan.FAN_DIRECTION_NOT_APPLICABLE
 
     def test_psu_fan_set_speed(self):
         psu = Psu(0)
