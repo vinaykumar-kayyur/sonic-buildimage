@@ -165,6 +165,7 @@ class SsdUtil(SsdBase):
             try:
                 self.health = 100 - (float(avg_erase_count) * 100 / float(nand_endurance))
             except (ValueError, ZeroDivisionError):
+                # Invalid avg_erase_count or nand_endurance.
                 pass
 
     def fetch_vendor_ssd_info(self, diskdev, model):
@@ -180,9 +181,9 @@ class SsdUtil(SsdBase):
             column_list = line.split()
             if line == '':
                 continue
-            if column_list[0] == partition and column_list[2] == filesystem:
+            if column_list[0] == str(partition) and column_list[2] == filesystem:
                 if column_list[5].split(',')[0][1:] == "ro":
-                    return partition
+                    return str(partition)
                 else:
                     return NOT_AVAILABLE
 
