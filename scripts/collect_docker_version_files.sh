@@ -39,6 +39,7 @@ docker create --name $DOCKER_CONTAINER --entrypoint /bin/bash $DOCKER_IMAGE_TAG
 docker cp -L $DOCKER_CONTAINER:/etc/os-release $TARGET_VERSIONS_PATH/
 docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/pre-versions $TARGET_VERSIONS_PATH/
 docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/post-versions $TARGET_VERSIONS_PATH/
+docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/log ${BUILD_LOG_PATH}/
 
 # Save the cache contents from docker build
 IMAGENAME=${DOCKER_IMAGE_TAG} j2 files/build_templates/build_docker_cache.j2 > ${DOCKER_FILE}.cleanup
@@ -51,16 +52,7 @@ docker cp -L $DOCKER_CONTAINER:/usr/local/share/buildinfo/log ${BUILD_LOG_PATH}/
 
 # Save the cache contents from docker build
 LOCAL_CACHE_FILE=target/vcache/${DOCKER_IMAGE_NAME}/cache.tgz
-CACHE_ENCODE_FILE=${DOCKER_PATH}/vcache/cache.base64
-sleep 1; sync ${CACHE_ENCODE_FILE}
-
-# Decode the cache content into gz format
 SRC_VERSION_PATH=files/build/versions
-if [[ -e ${CACHE_ENCODE_FILE} ]]; then
-
-	cat ${CACHE_ENCODE_FILE} | base64 -d  >${LOCAL_CACHE_FILE}
-	rm -f ${CACHE_ENCODE_FILE}
-fi
 
 # Version package cache
 IMAGE_DBGS_NAME=${DOCKER_IMAGE_NAME//-/_}_image_dbgs
@@ -70,10 +62,10 @@ else
 	GLOBAL_CACHE_DIR=/vcache/${DOCKER_IMAGE_NAME}
 fi
 
-if [[ ! -z ${SONIC_VERSION_CACHE} && -e ${CACHE_ENCODE_FILE} ]]; then
+if [[ ! -z ${SONIC_VERSION_CACHE} ]]; then
 
 	# Select version files for SHA calculation
-	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
+	VERSION_FILES="${SRC_VERSION_PATH}/dockers/${DOCKER_IMAGE_NAME/-dbg/}/versions-*-${DISTRO}-${ARCH} ${SRC_VERSION_PATH}/default/versions-*"
 	DEP_FILES="${DOCKER_PATH}/Dockerfile.j2"
 	if [[ ${DOCKER_IMAGE_NAME} =~ '-dbg' ]]; then
 		DEP_FILES="${DEP_FILES} build_debug_docker_j2.sh"
