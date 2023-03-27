@@ -298,14 +298,16 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'speed_tolerance': '20',
+            'direction': 'intake'
         },
         'FAN_INFO|fan2': {
             'presence': 'False',
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'speed_tolerance': '20',
+
         },
         'FAN_INFO|fan3': {
             'presence': 'True',
@@ -320,6 +322,14 @@ def test_hardware_checker():
             'speed': '20',
             'speed_target': '60',
             'speed_tolerance': '20'
+        },
+        'FAN_INFO|fan5': {
+            'presence': 'True',
+            'status': 'True',
+            'speed': '60',
+            'speed_target': '60',
+            'speed_tolerance': '20',
+            'direction': 'exhaust'
         }
     })
 
@@ -414,6 +424,10 @@ def test_hardware_checker():
 
     assert 'fan4' in checker._info
     assert checker._info['fan4'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+
+    assert 'fan5' in checker._info
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction is wrong, expect:intake, got:exhaust'
 
     assert 'PSU 1' in checker._info
     assert checker._info['PSU 1'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK

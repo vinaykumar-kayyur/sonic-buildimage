@@ -82,6 +82,7 @@ class HardwareChecker(HealthChecker):
             self.set_object_not_ok('Fan', 'Fan', 'Failed to get fan information')
             return
 
+        expect_fan_direction = None
         for key in natsorted(keys):
             key_list = key.split('|')
             if len(key_list) != 2:  # error data in DB, log it and ignore
@@ -131,6 +132,18 @@ class HardwareChecker(HealthChecker):
                                                    speed,
                                                    speed_target,
                                                    speed_tolerance))
+                        continue
+
+            if not self._ignore_check(config.ignore_devices, 'fan', name, 'direction'):
+                direction = data_dict.get('direction', 'N/A')
+                # ignore fan whose direction is not available to avoid too many false alarms
+                if direction != 'N/A':
+                    if not expect_fan_direction:
+                        # initialize the expect fan direction
+                        expect_fan_direction = direction
+                    elif direction != expect_fan_direction:
+                        self.set_object_not_ok('Fan', name,
+                                               f'{name} direction is wrong, expect:{expect_fan_direction}, got:{direction}')
                         continue
 
             status = data_dict.get('status', 'false')
