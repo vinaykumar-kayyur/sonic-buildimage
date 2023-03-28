@@ -892,15 +892,22 @@ INIT_PARAM_PRE = [
     {"loc": "7-0064/hwmon/hwmon*/avs0_vout_max", "value": "900000"},
     {"loc": "7-0064/hwmon/hwmon*/avs0_vout_min", "value": "750000"},
 ]
-INIT_COMMAND_PRE = []
+INIT_COMMAND_PRE = [
+    "i2cset -y -f 6 0x0d 0x91 0x48",
+    "i2cset -y -f 6 0x0d 0x92 0x01",  # MAC_PWR_EN
+    "i2cset -y -f 6 0x0d 0x94 0x01",  # SFF_PWR_EN
+    "i2cset -y -f 6 0x0d 0xbf 0x01",  # enbale tty_console monitor
+]
 
 INIT_PARAM = []
 
 INIT_COMMAND = [
-    "i2cset -y -f 6 0x0d 0x91 0x48",
-    "i2cset -y -f 6 0x0d 0x92 0x01",  # MAC_PWR_EN
-    "i2cset -y -f 6 0x0d 0x94 0x01",  # SFF_PWR_EN
-    "i2cset -y -f 6 0x0d 0xbf 0x01"  # enbale tty_console monitor
+    "i2cset -y -f 8 0x30 0x60 0x00",  # enable txdis[1~8]
+    "i2cset -y -f 8 0x30 0x61 0x00",  # enable txdis[9~16]
+    "i2cset -y -f 8 0x30 0x62 0x00",  # enable txdis[17~24]
+    "i2cset -y -f 8 0x31 0x60 0x00",  # enable txdis[24~32]
+    "i2cset -y -f 8 0x31 0x61 0x00",  # enable txdis[33~40]
+    "i2cset -y -f 8 0x31 0x62 0x00",  # enable txdis[41~48]
 ]
 
 REBOOT_CAUSE_PARA = [

@@ -747,14 +747,23 @@ INIT_PARAM_PRE = [
     {"loc": "2-0060/hwmon/hwmon*/avs0_vout_max", "value": "960000"},
     {"loc": "2-0060/hwmon/hwmon*/avs0_vout_min", "value": "840000"},
 ]
-INIT_COMMAND_PRE = []
+INIT_COMMAND_PRE = [
+    "i2cset -y -f 1 0x34 0xa1 0x01",  # sfp_enable
+]
 
 INIT_PARAM = []
 
 INIT_COMMAND = [
-    "i2cset -y -f 1 0x34 0xa1 0x01",  #sfp_enable
-    "i2cset -y -f 2 0x35 0xa0 0xff",  #sfp_enable2
-    "i2cset -y -f 2 0x33 0xa0 0xff",  #mac_led
+    "i2cset -y -f 2 0x35 0xa0 0xff",  # sfp_enable2
+    "i2cset -y -f 2 0x33 0xa0 0xff",  # mac_led
+    "i2cset -y -f 1 0x34 0xa6 0x0",
+    "i2cset -y -f 1 0x34 0xa7 0x0",
+    "i2cset -y -f 1 0x34 0xa8 0x0",
+    "i2cset -y -f 1 0x34 0xa9 0x0",
+    "i2cset -y -f 1 0x36 0xa6 0x0",
+    "i2cset -y -f 1 0x36 0xa7 0x0",
+    "i2cset -y -f 1 0x36 0xa8 0x0",
+    "i2cset -y -f 1 0x36 0xa9 0x0",
 ]
 
 WARM_UPGRADE_PARAM = {}

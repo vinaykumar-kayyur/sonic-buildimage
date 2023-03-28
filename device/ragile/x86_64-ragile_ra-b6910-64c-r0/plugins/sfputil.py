@@ -224,7 +224,7 @@ class SfpUtil(SfpUtilBase):
                     if -50 <= result <= 200:
                         temperature_valid_flag = True
                         hightest_temperature = max(hightest_temperature, result)
-            except BaseException:
+            except Exception:
                 print(traceback.format_exc())
 
         # all port not presence

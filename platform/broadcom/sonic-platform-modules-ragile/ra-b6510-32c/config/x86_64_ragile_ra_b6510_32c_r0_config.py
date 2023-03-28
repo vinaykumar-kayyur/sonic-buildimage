@@ -898,13 +898,13 @@ INIT_PARAM_PRE = [
     {"loc": "7-0064/hwmon/hwmon*/avs0_vout_max", "value": "900000"},
     {"loc": "7-0064/hwmon/hwmon*/avs0_vout_min", "value": "750000"},
 ]
-INIT_COMMAND_PRE = []
+INIT_COMMAND_PRE = [
+    "dfd_debug io_wr 0x994 0x01", # SFF_PWR_EN
+]
 
 INIT_PARAM = []
 
-INIT_COMMAND = [
-    "dfd_debug io_wr 0x994 0x01",
-]
+INIT_COMMAND = []
 
 REBOOT_CAUSE_PARA = [
     {

@@ -53,7 +53,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 file_path.seek(offset)
                 read_buf = file_path.read(num_bytes)
-            except:
+            except Exception:
                 attempts += 1
                 time.sleep(0.05)
             return True, read_buf
@@ -86,7 +86,7 @@ class SfpUtil(SfpUtilBase):
             return 0
 
     def _get_port_eeprom_path(self, port_num, devid):
-        sysfs_i2c_adapter_base_path = "/sys/class/i2c-adapter"
+        sysfs_i2c_adapter_base_path = ""
 
         if port_num in self.port_to_eeprom_mapping:
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[port_num]
@@ -223,7 +223,7 @@ class SfpUtil(SfpUtilBase):
                     if -50 <= result <= 200:
                         temperature_valid_flag = True
                         hightest_temperature = max(hightest_temperature, result)
-            except BaseException:
+            except Exception:
                 print(traceback.format_exc())
 
         # all port not presence

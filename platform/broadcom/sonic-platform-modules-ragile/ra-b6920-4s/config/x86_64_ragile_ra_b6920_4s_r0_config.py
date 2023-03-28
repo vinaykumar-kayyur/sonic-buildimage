@@ -1335,12 +1335,13 @@ INIT_PARAM_PRE = [
     {"loc": "30-0064/hwmon/hwmon*/avs1_vout_min", "value": "750000"},
 ]
 
-INIT_COMMAND_PRE = []
+INIT_COMMAND_PRE = [
+    "dfd_debug io_wr 0xb19 0xff",
+]
 
 INIT_PARAM = []
 
 INIT_COMMAND = [
-    "dfd_debug io_wr 0xb19 0xff",
     "i2cset -y -f 3 0x30 0xa0 0xff",
     "i2cset -y -f 3 0x31 0xa0 0xff",
     "i2cset -y -f 4 0x30 0xa0 0xff",
