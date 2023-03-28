@@ -24,7 +24,7 @@
 bcm_device:
   0:
     global:
-      pktio_mode: 1
+      pktio_mode: 0
       skip_protocol_default_entries: 1
       uft_mode: 3
       l3_alpm_template: 1
