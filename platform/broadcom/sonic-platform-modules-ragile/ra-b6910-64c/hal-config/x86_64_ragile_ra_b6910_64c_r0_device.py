@@ -40,7 +40,7 @@ class threshold:
     PSU_TEMP_MAX = 60 * 1000
 
     PSU_FAN_SPEED_MIN = 150
-    PSU_FAN_SPEED_MAX = 12000
+    PSU_FAN_SPEED_MAX = 18000
 
     PSU_FAN_SPEED_TOLERANCE = 40
 
@@ -354,7 +354,7 @@ devices = {
         {
             "name": "FRONT_SYS_LED",
             "led_type": "SYS_LED",
-            "led": {"bus": 2, "addr": 0x33, "offset": 0xb2, "way": "i2c"},
+            "led": {"bus": 2, "addr": 0x35, "offset": 0xb2, "way": "i2c"},
             "led_attrs": {
                 "green": 0x01, "red": 0x02, "amber": 0x03, "default": 0x01,
                 "flash": 0xff, "light": 0xff, "off": 0, "mask": 0xff
@@ -363,7 +363,7 @@ devices = {
         {
             "name": "FRONT_PSU_LED",
             "led_type": "PSU_LED",
-            "led": {"bus": 2, "addr": 0x33, "offset": 0xb3, "way": "i2c"},
+            "led": {"bus": 2, "addr": 0x35, "offset": 0xb3, "way": "i2c"},
             "led_attrs": {
                 "green": 0x04, "red": 0x02, "amber": 0x06, "default": 0x04,
                 "flash": 0xff, "light": 0xff, "off": 0, "mask": 0xff
@@ -372,13 +372,14 @@ devices = {
         {
             "name": "FRONT_FAN_LED",
             "led_type": "FAN_LED",
-            "led": {"bus": 2, "addr": 0x33, "offset": 0xb4, "way": "i2c"},
+            "led": {"bus": 2, "addr": 0x35, "offset": 0xb4, "way": "i2c"},
             "led_attrs": {
                 "green": 0x04, "red": 0x02, "amber": 0x06, "default": 0x04,
                 "flash": 0xff, "light": 0xff, "off": 0, "mask": 0xff
             },
         },
     ],
+
     "fans": [
         {
             "name": "FAN1",

@@ -485,3 +485,7 @@ core_clock_frequency=1325
 dpr_clock_frequency=1000
 device_clock_frequency=1325
 port_flex_enable=1
+
+#RDMA
+sai_pfc_defaults_disable=1
+sai_optimized_mmu=1
