@@ -181,11 +181,12 @@ class SsdUtil(SsdBase):
             column_list = line.split()
             if line == '':
                 continue
-            if column_list[0] == str(partition) and column_list[2] == filesystem:
+            if column_list[0] == partition and column_list[2] == filesystem:
                 if column_list[5].split(',')[0][1:] == "ro":
-                    return str(partition)
+                    return partition
                 else:
                     return NOT_AVAILABLE
+        return NOT_AVAILABLE
 
     def check_readonly(self, partition, filesystem):
         ret = os.access(filesystem, os.W_OK)

@@ -165,12 +165,14 @@ class checktype():
     def getfantlvValue(prob_t, root, val):
         try:
             ret, binval_bytes = dev_file_read(val, 0, 256)
-            if ret == False:
+            if ret is False:
                 return binval_bytes
             binval = byteTostr(binval_bytes)
             fanpro = {}
             fantlv = fan_tlv()
             ret = fantlv.decode(binval)
+            if len(ret) == 0:
+                return "ERR fan tlv eeprom info error"
             fanpro['fan_type']  = fantlv.typename
             fanpro['hw_version']  = fantlv.typehwinfo
             fanpro['sn']  = fantlv.typesn

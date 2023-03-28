@@ -32,6 +32,8 @@ l3_mem_entries=16384
 l3_alpm_enable=2
 ipv6_lpm_128b_enable=0x1
 l3_max_ecmp_mode=1
+svi_my_station_optimization=1
+sai_nbr_bcast_ifp_optimized=2
 
 
 #slot 1 bc 8 10 12 14 
