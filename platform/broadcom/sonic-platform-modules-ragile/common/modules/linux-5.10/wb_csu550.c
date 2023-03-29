@@ -33,8 +33,6 @@ static void pmbus_find_sensor_groups(struct i2c_client *client,
     /* Sensors detected on page 0 only */
     if (wb_pmbus_check_word_register(client, 0, PMBUS_READ_VIN))
         info->func[0] |= PMBUS_HAVE_VIN;
-    if (wb_pmbus_check_word_register(client, 0, PMBUS_READ_VCAP))
-        info->func[0] |= PMBUS_HAVE_VCAP;
     if (wb_pmbus_check_word_register(client, 0, PMBUS_READ_IIN))
         info->func[0] |= PMBUS_HAVE_IIN;
     if (wb_pmbus_check_word_register(client, 0, PMBUS_READ_PIN))

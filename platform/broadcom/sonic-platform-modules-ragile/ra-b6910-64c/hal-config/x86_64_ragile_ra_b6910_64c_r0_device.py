@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 psu_fan_airflow = {
-    "intake": ['CSU800AP-3-300', 'GW-CRPS800N2C'],
+    "intake": ['CSU800AP-3-300', 'GW-CRPS800N2C', 'CSU800AP-3'],
 }
 
 fanairflow = {
@@ -9,7 +9,7 @@ fanairflow = {
 }
 
 psu_display_name = {
-    "PA800I-F": ['GW-CRPS800N2C', 'CSU800AP-3-300'],
+    "PA800I-F": ['GW-CRPS800N2C', 'CSU800AP-3-300', 'CSU800AP-3'],
 }
 
 fan_display_name = {
