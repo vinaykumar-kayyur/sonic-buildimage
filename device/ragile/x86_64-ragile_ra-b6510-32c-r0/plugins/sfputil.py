@@ -156,7 +156,7 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        #The sff number starts from 1
+        # The sff number starts from 1
         presence_path = "/sys/wb_plat/sff/sff%d/present" % (port_num + 1)
 
         try:
