@@ -1192,6 +1192,13 @@ devices = {
             "format": "float(float(%s)/1000)",
         },
     ],
+    "cpu": [
+        {
+            "name": "cpu",
+            "CpuResetCntReg": {"bus": 8, "addr": 0x30, "offset": 0x42, "way": "i2c"},
+            "reboot_cause_path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"
+        }
+    ],
     "sfps": {
         "ver": '1.0',
         "port_index_start": 0,

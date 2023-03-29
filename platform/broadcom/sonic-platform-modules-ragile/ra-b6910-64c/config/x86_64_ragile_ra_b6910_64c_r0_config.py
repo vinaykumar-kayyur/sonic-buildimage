@@ -596,29 +596,19 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "i2c", "bus": 1, "loc": 0x36, "offset": 0xa1, "okval": 0},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "Power Loss, ",
-                    "path": "/etc/.reboot/.previous-reboot-cause.txt"},
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
                 {"record_type": "file", "mode": "add", "log": "Power Loss, ",
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
             ]
-        },
-        {
-            "name": "reboot",
-            "monitor_point": {"gettype": "i2c", "bus": 1, "loc": 0x36, "offset": 0xa1, "okval": 0, "compare_mode": "great"},
-            "record": [
-                {"record_type": "file", "mode": "cover", "log": "Reboot, ",
-                    "path": "/etc/.reboot/.previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "Reboot, ",
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
-            ],
         },
         {
             "name": "otp_switch_reboot",
             "monitor_point": {"gettype": "file_exist", "judge_file": "/etc/.otp_switch_reboot_flag", "okval": True},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "Thermal Overload: ASIC, ",
-                    "path": "/etc/.reboot/.previous-reboot-cause.txt"},
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
                 {"record_type": "file", "mode": "add", "log": "Thermal Overload: ASIC, ",
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
             ],
             "finish_operation": [
                 {"gettype": "cmd", "cmd": "rm -rf /etc/.otp_switch_reboot_flag"},
@@ -629,9 +619,9 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "file_exist", "judge_file": "/etc/.otp_other_reboot_flag", "okval": True},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "Thermal Overload: Other, ",
-                    "path": "/etc/.reboot/.previous-reboot-cause.txt"},
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
                 {"record_type": "file", "mode": "add", "log": "Thermal Overload: Other, ",
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
             ],
             "finish_operation": [
                 {"gettype": "cmd", "cmd": "rm -rf /etc/.otp_other_reboot_flag"},
@@ -639,8 +629,8 @@ REBOOT_CAUSE_PARA = {
         },
     ],
     "other_reboot_cause_record": [
-        {"record_type": "file", "mode": "cover", "log": "Other, ", "path": "/etc/.reboot/.previous-reboot-cause.txt"},
-        {"record_type": "file", "mode": "add", "log": "Other, ", "path": "/etc/.reboot/.history-reboot-cause.txt"}
+        {"record_type": "file", "mode": "cover", "log": "Other, ", "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+        {"record_type": "file", "mode": "add", "log": "Other, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
     ],
 }
 ##################### MAC Voltage adjust####################################

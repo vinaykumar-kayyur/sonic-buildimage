@@ -1309,3 +1309,16 @@ class interface(object):
             baseutil.logger_debug(msg)
             return -1
         return cpu.get_cpu_reset_num()
+
+    def get_cpu_reboot_cause(self):
+        """
+        Get CPU reboot cause
+        @return string of cpu reboot reason
+        """
+        cpu = self.chas.get_cpu_byname("cpu")
+        if cpu is None:
+            msg = "name cpu not find"
+            baseutil.logger_debug(msg)
+            return "Unknown reboot cause"
+        return cpu.get_cpu_reboot_cause()
+

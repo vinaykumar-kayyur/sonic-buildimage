@@ -1,6 +1,7 @@
 [Unit]
 Description= Global Load process.
 After=platform_driver.service
+Before=determine-reboot-cause.service
 Requires=platform_driver.service
 #DefaultDependencies=no
 

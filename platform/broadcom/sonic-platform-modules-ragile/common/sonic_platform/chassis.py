@@ -295,12 +295,22 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        reset_num = self.int_case.get_cpu_reset_num()
-        # cold reboot
-        if reset_num == 0:
-            return (self.REBOOT_CAUSE_POWER_LOSS, None)
-
-        return (self.REBOOT_CAUSE_NON_HARDWARE, None)
+        reboot_cause_msg = self.int_case.get_cpu_reboot_cause()
+        if "Power Loss" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_POWER_LOSS
+        elif "Watchdog" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_WATCHDOG
+        elif "BMC reboot" in reboot_cause_msg or "BMC powerdown" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_HARDWARE_OTHER
+        elif "Thermal Overload: ASIC" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
+        elif "Thermal Overload: Other" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER
+        elif "Other" in reboot_cause_msg:
+            reboot_cause_type = self.REBOOT_CAUSE_NON_HARDWARE
+        else:
+            reboot_cause_type = self.REBOOT_CAUSE_NON_HARDWARE
+        return (reboot_cause_type, reboot_cause_msg)
 
     def get_module(self, index):
         """
