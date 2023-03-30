@@ -245,8 +245,8 @@ libpcap-dev==1.8.1-6+deb10u1
 libpcap0.8==1.8.1-6+deb10u1
 libpcap0.8-dev==1.8.1-6+deb10u1
 libpciaccess0==0.14-1
-libpcre2-16-0==10.32-5
-libpcre2-8-0==10.32-5
+libpcre2-16-0==10.32-5+deb10u1
+libpcre2-8-0==10.32-5+deb10u1
 libperl5.28==5.28.1-6+deb10u1
 libpixman-1-0==0.36.0-1+deb10u1
 libpng16-16==1.6.36-6
@@ -482,7 +482,7 @@ tk8.6-blt2.5==2.5.3+dfsg-4
 tmux==2.8-3+deb10u1
 traceroute==1:2.1.0-2
 ttf-bitstream-vera==1.10-8
-tzdata==2021a-0+deb10u8
+tzdata==2021a-0+deb10u10
 ucf==3.0038+nmu1
 unzip==6.0-23+deb10u3
 vim==2:8.1.0875-5+deb10u4
