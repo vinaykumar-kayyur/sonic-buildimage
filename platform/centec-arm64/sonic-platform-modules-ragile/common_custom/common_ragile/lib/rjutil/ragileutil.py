@@ -221,14 +221,12 @@ def password_command_realtime(ssh_header, ssh_cmd, password,key_words, exec_time
 
     return False
 
-from subprocess import Popen, PIPE, STDOUT
-
 def get_sys_execute2(cmd, key_word_pass):
     # key_word_pass_flag1 = False
     key_word_pass_flag = False
     filename = "/tmp/diag_excute_out"
     cmd = cmd + "|tee %s" % filename
-    p =  Popen(shlex.split(cmd), shell=False)
+    p =  subprocess.Popen(shlex.split(cmd), shell=False)
     p.wait()
     with open(filename, 'r') as f:
         str1 = f.read()

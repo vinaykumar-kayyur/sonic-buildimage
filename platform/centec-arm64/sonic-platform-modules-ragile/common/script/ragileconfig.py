@@ -11,6 +11,7 @@
 # -------------------------------------------------------------------------------
 import sys
 import os
+import logging
 from rgutil.baseutil import get_machine_info
 from rgutil.baseutil import get_platform_info
 
@@ -102,7 +103,7 @@ if os.path.exists(configfile_pre + grtd_productfile + ".py"):
 elif os.path.exists(configfile_pre + common_productfile + ".py"):
     module_product = __import__(common_productfile, globals(), locals(), [], 0)
 else:
-    print("No Configuration existed, quit")
+    logging.info("No Configuration existed, quit")
     exit(-1)
 ############################################################################################
 

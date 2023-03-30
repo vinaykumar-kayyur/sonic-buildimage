@@ -43,13 +43,6 @@ class FanDrawer(FanDrawerBase):
         if state == "Enabled" or state == "UnavailableOffline":
             return True
 
-    def get_status(self):
-        self.get_power_3s()
-        ctrl = self.pinf["Fans"]
-        output = ctrl[self.fantrayindex]
-        if output.get("Status").get("Status").get("Health") == "OK":
-            return True
-
     def get_model(self):
         """
         Retrieves the part number of the FAN

@@ -168,7 +168,6 @@ class FanControl():
         self.airflow = ""
         self.pid_switch = 1
         self.openloop_switch = 1
-        pass
 
     def doGetAirFlow(self):
         if self.isLiquid == 1:

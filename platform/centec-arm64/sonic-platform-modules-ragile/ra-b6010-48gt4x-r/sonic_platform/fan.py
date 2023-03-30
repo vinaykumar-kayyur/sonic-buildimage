@@ -150,20 +150,6 @@ class Fan(FanBase):
             return True
         return False
 
-    def get_high_critical_threshold(self):
-        self.get_power_3s()
-        ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_tray_index]
-        high = output.get("UpperThresholdFatal")
-        return high
-
-    def get_low_critical_threshold(self):
-        self.get_power_3s()
-        ctrl = self.pinf["Fans"]
-        output = ctrl[self.fan_tray_index]
-        low = output.get("LowerThresholdFatal")
-        return low
-
     def get_speed(self):
         self.get_power_3s()
         ctrl = self.pinf["Fans"]

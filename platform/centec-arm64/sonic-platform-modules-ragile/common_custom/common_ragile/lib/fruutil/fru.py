@@ -23,11 +23,6 @@ def d_print(debug_info):
         print(debug_info)
 
 
-def r_print(debug_info):
-    if True:
-        print(debug_info)
-
-
 def p_print(prompt):
     print("PROMPT: " + prompt)
 
@@ -170,8 +165,6 @@ class BoardInfoArea(BaseArea):
         self.boardextra1 = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode boardextra1:%s" % self.boardextra1)
-
-        pass
 
     def recalcute(self):
         d_print("boardInfoArea version:%x" % ord(self.boardversion))
@@ -797,6 +790,7 @@ class E2Util():
                 boardinfoarea.recalcute()
             else:
                 boardinfoarea = None
+
         except Exception as e:
             raise e
             boardinfoarea = None
@@ -1291,4 +1285,3 @@ if __name__ == '__main__':
     main(["4"])
     main(["5"])
     main(["6"])
-    pass

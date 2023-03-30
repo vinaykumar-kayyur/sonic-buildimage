@@ -50,7 +50,7 @@ from ragileconfig import (
 try:
     from eepromutil.fru import ipmifru
 except Exception or SystemExit:
-    pass
+    print("error")
 
 import logging.handlers
 import shutil
@@ -286,7 +286,7 @@ def log_debug(msg, also_print_to_console=False):
         if also_print_to_console:
             click.echo(msg)
     except Exception as e:
-        pass
+        print(str(e))
 
 
 def log_warning(msg, also_print_to_console=False):
@@ -1208,7 +1208,7 @@ def rgi2cset(bus, devno, address, byte):
 def rgpcird(pcibus, slot, fn, bar, offset):
     """read pci register"""
     if offset % 4 != 0:
-        return
+        return False
     filename = "/sys/bus/pci/devices/0000:%02x:%02x.%x/resource%d" % (int(pcibus), int(slot), int(fn), int(bar))
     with open(filename, "r+") as file:
         size = os.path.getsize(filename)
@@ -1365,7 +1365,7 @@ def getPid(name):
 
 def fac_fans_setmac_tlv(ret):
     if len(ret) <= 0:
-        return None
+        return False
     fans = []
     fansntemp = []
     for index in range(len(ret)):
@@ -1745,7 +1745,7 @@ def get_pmc_register(reg_name):
         with open(mb_reg_file, "r") as fd:
             retval = fd.read()
     except Exception as error:
-        pass
+        print("error")
     retval = retval.rstrip("\r\n")
     retval = retval.lstrip(" ")
     return retval
@@ -1961,7 +1961,7 @@ def searchDirByName(name, dir):
             if name in file:
                 result.append(os.path.join(dir, file))
     except Exception as e:
-        pass
+        print(str(e))
     return result
 
 
