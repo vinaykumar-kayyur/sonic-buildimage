@@ -59,6 +59,8 @@ stages:
     parameters:
       buildOptions: 'USERNAME=admin ENABLE_DOCKER_BASE_PULL=y SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web,git,docker SONIC_DPKG_CACHE_METHOD=rcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/centec-arm64 SONIC_BUILD_JOBS=$(nproc)'
       jobGroups:
+      - name: centec-arm64
+        pool: sonicbld-arm64
         timeoutInMinutes: 1200
         variables:
           PLATFORM_ARCH: arm64
