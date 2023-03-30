@@ -84,8 +84,8 @@ class FixedPsu(PsuBase):
         Retrieves current PSU voltage output
 
         Returns:
-            A float number, the output voltage in volts, 
-            e.g. 12.1 
+            A float number, the output voltage in volts,
+            e.g. 12.1
         """
         return None
 
@@ -143,7 +143,7 @@ class FixedPsu(PsuBase):
         Gets the power available status
 
         Returns:
-            True if power is present and power on. 
+            True if power is present and power on.
             False and "absence of PSU" if power is not present.
             False and "absence of power" if power is present but not power on.
         """
@@ -176,7 +176,7 @@ class FixedPsu(PsuBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         return None
 
@@ -195,8 +195,8 @@ class FixedPsu(PsuBase):
         Retrieves current PSU voltage input
 
         Returns:
-            A float number, the input voltage in volts, 
-            e.g. 12.1 
+            A float number, the input voltage in volts,
+            e.g. 12.1
         """
         return None
 
@@ -216,6 +216,11 @@ class Psu(FixedPsu):
     PSU_VPD = "eeprom/psu{}_vpd"
     PSU_CURRENT_IN = "power/psu{}_curr_in"
     PSU_VOLT_IN = "power/psu{}_volt_in"
+    PORT_AMBIENT_TEMP = os.path.join(PSU_PATH, "thermal/port_amb")
+    FAN_AMBIENT_TEMP = os.path.join(PSU_PATH, "thermal/fan_amb")
+    AMBIENT_TEMP_CRITICAL_THRESHOLD = os.path.join(PSU_PATH, "config/amb_tmp_crit_limit")
+    AMBIENT_TEMP_WARNING_THRESHOLD = os.path.join(PSU_PATH, "config/amb_tmp_warn_limit")
+    PSU_POWER_SLOPE = os.path.join(PSU_PATH, "config/psu{}_power_slope")
 
     shared_led = None
 
@@ -235,8 +240,12 @@ class Psu(FixedPsu):
         self.psu_power_max = self.psu_power + "_max"
         self.psu_presence = os.path.join(PSU_PATH, "thermal/psu{}_status".format(self.index))
 
+        self.psu_power_max_capacity = os.path.join(PSU_PATH, "config/psu{}_power_capacity".format(self.index))
+
         self.psu_temp = os.path.join(PSU_PATH, 'thermal/psu{}_temp'.format(self.index))
         self.psu_temp_threshold = os.path.join(PSU_PATH, 'thermal/psu{}_temp_max'.format(self.index))
+
+        self.psu_power_slope = os.path.join(PSU_PATH, self.PSU_POWER_SLOPE.format(self.index))
 
         from .fan import PsuFan
         self._fan_list.append(PsuFan(psu_index, 1, self))
@@ -257,7 +266,7 @@ class Psu(FixedPsu):
                 psu_voltage_out = os.path.join(PSU_PATH, "power/psu{}_volt".format(self.index))
                 if os.path.exists(psu_voltage_out):
                     self._psu_voltage = psu_voltage_out
-        
+
         return self._psu_voltage
 
     @property
@@ -329,12 +338,10 @@ class Psu(FixedPsu):
         Retrieves current PSU voltage output
 
         Returns:
-            A float number, the output voltage in volts, 
-            e.g. 12.1 
+            A float number, the output voltage in volts,
+            e.g. 12.1
         """
         if self.get_powergood_status() and self.psu_voltage:
-            # TODO: should we put log_func=None here? If not do this, when a PSU is back to power, some PSU related
-            # sysfs may not ready, read_int_from_file would encounter exception and log an error.
             voltage = utils.read_int_from_file(self.psu_voltage, log_func=logger.log_info)
             return float(voltage) / 1000
         return None
@@ -398,7 +405,7 @@ class Psu(FixedPsu):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         if self.get_powergood_status():
             temp = utils.read_int_from_file(self.psu_temp, log_func=logger.log_info)
@@ -485,8 +492,8 @@ class Psu(FixedPsu):
         Retrieves current PSU voltage input
 
         Returns:
-            A float number, the input voltage in volts, 
-            e.g. 12.1 
+            A float number, the input voltage in volts,
+            e.g. 12.1
         """
         if self.get_powergood_status():
             voltage = utils.read_int_from_file(self.psu_voltage_in, log_func=logger.log_info)
@@ -505,14 +512,64 @@ class Psu(FixedPsu):
             return float(amperes) / 1000
         return None
 
+    def _get_psu_power_threshold(self, temp_threshold_path):
+        """
+        Calculate power threshold for a PSU according to the maximum power capacity and ambient temperature
+            amb_temp = min(port_amb, fan_amb)
+            If amb_temp < ambient_temp_threshold
+                threshold = max capacity
+            else
+                threshold = max capacity - slope*(amb_temp - ambient_temp_threshold)
+        """
+        if self.get_powergood_status():
+            if os.path.exists(self.psu_power_max_capacity):
+                power_max_capacity = utils.read_int_from_file(self.psu_power_max_capacity)
+                temp_threshold = utils.read_int_from_file(temp_threshold_path)
+                fan_ambient_temp = utils.read_int_from_file(Psu.FAN_AMBIENT_TEMP)
+                port_ambient_temp = utils.read_int_from_file(Psu.PORT_AMBIENT_TEMP)
+                ambient_temp = min(fan_ambient_temp, port_ambient_temp)
+                if ambient_temp < temp_threshold:
+                    power_threshold = power_max_capacity
+                else:
+                    slope = utils.read_int_from_file(self.psu_power_slope)
+                    power_threshold = power_max_capacity - (ambient_temp - temp_threshold) * slope
+                if power_threshold <= 0:
+                    logger.log_warning('Got negative PSU power threshold {} for {}'.format(power_threshold, self.get_name()))
+                    power_threshold = 0
+                return float(power_threshold) / 1000000
+
+        return None
+
+    def get_psu_power_warning_suppress_threshold(self):
+        """
+        Retrieve the warning suppress threshold of the power on this PSU
+        The value can be volatile, so the caller should call the API each time it is used.
+        On Mellanox platform, it is translated from the `warning threshold`
+
+        Returns:
+            A float number, the warning suppress threshold of the PSU in watts.
+        """
+        return self._get_psu_power_threshold(Psu.AMBIENT_TEMP_WARNING_THRESHOLD)
+
+    def get_psu_power_critical_threshold(self):
+        """
+        Retrieve the critical threshold of the power on this PSU
+        The value can be volatile, so the caller should call the API each time it is used.
+
+        Returns:
+            A float number, the critical threshold of the PSU in watts.
+        """
+        return self._get_psu_power_threshold(Psu.AMBIENT_TEMP_CRITICAL_THRESHOLD)
+
+
 class InvalidPsuVolWA:
-    """This class is created as a workaround for a known hardware issue that the PSU voltage threshold could be a 
+    """This class is created as a workaround for a known hardware issue that the PSU voltage threshold could be a
        invalid value 127998. Once we read a voltage threshold value equal to 127998, we should do following:
            1. Check the PSU vendor, it should be Delta
            2. Generate a temp sensor configuration file which contains a few set commands. Those set commands are the WA provided by low level team.
            3. Call "sensors -s -c <tmp_conf_file>"
            4. Wait for it to take effect
-        
+
         This issue is found on 3700, 3700c, 3800, 4600c
     """
 

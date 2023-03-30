@@ -2,7 +2,7 @@ module sonic-port{
 
 	yang-version 1.1;
 
-	namespace "http://github.com/Azure/sonic-port";
+	namespace "http://github.com/sonic-net/sonic-port";
 	prefix port;
 
 	import sonic-types {
@@ -118,6 +118,13 @@ module sonic-port{
 				leaf mtu {
 					type uint16 {
 						range 68..9216;
+					}
+				}
+
+				leaf channel {
+					description "Logical channel(s) for physical port breakout";
+					type uint8 {
+						range 0..8;
 					}
 				}
 
