@@ -80,7 +80,7 @@
             }
         }
     },
-    "SNMP_USER_NAME_TEST": {
+    "SNMP_RO_USER_NAME_TEST": {
         "sonic-snmp:sonic-snmp": {
             "sonic-snmp:SNMP_USER": {
                 "SNMP_USER_LIST": [
@@ -88,6 +88,19 @@
                         "name": "testuser",
                         "SNMP_USER_TYPE": "noAuthNoPriv",
                         "SNMP_USER_PERMISSION": "RO"
+                    }
+                ]
+            }
+         }
+    },
+    "SNMP_RW_USER_NAME_TEST": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_USER": {
+                "SNMP_USER_LIST": [
+                    {
+                        "name": "testuser",
+                        "SNMP_USER_TYPE": "noAuthNoPriv",
+                        "SNMP_USER_PERMISSION": "RW"
                     }
                 ]
             }
@@ -112,6 +125,19 @@
                 "SNMP_USER_LIST": [
                     {
                        "name": "test@user",
+                       "SNMP_USER_TYPE": "noAuthNoPriv",
+                       "SNMP_USER_PERMISSION": "RO"
+                    }
+                ]
+            }
+         }
+    },
+    "SNMP_USER_NAME_INVALID_NEG_TEST_2": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_USER": {
+                "SNMP_USER_LIST": [
+                    {
+                       "name": "test:user",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
                        "SNMP_USER_PERMISSION": "RO"
                     }
@@ -179,6 +205,36 @@
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                        "SNMP_USER_AUTH_TYPE": "SHA"
+                    }
+                ]
+            }
+         }
+    },
+    "SNMP_USER_AUTH_NO_PRIV_TEST_2": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_USER": {
+                "SNMP_USER_LIST": [
+                    {
+                       "name": "testuser",
+                       "SNMP_USER_TYPE": "AuthNoPriv",
+                       "SNMP_USER_PERMISSION": "RW",
+                       "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                       "SNMP_USER_AUTH_TYPE": "MD5"
+                    }
+                ]
+            }
+         }
+    },
+    "SNMP_USER_AUTH_NO_PRIV_TEST_3": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_USER": {
+                "SNMP_USER_LIST": [
+                    {
+                       "name": "testuser",
+                       "SNMP_USER_TYPE": "AuthNoPriv",
+                       "SNMP_USER_PERMISSION": "RW",
+                       "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                       "SNMP_USER_AUTH_TYPE": "HMAC-SHA-2"
                     }
                 ]
             }
@@ -267,6 +323,23 @@
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                        "SNMP_USER_AUTH_TYPE": "SHA",
                        "SNMP_USER_ENCRYPTION_TYPE": "AES",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": "encry_pass"
+                    }
+                ]
+            }
+         }
+    },
+    "SNMP_USER_PRIV_TEST_2": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_USER": {
+                "SNMP_USER_LIST": [
+                    {
+                       "name": "testuser",
+                       "SNMP_USER_TYPE": "Priv",
+                       "SNMP_USER_PERMISSION": "RW",
+                       "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                       "SNMP_USER_AUTH_TYPE": "SHA",
+                       "SNMP_USER_ENCRYPTION_TYPE": "DES",
                        "SNMP_USER_ENCRYPTION_PASSWORD": "encry_pass"
                     }
                 ]

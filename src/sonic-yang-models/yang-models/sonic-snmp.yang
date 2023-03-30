@@ -79,8 +79,8 @@ module sonic-snmp {
         leaf name {
           type string {
               length "4..32";
-              pattern '[^ @,\\' +"']*" {
-                  error-message 'Invalid snmp user string (Valid chars are ASCII printable except SPACE, single quote,"@", "," and "\")';
+              pattern '[^ :@,\\' +"']*" {
+                  error-message 'Invalid snmp user string (Valid chars are ASCII printable except SPACE, single quote,"@", ",", "\" and ":")';
               }
           }
           description

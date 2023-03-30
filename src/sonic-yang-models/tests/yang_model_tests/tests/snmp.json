@@ -25,8 +25,11 @@
         "desc": "Load SNMP community string with un supported type.",
         "eStrKey": "InvalidValue"
     },
-    "SNMP_USER_NAME_TEST": {
-        "desc": "Load valid SNMP user"
+    "SNMP_RO_USER_NAME_TEST": {
+        "desc": "Load valid RO SNMP user"
+    },
+    "SNMP_RW_USER_NAME_TEST": {
+        "desc": "Load valid RW SNMP user"
     },
     "SNMP_USER_NAME_MIN_NEG_TEST": {
         "desc": "Load SNMP user with name < 4",
@@ -34,7 +37,11 @@
     },
     "SNMP_USER_NAME_INVALID_NEG_TEST": {
         "desc": "Load SNMP user with invalid value",
-	"eStr": "Invalid snmp user string (Valid chars are ASCII printable except SPACE, single quote,\"@\", \",\" and \"\\\")"
+	"eStr": "Invalid snmp user string (Valid chars are ASCII printable except SPACE, single quote,\"@\", \",\", \"\\\" and \":\")"
+    },
+    "SNMP_USER_NAME_INVALID_NEG_TEST_2": {
+        "desc": "Load SNMP user with invalid value",
+        "eStr": "Invalid snmp user string (Valid chars are ASCII printable except SPACE, single quote,\"@\", \",\", \"\\\" and \":\")"
     },
     "SNMP_USER_NO_USER_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with no user type",
@@ -53,7 +60,13 @@
         "eStrKey": "InvalidValue"
     },
     "SNMP_USER_AUTH_NO_PRIV_TEST": {
-        "desc": "Load valid SNMP user with user type AuthNoPriv"
+        "desc": "Load valid SNMP user with user type AuthNoPriv with SHA auth type"
+    },
+    "SNMP_USER_AUTH_NO_PRIV_TEST_2": {
+        "desc": "Load valid SNMP user with user type AuthNoPriv with MD5 auth type"
+    },
+    "SNMP_USER_AUTH_NO_PRIV_TEST_3": {
+        "desc": "Load valid SNMP user with user type AuthNoPriv with HMAC-SHA-2 auth type"
     },
     "SNMP_USER_NO_AUTH_NO_PRIV_AUTH_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with user type noAuthNoPriv with auth type",
@@ -72,7 +85,10 @@
         "eStr": "Invalid snmp user authentication password (Valid chars are ASCII printable except \":\" and\"@\")"
     },
     "SNMP_USER_PRIV_TEST": {
-        "desc": "Load SNMP user with user type Priv"
+        "desc": "Load SNMP user with user type Priv with AES encryption type"
+    },
+    "SNMP_USER_PRIV_TEST": {
+        "desc": "Load SNMP user with user type Priv with DES encryption type"
     },
     "SNMP_USER_PRIV_NO_ENCRYPT_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv without encyrption type",
