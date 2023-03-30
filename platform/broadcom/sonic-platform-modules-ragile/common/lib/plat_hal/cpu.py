@@ -13,6 +13,7 @@ class cpu(devicebase):
         if conf is not None:
             self.name = conf.get('name', None)
             self.cpu_reset_cnt_reg = conf.get('CpuResetCntReg', None)
+            self.reboot_cause_path = conf.get('reboot_cause_path', "/etc/sonic/.reboot/.previous-reboot-cause.txt")
 
     def get_cpu_reset_num(self):
         """
@@ -32,3 +33,16 @@ class cpu(devicebase):
             else:
                 ret = reset_num
         return ret
+
+    def get_cpu_reboot_cause(self):
+        """
+        get_cpu_reboot_cause
+        @return cpu reset number, -1 for failure
+        """
+        try:
+            with open(self.reboot_cause_path) as fd:
+                reboot_cause = fd.read().strip()
+            return reboot_cause
+        except Exception:
+            return "Unknown reboot cause"
+

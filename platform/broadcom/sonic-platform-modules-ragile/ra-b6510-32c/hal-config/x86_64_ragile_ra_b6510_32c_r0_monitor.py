@@ -146,5 +146,8 @@ monitor = {
         "fan_air_flow_amber_num": 1,
     },
 
-
+    "otp_reboot_judge_file": {
+        "otp_switch_reboot_judge_file": "/etc/.otp_switch_reboot_flag",
+        "otp_other_reboot_judge_file": "/etc/.otp_other_reboot_flag",
+    },
 }

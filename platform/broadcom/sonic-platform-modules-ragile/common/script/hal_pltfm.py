@@ -137,6 +137,9 @@ def e2():
 def temps():
     r'''test temps sensor'''
 
+def cpu():
+    r'''test cpu'''
+
 
 int_case = interface()
 
@@ -417,6 +420,16 @@ def get_temps_sensor():
     for temp in temp_list:
         print("id: %s, name: %s, API name: %s, value: %s" % (temp.temp_id, temp.name, temp.api_name, temp.Value))
 
+def get_cpu_reset_num():
+    r'''get_cpu_reset_num'''
+    print("=================get_cpu_reset_num======================")
+    print(int_case.get_cpu_reset_num())
+
+def get_cpu_reboot_cause():
+    r'''get_cpu_reboot_cause'''
+    print("=================get_cpu_reboot_cause======================")
+    print(int_case.get_cpu_reboot_cause())
+
 
 def run_cli_man():
     clival.Fire(
@@ -466,6 +479,10 @@ def run_cli_man():
             },
             temps: {
                 get_temps_sensor: None,
+            },
+            cpu: {
+                get_cpu_reset_num: None,
+                get_cpu_reboot_cause: None,
             }
         }
     )

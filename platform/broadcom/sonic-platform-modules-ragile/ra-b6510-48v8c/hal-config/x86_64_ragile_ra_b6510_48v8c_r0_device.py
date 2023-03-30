@@ -1148,6 +1148,12 @@ devices = {
             "format": "float(float(%s)/1000)",
         },
     ],
+    "cpu": [
+        {
+            "name": "cpu",
+            "reboot_cause_path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"
+        }
+    ],
     "sfps": {
         "ver": '1.0',
         "port_index_start": 1,

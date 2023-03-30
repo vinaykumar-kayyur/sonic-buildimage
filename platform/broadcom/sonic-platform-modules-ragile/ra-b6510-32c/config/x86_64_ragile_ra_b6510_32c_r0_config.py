@@ -906,29 +906,50 @@ INIT_PARAM = []
 
 INIT_COMMAND = []
 
-REBOOT_CAUSE_PARA = [
-    {
-        "name": "cold_reboot",
-        "monitor_point": {"gettype": "i2c", "bus": 8, "addr": 0x30, "offset": 0x42, "okval": 0x0},
-        "record": [
-            {"record_type": "file", "mode": "cover", "log": "Cold reboot, ",
-                "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-            {"record_type": "file", "mode": "add", "log": "Cold reboot, ", "path": "/host/misc/history-reboot-cause.txt"}
-        ]
-    },
-    {
-        "name": "otp_reboot",
-        "monitor_point": {"gettype": "file_exist", "judge_file": "/etc/.otp_reboot_flag"},
-        "record": [
-            {"record_type": "file", "mode": "cover", "log": "OTP reboot, ",
-                "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-            {"record_type": "file", "mode": "add", "log": "OTP reboot, ", "path": "/host/misc/history-reboot-cause.txt"}
-        ],
-        "finish_operation": [
-            {"gettype": "cmd", "cmd": "rm -rf /etc/.otp_reboot_flag"},
-        ]
-    }
-]
+REBOOT_CAUSE_PARA = {
+    "reboot_cause_list": [
+        {
+            "name": "cold_reboot",
+            "monitor_point": {"gettype": "i2c", "bus": 8, "loc": 0x30, "offset": 0x42, "okval": 0x0},
+            "record": [
+                {"record_type": "file", "mode": "cover", "log": "Power Loss, ",
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "Power Loss, ",
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+            ]
+        },
+        {
+            "name": "otp_switch_reboot",
+            "monitor_point": {"gettype": "file_exist", "judge_file": "/etc/.otp_switch_reboot_flag", "okval": True},
+            "record": [
+                {"record_type": "file", "mode": "cover", "log": "Thermal Overload: ASIC, ",
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "Thermal Overload: ASIC, ",
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+            ],
+            "finish_operation": [
+                {"gettype": "cmd", "cmd": "rm -rf /etc/.otp_switch_reboot_flag"},
+            ]
+        },
+        {
+            "name": "otp_other_reboot",
+            "monitor_point": {"gettype": "file_exist", "judge_file": "/etc/.otp_other_reboot_flag", "okval": True},
+            "record": [
+                {"record_type": "file", "mode": "cover", "log": "Thermal Overload: Other, ",
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "Thermal Overload: Other, ",
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size": 1 * 1024 * 1024}
+            ],
+            "finish_operation": [
+                {"gettype": "cmd", "cmd": "rm -rf /etc/.otp_other_reboot_flag"},
+            ]
+        },
+    ],
+    "other_reboot_cause_record": [
+        {"record_type": "file", "mode": "cover", "log": "Other, ", "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+        {"record_type": "file", "mode": "add", "log": "Other, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
+    ],
+}
 
 UPGRADE_SUMMARY = {
     "devtype": 0x404b,

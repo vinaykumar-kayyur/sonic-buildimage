@@ -139,7 +139,7 @@ class SfpUtil(SfpUtilBase):
         try:
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
-        except:
+        except Exception:
             return None
 
         return eeprom_raw

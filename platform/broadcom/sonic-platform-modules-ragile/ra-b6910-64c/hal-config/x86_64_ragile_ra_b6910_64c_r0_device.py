@@ -642,6 +642,7 @@ devices = {
         {
             "name": "cpu",
             "CpuResetCntReg": {"bus": 1, "addr": 0x36, "offset": 0xa1, "way": "i2c"},
+            "reboot_cause_path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"
         }
     ],
     "sfps": {

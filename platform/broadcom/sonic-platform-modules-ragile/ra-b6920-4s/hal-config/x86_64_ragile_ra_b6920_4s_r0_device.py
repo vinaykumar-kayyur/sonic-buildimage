@@ -1748,6 +1748,7 @@ devices = {
         {
             "name": "cpu",
             "CpuResetCntReg": {"io_addr": 0xb88, "way": "io"},
+            "reboot_cause_path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"
         }
     ],
     "sfps": {
