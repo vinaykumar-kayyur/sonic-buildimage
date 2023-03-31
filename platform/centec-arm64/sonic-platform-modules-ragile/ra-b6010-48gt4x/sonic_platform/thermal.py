@@ -86,6 +86,7 @@ class Thermal(ThermalBase):
         output = ctrl[self.index]
         if output.get("Status").get("Status").get("State") == "Enabled":
             return True
+        return False
 
     def get_status(self):
         self.get_power_3s()

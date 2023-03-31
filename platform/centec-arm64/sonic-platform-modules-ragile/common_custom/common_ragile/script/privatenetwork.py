@@ -3,18 +3,18 @@
 import sys
 import os
 import re
-import subprocess
 try:
     from sonic_platform import get_machine_info
     from sonic_platform import get_platform_info
-except:
+except ImportError :
     try:
         from sonic_device_util import get_machine_info
         from sonic_device_util import get_platform_info
-    except:
+    except ImportError:
         from sonic_py_common import device_info
         def get_machine_info():
-            pass
+            print("get_machine_info is null")
+            return False
         def get_platform_info(x):
             return device_info.get_platform()
 

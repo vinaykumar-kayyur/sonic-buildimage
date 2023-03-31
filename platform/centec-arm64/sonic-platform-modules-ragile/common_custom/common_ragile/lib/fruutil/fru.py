@@ -5,7 +5,6 @@ from bitarray import bitarray
 from datetime import datetime, timedelta
 import requests
 import ConfigParser
-import sys
 import os
 import collections
 
@@ -790,11 +789,10 @@ class E2Util():
                 boardinfoarea.recalcute()
             else:
                 boardinfoarea = None
-
+            return boardinfoarea
         except Exception as e:
             raise e
-            boardinfoarea = None
-        return boardinfoarea
+            return None
 
     @staticmethod
     def getProductInfoAreaByProperty(prop):
@@ -976,7 +974,7 @@ class E2Util():
                 retval = fd.read()
         except Exception:
             print ("open file error")
-            return
+            return None
         return E2Util.decodeBinByValue(retval)
 
 
@@ -1196,6 +1194,7 @@ class E2Util():
         print (res.content)
         f = open('bin.conf', 'w')
         f.write(res.content)
+        f.close()
         return res.text
 
 

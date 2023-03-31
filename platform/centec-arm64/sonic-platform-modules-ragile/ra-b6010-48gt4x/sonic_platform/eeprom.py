@@ -23,7 +23,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         '''
         (is_valid, t) = self.get_tlv_field(e, self._TLV_CODE_PART_NUMBER)
         if not is_valid:
-            return super(TlvInfoDecoder, self).part_number_str(e)
+            return super(Eeprom, self).part_number_str(e)
 
         return t[2].decode("ascii")
 

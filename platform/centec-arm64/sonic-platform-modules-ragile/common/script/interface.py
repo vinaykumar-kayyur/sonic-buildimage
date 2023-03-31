@@ -1,5 +1,3 @@
-from sonic_platform.fan import Fan
-from sonic_platform.thermal import Thermal
 from sonic_platform.chassis import Chassis
 
 class Interface():

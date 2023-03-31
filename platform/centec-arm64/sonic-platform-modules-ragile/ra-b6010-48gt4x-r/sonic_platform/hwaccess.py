@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import struct
 import mmap
 import subprocess

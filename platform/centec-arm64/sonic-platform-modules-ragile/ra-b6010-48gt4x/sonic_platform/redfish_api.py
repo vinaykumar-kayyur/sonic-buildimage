@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import shlex
-import sys
 import json
-import traceback
-import datetime
 import os
 import ssl
 import subprocess
@@ -74,11 +71,10 @@ class Redfish_Api():
         try:
             cmd_get="curl --connect-timeout %d -m %d -X GET %s" % (self.connect_timeout, self.operation_timeout, self.get_full_url(url))
             result = self._exec_cmd(cmd_get)
+            return result
         except Exception as e:
             self.redfish_log_error("error_message: %s" % e)
-            result = None
-        finally:
-            return result
+            return None
 
     def _redfish_post(self, url, playload):
         self.redfish_log_debug("post url: %s" % url)
@@ -96,11 +92,10 @@ class Redfish_Api():
                 result = False
             else:
                 result = True
+            return result
         except Exception as e:
             redfish_log_error("error_message: %s" % e)
-            result = False
-        finally:
-            return result
+            return False
 
     def get_thermal(self):
         """Get thermal info

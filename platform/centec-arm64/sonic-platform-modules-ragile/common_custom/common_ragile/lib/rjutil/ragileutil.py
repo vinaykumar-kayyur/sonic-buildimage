@@ -1,23 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-import sys
 import os
 import re
-import syslog
-import logging
 import time
-import binascii
-import termios
-import threading
-import click
-import json
 import mmap
 configfile_pre   =  "/usr/local/bin/"
 import sys
 sys.path.append(configfile_pre)
 from ragileconfig import *
-from fruutil import fru
 import subprocess
 import pexpect
 import shlex
@@ -70,15 +61,14 @@ def lpc_cpld_rd(reg_addr):
         fd = os.open(devfile, os.O_RDWR|os.O_CREAT)
         os.lseek(fd, regaddr, os.SEEK_SET)
         str = os.read(fd, 1)
+        os.close(fd)
         return "%02x" % ord(str)
     except ValueError:
         return None
     except Exception as e:
         print (e)
         return None
-    finally:
-        os.close(fd)
-    return None
+
 
 def my_log(txt):
     if DEBUG == True:
@@ -274,6 +264,7 @@ def pci_read(pcibus, slot,  fn , bar, offset):
     for i in range(0, len(s)):
         val = val << 8  | ord(s[i])
     data.close()
+    file.close()
     return val
 
 ###########################################

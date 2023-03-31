@@ -173,24 +173,21 @@ class fan_tlv(object):
         try:
             name = ""
             value = ""
+            _len = ord(t[1])
             if ord(t[0]) == self._FAN_TLV_TYPE_NAME:
                 name = "Product Name"
-                _len = ord(t[1])
                 value = t[2:2 + ord(t[1])]
                 self._typename = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_SN:
                 name = "serial Number"
-                _len = ord(t[1])
                 value = t[2:2 + ord(t[1])]
                 self._typesn = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_HW_INFO:
                 name = "hardware info"
-                _len = ord(t[1])
                 value = t[2:2 + ord(t[1])]
                 self._typehwinfo = value
             elif ord(t[0]) == self._FAN_TLV_TYPE_DEV_TYPE:
                 name = "dev type"
-                _len = ord(t[1])
                 value = "0x"
                 for c in t[2:2 + ord(t[1])]:
                     value += "%02X" % (ord(c),)

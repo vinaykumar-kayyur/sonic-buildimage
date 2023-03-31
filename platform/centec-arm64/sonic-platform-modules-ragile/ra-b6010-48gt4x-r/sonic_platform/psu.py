@@ -7,7 +7,6 @@ import sys
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_py_common import device_info
     from .redfish_api import Redfish_Api
 except ImportError as e:
     raise ImportError("%s - required module not found" % e)
