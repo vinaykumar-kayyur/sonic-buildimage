@@ -192,9 +192,10 @@ class fan_tlv(object):
                 for c in t[2:2 + ord(t[1])]:
                     value += "%02X" % (ord(c),)
                 self._typedevtype = int(value,16)
+            return {"name": name, "code": ord(t[0]), "value": value,"lens": _len}
         except Exception as e:
             print(e)
-        return {"name": name, "code": ord(t[0]), "value": value,"lens": _len}
+            return None
 
     def __str__(self):
         formatstr = "VERSION     : 0x%02x  \n" \
