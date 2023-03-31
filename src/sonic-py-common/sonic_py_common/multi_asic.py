@@ -18,7 +18,7 @@ EXTERNAL_PORT = 'Ext'
 INTERNAL_PORT = 'Int'
 INBAND_PORT = 'Inb'
 RECIRC_PORT ='Rec'
-PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
+PORT_CHANNEL_MEMBER_CFG_DB_TABLE = 'PORTCHANNEL_MEMBER'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
 BGP_INTERNAL_NEIGH_CFG_DB_TABLE = 'BGP_INTERNAL_NEIGHBOR'
@@ -354,7 +354,7 @@ def is_port_channel_internal(port_channel, namespace=None):
 
     for ns in ns_list:
         config_db = connect_config_db_for_ns(ns)
-        port_channel_members = config_db.get_keys("PORTCHANNEL_MEMBER")
+        port_channel_members = config_db.get_keys(PORT_CHANNEL_MEMBER_CFG_DB_TABLE)
 
         for port_channel_member in port_channel_members:
             if port_channel_member[0] != port_channel:
@@ -379,7 +379,7 @@ def get_back_end_interface_set(namespace=None):
         ns_list = get_namespace_list(namespace)
         for ns in ns_list:
             config_db = connect_config_db_for_ns(ns)
-            port_channel_members = config_db.get_keys("PORTCHANNEL_MEMBER")
+            port_channel_members = config_db.get_keys(PORT_CHANNEL_MEMBER_CFG_DB_TABLE)
             # a back-end LAG must be configured with all of its member from back-end interfaces.
             # mixing back-end and front-end interfaces is miss configuration and not allowed.
             # To determine if a LAG is back-end LAG, just need to check its first member is back-end or not
