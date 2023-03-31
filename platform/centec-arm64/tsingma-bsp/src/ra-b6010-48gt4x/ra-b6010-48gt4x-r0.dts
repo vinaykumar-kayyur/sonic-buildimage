@@ -74,8 +74,11 @@
 
 &enet0 {
 	status = "okay";
-	phy-handle = <&phy0>;
 	auto-nego-mode= "sgmii-mac";
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
 };
 
 &qspi {
