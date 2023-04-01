@@ -4,7 +4,7 @@ import click
 import os
 import time
 from ragileconfig import GLOBALCONFIG, GLOBALINITPARAM, GLOBALINITCOMMAND, MAC_LED_RESET, STARTMODULE, i2ccheck_params
-from ragileutil import rgpciwr, os_system, rgi2cset, io_wr
+from ragileutil import rgpciwr, os_system
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -79,7 +79,6 @@ def stop_avs_ctrl():
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
-        return True
 
 def start_fan_ctrl():
     if STARTMODULE.get('fancontrol', 0) == 1:
@@ -95,7 +94,6 @@ def stop_fan_ctrl():
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
-        return True
 
 def rm_dev(bus, loc):
     cmd = "echo  0x%02x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (loc, bus)

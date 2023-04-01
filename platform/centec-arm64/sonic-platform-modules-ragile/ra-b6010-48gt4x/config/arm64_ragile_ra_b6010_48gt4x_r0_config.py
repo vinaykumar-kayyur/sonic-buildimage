@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 from ragilecommon import *
-from collections import OrderedDict
 PCA9548START  = -1
 PCA9548BUSEND = -2
 

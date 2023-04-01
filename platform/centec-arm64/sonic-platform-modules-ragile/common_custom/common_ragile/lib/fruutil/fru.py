@@ -5,7 +5,6 @@ from bitarray import bitarray
 from datetime import datetime, timedelta
 import requests
 import ConfigParser
-import sys
 import os
 import collections
 
@@ -20,11 +19,6 @@ def e_print(err):
 
 def d_print(debug_info):
     if(__DEBUG__ == "Y"):
-        print(debug_info)
-
-
-def r_print(debug_info):
-    if True:
         print(debug_info)
 
 
@@ -170,8 +164,6 @@ class BoardInfoArea(BaseArea):
         self.boardextra1 = self.data[index + 1: index + templen + 1]
         index += templen + 1
         d_print("decode boardextra1:%s" % self.boardextra1)
-
-        pass
 
     def recalcute(self):
         d_print("boardInfoArea version:%x" % ord(self.boardversion))
@@ -797,10 +789,10 @@ class E2Util():
                 boardinfoarea.recalcute()
             else:
                 boardinfoarea = None
+            return boardinfoarea
         except Exception as e:
             raise e
-            boardinfoarea = None
-        return boardinfoarea
+            return None
 
     @staticmethod
     def getProductInfoAreaByProperty(prop):
@@ -982,7 +974,7 @@ class E2Util():
                 retval = fd.read()
         except Exception:
             print ("open file error")
-            return
+            return None
         return E2Util.decodeBinByValue(retval)
 
 
@@ -1202,6 +1194,7 @@ class E2Util():
         print (res.content)
         f = open('bin.conf', 'w')
         f.write(res.content)
+        f.close()
         return res.text
 
 
@@ -1291,4 +1284,3 @@ if __name__ == '__main__':
     main(["4"])
     main(["5"])
     main(["6"])
-    pass

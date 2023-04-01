@@ -1,14 +1,10 @@
 #!/usr/bin/env python3.9
 # -*- coding: UTF-8 -*-
-import sys
 import click
 import os
-import subprocess
 import time
 import json
-import syslog
 import traceback
-import glob
 from interface import Interface
 import logging.handlers
 from ragileutil import CompressedRotatingFileHandler
@@ -168,7 +164,6 @@ class FanControl():
         self.airflow = ""
         self.pid_switch = 1
         self.openloop_switch = 1
-        pass
 
     def doGetAirFlow(self):
         if self.isLiquid == 1:
@@ -193,10 +188,11 @@ class FanControl():
             fh = open(FAN_CTRL_CFG_FILE)
             if not fh:
                 logger.error("Config file %s doesn't exist" % FAN_CTRL_CFG_FILE)
-                return
+                return False
             cfg_json = json.load(fh)
             if not cfg_json:
                 logger.error('Load config file %s failed' % FAN_CTRL_CFG_FILE)
+                fh.close()
                 return False
 
             cfg_keys = [KEY_THERMAL, KEY_FAN, KEY_PID, KEY_OPEN_LOOP, KEY_DEVICE, KEY_FAN_ERROR]
@@ -264,7 +260,7 @@ class FanControl():
                 self.fanStatus[key] = 0
                 self.fanErrTime[key] = [0, 0]
                 self.fanLowTime[key] = [0, 0]
-
+            fh.close()
         else:
             logger.error('%s is not a file' % FAN_CTRL_CFG_FILE)
             return False

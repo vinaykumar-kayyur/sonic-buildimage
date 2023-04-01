@@ -7,7 +7,6 @@ import sys
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_py_common import device_info
     from .redfish_api import Redfish_Api
 except ImportError as e:
     raise ImportError("%s - required module not found" % e)
@@ -137,11 +136,6 @@ class Psu(PsuBase):
 
     def get_status_led(self):
         return "BuildIn"
-        self.get_power_3s()
-        ctrl = self.pinf["PowerSupplies"]
-        output = ctrl[self.psu_index]
-        led = output.get("Oem").get("Ragile").get("IndicatorLEDColor")
-        return led
 
     def set_status_led(self, color):
         playload = {}

@@ -3,7 +3,6 @@
 import os
 import sys
 from setuptools import setup
-os.listdir
 
 setup(
     name='sonic_platform',

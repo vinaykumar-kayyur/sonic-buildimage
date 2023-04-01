@@ -88,7 +88,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 file_path.seek(offset)
                 read_buf = file_path.read(num_bytes)
-            except:
+            except Exception:
                 attempts += 1
                 time.sleep(0.05)
             else:
@@ -124,8 +124,6 @@ class SfpUtil(SfpUtilBase):
             return 0
 
     def _get_port_eeprom_path(self, port_num, devid):
-        sysfs_i2c_adapter_base_path = "/sys/class/i2c-adapter"
-
         if port_num in list(self.port_to_eeprom_mapping.keys()):
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[port_num]
         else:
@@ -426,30 +424,5 @@ class SfpUtil(SfpUtilBase):
         # 1: fault
         if result & (1 << offset):
             return True
-        else:
-            return False
-        
-        return False
 
-    def get_plug_record(self, port_num):
-        if not self.get_presence(port_num):
-            return False
-        
-        path, offset = self._get_cpld_info(port_num, self.port_drop_info)
-        if path == None:
-            return False
-        
-        result = 0
-        try:
-            with open(path, "r") as sys_file:
-                data = sys_file.read(2)
-                result = int(data, 16)
-        except Exception as e:
-            print((str(e)))
-            return False
-        
-        # 1: drop
-        if result & (1 << offset):
-            return True
-        else:
-            return False
+        return False

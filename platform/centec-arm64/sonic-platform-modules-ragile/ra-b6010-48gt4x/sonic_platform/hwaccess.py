@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import struct
 import mmap
 import subprocess
@@ -32,7 +31,7 @@ def pci_set_value(resource, val, offset):
             memmap = mmap.mmap(filed.fileno(), 0)
             pci_mem_write(memmap, offset, val)
         except EnvironmentError:
-            pass
+            print("error")
         if memmap is not None:
             memmap.close()
 

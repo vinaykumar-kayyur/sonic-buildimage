@@ -62,7 +62,8 @@ def getdeviceplatform():
     x = get_platform_info(get_machine_info())
     if x != None:
         filepath = "/usr/share/sonic/device/" + x
-    return filepath
+        return filepath
+    return None
 
 
 platform = get_platform_info(get_machine_info())

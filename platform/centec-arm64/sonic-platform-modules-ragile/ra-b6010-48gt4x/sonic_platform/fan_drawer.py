@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-
-import json
-import math
-import os.path
 import time
 
 try:
@@ -42,13 +38,7 @@ class FanDrawer(FanDrawerBase):
         state = output.get("Status").get("Status").get("State")
         if state == "Enabled" or state == "UnavailableOffline":
             return True
-
-    def get_status(self):
-        self.get_power_3s()
-        ctrl = self.pinf["Fans"]
-        output = ctrl[self.fantrayindex]
-        if output.get("Status").get("Status").get("Health") == "OK":
-            return True
+        return False
 
     def get_model(self):
         """

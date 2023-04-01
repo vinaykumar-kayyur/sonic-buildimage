@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import sys
 import os
 import syslog
 import logging
@@ -29,7 +28,7 @@ def log_debug(msg, log_type=SYSLOG_IDENTIFIER, also_print_to_console=False):
         if also_print_to_console:
             click.echo(msg)
     except Exception as e:
-        pass
+        print(str(e))
 
 
 def log_warning(msg, log_type=SYSLOG_IDENTIFIER, also_print_to_console=False):
