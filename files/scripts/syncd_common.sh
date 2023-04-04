@@ -163,7 +163,7 @@ stop() {
 
     stopplatform1
 
-    /usr/bin/${SERVICE}.sh stop $DEV
+    /usr/bin/${SERVICE}.sh stop $DEV &
     debug "Stopped ${SERVICE}$DEV service..."
 
     stopplatform2
