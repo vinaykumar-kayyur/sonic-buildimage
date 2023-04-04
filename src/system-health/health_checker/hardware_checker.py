@@ -143,7 +143,7 @@ class HardwareChecker(HealthChecker):
                         expect_fan_direction = direction
                     elif direction != expect_fan_direction:
                         self.set_object_not_ok('Fan', name,
-                                               f'{name} direction is wrong, expect:{expect_fan_direction}, got:{direction}')
+                                               f'{name} direction is not aligned, previous:{expect_fan_direction}, current:{direction}')
                         continue
 
             status = data_dict.get('status', 'false')
