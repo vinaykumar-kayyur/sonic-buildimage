@@ -109,7 +109,7 @@ class Chassis(PddfChassis):
         status, hw_reboot_cause = self.helper.ipmi_raw(GET_REBOOT_CAUSE)
 
         prev_reboot_cause = {
-            '11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
+            'plugins': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
             '22': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is soft-set CPU warm reset"),
             '33': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU cold reset"),
             '44': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU warm reset"),
