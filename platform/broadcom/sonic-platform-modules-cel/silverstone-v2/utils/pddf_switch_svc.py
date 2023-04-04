@@ -77,7 +77,7 @@ def stop_platform_pddf():
     return True
 
 def main():
-    pass
+    print("OK")
 
 if __name__ == "__main__":
     main()
