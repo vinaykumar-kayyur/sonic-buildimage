@@ -36,9 +36,18 @@ class MuxStateWriter(object):
         Returns config DB connector.
         Initializes the connector during the first call
         """
-        if self.config_db_connector is None:
-            self.config_db_connector = ConfigDBConnector()
-            self.config_db_connector.connect()
+        retries = 3
+        while self.config_db_connector is None and retries > 0:
+            try:
+                self.config_db_connector = ConfigDBConnector()
+                self.config_db_connector.connect()
+            except RuntimeError as e:
+                self.config_db_connector = None
+                retries = retries - 1
+                logger.log_warning("Failed to connect to config db: {} retry remaining, error: {}".format(
+                    retries, str(e)))
+                if retries > 0:
+                    time.sleep(10)
 
         return self.config_db_connector
 
@@ -68,9 +77,18 @@ class MuxStateWriter(object):
         Returns the ASIC DB connector.
         Initializes the connector during the first call
         """
-        if self.asic_db_connector is None:
-            self.asic_db_connector = SonicV2Connector()
-            self.asic_db_connector.connect('ASIC_DB')
+        retries = 3
+        while self.asic_db_connector is None and retries > 0:
+            try:
+                self.asic_db_connector = SonicV2Connector()
+                self.asic_db_connector.connect('ASIC_DB')
+            except RuntimeError as e:
+                self.asic_db_connector = None
+                retries = retries - 1
+                logger.log_warning("Failed to connect to asic db: {} retry remaining, error: {}".format(
+                    retries, str(e)))
+                if retries > 0:
+                    time.sleep(10)
 
         return self.asic_db_connector
 
