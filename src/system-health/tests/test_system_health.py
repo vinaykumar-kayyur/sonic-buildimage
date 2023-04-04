@@ -427,7 +427,7 @@ def test_hardware_checker():
 
     assert 'fan5' in checker._info
     assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction is not aligned, previous:intake, current:exhaust'
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction exhaust is not aligned with fan1 direction intake'
 
     assert 'PSU 1' in checker._info
     assert checker._info['PSU 1'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
