@@ -49,6 +49,11 @@
 
 {%- set require_global_dscp_to_tc_map = true -%}
 
+{%- set vars = {'backplane_port_exist': false} %}
+{% for port in PORT_ACTIVE if port.startswith('Ethernet-BP')%}
+{% if vars.update({'backplane_port_exist': true}) %} {% endif %}
+{% endfor %}
+
 {
 {% if (generate_tc_to_pg_map is defined) and tunnel_qos_remap_enable %}
     {{- generate_tc_to_pg_map() }}
@@ -296,15 +301,33 @@
             "green_drop_probability" : "5",
             "yellow_drop_probability": "5",
             "red_drop_probability"   : "5"
-        }
+        }{% if vars.backplane_port_exist %},
+        "AZURE_LOSSLESS_NO_MARK" : {
+            "wred_green_enable": "true",
+            "wred_yellow_enable": "true",
+            "ecn": "ecn_green_yellow",
+            "green_max_threshold": "6144000",
+            "green_min_threshold": "0",
+            "yellow_max_threshold": "6144000",
+            "yellow_min_threshold": "0",
+            "green_drop_probability": "0",
+            "yellow_drop_probability": "0"
+        }{% endif %}
     },
 {% endif %}
     "QUEUE": {
 {% for port in PORT_ACTIVE %}
+{% if port.startswith('Ethernet-BP') %}
+        "{{ port }}|3": {
+            "scheduler"   : "scheduler.1",
+            "wred_profile": "AZURE_LOSSLESS_NO_MARK"
+        },
+{% else %}
         "{{ port }}|3": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS"
         },
+{% endif %}
 {% endfor %}
 {% if 'resource_type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['resource_type'] in apollo_resource_types %}
 {% for port in PORT_ACTIVE %}
@@ -315,10 +338,17 @@
 {% endfor %}
 {% else %}
 {% for port in PORT_ACTIVE %}
+{% if port.startswith('Ethernet-BP') %}
+        "{{ port }}|4": {
+            "scheduler"   : "scheduler.1",
+            "wred_profile": "AZURE_LOSSLESS_NO_MARK"
+        },
+{% else %}
         "{{ port }}|4": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS"
         },
+{% endif %}
 {% endfor %}
 {% endif %}
 {% for port in PORT_ACTIVE %}
