@@ -59,7 +59,7 @@ config -#}
 
 {{ config.association_type }} {{ config_as }}{{ soptions }}
 {% if global.server_role == 'disabled' %}
-restrict {{ config_as }} kod nomodify notrap noquery{{ aoptions }}
+restrict {{ config_as }} kod limited nomodify notrap noquery{{ aoptions }}
 {% endif %}
 
 {% endfor -%}
@@ -153,8 +153,8 @@ that -#}
 
 # Access control configuration
 # By default, exchange time with everybody, but don't allow configuration.
-restrict -4 default kod notrap nomodify noquery{{ options }}
-restrict -6 default kod notrap nomodify noquery{{ options }}
+restrict -4 default kod limited notrap nomodify noquery{{ options }}
+restrict -6 default kod limited notrap nomodify noquery{{ options }}
 
 # Local users may interrogate the ntp server more closely.
 restrict 127.0.0.1
