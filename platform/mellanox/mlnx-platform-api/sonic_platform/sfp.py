@@ -7,6 +7,7 @@
 #############################################################################
 
 try:
+    import functools
     import time
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_eeprom import eeprom_dts
@@ -262,7 +263,6 @@ PATH_PAGE00_A2 = '/0/i2c-0x51/data'
 REGISTER_NUM = 1
 DEVICE_ID = 1
 SWITCH_ID = 0
-SX_PORT_ATTR_ARR_SIZE = 64
 
 PMAOS_ASE = 1
 PMAOS_EE = 1
@@ -323,6 +323,24 @@ def deinitialize_sdk_handle(sdk_handle):
          logger.log_warning("Sdk handle is none")
          return False
 
+
+def refresh_sfp_type(refresh_dom_capability=True):
+    """Decorator to force refreshing sfp type
+
+    Args:
+        refresh_dom_capability (bool, optional): refresh DOM capability. Defaults to True.
+    """
+    def decorator(method):
+        @functools.wraps(method)
+        def _impl(self, *args, **kwargs):
+            self._refresh_sfp_type()
+            if refresh_dom_capability:
+                self._dom_capability_detect()
+            return method(self, *args, **kwargs)
+        return _impl
+    return decorator
+
+
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
@@ -332,9 +350,9 @@ class SFP(SfpBase):
         self.sdk_sysfs_page_path_header = SFP_SYSFS_PATH.format(sfp_index)
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
-        self._detect_sfp_type(sfp_type)
+        self._sfp_type = None
+        self._default_sfp_type = sfp_type
         self.dom_tx_disable_supported = False
-        self._dom_capability_detect()
         self.sdk_handle_getter = sdk_handle_getter
         self.sdk_index = sfp_index
 
@@ -352,7 +370,7 @@ class SFP(SfpBase):
         Re-initialize this SFP object when a new SFP inserted
         :return: 
         """
-        self._detect_sfp_type(self.sfp_type)
+        self._refresh_sfp_type()
         self._dom_capability_detect()
 
     def get_presence(self):
@@ -382,7 +400,8 @@ class SFP(SfpBase):
             if page_num == 0:
                 page = self.sdk_sysfs_page_path_header + PATH_PAGE00
             else:
-                if self.sfp_type == SFP_TYPE and page_num == 1:
+                self._refresh_sfp_type()
+                if page_num == 1 and self.sfp_type == SFP_TYPE:
                     page = self.sdk_sysfs_page_path_header + PATH_PAGE00_A2
                 else:
                     page = self.sdk_sysfs_page_path_header + PATH_PAGE.format(page_num)
@@ -394,26 +413,33 @@ class SFP(SfpBase):
         except (OSError, IOError):
             return None
 
-    def _detect_sfp_type(self, sfp_type):
-        eeprom_raw = []
-        eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
-        if eeprom_raw:
-            if eeprom_raw[0] in SFP_TYPE_CODE_LIST:
-                self.sfp_type = SFP_TYPE
-            elif eeprom_raw[0] in QSFP_TYPE_CODE_LIST:
-                self.sfp_type = QSFP_TYPE
-            elif eeprom_raw[0] in QSFP_DD_TYPE_CODE_LIST:
-                self.sfp_type = QSFP_DD_TYPE
+    @property
+    def sfp_type(self):
+        if self._sfp_type is None:
+            eeprom_raw = []
+            eeprom_raw = self._read_eeprom_specific_bytes(XCVR_TYPE_OFFSET, XCVR_TYPE_WIDTH)
+            if eeprom_raw:
+                if eeprom_raw[0] in SFP_TYPE_CODE_LIST:
+                    self._sfp_type = SFP_TYPE
+                elif eeprom_raw[0] in QSFP_TYPE_CODE_LIST:
+                    self._sfp_type = QSFP_TYPE
+                elif eeprom_raw[0] in QSFP_DD_TYPE_CODE_LIST:
+                    self._sfp_type = QSFP_DD_TYPE
+                else:
+                    # we don't recognize this identifier value, treat the xSFP module as the default type
+                    self._sfp_type = self._default_sfp_type
+                    logger.log_info("Identifier value of {} module {} is {} which isn't recognized and will be treated as default type ({})".format(
+                        self._default_sfp_type, self.index, eeprom_raw[0], self._default_sfp_type
+                    ))
             else:
-                # we don't regonize this identifier value, treat the xSFP module as the default type
-                self.sfp_type = sfp_type
-                logger.log_info("Identifier value of {} module {} is {} which isn't regonized and will be treated as default type ({})".format(
-                    sfp_type, self.index, eeprom_raw[0], sfp_type
-                ))
-        else:
-            # eeprom_raw being None indicates the module is not present.
-            # in this case we treat it as the default type according to the SKU
-            self.sfp_type = sfp_type
+                # eeprom_raw being None indicates the module is not present.
+                # in this case we treat it as the default type according to the SKU
+                self._sfp_type = self._default_sfp_type
+            self._default_sfp_type = self._sfp_type
+        return self._sfp_type
+
+    def _refresh_sfp_type(self):
+        self._sfp_type = None
 
     def _is_qsfp_copper(self):
         # This function read the specification compliance byte and
@@ -537,6 +563,7 @@ class SFP(SfpBase):
                 self.dom_supported = False
                 self.dom_temp_supported = False
                 self.dom_volt_supported = False
+                self.second_application_list = False
                 self.dom_rx_power_supported = False
                 self.dom_tx_power_supported = False
                 self.dom_tx_bias_power_supported = False
@@ -595,7 +622,7 @@ class SFP(SfpBase):
         else:
             return 'N/A'
 
-
+    @refresh_sfp_type()
     def get_transceiver_info(self):
         """
         Retrieves transceiver info of this SFP
@@ -900,7 +927,7 @@ class SFP(SfpBase):
 
         return transceiver_info_dict
 
-
+    @refresh_sfp_type()
     def get_transceiver_bulk_status(self):
         """
         Retrieves transceiver bulk status of this SFP
@@ -1100,7 +1127,7 @@ class SFP(SfpBase):
 
         return transceiver_dom_info_dict
 
-
+    @refresh_sfp_type()
     def get_transceiver_threshold_info(self):
         """
         Retrieves transceiver threshold info of this SFP
@@ -1279,7 +1306,7 @@ class SFP(SfpBase):
 
         return transceiver_dom_threshold_info_dict
 
-
+    @refresh_sfp_type()
     def get_reset_status(self):
         """
         Retrieves the reset status of SFP
@@ -1332,6 +1359,7 @@ class SFP(SfpBase):
             dom_channel_status_data = sfpd_obj.parse_dom_channel_status(dom_channel_status_raw, 0)
             return dom_channel_status_data['data']['Status']['value'] == 'On'
 
+    @refresh_sfp_type()
     def get_rx_los(self):
         """
         Retrieves the RX LOS (lost-of-signal) status of SFP
@@ -1364,7 +1392,7 @@ class SFP(SfpBase):
             rx_los_list.append(False)
         return rx_los_list
 
-
+    @refresh_sfp_type()
     def get_tx_fault(self):
         """
         Retrieves the TX fault status of SFP
@@ -1397,7 +1425,7 @@ class SFP(SfpBase):
             tx_fault_list.append(False)
         return tx_fault_list
 
-
+    @refresh_sfp_type()
     def get_tx_disable(self):
         """
         Retrieves the tx_disable status of this SFP
@@ -1500,7 +1528,7 @@ class SFP(SfpBase):
 
         return oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E
 
-
+    @refresh_sfp_type(refresh_dom_capability=True)
     def get_power_override(self):
         """
         Retrieves the power-override status of this SFP
@@ -1521,7 +1549,7 @@ class SFP(SfpBase):
         else:
             return NotImplementedError
 
-
+    @refresh_sfp_type()
     def get_temperature(self):
         """
         Retrieves the temperature of this SFP
@@ -1579,7 +1607,7 @@ class SFP(SfpBase):
             else:
                 return None
 
-
+    @refresh_sfp_type()
     def get_voltage(self):
         """
         Retrieves the supply voltage of this SFP
@@ -1638,7 +1666,7 @@ class SFP(SfpBase):
             else:
                 return None
 
-
+    @refresh_sfp_type()
     def get_tx_bias(self):
         """
         Retrieves the TX bias current of this SFP
@@ -1672,7 +1700,7 @@ class SFP(SfpBase):
                 if sfpd_obj is None:
                     return None
 
-                if dom_tx_bias_power_supported:
+                if self.dom_tx_bias_power_supported:
                     dom_tx_bias_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_BIAS_OFFSET), QSFP_DD_TX_BIAS_WIDTH)
                     if dom_tx_bias_raw is not None:
                         dom_tx_bias_data = sfpd_obj.parse_dom_tx_bias(dom_tx_bias_raw, 0)
@@ -1705,7 +1733,7 @@ class SFP(SfpBase):
 
         return tx_bias_list
 
-
+    @refresh_sfp_type()
     def get_rx_power(self):
         """
         Retrieves the received optical power for this SFP
@@ -1781,7 +1809,7 @@ class SFP(SfpBase):
                 return None
         return rx_power_list
 
-
+    @refresh_sfp_type()
     def get_tx_power(self):
         """
         Retrieves the TX power of this SFP
@@ -1949,14 +1977,17 @@ class SFP(SfpBase):
 
     def get_logical_ports(self):
         # Get all the ports related to the sfp, if port admin status is up, put it to list
-        port_attributes_list = new_sx_port_attributes_t_arr(SX_PORT_ATTR_ARR_SIZE)
         port_cnt_p = new_uint32_t_p()
-        uint32_t_p_assign(port_cnt_p, SX_PORT_ATTR_ARR_SIZE)
+        uint32_t_p_assign(port_cnt_p, 0)
+        rc = sx_api_port_device_get(self.sdk_handle, DEVICE_ID, SWITCH_ID, None,  port_cnt_p)
+        assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
+        port_cnt = uint32_t_p_value(port_cnt_p)
+        port_attributes_list = new_sx_port_attributes_t_arr(port_cnt)
+
 
         rc = sx_api_port_device_get(self.sdk_handle, DEVICE_ID , SWITCH_ID, port_attributes_list,  port_cnt_p)
         assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
 
-        port_cnt = uint32_t_p_value(port_cnt_p)
         log_port_list = []
         for i in range(0, port_cnt):
             port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list, i)

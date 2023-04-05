@@ -97,7 +97,8 @@ jobs:
             platform_rpc: nephos
 
     buildSteps:
-      - template: template-skipvstest.yml
+      - template: .azure-pipelines/template-skipvstest.yml@buildimage
+      - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
@@ -108,7 +109,7 @@ jobs:
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
             if [ $(Build.Reason) != 'PullRequest' ];then
               gzip -kd target/sonic-vs.img.gz
-              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make sonic-slave-run
+              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make $BUILD_OPTIONS sonic-slave-run
               rm target/sonic-vs.img
             fi
           else
@@ -142,4 +143,4 @@ jobs:
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
-      - template: check-dirty-version.yml
+      - template: .azure-pipelines/check-dirty-version.yml@buildimage
