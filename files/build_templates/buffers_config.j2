@@ -110,6 +110,7 @@ def
 {%- endmacro %}
 
 {%- set PORT_ALL  = [] %}
+{%- set PORT_BP  = [] %}
 {%- set SYSTEM_PORT_ALL = [] %}
 
 {%- if voq_chassis %}
@@ -133,6 +134,9 @@ def
         {%- if not port.startswith('Ethernet-Rec') and not port.startswith('Ethernet-IB') %}
             {%- if PORT_ALL.append(port) %}{%- endif %}
         {%- endif %}
+        {%- if port.startswith('Ethernet-BP') %}
+            {%- if PORT_BP.append(port) %}{%- endif %}
+        {%- endif %}
     {%- endfor %}
 {%- endif %}
 
@@ -142,6 +146,9 @@ def
     {%- set PORT_ACTIVE = PORT_ALL %}
 {%- else %}
     {%- for port in DEVICE_NEIGHBOR.keys() %}
+        {%- if PORT_ACTIVE.append(port) %}{%- endif %}
+    {%- endfor %}
+    {%- for port in PORT_BP %}
         {%- if PORT_ACTIVE.append(port) %}{%- endif %}
     {%- endfor %}
     {%- for port in PORT_ALL %}
