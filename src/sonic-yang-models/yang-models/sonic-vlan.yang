@@ -176,6 +176,7 @@ module sonic-vlan {
 					}
 				}
 
+
 				leaf alias {
 					type string;
 				}
@@ -185,7 +186,7 @@ module sonic-vlan {
 						length 1..255;
 					}
 				}
-
+               
 				leaf-list dhcp_servers {
 					description "Configure the dhcp v4 servers";
 					type inet:ip-address;
@@ -195,6 +196,7 @@ module sonic-vlan {
 					description "Configure the dhcp v6 servers";
 					type inet:ipv6-address;
 				}
+                
 
 				leaf mtu {
 					type uint16 {
@@ -228,6 +230,12 @@ module sonic-vlan {
 					}
 				}
 
+				leaf mode {
+                   description "PortChannel SwitchPort Mode possible values are routed|access|trunk. Default value is routed.";
+                   type stypes:switchport_mode;
+                   default "routed";
+                }
+
 				leaf port {
 					/* key elements are mandatory by default */
 					type union {
@@ -238,6 +246,12 @@ module sonic-vlan {
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 						}
 					}
+					
+					must "((current()../mode = 'access') or (current()../mode = 'trunk'))";
+					{
+						error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
+					}
+				
 				}
 
 				leaf tagging_mode {
