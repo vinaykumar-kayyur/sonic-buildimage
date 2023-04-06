@@ -10,7 +10,6 @@ $(DOCKER_SYNCD_BASE)_DBG_DEPENDS += $(SYNCD_DBG) \
                                 $(LIBSAIMETADATA_DBG) \
                                 $(LIBSAIREDIS_DBG)
 
-
 SONIC_BUSTER_DOCKERS += $(DOCKER_SYNCD_BASE)
 SONIC_BUSTER_DBG_DOCKERS += $(DOCKER_SYNCD_BASE_DBG)
 
