@@ -332,7 +332,7 @@ RUN apt-get install -y \
            gnupg2 \
            software-properties-common
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-RUN echo "deb [arch={{ CONFIGURED_ARCH }}] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list
+RUN echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" >> /etc/apt/sources.list.d/docker.list
 
 RUN apt-get update -o Dir::Etc::sourcelist="sources.list.d/docker.list"
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
