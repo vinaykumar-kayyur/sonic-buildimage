@@ -12,9 +12,22 @@
 
 #### Why I did it
 
+##### Work item tracking
+- Microsoft ADO **number only**:
+- Broadcom CSP:
+
 #### How I did it
 
 #### How to verify it
+
+##### Test evidence for the base branch
+<!--
+The PR must be tested against the base branch and the earliest backport release branch and provide tested image version on these two branches. For example, if the PR is requested for master, 202211 and 202012, then the requester needs to provide test results on master and 202012.
+Evidence can be provided via manual KVM test if the feature can be tested on KVM platforms. 
+-->
+
+##### Test evidence for the earliest backport release branch
+
 
 #### Which release branch to backport (provide reason below if selected)
 
@@ -40,7 +53,9 @@ Write a short (one line) summary that describes the changes in this
 pull request for inclusion in the changelog:
 -->
 
-#### Ensure to add label/tag for the feature raised. example - PR#2174 under sonic-utilities repo. where, Generic Config and Update feature has been labelled as GCU.
+<!--
+ Ensure to add label/tag for the feature raised. example - PR#2174 under sonic-utilities repo. where, Generic Config and Update feature has been labelled as GCU.
+-->
 
 #### Link to config_db schema for YANG module changes
 <!--
