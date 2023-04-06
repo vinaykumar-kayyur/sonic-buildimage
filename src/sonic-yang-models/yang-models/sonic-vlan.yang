@@ -246,10 +246,12 @@ module sonic-vlan {
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 						}
 					}
-					must "((current()../mode = 'access') or (current()../mode = 'trunk'))";
+					must "((current()../mode = 'access') or (current()../mode = 'trunk'))"
 					{
-						error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
+					error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
+
 					}
+					
 				}
 
 				leaf tagging_mode {
