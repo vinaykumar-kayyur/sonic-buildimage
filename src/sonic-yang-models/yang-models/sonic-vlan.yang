@@ -231,7 +231,7 @@ module sonic-vlan {
 				}
 
 				leaf mode {
-                   description "PortChannel SwitchPort Mode possible values are routed|access|trunk. Default value is routed.";
+                   description "Port & PortChannel SwitchPort Mode possible values are routed|access|trunk. Default value is routed.";
                    type stypes:switchport_mode;
                    default "routed";
                 }
@@ -246,7 +246,7 @@ module sonic-vlan {
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 						}
 					}
-					must "((current()../mode = 'access') or (current()../mode = 'trunk'))"
+					must "(../mode = 'access' or ../mode = 'trunk')"
 					{
 					error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
 
