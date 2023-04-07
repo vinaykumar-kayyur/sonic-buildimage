@@ -19,14 +19,9 @@
 
 #### How to verify it
 
-##### Test evidence for the base branch
 <!--
-The PR must be tested against the base branch and the earliest backport release branch and provide tested image version on these two branches. For example, if the PR is requested for master, 202211 and 202012, then the requester needs to provide test results on master and 202012.
-Evidence can be provided via manual KVM test if the feature can be tested on KVM platforms. 
+If PR needs to be backported, then the PR must be tested against the base branch and the earliest backport release branch and provide tested image version on these two branches. For example, if the PR is requested for master, 202211 and 202012, then the requester needs to provide test results on master and 202012.
 -->
-
-##### Test evidence for the earliest backport release branch
-
 
 #### Which release branch to backport (provide reason below if selected)
 
@@ -45,6 +40,17 @@ Evidence can be provided via manual KVM test if the feature can be tested on KVM
 - [ ] 202111
 - [ ] 202205
 - [ ] 202211
+
+#### Tested branch (Please provide the tested image version)
+
+<!--
+- Please provide tested image version
+- e.g.
+- [x] 20201231.100
+-->
+
+- [ ] <!-- image version 1 -->
+- [ ] <!-- image version 2 -->
 
 #### Description for the changelog
 <!--
