@@ -14,8 +14,6 @@
 
 ##### Work item tracking
 - Microsoft ADO **(number only)**:
-- Broadcom CSP:
-- Cisco JIRA ID:
 
 #### How I did it
 
