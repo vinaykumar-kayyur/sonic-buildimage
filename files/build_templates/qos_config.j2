@@ -333,7 +333,7 @@
 {% endfor %}
 {% else %}
 {% for port in PORT_ACTIVE %}
-{% if port.startswith('Ethernet-BP') %}
+{% if port.startswith('Ethernet-BP') and backplane_port_no_ecn_marking %}
         "{{ port }}|4": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS_NO_MARK"
