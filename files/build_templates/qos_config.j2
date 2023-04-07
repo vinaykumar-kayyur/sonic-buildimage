@@ -49,11 +49,6 @@
 
 {%- set require_global_dscp_to_tc_map = true -%}
 
-{%- set vars = {'backplane_port_exist': false} %}
-{% for port in PORT_ACTIVE if port.startswith('Ethernet-BP')%}
-{% if vars.update({'backplane_port_exist': true}) %} {% endif %}
-{% endfor %}
-
 {
 {% if (generate_tc_to_pg_map is defined) and tunnel_qos_remap_enable %}
     {{- generate_tc_to_pg_map() }}
@@ -301,7 +296,7 @@
             "green_drop_probability" : "5",
             "yellow_drop_probability": "5",
             "red_drop_probability"   : "5"
-        }{% if vars.backplane_port_exist %},
+        }{% if backplane_port_no_ecn_marking %},
         "AZURE_LOSSLESS_NO_MARK" : {
             "wred_green_enable": "true",
             "wred_yellow_enable": "true",
@@ -317,7 +312,7 @@
 {% endif %}
     "QUEUE": {
 {% for port in PORT_ACTIVE %}
-{% if port.startswith('Ethernet-BP') %}
+{% if port.startswith('Ethernet-BP') and backplane_port_no_ecn_marking %}
         "{{ port }}|3": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS_NO_MARK"
