@@ -1,7 +1,7 @@
 /*
  * cls-switchboard.c - PCI device driver for Silverstone Switch board FPGA.
  *
- * Author: Nicholas Wu
+ * Author: Nicholas Wu/Ingrid Huang
  *
  * Copyright (C) 2021 Celestica Corp.
  *
@@ -9,64 +9,6 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
- FPGA:
- /sys/devices/platform
-					 ©À©¤©¤ fpga-sys
-					 ©¦   ©À©¤©¤ dump
-					 ©¦   ©À©¤©¤ getreg
-					 ©¦   ©À©¤©¤ scratch
-					 ©¦   ©À©¤©¤ setreg
-					 ©¦   ©¸©¤©¤ version
-					 ©À©¤©¤ fpga-xcvr
-					 ©¦   ©À©¤©¤ SFP1
-					 ©¦   ©¦	©À©¤©¤ sfp_modabs
-					 ©¦   ©¦	©À©¤©¤ sfp_rxlos
-					 ©¦   ©¦	©À©¤©¤ sfp_txdisable
-					 ©¦   ©¦	©À©¤©¤ sfp_txfault
-					 ©¦   ©À©¤©¤ SFP2
-					 ©¦   ©¦	©À©¤©¤ sfp_modabs
-					 ©¦   ©¦	©À©¤©¤ sfp_rxlos
-					 ©¦   ©¦	©À©¤©¤ sfp_txdisable
-					 ©¦   ©¦  	©À©¤©¤ sfp_txfault
- BASE CPLD:
- /sys/devices/platform
-					 ©À©¤©¤ sys_cpld
-								 ©À©¤©¤ dump
-								 ©À©¤©¤ getreg
-								 ©À©¤©¤ scratch
-								 ©À©¤©¤ setreg
-								 ©À©¤©¤ sys_led
-								 ©À©¤©¤ sys_led_color
- QSFP:				 
- sys/class/SFF
-			 ©À©¤©¤ QSFP1
-			 ...
-			 ©¸©¤©¤ QSFP32
-					 ©À©¤©¤ qsfp_lpmode
-					 ©À©¤©¤ qsfp_modirq
-					 ©À©¤©¤ qsfp_modprs
-					 ©À©¤©¤ qsfp_reset
- 
- SW CPLD1:
- /sys/bus/i2c/devices/9-0030
-				       ©À©¤©¤ getreg
-				       ©À©¤©¤ scratch
-				       ©À©¤©¤ setreg
-					   ©À©¤©¤ version
-					   ©À©¤©¤ port_led_mode	      # for qsfp1~16
-					   ©¸©¤©¤ port_led_color	  # for qsfp1~16
-
- 
- SW CPLD2:
- /sys/bus/i2c/devices/9-0031
-				       ©À©¤©¤ getreg
-				       ©À©¤©¤ scratch
-				       ©À©¤©¤ setreg
-					   ©À©¤©¤ version
-					   ©À©¤©¤ port_led_mode	      # for qsfp17~32
-					   ©¸©¤©¤ port_led_color	  # for qsfp17~32
-
  *
  */
 
@@ -79,10 +21,8 @@
 #include <linux/interrupt.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
-//#include <linux/i2c/pca954x.h>
 #include "fpga_i2c_ocores.h"
 #include "fpga_xcvr.h"
-#include "pca954x.h"
 
 #define MOD_VERSION "2.0.0"
 #define DRV_NAME "cls-switchboard"
@@ -95,13 +35,7 @@
 #define FPGA_TYPE_ADDR		0x0C
 #define FPGA_OTHER_CR_ADDR  0x14
 
-#define BMC_PRESENT_BIT     0x08
-#define BMC_PRESENT         0x00    /* FPGA_OTHER_CR_ADDR bit8 0-bmc present 1-bmc absent*/
-
-#define FPGA_EXCLUDE_MIN_BUS    8      /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 when BMC is present*/
-
 #define MMIO_BAR			    0
-#define PCA9548_I2C_BUS_OFS		11 /* for SilverstoneX, 2 bus for COMe, 10 bus for FPGA, [0~11] */
 
 /* I2C ocore configurations */
 #define OCORE_REGSHIFT		2
@@ -193,110 +127,37 @@ module_param(bus_clock_master_10, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_10, 
 	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-// NOTE:  SilverstoneX i2c channel mapping is very wierd!!!
-/* PCA9548 channel config on MASTER BUS */
-static struct pca954x_platform_mode i2c_mux_71[] = {
-	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS +  1, true),
-	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS +  2, true),
-	I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS +  3, true),
-	I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS +  4, true),
-	I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS +  5, true),
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS +  6, true),
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS +  7, true),
-	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS +  8, true),
-};
+//Add for V2.
+static int bus_clock_master_11 = 100;
+module_param(bus_clock_master_11, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_11, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-static struct pca954x_platform_mode i2c_mux_73[] = {
-	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 9, true),
-	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 10, true),
-	I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 11, true),
-	I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 12, true),
-	I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 13, true),
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 14, true),
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 15, true),
-	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 16, true),
-};
+static int bus_clock_master_12 = 100;
+module_param(bus_clock_master_12, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_12, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-static struct pca954x_platform_mode i2c_mux_70[] = {
-	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 17, true),
-	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 18, true),
-	I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 19, true),
-	I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 20, true),
-	I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 21, true),
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 22, true),
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 23, true),
-	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 24, true),
-};
+static int bus_clock_master_13 = 100;
+module_param(bus_clock_master_13, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_13, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-static struct pca954x_platform_mode i2c_mux_72[] = {
-	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 25, true),
-	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 26, true),
-	I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 27, true),
-	I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 28, true),
-	I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 29, true),
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 30, true),
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 31, true),
-	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 32, true),
-};
+static int bus_clock_master_14 = 100;
+module_param(bus_clock_master_14, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_14, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-/* 33-sfp1 34-sfp2  35-LMK*/
-static struct pca954x_platform_mode i2c_mux_74[] = {
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 33, true),
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 34, true),
-	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 35, true),
-	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 36, true),
-	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 37, true),
-	I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 38, true),
-	I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 39, true),
-	I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 40, true),
-};
+static int bus_clock_master_15 = 100;
+module_param(bus_clock_master_15, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_15, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-static struct pca954x_platform_data om_muxes[] = {
-	{
-		.modes = i2c_mux_70,
-		.num_modes = ARRAY_SIZE(i2c_mux_70),
-	},
-	{
-		.modes = i2c_mux_71,
-		.num_modes = ARRAY_SIZE(i2c_mux_71),
-	},
-	{
-		.modes = i2c_mux_72,
-		.num_modes = ARRAY_SIZE(i2c_mux_72),
-	},
-	{
-		.modes = i2c_mux_73,
-		.num_modes = ARRAY_SIZE(i2c_mux_73),
-	},
-	{
-		.modes = i2c_mux_74,
-		.num_modes = ARRAY_SIZE(i2c_mux_74),
-	},
-};
+static int bus_clock_master_16 = 100;
+module_param(bus_clock_master_16, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_16, 
+	"I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-/* Optical Module bus 1-7 i2c muxes info */
-static struct i2c_board_info i2c_info[] = {
-	{
-		I2C_BOARD_INFO("pca9548", 0x70),
-		.platform_data = &om_muxes[0],
-	},
-	{
-		I2C_BOARD_INFO("pca9548", 0x71),
-		.platform_data = &om_muxes[1],
-	},
-	{
-		I2C_BOARD_INFO("pca9548", 0x72),
-		.platform_data = &om_muxes[2],
-	},
-	{
-		I2C_BOARD_INFO("pca9548", 0x73),
-		.platform_data = &om_muxes[3],
-	},
-	{
-		I2C_BOARD_INFO("pca9548", 0x74),
-		.platform_data = &om_muxes[4],
-	},
-};
 
 /* RESOURCE SEPERATES BY FUNCTION */
 /* Resource IOMEM for FPGA extened i2c bus 0 */
@@ -368,6 +229,50 @@ static struct resource  cls_i2c_res_9[] = {
 		.start = 0x00019000, .end = 0x00019FFF,
 		.flags = IORESOURCE_MEM,}, 
 };
+		
+/* Resource IOMEM for FPGA extened i2c bus 10 */
+static struct resource  cls_i2c_res_10[] = {
+	{
+		.start = 0x0001A000, .end = 0x0001AFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for FPGA extened i2c bus 11 */
+static struct resource  cls_i2c_res_11[] = {
+	{
+		.start = 0x0001B000, .end = 0x0001BFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for FPGA extened i2c bus 12 */
+static struct resource  cls_i2c_res_12[] = {
+	{
+		.start = 0x0001C000, .end = 0x0001CFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for FPGA extened i2c bus 13 */
+static struct resource  cls_i2c_res_13[] = {
+	{
+		.start = 0x0001D000, .end = 0x0001DFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for FPGA extened i2c bus 14 */
+static struct resource  cls_i2c_res_14[] = {
+	{
+		.start = 0x0001E000, .end = 0x0001EFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+/* Resource IOMEM for FPGA extened i2c bus 15 */
+static struct resource  cls_i2c_res_15[] = {
+	{
+		.start = 0x0001F000, .end = 0x0001FFFF,
+		.flags = IORESOURCE_MEM,}, 
+};
+
+
 
 /* Resource IOMEM for front panel XCVR */
 static struct resource xcvr_res[] = {
@@ -521,8 +426,92 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 			.clock_khz = OCORE_IP_CLK_khz,
 			.bus_khz = OCORE_BUS_CLK_khz,
 			.big_endian = false,
-			.num_devices = 5,
-			.devices = i2c_info,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 10, 
+		.res = cls_i2c_res_10, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_10), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 11, 
+		.res = cls_i2c_res_11, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_11), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 12, 
+		.res = cls_i2c_res_12, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_12), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 13, 
+		.res = cls_i2c_res_13, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_13), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 14, 
+		.res = cls_i2c_res_14, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_14), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
+		},
+	},
+	{
+		.id = 15, 
+		.res = cls_i2c_res_15, 
+		.num_res = ARRAY_SIZE(cls_i2c_res_15), 
+		.pdata = {
+			.reg_shift = OCORE_REGSHIFT,
+			.reg_io_width = OCORE_REG_IO_WIDTH,
+			.clock_khz = OCORE_IP_CLK_khz,
+			.bus_khz = OCORE_BUS_CLK_khz,
+			.big_endian = false,
+			.num_devices = 0,
+			.devices = NULL,
 		},
 	},
 };
@@ -550,7 +539,6 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 {	
 	int err;
 	int num_i2c_bus, i = 0, ret, vector;
-	int bmc_present = 0;   /* 0-present 1-absent */
 	unsigned long rstart;
 	void __iomem *base_addr;
 	struct switchbrd_priv *priv;
@@ -580,22 +568,7 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		goto err_unmap;
 	}
 
-#if 0 /* only one FPGA, so not to judge FPGA TYTE*/
-	fpga_type = ioread32(base_addr + FPGA_TYPE_ADDR);
-	printk("fpga Type:0x%8.8x\n",fpga_type);
-	if (fpga_type == FPGA_CMM_TYPE) {
-		err = 0;
-		goto err_exit;
-	}
-#endif
-	bmc_present = (ioread32(base_addr + FPGA_OTHER_CR_ADDR) >> BMC_PRESENT_BIT) & 0x01;
-	if (bmc_present == BMC_PRESENT) {
-		printk("BMC present\n");
-	} else {
-		printk("BMC absent\n");
-	}
-
-
+	
 	rstart = pci_resource_start(dev, MMIO_BAR);
 	if (!rstart) {
 		dev_err(&dev->dev, "Switchboard base address uninitialized, "
@@ -666,17 +639,10 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	}
 	printk("register xcvr node\n");
 	
-	if (bmc_present == BMC_PRESENT) {
-		i += FPGA_EXCLUDE_MIN_BUS;       /* skip share bus so there's no dual i2c masters situation */
-	} else {
-		i = 0;
-	}
 	for(; i < num_i2c_bus; i++){
 		/* override resource with MEM/IO resource offset */
-		i2c_bus_configs[i].res[0].start += rstart;
-		i2c_bus_configs[i].res[0].end += rstart;
-
-		/* all fpga i2c bus share pci device msi irq */
+        i2c_bus_configs[i].res[0].start += rstart;
+        i2c_bus_configs[i].res[0].end += rstart;
 		i2c_bus_configs[i].pdata.irq = dev->irq;
 		dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start, i2c_bus_configs[i].res[0].end);
 		printk("bus id:%d, i2c_bus_configs[%d].res[0].start/end=%x:%x\n", i2c_bus_configs[i].id, i, i2c_bus_configs[i].res[0].start,i2c_bus_configs[i].res[0].end);
@@ -711,6 +677,24 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 			break;
 		case 10:
 			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_10;
+			break;
+		case 11:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_11;
+			break;
+		case 12:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_12;
+			break;
+		case 13:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_13;
+			break;
+		case 14:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_14;
+			break;
+		case 15:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_15;
+			break;
+		case 16:
+			i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_16;
 			break;
 		default:
 			i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
@@ -801,8 +785,8 @@ static struct pci_driver cls_pci_driver = {
 
 module_pci_driver(cls_pci_driver);
 
-MODULE_AUTHOR("Nicholas Wu<nicwu@celestica.com>");
-MODULE_DESCRIPTION("Celestica cloverstone switchboard driver");
+MODULE_AUTHOR("Nicholas Wu<nicwu@celestica.com>/Ingrid Huang<inhuang@celestica.com>");
+MODULE_DESCRIPTION("Celestica Silverstone-v2 switchboard driver");
 MODULE_VERSION(MOD_VERSION);
 MODULE_LICENSE("GPL");
 
