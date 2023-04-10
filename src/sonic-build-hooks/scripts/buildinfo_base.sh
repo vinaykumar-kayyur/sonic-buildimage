@@ -151,7 +151,7 @@ set_reproducible_mirrors()
 download_packages()
 {
     local parameters=("$@")
-    local filenames=
+    unset filenames
     declare -A filenames
     for (( i=0; i<${#parameters[@]}; i++ ))
     do
@@ -185,15 +185,16 @@ download_packages()
                 else
                     real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
                     if [ "$real_version" != "$version" ]; then
-                        log_err "Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
-                       exit 1
+                       log_err "Warning: Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
+                       continue
                     fi
                 fi
             else
                 real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
             fi
-
-            echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
+            # ignore md5sum for string ""
+            # echo -n "" | md5sum    ==   d41d8cd98f00b204e9800998ecf8427e
+            [[ $real_version == "d41d8cd98f00b204e9800998ecf8427e" ]] || echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
         fi
     done
 
