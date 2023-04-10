@@ -78,75 +78,75 @@ class Thermal(ThermalBase):
         self.default_threshold = {
             THERMAL_NAME_LIST[0] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '71.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '33.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '76.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '22.0'
             },
             THERMAL_NAME_LIST[1] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '55.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '23.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '60.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '12.0'
             },
             THERMAL_NAME_LIST[2] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '58.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '22.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '63.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '13.0'
             },
             THERMAL_NAME_LIST[3] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '49.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '18.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '54.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '8.0'
             },
             THERMAL_NAME_LIST[4] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '50.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '21.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '55.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '10.0'
             },
             THERMAL_NAME_LIST[5] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '45.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '9.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '50.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-2.0'
             },
             THERMAL_NAME_LIST[6] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '41.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '12.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '46.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[7] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '65.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '36.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '70.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '24.0'
             },
             THERMAL_NAME_LIST[8] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '56.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '27.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '61.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '16.0'
             },
             THERMAL_NAME_LIST[9] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '52.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '26.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '57.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '15.0'
             },
             THERMAL_NAME_LIST[10] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '62.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '31.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '67.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '20.0'
             },
             THERMAL_NAME_LIST[11] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.LOW_THRESHOLD_FIELD : '84.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
             },
             PSU_THERMAL_NAME_LIST[0] : {
                 self.conf.HIGH_THRESHOLD_FIELD : str(float(psu_temp_max)),
@@ -431,4 +431,85 @@ class Thermal(ThermalBase):
             self.get_temperature()
 
         return self.max_temperature
+
+    def get_low_threshold(self):
+        """
+        Retrieves the low threshold temperature of thermal sensor by 1-based index
+        Actions should be taken if the temperature becomes lower than the low threshold.
+        :param index: An integer, 1-based index of the thermal sensor of which to query status
+        :return: A float number, the low threshold temperature of thermal in Celsius
+                 up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        value = self.conf.get_low_threshold()
+        if value != self.conf.NOT_AVAILABLE:
+            return float(value)
+
+        default_value = self.default_threshold[self.get_name()][self.conf.LOW_THRESHOLD_FIELD]
+        if default_value != self.conf.NOT_AVAILABLE:
+            return float(default_value)
+
+        raise NotImplementedError
+
+    def set_low_threshold(self, temperature):
+        """
+        Sets the high threshold temperature of thermal
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
+            e.g. 30.125
+        Returns:
+            A boolean, True if threshold is set successfully, False if not
+        """
+        try:
+            value = float(temperature)
+        except Exception:
+            return False
+
+        try:
+            self.conf.set_low_threshold(str(value))
+        except Exception:
+            return False
+
+        return True
+
+    def get_low_critical_threshold(self):
+        """
+        Retrieves the low critical threshold temperature of thermal by 1-based index
+        Actions should be taken immediately if the temperature becomes lower than the low critical
+        threshold otherwise the device will be damaged.
+        :param index: An integer, 1-based index of the thermal sensor of which to query status
+        :return: A float number, the low critical threshold temperature of thermal in Celsius
+                 up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        value = self.conf.get_low_critical_threshold()
+        if value != self.conf.NOT_AVAILABLE:
+            return float(value)
+
+        default_value = self.default_threshold[self.get_name()][self.conf.LOW_CRIT_THRESHOLD_FIELD]
+        if default_value != self.conf.NOT_AVAILABLE:
+            return float(default_value)
+
+        raise NotImplementedError
+
+    def set_low_critical_threshold(self, temperature):
+        """
+        Sets the critical high threshold temperature of thermal
+
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
+            e.g. 30.125
+
+        Returns:
+            A boolean, True if threshold is set successfully, False if not
+        """
+        try:
+            value = float(temperature)
+        except Exception:
+            return False
+
+        try:
+            self.conf.set_low_critical_threshold(str(value))
+        except Exception:
+            return False
+
+        return True
 
