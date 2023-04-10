@@ -151,7 +151,6 @@ set_reproducible_mirrors()
 download_packages()
 {
     local parameters=("$@")
-    unset filenames
     declare -A filenames
     for (( i=0; i<${#parameters[@]}; i++ ))
     do
@@ -171,7 +170,7 @@ download_packages()
                 local filename=$(echo $url | awk -F"/" '{print $NF}' | cut -d? -f1 | cut -d# -f1)
                 [ -f $WEB_VERSION_FILE ] && version=$(grep "^${url}=" $WEB_VERSION_FILE | awk -F"==" '{print $NF}')
                 if [ -z "$version" ]; then
-                    log_err "Warning: Failed to verify the package: $url, the version is not specified" 1>&2
+                    log_err "Warning: Failed to verify the package: $url, the version is not specified"
                     continue
                 fi
 
@@ -185,7 +184,7 @@ download_packages()
                 else
                     real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
                     if [ "$real_version" != "$version" ]; then
-                       log_err "Warning: Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
+                       log_err "Warning: Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename"
                        continue
                     fi
                 fi
