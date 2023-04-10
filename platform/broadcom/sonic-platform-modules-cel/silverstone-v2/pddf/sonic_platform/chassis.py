@@ -18,6 +18,7 @@ except ImportError as e:
 
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
+WATCHDOG_TIMELEFT_PATH = "/sys/class/watchdog/watchdog0/timeleft"
 GET_REBOOT_CAUSE = "0x3a 0x64 0x00 0x01 0x06"
 
 Sensor_List_Info = "/tmp/sensor_info.log"
@@ -106,7 +107,10 @@ class Chassis(PddfChassis):
         """
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self.helper.read_txt_file(reboot_cause_path) or "Unknown"
+        status_wat, val = self.helper.run_command("cat %s" % WATCHDOG_TIMELEFT_PATH)
         status, hw_reboot_cause = self.helper.ipmi_raw(GET_REBOOT_CAUSE)
+        if float(val) <= 1 and float(hw_reboot_cause) == 44:
+            hw_reboot_cause = "66"
 
         prev_reboot_cause = {
             '11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
