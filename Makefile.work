@@ -224,6 +224,7 @@ PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 	DBGOPT='$(DBGOPT)' \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
 	scripts/prepare_docker_buildinfo.sh \
 		$(SLAVE_BASE_IMAGE) \
 		$(SLAVE_DIR)/Dockerfile \
@@ -245,6 +246,7 @@ SLAVE_BASE_TAG = $(shell \
 SLAVE_TAG = $(shell \
 	(cat $(SLAVE_DIR)/Dockerfile.user \
 		 $(SLAVE_DIR)/Dockerfile \
+		 $(SLAVE_DIR)/sources.list.* \
 		 $(SLAVE_DIR)/buildinfo/versions/versions-* \
 	&& echo $(USER)/$(PWD)/$(CONFIGURED_PLATFORM)) \
 	| sha1sum \
@@ -414,7 +416,7 @@ endif
 
 endif
 
-SPLIT_LOG = | tee
+SPLIT_LOG = 2>&1 | tee
 
 DOCKER_BASE_LOG = $(SLAVE_DIR)/$(SLAVE_BASE_IMAGE)_$(SLAVE_BASE_TAG).log
 DOCKER_LOG = $(SLAVE_DIR)/$(SLAVE_IMAGE)_$(SLAVE_TAG).log
@@ -560,6 +562,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
                            GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
                            MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
+                           SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -580,6 +583,7 @@ endif
 
 export MIRROR_URLS
 export MIRROR_SECURITY_URLS
+export MIRROR_SNAPSHOT
 export SONIC_VERSION_CONTROL_COMPONENTS
 
 %:: | sonic-build-hooks
