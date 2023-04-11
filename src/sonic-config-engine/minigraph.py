@@ -1680,7 +1680,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_png_speed = port_speed_png[port_name]
 
         # Add a check for for voq, T1
-        if switch_type in ['voq', 'LeafRouter']:
+        if results['DEVICE_METADATA']['localhost']['type'].lower() == 'leafrouter' or switch_type == 'voq':
             # when the port speed is changes from 400g to 100g 
             # update the port lanes, use the first 4 lanes of the 400G port to support 100G port
             if port_default_speed == '400000' and port_png_speed == '100000':
@@ -1690,6 +1690,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                     continue
                 updated_lanes = ",".join(port_lanes[:4])
                 ports[port_name]['lanes'] = updated_lanes
+
+
 
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
