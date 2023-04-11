@@ -2079,8 +2079,17 @@ static int check_qsfp_eeprom_pageable(struct bin_attribute *eeprom)
 
     pdata = eeprom->private;
 
-    if( fpga_i2c_ready_to_read(eeprom, EEPROM_LOWER_PAGE, pdata->i2c_slave_addr) != 1) {
-        return ret;
+    ret = fpga_i2c_ready_to_read(eeprom, EEPROM_LOWER_PAGE, pdata->i2c_slave_addr);
+
+    if(ret != 1) {
+        /* If user space code create port_eeprom sysfs when 400G insert.
+         * FPGA FW can't handle data quickly. Status code (ret) is 2 (busy).
+         * We let default case to support pageable.
+         * PS:This fix if 400G try read bigger than 256 bytes data. But sysfs only is 256 bytes
+         */
+        pdata->pageable = 1; /*This flag need to set 1, otherwise page-0 data can not get*/
+
+        return pdata->pageable;
     }
 
     read_status = ioread32(pdata->data_base_addr + (pdata->i2c_rtc_read_data));
