@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2022 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,6 +119,18 @@ THERMAL_NAMING_RULE = {
             "name": "Ambient Switch Board Temp",
             "temperature": "swb_amb",
             "default_present": False
+        },
+        {
+            "name": "PCH Temp",
+            "temperature": "pch_temp",
+            "default_present": False
+        },
+        {
+            "name": "SODIMM {} Temp",
+            "temperature": "sodimm{}_temp_input",
+            "high_threshold": "sodimm{}_temp_max",
+            "high_critical_threshold": "sodimm{}_temp_crit",
+            "type": "indexable",
         }
     ],
     'linecard thermals': {
@@ -161,6 +173,8 @@ def initialize_chassis_thermals():
                 count = DeviceDataManager.get_gearbox_count('/run/hw-management/config')
             elif 'CPU Core' in rule['name']:
                 count = DeviceDataManager.get_cpu_thermal_count()
+            elif 'SODIMM' in rule['name']:
+                count = DeviceDataManager.get_sodimm_thermal_count()
             if count == 0:
                 logger.log_debug('Failed to get thermal object count for {}'.format(rule['name']))
                 continue
@@ -400,9 +414,14 @@ class Thermal(ThermalBase):
         thermal_zone_present = False
         try:
             for thermal_zone_folder in glob.iglob(THERMAL_ZONE_FOLDER_WILDCARD):
+                current = utils.read_int_from_file(os.path.join(thermal_zone_folder, THERMAL_ZONE_TEMP_FILE))
+                if current == 0:
+                    # Temperature value 0 means that this thermal zone has no
+                    # sensor and it should be ignored in this loop
+                    continue
+
                 thermal_zone_present = True
                 normal_thresh = utils.read_int_from_file(os.path.join(thermal_zone_folder, THERMAL_ZONE_NORMAL_THRESHOLD))
-                current = utils.read_int_from_file(os.path.join(thermal_zone_folder, THERMAL_ZONE_TEMP_FILE))
                 if current < normal_thresh - THERMAL_ZONE_HYSTERESIS:
                     continue
 

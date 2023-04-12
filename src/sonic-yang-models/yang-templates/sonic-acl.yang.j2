@@ -7,7 +7,7 @@ module sonic-acl {
 
 	yang-version 1.1;
 
-	namespace "http://github.com/Azure/sonic-acl";
+	namespace "http://github.com/sonic-net/sonic-acl";
 	prefix acl;
 
 	import ietf-inet-types {
@@ -31,6 +31,10 @@ module sonic-acl {
 
 	import sonic-portchannel {
 		prefix lag;
+	}
+
+	import sonic-mirror-session {
+		prefix sms;
 	}
 
 	description "ACL YANG Module for SONiC OS";
@@ -65,11 +69,27 @@ module sonic-acl {
 					type stypes:packet_action;
 				}
 
+				/* Validating 'PACKET_ACTION' exist if ACL type is 'CTRLPLANE' */
+				must "(not(../../ACL_TABLE/ACL_TABLE_LIST[ACL_TABLE_NAME=current()/ACL_TABLE_NAME]/type = 'CTRLPLANE')) or (boolean(PACKET_ACTION))";
+
+				leaf MIRROR_INGRESS_ACTION {
+					type leafref {
+						path "/sms:sonic-mirror-session/sms:MIRROR_SESSION/sms:MIRROR_SESSION_LIST/sms:name";
+					}
+				}
+
+				leaf MIRROR_EGRESS_ACTION {
+					type leafref {
+						path "/sms:sonic-mirror-session/sms:MIRROR_SESSION/sms:MIRROR_SESSION_LIST/sms:name";
+					}
+				}
+
 				leaf IP_TYPE {
 					type stypes:ip_type;
 				}
 
 				leaf PRIORITY {
+					mandatory true;
 					type uint32 {
 						range 0..999999;
 					}
@@ -86,7 +106,7 @@ module sonic-acl {
 						}
 					}
 					case ip4_prefix {
-						when "boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
 						leaf SRC_IP {
 							type inet:ipv4-prefix;
 						}
@@ -97,7 +117,7 @@ module sonic-acl {
 					}
 
 					case ip6_prefix {
-						when "boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY'])";
 						leaf SRC_IPV6 {
 							type inet:ipv6-prefix;
 						}
@@ -152,7 +172,7 @@ module sonic-acl {
 
 				leaf ETHER_TYPE {
 					type string {
-					    pattern "0x0[6-9a-fA-F][0-9a-fA-F]{2}|0x[1-9a-fA-F][0-9a-fA-F]{3}";
+                                            pattern "0x0[6-9a-fA-F][0-9a-fA-F]{2}|0x[1-9a-fA-F][0-9a-fA-F]{3}|153[6-9]|15[4-9][0-9]|1[6-9][0-9][0-9]|[2-9][0-9]{3}|[1-5][0-9]{4}|6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}";
 					}
 				}
 
@@ -164,7 +184,7 @@ module sonic-acl {
 
 				leaf TCP_FLAGS {
 					type string {
-						pattern '0[x][0-9a-fA-F]{1,2}|0[X][0-9a-fA-F]{1,2}';
+						pattern '0[xX][0-9a-fA-F]{1,2}(/0[xX][0-9a-fA-F]{1,2})?';
 					}
 				}
 
@@ -179,7 +199,7 @@ module sonic-acl {
 				choice icmp {
 
 					case icmp4 {
-						when "boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
 						leaf ICMP_TYPE {
 							type uint8 {
 								range 1..44;
@@ -194,7 +214,7 @@ module sonic-acl {
 					}
 
 					case icmp6 {
-						when "boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY'])";
 						leaf ICMPV6_TYPE {
 							type uint8 {
 								range 1..44;
@@ -246,6 +266,20 @@ module sonic-acl {
 					when "(/acl:sonic-acl/acl:ACL_TABLE/acl:ACL_TABLE_LIST[ACL_TABLE_NAME=current()/../acl:ACL_TABLE_NAME]/acl:type = 'L2')";
 					type uint8 {
 						range "0..1";
+					}
+				}
+
+				leaf BTH_OPCODE {
+				        description "RoCEv2 BTH OPCODE field";
+					type string {
+						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
+					}
+				}
+
+				leaf AETH_SYNDROME {
+				        description "RoCEv2 AETH SYNDROME field";
+					type string {
+						pattern '0[xX][0-9a-fA-F]{1,2}/0[xX][0-9a-fA-F]{1,2}';
 					}
 				}
 			}

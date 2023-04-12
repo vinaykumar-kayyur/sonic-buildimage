@@ -1,9 +1,10 @@
+{% set prefix = DEFAULT_CONTAINER_REGISTRY %}
 {% if CONFIGURED_ARCH == "armhf" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/debian-debootstrap:armhf-jessie
+FROM {{ prefix }}multiarch/debian-debootstrap:armhf-jessie
 {% elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-FROM multiarch/debian-debootstrap:arm64-jessie
+FROM {{ prefix }}multiarch/debian-debootstrap:arm64-jessie
 {% else %}
-FROM {{DOCKER_BASE_ARCH}}/debian:jessie
+FROM {{ prefix }}{{DOCKER_BASE_ARCH}}/debian:jessie
 {% endif %}
 
 ## Remove retired jessie-updates repo
@@ -48,7 +49,6 @@ RUN apt-get -y install \
     rsyslog            \
     less
 
-COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
 COPY ["root/.vimrc", "/root/.vimrc"]
 
@@ -63,10 +63,11 @@ RUN pip install wheel
 # Install supervisor
 RUN pip install supervisor>=3.4.0
 
-RUN mkdir -p /etc/supervisor
+RUN mkdir -p /etc/supervisor/conf.d
 RUN mkdir -p /var/log/supervisor
 
 COPY ["etc/supervisor/supervisord.conf", "/etc/supervisor/"]
+COPY ["etc/supervisor/containercfgd.conf", "/etc/supervisor/conf.d/"]
 
 RUN apt-get -y purge   \
     exim4              \

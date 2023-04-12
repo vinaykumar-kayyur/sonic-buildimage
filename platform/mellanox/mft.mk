@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,21 +16,27 @@
 #
 # Mellanox SAI
 
-MFT_VERSION = 4.17.2
-MFT_REVISION = 12
+MFT_VERSION = 4.22.1
+MFT_REVISION = 15
 
-export MFT_VERSION MFT_REVISION
+MLNX_MFT_INTERNAL_SOURCE_BASE_URL =
 
-MFT = mft_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
+ifneq ($(MLNX_MFT_INTERNAL_SOURCE_BASE_URL), )
+MFT_FROM_INTERNAL = y
+else
+MFT_FROM_INTERNAL = n
+endif
+
+export MFT_VERSION MFT_REVISION MFT_FROM_INTERNAL MLNX_MFT_INTERNAL_SOURCE_BASE_URL
+
+MFT = mft_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
 $(MFT)_SRC_PATH = $(PLATFORM_PATH)/mft
 SONIC_MAKE_DEBS += $(MFT)
 
-ifeq ($(BLDENV), bullseye)
 $(MFT)_DEPENDS += $(LINUX_HEADERS) $(LINUX_HEADERS_COMMON)
 
-KERNEL_MFT = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_amd64.deb
+KERNEL_MFT = kernel-mft-dkms-modules-$(KVERSION)_$(MFT_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(MFT),$(KERNEL_MFT)))
-endif
 
-MFT_OEM = mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
+MFT_OEM = mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(MFT),$(MFT_OEM)))

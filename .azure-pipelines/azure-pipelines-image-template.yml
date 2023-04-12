@@ -25,18 +25,20 @@ jobs:
     jobFilters: ${{ parameters.jobFilters }}
     jobVariables: ${{ parameters.jobVariables }}
     preSteps:
-      - template: cleanup.yml
+      - template: .azure-pipelines/cleanup.yml@buildimage
       - ${{ parameters.preSteps }}
       - script: |
-          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox)$"; then
+          BUILD_OPTIONS="$(BUILD_OPTIONS)"
+          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox|marvell-armhf)$"; then
             CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(CACHE_MODE) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(PLATFORM_AZP)"
             BUILD_OPTIONS="$(BUILD_OPTIONS) $CACHE_OPTIONS"
-            echo "##vso[task.setvariable variable=BUILD_OPTIONS]$BUILD_OPTIONS"
           fi
+          echo "##vso[task.setvariable variable=BUILD_OPTIONS]$BUILD_OPTIONS"
         displayName: "Set cache options"
       - checkout: self
         submodules: recursive
-        condition: eq(variables.SKIP_CHECKOUT, '') 
+        fetchDepth: 0
+        condition: and(succeeded(), eq(variables.SKIP_CHECKOUT, ''))
         displayName: 'Checkout code'
       - script: |
           BRANCH_NAME=$(Build.SourceBranchName)
@@ -48,17 +50,24 @@ jobs:
           ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(PLATFORM_AZP) PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
         displayName: 'Make configure'
     postSteps:
-      - script: cp target -r $(Build.ArtifactStagingDirectory)/
+      - script: |
+          mkdir -p $(Build.ArtifactStagingDirectory)/target
+          mv target/* $(Build.ArtifactStagingDirectory)/target/
         displayName: Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
         displayName: "Archive sonic image"
       - publish:  $(Build.ArtifactStagingDirectory)
-        condition: failed()
+        condition: or(failed(), canceled())
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)$(System.JobAttempt)'
         displayName: "Archive failed sonic image"
+      - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        - template: trigger-publish-artifacts-build.yml
+          parameters:
+            artifactName: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
+            publishPrefix: '$(Build.DefinitionName)/$(Build.SourceBranchName)/$(GROUP_NAME)'
       - ${{ parameters.postSteps }}
-      - template: cleanup.yml
+      - template: .azure-pipelines/cleanup.yml@buildimage
     jobGroups: ${{ parameters.jobGroups }}
     buildSteps: ${{ parameters.buildSteps }}

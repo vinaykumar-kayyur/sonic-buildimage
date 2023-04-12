@@ -8,17 +8,12 @@
 
 try:
     import os
-    import sys
     from sonic_platform_base.psu_base import PsuBase
     from sonic_py_common import logger
     from sonic_platform.eeprom import Eeprom
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-if sys.version_info[0] < 3:
-    import commands as cmd
-else:
-    import subprocess as cmd
 
 smbus_present = 1
 try:
@@ -86,7 +81,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:  # if called from psuutil outside of pmon
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -114,7 +109,6 @@ class Psu(PsuBase):
         """
         return self.eeprom.modelstr()
 
-
     def get_serial(self):
         """
         Retrieves the serial number of the PSU
@@ -124,6 +118,14 @@ class Psu(PsuBase):
         """
         return self.eeprom.serial_number_str()
 
+    def get_revision(self):
+        """
+        Retrieves the HW revision of the PSU
+
+        Returns:
+            string: HW revision of PSU
+        """
+        return self.eeprom.part_number_str()
 
     def get_part_number(self):
         """
@@ -143,7 +145,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
             sonic_logger.log_warning("PMON psu-smbus - presence = 0 ")
         else:
@@ -172,7 +174,7 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
@@ -219,7 +221,7 @@ class Psu(PsuBase):
         """
 
         if smbus_present == 0:
-            cmdstatus, psustatus = cmd.getstatusoutput('sudo i2cget -y 0 0x41 0xa')
+            cmdstatus, psustatus = getstatusoutput_noshell(['sudo', 'i2cget', '-y', '0', '0x41', '0xa'])
             psustatus = int(psustatus, 16)
         else:
             bus = smbus.SMBus(0)
