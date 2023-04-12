@@ -21,7 +21,7 @@
 	url = https://github.com/sonic-net/sonic-dbsyncd
 [submodule "src/sonic-py-swsssdk"]
 	path = src/sonic-py-swsssdk
-	url = https://github.com/sonic-net/sonic-py-swsssdk.git
+	url = https://github.com/xumia/sonic-py-swsssdk.git
 [submodule "src/sonic-snmpagent"]
 	path = src/sonic-snmpagent
 	url = https://github.com/sonic-net/sonic-snmpagent
@@ -78,7 +78,7 @@
 	url = https://github.com/sonic-net/sonic-ztp
 [submodule "src/sonic-restapi"]
 	path = src/sonic-restapi
-	url = https://github.com/sonic-net/sonic-restapi.git
+	url = https://github.com/xumia/sonic-restapi.git
 	branch = master
 [submodule "src/sonic-mgmt-common"]
 	path = src/sonic-mgmt-common
