@@ -9,16 +9,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./ntp-$(NTP_VERSION) ./ntp_$(NTP_VERSION).orig.tar.xz ./ntp_$(NTP_VERSION)-4.debian.tar.xz
 
 	# Get ntp release, debian files
-	wget http://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION).orig.tar.xz
-	wget http://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION)-1.debian.tar.xz
+	dget https://deb.debian.org/debian/pool/main/n/ntp/ntp_$(NTP_VERSION)-1.dsc
 
-	# UnTar ntp release
-	xzcat ntp_$(NTP_VERSION).orig.tar.xz | tar -xvf -
-
-	pushd ./ntp-4.2.8p15
-
-	# UnTar debian files
-	xzcat ../ntp_$(NTP_VERSION)-1.debian.tar.xz | tar -xvf -
+	pushd ./ntp-$(NTP_VERSION)
 
 	# Add the additional patch
 	cp ../patch/bug1970-UNLINK_EXPR_SLIST_empty_list.patch debian/patches/

@@ -9,8 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./ifupdown2-$(IFUPDOWN2_VERSION) ./$(IFUPDOWN2_VERSION).tar.gz
 
 	# Get ifupdown2 release
-	wget --no-check-certificate https://github.com/CumulusNetworks/ifupdown2/archive/$(IFUPDOWN2_VERSION).tar.gz
-	tar -z -f $(IFUPDOWN2_VERSION).tar.gz -x
+	dget https://deb.debian.org/debian/pool/main/i/ifupdown2/ifupdown2_$(IFUPDOWN2_VERSION).dsc
 	pushd ./ifupdown2-$(IFUPDOWN2_VERSION)
 
 	git init
