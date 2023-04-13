@@ -225,6 +225,31 @@ static inline int xiic_getreg32(struct fpgalogic_i2c *i2c, int reg)
 	return ret;
 }
 
+static inline void xiic_irq_clr(struct fpgalogic_i2c *i2c, u32 mask)
+{
+	u32 isr = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
+
+	xiic_setreg32(i2c, XIIC_IISR_OFFSET, isr & mask);
+}
+
+static int xiic_clear_rx_fifo(struct fpgalogic_i2c *i2c)
+{
+	u8 sr;
+	unsigned long timeout;
+
+	timeout = jiffies + XIIC_I2C_TIMEOUT;
+	for (sr = xiic_getreg8(i2c, XIIC_SR_REG_OFFSET);
+		!(sr & XIIC_SR_RX_FIFO_EMPTY_MASK);
+		sr = xiic_getreg8(i2c, XIIC_SR_REG_OFFSET)) {
+		xiic_getreg8(i2c, XIIC_DRR_REG_OFFSET);
+		if (time_after(jiffies, timeout)) {
+			printk("Failed to clear rx fifo\n");
+			return -ETIMEDOUT;
+		}
+	}
+
+	return 0;
+}
 
 /**
  * Wait until something change in a given register
@@ -244,18 +269,19 @@ static int poll_wait(struct fpgalogic_i2c *i2c,
 		       const unsigned long timeout)
 {
 	unsigned long j;
+	u8 status = 0;
 
 	j = jiffies + timeout;
 	while (1) {
 		mutex_lock(&i2c->lock);
-		u8 status = xiic_getreg32(i2c, reg);
+		status = xiic_getreg32(i2c, reg);
 		mutex_unlock(&i2c->lock);
 		if ((status & mask) == val)
 			break;
 		if (time_after(jiffies, j))
 			return -ETIMEDOUT;
-        cpu_relax();
-        cond_resched();		
+                cpu_relax();
+                cond_resched();		
 	}
 	return 0;
 }
@@ -289,7 +315,7 @@ static int ocores_poll_wait(struct fpgalogic_i2c *i2c)
 		mask = XIIC_SR_TX_FIFO_EMPTY_MASK | XIIC_SR_RX_FIFO_EMPTY_MASK;
 	}
 
-	dev_dbg(&i2c->adap.dev, "Wait for: 0x%x\n", mask);
+	// printk("Wait for: 0x%x\n", mask);
 
 	/*
 	 * once we are here we expect to get the expected result immediately
@@ -325,13 +351,11 @@ static int ocores_poll_wait(struct fpgalogic_i2c *i2c)
 			/* Soft reset IIC controller. */
 			xiic_setreg32(i2c, XIIC_RESETR_OFFSET, XIIC_RESET_MASK);
 			if (status & XIIC_INTR_ARB_LOST_MASK) {
-				dev_warn(i2c->adap.dev.parent,
-					 "%s: TRANSFER STATUS ERROR, ISR: bit 0x%x happens\n",
+				printk("%s: TRANSFER STATUS ERROR, ISR: bit 0x%x happens\n",
 					 __func__, XIIC_INTR_ARB_LOST_MASK);
 			} 
 			if (status & XIIC_INTR_TX_ERROR_MASK) {
-				dev_warn(i2c->adap.dev.parent,
-					 "%s: TRANSFER STATUS ERROR, ISR: bit 0x%x happens\n",
+				printk("%s: TRANSFER STATUS ERROR, ISR: bit 0x%x happens\n",
 					 __func__, XIIC_INTR_TX_ERROR_MASK);
 			}
 			return err;
@@ -339,18 +363,87 @@ static int ocores_poll_wait(struct fpgalogic_i2c *i2c)
 	}
 	
 	if (err)
-		dev_dbg(i2c->adap.dev.parent,
-			 "%s: STATUS timeout, bit 0x%x did not clear in 50ms\n",
+		printk("%s: STATUS timeout, bit 0x%x did not clear in 50ms\n",
 			 __func__, mask);
 	return err;
+}
+
+static void ocores_process(struct fpgalogic_i2c *i2c)
+{
+	struct i2c_msg *msg = i2c->msg;
+	//unsigned long flags;
+	u16 val;
+
+	/*
+	 * If we spin here because we are in timeout, so we are going
+	 * to be in STATE_ERROR. See ocores_process_timeout()
+	 */
+	mutex_lock(&i2c->lock);
+	// printk("STATE: %d\n", i2c->state);
+
+	if (i2c->state == STATE_START) {
+		i2c->state =(msg->flags & I2C_M_RD) ? STATE_READ : STATE_WRITE;
+		/* if it's the time sequence is 'start bit + address + read bit + stop bit' */
+		if (i2c->state == STATE_READ){
+			/* it's the last message so we include dynamic stop bit with length */
+			val = msg->len | XIIC_TX_DYN_STOP_MASK;
+			xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, val);
+			goto out;
+		}
+	}
+	if (i2c->state == STATE_READ){
+                /* suit for I2C_FUNC_SMBUS_BLOCK_DATA */
+                if (msg->flags & I2C_M_RECV_LEN) {
+                        msg->len = xiic_getreg32(i2c, XIIC_DRR_REG_OFFSET);
+                        msg->flags &= ~I2C_M_RECV_LEN;
+                        msg->buf[i2c->pos++] = msg->len;
+                }
+                else {
+                        msg->buf[i2c->pos++] = xiic_getreg32(i2c, XIIC_DRR_REG_OFFSET);
+                }
+	} else if (i2c->state == STATE_WRITE){
+		/* if it reaches the last byte data to be sent */
+		if ((i2c->pos == msg->len - 1) && (i2c->nmsgs == 1)){
+			val = msg->buf[i2c->pos++] | XIIC_TX_DYN_STOP_MASK;
+			xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, val);
+			i2c->state = STATE_DONE;
+			goto out;
+		/* if it is not the last byte data to be sent */
+		} else if (i2c->pos < msg->len) {
+			xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, msg->buf[i2c->pos++]);
+			goto out;
+		}
+	}
+
+	/* end of msg? */
+	if (i2c->pos == msg->len) {
+		i2c->nmsgs--;
+		i2c->pos = 0;
+		if (i2c->nmsgs) {
+			i2c->msg++;
+			msg = i2c->msg;	
+			if (!(msg->flags & I2C_M_NOSTART)) /* send start? */{
+				i2c->state = STATE_START;			
+				xiic_setreg16(i2c, XIIC_DTR_REG_OFFSET, i2c_8bit_addr_from_msg(msg) | XIIC_TX_DYN_START_MASK);
+				goto out;
+			}
+		} else {	/* end? */
+			i2c->state = STATE_DONE;
+			goto out;
+		}
+	}
+
+out:
+	mutex_unlock(&i2c->lock);
+	return ;
 }
 
 
 static int fpgai2c_poll(struct fpgalogic_i2c *i2c,
 			                  struct i2c_msg *msgs, int num)
 {
-	int ret =0, res = 0;
-	u8 ctrl;
+	int ret = 0;
+	// u8 ctrl;
 	
 	mutex_unlock(&i2c->lock);
 	/* Soft reset IIC controller. */
@@ -377,7 +470,7 @@ static int fpgai2c_poll(struct fpgalogic_i2c *i2c,
 	i2c->nmsgs = num;
 	i2c->state = STATE_START;
 
-	dev_dbg(&i2c->adap.dev, "STATE: %d\n", i2c->state);
+	// printk("STATE: %d\n", i2c->state);
 	
 	if (msgs->len == 0 && num == 1){ /* suit for i2cdetect time sequence */
 		u8 status = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
@@ -409,8 +502,9 @@ static int fpgai2c_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
 {
     struct fpgalogic_i2c *i2c = i2c_get_adapdata(adap);
     int err = -EIO;
+	u8 retry = 0, max_retry = 0;
 
-	if((1 == msgs->len && (msgs->flags & I2C_M_RD) || 0 == msgs->len && !(msgs->flags & I2C_M_RD)) && num == 1) /* I2C_SMBUS_QUICK or I2C_SMBUS_BYTE */
+	if( ( (1 == msgs->len && (msgs->flags & I2C_M_RD)) || (0 == msgs->len && !(msgs->flags & I2C_M_RD)) ) && num == 1 ) /* I2C_SMBUS_QUICK or I2C_SMBUS_BYTE */
 		max_retry = 1;
 	else
 		max_retry = 5;  // retry 5 times if receive a NACK or other errors
