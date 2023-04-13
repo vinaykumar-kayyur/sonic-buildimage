@@ -29,7 +29,7 @@
 #include <linux/jiffies.h>
 #include <linux/errno.h>
 #include <linux/i2c.h>
-#include "pddf_i2c_algo.h"
+#include "../../../../pddf/i2c/modules/include/pddf_i2c_algo.h"
 
 #define DEBUG 0
 
