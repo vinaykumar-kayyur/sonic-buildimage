@@ -45,6 +45,9 @@ RUN pip3 install --no-cache-dir \
         pyyaml                              \
         smbus
 
+# Install python-redis
+RUN pip3 install redis==4.5.4
+
 {% if docker_snmp_whls.strip() -%}
 # Copy locally-built Python wheel dependencies
 {{ copy_files("python-wheels/", docker_snmp_whls.split(' '), "/python-wheels/") }}
