@@ -6,11 +6,11 @@ MAIN_TARGET = $(IFUPDOWN2)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
-	rm -rf ./ifupdown2-$(IFUPDOWN2_VERSION) ./$(IFUPDOWN2_VERSION).tar.gz
+	rm -rf ./ifupdown2-$(IFUPDOWN2_VERSION) ./$(IFUPDOWN2_VERSION).tar.gz ./ifupdown2-$(IFUPDOWN2_BASEVERSION) ./$(IFUPDOWN2_BASEVERSION).tar.gz
 
 	# Get ifupdown2 release
 	dget https://deb.debian.org/debian/pool/main/i/ifupdown2/ifupdown2_$(IFUPDOWN2_VERSION).dsc
-	pushd ./ifupdown2-$(IFUPDOWN2_VERSION)
+	pushd ./ifupdown2-$(IFUPDOWN2_BASEVERSION)
 
 	git init
 	git add -f *
