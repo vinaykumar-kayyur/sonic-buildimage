@@ -31,6 +31,8 @@ stages:
   pool: sonicbld
   variables:
     CACHE_MODE: wcache
+    # Disable MIRROR_SNAPSHOT temporarily
+    MIRROR_SNAPSHOT: n
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
       VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web,git,docker'
   jobs:
