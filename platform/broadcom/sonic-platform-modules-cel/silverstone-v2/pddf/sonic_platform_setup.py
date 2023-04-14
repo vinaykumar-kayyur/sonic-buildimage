@@ -10,8 +10,7 @@ setup(
     author='SONiC Team',
     author_email='yajiang@celestica.com',
     url='https://github.com/Azure/sonic-buildimage',
-    packages=['sonic_platform',
-             'sonic_pcie'],
+    packages=['sonic_platform'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Plugins',
