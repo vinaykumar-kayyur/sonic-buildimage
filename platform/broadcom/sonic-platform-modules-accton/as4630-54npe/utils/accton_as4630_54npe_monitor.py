@@ -41,15 +41,12 @@ global log_level
 
 
 # Temperature Policy
-# If any fan fail , please set fan speed register to 16
-# The max value of fan speed register is 14
-#  LM77(48)+LM75(4B)+LM75(4A)  >  140, Set 10
-#  LM77(48)+LM75(4B)+LM75(4A)  >  150, Set 12
-#  LM77(48)+LM75(4B)+LM75(4A)  >  160, Set 14
-#  LM77(48)+LM75(4B)+LM75(4A)  <  140, Set 8
-#  LM77(48)+LM75(4B)+LM75(4A)  <  150, Set 10
-#  LM77(48)+LM75(4B)+LM75(4A)  <  160, Set 12
-#  Reset DUT:LM77(48)>=70C
+# If any fan fail , set fan speed register to 16(100%)
+# Default system fan speed set to 12(75%)
+# The max value of fan speed register is 16
+#  LM77(48)+LM75(4B)+LM75(4A)  >  145, Set 16
+#  LM77(48)+LM75(4B)+LM75(4A)  <  105, Set 12
+#  Shutdown DUT:LM77(48)>=75C
 #
 class switch(object):
     def __init__(self, value):
@@ -80,7 +77,8 @@ test_temp_list = [0, 0, 0]
 temp_test_data = 0
 test_temp_revert = 0
 # Make a class we can use to capture stdout and sterr in the log
-
+LEVEL_FAN_NORMAL = 0
+LEVEL_TEMP_CRITICAL = 1
 
 class device_monitor(object):
     # static temp var
@@ -113,14 +111,21 @@ class device_monitor(object):
         sys_handler.setLevel(logging.WARNING)
         logging.getLogger('').addHandler(sys_handler)
 
-    def get_state_from_fan_policy(self, temp, policy):
-        state = 0
-        for i in range(0, len(policy)):
-            if (temp > policy[i][2]):  # temp_down
-                if temp <= policy[i][3]:  # temp_up
-                    state = i
+    def get_state_from_fan_policy(self, temp, policy, ori_state):
+        state = ori_state
 
-        return state
+        # check if current state is valid
+        if ori_state < LEVEL_FAN_NORMAL or ori_state > LEVEL_TEMP_CRITICAL:
+            return LEVEL_FAN_NORMAL
+
+        if ori_state == LEVEL_FAN_NORMAL:
+            if temp > policy[ori_state][3]:
+                return LEVEL_TEMP_CRITICAL
+        else: # LEVEL_TEMP_CRITICAL
+            if temp < policy[ori_state][2]:
+                return LEVEL_FAN_NORMAL
+
+        return state # LEVEL is not changed
 
     def manage_fans(self):
         global fan_policy_state
@@ -130,17 +135,9 @@ class device_monitor(object):
         global alarm_state
         global temp_test_data
         global test_temp_revert
-        LEVEL_FAN_MIN = 0
-        LEVEL_FAN_NORMAL = 1
-        LEVEL_FAN_MID = 2
-        LEVEL_FAN_HIGH = 3
-        LEVEL_TEMP_CRITICAL = 4
         fan_policy = {
-            LEVEL_FAN_MIN: [50, 8, 0, 140000],
-            LEVEL_FAN_NORMAL: [62, 10, 140000, 150000],
-            LEVEL_FAN_MID: [75, 12, 150000, 160000],
-            LEVEL_FAN_HIGH: [88, 14, 160000, 240000],
-            LEVEL_TEMP_CRITICAL: [100, 16, 240000, 300000],
+            LEVEL_FAN_NORMAL: [75, 12, 0, 145000],
+            LEVEL_TEMP_CRITICAL: [100, 16, 105000, 145000],
         }
         temp = [0, 0, 0]
         thermal = ThermalUtil()
@@ -152,7 +149,8 @@ class device_monitor(object):
             for i in range(0, 3):
                 temp[i] = thermal._get_thermal_val(i + 1)
                 if temp[i] == 0 or temp[i] is None:
-                    logging.warning("Get temp-%d fail", i)
+                    logging.warning("Get temp-%d fail, set pwm to 100", i)
+                    fan.set_fan_duty_cycle(100)
                     return False
         else:
             if test_temp_revert == 0:
@@ -183,9 +181,9 @@ class device_monitor(object):
                 fan_fail = 0
 
         ori_state = fan_policy_state
-        fan_policy_state = self.get_state_from_fan_policy(temp_val, fan_policy)
+        fan_policy_state = self.get_state_from_fan_policy(temp_val, fan_policy, ori_state)
 
-        if fan_policy_state > LEVEL_TEMP_CRITICAL or fan_policy_state < LEVEL_FAN_MIN:
+        if fan_policy_state > LEVEL_TEMP_CRITICAL or fan_policy_state < LEVEL_FAN_NORMAL:
             logging.error("Get error fan current_state\n")
             return 0
 
@@ -194,23 +192,28 @@ class device_monitor(object):
             new_duty_cycle = fan_policy[fan_policy_state][0]
             fan.set_fan_duty_cycle(new_duty_cycle)
 
-        if temp[0] >= 70000:  # LM75-48
+        if temp[0] >= 75000:  # LM77-48
             # critical case*/
             logging.critical(
-                'Alarm-Critical for temperature critical is detected, reset DUT')
-            cmd_str = "i2cset -y -f 3 0x60 0x4 0xE4"
+                'Alarm-Critical for temperature critical is detected, disable PoE')
+            cmd_str = "i2cset -f -y 16 0x20 0x06 0x0 0x0 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xFE i"
+            status, output = subprocess.getstatusoutput(cmd_str) # Disable PoE
+
+            logging.critical(
+                'Alarm-Critical for temperature critical is detected, shutdown DUT')
+            cmd_str = "i2cset -y -f 3 0x60 0x4 0x74"
             time.sleep(2)
-            status, output = subprocess.getstatusoutput(cmd_str)
+            status, output = subprocess.getstatusoutput(cmd_str) # Shutdown DUT
 
         #logging.debug('ori_state=%d, current_state=%d, temp_val=%d\n\n',ori_state, fan_policy_state, temp_val)
 
-        if ori_state < LEVEL_FAN_HIGH:
-            if fan_policy_state >= LEVEL_FAN_HIGH:
+        if ori_state < LEVEL_TEMP_CRITICAL:
+            if fan_policy_state >= LEVEL_TEMP_CRITICAL:
                 if alarm_state == 0:
                     logging.warning('Alarm for temperature high is detected')
                     alarm_state = 1
 
-        if fan_policy_state < LEVEL_FAN_MID:
+        if fan_policy_state <= LEVEL_FAN_NORMAL:
             if alarm_state == 1:
                 logging.info('Alarm for temperature high is cleared')
                 alarm_state = 0
@@ -251,8 +254,8 @@ def main(argv):
             print(test_temp_list)
 
     fan = FanUtil()
-    fan.set_fan_duty_cycle(50)
-    print("set default fan speed to 50%")
+    fan.set_fan_duty_cycle(75)
+    print("set default fan speed to 75%")
     monitor = device_monitor(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:
