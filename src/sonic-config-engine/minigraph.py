@@ -1691,6 +1691,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 updated_lanes = ",".join(port_lanes[:4])
                 ports[port_name]['lanes'] = updated_lanes
 
+
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
