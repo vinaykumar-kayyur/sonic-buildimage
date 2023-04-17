@@ -1,10 +1,24 @@
---- sonic-buildimage-one/src/sonic-swss/orchagent/orch.h	2023-02-08 15:12:59.842183729 +0800
-+++ sonic-buildimage-two/src/sonic-swss/orchagent/orch.h	2023-02-08 15:15:05.759154842 +0800
-@@ -39,6 +39,7 @@ const char state_db_key_delimiter  = '|';
+From 0b912efb17f425d6d9d97cfda4c0d18de22b970f Mon Sep 17 00:00:00 2001
+From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
+Date: Mon, 17 Apr 2023 10:08:33 +0800
+Subject: [PATCH] update-swss-orch-h
+
+---
+ orchagent/orch.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/orchagent/orch.h b/orchagent/orch.h
+index 6c620a3..bdff37b 100644
+--- a/orchagent/orch.h
++++ b/orchagent/orch.h
+@@ -40,6 +40,7 @@ const char state_db_key_delimiter  = '|';
  #define NPS_PLATFORM_SUBSTRING  "nephos"
  #define MRVL_PLATFORM_SUBSTRING "marvell"
  #define CISCO_8000_PLATFORM_SUBSTRING "cisco-8000"
 +#define CENTEC_PLATFORM_SUBSTRING "centec"
+ #define XS_PLATFORM_SUBSTRING   "xsight"
  
  #define CONFIGDB_KEY_SEPARATOR "|"
- #define DEFAULT_KEY_SEPARATOR  ":"
+-- 
+2.25.1
+

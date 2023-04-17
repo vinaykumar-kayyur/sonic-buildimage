@@ -1,17 +1,28 @@
---- sonic-buildimage-one/src/sonic-swss/orchagent/main.cpp	2023-02-08 15:12:59.842183729 +0800
-+++ sonic-buildimage-two/src/sonic-swss/orchagent/main.cpp	2023-02-08 15:15:05.767154906 +0800
-@@ -570,7 +570,9 @@ int main(int argc, char **argv)
+From f589c6a68345d2955e8100edabad2d210eb32915 Mon Sep 17 00:00:00 2001
+From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
+Date: Mon, 17 Apr 2023 10:05:51 +0800
+Subject: [PATCH] update-swss-main-cpp
+
+---
+ orchagent/main.cpp | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/orchagent/main.cpp b/orchagent/main.cpp
+index 5ae5aea..c5eed1e 100644
+--- a/orchagent/main.cpp
++++ b/orchagent/main.cpp
+@@ -585,7 +585,9 @@ int main(int argc, char **argv)
      attr.value.u64 = gSwitchId;
      attrs.push_back(attr);
  
--    if (gMySwitchType == "voq" || gMySwitchType == "fabric")
+-    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || gMySwitchType == "chassis-packet")
 +    /* centec create switch take longtime */
 +    char *platform = getenv("platform");
-+    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING)))
++    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || gMySwitchType == "chassis-packet" || (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING)))
      {
          /* We set this long timeout in order for orchagent to wait enough time for
           * response from syncd. It is needed since switch create takes more time
-@@ -586,6 +588,10 @@ int main(int argc, char **argv)
+@@ -601,6 +603,10 @@ int main(int argc, char **argv)
          {
              attr.value.u64 = (10 * SAI_REDIS_DEFAULT_SYNC_OPERATION_RESPONSE_TIMEOUT);
          }
@@ -22,12 +33,12 @@
  
          attr.id = SAI_REDIS_SWITCH_ATTR_SYNC_OPERATION_RESPONSE_TIMEOUT;
          status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
-@@ -608,11 +614,16 @@ int main(int argc, char **argv)
+@@ -623,11 +629,16 @@ int main(int argc, char **argv)
      }
      SWSS_LOG_NOTICE("Create a switch, id:%" PRIu64, gSwitchId);
  
--    if (gMySwitchType == "voq" || gMySwitchType == "fabric")
-+    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING)))
+-    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || gMySwitchType == "chassis-packet")
++    if (gMySwitchType == "voq" || gMySwitchType == "fabric" || gMySwitchType == "chassis-packet" || (platform && strstr(platform, CENTEC_PLATFORM_SUBSTRING)))
      {
          /* Set syncd response timeout back to the default value */
          attr.id = SAI_REDIS_SWITCH_ATTR_SYNC_OPERATION_RESPONSE_TIMEOUT;
@@ -40,3 +51,6 @@
          status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
  
          if (status != SAI_STATUS_SUCCESS)
+-- 
+2.25.1
+
