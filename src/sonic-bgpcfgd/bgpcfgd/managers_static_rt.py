@@ -46,6 +46,11 @@ class StaticRouteMgr(Manager):
 
         # bfd enabled route would be handled in staticroutebfd, skip here
         if bfd_enable and bfd_enable[0].lower() == "true":
+            log_debug("{} static route {} bfd flag is true".format(self.db_name, key))
+            tmp_nh_set, tmp_route_tag = self.static_routes.get(vrf, {}).get(ip_prefix, (IpNextHopSet(is_ipv6), route_tag))
+            if tmp_nh_set: #clear nexthop set if it is not empty
+                log_debug("{} static route {} bfd flag is true, cur_nh is not empty, clear it".format(self.db_name, key))
+                self.static_routes.setdefault(vrf, {}).pop(ip_prefix, None)
             return True
 
         try:
@@ -65,9 +70,9 @@ class StaticRouteMgr(Manager):
 
         if cmd_list:
             self.cfg_mgr.push_list(cmd_list)
-            log_debug("Static route {} is scheduled for updates".format(key))
+            log_debug("{} Static route {} is scheduled for updates. {}".format(self.db_name, key, str(cmd_list)))
         else:
-            log_debug("Nothing to update for static route {}".format(key))
+            log_debug("{} Nothing to update for static route {}".format(self.db_name, key))
 
         self.static_routes.setdefault(vrf, {})[ip_prefix] = (ip_nh_set, route_tag)
 
@@ -90,9 +95,9 @@ class StaticRouteMgr(Manager):
 
         if cmd_list:
             self.cfg_mgr.push_list(cmd_list)
-            log_debug("Static route {} is scheduled for updates".format(key))
+            log_debug("{} Static route {} is scheduled for updates. {}".format(self.db_name, key, str(cmd_list)))
         else:
-            log_debug("Nothing to update for static route {}".format(key))
+            log_debug("{} Nothing to update for static route {}".format(self.db_name, key))
 
         self.static_routes.setdefault(vrf, {}).pop(ip_prefix, None)
 

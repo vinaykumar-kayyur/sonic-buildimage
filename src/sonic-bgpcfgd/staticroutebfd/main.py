@@ -4,8 +4,10 @@ import sys
 import syslog
 import threading
 import traceback
+import time
 from collections import defaultdict
 from ipaddress import IPv4Address, IPv6Address
+from copy import deepcopy
 
 from swsscommon import swsscommon
 
@@ -117,12 +119,6 @@ class StaticRouteBfd(object):
 
         self.static_route_appl_tbl = swsscommon.Table(self.appl_db, STATIC_ROUTE_TABLE_NAME)
 
-        #to use SonicV2Connector get_all method, DBConnector doesn't have get_all
-        self.db = swsscommon.SonicV2Connector()
-        self.db.connect(self.db.CONFIG_DB)
-        self.db.connect(self.db.APPL_DB)
-        self.db.connect(self.db.STATE_DB)
-
         self.selector = swsscommon.Select()
         self.callbacks = defaultdict(lambda: defaultdict(list))  # db -> table -> handlers[]
         self.subscribers = set()
@@ -155,7 +151,6 @@ class StaticRouteBfd(object):
             pass
 
     def get_local_db(self, table, key):
-        #FIXME how to handle key does not exist case, to add item
         try:
             v = self.local_db[table][key]
             return v
@@ -168,7 +163,6 @@ class StaticRouteBfd(object):
                 del self.local_db[table][key]
 
     def append_to_nh_table_entry(self, nh_key, ip_prefix):
-        #FIXME consider first time adding nh_key
         entry = self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key)
         entry.add(ip_prefix)
 
@@ -238,38 +232,45 @@ class StaticRouteBfd(object):
         return key.split(splitter, 1)[1]
 
     def reconciliation(self):
+        #to use SonicV2Connector get_all method, DBConnector doesn't have get_all
+        db = swsscommon.SonicV2Connector()
+        db.connect(db.CONFIG_DB)
+        db.connect(db.APPL_DB)
+        db.connect(db.STATE_DB)
+
         #MUST keep the restore sequene
         #restore interface(loopback/interface/portchannel_interface) tables
 
         #restore interface tables
         log_info("restore interface table -->")
-        keys = self.db.keys(self.db.CONFIG_DB, "LOOPBACK_INTERFACE|*")
+        keys = db.keys(db.CONFIG_DB, "LOOPBACK_INTERFACE|*")
         for key in keys:
             key_new = self.strip_table_name(key, "|")
             self.interface_set_handler(key_new, "")
-        keys = self.db.keys(self.db.CONFIG_DB, "INTERFACE|*")
+        keys = db.keys(db.CONFIG_DB, "INTERFACE|*")
         for key in keys:
             key_new = self.strip_table_name(key, "|")
             self.interface_set_handler(key_new, "")
-        keys = self.db.keys(self.db.CONFIG_DB, "PORTCHANNEL_INTERFACE|*")
+        keys = db.keys(db.CONFIG_DB, "PORTCHANNEL_INTERFACE|*")
         for key in keys:
             key_new = self.strip_table_name(key, "|")
             self.interface_set_handler(key_new, "")
 
         #restore bfd session table, static route won't create bfd session if it is already in appl_db
         log_info("restore bfd session table -->")
-        keys = self.db.keys(self.db.APPL_DB, "BFD_SESSION_TABLE:*")
+        keys = db.keys(db.APPL_DB, "BFD_SESSION_TABLE:*")
         for key in keys:
-            data = self.db.get_all(self.db.APPL_DB, key)
+            data = db.get_all(db.APPL_DB, key)
             key_new = self.strip_table_name(key, ":")
             self.set_local_db(LOCAL_BFD_TABLE, key_new, data)
 
         #restore static route table
         log_info("restore static route table -->")
-        keys = self.db.keys(self.db.CONFIG_DB, "STATIC_ROUTE|*")
+        keys = db.keys(db.CONFIG_DB, "STATIC_ROUTE|*")
         for key in keys:
-            data = self.db.get_all(self.db.CONFIG_DB, key)
+            data = db.get_all(db.CONFIG_DB, key)
             key_new = self.strip_table_name(key, "|")
+            log_debug("SRT_BFD: restore static route from config_db, key %s, data %s"%(key, str(data)))
             self.static_route_set_handler(key_new, data)
 
         #clean up local bfd table, remove non static route bfd session
@@ -278,9 +279,9 @@ class StaticRouteBfd(object):
 
         #restore bfd state table
         log_info("restore bfd state table -->")
-        keys = self.db.keys(self.db.STATE_DB, "BFD_SESSION_TABLE|*")
+        keys = db.keys(db.STATE_DB, "BFD_SESSION_TABLE|*")
         for key in keys:
-            data = self.db.get_all(self.db.STATE_DB, key)
+            data = db.get_all(db.STATE_DB, key)
             key_new = self.strip_table_name(key, "|")
             self.bfd_state_set_handler(key_new, data)
 
@@ -293,13 +294,13 @@ class StaticRouteBfd(object):
             if "static_route" not in bfd_session or bfd_session["static_route"] != "true":
                 self.local_db[LOCAL_BFD_TABLE].pop(key)
 
-    def check_skip(self, bfd_enable):
-        if isinstance(bfd_enable, list):
-            if len(bfd_enable) == 1:
-                if isinstance(bfd_enable[0], str):
-                    if bfd_enable[0].lower() == "true":
-                        return False
-        return True
+    def isFieldTrue(self, bfd_field):
+        if isinstance(bfd_field, list):
+            if len(bfd_field) == 1:
+                if isinstance(bfd_field[0], str):
+                    if bfd_field[0].lower() == "true":
+                        return True
+        return False
 
     def refresh_active_nh(self, route_cfg_key):
         data = self.get_local_db(LOCAL_CONFIG_TABLE, route_cfg_key)
@@ -307,6 +308,7 @@ class StaticRouteBfd(object):
         arg_list    = lambda v: v.split(',') if len(v.strip()) != 0 else None
         nh_list     = arg_list(data['nexthop']) if 'nexthop' in data else None
         nh_vrf_list = arg_list(data['nexthop-vrf']) if 'nexthop-vrf' in data else None
+        nh_cnt      = 0
 
         for index in range(len(nh_list)):
             nh_ip = nh_list[index]
@@ -319,9 +321,41 @@ class StaticRouteBfd(object):
                 continue
             if "state" in bfd_session and bfd_session["state"].upper() == "UP":
                 self.append_to_srt_table_entry(route_cfg_key, (nh_vrf, nh_ip))
+                nh_cnt += 1
+
+        if nh_cnt == 0:
+            return
 
         new_config = self.reconstruct_static_route_config(data, self.get_local_db(LOCAL_SRT_TABLE, route_cfg_key))
         self.set_static_route_into_appl_db(route_cfg_key.replace("|", ":"), new_config)
+
+    def handle_bfd_change(self, cfg_key, data, to_bfd_enable):
+        valid, vrf, ip_prefix = static_route_split_key(cfg_key)
+        key = vrf + ":" + ip_prefix
+        log_debug("SRT_BFD: handle_bfd_change. key %s, data %s, to_bfd_enable %s"%(key, str(data), str(to_bfd_enable)))
+        if to_bfd_enable:
+            #uninstall existing route first, and then start bfd processing
+            #1, write route with full_nh_list to appl_db, let StaticRouteMgr(appl_db) install this route
+            #2, delete the above route to uninstall the the route, and then start normal processing
+            data['bfd'] = "false"
+            self.set_static_route_into_appl_db(key, data)
+            time.sleep(0.1)
+            self.del_static_route_from_appl_db(key)
+            data['bfd'] = "false"
+            log_debug("SRT_BFD: bfd toggle to true. uninstall the route first, delete static route from appl_db, key %s"%(key))
+        else:
+            #safely delete the static_route entry created by StaticRouteBfd
+            #1, write a route with bfd=true to appl_db to clean up cur_nh in StaticRouteMgr
+            #2, delete the entry from appl_db STATIC_ROUTE_TABLE, StaticRouteMgr do nothing because of empty cur_nh
+            data['bfd'] = "true"
+            self.set_static_route_into_appl_db(key, data)
+            time.sleep(0.1)
+            self.del_static_route_from_appl_db(key)
+            log_debug("SRT_BFD: bfd toggle to false. delete static route from appl_db, key %s"%(key))
+
+            data['bfd'] = "false"
+            #treat it as static route deletion, but do not delete it from LOCAL_CONFIG_TABLE
+            self.static_route_del_handler(cfg_key, False)
 
     def static_route_set_handler(self, key, data):
 
@@ -339,10 +373,28 @@ class StaticRouteBfd(object):
             log_err("invalid ip prefix for static route: ", key)
             return True
 
-        arg_list    = lambda v: v.split(',') if len(v.strip()) != 0 else None
-        bfd_enable  = arg_list(data['bfd']) if 'bfd' in data else False
+        arg_list  = lambda v: v.split(',') if len(v.strip()) != 0 else None
+        bfd_field = arg_list(data['bfd']) if 'bfd' in data else ["false"]
+
+        cur_data = self.get_local_db(LOCAL_CONFIG_TABLE, route_cfg_key)
+        cur_bfd_enabled = False
+        if cur_data:
+            cur_bfd_field = arg_list(cur_data['bfd']) if 'bfd' in cur_data else ["false"]
+            cur_bfd_enabled = self.isFieldTrue(cur_bfd_field)
+
         # this process, staticroutebfd, only handle the bfd enabled case, other cases would be handled in bgpcfgd/StaticRouteMgr
-        if self.check_skip(bfd_enable):
+        bfd_enabled = self.isFieldTrue(bfd_field)
+
+        if cur_data:
+            if cur_bfd_enabled and not bfd_enabled: # dynamic bfd flag change from TRUE to FALSE
+                self.handle_bfd_change(key, data, False)
+            if not cur_bfd_enabled and bfd_enabled: # dynamic bfd flag change from FALSE to TRUE
+                self.handle_bfd_change(key, data, True)
+
+        if not bfd_enabled: 
+            #skip if bfd is not enabled, but store it to local_db to detect bfd field dynamic change
+            data['bfd'] = "false"
+            self.set_local_db(LOCAL_CONFIG_TABLE, route_cfg_key, data)
             return True
 
         bkh_list    = arg_list(data['blackhole']) if 'blackhole' in data else None
@@ -359,17 +411,16 @@ class StaticRouteBfd(object):
             return True
 
 
-        data_exist = self.get_local_db(LOCAL_CONFIG_TABLE, route_cfg_key)
-        if data_exist:
+        if cur_data:
             # route with the prefix already exist, remove the deleted nexthops
-            nh_list_exist = arg_list(data_exist['nexthop']) if 'nexthop' in data else None
-            nh_vrf_list_exist = arg_list(data_exist['nexthop-vrf']) if 'nexthop-vrf' in data else None
+            nh_list_exist = arg_list(cur_data['nexthop']) if 'nexthop' in cur_data else None
+            nh_vrf_list_exist = arg_list(cur_data['nexthop-vrf']) if 'nexthop-vrf' in cur_data else None
             if nh_vrf_list_exist is None:
                 nh_vrf_list_exist = []
                 for nh in nh_list:
                     nh_vrf_list_exist.append(vrf)
 
-            intf_list_exist   = arg_list(data_exist['ifname']) if 'ifname' in data else None
+            intf_list_exist   = arg_list(cur_data['ifname']) if 'ifname' in cur_data else None
             nh_key_list_exist = list(zip(nh_vrf_list_exist, intf_list_exist, nh_list_exist))
             nh_key_list_new = list(zip(nh_vrf_list, intf_list, nh_list))
             for nh in nh_key_list_exist:
@@ -402,13 +453,14 @@ class StaticRouteBfd(object):
                 if not valid:
                     log_warn("cannot find ip for interface: %s" %intf)
                     continue
+
+                bfd_entry_cfg = self.BFD_DEFAULT_CFG.copy()
                 if all([bfd_rx_interval, bfd_tx_interval, bfd_multiplier, bfd_multihop]):
                     bfd_entry_cfg["multihop"] = bfd_multihop
                     bfd_entry_cfg["rx_interval"] = bfd_rx_interval
                     bfd_entry_cfg["tx_interval"] = bfd_tx_interval
                     bfd_entry_cfg["multiplier"] = bfd_multiplier
-                else:
-                    bfd_entry_cfg = self.BFD_DEFAULT_CFG.copy()
+
                 bfd_entry_cfg["local_addr"] = local_addr
                 self.set_bfd_session_into_appl_db(bfd_key, bfd_entry_cfg)
                 bfd_entry_cfg["static_route"] = "true"
@@ -420,7 +472,7 @@ class StaticRouteBfd(object):
 
         return True
 
-    def static_route_del_handler(self, key):
+    def static_route_del_handler(self, key, redis_del):
         valid, vrf, ip_prefix = static_route_split_key(key)
         if not valid:
             return True
@@ -450,7 +502,9 @@ class StaticRouteBfd(object):
                 self.del_bfd_session_from_appl_db(bfd_key)
 
         self.del_static_route_from_appl_db(route_cfg_key.replace("|", ":"))
-        self.remove_from_local_db(LOCAL_INTERFACE_TABLE, route_cfg_key)
+
+        if redis_del:
+            self.remove_from_local_db(LOCAL_CONFIG_TABLE, route_cfg_key)
 
         return True
 
@@ -466,7 +520,7 @@ class StaticRouteBfd(object):
         if op == swsscommon.SET_COMMAND:
             self.static_route_set_handler(key, data)
         elif op == swsscommon.DEL_COMMAND:
-            self.static_route_del_handler(key)
+            self.static_route_del_handler(key, True)
         else:
             log_err("Invalid operation '%s' for key '%s'" % (op, key))
 
@@ -495,7 +549,7 @@ class StaticRouteBfd(object):
     def set_static_route_into_appl_db(self, key, data):
         fvs = swsscommon.FieldValuePairs(list(data.items()))
         self.static_route_appl_tbl.set(key, fvs)
-        log_debug("set static route to appl_db, key %s, data %s"%(key, str(data)))
+        log_debug("SRT_BFD: set static route to appl_db, key %s, data %s"%(key, str(data)))
 
     def del_static_route_from_appl_db(self, key):
         self.static_route_appl_tbl.delete(key)
@@ -574,8 +628,10 @@ class StaticRouteBfd(object):
             for prefix in self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key):
                 srt_key =  prefix
                 config_key =  prefix
+                config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
                 self.remove_from_srt_table_entry(srt_key, (vrf, peer_ip))
                 if len(self.get_local_db(LOCAL_SRT_TABLE, srt_key)) == 0:
+                    log_debug("SRT_BFD: bfd_state DOWN. nh_list is empty, delete static route from appl_db, key %s"%(srt_key.replace("|", ":")))
                     self.del_static_route_from_appl_db(srt_key.replace("|", ":"))
                 else:
                     config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
@@ -594,6 +650,7 @@ class StaticRouteBfd(object):
             config_key = prefix
             self.remove_from_srt_table_entry(srt_key, (vrf, peer_ip))
             if len(self.get_local_db(LOCAL_SRT_TABLE, srt_key)) == 0:
+                log_debug("SRT_BFD: bfd_state deletion. nh_list is empty, delete static route from appl_db, key %s"%(srt_key.replace("|", ":")))
                 self.del_static_route_from_appl_db(srt_key.replace("|", ":"))
             else:
                 config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
@@ -652,7 +709,6 @@ class StaticRouteBfd(object):
                     log_debug("Received message : '%s'" % str((key, op, fvs)))
                     for callback in self.callbacks[sub.getDbConnector().getDbId()][sub.getTableName()]:
                         callback(key, op, dict(fvs))
-
 
 def do_work():
     sr_bfd = StaticRouteBfd()
