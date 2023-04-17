@@ -47,9 +47,6 @@ RUN pip3 install requests
 # We install the libpci module in order to be able to do PCI transactions
 RUN pip3 install libpci
 
-# Install python-redis
-RUN pip3 install redis==4.5.4
-
 {% if docker_platform_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_platform_monitor_debs.split(' '), "/debs/") }}
