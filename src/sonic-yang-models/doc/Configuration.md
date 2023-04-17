@@ -1,3 +1,4 @@
+=======
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -18,16 +19,23 @@ Table of Contents
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
+         * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
          * [Device Metadata](#device-metadata)  
-         * [Device neighbor metada](#device-neighbor-metada)  
+         * [Device neighbor metada](#device-neighbor-metada)
+         * [DHCP_RELAY](#dhcp_relay)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
+         * [FG_NHG](#fg_nhg)  
+         * [FG_NHG_MEMBER](#fg_nhg_member)  
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
+         * [Hash](#hash)  
          * [KDUMP](#kdump)  
+         * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -46,26 +54,35 @@ Table of Contents
          * [Scheduler](#scheduler)  
          * [Port QoS Map](#port-qos-map)  
          * [Queue](#queue)  
+         * [Syslog Rate Limit](#syslog-rate-limit)  
+         * [Sflow](#sflow)  
+         * [Restapi](#restapi)  
+         * [System Port](#system-port)  
          * [Tacplus Server](#tacplus-server)    
          * [TC to Priority group map](#tc-to-priority-group-map)  
          * [TC to Queue map](#tc-to-queue-map)    
          * [Telemetry](#telemetry)  
+         * [Tunnel](#tunnel)
          * [Versions](#versions)  
          * [VLAN](#vlan)   
          * [VLAN_MEMBER](#vlan_member)  
-         * [VXLAN](#vxlan)   
+         * [VOQ Inband Interface](#voq-inband-interface)  
+         * [VXLAN](#vxlan)  
          * [Virtual router](#virtual-router)  
+         * [LOGGER](#logger)           
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)  
-         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)  
+         * [RADIUS](#radius)  
+         * [Static DNS](#static-dns)  
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
+ 
 
 
-
-# Introduction																																									
-This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.  																																																																					
+# Introduction
+This document lists the configuration commands schema applied in the SONiC eco system. All these commands find relevance in collecting system information, analysis and even for trouble shooting. All the commands are categorized under relevant topics with corresponding examples.
 
 # Configuration
 
@@ -103,7 +120,7 @@ However, this feature is not implemented by all applications yet. By Sep
 is BGP (docker-fpm-quagga). For other applications, a manual restart is
 required after configuration changes in ConfigDB.
 
-# **Redis and Json Schema** 
+# **Redis and Json Schema**
 
 ConfigDB uses a table-object schema that is similar with
 [AppDB](https://github.com/Azure/sonic-swss/blob/4c56d23b9ff4940bdf576cf7c9e5aa77adcbbdcc/doc/swss-schema.md),
@@ -339,11 +356,11 @@ and migration plan
     }
 }
 ```
-### BGP Device Global 
+### BGP Device Global
 
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
-It has a STATE object containing device state like **tsa_enabled** 
-which is set to true if device is currently isolated using 
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.
+It has a STATE object containing device state like **tsa_enabled**
+which is set to true if device is currently isolated using
 traffic-shift-away (TSA) route-maps in BGP
 
 ```
@@ -375,17 +392,17 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
                 "asn": 64009,
                 "name": "ARISTA09T0"
         },
- 
+
         "10.0.0.63": {
-                "rrclient": "0", 
-				"name": "ARISTA04T1", 
-				"local_addr": "10.0.0.62", 
-				"nhopself": "0", 
-				"holdtime": "10", 
-				"asn": "64600", 
+                "rrclient": "0",
+				"name": "ARISTA04T1",
+				"local_addr": "10.0.0.62",
+				"nhopself": "0",
+				"holdtime": "10",
+				"asn": "64600",
 				"keepalive": "3"
         }
-		
+
 "BGP_PEER_RANGE": {
     "BGPSLBPassive": {
         "name": "BGPSLBPassive",
@@ -569,7 +586,7 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
     }
   }
 }
- 
+
 ```
 
 ### Buffer port ingress profile list
@@ -634,6 +651,25 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 
 ```
 
+### Chassis Module
+
+CHASSIS_MODULE table holds the list and configuration of linecard and fabric modules in a SONiC chassis.
+It currently allows user to administratively bring down a line-card or fabric-card
+
+```
+{
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
+    }
+}
+
+```
+
 ### COPP_TABLE
 
 ```
@@ -647,7 +683,7 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 	 "queue": "0",
 	 "red_action": "drop"
      },
-   
+
      "trap.group.arp": {
          "cbs": "600",
          "cir": "600",
@@ -659,21 +695,21 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 	 "trap_ids": "arp_req,arp_resp,neigh_discovery",
 	 "trap_priority": "4"
       },
-    
+
      "trap.group.lldp.dhcp.udld": {
          "queue": "4",
          "trap_action": "trap",
 	 "trap_ids": "lldp,dhcp,udld",
 	 "trap_priority": "4"
       },
-    
+
      "trap.group.bgp.lacp": {
          "queue": "4",
          "trap_action": "trap",
 	 "trap_ids": "bgp,bgpv6,lacp",
 	 "trap_priority": "4"
       },
-   
+
      "trap.group.ip2me": {
          "cbs": "600",
          "cir": "600",
@@ -828,7 +864,8 @@ instance is supported in SONiC.
         "deployment_id": "1",
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
-        "buffer_model": "traditional"
+        "buffer_model": "traditional",
+        "yang_config_validation": "disable"
     }
   }
 }
@@ -858,6 +895,22 @@ instance is supported in SONiC.
 
 ```
 
+### DHCP_RELAY
+
+```
+{
+"DHCP_RELAY": {
+    "dhcpv6_servers": [
+        "fc02:2000::1",
+        "fc02:2000::2",
+        "fc02:2000::3",
+        "fc02:2000::4"
+    ],
+    "rfc6939_support": "true",
+    "interface_id": "true"
+}
+
+```
 
 ### DSCP_TO_TC_MAP
 ```
@@ -878,6 +931,57 @@ instance is supported in SONiC.
   }
 }
 
+```
+
+### FG_NHG
+
+The FG_NHG table provides information on Next Hop Groups, including a specified Hash Bucket Size (bucket_size) and match mode for each group.
+
+```
+"FG_NHG": {
+    "fgnhg_v4": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    },
+    "fgnhg_v6": {
+        "bucket_size": "120",
+        "match_mode": "nexthop-based"
+    }
+}
+```
+
+### FG_NHG_MEMBER
+
+The FG_NHG_MEMBER table provides information about the members of a next hop group, including the group name (FG_NHG), the index at which redistribution is performed (bank), and the link associated with the next-hop-ip (link).
+
+```
+"FG_NHG_MEMBER": {
+    "200.200.200.4": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "0",
+        "link": "Ethernet8"
+    },
+    "200.200.200.5": {
+        "FG_NHG": "fgnhg_v4",
+        "bank": "1",
+        "link": "Ethernet12"
+    }
+}
+```
+
+### FG_NHG_PREFIX
+
+The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desired, and Fine Grained next-hop group name.
+
+```
+"FG_NHG_PREFIX": {
+    "100.50.25.12/32": {
+	    "FG_NHG": "fgnhg_v4"
+	},
+    "fc:05::/128": {
+	    "FG_NHG": "fgnhg_v6"
+	}
+}
 ```
 
 
@@ -904,19 +1008,78 @@ instance is supported in SONiC.
 
 ```
 {
-"FLEX_COUNTER_TABLE": {
-    "PFCWD": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "PORT": {
-        "FLEX_COUNTER_STATUS": "enable"
-    },
-    "QUEUE": {
-        "FLEX_COUNTER_STATUS": "enable"
-    }
-  }
+	"FLEX_COUNTER_TABLE": {
+		"PFCWD": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
+		},
+		"QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"TUNNEL": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		}
+	}
 }
 
+```
+
+### Hash
+
+Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.  
+The configuration is applied globally for each ECMP and LAG on a switch.
+
+***ECMP/LAG HASH***
+
+```
+{
+    "SWITCH_HASH": {
+        "GLOBAL": {
+            "ecmp_hash": [
+                "DST_MAC",
+                "SRC_MAC",
+                "ETHERTYPE",
+                "IP_PROTOCOL",
+                "DST_IP",
+                "SRC_IP",
+                "L4_DST_PORT",
+                "L4_SRC_PORT",
+                "INNER_DST_MAC",
+                "INNER_SRC_MAC",
+                "INNER_ETHERTYPE",
+                "INNER_IP_PROTOCOL",
+                "INNER_DST_IP",
+                "INNER_SRC_IP",
+                "INNER_L4_DST_PORT",
+                "INNER_L4_SRC_PORT"
+            ],
+            "lag_hash": [
+                "DST_MAC",
+                "SRC_MAC",
+                "ETHERTYPE",
+                "IP_PROTOCOL",
+                "DST_IP",
+                "SRC_IP",
+                "L4_DST_PORT",
+                "L4_SRC_PORT",
+                "INNER_DST_MAC",
+                "INNER_SRC_MAC",
+                "INNER_ETHERTYPE",
+                "INNER_IP_PROTOCOL",
+                "INNER_DST_IP",
+                "INNER_SRC_IP",
+                "INNER_L4_DST_PORT",
+                "INNER_L4_SRC_PORT"
+            ]
+        }
+    }
+}
 ```
 
 ### KDUMP
@@ -930,6 +1093,27 @@ instance is supported in SONiC.
             "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M"
          }
      }
+}
+
+```
+
+### Kubernetes Master
+
+Kubernetes Master related configurations are stored in
+**KUBERNETES_MASTER** table. These configurations are used mainly
+for CTRMGR service. CTRMGR service will interactive with
+kubernetes master according to these configurations.
+
+```
+{
+    "KUBERNETES_MASTER": {
+        "SERVER": {
+            "disable": "False",
+            "insecure": "True",
+            "ip": "k8s.apiserver.com",
+            "port": "6443"
+        }
+    }
 }
 
 ```
@@ -1057,7 +1241,7 @@ instead of data network.
     }
   }
 }
- 
+
 ```
 
 
@@ -1093,7 +1277,7 @@ instead of data network.
 ```
 ### MUX_CABLE
 
-The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_type` and `soc_ipv4` objects are optional. 
+The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_type` and `soc_ipv4` objects are optional.
 
 ```
 {
@@ -1136,7 +1320,7 @@ This option **has no effect** if the mgmt vrf is not enabled.
 
 ***NTP Source Port***
 
-This option sets the port which ntp will choose to send time update requests from by.  
+This option sets the port which ntp will choose to send time update requests from by.
 
 NOTE: If a Loopback interface is defined on the switch ntp will choose this by default, so this setting
 is **required** if the switch has a Loopback interface and the ntp peer does not have defined routes
@@ -1206,7 +1390,7 @@ attributes in those objects.
 
 ### Peer Switch
 
-Below is an exmaple of the peer switch table configuration. 
+Below is an exmaple of the peer switch table configuration.
 ```
 {
     "PEER_SWITCH": {
@@ -1306,6 +1490,33 @@ optional attributes.
     }
 }
 
+2x100G port breakout
+{
+"PORT": {
+        "Ethernet0": {
+            "admin_status": "up",
+            "index": "1",
+            "lanes": "101,102,103,104",
+            "description": "etp1a",
+            "mtu": "9100",
+            "alias": "etp1a",
+            "speed": "100000",
+            "subport": 1
+        },
+        "Ethernet4": {
+            "admin_status": "up",
+            "index": "1",
+            "lanes": "105,106,107,108",
+            "description": "etp1b",
+            "mtu": "9100",
+            "alias": "etp1b",
+            "speed": "100000",
+            "subport": 2
+        },
+    }
+}
+
+
 ```
 
 ### Port Channel
@@ -1330,7 +1541,9 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet56"
         ],
-        "mtu": "9100"
+        "mtu": "9100",
+        "fallback": "false",
+        "fast_rate": "true"
     }
   }
 }
@@ -1342,9 +1555,9 @@ name as object key and member list as attribute.
 ```
 {
 "PORTCHANNEL_MEMBER": {
-    "PortChannel0001|Ethernet50": {}, 
-    "PortChannel0002|Ethernet52": {}, 
-    "PortChannel0003|Ethernet54": {}, 
+    "PortChannel0001|Ethernet50": {},
+    "PortChannel0002|Ethernet52": {},
+    "PortChannel0003|Ethernet54": {},
     "PortChannel0004|Ethernet56": {}
   }
 }
@@ -1380,17 +1593,17 @@ name as object key and member list as attribute.
 {
 "PORT_QOS_MAP": {
     "Ethernet50,Ethernet52,Ethernet54,Ethernet56": {
-        "tc_to_pg_map": "AZURE", 
-        "tc_to_queue_map": "AZURE", 
-        "pfc_enable": "3,4", 
-        "pfc_to_queue_map": "AZURE", 
+        "tc_to_pg_map": "AZURE",
+        "tc_to_queue_map": "AZURE",
+        "pfc_enable": "3,4",
+        "pfc_to_queue_map": "AZURE",
         "dscp_to_tc_map": "AZURE",
         "dscp_to_fc_map": "AZURE",
         "exp_to_fc_map": "AZURE",
         "scheduler": "scheduler.port"
     }
   }
-}  
+}
 ```
 
 ### Queue
@@ -1398,12 +1611,12 @@ name as object key and member list as attribute.
 {
 "QUEUE": {
 	"Ethernet56|4": {
-        "wred_profile": "AZURE_LOSSLESS", 
+        "wred_profile": "AZURE_LOSSLESS",
         "scheduler": "scheduler.1"
-    }, 
+    },
     "Ethernet56|5": {
         "scheduler": "scheduler.0"
-    }, 
+    },
     "Ethernet56|6": {
         "scheduler": "scheduler.0"
     }
@@ -1411,6 +1624,128 @@ name as object key and member list as attribute.
 }
 ```
 
+### Restapi
+```
+{
+"RESTAPI": {
+    "certs": {
+        "ca_crt": "/etc/sonic/credentials/ame_root.pem",
+        "server_key": "/etc/sonic/credentials/restapiserver.key",
+        "server_crt": "/etc/sonic/credentials/restapiserver.crt",
+        "client_crt_cname": "client.sonic.net"
+    },
+    "config": {
+        "client_auth": "true",
+        "log_level": "trace",
+        "allow_insecure": "false"
+    }
+}
+```
+### Sflow
+
+The below are the tables and their schema for SFLOW feature
+
+SFLOW
+
+| Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
+|------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
+| admin_state      | Global sflow admin state                                                                |             | down      |                                           |
+| polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
+| agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |
+
+SFLOW_SESSION
+
+key - port
+| Field       | Description                                                                                                             | Mandatory   | Default   | Reference   |
+|-------------|-------------------------------------------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| port        | Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.                         |             |           | PORT:name   |
+| admin_state | Per port sflow admin state                                                                                              |             | up        |             |
+| sample_rate | Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets. |             |           |             |
+
+SFLOW_COLLECTOR
+
+key - name
+| Field          | Description                                                                             | Mandatory   | Default   | Reference   |
+|----------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------|
+| name           | Name of the Sflow collector                                                             |             |           |             |
+| collector_ip   | IPv4/IPv6 address of the Sflow collector                                                | true        |           |             |
+| collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
+| collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
+
+### Syslog Rate Limit
+
+Host side configuration:
+
+```
+{
+"SYSLOG_CONFIG": {
+    "GLOBAL": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    }
+  }
+}
+```
+
+Container side configuration:
+
+```
+{
+"SYSLOG_CONFIG_FEATURE": {
+    "bgp": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    },
+    "pmon": {
+        "rate_limit_interval": "300",
+        "rate_limit_burst": "20000"
+    }
+  }
+}
+```
+
+### System Port
+Every port on the system requires a global representation, known as a System Port,
+and is listed in this table.
+
+```
+{
+"SYSTEM_PORT": {
+    "host227-4|asic0|Ethernet0": {
+        "core_index": "1",
+        "core_port_index": "1",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "0",
+        "system_port_id": "1"
+    },
+    "host227-4|asic0|Ethernet4": {
+        "core_index": "1",
+        "core_port_index": "2",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "0",
+        "system_port_id": "2"
+    },
+    "host227-5|asic0|Ethernet0": {
+        "core_index": "1",
+        "core_port_index": "1",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "4",
+        "system_port_id": "80"
+    },
+    "host227-5|asic0|Ethernet4": {
+        "core_index": "1",
+        "core_port_index": "2",
+        "num_voq": "8",
+        "speed": "100000",
+        "switch_id": "4",
+        "system_port_id": "81"
+    }
+  }
+}
+```
 
 ### Tacplus Server
 
@@ -1418,11 +1753,11 @@ name as object key and member list as attribute.
 {
 "TACPLUS_SERVER": {
     "10.0.0.8": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
-    }, 
+    },
     "10.0.0.9": {
-        "priority": "1", 
+        "priority": "1",
         "tcp_port": "49"
     }
   }
@@ -1436,17 +1771,17 @@ name as object key and member list as attribute.
 {
 "TC_TO_PRIORITY_GROUP_MAP": {
     "AZURE": {
-        "1": "1", 
-        "0": "0", 
-        "3": "3", 
-        "2": "2", 
-        "5": "5", 
-        "4": "4", 
-        "7": "7", 
+        "1": "1",
+        "0": "0",
+        "3": "3",
+        "2": "2",
+        "5": "5",
+        "4": "4",
+        "7": "7",
         "6": "6"
     }
   }
-}  
+}
 ```
 
 ### TC to Queue map
@@ -1455,17 +1790,17 @@ name as object key and member list as attribute.
 {
 "TC_TO_QUEUE_MAP": {
     "AZURE": {
-        "1": "1", 
-        "0": "0", 
-        "3": "3", 
-        "2": "2", 
-        "5": "5", 
-        "4": "4", 
-        "7": "7", 
+        "1": "1",
+        "0": "0",
+        "3": "3",
+        "2": "2",
+        "5": "5",
+        "4": "4",
+        "7": "7",
         "6": "6"
     }
   }
-}  
+}
 ```
 
 ### Telemetry
@@ -1482,6 +1817,61 @@ name as object key and member list as attribute.
             "client_auth": "true",
             "log_level": "2",
             "port": "50051"
+        }
+    }
+}
+```
+
+### Tunnel
+
+This table configures the MUX tunnel for Dual-ToR setup
+```
+{
+    "TUNNEL": {
+        "MuxTunnel0": {
+            "dscp_mode": "uniform",
+            "dst_ip": "10.1.0.32",
+            "ecn_mode": "copy_from_outer",
+            "encap_ecn_mode": "standard",
+            "ttl_mode": "pipe",
+            "tunnel_type": "IPINIP"
+        }
+    }
+}
+```
+
+different example for configuring MUX tunnel
+```
+{
+    "TUNNEL": {
+        "MuxTunnel0": {
+            "dscp_mode": "pipe",
+            "dst_ip": "10.1.0.32",
+            "ecn_mode": "standard",
+            "encap_ecn_mode": "standard",
+            "ttl_mode": "uniform",
+            "tunnel_type": "IPINIP"
+        }
+    }
+}
+```
+
+example mux tunnel configuration for when tunnel_qos_remap is enabled
+```
+{
+    "TUNNEL": {
+        "MuxTunnel0": {
+            "tunnel_type": "IPINIP",
+            "src_ip": "10.1.0.33",
+            "dst_ip": "10.1.0.32",
+            "dscp_mode": "pipe",
+            "encap_ecn_mode": "standard",
+            "ecn_mode": "copy_from_outer",
+            "ttl_mode": "uniform",
+            "decap_dscp_to_tc_map": "DecapDscpToTcMap",
+            "decap_tc_to_pg_map": "DecapTcToPgMap",
+            "encap_tc_to_dscp_map": "EncapTcToQueueMap",
+            "encap_tc_to_queue_map": "EncapTcToDscpMap"
         }
     }
 }
@@ -1551,10 +1941,24 @@ channel name as object key, and tagging mode as attributes.
 }
 ```
 
+### VOQ INBAND INTERFACE
+
+VOQ_INBAND_INTERFACE holds the name of the inband system port dedicated for cpu communication. At this time, only inband_type of "port" is supported
+
+```
+"VOQ_INBAND_INTERFACE": {
+    "Ethernet-IB0": {
+	   "inband_type": "port"
+	},
+	"Ethernet-IB0|3.3.3.1/32": {},
+    "Ethernet-IB0|3333::3:5/128": {}
+}
+```
+
 ### VXLAN
 
-VXLAN_TUNNEL holds the VTEP source ip configuration.  
-VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.  
+VXLAN_TUNNEL holds the VTEP source ip configuration.
+VXLAN_TUNNEL_MAP holds the vlan to vni and vni to vlan mapping configuration.
 VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered tunnels.
 
 ```
@@ -1600,6 +2004,7 @@ table allow to change properties of a virtual router. Attributes:
     packets with IP options
 -   'l3_mc_action' contains packet action. Defines the action for
     unknown L3 multicast packets
+-   'vni' contains L3 VNI value. VNI associated Virtual router instance.
 
 The packet action could be:
 
@@ -1621,7 +2026,8 @@ The packet action could be:
 	'src_mac': '02:04:05:06:07:08',
 	'ttl_action': 'copy',
 	'ip_opt_action': 'deny',
-	'l3_mc_action': 'drop'
+	'l3_mc_action': 'drop',
+	'vni': '100'
 }
 ```
 
@@ -1632,23 +2038,51 @@ The packet action could be:
 {
 "WRED_PROFILE": {
     "AZURE_LOSSLESS": {
-        "red_max_threshold": "2097152", 
-        "wred_green_enable": "true", 
-        "ecn": "ecn_all", 
-        "green_min_threshold": "1048576", 
-        "red_min_threshold": "1048576", 
-        "wred_yellow_enable": "true", 
-        "yellow_min_threshold": "1048576", 
-        "green_max_threshold": "2097152", 
-        "green_drop_probability": "5", 
-        "yellow_max_threshold": "2097152", 
-        "wred_red_enable": "true", 
-        "yellow_drop_probability": "5", 
+        "red_max_threshold": "2097152",
+        "wred_green_enable": "true",
+        "ecn": "ecn_all",
+        "green_min_threshold": "1048576",
+        "red_min_threshold": "1048576",
+        "wred_yellow_enable": "true",
+        "yellow_min_threshold": "1048576",
+        "green_max_threshold": "2097152",
+        "green_drop_probability": "5",
+        "yellow_max_threshold": "2097152",
+        "wred_red_enable": "true",
+        "yellow_drop_probability": "5",
         "red_drop_probability": "5"
     }
   }
 }
 ```
+
+### Logger
+
+In this table, the loglevel and logoutput of the components are defined. Each component
+will have the component name as its key; and LOGLEVEL and LOGOUTPUT as attributes.
+The LOGLEVEL attribute will define the verbosity of the component.
+The LOGOUTPUT attribute will define the file of printing the logs.
+
+```
+{
+    "LOGGER": {
+        "orchagent": {
+                "LOGLEVEL": "NOTICE",
+                "LOGOUTPUT": "SYSLOG"
+            },
+            "syncd": {
+                "LOGLEVEL": "DEBUG",
+                "LOGOUTPUT": "STDOUT"
+            },
+            "SAI_API_LAG": {
+                "LOGLEVEL": "ERROR",
+                "LOGOUTPUT": "STDERR"
+            }
+    }
+}
+
+```
+
 ### PASSWORD_HARDENING
 
 Password Hardening, a user password is the key credential used in order to verify the user accessing the switch and acts as the first line of defense in regards to securing the switch. PASSWORD_HARDENING - support the enforce strong policies.
@@ -1764,6 +2198,41 @@ The default value of flags in `SYSTEM_DEFAULTS` table can be set in `init_cfg.js
 If the values in `config_db.json` is changed by user, it will not be rewritten back by `init_cfg.json` as `config_db.json` is loaded after `init_cfg.json` in [docker_image_ctl.j2](https://github.com/Azure/sonic-buildimage/blob/master/files/build_templates/docker_image_ctl.j2)
 
 For the flags that can be changed by reconfiguration, we can update entries in `minigraph.xml`, and parse the new values in to config_db with minigraph parser at reloading minigraph. If there are duplicated entries in `init_cfg.json` and `minigraph.xml`, the values in `minigraph.xml` will overwritten the values defined in `init_cfg.json`.
+
+### RADIUS
+
+The RADIUS and RADIUS_SERVER tables define RADIUS configuration parameters. RADIUS table carries global configuration while RADIUS_SERVER table carries per server configuration.
+
+```
+   "RADIUS": {
+       "global": {
+              "auth_type": "pap",
+              "timeout": "5"
+        }
+    }
+    
+    "RADIUS_SERVER": {
+        "192.168.1.2": {
+               "priority": "4",
+               "retransmit": "2",
+               "timeout": "5"
+        }
+    }
+```
+
+### Static DNS
+
+The DNS_NAMESERVER table introduces static DNS nameservers configuration.
+
+```json
+{
+	"DNS_NAMESERVER": {
+		"1.1.1.1": {},
+		"fe80:1000:2000:3000::1": {}
+	},
+}
+```
+
 #### 5.2.3 Update value directly in db memory
 
 For Developers

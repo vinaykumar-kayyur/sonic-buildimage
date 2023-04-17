@@ -1,9 +1,30 @@
+from __future__ import print_function
+import sys
 from setuptools import setup
+import pkg_resources
+from packaging import version
+
+# sonic_dependencies, version requirement only supports '>='
+sonic_dependencies = ['redis-dump-load']
 
 dependencies = [
     'natsort==6.2.1', # 6.2.1 is the last version which supports Python 2
     'pyyaml',
 ]
+
+dependencies += sonic_dependencies
+for package in sonic_dependencies:
+    try:
+        package_dist = pkg_resources.get_distribution(package.split(">=")[0])
+    except pkg_resources.DistributionNotFound:
+        print(package + " is not found!", file=sys.stderr)
+        print("Please build and install SONiC python wheels dependencies from sonic-buildimage", file=sys.stderr)
+        exit(1)
+    if ">=" in package:
+        if version.parse(package_dist.version) >= version.parse(package.split(">=")[1]):
+            continue
+        print(package + " version not match!", file=sys.stderr)
+        exit(1)
 
 setup(
     name='sonic-py-common',
@@ -27,6 +48,12 @@ setup(
         'pytest',
         'mock==3.0.5' # For python 2. Version >=4.0.0 drops support for py2
     ],
+    entry_points={
+        'console_scripts': [
+            'sonic-db-load = sonic_py_common.sonic_db_dump_load:sonic_db_dump_load',
+            'sonic-db-dump = sonic_py_common.sonic_db_dump_load:sonic_db_dump_load',
+        ],
+    },
     classifiers=[
         'Intended Audience :: Developers',
         'Operating System :: Linux',

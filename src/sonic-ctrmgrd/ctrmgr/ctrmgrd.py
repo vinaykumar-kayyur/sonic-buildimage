@@ -6,7 +6,7 @@ import json
 import os
 import sys
 import syslog
-
+import subprocess
 from collections import defaultdict
 from ctrmgr.ctrmgr_iptables import iptable_proxy_rule_upd
 
@@ -54,13 +54,23 @@ ST_FEAT_SYS_STATE = "system_state"
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
+MODE_KUBE = "kube"
+MODE_LOCAL = "local"
+OWNER_KUBE = "kube"
+OWNER_LOCAL = "local"
+OWNER_NONE = "none"
+REMOTE_READY = "ready"
+REMOTE_PENDING = "pending"
+REMOTE_STOPPED = "stopped"
+REMOTE_NONE = "none"
+
 remote_connected = False
 
 dflt_cfg_ser = {
         CFG_SER_IP: "",
         CFG_SER_PORT: "6443",
         CFG_SER_DISABLE: "false",
-        CFG_SER_INSECURE: "false"
+        CFG_SER_INSECURE: "true"
         }
 
 dflt_st_ser = {
@@ -88,18 +98,23 @@ dflt_st_feat= {
 JOIN_LATENCY = "join_latency_on_boot_seconds"
 JOIN_RETRY = "retry_join_interval_seconds"
 LABEL_RETRY = "retry_labels_update_seconds"
+TAG_IMAGE_LATEST = "tag_latest_image_on_wait_seconds"
+TAG_RETRY = "retry_tag_latest_seconds"
 USE_K8S_PROXY = "use_k8s_as_http_proxy"
 
 remote_ctr_config = {
     JOIN_LATENCY: 10,
     JOIN_RETRY: 10,
     LABEL_RETRY: 2,
+    TAG_IMAGE_LATEST: 30,
+    TAG_RETRY: 5,
     USE_K8S_PROXY: ""
     }
 
+ENABLED_FEATURE_SET = {"telemetry", "snmp"}
+
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
@@ -119,7 +134,7 @@ def ts_now():
 
 def is_systemd_active(feat):
     if not UNIT_TESTING:
-        status = os.system('systemctl is-active --quiet {}'.format(feat))
+        status = subprocess.call(['systemctl', 'is-active', '--quiet', str(feat)])
     else:
         status = UNIT_TESTING_ACTIVE
     log_debug("system status for {}: {}".format(feat, str(status)))
@@ -129,7 +144,7 @@ def is_systemd_active(feat):
 def restart_systemd_service(server, feat, owner):
     log_debug("Restart service {} to owner:{}".format(feat, owner))
     if not UNIT_TESTING:
-        status = os.system("systemctl restart {}".format(feat))
+        status = subprocess.call(["systemctl", "restart", str(feat)])
     else:
         server.mod_db_entry(STATE_DB_NAME,
                 FEATURE_TABLE, feat, {"restart": "true"})
@@ -148,7 +163,6 @@ def init():
         with open(SONIC_CTR_CONFIG, "r") as s:
             d = json.load(s)
             remote_ctr_config.update(d)
-
 
 class MainServer:
     """ Implements main io-loop of the application
@@ -172,11 +186,11 @@ class MainServer:
             self.db_connectors[db_name] = swsscommon.DBConnector(db_name, 0)
 
 
-    def register_timer(self, ts, handler):
+    def register_timer(self, ts, handler, args=None):
         """ Register timer based handler. 
             The handler will be called on/after give timestamp, ts
         """
-        self.timer_handlers[ts].append(handler)
+        self.timer_handlers[ts].append((handler, args))
 
 
     def register_handler(self, db_name, table_name, handler):
@@ -235,7 +249,10 @@ class MainServer:
                     lst = self.timer_handlers[k]
                     del self.timer_handlers[k]
                     for fn in lst:
-                        fn()
+                        if fn[1] is None:
+                            fn[0]()
+                        else:
+                            fn[0](*fn[1])
                 else:
                     timeout = (k - ct_ts).seconds
                     break
@@ -253,6 +270,8 @@ class MainServer:
             for subscriber in self.subscribers:
                 key, op, fvs = subscriber.pop()
                 if not key:
+                    continue
+                if subscriber.getTableName() == FEATURE_TABLE and key not in ENABLED_FEATURE_SET:
                     continue
                 log_debug("Received message : '%s'" % str((key, op, fvs)))
                 for callback in (self.callbacks
@@ -274,6 +293,8 @@ def set_node_labels(server):
     labels["sonic_version"] = version_info['build_version']
     labels["hwsku"] = device_info.get_hwsku() if not UNIT_TESTING else "mock"
     labels["deployment_type"] = dep_type
+    platform = device_info.get_platform()
+    labels["worker.sonic/platform"] = platform if platform is not None else ""
     server.mod_db_entry(STATE_DB_NAME,
             KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, labels)
 
@@ -425,7 +446,6 @@ class RemoteServerHandler:
             log_debug("kube_join_master failed retry after {} seconds @{}".
                     format(remote_ctr_config[JOIN_RETRY], self.start_time))
 
-
 #
 # Feature changes
 #
@@ -452,7 +472,9 @@ class FeatureTransitionHandler:
         # There after only called upon changes in either that requires action
         #
         if not is_systemd_active(feat):
-            # Nothing todo, if system state is down
+            # Restart the service manually when kube upgrade happens to decrease the down time
+            if set_owner == MODE_KUBE and ct_owner == OWNER_NONE and remote_state == REMOTE_STOPPED:
+                restart_systemd_service(self.server, feat, OWNER_KUBE)
             return
 
         label_add = set_owner == "kube"
@@ -523,10 +545,25 @@ class FeatureTransitionHandler:
         self.st_data[key] = _update_entry(dflt_st_feat, data)
         remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        if (not init) and (
-                (old_remote_state == remote_state) or (remote_state != "pending")):
-            # no change or nothing to do.
-            return
+        if (old_remote_state != remote_state) and (remote_state == "running"):
+            # Tag latest
+            start_time = datetime.datetime.now() + datetime.timedelta(
+                    seconds=remote_ctr_config[TAG_IMAGE_LATEST])
+            self.server.register_timer(start_time, self.do_tag_latest, (
+                    key, 
+                    self.st_data[key][ST_FEAT_CTR_ID],
+                    self.st_data[key][ST_FEAT_CTR_VER]))
+
+            log_debug("try to tag latest label after {} seconds @{}".format(
+                    remote_ctr_config[TAG_IMAGE_LATEST], start_time))
+
+        if (not init):
+            if (old_remote_state == remote_state):
+            # if no remote state change, do nothing.
+                return
+            if (remote_state not in (REMOTE_PENDING, REMOTE_STOPPED)):
+            # if remote state not in pending or stopped, do nothing.
+                return
 
         if key in self.cfg_data:
             log_debug("{} init={} old_remote_state={} remote_state={}".format(key, init, old_remote_state, remote_state))
@@ -534,7 +571,18 @@ class FeatureTransitionHandler:
                     self.st_data[key][ST_FEAT_OWNER],
                     remote_state)
         return
+    
+    def do_tag_latest(self, feat, docker_id, image_ver):
+        ret = kube_commands.tag_latest(feat, docker_id, image_ver)
+        if ret != 0:
+            # Tag latest failed. Retry after an interval
+            self.start_time = datetime.datetime.now()
+            self.start_time += datetime.timedelta(
+                    seconds=remote_ctr_config[TAG_RETRY])
+            self.server.register_timer(self.start_time, self.do_tag_latest, (feat, docker_id, image_ver))
 
+            log_debug("Tag latest as local failed retry after {} seconds @{}".
+                    format(remote_ctr_config[TAG_RETRY], self.start_time))
 
 #
 # Label re-sync
