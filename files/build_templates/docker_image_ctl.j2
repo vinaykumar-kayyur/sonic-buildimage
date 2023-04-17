@@ -310,12 +310,6 @@ start() {
     PLATFORM=${PLATFORM:-`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`}
 
 
-    SUPPORTS_INCREASED_NETLINK_BUFFER="false"
-    if [ "$PLATFORM" = "x86_64-cel_midstone-100x-r0" ] || \
-           [ "$PLATFORM" = "x86_64-cel_silverstone-x-r0" ]; then
-        SUPPORTS_INCREASED_NETLINK_BUFFER="true"
-    fi
-
     # Parse the device specific asic conf file, if it exists
     ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
     if [ -f "$ASIC_CONF" ]; then
@@ -575,8 +569,6 @@ start() {
 {%- endif %}
 {%- if docker_container_name == "swss" %}
         -e ASIC_VENDOR={{ sonic_asic_platform }} \
-        -e platform=$PLATFORM  \
-        -e supports_increased_netlink_buffer=$SUPPORTS_INCREASED_NETLINK_BUFFER \
 {%- endif -%}
 {%- if docker_container_name in ["swss", "syncd"] and enable_asan == "y" %}
         -v /var/log/asan/:/var/log/asan \
