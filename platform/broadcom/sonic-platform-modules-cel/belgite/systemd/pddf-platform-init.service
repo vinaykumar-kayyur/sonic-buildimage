@@ -1,6 +1,6 @@
 [Unit]
 Description=PDDF module and device initialization service
-Before=pmon.service watchdog-control.service
+Before=pmon.service watchdog-control.service belgite-fan-control.service
 Before=opennsl-modules.service
 DefaultDependencies=no
 

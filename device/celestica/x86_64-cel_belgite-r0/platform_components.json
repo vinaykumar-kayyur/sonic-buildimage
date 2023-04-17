@@ -2,8 +2,10 @@
     "chassis": {
         "E1070": {
             "component": {
+                "BIOS": {},
+                "ONIE": {},
                 "SWCPLD": {},
-                "BIOS": {}
+                "SSD": {}
             }
         }
     }

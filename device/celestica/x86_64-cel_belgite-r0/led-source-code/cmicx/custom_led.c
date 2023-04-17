@@ -89,14 +89,25 @@ Here is an exception, please keep in mind:
 #include <shared/cmicfw/cmicx_led_public.h>
 
 #define ACTIVITY_TICKS 2
-#define READ_LED_ACCU_DATA(base, port) (*((uint16 *)(base + ((port - 1) * sizeof(uint32)))))
-#define WRITE_LED_SEND_DATA(base, port, val)  (*((uint16 *)(base + ((port - 1) * sizeof(uint32)))) = val)
+
+/*! Macro to calculate LED RAM address. */
+#define LED_HW_RAM_ADDR(base, port) \
+    (base + (port * sizeof(uint32)))
+
+/*! Macro to read LED RAM. */
+#define LED_HW_RAM_READ16(base, port) \
+    *((uint16 *) LED_HW_RAM_ADDR(base, port))
+
+/*! Macro to write LED RAM. */
+#define LED_HW_RAM_WRITE16(base, port, val)  \
+    *((uint16 *) LED_HW_RAM_ADDR(base, port)) = (val)
 
 #define PORT_NUM_TOTAL 56
 
 #define LED_GREEN_BICOLOR 0x2 //bit : 10
 #define LED_AMBER_BICOLOR 0x1 //bit : 01
 #define LED_OFF_BICOLOR   0x3 //bit : 11
+#define LED_SW_LINK_UP    0x1
                                           
 unsigned short portmap[] = {
      25,  26,  27,  28,  29,  30,  31,  32,
@@ -123,47 +134,58 @@ unsigned short portmap[] = {
 void custom_led_handler(soc_led_custom_handler_ctrl_t *ctrl,
                         uint32 activity_count)
 {
-    unsigned short accu_val = 0, send_val = 0;
-    unsigned short port, physical_port;
+    uint8 idx = 0;
+    uint16 accu_val = 0, send_val = 0;
+    uint16 uc_port = 0, physical_port = 0;
     
     /* Physical port numbers to be used */
-    for(port = 1; port <= PORT_NUM_TOTAL; port++) {
+    for(uc_port = 0; uc_port < PORT_NUM_TOTAL; uc_port++) {
 
-	physical_port = portmap[port-1];
+	// change to zero-based
+	physical_port = portmap[uc_port] - 1;
         
         /* Read value from led_ram bank0 */
-        accu_val = READ_LED_ACCU_DATA(ctrl->accu_ram_base, physical_port);
+        accu_val = LED_HW_RAM_READ16(ctrl->accu_ram_base, physical_port);
 
-        send_val = 0xff; 
+        send_val = LED_OFF_BICOLOR;
        
-        if (((accu_val & LED_OUTPUT_RX) || (accu_val & LED_OUTPUT_TX)) && (activity_count & ACTIVITY_TICKS))
+        if (((accu_val & LED_HW_RX) || (accu_val & LED_HW_TX)) && (activity_count & ACTIVITY_TICKS))
         {
             send_val = LED_OFF_BICOLOR;
         }
-        else if ( accu_val & LED_OUTPUT_LINK_UP)
+        else if (ctrl->led_control_data[physical_port] & LED_SW_LINK_UP)
         {
             send_val = LED_GREEN_BICOLOR;
         }
         else
         {
             send_val = LED_OFF_BICOLOR;
-         }
+        }
         
 	/* Write value to led_ram bank1 */
-        WRITE_LED_SEND_DATA(ctrl->pat_ram_base, port, send_val);
+        LED_HW_RAM_WRITE16(ctrl->pat_ram_base, uc_port, send_val);
     } /* for */
 
-    /* Send the pattern over LED interface 1 for ports 1 - 56*/
-    ctrl->intf_ctrl[1].valid = 1;
-    ctrl->intf_ctrl[1].start_row = 0;
-    ctrl->intf_ctrl[1].end_row = 55;
-    ctrl->intf_ctrl[1].pat_width = 2;
+    /* Configure LED HW interfaces based on board configuration */
+    for (idx = 0; idx < LED_HW_INTF_MAX_NUM; idx++) {
+        soc_led_intf_ctrl_t *lic = &ctrl->intf_ctrl[idx];
+        switch (idx) {
+        case 0:
+	        lic->valid = 0;
+            break;
+        case 1:
+	        lic->valid = 1;
+            lic->start_row = 0;
+            lic->end_row = 55;
+            lic->pat_width = 2;
+            break;
+        default:
 
-    /* Invalidate rest of the interfaces */
-    ctrl->intf_ctrl[0].valid = 0;
-    ctrl->intf_ctrl[2].valid = 0;
-    ctrl->intf_ctrl[3].valid = 0;
-    ctrl->intf_ctrl[4].valid = 0;
+            /* Invalidate rest of the interfaces */
+            lic->valid = 0;
+            break;
+        }
+    }
 
     return;
 

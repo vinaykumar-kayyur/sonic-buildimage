@@ -3,109 +3,103 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+import subprocess
 
+HIGH_THRESHOLD = 0
+LOW_THRESHOLD = 1
+HIGH_CRIT_THRESHOLD = 2
+LOW_CRIT_THRESHOLD = 3
+
+NUM_SENSORS = 4
+CPU_SENSOR_STR = "CPU core temp"
+thermal_limits = {
+    # <sensor-name>: <high_thresh>, <low_thresh>, <high_crit_thresh>, <low_crit_thresh>
+    'Inlet U4 temp (EXHAUST)': [50.0, None, None, None],
+    'Inlet U10 temp (EXHAUST)': [50.0, None, None, None],
+    'Inlet U7 temp (INTAKE)': [50.0, None, None, None],
+    'BCM inlet U60 temp': [100.0, None, 105.0, None],
+    CPU_SENSOR_STR: [88.0, None, 91.0, None]
+}
 
 class Thermal(PddfThermal):
     """PDDF Platform-Specific Thermal class"""
 
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None, is_psu_thermal=False, psu_index=0):
-        PddfThermal.__init__(self, index, pddf_data, pddf_plugin_data, is_psu_thermal, psu_index)
-        self.minimum_thermal = self.get_temperature()
-        self.maximum_thermal = self.get_temperature()
+        # PDDF doesn't support CPU internal temperature sensor
+        # Hence it is created from chassis init override and
+        # handled appropriately in thermal APIs
+        self.thermal_index = index + 1
+        self.is_psu_thermal = is_psu_thermal
+        if self.thermal_index <= NUM_SENSORS:
+            PddfThermal.__init__(self, index, pddf_data, pddf_plugin_data, is_psu_thermal, psu_index)
     # Provide the functions/variables below for which implementation is to be overwritten
 
+    def get_name(self):
+        if self.thermal_index <= NUM_SENSORS:
+            return super().get_name()
+
+        return CPU_SENSOR_STR
+
+    def get_temperature(self):
+        if self.thermal_index <= NUM_SENSORS:
+            return super().get_temperature()
+
+        temperature = 0.0
+        cmd = ['cat', '/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input']
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+            data = p.communicate()
+            temperature = int(data[0].strip())/1000.0
+        except (IOError, ValueError):
+            pass
+
+        return temperature
+
+    def get_low_threshold(self):
+        thermal_limit = thermal_limits.get(self.get_name(), None)
+        if thermal_limit != None:
+            return thermal_limit[LOW_THRESHOLD]
+
+        return None
+
+    def __get_psu_high_threshold(self):
+        thermal_limit = None
+        try:
+            cmd = ['i2cget', '-y', '-f', '4', str(0x58 + (self.thermals_psu_index - 1)), '0x51', 'w']
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+            data = p.communicate()
+            thermal_limit = int(data[0].strip(), 16)
+        except (IOError, ValueError):
+            pass
+
+        return thermal_limit
+
+    def get_high_threshold(self):
+        if self.is_psu_thermal:
+            return self.__get_psu_high_threshold()
+
+        thermal_limit = thermal_limits.get(self.get_name(), None)
+        if thermal_limit != None:
+            return thermal_limit[HIGH_THRESHOLD]
+
+        return None
+
     def get_low_critical_threshold(self):
-        """
-        Retrieves the low critical threshold temperature of thermal
-        Returns:
-            A float number, the low critical threshold temperature of thermal in Celsius
-            up to nearest thousandth of one degree Celsius, e.g. 30.125
-        """
-        return 0.001 
+        thermal_limit = thermal_limits.get(self.get_name(), None)
+        if thermal_limit != None:
+            return thermal_limit[LOW_CRIT_THRESHOLD]
+
+        return None
 
     def get_high_critical_threshold(self):
-        """
-        Retrieves the high critical threshold temperature of thermal
-        Returns:
-            A float number, the high critical threshold temperature of thermal in Celsius
-            up to nearest thousandth of one degree Celsius, e.g. 30.125
-        """
-        
-        return 100.000 
-				
-    def get_minimum_recorded(self):
-        """
-        Retrieves the minimum recorded temperature of thermal
-        Returns:
-            A float number, the minimum recorded temperature of thermal in Celsius
-            up to nearest thousandth of one degree Celsius, e.g. 30.125
-        """
-        tmp = self.get_temperature()
-        if tmp < self.minimum_thermal:
-            self.minimum_thermal = tmp
+        thermal_limit = thermal_limits.get(self.get_name(), None)
+        if thermal_limit != None:
+            return thermal_limit[HIGH_CRIT_THRESHOLD]
 
-        return self.minimum_thermal
+        return None
 
-    def get_maximum_recorded(self):
-        """
-        Retrieves the maximum recorded temperature of thermal
-        Returns:
-            A float number, the maximum recorded temperature of thermal in Celsius
-            up to nearest thousandth of one degree Celsius, e.g. 30.125
-        """
-        tmp = self.get_temperature()
-        if tmp > self.maximum_thermal:
-            self.maximum_thermal = tmp
+    def set_high_threshold(self, temperature):
+        raise NotImplementedError
 
-        return self.maximum_thermal
-
-    def get_presence(self):
-        """
-        Retrieves the presence of the PSU
-        Returns:
-            bool: True if Thermal is present, False if not
-        """
-        return True
-
-    def get_model(self):
-        """
-        Retrieves the model number (or part number) of the device
-        Returns:
-            string: Model/part number of device
-        """
-        return "N/A"
-
-    def get_serial(self):
-        """
-        Retrieves the serial number of the device
-        Returns:
-            string: Serial number of device
-        """
-        return "N/A" 
-
-    def get_status(self):
-        """
-        Retrieves the operational status of the device
-        Returns:
-            A boolean value, True if device is operating properly, False if not
-        """
-        if not self.get_presence():
-            return False
-
-        return True
-
-    def is_replaceable(self):
-        """
-        Retrieves whether thermal module is replaceable
-        Returns:
-            A boolean value, True if replaceable, False if not
-        """
-        return False
-
-    def get_position_in_parent(self):
-        """
-        Retrieves the thermal position information
-        Returns:
-            A int value, 0 represent ASIC thermal, 1 represent CPU thermal info
-        """
-        return 0
+    def set_low_threshold(self, temperature):
+        raise NotImplementedError
