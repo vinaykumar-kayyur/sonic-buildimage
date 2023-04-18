@@ -113,7 +113,7 @@ jobs:
       - bash: |
           patch -p1 < 0001-update-swss-main-cpp.patch
           patch -p1 < 0002-update-swss-orch-h.patch
-          patch -p1 < 0003-update-configure-ac.patchy
+          patch -p1 < 0003-update-configure-ac.patch
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
