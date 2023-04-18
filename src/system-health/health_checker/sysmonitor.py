@@ -19,7 +19,6 @@ spl_srv_list = ['database-chassis', 'gbsyncd']
 SELECT_TIMEOUT_MSECS = 1000
 QUEUE_TIMEOUT = 15
 TASK_STOP_TIMEOUT = 10
-mpmgr = multiprocessing.Manager()
 logger = Logger(log_identifier=SYSLOG_IDENTIFIER)
 
 
@@ -235,7 +234,7 @@ class Sysmonitor(ProcessTaskBase):
 
     #Gets the service properties
     def run_systemctl_show(self, service):
-        command = ['systemctl', 'show', str(service), '--property=Id,LoadState,UnitFileState,Type,ActiveState,SubState,Result']
+        command = ('systemctl show {} --property=Id,LoadState,UnitFileState,Type,ActiveState,SubState,Result'.format(service))
         output = utils.run_command(command)
         srv_properties = output.split('\n')
         prop_dict = {}
@@ -274,7 +273,7 @@ class Sysmonitor(ProcessTaskBase):
             
             sysctl_show = self.run_systemctl_show(event)
 
-            load_state = sysctl_show['LoadState']
+            load_state = sysctl_show.get('LoadState')
             if load_state == "loaded":
                 status = sysctl_show['UnitFileState']
                 fail_reason = sysctl_show['Result']
@@ -420,6 +419,7 @@ class Sysmonitor(ProcessTaskBase):
             self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
             self.state_db.connect(self.state_db.STATE_DB)
         
+        mpmgr = multiprocessing.Manager()
         myQ = mpmgr.Queue()
         try:
             monitor_system_bus = MonitorSystemBusTask(myQ)

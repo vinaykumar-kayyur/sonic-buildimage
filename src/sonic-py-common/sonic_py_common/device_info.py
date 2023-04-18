@@ -647,9 +647,10 @@ def get_system_mac(namespace=None):
 
     # Align last byte of MAC if necessary
     if version_info and version_info['asic_type'] == 'centec':
-        last_byte = mac[-2:]
-        aligned_last_byte = format(int(int(last_byte, 16) + 1), '02x')
-        mac = mac[:-2] + aligned_last_byte
+        mac_tmp = mac.replace(':','')
+        mac_tmp = "{:012x}".format(int(mac_tmp, 16) + 1)
+        mac_tmp = re.sub("(.{2})", "\\1:", mac_tmp, 0, re.DOTALL)
+        mac = mac_tmp[:-1]
     return mac
 
 
@@ -698,14 +699,16 @@ def is_warm_restart_enabled(container_name):
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
-    fb_system_state = 0
-    cmd = ['sonic-db-cli', 'STATE_DB', 'get', "FAST_REBOOT|system"]
-    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE)
-    (stdout, stderr) = proc.communicate()
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
+    
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'FAST_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+    
+    # Get the system warm reboot enable state
+    _hash = '{}{}'.format(prefix, 'system')
+    fb_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    fb_enable_state = True if fb_system_state == "true" else False
 
-    if proc.returncode != 0:
-        log.log_error("Error running command '{}'".format(cmd))
-    elif stdout:
-        fb_system_state = stdout.rstrip('\n')
-
-    return fb_system_state
+    state_db.close(state_db.STATE_DB)
+    return fb_enable_state
