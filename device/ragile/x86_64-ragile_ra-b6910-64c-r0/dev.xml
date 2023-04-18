@@ -163,6 +163,7 @@
 	<psutype>		
 		<code key="CSU800AP-3-300" value="PA800I-F"/>
 		<code key="GW-CRPS800N2C" value="PA800I-F"/>
+		<code key="CSU800AP-3" value="PA800I-F"/>
 	</psutype>
     <fan_display_name>
         <code key="M6520-FAN-F" value="P2EFAN III-F"/>
