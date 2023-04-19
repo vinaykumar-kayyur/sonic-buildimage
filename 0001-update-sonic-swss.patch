@@ -1,6 +1,6 @@
-diff -uprN sonic-swss-202211-bak/orchagent/main.cpp sonic-swss-202211/orchagent/main.cpp
---- sonic-swss-202211-bak/orchagent/main.cpp	2023-04-19 15:24:28.754442568 +0800
-+++ sonic-swss-202211/orchagent/main.cpp	2023-04-19 15:28:30.138380640 +0800
+diff -uprN sonic-buildimage-one/src/sonic-swss/orchagent/main.cpp sonic-buildimage-two/src/sonic-swss/orchagent/main.cpp
+--- sonic-buildimage-one/src/sonic-swss/orchagent/main.cpp	2023-04-19 15:58:51.242913501 +0800
++++ sonic-buildimage-two/src/sonic-swss/orchagent/main.cpp	2023-04-19 15:58:13.335075888 +0800
 @@ -585,7 +585,9 @@ int main(int argc, char **argv)
      attr.value.u64 = gSwitchId;
      attrs.push_back(attr);
@@ -41,9 +41,9 @@ diff -uprN sonic-swss-202211-bak/orchagent/main.cpp sonic-swss-202211/orchagent/
          status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
  
          if (status != SAI_STATUS_SUCCESS)
-diff -uprN sonic-swss-202211-bak/orchagent/orch.h sonic-swss-202211/orchagent/orch.h
---- sonic-swss-202211-bak/orchagent/orch.h	2023-04-19 15:24:28.786442566 +0800
-+++ sonic-swss-202211/orchagent/orch.h	2023-04-19 15:29:02.294717223 +0800
+diff -uprN sonic-buildimage-one/src/sonic-swss/orchagent/orch.h sonic-buildimage-two/src/sonic-swss/orchagent/orch.h
+--- sonic-buildimage-one/src/sonic-swss/orchagent/orch.h	2023-04-19 15:58:51.242913501 +0800
++++ sonic-buildimage-two/src/sonic-swss/orchagent/orch.h	2023-04-19 15:58:13.339075870 +0800
 @@ -40,6 +40,7 @@ const char state_db_key_delimiter  = '|'
  #define NPS_PLATFORM_SUBSTRING  "nephos"
  #define MRVL_PLATFORM_SUBSTRING "marvell"
