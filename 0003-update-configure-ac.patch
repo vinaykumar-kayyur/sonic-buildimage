@@ -1,30 +1,37 @@
-From 58e7c4fa6b1916d9f26e4e5b5625879a5745127d Mon Sep 17 00:00:00 2001
+From 21f1312d860eeb3fadd606bdaf1133546e38741e Mon Sep 17 00:00:00 2001
 From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
-Date: Tue, 18 Apr 2023 17:40:20 +0800
-Subject: [PATCH] update configure.ac
+Date: Wed, 19 Apr 2023 09:21:48 +0800
+Subject: [PATCH] update-configure-ac
 
 ---
- configure.ac | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ configure.ac | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index e7ccb4e..68a96b6 100644
+index e7ccb4e..979dc00 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -191,7 +191,6 @@ AM_COND_IF([SYNCD], [
+@@ -191,23 +191,6 @@ AM_COND_IF([SYNCD], [
  AM_COND_IF([SAIVS], [], [
  SAVED_FLAGS="$CXXFLAGS"
  CXXFLAGS="-Xlinker --no-as-needed -lsai -I$srcdir/SAI/inc -I$srcdir/SAI/experimental -I$srcdir/SAI/meta"
 -AC_CHECK_FUNCS(sai_query_api_version, [
- AC_MSG_CHECKING([SAI headers API version and library version check])
- AC_TRY_RUN([
- extern "C" {
-@@ -207,7 +206,7 @@ int main() {
- }],
- [AC_MSG_RESULT(ok)],
- [AC_MSG_RESULT(failed)
+-AC_MSG_CHECKING([SAI headers API version and library version check])
+-AC_TRY_RUN([
+-extern "C" {
+-#include <sai.h>
+-}
+-int main() {
+-    sai_api_version_t version;
+-    if (SAI_STATUS_SUCCESS != sai_query_api_version(&version))
+-    {
+-        return 1;
+-    }
+-    return (version != SAI_API_VERSION);
+-}],
+-[AC_MSG_RESULT(ok)],
+-[AC_MSG_RESULT(failed)
 -AC_MSG_ERROR("SAI headers API version and library version mismatch")])])
-+AC_MSG_ERROR("SAI headers API version and library version mismatch")])
  CXXFLAGS="$SAVED_FLAGS"
  ])])
  
