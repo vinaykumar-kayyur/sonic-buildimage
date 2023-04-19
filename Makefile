@@ -49,7 +49,9 @@ endif
 ifeq ($(NOBULLSEYE), 0)
 	$(MAKE_WITH_RETRY) BLDENV=bullseye -f Makefile.work $@
 endif
+ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD),y)
 	BLDENV=bullseye $(MAKE) -f Makefile.work docker-cleanup
+endif
 
 jessie:
 	@echo "+++ Making $@ +++"
