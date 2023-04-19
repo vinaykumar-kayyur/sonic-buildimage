@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # @Company ：Celestica
 # @Time    : 2023/3/6 09:32
-# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 
 try:

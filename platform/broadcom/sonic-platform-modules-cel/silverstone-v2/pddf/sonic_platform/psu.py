@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/3/10 10:11
-# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Time    : 2023/3/10 10:plugins
+# @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 try:
     from sonic_platform_pddf_base.pddf_psu import PddfPsu
     import re
+    import os
     from . import helper
+    from . import sensor_list_config
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -30,13 +32,16 @@ class Psu(PddfPsu):
 
     def get_status(self):
         """
-        Get PSU1/2 Status by bmc command
+        Get PSU1/2 Status by sensor list information
         return: True or False
         """
-        status_cmd = "ipmitool sdr get PSU%d_Status" % self.psu_index
-        res_status, result = self.helper.run_command(status_cmd)
-        if res_status:
-            return True if "[Presence detected]" in result.split(":")[6] else False
+        if not os.path.exists(sensor_list_config.Sensor_List_Info):
+            cmd = "ipmitool sensor list > %s" % sensor_list_config.Sensor_List_Info
+            cmd_status, sensor_info = self.helper.run_command(cmd)
+        cmd = "cat %s | grep PSU%d_Status" % (sensor_list_config.Sensor_List_Info, self.psu_index)
+        cmd_status, sensor_info = self.helper.run_command(cmd)
+        if cmd_status:
+            return True if sensor_info.split("|")[3].strip() == "0x0180" else False
         else:
             return False
 

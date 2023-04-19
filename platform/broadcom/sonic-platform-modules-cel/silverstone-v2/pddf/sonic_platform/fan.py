@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # @Company ：Celestica
 # @Time    : 2023/2/18 15:43
-# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 try:
     from sonic_platform_pddf_base.pddf_fan import PddfFan

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # @Company ：Celestica
 # @Time   : 2023/3/3 17:09
-# @Mail   : J_Talong@163.com yajiang@celestica.com
+# @Mail   : yajiang@celestica.com
 # @Author : jiang tao
 try:
     from sonic_platform_base.component_base import ComponentBase

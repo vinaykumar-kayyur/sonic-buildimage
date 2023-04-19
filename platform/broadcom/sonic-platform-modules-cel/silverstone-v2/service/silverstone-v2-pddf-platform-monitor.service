@@ -1,13 +1,13 @@
 [Unit]
 Description=Silverstone-V2 Platform Monitoring service
-Before=pmon.service
-After=pddf-platform-init.service
+After=networking.service
+Before=pddf-platform-init.service
 DefaultDependencies=no
 
-#[Service]
-#ExecStart=/usr/local/bin/pddf_switch_svc.py
-#KillSignal=SIGKILL
-#SuccessExitStatus=SIGKILL
+[Service]
+ExecStart=/usr/local/bin/pddf_sensor_list_refresh.py
+KillSignal=SIGKILL
+SuccessExitStatus=SIGKILL
 
 # Resource Limitations
 LimitCORE=infinity

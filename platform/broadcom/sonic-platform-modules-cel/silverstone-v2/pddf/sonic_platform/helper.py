@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/2/28 11:10
-# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Time    : 2023/2/28 plugins:10
+# @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 import os
 import struct

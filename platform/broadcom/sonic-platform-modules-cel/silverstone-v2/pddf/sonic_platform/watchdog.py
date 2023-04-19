@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # @Company ：Celestica
 # @Time    : 2023/3/9 16:19
-# @Mail    : J_Talong@163.com yajiang@celestica.com
+# @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 
 import fcntl
@@ -9,6 +9,7 @@ import os
 import array
 
 try:
+    from . import helper
     from sonic_platform_base.watchdog_base import WatchdogBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -179,7 +180,6 @@ class Watchdog(WatchdogBase):
             ret = self.timeout
         except IOError:
             pass
-
         return ret
 
     def disarm(self):
@@ -196,7 +196,6 @@ class Watchdog(WatchdogBase):
                 disarmed = True
             except IOError:
                 pass
-
         return disarmed
 
     def is_armed(self):
@@ -213,7 +212,7 @@ class Watchdog(WatchdogBase):
         If the watchdog is armed, retrieve the number of seconds remaining on
         the watchdog timer
         Returns:
-            An integer specifying the number of seconds remaining on thei
+            An integer specifying the number of seconds remaining on the
             watchdog timer. If the watchdog is not armed, returns -1.
         """
 
