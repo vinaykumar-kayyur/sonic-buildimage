@@ -31,6 +31,7 @@ module sonic-fabric-port{
                     type string {
                         pattern "False|True";
                     }
+                    default "False";
                 }
 
                 leaf alias {
@@ -40,6 +41,7 @@ module sonic-fabric-port{
                 }
 
                 leaf lanes {
+                    mandatory true;
                     type string {
                         length 1..128;
                     }
