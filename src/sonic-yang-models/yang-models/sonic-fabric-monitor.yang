@@ -22,21 +22,25 @@ module sonic-fabric-monitor{
                 leaf monErrThreshCrcCells {
                     type uint32;
                     default 1;
+                    description "The number of cells with errors.";
                 }
 
                 leaf monErrThreshRxCells {
                     type uint32;
                     default 61035156;
+                    description "The number of cells received. If more than monErrThreshCrcCells out of monErrThreshRxCells seen with errors, the fabric port needs to be isolated";
                 }
 
                 leaf monPollThreshIsolation {
                     type uint32;
                     default 1;
+                    description "Consecutive polls with higher error rate for isolation.";
                 }
 
                 leaf monPollThreshRecovery {
                     type uint32;
                     default 8;
+                    description "Consecutive polls with lesser error rate for inclusion.";
                 }
 
             } /* end of container FABRIC_MONITOR_DATA */
