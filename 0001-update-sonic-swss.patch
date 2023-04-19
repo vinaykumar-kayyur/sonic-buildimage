@@ -1,16 +1,6 @@
-From f589c6a68345d2955e8100edabad2d210eb32915 Mon Sep 17 00:00:00 2001
-From: pettershao-ragilenetworks <pettershao@ragilenetworks.com>
-Date: Mon, 17 Apr 2023 10:05:51 +0800
-Subject: [PATCH] update-swss-main-cpp
-
----
- orchagent/main.cpp | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/orchagent/main.cpp b/orchagent/main.cpp
-index 5ae5aea..c5eed1e 100644
---- a/orchagent/main.cpp
-+++ b/orchagent/main.cpp
+diff -uprN sonic-swss-202211-bak/orchagent/main.cpp sonic-swss-202211/orchagent/main.cpp
+--- sonic-swss-202211-bak/orchagent/main.cpp	2023-04-19 15:24:28.754442568 +0800
++++ sonic-swss-202211/orchagent/main.cpp	2023-04-19 15:28:30.138380640 +0800
 @@ -585,7 +585,9 @@ int main(int argc, char **argv)
      attr.value.u64 = gSwitchId;
      attrs.push_back(attr);
@@ -51,6 +41,14 @@ index 5ae5aea..c5eed1e 100644
          status = sai_switch_api->set_switch_attribute(gSwitchId, &attr);
  
          if (status != SAI_STATUS_SUCCESS)
--- 
-2.25.1
-
+diff -uprN sonic-swss-202211-bak/orchagent/orch.h sonic-swss-202211/orchagent/orch.h
+--- sonic-swss-202211-bak/orchagent/orch.h	2023-04-19 15:24:28.786442566 +0800
++++ sonic-swss-202211/orchagent/orch.h	2023-04-19 15:29:02.294717223 +0800
+@@ -40,6 +40,7 @@ const char state_db_key_delimiter  = '|'
+ #define NPS_PLATFORM_SUBSTRING  "nephos"
+ #define MRVL_PLATFORM_SUBSTRING "marvell"
+ #define CISCO_8000_PLATFORM_SUBSTRING "cisco-8000"
++#define CENTEC_PLATFORM_SUBSTRING "centec"
+ #define XS_PLATFORM_SUBSTRING   "xsight"
+ 
+ #define CONFIGDB_KEY_SEPARATOR "|"

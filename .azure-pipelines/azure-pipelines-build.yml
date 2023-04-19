@@ -111,9 +111,8 @@ jobs:
       - template: .azure-pipelines/template-skipvstest.yml@buildimage
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
-          patch -p1 < 0001-update-swss-main-cpp.patch
-          patch -p1 < 0002-update-swss-orch-h.patch
-          patch -p1 < 0003-update-configure-ac.patch
+          patch -p1 < 0001-update-sonic-swss.patch
+          patch -p1 < 0002-update-sonic-sairedis.patch
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
