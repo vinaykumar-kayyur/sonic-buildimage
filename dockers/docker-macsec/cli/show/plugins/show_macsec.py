@@ -17,7 +17,6 @@ CACHE_FILE = os.path.join(CACHE_MANAGER.get_directory(), "macsecstats{}")
 
 DB_CONNECTOR = None
 COUNTER_TABLE = None
-macsec_profiles = []
 
 class MACsecCfgMeta(object):
     def __init__(self, *args) -> None:
@@ -280,15 +279,15 @@ class MacsecContext(object):
         self.db = None
         self.multi_asic = multi_asic_util.MultiAsic(
             display_option, namespace_option)
+        self.macsec_profiles = []
 
     @multi_asic_util.run_on_multi_asic
     def show(self, interface_name, dump_file, profile):
         global DB_CONNECTOR
         global COUNTER_TABLE
-        global macsec_profiles
         DB_CONNECTOR = self.db
 
-        if not profile: 
+        if not profile:
             COUNTER_TABLE = CounterTable(self.db.get_redis_client(self.db.COUNTERS_DB))
 
             interface_names = [name.split(":")[1] for name in self.db.keys(self.db.APPL_DB, "MACSEC_PORT*")]
@@ -297,18 +296,18 @@ class MacsecContext(object):
                     return
                 interface_names = [interface_name]
             objs = []
-        
+
             for interface_name in natsorted(interface_names):
                 objs += create_macsec_objs(interface_name)
         else:
             profile_names = [name.split("|")[1] for name in self.db.keys(self.db.CONFIG_DB, "MACSEC_PROFILE*")]
             objs = []
-        
+
             for profile_name in natsorted(profile_names):
                 # Check if this macsec profile is already added to profile list. This is in case of
                 # multi-asic devices where all namespaces will have the same macsec profile defined.
-                if profile_name not in macsec_profiles and not dump_file:
-                    macsec_profiles.append(profile_name)
+                if profile_name not in self.macsec_profiles and not dump_file:
+                    self.macsec_profiles.append(profile_name)
                     objs += create_macsec_profiles_objs(profile_name)
 
         cache = {}
