@@ -6,11 +6,11 @@ Date: 2022-12-21 18:11:31 -0800
 Add support for using custom retry count (instead of the default of 3) for LACP
 sessions, to allow for sessions to stay up for more than 90 seconds.
 ---
- teamd/teamd_runner_lacp.c |  214 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 200 insertions(+), 14 deletions(-)
+ teamd/teamd_runner_lacp.c |  227 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 213 insertions(+), 14 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 82b8b86..4b77692 100644
+index 82b8b86..5c7e7b4 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -77,22 +77,45 @@ struct lacpdu {
@@ -159,7 +159,7 @@ index 82b8b86..4b77692 100644
  	memcpy(lacpdu.hdr.ether_shost, hwaddr, hwaddr_len);
  	memcpy(lacpdu.hdr.ether_dhost, ll_slow.sll_addr, ll_slow.sll_halen);
  	lacpdu.hdr.ether_type = htons(ETH_P_SLOW);
-+	if (lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT || lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
++	if (lacpdu.version_number == 0xf1) {
 +		lacpdu.v2.actor_retry_count = lacp_port->lacp->cfg.retry_count;
 +		lacpdu.v2.partner_retry_count = lacp_port->partner_retry_count;
 +	}
@@ -337,7 +337,34 @@ index 82b8b86..4b77692 100644
  };
  
  static struct lacp_port *lacp_port_gsc(struct team_state_gsc *gsc,
-@@ -2380,6 +2559,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
+@@ -2272,6 +2451,14 @@ static int lacp_port_state_prio_get(struct teamd_context *ctx,
+ 	return 0;
+ }
+ 
++static int lacp_port_partner_retry_count_get(struct teamd_context *ctx,
++				    struct team_state_gsc *gsc,
++				    void *priv)
++{
++	gsc->data.int_val = lacp_port_gsc(gsc, priv)->partner_retry_count;
++	return 0;
++}
++
+ static const struct teamd_state_val lacp_port_state_vals[] = {
+ 	{
+ 		.subpath = "selected",
+@@ -2314,6 +2501,11 @@ static const struct teamd_state_val lacp_port_state_vals[] = {
+ 		.vals = lacp_port_partner_state_vals,
+ 		.vals_count = ARRAY_SIZE(lacp_port_partner_state_vals),
+ 	},
++	{
++		.subpath = "partner_retry_count",
++		.type = TEAMD_STATE_ITEM_TYPE_INT,
++		.getter = lacp_port_partner_retry_count_get,
++	},
+ };
+ 
+ static const struct teamd_state_val lacp_state_vgs[] = {
+@@ -2380,6 +2572,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
  		teamd_log_err("Failed to register state groups.");
  		goto balancer_fini;
  	}
@@ -350,7 +377,7 @@ index 82b8b86..4b77692 100644
  	return 0;
  
  balancer_fini:
-@@ -2395,6 +2580,7 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
+@@ -2395,6 +2593,7 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
  
  	if (ctx->lacp_directory)
  		lacp_state_save(ctx, lacp);
