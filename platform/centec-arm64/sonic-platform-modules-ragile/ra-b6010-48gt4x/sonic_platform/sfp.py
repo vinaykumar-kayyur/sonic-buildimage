@@ -257,7 +257,7 @@ class SfpV2(SfpCust):
         new_device_path = "/sys/bus/i2c/devices/i2c-%d/new_device"
         new_device_key = sfp_pt2ee_path_list[self._port_id]
         self.new_class_path = None if new_device_path is None or new_device_key == 0 else new_device_path % new_device_key
-        self._sfplog(LOG_DEBUG_LEVEL, "Done init new_class path: %s" % self.new_class_path
+        self._sfplog(LOG_DEBUG_LEVEL, "Done init new_class path: %s" % self.new_class_path)
 
         if sfp_pt2ee_path_list[self._port_id] != 0:
             self.add_new_sfp_device(self._port_id, 0x50)
