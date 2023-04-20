@@ -22,5 +22,8 @@
         "desc": "INCORRECT LOOPBACK ACTION IN INTERFACE TABLE.",
         "eStrKey" : "Pattern",
         "eStr": ["drop|forward"]
+    },
+    "INTERFACE_ENABLE_IPV6_LINK_LOCAL": {
+        "desc": "Enable the ipv6 link-local."
     }
 }

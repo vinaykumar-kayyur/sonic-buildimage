@@ -79,5 +79,8 @@
         "desc": "INCORRECT LOOPBACK ACTION IN VLAN_INTERFACE TABLE.",
         "eStrKey" : "Pattern",
         "eStr": ["drop|forward"]
+    },
+    "VLAN_INTERFACE_ENABLE_IPV6_LINK_LOCAL": {
+        "desc": "Enable the ipv6 link-local."
     }
 }
