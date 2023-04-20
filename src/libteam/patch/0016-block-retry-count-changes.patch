@@ -5,13 +5,13 @@ Date: 2023-01-18 14:26:36 -0800
 
 After setting the retry count to some custom value, if a normal LACP
 packet comes in without a custom retry count, don't reset it back to
-that custom retry count for the first 60 seconds.
+that custom retry count for 60 seconds since the last new packet.
 ---
- teamd/teamd_runner_lacp.c |   40 ++++++++++++++++++++++++++++++----------
- 1 file changed, 30 insertions(+), 10 deletions(-)
+ teamd/teamd_runner_lacp.c |   44 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 35 insertions(+), 9 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 4b77692..5a55bd5 100644
+index 5c7e7b4..4f971d9 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -180,6 +180,7 @@ struct lacp {
@@ -22,7 +22,36 @@ index 4b77692..5a55bd5 100644
  	struct {
  		bool active;
  #define		LACP_CFG_DFLT_ACTIVE true
-@@ -1457,9 +1458,12 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+@@ -232,6 +233,7 @@ struct lacp_port {
+ 	struct lacp_port *agg_lead; /* leading port of aggregator.
+ 				     * NULL in case this port is not selected */
+ 	enum lacp_port_state state;
++	int last_received_lacpdu_version;
+ 	bool lacpdu_saved;
+ 	struct lacpdu last_pdu;
+ 	struct {
+@@ -1331,6 +1333,7 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
+ 		if (err)
+ 			return err;
+ 		lacp_port->lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++		lacp_port->last_received_lacpdu_version = 0x01;
+ 		teamd_loop_callback_disable(lacp_port->ctx,
+ 					    LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp_port->lacp);
+ 		lacp_port_timeout_set(lacp_port, true);
+@@ -1439,10 +1442,10 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+ 	if (hwaddr_len != ETH_ALEN)
+ 		return 0;
+ 
+-	if (lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT || lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
++	if (lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT)
+ 		lacpdu_init(&lacpdu, 0xf1);
+ 	else
+-		lacpdu_init(&lacpdu, 0x01);
++		lacpdu_init(&lacpdu, lacp_port->last_received_lacpdu_version);
+ 	lacpdu.actor = lacp_port->actor;
+ 	lacpdu.partner = lacp_port->partner;
+ 	memcpy(lacpdu.hdr.ether_shost, hwaddr, hwaddr_len);
+@@ -1457,9 +1460,12 @@ static int lacpdu_send(struct lacp_port *lacp_port)
  	return err;
  }
  
@@ -35,26 +64,20 @@ index 4b77692..5a55bd5 100644
  
  	if (!lacpdu_check(lacpdu)) {
  		teamd_log_warn("malformed LACP PDU came.");
-@@ -1489,18 +1493,34 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+@@ -1493,17 +1499,38 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+ 					lacp_port->partner_retry_count,
+ 					lacpdu->v2.actor_retry_count);
+ 			lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
++			if (clock_gettime(CLOCK_MONOTONIC, &monotonic_time)) {
++				err = errno;
++				teamd_log_err("%s: unable to get current time: %s", lacp_port->tdport->ifname, strerror(err));
++				return -err;
++			}
++		}
++		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
++			// Reset the change time every time a 0xf1 packet comes in
++			lacp_port->lacp->next_retry_count_change_time = monotonic_time.tv_sec + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS;
  		}
- 		if (lacp_port->partner_retry_count != lacpdu->v2.actor_retry_count) {
- 			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
--					lacp_port->tdport->ifname,
--					lacp_port->partner_retry_count,
--					lacpdu->v2.actor_retry_count);
--			lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
--		}
-+					   lacp_port->tdport->ifname,
-+					   lacp_port->partner_retry_count,
-+					   lacpdu->v2.actor_retry_count);
-+            lacp_port->partner_retry_count = lacpdu->v2.actor_retry_count;
-+            if (clock_gettime(CLOCK_MONOTONIC, &monotonic_time)) {
-+                err = errno;
-+                teamd_log_err("%s: unable to get current time: %s", lacp_port->tdport->ifname, strerror(err));
-+                return -err;
-+            }
-+            lacp_port->lacp->next_retry_count_change_time = monotonic_time.tv_sec + LACP_NEXT_RETRY_COUNT_CHANGE_TIMEOUT_SECONDS;
-+        }
  	} else {
  		if (lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
 -			teamd_log_dbg(lacp_port->ctx, "%s: retry count from partner changed from %u to %u",
@@ -80,3 +103,18 @@ index 4b77692..5a55bd5 100644
  		}
  	}
  
++	lacp_port->last_received_lacpdu_version = lacpdu->version_number;
++
+ 	err = lacp_port_set_state(lacp_port, PORT_STATE_CURRENT);
+ 	if (err)
+ 		return err;
+@@ -1512,8 +1539,7 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+ 
+ 	/* Check if the other side has correct info about us */
+ 	if (memcmp(&lacpdu->partner, &lacp_port->actor, sizeof(struct lacpdu_info))
+-            || (lacpdu->version_number == 0xf1 && lacp_port->lacp->cfg.retry_count != lacpdu->v2.partner_retry_count)
+-            || (lacpdu->version_number != 0xf1 && lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT)) {
++            || (lacpdu->version_number == 0xf1 && lacp_port->lacp->cfg.retry_count != lacpdu->v2.partner_retry_count)) {
+ 		err = lacpdu_send(lacp_port);
+ 		if (err)
+ 			return err;
