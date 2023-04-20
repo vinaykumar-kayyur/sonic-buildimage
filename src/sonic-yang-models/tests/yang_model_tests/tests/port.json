@@ -13,6 +13,12 @@
         "eStrKey" : "Pattern",
         "eStr": ["rc"]
     },
+    "PORT_VALID_MTU_TEST_1": {
+        "desc": "PORT_VALID_MTU_TEST_1 no failure."
+    },
+    "PORT_VALID_MTU_TEST_2": {
+        "desc": "PORT_VALID_MTU_TEST_2 no failure."
+    },
     "PORT_VALID_AUTONEG_TEST_1": {
         "desc": "PORT_VALID_AUTONEG_TEST_1 no failure."
     },
@@ -114,6 +120,13 @@
      "PORT_INVALID_MULTIASIC_TEST": {
          "desc": "PORT_INVALID_MULTIASIC_TEST invalid role pattern, expect fail",
          "eStrKey": "Pattern"
+     },
+     "PORT_VALID_SUBPORT_NUMBER": {
+         "desc": "PORT_VALID_SUBPORT_NUMBER no failure."
+     },
+     "PORT_INVALID_SUBPORT_NUMBER": {
+         "desc": "Out of range subport number",
+         "eStrKey": "Range",
+         "eStr": "0..8"
      }
-
 }

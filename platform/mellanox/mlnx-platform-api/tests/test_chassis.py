@@ -17,6 +17,7 @@
 
 import os
 import sys
+import subprocess
 
 from mock import MagicMock
 if sys.version_info.major == 3:
@@ -29,6 +30,7 @@ modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
 import sonic_platform.chassis
+from sonic_platform_base.sfp_base import SfpBase
 from sonic_platform.chassis import Chassis
 from sonic_platform.device_data import DeviceDataManager
 
@@ -171,7 +173,6 @@ class TestChassis:
     @mock.patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
     def test_change_event(self):
         from sonic_platform.sfp_event import sfp_event
-        from sonic_platform.sfp import SFP
 
         return_port_dict = {1: '1'}
         def mock_check_sfp_status(self, port_dict, error_dict, timeout):
@@ -222,6 +223,35 @@ class TestChassis:
             assert major == chassis.REBOOT_CAUSE_HARDWARE_OTHER
             assert minor == value
             mock_file_content[file_path] = 0
+
+        utils.is_host = mock.MagicMock(return_value=True)
+        chassis._parse_warmfast_reboot_from_proc_cmdline = mock.MagicMock(return_value='warm-reboot')
+        for key, value in chassis.reboot_major_cause_dict.items():
+            file_path = os.path.join(REBOOT_CAUSE_ROOT, key)
+            mock_file_content[file_path] = 1
+            major, minor = chassis.get_reboot_cause()
+            assert major == chassis.REBOOT_CAUSE_NON_HARDWARE
+            assert minor == ''
+            mock_file_content[file_path] = 0
+
+        for key, value in chassis.reboot_minor_cause_dict.items():
+            file_path = os.path.join(REBOOT_CAUSE_ROOT, key)
+            mock_file_content[file_path] = 1
+            major, minor = chassis.get_reboot_cause()
+            assert major == chassis.REBOOT_CAUSE_NON_HARDWARE
+            assert minor == value
+            mock_file_content[file_path] = 0
+
+    def test_parse_warmfast_reboot_from_proc_cmdline(self):
+        chassis = Chassis()
+        with mock.patch("builtins.open", mock.mock_open(read_data="SONIC_BOOT_TYPE=warm")):
+            assert chassis._parse_warmfast_reboot_from_proc_cmdline() == "warm-reboot"
+
+        with mock.patch("builtins.open", mock.mock_open(read_data="SONIC_BOOT_TYPE=fast")):
+            assert chassis._parse_warmfast_reboot_from_proc_cmdline() == "fast-reboot"
+
+        with mock.patch("builtins.open", mock.mock_open(read_data="SONIC_BOOT_TYPE=None")):
+            assert chassis._parse_warmfast_reboot_from_proc_cmdline() == None
 
     def test_module(self):
         from sonic_platform.chassis import ModularChassis
@@ -275,10 +305,24 @@ class TestChassis:
         #Override the dmi file
         sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
         new_dmi_file = sonic_platform.chassis.DMI_FILE
-        os.system("touch " + new_dmi_file)
-        os.system("chmod -r " + new_dmi_file)
+        subprocess.call(["touch", new_dmi_file])
+        subprocess.call(["chmod", "-r", new_dmi_file])
         chassis = Chassis()
         rev = chassis.get_revision()
         sonic_platform.chassis.DMI_FILE = old_dmi_file
-        os.system("rm -f " + new_dmi_file)
+        subprocess.call(["rm", "-f", new_dmi_file])
         assert rev == "N/A"
+
+    def test_get_port_or_cage_type(self):
+        chassis = Chassis()
+        chassis._RJ45_port_inited = True
+        chassis._RJ45_port_list = [0]
+        assert SfpBase.SFP_PORT_TYPE_BIT_RJ45 == chassis.get_port_or_cage_type(1)
+
+        exceptionRaised = False
+        try:
+            chassis.get_port_or_cage_type(2)
+        except NotImplementedError:
+            exceptionRaised = True
+
+        assert exceptionRaised

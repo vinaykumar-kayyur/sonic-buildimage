@@ -16,6 +16,9 @@ parameters:
 - name: 'jobGroups'
   type: object
   default: ''
+- name: 'qemuOrCrossBuild'
+  type: boolean
+  default: false
 
 jobs:
 - template: azure-pipelines-image-template.yml
@@ -36,6 +39,9 @@ jobs:
       docker_syncd_rpc_image: no
       syncd_rpc_image: no
       platform_rpc: no
+      ${{ if parameters.qemuOrCrossBuild }}:
+        SONIC_SLAVE_DOCKER_DRIVER: 'vfs'
+        CACHE_MODE: 'none'
     ${{ if ne(parameters.jobGroups, '') }}:
       jobGroups: ${{ parameters.jobGroups }}
     ${{ if eq(parameters.jobGroups, '') }}:
@@ -67,7 +73,8 @@ jobs:
             platform_rpc: centec
 
         - name: centec-arm64
-          pool: sonicbld-arm64
+          ${{ if not(parameters.qemuOrCrossBuild) }}:
+            pool: sonicbld-arm64
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: arm64
@@ -81,7 +88,8 @@ jobs:
             dbg_image: yes
 
         - name: marvell-armhf
-          pool: sonicbld-armhf
+          ${{ if not(parameters.qemuOrCrossBuild) }}:
+            pool: sonicbld-armhf
           timeoutInMinutes: 2880
           variables:
             PLATFORM_ARCH: armhf
@@ -100,7 +108,8 @@ jobs:
             platform_rpc: nephos
 
     buildSteps:
-      - template: template-skipvstest.yml
+      - template: .azure-pipelines/template-skipvstest.yml@buildimage
+      - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
           if [ $(GROUP_NAME) == vs ]; then
@@ -113,9 +122,10 @@ jobs:
               mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
+            make $BUILD_OPTIONS target/docker-ptf-sai.gz
             if [ $(Build.Reason) != 'PullRequest' ];then
               gzip -kd target/sonic-vs.img.gz
-              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make sonic-slave-run
+              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make $BUILD_OPTIONS sonic-slave-run
               rm target/sonic-vs.img
             fi
           else
@@ -130,7 +140,27 @@ jobs:
               make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).raw
             fi
             if [ $(docker_syncd_rpc_image) == yes ]; then
+              # workaround for issue in rules/sairedis.dep, git ls-files will list un-exist files for cache
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
+              pushd ./src/sonic-sairedis/SAI
+              git stash
+              popd
+              if [ $(GROUP_NAME) == broadcom ]; then
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd 
+                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y SAITHRIFT_V2=y target/docker-saiserverv2-brcm.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd
+              fi
+              if [ $(GROUP_NAME) == barefoot ]; then
+                make $BUILD_OPTIONS SAITHRIFT_V2=y ENABLE_SYNCD_RPC=y target/docker-saiserverv2-bfn.gz
+                pushd ./src/sonic-sairedis/SAI
+                git stash
+                popd
+              fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
@@ -139,4 +169,4 @@ jobs:
             make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
           fi
         displayName: "Build sonic image"
-      - template: check-dirty-version.yml
+      - template: .azure-pipelines/check-dirty-version.yml@buildimage

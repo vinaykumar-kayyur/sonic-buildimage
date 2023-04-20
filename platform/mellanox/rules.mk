@@ -30,6 +30,7 @@ include $(PLATFORM_PATH)/issu-version.mk
 include $(PLATFORM_PATH)/mlnx-onie-fw-update.mk
 include $(PLATFORM_PATH)/mlnx-ssd-fw-update.mk
 include $(PLATFORM_PATH)/install-pending-fw.mk
+include $(PLATFORM_PATH)/integration-scripts.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM)
@@ -47,5 +48,11 @@ $(SYNCD)_RDEPENDS += $(MLNX_SAI)
 
 # Inject mlnx sdk libs to platform monitor
 $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(APPLIBS) $(SX_COMPLIB) $(SXD_LIBS) $(SX_GEN_UTILS) $(PYTHON_SDK_API) $(APPLIBS_DEV) $(SX_COMPLIB_DEV) $(SXD_LIBS_DEV) $(SX_GEN_UTILS_DEV)
+
+# Force the target bootloader for mellanox platforms to grub regardless of arch
+TARGET_BOOTLOADER = grub
+
+# location for the platform specific external kernel patches
+override EXTERNAL_KERNEL_PATCH_LOC := $(BUILD_WORKDIR)/$(PLATFORM_PATH)/non-upstream-patches/
 
 export SONIC_BUFFER_MODEL=dynamic

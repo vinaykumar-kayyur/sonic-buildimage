@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import ctypes
 import functools
 import subprocess
 import json
 import sys
+import time
 import os
 from sonic_py_common import device_info
 from sonic_py_common.logger import Logger
@@ -43,7 +45,14 @@ def read_from_file(file_path, target_type, default='', raise_exception=False, lo
     """
     try:
         with open(file_path, 'r') as f:
-            value = target_type(f.read().strip())
+            value = f.read()
+            if value is None:
+                # None return value is not allowed in any case, so we log error here for further debug.
+                logger.log_error('Failed to read from {}, value is None, errno is {}'.format(file_path, ctypes.get_errno()))
+                # Raise ValueError for the except statement to handle this as a normal exception
+                raise ValueError('File content of {} is None'.format(file_path))
+            else:
+                value = target_type(value.strip())
     except (ValueError, IOError) as e:
         if log_func:
             log_func('Failed to read from file {} - {}'.format(file_path, repr(e)))
@@ -177,19 +186,9 @@ def is_host():
     """
     Test whether current process is running on the host or an docker
     return True for host and False for docker
-    """ 
-    try:
-        proc = subprocess.Popen("docker --version 2>/dev/null", 
-                                stdout=subprocess.PIPE, 
-                                shell=True, 
-                                stderr=subprocess.STDOUT, 
-                                universal_newlines=True)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        result = stdout.rstrip('\n')
-        return result != ''
-    except OSError as e:
-        return False
+    """
+    docker_env_file = '/.dockerenv'
+    return os.path.exists(docker_env_file) is False
 
 
 def default_return(return_value, log_func=logger.log_debug):
@@ -213,7 +212,7 @@ def run_command(command):
     :return: Output of the shell command.
     """
     try:
-        process = subprocess.Popen(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return process.communicate()[0].strip()
     except Exception:
         return None
@@ -239,9 +238,13 @@ def load_json_file(filename, log_func=logger.log_error):
 def extract_RJ45_ports_index():
     # Cross check 'platform.json' and 'hwsku.json' to extract the RJ45 port index if exists.
     hwsku_path = device_info.get_path_to_hwsku_dir()
+    hwsku_file = os.path.join(hwsku_path, HWSKU_JSON)
+    if not os.path.exists(hwsku_file):
+        # Platforms having no hwsku.json do not have RJ45 port
+        return None
+
     platform_file = device_info.get_path_to_port_config_file()
     platform_dict = load_json_file(platform_file)['interfaces']
-    hwsku_file = os.path.join(hwsku_path, HWSKU_JSON)
     hwsku_dict = load_json_file(hwsku_file)['interfaces']
     port_name_to_index_map_dict = {}
     RJ45_port_index_list = []
@@ -264,3 +267,21 @@ def extract_RJ45_ports_index():
 
     return RJ45_port_index_list if bool(RJ45_port_index_list) else None
 
+
+def wait_until(predict, timeout, interval=1, *args, **kwargs):
+    """Wait until a condition become true
+
+    Args:
+        predict (object): a callable such as function, lambda
+        timeout (int): wait time in seconds
+        interval (int, optional): interval to check the predict. Defaults to 1.
+
+    Returns:
+        _type_: _description_
+    """
+    while timeout > 0:
+        if predict(*args, **kwargs):
+            return True
+        time.sleep(interval)
+        timeout -= interval
+    return False

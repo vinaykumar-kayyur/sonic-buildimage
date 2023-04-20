@@ -18,6 +18,8 @@
 import os
 import pytest
 import sys
+import threading
+import time
 if sys.version_info.major == 3:
     from unittest import mock
 else:
@@ -113,10 +115,29 @@ class TestUtils:
         @utils.default_return(100, log_func=mock_log)
         def func():
             raise RuntimeError('')
-        
+
         assert func() == 100
         assert mock_log.call_count == 1
 
     def test_run_command(self):
-        output = utils.run_command('ls')
+        output = utils.run_command(['ls'])
         assert output
+
+    @mock.patch('sonic_py_common.device_info.get_path_to_hwsku_dir', mock.MagicMock(return_value='/tmp'))
+    def test_extract_RJ45_ports_index(self):
+        rj45_list = utils.extract_RJ45_ports_index()
+        assert rj45_list is None
+
+    def test_wait_until(self):
+        values = []
+        assert utils.wait_until(lambda: len(values) == 0, timeout=1)
+        assert not utils.wait_until(lambda: len(values) > 0, timeout=1)
+
+        def thread_func(items):
+            time.sleep(3)
+            items.append(0)
+
+        t = threading.Thread(target=thread_func, args=(values, ))
+        t.start()
+        assert utils.wait_until(lambda: len(values) > 0, timeout=5)
+        t.join()
