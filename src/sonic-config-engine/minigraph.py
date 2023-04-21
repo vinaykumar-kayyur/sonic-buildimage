@@ -1397,6 +1397,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     u_neighbors = None
     u_devices = None
+    acls = {}
+    acl_table_types = {}
     hwsku = None
     bgp_sessions = None
     bgp_monitors = []
@@ -1921,7 +1923,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
-    if acl_table_types is not None and len(acl_table_types) > 0:
+    if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'], is_storage_device, vlan_members)
     results['FEATURE'] = {
