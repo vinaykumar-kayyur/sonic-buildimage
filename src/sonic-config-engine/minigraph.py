@@ -51,6 +51,20 @@ dualtor_cable_types = ["active-active", "active-standby"]
 # Default Virtual Network Index (VNI) 
 vni_default = 8000
 
+# Defination of custom acl table types
+acl_table_type_defination = {
+    'BMCDATA': {
+        "ACTIONS": "PACKET_ACTION,COUNTER",
+        "BIND_POINTS": "PORT",
+        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+    },
+    'BMCDATAV6': {
+        "ACTIONS": "PACKET_ACTION,COUNTER",
+        "BIND_POINTS": "PORT",
+        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+    }
+}
+
 ###############################################################################
 #
 # Minigraph parsing functions
@@ -745,18 +759,10 @@ def parse_dpg(dpg, hname):
             if aclintf.find(str(QName(ns, "Type"))) is not None and aclintf.find(str(QName(ns, "Type"))).text.upper() == "BMCDATA":
                 if 'v6' in aclname.lower():
                     is_bmc_data_v6 = True
-                    acl_table_types['BMCDATAV6'] = {
-                        "ACTIONS": "PACKET_ACTION,COUNTER",
-                        "BIND_POINTS": "PORT",
-                        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
-                    }
+                    acl_table_types['BMCDATAV6'] = acl_table_type_defination['BMCDATAV6']
                 else:
                     is_bmc_data = True
-                    acl_table_types['BMCDATA'] = {
-                        "ACTIONS": "PACKET_ACTION,COUNTER",
-                        "BIND_POINTS": "PORT",
-                        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
-                    }
+                    acl_table_types['BMCDATA'] = acl_table_type_defination['BMCDATA']
             # if acl is classified as mirror (erpsan) or acl interface 
             # are binded then do not classify as Control plane.
             # For multi-asic platforms it's possible there is no
