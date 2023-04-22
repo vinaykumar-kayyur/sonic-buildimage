@@ -586,6 +586,8 @@ class StaticRouteBfd(object):
         for key in original_config:
             if key == "bfd":
                 continue
+            if key == "bfd_nh_hold":
+                continue
             if key == "blackhole":
                 new_config[key] = bkh_candidate[1:]
             elif key == "nexthop":
