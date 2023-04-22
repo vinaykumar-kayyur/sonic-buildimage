@@ -28,6 +28,7 @@ module sonic-fabric-port{
                 }
 
                 leaf isolateStatus {
+                    description "Isolation status of a fabric port";
                     type string {
                         pattern "False|True";
                     }
@@ -35,12 +36,14 @@ module sonic-fabric-port{
                 }
 
                 leaf alias {
+                    description "Alias of a fabric port";
                     type string {
                         length 1..128;
                     }
                 }
 
                 leaf lanes {
+                    description "Lanes of a fabric port";
                     mandatory true;
                     type string {
                         length 1..128;
