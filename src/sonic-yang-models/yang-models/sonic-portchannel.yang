@@ -184,7 +184,7 @@ module sonic-portchannel {
 
 		leaf ipv6_use_link_local_only {
 			description "Enable/Disable IPv6 link local address on portchannel interface";
-			type mode-status;
+			type stypes:mode-status;
 			default disable;
 		}
 
