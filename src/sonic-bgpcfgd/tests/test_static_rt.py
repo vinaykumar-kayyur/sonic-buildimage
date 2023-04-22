@@ -821,3 +821,109 @@ def test_set_tag_change():
             "ip route 10.1.0.0/24 10.0.0.57 tag 2",
         ]
     )
+
+def test_set_bfd_false():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "bfd": "false",
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+            "ip route 10.1.0.0/24 PortChannel0001 tag 1",
+            "route-map STATIC_ROUTE_FILTER permit 10",
+            " match tag 1",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            " address-family ipv6",
+            "  redistribute static route-map STATIC_ROUTE_FILTER"
+        ]
+    )
+
+    set_del_test(
+        mgr,
+        "DEL",
+        ("10.1.0.0/24",),
+        True,
+        [
+            "no ip route 10.1.0.0/24 PortChannel0001 tag 1",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  no redistribute static route-map STATIC_ROUTE_FILTER",
+            " address-family ipv6",
+            "  no redistribute static route-map STATIC_ROUTE_FILTER",
+            "no route-map STATIC_ROUTE_FILTER"
+        ]
+    )
+
+def test_set_bfd_true():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "bfd": "false",
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+            "ip route 10.1.0.0/24 PortChannel0001 tag 1",
+            "route-map STATIC_ROUTE_FILTER permit 10",
+            " match tag 1",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            " address-family ipv6",
+            "  redistribute static route-map STATIC_ROUTE_FILTER"
+        ]
+    )
+    #do nothing for adding smae route second time
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "bfd": "false",
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+        ]
+    )
+    #clear internal cache if bfd flag is true
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "bfd": "true",
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+        ]
+    )
+
+    #install the route becasue that cache was cleared above
+    set_del_test(
+        mgr,
+        "SET",
+        ("10.1.0.0/24", {
+            "bfd": "false",
+            "nexthop": "PortChannel0001",
+        }),
+        True,
+        [
+            "ip route 10.1.0.0/24 PortChannel0001 tag 1",
+            "route-map STATIC_ROUTE_FILTER permit 10",
+            " match tag 1",
+            "router bgp 65100",
+            " address-family ipv4",
+            "  redistribute static route-map STATIC_ROUTE_FILTER",
+            " address-family ipv6",
+            "  redistribute static route-map STATIC_ROUTE_FILTER"
+        ]
+    )
+

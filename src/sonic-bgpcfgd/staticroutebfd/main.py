@@ -339,9 +339,9 @@ class StaticRouteBfd(object):
         if to_bfd_enable:
             #write route with full_nh_list to appl_db, let StaticRouteMgr(appl_db) install this route to update its cache
             data['bfd'] = "false"
+            data['expiry'] = "false"
             self.set_static_route_into_appl_db(key, data)
             time.sleep(0.1)
-            data['bfd'] = "true"
             log_debug("SRT_BFD: bfd toggle to true. write the route to appl_db, update StaticRouteMgr(appl_db), key %s"%(key))
         else:
             #safely delete the static_route entry created by StaticRouteBfd
@@ -353,7 +353,6 @@ class StaticRouteBfd(object):
             self.del_static_route_from_appl_db(key)
             log_debug("SRT_BFD: bfd toggle to false. delete static route from appl_db, key %s"%(key))
 
-            data['bfd'] = "false"
             #treat it as static route deletion, but do not delete it from LOCAL_CONFIG_TABLE
             self.static_route_del_handler(cfg_key, False)
 
@@ -388,12 +387,13 @@ class StaticRouteBfd(object):
         #when bfd changed from "false" to "true", before bfd session created and state becomes up,
         #the installed static route need to be kept in the system system, so put this route in "hold" state until at least one 
         #bfd session becomes UP.
+        data_copy = data.copy()
         data['bfd_nh_hold'] = "false"
         if cur_data:
             if cur_bfd_enabled and not bfd_enabled: # dynamic bfd flag change from TRUE to FALSE
-                self.handle_bfd_change(key, data, False)
+                self.handle_bfd_change(key, data_copy, False)
             if not cur_bfd_enabled and bfd_enabled: # dynamic bfd flag change from FALSE to TRUE
-                self.handle_bfd_change(key, data, True)
+                self.handle_bfd_change(key, data_copy, True)
                 data['bfd_nh_hold'] = "true"
 
         if not bfd_enabled: 
@@ -507,6 +507,7 @@ class StaticRouteBfd(object):
                 self.del_bfd_session_from_appl_db(bfd_key)
 
         self.del_static_route_from_appl_db(route_cfg_key.replace("|", ":"))
+        self.remove_from_local_db(LOCAL_SRT_TABLE, route_cfg_key)
 
         if redis_del:
             self.remove_from_local_db(LOCAL_CONFIG_TABLE, route_cfg_key)
@@ -629,7 +630,7 @@ class StaticRouteBfd(object):
                 self.append_to_srt_table_entry(srt_key, (vrf, peer_ip))
                 config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
                 #exit "hold" state when any BFD session becomes UP
-                data['bfd_nh_hold'] = "false"
+                config_data['bfd_nh_hold'] = "false"
                 new_config = self.reconstruct_static_route_config(config_data, self.get_local_db(LOCAL_SRT_TABLE, srt_key))
                 self.set_static_route_into_appl_db(srt_key.replace("|", ":"), new_config)
 
@@ -639,7 +640,7 @@ class StaticRouteBfd(object):
                 config_key =  prefix
                 config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
                 #skip if the static route is in "hold" state
-                if data['bfd_nh_hold'] == "true":
+                if config_data['bfd_nh_hold'] == "true":
                     continue
                 self.remove_from_srt_table_entry(srt_key, (vrf, peer_ip))
                 if len(self.get_local_db(LOCAL_SRT_TABLE, srt_key)) == 0:
