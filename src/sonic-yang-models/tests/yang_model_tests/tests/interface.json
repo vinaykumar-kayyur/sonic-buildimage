@@ -25,5 +25,10 @@
     },
     "INTERFACE_ENABLE_IPV6_LINK_LOCAL": {
         "desc": "Enable the ipv6 link-local."
+    },
+    "INTERFACE_INVALID_ENABLE_IPV6_LINK_LOCAL": {
+        "desc": "Enable the ipv6 link-local as true.",
+        "eStrKey" : "InvalidValue",
+        "eStr": ["enable|disable"]
     }
 }

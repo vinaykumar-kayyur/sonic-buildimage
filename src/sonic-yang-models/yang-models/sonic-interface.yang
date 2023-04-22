@@ -77,10 +77,7 @@ module sonic-interface {
 
 				leaf ipv6_use_link_local_only {
 					description "Enable/Disable IPv6 link local address on interface";
-					type enumeration {
-						enum enable;
-						enum disable;
-					}
+					type mode-status;
 					default disable;
 				}
 
