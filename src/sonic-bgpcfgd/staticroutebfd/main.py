@@ -627,6 +627,9 @@ class StaticRouteBfd(object):
             for prefix in self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key):
                 srt_key =  prefix
                 config_key =  prefix
+                #skip if the (vrf, peer_ip) is already in the nexthop list
+                if (vrf, peer_ip) in self.get_local_db(LOCAL_SRT_TABLE, srt_key):
+                    continue
                 self.append_to_srt_table_entry(srt_key, (vrf, peer_ip))
                 config_data = self.get_local_db(LOCAL_CONFIG_TABLE, config_key)
                 #exit "hold" state when any BFD session becomes UP

@@ -246,7 +246,7 @@ def test_set_2routes():
          'default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
 
-def test_set_bfd_flag_change():
+def test_set_bfd_change_hold():
     dut = constructor()
     intf_setup(dut)
 
@@ -339,6 +339,117 @@ def test_set_bfd_flag_change():
         }),
         {},
         {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.3.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+    )
+
+
+def test_set_bfd_change_no_hold():
+    dut = constructor()
+    intf_setup(dut)
+
+    #setup runtime "bfd"="false" condition``
+    set_del_test(dut, "srt",
+        "SET",
+        ("2.2.2.0/24", {
+            "bfd": "true",
+            "nexthop": "192.168.1.2 , 192.168.2.2, 192.168.3.2",
+            "ifname": "if1, if2, if3",
+        }),
+        { 
+            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+        },
+        {}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.1.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.2.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.3.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "srt",
+        "SET",
+        ("3.3.3.0/24", {
+            "bfd": "true",
+            "nexthop": "192.168.2.2",
+            "ifname": "if2",
+        }),
+        {},
+        {'default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+    )
+
+    set_del_test(dut, "srt",
+        "SET",
+        ("2.2.2.0/24", {
+            "bfd": "false",
+            "nexthop": "192.168.1.2 , 192.168.2.2, 192.168.3.2",
+            "ifname": "if1, if2, if3",
+        }),
+        { 
+            "default:default:192.168.1.2" : {},
+            "default:default:192.168.3.2" : {}
+        },
+        {'default:2.2.2.0/24': {'bfd':'true', 'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'},
+         'default:2.2.2.0/24': {}
+        }
+    )
+
+    #test #10 change 'bfd': false to true, because the bfd session "default:default:192.168.2.2" is up, so add that nexthop right after "bfd" change to "true" 
+    set_del_test(dut, "srt",
+        "SET",
+        ("2.2.2.0/24", {
+            "bfd": "true",
+            "nexthop": "192.168.1.2 , 192.168.2.2, 192.168.3.2",
+            "ifname": "if1, if2, if3",
+        }),
+        { 
+            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+        },
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+    )
+
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.1.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.2.2", {
+            "state": "Up"
+        }),
+        {},
+        {}
     )
     set_del_test(dut, "bfd",
         "SET",
