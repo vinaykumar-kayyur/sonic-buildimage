@@ -95,7 +95,7 @@ def intf_setup(dut):
         {}
     )
 
-def test_set():
+def test_set_del():
     dut = constructor()
     intf_setup(dut)
 
@@ -167,6 +167,58 @@ def test_set():
             "default:default:192.168.2.2" : {}
         },
         {'default:2.2.2.0/24': {}}
+    )
+
+def test_bfd_del():
+    dut = constructor()
+    intf_setup(dut)
+
+    set_del_test(dut, "srt",
+        "SET",
+        ("2.2.2.0/24", {
+            "bfd": "true",
+            "nexthop": "192.168.1.2 , 192.168.2.2, 192.168.3.2",
+            "ifname": "if1, if2, if3",
+        }),
+        { 
+            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+        },
+        {}
+    )
+
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.1.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.2.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+    )
+    set_del_test(dut, "bfd",
+        "SET",
+        ("192.168.3.2", {
+            "state": "Up"
+        }),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+    )
+
+    #test bfd state del
+    set_del_test(dut, "bfd",
+        "DEL",
+        ({"192.168.2.2"}),
+        {},
+        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2,192.168.3.2 ', 'ifname': 'if1,if3', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
 
 def test_set_2routes():
