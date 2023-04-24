@@ -87,7 +87,11 @@
                     {
                         "name": "testuser",
                         "SNMP_USER_TYPE": "noAuthNoPriv",
-                        "SNMP_USER_PERMISSION": "RO"
+                        "SNMP_USER_PERMISSION": "RO",
+                        "SNMP_USER_AUTH_TYPE": "",
+                        "SNMP_USER_AUTH_PASSWORD": "",
+                        "SNMP_USER_ENCRYPTION_TYPE": "",
+                        "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -100,7 +104,11 @@
                     {
                         "name": "testuser",
                         "SNMP_USER_TYPE": "noAuthNoPriv",
-                        "SNMP_USER_PERMISSION": "RW"
+                        "SNMP_USER_PERMISSION": "RW",
+                        "SNMP_USER_AUTH_TYPE": "",
+                        "SNMP_USER_AUTH_PASSWORD": "",
+                        "SNMP_USER_ENCRYPTION_TYPE": "",
+                        "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -113,7 +121,11 @@
                     {
                        "name": "tes",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
-                       "SNMP_USER_PERMISSION": "RO"
+                       "SNMP_USER_PERMISSION": "RO",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -126,7 +138,12 @@
                     {
                        "name": "test@user",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
-                       "SNMP_USER_PERMISSION": "RO"
+                       "SNMP_USER_PERMISSION": "RO",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
+
                     }
                 ]
             }
@@ -139,7 +156,11 @@
                     {
                        "name": "test:user",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
-                       "SNMP_USER_PERMISSION": "RO"
+                       "SNMP_USER_PERMISSION": "RO",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -151,7 +172,11 @@
                 "SNMP_USER_LIST": [
                     {
                        "name": "testuser",
-                       "SNMP_USER_PERMISSION": "RO"
+                       "SNMP_USER_PERMISSION": "RO",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -164,7 +189,11 @@
                     {
                        "name": "testuser",
                        "SNMP_USER_TYPE": "randomUserType",
-                       "SNMP_USER_PERMISSION": "RO"
+                       "SNMP_USER_PERMISSION": "RO",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -176,7 +205,11 @@
                 "SNMP_USER_LIST": [
                     {
                        "name": "testuser",
-                       "SNMP_USER_TYPE": "noAuthNoPriv"
+                       "SNMP_USER_TYPE": "noAuthNoPriv",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -189,7 +222,11 @@
                     {
                        "name": "testuser",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
-                       "SNMP_USER_PERMISSION": "WR"
+                       "SNMP_USER_PERMISSION": "WR",
+                       "SNMP_USER_AUTH_TYPE": "",
+                       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -203,8 +240,10 @@
                        "name": "testuser",
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
+                       "SNMP_USER_AUTH_TYPE": "SHA",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
-                       "SNMP_USER_AUTH_TYPE": "SHA"
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -219,7 +258,9 @@
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
-                       "SNMP_USER_AUTH_TYPE": "MD5"
+                       "SNMP_USER_AUTH_TYPE": "MD5",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -234,7 +275,9 @@
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
-                       "SNMP_USER_AUTH_TYPE": "HMAC-SHA-2"
+                       "SNMP_USER_AUTH_TYPE": "HMAC-SHA-2",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -248,7 +291,10 @@
                        "name": "testuser",
                        "SNMP_USER_TYPE": "noAuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
-                       "SNMP_USER_AUTH_TYPE": "SHA"
+                       "SNMP_USER_AUTH_TYPE": "SHA",
+		       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -262,7 +308,10 @@
                        "name": "testuser",
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
-                       "SNMP_USER_AUTH_TYPE": "SHA"
+                       "SNMP_USER_AUTH_TYPE": "SHA",
+		       "SNMP_USER_AUTH_PASSWORD": "",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -276,7 +325,9 @@
                        "name": "testuser",
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
-                       "SNMP_USER_AUTH_PASSWORD": "auth_pass"
+                       "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -291,7 +342,9 @@
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
-                       "SNMP_USER_AUTH_TYPE": "SAH"
+                       "SNMP_USER_AUTH_TYPE": "SAH",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -306,7 +359,9 @@
                        "SNMP_USER_TYPE": "AuthNoPriv",
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth:pass",
-                       "SNMP_USER_AUTH_TYPE": "SHA"
+                       "SNMP_USER_AUTH_TYPE": "SHA",
+                       "SNMP_USER_ENCRYPTION_TYPE": "",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }
@@ -356,7 +411,8 @@
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                        "SNMP_USER_AUTH_TYPE": "SHA",
-                       "SNMP_USER_ENCRYPTION_PASSWORD": "encry_pass"
+                       "SNMP_USER_ENCRYPTION_PASSWORD": "encry_pass",
+                       "SNMP_USER_ENCRYPTION_TYPE": ""
                     }
                 ]
             }
@@ -389,7 +445,8 @@
                        "SNMP_USER_PERMISSION": "RW",
                        "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                        "SNMP_USER_AUTH_TYPE": "SHA",
-                       "SNMP_USER_ENCRYPTION_TYPE": "AES"
+                       "SNMP_USER_ENCRYPTION_TYPE": "AES",
+                       "SNMP_USER_ENCRYPTION_PASSWORD": ""
                     }
                 ]
             }

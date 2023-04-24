@@ -45,7 +45,7 @@
     },
     "SNMP_USER_NO_USER_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with no user type",
-        "eStrKey": "Mandatory"
+        "eStrKey": "Must"
     },
     "SNMP_USER_INVALID_USER_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with invalid user type",
@@ -70,15 +70,15 @@
     },
     "SNMP_USER_NO_AUTH_NO_PRIV_AUTH_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with user type noAuthNoPriv with auth type",
-        "eStrKey": "When"
+        "eStrKey": "Must"
     },
     "SNMP_USER_AUTH_NO_PRIV_NO_AUTH_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type AuthNoPriv without auth password",
-        "eStrKey": "Mandatory"
+        "eStrKey": "Must"
     },
     "SNMP_USER_AUTH_NO_PRIV_NO_AUTH_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with user type AuthNoPriv without auth type",
-        "eStrKey": "Mandatory"
+        "eStrKey": "Must"
     },
     "SNMP_USER_AUTH_NO_PRIV_INVALID_AUTH_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type AuthNoPriv with invalid auth password",
@@ -92,15 +92,15 @@
     },
     "SNMP_USER_PRIV_NO_ENCRYPT_TYPE_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv without encyrption type",
-        "eStrKey": "Mandatory"
+        "eStrKey": "Must"
     },
     "SNMP_USER_PRIV_INVALID_ENCRYPT_TYPE_NEG_TEST": {	
         "desc": "Load SNMP user with user type Priv with invalid encryption type",
-        "eStrKey": "InvalidValue"
+        "eStrKey": "Must"
     },
     "SNMP_USER_PRIV_NO_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with no encryption password",
-        "eStrKey": "Mandatory"
+        "eStrKey": "Must"
     },
     "SNMP_USER_PRIV_INVALID_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with invalid encryption password",
@@ -108,7 +108,7 @@
     },
     "SNMP_USER_PRIV_SHORT_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with short encryption password",
-        "eStrKey": "Range"
+        "eStrKey": "Must"
     },
     "SNMP_USER_PRIV_LONG_ENCRYPT_PASS_NEG_TEST": {
         "desc": "Load SNMP user with user type Priv with long encryption password",
