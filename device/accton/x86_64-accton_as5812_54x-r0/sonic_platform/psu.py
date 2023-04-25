@@ -33,12 +33,12 @@ PSU_HWMON_I2C_MAPPING = {
 
 PSU_CPLD_I2C_MAPPING = {
     0: {
-        "num": 57,
-        "addr": "38"
+        "num": [57, 57],
+        "addr": ["38", "50"]
     },
     1: {
-        "num": 58,
-        "addr": "3b"
+        "num": [58, 58],
+        "addr": ["3b", "50"]
     },
 }
 
@@ -53,10 +53,11 @@ class Psu(PsuBase):
         self.i2c_num = PSU_HWMON_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_HWMON_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
-        
-        self.i2c_num = PSU_CPLD_I2C_MAPPING[self.index]["num"]
-        self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
-        self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
+
+        self.cpld_path = []
+        value = PSU_CPLD_I2C_MAPPING[self.index]
+        for self.i2c_num, self.i2c_addr in zip(value["num"], value["addr"]):
+            self.cpld_path.append(I2C_PATH.format(self.i2c_num, self.i2c_addr))
         self.__initialize_fan()
 
     def __initialize_fan(self):
@@ -82,6 +83,9 @@ class Psu(PsuBase):
             return 0
 
     def get_revision(self):
+        if not self.get_status():
+            return "N/A"
+
         rev_path = "{}{}".format(self.hwmon_path, 'psu_revision')
         rev_val = self._api_helper.read_txt_file(rev_path)
         if rev_val is not None:
@@ -208,12 +212,12 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is present, False if not
         """        
-        presence_path="{}{}".format(self.cpld_path, 'psu_present')
-        val=self._api_helper.read_txt_file(presence_path)
-        if val is not None:
-            return int(val, 10) == 1
-        else:
-            return 0
+        for cpld_path in self.cpld_path:
+            presence_path="{}{}".format(cpld_path, 'psu_present')
+            val=self._api_helper.read_txt_file(presence_path)
+            if val is not None:
+                return int(val, 10) == 1
+        return False
 
     def get_status(self):
         """
@@ -221,12 +225,12 @@ class Psu(PsuBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        power_path="{}{}".format(self.cpld_path, 'psu_power_good')
-        val=self._api_helper.read_txt_file(power_path)
-        if val is not None:
-            return int(val, 10) == 1
-        else:
-            return 0
+        for cpld_path in self.cpld_path:
+            power_path="{}{}".format(cpld_path, 'psu_power_good')
+            val=self._api_helper.read_txt_file(power_path)
+            if val is not None:
+                return int(val, 10) == 1
+        return False
 
     def get_model(self):
         """
@@ -234,12 +238,13 @@ class Psu(PsuBase):
         Returns:
             string: Model/part number of device
         """
-        model_path="{}{}".format(self.cpld_path, 'psu_model_name')
-        model=self._api_helper.read_txt_file(model_path)
+        for cpld_path in self.cpld_path:
+            model_path="{}{}".format(cpld_path, 'psu_model_name')
+            model=self._api_helper.read_txt_file(model_path)
         
-        if model is None:
-            return "N/A"
-        return model
+            if model is not None:
+                return model
+        return "N/A"
 
     def get_serial(self):
         """
@@ -247,12 +252,13 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial_path="{}{}".format(self.cpld_path, 'psu_serial_number')
-        serial=self._api_helper.read_txt_file(serial_path)
+        for cpld_path in self.cpld_path:
+            serial_path="{}{}".format(cpld_path, 'psu_serial_number')
+            serial=self._api_helper.read_txt_file(serial_path)
         
-        if serial is None:
-            return "N/A"
-        return serial
+            if serial is not None:
+                return serial
+        return "N/A"
 
     def get_position_in_parent(self):
         """
