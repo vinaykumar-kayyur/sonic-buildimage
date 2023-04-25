@@ -105,12 +105,5 @@
 			ramdisk = "initramfs";
 			fdt = "ctc_fdtb6010";
 			};
-
-		arm64-ragile_ra-b6010-48gt4x-r-r0 {
-			description = "config for ragile_ra-b6010-48gt4x-r";
-			kernel = "kernel_ctc";
-			ramdisk = "initramfs";
-			fdt = "ctc_fdtb6010";
-			};
 	};
 };

@@ -26,7 +26,6 @@ INSTALL_SERVICE_DIR = $(SUB_BUILD_DIR)/lib/systemd/system
 INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3.9/dist-packages
 INSTALL_BLACK_DRIVER = $(SUB_BUILD_DIR)/etc/modprobe.d
 CTC_48GT4X_PHY_DIR = $(SUB_BUILD_DIR)/usr/share/sonic/device/arm64-ragile_ra-b6010-48gt4x-r0/RA-B6010-48GT4X
-CTC_48GT4X_R_PHY_DIR = $(SUB_BUILD_DIR)/usr/share/sonic/device/arm64-ragile_ra-b6010-48gt4x-r-r0/RA-B6010-48GT4X-R
 
 all:
 	$(MAKE) -C $(app_dir)
@@ -35,11 +34,9 @@ all:
 	@if [ ! -d ${INSTALL_SCRIPT_DIR} ]; then mkdir -p ${INSTALL_SCRIPT_DIR} ;fi
 	@if [ ! -d ${INSTALL_SERVICE_DIR} ]; then mkdir -p ${INSTALL_SERVICE_DIR} ;fi
 	@if [ ! -d ${CTC_48GT4X_PHY_DIR} ]; then mkdir -p ${CTC_48GT4X_PHY_DIR}/phy_drv ;fi
-	@if [ ! -d ${CTC_48GT4X_R_PHY_DIR} ]; then mkdir -p ${CTC_48GT4X_R_PHY_DIR}/phy_drv ;fi
 	@if [ ! -d ${INSTALL_LIB_DIR} ]; then mkdir -p ${INSTALL_LIB_DIR} ;fi
 	@if [ -d $(PWD)/lib/ ]; then cp -r $(PWD)/lib/* ${INSTALL_LIB_DIR} ;fi
 	cp -r $(app_dir)/*.so $(CTC_48GT4X_PHY_DIR)/phy_drv
-	cp -r $(app_dir)/*.so $(CTC_48GT4X_R_PHY_DIR)/phy_drv
 	cp -r $(app_build_dir)/module/*.ko $(INSTALL_MODULE_DIR)
 	cp -r $(modules_build_dir)/*.ko $(INSTALL_MODULE_DIR)
 	cp -r $(app_dir)/build/app/*  $(INSTALL_SCRIPT_DIR)
