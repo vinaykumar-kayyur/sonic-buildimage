@@ -21,6 +21,9 @@ class Fan(PddfFan):
 
         self.max_speed_rpm = 28600 #Max RPM from FAN spec
 
+        # Remap LED color RED and OFF to AMBER as they are unsupported
+        self.STATUS_LED_COLOR_RED = "amber"
+        self.STATUS_LED_COLOR_OFF = "amber"
 
     def get_presence(self):
         if not self.is_psu_fan:
@@ -119,10 +122,4 @@ class Fan(PddfFan):
         if self.get_status_led() == color:
             return True
             
-        color_dict = {
-            'green': "STATUS_LED_COLOR_GREEN",
-            'amber': "STATUS_LED_COLOR_AMBER",
-        }
-        color = color_dict.get(color, "STATUS_LED_COLOR_AMBER")
-
         return super().set_status_led(color)

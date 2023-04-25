@@ -172,16 +172,10 @@ class Chassis(PddfChassis):
         return False
 
     def set_status_led(self, color):
-        color_dict = {
-            'green': "STATUS_LED_COLOR_GREEN",
-            'red': "STATUS_LED_COLOR_AMBER",
-            'amber': "STATUS_LED_COLOR_AMBER",
-            'off': "STATUS_LED_COLOR_OFF"
-        }
         if color == self.get_system_led("SYS_LED"):
-            return False
-        else:
-            return self.set_system_led("SYS_LED", color_dict.get(color, "STATUS_LED_COLOR_OFF"))
+            return True
+
+        return self.set_system_led("SYS_LED", color)
 
     def get_status_led(self):
         return self.get_system_led("SYS_LED")

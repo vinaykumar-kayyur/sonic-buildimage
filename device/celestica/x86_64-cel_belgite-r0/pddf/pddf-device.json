@@ -637,9 +637,9 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"STATUS_LED_COLOR_AMBER","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x1","swpld_addr_offset":"0x43"},
-                {"attr_name":"STATUS_LED_COLOR_GREEN","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x2","swpld_addr_offset":"0x43"},
-                {"attr_name":"STATUS_LED_COLOR_OFF","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x3","swpld_addr_offset":"0x43"}
+                {"attr_name":"amber","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x1","swpld_addr_offset":"0x43"},
+                {"attr_name":"green","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x2","swpld_addr_offset":"0x43"},
+                {"attr_name":"off","swpld_addr":"0x32","attr_devtype":"cpld","attr_devname":"CPLD1", "bits":"5:4","descr":"","value":"0x3","swpld_addr_offset":"0x43"}
             ]
         }
     },
@@ -650,8 +650,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"STATUS_LED_COLOR_GREEN","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x33"},
-                {"attr_name":"STATUS_LED_COLOR_AMBER","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x33"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x33"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x33"}
             ]
         }
     },
@@ -662,8 +662,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"STATUS_LED_COLOR_GREEN","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x37"},
-                {"attr_name":"STATUS_LED_COLOR_AMBER","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x37"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x37"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x37"}
             ]
         }
     },
@@ -674,8 +674,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"STATUS_LED_COLOR_GREEN","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x3b"},
-                {"attr_name":"STATUS_LED_COLOR_AMBER","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x3b"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x1","swpld_addr":"0x32","swpld_addr_offset":"0x3b"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"CPLD1","bits":"1:0","descr":"","value":"0x2","swpld_addr":"0x32","swpld_addr_offset":"0x3b"}
             ]
         }
     }
