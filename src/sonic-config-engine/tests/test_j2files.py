@@ -38,6 +38,7 @@ class TestJ2Files(TestCase):
         self.dell9332_t1_minigraph = os.path.join(self.test_dir, 'sample-dell-9332-t1-minigraph.xml')
         self.radv_test_minigraph = os.path.join(self.test_dir, 'radv-test-sample-graph.xml')
         self.no_ip_helper_minigraph = os.path.join(self.test_dir, 't0-sample-no-ip-helper-graph.xml')
+        self.nokia_ixr7250e_36x100g_t2_minigraph = os.path.join(self.test_dir, 'sample-nokia-ixr7250e-36x100g-t2-minigraph.xml')
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
@@ -318,6 +319,35 @@ class TestJ2Files(TestCase):
 
     def test_qos_and_buffer_arista7800r3_48cqm2_lc_render_template(self):
         self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cqm2_lc', 'Arista-7800R3-48CQM2-C48')
+
+    def do_test_qos_and_buffer_nokia_ixr7250e_36x100g_render_template(self, platform, hwsku):
+        nokia_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'nokia', platform, hwsku)
+        # for asic0
+        nokia_dir_path = os.path.join(nokia_dir_path, '0')
+        qos_file = os.path.join(nokia_dir_path, 'qos.json.j2')
+        buffer_file = os.path.join(nokia_dir_path, 'buffers.json.j2')
+        port_config_ini_file = os.path.join(nokia_dir_path, 'port_config.ini')
+
+        # copy qos_config.j2 and buffer_config.j2 to the Nokia-IXR7250E-36x100G directory to have all templates in one directory
+        qos_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'qos_config.j2')
+        shutil.copy2(qos_config_file, nokia_dir_path)
+        buffer_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
+        shutil.copy2(buffer_config_file, nokia_dir_path)
+
+        for template_file, cfg_file, sample_output_file in [(qos_file, 'qos_config.j2', 'qos-nokia-ixr7250e-36x100g.json'),
+                                                            (buffer_file, 'buffers_config.j2', 'buffer-nokia-ixr7250e-36x100g.json') ]:
+            argument = ['-m', self.nokia_ixr7250e_36x100g_t2_minigraph, '-p', port_config_ini_file, '-t', template_file]
+            self.run_script(argument, output_file=self.output_file)
+
+            # cleanup
+            cfg_file_new = os.path.join(nokia_dir_path, cfg_file)
+            os.remove(cfg_file_new)
+
+            sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, sample_output_file)
+            assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
+
+    def test_qos_and_buffer_nokia_ixr7250e_36x100g_render_template(self):
+        self.do_test_qos_and_buffer_nokia_ixr7250e_36x100g_render_template('x86_64-nokia_ixr7250e_36x400g-r0', 'Nokia-IXR7250E-36x100G')
 
     def test_qos_dell9332_render_template(self):
         self._test_qos_render_template('dell', 'x86_64-dellemc_z9332f_d1508-r0', 'DellEMC-Z9332f-O32', 'sample-dell-9332-t1-minigraph.xml', 'qos-dell9332.json')
