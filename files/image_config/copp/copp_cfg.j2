@@ -11,7 +11,12 @@
 	    "queue4_group1": {
 		    "trap_action":"trap",
 		    "trap_priority":"4",
-		    "queue": "4"
+		    "queue": "4",
+		    "meter_type":"packets",
+		    "mode":"sr_tcm",
+		    "cir":"6000",
+		    "cbs":"6000",
+		    "red_action":"drop"
 	    },
 	    "queue4_group2": {
 		    "trap_action":"copy",
@@ -26,7 +31,12 @@
 	    "queue4_group3": {
 		    "trap_action":"trap",
 		    "trap_priority":"4",
-		    "queue": "4"
+		    "queue": "4",
+		    "meter_type":"packets",
+		    "mode":"sr_tcm",
+		    "cir":"6000",
+		    "cbs":"6000",
+		    "red_action":"drop"
 	    },
 	    "queue1_group1": {
 		    "trap_action":"trap",
