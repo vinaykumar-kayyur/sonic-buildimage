@@ -72,6 +72,12 @@ module sonic-vlan {
 					}
 				}
 
+				leaf port_mode {
+					type leafref{
+						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
+					}
+				}
+
 				leaf nat_zone {
 					description "NAT Zone for the vlan interface";
 					type uint8 {
@@ -213,11 +219,12 @@ module sonic-vlan {
 					type yang:mac-address;
 				}
 
-				leaf mode {
+                leaf mode {
                    description "Port & PortChannel SwitchPort Mode possible values are routed|access|trunk. Default value is routed.";
                    type stypes:switchport_mode;
                    default "routed";
                 }
+				
 
 			}
 			/* end of VLAN_LIST */
@@ -241,26 +248,48 @@ module sonic-vlan {
 				leaf port {
 					/* key elements are mandatory by default */
 					type union {
-						type leafref {
+						type leafref 
+						{
 							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
-						}
-						type leafref {
-							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
-						}
-					}
-						
-				must "(/VLAN/mode = 'access' or /VLAN/mode/ = 'trunk')"
-					{
-					error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
+							
 
+						}
+						type leafref
+						 {
+							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                            
+					
+						}
 					}
-						
 				}
 
+                leaf port_mode {
+
+					/* key elements are mandatory by default */
+
+					
+						type leafref 
+						{
+							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:mode";
+							
+
+						}
+						
+					
+				}
+
+				must "(/port:sonic-port/port:PORT/port:PORT_LIST/port:mode = 'access' or /port:sonic-port/port:PORT/port:PORT_LIST/port:mode = 'trunk')"{
+                  error-message "VLAN member assignment is only allowed when port is in access or trunk mode.";
+                    }
+					
+		
 				leaf tagging_mode {
 					mandatory true;
 					type stypes:vlan_tagging_mode;
 				}
+
+				 
+
 			}
             /* end of list VLAN_MEMBER_LIST */
 		}
