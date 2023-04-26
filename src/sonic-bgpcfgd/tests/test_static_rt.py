@@ -604,7 +604,7 @@ def test_set_no_action(mocked_log_debug):
         True,
         []
     )
-    mocked_log_debug.assert_called_with("Nothing to update for static route default|10.1.1.0/24")
+    mocked_log_debug.assert_called_with("CONFIG_DB Nothing to update for static route default|10.1.1.0/24")
 
 @patch('bgpcfgd.managers_static_rt.log_debug')
 def test_del_no_action(mocked_log_debug):
@@ -616,7 +616,7 @@ def test_del_no_action(mocked_log_debug):
         True,
         []
     )
-    mocked_log_debug.assert_called_with("Nothing to update for static route default|10.1.1.0/24")
+    mocked_log_debug.assert_called_with("CONFIG_DB Nothing to update for static route default|10.1.1.0/24")
 
 def test_set_invalid_arg():
     mgr = constructor()
