@@ -34,7 +34,7 @@
                         "name": "Ethernet8",
                         "tpid": "0x8100",
                         "speed": 25000,
-                        "mode":"routed"
+                        "mode":"access"
                     }
                 ]
             }
