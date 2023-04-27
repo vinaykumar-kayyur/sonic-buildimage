@@ -82,12 +82,6 @@
     f0)'
 - bus: '00'
   dev: 1b
-  fn: '2'
-  id: a342
-  name: 'PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #19 (rev
-    f0)'
-- bus: '00'
-  dev: 1b
   fn: '4'
   id: a32c
   name: 'PCI bridge: Intel Corporation Cannon Lake PCH PCI Express Root Port #21 (rev
