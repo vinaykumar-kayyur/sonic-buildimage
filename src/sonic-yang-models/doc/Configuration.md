@@ -23,6 +23,7 @@ Table of Contents
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
+         * [CRM DASH](#crm-dash)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
          * [Device Metadata](#device-metadata)  
@@ -43,7 +44,8 @@ Table of Contents
          * [Management port](#management-port)  
          * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [MUX_CABLE](#muxcable)  
+         * [MUX_CABLE](#mux_cable)  
+         * [NEIGH](#neigh)
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Peer Switch](#peer-switch)  
@@ -784,6 +786,62 @@ It currently allows user to administratively bring down a line-card or fabric-ca
 
 ```
 
+### CRM DASH
+
+```json
+{
+"CRM": {
+    "Config": {
+        "dash_vnet_threshold_type": "percentage",
+        "dash_vnet_low_threshold": "70",
+        "dash_vnet_high_threshold": "85",
+        "dash_eni_threshold_type": "percentage",
+        "dash_eni_low_threshold": "70",
+        "dash_eni_high_threshold": "85",
+        "dash_eni_ether_address_map_threshold_type": "percentage",
+        "dash_eni_ether_address_map_low_threshold": "70",
+        "dash_eni_ether_address_map_high_threshold": "85",
+        "dash_ipv4_inbound_routing_threshold_type": "percentage",
+        "dash_ipv4_inbound_routing_low_threshold": "70",
+        "dash_ipv4_inbound_routing_high_threshold": "85",
+        "dash_ipv6_inbound_routing_threshold_type": "percentage",
+        "dash_ipv6_inbound_routing_low_threshold": "70",
+        "dash_ipv6_inbound_routing_high_threshold": "85",
+        "dash_ipv4_outbound_routing_threshold_type": "percentage",
+        "dash_ipv4_outbound_routing_low_threshold": "70",
+        "dash_ipv4_outbound_routing_high_threshold": "85",
+        "dash_ipv6_outbound_routing_threshold_type": "percentage",
+        "dash_ipv6_outbound_routing_low_threshold": "70",
+        "dash_ipv6_outbound_routing_high_threshold": "85",
+        "dash_ipv4_pa_validation_threshold_type": "percentage",
+        "dash_ipv4_pa_validation_low_threshold": "70",
+        "dash_ipv4_pa_validation_high_threshold": "85",
+        "dash_ipv6_pa_validation_threshold_type": "percentage",
+        "dash_ipv6_pa_validation_low_threshold": "70",
+        "dash_ipv6_pa_validation_high_threshold": "85",
+        "dash_ipv4_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv4_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv4_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv6_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv6_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv6_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv4_acl_group_threshold_type": "percentage",
+        "dash_ipv4_acl_group_low_threshold": "70",
+        "dash_ipv4_acl_group_high_threshold": "85",
+        "dash_ipv6_acl_group_threshold_type": "percentage",
+        "dash_ipv6_acl_group_low_threshold": "70",
+        "dash_ipv6_acl_group_high_threshold": "85",
+        "dash_ipv4_acl_rule_threshold_type": "percentage",
+        "dash_ipv4_acl_rule_low_threshold": "70",
+        "dash_ipv4_acl_rule_high_threshold": "85",
+        "dash_ipv6_acl_rule_threshold_type": "percentage",
+        "dash_ipv6_acl_rule_low_threshold": "70",
+        "dash_ipv6_acl_rule_high_threshold": "85"
+    }
+  }
+}
+```
+
 ### Data Plane L3 Interfaces
 
 IP configuration for data plane are defined in **INTERFACE**, **VLAN_SUB_INTERFACE**,
@@ -1288,6 +1346,32 @@ The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_
             "server_ipv6": "fc02:1000::30/128",
             "soc_ipv4": "192.168.0.3/32",
             "state": "auto"
+        }
+    }
+}
+```
+
+### NEIGH
+
+The **NEIGH** table is used to keep track of resolved and static neighbors.
+
+Resolve case:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.3": { 
+            "family": "IPv4" 
+        }
+    }
+}
+```
+Static Nbr:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.5": { 
+            "neigh": "00:02:02:03:04:05",
+            "family": "IPv4" 
         }
     }
 }
