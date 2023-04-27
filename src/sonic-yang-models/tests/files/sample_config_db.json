@@ -1736,7 +1736,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "False",
                 "has_per_asic_scope": "True",
-                "has_timer": "False",
+                "delayed": "False",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
@@ -1747,7 +1747,7 @@
                 "auto_restart": "always_enabled",
                 "has_global_scope": "true",
                 "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "always_enabled",
                 "set_owner": "local",
@@ -1758,7 +1758,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "true",
                 "has_per_asic_scope": "false",
-                "has_timer": "true",
+                "delayed": "true",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "kube",
@@ -1769,7 +1769,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "false",
                 "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
@@ -1780,7 +1780,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "false",
                 "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "local",
@@ -1791,7 +1791,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "false",
                 "has_per_asic_scope": "{% if not DEVICE_RUNTIME_METADATA['ETHERNET_PORTS_PRESENT'] or ('CHASSIS_METADATA' in DEVICE_RUNTIME_METADATA and DEVICE_RUNTIME_METADATA['CHASSIS_METADATA']['module_type'] in ['supervisor']) %}False{% else %}True{% endif %}",
-                "has_timer": "false",
+                "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "enabled",
                 "set_owner": "kube",
@@ -1802,7 +1802,7 @@
                 "auto_restart": "enabled",
                 "has_global_scope": "false",
                 "has_per_asic_scope": "true",
-                "has_timer": "false",
+                "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] != 'ToRRouter') %}enabled{% else %}disabled{% endif %}",
                 "set_owner": "kube",
@@ -2098,6 +2098,15 @@
             }
         },
 
+        "NEIGH": {
+            "Vlan100|100.1.1.3": {
+                "family": "IPv4"
+            },
+            "Vlan100|100.1.1.5": {
+                "neigh": "00:02:02:03:04:05",
+                "family": "IPv4"
+            }
+        },
 
         "POLICER": {
             "everflow_static_policer": {
@@ -2251,7 +2260,33 @@
                 "TYPE": "RW"
             }
         },
+        "SNMP_USER": {
+            "testuser": {
+                "SNMP_USER_TYPE": "Priv",
+                "SNMP_USER_PERMISSION": "RO",
+                "SNMP_USER_AUTH_TYPE": "SHA",
+                "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                "SNMP_USER_ENCRYPTION_TYPE": "AES",
+                "SNMP_USER_ENCRYPTION_PASSWORD": "encr_pass"
+            },
+            "testuser_noAuthNoPriv": {
+                "SNMP_USER_TYPE": "noAuthNoPriv",
+                "SNMP_USER_PERMISSION": "RO",
+                "SNMP_USER_AUTH_TYPE": "",
+                "SNMP_USER_AUTH_PASSWORD": "",
+                "SNMP_USER_ENCRYPTION_TYPE": "",
+                "SNMP_USER_ENCRYPTION_PASSWORD": "" 
+            },
+            "testuser_AuthNoPriv": {
+                "SNMP_USER_TYPE": "AuthNoPriv",
+                "SNMP_USER_PERMISSION": "RO",
+                "SNMP_USER_AUTH_TYPE": "SHA",
+                "SNMP_USER_AUTH_PASSWORD": "auth_pass",
+                "SNMP_USER_ENCRYPTION_TYPE": "",
+                "SNMP_USER_ENCRYPTION_PASSWORD": ""         
+            }
 
+        },
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
