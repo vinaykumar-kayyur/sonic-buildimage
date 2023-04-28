@@ -3,14 +3,14 @@
     {
         "xcvr_present": {
             "i2c":{
-                "valmap-QSFP28": {
+                "valmap-QSFP-DD": {
                     "0": true,
                     "1": false
                 }
             }
         }
     },
-    
+
     "PSU":
     {
         "psu_present":
