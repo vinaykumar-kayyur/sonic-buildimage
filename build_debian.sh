@@ -301,7 +301,7 @@ then
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
         https://packages.microsoft.com/keys/msopentech.asc | \
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main" | \
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian buster main" | \
         sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/azure.list
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
