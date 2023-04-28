@@ -114,9 +114,9 @@ reload_minigraph()
     [[ "$(sonic-cfggen -d -v DEVICE_METADATA.localhost.type | tr [:upper:] [:lower:])" == *"leafrouter"* ]];
     then
         #Keep device isolated with traffic-shift-away option on LeafRouter and Dualtor
-        config load_minigraph -y -n -t --override_config
+        config load_minigraph -y -n -t --override_config --golden_config_path '/etc/sonic/golden_config_db.json'
     else
-        config load_minigraph -y -n --override_config
+        config load_minigraph -y -n --override_config --golden_config_path '/etc/sonic/golden_config_db.json'
     fi
     config save -y
 }
