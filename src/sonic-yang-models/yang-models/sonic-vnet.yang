@@ -71,7 +71,7 @@ module sonic-vnet {
                 }
 
                 leaf scope {
-                    description "can either be default or a valid VRF.";
+                    description "can only be default.";
                     type string {
                         pattern "default" {
                             error-message "Invalid VRF name";
