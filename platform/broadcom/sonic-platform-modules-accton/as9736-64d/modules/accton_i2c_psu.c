@@ -50,6 +50,7 @@
 #define PMBUS_REGISTER_READ_IOUT_MAX            0xa6
 #define PMBUS_REGISTER_READ_POUT_MAX            0xa7
 #define PMBUS_REGISTER_READ_TEMP_MAX            0xa8
+#define PMBUS_REGISTER_READ_TEMP_MIN            0xa9
 
 #define MAX_FAN_DUTY_CYCLE      100
 #define I2C_RW_RETRY_COUNT        10
@@ -91,6 +92,7 @@ struct accton_i2c_psu_data {
     u16  mfr_vout_min;   /* Register value */
     u16  mfr_vout_max;   /* Register value */
     u16  mfr_tambient_max;   /* Register value */
+    u16  mfr_tambient_min;   /* Register value */
 };
 
 static ssize_t show_linear(struct device *dev, struct device_attribute *da, char *buf);
@@ -130,7 +132,8 @@ enum accton_i2c_psu_sysfs_attributes {
     PSU_MFR_IOUT_MAX,
     PSU_MFR_PIN_MAX,
     PSU_MFR_POUT_MAX,
-    PSU_MFR_TAMBIENT_MAX
+    PSU_MFR_TAMBIENT_MAX,
+    PSU_MFR_TAMBIENT_MIN
 };
 
 /* sysfs attributes for hwmon
@@ -159,6 +162,7 @@ static SENSOR_DEVICE_ATTR(psu_mfr_iout_max,   S_IRUGO, show_linear, NULL, PSU_MF
 static SENSOR_DEVICE_ATTR(psu_mfr_pin_max,   S_IRUGO, show_linear, NULL, PSU_MFR_PIN_MAX);
 static SENSOR_DEVICE_ATTR(psu_mfr_pout_max,   S_IRUGO, show_linear, NULL, PSU_MFR_POUT_MAX);
 static SENSOR_DEVICE_ATTR(psu_temp1_max, S_IRUGO, show_linear,      NULL, PSU_MFR_TAMBIENT_MAX);
+static SENSOR_DEVICE_ATTR(psu_temp1_min, S_IRUGO, show_linear,      NULL, PSU_MFR_TAMBIENT_MIN);
 
 
 /*Duplicate nodes for lm-sensors.*/
@@ -195,6 +199,7 @@ static struct attribute *accton_i2c_psu_attributes[] = {
     &sensor_dev_attr_psu_mfr_vout_max.dev_attr.attr,
     &sensor_dev_attr_psu_mfr_iout_max.dev_attr.attr,
     &sensor_dev_attr_psu_temp1_max.dev_attr.attr,
+    &sensor_dev_attr_psu_temp1_min.dev_attr.attr,
      /*Duplicate nodes for lm-sensors.*/
     &sensor_dev_attr_curr2_input.dev_attr.attr,
     &sensor_dev_attr_in3_input.dev_attr.attr,
@@ -271,6 +276,9 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
         break;
     case PSU_MFR_TAMBIENT_MAX:
         value = data->mfr_tambient_max;
+        break;
+    case PSU_MFR_TAMBIENT_MIN:
+        value = data->mfr_tambient_min;
         break;
     case PSU_FAN1_DUTY_CYCLE:
         multiplier = 1;
@@ -602,6 +610,7 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
                                              {PMBUS_REGISTER_READ_IOUT_MAX, &data->mfr_iout_max},
                                              {PMBUS_REGISTER_READ_POUT_MAX, &data->mfr_pout_max},
                                              {PMBUS_REGISTER_READ_TEMP_MAX, &data->mfr_tambient_max},
+                                             {PMBUS_REGISTER_READ_TEMP_MIN, &data->mfr_tambient_min},
                                              };
 
         dev_dbg(&client->dev, "Starting accton_i2c_psu update\n");
@@ -687,3 +696,4 @@ MODULE_LICENSE("GPL");
 
 module_init(accton_i2c_psu_init);
 module_exit(accton_i2c_psu_exit);
+
