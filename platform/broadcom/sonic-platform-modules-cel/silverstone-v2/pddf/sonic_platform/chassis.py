@@ -12,6 +12,9 @@ try:
     from . import helper
     from . import component
     from .watchdog import Watchdog
+    import subprocess
+    from .event import XcvrEvent
+    from sonic_py_common import logger
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -21,9 +24,6 @@ REBOOT_CAUSE_FILE = "reboot-cause.txt"
 WATCHDOG_TIMELEFT_PATH = "/sys/class/watchdog/watchdog0/timeleft"
 GET_REBOOT_CAUSE = "0x3a 0x64 0x00 0x01 0x06"
 
-Sensor_List_Info = "/tmp/sensor_info.log"
-Sensor_Info_Update_Period_Secs = 60
-
 
 class Chassis(PddfChassis):
     """
@@ -32,37 +32,11 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         self.helper = helper.APIHelper()
-        self.__refresh_sensor_list_info()
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
 
         for index in range(self.platform_inventory['num_component']):
             component_obj = component.Component(index)
             self._component_list.append(component_obj)
-
-    def __refresh_sensor_list_info(self):
-        """
-        refresh the sensor list informal in sensor_info.log.
-        The refresh interval is 60 seconds
-        """
-        if not os.path.exists(Sensor_List_Info):
-            self.__write_sensor_list_info()
-
-        with open(Sensor_List_Info, "r") as f:
-            log_time = f.readline()
-        if time.time() - float(log_time.strip()) > Sensor_Info_Update_Period_Secs:
-            self.__write_sensor_list_info()
-
-    def __write_sensor_list_info(self):
-        """
-        Write the log of the command 'ipmitool sensor list' in sensor_info.log
-        """
-        status, info = self.helper.run_command("ipmitool sensor list")
-        if not status:
-            print("Fail! Can't get sensor list info by command: ipmitool sensor list")
-            return False
-        with open(Sensor_List_Info, "w") as f:
-            f.write("%s\n%s" % (str(time.time()), info))
-        return True
 
     def get_sfp(self, index):
         """
@@ -143,3 +117,35 @@ class Chassis(PddfChassis):
         except Exception as E:
             syslog.syslog(syslog.LOG_ERR, "Fail to load watchdog due to {}".format(E))
         return self._watchdog
+
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+        """
+        # SFP event
+        if self.get_num_sfps() == 0:
+            for index in range(self.platform_inventory['num_ports']):
+                sfp = Sfp(index, self.pddf_obj, self.plugin_data)
+                self._sfp_list.append(sfp)
+
+        succeed, sfp_event = XcvrEvent(self._sfp_list).get_xcvr_event(timeout)
+        if succeed:
+            return True, {'sfp': sfp_event}
+        return False, {'sfp': {}}
