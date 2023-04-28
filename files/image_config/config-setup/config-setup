@@ -109,7 +109,7 @@ run_hookdir() {
 reload_minigraph()
 {
     echo "Reloading minigraph..."
-    config load_minigraph -y -n --override_config
+    config load_minigraph -y -n --override_config --golden_config_path '/etc/sonic/golden_config_db.json'
     config save -y
 }
 
