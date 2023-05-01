@@ -76,4 +76,12 @@ else
     TELEMETRY_ARGS+=" --threshold 100"
 fi
 
+IDLE_CONN_DURATION=$(echo $GNMI | jq -r '.idle_conn_duration')
+if [[ $IDLE_CONN_DURATION =~ ^[0-9]+$ ]]; then
+    TELEMETRY_ARGS+=" --idle_conn_duration $IDLE_CONN_DURATION"
+else
+    TELEMETRY_ARGS+=" --idle_conn_duration 5"
+fi
+
+
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
