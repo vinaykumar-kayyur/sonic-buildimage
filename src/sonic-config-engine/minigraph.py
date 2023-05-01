@@ -1783,7 +1783,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results[ 'FABRIC_MONITOR' ] = fabric_monitor
 
     # parse fabric
-    (fabric_ports, _, _) = get_fabric_port_config(hwsku=hwsku, platform=platform, fabric_port_config_file=fabric_port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
+    fabric_ports = get_fabric_port_config(hwsku=hwsku, platform=platform, fabric_port_config_file=fabric_port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
     if bool( fabric_ports ):
         results['FABRIC_PORT'] = fabric_ports
 

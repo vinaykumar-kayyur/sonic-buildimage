@@ -128,11 +128,7 @@ def get_fabric_port_config(hwsku=None, platform=None, fabric_port_config_file=No
        port_data = config_db.get_table("FABRIC_PORT")
        if bool(port_data):
           ports = ast.literal_eval(json.dumps(port_data))
-          port_alias_map = {}
-          port_alias_asic_map = {}
-          for intf_name in ports.keys():
-             port_alias_map[ports[intf_name]["alias"]] = intf_name
-          return (ports, port_alias_map, port_alias_asic_map)
+          return ports
 
     if asic_name is not None:
         asic_id = str(get_asic_id_from_name(asic_name))
@@ -142,11 +138,9 @@ def get_fabric_port_config(hwsku=None, platform=None, fabric_port_config_file=No
     if not fabric_port_config_file:
         fabric_port_config_file = device_info.get_path_to_fabric_port_config_file(hwsku, asic_id)
         if not fabric_port_config_file:
-            return ({}, {}, {})
+            return {}
     # else  parse fabric_port_config.ini
     ports = {}
-    port_alias_map = {}
-    port_alias_asic_map = {}
 
     # Default column definition
     # ../../device/arista/x86_64-arista_7800r3_48cq2_lc/Arista-7800R3-48CQ2-C48/fabric_port_config.ini
@@ -172,16 +166,7 @@ def get_fabric_port_config(hwsku=None, platform=None, fabric_port_config_file=No
                 data[titles[i]] = item
             data.setdefault('alias', name)
             ports[name] = data
-            port_alias_map[data['alias']] = name
-            # asic_port_name to sonic_name mapping also included in
-            # port_alias_map
-            if (('asic_port_name' in data) and
-                (data['asic_port_name'] != name)):
-                port_alias_map[data['asic_port_name']] = name
-            # alias to asic_port_name mapping
-            if 'asic_port_name' in data:
-                port_alias_asic_map[data['alias']] = data['asic_port_name'].strip()
-    return (ports, port_alias_map, port_alias_asic_map)
+    return ports
 
 def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_config_file=None, asic_name=None):
     config_db = db_connect_configdb(asic_name)
