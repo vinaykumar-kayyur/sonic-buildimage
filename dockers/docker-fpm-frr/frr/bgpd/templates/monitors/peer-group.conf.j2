@@ -1,9 +1,13 @@
 !
 ! template: bgpd/templates/BGPMON/peer-group.conf.j2
 !
-{% from "common/functions.conf.j2" import get_ipv6_loopback_address %}
-
   neighbor BGPMON peer-group
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['type'] == 'SpineRouter' %}
+  neighbor BGPMON update-source Loopback4096
+{% else %}
+  neighbor BGPMON update-source {{ loopback0_ipv4 | ip }}
+{% endif %}
+
   address-family ipv4
     neighbor BGPMON activate
     neighbor BGPMON route-map FROM_BGPMON in
@@ -12,18 +16,16 @@
     neighbor BGPMON maximum-prefix 1
   exit-address-family
 
-  {% if CONFIG_DB__DEVICE_METADATA['localhost']['type'] == 'SpineRouter' %}
-    neighbor BGPMON update-source Loopback4096
-    address-family ipv6
-      neighbor BGPMON activate
-      neighbor BGPMON route-map FROM_BGPMON in
-      neighbor BGPMON route-map TO_BGPMON out
-      neighbor BGPMON send-community
-      neighbor BGPMON maximum-prefix 1
-    exit-address-family
-  {% else %}
-    neighbor BGPMON update-source {{ loopback0_ipv4 | ip }}
-  {% endif %}
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['type'] == 'SpineRouter' %}
+  address-family ipv6
+    neighbor BGPMON activate
+    neighbor BGPMON route-map FROM_BGPMON in
+    neighbor BGPMON route-map TO_BGPMON out
+    neighbor BGPMON send-community
+    neighbor BGPMON maximum-prefix 1
+  exit-address-family
+{% endif %}
 !
 ! end of template: bgpd/templates/BGPMON/peer-group.conf.j2
 !
+
