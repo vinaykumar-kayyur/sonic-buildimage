@@ -163,7 +163,11 @@ stop() {
 
     stopplatform1
 
-    /usr/bin/${SERVICE}.sh stop $DEV &
+    if [[ x"$WARM_BOOT" == x"true" ]]; then
+        /usr/bin/${SERVICE}.sh stop $DEV &
+    else
+        /usr/bin/${SERVICE}.sh stop $DEV
+    fi
     debug "Stopped ${SERVICE}$DEV service..."
 
     stopplatform2
