@@ -6,6 +6,7 @@
  * Copyright (C) 2010-2019 Jean Delvare <jdelvare@suse.de>
  */
 
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <linux/device.h>
 #include <linux/dmi.h>
 #include <linux/i2c.h>
@@ -397,7 +398,11 @@ void i2c_register_spd(struct i2c_adapter *adap)
 		struct i2c_board_info info;
 		unsigned short addr_list[2];
 
-		memset_s(&info, 0, sizeof(struct i2c_board_info));
+#ifdef __STDC_LIB_EXT1__
+	    memset_s(&info, sizeof(struct i2c_board_info), 0, sizeof(struct i2c_board_info));
+#else
+        memset(&info, 0, sizeof(struct i2c_board_info));
+#endif
 		strlcpy(info.type, name, I2C_NAME_SIZE);
 		addr_list[0] = 0x50 + n;
 		addr_list[1] = I2C_CLIENT_END;

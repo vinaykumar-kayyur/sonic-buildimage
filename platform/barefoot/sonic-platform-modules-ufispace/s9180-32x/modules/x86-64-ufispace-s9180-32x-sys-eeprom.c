@@ -19,6 +19,7 @@
 /* enable dev_dbg print out */
 //#define DEBUG
 
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -216,7 +217,11 @@ static int sys_eeprom_probe(struct i2c_client *client,
         goto exit;
     }
 
-    memset_s(data->data, 0xff, EEPROM_SIZE);
+#ifdef __STDC_LIB_EXT1__
+    memset_s(data->data, EEPROM_SIZE, 0xff, EEPROM_SIZE);
+#else
+    memset(data->data, 0xff, EEPROM_SIZE);
+#endif
     i2c_set_clientdata(client, data);
     mutex_init(&data->update_lock);
 
