@@ -78,7 +78,7 @@ else
     if [[ $THRESHOLD_CONNECTIONS == "null" ]]; then
         TELEMETRY_ARGS+=" --threshold 100"
     else
-        echo "Incorrect threshold value, expecting positive integers"
+        echo "Incorrect threshold value, expecting positive integers" >&2
         exit $INCORRECT_TELEMETRY_VALUE
     fi
 fi
@@ -91,7 +91,7 @@ else
     if [[ $IDLE_CONN_DURATION == "null" ]]; then
         TELEMETRY_ARGS+=" --idle_conn_duration 5"
     else
-        echo "Incorrect idle_conn_duration value, expecting positive integers"
+        echo "Incorrect idle_conn_duration value, expecting positive integers" >&2
         exit $INCORRECT_TELEMETRY_VALUE
     fi
 fi
