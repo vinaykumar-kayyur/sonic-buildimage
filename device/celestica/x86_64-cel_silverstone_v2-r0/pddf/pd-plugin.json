@@ -6,6 +6,10 @@
                 "valmap-QSFP-DD": {
                     "0": true,
                     "1": false
+                },
+                "valmap-SFP+": {
+                    "0": true,
+                    "1": false
                 }
             }
         }
