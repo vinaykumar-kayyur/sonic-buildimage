@@ -71,6 +71,7 @@ class HardwareChecker(HealthChecker):
             1. Check all fans are present
             2. Check all fans are in good state
             3. Check fan speed is in valid range
+            4. Check all fans direction are the same
         :param config: Health checker configuration
         :return:
         """
