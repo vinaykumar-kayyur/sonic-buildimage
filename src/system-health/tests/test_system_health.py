@@ -306,8 +306,7 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20',
-
+            'speed_tolerance': '20'
         },
         'FAN_INFO|fan3': {
             'presence': 'True',
