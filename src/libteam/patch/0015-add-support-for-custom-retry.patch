@@ -6,11 +6,11 @@ Date: 2022-12-21 18:11:31 -0800
 Add support for using custom retry count (instead of the default of 3) for LACP
 sessions, to allow for sessions to stay up for more than 90 seconds.
 ---
- teamd/teamd_runner_lacp.c |  227 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 213 insertions(+), 14 deletions(-)
+ teamd/teamd_runner_lacp.c |  338 +++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 324 insertions(+), 14 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 82b8b86..5c7e7b4 100644
+index 6b43916..d73ee1c 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -77,22 +77,45 @@ struct lacpdu {
@@ -101,16 +101,18 @@ index 82b8b86..5c7e7b4 100644
  	return true;
  }
  
-@@ -154,6 +194,8 @@ struct lacp {
+@@ -154,6 +194,10 @@ struct lacp {
  #define		LACP_CFG_DFLT_MIN_PORTS_MAX 1024
  		enum lacp_agg_select_policy agg_select_policy;
  #define		LACP_CFG_DFLT_AGG_SELECT_POLICY LACP_AGG_SELECT_LACP_PRIO
++		bool enable_retry_count;
++#define		LACP_CFG_DFLT_ENABLE_RETRY_COUNT true
 +		uint8_t retry_count;
 +#define		LACP_CFG_DFLT_RETRY_COUNT 3
  	} cfg;
  	struct {
  		bool carrier_up;
-@@ -185,6 +227,7 @@ struct lacp_port {
+@@ -185,6 +229,7 @@ struct lacp_port {
  	struct lacpdu_info actor;
  	struct lacpdu_info partner;
  	struct lacpdu_info __partner_last; /* last state before update */
@@ -118,7 +120,30 @@ index 82b8b86..5c7e7b4 100644
  	bool periodic_on;
  	struct lacp_port *agg_lead; /* leading port of aggregator.
  				     * NULL in case this port is not selected */
-@@ -1110,6 +1153,7 @@ static int slow_addr_del(struct lacp_port *lacp_port)
+@@ -513,6 +558,22 @@ static int lacp_load_config(struct teamd_context *ctx, struct lacp *lacp)
+ 	}
+ 	teamd_log_dbg(ctx, "Using agg_select_policy \"%s\".",
+ 		      lacp_get_agg_select_policy_name(lacp));
++
++	err = teamd_config_bool_get(ctx, &lacp->cfg.enable_retry_count, "$.runner.enable_retry_count");
++	if (err)
++		lacp->cfg.enable_retry_count = LACP_CFG_DFLT_ENABLE_RETRY_COUNT;
++	teamd_log_dbg(ctx, "Using enable_retry_count \"%d\".", lacp->cfg.enable_retry_count);
++
++	err = teamd_config_int_get(ctx, &tmp, "$.runner.retry_count");
++	if (err) {
++		lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++	} else if (tmp < 3) {
++		teamd_log_err("\"retry_count\" value is out of its limits.");
++		return -EINVAL;
++	} else {
++		lacp->cfg.retry_count = tmp;
++	}
++	teamd_log_dbg(ctx, "Using retry_count \"%d\".", lacp->cfg.retry_count);
+ 	return 0;
+ }
+ 
+@@ -1110,6 +1171,7 @@ static int slow_addr_del(struct lacp_port *lacp_port)
  #define LACP_SOCKET_CB_NAME "lacp_socket"
  #define LACP_PERIODIC_CB_NAME "lacp_periodic"
  #define LACP_TIMEOUT_CB_NAME "lacp_timeout"
@@ -126,7 +151,7 @@ index 82b8b86..5c7e7b4 100644
  
  static int lacp_port_timeout_set(struct lacp_port *lacp_port, bool fast_forced)
  {
-@@ -1119,7 +1163,7 @@ static int lacp_port_timeout_set(struct lacp_port *lacp_port, bool fast_forced)
+@@ -1119,7 +1181,7 @@ static int lacp_port_timeout_set(struct lacp_port *lacp_port, bool fast_forced)
  
  	ms = fast_forced || lacp_port->lacp->cfg.fast_rate ?
  					LACP_PERIODIC_SHORT: LACP_PERIODIC_LONG;
@@ -135,7 +160,7 @@ index 82b8b86..5c7e7b4 100644
  	ms_to_timespec(&ts, ms);
  	err = teamd_loop_callback_timer_set(lacp_port->ctx,
  					    LACP_TIMEOUT_CB_NAME,
-@@ -1286,6 +1330,9 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
+@@ -1288,6 +1350,9 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
  		err = lacp_port_partner_update(lacp_port);
  		if (err)
  			return err;
@@ -145,15 +170,21 @@ index 82b8b86..5c7e7b4 100644
  		lacp_port_timeout_set(lacp_port, true);
  		teamd_loop_callback_enable(lacp_port->ctx,
  					   LACP_TIMEOUT_CB_NAME, lacp_port);
-@@ -1392,12 +1439,19 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+@@ -1394,12 +1459,25 @@ static int lacpdu_send(struct lacp_port *lacp_port)
  	if (hwaddr_len != ETH_ALEN)
  		return 0;
  
 -	lacpdu_init(&lacpdu);
-+	if (lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT || lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT)
-+		lacpdu_init(&lacpdu, 0xf1);
-+	else
++	if (lacp_port->lacp->cfg.enable_retry_count) {
++		if (lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT
++				|| lacp_port->partner_retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
++			lacpdu_init(&lacpdu, 0xf1);
++		} else {
++			lacpdu_init(&lacpdu, 0x01);
++		}
++	} else {
 +		lacpdu_init(&lacpdu, 0x01);
++	}
  	lacpdu.actor = lacp_port->actor;
  	lacpdu.partner = lacp_port->partner;
  	memcpy(lacpdu.hdr.ether_shost, hwaddr, hwaddr_len);
@@ -166,11 +197,15 @@ index 82b8b86..5c7e7b4 100644
  
  	err = teamd_send(lacp_port->sock, &lacpdu, sizeof(lacpdu), 0);
  	return err;
-@@ -1428,6 +1482,28 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+@@ -1430,6 +1508,32 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
  			return err;
  	}
  
 +	if (lacpdu->version_number == 0xf1) {
++		if (!lacp_port->lacp->cfg.enable_retry_count) {
++			teamd_log_err("%s: Received 0xf1 LACPDU packet while retry count feature is disabled.", lacp_port->tdport->ifname);
++			return -EINVAL;
++		}
 +		if (lacpdu->v2.actor_retry_count < LACP_CFG_DFLT_RETRY_COUNT) {
 +			teamd_log_err("%s: retry count from partner (%u) out of its limits.", lacp_port->tdport->ifname, lacpdu->v2.actor_retry_count);
 +			return -EINVAL;
@@ -195,19 +230,19 @@ index 82b8b86..5c7e7b4 100644
  	err = lacp_port_set_state(lacp_port, PORT_STATE_CURRENT);
  	if (err)
  		return err;
-@@ -1435,8 +1511,9 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
+@@ -1437,8 +1541,9 @@ static int lacpdu_process(struct lacp_port *lacp_port, struct lacpdu* lacpdu)
  	lacp_port_actor_update(lacp_port);
  
  	/* Check if the other side has correct info about us */
 -	if (memcmp(&lacpdu->partner, &lacp_port->actor,
 -		   sizeof(struct lacpdu_info))) {
 +	if (memcmp(&lacpdu->partner, &lacp_port->actor, sizeof(struct lacpdu_info))
-+            || (lacpdu->version_number == 0xf1 && lacp_port->lacp->cfg.retry_count != lacpdu->v2.partner_retry_count)
-+            || (lacpdu->version_number != 0xf1 && lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT)) {
++			|| (lacpdu->version_number == 0xf1 && lacp_port->lacp->cfg.retry_count != lacpdu->v2.partner_retry_count)
++			|| (lacpdu->version_number != 0xf1 && lacp_port->lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT)) {
  		err = lacpdu_send(lacp_port);
  		if (err)
  			return err;
-@@ -1506,6 +1583,19 @@ static int lacp_callback_timeout(struct teamd_context *ctx, int events,
+@@ -1508,6 +1613,19 @@ static int lacp_callback_timeout(struct teamd_context *ctx, int events,
  	return err;
  }
  
@@ -227,7 +262,7 @@ index 82b8b86..5c7e7b4 100644
  static int lacp_callback_periodic(struct teamd_context *ctx, int events,
  				  void *priv)
  {
-@@ -1595,6 +1685,7 @@ static int lacp_port_added(struct teamd_context *ctx,
+@@ -1597,6 +1715,7 @@ static int lacp_port_added(struct teamd_context *ctx,
  	lacp_port->ctx = ctx;
  	lacp_port->tdport = tdport;
  	lacp_port->lacp = lacp;
@@ -235,10 +270,80 @@ index 82b8b86..5c7e7b4 100644
  
  	err = lacp_port_load_config(ctx, lacp_port);
  	if (err) {
-@@ -1947,6 +2038,88 @@ static int lacp_state_select_policy_get(struct teamd_context *ctx,
+@@ -1961,6 +2080,165 @@ static int lacp_state_select_policy_get(struct teamd_context *ctx,
  	return 0;
  }
  
++static int lacp_state_enable_retry_count_get(struct teamd_context *ctx,
++				   struct team_state_gsc *gsc,
++				   void *priv)
++{
++	struct lacp *lacp = priv;
++
++	gsc->data.bool_val = lacp->cfg.enable_retry_count;
++	return 0;
++}
++
++struct lacp_state_enable_retry_count_info {
++	struct teamd_workq workq;
++	struct lacp *lacp;
++	bool enable_retry_count;
++};
++
++static int lacp_state_enable_retry_count_work(struct teamd_context *ctx,
++					    struct teamd_workq *workq)
++{
++	struct lacp_state_enable_retry_count_info *info;
++	struct lacp *lacp;
++	struct teamd_port *tdport;
++
++	info = get_container(workq, struct lacp_state_enable_retry_count_info, workq);
++	lacp = info->lacp;
++	if (info->enable_retry_count == lacp->cfg.enable_retry_count)
++		return 0;
++	lacp->cfg.enable_retry_count = info->enable_retry_count;
++	teamd_log_dbg(ctx, "Retry count feature is set to %d",
++		       lacp->cfg.enable_retry_count);
++
++	if (lacp->cfg.enable_retry_count)
++		return 0;
++
++    // Reset all retry counts to the default value
++	lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++	teamd_loop_callback_disable(ctx,
++					LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp);
++
++	teamd_for_each_tdport(tdport, lacp->ctx) {
++		struct lacp_port* lacp_port;
++
++		lacp_port = lacp_port_get(lacp, tdport);
++        lacp_port->partner_retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++		if (lacp_port_selected(lacp_port)) {
++			teamd_log_dbg(ctx, "%s: Notifying partner of retry count reset",
++					   lacp_port->tdport->ifname);
++			lacpdu_send(lacp_port);
++		}
++	}
++	return 0;
++}
++
++static int lacp_state_enable_retry_count_set(struct teamd_context *ctx,
++						   struct team_state_gsc *gsc,
++						   void *priv)
++{
++	struct lacp_state_enable_retry_count_info *info;
++	struct lacp *lacp = priv;
++
++	info = malloc(sizeof(*info));
++	if (!info)
++		return -ENOMEM;
++	teamd_workq_init_work(&info->workq, lacp_state_enable_retry_count_work);
++	info->lacp = lacp;
++	info->enable_retry_count = gsc->data.bool_val;
++	teamd_workq_schedule_work(ctx, &info->workq);
++	return 0;
++}
++
 +static int lacp_state_retry_count_get(struct teamd_context *ctx,
 +				   struct team_state_gsc *gsc,
 +				   void *priv)
@@ -273,19 +378,24 @@ index 82b8b86..5c7e7b4 100644
 +		       lacp->cfg.retry_count,
 +		       info->retry_count);
 +	lacp->cfg.retry_count = info->retry_count;
-+	ms = lacp->cfg.retry_count * 3 * 60 * 1000;
-+	ms_to_timespec(&ts, ms);
-+	err = teamd_loop_callback_timer_set(lacp->ctx,
-+						LACP_RETRY_COUNT_TIMEOUT_CB_NAME,
-+						lacp, NULL, &ts);
-+	if (err) {
-+		teamd_log_err("Failed to set retry count timeout timer.");
-+		// Switch back to default now
-+		lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
-+		return err;
++	if (lacp->cfg.retry_count != LACP_CFG_DFLT_RETRY_COUNT) {
++		ms = lacp->cfg.retry_count * 3 * 60 * 1000;
++		ms_to_timespec(&ts, ms);
++		err = teamd_loop_callback_timer_set(lacp->ctx,
++				LACP_RETRY_COUNT_TIMEOUT_CB_NAME,
++				lacp, NULL, &ts);
++		if (err) {
++			teamd_log_err("Failed to set retry count timeout timer.");
++			// Switch back to default now
++			lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
++			return err;
++		}
++		teamd_loop_callback_enable(ctx,
++				LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp);
++	} else {
++		teamd_loop_callback_disable(ctx,
++				LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp);
 +	}
-+	teamd_loop_callback_enable(ctx,
-+					LACP_RETRY_COUNT_TIMEOUT_CB_NAME, lacp);
 +
 +	teamd_for_each_tdport(tdport, lacp->ctx) {
 +		struct lacp_port* lacp_port;
@@ -309,6 +419,8 @@ index 82b8b86..5c7e7b4 100644
 +
 +	if (!gsc->data.int_val)
 +		return -EOPNOTSUPP;
++	if (!lacp->cfg.enable_retry_count)
++		return -EOPNOTSUPP;
 +	if (gsc->data.int_val < 3 || gsc->data.int_val > UCHAR_MAX)
 +		return -EINVAL;
 +	info = malloc(sizeof(*info));
@@ -324,10 +436,16 @@ index 82b8b86..5c7e7b4 100644
  static const struct teamd_state_val lacp_state_vals[] = {
  	{
  		.subpath = "active",
-@@ -1973,6 +2146,12 @@ static const struct teamd_state_val lacp_state_vals[] = {
+@@ -1987,6 +2265,18 @@ static const struct teamd_state_val lacp_state_vals[] = {
  		.type = TEAMD_STATE_ITEM_TYPE_STRING,
  		.getter = lacp_state_select_policy_get,
  	},
++	{
++		.subpath = "enable_retry_count_feature",
++		.type = TEAMD_STATE_ITEM_TYPE_BOOL,
++		.getter = lacp_state_enable_retry_count_get,
++		.setter = lacp_state_enable_retry_count_set,
++	},
 +	{
 +		.subpath = "retry_count",
 +		.type = TEAMD_STATE_ITEM_TYPE_INT,
@@ -337,7 +455,7 @@ index 82b8b86..5c7e7b4 100644
  };
  
  static struct lacp_port *lacp_port_gsc(struct team_state_gsc *gsc,
-@@ -2272,6 +2451,14 @@ static int lacp_port_state_prio_get(struct teamd_context *ctx,
+@@ -2286,6 +2576,14 @@ static int lacp_port_state_prio_get(struct teamd_context *ctx,
  	return 0;
  }
  
@@ -352,7 +470,7 @@ index 82b8b86..5c7e7b4 100644
  static const struct teamd_state_val lacp_port_state_vals[] = {
  	{
  		.subpath = "selected",
-@@ -2314,6 +2501,11 @@ static const struct teamd_state_val lacp_port_state_vals[] = {
+@@ -2328,6 +2626,11 @@ static const struct teamd_state_val lacp_port_state_vals[] = {
  		.vals = lacp_port_partner_state_vals,
  		.vals_count = ARRAY_SIZE(lacp_port_partner_state_vals),
  	},
@@ -364,7 +482,7 @@ index 82b8b86..5c7e7b4 100644
  };
  
  static const struct teamd_state_val lacp_state_vgs[] = {
-@@ -2380,6 +2572,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
+@@ -2394,6 +2697,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
  		teamd_log_err("Failed to register state groups.");
  		goto balancer_fini;
  	}
@@ -377,7 +495,7 @@ index 82b8b86..5c7e7b4 100644
  	return 0;
  
  balancer_fini:
-@@ -2395,6 +2593,7 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
+@@ -2409,6 +2718,7 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
  
  	if (ctx->lacp_directory)
  		lacp_state_save(ctx, lacp);
