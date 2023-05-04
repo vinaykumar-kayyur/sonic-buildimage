@@ -63,10 +63,17 @@ if [ -z $CLIENT_AUTH ] || [ $CLIENT_AUTH == "false" ]; then
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [ ! -z $LOG_LEVEL ]; then
+if [[ $LOG_LEVEL =~ ^[0-9]+$ ]]; then
     TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
 else
     TELEMETRY_ARGS+=" -v=2"
+fi
+
+THRESHOLD_CONNECTIONS=$(echo $GNMI | jq -r '.threshold')
+if [[ $THRESHOLD_CONNECTIONS =~ ^[0-9]+$ ]]; then
+    TELEMETRY_ARGS+=" --threshold $THRESHOLD_CONNECTIONS"
+else
+    TELEMETRY_ARGS+=" --threshold 100"
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
