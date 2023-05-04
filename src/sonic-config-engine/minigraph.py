@@ -474,7 +474,6 @@ def parse_dpg(dpg, hname):
     tunnelintfs_qos_remap_config = defaultdict(dict)
 
     for child in dpg:
-
         """ 
             In Multi-NPU platforms the acl intfs are defined only for the host not for individual asic.
             There is just one aclintf node in the minigraph
