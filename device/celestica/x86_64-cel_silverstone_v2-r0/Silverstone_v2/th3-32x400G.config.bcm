@@ -1,4 +1,3 @@
-v2
 pbmp_xport_xe.0=0x8111181111c1111811118111181111c111182222
 ccm_dma_enable=0
 ccmdma_intr_enable=0
