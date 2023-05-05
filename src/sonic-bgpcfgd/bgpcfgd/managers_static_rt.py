@@ -25,6 +25,7 @@ class StaticRouteMgr(Manager):
         self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),], self.on_bgp_asn_change)
         self.static_routes = {}
         self.vrf_pending_redistribution = set()
+        self.config_db = None
 
     OP_DELETE = 'DELETE'
     OP_ADD = 'ADD'
@@ -79,9 +80,37 @@ class StaticRouteMgr(Manager):
         return True
 
 
+    def skip_appl_del(self, vrf, ip_prefix):
+        if self.db_name == "CONFIG_DB":
+            return False
+
+        if self.config_db is None:
+            self.config_db = swsscommon.SonicV2Connector()
+            self.config_db.connect(self.config_db.CONFIG_DB)
+
+        #just pop local cache if the route exist in config_db
+        cfg_key = "STATIC_ROUTE|" + vrf + "|" + ip_prefix
+        nexthop = self.config_db.get(self.config_db.CONFIG_DB, cfg_key, "nexthop")
+        if nexthop and len(nexthop)>0:
+            self.static_routes.setdefault(vrf, {}).pop(ip_prefix, None)
+            return True
+
+        if vrf == "default":
+            cfg_key = "STATIC_ROUTE|" + ip_prefix
+        nexthop = self.config_db.get(self.config_db.CONFIG_DB, cfg_key, "nexthop")
+        if nexthop and len(nexthop)>0:
+            self.static_routes.setdefault(vrf, {}).pop(ip_prefix, None)
+            return True
+
+        return False
+
     def del_handler(self, key):
         vrf, ip_prefix = self.split_key(key)
         is_ipv6 = TemplateFabric.is_ipv6(ip_prefix)
+
+        if self.skip_appl_del(vrf, ip_prefix):
+            log_debug("{} ignore appl_db static route deletion because of key {} exist in config_db".format(self.db_name, key))
+            return
 
         ip_nh_set = IpNextHopSet(is_ipv6)
         cur_nh_set, route_tag = self.static_routes.get(vrf, {}).get(ip_prefix, (IpNextHopSet(is_ipv6), self.ROUTE_ADVERTISE_DISABLE_TAG))

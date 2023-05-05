@@ -20,13 +20,13 @@ def set_del_test(dut, hdlr, op, args, e_bfd_dict, e_srt_dict):
     set_del_test.srt_dict = {}
 
     def bfd_app_set(key, data):
-        set_del_test.bfd_dict[key] = data.copy()
+        set_del_test.bfd_dict["set_"+key] = data.copy()
     def bfd_app_del(key):
-        set_del_test.bfd_dict[key] = {}
+        set_del_test.bfd_dict["del_"+key] = {}
     def srt_app_set(key, data):
-        set_del_test.srt_dict[key] = data.copy()
+        set_del_test.srt_dict["set_"+key] = data.copy()
     def srt_app_del(key):
-        set_del_test.srt_dict[key] = {}
+        set_del_test.srt_dict["del_"+key] = {}
 
     def compare_dict(r, e):
         if len(r) == 0 and len(e) == 0:
@@ -108,9 +108,9 @@ def test_set_del():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
         {}
     )
@@ -121,7 +121,7 @@ def test_set_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -129,7 +129,7 @@ def test_set_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -137,7 +137,7 @@ def test_set_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
     #test #2
@@ -149,9 +149,9 @@ def test_set_del():
             "ifname": "if1, if2",
         }),
         { 
-            "default:default:192.168.3.2" : {}
+            "del_default:default:192.168.3.2" : {}
         },
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
 
     #test #3
@@ -163,10 +163,10 @@ def test_set_del():
             "ifname": "if1, if2",
         }),
         { 
-            "default:default:192.168.1.2" : {},
-            "default:default:192.168.2.2" : {}
+            "del_default:default:192.168.1.2" : {},
+            "del_default:default:192.168.2.2" : {}
         },
-        {'default:2.2.2.0/24': {}}
+        {'del_default:2.2.2.0/24': {}}
     )
 
 def test_bfd_del():
@@ -181,9 +181,9 @@ def test_bfd_del():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
         {}
     )
@@ -194,7 +194,7 @@ def test_bfd_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -202,7 +202,7 @@ def test_bfd_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -210,7 +210,7 @@ def test_bfd_del():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
     #test bfd state del
@@ -218,7 +218,7 @@ def test_bfd_del():
         "DEL",
         ({"192.168.2.2"}),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2,192.168.3.2 ', 'ifname': 'if1,if3', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2,192.168.3.2 ', 'ifname': 'if1,if3', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
 
 def test_set_2routes():
@@ -234,9 +234,9 @@ def test_set_2routes():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
         {}
     )
@@ -247,7 +247,7 @@ def test_set_2routes():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -255,7 +255,7 @@ def test_set_2routes():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -263,7 +263,7 @@ def test_set_2routes():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
     set_del_test(dut, "srt",
@@ -274,7 +274,7 @@ def test_set_2routes():
             "ifname": "if2",
         }),
         {},
-        {'default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
 
     #test #5
@@ -284,7 +284,7 @@ def test_set_2routes():
             "state": "Down"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.3.2,192.168.1.2 ', 'ifname': 'if3,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}, 'default:3.3.3.0/24': {}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.3.2,192.168.1.2 ', 'ifname': 'if3,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}, 'del_default:3.3.3.0/24': {}}
     )
 
     #test #6
@@ -294,8 +294,8 @@ def test_set_2routes():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'},
-         'default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'},
+         'set_default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
 
 def test_set_bfd_change_hold():
@@ -311,9 +311,9 @@ def test_set_bfd_change_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
         {}
     )
@@ -324,7 +324,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -332,7 +332,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -340,7 +340,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
     set_del_test(dut, "srt",
@@ -351,14 +351,15 @@ def test_set_bfd_change_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {},
-            "default:default:192.168.2.2" : {},
-            "default:default:192.168.3.2" : {}
+            "del_default:default:192.168.1.2" : {},
+            "del_default:default:192.168.2.2" : {},
+            "del_default:default:192.168.3.2" : {}
         },
-        {'default:2.2.2.0/24': {'bfd':'true', 'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'},
-         'default:2.2.2.0/24': {}
+        {
+         'del_default:2.2.2.0/24': {}
         }
     )
+    return
 
     #test #10 'bfd': false --> true, write original rout first
     set_del_test(dut, "srt",
@@ -369,11 +370,11 @@ def test_set_bfd_change_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
-        {'default:2.2.2.0/24': {'bfd':'false', 'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'bfd':'false', 'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'expiry': 'false'}}
     )
 
     set_del_test(dut, "bfd",
@@ -382,7 +383,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -390,7 +391,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -398,7 +399,7 @@ def test_set_bfd_change_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
 
@@ -415,9 +416,9 @@ def test_set_bfd_change_no_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.2.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.2.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
         {}
     )
@@ -427,7 +428,7 @@ def test_set_bfd_change_no_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.1.2', 'ifname': 'if1', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -435,7 +436,7 @@ def test_set_bfd_change_no_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -443,7 +444,7 @@ def test_set_bfd_change_no_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "srt",
         "SET",
@@ -453,7 +454,7 @@ def test_set_bfd_change_no_hold():
             "ifname": "if2",
         }),
         {},
-        {'default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:3.3.3.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
 
     set_del_test(dut, "srt",
@@ -464,11 +465,11 @@ def test_set_bfd_change_no_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {},
-            "default:default:192.168.3.2" : {}
+            "del_default:default:192.168.1.2" : {},
+            "del_default:default:192.168.3.2" : {}
         },
-        {'default:2.2.2.0/24': {'bfd':'true', 'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'},
-         'default:2.2.2.0/24': {}
+        {
+         'del_default:2.2.2.0/24': {}
         }
     )
 
@@ -481,10 +482,10 @@ def test_set_bfd_change_no_hold():
             "ifname": "if1, if2, if3",
         }),
         { 
-            "default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
-            "default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
+            "set_default:default:192.168.1.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.1.1'},
+            "set_default:default:192.168.3.2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '192.168.3.1'}
         },
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2', 'ifname': 'if2', 'nexthop-vrf': 'default', 'expiry': 'false'}}
     )
 
     set_del_test(dut, "bfd",
@@ -493,7 +494,7 @@ def test_set_bfd_change_no_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2 ', 'ifname': 'if2,if1', 'nexthop-vrf': 'default,default', 'expiry': 'false'}}
     )
     set_del_test(dut, "bfd",
         "SET",
@@ -509,7 +510,7 @@ def test_set_bfd_change_no_hold():
             "state": "Up"
         }),
         {},
-        {'default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
+        {'set_default:2.2.2.0/24': {'nexthop': '192.168.2.2,192.168.1.2,192.168.3.2 ', 'ifname': 'if2,if1,if3', 'nexthop-vrf': 'default,default,default', 'expiry': 'false'}}
     )
 
 

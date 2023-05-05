@@ -4,7 +4,6 @@ import sys
 import syslog
 import threading
 import traceback
-import time
 from collections import defaultdict
 from ipaddress import IPv4Address, IPv6Address
 from copy import deepcopy
@@ -341,15 +340,8 @@ class StaticRouteBfd(object):
             data['bfd'] = "false"
             data['expiry'] = "false"
             self.set_static_route_into_appl_db(key, data)
-            time.sleep(0.1)
             log_debug("SRT_BFD: bfd toggle to true. write the route to appl_db, update StaticRouteMgr(appl_db), key %s"%(key))
         else:
-            #safely delete the static_route entry created by StaticRouteBfd
-            #1, write a route with bfd=true to appl_db to clean up cur_nh in StaticRouteMgr
-            #2, delete the entry from appl_db STATIC_ROUTE_TABLE, StaticRouteMgr do nothing because of empty cur_nh
-            data['bfd'] = "true"
-            self.set_static_route_into_appl_db(key, data)
-            time.sleep(0.1)
             self.del_static_route_from_appl_db(key)
             log_debug("SRT_BFD: bfd toggle to false. delete static route from appl_db, key %s"%(key))
 
