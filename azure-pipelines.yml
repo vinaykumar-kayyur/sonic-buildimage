@@ -43,6 +43,7 @@ variables:
 - name: ENABLE_FIPS
   value: y
 
+stages:
 - stage: Test
   variables:
   - group: Testbed-Tools
