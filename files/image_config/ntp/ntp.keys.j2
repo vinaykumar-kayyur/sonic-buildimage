@@ -13,5 +13,6 @@
 {# Define authentication keys inventory -#}
 {% set trusted_str = ' ' ~ trusted_arr|join(',') -%}
 {% for keyid in NTP_KEY if NTP_KEY[keyid].type and NTP_KEY[keyid].value %}
-{{ keyid }} {{ NTP_KEY[keyid].type }} {{ NTP_KEY[keyid].value }}{{trusted_str}}
+{% set keyval = NTP_KEY[keyid].value | b64decode %}
+{{ keyid }} {{ NTP_KEY[keyid].type }} {{ keyval }}{{trusted_str}}
 {% endfor -%}
