@@ -99,7 +99,6 @@
             "sonic-portchannel:PORTCHANNEL": {
                 "PORTCHANNEL_LIST": [
                     {
-                        "admin_status": "up",
                         "mtu": "9100",
                         "name": "PortChannel11001"
                     }

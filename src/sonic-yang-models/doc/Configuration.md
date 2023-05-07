@@ -35,6 +35,7 @@ Table of Contents
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
+         * [IPv6 Link-local] (#ipv6-link-local)
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -1140,6 +1141,30 @@ The configuration is applied globally for each ECMP and LAG on a switch.
 }
 ```
 
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
+
+```
+
 ### KDUMP
 
 ```
@@ -1547,7 +1572,8 @@ optional attributes.
             "speed": "40000",
             "link_training": "off",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "mode":"trunk"
         },
         "Ethernet1": {
             "index": "1",
@@ -1559,7 +1585,8 @@ optional attributes.
             "speed": "40000",
             "link_training": "on",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "mode":"trunk"
         },
         "Ethernet63": {
             "index": "63",
@@ -1569,7 +1596,8 @@ optional attributes.
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "mode":"trunk"
         }
     }
 }
@@ -1627,7 +1655,8 @@ name as object key and member list as attribute.
         ],
         "mtu": "9100",
         "fallback": "false",
-        "fast_rate": "true"
+        "fast_rate": "true",
+        "mode":"trunk"
     }
   }
 }
