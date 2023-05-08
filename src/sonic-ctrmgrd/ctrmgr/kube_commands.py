@@ -483,6 +483,35 @@ def tag_latest(feat, docker_id, image_ver):
         log_error(err)
     return ret
 
+def _do_clean(feat, current_version, last_version):
+    err = ""
+    out = ""
+    ret = 0
+    _, feat_status, err = _run_command("docker images |grep {} |awk '{print $3}'".format(feat))
+    if feat_status:
+        version_set = set(feat_status.split())
+        version_set.remove(current_version)
+        version_set.remove(last_version)
+        clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(version_set)))
+        if clean_res == 0:
+            out = "Clean {} old version images successfully".format(feat)
+        else:
+            err = "Failed to clean {} old version images. Err: {}".format(feat, err)
+            ret = 1
+    else:
+        err = "Failed to docker images |grep {} |awk '{print $3}'".format(feat)
+        ret = 1
+
+    return ret, out, err
+
+def clean_image(feat, current_version, last_version):
+    ret, out, err = _do_clean(feat, current_version, last_version)
+    if ret == 0:
+        log_debug(out)
+    else:
+        log_error(err)
+    return ret
+
 def main():
     syslog.openlog("kube_commands")
     parser=argparse.ArgumentParser(description=
