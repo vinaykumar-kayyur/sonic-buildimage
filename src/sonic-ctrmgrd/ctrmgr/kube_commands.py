@@ -487,12 +487,17 @@ def _do_clean(feat, current_version, last_version):
     err = ""
     out = ""
     ret = 0
-    _, feat_status, err = _run_command("docker images |grep {} |awk '{print $3}'".format(feat))
-    if feat_status:
-        version_set = set(feat_status.split())
-        version_set.remove(current_version)
-        version_set.remove(last_version)
-        clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(version_set)))
+    _, image_info, err = _run_command("docker images |grep {} |grep -v latest |awk '{{print $2,$3}}'".format(feat))
+    if image_info:
+        version_dict = {}
+        for pair in image_info.split("\n"):
+            version, docker_id = pair.split()
+            version_dict[version] = docker_id
+        if current_version in version_dict:
+            del version_dict[current_version]
+        if last_version in version_dict:
+            del version_dict[last_version]
+        clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(version_dict.values())))
         if clean_res == 0:
             out = "Clean {} old version images successfully".format(feat)
         else:

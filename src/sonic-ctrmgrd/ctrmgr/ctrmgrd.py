@@ -111,13 +111,13 @@ remote_ctr_config = {
     JOIN_LATENCY: 10,
     JOIN_RETRY: 10,
     LABEL_RETRY: 2,
-    TAG_IMAGE_LATEST: 30,
+    TAG_IMAGE_LATEST: 5,
     TAG_RETRY: 5,
     CLEAN_IMAGE_RETRY: 5,
     USE_K8S_PROXY: ""
     }
 
-ENABLED_FEATURE_SET = {"telemetry", "snmp"}
+DISABLED_FEATURE_SET = {"database"}
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -277,7 +277,7 @@ class MainServer:
                 key, op, fvs = subscriber.pop()
                 if not key:
                     continue
-                if subscriber.getTableName() == FEATURE_TABLE and key not in ENABLED_FEATURE_SET:
+                if subscriber.getTableName() == FEATURE_TABLE and key in DISABLED_FEATURE_SET:
                     continue
                 log_debug("Received message : '%s'" % str((key, op, fvs)))
                 for callback in (self.callbacks
@@ -590,13 +590,13 @@ class FeatureTransitionHandler:
             log_debug("Tag latest as local failed retry after {} seconds @{}".
                     format(remote_ctr_config[TAG_RETRY], self.start_time))
         else:
+            last_version = self.st_data[feat][ST_FEAT_CTR_STABLE_VER]
             self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
                 {ST_FEAT_CTR_STABLE_VER: image_ver,
                  ST_FEAT_CTR_LAST_VER: last_version})
-            last_version = self.st_data[ST_FEAT_CTR_STABLE_VER]
             self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
             self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
-            if last_version:
+            if last_version and last_version != image_ver:
                 self.do_clean_image(feat, image_ver, last_version)
 
     def do_clean_image(self, feat, current_version, last_version):
