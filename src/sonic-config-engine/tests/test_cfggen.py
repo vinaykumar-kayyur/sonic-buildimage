@@ -1030,7 +1030,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output_dict['tx_power'], '7.5')
         self.assertEqual(output_dict['laser_freq'], 131000)
 
-def test_minigraph_400g_to_100G_speed(self):
+    def test_minigraph_400g_to_100G_speed(self):
         argument = "-j {} -m {} -p {} -n asic0 -v \"PORT\"".format(self.macsec_profile,self.voq_sample_masic_graph, self.voq_port_config_400g )
         output = self.run_script(argument)
         self.assertEqual(
