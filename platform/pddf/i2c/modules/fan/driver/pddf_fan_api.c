@@ -16,6 +16,7 @@
  * Description of various APIs related to FAN component
  */
 
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <linux/string.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -738,7 +739,11 @@ ssize_t fan_show_status(struct device *dev, struct device_attribute *da, char *b
     memcpy(attr_name, attr->dev_attr.attr.name, fan_attr_len+1);
     fan_id = strsep(&end, "_");
     /* fan_id is fan1/fan2/.../fan12 */
+#ifdef __STDC_LIB_EXT1__
+	memset_s(fan_attr, sizeof(fan_attr), 0 , ATTR_NAME_LEN);
+#else
     memset(fan_attr, 0, ATTR_NAME_LEN);
+#endif
     snprintf(fan_attr, ATTR_NAME_LEN, "%s_present", fan_id);
     for (i=0;i<data->num_attr;i++)
     {
@@ -749,7 +754,11 @@ ssize_t fan_show_status(struct device *dev, struct device_attribute *da, char *b
             break;
         }
     }
+#ifdef __STDC_LIB_EXT1__
+	memset_s(fan_attr, sizeof(fan_attr), 0 , ATTR_NAME_LEN);
+#else
     memset(fan_attr, 0, ATTR_NAME_LEN);
+#endif
     snprintf(fan_attr, ATTR_NAME_LEN, "%s_input", fan_id);
     for (i=0;i<data->num_attr;i++)
     {
