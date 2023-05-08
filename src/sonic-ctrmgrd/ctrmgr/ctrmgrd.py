@@ -111,7 +111,7 @@ remote_ctr_config = {
     USE_K8S_PROXY: ""
     }
 
-DISABLED_FEATURE_SET = {"database"}
+ENABLED_FEATURE_SET = {"telemetry", "snmp"}
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -271,7 +271,7 @@ class MainServer:
                 key, op, fvs = subscriber.pop()
                 if not key:
                     continue
-                if subscriber.getTableName() == FEATURE_TABLE and key in DISABLED_FEATURE_SET:
+                if subscriber.getTableName() == FEATURE_TABLE and key not in ENABLED_FEATURE_SET:
                     continue
                 log_debug("Received message : '%s'" % str((key, op, fvs)))
                 for callback in (self.callbacks
