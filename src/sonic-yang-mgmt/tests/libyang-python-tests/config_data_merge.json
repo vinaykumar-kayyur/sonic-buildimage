@@ -66,7 +66,8 @@
 					"description": "Ethernet0",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet1",
@@ -74,7 +75,8 @@
 					"description": "Ethernet1",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet2",
@@ -82,7 +84,8 @@
 					"description": "Ethernet2",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet3",
@@ -90,7 +93,8 @@
 					"description": "Ethernet3",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet4",
@@ -98,7 +102,9 @@
 					"description": "Ethernet4",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
+
 				},
 				{
 					"port_name": "Ethernet5",
@@ -106,7 +112,9 @@
 					"description": "Ethernet5",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
+
 				},
 				{
 					"port_name": "Ethernet6",
@@ -114,7 +122,8 @@
 					"description": "Ethernet6",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet7",
@@ -122,7 +131,8 @@
 					"description": "Ethernet7",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode": "trunk"
 				},
 				{
 					"port_name": "Ethernet8",
@@ -130,7 +140,8 @@
 					"description": "Ethernet8",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet9",
@@ -138,7 +149,8 @@
 					"description": "Ethernet9",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				},
 				{
 					"port_name": "Ethernet10",
@@ -146,7 +158,8 @@
 					"description": "Ethernet10",
 					"speed": 25000,
 					"mtu": 9000,
-					"admin_status": "up"
+					"admin_status": "up",
+					"mode":"trunk"
 				}
 			]
 		}
