@@ -467,6 +467,7 @@ def parse_dpg(dpg, hname):
     pcs= {}
     pc_members= {}
     acls= {}
+    acl_table_types = {}
     vni= {}
     dpg_ecmp_content= {}
     static_routes= {}
@@ -672,8 +673,6 @@ def parse_dpg(dpg, hname):
             vlans[sonic_vlan_name] = vlan_attributes
             vlan_member_list[sonic_vlan_name] = vmbr_list
 
-        acls = {}
-        acl_table_types = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
                 aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
