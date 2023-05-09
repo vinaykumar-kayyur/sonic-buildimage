@@ -504,7 +504,7 @@ def _do_clean(feat, current_version, last_version):
             err = "Failed to clean {} old version images. Err: {}".format(feat, err)
             ret = 1
     else:
-        err = "Failed to docker images |grep {} |awk '{print $3}'".format(feat)
+        err = "Failed to docker images |grep {} |awk '{{print $3}}'".format(feat)
         ret = 1
 
     return ret, out, err

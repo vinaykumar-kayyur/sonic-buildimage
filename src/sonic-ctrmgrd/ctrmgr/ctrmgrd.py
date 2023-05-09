@@ -596,7 +596,8 @@ class FeatureTransitionHandler:
                  ST_FEAT_CTR_LAST_VER: last_version})
             self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
             self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
-            if last_version and last_version != image_ver:
+            # if last_version and last_version != image_ver:
+            if last_version:
                 self.do_clean_image(feat, image_ver, last_version)
 
     def do_clean_image(self, feat, current_version, last_version):

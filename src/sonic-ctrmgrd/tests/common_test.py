@@ -547,6 +547,19 @@ def set_mock_kube(kube_labels, kube_join, kube_reset):
     kube_reset.side_effect = kube_reset_side_effect
 
 
+def clean_image_side_effect(feat, current_version, last_version):
+    return 0
+
+
+def tag_latest_side_effect(feat, docker_id, image_ver):
+    return 0
+
+
+def set_mock_image_op(clean_image, tag_latest):
+    clean_image.side_effect = clean_image_side_effect
+    tag_latest.side_effect = tag_latest_side_effect
+
+
 def str_comp(needle, hay):
     nlen = len(needle)
     hlen = len(hay)
