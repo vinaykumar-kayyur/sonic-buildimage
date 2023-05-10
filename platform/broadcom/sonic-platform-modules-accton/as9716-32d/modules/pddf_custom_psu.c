@@ -1,4 +1,4 @@
-#define __STDC_WANT_LIB_EXT1__ 1
+
 #include <linux/string.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -195,13 +195,7 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
     char buffer[32]={0};
     
     for (i = 0; i < ARRAY_SIZE(models); i++) {
-#ifdef __STDC_LIB_EXT1__
-        memset_s(data.serial_number, sizeof(data.serial_number), 0, sizeof(data.serial_number));
-        memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
-#else
-        memset(data.serial_number, 0, sizeof(data.serial_number));
-        memset(buffer, 0, sizeof(buffer));
-#endif
+
         status = pddf_psu_read_block(client, models[i].offset,
                                            buffer, models[i].length);
         if (status < 0) {
@@ -211,12 +205,12 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
             return status;
         }
         else {
-            buffer[models[i].length] = '\0';
+            buffer[models[i].length >= (sizeof(buffer)-1)?(sizeof(buffer)-1):models[i].length] = '\0';
         }
 
         /* Determine if the model name is known, if not, read next index
          */
-        
+        data.serial_number[0] = '\0';
         if (strncmp(buffer, models[i].model_name, models[i].chk_length) == 0) {
             status = pddf_psu_read_block(client, serials[i].offset,
                                            data.serial_number, serials[i].length);
@@ -228,7 +222,7 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
                 return status;
             }
             else {
-                data.serial_number[serials[i].length] = '\0';
+                data.serial_number[serials[i].length>=(sizeof(data.serial_number)-1)?(sizeof(data.serial_number)-1):serials[i].length] = '\0';
 	            return sprintf(buf, "%s\n", data.serial_number);
             }
                         
@@ -250,13 +244,8 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
 	struct pddf_psu_data data;	
     int i, status;
     
+    data.model_name[0]='\0';
     for (i = 0; i < ARRAY_SIZE(models); i++) {
-#ifdef __STDC_LIB_EXT1__        
-        memset_s(data.model_name, sizeof(data.model_name), 0, sizeof(data.model_name));
-#else
-        memset(data.model_name, 0, sizeof(data.model_name));
-#endif
-
         status = pddf_psu_read_block(client, models[i].offset,
                                            data.model_name, models[i].length);
         if (status < 0) {
@@ -266,7 +255,7 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
             return status;
         }
         else {
-            data.model_name[models[i].length] = '\0';
+            data.model_name[models[i].length >= (sizeof(data.model_name)-1)?(sizeof(data.model_name)-1):models[i].length] = '\0';
         }
 
         /* Determine if the model name is known, if not, read next index
@@ -311,15 +300,10 @@ ssize_t pddf_get_custom_psu_fan_dir(struct device *dev, struct device_attribute 
 	struct pddf_psu_data data;
     int i, status;
     char buffer[32]={0};
+    
+    data.fan_dir[0]='\0';
     for (i = 0; i < ARRAY_SIZE(models); i++) {
-#ifdef __STDC_LIB_EXT1__          
-        memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
-        memset_s(data.fan_dir, sizeof(data.fan_dir), 0, sizeof(data.fan_dir));
-#else
-        memset(buffer, 0, sizeof(buffer));
-        memset(data.fan_dir, 0, sizeof(data.fan_dir));
-#endif        
-
+        buffer[0]='\0';
         status = pddf_psu_read_block(client, models[i].offset,
                                            buffer, models[i].length);
         if (status < 0) {
@@ -329,7 +313,7 @@ ssize_t pddf_get_custom_psu_fan_dir(struct device *dev, struct device_attribute 
             return status;
         }
         else {
-            buffer[models[i].length] = '\0';
+            buffer[models[i].length >= (sizeof(buffer)-1)?(sizeof(buffer)-1):models[i].length]='\0';
         }
 
         /* Determine if the model name is known, if not, read next index
