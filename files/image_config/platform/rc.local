@@ -126,6 +126,7 @@ migrate_nos_configuration()
         PORT_CONFIG_GZFILE=$NOS_DIR/port_config.json.gz.base64.txt
         PORT_CONFIG_FILE=$NOS_DIR/port_config.json
         SNMP_FILE=$NOS_DIR/snmp.yml
+        GOLDEN_CONFIG_DB_GZFILE=$NOS_DIR/golden_config_db.json.gz.base64.txt
         GOLDEN_CONFIG_DB_FILE=$NOS_DIR/golden_config_db.json
         mkdir -p $NOS_DIR
 
@@ -138,6 +139,7 @@ migrate_nos_configuration()
             [ -f $MG_GZFILE ] && /usr/bin/base64 -d $MG_GZFILE | /bin/gunzip > $MG_FILE
             [ -f $ACL_GZFILE ] && /usr/bin/base64 -d $ACL_GZFILE | /bin/gunzip > $ACL_FILE
             [ -f $PORT_CONFIG_GZFILE ] && /usr/bin/base64 -d $PORT_CONFIG_GZFILE | /bin/gunzip > $PORT_CONFIG_FILE
+            [ -f $GOLDEN_CONFIG_DB_GZFILE] && /usr/bin/base64 -d $GOLDEN_CONFIG_DB_GZFILE| /bin/gunzip > $GOLDEN_CONFIG_DB_FILE
 
             # Copy relevant files
             nos_migration_import $NOS_DIR/mgmt_interface.cfg /host/migration
