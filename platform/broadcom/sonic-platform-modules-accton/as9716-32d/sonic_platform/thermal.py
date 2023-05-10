@@ -175,8 +175,8 @@ class Thermal(PddfThermal):
         default_value = self.__default_threshold[HIGH_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             return float(default_value)
-
-        raise NotImplementedError
+        
+        return super().get_high_threshold()
 
     def set_low_threshold(self, temperature):
         try:
@@ -235,8 +235,7 @@ class Thermal(PddfThermal):
         default_value = self.__default_threshold[HIGH_CRIT_THRESHOLD]
         if default_value != NOT_AVAILABLE:
             return float(default_value)
-
-        raise NotImplementedError
+        return super().get_high_critical_threshold()
 
     def set_low_critical_threshold(self, temperature):
         try:
