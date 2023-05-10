@@ -129,15 +129,15 @@ module test-vlan {
 						path /port:port/port:PORT/port:PORT_LIST/port:port_name;
 					}
 				
-				    must "(/port:sonic-port/port:PORT/port:PORT_LIST[port:name=current()]/mode = 'access' 
-					or /port:sonic-port/port:PORT/port:PORT_LIST[port:name=current()]/mode = 'trunk'
-					or /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST[lag:name=current()]/mode = 'access'
-					or /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST[lag:name=current()]/mode = 'trunk')"
-				
+				    must "(/port:sonic-port/port:PORT/port:PORT_LIST[port:mode=current()]/port:mode = 'access' 
+				       or /port:sonic-port/port:PORT/port:PORT_LIST[port:mode=current()]/port:mode = 'trunk'
+				       or /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST[lag:mode=current()]/lag:mode = 'access'
+				       or /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST[lag:mode=current()]/lag:mode = 'trunk')
+										
 					   {
-					      error-message "VLAN member assignment is allowed only if port is in access or trunk mode.";
+					       error-message "VLAN member assignment is allowed only if port is in access or trunk mode.";
 
-					   } 
+					   }
 
 				}
                     
