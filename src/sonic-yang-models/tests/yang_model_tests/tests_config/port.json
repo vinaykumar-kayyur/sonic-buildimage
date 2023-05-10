@@ -13,7 +13,8 @@
                         "pfc_asym": "off",
                         "name": "Ethernet8",
                         "tpid": "0x8100",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -34,7 +35,7 @@
                         "name": "Ethernet8",
                         "tpid": "0x8100",
                         "speed": 25000,
-                        "mode":"access"
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -49,7 +50,8 @@
                         "alias": "eth8",
                         "lanes": "65",
                         "speed": 25000,
-                        "mtu": 68
+                        "mtu": 68,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -64,7 +66,8 @@
                         "alias": "eth8",
                         "lanes": "65",
                         "speed": 25000,
-                        "mtu": 9216
+                        "mtu": 9216,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -95,7 +98,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "autoneg": "on"
+                        "autoneg": "on",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -112,7 +116,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "autoneg": "off"
+                        "autoneg": "off",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -129,7 +134,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "autoneg": 0
+                        "autoneg": 0,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -146,7 +152,8 @@
                         "lanes": "65",
                         "speed": 800000,
                         "autoneg": "on",
-                        "adv_speeds": [400000, 800000]
+                        "adv_speeds": [400000, 800000],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -163,7 +170,8 @@
                         "lanes": "65",
                         "speed": 900000,
                         "autoneg": "on",
-                        "adv_speeds": [25000,40000]
+                        "adv_speeds": [25000,40000],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -180,7 +188,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_speeds": [25000,40000]
+                        "adv_speeds": [25000,40000],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -197,7 +206,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_speeds": ["all"]
+                        "adv_speeds": ["all"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -214,7 +224,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_speeds": [25000,800000]
+                        "adv_speeds": [25000,800000],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -231,7 +242,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_speeds": ["invalid"]
+                        "adv_speeds": ["invalid"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -248,7 +260,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_speeds": ["all", "25000"]
+                        "adv_speeds": ["all", "25000"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -265,7 +278,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "interface_type": "CR4"
+                        "interface_type": "CR4",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -282,7 +296,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "interface_type": "Invalid"
+                        "interface_type": "Invalid",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -299,7 +314,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_interface_types": ["CR4", "CR"]
+                        "adv_interface_types": ["CR4", "CR"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -316,7 +332,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_interface_types": ["all"]
+                        "adv_interface_types": ["all"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -333,7 +350,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_interface_types": ["Invalid"]
+                        "adv_interface_types": ["Invalid"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -350,7 +368,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "autoneg": "on",
-                        "adv_interface_types": ["all", "CR4"]
+                        "adv_interface_types": ["all", "CR4"],
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -367,7 +386,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "laser_freq": 193100
+                        "laser_freq": 193100,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -384,7 +404,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "tx_power": "27.3"
+                        "tx_power": "27.3",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -401,7 +422,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "laser_freq": "27.3"
+                        "laser_freq": "27.3",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -418,7 +440,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "tx_power": "27/4"
+                        "tx_power": "27/4",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -435,7 +458,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "link_training": "on"
+                        "link_training": "on",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -452,7 +476,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "link_training": "off"
+                        "link_training": "off",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -469,7 +494,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "link_training": 0
+                        "link_training": 0,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -486,7 +512,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x9500",
-                        "autoneg": "off"
+                        "autoneg": "off",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -502,14 +529,16 @@
                         "alias": "eth8",
                         "lanes": "65",
                         "speed": 50000,
-                        "mux_cable": "true"
+                        "mux_cable": "true",
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet12",
                         "alias": "eth12",
                         "lanes": "6",
                         "speed": 50000,
-                        "mux_cable": "false"
+                        "mux_cable": "false",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -525,7 +554,8 @@
                         "alias": "eth8",
                         "lanes": "65",
                         "speed": 50000,
-                        "mux_cable": "enabled"
+                        "mux_cable": "enabled",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -541,7 +571,8 @@
                          "alias": "etp1a",
                          "lanes": "60, 61",
                          "speed": 100000,
-                         "subport": 9
+                         "subport": 9,
+                        "mode":"trunk"
                      }
                  ]
              }
@@ -557,28 +588,32 @@
                         "alias": "etp1a",
                         "lanes": "60, 61",
                         "speed": 100000,
-                        "subport": 1
+                        "subport": 1,
+                        "mode":"trunk"
                     },
                     {
                        "name": "Ethernet2",
                         "alias": "etp1b",
                         "lanes": "62, 63",
                         "speed": 100000,
-                        "subport": 2
+                        "subport": 2,
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet4",
                         "alias": "etp1c",
                         "lanes": "64, 65",
                         "speed": 100000,
-                        "subport": 3
+                        "subport": 3,
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet6",
                         "alias": "etp1d",
                         "lanes": "66, 67",
                         "speed": 100000,
-                        "subport": 4
+                        "subport": 4,
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -596,7 +631,8 @@
                         "speed": 50000,
                         "index": "0",
                         "asic_port_name": "Eth8-ASIC1",
-                        "role": "Ext"
+                        "role": "Ext",
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet9",
@@ -604,7 +640,8 @@
                         "lanes": "66",
                         "speed": 50000,
                         "index": "1",
-                        "asic_port_name": "Eth9-ASIC1"
+                        "asic_port_name": "Eth9-ASIC1",
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet10",
@@ -613,7 +650,8 @@
                         "speed": 50000,
                         "index": "2",
                         "asic_port_name": "Eth10-ASIC1",
-                        "role": "Int"
+                        "role": "Int",
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet11",
@@ -622,7 +660,8 @@
                         "speed": 50000,
                         "index": "3",
                         "asic_port_name": "Eth11-ASIC1",
-                        "role": "Inb"
+                        "role": "Inb",
+                        "mode":"trunk"
                     },
                     {
                         "name": "Ethernet12",
@@ -631,7 +670,8 @@
                         "speed": 50000,
                         "index": "4",
                         "asic_port_name": "Eth12-ASIC1",
-                        "role": "Rec"
+                        "role": "Rec",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -649,7 +689,8 @@
                         "speed": 50000,
                         "index": "0",
                         "asic_port_name": "Eth8-ASIC1",
-                        "role": "Invalid"
+                        "role": "Invalid",
+                        "mode":"trunk"
                     }
                 ]
             }

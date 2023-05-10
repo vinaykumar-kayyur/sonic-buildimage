@@ -9,10 +9,10 @@
                         "description": "Ethernet0",
                         "lanes": "65",
                         "mtu": 9000,
-                        "mode": "access",
                         "name": "Ethernet0",
                         "tpid": "0x8100",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -29,7 +29,7 @@
                         "name": "PortChannel0001",
                         "fast_rate": "false",
                         "fallback" : "false",
-                        "mode" :  "access"
+                        "mode" :  "trunk"
                     }
                 ]
             }
@@ -46,7 +46,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -59,7 +60,7 @@
                         "min_links": "1024",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "access"
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -76,7 +77,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -88,7 +90,8 @@
                         "admin_status": "up",
                         "min_links": "1025",
                         "mtu": "9100",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -114,7 +117,8 @@
                         "admin_status": "up",
                         "mtu": "9100",
                         "tpid": "0x9500",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -145,7 +149,8 @@
                         "mtu": "9100",
                         "tpid": "0x9100",
                         "name": "PortChannel0001",
-                        "fallback": "enabled"
+                        "fallback": "enabled",
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -160,7 +165,8 @@
                         "mtu": "9100",
                         "tpid": "0x9100",
                         "name": "PortChannel0001",
-                        "fast_rate": "TRUE"
+                        "fast_rate": "TRUE",
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -334,7 +340,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -378,7 +385,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -421,7 +429,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -433,7 +442,8 @@
                         "admin_status": "up",
                         "min_links": "1",
                         "mtu": "9100",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "mode": "trunk"
                     }
                 ]
             },
@@ -458,7 +468,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -470,7 +481,8 @@
                         "admin_status": "up",
                         "min_links": "1",
                         "mtu": "9100",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "mode": "trunk"
                     }
                 ]
             },
@@ -495,7 +507,8 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000
+                        "speed": 25000,
+                        "mode": "trunk"
                     }
                 ]
             }
@@ -507,7 +520,8 @@
                         "admin_status": "up",
                         "min_links": "1",
                         "mtu": "9100",
-                        "name": "PortChannel0001"
+                        "name": "PortChannel0001",
+                        "mode": "trunk"
                     }
                 ]
             },
