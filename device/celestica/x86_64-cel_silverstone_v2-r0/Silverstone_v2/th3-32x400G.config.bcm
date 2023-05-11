@@ -1,22 +1,22 @@
 pbmp_xport_xe.0=0x8111181111c1111811118111181111c111182222
 ccm_dma_enable=0
 ccmdma_intr_enable=0
-#ctr_evict_enable=0
+ctr_evict_enable=0
 mem_cache_enable=0
 parity_correction=0
 parity_enable=0
 phy_enable=0
 phy_null=1
-#pll_bypass=1
+pll_bypass=1
 
-#init_all_modules=0
+init_all_modules=0
 
-port_fec=9
+sai_tunnel_global_sip_mask_enable=1
 
-pcie_hot_swap_timeout_usec=300
-port_init_cl72=0
-portmap_38=257:10
-portmap_118=258:10
+
+#portmap_38=257:10
+#portmap_118=258:10
+
 
 portmap_20=33:400
 portmap_24=41:400
@@ -215,43 +215,9 @@ dport_map_port_124=30
 dport_map_port_128=31
 dport_map_port_132=32
 
-dport_map_port_38=33
-dport_map_port_118=34
+#dport_map_port_38=33
+#dport_map_port_118=34
 
-
-
-serdes_lane_config_media_type_20=copper
-serdes_lane_config_media_type_24=copper
-serdes_lane_config_media_type_28=copper
-serdes_lane_config_media_type_32=copper
-serdes_lane_config_media_type_40=copper
-serdes_lane_config_media_type_44=copper
-serdes_lane_config_media_type_48=copper
-serdes_lane_config_media_type_52=copper
-serdes_lane_config_media_type_1=copper
-serdes_lane_config_media_type_5=copper
-serdes_lane_config_media_type_9=copper
-serdes_lane_config_media_type_13=copper
-serdes_lane_config_media_type_60=copper
-serdes_lane_config_media_type_64=copper
-serdes_lane_config_media_type_68=copper
-serdes_lane_config_media_type_72=copper
-serdes_lane_config_media_type_80=copper
-serdes_lane_config_media_type_84=copper
-serdes_lane_config_media_type_88=copper
-serdes_lane_config_media_type_92=copper
-serdes_lane_config_media_type_140=copper
-serdes_lane_config_media_type_144=copper
-serdes_lane_config_media_type_148=copper
-serdes_lane_config_media_type_152=copper
-serdes_lane_config_media_type_100=copper
-serdes_lane_config_media_type_104=copper
-serdes_lane_config_media_type_108=copper
-serdes_lane_config_media_type_112=copper
-serdes_lane_config_media_type_120=copper
-serdes_lane_config_media_type_124=copper
-serdes_lane_config_media_type_128=copper
-serdes_lane_config_media_type_132=copper
 
 
 core_clock_frequency=1325
@@ -261,3 +227,5 @@ port_flex_enable=1
 
 #firmware load method, use fast load
 load_firmware=0x2
+
+
