@@ -61,6 +61,7 @@ MODE_LOCAL = "local"
 OWNER_KUBE = "kube"
 OWNER_LOCAL = "local"
 OWNER_NONE = "none"
+REMOTE_RUNNING = "running"
 REMOTE_READY = "ready"
 REMOTE_PENDING = "pending"
 REMOTE_STOPPED = "stopped"
@@ -551,7 +552,7 @@ class FeatureTransitionHandler:
         self.st_data[key] = _update_entry(dflt_st_feat, data)
         remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        if (old_remote_state != remote_state) and (remote_state == "running"):
+        if (old_remote_state == REMOTE_READY) and (remote_state == REMOTE_RUNNING):
             # Tag latest
             start_time = datetime.datetime.now() + datetime.timedelta(
                     seconds=remote_ctr_config[TAG_IMAGE_LATEST])
@@ -591,13 +592,12 @@ class FeatureTransitionHandler:
                     format(remote_ctr_config[TAG_RETRY], self.start_time))
         else:
             last_version = self.st_data[feat][ST_FEAT_CTR_STABLE_VER]
-            self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
-                {ST_FEAT_CTR_STABLE_VER: image_ver,
-                 ST_FEAT_CTR_LAST_VER: last_version})
-            self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
-            self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
-            # if last_version and last_version != image_ver:
-            if last_version:
+            if last_version != image_ver:
+                self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
+                    {ST_FEAT_CTR_STABLE_VER: image_ver,
+                    ST_FEAT_CTR_LAST_VER: last_version})
+                self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
+                self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
                 self.do_clean_image(feat, image_ver, last_version)
 
     def do_clean_image(self, feat, current_version, last_version):

@@ -291,7 +291,7 @@ feature_test_data = {
             common_test.STATE_DB_NO: {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
-                        "remote_state": "pending"
+                        "remote_state": "ready"
                     }
                 }
             }

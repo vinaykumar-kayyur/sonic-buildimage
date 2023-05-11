@@ -487,17 +487,35 @@ def _do_clean(feat, current_version, last_version):
     err = ""
     out = ""
     ret = 0
-    _, image_info, err = _run_command("docker images |grep {} |grep -v latest |awk '{{print $2,$3}}'".format(feat))
+    DOCKER_ID = "docker_id"
+    REPO = "repo"
+    _, image_info, err = _run_command("docker images |grep {} |grep -v latest |awk '{{print $1,$2,$3}}'".format(feat))
     if image_info:
         version_dict = {}
-        for pair in image_info.split("\n"):
-            version, docker_id = pair.split()
-            version_dict[version] = docker_id
+        for info in image_info.split("\n"):
+            rep, version, docker_id = info.split()
+            version_dict[version] = {DOCKER_ID: docker_id, REPO: rep}
         if current_version in version_dict:
+            image_prefix = version_dict[current_version][REPO]
             del version_dict[current_version]
+        else:
+            out = "Current version {} doesn't exist.".format(current_version)
+            ret = 0
+            return ret, out, err
         if last_version in version_dict:
             del version_dict[last_version]
-        clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(version_dict.values())))
+        if last_version == "":
+            for k, v in version_dict.items():
+                if len(v[REPO].split("/")) == 1:
+                    local_version, local_repo, local_docker_id = k, v[REPO], v[DOCKER_ID]
+                    clean_res, _, err = _run_command("docker tag {} {}:{} && docker rmi {}:{}".format(
+                        local_docker_id, image_prefix, local_version, local_repo, local_version))
+        else:
+            versions = [item[DOCKER_ID] for item in version_dict.values()]
+            if versions:
+                clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(versions)))
+            else:
+                clean_res = 0
         if clean_res == 0:
             out = "Clean {} old version images successfully".format(feat)
         else:

@@ -311,15 +311,17 @@ tag_latest_test_data = {
 
 clean_image_test_data = {
     0: {
-        common_test.DESCR: "Clean image successfuly",
+        common_test.DESCR: "Clean image successfuly(kube to kube)",
         common_test.RETVAL: 0,
         common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
         common_test.PROC_CMD: [
-            "docker images |grep snmp |grep -v latest |awk '{print $2,$3}'",
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
             "docker rmi 744d3a09062f --force"
         ],
         common_test.PROC_OUT: [
-            "20201231.74 507f8d28bf6e\n20201231.96 744d3a09062f",
+            "sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.96 744d3a09062f\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.84 507f8d28bf6e",
             ""
         ],
         common_test.PROC_CODE: [
@@ -328,15 +330,17 @@ clean_image_test_data = {
         ]
     },
     1: {
-        common_test.DESCR: "Clean image failed",
+        common_test.DESCR: "Clean image failed(delete image failed)",
         common_test.RETVAL: 1,
         common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
         common_test.PROC_CMD: [
-            "docker images |grep snmp |grep -v latest |awk '{print $2,$3}'",
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
             "docker rmi 744d3a09062f --force"
         ],
         common_test.PROC_OUT: [
-            "20201231.74 507f8d28bf6e\n20201231.96 744d3a09062f",
+            "sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.96 744d3a09062f\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.84 507f8d28bf6e",
             ""
         ],
         common_test.PROC_CODE: [
@@ -345,16 +349,51 @@ clean_image_test_data = {
         ]
     },
     2: {
-        common_test.DESCR: "Clean image failed",
+        common_test.DESCR: "Clean image failed(no image found)",
         common_test.RETVAL: 1,
         common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
         common_test.PROC_CMD: [
-            "docker images |grep snmp |grep -v latest |awk '{print $2,$3}'"
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'"
         ],
         common_test.PROC_OUT: [
             ""
         ]
-    }
+    },
+    3: {
+        common_test.DESCR: "Clean image failed(current image doesn't exist)",
+        common_test.RETVAL: 0,
+        common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
+        common_test.PROC_CMD: [
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
+            ""
+        ],
+        common_test.PROC_OUT: [
+            "sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.96 744d3a09062f",
+            ""
+        ],
+        common_test.PROC_CODE: [
+            0
+        ]
+    },
+    4: {
+        common_test.DESCR: "Clean image successfuly(local to kube)",
+        common_test.RETVAL: 0,
+        common_test.ARGS: ["snmp", "20201231.84", ""],
+        common_test.PROC_CMD: [
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
+            "docker tag 507f8d28bf6e sonick8scue.azurecr.io/docker-sonic-telemetry:20201231.74 && docker rmi docker-sonic-telemetry:20201231.74"
+        ],
+        common_test.PROC_OUT: [
+            "docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.84 507f8d28bf6e",
+            ""
+        ],
+        common_test.PROC_CODE: [
+            0,
+            0
+        ]
+    },
 }
 
 class TestKubeCommands(object):
