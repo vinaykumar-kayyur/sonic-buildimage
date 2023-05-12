@@ -11,7 +11,7 @@ that custom retry count for 60 seconds since the last new packet.
  1 file changed, 52 insertions(+), 8 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index d73ee1c..3aaf97a 100644
+index 3e8a0f6..c5dad35 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -180,6 +180,7 @@ struct lacp {

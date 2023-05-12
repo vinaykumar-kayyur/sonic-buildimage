@@ -10,7 +10,7 @@ sessions, to allow for sessions to stay up for more than 90 seconds.
  1 file changed, 324 insertions(+), 14 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 6b43916..d73ee1c 100644
+index 6b43916..3e8a0f6 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -77,22 +77,45 @@ struct lacpdu {
@@ -134,8 +134,8 @@ index 6b43916..d73ee1c 100644
 +	if (err) {
 +		lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
 +	} else if (tmp < 3) {
-+		teamd_log_err("\"retry_count\" value is out of its limits.");
-+		return -EINVAL;
++		teamd_log_err("\"retry_count\" value is out of its limits, using LACP standard default (3) instead");
++		lacp->cfg.retry_count = LACP_CFG_DFLT_RETRY_COUNT;
 +	} else {
 +		lacp->cfg.retry_count = tmp;
 +	}
