@@ -119,7 +119,7 @@ class BgpdClientMgr(threading.Thread):
             'IGMP_INTERFACE': ['pimd'],
             'IGMP_INTERFACE_QUERY': ['pimd'],
             'ISIS_GLOBAL': ['isisd'],
-            'ISIS_LEVEL': ['isisd'],
+            'ISIS_LEVELS': ['isisd'],
             'ISIS_INTERFACE': ['isisd'],
     }
     VTYSH_CMD_DAEMON = [(r'show (ip|ipv6) route($|\s+\S+)', ['zebra']),
@@ -1446,10 +1446,13 @@ def hdl_static_route(daemon, cmd_str, op, st_idx, args, data):
 
 def handle_isis_if_nwtype(daemon, cmd_str, op, st_idx, args, data):
     cmd_list = []
-    no_op = 'no ' if op == CachedDataWithOp.OP_DELETE else ''
+
+    no_op = ''
+    if op == CachedDataWithOp.OP_DELETE or args[0] == 'BROADCAST':
+        no_op = 'no '
 
     nwtype = ''
-    if args[0] == 'point-to-point':
+    if args[0] == 'POINT_TO_POINT':
         nwtype = 'point-to-point'
     else :
         syslog.syslog(syslog.LOG_ERR, 'handle_isis_if_nwtype invalid nw type args {}'.format(args))
@@ -1466,9 +1469,9 @@ def handle_isis_if_auth(daemon, cmd_str, op, st_idx, args, data):
     no_op = 'no ' if op == CachedDataWithOp.OP_DELETE else ''
 
     authtype = ''
-    if args[0] == 'clear':
+    if args[0] == 'TEXT':
         authtype = 'clear'
-    elif args[0] == 'md5':
+    elif args[0] == 'MD5':
         authtype = 'md5'
     else :
         syslog.syslog(syslog.LOG_ERR, 'handle_isis_if_auth invalid nw type args {}'.format(args))
@@ -1488,11 +1491,11 @@ def handle_isis_level_capability(daemon, cmd_str, op, st_idx, args, data):
     no_op = 'no ' if op == CachedDataWithOp.OP_DELETE else ''
 
     level = ''
-    if args[0] == 'level-1':
+    if args[0] == 'LEVEL_1':
         level = 'level-1'
-    elif args[0] == 'level-2':
+    elif args[0] == 'LEVEL_2':
         level = 'level-2'
-    elif args[0] == 'level-1-2':
+    elif args[0] == 'LEVEL_1_2':
         level = 'level-1-2'
     else :
         syslog.syslog(syslog.LOG_ERR, 'handle_isis_level_capability invalid level type args {}'.format(args))
@@ -2089,7 +2092,7 @@ class BGPConfigDaemon:
                             ('log_adjacency_changes',       '{no:no-prefix}log-adjacency-changes', ['true', 'false', False])
                           ]
 
-    isis_level_key_map = [
+    isis_levels_key_map = [
                             ('lsp_maximum_lifetime',        '{no:no-prefix}max-lsp-lifetime {} {}'),
                             ('lsp_refresh_interval',        '{no:no-prefix}lsp-refresh-interval {} {}'),
                             ('lsp_generation_interval',     '{no:no-prefix}lsp-gen-interval {} {}'),
@@ -2142,7 +2145,7 @@ class BGPConfigDaemon:
                       'IGMP_INTERFACE':                 igmp_mcast_grp_key_map,
                       'IGMP_INTERFACE_QUERY':           igmp_interface_config_key_map,
                       'ISIS_GLOBAL':                    isis_global_key_map,
-                      'ISIS_LEVEL':                     isis_level_key_map,
+                      'ISIS_LEVELS':                    isis_levels_key_map,
                       'ISIS_INTERFACE':                 isis_interface_key_map
     }
 
@@ -2342,7 +2345,7 @@ class BGPConfigDaemon:
             ('IGMP_INTERFACE', self.bgp_table_handler_common),
             ('IGMP_INTERFACE_QUERY', self.bgp_table_handler_common),
             ('ISIS_GLOBAL', self.bgp_table_handler_common),
-            ('ISIS_LEVEL', self.bgp_table_handler_common),
+            ('ISIS_LEVELS', self.bgp_table_handler_common),
             ('ISIS_INTERFACE', self.bgp_table_handler_common)
         ]
         self.bgp_message = queue.Queue(0)
@@ -3781,24 +3784,25 @@ class BGPConfigDaemon:
                     continue
             
             elif table == 'ISIS_GLOBAL':
-                instance = prefix
+                vrf = prefix
+                instance = key
 
                 if not del_table:
-                    syslog.syslog(syslog.LOG_INFO, 'Create router isis {}'.format(instance))
+                    syslog.syslog(syslog.LOG_INFO, 'Create router isis {} vrf {}'.format(instance, vrf))
                 
                     cmd_prefix = ['configure terminal',
-                                  'router isis {}'.format(instance)]
+                                  'router isis {} vrf {}'.format(instance, vrf)]
 
                     if not key_map.run_command(self, table, data, cmd_prefix):
                         syslog.syslog(syslog.LOG_ERR, 'failed running isis config command')
                         continue
                 else:
-                    syslog.syslog(syslog.LOG_INFO, 'Delete ISIS_GLOBAL {} data {}'.format(instance, data))
+                    syslog.syslog(syslog.LOG_INFO, 'Delete ISIS_GLOBAL {} vrf {} data {}'.format(instance, vrf, data))
 
                     cmd_data = {}
-                    cache_tbl_key = 'ISIS_GLOBAL&&{}'.format(instance)
-                    cache_tbl_l1 = 'ISIS_LEVEL&&{}|{}'.format(instance, 'level-1')
-                    cache_tbl_l2 = 'ISIS_LEVEL&&{}|{}'.format(instance, 'level-2')
+                    cache_tbl_key = 'ISIS_GLOBAL&&{}|{}'.format(vrf, instance)
+                    cache_tbl_l1 = 'ISIS_LEVELS&&{}|{}|{}'.format(vrf, instance, '1')
+                    cache_tbl_l2 = 'ISIS_LEVELS&&{}|{}|{}'.format(vrf, instance, '2')
 
                     del_isis_instance = True
                     if (cache_tbl_l1 in self.table_data_cache.keys() or cache_tbl_l2 in self.table_data_cache.keys()):
@@ -3813,45 +3817,49 @@ class BGPConfigDaemon:
 
                         if len(cmd_data) :
                             cmd_prefix = ['configure terminal',
-                                          'router isis {}'.format(instance)]
+                                          'router isis {} vrf {}'.format(instance, vrf)]
 
                             syslog.syslog(syslog.LOG_INFO, 'Row delete cmd data {}'.format(cmd_data))
                             if not key_map.run_command(self, table, cmd_data, cmd_prefix):
-                                syslog.syslog(syslog.LOG_ERR, 'failed running isis {} global config command'.format(instance))
+                                syslog.syslog(syslog.LOG_ERR, 'failed running isis {} vrf {} global config command'.format(instance, vrf))
                                 continue
 
-                        # force delete all ISIS_Global instance attributes in cache
+                        # force delete all ISIS_GLOBAL instance attributes in cache
                         syslog.syslog(syslog.LOG_INFO, 'Row delete key {}'.format(cache_tbl_key))
                         syslog.syslog(syslog.LOG_INFO, 'Row delete cached data {}'.format(cache_tbl_data))
 
                         del(self.table_data_cache[cache_tbl_key])
-                        self.upd_data_list = [(table, '{}'.format(instance), {})]
+                        self.upd_data_list = [(table, '{}|{}'.format(vrf, instance), {})]
 
                     if del_isis_instance:
-                        command = "vtysh -c 'configure terminal' -c 'no router isis {}'".format(instance)
+                        command = "vtysh -c 'configure terminal' -c 'no router isis {} vrf {}'".format(instance, vrf)
                         if not self.__run_command(table, command):
-                            syslog.syslog(syslog.LOG_ERR, 'failed to delete isis local_instance for: %s' % instance)
+                            syslog.syslog(syslog.LOG_ERR, 'failed to delete isis local_asn {} vrf ()'.format(instance, vrf))
 
-            elif table == 'ISIS_LEVEL':
-                instance = prefix
-                level = key
+            elif table == 'ISIS_LEVELS':
+                vrf = prefix
+
+                keyvals = key.split('|')
+                instance = keyvals[0]
+                level_number = keyvals[1]
+                level = 'level-{}'.format(level_number)
 
                 if not del_table:
-                    syslog.syslog(syslog.LOG_INFO, 'Create router isis {}, Level: {}, Command: {}'.format(instance, level, data))
+                    syslog.syslog(syslog.LOG_INFO, 'Create router isis {} vrf {}, Level: {}, Command: {}'.format(instance, vrf, level, data))
 
                     cmd_prefix = ['configure terminal',
-                                  'router isis {}'.format(instance)]
+                                  'router isis {} vrf {}'.format(instance, vrf)]
 
                     if not key_map.run_command(self, table, data, cmd_prefix, level):
-                        syslog.syslog(syslog.LOG_ERR, 'failed running isis {} level config command for Level: {}, Command: {}'.format(instance, level, data))
+                        syslog.syslog(syslog.LOG_ERR, 'failed running isis {} vrf {} level config command for Level: {}, Command: {}'.format(instance, vrf, level, data))
                         continue
 
                 else:
-                    syslog.syslog(syslog.LOG_INFO, 'Delete ISIS_LEVEL {} {} data {}'.format(instance, level, data))
+                    syslog.syslog(syslog.LOG_INFO, 'Delete ISIS_LEVELS {} vrf {} {} data {}'.format(instance, vrf, level, data))
                     
                     cmd_data = {}
-                    cache_tbl_key = 'ISIS_LEVEL&&{}|{}'.format(instance, level)
-                    cache_tbl_global = 'ISIS_GLOBAL&&{}'.format(instance)
+                    cache_tbl_key = 'ISIS_LEVELS&&{}|{}|{}'.format(vrf, instance, level_number)
+                    cache_tbl_global = 'ISIS_GLOBAL&&{}|{}'.format(vrf, instance)
 
                     del_isis_instance = True
                     if  cache_tbl_global in self.table_data_cache.keys():
@@ -3866,24 +3874,24 @@ class BGPConfigDaemon:
 
                         if len(cmd_data) :
                             cmd_prefix = ['configure terminal',
-                                          'router isis {}'.format(instance)]
+                                          'router isis {} vrf {}'.format(instance, vrf)]
 
                             syslog.syslog(syslog.LOG_INFO, 'Row delete cmd data {} '.format(cmd_data))            
                             if not key_map.run_command(self, table, cmd_data, cmd_prefix, level):
-                                syslog.syslog(syslog.LOG_ERR, 'failed running isis {} level config command for Level: {}, Command: {}'.format(instance, level, cmd_data))
+                                syslog.syslog(syslog.LOG_ERR, 'failed running isis {} vrf {} level config command for Level: {}, Command: {}'.format(instance, vrf, level, cmd_data))
                                 continue   
                         
-                        # force delete all ISIS_LEVEL level attributes in cache
+                        # force delete all ISIS_LEVELS level attributes in cache
                         syslog.syslog(syslog.LOG_INFO, 'Row delete key {}'.format(cache_tbl_key))
                         syslog.syslog(syslog.LOG_INFO, 'Row delete cached data {}'.format(cache_tbl_data))
   
                         del(self.table_data_cache[cache_tbl_key])
-                        self.upd_data_list = [(table, '{}|{}'.format(instance, level), {})]
+                        self.upd_data_list = [(table, '{}|{}|{}'.format(vrf, instance, level_number), {})]
 
                     if del_isis_instance:
-                        command = "vtysh -c 'configure terminal' -c 'no router isis {}'".format(instance)
+                        command = "vtysh -c 'configure terminal' -c 'no router isis {} vrf {}'".format(instance, vrf)
                         if not self.__run_command(table, command):
-                            syslog.syslog(syslog.LOG_ERR, 'failed to delete isis local_instance: %s' % instance)
+                            syslog.syslog(syslog.LOG_ERR, 'failed to delete isis local_asn {} vrf {}'.format(instance, vrf))
 
             elif table == 'ISIS_INTERFACE':
                 instance = prefix
@@ -3934,7 +3942,7 @@ class BGPConfigDaemon:
                                 syslog.syslog(syslog.LOG_ERR, 'failed running isis {} interface config command for Interface: {}, Command: {}'.format(instance, ifname, cmd_data))
                                 continue
 
-                        # force delete all ISIS_LEVEL level attributes in cache
+                        # force delete all ISIS_INTERFACE level attributes in cache
                         syslog.syslog(syslog.LOG_INFO, 'Row delete key {}'.format(cache_tbl_key))
                         syslog.syslog(syslog.LOG_INFO, 'Row delete cached data {}'.format(cache_tbl_data))
 

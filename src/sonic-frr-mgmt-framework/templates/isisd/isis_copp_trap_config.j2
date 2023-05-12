@@ -1,5 +1,12 @@
+{
+    "COPP_TRAP": {
+        "bgp": {
 {% if DEVICE_METADATA.localhost.frr_mgmt_framework_config is defined and DEVICE_METADATA.localhost.frr_mgmt_framework_config == "true" %}
-    {% include "/usr/local/sonic/frrcfgd/isisd.conf.j2" %}
+
+		    "trap_ids": "bgp,bgpv6,isis"
 {% else %}
-    {% include "/usr/share/sonic/templates/isisd/isisd.conf.j2" %}
+		    "trap_ids": "bgp,bgpv6"
 {% endif %}
+        }
+    }
+}
