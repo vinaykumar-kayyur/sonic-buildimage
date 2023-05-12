@@ -18,7 +18,6 @@ CONFIG_DB_NAME = "CONFIG_DB"
 APPL_DB_NAME = "APPL_DB"
 STATE_DB_NAME = "STATE_DB"
 
-LOOPBACK_TABLE_NAME = "LOOPBACK_INTERFACE"
 INTERFACE_TABLE_NAME = "INTERFACE"
 PORTCHANNEL_INTERFACE_TABLE_NAME = "PORTCHANNEL_INTERFACE"
 STATIC_ROUTE_TABLE_NAME = "STATIC_ROUTE"
@@ -28,10 +27,8 @@ LOCAL_CONFIG_TABLE = "config"
 LOCAL_NEXTHOP_TABLE = "nexthop"
 LOCAL_SRT_TABLE = "srt"
 LOCAL_BFD_TABLE = "bfd"
+LOCAL_BFD_PENDING_TABLE = "bfd_pending"
 LOCAL_INTERFACE_TABLE = "interface"
-
-LOOPBACK0_NAME = "Loopback0"
-LOOPBACK4096_NAME = "Loopback4096"
 
 def log_debug(msg):
     """ Send a message msg to the syslog as DEBUG """
@@ -106,6 +103,7 @@ class StaticRouteBfd(object):
         self.local_db[LOCAL_NEXTHOP_TABLE] = defaultdict(set)
         self.local_db[LOCAL_SRT_TABLE] = defaultdict(set)
         self.local_db[LOCAL_BFD_TABLE] = defaultdict(dict)
+        self.local_db[LOCAL_BFD_PENDING_TABLE] = defaultdict(dict)
         #interface, portchannel_interface and loopback_interface share same table, assume name is unique
         #assume only one ipv4  and/or one ipv6 for each interface
         self.local_db[LOCAL_INTERFACE_TABLE] = defaultdict(dict)
@@ -190,6 +188,7 @@ class StaticRouteBfd(object):
         else:
             value[is_ipv4] = ip
         self.set_local_db(LOCAL_INTERFACE_TABLE, if_name, value)
+        self.update_bfd_pending(if_name)
         return True
 
     def interface_del_handler(self, key):
@@ -213,19 +212,32 @@ class StaticRouteBfd(object):
         if len(ip)>0: #ip should be verified when add to local_db
             return True, ip
 
-        #if there is no ip for the interface, try loopback ip address
-        value = self.get_local_db(LOCAL_INTERFACE_TABLE, LOOPBACK4096_NAME)
-
-        lp4096_ip = value.get(is_ipv4, "")
-        if len(lp4096_ip)>0:
-            return True, lp4096_ip
-        value = self.get_local_db(LOCAL_INTERFACE_TABLE, LOOPBACK0_NAME)
-
-        lp0_ip = value.get(is_ipv4, "")
-        if len(lp0_ip)>0:
-            return True, lp0_ip
-
         return False, ""
+
+    def update_bfd_pending(self, if_name):
+        del_list=[]
+        for k, v in self.local_db[LOCAL_BFD_PENDING_TABLE].items():
+            if len(v) == 3 and v[0] == if_name:
+                intf, nh_ip, bfd_key = v[0], v[1], v[2]
+                valid, local_addr = self.find_interface_ip(intf, nh_ip)
+                if not valid: #IP address might not be available for this type of nh_ip (IPv4 or IPv6) yet
+                    continue
+                log_notice("bfd_pending: get ip for interface: %s, create bfd session for %s"%(intf, bfd_key))
+                bfd_entry_cfg = self.BFD_DEFAULT_CFG.copy()
+                if all([bfd_rx_interval, bfd_tx_interval, bfd_multiplier, bfd_multihop]):
+                    bfd_entry_cfg["multihop"] = bfd_multihop
+                    bfd_entry_cfg["rx_interval"] = bfd_rx_interval
+                    bfd_entry_cfg["tx_interval"] = bfd_tx_interval
+                    bfd_entry_cfg["multiplier"] = bfd_multiplier
+
+                bfd_entry_cfg["local_addr"] = local_addr
+                self.set_bfd_session_into_appl_db(bfd_key, bfd_entry_cfg)
+                bfd_entry_cfg["static_route"] = "true"
+                self.set_local_db(LOCAL_BFD_TABLE, bfd_key, bfd_entry_cfg)
+                del_list.append(k)
+
+        for k in del_list:
+            self.local_db[LOCAL_BFD_PENDING_TABLE].pop(k)
 
     def strip_table_name(self, key, splitter):
         return key.split(splitter, 1)[1]
@@ -448,7 +460,10 @@ class StaticRouteBfd(object):
             if len(self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key)) == 0 and len(bfd_session) == 0:
                 valid, local_addr = self.find_interface_ip(intf, nh_ip)
                 if not valid:
-                    log_warn("cannot find ip for interface: %s" %intf)
+                    #interface IP is not available yet, put this request to cache
+                    self.set_local_db(LOCAL_BFD_PENDING_TABLE, intf+"_"+bfd_key, [intf, nh_ip, bfd_key])
+                    self.append_to_nh_table_entry(nh_key, vrf + "|" + ip_prefix)
+                    log_warn("bfd_pending: cannot find ip for interface: %s, postpone bfd session creation" %intf)
                     continue
 
                 bfd_entry_cfg = self.BFD_DEFAULT_CFG.copy()
@@ -690,7 +705,6 @@ class StaticRouteBfd(object):
         self.subscribers.add(static_route_subscriber)
         self.subscribers.add(bfd_state_subscriber)
 
-        self.callbacks[self.config_db.getDbId()][LOOPBACK_TABLE_NAME].append(self.interface_callback)
         self.callbacks[self.config_db.getDbId()][INTERFACE_TABLE_NAME].append(self.interface_callback)
         self.callbacks[self.config_db.getDbId()][PORTCHANNEL_INTERFACE_TABLE_NAME].append(self.interface_callback)
         self.callbacks[self.config_db.getDbId()][STATIC_ROUTE_TABLE_NAME].append(self.static_route_callback)
