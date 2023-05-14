@@ -131,7 +131,6 @@ module test-vlan {
 				
 				}
                     
-
 				leaf tagging_mode {
 					mandatory true;
 					type head:vlan_tagging_mode;

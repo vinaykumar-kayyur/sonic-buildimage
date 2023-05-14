@@ -443,7 +443,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "link_training": "on"
+                        "link_training": "on",
+                        "mode":"trunk"
                     }
                 ]
             }
@@ -460,7 +461,8 @@
                         "lanes": "65",
                         "speed": 25000,
                         "tpid": "0x8100",
-                        "link_training": "off"
+                        "link_training": "off",
+                        "mode":"trunk"
                     }
                 ]
             }
