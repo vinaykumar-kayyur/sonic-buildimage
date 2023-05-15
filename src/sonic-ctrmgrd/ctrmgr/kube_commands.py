@@ -492,9 +492,14 @@ def _do_clean(feat, current_version, last_version):
     _, image_info, err = _run_command("docker images |grep {} |grep -v latest |awk '{{print $1,$2,$3}}'".format(feat))
     if image_info:
         version_dict = {}
+        version_dict_default = {}
         for info in image_info.split("\n"):
             rep, version, docker_id = info.split()
-            version_dict[version] = {DOCKER_ID: docker_id, REPO: rep}
+            if len(rep.split("/")) == 1:
+                version_dict_default[version] = {DOCKER_ID: docker_id, REPO: rep}
+            else:
+                version_dict[version] = {DOCKER_ID: docker_id, REPO: rep}
+
         if current_version in version_dict:
             image_prefix = version_dict[current_version][REPO]
             del version_dict[current_version]
@@ -502,20 +507,27 @@ def _do_clean(feat, current_version, last_version):
             out = "Current version {} doesn't exist.".format(current_version)
             ret = 0
             return ret, out, err
+        # should be only one item in version_dict_default
+        for k, v in version_dict_default.items():
+            local_version, local_repo, local_docker_id = k, v[REPO], v[DOCKER_ID]
+            tag_res, _, err = _run_command("docker tag {} {}:{} && docker rmi {}:{}".format(
+                local_docker_id, image_prefix, local_version, local_repo, local_version))
+            if tag_res == 0:
+                msg = "Tag {} local version images successfully".format(feat)
+                log_debug(msg)
+            else:
+                ret = 1
+                err = "Failed to tag {} local version images. Err: {}".format(feat, err)
+            return ret, out, err
+        
         if last_version in version_dict:
             del version_dict[last_version]
-        if last_version == "":
-            for k, v in version_dict.items():
-                if len(v[REPO].split("/")) == 1:
-                    local_version, local_repo, local_docker_id = k, v[REPO], v[DOCKER_ID]
-                    clean_res, _, err = _run_command("docker tag {} {}:{} && docker rmi {}:{}".format(
-                        local_docker_id, image_prefix, local_version, local_repo, local_version))
+        
+        versions = [item[DOCKER_ID] for item in version_dict.values()]
+        if versions:
+            clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(versions)))
         else:
-            versions = [item[DOCKER_ID] for item in version_dict.values()]
-            if versions:
-                clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(versions)))
-            else:
-                clean_res = 0
+            clean_res = 0
         if clean_res == 0:
             out = "Clean {} old version images successfully".format(feat)
         else:

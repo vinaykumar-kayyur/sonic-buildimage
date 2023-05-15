@@ -552,7 +552,7 @@ class FeatureTransitionHandler:
         self.st_data[key] = _update_entry(dflt_st_feat, data)
         remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        if (old_remote_state == REMOTE_READY) and (remote_state == REMOTE_RUNNING):
+        if (remote_state == REMOTE_RUNNING) and (old_remote_state != remote_state):
             # Tag latest
             start_time = datetime.datetime.now() + datetime.timedelta(
                     seconds=remote_ctr_config[TAG_IMAGE_LATEST])
@@ -592,13 +592,14 @@ class FeatureTransitionHandler:
                     format(remote_ctr_config[TAG_RETRY], self.start_time))
         else:
             last_version = self.st_data[feat][ST_FEAT_CTR_STABLE_VER]
-            if last_version != image_ver:
-                self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
-                    {ST_FEAT_CTR_STABLE_VER: image_ver,
-                    ST_FEAT_CTR_LAST_VER: last_version})
-                self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
-                self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
-                self.do_clean_image(feat, image_ver, last_version)
+            if last_version == image_ver:
+                last_version = self.st_data[feat][ST_FEAT_CTR_LAST_VER]
+            self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
+                {ST_FEAT_CTR_STABLE_VER: image_ver,
+                ST_FEAT_CTR_LAST_VER: last_version})
+            self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
+            self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
+            self.do_clean_image(feat, image_ver, last_version)
 
     def do_clean_image(self, feat, current_version, last_version):
         ret = kube_commands.clean_image(feat, current_version, last_version)
