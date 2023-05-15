@@ -1777,7 +1777,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['CONSOLE_PORT'] = console_ports
 
     # Get the global fabric monitoring data
-    curDir = os.getcwd()
     fabric_monitor = get_fabric_monitor_config(hwsku=hwsku, asic_name=asic_name)
     if bool( fabric_monitor ):
         results[ 'FABRIC_MONITOR' ] = fabric_monitor
