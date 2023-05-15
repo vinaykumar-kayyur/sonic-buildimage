@@ -23,6 +23,7 @@ Table of Contents
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
+         * [CRM DASH](#crm-dash)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
          * [Device Metadata](#device-metadata)  
@@ -33,8 +34,10 @@ Table of Contents
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [FABRIC_MONITOR](#fabric-monitor)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
+         * [IPv6 Link-local] (#ipv6-link-local)
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -44,7 +47,8 @@ Table of Contents
          * [Management port](#management-port)  
          * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [MUX_CABLE](#muxcable)  
+         * [MUX_CABLE](#mux_cable)  
+         * [NEIGH](#neigh)
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Peer Switch](#peer-switch)  
@@ -785,6 +789,62 @@ It currently allows user to administratively bring down a line-card or fabric-ca
 
 ```
 
+### CRM DASH
+
+```json
+{
+"CRM": {
+    "Config": {
+        "dash_vnet_threshold_type": "percentage",
+        "dash_vnet_low_threshold": "70",
+        "dash_vnet_high_threshold": "85",
+        "dash_eni_threshold_type": "percentage",
+        "dash_eni_low_threshold": "70",
+        "dash_eni_high_threshold": "85",
+        "dash_eni_ether_address_map_threshold_type": "percentage",
+        "dash_eni_ether_address_map_low_threshold": "70",
+        "dash_eni_ether_address_map_high_threshold": "85",
+        "dash_ipv4_inbound_routing_threshold_type": "percentage",
+        "dash_ipv4_inbound_routing_low_threshold": "70",
+        "dash_ipv4_inbound_routing_high_threshold": "85",
+        "dash_ipv6_inbound_routing_threshold_type": "percentage",
+        "dash_ipv6_inbound_routing_low_threshold": "70",
+        "dash_ipv6_inbound_routing_high_threshold": "85",
+        "dash_ipv4_outbound_routing_threshold_type": "percentage",
+        "dash_ipv4_outbound_routing_low_threshold": "70",
+        "dash_ipv4_outbound_routing_high_threshold": "85",
+        "dash_ipv6_outbound_routing_threshold_type": "percentage",
+        "dash_ipv6_outbound_routing_low_threshold": "70",
+        "dash_ipv6_outbound_routing_high_threshold": "85",
+        "dash_ipv4_pa_validation_threshold_type": "percentage",
+        "dash_ipv4_pa_validation_low_threshold": "70",
+        "dash_ipv4_pa_validation_high_threshold": "85",
+        "dash_ipv6_pa_validation_threshold_type": "percentage",
+        "dash_ipv6_pa_validation_low_threshold": "70",
+        "dash_ipv6_pa_validation_high_threshold": "85",
+        "dash_ipv4_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv4_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv4_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv6_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv6_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv6_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv4_acl_group_threshold_type": "percentage",
+        "dash_ipv4_acl_group_low_threshold": "70",
+        "dash_ipv4_acl_group_high_threshold": "85",
+        "dash_ipv6_acl_group_threshold_type": "percentage",
+        "dash_ipv6_acl_group_low_threshold": "70",
+        "dash_ipv6_acl_group_high_threshold": "85",
+        "dash_ipv4_acl_rule_threshold_type": "percentage",
+        "dash_ipv4_acl_rule_low_threshold": "70",
+        "dash_ipv4_acl_rule_high_threshold": "85",
+        "dash_ipv6_acl_rule_threshold_type": "percentage",
+        "dash_ipv6_acl_rule_low_threshold": "70",
+        "dash_ipv6_acl_rule_high_threshold": "85"
+    }
+  }
+}
+```
+
 ### Data Plane L3 Interfaces
 
 IP configuration for data plane are defined in **INTERFACE**, **VLAN_SUB_INTERFACE**,
@@ -985,6 +1045,21 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 }
 ```
 
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
+```
+
 
 ### FABRIC_PORT
 ```
@@ -1101,6 +1176,30 @@ The configuration is applied globally for each ECMP and LAG on a switch.
         }
     }
 }
+```
+
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
+
 ```
 
 ### KDUMP
@@ -1314,6 +1413,32 @@ The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_
 }
 ```
 
+### NEIGH
+
+The **NEIGH** table is used to keep track of resolved and static neighbors.
+
+Resolve case:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.3": { 
+            "family": "IPv4" 
+        }
+    }
+}
+```
+Static Nbr:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.5": { 
+            "neigh": "00:02:02:03:04:05",
+            "family": "IPv4" 
+        }
+    }
+}
+```
+
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
@@ -1522,7 +1647,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "channel": 1
+            "subport": 1
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1532,7 +1657,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "channel": 2
+            "subport": 2
         },
     }
 }
