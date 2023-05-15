@@ -59,6 +59,9 @@ TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
     exit 1
 }
 
+## Check if not a last stage of RFS build
+if [[ $RFS_SPLIT_LAST_STAGE != y ]]; then
+
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
@@ -71,10 +74,12 @@ touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 ## ensure proc is mounted
 sudo mount proc /proc -t proc || true
 
-## make / as a mountpoint in chroot env, needed by dockerd
-pushd $FILESYSTEM_ROOT
-sudo mount --bind . .
-popd
+if [[ $ENABLE_RFS_SPLIT_BUILD != y ]]; then
+    ## make / as a mountpoint in chroot env, needed by dockerd
+    pushd $FILESYSTEM_ROOT
+    sudo mount --bind . .
+    popd
+fi
 
 ## Build the host debian base system
 echo '[INFO] Build host debian base system...'
@@ -614,6 +619,46 @@ if [[ ! -f './asic_config_checksum' ]]; then
     exit 1
 fi
 sudo cp ./asic_config_checksum $FILESYSTEM_ROOT/etc/sonic/asic_config_checksum
+
+## Check if not a last stage of RFS build
+fi
+
+if [[ $RFS_SPLIT_FIRST_STAGE == y ]]; then
+    echo '[INFO] Finished with RFS first stage'
+    echo '[INFO] Umount all'
+
+    ## Display all process details access /proc
+    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
+    ## Kill the processes
+    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
+    ## Wait fuser fully kill the processes
+    sleep 15
+    sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc
+
+    sudo rm -f $TARGET_PATH/$RFS_SQUASHFS_NAME
+    sudo mksquashfs $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
+
+    exit 0
+fi
+
+if [[ $RFS_SPLIT_LAST_STAGE == y ]]; then
+    echo '[INFO] RFS build: second stage'
+
+    ## ensure proc is mounted
+    sudo mount proc /proc -t proc || true
+
+    sudo fuser -vm $FILESYSTEM_ROOT || true
+    sudo rm -rf $FILESYSTEM_ROOT
+    sudo unsquashfs -d $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
+
+    ## make / as a mountpoint in chroot env, needed by dockerd
+    pushd $FILESYSTEM_ROOT
+    sudo mount --bind . .
+    popd
+
+    trap_push 'sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true'
+    sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
+fi
 
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $IMAGE_DISTRO

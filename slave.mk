@@ -90,6 +90,7 @@ export BUILD_WORKDIR
 export GZ_COMPRESS_PROGRAM
 export MIRROR_SNAPSHOT
 export SONIC_OS_VERSION
+export ENABLE_RFS_SPLIT_BUILD
 
 ###############################################################################
 ## Utility rules
@@ -444,6 +445,7 @@ $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
 endif
 $(info "CROSS_BUILD_ENVIRON"             : "$(CROSS_BUILD_ENVIRON)")
 $(info "GZ_COMPRESS_PROGRAM"             : "$(GZ_COMPRESS_PROGRAM)")
+$(info "ENABLE_RFS_SPLIT_BUILD"          : "$(ENABLE_RFS_SPLIT_BUILD)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
@@ -1211,6 +1213,60 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 ## Installers
 ###############################################################################
 
+ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
+define rfs_get_installer_dependencies
+$(1)__$($(1)_MACHINE)__rfs.squashfs $(if $($(1)_DEPENDENT_MACHINE),$(1)__$($(1)_DEPENDENT_MACHINE)__rfs.squashfs)
+endef
+
+$(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
+
+SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
+endif
+
+$(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
+        .platform \
+        build_debian.sh \
+        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL))
+	$(HEADER)
+
+	$(eval installer=$(word 1,$(subst __, ,$*)))
+	$(eval machine=$(word 2,$(subst __, ,$*)))
+
+	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
+	export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
+	export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
+	export kversion="$(KVERSION)"
+	export image_type="$($(installer)_IMAGE_TYPE)"
+	export sonicadmin_user="$(USERNAME)"
+	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
+	export RFS_SPLIT_FIRST_STAGE=y
+
+	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
+	j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
+
+	RFS_SQUASHFS_NAME=$* \
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+	CHANGE_DEFAULT_PASSWORD="$(CHANGE_DEFAULT_PASSWORD)" \
+	TARGET_MACHINE=$(machine) \
+	IMAGE_TYPE=$($(installer)_IMAGE_TYPE) \
+	TARGET_PATH=$(TARGET_PATH) \
+	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
+	SONIC_ENABLE_SECUREBOOT_SIGNATURE="$(SONIC_ENABLE_SECUREBOOT_SIGNATURE)" \
+	SIGNING_KEY="$(SIGNING_KEY)" \
+	SIGNING_CERT="$(SIGNING_CERT)" \
+	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+	DBGOPT='$(DBGOPT)' \
+	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
+	CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
+	MASTER_KUBERNETES_VERSION=$(MASTER_KUBERNETES_VERSION) \
+	MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
+		./build_debian.sh $(LOG)
+
+	$(FOOTER)
+
 # targets for building installers with base image
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         .platform \
@@ -1265,7 +1321,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(FILES_PATH)/,$($(SONIC_CTRMGRD)_FILES)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SYSTEM_HEALTH)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3))
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3)) \
+        $(if $(findstring y,$(ENABLE_RFS_SPLIT_BUILD)),$$(addprefix $(TARGET_PATH)/,$$($$*_RFS_DEPENDS)))
+
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
@@ -1421,6 +1479,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x sonic_debian_extension.sh,
 	)
 
+	export RFS_SPLIT_FIRST_STAGE=n
+	export RFS_SPLIT_LAST_STAGE="$(ENABLE_RFS_SPLIT_BUILD)"
+
 	# Build images for the MACHINE, DEPENDENT_MACHINE defined.
 	$(foreach dep_machine, $($*_MACHINE) $($*_DEPENDENT_MACHINE), \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
@@ -1428,6 +1489,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 			scripts/dbg_files.sh
 
+		RFS_SQUASHFS_NAME=$*__$(dep_machine)__rfs.squashfs \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 		USERNAME="$(USERNAME)" \
