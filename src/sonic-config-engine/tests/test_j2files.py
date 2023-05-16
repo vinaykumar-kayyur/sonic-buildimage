@@ -33,6 +33,7 @@ class TestJ2Files(TestCase):
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
         self.arista7050_t0_minigraph = os.path.join(self.test_dir, 'sample-arista-7050-t0-minigraph.xml')
         self.arista7800r3_48cq2_lc_t2_minigraph = os.path.join(self.test_dir, 'sample-arista-7800r3-48cq2-lc-t2-minigraph.xml')
+        self.arista7800r3_48cqm2_lc_t2_minigraph = os.path.join(self.test_dir, 'sample-arista-7800r3-48cqm2-lc-t2-minigraph.xml')
         self.arista7800r3a_36dm2_c36_lc_t2_minigraph = os.path.join(self.test_dir, 'sample-arista-7800r3a-36dm2-c36-lc-t2-minigraph.xml')
         self.arista7800r3a_36dm2_d36_lc_t2_minigraph = os.path.join(self.test_dir, 'sample-arista-7800r3a-36dm2-d36-lc-t2-minigraph.xml')
         self.multi_asic_minigraph = os.path.join(self.test_dir, 'multi_npu_data', 'sample-minigraph.xml')
