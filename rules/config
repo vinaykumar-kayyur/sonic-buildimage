@@ -165,7 +165,7 @@ ENABLE_AUTO_TECH_SUPPORT = y
 
 # ENABLE_NATIVE_WRITE - Enable native write/config operations via the gNMI interface.
 # Uncomment to enable:
-# ENABLE_NATIVE_WRITE = y
+ENABLE_NATIVE_WRITE = y
 
 # INCLUDE_MACSEC - build docker-macsec for macsec support
 INCLUDE_MACSEC = y
@@ -188,6 +188,7 @@ KUBE_DOCKER_PROXY = http://172.16.1.1:3128/
 # NOTE: As a worker node it has to run version compatible to kubernetes master.
 #
 KUBERNETES_VERSION = 1.22.2-00
+KUBERNETES_CNI_VERSION = 0.8.7-00
 K8s_GCR_IO_PAUSE_VERSION = 3.5
 
 # INCLUDE_KUBERNETES_MASTER - if set to y kubernetes packages are installed o be able 
@@ -220,6 +221,17 @@ SONIC_ENABLE_IMAGE_SIGNATURE ?= n
 # The absolute path should be provided.
 SONIC_ENABLE_SECUREBOOT_SIGNATURE ?= n
 
+# Full Secure Boot feature flags.
+# SECURE_UPGRADE_DEV_SIGNING_KEY - path to development signing key, used for image signing during build
+# SECURE_UPGRADE_SIGNING_CERT - path to development signing certificate, used for image signing during build
+# SECURE_UPGRADE_MODE - enum value for secure upgrade mode, valid options are "dev", "prod" and "no_sign"
+# SECURE_UPGRADE_PROD_SIGNING_TOOL - path to a vendor signing tool for production flow.
+# SECURE_UPGRADE_PROD_TOOL_ARGS - Extra arguments options for vendor to use to run his specific prod signing script
+SECURE_UPGRADE_DEV_SIGNING_KEY ?= 
+SECURE_UPGRADE_SIGNING_CERT ?= 
+SECURE_UPGRADE_MODE = "no_sign"
+SECURE_UPGRADE_PROD_SIGNING_TOOL ?=
+SECURE_UPGRADE_PROD_TOOL_ARGS ?=
 # PACKAGE_URL_PREFIX - the package url prefix
 PACKAGE_URL_PREFIX ?= https://packages.trafficmanager.net/public/packages
 
@@ -254,6 +266,7 @@ SONIC_VERSION_CACHE_SOURCE ?= $(SONIC_DPKG_CACHE_SOURCE)/vcache
 # Set the env variable ENABLE_DOCKER_BASE_PULL = y to enable pulling sonic-slave docker from registry
 REGISTRY_PORT ?= 443
 REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
+REGISTRY_SERVER_PATH ?=
 
 # BUILD_MULTIASIC_KVM - if set to y multi-asic KVM images will be generated.
 BUILD_MULTIASIC_KVM = n
@@ -284,3 +297,6 @@ SONIC_SLAVE_DOCKER_DRIVER ?= vfs
 # GZ_COMPRESS_PROGRAM - select pigz (a parallel implementation of gzip) to reduce a build time
 # and speed up a decompression of docker images on target system
 GZ_COMPRESS_PROGRAM ?= gzip
+
+# SONIC_OS_VERSION - sonic os version
+SONIC_OS_VERSION ?= 11

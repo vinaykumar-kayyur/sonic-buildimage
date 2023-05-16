@@ -45,6 +45,7 @@ DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 BUILD_WORKDIR = /sonic
 DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
+SLAVE_DIR ?= sonic-slave-$(BLDENV)
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -88,6 +89,7 @@ export BLDENV
 export BUILD_WORKDIR
 export GZ_COMPRESS_PROGRAM
 export MIRROR_SNAPSHOT
+export SONIC_OS_VERSION
 
 ###############################################################################
 ## Utility rules
@@ -377,6 +379,11 @@ $(info "SONIC_USE_DOCKER_BUILDKIT"       : "$(SONIC_USE_DOCKER_BUILDKIT)")
 $(info "USERNAME"                        : "$(USERNAME)")
 $(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "CHANGE_DEFAULT_PASSWORD"         : "$(CHANGE_DEFAULT_PASSWORD)")
+$(info "SECURE_UPGRADE_MODE"             : "$(SECURE_UPGRADE_MODE)")
+$(info "SECURE_UPGRADE_DEV_SIGNING_KEY"  : "$(SECURE_UPGRADE_DEV_SIGNING_KEY)")
+$(info "SECURE_UPGRADE_SIGNING_CERT" : "$(SECURE_UPGRADE_SIGNING_CERT)")
+$(info "SECURE_UPGRADE_PROD_SIGNING_TOOL": "$(SECURE_UPGRADE_PROD_SIGNING_TOOL)")
+$(info "SECURE_UPGRADE_PROD_TOOL_ARGS"   : "$(SECURE_UPGRADE_PROD_TOOL_ARGS)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
@@ -449,6 +456,8 @@ include Makefile.cache
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
 $(warning "Using SONIC_USE_DOCKER_BUILDKIT will produce larger installable SONiC image because of a docker bug (more details: https://github.com/moby/moby/issues/38903)")
 export DOCKER_BUILDKIT=1
+else
+export DOCKER_BUILDKIT=0
 endif
 
 
@@ -536,10 +545,25 @@ endef
 #     SOME_NEW_DEB = some_new_deb.deb
 #     $(SOME_NEW_DEB)_PATH = path/to/some_new_deb.deb
 #     SONIC_COPY_DEBS += $(SOME_NEW_DEB)
-$(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS)) : $(DEBS_PATH)/% : .platform
+$(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS)) : $(DEBS_PATH)/% : .platform \
+	$(call dpkg_depend,$(DEBS_PATH)/%.dep)
+
 	$(HEADER)
-	$(foreach deb,$* $($*_DERIVED_DEBS), \
-	    { cp $($(deb)_PATH)/$(deb) $(DEBS_PATH)/ $(LOG) || exit 1 ; } ; )
+
+	# Load the target deb from DPKG cache
+	$(call LOAD_CACHE,$*,$@)
+
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($*_CACHE_LOADED)' ] ; then
+
+		$(foreach deb,$* $($*_DERIVED_DEBS), \
+			{ cp $($(deb)_PATH)/$(deb) $(DEBS_PATH)/ $(LOG) || exit 1 ; } ; )
+
+		# Save the target deb into DPKG cache
+		$(call SAVE_CACHE,$*,$@)
+
+	fi
+
 	$(FOOTER)
 
 
@@ -573,8 +597,8 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform \
 	# Load the target deb from DPKG cache
 	$(call LOAD_CACHE,$*,$@)
 
-	# Skip building the target if it is already loaded from cache
-	if [ -z '$($*_CACHE_LOADED)' ] ; then
+	# Skip building the target if it is already loaded from cache or exists in target/ directory
+	if [ -z '$($*_CACHE_LOADED)' ] && [ ! -e $(DEBS_PATH)/$* ] ; then
 
 		$(foreach deb,$* $($*_DERIVED_DEBS), \
 			{ SKIP_BUILD_HOOK=$($*_SKIP_VERSION) curl -L -f -o $(DEBS_PATH)/$(deb) $($(deb)_CURL_OPTIONS) $($(deb)_URL) $(LOG) || { exit 1 ; } } ; )
@@ -1258,6 +1282,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_ztp="$(ENABLE_ZTP)"
 	export include_teamd="$(INCLUDE_TEAMD)"
 	export include_router_advertiser="$(INCLUDE_ROUTER_ADVERTISER)"
+	export sonic_su_dev_signing_key="$(SECURE_UPGRADE_DEV_SIGNING_KEY)"
+	export sonic_su_signing_cert="$(SECURE_UPGRADE_SIGNING_CERT)"
+	export sonic_su_mode="$(SECURE_UPGRADE_MODE)"
+	export sonic_su_prod_signing_tool="/sonic/scripts/$(shell basename -- $(SECURE_UPGRADE_PROD_SIGNING_TOOL))"
 	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
 	export include_restapi="$(INCLUDE_RESTAPI)"
 	export include_nat="$(INCLUDE_NAT)"
@@ -1331,14 +1359,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
 			)
 		fi
-		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
-			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
-
-			# Set the flag GLOBAL_TIMER for all the global system-wide dockers timers.
-			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_GLOBAL_TIMER = yes)
-			)
-		fi
 		# Any service template, inside instance directory, will be used to generate .service and @.service file.
 		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			export multi_instance="true"
@@ -1348,16 +1368,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)
 			export multi_instance="false"
 			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
-		fi
-		# Any timer template, inside instance directory, will be used to generate .timer and @.timer file.
-		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
-			export multi_instance="true"
-			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.timer
-			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE_TIMER = yes)
-			)
-			export multi_instance="false"
-			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
 		fi
 		# Any service template, inside share_image directory, will be used to generate -chassis.service file.
 		# TODO: need better way to name the image-shared service
@@ -1395,20 +1405,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			$(eval SERVICES += "$(addsuffix -chassis.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
 		)
 	)
-	# Marks template timers with an "@" according to systemd convention
-	# If the $($docker)_TEMPLATE_TIMER) variable is set, the timer will be treated as a template
-	# If the $($docker)_GLOBAL_TIMER) and $($docker)_TEMPLATE_TIMER) variables are set the timer will be added both as a global and template timer.
-	$(foreach docker, $($*_DOCKERS),\
-		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE_TIMER),\
-			$(if $($(docker:-dbg.gz=.gz)_GLOBAL_TIMER),\
-				$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
-			)\
-			$(eval TIMERS += "$(addsuffix @.timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
-			$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
-		)
-	)
 	export installer_services="$(SERVICES)"
-	export installer_timers="$(TIMERS)"
 
 	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
 
@@ -1458,6 +1455,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		TARGET_MACHINE=$(dep_machine) \
 		IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
+		SECURE_UPGRADE_MODE="$(SECURE_UPGRADE_MODE)" \
+		SECURE_UPGRADE_DEV_SIGNING_KEY="$(SECURE_UPGRADE_DEV_SIGNING_KEY)" \
+		SECURE_UPGRADE_SIGNING_CERT="$(SECURE_UPGRADE_SIGNING_CERT)" \
+		SECURE_UPGRADE_PROD_SIGNING_TOOL="$(SECURE_UPGRADE_PROD_SIGNING_TOOL)" \
+		SECURE_UPGRADE_PROD_TOOL_ARGS="$(SECURE_UPGRADE_PROD_TOOL_ARGS)" \
 		SIGNING_KEY="$(SIGNING_KEY)" \
 		SIGNING_CERT="$(SIGNING_CERT)" \
 		CA_CERT="$(CA_CERT)" \

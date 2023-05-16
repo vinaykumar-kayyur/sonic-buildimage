@@ -1,3 +1,4 @@
+=======
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -18,19 +19,24 @@ Table of Contents
          * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
          * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
          * [Cable length](#cable-length)  
+         * [Chassis module](#chassis-module)         
          * [COPP_TABLE](#copp_table)  
          * [Console](#console)  
          * [CRM](#crm)  
+         * [CRM DASH](#crm-dash)  
          * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
          * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
          * [Device Metadata](#device-metadata)  
-         * [Device neighbor metada](#device-neighbor-metada)  
+         * [Device neighbor metada](#device-neighbor-metada)
+         * [DHCP_RELAY](#dhcp_relay)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [FABRIC_MONITOR](#fabric-monitor)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
+         * [IPv6 Link-local] (#ipv6-link-local)
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -40,7 +46,8 @@ Table of Contents
          * [Management port](#management-port)  
          * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [MUX_CABLE](#muxcable)  
+         * [MUX_CABLE](#mux_cable)  
+         * [NEIGH](#neigh)
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
          * [Peer Switch](#peer-switch)  
@@ -648,6 +655,25 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 
 ```
 
+### Chassis Module
+
+CHASSIS_MODULE table holds the list and configuration of linecard and fabric modules in a SONiC chassis.
+It currently allows user to administratively bring down a line-card or fabric-card
+
+```
+{
+    "CHASSIS_MODULE": {
+        "LINE-CARD0": {
+            "admin_status": "down"
+        },
+        "FABRIC-CARD1": {
+            "admin_status": "down"
+        }
+    }
+}
+
+```
+
 ### COPP_TABLE
 
 ```
@@ -762,6 +788,62 @@ This kind of profiles will be handled by buffer manager and won't be applied to 
 
 ```
 
+### CRM DASH
+
+```json
+{
+"CRM": {
+    "Config": {
+        "dash_vnet_threshold_type": "percentage",
+        "dash_vnet_low_threshold": "70",
+        "dash_vnet_high_threshold": "85",
+        "dash_eni_threshold_type": "percentage",
+        "dash_eni_low_threshold": "70",
+        "dash_eni_high_threshold": "85",
+        "dash_eni_ether_address_map_threshold_type": "percentage",
+        "dash_eni_ether_address_map_low_threshold": "70",
+        "dash_eni_ether_address_map_high_threshold": "85",
+        "dash_ipv4_inbound_routing_threshold_type": "percentage",
+        "dash_ipv4_inbound_routing_low_threshold": "70",
+        "dash_ipv4_inbound_routing_high_threshold": "85",
+        "dash_ipv6_inbound_routing_threshold_type": "percentage",
+        "dash_ipv6_inbound_routing_low_threshold": "70",
+        "dash_ipv6_inbound_routing_high_threshold": "85",
+        "dash_ipv4_outbound_routing_threshold_type": "percentage",
+        "dash_ipv4_outbound_routing_low_threshold": "70",
+        "dash_ipv4_outbound_routing_high_threshold": "85",
+        "dash_ipv6_outbound_routing_threshold_type": "percentage",
+        "dash_ipv6_outbound_routing_low_threshold": "70",
+        "dash_ipv6_outbound_routing_high_threshold": "85",
+        "dash_ipv4_pa_validation_threshold_type": "percentage",
+        "dash_ipv4_pa_validation_low_threshold": "70",
+        "dash_ipv4_pa_validation_high_threshold": "85",
+        "dash_ipv6_pa_validation_threshold_type": "percentage",
+        "dash_ipv6_pa_validation_low_threshold": "70",
+        "dash_ipv6_pa_validation_high_threshold": "85",
+        "dash_ipv4_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv4_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv4_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv6_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv6_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv6_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv4_acl_group_threshold_type": "percentage",
+        "dash_ipv4_acl_group_low_threshold": "70",
+        "dash_ipv4_acl_group_high_threshold": "85",
+        "dash_ipv6_acl_group_threshold_type": "percentage",
+        "dash_ipv6_acl_group_low_threshold": "70",
+        "dash_ipv6_acl_group_high_threshold": "85",
+        "dash_ipv4_acl_rule_threshold_type": "percentage",
+        "dash_ipv4_acl_rule_low_threshold": "70",
+        "dash_ipv4_acl_rule_high_threshold": "85",
+        "dash_ipv6_acl_rule_threshold_type": "percentage",
+        "dash_ipv6_acl_rule_low_threshold": "70",
+        "dash_ipv6_acl_rule_high_threshold": "85"
+    }
+  }
+}
+```
+
 ### Data Plane L3 Interfaces
 
 IP configuration for data plane are defined in **INTERFACE**, **VLAN_SUB_INTERFACE**,
@@ -873,6 +955,22 @@ instance is supported in SONiC.
 
 ```
 
+### DHCP_RELAY
+
+```
+{
+"DHCP_RELAY": {
+    "dhcpv6_servers": [
+        "fc02:2000::1",
+        "fc02:2000::2",
+        "fc02:2000::3",
+        "fc02:2000::4"
+    ],
+    "rfc6939_support": "true",
+    "interface_id": "true"
+}
+
+```
 
 ### DSCP_TO_TC_MAP
 ```
@@ -944,6 +1042,21 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 	    "FG_NHG": "fgnhg_v6"
 	}
 }
+```
+
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
 ```
 
 
@@ -1042,6 +1155,30 @@ The configuration is applied globally for each ECMP and LAG on a switch.
         }
     }
 }
+```
+
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
+
 ```
 
 ### KDUMP
@@ -1255,6 +1392,32 @@ The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_
 }
 ```
 
+### NEIGH
+
+The **NEIGH** table is used to keep track of resolved and static neighbors.
+
+Resolve case:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.3": { 
+            "family": "IPv4" 
+        }
+    }
+}
+```
+Static Nbr:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.5": { 
+            "neigh": "00:02:02:03:04:05",
+            "family": "IPv4" 
+        }
+    }
+}
+```
+
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
@@ -1451,6 +1614,33 @@ optional attributes.
         }
     }
 }
+
+2x100G port breakout
+{
+"PORT": {
+        "Ethernet0": {
+            "admin_status": "up",
+            "index": "1",
+            "lanes": "101,102,103,104",
+            "description": "etp1a",
+            "mtu": "9100",
+            "alias": "etp1a",
+            "speed": "100000",
+            "subport": 1
+        },
+        "Ethernet4": {
+            "admin_status": "up",
+            "index": "1",
+            "lanes": "105,106,107,108",
+            "description": "etp1b",
+            "mtu": "9100",
+            "alias": "etp1b",
+            "speed": "100000",
+            "subport": 2
+        },
+    }
+}
+
 
 ```
 

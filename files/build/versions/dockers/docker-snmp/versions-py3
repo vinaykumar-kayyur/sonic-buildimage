@@ -1,6 +1,4 @@
-async-timeout==4.0.2
-hiredis==2.2.2
-psutil==5.9.4
+hiredis==2.2.3
+psutil==5.9.5
 python-arptable==0.0.2
-redis==4.5.1
 smbus==1.1.post2

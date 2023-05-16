@@ -121,6 +121,13 @@ module sonic-port{
 					}
 				}
 
+				leaf subport {
+					description "Logical subport(s) for physical port breakout";
+					type uint8 {
+						range 0..8;
+					}
+				}
+
 				leaf index {
 					type uint16;
 				}
