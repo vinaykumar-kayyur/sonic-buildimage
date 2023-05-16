@@ -293,7 +293,7 @@ class TestJ2Files(TestCase):
     def test_qos_arista7050_render_template(self):
         self._test_qos_render_template('arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S', 'sample-arista-7050-t0-minigraph.xml', 'qos-arista7050.json')
 
-    def do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template(self, platform, hwsku):
+    def do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template(self, platform, hwsku, minigraph, qos_sample_output, buffer_sample_output):
         arista_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'arista', platform, hwsku)
         qos_file = os.path.join(arista_dir_path, 'qos.json.j2')
         buffer_file = os.path.join(arista_dir_path, 'buffers.json.j2')
@@ -305,9 +305,9 @@ class TestJ2Files(TestCase):
         buffer_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'buffers_config.j2')
         shutil.copy2(buffer_config_file, arista_dir_path)
 
-        for template_file, cfg_file, sample_output_file in [(qos_file, 'qos_config.j2', 'qos-arista7800r3-48cq2-lc.json'),
-                                                            (buffer_file, 'buffers_config.j2', 'buffer-arista7800r3-48cq2-lc.json') ]:
-            argument = ['-m', self.arista7800r3_48cq2_lc_t2_minigraph, '-p', port_config_ini_file, '-t', template_file]
+        for template_file, cfg_file, sample_output_file in [(qos_file, 'qos_config.j2', qos_sample_output),
+                                                            (buffer_file, 'buffers_config.j2', buffer_sample_output) ]:
+            argument = ['-m', minigraph, '-p', port_config_ini_file, '-t', template_file]
             self.run_script(argument, output_file=self.output_file)
 
             # cleanup
@@ -318,10 +318,14 @@ class TestJ2Files(TestCase):
             assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
     def test_qos_and_buffer_arista7800r3_48cq2_lc_render_template(self):
-        self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cq2_lc', 'Arista-7800R3-48CQ2-C48')
+        self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cq2_lc', 'Arista-7800R3-48CQ2-C48',\
+                                                                           self.arista7800r3_48cq2_lc_t2_minigraph, 'qos-arista7800r3-48cq2-lc.json',\
+                                                                           'buffer-arista7800r3-48cq2-lc.json')
 
     def test_qos_and_buffer_arista7800r3_48cqm2_lc_render_template(self):
-        self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cqm2_lc', 'Arista-7800R3-48CQM2-C48')
+        self.do_test_qos_and_buffer_arista7800r3_48cq2_lc_render_template('x86_64-arista_7800r3_48cqm2_lc', 'Arista-7800R3-48CQM2-C48',\
+                                                                           self.arista7800r3_48cqm2_lc_t2_minigraph, 'qos-arista7800r3-48cqm2-lc.json',\
+                                                                           'buffer-arista7800r3-48cqm2-lc.json')
 
     def do_test_qos_and_buffer_lc_render_template(self, platform, vendor, hwsku, minigraph, qos_sample_output, buffer_sample_output):
         dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', vendor, platform, hwsku)
