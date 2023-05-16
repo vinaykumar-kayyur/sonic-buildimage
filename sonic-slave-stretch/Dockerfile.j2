@@ -24,7 +24,7 @@ RUN echo "deb [arch=armhf] http://packages.trafficmanager.net/snapshot/debian/20
         echo "deb-src [arch=armhf] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=armhf] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list
+        echo 'deb [arch=armhf] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch-backports main' >> /etc/apt/sources.list
 {%- elif CONFIGURED_ARCH == "arm64" %}
 RUN echo "deb [arch=arm64] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch main contrib non-free" >> /etc/apt/sources.list && \
@@ -32,7 +32,7 @@ RUN echo "deb [arch=arm64] http://packages.trafficmanager.net/snapshot/debian/20
         echo "deb-src [arch=arm64] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=arm64] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list
+        echo 'deb [arch=arm64] http://packages.trafficmanager.net/snapshot/debian/20230101T000234Z/ stretch-backports main' >> /etc/apt/sources.list
 {%- endif %}
 
 ## Make apt-get non-interactive
