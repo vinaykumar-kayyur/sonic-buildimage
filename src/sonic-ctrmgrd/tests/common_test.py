@@ -185,6 +185,7 @@ class mock_container:
         self.actions = []
         self.name = name
         self.image = mock_image(self.actions)
+        self.attrs = {"Config": {"Env": ["IMAGE_VERSION=20201231.11"]}}
 
 
     def start(self):
