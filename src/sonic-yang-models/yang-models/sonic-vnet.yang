@@ -43,11 +43,13 @@ module sonic-vnet {
                 key "name";
                 
                 leaf name {
+                    description "An alphanumaric string to represent the name of the unique vnet";
                     type string;
                 }
 
                 leaf vxlan_tunnel {
                     mandatory true;
+                    description "A valid and active vxlan tunnel to be used with this vnet for traffic encapsulation.";
                     type leafref {
                         path "/svxlan:sonic-vxlan/svxlan:VXLAN_TUNNEL/svxlan:VXLAN_TUNNEL_LIST/svxlan:name";
                     }
@@ -55,6 +57,7 @@ module sonic-vnet {
                 
                 leaf vni {
                     mandatory true;
+                    description "A valid and unique vni which will become part of the encapsulated traffic header.";
                     type stypes:vnid_type;
                 }
 
@@ -65,6 +68,7 @@ module sonic-vnet {
                 }
 
                 leaf guid {
+                    description "An optional guid.";
                     type string {
                         length 1..255;
                     }
