@@ -163,7 +163,7 @@ stop() {
 
     stopplatform1
 
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
+    if [[ x"$WARM_BOOT" == x"true" ]] && [[ x$sonic_asic_platform == x"cisco-8000" ]]; then
         /usr/bin/${SERVICE}.sh stop $DEV &
     else
         /usr/bin/${SERVICE}.sh stop $DEV
