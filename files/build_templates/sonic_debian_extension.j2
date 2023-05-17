@@ -787,44 +787,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install statsd
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-storage-blob azure-identity
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install kubernetes
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable mdm.service
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubelet.service
-# Install mdsd
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install azure-mdsd wget
-# install td-agent, https://eng.ms/docs/products/geneva/collect/instrument/linux/fluentd
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/td-agent-apt-source.deb -fsSL \
-    https://packages.treasuredata.com/4/debian/buster/pool/contrib/f/fluentd-apt-source/fluentd-apt-source_2020.8.25-1_all.deb
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/td-agent-apt-source.deb
-sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/td-agent-apt-source.deb
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install td-agent
-# install mdsd plugin, https://github.com/Azure/fluentd-plugin-mdsd
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/fluent-plugin-mdsd-0.1.9.pre.build.master.71-td.amd64.gem -fsSL \
-    https://github.com/Azure/fluentd-plugin-mdsd/releases/download/0.1.9/fluent-plugin-mdsd-0.1.9.pre.build.master.71-td.amd64.gem
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get install make libcurl4-gnutls-dev --yes
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get install build-essential -y
-sudo LANG=C chroot $FILESYSTEM_ROOT /opt/td-agent/bin/fluent-gem install /tmp/fluent-plugin-mdsd-0.1.9.pre.build.master.71-td.amd64.gem
-sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/fluent-plugin-mdsd-0.1.9.pre.build.master.71-td.amd64.gem
-sudo LANG=C chroot $FILESYSTEM_ROOT mkdir -p /var/log/fluentd_journald/
-sudo LANG=C chroot $FILESYSTEM_ROOT chmod 777 /var/log/fluentd_journald
-# install systemd plugin
-sudo LANG=C chroot $FILESYSTEM_ROOT td-agent-gem install fluent-plugin-systemd -v 1.0.3
-sudo LANG=C chroot $FILESYSTEM_ROOT usermod -a -G systemd-journal td-agent
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable mdsd.service
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable td-agent.service
-# fix ruby package compliance issue
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install git gcc g++
-sudo LANG=C chroot $FILESYSTEM_ROOT td-agent-gem update --system
-DIAG_GEM="/opt/td-agent/lib/ruby/gems/2.7.0/gems/fluent-diagtool-1.0.1/Gemfile"
-PLUG_GEM="/opt/td-agent/lib/ruby/gems/2.7.0/gems/fluent-plugin-td-1.2.0/Gemfile"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "BUNDLE_GEMFILE=${DIAG_GEM} /opt/td-agent/bin/bundle update --all"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "BUNDLE_GEMFILE=${PLUG_GEM} /opt/td-agent/bin/bundle update --all"
-FLUENTD_DIR="/opt/td-agent/lib/ruby/gems/2.7.0/gems/fluentd-0.12.43"
-FLUENTD_GEM="${FLUENTD_DIR}/fluentd.gemspec"
-sudo LANG=C chroot $FILESYSTEM_ROOT sed -i 's/">= 0.5.1", "< 0.7.0"/">=0.8.0"/' ${FLUENTD_GEM}
-sudo LANG=C chroot $FILESYSTEM_ROOT td-agent-gem build -C ${FLUENTD_DIR} -o /tmp/fluentd.gem
-sudo LANG=C chroot $FILESYSTEM_ROOT td-agent-gem install /tmp/fluentd.gem
-sudo LANG=C chroot $FILESYSTEM_ROOT td-agent-gem uninstall http_parser.rb -v 0.6.0
 # Add kubernetes master entrance
 sudo cp files/image_config/kubernetes/kubernetes_master_entrance.sh $FILESYSTEM_ROOT/usr/sbin/
 sudo sed -i '/^exit 0/i\bash /usr/sbin/kubernetes_master_entrance.sh' $FILESYSTEM_ROOT/etc/rc.local
