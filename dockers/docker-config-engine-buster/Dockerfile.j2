@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-base-buster
+FROM docker-base-buster-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,6 +22,9 @@ RUN apt-get install -y        \
 # https://github.com/robshakir/pyangbind/issues/232
 RUN pip3 install pyangbind==0.8.1
 RUN pip3 uninstall -y enum34
+
+# Install python-redis
+RUN pip3 install redis==4.5.4
 
 {% if docker_config_engine_buster_debs.strip() %}
 # Copy locally-built Debian package dependencies
@@ -49,4 +52,4 @@ RUN apt-get purge -y               \
     apt-get clean -y            && \
     apt-get autoclean -y        && \
     apt-get autoremove -y       && \
-    rm -rf /debs /python-wheels
+    rm -rf /debs /python-wheels ~/.cache

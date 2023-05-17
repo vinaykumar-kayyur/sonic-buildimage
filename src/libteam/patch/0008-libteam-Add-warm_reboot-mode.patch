@@ -1,16 +1,17 @@
-From a4ab4de68134f6425f704a2ddcda33a4930645de Mon Sep 17 00:00:00 2001
+From cdc7eb674bb779b9e5181921e4c7c2b2f0a0db41 Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
 Date: Tue, 3 Mar 2020 13:04:57 -0800
 Subject: [PATCH] [libteam]: Reimplement Warm-Reboot procedure'
 
 ---
  libteam/ifinfo.c          |   6 +-
+ libteam/ports.c           |  19 +-
  teamd/teamd.c             |  51 +++-
  teamd/teamd.h             |   6 +
  teamd/teamd_events.c      |  13 ++
  teamd/teamd_per_port.c    |   6 +
- teamd/teamd_runner_lacp.c | 474 +++++++++++++++++++++++++++++++++++---
- 6 files changed, 512 insertions(+), 44 deletions(-)
+ teamd/teamd_runner_lacp.c | 475 +++++++++++++++++++++++++++++++++++---
+ 7 files changed, 530 insertions(+), 46 deletions(-)
 
 diff --git a/libteam/ifinfo.c b/libteam/ifinfo.c
 index 46d56a2..b86d34c 100644
@@ -34,8 +35,60 @@ index 46d56a2..b86d34c 100644
  		set_changed(ifinfo, CHANGED_HWADDR);
  	}
  }
+diff --git a/libteam/ports.c b/libteam/ports.c
+index 9ebf30f..0bd7cc0 100644
+--- a/libteam/ports.c
++++ b/libteam/ports.c
+@@ -128,6 +128,12 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *port_attrs[TEAM_ATTR_PORT_MAX + 1];
+ 	int i;
+ 	uint32_t team_ifindex = 0;
++	/*
++	 * In case get_port_list is being called from check_call_change_handlers recursively,
++	 * there can be some attributes which have not been consumed by callbacks.
++	 * In this case, we should only merge the new attributes into the existing ones without clearing them
++	 */
++	bool recursive = (th->change_handler.pending_type_mask & TEAM_PORT_CHANGE) ? true : false;
+ 
+ 	genlmsg_parse(nlh, 0, attrs, TEAM_ATTR_MAX, NULL);
+ 	if (attrs[TEAM_ATTR_TEAM_IFINDEX])
+@@ -140,7 +146,8 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 		return NL_SKIP;
+ 
+ 	if (!th->msg_recv_started) {
+-		port_list_cleanup_last_state(th);
++		if (!recursive)
++			port_list_cleanup_last_state(th);
+ 		th->msg_recv_started = true;
+ 	}
+ 	nla_for_each_nested(nl_port, attrs[TEAM_ATTR_LIST_PORT], i) {
+@@ -165,7 +172,9 @@ int get_port_list_handler(struct nl_msg *msg, void *arg)
+ 			if (!port)
+ 				return NL_SKIP;
+ 		}
+-		port->changed = port_attrs[TEAM_ATTR_PORT_CHANGED] ? true : false;
++
++		if (!port->changed || !recursive)
++			port->changed = port_attrs[TEAM_ATTR_PORT_CHANGED] ? true : false;
+ 		port->linkup = port_attrs[TEAM_ATTR_PORT_LINKUP] ? true : false;
+ 		port->removed = port_attrs[TEAM_ATTR_PORT_REMOVED] ? true : false;
+ 		if (port_attrs[TEAM_ATTR_PORT_SPEED])
+@@ -196,6 +204,13 @@ static int get_port_list(struct team_handle *th)
+ 	if (err)
+ 		return err;
+ 
++	/*
++	 * Do not call check_call_change_handlers if this is called recursively to avoid racing conditions
++	 * It will be called by the outer call
++	 */
++	if (th->change_handler.pending_type_mask & TEAM_PORT_CHANGE)
++		return 0;
++
+ 	return check_call_change_handlers(th, TEAM_PORT_CHANGE);
+ 
+ nla_put_failure:
 diff --git a/teamd/teamd.c b/teamd/teamd.c
-index bf42347..221d71d 100644
+index 421e34d..33512a6 100644
 --- a/teamd/teamd.c
 +++ b/teamd/teamd.c
 @@ -117,7 +117,9 @@ static void print_help(const struct teamd_context *ctx) {
@@ -203,7 +256,7 @@ index 221803e..bd4dcc1 100644
  			   struct teamd_port *tdport)
  {
 diff --git a/teamd/teamd_per_port.c b/teamd/teamd_per_port.c
-index 166da57..03f8d63 100644
+index 166da57..cefd6c2 100644
 --- a/teamd/teamd_per_port.c
 +++ b/teamd/teamd_per_port.c
 @@ -350,6 +350,12 @@ static int teamd_port_remove(struct teamd_context *ctx,
@@ -220,7 +273,7 @@ index 166da57..03f8d63 100644
  		      tdport->ifname, tdport->ifindex);
  	err = team_port_remove(ctx->th, tdport->ifindex);
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 55abe88..f225fb2 100644
+index 955ef0c..782fc05 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -31,6 +31,7 @@
@@ -523,7 +576,7 @@ index 55abe88..f225fb2 100644
 +						/* the port was up before the WR. Trying to restore it */
 +						struct lacpdu lacpdu;
 +						err = lacpdu_read(lacp_port, &lacpdu);
-+						if (err) /* Can't read, so the port will start from scratch */ 
++						if (err) /* Can't read, so the port will start from scratch */
 +							continue;
 +						teamd_log_info("WR-mode. State of the LAG member port '%s' was restored.",
 +							tdport->ifname);
@@ -810,7 +863,7 @@ index 55abe88..f225fb2 100644
  static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.hwaddr_changed = lacp_event_watch_hwaddr_changed,
  	.port_hwaddr_changed = lacp_event_watch_port_hwaddr_changed,
-@@ -1469,21 +1848,35 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
+@@ -1469,21 +1848,36 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.port_changed = lacp_event_watch_port_changed,
  	.admin_state_changed = lacp_event_watch_admin_state_changed,
  	.refresh = lacp_event_watch_refresh,
@@ -832,6 +885,7 @@ index 55abe88..f225fb2 100644
 +		if (lacp->wr.carrier_up) {
 +			teamd_log_info("WR-mode. Starting in WR mode");
 +		} else {
++			stop_wr_mode(lacp);
 +			teamd_log_info("WR-mode. Starting in normal mode. The LAG interface was down before restart");
 +		}
 +		ctx->warm_start_mode = lacp->wr.carrier_up;
@@ -851,7 +905,7 @@ index 55abe88..f225fb2 100644
  	return 0;
  }
  
-@@ -1951,6 +2344,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
+@@ -1951,6 +2345,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
  	}
  
  	lacp->ctx = ctx;
@@ -864,7 +918,7 @@ index 55abe88..f225fb2 100644
  	err = teamd_hash_func_set(ctx);
  	if (err)
  		return err;
-@@ -1992,10 +2391,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
+@@ -1992,10 +2392,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
  {
  	struct lacp *lacp = priv;
  
@@ -880,5 +934,5 @@ index 55abe88..f225fb2 100644
  
  const struct teamd_runner teamd_runner_lacp = {
 -- 
-2.17.1.windows.2
+2.30.2
 

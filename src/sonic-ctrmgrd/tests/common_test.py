@@ -1,5 +1,4 @@
 import copy
-import importlib
 import json
 import os
 import subprocess
@@ -10,6 +9,7 @@ import time
 CONFIG_DB_NO = 4
 STATE_DB_NO = 6
 FEATURE_TABLE = "FEATURE"
+MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
@@ -42,14 +42,23 @@ KUBE_RETURN = "kube_return"
 IMAGE_TAG = "image_tag"
 FAIL_LOCK = "fail_lock"
 DO_JOIN = "do_join"
+REQ = "req"
 
 # subproc key words
+
+# List all subprocess commands expected within the test.
+# Each call to subproc-side effect (mock_subproc_side_effect) increment index
+# Other key words influence how this proc command to be processed
+# PROC_RUN having true at that index, implies run it instead of mocking it
+# PROC_OUT, ERR, FAIL THROW provide data on how to mock
+#
 PROC_CMD = "subproc_cmd"
 PROC_RUN = "skip_mock"
 PROC_FAIL = "proc_fail"
 PROC_THROW = "proc_throw"
 PROC_OUT = "subproc_output"
 PROC_ERR = "subproc_error"
+PROC_CODE = "subproc_code"
 PROC_KILLED = "procs_killed"
 
 # container_start test cases
@@ -597,6 +606,7 @@ class mock_proc:
 
         out_lst = current_test_data.get(PROC_OUT, None)
         err_lst = current_test_data.get(PROC_ERR, None)
+        code_lst = current_test_data.get(PROC_CODE, None)
         if out_lst:
             assert (len(out_lst) > self.index)
             out = out_lst[self.index]
@@ -607,7 +617,11 @@ class mock_proc:
             err = err_lst[self.index]
         else:
             err = ""
-        self.returncode = 0
+        if code_lst:
+            assert (len(code_lst) > self.index)
+            self.returncode = code_lst[self.index]
+        else:
+            self.returncode = 0 if not err else -1
         return (out, err)
 
     def kill(self):
@@ -637,8 +651,27 @@ def mock_subproc_side_effect(cmd, shell=False, stdout=None, stderr=None):
     return mock_proc(cmd, index)
 
 
-def set_kube_mock(mock_subproc):
+class mock_reqget:
+    def __init__(self):
+        self.ok = True
+
+    def json(self):
+        return current_test_data.get(REQ, "")
+
+
+def mock_reqget_side_effect(url, cert, verify=True):
+    return mock_reqget()
+
+
+def set_kube_mock(mock_subproc, mock_table=None, mock_conn=None, mock_reqget=None):
     mock_subproc.side_effect = mock_subproc_side_effect
+    if mock_table != None:
+        mock_table.side_effect = table_side_effect
+    if mock_conn != None:
+        mock_conn.side_effect = conn_side_effect
+    if mock_reqget != None:
+        mock_reqget.side_effect = mock_reqget_side_effect
+
 
 def create_remote_ctr_config_json():
     str_conf = '\
@@ -646,7 +679,8 @@ def create_remote_ctr_config_json():
     "join_latency_on_boot_seconds": 2,\n\
     "retry_join_interval_seconds": 0,\n\
     "retry_labels_update_seconds": 0,\n\
-    "revert_to_local_on_wait_seconds": 5\n\
+    "revert_to_local_on_wait_seconds": 5,\n\
+    "tag_latest_image_on_wait_seconds": 0\n\
 }\n'
 
     fname = "/tmp/remote_ctr.config.json"
@@ -654,13 +688,3 @@ def create_remote_ctr_config_json():
         s.write(str_conf)
 
     return fname
-
-
-def load_mod_from_file(modname, fpath):
-    spec = importlib.util.spec_from_loader(modname,
-            importlib.machinery.SourceFileLoader(modname, fpath))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    sys.modules[modname] = mod
-    return mod
-

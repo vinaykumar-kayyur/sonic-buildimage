@@ -10,9 +10,11 @@
 try:
     import os
     from sonic_platform_base.thermal_base import ThermalBase
+    from sonic_py_common import logger
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+sonic_logger = logger.Logger('thermal')
 
 class Thermal(ThermalBase):
     """Nokia platform-specific Thermal class"""
@@ -20,9 +22,9 @@ class Thermal(ThermalBase):
     I2C_CLASS_DIR = "/sys/class/i2c-adapter/"
     I2C_DEV_MAPPING = (['i2c-0/0-004a/hwmon/', 1],
                        ['i2c-0/0-004b/hwmon/', 1],
-                       ['i2c-0/0-002e/', 1],
-                       ['i2c-0/0-002e/', 2],
-                       ['i2c-0/0-002e/', 3])
+                       ['i2c-0/0-002e/hwmon/', 1],
+                       ['i2c-0/0-002e/hwmon/', 2],
+                       ['i2c-0/0-002e/hwmon/', 3])
 
     HWMON_CLASS_DIR = "/sys/class/hwmon/"
 
@@ -31,16 +33,19 @@ class Thermal(ThermalBase):
                     "CPU Core")
 
     def __init__(self, thermal_index):
+        ThermalBase.__init__(self)
         self.index = thermal_index + 1
         self.is_psu_thermal = False
         self.dependency = None
+        self._minimum = None
+        self._maximum = None
         self.thermal_high_threshold_file = None
         # PCB temperature sensors
         if self.index < 3:
             i2c_path = self.I2C_CLASS_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
             sensor_index = self.I2C_DEV_MAPPING[self.index - 1][1]
-            sensor_max_suffix = "max"
-            sensor_crit_suffix = None
+            sensor_high_suffix = "max"
+            sensor_high_crit_suffix = None
             hwmon_node = os.listdir(i2c_path)[0]
             self.SENSOR_DIR = i2c_path + hwmon_node + '/'
 
@@ -48,16 +53,17 @@ class Thermal(ThermalBase):
         elif self.index < 6:
             i2c_path = self.I2C_CLASS_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
             sensor_index = self.I2C_DEV_MAPPING[self.index - 1][1]
-            sensor_max_suffix = "max"
-            sensor_crit_suffix = "crit"
-            self.SENSOR_DIR = i2c_path
+            sensor_high_suffix = "crit"
+            sensor_high_crit_suffix = None
+            hwmon_node = os.listdir(i2c_path)[0]
+            self.SENSOR_DIR = i2c_path + hwmon_node + '/'
 
         # Armada 38x SOC temperature sensor
         else:
             dev_path = self.HWMON_CLASS_DIR
             sensor_index = 1
-            sensor_max_suffix = None
-            sensor_crit_suffix = None
+            sensor_high_suffix = None
+            sensor_high_crit_suffix = None
             hwmon_node = os.listdir(dev_path)[0]
             self.SENSOR_DIR = dev_path + hwmon_node + '/'
 
@@ -66,16 +72,16 @@ class Thermal(ThermalBase):
             + "temp{}_input".format(sensor_index)
 
         # sysfs file for high threshold value if supported for this sensor
-        if sensor_max_suffix:
+        if sensor_high_suffix:
             self.thermal_high_threshold_file = self.SENSOR_DIR \
-                + "temp{}_{}".format(sensor_index, sensor_max_suffix)
+                + "temp{}_{}".format(sensor_index, sensor_high_suffix)
         else:
             self.thermal_high_threshold_file = None
 
         # sysfs file for crit high threshold value if supported for this sensor
-        if sensor_crit_suffix:
+        if sensor_high_crit_suffix:
             self.thermal_high_crit_threshold_file = self.SENSOR_DIR \
-                + "temp{}_{}".format(sensor_index, sensor_crit_suffix)
+                + "temp{}_{}".format(sensor_index, sensor_high_crit_suffix)
         else:
             self.thermal_high_crit_threshold_file = None
 
@@ -161,6 +167,10 @@ class Thermal(ThermalBase):
             self.thermal_temperature_file)
         if (thermal_temperature != 'ERR'):
             thermal_temperature = float(thermal_temperature) / 1000
+            if self._minimum is None or self._minimum > thermal_temperature:
+                self._minimum = thermal_temperature
+            if self._maximum is None or self._maximum < thermal_temperature:
+                self._maximum = thermal_temperature
         else:
             thermal_temperature = 0
 
@@ -175,7 +185,6 @@ class Thermal(ThermalBase):
             Celsius up to nearest thousandth of one degree Celsius,
             e.g. 30.125
         """
-
         # Not implemented for this sensor
         if not self.thermal_high_threshold_file:
             raise  NotImplementedError
@@ -224,3 +233,27 @@ class Thermal(ThermalBase):
             thermal_high_crit_threshold = 0.0
 
         return float("{:.3f}".format(thermal_high_crit_threshold))
+
+    def get_minimum_recorded(self):
+        self.get_temperature()
+        return self._minimum
+
+    def get_maximum_recorded(self):
+        self.get_temperature()
+        return self._maximum
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

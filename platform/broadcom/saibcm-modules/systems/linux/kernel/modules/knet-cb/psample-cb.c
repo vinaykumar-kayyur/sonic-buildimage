@@ -394,6 +394,7 @@ psample_task(struct work_struct *work)
     unsigned long flags;
     struct list_head *list_ptr, *list_next;
     psample_pkt_t *pkt;
+    struct psample_metadata md = {0};
 
     spin_lock_irqsave(&psample_work->lock, flags);
     list_for_each_safe(list_ptr, list_next, &psample_work->pkt_list) {
@@ -410,12 +411,13 @@ psample_task(struct work_struct *work)
                     pkt->meta.trunc_size, pkt->meta.src_ifindex, 
                     pkt->meta.dst_ifindex, pkt->meta.sample_rate);
 
+            md.trunc_size = pkt->meta.trunc_size;
+            md.in_ifindex = pkt->meta.src_ifindex;
+            md.out_ifindex = pkt->meta.dst_ifindex;
             psample_sample_packet(pkt->group, 
-                                  pkt->skb, 
-                                  pkt->meta.trunc_size,
-                                  pkt->meta.src_ifindex,
-                                  pkt->meta.dst_ifindex,
-                                  pkt->meta.sample_rate);
+                                  pkt->skb,
+                                  pkt->meta.sample_rate,
+                                  &md);
             g_psample_stats.pkts_f_psample_mod++;
  
             dev_kfree_skb_any(pkt->skb);
@@ -509,7 +511,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         /* setup skb to point to pkt */
         memcpy(skb->data, pkt, meta.trunc_size);
         skb_put(skb, meta.trunc_size);
-        skb->len = meta.trunc_size;
+        skb->len = size; /* SONIC-55684 */
         psample_pkt->skb = skb;
 
         spin_lock_irqsave(&g_psample_work.lock, flags);
@@ -714,13 +716,13 @@ psample_proc_rate_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_rate_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_rate_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_rate_write,
-    release:    single_release,
+struct proc_ops psample_proc_rate_file_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =      psample_proc_rate_open,
+    .proc_read =      seq_read,
+    .proc_lseek =     seq_lseek,
+    .proc_write =     psample_proc_rate_write,
+    .proc_release =   single_release,
 };
 
 /*
@@ -813,13 +815,13 @@ psample_proc_size_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_size_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_size_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_size_write,
-    release:    single_release,
+struct proc_ops psample_proc_size_file_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =      psample_proc_size_open,
+    .proc_read =      seq_read,
+    .proc_lseek =     seq_lseek,
+    .proc_write =     psample_proc_size_write,
+    .proc_release =   single_release,
 };
 
 /*
@@ -854,13 +856,13 @@ psample_proc_map_open(struct inode * inode, struct file * file)
     return single_open(file, psample_proc_map_show, NULL);
 }
 
-struct file_operations psample_proc_map_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_map_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      NULL,
-    release:    single_release,
+struct proc_ops psample_proc_map_file_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =       psample_proc_map_open,
+    .proc_read =       seq_read,
+    .proc_lseek =      seq_lseek,
+    .proc_write =      NULL,
+    .proc_release =    single_release,
 };
 
 /*
@@ -924,13 +926,13 @@ psample_proc_debug_write(struct file *file, const char *buf,
     return count;
 }
 
-struct file_operations psample_proc_debug_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_debug_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_debug_write,
-    release:    single_release,
+struct proc_ops psample_proc_debug_file_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =       psample_proc_debug_open,
+    .proc_read =       seq_read,
+    .proc_lseek =      seq_lseek,
+    .proc_write =      psample_proc_debug_write,
+    .proc_release =    single_release,
 };
 
 static int
@@ -967,7 +969,7 @@ psample_proc_stats_open(struct inode * inode, struct file * file)
  * psample stats Proc Write Entry
  *
  *   Syntax:
- *   write any value to clear stats 
+ *   write any value to clear stats
  */
 static ssize_t
 psample_proc_stats_write(struct file *file, const char *buf,
@@ -984,13 +986,13 @@ psample_proc_stats_write(struct file *file, const char *buf,
 
     return count;
 }
-struct file_operations psample_proc_stats_file_ops = {
-    owner:      THIS_MODULE,
-    open:       psample_proc_stats_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      psample_proc_stats_write,
-    release:    single_release,
+struct proc_ops psample_proc_stats_file_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =      psample_proc_stats_open,
+    .proc_read =      seq_read,
+    .proc_lseek =     seq_lseek,
+    .proc_write =     psample_proc_stats_write,
+    .proc_release =   single_release,
 };
 
 int psample_cleanup(void)
@@ -1009,13 +1011,13 @@ int psample_cleanup(void)
 int psample_init(void)
 {
     #define PROCFS_MAX_PATH 1024
+    #define PSAMPLE_PROCFS_PATH "bcm/knet-cb"
     char psample_procfs_path[PROCFS_MAX_PATH];
     struct proc_dir_entry *entry;
 
     /* create procfs for psample */
-    snprintf(psample_procfs_path, PROCFS_MAX_PATH, "bcm/knet-cb");
-    knet_cb_proc_root = proc_mkdir(psample_procfs_path, NULL);
-    snprintf(psample_procfs_path, PROCFS_MAX_PATH, "%s/%s", psample_procfs_path, PSAMPLE_CB_NAME);
+    proc_mkdir(PSAMPLE_PROCFS_PATH, NULL);
+    snprintf(psample_procfs_path, sizeof(psample_procfs_path), "%s/%s", PSAMPLE_PROCFS_PATH, PSAMPLE_CB_NAME);
     psample_proc_root = proc_mkdir(psample_procfs_path, NULL);
 
     /* create procfs for psample stats */
@@ -1031,7 +1033,7 @@ int psample_init(void)
         gprintk("%s: Unable to create procfs entry '/procfs/%s/rate'\n", __func__, psample_procfs_path);
         return -1;
     }
-    
+
     /* create procfs for setting sample size */
     PROC_CREATE(entry, "size", 0666, psample_proc_root, &psample_proc_size_file_ops);
     if (entry == NULL) {
@@ -1059,23 +1061,23 @@ int psample_init(void)
     memset(&g_psample_work, 0, sizeof(psample_work_t));
 
     /* setup psample_info struct */
-    INIT_LIST_HEAD(&g_psample_info.netif_list); 
+    INIT_LIST_HEAD(&g_psample_info.netif_list);
     spin_lock_init(&g_psample_info.lock);
 
     /* setup psample work queue */
-    spin_lock_init(&g_psample_work.lock); 
-    INIT_LIST_HEAD(&g_psample_work.pkt_list); 
+    spin_lock_init(&g_psample_work.lock);
+    INIT_LIST_HEAD(&g_psample_work.pkt_list);
     INIT_WORK(&g_psample_work.wq, psample_task);
 
-    /* get net namespace */ 
+    /* get net namespace */
     g_psample_info.netns = get_net_ns_by_pid(current->pid);
     if (!g_psample_info.netns) {
         gprintk("%s: Could not get network namespace for pid %d\n", __func__, current->pid);
         return (-1);
     }
-    PSAMPLE_CB_DBG_PRINT("%s: current->pid %d, netns 0x%p, sample_size %d\n", __func__, 
+    PSAMPLE_CB_DBG_PRINT("%s: current->pid %d, netns 0x%p, sample_size %d\n", __func__,
             current->pid, g_psample_info.netns, psample_size);
-   
+
 
     return 0;
 }

@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: ibde.h,v 1.27 Broadcom SDK $
@@ -76,6 +87,8 @@ typedef struct ibde_s {
 #define BDE_I2C_DEV_TYPE      SAL_I2C_DEV_TYPE    /* I2C device */
 #define BDE_AXI_DEV_TYPE      SAL_AXI_DEV_TYPE    /* AXI device */
 #define BDE_EMMI_DEV_TYPE     SAL_EMMI_DEV_TYPE   /* EMMI device */
+#define BDE_COMPOSITE_DEV_TYPE SAL_COMPOSITE_DEV_TYPE /* Composite device, composed of sub-devices with buses */
+#define BDE_USER_DEV_TYPE     SAL_USER_DEV_TYPE   /* The user implements his own method of access to the device */
 #define BDE_DEV_BUS_ALT       SAL_DEV_BUS_ALT     /* Alternate Access */
 #define BDE_DEV_BUS_MSI       SAL_DEV_BUS_MSI     /* Message-signaled interrupts */
 
@@ -92,6 +105,7 @@ typedef struct ibde_s {
 #define BDE_256K_REG_SPACE    0x20000000          /* Map 256K (v 64K) */
 #define BDE_128K_REG_SPACE    0x40000000          /* Map 128K (v 64K) */
 #define BDE_320K_REG_SPACE    0x80000000          /* Map 256K+64K */
+
 
 /* Bus supports only 16bit reads */
 #define BDE_DEV_BUS_RD_16BIT  SAL_DEV_BUS_RD_16BIT 
@@ -167,6 +181,10 @@ typedef struct ibde_s {
         int dev,       /* The device ID to access */
         uint32 addr,   /* The address to access in the internal device address space */
         uint32 value); /* the value to be written. */
+
+    /* 64 bit read/write */
+    uint64  (*read64)(int d, uint32 addr);
+    void    (*write64)(int d, uint32 addr, uint64 data);
 
 } ibde_t;
 

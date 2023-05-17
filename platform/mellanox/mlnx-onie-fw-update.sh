@@ -1,9 +1,21 @@
 #!/bin/bash
-
-# Copyright (C) 2019 Mellanox Technologies Ltd.
-# Copyright (C) 2019 Michael Shych <michaelsh@mellanox.com>
 #
-# SPDX-License-Identifier:     GPL-2.0
+# Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 
 this_script="$(basename $(realpath ${0}))"
 lock_file="/var/run/${this_script%.*}.lock"
@@ -174,7 +186,12 @@ case "${cmd}" in
             rc=$?
             disable_onie_access
             if [[ ${rc} -eq 0 ]]; then
-                system_reboot
+                if [[ "${arg}" == "--no-reboot" ]]; then
+                    echo "INFO: ONIE firmware update successfully STAGED for install at NEXT reboot. Please reboot manually to complete installation."
+                    exit 0
+                else
+                    system_reboot
+                fi
             else
                 echo "ERROR: failed to enable ONIE firmware update mode"
                 exit ${rc}

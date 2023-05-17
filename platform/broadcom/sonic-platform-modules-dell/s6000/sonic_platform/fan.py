@@ -13,45 +13,62 @@ try:
     import os
     import glob
     from sonic_platform_base.fan_base import FanBase
-    from sonic_platform.eeprom import Eeprom
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-
 MAX_S6000_PSU_FAN_SPEED = 18000
 MAX_S6000_FAN_SPEED = 19000
+MAX_S6000_FAN_TARGET_SPEED = 18900
+
+# Each element corresponds to required speed (in RPM)
+# for a given system thermal level
+THERMAL_LEVEL_PSU_FAN_SPEED = (7200, 10800, 14400, 16200, 18000)
+THERMAL_LEVEL_FAN_SPEED = (7000, 10000, 13000, 16000, 19000)
 
 
 class Fan(FanBase):
     """DellEMC Platform-specific Fan class"""
 
-    CPLD_DIR = "/sys/devices/platform/dell-s6000-cpld.0/"
     I2C_DIR = "/sys/class/i2c-adapter/"
+    FAN_DEV_MAPPING = {
+        1: {1: ("i2c-11/11-002a", 1), 2: ("i2c-11/11-002a", 2)},
+        2: {1: ("i2c-11/11-0029", 3), 2: ("i2c-11/11-0029", 4)},
+        3: {1: ("i2c-11/11-0029", 1), 2: ("i2c-11/11-0029", 2)}
+    }
 
-    def __init__(self, fan_index, psu_fan=False, dependency=None):
+    def __init__(self, fantray_index=1, fan_index=1,
+                 psu_index=1, psu_fan=False, dependency=None):
+        FanBase.__init__(self)
+        self._target_speed = None
         self.is_psu_fan = psu_fan
         self.is_driver_initialized = True
 
         if not self.is_psu_fan:
             # Fan is 1-based in DellEMC platforms
-            self.index = fan_index + 1
-            self.fan_presence_reg = "fan_prs"
-            self.fan_led_reg = "fan{}_led".format(fan_index)
-            self.get_fan_speed_reg = self.I2C_DIR + "i2c-11/11-0029/" +\
-                    "fan{}_input".format(self.index)
-            self.set_fan_speed_reg = self.I2C_DIR + "i2c-11/11-0029/" +\
-                    "fan{}_target".format(self.index)
-            self.eeprom = Eeprom(is_fan=True, fan_index=self.index)
-            self.max_fan_speed = MAX_S6000_FAN_SPEED
-            self.supported_led_color = ['off', 'green', 'amber']
-        else:
+            self.fantray_index = fantray_index
             self.index = fan_index
             self.dependency = dependency
-            self.set_fan_speed_reg = self.I2C_DIR +\
-                    "i2c-1/1-005{}/fan1_target".format(10 - self.index)
 
             hwmon_dir = self.I2C_DIR +\
-                    "i2c-1/1-005{}/hwmon/".format(10 - self.index)
+                    "{}/hwmon/".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][0])
+            hwmon_node = os.listdir(hwmon_dir)[0]
+            self.fan_status_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_alarm".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
+            self.get_fan_speed_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_input".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
+            self.set_fan_speed_reg = hwmon_dir + hwmon_node +\
+                    "/fan{}_target".format(self.FAN_DEV_MAPPING[fantray_index][fan_index][1])
+            self.max_fan_speed = MAX_S6000_FAN_SPEED
+            self.thermal_level_to_speed = THERMAL_LEVEL_FAN_SPEED
+        else:
+            self.psu_index = psu_index
+            self.index = 1
+            self.dependency = dependency
+            self.set_fan_speed_reg = self.I2C_DIR +\
+                    "i2c-1/1-005{}/fan1_target".format(10 - self.psu_index)
+
+            hwmon_dir = self.I2C_DIR +\
+                    "i2c-1/1-005{}/hwmon/".format(10 - self.psu_index)
             try:
                 hwmon_node = os.listdir(hwmon_dir)[0]
             except OSError:
@@ -60,43 +77,7 @@ class Fan(FanBase):
 
             self.get_fan_speed_reg = hwmon_dir + hwmon_node + '/fan1_input'
             self.max_fan_speed = MAX_S6000_PSU_FAN_SPEED
-
-    def _get_cpld_register(self, reg_name):
-        # On successful read, returns the value read from given
-        # reg_name and on failure returns 'ERR'
-        rv = 'ERR'
-        cpld_reg_file = self.CPLD_DIR + reg_name
-
-        if (not os.path.isfile(cpld_reg_file)):
-            return rv
-
-        try:
-           with open(cpld_reg_file, 'r') as fd:
-                rv = fd.read()
-        except:
-            rv = 'ERR'
-
-        rv = rv.rstrip('\r\n')
-        rv = rv.lstrip(" ")
-        return rv
-
-    def _set_cpld_register(self, reg_name, value):
-        # On successful write, returns the value will be written on
-        # reg_name and on failure returns 'ERR'
-        rv = 'ERR'
-        cpld_reg_file = self.CPLD_DIR + reg_name
-
-        if (not os.path.isfile(cpld_reg_file)):
-            print("open error")
-            return rv
-
-        try:
-           with open(cpld_reg_file, 'w') as fd:
-                rv = fd.write(str(value))
-        except:
-            rv = 'ERR'
-
-        return rv
+            self.thermal_level_to_speed = THERMAL_LEVEL_PSU_FAN_SPEED
 
     def _get_i2c_register(self, reg_file):
         # On successful read, returns the value read from given
@@ -147,6 +128,31 @@ class Fan(FanBase):
             self.get_fan_speed_reg = fan_speed_reg[0]
             self.is_driver_initialized = True
 
+    def _get_speed_to_percentage(self, speed):
+        speed_percent = (100 * speed) // self.max_fan_speed
+        return speed_percent if speed_percent <= 100 else 100
+
+    def _get_target_speed_rpm(self):
+        target_speed_rpm = self._get_i2c_register(self.set_fan_speed_reg)
+        if (target_speed_rpm != 'ERR') and self.get_presence():
+            target_speed_rpm = int(target_speed_rpm, 10)
+        else:
+            target_speed_rpm = 0
+
+        return target_speed_rpm
+
+    def _set_speed_rpm(self, speed):
+        if not self.is_psu_fan:
+            if speed > MAX_S6000_FAN_TARGET_SPEED:
+                speed = MAX_S6000_FAN_TARGET_SPEED
+            self._target_speed = speed
+
+        rv = self._set_i2c_register(self.set_fan_speed_reg, speed)
+        if (rv != 'ERR'):
+            return True
+        else:
+            return False
+
     def get_name(self):
         """
         Retrieves the name of the Fan
@@ -155,9 +161,9 @@ class Fan(FanBase):
             string: The name of the Fan
         """
         if not self.is_psu_fan:
-            return "FanTray{}-Fan1".format(self.index)
+            return "FanTray{}-Fan{}".format(self.fantray_index, self.index)
         else:
-            return "PSU{} Fan".format(self.index)
+            return "PSU{} Fan".format(self.psu_index)
 
     def get_presence(self):
         """
@@ -166,42 +172,23 @@ class Fan(FanBase):
         Returns:
             bool: True if Fan is present, False if not
         """
-        status = False
-        if self.is_psu_fan:
-            return self.dependency.get_presence()
-
-        fan_presence = self._get_cpld_register(self.fan_presence_reg)
-        if (fan_presence != 'ERR'):
-            fan_presence = int(fan_presence,16) & self.index
-            if fan_presence:
-                status = True
-
-        return status
+        return self.dependency.get_presence()
 
     def get_model(self):
         """
         Retrieves the part number of the Fan
-
         Returns:
             string: Part number of Fan
         """
-        if not self.is_psu_fan:
-            return self.eeprom.get_part_number()
-        else:
-            return 'NA'
+        return 'NA'
 
     def get_serial(self):
         """
         Retrieves the serial number of the Fan
-
         Returns:
             string: Serial number of Fan
         """
-        # Sample Serial number format "US-01234D-54321-25A-0123-A00"
-        if not self.is_psu_fan:
-            return self.eeprom.get_serial_number()
-        else:
-            return 'NA'
+        return 'NA'
 
     def get_status(self):
         """
@@ -211,12 +198,36 @@ class Fan(FanBase):
             bool: True if Fan is operating properly, False if not
         """
         status = False
-        fan_speed = self._get_i2c_register(self.get_fan_speed_reg)
-        if (fan_speed != 'ERR'):
-            if (int(fan_speed) > 1000):
-                status = True
+        if self.is_psu_fan:
+            fan_speed = self._get_i2c_register(self.get_fan_speed_reg)
+            if (fan_speed != 'ERR'):
+                if (int(fan_speed) > 1000):
+                    status = True
+        else:
+            fan_status = self._get_i2c_register(self.fan_status_reg)
+            if (fan_status != 'ERR'):
+                fan_status = int(fan_status, 10)
+                if ~fan_status & 0b1:
+                    status = True
 
         return status
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether Fan is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
 
     def get_direction(self):
         """
@@ -234,11 +245,10 @@ class Fan(FanBase):
         if self.is_psu_fan:
             direction = {1: self.FAN_DIRECTION_EXHAUST, 2: self.FAN_DIRECTION_INTAKE,
                          3: self.FAN_DIRECTION_EXHAUST, 4: self.FAN_DIRECTION_INTAKE}
-            fan_direction = self.dependency.eeprom.airflow_fan_type()
         else:
             direction = {1: self.FAN_DIRECTION_EXHAUST, 2: self.FAN_DIRECTION_INTAKE}
-            fan_direction = self.eeprom.airflow_fan_type()
 
+        fan_direction = self.dependency.eeprom.airflow_fan_type()
         return direction.get(fan_direction, self.FAN_DIRECTION_NOT_APPLICABLE)
 
     def get_speed(self):
@@ -250,8 +260,7 @@ class Fan(FanBase):
         """
         fan_speed = self._get_i2c_register(self.get_fan_speed_reg)
         if (fan_speed != 'ERR') and self.get_presence():
-            speed_in_rpm = int(fan_speed, 10)
-            speed = (100 * speed_in_rpm)//self.max_fan_speed
+            speed = self._get_speed_to_percentage(int(fan_speed, 10))
         else:
             speed = 0
 
@@ -282,12 +291,8 @@ class Fan(FanBase):
         Returns:
             bool: True if set success, False if fail.
         """
-        fan_set = (speed * self.max_fan_speed)/ 100
-        rv = self._set_i2c_register(self.set_fan_speed_reg , fan_set)
-        if (rv != 'ERR'):
-            return True
-        else:
-            return False
+        fan_set = (speed * self.max_fan_speed) // 100
+        return self._set_speed_rpm(fan_set)
 
     def set_status_led(self, color):
         """
@@ -298,16 +303,9 @@ class Fan(FanBase):
         Returns:
             bool: True if set success, False if fail.
         """
-        if self.is_psu_fan or (color not in self.supported_led_color):
-            return False
-        if(color == self.STATUS_LED_COLOR_AMBER):
-            color = 'yellow'
-
-        rv = self._set_cpld_register(self.fan_led_reg ,color)
-        if (rv != 'ERR'):
-            return True
-        else:
-            return False
+        # No LED available for FanTray and PSU Fan
+        # Return True to avoid thermalctld alarm.
+        return True
 
     def get_status_led(self):
         """
@@ -316,18 +314,8 @@ class Fan(FanBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings.
         """
-        if self.is_psu_fan:
-            # No LED available for PSU Fan
-            return None
-
-        fan_led = self._get_cpld_register(self.fan_led_reg)
-        if (fan_led != 'ERR'):
-            if (fan_led == 'yellow'):
-                return self.STATUS_LED_COLOR_AMBER
-            else:
-                return fan_led
-        else:
-            return self.STATUS_LED_COLOR_OFF
+        # No LED available for FanTray and PSU Fan
+        return None
 
     def get_target_speed(self):
         """
@@ -337,5 +325,26 @@ class Fan(FanBase):
             An integer, the percentage of full fan speed, in the range 0
             (off) to 100 (full speed)
         """
-        # Fan speeds are controlled by fancontrol.sh
-        return self.get_speed()
+        target_speed_rpm = self._get_target_speed_rpm()
+
+        if not self.is_psu_fan and self._target_speed:
+            # Handle max6620 driver approximation
+            max6620_conv_factor = (60 * 8192 * 4) / 2
+            expected_speed_rpm = max6620_conv_factor // (max6620_conv_factor // self._target_speed)
+
+            if expected_speed_rpm == target_speed_rpm:
+                if self._target_speed >= MAX_S6000_FAN_TARGET_SPEED:
+                    return 100
+                else:
+                    return self._get_speed_to_percentage(self._target_speed)
+
+        return self._get_speed_to_percentage(target_speed_rpm)
+
+    def set_speed_for_thermal_level(self, thermal_level):
+
+        req_speed_rpm = self.thermal_level_to_speed[thermal_level]
+        req_speed = self._get_speed_to_percentage(req_speed_rpm)
+        target_speed = self.get_target_speed()
+
+        if req_speed != target_speed:
+            self._set_speed_rpm(req_speed_rpm)

@@ -6,13 +6,11 @@
 #
 #############################################################################
 
-import json
-import os.path
-import shutil
-import shlex
-import subprocess
 
 try:
+    import os.path
+    import shutil
+    import subprocess
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -40,8 +38,7 @@ class Component(ComponentBase):
     def __run_command(self, command):
         # Run bash command and print output to stdout
         try:
-            process = subprocess.Popen(
-                shlex.split(command), universal_newlines=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen(command, universal_newlines=True, stdout=subprocess.PIPE)
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:
@@ -49,7 +46,7 @@ class Component(ComponentBase):
             rc = process.poll()
             if rc != 0:
                 return False
-        except:
+        except Exception:
             return False
         return True
 
@@ -64,12 +61,10 @@ class Component(ComponentBase):
 
     def get_register_value(self, register):
         # Retrieves the cpld register value
-        cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
-        p = subprocess.Popen(
-            cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        raw_data, err = p.communicate()
-        if err is not '':
-            return None
+        with open(GETREG_PATH, 'w') as file:
+            file.write(register + '\n')
+        with open(GETREG_PATH, 'r') as file:
+            raw_data = file.readline()
         return raw_data.strip()
 
     def __get_cpld_version(self):
@@ -77,11 +72,11 @@ class Component(ComponentBase):
         cpld_version = dict()
         with open(SMC_CPLD_PATH, 'r') as fd:
             smc_cpld_version = fd.read()
-        smc_cpld_version = 'None' if smc_cpld_version is 'None' else "{}.{}".format(
+        smc_cpld_version = 'None' if smc_cpld_version == 'None' else "{}.{}".format(
             int(smc_cpld_version[2], 16), int(smc_cpld_version[3], 16))
 
         mmc_cpld_version = self.get_register_value(MMC_CPLD_ADDR)
-        mmc_cpld_version = 'None' if mmc_cpld_version is 'None' else "{}.{}".format(
+        mmc_cpld_version = 'None' if mmc_cpld_version == 'None' else "{}.{}".format(
             int(mmc_cpld_version[2], 16), int(mmc_cpld_version[3], 16))
 
         cpld_version["SMC_CPLD"] = smc_cpld_version
@@ -120,6 +115,29 @@ class Component(ComponentBase):
 
         return fw_version
 
+    def get_available_firmware_version(self, image_path):
+        """
+        Retrieves the available firmware version of the component
+        Note: the firmware version will be read from image
+        Args:
+            image_path: A string, path to firmware image
+        Returns:
+            A string containing the available firmware version of the component
+        """
+        return "N/A"
+
+    def get_firmware_update_notification(self, image_path):
+        """
+        Retrieves a notification on what should be done in order to complete
+        the component firmware update
+        Args:
+            image_path: A string, path to firmware image
+        Returns:
+            A string containing the component firmware update notification if required.
+            By default 'None' value will be used, which indicates that no actions are required
+        """
+        return "None"
+
     def install_firmware(self, image_path):
         """
         Install firmware to module
@@ -137,8 +155,76 @@ class Component(ComponentBase):
             ext = ".vme" if ext == "" else ext
             new_image_path = os.path.join("/tmp", (root.lower() + ext))
             shutil.copy(image_path, new_image_path)
-            install_command = "ispvm %s" % new_image_path
+            install_command = ["ispvm", str(new_image_path)]
         # elif self.name == "BIOS":
         #     install_command = "afulnx_64 %s /p /b /n /x /r" % image_path
-
         return self.__run_command(install_command)
+
+    def update_firmware(self, image_path):
+        """
+        Updates firmware of the component
+        This API performs firmware update: it assumes firmware installation and loading in a single call.
+        In case platform component requires some extra steps (apart from calling Low Level Utility)
+        to load the installed firmware (e.g, reboot, power cycle, etc.) - this will be done automatically by API
+        Args:
+            image_path: A string, path to firmware image
+        Raises:
+            RuntimeError: update failed
+        """
+        return False
+
+    ##############################################################
+    ###################### Device methods ########################
+    ##############################################################
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the FAN
+        Returns:
+            bool: True if FAN is present, False if not
+        """
+        return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return 'N/A'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return 'N/A'
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

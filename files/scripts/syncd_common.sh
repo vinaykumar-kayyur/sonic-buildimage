@@ -3,13 +3,15 @@
 #
 # common functions used by "syncd" scipts (syncd.sh, gbsyncd.sh, etc..)
 # scripts using this must provide implementations of the following functions:
-# 
+#
 # startplatform
 # waitplatform
 # stopplatform1 and stopplatform2
-# 
+#
 # For examples of these, see gbsyncd.sh and syncd.sh.
 #
+
+. /usr/local/bin/asic_status.sh
 
 function debug()
 {
@@ -23,7 +25,7 @@ function lock_service_state_change()
 
     exec {LOCKFD}>${LOCKFILE}
     /usr/bin/flock -x ${LOCKFD}
-    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+    trap "/usr/bin/flock -u ${LOCKFD}" EXIT
 
     debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE}$DEV service"
 }
@@ -43,6 +45,16 @@ function check_warm_boot()
         WARM_BOOT="true"
     else
         WARM_BOOT="false"
+    fi
+}
+
+function check_fast_boot()
+{
+    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${SYSTEM_FAST_REBOOT}" == x"true" ]]; then
+        FAST_BOOT="true"
+    else
+        FAST_BOOT="false"
     fi
 }
 
@@ -71,7 +83,8 @@ function getBootType()
         ;;
     *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
         # check that the key exists
-        if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+        SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+        if [[ x"${SYSTEM_FAST_REBOOT}" == x"true" ]]; then
             TYPE='fast'
         else
             TYPE='cold'
@@ -104,14 +117,30 @@ start() {
 
     startplatform
 
-    # start service docker
-    /usr/bin/${SERVICE}.sh start $DEV
-    debug "Started ${SERVICE} service..."
+    # On supervisor card, skip starting asic related services here. In wait(),
+    # wait until the asic is detected by pmon and published via database.
+    if ! is_chassis_supervisor; then
+        # start service docker
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 
     unlock_service_state_change
 }
 
 wait() {
+    # On supervisor card, wait for asic to be online before starting the docker.
+    if is_chassis_supervisor; then
+        check_asic_status
+        ASIC_STATUS=$?
+
+        # start service docker
+        if [[ $ASIC_STATUS == 0 ]]; then
+            /usr/bin/${SERVICE}.sh start $DEV
+            debug "Started ${SERVICE}$DEV service..."
+        fi
+    fi
+
     waitplatform
 
     /usr/bin/${SERVICE}.sh wait $DEV
@@ -122,10 +151,14 @@ stop() {
 
     lock_service_state_change
     check_warm_boot
+    check_fast_boot
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     if [[ x"$WARM_BOOT" == x"true" ]]; then
         TYPE=warm
+    elif [[ x"$FAST_BOOT" == x"true" ]]; then
+        TYPE=fast
     else
         TYPE=cold
     fi

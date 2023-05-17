@@ -1,5 +1,19 @@
-#!/usr/bin/env python
-
+#
+# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #############################################################################
 # Mellanox
 #
@@ -7,46 +21,16 @@
 #############################################################################
 
 try:
-    import subprocess
     from sonic_platform_base.platform_base import PlatformBase
-    from sonic_platform.chassis import Chassis
+    from .chassis import Chassis, ModularChassis
+    from .device_data import DeviceDataManager
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 class Platform(PlatformBase):
     def __init__(self):
         PlatformBase.__init__(self)
-        if self._is_host():
+        if DeviceDataManager.get_linecard_count() == 0:
             self._chassis = Chassis()
-            self._chassis.initialize_components()
-            self._chassis.initizalize_system_led()
-            self._chassis.initialize_eeprom()
         else:
-            self._chassis = Chassis()
-            self._chassis.initialize_psu()
-            self._chassis.initialize_fan()
-            self._chassis.initialize_eeprom()
-            self._chassis.initialize_thermals()
-
-    def _is_host(self):
-        """
-        Test whether current process is running on the host or an docker
-        return True for host and False for docker
-        """
-        is_host = False
-        try:
-            proc = subprocess.Popen("docker --version 2>/dev/null", 
-                                    stdout=subprocess.PIPE, 
-                                    shell=True, 
-                                    stderr=subprocess.STDOUT, 
-                                    universal_newlines=True)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            result = stdout.rstrip('\n')
-            if result != '':
-                is_host = True
-
-        except OSError as e:
-            pass
-
-        return is_host
+            self._chassis = ModularChassis()

@@ -8,6 +8,7 @@ from . import common_test
 
 sys.path.append("ctrmgr")
 import ctrmgrd
+import ctrmgr.ctrmgr_iptables
 
 
 # ctrmgrd test cases
@@ -105,7 +106,7 @@ server_test_data = {
             common_test.KUBE_JOIN: {
                 "ip": "10.10.10.10",
                 "port": "6443",
-                "insecure": "false"
+                "insecure": "true"
             }
         }
     },
@@ -150,7 +151,7 @@ server_test_data = {
             common_test.KUBE_JOIN: {
                 "ip": "10.10.10.10",
                 "port": "6443",
-                "insecure": "false"
+                "insecure": "true"
             },
             common_test.KUBE_RESET: {
                 "flag": "true"
@@ -275,6 +276,42 @@ feature_test_data = {
                 }
             }
         }
+    },
+    3: {
+        common_test.DESCR: "Tag image latest when remote_state changes to running",
+        common_test.ARGS: "ctrmgrd",
+        common_test.PRE: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "set_owner": "kube"
+                    }
+                }
+            },
+            common_test.STATE_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "remote_state": "pending"
+                    }
+                }
+            }
+        },
+        common_test.UPD: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "set_owner": "kube"
+                    }
+                }
+            },
+            common_test.STATE_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "remote_state": "running"
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -387,6 +424,11 @@ class TestContainerStartup(object):
         ctrmgrd.UNIT_TESTING = 1
         ctrmgrd.SONIC_CTR_CONFIG = (
                 common_test.create_remote_ctr_config_json())
+        ctrmgr.ctrmgr_iptables.UNIT_TESTING = 1
+
+
+    def clear(self):
+        ctrmgr.ctrmgr_iptables.UNIT_TESTING = 0
 
 
     @patch("ctrmgrd.swsscommon.DBConnector")
@@ -421,6 +463,7 @@ class TestContainerStartup(object):
             ret = common_test.check_kube_actions()
             assert ret == 0
             common_test.mock_selector.SLEEP_SECS = 0
+        self.clear()
 
 
     @patch("ctrmgrd.swsscommon.DBConnector")
@@ -450,6 +493,7 @@ class TestContainerStartup(object):
 
             ret = common_test.check_tables_returned()
             assert ret == 0
+        self.clear()
 
 
     @patch("ctrmgrd.swsscommon.DBConnector")
@@ -486,3 +530,4 @@ class TestContainerStartup(object):
 
             ret = common_test.check_kube_actions()
             assert ret == 0
+        self.clear()

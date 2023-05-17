@@ -1,12 +1,16 @@
-FROM docker-config-engine-buster
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages %}
+FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
-RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update
+## Pre-install the fundamental packages
+RUN apt-get update \
+ && apt-get -y install  \
+    gdb                 \
+    libboost-atomic1.74.0
 
 COPY \
 {% for deb in docker_saiserver_brcm_debs.split(' ') -%}
@@ -14,18 +18,17 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
-RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } ; \
-{% for deb in docker_saiserver_brcm_debs.split(' ') -%}
-dpkg_apt debs/{{ deb }}{{'; '}}
-{%- endfor %}
+# Install locally-built Debian packages and implicitly install their dependencies
+{{ install_debian_packages(docker_saiserver_brcm_debs.split(' ')) }}
 
 ## TODO: add kmod into Depends
 RUN apt-get install -yf kmod
 
 COPY ["files/dsserve", "files/bcmcmd", "start.sh", "bcmsh", "/usr/bin/"]
+COPY ["saiserver_start.sh", "/usr/bin/"]
+COPY ["files/syncd_init_common.sh", "/usr/bin/"]
 RUN chmod +x /usr/bin/dsserve /usr/bin/bcmcmd
-
-COPY ["profile.ini", "portmap.ini", "/etc/sai/"]
+RUN chmod +x /usr/bin/saiserver_start.sh /usr/bin/syncd_init_common.sh
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 

@@ -13,18 +13,24 @@ import sys
 import syslog
 import tempfile
 import urllib.request
+import base64
 from urllib.parse import urlparse
 
 import yaml
+import requests
 from sonic_py_common import device_info
+from jinja2 import Template
+from swsscommon import swsscommon
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
 KUBELET_YAML = "/var/lib/kubelet/config.yaml"
 SERVER_ADMIN_URL = "https://{}/admin.conf"
 LOCK_FILE = "/var/lock/kube_join.lock"
-
-# kubectl --kubeconfig <KUBE_ADMIN_CONF> label nodes
-#       <device_info.get_hostname()> <label to be added>
+FLANNEL_CONF_FILE = "/usr/share/sonic/templates/kube_cni.10-flannel.conflist"
+CNI_DIR = "/etc/cni/net.d"
+K8S_CA_URL = "https://{}:{}/api/v1/namespaces/default/configmaps/kube-root-ca.crt"
+AME_CRT = "/etc/sonic/credentials/restapiserver.crt"
+AME_KEY = "/etc/sonic/credentials/restapiserver.key"
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -47,6 +53,9 @@ def to_str(s):
 
     return str(s)
 
+def get_device_name():
+    return str(device_info.get_hostname()).lower()
+
 
 def _run_command(cmd, timeout=5):
     """ Run shell command and return exit code, along with stdout. """
@@ -57,10 +66,7 @@ def _run_command(cmd, timeout=5):
         (o, e) = proc.communicate(timeout)
         output = to_str(o)
         err = to_str(e)
-        if err:
-            ret = -1
-        else:
-            ret = proc.returncode
+        ret = proc.returncode
     except subprocess.TimeoutExpired as error:
         proc.kill()
         output = ""
@@ -78,12 +84,11 @@ def _run_command(cmd, timeout=5):
 
 def kube_read_labels():
     """ Read current labels on node and return as dict. """
-    KUBECTL_GET_CMD = "kubectl --kubeconfig {} get nodes --show-labels |\
- grep {} | tr -s ' ' | cut -f6 -d' '"
+    KUBECTL_GET_CMD = "kubectl --kubeconfig {} get nodes {} --show-labels --no-headers |tr -s ' ' | cut -f6 -d' '"
 
     labels = {}
     ret, out, _ = _run_command(KUBECTL_GET_CMD.format(
-        KUBE_ADMIN_CONF, device_info.get_hostname()))
+        KUBE_ADMIN_CONF, get_device_name()))
 
     if ret == 0:
         lst = out.split(",")
@@ -131,9 +136,9 @@ def kube_write_labels(set_labels):
         # First remove if any
         if del_label_str:
             (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname(), del_label_str.strip()))
+            KUBE_ADMIN_CONF, get_device_name(), del_label_str.strip()))
         (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname(), add_label_str.strip()))
+            KUBE_ADMIN_CONF, get_device_name(), add_label_str.strip()))
 
         log_debug("{} kube labels {} ret={}".format(
             "Applied" if ret == 0 else "Failed to apply", add_label_str, ret))
@@ -150,7 +155,7 @@ def func_get_labels(args):
         log_debug("Labels read failed.")
         return ret
 
-    print(json.dumps(node_labels, indent=4))
+    log_debug(json.dumps(node_labels, indent=4))
     return 0
     
 
@@ -174,7 +179,7 @@ def is_connected(server=""):
 def func_is_connected(args):
     """ Get connected state """
     connected = is_connected()
-    print("Currently {} to Kube master".format(
+    log_debug("Currently {} to Kube master".format(
         "connected" if connected else "not connected"))
     return 0 if connected else 1
 
@@ -205,25 +210,73 @@ def _download_file(server, port, insecure):
     data = r.read()
     os.write(h, data)
     os.close(h)
+    log_debug("Downloaded = {}".format(fname))
 
-    # Ensure the admin.conf has given VIP as server-IP.
-    update_file = "{}.upd".format(fname)
-    cmd = r'sed "s/server:.*:{}/server: https:\/\/{}:{}/" {} > {}'.format(
-            str(port), server, str(port), fname, update_file)
-    (ret, _, err) = _run_command(cmd)
+    shutil.copyfile(fname, KUBE_ADMIN_CONF)
 
-    print("sed command: ret={}".format(ret))
-    if ret != 0:
-        log_error("sed update of downloaded file failed with ret={}".
-                format(ret))
-        print("sed command failed: ret={}".format(ret))
-        return ret
-
-    shutil.copyfile(update_file, KUBE_ADMIN_CONF)
-
-    _run_command("rm -f {} {}".format(fname, update_file))
     log_debug("{} downloaded".format(KUBE_ADMIN_CONF))
-    return ret
+
+
+def _gen_cli_kubeconf(server, port, insecure):
+    """generate identity which can help authenticate and 
+       authorization to k8s cluster
+    """
+    client_kubeconfig_template = """
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: {{ k8s_ca }}
+    server: https://{{ vip }}:{{ port }}
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: user
+  name: user@kubernetes
+current-context: user@kubernetes
+kind: Config
+preferences: {}
+users:
+- name: user
+  user:
+    client-certificate-data: {{ ame_crt }}
+    client-key-data: {{ ame_key }}
+    """
+    if insecure:
+        r = requests.get(K8S_CA_URL.format(server, port), cert=(AME_CRT, AME_KEY), verify=False)
+    else:
+        r = requests.get(K8S_CA_URL.format(server, port), cert=(AME_CRT, AME_KEY))
+    if not r.ok:
+        raise requests.RequestException("Something wrong with AME cert or something wrong about sonic role in k8s cluster")
+    k8s_ca = r.json()["data"]["ca.crt"]
+    k8s_ca_b64 = base64.b64encode(k8s_ca.encode("utf-8")).decode("utf-8")
+    ame_crt_raw = open(AME_CRT, "rb")
+    ame_crt_b64 = base64.b64encode(ame_crt_raw.read()).decode("utf-8")
+    ame_key_raw = open(AME_KEY, "rb")
+    ame_key_b64 = base64.b64encode(ame_key_raw.read()).decode("utf-8")
+    client_kubeconfig_template_j2 = Template(client_kubeconfig_template)
+    client_kubeconfig = client_kubeconfig_template_j2.render(
+        k8s_ca=k8s_ca_b64, vip=server, port=port, ame_crt=ame_crt_b64, ame_key=ame_key_b64)
+    (h, fname) = tempfile.mkstemp(suffix="_kube_join")
+    os.write(h, client_kubeconfig.encode("utf-8"))
+    os.close(h)
+    log_debug("Downloaded = {}".format(fname))
+
+    shutil.copyfile(fname, KUBE_ADMIN_CONF)
+
+    log_debug("{} downloaded".format(KUBE_ADMIN_CONF))
+
+
+def _get_local_ipv6():
+    try:
+        config_db = swsscommon.DBConnector("CONFIG_DB", 0)
+        mgmt_ip_data = swsscommon.Table(config_db, 'MGMT_INTERFACE')
+        for key in mgmt_ip_data.getKeys():
+            if key.find(":") >= 0:
+                return key.split("|")[1].split("/")[0]
+        raise IOError("IPV6 not find from MGMT_INTERFACE table")
+    except Exception as e:
+        raise IOError(str(e))
 
 
 def _troubleshoot_tips():
@@ -266,13 +319,13 @@ def _do_reset(pending_join = False):
     if os.path.exists(KUBE_ADMIN_CONF):
         _run_command(
                 "kubectl --kubeconfig {} --request-timeout 20s drain {} --ignore-daemonsets".
-                format(KUBE_ADMIN_CONF, device_info.get_hostname()))
+                format(KUBE_ADMIN_CONF, get_device_name()))
 
         _run_command("kubectl --kubeconfig {} --request-timeout 20s delete node {}".
-                format(KUBE_ADMIN_CONF, device_info.get_hostname()))
+                format(KUBE_ADMIN_CONF, get_device_name()))
 
     _run_command("kubeadm reset -f", 10)
-    _run_command("rm -rf /etc/cni/net.d")
+    _run_command("rm -rf {}".format(CNI_DIR))
     if not pending_join:
         _run_command("rm -f {}".format(KUBE_ADMIN_CONF))
     _run_command("systemctl stop kubelet")
@@ -282,21 +335,23 @@ def _do_join(server, port, insecure):
     KUBEADM_JOIN_CMD = "kubeadm join --discovery-file {} --node-name {}"
     err = ""
     out = ""
+    ret = 0
     try:
-        ret = _download_file(server, port, insecure)
-        print("_download ret={}".format(ret))
-        if ret == 0:
-            _do_reset(True)
-            _run_command("modprobe br_netfilter")
-            (ret, _, _) = _run_command("systemctl start kubelet")
+        _gen_cli_kubeconf(server, port, insecure)
+        _do_reset(True)
+        _run_command("modprobe br_netfilter")
+        # Copy flannel.conf
+        _run_command("mkdir -p {}".format(CNI_DIR))
+        _run_command("cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR))
+        (ret, _, _) = _run_command("systemctl start kubelet")
 
         if ret == 0:
             (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
-                KUBE_ADMIN_CONF, device_info.get_hostname()), timeout=60)
-            print("ret = {}".format(ret))
+                KUBE_ADMIN_CONF, get_device_name()), timeout=60)
+            log_debug("ret = {}".format(ret))
 
     except IOError as e:
-        err = "Download failed: {}".format(str(e))
+        err = "Join failed: {}".format(str(e))
         ret = -1
         out = ""
 
@@ -357,7 +412,76 @@ def kube_reset_master(force):
 
     return (ret, err)
 
+def _do_tag(docker_id, image_ver):
+    err = ""
+    out = ""
+    ret = 1
+    status, _, err = _run_command("docker ps |grep {}".format(docker_id))
+    if status == 0:
+        _, image_item, err = _run_command("docker inspect {} |jq -r .[].Image".format(docker_id))
+        if image_item:
+            image_id = image_item.split(":")[1][:12]
+            _, image_info, err = _run_command("docker images |grep {}".format(image_id))
+            if image_info:
+                # Only need the docker repo name without acr domain
+                image_rep = image_info.split()[0].split("/")[-1]
+                tag_res, _, err = _run_command("docker tag {} {}:latest".format(image_id, image_rep))
+                if tag_res == 0:
+                    out = "docker tag {} {}:latest successfully".format(image_id, image_rep)
+                    ret = 0
+                else:
+                    err = "Failed to tag {}:{} to latest. Err: {}".format(image_rep, image_ver, err)
+            else:
+                err = "Failed to docker images |grep {} to get image repo. Err: {}".format(image_id, err)
+        else:
+            err = "Failed to inspect container:{} to get image id. Err: {}".format(docker_id, err)
+    elif err:
+        err = "Error happens when execute docker ps |grep {}. Err: {}".format(docker_id, err)
+    else:
+        out = "New version {} is not running.".format(image_ver)
+        ret = -1
+    
+    return (ret, out, err)
 
+def _remove_container(feat):
+    err = ""
+    out = ""
+    ret = 0
+    _, feat_status, err = _run_command("docker inspect {} |jq -r .[].State.Running".format(feat))
+    if feat_status:
+        if feat_status == 'true':
+            err = "Feature {} container is running, it's unexpected".format(feat)
+            ret = 1
+        else:
+            rm_res, _, err = _run_command("docker rm {}".format(feat))
+            if rm_res == 0:
+                out = "Remove origin local {} container successfully".format(feat)
+            else:
+                err = "Failed to docker rm {}. Err: {}".format(feat, err)
+                ret = 1
+    elif err.startswith("Error: No such object"):
+        out = "Origin local {} container has been removed before".format(feat)
+        err = ""
+    else:
+        err = "Failed to docker inspect {} |jq -r .[].State.Running. Err: {}".format(feat, err)
+        ret = 1
+    
+    return (ret, out, err)
+
+def tag_latest(feat, docker_id, image_ver):
+    ret, out, err = _do_tag(docker_id, image_ver)
+    if ret == 0:
+        log_debug(out)
+        ret, out, err = _remove_container(feat)
+        if ret == 0:
+            log_debug(out)
+        else:
+            log_error(err)
+    elif ret == -1:
+        ret = 0
+    else:
+        log_error(err)
+    return ret
 
 def main():
     syslog.openlog("kube_commands")

@@ -4,49 +4,48 @@
 Description: bgpmon.py -- populating bgp related information in stateDB.
     script is started by supervisord in bgp docker when the docker is started.
 
-    Initial creation of this daemon is to assist SNMP agent in obtaining the 
+    Initial creation of this daemon is to assist SNMP agent in obtaining the
     BGP related information for its MIB support. The MIB that this daemon is
     assisting is for the CiscoBgp4MIB (Neighbor state only). If there are other
-    BGP related items that needs to be updated in a periodic manner in the 
+    BGP related items that needs to be updated in a periodic manner in the
     future, then more can be added into this process.
 
     The script check if there are any bgp activities by monitoring the bgp
     frr.log file timestamp.  If activity is detected, then it will request bgp
-    neighbor state via vtysh cli interface. This bgp activity monitoring is 
+    neighbor state via vtysh cli interface. This bgp activity monitoring is
     done periodically (every 15 second). When triggered, it looks specifically
     for the neighbor state in the json output of show ip bgp neighbors json
     and update the state DB for each neighbor accordingly.
     In order to not disturb and hold on to the State DB access too long and
-    removal of the stale neighbors (neighbors that was there previously on 
+    removal of the stale neighbors (neighbors that was there previously on
     previous get request but no longer there in the current get request), a
     "previous" neighbor dictionary will be kept and used to determine if there
     is a need to perform update or the peer is stale to be removed from the
     state DB
 """
-import subprocess
 import json
 import os
 import syslog
-import swsssdk
+from swsscommon import swsscommon
 import time
+from sonic_py_common.general import getstatusoutput_noshell
 
 PIPE_BATCH_MAX_COUNT = 50
 
 class BgpStateGet:
     def __init__(self):
-        # list peer_l stores the Neighbor peer Ip address
+        # set peer_l stores the Neighbor peer Ip address
         # dic peer_state stores the Neighbor peer state entries
-        # list new_peer_l stores the new snapshot of Neighbor peer ip address
+        # set new_peer_l stores the new snapshot of Neighbor peer ip address
         # dic new_peer_state stores the new snapshot of Neighbor peer states
-        self.peer_l = []
+        self.peer_l = set()
         self.peer_state = {}
-        self.new_peer_l = []
+        self.new_peer_l = set()
         self.new_peer_state = {}
         self.cached_timestamp = 0
-        self.db = swsssdk.SonicV2Connector()
+        self.db = swsscommon.SonicV2Connector()
         self.db.connect(self.db.STATE_DB, False)
-        client = self.db.get_redis_client(self.db.STATE_DB)
-        self.pipe = client.pipeline()
+        self.pipe = swsscommon.RedisPipeline(self.db.get_redis_client(self.db.STATE_DB))
         self.db.delete_all_by_pattern(self.db.STATE_DB, "NEIGH_STATE_TABLE|*" )
 
     # A quick way to check if there are anything happening within BGP is to
@@ -67,21 +66,21 @@ class BgpStateGet:
 
     def update_new_peer_states(self, peer_dict):
         peer_l = peer_dict["peers"].keys()
-        self.new_peer_l.extend(peer_l)
+        self.new_peer_l.update(peer_l)
         for peer in peer_l:
             self.new_peer_state[peer] = peer_dict["peers"][peer]["state"]
 
     # Get a new snapshot of BGP neighbors and store them in the "new" location
     def get_all_neigh_states(self):
-        cmd = "vtysh -c 'show bgp summary json'"
-        rc, output = subprocess.getstatusoutput(cmd)
+        cmd = ["vtysh", "-c", 'show bgp summary json']
+        rc, output = getstatusoutput_noshell(cmd)
         if rc:
             syslog.syslog(syslog.LOG_ERR, "*ERROR* Failed with rc:{} when execute: {}".format(rc, cmd))
             return
 
         peer_info = json.loads(output)
-        # cmd ran successfully, safe to Clean the "new" lists/dic for new snapshot
-        del self.new_peer_l[:]
+        # cmd ran successfully, safe to Clean the "new" set/dict for new snapshot
+        self.new_peer_l.clear()
         self.new_peer_state.clear()
         for key, value in peer_info.items():
             if key == "ipv4Unicast" or key == "ipv6Unicast":
@@ -106,17 +105,21 @@ class BgpStateGet:
         for key, value in data.items():
             if value is None:
                 # delete case
-                self.pipe.delete(key)
+                command = swsscommon.RedisCommand()
+                command.formatDEL(key)
+                self.pipe.push(command)
             else:
                 # Add or Modify case
-                self.pipe.hmset(key, value)
-        self.pipe.execute()
+                command = swsscommon.RedisCommand()
+                command.formatHSET(key, value)
+                self.pipe.push(command)
+
+        self.pipe.flush()
         data.clear()
 
     def update_neigh_states(self):
         data = {}
-        for i in range (0, len(self.new_peer_l)):
-            peer = self.new_peer_l[i]
+        for peer in self.new_peer_l:
             key = "NEIGH_STATE_TABLE|%s" % peer
             if peer in self.peer_l:
                 # only update the entry if state changed
@@ -125,7 +128,7 @@ class BgpStateGet:
                     state = self.new_peer_state[peer]
                     data[key] = {'state':state}
                     self.peer_state[peer] = state
-                # remove this neighbor from old list since it is accounted for
+                # remove this neighbor from old set since it is accounted for
                 self.peer_l.remove(peer)
             else:
                 # New neighbor found case. Add to dictionary and state DB
@@ -135,19 +138,19 @@ class BgpStateGet:
             if len(data) > PIPE_BATCH_MAX_COUNT:
                 self.flush_pipe(data)
         # Check for stale state entries to be cleaned up
-        while len(self.peer_l) > 0:
+        for peer in self.peer_l:
             # remove this from the stateDB and the current neighbor state entry
-            peer = self.peer_l.pop(0)
             del_key = "NEIGH_STATE_TABLE|%s" % peer
             data[del_key] = None
-            del self.peer_state[peer]
+            if peer in self.peer_state:
+                del self.peer_state[peer]
             if len(data) > PIPE_BATCH_MAX_COUNT:
                 self.flush_pipe(data)
         # If anything in the pipeline not yet flushed, flush them now
         if len(data) > 0:
             self.flush_pipe(data)
-        # Save the new List
-        self.peer_l = self.new_peer_l[:]
+        # Save the new set
+        self.peer_l = self.new_peer_l.copy()
 
 def main():
 

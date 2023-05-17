@@ -1,12 +1,33 @@
 #!/bin/bash
 
-DEPENDENT="radv dhcp_relay"
-MULTI_INST_DEPENDENT="teamd"
+DEV=$2
+
+SERVICE="swss"
+PEER="syncd"
+DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
+LOCKFILE="/tmp/swss-syncd-lock$DEV"
+NAMESPACE_PREFIX="asic"
+ETC_SONIC_PATH="/etc/sonic/"
+
+
+. /usr/local/bin/asic_status.sh
 
 function debug()
 {
     /usr/bin/logger $1
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
+}
+
+function read_dependent_services()
+{
+    # Update dependent list based on other packages requirements
+    if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_dependent ]]; then
+        DEPENDENT="${DEPENDENT} $(cat ${ETC_SONIC_PATH}/${SERVICE}_dependent)"
+    fi
+
+    if [[ -f ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent ]]; then
+        MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} $(cat ${ETC_SONIC_PATH}/${SERVICE}_multi_inst_dependent)"
+    fi
 }
 
 function lock_service_state_change()
@@ -15,7 +36,7 @@ function lock_service_state_change()
 
     exec {LOCKFD}>${LOCKFILE}
     /usr/bin/flock -x ${LOCKFD}
-    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+    trap "/usr/bin/flock -u ${LOCKFD}" EXIT
 
     debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE}$DEV service"
 }
@@ -39,7 +60,8 @@ function check_warm_boot()
 
 function check_fast_boot()
 {
-    if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${SYSTEM_FAST_REBOOT}" == x"true" ]]; then
         FAST_BOOT="true"
     else
         FAST_BOOT="false"
@@ -89,11 +111,13 @@ start_peer_and_dependent_services() {
     check_warm_boot
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        if [[ ! -z $DEV ]]; then
-            /bin/systemctl start ${PEER}@$DEV
-        else
-           /bin/systemctl start ${PEER}
-        fi
+        for peer in ${PEER}; do
+            if [[ ! -z $DEV ]]; then
+                /bin/systemctl start ${peer}@$DEV
+            else
+               /bin/systemctl start ${peer}
+            fi
+        done
         for dep in ${DEPENDENT}; do
             /bin/systemctl start ${dep}
         done
@@ -110,14 +134,6 @@ start_peer_and_dependent_services() {
 stop_peer_and_dependent_services() {
     # if warm/fast start enabled or peer lock exists, don't stop peer service docker
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
-        if [[ ! -z $DEV ]]; then
-            /bin/systemctl stop ${PEER}@$DEV
-        else
-            /bin/systemctl stop ${PEER}
-        fi
-        for dep in ${DEPENDENT}; do
-            /bin/systemctl stop ${dep}
-        done
         for dep in ${MULTI_INST_DEPENDENT}; do
             if [[ ! -z $DEV ]]; then
                 /bin/systemctl stop ${dep}@$DEV
@@ -125,7 +141,16 @@ stop_peer_and_dependent_services() {
                 /bin/systemctl stop ${dep}
             fi
         done
-
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl stop ${dep}
+        done
+        for peer in ${PEER}; do
+            if [[ ! -z $DEV ]]; then
+                /bin/systemctl stop ${peer}@$DEV
+            else
+                /bin/systemctl stop ${peer}
+            fi
+        done
     fi
 }
 
@@ -147,29 +172,57 @@ start() {
         $SONIC_DB_CLI ASIC_DB FLUSHDB
         $SONIC_DB_CLI COUNTERS_DB FLUSHDB
         $SONIC_DB_CLI FLEX_COUNTER_DB FLUSHDB
-        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*'"
+        $SONIC_DB_CLI GB_ASIC_DB FLUSHDB
+        $SONIC_DB_CLI GB_COUNTERS_DB FLUSHDB
+        $SONIC_DB_CLI RESTAPI_DB FLUSHDB
+        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*', 'MUX_CABLE_TABLE*', 'ADVERTISE_NETWORK_TABLE*', 'VXLAN_TUNNEL_TABLE*', 'MACSEC_PORT_TABLE*', 'MACSEC_INGRESS_SA_TABLE*', 'MACSEC_EGRESS_SA_TABLE*', 'MACSEC_INGRESS_SC_TABLE*', 'MACSEC_EGRESS_SC_TABLE*', 'VRF_OBJECT_TABLE*'"
+        $SONIC_DB_CLI APPL_STATE_DB FLUSHDB
+        rm -rf /tmp/cache
     fi
 
-    # start service docker
-    /usr/bin/${SERVICE}.sh start $DEV
-    debug "Started ${SERVICE}$DEV service..."
+    # On supervisor card, skip starting asic related services here. In wait(),
+    # wait until the asic is detected by pmon and published via database.
+    if ! is_chassis_supervisor; then
+        # start service docker
+        /usr/bin/${SERVICE}.sh start $DEV
+        debug "Started ${SERVICE}$DEV service..."
+    fi
 
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
 }
 
 wait() {
+    # On supervisor card, wait for asic to be online before starting the docker.
+    if is_chassis_supervisor; then
+        check_asic_status
+        ASIC_STATUS=$?
+
+        # start service docker
+        if [[ $ASIC_STATUS == 0 ]]; then
+            /usr/bin/${SERVICE}.sh start $DEV
+            debug "Started ${SERVICE}$DEV service..."
+        fi
+    fi
+
     start_peer_and_dependent_services
 
     # Allow some time for peer container to start
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
     for SECS in {1..60}; do
-        if [[ ! -z $DEV ]]; then
-            RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER}$DEV)
-        else
-            RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER})
-        fi
+        ALL_PEERS_RUNNING=true
+        for peer in ${PEER}; do
+            if [[ ! -z $DEV ]]; then
+                RUNNING=$(docker inspect -f '{{.State.Running}}' ${peer}$DEV)
+            else
+                RUNNING=$(docker inspect -f '{{.State.Running}}' ${peer})
+            fi
+            if [[ x"$RUNNING" != x"true" ]]; then
+                ALL_PEERS_RUNNING=false
+                break
+            fi
+        done
         ALL_DEPS_RUNNING=true
         for dep in ${MULTI_INST_DEPENDENT}; do
             if [[ ! -z $DEV ]]; then
@@ -183,7 +236,7 @@ wait() {
             fi
         done
 
-        if [[ x"$RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
+        if [[ x"$ALL_PEERS_RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
             break
         else
             sleep 1
@@ -201,7 +254,7 @@ wait() {
     done
 
     if [[ ! -z $DEV ]]; then
-        /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d ${PEER}$DEV ${ALL_DEPS}
+        /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d `printf "%s$DEV " ${PEER}` ${ALL_DEPS}
     else
         /usr/bin/docker-wait-any -s ${SERVICE} -d ${PEER} ${ALL_DEPS}
     fi
@@ -222,6 +275,8 @@ stop() {
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         /usr/bin/${SERVICE}.sh stop $DEV
         debug "Stopped ${SERVICE}$DEV service..."
+        $SONIC_DB_CLI APPL_DB DEL PORT_TABLE:PortInitDone
+        debug "Cleared PortInitDone from APPL_DB..."
     else
         debug "Killing Docker swss..."
         /usr/bin/docker kill swss &> /dev/null || debug "Docker swss is not running ($?) ..."
@@ -232,8 +287,8 @@ stop() {
     # encountered error, e.g. syncd crashed. And swss needs to
     # be restarted.
     if [[ x"$FAST_BOOT" != x"true" ]]; then
-        debug "Clearing FAST_REBOOT flag..."
-        clean_up_tables STATE_DB "'FAST_REBOOT*'"
+        debug "Clearing FAST_RESTART_ENABLE_TABLE flag..."
+        sonic-db-cli STATE_DB hset "FAST_RESTART_ENABLE_TABLE|system" "enable" "false"
     fi
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
@@ -241,20 +296,84 @@ stop() {
     stop_peer_and_dependent_services
 }
 
-DEV=$2
+function check_peer_gbsyncd()
+{
+    GEARBOX_CONFIG=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/gearbox_config.json
 
-SERVICE="swss"
-PEER="syncd"
-DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
-LOCKFILE="/tmp/swss-syncd-lock$DEV"
-NAMESPACE_PREFIX="asic"
+    if [ -f $GEARBOX_CONFIG ]; then
+        PEER="$PEER gbsyncd"
+    fi
+}
+
+function check_macsec()
+{
+    MACSEC_STATE=`$SONIC_DB_CLI CONFIG_DB hget 'FEATURE|macsec' state`
+
+    if [[ ${MACSEC_STATE} == 'enabled' ]]; then
+        if [ "$DEV" ]; then
+            DEPENDENT="${DEPENDENT} macsec@${DEV}"
+        else
+            DEPENDENT="${DEPENDENT} macsec"
+        fi
+    fi
+}
+
+function check_ports_present()
+{
+    PORT_CONFIG_INI=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/port_config.ini
+    HWSKU_JSON=/usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV/hwsku.json
+
+    if [[ -f $PORT_CONFIG_INI ]] || [[ -f $HWSKU_JSON ]]; then
+         return 0
+    fi
+    return 1
+}
+
+function check_service_exists()
+{
+    systemctl list-units --full -all 2>/dev/null | grep -Fq $1
+    if [[ $? -eq 0 ]]; then
+        echo true
+        return
+    else
+        echo false
+        return
+    fi
+}
+
+# DEPENDENT initially contains namespace independent services
+# namespace specific services are added later in this script.
+DEPENDENT=""
+MULTI_INST_DEPENDENT=""
+
+if [[ $(check_service_exists radv) == "true" ]]; then
+    DEPENDENT="$DEPENDENT radv"
+fi
+
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
+    DEPENDENT+=" bgp@${DEV}"
 else
     NET_NS=""
     SONIC_DB_CLI="sonic-db-cli"
+    DEPENDENT+=" bgp"
 fi
+
+PLATFORM=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' platform`
+HWSKU=`$SONIC_DB_CLI CONFIG_DB hget 'DEVICE_METADATA|localhost' hwsku`
+
+check_peer_gbsyncd
+check_macsec
+
+check_ports_present
+PORTS_PRESENT=$?
+
+if [[ $PORTS_PRESENT == 0 ]] && [[ $(check_service_exists teamd) == "true" ]]; then
+    MULTI_INST_DEPENDENT="teamd"
+fi
+
+read_dependent_services
 
 case "$1" in
     start|wait|stop)

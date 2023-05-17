@@ -21,9 +21,12 @@ class Psu(PsuBase):
 
     # { PSU-ID: { Sensor-Name: Sensor-ID } }
     SENSOR_MAPPING = { 1: { "State": 0x2f, "Current": 0x37,
-                            "Power": 0x38, "Voltage": 0x36 },
+                            "Power": 0x38, "Voltage": 0x36,
+                            "Temperature": 0x35 },
                        2: { "State": 0x39, "Current": 0x41,
-                            "Power": 0x42, "Voltage": 0x40 } }
+                            "Power": 0x42, "Voltage": 0x40,
+                            "Temperature": 0x3F } }
+
     # ( PSU-ID: FRU-ID }
     FRU_MAPPING = { 1: 3, 2: 4 }
 
@@ -36,6 +39,7 @@ class Psu(PsuBase):
         self.voltage_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Voltage"])
         self.current_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Current"])
         self.power_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Power"])
+        self.temp_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index ]["Temperature"])
         self.fru = IpmiFru(self.FRU_MAPPING[self.index])
         self.psu_type_raw_cmd = "0x3A 0x0B {}".format(psu_index+1)
 
@@ -83,6 +87,19 @@ class Psu(PsuBase):
         """
         return self.fru.get_board_serial()
 
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        serial = self.fru.get_board_serial()
+        if serial != "NA" and len(serial) == 23:
+            return serial[-3:]
+        else:
+            return "NA"
+
     def get_status(self):
         """
         Retrieves the operational status of the PSU
@@ -110,7 +127,56 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(voltage)
+        return float(voltage)
+
+    def get_voltage_low_threshold(self):
+        """
+        Returns PSU low threshold in Volts
+        """
+        is_valid, low_threshold = self.voltage_sensor.get_threshold("LowerCritical")
+        if not is_valid:
+            low_threshold = 11.4
+        low_threshold = "{:.2f}".format(low_threshold)
+
+        return float(low_threshold)
+
+
+    def get_voltage_high_threshold(self):
+        """
+        Returns PSU high threshold in Volts
+        """
+        is_valid, high_threshold = self.voltage_sensor.get_threshold("UpperCritical")
+        if not is_valid:
+            high_threshold = 12.6
+        high_threshold = "{:.2f}".format(high_threshold)
+
+        return float(high_threshold)
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from thermal
+
+        Returns:
+            A float number of current temperature in Celsius up to
+            nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        is_valid, temperature = self.temp_sensor.get_reading()
+        if not is_valid:
+            temperature = 0
+
+        return float(temperature)
+
+    def get_temperature_high_threshold(self):
+        """
+        Returns the high temperature threshold for PSU in Celsius
+        """
+        is_valid, high_threshold = self.temp_sensor.get_threshold("UpperCritical")
+        if not is_valid:
+            high_threshold = 113
+        high_threshold = "{:.2f}".format(high_threshold)
+
+        return float(high_threshold)
+
 
     def get_current(self):
         """
@@ -124,7 +190,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(current)
+        return float(current)
 
     def get_power(self):
         """
@@ -138,7 +204,21 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(power)
+        return float(power)
+
+    def get_maximum_supplied_power(self):
+        """
+        Retrieves the maximum supplied power by PSU
+
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        is_valid, power = self.power_sensor.get_threshold("UpperCritical")
+        if not is_valid:
+            return None
+
+        return float(power)
 
     def get_powergood_status(self):
         """
@@ -177,3 +257,20 @@ class Psu(PsuBase):
         if type_res is not None and len(type_res) == 1 :
             return psu_type[type_res[0]]
         return None
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this PSU is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

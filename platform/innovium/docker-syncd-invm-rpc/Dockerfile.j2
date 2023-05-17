@@ -1,4 +1,4 @@
-FROM docker-syncd-invm
+FROM docker-syncd-invm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,27 +9,32 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
-RUN dpkg -P syncd
-
-RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } ; \
-{% for deb in docker_syncd_invm_rpc_debs.split(' ') -%}
-dpkg_apt debs/{{ deb }}{{'; '}}
-{%- endfor %}
+RUN apt-get purge -y syncd
 
 ## Pre-install the fundamental packages
 RUN apt-get update \
  && apt-get -y install  \
     net-tools           \
     python-pip          \
+    python-setuptools   \
     build-essential     \
     libssl-dev          \
     libffi-dev          \
     python-dev          \
-    libpython2.7        \
     libjansson4         \
+    libyaml-dev         \
     wget                \
     cmake               \
- && wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
+    libqt5core5a        \
+    libqt5network5      \
+    libboost-atomic1.71.0
+
+RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } ; \
+{% for deb in docker_syncd_invm_rpc_debs.split(' ') -%}
+dpkg_apt debs/{{ deb }}{{'; '}}
+{%- endfor %}
+
+RUN wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
  && tar xvfz 1.0.0.tar.gz \
  && cd nanomsg-1.0.0    \
  && mkdir -p build      \
@@ -39,9 +44,9 @@ RUN apt-get update \
  && cd ..               \
  && rm -fr nanomsg-1.0.0 \
  && rm -f 1.0.0.tar.gz  \
- && pip install cffi==1.7.0    \
- && pip install --upgrade cffi==1.7.0 \
- && pip install nnpy    \
+ && pip install numpy   \
+ && pip install scipy   \
+ && pip install setuptools   \
  && mkdir -p /opt       \
  && cd /opt             \
  && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py \

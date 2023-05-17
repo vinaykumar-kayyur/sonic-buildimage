@@ -1,0 +1,15 @@
+obj-m := rg-gpio-xeon.o
+obj-m += rg_fan.o
+obj-m += rg_psu.o
+obj-m += ragile_platform.o
+obj-m += i2c-mux-pca9641.o
+obj-m += i2c-mux-pca954x.o
+obj-m += csu550.o
+ragile_common-objs := ragile_common_module.o
+obj-m += ragile_common.o
+obj-m += fpga_pcie_i2c.o
+obj-m += fpga_i2c_ocores.o
+obj-m += lpc_dbg.o
+obj-m += lpc_cpld_i2c_ocores.o
+obj-m += rg-i2c-algo-bit.o
+obj-m += rg-i2c-gpio.o

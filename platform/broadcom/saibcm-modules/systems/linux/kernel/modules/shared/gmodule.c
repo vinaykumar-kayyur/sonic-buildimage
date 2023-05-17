@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: gmodule.c,v 1.20 Broadcom SDK $
@@ -26,21 +37,9 @@
 #include <lkm.h>
 #include <gmodule.h>
 #include <linux/init.h>
-#include <linux/seq_file.h>
-
 /* Module Vector Table */
 static gmodule_t* _gmodule = NULL;
 
-
-/* Allow DEVFS Support on 2.4 Kernels */
-#if defined(LKM_2_4) && defined(CONFIG_DEVFS_FS)
-#define GMODULE_CONFIG_DEVFS_FS
-#endif
-
-
-#ifdef GMODULE_CONFIG_DEVFS_FS
-devfs_handle_t devfs_handle = NULL;
-#endif
 
 /* FIXME: support dynamic debugging */
 
@@ -94,21 +93,18 @@ gdbg(const char* fmt, ...)
  * Proc FS Utilities
  */
 #if PROC_INTERFACE_KERN_VER_3_10
-static struct seq_file* _proc_buf = NULL;
-
 int 
-pprintf(const char* fmt, ...)
+pprintf(struct seq_file *m, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    seq_vprintf(_proc_buf, fmt, args);
+    seq_vprintf(m, fmt, args);
     va_end(args);
     return 0;
 }
 
 static int _gmodule_proc_show(struct seq_file *m, void *v){
-    _proc_buf = m;
-    _gmodule->pprint();
+    _gmodule->pprint(m);
     return 0;
 }
 
@@ -143,13 +139,13 @@ static int _gmodule_proc_release(struct inode * inode, struct file * file) {
     return single_release(inode, file);
 }
 
-struct file_operations _gmodule_proc_fops = {
-    owner:      THIS_MODULE,
-    open:       _gmodule_proc_open,
-    read:       seq_read,
-    llseek:     seq_lseek,
-    write:      _gmodule_proc_write,
-    release:    _gmodule_proc_release,
+struct proc_ops _gmodule_proc_fops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open =       _gmodule_proc_open,
+    .proc_read =       seq_read,
+    .proc_lseek =      seq_lseek,
+    .proc_write =      _gmodule_proc_write,
+    .proc_release =    _gmodule_proc_release,
 };
 #else
 int
@@ -174,7 +170,7 @@ gmodule_pprintf(char** page_ptr, const char* fmt, ...)
 static char* _proc_buf = NULL;
 
 int 
-pprintf(const char* fmt, ...)
+pprintf(struct seq_file *m, const char* fmt, ...)
 {  
     int rv;
 
@@ -193,7 +189,7 @@ static int
 _gmodule_pprint(char* buf)
 {
     PSTART(buf);
-    _gmodule->pprint();
+    _gmodule->pprint(NULL);
     return PEND(buf);
 }
 
@@ -265,7 +261,6 @@ _gmodule_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
-#ifdef HAVE_UNLOCKED_IOCTL
 static long
 _gmodule_unlocked_ioctl(struct file *filp,
                         unsigned int cmd, unsigned long arg)
@@ -276,20 +271,7 @@ _gmodule_unlocked_ioctl(struct file *filp,
 	return -1;
     }
 }
-#else
-static int 
-_gmodule_ioctl(struct inode *inode, struct file *filp,
-	       unsigned int cmd, unsigned long arg)
-{
-    if(_gmodule->ioctl) {
-	return _gmodule->ioctl(cmd, arg);
-    } else {
-	return -1;
-    }
-}
-#endif
 
-#ifdef HAVE_COMPAT_IOCTL
 static long
 _gmodule_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -299,7 +281,6 @@ _gmodule_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	return -1;
     }
 }
-#endif
 
 
 static int
@@ -328,17 +309,11 @@ _gmodule_mmap(struct file *filp, struct vm_area_struct *vma)
 /* FILE OPERATIONS */
 
 struct file_operations _gmodule_fops = {
-#ifdef HAVE_UNLOCKED_IOCTL
-    unlocked_ioctl: _gmodule_unlocked_ioctl,
-#else
-    ioctl:      _gmodule_ioctl,
-#endif
-    open:       _gmodule_open,
-    release:    _gmodule_release,
-    mmap:       _gmodule_mmap,
-#ifdef HAVE_COMPAT_IOCTL
-    compat_ioctl: _gmodule_compat_ioctl,
-#endif
+    .unlocked_ioctl = _gmodule_unlocked_ioctl,
+    .open =       _gmodule_open,
+    .release =    _gmodule_release,
+    .mmap =       _gmodule_mmap,
+    .compat_ioctl = _gmodule_compat_ioctl,
 };
 
 
@@ -358,11 +333,7 @@ cleanup_module(void)
     }
   
     /* Finally, remove ourselves from the universe */
-#ifdef GMODULE_CONFIG_DEVFS_FS
-    if(devfs_handle) devfs_unregister(devfs_handle);
-#else
     unregister_chrdev(_gmodule->major, _gmodule->name);
-#endif
 }
 
 int __init
@@ -376,21 +347,6 @@ init_module(void)
 
 
     /* Register ourselves */
-#ifdef GMODULE_CONFIG_DEVFS_FS
-    devfs_handle = devfs_register(NULL, 
-				  _gmodule->name, 
-				  DEVFS_FL_NONE, 
-				  _gmodule->major,
-				  _gmodule->minor, 
-				  S_IFCHR | S_IRUGO | S_IWUGO,
-				  &_gmodule_fops, 
-				  NULL);
-    if(!devfs_handle) {
-	printk(KERN_WARNING "%s: can't register device with devfs", 
-	       _gmodule->name);
-    }
-    rc = 0;
-#else
     rc = register_chrdev(_gmodule->major, 
 			 _gmodule->name, 
 			 &_gmodule_fops);
@@ -403,17 +359,12 @@ init_module(void)
     if(_gmodule->major == 0) {
 	_gmodule->major = rc;
     }
-#endif
 
     /* Specific module Initialization */
     if(_gmodule->init) {
 	int rc;
 	if((rc = _gmodule->init()) < 0) {
-#ifdef GMODULE_CONFIG_DEVFS_FS
-            if(devfs_handle) devfs_unregister(devfs_handle);
-#else
             unregister_chrdev(_gmodule->major, _gmodule->name);
-#endif
 	    return rc;
 	}
     }
