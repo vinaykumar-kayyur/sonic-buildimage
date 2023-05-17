@@ -36,7 +36,6 @@ $(DOCKER_TELEMETRY)_RUN_OPT += --mount type=bind,source="/var/platform/",target=
 ifneq ($(INCLUDE_SYSTEM_GNMI), y)
 $(DOCKER_TELEMETRY)_RUN_OPT += -v /var/run/dbus:/var/run/dbus:rw
 endif
->>>>>>> upstream/master
 
 $(DOCKER_TELEMETRY)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 $(DOCKER_TELEMETRY)_BASE_IMAGE_FILES += monit_telemetry:/etc/monit/conf.d
