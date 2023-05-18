@@ -128,8 +128,6 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 # Install Python module for ipaddr
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install ipaddr
 
-# Install Python module for bcrypt
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install bcrypt==3.2.2
 
 # Install Python module for grpcio and grpcio-toole
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
@@ -210,9 +208,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Install prerequisites needed for using the Python m2crypto package, used by sonic-utilities
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install openssl
 
-# Install SONiC Utilities Python package
+
 # install libffi-dev to match utilities' dependency.
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libffi-dev
+# Install Python module for bcrypt
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install bcrypt==3.2.2
+
+# Install SONiC Utilities Python package
 SONIC_UTILITIES_PY3_WHEEL_NAME=$(basename {{sonic_utilities_py3_wheel_path}})
 sudo cp {{sonic_utilities_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_UTILITIES_PY3_WHEEL_NAME
