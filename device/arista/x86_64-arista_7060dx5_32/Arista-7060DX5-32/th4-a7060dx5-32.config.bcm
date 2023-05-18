@@ -1496,7 +1496,6 @@ device:
 ...
 
 ### PFC
-# NOTE: $SDK/rc/ltsw.soc sets "txpause=true rxpause=true" for all ports, which blows away the PFC enabling below :(
 ---
 device:
     0:
