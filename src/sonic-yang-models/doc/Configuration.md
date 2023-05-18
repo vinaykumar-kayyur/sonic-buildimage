@@ -33,6 +33,7 @@ Table of Contents
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [FABRIC_MONITOR](#fabric-monitor)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
          * [IPv6 Link-local] (#ipv6-link-local)
@@ -924,7 +925,8 @@ instance is supported in SONiC.
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
-        "yang_config_validation": "disable"
+        "yang_config_validation": "disable",
+        "rack_mgmt_map": "dummy_value"
     }
   }
 }
@@ -1041,6 +1043,21 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 	    "FG_NHG": "fgnhg_v6"
 	}
 }
+```
+
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
 ```
 
 

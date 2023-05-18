@@ -532,7 +532,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setup
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==6.1.1'
 
 # Install scapy
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
@@ -674,7 +674,11 @@ if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_
             exit 1
         fi
 
-        sudo $sonic_su_prod_signing_tool $CONFIGURED_ARCH $FILESYSTEM_ROOT $LINUX_KERNEL_VERSION $OUTPUT_SEC_BOOT_DIR
+        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH \
+                                         -r $FILESYSTEM_ROOT \
+                                         -l $LINUX_KERNEL_VERSION \
+                                         -o $OUTPUT_SEC_BOOT_DIR \
+                                         $SECURE_UPGRADE_PROD_TOOL_ARGS
 
         # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
         sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \

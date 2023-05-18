@@ -456,6 +456,21 @@ def parse_dpg(dpg, hname):
     aclintfs = None
     mgmtintfs = None
     subintfs = None
+    intfs= {}
+    lo_intfs= {}
+    mvrf= {}
+    mgmt_intf= {}
+    voq_inband_intfs= {}
+    vlans= {}
+    vlan_members= {}
+    dhcp_relay_table= {}
+    pcs= {}
+    pc_members= {}
+    acls= {}
+    acl_table_types = {}
+    vni= {}
+    dpg_ecmp_content= {}
+    static_routes= {}
     tunnelintfs = defaultdict(dict)
     tunnelintfs_qos_remap_config = defaultdict(dict)
 
@@ -586,7 +601,7 @@ def parse_dpg(dpg, hname):
                         else:
                             prefix = prefix + "/32"
                     static_routes[prefix] = {'nexthop': ",".join(nexthop), 'ifname': ",".join(ifname), 'advertise': advertise}
-
+                    
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
                 for subnet_range in ip_intfs_map:
@@ -670,8 +685,6 @@ def parse_dpg(dpg, hname):
             vlans[sonic_vlan_name] = vlan_attributes
             vlan_member_list[sonic_vlan_name] = vmbr_list
 
-        acls = {}
-        acl_table_types = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
                 aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
@@ -855,9 +868,8 @@ def parse_dpg(dpg, hname):
                 for table_key, mg_key in tunnel_qos_remap_table_key_to_mg_key_map.items():
                     if mg_key in mg_tunnel.attrib:
                         tunnelintfs_qos_remap_config[tunnel_type][tunnel_name][table_key] = mg_tunnel.attrib[mg_key]
-
         return intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, acl_table_types, vni, tunnelintfs, dpg_ecmp_content, static_routes, tunnelintfs_qos_remap_config
-    return None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+    return intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, acl_table_types, vni, tunnelintfs, dpg_ecmp_content, static_routes, tunnelintfs_qos_remap_config
 
 
 def parse_host_loopback(dpg, hname):
@@ -1530,7 +1542,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if asic_name is None:
         current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
     else:
-        current_device = [devices[key] for key in devices if key.lower() == asic_name.lower()][0]
+        try:
+            current_device = [devices[key] for key in devices if key.lower() == asic_name.lower()][0]
+        except:
+            print("Warning: no asic configuration found for {} in minigraph".format(asic_name), file=sys.stderr)
+            current_device = {}
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -1720,18 +1736,15 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
-        # Add a check for for voq, T1
-        if results['DEVICE_METADATA']['localhost']['type'].lower() == 'leafrouter' or switch_type == 'voq':
-            # when the port speed is changes from 400g to 100g 
-            # update the port lanes, use the first 4 lanes of the 400G port to support 100G port
-            if port_default_speed == '400000' and port_png_speed == '100000':
-                port_lanes =  ports[port_name].get('lanes', '').split(',')
-                # check if the 400g port has only 8 lanes
-                if len(port_lanes) != 8:
-                    continue
-                updated_lanes = ",".join(port_lanes[:4])
-                ports[port_name]['lanes'] = updated_lanes
-
+        # when the port speed is changes from 400g to 100g/40g 
+        # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
+        if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
+            port_lanes =  ports[port_name].get('lanes', '').split(',')
+            # check if the 400g port has only 8 lanes
+            if len(port_lanes) != 8:
+                continue
+            updated_lanes = ",".join(port_lanes[:4])
+            ports[port_name]['lanes'] = updated_lanes
 
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
@@ -1859,7 +1872,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
     # for storage backend subinterface info present in minigraph takes precedence over ResourceType
-    if current_device['type'] in backend_device_types and bool(vlan_sub_intfs):
+    if current_device and current_device['type'] in backend_device_types and bool(vlan_sub_intfs):
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
         is_storage_device = True
@@ -1867,7 +1880,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # storage backend T0 have all vlan members tagged
         for vlan in vlan_members:
             vlan_members[vlan]["tagging_mode"] = "tagged"
-    elif current_device['type'] in backend_device_types and (resource_type is None or 'Storage' in resource_type):
+    elif current_device and current_device['type'] in backend_device_types and (resource_type is None or 'Storage' in resource_type):
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
         is_storage_device = True
@@ -1944,7 +1957,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
-    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'], is_storage_device, vlan_members)
+    results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'] if current_device else None, is_storage_device, vlan_members)
     results['FEATURE'] = {
         'telemetry': {
             'state': 'enabled'
@@ -1997,18 +2010,18 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     #     results['MIRROR_SESSION'] = mirror_sessions
 
     # Special parsing for spine chassis frontend routers
-    if current_device['type'] == spine_chassis_frontend_role:
+    if current_device and current_device['type'] == spine_chassis_frontend_role:
         parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
     # Enable console management feature for console swtich
     results['CONSOLE_SWITCH'] = {
         'console_mgmt' : {
-            'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
+            'enabled' : 'yes' if current_device and current_device['type'] in console_device_types else 'no'
         }
     }
 
     # Enable DHCP Server feature for specific device type
-    if current_device['type'] in dhcp_server_enabled_device_types:
+    if current_device and current_device['type'] in dhcp_server_enabled_device_types:
         results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
 
     return results
