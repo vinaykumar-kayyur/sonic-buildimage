@@ -602,14 +602,17 @@ def get_system_mac(namespace=None):
         hw_mac_entry_outputs.append((mac, err))
         if machine_vars is not None and machine_key in machine_vars:
             hwsku = machine_vars[machine_key]
-            profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini']
-            profile_cmd1 = ['grep', 'switchMacAddress']
-            profile_cmd2 = ['cut', '-f2', '-d', '=']
-            (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
+            profile_file = HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini'
+            if os.path.exists(profile_file):
+                profile_cmd0 = ['cat', profile_file]
+                profile_cmd1 = ['grep', 'switchMacAddress']
+                profile_cmd2 = ['cut', '-f2', '-d', '=']
+                (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
+                hw_mac_entry_outputs.append((mac, err))
         else:
             profile_cmd = ["false"]
             (mac, err) = run_command(profile_cmd)
-        hw_mac_entry_outputs.append((mac, err))
+            hw_mac_entry_outputs.append((mac, err))
         (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
         hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'cisco-8000'):
