@@ -143,19 +143,19 @@ override_dh_clean:
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build/*.egg-info; \
 		elif [ $$mod = "s5224f" ]; then \
-		         rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5224f_fpga_ocores.c; \
+		        rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5224f_fpga_ocores.c; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/sonic_platform/ipmihelper.py; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/modules/*.whl; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build/*.egg-info; \
 		elif [ $$mod = "s5232f" ]; then \
-		         rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5232f_fpga_ocores.c; \
+		        rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5232f_fpga_ocores.c; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/sonic_platform/ipmihelper.py; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/modules/*.whl; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build/*.egg-info; \
 		elif [ $$mod = "s5248f" ]; then \
-		         rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5248f_fpga_ocores.c; \
+		        rm -f $(MOD_SRC_DIR)/$${mod}/modules/dell_s5248f_fpga_ocores.c; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/sonic_platform/ipmihelper.py; \
 			rm -f $(MOD_SRC_DIR)/$${mod}/modules/*.whl; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/build; \
