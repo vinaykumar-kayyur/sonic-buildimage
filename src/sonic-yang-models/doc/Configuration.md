@@ -1,3 +1,5 @@
+
+=======
 =======
 # SONiC Configuration Database Manual
 
@@ -33,6 +35,7 @@ Table of Contents
          * [FG_NHG](#fg_nhg)  
          * [FG_NHG_MEMBER](#fg_nhg_member)  
          * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [FABRIC_MONITOR](#fabric-monitor)
          * [FLEX_COUNTER_TABLE](#flex_counter_table)  
          * [Hash](#hash)  
          * [IPv6 Link-local] (#ipv6-link-local)
@@ -924,7 +927,8 @@ instance is supported in SONiC.
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
-        "yang_config_validation": "disable"
+        "yang_config_validation": "disable",
+        "rack_mgmt_map": "dummy_value"
     }
   }
 }
@@ -1041,6 +1045,21 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 	    "FG_NHG": "fgnhg_v6"
 	}
 }
+```
+
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
 ```
 
 
@@ -1572,8 +1591,7 @@ optional attributes.
             "speed": "40000",
             "link_training": "off",
             "laser_freq": "191300",
-            "tx_power": "-27.3",
-            "mode":"trunk"
+            "tx_power": "-27.3"
         },
         "Ethernet1": {
             "index": "1",
@@ -1585,8 +1603,7 @@ optional attributes.
             "speed": "40000",
             "link_training": "on",
             "laser_freq": "191300",
-            "tx_power": "-27.3",
-            "mode":"trunk"
+            "tx_power": "-27.3"
         },
         "Ethernet63": {
             "index": "63",
@@ -1596,8 +1613,7 @@ optional attributes.
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
-            "tx_power": "-27.3",
-            "mode":"trunk"
+            "tx_power": "-27.3"
         }
     }
 }
@@ -1613,8 +1629,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "subport": 1,
-            "mode":"trunk"
+            "subport": 1
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1624,8 +1639,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "subport": 2,
-            "mode":"trunk"
+            "subport": 2
         },
     }
 }
@@ -1657,8 +1671,7 @@ name as object key and member list as attribute.
         ],
         "mtu": "9100",
         "fallback": "false",
-        "fast_rate": "true",
-        "mode":"trunk"
+        "fast_rate": "true"
     }
   }
 }
