@@ -84,7 +84,7 @@ config_syncd_bcm()
        chip_id=${readline#*0x14e4:0x}
        chip_id=${chip_id::3}
        COMMON_CONFIG_BCM=$(find $PLATFORM_COMMON_DIR/x86_64-broadcom_${chip_id} -name '*.bcm')
-   
+
        if [ -f $PLATFORM_COMMON_DIR/x86_64-broadcom_${chip_id}/*.bcm ]; then
           for file in $CONFIG_BCM; do
               echo "" >> $file

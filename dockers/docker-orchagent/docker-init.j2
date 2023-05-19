@@ -52,7 +52,7 @@ fi
 IS_SUPERVISOR=/etc/sonic/chassisdb.conf
 USE_PCI_ID_IN_CHASSIS_STATE_DB=/usr/share/sonic/platform/use_pci_id_chassis
 ASIC_ID="asic$NAMESPACE_ID"
-if [ -f "$IS_SUPERVISOR" ]; then 
+if [ -f "$IS_SUPERVISOR" ]; then
     if [ -f "$USE_PCI_ID_IN_CHASSIS_STATE_DB" ]; then
         while true; do
             PCI_ID=$(sonic-db-cli -s CHASSIS_STATE_DB HGET "CHASSIS_FABRIC_ASIC_TABLE|$ASIC_ID" asic_pci_address)

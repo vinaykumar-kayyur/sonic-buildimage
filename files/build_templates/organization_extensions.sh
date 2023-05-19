@@ -45,7 +45,7 @@ done
 
 echo "Executing SONIC Organization Extensions"
 
-## Place your Organization specific code / scipts here ... 
+## Place your Organization specific code / scipts here ...
 
 
 echo "SONIC Organization Extensions - Done"

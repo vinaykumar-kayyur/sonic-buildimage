@@ -18,7 +18,7 @@ fi
 /usr/bin/TS TSB
 if [[ "$(sonic-cfggen -d -v DEVICE_METADATA.localhost.type)" == *"SpineRouter"* ]] ; then
   if [[ "$1" != "chassis" ]] ; then
-    echo "Please execute 'sudo config save' to preserve System mode in Normal state after reboot or config reload"    
+    echo "Please execute 'sudo config save' to preserve System mode in Normal state after reboot or config reload"
   fi
 else
   echo "Please execute 'sudo config save' to preserve System mode in Normal state after reboot or config reload"

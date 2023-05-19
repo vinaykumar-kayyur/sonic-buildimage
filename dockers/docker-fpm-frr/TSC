@@ -12,7 +12,7 @@ check_installed
 installed=$?
 
 if [[ $routemap_count -eq 0 ]];
-then 
+then
   echo "System Mode: No external neighbors"
 elif [[ $installed -eq 0 ]];
 then

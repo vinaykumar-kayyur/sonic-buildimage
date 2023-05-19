@@ -5,7 +5,7 @@ import time
 
 from sonic_py_common import logger as log
 from swsscommon.swsscommon import ConfigDBConnector, DBConnector, FieldValuePairs, ProducerStateTable, SonicV2Connector, Table
-from swsscommon.swsscommon import APPL_DB, STATE_DB 
+from swsscommon.swsscommon import APPL_DB, STATE_DB
 
 logger = log.Logger('write_standby')
 
@@ -51,7 +51,7 @@ class MuxStateWriter(object):
         if self.appl_db_connector is None:
             self.appl_db_connector = DBConnector(APPL_DB, REDIS_SOCK_PATH, True)
         return self.appl_db_connector
-    
+
     @property
     def state_db(self):
         """
@@ -149,7 +149,7 @@ class MuxStateWriter(object):
         curr_time = time.time()
 
         while not self.tunnel_exists() and curr_time - start < timeout:
-            time.sleep(interval) 
+            time.sleep(interval)
             curr_time = time.time()
 
         # If we timed out, return False else return True

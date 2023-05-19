@@ -43,7 +43,7 @@ class LldpManager(daemon_base.DaemonBase):
         state_db: Handle to Redis State database via swsscommon lib
         config_db: Handle to Redis Config database via swsscommon lib
         pending_cmds: Dictionary where key is port name, value is pending
-                      LLDP configuration command to run 
+                      LLDP configuration command to run
                       and the last timestamp that this command was failed (used for retry mechanism)
     """
     REDIS_TIMEOUT_MS = 0
@@ -65,7 +65,7 @@ class LldpManager(daemon_base.DaemonBase):
         self.state_db = swsscommon.DBConnector("STATE_DB",
                                               self.REDIS_TIMEOUT_MS,
                                               False)
-        
+
         self.pending_cmds = {}
         self.hostname = "None"
         self.mgmt_ip = "None"
@@ -140,16 +140,16 @@ class LldpManager(daemon_base.DaemonBase):
         # asic-to-asic communication in VOQ based chassis system. We do not configure LLDP on these.
         if port_name.startswith(inband_prefix()) or port_name.startswith(recirc_prefix()):
             return
- 
+
         # Get the port alias. If None or empty string, use port name instead
         port_alias = port_table_dict.get("alias")
         if not port_alias:
             self.log_info("Unable to retrieve port alias for port '{}'. Using port name instead.".format(port_name))
             port_alias = port_name
-        
+
         # Get the port description. If None or empty string, we'll skip this configuration
         port_desc = port_table_dict.get("description")
-        
+
         lldpcli_cmd = ["lldpcli", "configure", "ports", port_name, "lldp", "portidsubtype", "local", port_alias]
 
         # if there is a description available, also configure that
@@ -173,7 +173,7 @@ class LldpManager(daemon_base.DaemonBase):
             if not self.is_port_up(port_name):
                 self.log_info("port %s is not up, continue"%port_name)
                 continue
-                
+
             if 'failed_timestamp' in port_item and time.time()-port_item['failed_timestamp']<FAILED_CMD_TIMEOUT:
                 continue
 
@@ -195,7 +195,7 @@ class LldpManager(daemon_base.DaemonBase):
                     self.pending_cmds[port_name]['failed_count'] += 1
                     self.pending_cmds[port_name]['failed_timestamp'] = time.time()
                     self.log_info("Command failed '{}': {} - cmd failed {} times, retrying again".format(cmd, stderr, self.pending_cmds[port_name]['failed_count']))
-                    
+
         # Delete all successful commands from self.pending_cmds
         for port_name in to_delete:
             self.pending_cmds.pop(port_name, None)

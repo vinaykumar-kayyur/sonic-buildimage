@@ -301,7 +301,7 @@ check_all_config_db_present()
         ((asic_num = asic_num + 1))
     done
 
-    return 0   
+    return 0
 }
 
 # Perform configuration migration from backup copy.
@@ -313,7 +313,7 @@ do_config_migration()
 
     # Migrate all configuration files from old to new
     copy_config_files_and_directories $copy_list
-    
+
     # Migrate all config_db from old to new
     copy_config_files_and_directories $(get_config_db_file_list)
 
@@ -376,7 +376,7 @@ boot_config()
     # for multi-npu platforms if we reach this case.
     if [[ ($NUM_ASIC -gt 1) ]]; then
         return 0
-    fi	
+    fi
 
     if [ -e /tmp/pending_config_initialization ] || [ -e  ${CONFIG_SETUP_INITIALIZATION_FLAG} ]; then
         do_config_initialization

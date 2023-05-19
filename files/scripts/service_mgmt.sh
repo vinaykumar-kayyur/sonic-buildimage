@@ -32,7 +32,7 @@ function check_redundant_type()
     DEVICE_SUBTYPE=`$SONIC_DB_CLI CONFIG_DB hget "DEVICE_METADATA|localhost" subtype`
     if [[ x"$DEVICE_SUBTYPE" == x"DualToR" ]]; then
         MUX_CONFIG=`show muxcable config`
-        if [[ $MUX_CONFIG =~ .*active-active.* ]]; then 
+        if [[ $MUX_CONFIG =~ .*active-active.* ]]; then
             ACTIVE_ACTIVE="true"
         else
             ACTIVE_ACTIVE="false"
@@ -43,7 +43,7 @@ function check_redundant_type()
     CONFIG_KNOB=`$SONIC_DB_CLI CONFIG_DB hget "MUX_LINKMGR|SERVICE_MGMT" kill_radv`
     if [[ x"$CONFIG_KNOB" == x"False" ]]; then
         ACTIVE_ACTIVE='false'
-    fi 
+    fi
     debug "DEVICE_SUBTYPE: ${DEVICE_SUBTYPE}, CONFIG_KNOB: ${CONFIG_KNOB}"
 }
 

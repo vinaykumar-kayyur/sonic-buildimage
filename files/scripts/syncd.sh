@@ -35,7 +35,7 @@ function startplatform() {
                 platform=$aboot_platform
             elif [ -n "$onie_platform" ]; then
                 platform=$onie_platform
-            else 
+            else
                 platform="unknown"
             fi
             if [[ x"$platform" == x"x86_64-arista_720dt_48s" ]]; then

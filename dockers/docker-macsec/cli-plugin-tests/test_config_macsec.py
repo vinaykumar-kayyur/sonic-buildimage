@@ -115,7 +115,7 @@ class TestConfigMACsec(object):
         result = runner.invoke(macsec.macsec, ["port", "add", "Ethernet0", "test"], obj=cfgdb)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         port_table = cfgdb.get_entry("PORT", "Ethernet0")
-        assert port_table 
+        assert port_table
         assert port_table["macsec"] == "test"
         assert port_table["admin_status"] == "up"
 
@@ -133,7 +133,7 @@ class TestConfigMACsec(object):
         cfgdb = mock_cfgdb
         runner = CliRunner()
 
-        # Enable nonexisted profile 
+        # Enable nonexisted profile
         result = runner.invoke(macsec.macsec, ["port", "add", "Ethernet0", "test"], obj=cfgdb)
         assert result.exit_code != 0
 

@@ -9,7 +9,7 @@ RUN apt-get update              \
     && apt-get upgrade -y       \
     && apt-get dist-upgrade -y  \
     && apt-get install -y       \
-    python3-pip             
+    python3-pip
 
 RUN pip3 install crc16          \
         netifaces               \
@@ -23,7 +23,7 @@ RUN pip3 install crc16          \
 COPY \
 {% for deb in docker_ptf_sai_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
-{%- endfor -%} 
+{%- endfor -%}
 debs/
 
 RUN dpkg -i \

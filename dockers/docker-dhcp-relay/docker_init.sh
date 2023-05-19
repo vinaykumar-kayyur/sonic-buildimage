@@ -4,7 +4,7 @@
 mkdir -p /etc/supervisor/conf.d/
 
 # Generate the following files from templates:
-# 1. supervisord configuration 
+# 1. supervisord configuration
 # 2. wait_for_intf.sh, which waits for all interfaces to come up
 # 3. port-to-alias name map
 CFGGEN_PARAMS=" \

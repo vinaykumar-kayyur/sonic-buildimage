@@ -53,7 +53,7 @@ ip route 0.0.0.0/0 {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} 200
 route-map RM_SET_SRC permit 10
     set src {{ lo_ipv4_addrs[0] | ip }}
 !
-{% if lo_ipv6_addrs|length > 0 %} 
+{% if lo_ipv6_addrs|length > 0 %}
 route-map RM_SET_SRC6 permit 10
     set src {{ lo_ipv6_addrs[0] | ip }}
 !
