@@ -28,8 +28,7 @@ else
 	PKG_CACHE_PATH=/sonic/target/vcache/${IMAGENAME}
 fi
 PKG_CACHE_FILE_NAME=${PKG_CACHE_PATH}/cache.tgz
-$SUDO mkdir -p ${PKG_CACHE_PATH}
-$SUDO chown $USER $PKG_CACHE_PATH
+mkdir -p ${PKG_CACHE_PATH}
 
 . ${BUILDINFO_PATH}/scripts/utils.sh
 
@@ -112,7 +111,7 @@ get_version_cache_option()
 set_reproducible_mirrors()
 {
     # Remove the charater # in front of the line if matched
-    local expression="s/^#\(.*$REPR_MIRROR_URL_PATTERN\)/\1/"
+    local expression="s/^#\s*\(.*$REPR_MIRROR_URL_PATTERN\)/\1/"
     # Add the character # in front of the line, if not match the URL pattern condition
     local expression2="/^#*deb.*$REPR_MIRROR_URL_PATTERN/! s/^#*deb/#&/"
     local expression3="\$a#SET_REPR_MIRRORS"
@@ -120,7 +119,7 @@ set_reproducible_mirrors()
         # Add the charater # in front of the line if match
         expression="s/^deb.*$REPR_MIRROR_URL_PATTERN/#\0/"
         # Remove the character # in front of the line, if not match the URL pattern condition
-        expression2="/^#*deb.*$REPR_MIRROR_URL_PATTERN/! s/^#(#*deb)/\1/"
+        expression2="/^#*deb.*$REPR_MIRROR_URL_PATTERN/! s/^#\s*(#*deb)/\1/"
         expression3="/#SET_REPR_MIRRORS/d"
     fi
 
@@ -152,7 +151,6 @@ set_reproducible_mirrors()
 download_packages()
 {
     local parameters=("$@")
-    local filenames=
     declare -A filenames
     for (( i=0; i<${#parameters[@]}; i++ ))
     do
@@ -172,7 +170,7 @@ download_packages()
                 local filename=$(echo $url | awk -F"/" '{print $NF}' | cut -d? -f1 | cut -d# -f1)
                 [ -f $WEB_VERSION_FILE ] && version=$(grep "^${url}=" $WEB_VERSION_FILE | awk -F"==" '{print $NF}')
                 if [ -z "$version" ]; then
-                    log_err "Warning: Failed to verify the package: $url, the version is not specified" 1>&2
+                    log_err "Warning: Failed to verify the package: $url, the version is not specified"
                     continue
                 fi
 
@@ -186,15 +184,16 @@ download_packages()
                 else
                     real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
                     if [ "$real_version" != "$version" ]; then
-                        log_err "Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename" 1>&2
-                       exit 1
+                       log_err "Warning: Failed to verify url: $url, real hash value: $real_version, expected value: $version_filename"
+                       continue
                     fi
                 fi
             else
                 real_version=$(get_url_version $url) || { echo "get_url_version $url failed"; exit 1; }
             fi
-
-            echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
+            # ignore md5sum for string ""
+            # echo -n "" | md5sum    ==   d41d8cd98f00b204e9800998ecf8427e
+            [[ $real_version == "d41d8cd98f00b204e9800998ecf8427e" ]] || echo "$url==$real_version" >> ${BUILD_WEB_VERSION_FILE}
         fi
     done
 
@@ -249,6 +248,11 @@ run_pip_command()
 
     $REAL_COMMAND "${parameters[@]}"
     local result=$?
+    if [ "$result" != 0 ]; then
+        echo "Failed to run the command with constraint, try to install with the original command" 1>&2
+        $REAL_COMMAND "$@"
+        result=$?
+    fi
     rm $tmp_version_file
     return $result
 }
@@ -378,6 +382,9 @@ update_version_file()
 update_version_files()
 {
     local version_names="versions-deb versions-py2 versions-py3"
+    if [ "$MIRROR_SNAPSHOT" == y ]; then
+        version_names="versions-py2 versions-py3"
+    fi
     for version_name in $version_names; do
         update_version_file $version_name
     done
