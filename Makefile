@@ -7,7 +7,7 @@ NOBULLSEYE ?= 0
 
 override Q := @
 ifeq ($(QUIET),n)
-  override Q := 
+  override Q :=
 endif
 override SONIC_OVERRIDE_BUILD_VARS += $(SONIC_BUILD_VARS)
 override SONIC_OVERRIDE_BUILD_VARS += Q=$(Q)

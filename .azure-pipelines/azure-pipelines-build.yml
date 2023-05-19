@@ -158,7 +158,7 @@ jobs:
                 make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
                 pushd ./src/sonic-sairedis/SAI
                 git stash
-                popd 
+                popd
               fi
             fi
             if [ $(syncd_rpc_image) == yes ]; then

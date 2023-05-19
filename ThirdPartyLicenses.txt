@@ -1176,12 +1176,12 @@ Microsoft is offering you a license to use the following components, to the exte
 /*   Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
  *   Upstream-Name: tacplus-auth
  *   Source: https://github.com/daveolson53/tacplus-auth
- *   
+ *
  *   Files: *
  *   Copyright: 2016 Cumulus Networks, Inc.  All rights reserved.,
  *              2010 Pawel Krawczyk <pawel.krawczyk@hush.com> and Jeroen Nijhof <jeroen@jeroennijhof.nl>.
  *   License: GPL-2+
- *   
+ *
  *   License: GPL-2+
  *    This program is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by

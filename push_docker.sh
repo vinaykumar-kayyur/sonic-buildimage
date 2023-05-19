@@ -14,7 +14,7 @@ do
             ;;
         \? ) echo "\
 Usage: [-v <version> ] [ -p <platform> ] <DOCKER_IMAGE_FILE> <REGISTRY_SERVER> <REGISTRY_PORT> \
-<REGISTRY_USERNAME> <REGISTRY_PASSWD> [<DOCKER_IMAGE_TAG>]" 
+<REGISTRY_USERNAME> <REGISTRY_PASSWD> [<DOCKER_IMAGE_TAG>]"
             ;;
     esac
 done
