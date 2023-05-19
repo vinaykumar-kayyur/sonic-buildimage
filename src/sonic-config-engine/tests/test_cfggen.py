@@ -530,7 +530,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description'}")
+            utils.to_dict("{'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description','mode': 'trunk'}")
         )
 
     def test_minigraph_neighbor_interfaces(self):
