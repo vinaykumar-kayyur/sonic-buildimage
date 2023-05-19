@@ -87,9 +87,9 @@ function LoadConfig
 
 	# write settings to arrays for easier use and print them
 	echo "Common settings:"
-	
+
 	temp_string=$FCTEMPS
-	
+
 	let fcvcount=0
 	for fcv in $FCTEMPS
 	do
@@ -105,9 +105,9 @@ function LoadConfig
 			#echo  "0x20" > '/sys/bus/i2c/devices/6-0058/psu_select_member'
 		#	AFCTEMP[$fcvcount]=$( cat ${AFCTEMP[$fcvcount]} )
 		#else
-		#	AFCTEMP[$fcvcount]=$( cat ${AFCTEMP[$fcvcount]} )	
+		#	AFCTEMP[$fcvcount]=$( cat ${AFCTEMP[$fcvcount]} )
 		#fi
-		AFCTEMP[$fcvcount]=$( cat ${AFCTEMP[$fcvcount]} )	
+		AFCTEMP[$fcvcount]=$( cat ${AFCTEMP[$fcvcount]} )
 		AFCTEMP[$fcvcount]=$(( AFCTEMP[$fcvcount]/1000 ))
 		echo "AFCTEMP[$fcvcount]=${AFCTEMP[$fcvcount]} (Celsius)"
 	done
@@ -189,9 +189,9 @@ function UpdateThermalSensors
 	TEMP_HIGHEST=0
 	FAN_PERCENTAGE=0
 
-	for i in ${AFCTEMP_PATH[@]}; do 
-    	if (( $(cat $i) > $TEMP_HIGHEST )); then 
-        	TEMP_HIGHEST=$(cat $i); 
+	for i in ${AFCTEMP_PATH[@]}; do
+    	if (( $(cat $i) > $TEMP_HIGHEST )); then
+        	TEMP_HIGHEST=$(cat $i);
     	fi;
 	done
 	TEMP_HIGHEST=$((TEMP_HIGHEST/1000))
@@ -221,7 +221,7 @@ function UpdateFanSpeeds
 	for fcv in $FCFANS
 	do
 		fcvcount=$(( fcvcount + 1 ))
-		echo  $FAN_PERCENTAGE > ${AFCFAN_TARGET[$fcvcount]} 
+		echo  $FAN_PERCENTAGE > ${AFCFAN_TARGET[$fcvcount]}
 		AFCFAN[$fcvcount]=$( cat ${AFCFAN_PATH[$fcvcount]} )
 
 		if [ "${AFCFAN[$fcvcount]}" == 960 ]

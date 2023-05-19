@@ -54,7 +54,7 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
         self.chassis = sonic_platform.platform.Platform().get_chassis()
-        
+
     def reset(self, port_num):
         # print " SfpUtil(SfpUtilBase) re-directed to chassis PMON 2.0 "
         if self.chassis is not None:

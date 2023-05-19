@@ -11,7 +11,7 @@ l2xmsg_mode=1
 mem_cache_enable=0
 parity_correction=0
 parity_enable=0
-# per Broadcom feedback, no more pbmp_oversubscribe 
+# per Broadcom feedback, no more pbmp_oversubscribe
 # pbmp_oversubscribe=0x00003fc000000ff0000003fc000001fe
 oversubscribe_mode=1
 pbmp_xport_xe=0x3fd000000ff4000003fc000001fe

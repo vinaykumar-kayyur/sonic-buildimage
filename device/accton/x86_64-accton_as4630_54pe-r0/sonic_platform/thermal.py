@@ -68,8 +68,8 @@ class Thermal(ThermalBase):
 
         # Set hwmon path
         i2c_path = {
-            0: "14-0048/hwmon/hwmon*/", 
-            1: "24-004b/hwmon/hwmon*/", 
+            0: "14-0048/hwmon/hwmon*/",
+            1: "24-004b/hwmon/hwmon*/",
             2: "25-004a/hwmon/hwmon*/"
         }.get(self.index, None)
 
@@ -87,7 +87,7 @@ class Thermal(ThermalBase):
                 pass
 
         return None
-        
+
     def __get_temp(self, temp_file):
         if not self.is_psu:
             temp_file_path = os.path.join(self.hwmon_path, temp_file)
@@ -97,7 +97,7 @@ class Thermal(ThermalBase):
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0        
+            return 0
 
     def __set_threshold(self, file_name, temperature):
         if self.is_psu:
@@ -151,7 +151,7 @@ class Thermal(ThermalBase):
         temp_file = "temp{}_max".format(self.ss_index)
         temperature = temperature *1000
         self.__set_threshold(temp_file, temperature)
-        
+
         return True
 
     def get_name(self):

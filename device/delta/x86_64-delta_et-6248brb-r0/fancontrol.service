@@ -97,9 +97,9 @@ function LoadConfig
 	# write settings to arrays for easier use and print them
 	echo
 	echo "Common settings:"
-	
+
 	temp_string=$FCTEMPS
-	
+
 	let fcvcount=0
 	for fcv in $FCTEMPS
 	do
@@ -198,12 +198,12 @@ function UpdateThermalLevel
  	AFCTEMP_LOWER=${!AFCTEMP_LOWER_BUF}
 
 
-	if (( ("${AFCTEMP[$i]}" <= "$AFCTEMP_UPPER") && ("${AFCTEMP[$i]}" >= "$AFCTEMP_LOWER") )) ; then 
+	if (( ("${AFCTEMP[$i]}" <= "$AFCTEMP_UPPER") && ("${AFCTEMP[$i]}" >= "$AFCTEMP_LOWER") )) ; then
 	    FLAG=2
-	elif (( "${AFCTEMP[$i]}" > "$AFCTEMP_UPPER" )); then 
+	elif (( "${AFCTEMP[$i]}" > "$AFCTEMP_UPPER" )); then
 	    AFCTEMP_LEVEL[$i]=$((${AFCTEMP_LEVEL[$i]} - 1))
 	    FLAG=1
-	elif (( "${AFCTEMP[$i]}" < "$AFCTEMP_LOWER" )); then     
+	elif (( "${AFCTEMP[$i]}" < "$AFCTEMP_LOWER" )); then
 		AFCTEMP_LEVEL[$i]=$((${AFCTEMP_LEVEL[$i]} + 1))
 		FLAG=1
 	else
@@ -235,9 +235,9 @@ function UpdateFanSpeeds
 	  (( j < min )) && min=$j
 	done
 
-	if (($min == 1 || $min == 2)); then 
+	if (($min == 1 || $min == 2)); then
     	FAN_PERCENTAGE=100
-	elif (($min == 3)); then 
+	elif (($min == 3)); then
 	    FAN_PERCENTAGE=80
 	elif (($min == 4)); then
 	    FAN_PERCENTAGE=60
@@ -256,7 +256,7 @@ function UpdateFanSpeeds
 	for fcv in $FCFANS
 	do
 		fcvcount=$(( fcvcount + 1 ))
-		echo  $FAN_PERCENTAGE > ${AFCFAN_TARGET[$fcvcount]} 
+		echo  $FAN_PERCENTAGE > ${AFCFAN_TARGET[$fcvcount]}
 		AFCFAN[$fcvcount]=$( cat ${AFCFAN_PATH[$fcvcount]} )
 
 		echo "FAN fan$fcvcount = ${AFCFAN[$fcvcount]} (rpm)"

@@ -8,7 +8,7 @@
     "thermal_manager": false,
         "components": [
 		{
-			"name": "SWCPLD"	
+			"name": "SWCPLD"
 		},
 		{
 			"name": "BIOS"

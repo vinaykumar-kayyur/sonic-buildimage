@@ -2830,7 +2830,7 @@
                     "lane6": "0xfffffffc",
                     "lane7": "0xfffffffc"
                 }
-            },		
+            },
             "QSFP+-40GBASE-CR4-1.0M":{
                 "main":{
                     "lane0": "0x0000001e",

@@ -65,19 +65,19 @@
         "i2c":
         {
             "CONTROLLERS":
-            [ 
+            [
                 { "dev_name":"i2c-1", "dev":"SMBUS1" }
             ]
         }
     },
 
-    "SMBUS1": 
+    "SMBUS1":
     {
         "dev_info": {"device_type": "SMBUS", "device_name": "SMBUS1", "device_parent": "SYSTEM"},
-        "i2c": 
+        "i2c":
         {
             "topo_info": {"dev_addr": "0x1"},
-            "DEVICES": 
+            "DEVICES":
             [
                 {"dev": "EEPROM1"},
                 {"dev": "MUX1"}
@@ -103,7 +103,7 @@
     {
         "dev_info": { "device_type":"MUX", "device_name":"MUX1", "device_parent":"SMBUS1"},
         "i2c":
-        { 
+        {
             "topo_info": { "parent_bus":"0x1", "dev_addr":"0x77", "dev_type":"pca9548"},
             "dev_attr": { "virt_bus":"0x2", "idle_state":"-2"},
             "channel":
@@ -309,7 +309,7 @@
 
 	"PSU1":
 	{
-		"dev_info": { "device_type":"PSU", "device_name":"PSU1", "device_parent":"MUX2"}, 
+		"dev_info": { "device_type":"PSU", "device_name":"PSU1", "device_parent":"MUX2"},
 		"dev_attr": { "dev_idx":"1", "num_psu_fans": "1"},
 		"i2c":
 		{
@@ -318,7 +318,7 @@
 				{ "itf":"pmbus", "dev":"PSU1-PMBUS" },
 				{ "itf":"eeprom", "dev":"PSU1-EEPROM" }
 			]
-		
+
 		}
 	},
 
@@ -327,9 +327,9 @@
 		"dev_info": { "device_type":"PSU-PMBUS", "device_name":"PSU1-PMBUS", "device_parent":"MUX2", "virt_parent":"PSU1"},
 		"i2c":
 		{
-			"topo_info":{ "parent_bus":"0xa", "dev_addr":"0x58", "dev_type":"psu_pmbus"}, 
-			"attr_list": 
-			[  
+			"topo_info":{ "parent_bus":"0xa", "dev_addr":"0x58", "dev_type":"psu_pmbus"},
+			"attr_list":
+			[
 				{ "attr_name":"psu_mfr_id", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0X99", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10" },
 				{ "attr_name":"psu_fan_dir", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xc3", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"5"},
 				{ "attr_name":"psu_v_out", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0x8b", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
@@ -379,8 +379,8 @@
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0xb", "dev_addr":"0x59", "dev_type":"psu_pmbus"},
-			"attr_list": 
-			[  
+			"attr_list":
+			[
 				{ "attr_name":"psu_mfr_id", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0X99", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10" },
 				{ "attr_name":"psu_fan_dir", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xc3", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"5"},
 				{ "attr_name":"psu_v_out", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0x8b", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},

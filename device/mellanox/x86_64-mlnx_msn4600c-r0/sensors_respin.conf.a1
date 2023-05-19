@@ -36,17 +36,17 @@ bus "i2c-5" "i2c-1-mux (chan_id 4)"
         label in1 "PMIC-1 PSU 12V Rail (in)"
         label in2 "PMIC-1 ASIC VCORE_MAIN Rail (out)"
         ignore in3
-        ignore in4 
+        ignore in4
         label temp1 "PMIC-1 ASIC VCORE_MAIN Temp 1"
-        ignore temp2 
+        ignore temp2
         label power1 "PMIC-1 12V ASIC VCORE_MAIN Rail Pwr (in)"
         label power2 "PMIC-1 ASIC VCORE_MAIN Rail Pwr (out)"
-        ignore power3 
-        ignore power4 
+        ignore power3
+        ignore power4
         label curr1 "PMIC-1 12V ASIC VCORE_MAIN Rail Curr (in)"
         label curr2 "PMIC-1 ASIC VCORE_MAIN Rail Curr (out)"
-        ignore curr3 
-        ignore curr4 
+        ignore curr3
+        ignore curr4
     chip "mp2975-i2c-*-64"
         label in1 "PMIC-2 PSU 12V Rail (in)"
         label in2 "PMIC-2 ASIC 1.8V_MAIN Rail (out1)"
@@ -72,7 +72,7 @@ bus "i2c-5" "i2c-1-mux (chan_id 4)"
         label power1 "PMIC-3 12V ASIC VCORE_1.8V_T0_3 Rail Pwr (in) "
         label power2 "PMIC-3 ASIC VCORE_T0_3 Rail Pwr (out)"
         ignore power3
-        ignore power4 
+        ignore power4
         label curr1 "PMIC-3 12V ASIC VCORE_1.8V_T0_3 Rail Curr (in)"
         label curr2 "PMIC-3 ASIC VCORE_T0_3 Rail Curr (out1)"
         label curr3 "PMIC-3 ASIC 1.8V_T0_3 Rail Curr (out2)"
@@ -87,7 +87,7 @@ bus "i2c-5" "i2c-1-mux (chan_id 4)"
         label power1 "PMIC-4 12V ASIC VCORE_1.8V_T4_7 Rail Pwr (in) "
         label power2 "PMIC-4 ASIC VCORE_T4_7 Rail Pwr (out)"
         ignore power3
-        ignore power4 
+        ignore power4
         label curr1 "PMIC-4 12V ASIC VCORE_1.8V_T4_7 Rail Curr (in)"
         label curr2 "PMIC-4 ASIC VCORE_T4_7 Rail Curr (out1)"
         label curr3 "PMIC-4 ASIC 1.8V_T4_7 Rail Curr (out2)"
@@ -128,9 +128,9 @@ bus "i2c-15" "i2c-1-mux (chan_id 6)"
         label temp1 "PMIC-7 Temp 1"
         label temp2 "PMIC-7 Temp 2"
         label power1 "PMIC-7 COMEX 1.2V Rail Pwr (out1)"
-        ignore power2 
+        ignore power2
         label curr1 "PMIC-7 COMEX 1.2V Rail Curr (out1)"
-        ignore curr2 
+        ignore curr2
 
     chip "mp2975-i2c-*-6a"
         label in1 "PMIC-3 PSU 12V Rail (in1)"

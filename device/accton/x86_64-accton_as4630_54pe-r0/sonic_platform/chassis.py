@@ -44,16 +44,16 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         for index in range(0, PORT_END):
@@ -68,19 +68,19 @@ class Chassis(ChassisBase):
            fandrawer = FanDrawer(fant_index)
            self._fan_drawer_list.append(fandrawer)
            self._fan_list.extend(fandrawer._fan_list)
-               
+
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-    
+
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
@@ -114,7 +114,7 @@ class Chassis(ChassisBase):
             Returns:
             string: The name of the device
         """
-        
+
         return self._eeprom.get_product_name()
 
     def get_presence(self):

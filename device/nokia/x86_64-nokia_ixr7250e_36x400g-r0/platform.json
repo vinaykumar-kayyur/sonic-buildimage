@@ -28,7 +28,7 @@
 	},
         "fans": [],
         "fan_drawers": [],
-        "master_psu_led_color": [], 
+        "master_psu_led_color": [],
         "psus": [],
         "thermals": [
 	    {

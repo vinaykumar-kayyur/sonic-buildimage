@@ -29,12 +29,12 @@ class Thermal(ThermalBase):
         # Add thermal name
         self.THERMAL_NAME_LIST.append("Temp sensor 1")
         self.THERMAL_NAME_LIST.append("Temp sensor 2")
-        self.THERMAL_NAME_LIST.append("Temp sensor 3")        
+        self.THERMAL_NAME_LIST.append("Temp sensor 3")
 
         # Set hwmon path
         i2c_path = {
-            0: "14-0048/hwmon/hwmon*/", 
-            1: "24-004b/hwmon/hwmon*/", 
+            0: "14-0048/hwmon/hwmon*/",
+            1: "24-004b/hwmon/hwmon*/",
             2: "25-004a/hwmon/hwmon*/"
         }.get(self.index, None)
 
@@ -45,7 +45,7 @@ class Thermal(ThermalBase):
     def __read_txt_file(self, file_path):
         for filename in glob.glob(file_path):
             try:
-                with open(filename, 'r') as fd:                    
+                with open(filename, 'r') as fd:
                     data =fd.readline().rstrip()
                     return data
             except IOError as e:
@@ -59,7 +59,7 @@ class Thermal(ThermalBase):
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0        
+            return 0
 
     def __set_threshold(self, file_name, temperature):
         temp_file_path = os.path.join(self.hwmon_path, file_name)
@@ -141,5 +141,5 @@ class Thermal(ThermalBase):
         raw_txt = self.__read_txt_file(file_path)
         if raw_txt is None:
             return False
-        else:     
+        else:
             return int(raw_txt) != 0

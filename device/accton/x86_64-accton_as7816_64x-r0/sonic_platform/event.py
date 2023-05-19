@@ -9,7 +9,7 @@ POLL_INTERVAL_IN_SEC = 1
 
 class SfpEvent:
     ''' Listen to insert/remove sfp events '''
-   
+
     def __init__(self, sfp_list):
         self._api_helper = APIHelper()
         self._sfp_list = sfp_list

@@ -323,7 +323,7 @@ class Thermal(object):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         value_str = self._read_generic_file(self.temperature, 0)
         if value_str is None:
@@ -425,7 +425,7 @@ class ThermalUtil(ThermalBase):
         Returns:
         :param index: An integer, 1-based index of the thermal sensor of which to query status
         :return: String,
-            A string representing the name of the thermal sensor. 
+            A string representing the name of the thermal sensor.
         """
         if index >= self.number_of_thermals:
             raise RuntimeError("index ({}) shouldn't be greater than {}".format(index, self.number_of_thermals))
@@ -438,7 +438,7 @@ class ThermalUtil(ThermalBase):
         :param index: An integer, 1-based index of the thermal sensor of which to query status
         :return: Float,
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         if index >= self.number_of_thermals:
             raise RuntimeError("index ({}) shouldn't be greater than {}".format(index, self.number_of_thermals))

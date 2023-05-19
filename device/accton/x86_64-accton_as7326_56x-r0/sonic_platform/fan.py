@@ -39,7 +39,7 @@ PSU_CPLD_I2C_MAPPING = {
 }
 
 FAN_NAME_LIST = ["FAN-1F", "FAN-1R", "FAN-2F", "FAN-2R",
-                 "FAN-3F", "FAN-3R", "FAN-4F", "FAN-4R", 
+                 "FAN-3F", "FAN-3R", "FAN-4F", "FAN-4R",
                  "FAN-5F", "FAN-5R", "FAN-6F", "FAN-6R"]
 
 class Fan(FanBase):
@@ -181,7 +181,7 @@ class Fan(FanBase):
 
         return {
             1: self.STATUS_LED_COLOR_GREEN,
-            0: self.STATUS_LED_COLOR_RED            
+            0: self.STATUS_LED_COLOR_RED
         }.get(status, self.STATUS_LED_COLOR_OFF)
 
     def get_name(self):
@@ -223,7 +223,7 @@ class Fan(FanBase):
                 return int(val, 10)==0
             else:
                 return False
-        else:    
+        else:
             path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_fault')
             val=self.__read_txt_file(path)
             if val is not None:
@@ -237,9 +237,9 @@ class Fan(FanBase):
         Returns:
             string: Model/part number of device
         """
-               
+
         return "N/A"
-    
+
     def get_serial(self):
         """
         Retrieves the serial number of the device

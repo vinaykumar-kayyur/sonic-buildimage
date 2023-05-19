@@ -9,7 +9,7 @@ NUM_INTERFACES_PER_ASIC=32
 start () {
     # Move external links into assigned frontend namespaces
     # eth1  - eth16: asic0
-    # eth17 - eth32: asic1 
+    # eth17 - eth32: asic1
     # eth33 - eth48: asic2
     # eth49 - eth64: asic3
     for ASIC in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
@@ -23,7 +23,7 @@ start () {
             ip link set dev $TEMP netns asic$ASIC
             sudo ip netns exec asic$ASIC ip link set $TEMP name $NEW # rename to final interface name
             sudo ip netns exec asic$ASIC ip link set dev $NEW mtu 9100
-            sudo ip netns exec asic$ASIC ip link set $NEW up 
+            sudo ip netns exec asic$ASIC ip link set $NEW up
         done
     done
 
@@ -36,11 +36,11 @@ start () {
 		echo "$FRONTEND:$FRONT_NAME - $BACKEND:$BACK_NAME"
                 TEMP_BACK="ethBack999"
                 TEMP_FRONT="ethFront999"
-                
+
                 ip link add $TEMP_BACK type veth peer name $TEMP_FRONT # temporary name to prevent conflicts between interfaces
                 ip link set dev $TEMP_BACK netns asic$BACKEND
-                ip link set dev $TEMP_FRONT netns asic$FRONTEND 
-    
+                ip link set dev $TEMP_FRONT netns asic$FRONTEND
+
                 sudo ip netns exec asic$BACKEND ip link set $TEMP_BACK name $BACK_NAME
                 sudo ip netns exec asic$FRONTEND ip link set $TEMP_FRONT name $FRONT_NAME
 

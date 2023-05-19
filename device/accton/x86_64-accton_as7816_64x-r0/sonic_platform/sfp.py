@@ -31,7 +31,7 @@ class Sfp(SfpOptoeBase):
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
     HOST_CHK_CMD = ["which", "systemctl"]
-        
+
     PLATFORM = "x86_64-accton_as7816_64x-r0"
     HWSKU = "Accton-AS7816-64X"
 
@@ -99,7 +99,7 @@ class Sfp(SfpOptoeBase):
         49: 85,
         50: 86,
         51: 87,
-        52: 88 
+        52: 88
     }
 
     def __init__(self, sfp_index=0):
@@ -113,7 +113,7 @@ class Sfp(SfpOptoeBase):
         self.port_to_eeprom_mapping = {}
         for x in range(self.PORT_START, self.PORT_END + 1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(self._port_to_i2c_mapping[x])
-        
+
     def get_eeprom_path(self):
         return self.port_to_eeprom_mapping[self.port_num]
 
@@ -160,7 +160,7 @@ class Sfp(SfpOptoeBase):
         """
         reset_path="{}{}{}".format(CPLD_I2C_PATH , "module_reset_" , str(self.port_num))
         val = self._api_helper.read_txt_file(reset_path)
-        
+
         if val is not None:
             return int(val, 10) == 1
         else:
@@ -214,13 +214,13 @@ class Sfp(SfpOptoeBase):
         Returns:
             A Boolean, True if tx_disable is enabled, False if disabled
         """
-        
+
         tx_disable_list = []
-    
+
         sfpd_obj = sff8436Dom()
         if sfpd_obj is None:
             return False
-    
+
         dom_control_raw = self.__read_eeprom_specific_bytes(
             QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
         if dom_control_raw is not None:
@@ -277,7 +277,7 @@ class Sfp(SfpOptoeBase):
             dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
             power_set = (
                 'On' == dom_control_data['data']['PowerSet']['value'])
-    
+
         return power_set
 
     def get_power_override(self):
@@ -348,7 +348,7 @@ class Sfp(SfpOptoeBase):
             if sysfsfile_eeprom is not None:
                 sysfsfile_eeprom.close()
                 time.sleep(0.01)
-        
+
         return True
 
     def tx_disable_channel(self, channel, disable):
@@ -361,7 +361,7 @@ class Sfp(SfpOptoeBase):
                       False to enable
         Returns:
             A boolean, True if successful, False if not
-        """        
+        """
         if not self.get_presence():
             return False
 
@@ -406,14 +406,14 @@ class Sfp(SfpOptoeBase):
             Note  : lpmode can be overridden by set_power_override
         Returns:
             A boolean, True if lpmode is set successfully, False if not
-        """        
+        """
         if lpmode:
             self.set_power_override(True, True)
         else:
             self.set_power_override(False, False)
-    
+
         return True
-       
+
     def set_power_override(self, power_override, power_set):
         """
         Sets SFP power level using power_override and power_set
@@ -431,13 +431,13 @@ class Sfp(SfpOptoeBase):
             A boolean, True if power-override and power_set are set successfully,
             False if not
         """
-       
+
         if not self.get_presence():
             return False
         try:
             power_override_bit = (1 << 0) if power_override else 0
             power_set_bit      = (1 << 1) if power_set else (1 << 3)
-    
+
             buffer = create_string_buffer(1)
             if sys.version_info[0] >= 3:
                 buffer[0] = (power_override_bit | power_set_bit)

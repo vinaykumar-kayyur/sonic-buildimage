@@ -33,7 +33,7 @@ class Component(ComponentBase):
         self._api_helper=APIHelper()
         ComponentBase.__init__(self)
         self.index = component_index
-        self.name = self.get_name()        
+        self.name = self.get_name()
 
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
@@ -50,7 +50,7 @@ class Component(ComponentBase):
         for cpld_name in CPLD_ADDR_MAPPING:
             try:
                 cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
-                cpld_version_raw= self._api_helper.read_txt_file(cpld_path)               
+                cpld_version_raw= self._api_helper.read_txt_file(cpld_path)
                 cpld_version[cpld_name] = "{}".format(int(cpld_version_raw,16))
             except Exception as e:
                 print('Get exception when read cpld')
@@ -86,7 +86,7 @@ class Component(ComponentBase):
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
-            cpld_version = self.__get_cpld_version()           
+            cpld_version = self.__get_cpld_version()
             fw_version = cpld_version.get(self.name)
 
         return fw_version

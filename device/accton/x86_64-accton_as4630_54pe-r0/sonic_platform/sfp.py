@@ -30,7 +30,7 @@ class Sfp(SfpOptoeBase):
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
     HOST_CHK_CMD = ["which", "systemctl"]
-        
+
     PLATFORM = "x86_64-accton_as4630_54pe-r0"
     HWSKU = "Accton-AS4630-54PE"
 
@@ -104,10 +104,10 @@ class Sfp(SfpOptoeBase):
 
         reset_path="{}{}{}".format(CPLD_I2C_PATH , "module_reset_" , str(self.port_num))
         val = self._api_helper.read_txt_file(reset_path)
-        
+
         if val is not None:
             return int(val, 10) == 1
-        else:        
+        else:
             return False
 
     def get_rx_los(self):
@@ -118,10 +118,10 @@ class Sfp(SfpOptoeBase):
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
         rx_los = False
-        
+
         if self.port_num < 49: #Copper port, no sysfs
             return False
-            
+
         if self.port_num < 53:
             rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)
             rx_los=self._api_helper.read_txt_file(rx_path)
@@ -150,7 +150,7 @@ class Sfp(SfpOptoeBase):
         tx_fault = False
         if self.port_num < 49: #Copper port, no sysfs
             return False
-        
+
         if self.port_num < 53:
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)
             tx_fault=self._api_helper.read_txt_file(tx_path)
@@ -178,25 +178,25 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num < 49: #Copper port, no sysfs
             return False
-        
-        if self.port_num < 53: 
-            tx_disable = False            
-                
+
+        if self.port_num < 53:
+            tx_disable = False
+
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
             tx_disable=self._api_helper.read_txt_file(tx_path)
-            
+
             if tx_disable is not None:
-                return tx_disable 
+                return tx_disable
             else:
                 return False
-                   
+
         else:
             tx_disable_list = []
-    
+
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
-    
+
             dom_control_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
@@ -209,7 +209,7 @@ class Sfp(SfpOptoeBase):
                     'On' == dom_control_data['data']['TX3Disable']['value'])
                 tx_disable_list.append(
                     'On' == dom_control_data['data']['TX4Disable']['value'])
-    
+
             return tx_disable_list
 
     def get_tx_disable_channel(self):
@@ -221,7 +221,7 @@ class Sfp(SfpOptoeBase):
             As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
-        if self.port_num < 53: 
+        if self.port_num < 53:
             # SFP doesn't support this feature
             return False
         else:
@@ -240,15 +240,15 @@ class Sfp(SfpOptoeBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self.port_num < 53: 
+        if self.port_num < 53:
             # SFP doesn't support this feature
             return False
         else:
             power_set=self.get_power_set()
             power_override = self.get_power_override()
             return power_set and power_override
-      
-    
+
+
     def reset(self):
         """
         Reset SFP and return all user module settings to their default srate.
@@ -263,13 +263,13 @@ class Sfp(SfpOptoeBase):
         ret = self._api_helper.write_txt_file(reset_path, 1)
         if ret is not True:
             return ret
-        
+
         time.sleep(0.01)
         ret = self._api_helper.write_txt_file(reset_path, 0)
         time.sleep(0.2)
-        
+
         return ret
-        
+
     def tx_disable(self, tx_disable):
         """
         Disable SFP TX for all channels
@@ -281,16 +281,16 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num < 49: #Copper port, no sysfs
             return False
-        
+
         if self.port_num < 53:
-            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)      
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
             ret = self._api_helper.write_txt_file(tx_path,  1 if tx_disable else 0)
             if ret is not None:
                 time.sleep(0.01)
                 return ret
             else:
                 return False
-        
+
         else:
             if not self.get_presence():
                 return False
@@ -328,7 +328,7 @@ class Sfp(SfpOptoeBase):
         Returns:
             A boolean, True if successful, False if not
         """
-        
+
         if self.port_num < 53:
             return False # SFP doesn't support this feature
         else:
@@ -384,9 +384,9 @@ class Sfp(SfpOptoeBase):
                 self.set_power_override(True, True)
             else:
                 self.set_power_override(False, False)
-    
+
             return True
-       
+
     def set_power_override(self, power_override, power_set):
         """
         Sets SFP power level using power_override and power_set
@@ -412,7 +412,7 @@ class Sfp(SfpOptoeBase):
             try:
                 power_override_bit = (1 << 0) if power_override else 0
                 power_set_bit      = (1 << 1) if power_set else (1 << 3)
-    
+
                 buffer = create_string_buffer(1)
                 if sys.version_info[0] >= 3:
                     buffer[0] = (power_override_bit | power_set_bit)
@@ -449,7 +449,7 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num < 49: #Copper port, no sysfs
             return False
-            
+
         present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)
         val=self._api_helper.read_txt_file(present_path)
         if val is not None:

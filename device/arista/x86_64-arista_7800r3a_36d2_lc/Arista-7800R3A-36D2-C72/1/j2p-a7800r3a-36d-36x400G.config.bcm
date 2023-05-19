@@ -242,7 +242,7 @@ lane_to_serdes_map_nif_lane143=rx138:tx142
 sw_state_max_size=750000000
 
 #location of warmboot NV memory
-#Allowed options for dnx are - 3:external storage in filesystem 4:driver will save the state directly in shared memory 
+#Allowed options for dnx are - 3:external storage in filesystem 4:driver will save the state directly in shared memory
 stable_location=4
 
 # Note that each unit should have a unique filename and that adapter does not play well with tmp and dev/shm folders.

@@ -43,9 +43,9 @@ class Fan(FanBase):
             self.psu_i2c_addr = PSU_I2C_MAPPING[self.psu_index]['addr']
             self.psu_hwmon_path = PSU_HWMON_I2C_PATH.format(
                 self.psu_i2c_num, self.psu_i2c_addr)
-        
+
         FanBase.__init__(self)
-    
+
 
     def get_direction(self):
         """
@@ -54,7 +54,7 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
-        
+
 
         if not self.is_psu_fan:
             dir_str = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index, '_direction')
@@ -76,8 +76,8 @@ class Fan(FanBase):
                 else:
                     direction=self.FAN_DIRECTION_INTAKE
             else:
-                direction=self.FAN_DIRECTION_EXHAUST 
-                
+                direction=self.FAN_DIRECTION_EXHAUST
+
         return direction
 
     def get_speed(self):
@@ -86,7 +86,7 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-                         
+
         """
         speed = 0
         if self.is_psu_fan:
@@ -99,14 +99,14 @@ class Fan(FanBase):
             else:
                 return 0
 
-        elif self.get_presence():            
+        elif self.get_presence():
             speed_path = "{}{}".format(CPLD_I2C_PATH, '_duty_cycle_percentage')
             speed=self._api_helper.read_txt_file(speed_path)
             if speed is None:
                 return 0
-                
+
         return int(speed)
-            
+
     def get_target_speed(self):
         """
         Retrieves the target (expected) speed of the fan
@@ -141,8 +141,8 @@ class Fan(FanBase):
             A boolean, True if speed is set successfully, False if not
 
         """
-        
-        if not self.is_psu_fan and self.get_presence():            
+
+        if not self.is_psu_fan and self.get_presence():
             speed_path = "{}{}".format(CPLD_I2C_PATH, '_duty_cycle_percentage')
             return self._api_helper.write_txt_file(speed_path, int(speed))
 
@@ -158,7 +158,7 @@ class Fan(FanBase):
             bool: True if status LED state is set successfully, False if not
         """
         return False #Not supported
-   
+
     def get_presence(self):
         """
         Retrieves the presence of the FAN
@@ -167,7 +167,7 @@ class Fan(FanBase):
         """
         present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_present')
         val=self._api_helper.read_txt_file(present_path)
-        
+
         if not self.is_psu_fan:
             if val is not None:
                 return int(val, 10)==1

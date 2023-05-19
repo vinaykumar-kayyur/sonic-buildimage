@@ -25,7 +25,7 @@ COMPONENT_LIST= [
    ("CPLD2", "CPLD 2"),
    ("CPLD3", "CPLD 3"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 COMPONENT_DES_LIST = ["CPLD","Basic Input/Output System"]
 
@@ -49,7 +49,7 @@ class Component(ComponentBase):
                 return bios_version.strip()
         except Exception as e:
             return None
-   
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
@@ -61,7 +61,7 @@ class Component(ComponentBase):
             except Exception as e:
                 print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
-        
+
         return cpld_version
 
     def get_name(self):

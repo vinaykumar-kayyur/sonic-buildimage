@@ -609,7 +609,7 @@ device:
                           140, 144, 149, 153]
             :
                 &port_mode_400g
-                ENABLE: 0 
+                ENABLE: 0
                 SPEED: 400000
                 NUM_LANES: 8
                 FEC_MODE: PC_FEC_RS544_2XN

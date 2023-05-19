@@ -243,7 +243,7 @@ phy_chain_rx_polarity_flip_physical{66.0}=0
 phy_chain_rx_polarity_flip_physical{67.0}=1
 phy_chain_rx_polarity_flip_physical{68.0}=0
 phy_chain_tx_lane_map_physical{65.0}=0x2031
-phy_chain_rx_lane_map_physical{65.0}=0x2031 
+phy_chain_rx_lane_map_physical{65.0}=0x2031
 
 #FC 17
 portmap_35=69:100
@@ -861,7 +861,7 @@ phy_chain_rx_lane_map_physical{253.0}=0x2103
 
 
 #MGMT
-portmap_66=257:10 
+portmap_66=257:10
 portmap_100=259:10
 #phy_chain_tx_lane_map_physical{257.0}=0x0123
 #phy_chain_rx_lane_map_physical{257.0}=0x0123

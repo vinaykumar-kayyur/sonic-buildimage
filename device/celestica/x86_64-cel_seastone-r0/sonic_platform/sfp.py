@@ -1463,7 +1463,7 @@ class Sfp(SfpBase):
         Returns:
             A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
             TX channels which have been disabled in this SFP.
-            As an example, a returned value of 0x5 indicates that channel 0 
+            As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
         tx_disable_list = self.get_tx_disable()

@@ -28,7 +28,7 @@
         "key": "sonic_bdb_mode",
         "intval": 0
     },
-    { 
+    {
       "key": "update_asic_pvt",
       "intval": 10
     },

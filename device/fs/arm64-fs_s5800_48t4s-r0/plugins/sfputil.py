@@ -159,7 +159,7 @@ class SfpUtil(SfpUtilBase):
         else:
             time.sleep(0.5)
             return True, {}
-        
+
     def get_transceiver_info_dict(self, port_num):
         transceiver_info_dict = SfpUtilBase.get_transceiver_info_dict(self, port_num)
         transceiver_info_dict['vendor_rev'] = transceiver_info_dict['hardware_rev']

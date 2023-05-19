@@ -27,7 +27,7 @@ ifp_inports_support_enable=1
 #3x PM4x10Q (3 * 16 = 48 physical ports)
 #Doesn't support oversubscribe in Q mode
 #MCQ0
-port_gmii_mode_1=1 #Q mode 
+port_gmii_mode_1=1 #Q mode
 
 #PHY4 U56 xx1, MDC/MDIO2, PHYADDR:0x00-0x07, 0x08
 port_phy_addr_1=0x40
@@ -432,7 +432,7 @@ phy_chain_tx_polarity_flip_physical{46.0}=0x1
 phy_chain_tx_polarity_flip_physical{47.0}=0x1
 phy_chain_tx_polarity_flip_physical{48.0}=0x1
 
-#3x PM4x25 (3 * 4 = 12 physical ports) 
+#3x PM4x25 (3 * 4 = 12 physical ports)
 #FC0
 dport_map_port_49=51
 dport_map_port_50=50

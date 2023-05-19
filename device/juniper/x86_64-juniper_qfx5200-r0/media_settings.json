@@ -1,6 +1,6 @@
 {
     "GLOBAL_MEDIA_SETTINGS": {
-	"0-31": {    
+	"0-31": {
             "JUNIPER-AVAGO-AFBR-89CDDZ-JU1": {
                 "preemphasis": {
                     "lane0":"0x0c6400",
@@ -169,8 +169,8 @@
                     "lane3":"0x0"
                 }
             }
-	}    
+	}
     },
     "PORT_MEDIA_SETTINGS": {
     }
-}    
+}

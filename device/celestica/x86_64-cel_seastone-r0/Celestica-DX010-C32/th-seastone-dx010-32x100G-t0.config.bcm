@@ -10,7 +10,7 @@ pbmp_oversubscribe=0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 # L2MOD_FIFO mechanism aka L2MODE_FIFO (1) for L2 table change notification.
 l2xmsg_mode=1
 
-# Memory table size configs 
+# Memory table size configs
 l2_mem_entries=8192
 l3_mem_entries=8192
 l3_alpm_enable=2
@@ -112,8 +112,8 @@ portmap_118=113:100:4
 portmap_122=117:100:4
 portmap_126=121:100:4
 portmap_130=125:100:4
-#portmap_66=129:10 
-#portmap_100=131:10 
+#portmap_66=129:10
+#portmap_100=131:10
 
 #WC16
 xgxs_tx_lane_map_68=0x3201

@@ -6,11 +6,11 @@ oversubscribe_mode=1
 pbmp_xport_xe=0x3c000000ff0003ffffdfffffffe
 
 l3_alpm_enable=2
-ipv6_lpm_128b_enable=1 
-l3_mem_entries=40960 
+ipv6_lpm_128b_enable=1
+l3_mem_entries=40960
 l2_mem_entries=40960
 
-l2xmsg_mode=1 
+l2xmsg_mode=1
 mmu_lossless=0
 
 #Parity
@@ -46,7 +46,7 @@ portmap_25=12:25
 portmap_26=11:25
 portmap_27=10:25
 portmap_28=9:25
-portmap_29=13:25 
+portmap_29=13:25
 portmap_30=14:25
 portmap_31=15:25
 portmap_32=16:25

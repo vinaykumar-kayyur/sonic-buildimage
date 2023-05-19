@@ -48,7 +48,7 @@ class PsuUtil(PsuBase):
 
         except Exception:
             logging.error('Failed to execute : %s'%(' '.join(self.IPMI_PSU_VOUT)))
-    
+
     def get_psu_cout(self,index):
         try:
             self.IPMI_PSU_COUT[3] = 'PSU' + str(index) + 'POut'
@@ -162,7 +162,7 @@ class PsuUtil(PsuBase):
         :param index: An integer, index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        
+
         psu_status = '0'
         ipmi_cmd = ''
         if index == 1:
@@ -232,7 +232,7 @@ class PsuUtil(PsuBase):
             fru_id = FRU_PSUR
 
         return self.get_fru_info(fru_id,'Board Mfg')
-        
+
     def get_direction(self, index):
         if index is None:
             return None

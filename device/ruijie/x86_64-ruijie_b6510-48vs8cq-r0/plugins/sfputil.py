@@ -34,7 +34,7 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     port_to_i2cbus_mapping ={}
-    port_dict = {} 
+    port_dict = {}
 
     @property
     def port_start(self):
@@ -251,7 +251,7 @@ class SfpUtil(SfpUtilBase):
                 return False
             sysfs_sfp_i2c_client_eeprom_path = self._get_port_eeprom_path(port_num, self.IDENTITY_EEPROM_ADDR)
             with open(sysfs_sfp_i2c_client_eeprom_path, "rb", buffering=0) as sysfsfile:
-                dom_control_raw = self._read_eeprom_specific_bytes(sysfsfile, 
+                dom_control_raw = self._read_eeprom_specific_bytes(sysfsfile,
                     offset + self.QSFP_CONTROL_OFFSET, self.QSFP_CONTROL_WIDTH) if self.get_presence(port_num) else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)

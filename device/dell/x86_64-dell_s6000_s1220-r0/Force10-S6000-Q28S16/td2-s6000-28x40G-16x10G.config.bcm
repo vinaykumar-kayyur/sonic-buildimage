@@ -39,8 +39,8 @@ schan_intr_enable=0
 stable_size=0x2000000
 tdma_timeout_usec=5000000
 
-pbmp_oversubscribe=0x0000000000000000000001fffffffffff 
-pbmp_xport_xe=0x0000000000000000000001fffffffffff 
+pbmp_oversubscribe=0x0000000000000000000001fffffffffff
+pbmp_xport_xe=0x0000000000000000000001fffffffffff
 
 
 # Ports configuration

@@ -89,7 +89,7 @@ class Fan(FanBase):
 
         Note:
             M = 150
-            Max F2B = 24700 RPM 
+            Max F2B = 24700 RPM
             Max B2F = 29700 RPM
         """
 

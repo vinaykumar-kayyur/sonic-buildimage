@@ -60,20 +60,20 @@
 		"i2c":
 		{
 			"CONTROLLERS":
-			[ 
+			[
 				{ "dev_name":"i2c-1", "dev":"SMBUS1" },
 				{ "dev_name":"i2c-0", "dev":"SMBUS0" }
 			]
 		}
 	},
 
-	"SMBUS0": 
+	"SMBUS0":
 	{
 		"dev_info": {"device_type": "SMBUS", "device_name": "SMBUS0", "device_parent": "SYSTEM"},
-		"i2c": 
+		"i2c":
 		{
 			"topo_info": {"dev_addr": "0x0"},
-			"DEVICES": 
+			"DEVICES":
 			[
 				{"dev": "EEPROM1"},
 				{"dev": "MUX2"},
@@ -85,22 +85,22 @@
 		}
 	},
 
-	"SMBUS1": 
+	"SMBUS1":
 	{
 		"dev_info": {"device_type": "SMBUS", "device_name": "SMBUS1", "device_parent": "SYSTEM"},
-		"i2c": 
+		"i2c":
 		{
 			"topo_info": {"dev_addr": "0x1"},
-			"DEVICES": 
+			"DEVICES":
 			[
 				{"dev": "MUX1"}
 			]
 		}
 	},
-	"EEPROM1": 
+	"EEPROM1":
 	{
 		"dev_info": {"device_type": "EEPROM", "device_name": "EEPROM1", "device_parent": "SMBUS0"},
-		"i2c": 
+		"i2c":
 		{
 			"topo_info": {"parent_bus": "0x0", "dev_addr": "0x57", "dev_type": "24c02"},
 			"dev_attr": {"access_mode": "BLOCK"},
@@ -114,7 +114,7 @@
 	{
 		"dev_info": { "device_type":"MUX", "device_name":"MUX1", "device_parent":"SMBUS1"},
 		"i2c":
-		{ 
+		{
 			"topo_info": { "parent_bus":"0x1", "dev_addr":"0x76", "dev_type":"pca9548"},
 			"dev_attr": { "virt_bus":"0x2", "idle_state":"-2"},
 			"channel":
@@ -202,7 +202,7 @@
 				{ "attr_name":"fan9_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 				{ "attr_name":"fan10_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
 				{ "attr_name":"fan11_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" },
-				{ "attr_name":"fan12_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" }				
+				{ "attr_name":"fan12_pwm", "attr_devtype":"FAN-CTRL", "attr_offset":"0x11", "attr_mask":"0x0F", "attr_len":"1" }
 			]
 		}
 	},
@@ -254,7 +254,7 @@
 			]
 		}
 	},
-	
+
 	"TEMP4" :
 	{
 		"dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP4", "device_parent":"MUX1"},
@@ -270,7 +270,7 @@
 			]
 		}
 	},
-	
+
 	"CPLD1":
 	{
 		"dev_info": { "device_type":"CPLD", "device_name":"CPLD1", "device_parent":"MUX1"},
@@ -307,7 +307,7 @@
 		"dev_attr":{ },
 		"attr_list":
 		[
-                
+
                   { "attr_name":"board_info","attr_devaddr":"0x60", "attr_offset":"0x0","attr_mask":"0xf","attr_len":"0x1"},
                   { "attr_name":"cpld1_version","attr_devaddr":"0x60","attr_offset":"0x1","attr_mask":"0xff","attr_len":"0x1"},
                   { "attr_name":"power_module_status","attr_devaddr":"0x60","attr_offset":"0x2","attr_mask":"0x2f","attr_len":"0x1"},
@@ -324,7 +324,7 @@
 
 	"PSU1":
 	{
-		"dev_info": { "device_type":"PSU", "device_name":"PSU1", "device_parent":"MUX2"}, 
+		"dev_info": { "device_type":"PSU", "device_name":"PSU1", "device_parent":"MUX2"},
 		"dev_attr": { "dev_idx":"1", "num_psu_fans": "1"},
 		"i2c":
 		{
@@ -332,7 +332,7 @@
 			[
 				{ "itf":"pmbus", "dev":"PSU1-PMBUS" }
 			]
-		
+
 		}
 	},
 
@@ -341,9 +341,9 @@
 		"dev_info": { "device_type":"PSU-PMBUS", "device_name":"PSU1-PMBUS", "device_parent":"MUX2", "virt_parent":"PSU1"},
 		"i2c":
 		{
-			"topo_info":{ "parent_bus":"0xb", "dev_addr":"0x5b", "dev_type":"psu_pmbus"}, 
-			"attr_list": 
-			[  
+			"topo_info":{ "parent_bus":"0xb", "dev_addr":"0x5b", "dev_type":"psu_pmbus"},
+			"attr_list":
+			[
 				{ "attr_name":"psu_present", "attr_devaddr":"0x60", "attr_devtype":"cpld", "attr_offset":"0x2", "attr_mask":"0x2", "attr_cmpval":"0x0", "attr_len":"1"},
 				{ "attr_name":"psu_model_name", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0x9a", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"9" },
 				{ "attr_name":"psu_power_good", "attr_devaddr":"0x60", "attr_devtype":"cpld", "attr_offset":"0x2", "attr_mask":"0x28", "attr_cmpval":"0x28", "attr_len":"1"},
@@ -379,8 +379,8 @@
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0xa", "dev_addr":"0x58", "dev_type":"psu_pmbus"},
-			"attr_list": 
-			[  
+			"attr_list":
+			[
 				{ "attr_name":"psu_present", "attr_devaddr":"0x60", "attr_devtype":"cpld", "attr_offset":"0x2", "attr_mask":"0x1", "attr_cmpval":"0x0", "attr_len":"1"},
 				{ "attr_name":"psu_model_name", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0x9a", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"9" },
 				{ "attr_name":"psu_power_good", "attr_devaddr":"0x60", "attr_devtype":"cpld", "attr_offset":"0x2", "attr_mask":"0x14", "attr_cmpval":"0x14", "attr_len":"1"},
@@ -398,7 +398,7 @@
 
 	"MUX3":
 	{
-		"dev_info": { "device_type":"MUX", "device_name":"MUX3", "device_parent":"SMBUS0"}, 
+		"dev_info": { "device_type":"MUX", "device_name":"MUX3", "device_parent":"SMBUS0"},
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0x0", "dev_addr":"0x72", "dev_type":"pca9548"},
@@ -416,10 +416,10 @@
 			]
 		}
 	},
-	
+
 	"MUX4":
 	{
-		"dev_info": { "device_type":"MUX", "device_name":"MUX4", "device_parent":"SMBUS0"}, 
+		"dev_info": { "device_type":"MUX", "device_name":"MUX4", "device_parent":"SMBUS0"},
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0x0", "dev_addr":"0x73", "dev_type":"pca9548"},
@@ -437,10 +437,10 @@
 			]
 		}
 	},
-	
+
 	"MUX5":
 	{
-		"dev_info": { "device_type":"MUX", "device_name":"MUX5", "device_parent":"SMBUS0"}, 
+		"dev_info": { "device_type":"MUX", "device_name":"MUX5", "device_parent":"SMBUS0"},
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0x0", "dev_addr":"0x74", "dev_type":"pca9548"},
@@ -458,10 +458,10 @@
 			]
 		}
 	},
-	
+
 	"MUX6":
 	{
-		"dev_info": { "device_type":"MUX", "device_name":"MUX6", "device_parent":"SMBUS0"}, 
+		"dev_info": { "device_type":"MUX", "device_name":"MUX6", "device_parent":"SMBUS0"},
 		"i2c":
 		{
 			"topo_info": { "parent_bus":"0x0", "dev_addr":"0x75", "dev_type":"pca9548"},
@@ -479,7 +479,7 @@
 			]
 		}
 	},
-	
+
 	"LOC_LED":
 	{
 			"dev_info": { "device_type":"LED", "device_name":"LOC_LED"},
@@ -507,7 +507,7 @@
                         }
 
 	},
-	
+
 
     "PORT1":
     {

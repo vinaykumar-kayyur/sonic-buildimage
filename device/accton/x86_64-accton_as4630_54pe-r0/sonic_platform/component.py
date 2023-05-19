@@ -21,7 +21,7 @@ BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
    ("CPLD1", "CPLD 1"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 
 class Component(ComponentBase):
@@ -55,7 +55,7 @@ class Component(ComponentBase):
             except Exception as e:
                 print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
-        
+
         return cpld_version
 
     def get_name(self):
@@ -73,7 +73,7 @@ class Component(ComponentBase):
             A string containing the description of the component
         """
         return COMPONENT_LIST[self.index][1]
-        
+
 
     def get_firmware_version(self):
         """

@@ -39,16 +39,16 @@ PSU_CPLD_I2C_MAPPING = {
     },
 }
 
-THERMAL_NAME_LIST = ["Temp sensor 1", "Temp sensor 2", "Temp sensor 3", 
+THERMAL_NAME_LIST = ["Temp sensor 1", "Temp sensor 2", "Temp sensor 3",
                      "Temp sensor 4", "Temp sensor 5", "Temp sensor 6"]
-                     
+
 PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 2"]
 
 SYSFS_PATH = "/sys/bus/i2c/devices"
 
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
-    
+
     def __init__(self, thermal_index=0, is_psu=False, psu_index=0):
         self.index = thermal_index
         self.is_psu = is_psu
@@ -65,8 +65,8 @@ class Thermal(ThermalBase):
 
         # Set hwmon path
         i2c_path = {
-            0: "18-0048/hwmon/hwmon*/", 
-            1: "18-0049/hwmon/hwmon*/", 
+            0: "18-0048/hwmon/hwmon*/",
+            1: "18-0049/hwmon/hwmon*/",
             2: "18-004a/hwmon/hwmon*/",
             3: "18-004b/hwmon/hwmon*/",
             4: "17-004d/hwmon/hwmon*/",
@@ -87,7 +87,7 @@ class Thermal(ThermalBase):
                 pass
 
         return None
-        
+
     def __get_temp(self, temp_file):
         if not self.is_psu:
             temp_file_path = os.path.join(self.hwmon_path, temp_file)
@@ -97,7 +97,7 @@ class Thermal(ThermalBase):
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0        
+            return 0
 
     def __set_threshold(self, file_name, temperature):
         if self.is_psu:
@@ -151,7 +151,7 @@ class Thermal(ThermalBase):
         temp_file = "temp{}_max".format(self.ss_index)
         temperature = temperature *1000
         self.__set_threshold(temp_file, temperature)
-        
+
         return True
 
     def get_name(self):

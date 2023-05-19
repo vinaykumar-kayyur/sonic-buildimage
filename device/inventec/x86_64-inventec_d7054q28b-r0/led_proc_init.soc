@@ -138,7 +138,7 @@ led 1 start
 
 # Set per port speed config of LED Color register
 # For Invnetec Cypress platform,
-# If we want to set 10G speed per port, We need to set amber color light, so use cmd "setreg CMIC_LEDUP0_DATA_RAM(160) 0x04". 
+# If we want to set 10G speed per port, We need to set amber color light, so use cmd "setreg CMIC_LEDUP0_DATA_RAM(160) 0x04".
 # If we want to set 25G ( or up ) speed per port, we need to set green color light, so use cmd "setreg CMIC_LEDUP0_DATA_RAM(160) 0x00".
 
 setreg CMIC_LEDUP0_DATA_RAM(160) 0x00

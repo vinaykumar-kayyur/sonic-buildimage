@@ -124,7 +124,7 @@ class PsuUtil(PsuBase):
                 status = True
 
         return status
-    
+
     def get_model(self, index):
         attr_filename = self.get_attr_filename(index, 'model')
         if attr_filename == '':

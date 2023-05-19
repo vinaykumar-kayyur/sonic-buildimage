@@ -35,42 +35,42 @@ class Chassis(ChassisBase):
         self._api_helper = APIHelper()
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         for index in range(0, PORT_END):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
-        
+
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
         for fant_index in range(0, NUM_FAN_TRAY):
             for fan_index in range(0, NUM_FAN):
                 fan = Fan(fant_index, fan_index)
                 self._fan_list.append(fan)
-                
+
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-    
+
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
@@ -80,12 +80,12 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
-    
+
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
-    
-    
+
+
     def __is_host(self):
         return subprocess.call(HOST_CHK_CMD) == 0
 
@@ -104,7 +104,7 @@ class Chassis(ChassisBase):
             Returns:
             string: The name of the device
         """
-        
+
         return self._api_helper.hwsku
 
     def get_presence(self):
@@ -114,7 +114,7 @@ class Chassis(ChassisBase):
             bool: True if Chassis is present, False if not
         """
         return True
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -122,7 +122,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
-    
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -148,7 +148,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self._eeprom.get_eeprom()   
+        return self._eeprom.get_eeprom()
 
     def get_reboot_cause(self):
         """
@@ -161,12 +161,12 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        
+
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self._api_helper.read_txt_file(
             reboot_cause_path) or "Unknown"
 
-         
+
         return ('REBOOT_CAUSE_NON_HARDWARE', sw_reboot_cause)
 
     def get_sfp(self, index):

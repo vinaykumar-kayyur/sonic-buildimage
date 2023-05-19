@@ -1,4 +1,4 @@
-{% if DEVICE_METADATA is defined and 'type' in DEVICE_METADATA['localhost'] and 
+{% if DEVICE_METADATA is defined and 'type' in DEVICE_METADATA['localhost'] and
 (DEVICE_METADATA['localhost']['type'] == 'LeafRouter' or DEVICE_METADATA['localhost']['subtype'] == 'DualToR') %}
 {%- macro generate_queue_buffers_with_extra_lossless_queues(port_names, port_names_require_extra_buffer) %}
     "BUFFER_QUEUE": {

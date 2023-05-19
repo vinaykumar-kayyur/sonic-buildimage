@@ -256,7 +256,7 @@ class Sfp(SfpBase):
             return {}
         elif self.port_num < 53:
             sfpi_obj = sff8472InterfaceId() #SFP
-        else:    
+        else:
             sfpi_obj = sff8436InterfaceId() #QSFP
         if not self.get_presence() or not sfpi_obj:
             return {}
@@ -424,7 +424,7 @@ class Sfp(SfpBase):
                     dom_channel_monitor_raw, 0)
                 transceiver_dom_info_dict['tx1power'] = dom_voltage_data['data']['TXPower']['value']
                 transceiver_dom_info_dict['rx1power'] = dom_voltage_data['data']['RXPower']['value']
-                transceiver_dom_info_dict['tx1bias'] = dom_voltage_data['data']['TXBias']['value']            
+                transceiver_dom_info_dict['tx1bias'] = dom_voltage_data['data']['TXBias']['value']
 
         else: #QSFP case
             sfpd_obj = sff8436Dom()
@@ -546,7 +546,7 @@ class Sfp(SfpBase):
         """
         # check present status
         if self.port_num < 53:
-            sfpd_obj = sff8472Dom()    
+            sfpd_obj = sff8472Dom()
 
             if not self.get_presence() and not sfpd_obj:
                 return {}
@@ -675,7 +675,7 @@ class Sfp(SfpBase):
             return False
 
         if self.port_num < 53:
-            rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)           
+            rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)
             rx_los=self._api_helper.read_txt_file(rx_path)
             if rx_los is None:
                 return False
@@ -710,7 +710,7 @@ class Sfp(SfpBase):
             return False
 
         if self.port_num < 53:
-            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)           
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)
             tx_fault=self._api_helper.read_txt_file(tx_path)
             if tx_fault is None:
                 return False
@@ -742,8 +742,8 @@ class Sfp(SfpBase):
         if self.port_num < 49: #Copper port, no sysfs
             return False
 
-        if self.port_num < 53: 
-            tx_disable = False            
+        if self.port_num < 53:
+            tx_disable = False
 
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
             tx_disable=self._api_helper.read_txt_file(tx_path)
@@ -759,7 +759,7 @@ class Sfp(SfpBase):
             #        data, SFP_TX_DISABLE_SOFT_BIT) != 0)
             #    tx_disable = tx_disable_hard | tx_disable_soft
             if tx_disable is not None:
-                return tx_disable 
+                return tx_disable
             else:
                 return False
 
@@ -794,7 +794,7 @@ class Sfp(SfpBase):
             As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
-        if self.port_num < 53: 
+        if self.port_num < 53:
             # SFP doesn't support this feature
             return False
         else:
@@ -813,7 +813,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self.port_num < 53: 
+        if self.port_num < 53:
             # SFP doesn't support this feature
             return False
         else:
@@ -822,13 +822,13 @@ class Sfp(SfpBase):
             return power_set and power_override
 
 
-    def get_power_set(self):        
+    def get_power_set(self):
 
-        if self.port_num < 53: 
+        if self.port_num < 53:
             # SFP doesn't support this feature
             return False
         else:
-            power_set = False    
+            power_set = False
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -897,7 +897,7 @@ class Sfp(SfpBase):
         transceiver_dom_info_dict = self.get_transceiver_bulk_status()
 
         tx1_bs = transceiver_dom_info_dict.get("tx1bias", "N/A")
-        if self.port_num < 53:            
+        if self.port_num < 53:
             return [tx1_bs, "N/A", "N/A", "N/A"] if transceiver_dom_info_dict else []
 
         tx2_bs = transceiver_dom_info_dict.get("tx2bias", "N/A")
@@ -974,8 +974,8 @@ class Sfp(SfpBase):
             return False
 
         if self.port_num < 53:
-            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)      
-            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)           
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
+            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
             if ret is not None:
                 time.sleep(0.01)
                 return ret
@@ -996,7 +996,7 @@ class Sfp(SfpBase):
                 # Write to eeprom
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
-                sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)               
+                sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
                 print ('Error: unable to open file: ',str(e))
@@ -1139,11 +1139,11 @@ class Sfp(SfpBase):
         if self.port_num < 49: #Copper port, no sysfs
             return False
 
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)        
+        present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)
         val=self._api_helper.read_txt_file(present_path)
         if val is not None:
             return int(val, 10)==1
-        else:           
+        else:
             return False
 
     def get_model(self):

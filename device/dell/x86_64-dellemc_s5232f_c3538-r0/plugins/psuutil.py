@@ -56,7 +56,7 @@ class PsuUtil(PsuBase):
                 ipmi_cmd = IPMI_PSU2_DATA
         if ipmi_cmd != '':
             status, ipmi_sdr_list = getstatusoutput_noshell_pipe(ipmi_cmd, awk_cmd)
-        
+
         if status:
             logging.error('Failed to execute ipmitool')
             sys.exit(0)

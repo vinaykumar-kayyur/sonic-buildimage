@@ -260,7 +260,7 @@ class SfpUtil(SfpUtilBase):
         if port_num > self.PORTS_IN_BLOCK:
             return False
         if self.get_media_type(port_num) == 'QSFP_DD':
-            lpmode = self._read_eeprom_bytes(self.port_to_eeprom_mapping[port_num], QSFP_DD_MODULE_ENC_OFFSET, 
+            lpmode = self._read_eeprom_bytes(self.port_to_eeprom_mapping[port_num], QSFP_DD_MODULE_ENC_OFFSET,
                      QSFP_DD_MODULE_ENC_WIDTH)
             if lpmode is not None:
                 if int(lpmode[0])>>1 == 1:

@@ -145,7 +145,7 @@ class Psu(PsuBase):
 
         return {
             1: self.STATUS_LED_COLOR_GREEN,
-            0: self.STATUS_LED_COLOR_RED            
+            0: self.STATUS_LED_COLOR_RED
         }.get(status, self.STATUS_LED_COLOR_OFF)
 
     def get_temperature(self):

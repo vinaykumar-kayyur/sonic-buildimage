@@ -204,7 +204,7 @@ class Thermal(ThermalBase):
     def set_low_threshold(self, temperature):
         """
         Sets the low threshold temperature of thermal
-        Args : 
+        Args :
             temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
         Returns:
@@ -324,5 +324,5 @@ class Thermal(ThermalBase):
         Returns:
             A int value, 0 represent ASIC thermal, 1 represent CPU thermal info
         """
-        
+
         return self.index + 1

@@ -23,7 +23,7 @@ class FanUtil(FanBase):
 
     def __init__(self, log_level=logging.DEBUG):
         FanBase.__init__(self)
-        self.num_fans = (self.SYS_FAN_NUM * self.NUM_FANS_PERTRAY) 
+        self.num_fans = (self.SYS_FAN_NUM * self.NUM_FANS_PERTRAY)
 
     # Get sysfs attribute
     def get_attr_value(self, attr_path):

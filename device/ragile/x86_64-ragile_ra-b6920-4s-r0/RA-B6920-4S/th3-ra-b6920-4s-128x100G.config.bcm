@@ -257,7 +257,7 @@ sap_mdio_num_92.0=1
 sap_mdio_num_104.0=2
 sap_mdio_num_112.0=2
 
-#slot 1 bc 8 10 12 14 
+#slot 1 bc 8 10 12 14
 portmap_40=65:100
 portmap_41=67:100
 portmap_42=69:100

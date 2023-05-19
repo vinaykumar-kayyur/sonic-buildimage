@@ -182,7 +182,7 @@ class PsuUtil(PsuBase):
 
     def get_fan_speed(self, index, fan_index):
         """
-        Retrieves the speed of fan, in rpm, denoted by 1-based <fan_index> of a power 
+        Retrieves the speed of fan, in rpm, denoted by 1-based <fan_index> of a power
                 supply unit (PSU) defined by 1-based index <index>
         :param index: An integer, 1-based index of the PSU of which to query fan speed
         :param fan_index: An integer, 1-based index of the PSU-fan of which to query speed

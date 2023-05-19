@@ -396,7 +396,7 @@ class Sfp(SfpBase):
 
     def _dom_capability_detect(self):
         self._detect_sfp_type()
-    
+
         if not self.get_presence():
             self.dom_supported = False
             self.dom_temp_supported = False
@@ -1302,7 +1302,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if reset enabled, False if disabled
         """
-        if self._port_num <= 16: 
+        if self._port_num <= 16:
             reset_path = "{}{}{}".format(CPLD2_I2C_PATH, '/module_reset_', self._port_num)
         else:
             reset_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_reset_', self._port_num)
@@ -1310,7 +1310,7 @@ class Sfp(SfpBase):
         val=self._api_helper.read_txt_file(reset_path)
         if val is not None:
             return int(val, 10)==1
-        else:           
+        else:
             return False
 
     def get_rx_los(self):
@@ -1483,7 +1483,7 @@ class Sfp(SfpBase):
         Returns:
             A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
             TX channels which have been disabled in this SFP.
-            As an example, a returned value of 0x5 indicates that channel 0 
+            As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
         tx_disable_list = self.get_tx_disable()
@@ -1501,23 +1501,23 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self._port_num > 32: 
+        if self._port_num > 32:
             # SFP doesn't support this feature
             return False
         else:
             try:
                 eeprom = None
-    
+
                 if not self.get_presence():
                     return False
                 # Write to eeprom
                 port_to_i2c_mapping = SFP_I2C_START + self._index
                 port_eeprom_path = I2C_EEPROM_PATH.format(port_to_i2c_mapping)
-    
+
                 eeprom = open(port_eeprom_path, "rb")
                 eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 lpmode = ord(eeprom.read(1))
-    
+
                 if ((lpmode & 0x3) == 0x3):
                     return True  # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
                 else:
@@ -1533,13 +1533,13 @@ class Sfp(SfpBase):
                     eeprom.close()
                     time.sleep(0.01)
 
-    def get_power_set(self):        
+    def get_power_set(self):
 
-        if self._port_num > 32: 
+        if self._port_num > 32:
             # SFP doesn't support this feature
             return False
         else:
-            power_set = False    
+            power_set = False
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -2015,11 +2015,11 @@ class Sfp(SfpBase):
         ret = self.__write_txt_file(reset_path, 1) #sysfs 1: enable reset
         if ret is not True:
             return ret
-        
+
         time.sleep(0.2)
         ret = self.__write_txt_file(reset_path, 0) #sysfs 0: disable reset
         time.sleep(0.2)
-        
+
         return ret
 
     def tx_disable(self, tx_disable):
@@ -2166,7 +2166,7 @@ class Sfp(SfpBase):
         Returns:
             bool: True if device is present, False if not
         """
-        if self._port_num <= 16: 
+        if self._port_num <= 16:
             present_path = "{}{}{}".format(CPLD2_I2C_PATH, '/module_present_', self._port_num)
         else:
             present_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_present_', self._port_num)
@@ -2174,7 +2174,7 @@ class Sfp(SfpBase):
         val=self._api_helper.read_txt_file(present_path)
         if val is not None:
             return int(val, 10)==1
-        else:           
+        else:
             return False
 
 

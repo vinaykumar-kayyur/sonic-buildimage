@@ -31,7 +31,7 @@ class Sfp(SfpOptoeBase):
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
     HOST_CHK_CMD = ["which", "systemctl"]
-        
+
     PLATFORM = "x86_64-accton_as5835_54x-r0"
     HWSKU = "Accton-AS5835-54X"
 
@@ -95,7 +95,7 @@ class Sfp(SfpOptoeBase):
         52: 30,  # QSFP52
         53: 31,  # QSFP53
         54: 27,  # QSFP54
-        
+
     }
 
     def __init__(self, sfp_index=0):
@@ -113,7 +113,7 @@ class Sfp(SfpOptoeBase):
 
     def get_eeprom_path(self):
         return self.port_to_eeprom_mapping[self.port_num]
-        
+
     # For cage 1~38 are at cpld2, others are at cpld3.
     def __get_cpld_num(self, port_num):
         return 1 if (port_num < 39) else 2
@@ -162,9 +162,9 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num <49:
             return False # SPF port doesn't support this feature
-          
+
         cpld_i = self.__get_cpld_num(self.port_num)
-        cpld_path = self._cpld_mapping[cpld_i]        
+        cpld_path = self._cpld_mapping[cpld_i]
         reset_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_reset_', self.port_num)
         val=self._api_helper.read_txt_file(reset_path)
         if val is not None:
@@ -182,7 +182,7 @@ class Sfp(SfpOptoeBase):
         rx_los = False
         if self.port_num < 49:
             cpld_i = self.__get_cpld_num(self.port_num)
-            cpld_path = self._cpld_mapping[cpld_i]        
+            cpld_path = self._cpld_mapping[cpld_i]
             rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)
 
             rx_los=self._api_helper.read_txt_file(rx_path)
@@ -195,7 +195,7 @@ class Sfp(SfpOptoeBase):
             #if status_control_raw:
             #    data = int(status_control_raw[0], 16)
             #    rx_los = (sffbase().test_bit(data, 1) != 0)
-            
+
         else:
             rx_los_list = []
             dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
@@ -223,7 +223,7 @@ class Sfp(SfpOptoeBase):
         tx_fault = False
         if self.port_num < 49:
             cpld_i = self.__get_cpld_num(self.port_num)
-            cpld_path = self._cpld_mapping[cpld_i]        
+            cpld_path = self._cpld_mapping[cpld_i]
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)
 
             tx_fault=self._api_helper.read_txt_file(tx_path)
@@ -260,15 +260,15 @@ class Sfp(SfpOptoeBase):
             is TX disabled, False if not.
             E.g., for a tranceiver with four channels: [False, False, True, False]
         """
-        if self.port_num < 49: 
+        if self.port_num < 49:
             tx_disable = False
-            
+
             cpld_i = self.__get_cpld_num(self.port_num)
-            cpld_path = self._cpld_mapping[cpld_i]        
+            cpld_path = self._cpld_mapping[cpld_i]
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)
 
             tx_disable=self._api_helper.read_txt_file(tx_path)
-            
+
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             #if status_control_raw:
@@ -285,11 +285,11 @@ class Sfp(SfpOptoeBase):
 
         else:
             tx_disable_list = []
-    
+
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
-    
+
             dom_control_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
@@ -330,34 +330,34 @@ class Sfp(SfpOptoeBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self.port_num < 49: 
+        if self.port_num < 49:
             # SFP doesn't support this feature
             return False
         else:
             power_set=self.get_power_set()
             power_override = self.get_power_override()
             return power_set and power_override
-       
-    
+
+
     def get_power_set(self):
-        
-        if self.port_num < 49: 
+
+        if self.port_num < 49:
             # SFP doesn't support this feature
             return False
         else:
             power_set = False
-            
+
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
-    
+
             dom_control_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_set = (
                     'On' == dom_control_data['data']['PowerSet']['value'])
-    
+
             return power_set
 
     def get_power_override(self):
@@ -370,19 +370,19 @@ class Sfp(SfpOptoeBase):
             return False # SFP doesn't support this feature
         else:
             power_override = False
-    
-            
+
+
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
-    
+
             dom_control_raw = self.__read_eeprom_specific_bytes(
                 QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_override = (
                     'On' == dom_control_data['data']['PowerOverride']['value'])
-    
+
             return power_override
 
     def reset(self):
@@ -393,10 +393,10 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num <49:
             return False # SFP doesn't support this feature
-          
+
         cpld_i = self.__get_cpld_num(self.port_num)
-        cpld_path = self._cpld_mapping[cpld_i]        
-        reset_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_reset_', self.port_num)      
+        cpld_path = self._cpld_mapping[cpld_i]
+        reset_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_reset_', self.port_num)
         ret = self._api_helper.write_txt_file(reset_path, 1)
 
         if ret is not True:
@@ -405,9 +405,9 @@ class Sfp(SfpOptoeBase):
         time.sleep(0.01)
         ret = self._api_helper.write_txt_file(reset_path, 0)
         time.sleep(0.2)
-        
+
         return ret
-      
+
     def tx_disable(self, tx_disable):
         """
         Disable SFP TX for all channels
@@ -419,8 +419,8 @@ class Sfp(SfpOptoeBase):
         """
         if self.port_num < 49:
             cpld_i = self.__get_cpld_num(self.port_num)
-            cpld_path = self._cpld_mapping[cpld_i]        
-            tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)      
+            cpld_path = self._cpld_mapping[cpld_i]
+            tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)
             ret = self._api_helper.write_txt_file(tx_path,  1 if tx_disable else 0)
 
             if ret is not None:
@@ -428,7 +428,7 @@ class Sfp(SfpOptoeBase):
                 return ret
             else:
                 return False
-        
+
         else:
             if not self.get_presence():
                 return False
@@ -466,7 +466,7 @@ class Sfp(SfpOptoeBase):
         Returns:
             A boolean, True if successful, False if not
         """
-        
+
         if self.port_num < 49:
             return False # SFP doesn't support this feature
         else:
@@ -522,9 +522,9 @@ class Sfp(SfpOptoeBase):
                 self.set_power_override(True, True)
             else:
                 self.set_power_override(False, False)
-    
+
             return True
-       
+
     def set_power_override(self, power_override, power_set):
         """
         Sets SFP power level using power_override and power_set
@@ -550,7 +550,7 @@ class Sfp(SfpOptoeBase):
             try:
                 power_override_bit = (1 << 0) if power_override else 0
                 power_set_bit      = (1 << 1) if power_set else (1 << 3)
-    
+
                 buffer = create_string_buffer(1)
                 if sys.version_info[0] >= 3:
                     buffer[0] = (power_override_bit | power_set_bit)
@@ -585,7 +585,7 @@ class Sfp(SfpOptoeBase):
             bool: True if device is present, False if not
         """
         cpld_i = self.__get_cpld_num(self.port_num)
-        cpld_path = self._cpld_mapping[cpld_i]          
+        cpld_path = self._cpld_mapping[cpld_i]
         present_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_present_', self.port_num)
         val=self._api_helper.read_txt_file(present_path)
         if val is not None:

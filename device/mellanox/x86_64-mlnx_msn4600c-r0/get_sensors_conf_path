@@ -20,7 +20,7 @@ function get_sensor_conf_path() {
                         echo $SENSORS_RESPIN_CONF_FILE_A1
                         return
                     fi
-                else 
+                else
                     if [[ -e $SENSORS_CONF_FILE_A1 ]]; then
                         echo $SENSORS_CONF_FILE_A1
                         return
