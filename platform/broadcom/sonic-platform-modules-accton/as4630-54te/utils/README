@@ -7,7 +7,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -17,12 +17,12 @@ All Linux kernel code is licensed under the GPLv1. All other code is
 licensed under the GPLv3. Please see the LICENSE file for copies of
 both licenses.
 
-The code for integacting with Accton AS4630-54te has 2 parts, 
-kernel drivers and operational script. 
+The code for integacting with Accton AS4630-54te has 2 parts,
+kernel drivers and operational script.
 The kernel drivers of peripherals are under module/ directory.
 1.  These drivers are at module dir.
-2.  A operational script, accton_as4630_util.py, for device initializatian and 
-    peripheral accessing should be installed at /usr/bin. 
+2.  A operational script, accton_as4630_util.py, for device initializatian and
+    peripheral accessing should be installed at /usr/bin.
     Run "accton_as4630_util.py install" to install drivers.
 
 To initialize the system, run "accton_as4630_util.py install".
@@ -35,12 +35,12 @@ To set system LEDs' color, run "accton_as4630_util.py set led"
 For more information, run "accton_as4630_util.py --help".
 
 ====================================================================
-Besides applying accton_as4630_util.py to access peripherals, you can 
+Besides applying accton_as4630_util.py to access peripherals, you can
 access peripherals by sysfs nodes directly after the installation is run.
 
 System LED:
     There are 5 system LEDs at the lower-left corner of front panel.
-    They are  loc, diag, fan, ps1, and ps2. 
+    They are  loc, diag, fan, ps1, and ps2.
     The sysfs interface color mappings are as follows:
     Brightness:
         0 => off
@@ -55,13 +55,13 @@ Fan Control:
     All fans share 1 duty setting, ranged from 0~100.
 
 Thermal sensers:
-    3 temperature sensors are controlled by the lm75 kernel modules. 
+    3 temperature sensors are controlled by the lm75 kernel modules.
 
 PSUs:
     There 2 power supplies slot at the left/right side of the back.
     Once if a PSU is not plugged, the status of it is shown failed.
 
-There are 48 SFP+ and 6 QSFP modules are equipped. 
-Before operating on PSU and QSFP+, please make sure it is well plugged. 
+There are 48 SFP+ and 6 QSFP modules are equipped.
+Before operating on PSU and QSFP+, please make sure it is well plugged.
 Otherwise, operation is going to fail.
 

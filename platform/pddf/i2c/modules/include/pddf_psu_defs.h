@@ -27,7 +27,7 @@
 #define STR_ATTR_SIZE 32
 #define DEV_TYPE_LEN 32
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 
 typedef struct PSU_DATA_ATTR
@@ -73,7 +73,7 @@ typedef struct PSU_DATA
     int num_psu_fans;
     PSU_DATA_ATTR psu_attr;
     int len;             // no of valid attributes for this psu client
-    PSU_DATA_ATTR psu_attrs[MAX_PSU_ATTRS]; 
+    PSU_DATA_ATTR psu_attrs[MAX_PSU_ATTRS];
 }PSU_DATA;
 
 typedef struct PSU_PDATA
@@ -81,7 +81,7 @@ typedef struct PSU_PDATA
     int idx;                    // psu index
     int num_psu_fans;      // num of fans supported by the PSU
     int len;             // no of valid attributes for this psu client
-    PSU_DATA_ATTR *psu_attrs; 
+    PSU_DATA_ATTR *psu_attrs;
 }PSU_PDATA;
 
 extern int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg);

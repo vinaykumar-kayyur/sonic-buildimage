@@ -23,7 +23,7 @@ def fantype_detect():
                 pass
 
     return default_fantype
- 
+
 def main():
     AFO_value = "1"
 
@@ -35,7 +35,7 @@ def main():
     else:
         temp_thres_file = open("/usr/local/bin/temperature_thresholds_AFI.txt", "r+")
         print temp_thres_file.read()
-    
+
     temp_thres_file.close()
 
 if __name__ == "__main__":

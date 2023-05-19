@@ -26,17 +26,17 @@ class Chassis(PddfChassis):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
         self.__initialize_components()
         self._sfpevent = SfpEvent(self.get_all_sfps())
-       
+
     def __initialize_components(self):
         from sonic_platform.component import Component
         for index in range(NUM_COMPONENT):
             component = Component(index)
-            self._component_list.append(component)    
-        
+            self._component_list.append(component)
+
     # Provide the functions/variables below for which implementation is to be overwritten
     def get_change_event(self, timeout=0):
         return self._sfpevent.get_sfp_event(timeout)
-    
+
     def get_sfp(self, index):
         """
         Retrieves sfp represented by (1-based) index <index>

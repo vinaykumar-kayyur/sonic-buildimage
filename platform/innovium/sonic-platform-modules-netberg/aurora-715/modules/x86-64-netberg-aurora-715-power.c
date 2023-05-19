@@ -27,7 +27,7 @@ ssize_t psu_status_get(struct device *dev, struct device_attribute *da, char *bu
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_35_data = i2c_get_clientdata(Netberg_CPLD_35_client);
     struct Netberg_i2c_data *Netberg_BMC_14_data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -41,7 +41,7 @@ ssize_t psu_status_get(struct device *dev, struct device_attribute *da, char *bu
         status = i2c_smbus_read_byte_data(Netberg_CPLD_35_client, PSU_STAT_REG);
         mutex_unlock(&Netberg_CPLD_35_data->update_lock);
     }
-    
+
     result = TRUE;
     switch (attr->index)
     {
@@ -71,7 +71,7 @@ ssize_t psu_present_get(struct device *dev, struct device_attribute *da, char *b
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_35_data = i2c_get_clientdata(Netberg_CPLD_35_client);
     struct Netberg_i2c_data *Netberg_BMC_14_data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -85,7 +85,7 @@ ssize_t psu_present_get(struct device *dev, struct device_attribute *da, char *b
         status = i2c_smbus_read_byte_data(Netberg_CPLD_35_client, PSU_STAT_REG);
         mutex_unlock(&Netberg_CPLD_35_data->update_lock);
     }
-    
+
     result = FALSE;
     switch (attr->index)
     {
@@ -115,7 +115,7 @@ ssize_t psu_vin_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -152,7 +152,7 @@ ssize_t psu_iin_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -190,19 +190,19 @@ ssize_t psu_vout_get(struct device *dev, struct device_attribute *da, char *buf)
     u16 u16_vmode = 0;
     u16 u16_vout  = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
         switch(attr->index)
         {
             case PSU1_VOUT:
-                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_1_VOMDE_REG); 
-                u16_vout  = i2c_smbus_read_word_data(Netberg_BMC_14_client, PSU_1_VOUT_REG); 
+                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_1_VOMDE_REG);
+                u16_vout  = i2c_smbus_read_word_data(Netberg_BMC_14_client, PSU_1_VOUT_REG);
                 break;
             case PSU2_VOUT:
-                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_2_VOMDE_REG); 
-                u16_vout  = i2c_smbus_read_word_data(Netberg_BMC_14_client, PSU_2_VOUT_REG); 
+                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_2_VOMDE_REG);
+                u16_vout  = i2c_smbus_read_word_data(Netberg_BMC_14_client, PSU_2_VOUT_REG);
                 break;
         }
         if(u16_vout == 0xffff || u16_vout == -1)
@@ -231,7 +231,7 @@ ssize_t psu_iout_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -269,7 +269,7 @@ ssize_t psu_temp_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -307,7 +307,7 @@ ssize_t psu_fan_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -345,7 +345,7 @@ ssize_t psu_pout_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -383,7 +383,7 @@ ssize_t psu_pin_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -419,7 +419,7 @@ ssize_t psu_mfr_model_get(struct device *dev, struct device_attribute *da, char 
     u16 u16_val = 0;
     char model[2];
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -454,7 +454,7 @@ ssize_t psu_iout_max_get(struct device *dev, struct device_attribute *da, char *
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -489,17 +489,17 @@ ssize_t psu_vmode_get(struct device *dev, struct device_attribute *da, char *buf
 {
     u16 u16_vmode = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
         switch(attr->index)
         {
             case PSU1_VOMDE:
-                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_1_VOMDE_REG); 
+                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_1_VOMDE_REG);
                 break;
             case PSU2_VOMDE:
-                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_2_VOMDE_REG); 
+                u16_vmode = i2c_smbus_read_byte_data(Netberg_BMC_14_client, PSU_2_VOMDE_REG);
                 break;
         }
         if(u16_vmode == 0xffff || u16_vmode == -1)
@@ -523,7 +523,7 @@ ssize_t dc_vout_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -567,7 +567,7 @@ ssize_t dc_iout_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -611,7 +611,7 @@ ssize_t dc_pout_get(struct device *dev, struct device_attribute *da, char *buf)
     int multiplier = 1000;
     u16 u16_val = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {

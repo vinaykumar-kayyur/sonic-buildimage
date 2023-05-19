@@ -11,5 +11,5 @@ Homepage: <insert the upstream URL, if relevant>
 Package: mrvlprestera
 Architecture: arm64
 Homepage: <insert the upstream URL, if relevant>
-Description: 
-	kernel modules for prestera switch driver 
+Description:
+	kernel modules for prestera switch driver

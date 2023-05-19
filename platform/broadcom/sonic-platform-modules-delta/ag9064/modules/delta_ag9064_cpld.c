@@ -39,7 +39,7 @@
 #define QSFP_INTERRUPT_1   0x0f
 #define QSFP_INTERRUPT_2   0x0f
 #define QSFP_INTERRUPT_3   0x2c
-#define QSFP_INTERRUPT_4   0x2c 
+#define QSFP_INTERRUPT_4   0x2c
 #define QSFP_INTERRUPT_5   0x10
 #define QSFP_INTERRUPT_6   0x10
 #define QSFP_INTERRUPT_7   0x2d
@@ -188,7 +188,7 @@ static ssize_t get_lpmode(struct device *dev, struct device_attribute \
     data |= (u64)(ret & 0xff) << 56;
 
     dni_kunlock();
- 
+
     return sprintf(buf, "0x%016llx\n", data);
 }
 
@@ -411,7 +411,7 @@ static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, 
     if (err){
         dni_kunlock();
         return err;
-    } 
+    }
 
     /*QSFP1~8*/
     cmd_data[0] = BMC_BUS_5;
@@ -464,7 +464,7 @@ static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, 
     dni_bmc_cmd(set_cmd, cmd_data, cmd_data_len);
 
     dni_kunlock();
-   
+
     return count;
 }
 
@@ -607,8 +607,8 @@ static ssize_t set_response(struct device *dev, struct device_attribute *devattr
     cmd_data[3] = ((set_data >> 56 ) & 0xff);
     dni_bmc_cmd(set_cmd, cmd_data, cmd_data_len);
 
-    dni_kunlock();  
- 
+    dni_kunlock();
+
     return count;
 }
 
@@ -638,7 +638,7 @@ static ssize_t psu_scan(struct device *dev, struct device_attribute *dev_attr, c
     return sprintf(buf, "0x%x\n", ret);
 }
 
-static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *dev_attr, char *buf) 
+static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *dev_attr, char *buf)
 {
     int ret;
     int mask;
@@ -649,7 +649,7 @@ static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *dev_att
     struct cpld_platform_data *pdata = dev->platform_data;
 
     dni_klock();
-    
+
     switch (attr->index) {
         case CPLD_REG_ADDR:
             dni_kunlock();
@@ -668,8 +668,8 @@ static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *dev_att
         default:
             dni_kunlock();
             return sprintf(buf, "%d not found", attr->index);
-    } 
-    
+    }
+
     switch (mask) {
         case 0xFF:
             dni_kunlock();
@@ -698,8 +698,8 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *dev_att
     int set_data;
     unsigned long set_data_ul;
     unsigned char reg;
-    unsigned char mask;  
-    unsigned char mask_out;      
+    unsigned char mask;
+    unsigned char mask_out;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
     struct cpld_platform_data *pdata = dev->platform_data;
 
@@ -710,7 +710,7 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *dev_att
         dni_kunlock();
         return err;
     }
-    
+
     set_data = (int)set_data_ul;
     if (set_data > 0xff){
         printk(KERN_ALERT "address out of range (0x00-0xFF)\n");
@@ -735,7 +735,7 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *dev_att
             break;
         default:
             dni_kunlock();
-            return sprintf(buf, "%d not found", attr->index); 
+            return sprintf(buf, "%d not found", attr->index);
     }
 
     switch (mask) {
@@ -748,10 +748,10 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *dev_att
         case 0xF0:
             set_data = set_data << 4;
             set_data = mask_out | (set_data & mask);
-            break; 
+            break;
         default :
-            set_data = mask_out | (set_data << dni_log2(mask) );        
-    }   
+            set_data = mask_out | (set_data << dni_log2(mask) );
+    }
 
     i2c_smbus_write_byte_data(pdata[system_cpld].client, reg, set_data);
     dni_kunlock();
@@ -791,7 +791,7 @@ static struct attribute *ag9064_cpld_attrs[] = {
     &dev_attr_qsfp_modsel.attr,
     &dev_attr_qsfp_interrupt.attr,
     &sensor_dev_attr_cpld_reg_value.dev_attr.attr,
-    &sensor_dev_attr_cpld_reg_addr.dev_attr.attr,    
+    &sensor_dev_attr_cpld_reg_addr.dev_attr.attr,
     &sensor_dev_attr_cpld_ver.dev_attr.attr,
     &sensor_dev_attr_cpu_board_ver.dev_attr.attr,
     &sensor_dev_attr_cpu_id.dev_attr.attr,
@@ -918,11 +918,11 @@ error_cpupld_driver:
 static void __exit delta_ag9064_cpupld_exit(void)
 {
     platform_device_unregister(&ag9064_cpld);
-    platform_driver_unregister(&cpld_driver);  
+    platform_driver_unregister(&cpld_driver);
 }
 module_init(delta_ag9064_cpupld_init);
 module_exit(delta_ag9064_cpupld_exit);
 
 MODULE_DESCRIPTION("DNI ag9064 CPLD Platform Support");
 MODULE_AUTHOR("Stanley Chi <stanley.chi@deltaww.com>");
-MODULE_LICENSE("GPL"); 
+MODULE_LICENSE("GPL");

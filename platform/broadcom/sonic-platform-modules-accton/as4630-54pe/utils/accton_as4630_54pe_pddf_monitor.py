@@ -79,7 +79,7 @@ def as4630_54pe_set_fan_speed(pwm):
         print("Error: Wrong duty cycle value %d" % (pwm))
     platform_chassis.get_fan(0).set_speed(pwm)
     platform_chassis.get_fan(2).set_speed(pwm)
-   
+
     return 0
 
 
@@ -160,7 +160,7 @@ class device_monitor(object):
             LEVEL_TEMP_CRITICAL: [100, 16, 240000, 300000],
         }
         temp = [0, 0, 0]
-        
+
         #thermal = ThermalUtil()
         #fan = FanUtil()
         # Supposedly all the fans are set with same duty cycle
@@ -171,7 +171,7 @@ class device_monitor(object):
             for i in range(0, 3):
                 temp[i] = platform_chassis.get_thermal(i).get_temperature()
                 if temp[i] == 0.0 or temp[i] is None:
-                    
+
                     logging.warning("Get temp-%d fail", i)
                     return False
                 temp[i] = int(temp[i]*1000)
@@ -325,7 +325,7 @@ def main(argv):
     platform_chassis = platform.Platform().get_chassis()
 
     as4630_54pe_set_fan_speed(50)
-    
+
     monitor = device_monitor(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:

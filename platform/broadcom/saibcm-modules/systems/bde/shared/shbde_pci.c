@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -35,7 +35,7 @@
 
 /* PCIe capabilities */
 #ifndef PCI_CAPABILITY_LIST
-#define PCI_CAPABILITY_LIST     0x34 
+#define PCI_CAPABILITY_LIST     0x34
 #endif
 #ifndef PCI_CAP_ID_EXP
 #define PCI_CAP_ID_EXP          0x10
@@ -186,10 +186,10 @@ shbde_pci_is_iproc(shbde_hal_t *shbde, void *pci_dev, int *cmic_bar)
     cap_base = PCI_EXT_CAP_START;
     while (cap_base) {
         rval = pcic32_read(shbde, pci_dev, cap_base);
-        if (rval == 0xffffffff) { 
-           /* Assume PCI HW read error */ 
-           return 0; 
-        } 
+        if (rval == 0xffffffff) {
+           /* Assume PCI HW read error */
+           return 0;
+        }
 
         if (PCI_EXT_CAP_ID(rval) == PCI_EXT_CAP_ID_VNDR) {
             break;

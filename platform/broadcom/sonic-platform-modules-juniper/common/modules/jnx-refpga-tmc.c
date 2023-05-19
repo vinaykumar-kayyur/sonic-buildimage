@@ -148,7 +148,7 @@ static bool get_fan_presense(u8 idx)
 	u8 value = 0x00;
 	u8 offset = REFPGA_FAN0_CTRL_STAT;
 	bool ret = 0;
-	
+
 	value = refpga_read(tmc_membase, (offset + (idx * 2)));
         /*
          * Get the last two bits of REFPGA_FANx_CTRL_STAT.
@@ -168,7 +168,7 @@ static int get_fan_type(u8 idx)
 	u8 value = 0x00;
 	u8 offset = REFPGA_FAN0_CTRL_STAT;
 	int ret = -1;
-	
+
 	value = refpga_read(tmc_membase, (offset + (idx * 2)));
         /*
          * Get the last two bits of REFPGA_FANx_CTRL_STAT.
@@ -213,7 +213,7 @@ enum sysfs_fan_type_attributes {
 	FAN4_TYPE,
 };
 
-/* 
+/*
  * The sysfs files will be present in this path
  * /sys/devices/pci0000:00/0000:00:1c.0/0000:0f:00.0/refpga-tmc.15/fan*_present
  * /sys/devices/pci0000:00/0000:00:1c.0/0000:0f:00.0/refpga-tmc.15/fan*_type
@@ -230,7 +230,7 @@ enum sysfs_fan_type_attributes {
 static ssize_t refpga_fan_presense_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct sensor_device_attribute *s_attr = to_sensor_dev_attr(attr);
-	
+
 	return sprintf(buf, "%d\n", get_fan_presense(s_attr->index));
 
 }
@@ -238,7 +238,7 @@ static ssize_t refpga_fan_presense_show(struct device *dev, struct device_attrib
 static ssize_t refpga_fan_type_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct sensor_device_attribute *s_attr = to_sensor_dev_attr(attr);
-	
+
 	return sprintf(buf, "%d\n", get_fan_type(s_attr->index));
 
 }
@@ -348,7 +348,7 @@ static void refpga_led_work(struct work_struct *work)
 	void __iomem *addr;
 
 	addr = led->addr;
-	
+
 	if(strstr(led->lc.name, "fan"))
 		manage_fan_led(addr, led->bit, led->on);
 	else
@@ -432,7 +432,7 @@ static int refpga_led_qfx5200_init(struct device *dev, struct refpga_led_data *i
 {
 	int ret = 0, idx = 0;
 
-	
+
 	if (!dev->parent) {
 		dev_err(dev, "dev->parent is null\n");
 		return -ENODEV;
@@ -456,7 +456,7 @@ static int refpga_led_qfx5200_init(struct device *dev, struct refpga_led_data *i
 }
 
 static int jnx_refpga_led_probe(struct platform_device *pdev)
-{	
+{
 	struct device *dev = &pdev->dev;
 	struct refpga_led_data *ild;
 	int ret;
@@ -470,7 +470,7 @@ static int jnx_refpga_led_probe(struct platform_device *pdev)
 	ret = refpga_led_qfx5200_init(dev, ild);
 	if (ret < 0)
 		return ret;
-	
+
 	refpga->led = ild;
 
 	return 0;
@@ -478,7 +478,7 @@ static int jnx_refpga_led_probe(struct platform_device *pdev)
 
 static int jnx_refpga_led_remove(struct platform_device *pdev)
 {
-	struct refpga_chip *drv_data = platform_get_drvdata(pdev);	
+	struct refpga_chip *drv_data = platform_get_drvdata(pdev);
 	struct refpga_led_data *ild = drv_data->led;
 	int i;
 
@@ -556,7 +556,7 @@ static int jnx_refpga_tmc_probe(struct platform_device *pdev)
 	if (ret != 0) {
 		dev_err(dev, "sysfs_create_group failed: %d\n", ret);
 		return ret;
-	} 
+	}
 
 	platform_set_drvdata(pdev, refpga);
 
@@ -585,7 +585,7 @@ static int __init jnx_refpga_tmc_driver_init(void)
 	int ret = -1;
 
 	ret = platform_driver_register(&jnx_refpga_tmc_driver);
-	
+
 	return ret;
 
 }

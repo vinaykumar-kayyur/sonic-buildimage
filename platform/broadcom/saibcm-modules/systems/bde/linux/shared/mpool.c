@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -34,15 +34,15 @@
 
 #ifdef __KERNEL__
 
-/* 
- * Abstractions used when compiling for Linux kernel mode. 
+/*
+ * Abstractions used when compiling for Linux kernel mode.
  */
 
 #include <lkm.h>
 
 /*
- * We cannot use the linux kernel SAL for MALLOC/FREE because 
- * the current implementation of sal_alloc() allocates memory 
+ * We cannot use the linux kernel SAL for MALLOC/FREE because
+ * the current implementation of sal_alloc() allocates memory
  * out of an mpool created by this module...
  */
 #define MALLOC(x) kmalloc(x, GFP_ATOMIC)
@@ -55,8 +55,8 @@ static spinlock_t _mpool_lock;
 
 #else /* !__KERNEL__*/
 
-/* 
- * Abstractions used when compiling for Linux user mode. 
+/*
+ * Abstractions used when compiling for Linux user mode.
  */
 
 #include <stdlib.h>
@@ -138,7 +138,7 @@ _mpool_buf_create(void)
  * Returns:
  *    Always 0
  */
-int 
+int
 mpool_init(void)
 {
     int i;
@@ -190,7 +190,7 @@ mpool_alloc(mpool_handle_t pool, int size)
         }
         ptr = ptr->next;
     }
-  
+
     if (!(ptr && ptr->next)) {
         MPOOL_UNLOCK();
         return NULL;
@@ -203,7 +203,7 @@ mpool_alloc(mpool_handle_t pool, int size)
 
     newptr = free_list;
     free_list = free_list->next;
-  
+
     newptr->address = ptr->address + ptr->size;
     newptr->size = size;
     newptr->next = ptr->next;
@@ -230,10 +230,10 @@ mpool_alloc(mpool_handle_t pool, int size)
  * Returns:
  *    Nothing
  */
-void 
+void
 mpool_free(mpool_handle_t pool, void *addr)
 {
-    unsigned char *address = (unsigned char *)addr;  
+    unsigned char *address = (unsigned char *)addr;
     mpool_mem_t *head = pool, *ptr = NULL;
 
     MPOOL_LOCK();

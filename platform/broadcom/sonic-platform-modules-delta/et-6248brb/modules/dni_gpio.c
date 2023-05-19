@@ -134,7 +134,7 @@ static int ichx_write_bit(int reg, unsigned nr, int val, int verify)
 		data = ichx_priv.outlvl_cache[reg_nr];
 	}
 	else
-	{	
+	{
 		data = ICHX_READ(ichx_priv.desc->regs[reg][reg_nr],
 				 ichx_priv.gpio_base);
 	}
@@ -152,7 +152,7 @@ static int ichx_write_bit(int reg, unsigned nr, int val, int verify)
 			ichx_priv.gpio_base);
 	if (verify && data != tmp)
 		ret = -EPERM;
-	
+
 	spin_unlock_irqrestore(&ichx_priv.lock, flags);
 
 	return ret;
@@ -482,7 +482,7 @@ static int ichx_gpio_probe(struct platform_device *pdev)
                 ichx_priv.outlvl_cache[0] = 0x06; /*core output values*/
                 ichx_priv.outlvl_cache[1] = 0x7c0008; /*sus output values*/
                 ichx_priv.outlvl_cache[2] = 0x0; /*no used*/
-                
+
 		break;
 	default:
 		return -ENODEV;

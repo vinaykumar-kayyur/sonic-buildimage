@@ -83,10 +83,10 @@ typedef enum dfd_dev_info_type_e {
 
 typedef struct i2c_muxs_struct_flag
 {
-    int nr; 
-    char name[48]; 
-    struct mutex    update_lock; 
-    int flag; 
+    int nr;
+    char name[48];
+    struct mutex    update_lock;
+    int flag;
 }i2c_mux_flag;
 
 extern int setpca9641_muxflag(i2c_mux_flag i2c);

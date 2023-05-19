@@ -42,7 +42,7 @@ __all__ = ["MENUID", "MENUPARENT", "MENUVALUE", "CHILDID", "MENUITEMNAME", "MENU
            "INFO", "DEBUG", "NOTSET", "levelNames", "TLV_INFO_ID_STRING", "TLV_INFO_VERSION",
            "TLV_INFO_LENGTH", "TLV_INFO_LENGTH_VALUE", "TLV_CODE_PRODUCT_NAME",
            "TLV_CODE_PART_NUMBER", "TLV_CODE_SERIAL_NUMBER", "TLV_CODE_MAC_BASE",
-           "TLV_CODE_MANUF_DATE", "TLV_CODE_DEVICE_VERSION", "TLV_CODE_LABEL_REVISION", 
+           "TLV_CODE_MANUF_DATE", "TLV_CODE_DEVICE_VERSION", "TLV_CODE_LABEL_REVISION",
            "TLV_CODE_PLATFORM_NAME", "TLV_CODE_ONIE_VERSION", "TLV_CODE_MAC_SIZE",
            "TLV_CODE_MANUF_NAME", "TLV_CODE_MANUF_COUNTRY", "TLV_CODE_VENDOR_NAME",
            "TLV_CODE_DIAG_VERSION", "TLV_CODE_SERVICE_TAG", "TLV_CODE_VENDOR_EXT",
@@ -250,7 +250,7 @@ class fan_tlv(object):
     VERSION = 0x01                    # E2PROM Version，start from 0x01
     FLAG = 0x7E                       # New E2PROM version flag is 0x7E
     HW_VER = 0X01                     # compose by master version and fixed version
-    TYPE = 0xf1                       # hw type defination 
+    TYPE = 0xf1                       # hw type defination
     TLV_LEN = 00                      # data length (16bit)
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
@@ -507,14 +507,14 @@ class I2CUTIL():
         for item in rst_arr:
             rji2cset(bus, loc, index, ord(item))
             index += 1
-            
+
     @staticmethod
     def writeToE2(bus, loc, rst_arr):
         index = 0
         for item in rst_arr:
             rji2cset(bus, loc, index, ord(item))
             index += 1
-    
+
     @staticmethod
     def getE2File(bus, loc):
         return "/sys/bus/i2c/devices/%d-00%02x/eeprom" % (bus, loc)
@@ -533,7 +533,7 @@ class BMC():
                     Singleton._instance = object.__new__(cls)
         return Singleton._instance
 
-#  Internal interface 
+#  Internal interface
 
 
 def getSdkReg(reg):
@@ -736,7 +736,7 @@ def waitForSdk(sdk_fpath ,timeout):
 
 def waitForDocker(need_restart=False,timeout=180):
     sdkcheck_params = STARTMODULE.get("sdkcheck",{})
-    if sdkcheck_params.get("checktype") == "file": # pass file check 
+    if sdkcheck_params.get("checktype") == "file": # pass file check
         sdk_fpath = sdkcheck_params.get("sdk_fpath")
         return waitForSdk(sdk_fpath,timeout)
     return waitForDhcp(timeout)
@@ -803,7 +803,7 @@ def generate_value(_t):
     return (ret, True)
 
 
-def getsyseeprombyId(id):  
+def getsyseeprombyId(id):
     ret = get_sys_eeprom()
     for item in ret:
         if item["code"] == id:
@@ -839,7 +839,7 @@ def util_setmac(eth, mac):
     rulefile = "/etc/udev/rules.d/70-persistent-net.rules"
     if isValidMac(mac) == False:
         return False, "MAC invaild"
-    cmd1 = ["ethtool", "-e", eth] 
+    cmd1 = ["ethtool", "-e", eth]
     cmd2 = ["grep", "0x0010"]
     cmd3 = ["awk", '{print \"0x\"$13$12$15$14}']
     ret, log = getstatusoutput_noshell_pipe(cmd1, cmd2, cmd3)
@@ -863,7 +863,7 @@ def util_setmac(eth, mac):
         ret, log = getstatusoutput_noshell(cmd)
         if ret != 0:
             raise SETMACException(" set hardware Internet card MAC error")
-    # get value after setting 
+    # get value after setting
     cmd_t = ["ethtool", "-e", "eth0", "offset", "0", "length", "6"]
     ret, log = getstatusoutput_noshell(cmd_t)
     m = re.split(':', log)[-1].strip().upper()
@@ -873,7 +873,7 @@ def util_setmac(eth, mac):
         if s != mac_result[ind]:
             RJPRINTERR("MAC comparison error")
     if os.path.exists(rulefile):
-        os.remove(rulefile)  
+        os.remove(rulefile)
     print("MGMT MAC[%s]" % mac)
     return True
 
@@ -1109,7 +1109,7 @@ def get_fane2_sysfs(bus, loc):
 
 
 def util_show_fane2():
-    ret = sorted(I2CUTIL.getvaluefromdevice("rg_fan"))    
+    ret = sorted(I2CUTIL.getvaluefromdevice("rg_fan"))
     if len(ret) <=0:
         return None
     fans = []
@@ -1189,10 +1189,10 @@ def fac_fans_setmac_tlv(ret):
 
 def fac_fan_setmac_fru(ret):
     fans =  FRULISTS.get('fans')
-    
+
     fanfrus = {}
     newfrus = {}
-    
+
     #getmsg
     try:
         for fan in fans:
@@ -1204,7 +1204,7 @@ def fac_fan_setmac_fru(ret):
     except Exception as e:
         print(str(e))
         return False
-    
+
     #setmsg
     for fan in fans:
         print("===============%s ================setmac" % fan.get('name'))
@@ -1256,7 +1256,7 @@ def writeToEEprom(rst_arr):
     for item in rst_arr:
         rji2cset(E2_LOC["bus"], E2_LOC["devno"], index, ord(item))
         index += 1
-    
+
     if dealtype is None:
         rji2cset(E2_PROTECT["bus"], E2_PROTECT["devno"],
                  E2_PROTECT["addr"], E2_PROTECT["close"])
@@ -1287,7 +1287,7 @@ def getonieversion():
 
 def createbmcMac(cpumac , num = 2):
     bcmvalue =  strtoint(cpumac[cpumac.rindex(":")+ 1:len(cpumac)]) + num
-    # bmcmac = 
+    # bmcmac =
     t = cpumac.split(":")
     t[5] = "%02x" %  bcmvalue
     bmcmac = ":".join(t)
@@ -1490,7 +1490,7 @@ def get_pmc_register(reg_name):
     filepath = glob.glob(mb_reg_file)
     if(len(filepath) == 0):
         return "%s %s  notfound"% (retval , mb_reg_file)
-    mb_reg_file = filepath[0]       
+    mb_reg_file = filepath[0]
     if (not os.path.isfile(mb_reg_file)):
         return "%s %s  notfound"% (retval , mb_reg_file)
     try:
@@ -1778,7 +1778,7 @@ def get_version_config_info(attr_key, file_name=None):
 
 def io_rd(reg_addr, len =1):
     u'''io read'''
-    try: 
+    try:
         regaddr = 0
         if type(reg_addr) == int:
             regaddr = reg_addr
@@ -1789,14 +1789,14 @@ def io_rd(reg_addr, len =1):
         os.lseek(fd, regaddr, os.SEEK_SET)
         str = os.read(fd, len)
         return "".join(["%02x"% ord(item) for item in str])
-    except ValueError: 
+    except ValueError:
         return None
     except Exception as e:
         print(e)
         return None
     finally:
         os.close(fd)
-    
+
 
 def io_wr(reg_addr, reg_data):
     u'''io write'''
@@ -1824,4 +1824,4 @@ def io_wr(reg_addr, reg_data):
         return False
     finally:
         os.close(fd)
-    
+

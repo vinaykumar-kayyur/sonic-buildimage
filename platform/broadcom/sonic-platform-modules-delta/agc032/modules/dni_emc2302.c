@@ -14,7 +14,7 @@
  *
  * A hwmon driver for the SMSC EMC2302 fan controller
  * Complete datasheet is available (6/2013) at:
- * 
+ *
  */
 
 #include <linux/module.h>

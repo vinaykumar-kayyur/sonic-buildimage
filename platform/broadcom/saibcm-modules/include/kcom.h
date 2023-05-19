@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -393,7 +393,7 @@ typedef struct kcom_msg_string_s {
 /*
  * Indicate that eth hardware has been properly initialized
  * for DMA operation to commence.
- */ 
+ */
 typedef struct kcom_msg_eth_hw_config_s {
     kcom_msg_hdr_t hdr;
     kcom_eth_hw_config_t config;

@@ -20,20 +20,20 @@ PACKET_SCHEME = {
     "type" : "object",
     "properties" :
     {
-        "packet_info" : 
+        "packet_info" :
         {
             "type" : "object",
-            "properties" : 
+            "properties" :
             {
-                "outer" : 
+                "outer" :
                 {
                     "type" : "object",
-                    "properties" : 
+                    "properties" :
                     {
-                        "layer2" : 
+                        "layer2" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "smac": {"type": "string"},
                                 "dmac": {"type": "string"},
@@ -49,16 +49,16 @@ PACKET_SCHEME = {
                         "arp" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "spa": {"type": "string"},
                                 "tpa": {"type": "string"}
                             }
                         },
-                        "ipv4" : 
+                        "ipv4" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sip": {"type": "string"},
                                 "dip": {"type": "string"},
@@ -66,10 +66,10 @@ PACKET_SCHEME = {
                             },
                             "required": ["dip"]
                         },
-                        "ipv6" : 
+                        "ipv6" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sip": {"type": "string"},
                                 "dip": {"type": "string"},
@@ -82,44 +82,44 @@ PACKET_SCHEME = {
                             },
                             "required": ["dip"]
                         },
-                        "tcp_udp" : 
+                        "tcp_udp" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sport": {"type": "number"},
                                 "dport": {"type": "number"}
                             }
                         },
-                        "vxlan_nvgre" : 
+                        "vxlan_nvgre" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "vni": {"type": "number"}
                             }
                         }
                     }
-                },                      
-                "inner" : 
+                },
+                "inner" :
                 {
                     "type" : "object",
-                    "properties" : 
+                    "properties" :
                     {
-                        "layer2" : 
+                        "layer2" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "smac": {"type": "string"},
                                 "dmac": {"type": "string"},
                                 "ethertype": {"type": "number"}
                             }
                         },
-                        "ipv4" : 
+                        "ipv4" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sip": {"type": "string"},
                                 "dip": {"type": "string"},
@@ -127,10 +127,10 @@ PACKET_SCHEME = {
                                 "proto": {"type": "number"}
                             }
                         },
-                        "ipv6" : 
+                        "ipv6" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sip": {"type": "string"},
                                 "dip": {"type": "string"},
@@ -139,17 +139,17 @@ PACKET_SCHEME = {
                                 "flow_label": {"type": "number"}
                             }
                         },
-                        "tcp_udp" : 
+                        "tcp_udp" :
                         {
                             "type" : "object",
-                            "properties" : 
+                            "properties" :
                             {
                                 "sport": {"type": "number"},
                                 "dport": {"type": "number"}
                             }
                         }
                     }
-                }                        
+                }
             }
         }
     }

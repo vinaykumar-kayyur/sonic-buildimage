@@ -57,7 +57,7 @@ if $at_id ; then
         sync
         sed -i 's@{ "attr_name":"psu_model_name", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0x9a", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10"},@\
                  { "attr_name":"psu_model_name", "attr_devaddr":"0x58" , "attr_devtype":"pmbus", "attr_offset":"0x9a", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10" },@g' \
-            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json    
+            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json
         sync
         sed -i 's@{ "attr_name":"psu_mfr_id", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0X99", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10"},@\
                  { "attr_name":"psu_mfr_id", "attr_devaddr":"0x58" , "attr_devtype":"pmbus", "attr_offset":"0X99", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"10" },@g' \
@@ -65,11 +65,11 @@ if $at_id ; then
         sync
         sed -i 's@{ "attr_name":"psu_fan_dir", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0xc3", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"5"},@\
                  { "attr_name":"psu_fan_dir", "attr_devaddr":"0x58" , "attr_devtype":"pmbus", "attr_offset":"0xc3", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"5" },@g' \
-            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json    
+            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json
         sync
         sed -i 's@{ "attr_name":"psu_v_out", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0x8b", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},@\
                  { "attr_name":"psu_v_out", "attr_devaddr":"0x58" , "attr_devtype":"pmbus", "attr_offset":"0x8b", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2" },@g' \
-            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json    
+            /usr/share/sonic/device/x86_64-accton_as7816_64x-r0/pddf/pddf-device.json
         sync
         sed -i 's@{ "attr_name":"psu_i_out", "attr_devaddr":"0x5b", "attr_devtype":"pmbus", "attr_offset":"0x8c", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},@\
                  { "attr_name":"psu_i_out", "attr_devaddr":"0x58" , "attr_devtype":"pmbus", "attr_offset":"0x8c", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2" },@g' \

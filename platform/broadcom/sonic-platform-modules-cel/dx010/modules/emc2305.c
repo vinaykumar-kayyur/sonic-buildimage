@@ -753,7 +753,7 @@ emc2305_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	i2c_set_clientdata(client, data);
 	mutex_init(&data->update_lock);
-	
+
 	dis_to = i2c_smbus_read_byte_data(client, REG_CONFIGURATION);
 	dis_to &= 0xBF;
 	/* The SMBus timeout function is enabled */

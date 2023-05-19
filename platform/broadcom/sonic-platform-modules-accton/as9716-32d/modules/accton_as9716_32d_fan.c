@@ -211,7 +211,7 @@ static struct attribute *as9716_32d_fan_attributes[] = {
     DECLARE_FAN_DIRECTION_ATTR(4),
     DECLARE_FAN_DIRECTION_ATTR(5),
     DECLARE_FAN_DIRECTION_ATTR(6),
-    DECLARE_FAN_DUTY_CYCLE_ATTR(),    
+    DECLARE_FAN_DUTY_CYCLE_ATTR(),
     NULL
 };
 

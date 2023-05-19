@@ -90,7 +90,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct as4630_54pe_psu_data *data = as4630_54pe_psu_update_device(dev);
     u8 status = 0;
-   
+
     if (attr->index == PSU_PRESENT) {
         if(data->index==0)
             status = !( (data->status >> 5) & 0x1);
@@ -101,7 +101,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
         if(data->index==0)
            status = ( (data->status >> 6) & 0x1);
         else
-           status = ( (data->status >> 2) & 0x1); 
+           status = ( (data->status >> 2) & 0x1);
     }
 
     return sprintf(buf, "%d\n", status);
@@ -277,23 +277,23 @@ static struct as4630_54pe_psu_data *as4630_54pe_psu_update_device(struct device 
         memset(data->model_name, 0, sizeof(data->model_name));
         memset(data->serial_number, 0, sizeof(data->serial_number));
         power_good = (data->status >> (3-data->index) & 0x1);
-       
+
         if (power_good) {
             status = as4630_54pe_psu_read_block(client, 0x20, data->model_name,
-                                               ARRAY_SIZE(data->model_name)-1);                                               
+                                               ARRAY_SIZE(data->model_name)-1);
             if (status < 0) {
                 data->model_name[0] = '\0';
                 dev_dbg(&client->dev, "unable to read model name from (0x%x)\n", client->addr);
             }
             else if(!strncmp(data->model_name, "YPEB1200", strlen("YPEB1200")))
-            {                
+            {
                     if (data->model_name[9]=='A' && data->model_name[10]=='M')
                     {
                        data->model_name[8]='A';
                        data->model_name[9]='M';
                        data->model_name[strlen("YPEB1200AM")]='\0';
                     }
-                    else  
+                    else
                         data->model_name[strlen("YPEB1200")]='\0';
             }
             else
@@ -313,7 +313,7 @@ static struct as4630_54pe_psu_data *as4630_54pe_psu_update_device(struct device 
             }
             else
                 data->serial_number[MAX_SERIAL_NUMBER-2]='\0';
-            
+
         }
 
         data->last_updated = jiffies;

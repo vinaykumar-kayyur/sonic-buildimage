@@ -21,7 +21,7 @@ class Thermal(PddfThermal):
             A float number, the low critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return 0.001 
+        return 0.001
 
     def get_high_critical_threshold(self):
         """
@@ -30,9 +30,9 @@ class Thermal(PddfThermal):
             A float number, the high critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        
-        return 100.000 
-				
+
+        return 100.000
+
     def get_minimum_recorded(self):
         """
         Retrieves the minimum recorded temperature of thermal
@@ -81,7 +81,7 @@ class Thermal(PddfThermal):
         Returns:
             string: Serial number of device
         """
-        return "N/A" 
+        return "N/A"
 
     def get_status(self):
         """

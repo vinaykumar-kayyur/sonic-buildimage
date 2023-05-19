@@ -144,7 +144,7 @@ class Psu(PsuBase):
 
     def get_num_fans(self):
         return len(self._fan_list)
-        
+
     def get_name(self):
         """
         Retrieves the name of the device
@@ -362,7 +362,7 @@ class Psu(PsuBase):
         Retrieves current temperature reading from PSU
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         if self._hal_psu:
             pass
@@ -388,8 +388,8 @@ class Psu(PsuBase):
         """
         Retrieves the high threshold PSU voltage output
         Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
         """
         return float(self.PSU_OUTPUT_VOLTAGE_MAX/1000)
 
@@ -397,8 +397,8 @@ class Psu(PsuBase):
         """
         Retrieves the low threshold PSU voltage output
         Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
         """
         return float(self.PSU_OUTPUT_VOLTAGE_MIN/1000)
 

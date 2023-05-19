@@ -39,7 +39,7 @@ enum{
     CPLD_DEBUG_MODE,
     APWROK_STAT,
     EDGE_PROCHOT_SIG_DIS,
-    PSU_THERMAL_STAT,    
+    PSU_THERMAL_STAT,
     PR_THERMAL_STAT,
     ME_DRIVE_SIG_EN,
     CPU_THERMAL_STAT,
@@ -52,7 +52,7 @@ enum{
     CPU_STANDBY_MODE,
     CPLD_RST,
     MB_POWER_STAT,
-    BIOS1_SPI_WP,    
+    BIOS1_SPI_WP,
     BIOS2_SPI_WP,
     BIOS_MUX_SEL,
     GBE_SPI_WP,
@@ -349,7 +349,7 @@ static ssize_t cpupld_data_show(struct device *dev, struct device_attribute *dev
             mask = (1 << shift);
             scnprintf(desc, PAGE_SIZE, "\n“1” = Watchdog Timer Flag Clear\n“0” = Watchdog Timer Flag Not Clear.\n");
             break;
-    }    
+    }
 
     value = i2c_smbus_read_byte_data(pdata[cpld].client, offset);
     value = (value & mask) >> shift;
@@ -493,7 +493,7 @@ static SENSOR_DEVICE_ATTR(p1v5_pch_en,           S_IRUGO,         cpupld_data_sh
 static SENSOR_DEVICE_ATTR(p2v5_vpp_en,           S_IRUGO,         cpupld_data_show,        NULL,            P2V5_VPP_EN            );
 static SENSOR_DEVICE_ATTR(pvccin_en,             S_IRUGO,         cpupld_data_show,        NULL,            PVCCIN_EN              );
 static SENSOR_DEVICE_ATTR(pvccioin_en,           S_IRUGO,         cpupld_data_show,        NULL,            PVCCIOIN_EN            );
-static SENSOR_DEVICE_ATTR(pvcckrhv_en,           S_IRUGO,         cpupld_data_show,        NULL,            PVCCKRHV_EN            );   
+static SENSOR_DEVICE_ATTR(pvcckrhv_en,           S_IRUGO,         cpupld_data_show,        NULL,            PVCCKRHV_EN            );
 static SENSOR_DEVICE_ATTR(pvccscfusesus_en,      S_IRUGO,         cpupld_data_show,        NULL,            PVCCSCFUSESUS_EN       );
 static SENSOR_DEVICE_ATTR(vr_p3v3_en,            S_IRUGO,         cpupld_data_show,        NULL,            VR_P3V3_EN             );
 /* offset 0x6 */
@@ -600,7 +600,7 @@ static struct attribute *agc032_cpupld_attrs[] = {
     &sensor_dev_attr_wd_timer.dev_attr.attr,
     &sensor_dev_attr_wd_en.dev_attr.attr,
     &sensor_dev_attr_wd_clear_flag.dev_attr.attr,
-    NULL, 
+    NULL,
 };
 
 static struct attribute_group agc032_cpupld_attr_group = {

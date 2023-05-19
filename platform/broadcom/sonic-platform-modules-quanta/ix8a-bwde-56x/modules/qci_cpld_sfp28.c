@@ -87,7 +87,7 @@ static struct i2c_driver cpld_driver = {
 #define CPLD_ID_PREFIX "port-"
 #define CPLD_ID_FORMAT CPLD_ID_PREFIX "%d"
 
-//SFP28 
+//SFP28
 #define TX_FAULT_MASK 			0x08
 #define TX_DIS_MASK	 			0x04
 #define PRE_N_MASK 				0x02

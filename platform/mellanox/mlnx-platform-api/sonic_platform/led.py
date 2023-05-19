@@ -79,7 +79,7 @@ class Led(object):
 
     def _get_primary_color(self, color):
         # For backward compatible, we don't return the actual color here.
-        # We always return "green"(indicate a good status) or "red"(indicate a bad status) 
+        # We always return "green"(indicate a good status) or "red"(indicate a bad status)
         # which are the "primary" colors.
         return self.PRIMARY_COLORS.get(color, color)
 

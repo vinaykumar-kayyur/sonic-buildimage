@@ -26,8 +26,8 @@
 #define NETFN_OEM 0x30
 #define CMD_GETDATA 0x31
 #define CMD_SETDATA 0x32
-#define FAN_NUM  4 
-#define PSU_NUM  2 
+#define FAN_NUM  4
+#define PSU_NUM  2
 
 #define PSU1		0x5800
 #define PSU2		0x5900
@@ -75,12 +75,12 @@ struct __attribute__ ((__packed__))  psoc_psu_layout {
     u16 psu2_iin;
     u16 psu1_iout;
     u16 psu2_iout;
-    
+
     u16 psu1_pin;
     u16 psu2_pin;
     u16 psu1_pout;
     u16 psu2_pout;
-    
+
     u16 psu1_vin;
     u16 psu2_vin;
     u16 psu1_vout;
@@ -98,7 +98,7 @@ struct __attribute__ ((__packed__))  psoc_layout {
     u8 i2c_st;              //offset: 5
     u8 i2c_ctl;             //offset: 6
     u8 i2c_addr;            //offset: 7
-    u8 i2c_data[0x20];      //offset: 8 
+    u8 i2c_data[0x20];      //offset: 8
 
     //gpo
     u8 led_ctl;             //offset: 28
@@ -111,11 +111,11 @@ struct __attribute__ ((__packed__))  psoc_layout {
 
     //fan rpm
     u16 fan[FAN_NUM*2];     //offset: 30
-    
+
     u8  reserve1[4];        //offset: 40
 
-    //gpi 
-    u8 gpi_fan;             //offset: 44 
+    //gpi
+    u8 gpi_fan;             //offset: 44
 
     //psu state
     u8 psu_state;           //offset: 45
@@ -126,10 +126,10 @@ struct __attribute__ ((__packed__))  psoc_layout {
 
     //version
     u8 version[2];          //offset: 54
-    
+
     u8  reserve2[4];        //offset: 56
     struct psoc_psu_layout psu_info;      //offset: 5a
-};        
+};
 
 /* definition */
 /* definition */
@@ -151,7 +151,7 @@ struct __attribute__ ((__packed__))  psoc_layout {
 static void msg_handler(struct ipmi_recv_msg *recv_msg,void* handler_data)
 {
     struct ipmi_result *msg_result = recv_msg->user_msg_data;
-    
+
     if(recv_msg->msg.data[0]==0 && recv_msg->msg.data_len>0) {
         msg_result->result_length=recv_msg->msg.data_len-1;
         memcpy(msg_result->result, &recv_msg->msg.data[1], recv_msg->msg.data_len-1);
@@ -166,7 +166,7 @@ int start_ipmi_command(char NetFn, char cmd,char *data,int data_length, char* re
 {
     int rv=0,i;
     int timeout;
-	
+
     //wait previous command finish at least 50msec
     timeout=50;
     while((mutex_is_locked(&ipmi_mutex) == 1 || (mutex_is_locked(&ipmi2_mutex) == 1)) && (--timeout)>0) { usleep_range(1000,1010); }
@@ -179,20 +179,20 @@ int start_ipmi_command(char NetFn, char cmd,char *data,int data_length, char* re
             rv = ipmi_create_user(i, &ipmi_hndlrs, NULL, &ipmi_mh_user);
 	    }
     }
-	
-    if (rv < 0) { 
-        mutex_unlock(&ipmi_mutex); 
+
+    if (rv < 0) {
+        mutex_unlock(&ipmi_mutex);
         mutex_unlock(&ipmi2_mutex);
-        return rv; 
+        return rv;
     }
     else {
 	struct	ipmi_system_interface_addr addr;
 	struct	kernel_ipmi_msg msg;
 	uint8_t msg_data[data_length];
-		
+
 	memcpy(msg_data,data,data_length);
-	addr.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE; 
-	addr.channel = IPMI_BMC_CHANNEL;  
+	addr.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE;
+	addr.channel = IPMI_BMC_CHANNEL;
 	addr.lun = 0;
 
 	msg.netfn = NetFn;
@@ -212,7 +212,7 @@ int start_ipmi_command(char NetFn, char cmd,char *data,int data_length, char* re
         while(mutex_is_locked(&ipmi_mutex) == 1 && (--timeout)>0) { usleep_range(1000,1100);}
 	if(timeout==0) {
         	mutex_unlock(&ipmi2_mutex);
-		return -1; 
+		return -1;
 	}
 	else {
 		*result_length=ipmiresult.result_length;
@@ -247,7 +247,7 @@ static ssize_t psoc_ipmi_write(char *buf, unsigned offset, size_t count)
     data[0] = offset;
     memcpy(&data[1],buf,count);
 
-    start_ipmi_command(NETFN_OEM, CMD_SETDATA,data,count+1, result, &result_len);	
+    start_ipmi_command(NETFN_OEM, CMD_SETDATA,data,count+1, result, &result_len);
     return count;
 }
 
@@ -256,10 +256,10 @@ static u16 psoc_read16(u8 offset)
 {
 	u16 value = 0;
 	u8 buf[]={0,0};
-    
+
     if(psoc_ipmi_read(buf, offset, 2) == 2)
         value = (buf[0]<<8 | buf[1]<<0);
-    
+
 	return value;
 }
 
@@ -267,10 +267,10 @@ static u8 psoc_read8(u8 offset)
 {
 	u8 value = 0;
 	u8 buf = 0;
-    
+
     if(psoc_ipmi_read(&buf, offset, 1) == 1)
         value = buf;
-    
+
 	return value;
 }
 
@@ -303,13 +303,13 @@ static ssize_t show_psu_st(struct device *dev, struct device_attribute *da,
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	u8 byte=0;
 	int shift = (attr->index == 0)?3:0;
-    
+
     status = psoc_ipmi_read(&byte, PSOC_PSU_OFFSET, 1);
-	
+
     byte = (byte >> shift) & 0x7;
-	
+
 	status = sprintf (buf, "%d : %s\n", byte, psu_str[byte]);
-	    
+
 	return strlen(buf);
 }
 
@@ -323,7 +323,7 @@ static ssize_t show_ipmi_pmbus(struct device *dev, struct device_attribute *da,
 	data[0] = BMC_PMBusNumber;
 	data[1] = (attr->index & 0xFF00 ) >>7;
 	data[3] = attr->index & 0xff;
-	if(data[3]==PMBus_Temp2) 
+	if(data[3]==PMBus_Temp2)
 		{data[2]=2;}
 	else
 		{data[2]=MaxLeng_Result;}
@@ -378,9 +378,9 @@ static ssize_t set_pwm(struct device *dev,
 
 	u8 pwm = simple_strtol(buf, NULL, 10);
 	if(pwm > 255) pwm = 255;
-	  
+
     psoc_ipmi_write(&pwm, offset, 1);
-	
+
 	return count;
 }
 
@@ -391,7 +391,7 @@ static ssize_t show_rpm(struct device *dev, struct device_attribute *da,
 	int status=0;
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	u8 offset = attr->index*2  + RPM_OFFSET;
-	
+
 	status = psoc_read16(offset);
 
 	return sprintf(buf, "%d\n",
@@ -405,9 +405,9 @@ static ssize_t show_switch_tmp(struct device *dev, struct device_attribute *da,
 	u16 temp = 0;
 
     status = psoc_ipmi_read((u8*)&temp, SWITCH_TMP_OFFSET, 2);
-	
+
 	status = sprintf (buf, "%d\n",  (s8)(temp>>8) * 1000  );
-	    
+
 	return strlen(buf);
 }
 
@@ -417,11 +417,11 @@ static ssize_t set_switch_tmp(struct device *dev,
 {
 	long temp = simple_strtol(buf, NULL, 10);
     u16 temp2 =  ( (temp/1000) <<8 ) & 0xFF00 ;
-    
+
     //printk("set_switch_tmp temp=%d, temp2=0x%x (%x,%x)\n", temp, temp2, ( ( (temp/1000) <<8 ) & 0xFF00 ),  (( (temp%1000) / 10 ) & 0xFF));
 	psoc_ipmi_write((u8*)&temp2, SWITCH_TMP_OFFSET, 2);
 
-	
+
 	return count;
 }
 
@@ -434,7 +434,7 @@ static ssize_t show_diag(struct device *dev, struct device_attribute *da,
     status = psoc_ipmi_read((u8*)&diag_flag, DIAG_FLAG_OFFSET, 1);
 
 	status = sprintf (buf, "%d\n", ((diag_flag & 0x80)?1:0));
-	    
+
 	return strlen(buf);
 }
 
@@ -444,14 +444,14 @@ static ssize_t set_diag(struct device *dev,
 {
 	u8 value = 0;
 	u8 diag = simple_strtol(buf, NULL, 10);
-	
+
     diag = diag?1:0;
 
 	psoc_ipmi_read((u8*)&value, DIAG_FLAG_OFFSET, 1);
 	if(diag) value |= (1<<7);
 	else     value &= ~(1<<7);
 	psoc_ipmi_write((u8*)&value, DIAG_FLAG_OFFSET, 1);
-	
+
 	return count;
 }
 
@@ -461,7 +461,7 @@ static ssize_t show_version(struct device *dev, struct device_attribute *da,
 	u16 status=0;
 
 	status = psoc_read16(VERSION_OFFSET);
-	
+
 	return sprintf(buf, "ver: %x.%x\n", (status & 0xFF00)>>8,  (status & 0xFF) );
 }
 
@@ -478,7 +478,7 @@ static ssize_t show_fan_led(struct device *dev, struct device_attribute *da,
 	int status=0;
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	u8 bit = attr->index;
-	
+
 	status = psoc_read8(FAN_LED_OFFSET);
 
 	return sprintf(buf, "%d\n",
@@ -494,12 +494,12 @@ static ssize_t set_fan_led(struct device *dev,
 	u8 led_state = 0;
 
 	u8 v = simple_strtol(buf, NULL, 10);
-	  
+
     led_state = psoc_read8(FAN_LED_OFFSET);
     if(v) led_state |=  (1<<bit);
-    else  led_state &= ~(1<<bit);    
+    else  led_state &= ~(1<<bit);
     psoc_ipmi_write(&led_state, FAN_LED_OFFSET, 1);
-    
+
 	return count;
 }
 
@@ -511,7 +511,7 @@ static ssize_t show_value8(struct device *dev, struct device_attribute *da,
 	u8 offset = attr->index;
 
 	status = psoc_read8(offset);
-	
+
 	return sprintf(buf, "0x%02X\n", status );
 }
 
@@ -529,7 +529,7 @@ static long pmbus_reg2data_linear(int data, int linear16)
         exponent = ((s16)( data & 0xF800) ) >> 11;
         mantissa = ((s32)((data & 0x7ff) << 5)) >> 5;
     }
-    
+
     //printk("data=%d,  m=%d, e=%d\n", data, exponent, mantissa);
     val = mantissa;
 
@@ -552,7 +552,7 @@ static ssize_t show_psu_psoc(struct device *dev, struct device_attribute *da,
 	u8 offset = attr->index + PSU_INFO_OFFSET;
 
 	status = psoc_read16(offset);
-	
+
 	return sprintf(buf, "%ld \n", pmbus_reg2data_linear(status, strstr(attr->dev_attr.attr.name, "vout")? 1:0 ));
 }
 
@@ -611,11 +611,11 @@ static SENSOR_DEVICE_ATTR(psoc_psu1_pin,      S_IRUGO,			        show_psu_psoc, 
 static SENSOR_DEVICE_ATTR(psoc_psu1_pout,     S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu1_pout));
 
 
-static SENSOR_DEVICE_ATTR(psoc_psu2_vin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_vin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_vin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_vin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_vout,     S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_vout));
-static SENSOR_DEVICE_ATTR(psoc_psu2_iin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_iin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_iin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_iin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_iout,     S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_iout));
-static SENSOR_DEVICE_ATTR(psoc_psu2_pin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_pin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_pin,      S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_pin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_pout,     S_IRUGO,			        show_psu_psoc,  0,           PSOC_PSU_OFF(psu2_pout));
 
 static SENSOR_DEVICE_ATTR(in1_input,        S_IRUGO,		show_psu_psoc,	0,		PSOC_PSU_OFF(psu1_vin));
@@ -636,7 +636,7 @@ static SENSOR_DEVICE_ATTR(psoc_psu2_vender,     S_IRUGO,                show_ipm
 static SENSOR_DEVICE_ATTR(psoc_psu2_serial,     S_IRUGO,                show_ipmi_pmbus, 0, PSU2 | PMBus_Serial);
 static SENSOR_DEVICE_ATTR(psoc_psu2_version,    S_IRUGO,                show_ipmi_pmbus, 0, PSU2 | PMBus_Version);
 
- 
+
 static struct attribute *psoc_attributes[] = {
     //thermal
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
@@ -644,7 +644,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_temp3_input.dev_attr.attr,
 	&sensor_dev_attr_temp4_input.dev_attr.attr,
 	&sensor_dev_attr_temp5_input.dev_attr.attr,
-	
+
 	&sensor_dev_attr_thermal_psu1.dev_attr.attr,
 	&sensor_dev_attr_thermal_psu2.dev_attr.attr,
 
@@ -656,7 +656,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_pwm4.dev_attr.attr,
 	&sensor_dev_attr_pwm_psu1.dev_attr.attr,
 	&sensor_dev_attr_pwm_psu2.dev_attr.attr,
-	
+
 	//rpm
 	&sensor_dev_attr_fan1_input.dev_attr.attr,
 	&sensor_dev_attr_fan2_input.dev_attr.attr,
@@ -666,20 +666,20 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_fan6_input.dev_attr.attr,
 	&sensor_dev_attr_fan7_input.dev_attr.attr,
 	&sensor_dev_attr_fan8_input.dev_attr.attr,
-	
+
 	&sensor_dev_attr_rpm_psu1.dev_attr.attr,
 	&sensor_dev_attr_rpm_psu2.dev_attr.attr,
-    
+
     //switch temperature
 	&sensor_dev_attr_switch_tmp.dev_attr.attr,
         &sensor_dev_attr_temp6_input.dev_attr.attr,
     //diag flag
 	&sensor_dev_attr_diag.dev_attr.attr,
-	
+
 	//version
 	&sensor_dev_attr_version.dev_attr.attr,
-	
-	//fan led 
+
+	//fan led
 	&sensor_dev_attr_fan_led_grn1.dev_attr.attr,
 	&sensor_dev_attr_fan_led_grn2.dev_attr.attr,
 	&sensor_dev_attr_fan_led_grn3.dev_attr.attr,
@@ -689,7 +689,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_fan_led_red3.dev_attr.attr,
 	&sensor_dev_attr_fan_led_red4.dev_attr.attr,
 
-	//fan GPI 
+	//fan GPI
 	&sensor_dev_attr_fan_gpi.dev_attr.attr,
 	&sensor_dev_attr_psu0.dev_attr.attr,
 	&sensor_dev_attr_psu1.dev_attr.attr,
@@ -713,7 +713,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_in1_input.dev_attr.attr,
 	&sensor_dev_attr_in2_input.dev_attr.attr,
 	&sensor_dev_attr_curr1_input.dev_attr.attr,
-	&sensor_dev_attr_curr2_input.dev_attr.attr,	
+	&sensor_dev_attr_curr2_input.dev_attr.attr,
 	&sensor_dev_attr_power1_input.dev_attr.attr,
 	&sensor_dev_attr_power2_input.dev_attr.attr,
 
@@ -740,13 +740,13 @@ static const struct attribute_group psoc_group = {
 static int __init inv_psoc_init(void)
 {
 	int ret;
-	
+
     printk("+%s\n", __func__);
 
 	hwmon_dev = hwmon_device_register(NULL);
 	if (IS_ERR(hwmon_dev)) {
 		goto fail_hwmon_device_register;
-	}	
+	}
 
 	ret = sysfs_create_group(&hwmon_dev->kobj, &psoc_group);
 	if (ret) {

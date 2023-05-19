@@ -146,7 +146,7 @@ class ONIEUpdater(object):
     PLATFORM_ALWAYS_SUPPORT_UPGRADE = ['x86_64-nvidia_sn2201-r0']
 
     BIOS_UPDATE_FILE_EXT = '.rom'
-    
+
 
     def __init__(self):
         self.platform = device_info.get_platform()
@@ -533,8 +533,8 @@ class ComponentSSD(Component):
         try:
             reboot_required = self.get_firmware_update_notification(image_path) is not None
         except RuntimeError as e:
-            return FW_AUTO_ERR_UNKNOWN                    
-        
+            return FW_AUTO_ERR_UNKNOWN
+
         # Update if no reboot needed
         if not reboot_required:
             self.update_firmware(image_path)
@@ -807,9 +807,9 @@ class ComponentCPLD(Component):
         # Install burn. Error if fail.
         if not self.install_firmware(image_path):
             return FW_AUTO_ERR_UNKNOWN
-            
+
         # Schedule refresh
-        return FW_AUTO_SCHEDULED    
+        return FW_AUTO_SCHEDULED
 
     def get_firmware_version(self):
         part_number_file = self.CPLD_PART_NUMBER_FILE.format(self.idx)

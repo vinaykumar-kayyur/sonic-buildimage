@@ -619,7 +619,7 @@ class Sfp(SfpBase):
         Returns:
             A dict which contains following keys/values :
         ========================================================================
-        keys                       |Value Format   |Information	
+        keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         rx_los                     |BOOLEAN        |RX loss-of-signal status, True if has RX los, False if not.
         tx_fault                   |BOOLEAN        |TX fault status, True if has TX fault, False if not.
@@ -895,7 +895,7 @@ class Sfp(SfpBase):
         Returns:
             A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
             TX channels which have been disabled in this SFP.
-            As an example, a returned value of 0x5 indicates that channel 0 
+            As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
         raise NotImplementedError
@@ -1234,7 +1234,7 @@ class Sfp(SfpBase):
         Sets SFP power level using power_override and power_set
 
         Args:
-            power_override : 
+            power_override :
                     A Boolean, True to override set_lpmode and use power_set
                     to control SFP power, False to disable SFP power control
                     through power_override/power_set and use set_lpmode

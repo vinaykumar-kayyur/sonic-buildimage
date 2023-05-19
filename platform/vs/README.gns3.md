@@ -4,7 +4,7 @@ HOWTO Create a GNS3 Appliance File (.gns3a)
 Execute the command sonic-gns3.sh
 
 
-For instance: 
+For instance:
 
 ./sonic-gns3a.sh -h
 

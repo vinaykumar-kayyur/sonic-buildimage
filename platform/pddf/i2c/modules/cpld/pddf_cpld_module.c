@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  *
- * A pddf kernel module to create I2C client for a CPLD 
+ * A pddf kernel module to create I2C client for a CPLD
  */
 
 #include <linux/kernel.h>
@@ -103,7 +103,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 	if (strncmp(buf, "add", strlen(buf)-1)==0)
 	{
 		adapter = i2c_get_adapter(device_ptr->parent_bus);
-		
+
 		if (strncmp(device_ptr->dev_type, "i2c_cpld", strlen("i2c_cpld"))==0)
 		{
 			pddf_cpld_name = (char *)kzalloc(CPLD_CLIENT_NAME_LEN, GFP_KERNEL);
@@ -177,11 +177,11 @@ int __init cpld_data_init(void)
     pddf_dbg(CPLD, "CPLD_DATA MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     cpld_kobj = kobject_create_and_add("cpld", device_kobj);
-    if(!cpld_kobj) 
+    if(!cpld_kobj)
         return -ENOMEM;
 
 

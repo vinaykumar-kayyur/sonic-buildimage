@@ -198,30 +198,30 @@ static struct fanx_info_s fanx_info[] = {
     {'4', LED_TYPE_FAN4, 3},
     {'5', LED_TYPE_FAN5, 2},
 };
-	
+
 
 static int led_reg_val_to_light_mode(enum led_type type, u8 reg_val) {
     int i;
-    
+
     for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 
         if (type != led_type_mode_data[i].type)
             continue;
-           
-        if ((led_type_mode_data[i].type_mask & reg_val) == 
+
+        if ((led_type_mode_data[i].type_mask & reg_val) ==
              led_type_mode_data[i].mode_mask)
         {
             return led_type_mode_data[i].mode;
         }
     }
-    
+
     return 0;
 }
 
-static u8 led_light_mode_to_reg_val(enum led_type type, 
+static u8 led_light_mode_to_reg_val(enum led_type type,
                                     enum led_light_mode mode, u8 reg_val) {
     int i;
-                                      
+
     for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
         if (type != led_type_mode_data[i].type)
             continue;
@@ -229,14 +229,14 @@ static u8 led_light_mode_to_reg_val(enum led_type type,
         if (mode != led_type_mode_data[i].mode)
             continue;
 
-        reg_val = led_type_mode_data[i].mode_mask | 
+        reg_val = led_type_mode_data[i].mode_mask |
                      (reg_val & (~led_type_mode_data[i].type_mask));
         break;
     }
-    
+
     return reg_val;
 }
-									
+
 static void cs6436_56p_led_update(void)
 {
     mutex_lock(&ledctl->update_lock);
@@ -284,9 +284,9 @@ static void cs6436_56p_led_set(struct led_classdev *led_cdev,
         dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", reg, reg_val);
         goto exit;
     }
-	
+
     reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);
-	
+
     cig_cpld_write_register(reg, reg_val);
 
     /* to prevent the slow-update issue */
@@ -295,7 +295,7 @@ static void cs6436_56p_led_set(struct led_classdev *led_cdev,
 exit:
     mutex_unlock(&ledctl->update_lock);
 }
-									  
+
 static void cs6436_56p_led_fanx_set(struct led_classdev *led_cdev,
 									enum led_brightness led_light_mode)
 {
@@ -339,11 +339,11 @@ static enum led_brightness cs6436_56p_led_fanx_get(struct led_classdev *cdev)
 			return led_reg_val_to_light_mode(led_type1, ledctl->reg_val[reg_id]);
 		}
   	}
-  
+
 	return led_reg_val_to_light_mode(LED_TYPE_FAN1, ledctl->reg_val[5]);
 }
 
-									  
+
 static void cs6436_56p_led_psu1_set(struct led_classdev *led_cdev,
 	  enum led_brightness led_light_mode)
 {
@@ -411,7 +411,7 @@ static struct led_classdev cs6436_56p_leds[] = {
         .flags			 = LED_CORE_SUSPENDRESUME,
         .max_brightness  = LED_MODE_AUTO,
     },
-	
+
     [LED_TYPE_PSU1] = {
         .name			 = "cs6436_56p_led::psu1",
         .default_trigger = "unused",
@@ -428,7 +428,7 @@ static struct led_classdev cs6436_56p_leds[] = {
         .flags			 = LED_CORE_SUSPENDRESUME,
         .max_brightness  = LED_MODE_AUTO,
     },
-	   
+
 	[LED_TYPE_FAN1] = {
 		.name			  = "cs6436_56p_led::fan1",
 		.default_trigger = "unused",
@@ -570,7 +570,7 @@ static int __init cs6436_56p_led_init(void)
         kfree(ledctl);
         goto exit;
     }
-	
+
 	cs6436_56p_led_default();
 
 exit:

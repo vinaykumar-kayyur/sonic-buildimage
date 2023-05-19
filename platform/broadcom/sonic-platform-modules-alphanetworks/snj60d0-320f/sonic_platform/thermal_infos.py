@@ -45,7 +45,7 @@ class FanInfo(ThermalPolicyInfoBase):
             elif status and fan in self._fault_fans:
                 self._fault_fans.remove(fan)
                 self._status_changed = True
-                    
+
 
     def get_absence_fans(self):
         """
@@ -84,7 +84,7 @@ class ThermalInfo(ThermalPolicyInfoBase):
     INFO_NAME = 'thermal_info'
 
     def __init__(self):
-        
+
         self.init = False
         self._old_avg_temp = 0
         self._current_avg_temp = 0
@@ -121,10 +121,10 @@ class ThermalInfo(ThermalPolicyInfoBase):
 
         if self._current_avg_temp >= self._high_threshold:
             self._over_high_threshold = True
-            
+
         if self._current_avg_temp <= self._low_threshold:
             self._below_low_threshold = True
-        
+
         temp_tolerance = self._temp_scale/num_of_thermals
         temp_diff = abs(self._current_avg_temp - self._old_avg_temp)
         if self._current_avg_temp > self._old_avg_temp and temp_diff > temp_tolerance:
@@ -132,7 +132,7 @@ class ThermalInfo(ThermalPolicyInfoBase):
 
         if self._current_avg_temp < self._old_avg_temp and temp_diff > temp_tolerance:
             self._cool_down = True
-        
+
         if self._temps[self._thermal_0x4d_index] >= self._high_crital_threshold:
             self._over_high_critical_threshold = True
 
@@ -144,7 +144,7 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :return: True if the temperature is warm up else False
         """
         return self._warm_up
-    
+
     def is_over_high_threshold(self):
         """
         Retrieves if the temperature is over high threshold
@@ -158,7 +158,7 @@ class ThermalInfo(ThermalPolicyInfoBase):
         :return: True if the temperature is cood down else False
         """
         return self._cool_down
-    
+
     def is_below_low_threshold(self):
         """
         Retrieves if the temperature is below low threshold

@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 obj-m:= x86-64-accton-as9726-32d-cpld.o x86-64-accton-as9726-32d-psu.o  \
 	    x86-64-accton-as9726-32d-fan.o ym2651y.o
-	    
+
 else
 ifeq (,$(KERNEL_SRC))
 #$(error KERNEL_SRC is not defined)

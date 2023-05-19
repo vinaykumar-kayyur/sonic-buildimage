@@ -2,15 +2,15 @@
 #
 # Name: platform.py, version: 1.0
 #
-# Description: Module contains the definition of SONiC platform API 
+# Description: Module contains the definition of SONiC platform API
 # which provide the platform specific details
 #
 # Copyright (c) 2020, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 3 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 3 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -28,9 +28,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
-# components is subject to the terms and conditions of the respective license 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
+# components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 #
 
@@ -46,7 +46,7 @@ except ImportError as e:
 class Platform(PlatformBase):
     """
     Juniper Platform-specific class
-    """	
+    """
     def __init__(self):
 	PlatformBase.__init__(self)
-        self._chassis = Chassis()	
+        self._chassis = Chassis()

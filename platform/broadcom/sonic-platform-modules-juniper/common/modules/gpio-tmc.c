@@ -87,7 +87,7 @@
 /*
  * Index 4 to 15 is used for QSFP starting with
  * QSFP_LED_LANE0_GREEN. To keep multibit set/get common
- * starting SFP_LED_LANE0_GREEN with 16 which will avoid 
+ * starting SFP_LED_LANE0_GREEN with 16 which will avoid
  * conflict with QSFP enums.
  */
 #define SFP_LED_OP_START_INDEX   	16
@@ -568,7 +568,7 @@ static void tmc_gpio_setup(struct tmc_gpio_chip *sgc, int id)
             chip->base = 0;
         } else if (id == 1) {
             chip->base = (gpio_max * id);
-        } else { 
+        } else {
 	    chip->base	= -1;
         }
 

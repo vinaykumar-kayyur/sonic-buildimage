@@ -310,7 +310,7 @@ static struct minipack_data *mp_data = NULL;
 
 /*-----------------------------------------------------------------------*/
 
-static void debug_print(const char *func, int line, int level, 
+static void debug_print(const char *func, int line, int level,
                         const char *fmt, ...)
 {
     va_list args;

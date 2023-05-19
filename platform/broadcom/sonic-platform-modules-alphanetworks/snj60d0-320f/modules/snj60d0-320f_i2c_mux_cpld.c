@@ -535,9 +535,9 @@ static ssize_t show_led_control(struct device *dev, struct device_attribute *da,
     struct snj60d0_320f_cpld_data *data = i2c_mux_priv(muxc);
     int status = 0;
     u8 reg = 0, mask = 0, revert = 1;
-    
+
     switch (attr->index)
-	{   
+	{
         case CPLD_PORT_LED_ENABLE_1:
             reg  = CPLD_REG_ADDR_PORT_LED_CONTROL;
 			mask = 0x1;
@@ -553,7 +553,7 @@ static ssize_t show_led_control(struct device *dev, struct device_attribute *da,
         case CPLD_PORT_LED_ENABLE_4:
             reg  = CPLD_REG_ADDR_PORT_LED_CONTROL;
 			mask = 0x1;
-            break; 
+            break;
         default:
             return -ENODEV;
     }
@@ -580,10 +580,10 @@ static ssize_t show_interrupt(struct device *dev, struct device_attribute *da,
     struct i2c_mux_core *muxc = i2c_get_clientdata(client);
     struct snj60d0_320f_cpld_data *data = i2c_mux_priv(muxc);
     int status = 0;
-    u8 reg = 0; 
-    
+    u8 reg = 0;
+
     switch (attr->index)
-	{   
+	{
         case CPLD_INTR_1:
             reg  = CPLD_REG_ADDR_INTR;
             break;
@@ -595,7 +595,7 @@ static ssize_t show_interrupt(struct device *dev, struct device_attribute *da,
             break;
         case CPLD_INTR_4:
             reg  = CPLD_REG_ADDR_INTR;
-            break; 
+            break;
         default:
             return -ENODEV;
     }
@@ -713,9 +713,9 @@ static ssize_t set_led_control(struct device *dev, struct device_attribute *da,
 
 	if ((on != 1) && (on != 0))
         return -EINVAL;
-		
+
     switch (attr->index)
-	{   
+	{
         case CPLD_PORT_LED_ENABLE_1:
             reg  = CPLD_REG_ADDR_PORT_LED_CONTROL;
 			mask = 0x1;
@@ -731,7 +731,7 @@ static ssize_t set_led_control(struct device *dev, struct device_attribute *da,
         case CPLD_PORT_LED_ENABLE_4:
             reg  = CPLD_REG_ADDR_PORT_LED_CONTROL;
 			mask = 0x1;
-            break; 
+            break;
         default:
             return -ENODEV;
     }

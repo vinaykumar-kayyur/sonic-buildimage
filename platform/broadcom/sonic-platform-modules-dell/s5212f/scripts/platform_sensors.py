@@ -3,7 +3,7 @@
 # autonomous subsystem provides monitoring and management
 # facility independent of the host CPU. IPMI standard
 # protocol is used with ipmitool to fetch sensor details.
-# Current script support X00 board only. X01 support will 
+# Current script support X00 board only. X01 support will
 # be added soon. This provies support for the
 # following objects:
 #   * Onboard temperature sensors
@@ -73,7 +73,7 @@ def get_switch_details():
     status, ipmi_fru = getstatusoutput_noshell(['/usr/bin/ipmitool', 'fru'])
     for line in ipmi_fru.splitlines():
         info = line.split(':')
-        if 'Board Part Number' in info[0] : 
+        if 'Board Part Number' in info[0] :
             partno =  info[1][1:-3]
             if (partno  in switch_sku): return switch_sku[partno]
     return None

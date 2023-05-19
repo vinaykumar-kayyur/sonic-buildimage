@@ -137,10 +137,10 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
             plat_dev = platform_device_alloc(device_ptr->dev_type, device_ptr->dev_id);
 
             plat_dev->dev.platform_data = cpldmux_platform_data;
-        
+
             pddf_dbg(CPLDMUX, KERN_ERR "Creating a %s platform_device 0x%p, platform_data 0x%p\n", plat_dev->name, (void *)plat_dev, (void *)cpldmux_platform_data);
 			ret = platform_device_add(plat_dev);
-			if (ret) 
+			if (ret)
             {
 				pddf_dbg(CPLDMUX, KERN_ERR "Unable to create cpld_mux (%s) device: Error %d\n", device_ptr->i2c_name, ret);
                 goto free_data;
@@ -208,11 +208,11 @@ int __init cpldmux_data_init(void)
     pddf_dbg(CPLDMUX, "CPLDMUX_DATA MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     cpldmux_kobj = kobject_create_and_add("cpldmux", device_kobj);
-    if(!cpldmux_kobj) 
+    if(!cpldmux_kobj)
         return -ENOMEM;
 
 

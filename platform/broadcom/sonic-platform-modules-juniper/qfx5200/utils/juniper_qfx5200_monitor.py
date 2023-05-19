@@ -7,9 +7,9 @@
 # Copyright (c) 2020, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 3 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 3 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -27,9 +27,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
-# components is subject to the terms and conditions of the respective license 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
+# components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
 try:
@@ -60,10 +60,10 @@ PrevASICValue = 0
 
 temp_policy_AFI = {
     0: [[35, 0, 30000], [35, 30000, 39000], [55, 39000, 0], [55, 39000, 48000], [75, 48000, 0], [75, 48000, 56000], [90, 56000, 0], [90, 56000, 66000],[100, 66000, 0],
-         ['Yellow Alarm', 64000, 70000], ['Red Alarm', 70000, 73000], ['Fire Shut Alarm', 73000, 0]], 
+         ['Yellow Alarm', 64000, 70000], ['Red Alarm', 70000, 73000], ['Fire Shut Alarm', 73000, 0]],
 
     1: [[35, 0, 30000], [35, 30000, 39000], [55, 39000, 0], [55, 39000, 48000], [75, 48000, 0], [75, 48000, 56000], [90, 56000, 0], [90, 56000, 66000],[100, 66000, 0],
-         ['Yellow Alarm', 64000, 70000], ['Red Alarm', 70000, 73000], ['Fire Shut Alarm', 73000, 0]], 
+         ['Yellow Alarm', 64000, 70000], ['Red Alarm', 70000, 73000], ['Fire Shut Alarm', 73000, 0]],
 
     2: [[35, 0, 40000], [35, 40000, 47000], [55, 47000, 0], [55, 47000, 55000], [75, 55000, 0], [75, 55000, 62000], [90, 62000, 0], [90, 62000, 70000],[100, 70000, 0],
          ['Yellow Alarm', 68000, 74000], ['Red Alarm', 74000, 77000], ['Fire Shut Alarm', 77000, 0]],
@@ -81,27 +81,27 @@ temp_policy_AFI = {
          ['Yellow Alarm', 67000, 73000], ['Red Alarm', 73000, 76000], ['Fire Shut Alarm', 76000, 0]],
 
     7: [[35, 0, 52000], [35, 52000, 57000], [55, 57000, 0], [55, 57000, 63000], [75, 63000, 0], [75, 63000, 68000], [90, 68000, 0], [90, 68000, 74000],[100, 74000, 0],
-         ['Yellow Alarm', 72000, 78000], ['Red Alarm', 78000, 81000], ['Fire Shut Alarm', 81000, 0]], 
+         ['Yellow Alarm', 72000, 78000], ['Red Alarm', 78000, 81000], ['Fire Shut Alarm', 81000, 0]],
 
     8: [[35, 0, 41000], [35, 41000, 48000], [55, 48000, 0], [55, 48000, 55000], [75, 55000, 0], [75, 55000, 62000], [90, 62000, 0], [90, 62000, 70000],[100, 70000, 0],
-         ['Yellow Alarm', 68000, 74000], ['Red Alarm', 74000, 77000], ['Fire Shut Alarm', 77000, 0]], 
+         ['Yellow Alarm', 68000, 74000], ['Red Alarm', 74000, 77000], ['Fire Shut Alarm', 77000, 0]],
 
     9: [[35, 0, 42000], [35, 42000, 49000], [55, 49000, 0], [55, 49000, 57000], [75, 57000, 0], [75, 57000, 64000], [90, 64000, 0], [90, 64000, 72000],[100, 72000, 0],
-         ['Yellow Alarm', 70000, 76000], ['Red Alarm', 76000, 79000], ['Fire Shut Alarm', 79000, 0]], 
+         ['Yellow Alarm', 70000, 76000], ['Red Alarm', 76000, 79000], ['Fire Shut Alarm', 79000, 0]],
 
     10: [[35, 0, 42000], [35, 42000, 50000], [55, 50000, 0], [55, 50000, 58000], [75, 58000, 0], [75, 58000, 66000], [90, 66000, 0], [90, 66000, 75000],[100, 75000, 0],
          ['Yellow Alarm', 86000, 92000], ['Red Alarm', 92000, 95000], ['Fire Shut Alarm', 95000, 0]],
 
     11: [[35, 0, 68000], [35, 68000, 74000], [55, 74000, 0], [55, 74000, 80000], [75, 80000, 0], [75, 80000, 85000], [90, 85000, 0], [90, 85000, 92000],[100, 92000, 0],
-         ['Yellow Alarm', 99000, 102000], ['Red Alarm', 102000, 105000], ['Fire Shut Alarm', 105000, 0]], 
+         ['Yellow Alarm', 99000, 102000], ['Red Alarm', 102000, 105000], ['Fire Shut Alarm', 105000, 0]],
     }
 
 temp_policy_AFO = {
     0: [[35, 0, 42000], [35, 42000, 49000], [55, 49000, 0], [55, 49000, 55000], [75, 55000, 0], [75, 55000, 62000], [90, 62000, 0], [90, 62000, 69000],[100, 69000, 0],
-         ['Yellow Alarm', 67000, 73000], ['Red Alarm', 73000, 76000], ['Fire Shut Alarm', 76000, 0]], 
+         ['Yellow Alarm', 67000, 73000], ['Red Alarm', 73000, 76000], ['Fire Shut Alarm', 76000, 0]],
 
     1: [[35, 0, 41000], [35, 41000, 48000], [55, 48000, 0], [55, 48000, 55000], [75, 55000, 0], [75, 55000, 61000], [90, 61000, 0], [90, 61000, 69000],[100, 69000, 0],
-         ['Yellow Alarm', 67000, 73000], ['Red Alarm', 73000, 76000], ['Fire Shut Alarm', 76000, 0]], 
+         ['Yellow Alarm', 67000, 73000], ['Red Alarm', 73000, 76000], ['Fire Shut Alarm', 76000, 0]],
 
     2: [[35, 0, 44000], [35, 44000, 50000], [55, 50000, 0], [55, 50000, 56000], [75, 56000, 0], [75, 56000, 63000], [90, 63000, 0], [90, 63000, 70000],[100, 70000, 0],
          ['Yellow Alarm', 68000, 74000], ['Red Alarm', 74000, 77000], ['Fire Shut Alarm', 77000, 0]],
@@ -119,24 +119,24 @@ temp_policy_AFO = {
          ['Yellow Alarm', 65000, 71000], ['Red Alarm', 71000, 78000], ['Fire Shut Alarm', 78000, 0]],
 
     7: [[35, 0, 49000], [35, 49000, 55000], [55, 55000, 0], [55, 55000, 60000], [75, 60000, 0], [75, 60000, 66000], [90, 66000, 0], [90, 66000, 72000],[100, 72000, 0],
-         ['Yellow Alarm', 70000, 76000], ['Red Alarm', 76000, 79000], ['Fire Shut Alarm', 79000, 0]], 
+         ['Yellow Alarm', 70000, 76000], ['Red Alarm', 76000, 79000], ['Fire Shut Alarm', 79000, 0]],
 
     8: [[35, 0, 41000], [35, 41000, 47000], [55, 47000, 0], [55, 47000, 54000], [75, 54000, 0], [75, 54000, 60000], [90, 60000, 0], [90, 60000, 67000],[100, 67000, 0],
-         ['Yellow Alarm', 65000, 71000], ['Red Alarm', 71000, 74000], ['Fire Shut Alarm', 74000, 0]], 
+         ['Yellow Alarm', 65000, 71000], ['Red Alarm', 71000, 74000], ['Fire Shut Alarm', 74000, 0]],
 
     9: [[35, 0, 57000], [35, 57000, 61000], [55, 61000, 0], [55, 61000, 66000], [75, 66000, 0], [75, 66000, 70000], [90, 70000, 0], [90, 70000, 75000],[100, 75000, 0],
-         ['Yellow Alarm', 73000, 79000], ['Red Alarm', 79000, 82000], ['Fire Shut Alarm', 82000, 0]], 
+         ['Yellow Alarm', 73000, 79000], ['Red Alarm', 79000, 82000], ['Fire Shut Alarm', 82000, 0]],
 
     10: [[35, 0, 51000], [35, 51000, 58000], [55, 58000, 0], [55, 58000, 64000], [75, 64000, 0], [75, 64000, 70000], [90, 70000, 0], [90, 70000, 78000],[100, 78000, 0],
-         ['Yellow Alarm', 86000, 92000], ['Red Alarm', 92000, 95000], ['Fire Shut Alarm', 95000, 0]], 
+         ['Yellow Alarm', 86000, 92000], ['Red Alarm', 92000, 95000], ['Fire Shut Alarm', 95000, 0]],
 
     11: [[35, 0, 76000], [35, 76000, 79000], [55, 79000, 0], [55, 79000, 83000], [75, 83000, 0], [75, 83000, 86000], [90, 86000, 0], [90, 86000, 90000],[100, 90000, 0],
-         ['Yellow Alarm', 99000, 102000], ['Red Alarm', 102000, 105000], ['Fire Shut Alarm', 105000, 0]], 
+         ['Yellow Alarm', 99000, 102000], ['Red Alarm', 102000, 105000], ['Fire Shut Alarm', 105000, 0]],
     }
 
 class QFX5200_FanUtil(object):
     """QFX5200 Platform FanUtil class"""
-    
+
     PWMINPUT_PATH = '/sys/bus/i2c/devices/7-00{0}/hwmon/{1}/pwm{2}'
     HWMONINPUT_PATH = '/sys/bus/i2c/devices/7-00{0}/hwmon/'
     PWMINPUT_NUM_IDX = 0
@@ -155,7 +155,7 @@ class QFX5200_FanUtil(object):
         for x in range(self.PWMINPUT_NUM):
             self._hwmon_input_path_mapping[x] = hwmoninput_path.format(
                     self._hwmon_input_node_mapping[x])
-            
+
             hwmon_path = os.listdir(self._hwmon_input_path_mapping[x])
             hwmon_dir = ''
             for hwmon_name in hwmon_path:
@@ -180,12 +180,12 @@ class QFX5200_FanUtil(object):
 	        ret_value = fan_speed.get(int(pwm_value))
 	        break
 
-        return int(ret_value)	
+        return int(ret_value)
 
     def write_file(self, text, file):
         with open(file, 'w') as f:
             f.write(text + '\n')
-            
+
     def set_fan_dutycycle(self, val):
         fan_speed = {35: 86, 55: 139, 75: 192, 90: 230,100: 255}
         for x in range(self.PWMINPUT_NUM):
@@ -198,13 +198,13 @@ class QFX5200_FanUtil(object):
         return True
 
     def get_check_fan_dutycycle(self):
-	pwm_str = ''    
+	pwm_str = ''
 	for x in range(self.PWMINPUT_NUM):
             device_path = self._pwm_input_path_mapping[x]
             cmd = ["sudo", "cat", device_path]
             status, pwm_value = getstatusoutput_noshell(cmd)
 	    pwm_str += pwm_value
-            if (x != self.PWMINPUT_NUM -1):		   
+            if (x != self.PWMINPUT_NUM -1):
 	        pwm_str += ', '
             time.sleep(0.25)
         logging.debug('Current PWM values set in all fans: %s', pwm_str)
@@ -254,13 +254,13 @@ class QFX5200_ThermalUtil(object):
             self._sensor_to_device_path_mapping[x] = sensor_path.format(
                 self._sensor_to_device_node_mapping[x][0],
                 self._sensor_to_device_node_mapping[x][1])
-            
+
         for x in range(self.CORETEMP_NUM_ON_MAIN_BOARD):
             self._coretemp_to_device_path_mapping[x] = coretemp_path.format(
                 self._coretemp_to_device_node_mapping[x])
 
-    
-    """ Function reads the 5 temp inputs in CORETEMP_PATH 
+
+    """ Function reads the 5 temp inputs in CORETEMP_PATH
         and returns the average of these 5 temp readings """
     def get_coretempValue(self):
         sum = 0
@@ -271,7 +271,7 @@ class QFX5200_ThermalUtil(object):
 
 
     """ Function takes the Sensor number as input, constructs the device path,
-        opens sensor file, reads the temp content from the file and returns the value """ 
+        opens sensor file, reads the temp content from the file and returns the value """
     def _get_sensor_node_val(self, thermal_num):
         if thermal_num < self.SENSOR_NUM_0_IDX or thermal_num >= self.SENSOR_NUM_ON_MAIN_BOARD:
             logging.debug('GET. Parameter error. thermal_num, %d', thermal_num)
@@ -296,12 +296,12 @@ class QFX5200_ThermalUtil(object):
         except IOError as e:
             logging.error('get_sensor_node_val: unable to close file. device_path:%s', str(e))
             return None
-      
+
         return int(content)
 
 
     """ Function takes the coretemp number as input, constructs the device path,
-        opens sensor file, reads the temp content from the file and returns the value """ 
+        opens sensor file, reads the temp content from the file and returns the value """
     def _get_coretemp_node_val(self, thermal_num):
 
         device_path = self.get_coretemp_to_device_path(thermal_num)
@@ -365,7 +365,7 @@ class QFX5200_ThermalUtil(object):
 
     def set_alarm_led_brightness(self, val):
 
-        """ Major Alarm set"""	    
+        """ Major Alarm set"""
         if val == 2:
             major_alarm_val = 1
             minor_alarm_val = 0
@@ -388,7 +388,7 @@ class QFX5200_ThermalUtil(object):
             val_file.write(str(minor_alarm_val))
             val_file.close()
 
-        elif val == 1:  
+        elif val == 1:
             major_alarm_val = 0
             minor_alarm_val = 1
 
@@ -409,7 +409,7 @@ class QFX5200_ThermalUtil(object):
             val_file.write(str(minor_alarm_val))
             val_file.close()
 
-        else:   
+        else:
             major_alarm_val = 0
             minor_alarm_val = 0
 
@@ -430,19 +430,19 @@ class QFX5200_ThermalUtil(object):
             val_file.write(str(minor_alarm_val))
             val_file.close()
 
-    """ Function is called periodically every 20 secs. It reads the 10 Temp sensors, 1 core Temp sensor and ASIC temp sets 
+    """ Function is called periodically every 20 secs. It reads the 10 Temp sensors, 1 core Temp sensor and ASIC temp sets
         Sensor flags accordingly. Also reads the Fan duty cycle and depending on the FAN duty cycle reading and temp sensor reading,
-        set the different parameters 
+        set the different parameters
 
         Below is the Sensor Mapping(Refer AFI/AFO EM Policy Specification) to the I2C devices
 
-    	/sys/bus/i2c/devices/7-0048/hwmon/hwmon*          --> Sensor# 2 
-    	/sys/bus/i2c/devices/7-0049/hwmon/hwmon*          --> Sensor# 3 
-    	/sys/bus/i2c/devices/5-0048/hwmon/hwmon*          --> Sensor# 5 
-    	/sys/bus/i2c/devices/5-0049/hwmon/hwmon*          --> Sensor# 6 
-    	/sys/bus/i2c/devices/5-004a/hwmon/hwmon*          --> Sensor# 7 
-    	/sys/bus/i2c/devices/5-004b/hwmon/hwmon*          --> Sensor# 8 
-    	/sys/bus/i2c/devices/6-0048/hwmon/hwmon*          --> Sensor# 9 
+    	/sys/bus/i2c/devices/7-0048/hwmon/hwmon*          --> Sensor# 2
+    	/sys/bus/i2c/devices/7-0049/hwmon/hwmon*          --> Sensor# 3
+    	/sys/bus/i2c/devices/5-0048/hwmon/hwmon*          --> Sensor# 5
+    	/sys/bus/i2c/devices/5-0049/hwmon/hwmon*          --> Sensor# 6
+    	/sys/bus/i2c/devices/5-004a/hwmon/hwmon*          --> Sensor# 7
+    	/sys/bus/i2c/devices/5-004b/hwmon/hwmon*          --> Sensor# 8
+    	/sys/bus/i2c/devices/6-0048/hwmon/hwmon*          --> Sensor# 9
     	/sys/bus/i2c/devices/6-0049/hwmon/hwmon*          --> Sensor# 10
     	/sys/bus/i2c/devices/6-004a/hwmon/hwmon*          --> Sensor# 11
     	/sys/bus/i2c/devices/6-004b/hwmon/hwmon*          --> Sensor# 12
@@ -461,7 +461,7 @@ class QFX5200_ThermalUtil(object):
         #AFO
             temp_policy = temp_policy_AFO
 
-        """ Dictionary where 
+        """ Dictionary where
             key = thermal id index starting from 0. 0 is the sensor 1 ...
             value = Different temp ranges """
         SensorFlag = {
@@ -477,7 +477,7 @@ class QFX5200_ThermalUtil(object):
             9: [0,0,0,0,0,0,0,0,0,0,0,0],
             10: [0,0,0,0,0,0,0,0,0,0,0,0],
             11: [0,0,0,0,0,0,0,0,0,0,0,0],
-        }    
+        }
 
         for x in range(self.SENSOR_CORETEMP_NUM_ON_MAIN_BOARD):
             SEN_str = 'SEN'
@@ -500,7 +500,7 @@ class QFX5200_ThermalUtil(object):
                 time.sleep(2)
                 cmd = ["kill", "-9", proc.pid]
                 getstatusoutput_noshell(cmd)
-                
+
                 if os.stat("/var/log/asic_value").st_size == 0:
                     value = PrevASICValue
                 else:
@@ -511,8 +511,8 @@ class QFX5200_ThermalUtil(object):
                     value = int(value1)
                     PrevASICValue = value
 
-		sensor_str += 'BRCM TH:' + str(value)    
-	    	
+		sensor_str += 'BRCM TH:' + str(value)
+
             # 35% Duty Cycle
             if value > temp_policy[x][0][1] and value <= temp_policy[x][0][2]:
                 SensorFlag[x][0] = True
@@ -548,7 +548,7 @@ class QFX5200_ThermalUtil(object):
             #100% Duty Cycle
             elif value >= temp_policy[x][8][1]:
                 SensorFlag[x][8] = True
-            
+
             else:
                 pass
 
@@ -560,10 +560,10 @@ class QFX5200_ThermalUtil(object):
             elif value >= temp_policy[x][10][1] and value < temp_policy[x][10][2]:
                 SensorFlag[x][10] = True
 
-            # Fire Shut down    
+            # Fire Shut down
             elif value >= temp_policy[x][11][1]:
                 SensorFlag[x][11] = True
-         
+
         logging.debug('Sensor values : %s', sensor_str)
         fan = QFX5200_FanUtil()
         # CHECK IF ANY TEMPERATURE SENSORS is running at Soft shutdown temperature
@@ -588,11 +588,11 @@ class QFX5200_ThermalUtil(object):
 
             cmd = ["poweroff"]
         subprocess.call(cmd)
-            
+
         # CHECK IF ANY TEMPERATURE SENSORS is running at RED warning , IF YES, SET THE ALARM LED TO 'RED'
         elif (SensorFlag[0][10] or SensorFlag[1][10] or SensorFlag[2][10] or SensorFlag[3][10] or SensorFlag[4][10] or SensorFlag[5][10] or SensorFlag[6][10] or SensorFlag[7][10]
             or SensorFlag[8][10] or SensorFlag[9][10] or SensorFlag[10][10] or SensorFlag[11][10]):
-  
+
             self.set_alarm_led_brightness(2)
 
             logging.debug('Setting Red Alarm')
@@ -611,7 +611,7 @@ class QFX5200_ThermalUtil(object):
                 logging.debug('Clearing Red Alarm')
 	    elif ( value == 1):
                 logging.debug('Clearing Yellow Alarm')
-            
+
             self.set_alarm_led_brightness(0)
 
         #CHECK IF ANY TEMPERATURE SENSORS HAS SET 100% DUTY CYCLE FLAG
@@ -679,8 +679,8 @@ class QFX5200_ThermalUtil(object):
         # CHECK IF ANY TEMPERATURE SENSORS HAS SET 75% DUTY CYCLE FLAG
         elif (SensorFlag[0][4] or SensorFlag[1][4] or SensorFlag[2][4] or SensorFlag[3][4] or SensorFlag[4][4] or SensorFlag[5][4] or SensorFlag[6][4] or SensorFlag[7][4]
             or SensorFlag[8][4] or SensorFlag[9][4] or SensorFlag[10][4] or SensorFlag[11][4]):
-        
-	    fan.get_check_fan_dutycycle()    
+
+	    fan.get_check_fan_dutycycle()
 	    if (fan.get_fan_dutycycle() < 75):
 		time.sleep(0.25)
                 fan.set_fan_dutycycle(75)
@@ -738,9 +738,9 @@ class QFX5200_ThermalUtil(object):
                 logging.debug('Fan set to 55% dutycycle')
 
         # CHECK IF ANY TEMPERATURE SENSORS HAS SET 35% PREV DUTY CYCLE FLAG
-        elif (SensorFlag[0][1] or SensorFlag[1][1] or SensorFlag[2][1] or SensorFlag[3][1] or SensorFlag[4][1] or SensorFlag[5][1] or SensorFlag[6][1] or SensorFlag[7][1] 
+        elif (SensorFlag[0][1] or SensorFlag[1][1] or SensorFlag[2][1] or SensorFlag[3][1] or SensorFlag[4][1] or SensorFlag[5][1] or SensorFlag[6][1] or SensorFlag[7][1]
             or SensorFlag[8][1] or SensorFlag[9][1] or SensorFlag[10][1] or SensorFlag[11][1]):
-	
+
 	    fan.get_check_fan_dutycycle()
 
 	    if (fan.get_fan_dutycycle() > 35):
@@ -762,7 +762,7 @@ class QFX5200_ThermalUtil(object):
                     logging.debug('Fan set to 35% dutycycle')
 
         # CHECK IF ANY TEMPERATURE SENSORS HAS SET 35% DUTY CYCLE FLAG
-        elif (SensorFlag[0][0] or SensorFlag[1][0] or SensorFlag[2][0] or SensorFlag[3][0] or SensorFlag[4][0] or SensorFlag[5][0] or SensorFlag[6][0] or SensorFlag[7][0] 
+        elif (SensorFlag[0][0] or SensorFlag[1][0] or SensorFlag[2][0] or SensorFlag[3][0] or SensorFlag[4][0] or SensorFlag[5][0] or SensorFlag[6][0] or SensorFlag[7][0]
 	    or SensorFlag[8][0] or SensorFlag[9][0] or SensorFlag[10][0] or SensorFlag[11][0]):
 
             fan.get_check_fan_dutycycle()
@@ -775,7 +775,7 @@ class QFX5200_ThermalUtil(object):
 
         else:
             pass
-            
+
 
         # RESET ALL THE SENSOR FLAGS
         for x in range(self.SENSOR_CORETEMP_NUM_ON_MAIN_BOARD):
@@ -783,10 +783,10 @@ class QFX5200_ThermalUtil(object):
                 SensorFlag[x][y] = 0
 
 class device_monitor(object):
-    
+
     MASTER_LED_PATH = '/sys/class/leds/master/brightness'
     SYSTEM_LED_PATH = '/sys/class/leds/system/brightness'
-    
+
     PWMINPUT_PATH = '/sys/bus/i2c/devices/7-00{0}/hwmon/{1}/pwm{2}'
     HWMONINPUT_PATH = '/sys/bus/i2c/devices/7-00{0}/hwmon/'
 
@@ -801,9 +801,9 @@ class device_monitor(object):
     _hwmon_input_node_mapping = ['2c','2c','2c','2c','2e','2e','2e','2e','2f','2f']
 
     def __init__(self, log_file, log_level):
-        global DEBUG  
+        global DEBUG
         global isPlatformAFI
-        
+
 	hwmoninput_path = self.HWMONINPUT_PATH
         pwminput_path = self.PWMINPUT_PATH
 	for x in range(self.PWMINPUT_NUM):
@@ -814,11 +814,11 @@ class device_monitor(object):
 	    hwmon_dir = ''
 	    for hwmon_name in hwmon_path:
 	        hwmon_dir = hwmon_name
-	    
+
 	    self._pwm_input_path_mapping[x] = pwminput_path.format(
 		                                 self._hwmon_input_node_mapping[x],
 				                 hwmon_dir,
-				                 self._pwm_input_node_mapping[x])		 
+				                 self._pwm_input_node_mapping[x])
 
         """Needs a logger and a logger level."""
         # set up logging to file
@@ -859,7 +859,7 @@ class device_monitor(object):
             logging.error('device_monitor: unable to open Master LED file: %s', str(e))
 
         masterLED_file.write(str(master_led_value))
-        masterLED_file.close() 
+        masterLED_file.close()
 
         system_led_value = 1
 
@@ -870,7 +870,7 @@ class device_monitor(object):
 
         systemLED_file.write(str(system_led_value))
         systemLED_file.close()
-        self.get_Initial_fan_dutycycle()	
+        self.get_Initial_fan_dutycycle()
 	self.set_Default_fan_dutycycle(35)
 
 
@@ -887,16 +887,16 @@ class device_monitor(object):
 	return True
 
     def get_Initial_fan_dutycycle(self):
-	pwm_str = ''    
+	pwm_str = ''
 	for x in range(self.PWMINPUT_NUM):
             device_path = self._pwm_input_path_mapping[x]
             cmd = ["sudo", "cat", device_path]
             status, pwm_value = getstatusoutput_noshell(cmd)
 	    pwm_str += pwm_value
-            if (x != self.PWMINPUT_NUM -1):		   
+            if (x != self.PWMINPUT_NUM -1):
 	        pwm_str += ', '
             time.sleep(0.25)
-	logging.debug('Initial PWM values read: %s', pwm_str) 
+	logging.debug('Initial PWM values read: %s', pwm_str)
         return True
 
     def manage_device(self):

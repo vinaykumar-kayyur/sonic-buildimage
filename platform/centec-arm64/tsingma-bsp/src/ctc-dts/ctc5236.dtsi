@@ -52,7 +52,7 @@
 			cpu-release-addr = <0 0x0010fff0>;
 		};
 	};
-	
+
 	gic: interrupt-controller@31201000 {
 			compatible = "arm,gic-400";
 			#interrupt-cells = <3>;
@@ -78,7 +78,7 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-		
+
 		#include "ctc5236-clock.dtsi"
 		ocram: sram@00100000 {
 			compatible = "mmio-sram";
@@ -100,7 +100,7 @@
 			reg = <0x0 0x33200000 0x0 0x100000>;
 			little-endian;
 		};
-		
+
 		serial0: serial@33000000 {
                         compatible = "arm,pl011","arm,primecell";
                         reg = <0x0 0x33000000 0x0 0x1000>;
@@ -124,7 +124,7 @@
                         clocks = <&uart_clk>, <&sup_clk>;
                         clock-names = "uart_clk", "apb_pclk";
                         status="disabled";
-                };				
+                };
 		mdio: mdio@33620000 {
 			compatible = "ctc,mdio";
 			reg = <0x0 0x33620000 0x0 0x10000>;
@@ -132,7 +132,7 @@
 			#size-cells = <0>;
 			status = "disabled";
 		};
-		
+
 		enet0: ethernet@33410000 {
 			compatible = "ctc,mac";
 			device_type = "network";
@@ -170,7 +170,7 @@
 				<GIC_SPI 103 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
 			ctc,sysctrl = <&sysctrl>;
 		};
-		
+
 		ehci0: usb@30500000 {
 			compatible = "ctc-ehci";
 			reg = <0x0 0x30500000 0x0 0x1000>;
@@ -178,32 +178,32 @@
 			ctc,sysctrl = <&sysctrl>;
 			status = "disabled";
 		};
-		
+
 		ohci0: usb@30580000 {
 			compatible = "generic-ohci";
 			reg = <0x0 0x30580000 0x0 0x1000>;
 			interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
 			status = "okay";
 		};
-		
+
 		spi: spi@33100000 {
 			compatible = "arm,pl022","arm,primecell";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <0x0 0x33100000 0x0 0x100000>;
 			clocks = <&spi_clk>, <&sup_clk>;
-			clock-names = "spi_clk", "apb_pclk";    
-			num-cs = <4>;   
+			clock-names = "spi_clk", "apb_pclk";
+			num-cs = <4>;
 			interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
 			ctc,sysctrl = <&sysctrl>;
 			status ="disabled";
 		};
-		
+
 		qspi: spi@10000000 {
 			compatible = "ctc, igdaxi001a-qspi";
-			#address-cells = <1>;	
+			#address-cells = <1>;
 			#size-cells = <0>;
-			reg = <0x0 0x10000000 0x0 0x10000>; 
+			reg = <0x0 0x10000000 0x0 0x10000>;
 			pclk = <500000000>;
 			num-cs = <2>;
 			idle-cycle = <2>;
@@ -212,10 +212,10 @@
 			interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
 			status = "disabled";
 		};
-		switch: switch@31100000 {                      
-			compatible = "centec,dal-localbus";    
+		switch: switch@31100000 {
+			compatible = "centec,dal-localbus";
 			reg = <0x0 0x31100000 0x0 0x1000>,
-				 <0x0 0x33290000 0x0 0x10000>; 
+				 <0x0 0x33290000 0x0 0x10000>;
 			interrupts = <GIC_SPI 128 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>,
 				<GIC_SPI 129 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>,
 				<GIC_SPI 130 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>,
@@ -224,17 +224,17 @@
 				<GIC_SPI 133 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>,
 				<GIC_SPI 134 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>,
 				<GIC_SPI 135 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
-			status ="disabled";                     
-		};  
-		switch1: switch1@31101000 {                      
-			compatible = "centec,switch";    
-			reg = <0x0 0x31101000 0x0 0x1000>; 
-			status ="disabled";                     
-		}; 
-		
+			status ="disabled";
+		};
+		switch1: switch1@31101000 {
+			compatible = "centec,switch";
+			reg = <0x0 0x31101000 0x0 0x1000>;
+			status ="disabled";
+		};
+
 		i2c0: i2c0@33700000{
 			compatible = "ctc,i2c";
-			#address-cells = <1>;	
+			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <0x0 0x33700000 0x0 0x1000>;
 			interrupts = <GIC_SPI 58 IRQ_TYPE_LEVEL_HIGH>;
@@ -242,11 +242,11 @@
 			ctc,sysctrl = <&sysctrl>;
 			i2c-num = <0>;
 			status ="disabled";
-		};		
-		
+		};
+
 		i2c1: i2c1@33701000{
 			compatible = "ctc,i2c";
-			#address-cells = <1>;	
+			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <0x0 0x33701000 0x0 0x1000>;
 			interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>;
@@ -255,7 +255,7 @@
 			i2c-num = <1>;
 			status ="disabled";
 		};
-		
+
 		pcie: pcie@20000000 {
 			compatible = "centec,ctc5236-pcie";
 			reg =   <0x0 0x20000000 0x0 0x10000000
@@ -276,27 +276,27 @@
                                0x02000000 0 0x20000000 0  0x60000000 0 0x20000000>;
 			num-lanes = <1>;
 			ctc,sysctrl = <&sysctrl>;
-			status ="disabled"; 
+			status ="disabled";
 		};
 
 		wtd0: wtd0@33500000{
 			compatible = "arm,sp805-wdt", "arm,primecell";
-			#address-cells = <1>;	
+			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <0x0 0x33500000 0x0 0x1000>;
 			clocks = <&wdog_clk>, <&sup_clk>;
-			clock-names = "wdog_clk", "apb_pclk"; 
+			clock-names = "wdog_clk", "apb_pclk";
 			ctc,sysctrl = <&sysctrl>;
 			interrupts = <GIC_SPI 38 IRQ_TYPE_EDGE_RISING>;
 			status="disabled";
 		};
 		wtd1: wtd1@33501000{
 			compatible = "arm,sp805-wdt", "arm,primecell";
-			#address-cells = <1>;	
+			#address-cells = <1>;
 			#size-cells = <0>;
 			reg = <0x0 0x33501000 0x0 0x1000>;
 			clocks = <&wdog_clk>, <&sup_clk>;
-			clock-names = "wdog_clk", "apb_pclk"; 
+			clock-names = "wdog_clk", "apb_pclk";
 			ctc,sysctrl = <&sysctrl>;
 			interrupts = <GIC_SPI 39 IRQ_TYPE_EDGE_RISING>;
 			status="disabled";
@@ -311,8 +311,8 @@
 			clock-names = "mmc_clk";
 			ctc,sysctrl = <&sysctrl>;
 			reg = <0x0 0x30400000 0x0 0x1000>;
-                };	
-				
+                };
+
 		timer0: timer0@33600000{
 			compatible = "snps,dw-apb-timer";
 			reg = <0x0 0x33600000 0x0 0x20>;
@@ -321,7 +321,7 @@
 			interrupts = <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;
 			DivNum = <0x3c>;
 			status="disabled";
-		};		
+		};
 		timer1: timer1@33600020{
 			compatible = "snps,dw-apb-timer";
 			reg = <0x0 0x33600020 0x0 0x20>;
@@ -331,12 +331,12 @@
 			DivNum = <0x3c>;
 			status="disabled";
 		};
-		
+
 		pwm: pwm@33200240{
 			compatible = "centec-pwm";
 			ctc,sysctrl = <&sysctrl>;
-			#pwm-cells = <2>;	
-			
+			#pwm-cells = <2>;
+
 			status="disabled";
 		};
 
@@ -348,14 +348,14 @@
 		           <&pwm 3 1000000>;
 		    pwm-names = "pwm1","pwm2","pwm3","pwm4";
 		};
-		
+
 		gpio0: gpio@33610000 {
 			compatible = "ctc,apb-gpio";
 			reg = <0x0 0x33610000 0x0 0x10000>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ctc,sysctrl = <&sysctrl>;
-			
+
 			porta: gpio-port@0 {
                 		compatible = "ctc,apb-gpio-porta";
                 		gpio-controller;
@@ -377,7 +377,7 @@
                 		interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
 			};
 		};
-		
+
 		pinctrl: pinctrl {
 			compatible = "ctc,ctc5236-pinctrl";
 			#address-cells = <0x2>;
@@ -385,7 +385,7 @@
 			ctc,pinctrl-bank0 = <16>;
 			ctc,pinctrl-bank1 = <8>;
 			ctc,sysctrl = <&sysctrl>;
-			
+
 			spi0 {
 				spi_pin: spi_pin {
 					ctc,pins = <0 0 PIN_FUNC_SPI>,
@@ -407,8 +407,8 @@
  				           	   <0 14 PIN_FUNC_UART>,
 						       <0 15 PIN_FUNC_UART>;
 				};
-			};	
-	
+			};
+
 			fc {
 				fc_pin: fc_pin {
 					ctc,pins = <1 0 PIN_FUNC_FC>,
@@ -423,6 +423,6 @@
 			};
 		};
 	};
-   
+
 };
-  
+

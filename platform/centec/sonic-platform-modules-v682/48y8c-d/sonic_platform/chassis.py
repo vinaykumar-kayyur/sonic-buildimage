@@ -2,7 +2,7 @@
 #
 # Name: chassis.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -52,7 +52,7 @@ class Chassis(ChassisBase):
         for port_cfg in _port_cfgs:
             sfp = Sfp(int(port_cfg.index))
             self._sfp_list.append(sfp)
-           
+
 ##############################################
 # Device methods
 ##############################################

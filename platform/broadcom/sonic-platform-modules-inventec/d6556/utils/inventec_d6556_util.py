@@ -21,7 +21,7 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install         : install drivers and generate related sysfs nodes
     clean           : uninstall drivers and remove related sysfs nodes
@@ -151,7 +151,7 @@ def system_install():
        status, output = exec_cmd(instantiate[i], 1)
     if status:
 	   print output
-	   if FORCE == 0:                
+	   if FORCE == 0:
 	      return status
 
 
@@ -230,7 +230,7 @@ def uninstall():
 def device_found():
     ret1, log = exec_cmd("ls "+i2c_prefix+"*0072", 0)
     ret2, log = exec_cmd("ls "+i2c_prefix+"i2c-2", 0)
-    return not(ret1 or ret2)				
+    return not(ret1 or ret2)
 
 if __name__ == "__main__":
     main()

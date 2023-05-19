@@ -43,8 +43,8 @@ from .sfp import SFP
 # 0x1 plug in
 # 0x2 plug out
 # 0x3 plug in with error
-# 0x4 disabled, at this status SFP eeprom is not accessible, 
-#     and presence status also will be not present, 
+# 0x4 disabled, at this status SFP eeprom is not accessible,
+#     and presence status also will be not present,
 #     so treate it as plug out.
 SDK_SFP_STATE_IN  = 0x1
 SDK_SFP_STATE_OUT = 0x2
@@ -59,8 +59,8 @@ STATUS_ERROR   = '-2'
 
 # SFP error code, only valid when SFP at SDK_SFP_STATE_ERR status
 # Only 0x2, 0x3, 0x5, 0x6 and 0x7 will block the eeprom access,
-# so will only report above errors to XCVRD and other errors will be 
-# printed to syslog. 
+# so will only report above errors to XCVRD and other errors will be
+# printed to syslog.
 
 '''
 0x0: "Power_Budget_Exceeded",
@@ -153,7 +153,7 @@ class sfp_event:
         try:
             # Wait for SDK daemon to be started with detect the sdk_ready file
             retry = 0
-            while not os.path.exists(SDK_DAEMON_READY_FILE):  
+            while not os.path.exists(SDK_DAEMON_READY_FILE):
                 if retry >= self.SX_OPEN_RETRIES:
                     raise RuntimeError("SDK daemon failed to start after {} retries and {} seconds waiting, exiting..."
                         .format(retry, self.SX_OPEN_TIMEOUT * self.SX_OPEN_RETRIES))
@@ -254,7 +254,7 @@ class sfp_event:
                 sx_lib_host_ifc_recv_list can return all notification in the fd via a single reading operation but
                                          not supported by PMPE register (I've tested it but failed)
             as a result the only way to satisfy the logic is to call sx_lib_host_ifc_recv in a loop until all notifications
-            has been read and we have to find a way to check that. it seems the only way to check that is via using select. 
+            has been read and we have to find a way to check that. it seems the only way to check that is via using select.
             in this sense, we return one notification each time check_sfp_status called and let the caller, get_change_event,
             to repeat calling it with timeout = 0 in a loop until no new notification read (in this case it returns false).
             by doing so all the notifications in the fd can be retrieved through a single call to get_change_event.

@@ -27,7 +27,7 @@
 #define STR_ATTR_SIZE 32
 #define DEV_TYPE_LEN 32
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 
 typedef struct FAN_DATA_ATTR
@@ -75,14 +75,14 @@ typedef struct FAN_DATA
     int num_fantrays;                    // num of fans controlled by this fan client
     FAN_DATA_ATTR fan_attr;
     int len;             // no of valid attributes for this fan client
-    FAN_DATA_ATTR fan_attrs[MAX_FAN_ATTRS]; 
+    FAN_DATA_ATTR fan_attrs[MAX_FAN_ATTRS];
 }FAN_DATA;
 
 typedef struct FAN_PDATA
 {
     int num_fantrays;                    // num of fans controlled by this fan client
     int len;             // no of valid attributes for this fan client
-    FAN_DATA_ATTR *fan_attrs; 
+    FAN_DATA_ATTR *fan_attrs;
 }FAN_PDATA;
 
 struct pddf_fan_ops_t

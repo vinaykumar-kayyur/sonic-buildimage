@@ -35,7 +35,7 @@
 #include <linux/sysfs.h>
 #include <linux/hwmon-sysfs.h>
 
-#define WDT_CONTROL_BASE             0xA100	
+#define WDT_CONTROL_BASE             0xA100
 #define TEST_SCRATCH_REG             0xA101
 #define REBOOT_CAUSE_REG             0xA105
 #define WDT_SET_TIMER_H_BIT_REG      0xA161
@@ -77,7 +77,7 @@ struct wdt_data {
         char                 expect_close;
         struct watchdog_info ident;
         int        	     timeout;
-        int                  timer_val;      
+        int                  timer_val;
         char                 caused_reboot;  /* last reboot was by the watchdog */
 	struct resource      *res;
 };
@@ -88,7 +88,7 @@ struct cpld_wdt_private {
 	struct cdev cdev;
 		struct miscdevice mdev;
         bool suspended;
-	struct wdt_data wdat;	
+	struct wdt_data wdat;
 };
 
 //struct class *cpld_wdt;
@@ -108,7 +108,7 @@ static unsigned int watchdog_get_timeleft(struct cpld_wdt_private *wdt)
 {
 	int time = 0;
 
-	mutex_lock(&wdt->wdat.lock);	
+	mutex_lock(&wdt->wdat.lock);
 
 	time = inb(WDT_TIMER_H_BIT_REG);
 	time = time << 8 | inb(WDT_TIMER_M_BIT_REG);
@@ -124,12 +124,12 @@ static int watchdog_get_timeout(struct cpld_wdt_private *wdt)
 	if(!wdt)
 	    return -EINVAL;
 
-	mutex_lock(&wdt->wdat.lock);	
+	mutex_lock(&wdt->wdat.lock);
 	timeout = inb(WDT_SET_TIMER_H_BIT_REG);
 	timeout = timeout << 8 | inb(WDT_SET_TIMER_M_BIT_REG);
 	timeout = timeout << 8 | inb(WDT_SET_TIMER_L_BIT_REG);
 	timeout=timeout/1000;
-	mutex_unlock(&wdt->wdat.lock);	
+	mutex_unlock(&wdt->wdat.lock);
 
 	return timeout;
 }
@@ -144,9 +144,9 @@ static int watchdog_set_timeout(struct cpld_wdt_private *wdt, unsigned int timeo
 		pr_err("watchdog timeout out of range\n");
 		return -EINVAL;
 	}
-	
+
 	mutex_lock(&wdt->wdat.lock);
-	
+
 	wdt->wdat.timeout = timeout;
 	if (timeout > MAX_TIMER_VALUE) {
 		wdt->wdat.timer_val = MAX_TIMER_VALUE;
@@ -154,7 +154,7 @@ static int watchdog_set_timeout(struct cpld_wdt_private *wdt, unsigned int timeo
 		wdt->wdat.timer_val = timeout;
 	}
 	/* Set timer value */
-	//pr_crit("Watchdog Timeout:0x%06x\n", wdt->wdat.timer_val); 
+	//pr_crit("Watchdog Timeout:0x%06x\n", wdt->wdat.timer_val);
 
 	outb((wdt->wdat.timer_val >> 16) & 0xff, WDT_SET_TIMER_H_BIT_REG);
 	outb((wdt->wdat.timer_val >> 8) & 0xff, WDT_SET_TIMER_M_BIT_REG);
@@ -171,12 +171,12 @@ static int watchdog_ping(struct cpld_wdt_private *wdt)
 	    return -EINVAL;
 
 	mutex_lock(&wdt->wdat.lock);
-	
+
 	/* start feed watchdog */
 	outb(WDT_START_FEED, WDT_FEED_REG);
 	/* stop feed watchdog */
 	outb(WDT_STOP_FEED, WDT_FEED_REG);
-		
+
 	mutex_unlock(&wdt->wdat.lock);
 
 	return 0;
@@ -189,7 +189,7 @@ static void watchdog_keepalive(struct cpld_wdt_private *wdt)
             return;
 
 	mutex_lock(&wdt->wdat.lock);
-	
+
 	val = inb(WDT_FEED_REG);
 
         val &= 0x1;
@@ -199,7 +199,7 @@ static void watchdog_keepalive(struct cpld_wdt_private *wdt)
         val &= 0x1;
         /* start feed watchdog */
         outb(val, WDT_FEED_REG);
-        	
+
 	mutex_unlock(&wdt->wdat.lock);
 	return;
 }
@@ -215,7 +215,7 @@ static int watchdog_start(struct cpld_wdt_private *wdt)
 	outb(WDT_ENABLE, WDT_ENABLE_REG);
 	outb(WDT_RESTART, WDT_PUNCH_REG);
 	mutex_unlock(&wdt->wdat.lock);
-       
+
 	return 0;
 }
 
@@ -227,14 +227,14 @@ static int watchdog_stop(struct cpld_wdt_private *wdt)
 	mutex_lock(&wdt->wdat.lock);
 	outb(WDT_DISABLE, WDT_ENABLE_REG);
 	mutex_unlock(&wdt->wdat.lock);
-        
+
 	return 0;
 }
 
 static char watchdog_get_reason(struct cpld_wdt_private *p)
 {
 	char status = 0;
-	
+
 	if (!p)
 	    return -1;
 	mutex_lock(&p->wdat.lock);
@@ -256,7 +256,7 @@ static bool watchdog_is_running(struct cpld_wdt_private *wdt)
 	mutex_lock(&wdt->wdat.lock);
 	is_running = inb(WDT_ENABLE_REG);
 	mutex_unlock(&wdt->wdat.lock);
-	
+
 	return is_running;
 }
 
@@ -327,10 +327,10 @@ static ssize_t timeleft_show(struct device *dev, struct device_attribute *attr,
 	unsigned int timeleft;
 	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
         if(!wdt)
-           return -EINVAL;	
-	
+           return -EINVAL;
+
 	timeleft = watchdog_get_timeleft(wdt);
-	
+
 	return sprintf(buf, "%u\n", timeleft);
 
 }
@@ -341,7 +341,7 @@ static DEVICE_ATTR_RO(timeleft);
 static ssize_t timeout_show(struct device *dev, struct device_attribute *attr,
 				char *buf)
 {
- 	unsigned int timeout;	
+ 	unsigned int timeout;
 	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
 	if(!wdt)
            return -EINVAL;
@@ -385,7 +385,7 @@ static int watchdog_open(struct inode *inode, struct file *file)
 
 	wdt->wdat.expect_close = 0;
 
-	
+
 	return nonseekable_open(inode, file);
 }
 
@@ -494,7 +494,7 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 		status = watchdog_is_running(p);
 		return put_user(status, uarg.i);
 
-	case WDIOC_GETBOOTSTATUS:	
+	case WDIOC_GETBOOTSTATUS:
 		//status = watchdog_get_bootstatus(p);
 		return put_user(status, uarg.i);
 
@@ -506,7 +506,7 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 		if (new_options & WDIOS_DISABLECARD){
 			return watchdog_stop(p);
 		}
-	
+
 		if (new_options & WDIOS_ENABLECARD){
 			return watchdog_start(p);
 		}
@@ -520,18 +520,18 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 	case WDIOC_SETTIMEOUT:
 		if (get_user(new_timeout, uarg.i))
 			return -EFAULT;
-		new_timeout = new_timeout*1000;	
+		new_timeout = new_timeout*1000;
 		if (watchdog_set_timeout(p, new_timeout))
 			return -EINVAL;
-		
-                val = watchdog_get_timeout(p);	
+
+                val = watchdog_get_timeout(p);
 		return put_user(val, uarg.i);
 	case WDIOC_GETTIMEOUT:
 		val = watchdog_get_timeout(p);
 		return put_user(val, uarg.i);
-		
+
 	case WDIOC_GETTIMELEFT:
-		val = watchdog_get_timeleft(p);	
+		val = watchdog_get_timeleft(p);
 		return put_user(val, uarg.i);
 	default:
 		return -ENOTTY;
@@ -670,7 +670,7 @@ static int cpld_wdt_remove(struct platform_device *pdev)
 	*/
 	if(!p)
 		return 0;
-    
+
     	sysfs_remove_group(&pdev->dev.kobj, &wdt_group);
 
         misc_deregister(&p->mdev);
@@ -715,7 +715,7 @@ static struct platform_device cpld_wdt_dev = {
 static int __init cpld_wdt_init_module(void)
 {
 	int err = 0;
-     
+
 	err = platform_device_register(&cpld_wdt_dev);
 	err += platform_driver_register(&cpld_wdt_driver);
 	if(err < 0)

@@ -195,7 +195,7 @@ int get_sys_val(LED_OPS_DATA *ops_ptr, uint32_t *sys_val)
     return ret;
 }
 #endif
-	
+
 ssize_t get_status_led(struct device_attribute *da)
 {
     int ret=0;
@@ -213,7 +213,7 @@ ssize_t get_status_led(struct device_attribute *da)
                 temp_data_ptr->device_name, temp_data_ptr->index);
         return (-1);
     }
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)	
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
     ret = get_sys_val(ops_ptr, &sys_val);
     if (ret < 0) {
         pddf_dbg(LED, KERN_ERR "ERROR %s: Cannot get sys val\n", __func__);

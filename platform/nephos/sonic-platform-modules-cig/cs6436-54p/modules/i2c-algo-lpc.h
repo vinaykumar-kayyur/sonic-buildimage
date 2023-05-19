@@ -1,4 +1,4 @@
-/* -------------------------------------------------------------------- 
+/* --------------------------------------------------------------------
 
 	 * A hwmon driver for the CIG cs6436-54P
 	 *
@@ -47,7 +47,7 @@
 #define I2C_LPC_START    I2C_LPC_STA
 #define I2C_LPC_STOP     I2C_LPC_STO
 #define I2C_LPC_REPSTART I2C_LPC_STA
-#define I2C_LPC_IDLE     
+#define I2C_LPC_IDLE
 
 /* ----- Status register bits -----------------------------------------	*/
 /*#define I2C_LPC_PIN  0x80    as above*/
@@ -99,17 +99,17 @@
 #define ADDR_REG_SFP_STATUS_TX 0X63  // write data
 #define ADDR_REG_SFP_STATUS_RX 0X64 //read data
 #define ADDR_REG_SFP_STATUS_COMMAND 0X65 //cmd bit7=1,go
-#define ADDR_REG_SFP_STATUS_STATUS 0X66 //status 
+#define ADDR_REG_SFP_STATUS_STATUS 0X66 //status
 
 #define CPLD_MASTER_INTERRUPT_STATUS_REG 0x20
 #define CPLD_MASTER_INTERRUPT_MASK_REG 0x21
 #define CPLD_MASTER_INTERRUPT_ALL 0x3f
-#define CPLD_MASTER_INTERRUPT_CPLD2 0x20 
-#define CPLD_MASTER_INTERRUPT_CPLD1 0x10 
-#define CPLD_MASTER_INTERRUPT_PSU2 0x08 
-#define CPLD_MASTER_INTERRUPT_PSU1 0x04 
-#define CPLD_MASTER_INTERRUPT_6320 0x02 
-#define CPLD_MASTER_INTERRUPT_LSW 0x01 
+#define CPLD_MASTER_INTERRUPT_CPLD2 0x20
+#define CPLD_MASTER_INTERRUPT_CPLD1 0x10
+#define CPLD_MASTER_INTERRUPT_PSU2 0x08
+#define CPLD_MASTER_INTERRUPT_PSU1 0x04
+#define CPLD_MASTER_INTERRUPT_6320 0x02
+#define CPLD_MASTER_INTERRUPT_LSW 0x01
 
 
 

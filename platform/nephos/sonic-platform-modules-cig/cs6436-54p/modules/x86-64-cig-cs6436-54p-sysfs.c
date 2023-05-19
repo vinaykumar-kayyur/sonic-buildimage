@@ -33,9 +33,9 @@
 #include <linux/kthread.h>
 #include <linux/device.h>
 #include <linux/platform_device.h>
-#include <linux/init.h> 
-#include <linux/fs.h> 
-#include <asm/uaccess.h> 
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <asm/uaccess.h>
 #include <asm/device.h>
 #include <linux/cdev.h>
 
@@ -147,11 +147,11 @@ int cs6436_54p_sysfs_create_symlink(struct class *my_class,char * driver_name,ch
     list_for_each(list_node, &sysfs_client_list)
     {
         sysfs_node = list_entry(list_node, struct sysfs_client_node, list);
-        if (!strcmp(sysfs_node->client->name,driver_name)) {	
+        if (!strcmp(sysfs_node->client->name,driver_name)) {
 			rc = sysfs_create_link(&my_class->p->subsys.kobj, &sysfs_node->client->dev.kobj,device_name);
 			if(rc)
 			{
-				pr_err("failed to create symlink %d\n",rc); 
+				pr_err("failed to create symlink %d\n",rc);
 			}
             break;
         }
@@ -172,7 +172,7 @@ int cs6436_54p_sysfs_delete_symlink(struct class *my_class,char * driver_name,ch
     list_for_each(list_node, &sysfs_client_list)
     {
         sysfs_node = list_entry(list_node, struct sysfs_client_node, list);
-        if (!strcmp(sysfs_node->client->name,driver_name)) {	
+        if (!strcmp(sysfs_node->client->name,driver_name)) {
 			sysfs_remove_link(&my_class->p->subsys.kobj,device_name);
             break;
         }
@@ -239,8 +239,8 @@ static ssize_t cs6436_54p_sysfs_write(struct file *file, const char __user *buf,
 
 static struct file_operations cs6436_54p_sysfs_fops = {
     .owner  = THIS_MODULE,
-    .open   = cs6436_54p_sysfs_open,            
-    .write  = cs6436_54p_sysfs_write,   
+    .open   = cs6436_54p_sysfs_open,
+    .write  = cs6436_54p_sysfs_write,
 };
 
 
@@ -265,19 +265,19 @@ static int __init cs6436_54p_sysfs_init(void)
 	if (dev_major == 0)
 		dev_major = result;
 
-	dev_cdev= kmalloc(sizeof(struct cdev), GFP_KERNEL);  
-	if(IS_ERR(dev_cdev)) {  
-	    err= -ENOMEM;   
-	} 
+	dev_cdev= kmalloc(sizeof(struct cdev), GFP_KERNEL);
+	if(IS_ERR(dev_cdev)) {
+	    err= -ENOMEM;
+	}
 
-	cdev_init(dev_cdev, &cs6436_54p_sysfs_fops); 
+	cdev_init(dev_cdev, &cs6436_54p_sysfs_fops);
 	dev_cdev->owner = THIS_MODULE;
 	dev_cdev->ops = &cs6436_54p_sysfs_fops;
 	err = cdev_add(dev_cdev, dev, 1);
 	if (err)
 	{
 		printk("error %d add fpga ", err);
-		goto err_malloc; 
+		goto err_malloc;
 	}
 
 	dev_class = class_create(THIS_MODULE, DEVICE_NAME);
@@ -293,18 +293,18 @@ static int __init cs6436_54p_sysfs_init(void)
 		printk("Err:failed in creating device.\n");
 		goto err_class_crt;
 	}
-	
+
 	mutex_init(&list_lock);
 
 	return err;
 
-	err_class_crt:	
-		cdev_del(dev_cdev);	
-	err_cdev_add:  
-		kfree(dev_cdev);  
-	err_malloc:  
-		unregister_chrdev_region(MKDEV(dev_major,0), 1);  
-		
+	err_class_crt:
+		cdev_del(dev_cdev);
+	err_cdev_add:
+		kfree(dev_cdev);
+	err_malloc:
+		unregister_chrdev_region(MKDEV(dev_major,0), 1);
+
 	return err;
 
 }
@@ -314,7 +314,7 @@ static void __exit cs6436_54p_sysfs_exit(void)
 	cdev_del(dev_cdev);
 	printk("cdev_del ok\n");
     device_destroy(dev_class, MKDEV(dev_major, 0));
-	
+
     class_destroy(dev_class);
 
 	 if(dev_cdev != NULL)

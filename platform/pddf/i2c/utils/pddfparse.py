@@ -1203,7 +1203,7 @@ class PddfParse():
         print(ret_val)
 
     ###################################################################################################################
-    #  SPYTEST 
+    #  SPYTEST
     ###################################################################################################################
     def verify_attr(self, key, attr, path):
         node = "/sys/kernel/%s/%s" % (path, key)
@@ -1357,7 +1357,7 @@ class PddfParse():
                 print("Loaded")
         else:
             print(validate_type + " not configured")
-    
+
 
 
 
@@ -1634,7 +1634,7 @@ class PddfParse():
                 return self.cpu_parse_reverse(dev, ops)
             else:
                 return self.cpu_parse(dev, ops)
-        
+
         if attr['device_type'] == 'FPGAPCIE':
             return self.fpgapci_parse(dev, ops)
 
@@ -1783,11 +1783,11 @@ class PddfParse():
         self.dev_parse(self.data['SYSTEM'], v_ops)
 
     ##################################################################################################################
-    #   BMC APIs 
+    #   BMC APIs
     ##################################################################################################################
     def populate_bmc_cache_db(self, bmc_attr):
         bmc_cmd = str(bmc_attr['bmc_cmd']).strip()
-        
+
         if 'delimiter' in bmc_attr.keys():
             delim = str(bmc_attr['delimiter']).strip()
         else:

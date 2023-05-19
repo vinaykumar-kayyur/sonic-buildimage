@@ -3,7 +3,7 @@
 include /usr/share/dpkg/pkg-info.mk
 
 BIN_FILES        := brcm-xlr-gts-platform-setup brcm-xlr-gts-create-eeprom-file.py
-RULE_FILES       := 
+RULE_FILES       :=
 SERVICE_FILES    := sonic-platform-brcm-xlr-gts.service
 USR_SBIN_FILES   := brcm-xlr-gts-platform-setup brcm-xlr-gts-create-eeprom-file.py
 

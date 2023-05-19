@@ -343,7 +343,7 @@ class Sfp(SfpBase):
             self.dom_volt_supported = False
             self.dom_rx_power_supported = False
             self.dom_tx_power_supported = False
-    
+
     def __add_new_sfp_device(self, sysfs_sfp_i2c_adapter_path, devaddr, devtype):
         try:
             sysfs_nd_path = "%s/new_device" % sysfs_sfp_i2c_adapter_path
@@ -359,7 +359,7 @@ class Sfp(SfpBase):
             return 1
         else:
             return 0
-    
+
     def __get_port_eeprom_path(self, port_num, devid):
         if self.get_presence() is False:
             print("port %d Not present" % port_num)
@@ -575,7 +575,7 @@ class Sfp(SfpBase):
         Returns:
             A dict which contains following keys/values :
         ========================================================================
-        keys                       |Value Format   |Information	
+        keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         rx_los                     |BOOLEAN        |RX loss-of-signal status, True if has RX los, False if not.
         tx_fault                   |BOOLEAN        |TX fault status, True if has TX fault, False if not.
@@ -1216,7 +1216,7 @@ class Sfp(SfpBase):
         Returns:
             A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
             TX channels which have been disabled in this SFP.
-            As an example, a returned value of 0x5 indicates that channel 0 
+            As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
         tx_disable_list = self.get_tx_disable()
@@ -1423,7 +1423,7 @@ class Sfp(SfpBase):
             # SFP doesn't support this feature
             return False
         return False
-    
+
     def set_lpmode(self, lpmode):
         """
         Sets the lpmode (low power mode) of SFP
@@ -1449,7 +1449,7 @@ class Sfp(SfpBase):
         Sets SFP power level using power_override and power_set
 
         Args:
-            power_override : 
+            power_override :
                     A Boolean, True to override set_lpmode and use power_set
                     to control SFP power, False to disable SFP power control
                     through power_override/power_set and use set_lpmode
@@ -1550,7 +1550,7 @@ class Sfp(SfpBase):
 
     def write_eeprom(self, offset, num_bytes, write_buffer):
         """
-        write eeprom specfic bytes beginning from a random offset with size as num_bytes 
+        write eeprom specfic bytes beginning from a random offset with size as num_bytes
         and write_buffer as the required bytes
         Args:
              offset :

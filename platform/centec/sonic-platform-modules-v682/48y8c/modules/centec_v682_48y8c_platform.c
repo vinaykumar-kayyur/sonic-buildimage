@@ -82,9 +82,9 @@ static unsigned char port_led_mode[PORT_NUM] = {0};
 void v682_48y8c_led_port_set(struct led_classdev *led_cdev, enum led_brightness set_value)
 {
     int portNum = 0;
-    
+
     sscanf(led_cdev->name, "port%d", &portNum);
-    
+
     port_led_mode[portNum] = set_value;
 
     return;
@@ -93,9 +93,9 @@ void v682_48y8c_led_port_set(struct led_classdev *led_cdev, enum led_brightness 
 enum led_brightness v682_48y8c_led_port_get(struct led_classdev *led_cdev)
 {
     int portNum = 0;
-    
-    sscanf(led_cdev->name, "port%d", &portNum);    
-    
+
+    sscanf(led_cdev->name, "port%d", &portNum);
+
     return port_led_mode[portNum];
 }
 
@@ -113,7 +113,7 @@ static int v682_48y8c_init_led(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -134,9 +134,9 @@ static int v682_48y8c_init(void)
 {
     int ret = 0;
     int failed = 0;
-    
+
     printk(KERN_ALERT "init v682_48y8c board dirver...\n");
-    
+
     ret = v682_48y8c_init_led();
     if (ret != 0)
     {
@@ -147,14 +147,14 @@ static int v682_48y8c_init(void)
         printk(KERN_INFO "init v682_48y8c board driver failed\n");
     else
         printk(KERN_ALERT "init v682_48y8c board dirver...ok\n");
-    
+
     return 0;
 }
 
 static void v682_48y8c_exit(void)
 {
     printk(KERN_INFO "deinit v682_48y8c board dirver...\n");
-    
+
     v682_48y8c_exit_led();
 
     printk(KERN_INFO "deinit v682_48y8c board dirver...ok\n");

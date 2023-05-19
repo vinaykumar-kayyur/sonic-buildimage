@@ -87,7 +87,7 @@ int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EPERM;
-	
+
 	//hw_preaccess_func_cpld_mux_default((uint32_t)cpld_addr, NULL);
 
 	mutex_lock(&list_lock);
@@ -95,13 +95,13 @@ int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg)
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_read_byte_data(cpld_node->client, reg);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -113,20 +113,20 @@ int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EIO;
-	
+
 
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_write_byte_data(cpld_node->client, reg, value);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -139,7 +139,7 @@ ssize_t regval_show(struct device *dev, struct device_attribute *attr, char *buf
     struct i2c_client *client = to_i2c_client(dev);
 
     mutex_lock(&pddf_cpld_data.cpld_lock);
-    // Put code here to read the register value and print it 
+    // Put code here to read the register value and print it
     if (pddf_cpld_data.reg_addr!=0)
         len = sprintf(buf, "0x%2.2x\n", board_i2c_cpld_read(client->addr, pddf_cpld_data.reg_addr));
     else
@@ -170,12 +170,12 @@ static const unsigned short normal_i2c[] = { 0x31, 0x32, 0x33, 0x35, 0x60, 0x61,
 static void board_i2c_cpld_add_client(struct i2c_client *client)
 {
 	struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
-	
+
 	if (!node) {
 		dev_dbg(&client->dev, "Can't allocate cpld_client_node (0x%x)\n", client->addr);
 		return;
 	}
-	
+
 	node->client = client;
 	strcpy(node->name, (char *)client->dev.platform_data);
 	dev_dbg(&client->dev, "Adding %s to the cpld client list\n", node->name);
@@ -190,24 +190,24 @@ static void board_i2c_cpld_remove_client(struct i2c_client *client)
 	struct list_head		*list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int found = 0;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client == client) {
 			found = 1;
 			break;
 		}
 	}
-	
+
 	if (found) {
 		list_del(list_node);
 		kfree(cpld_node);
 	}
-	
+
 	mutex_unlock(&list_lock);
 }
 
@@ -230,7 +230,7 @@ static int board_i2c_cpld_probe(struct i2c_client *client,
 
 	dev_dbg(&client->dev, "chip found\n");
 	board_i2c_cpld_add_client(client);
-	
+
 	return 0;
 
 exit:
@@ -247,7 +247,7 @@ static int board_i2c_cpld_remove(struct i2c_client *client)
 	{
 	    kfree(platdata);
 	}
-	
+
 	return 0;
 }
 
@@ -278,7 +278,7 @@ static void __exit board_i2c_cpld_exit(void)
 {
 	i2c_del_driver(&board_i2c_cpld_driver);
 }
-	
+
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("board_i2c_cpld driver");
 MODULE_LICENSE("GPL");

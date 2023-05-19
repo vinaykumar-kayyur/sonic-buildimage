@@ -23,7 +23,7 @@ class AliasedGroup(click.Group):
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
-   
+
 def log_os_system(cmd):
     u'''execute shell command'''
     status, output = subprocess.getstatusoutput(cmd)
@@ -48,7 +48,7 @@ def check_driver():
     u'''whether there is driver start with rg'''
     status, output = getstatusoutput_noshell_pipe(["lsmod"], ["grep", "rg"], ["wc", "-l"])
     #System execution error
-    if status: 
+    if status:
         return False
     if output.isdigit() and int(output) > 0:
         return True
@@ -150,18 +150,18 @@ def removeDev(bus, loc):
         file = "/sys/bus/i2c/devices/i2c-%d/delete_device" % bus
         with open(file, 'w') as f:
             f.write('0x%02x\n'%str(bus))
-        
+
 def addDev(name, bus, loc):
     if name == "lm75":
         time.sleep(0.1)
     pdevpath = "/sys/bus/i2c/devices/i2c-%d/" % (bus)
     for i in range(1, 100):#wait for mother-bus generation，maximum wait time is 10s
-        if os.path.exists(pdevpath) == True: 
+        if os.path.exists(pdevpath) == True:
             break
         time.sleep(0.1)
         if i % 10 == 0:
             click.echo("%%DEVICE_I2C-INIT: %s not found, wait 0.1 second ! i %d " % (pdevpath,i))
-            
+
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) == False:
         file = "/sys/bus/i2c/devices/i2c-%d/new_device" % bus
@@ -172,7 +172,7 @@ def removedevs():
     devs = GLOBALCONFIG["DEVS"]
     for index in range(len(devs)-1, -1, -1 ):
         removeDev(devs[index]["bus"] , devs[index]["loc"])
-        
+
 def adddevs():
     devs = GLOBALCONFIG["DEVS"]
     for dev in range(0, devs.__len__()):
@@ -181,7 +181,7 @@ def adddevs():
 def checksignaldriver(name):
     status, output = getstatusoutput_noshell_pipe(["lsmod"], ["grep", name], ["wc", "-l"])
     #System execution error
-    if status: 
+    if status:
         return False
     if output.isdigit() and int(output) > 0:
         return True
@@ -209,7 +209,7 @@ def removedrivers():
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
     if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
-        return 
+        return
     for index in range(len(drivers)-1, -1, -1 ):
         delay = 0
         name = ""
@@ -228,7 +228,7 @@ def adddrivers():
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
     if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
-        return 
+        return
     for index in range(0 ,len(drivers)):
         delay = 0
         name = ""
@@ -245,7 +245,7 @@ def otherinit():
 
     for index in GLOBALINITCOMMAND:
         log_os_system(index)
-    
+
 def unload_driver():
     u'''remove devices and drivers'''
     stopDevmonitor() # disable removable device driver monitors
@@ -272,7 +272,7 @@ def i2c_check(bus,retrytime = 6):
             time.sleep(1)
     except Exception as e:
         click.echo("%%DEVICE_I2C-HA: %s" % str(e))
-    return 
+    return
 
 def MacLedSet(data):
     '''write pci register'''
@@ -305,7 +305,7 @@ def load_driver():
     otherinit();    # other initialization, QSFP initialization
     if STARTMODULE.get("macledreset",0) == 1:
         MacLedSet("reset")
-    
+
 @click.group(cls=AliasedGroup, context_settings=CONTEXT_SETTINGS)
 def main():
     '''device operator'''

@@ -11,7 +11,7 @@ class FanDrawer(PddfFanDrawer):
     """PDDF Platform-Specific Fan-Drawer class"""
 
     def __init__(self, tray_idx, pddf_data=None, pddf_plugin_data=None):
-        # idx is 0-based 
+        # idx is 0-based
         PddfFanDrawer.__init__(self, tray_idx, pddf_data, pddf_plugin_data)
 
     # Provide the functions/variables below for which implementation is to be overwritten

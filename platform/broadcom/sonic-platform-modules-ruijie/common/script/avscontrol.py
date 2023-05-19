@@ -24,22 +24,22 @@ class AliasedGroup(click.Group):
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
-    
+
 def avswarninglog(s):
     s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("AVSCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_WARNING,s)
-    
+
 def avscriticallog(s):
     s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("AVSCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_CRIT,s)
-    
+
 def avserror(s):
     s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("AVSCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_ERR,s)
-    
+
 def avsinfo(s):
     syslog.openlog("AVSCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_INFO,s)
@@ -64,14 +64,14 @@ def doAvsCtrol():
         else:
             if AVSUTIL.mac_adj():
                 break
- 
+
         index += 1
         if index >= 10:
             avserror("%%DEV_MONITOR-AVS: MAC Voltage adjust failed.")
             exit(-1)
     avsinfo("%%AVSCONTROL success")
     exit(0)
-    
+
 def run(interval):
     while True:
         try:
@@ -87,7 +87,7 @@ def run(interval):
 def main():
     '''device operator'''
     pass
-    
+
 @main.command()
 def start():
     '''start AVS control'''

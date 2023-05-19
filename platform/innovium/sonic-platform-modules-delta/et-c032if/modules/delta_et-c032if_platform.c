@@ -43,7 +43,7 @@
 #define QSFP_RESPONDE_4   0x32
 #define QSFP_LP_MODE_1    0x21
 #define QSFP_LP_MODE_2    0x22
-#define QSFP_LP_MODE_3    0x21 
+#define QSFP_LP_MODE_3    0x21
 #define QSFP_LP_MODE_4    0x22
 #define QSFP_RESET_1      0x11
 #define QSFP_RESET_2      0x12
@@ -147,7 +147,7 @@ struct i2c_device_platform_data {
 };
 /* pca9548 - add 8 bus */
 
-static struct pca954x_platform_mode pca954x_1_mode[] = 
+static struct pca954x_platform_mode pca954x_1_mode[] =
 {
     { .adap_id = 30,
       .deselect_on_exit = 1,
@@ -287,7 +287,7 @@ static struct pca954x_platform_mode pca954x_5_mode[] =
     },
 };
 
-static struct pca954x_platform_data pca954x_data[] = 
+static struct pca954x_platform_data pca954x_data[] =
 {
     {
         .modes = pca954x_1_mode,
@@ -930,7 +930,7 @@ static ssize_t for_status(struct device *dev, struct device_attribute *dev_attr,
             data2 |= save_bytes;
             mutex_unlock(&dni_lock);
             return sprintf(buf, "0x%x%02x\n", data, data2);
- 
+
         case QSFP_LP_MODE:
             ret = i2c_smbus_read_byte_data(pdata2[swpld3].client, QSFP_LP_MODE_4);
             data = (u32)(ret & 0xff);
@@ -1276,7 +1276,7 @@ error:
     i2c_unregister_device(pdata[cpu_cpld].client);
     i2c_put_adapter(parent);
 
-    return -ENODEV; 
+    return -ENODEV;
 }
 
 static int __exit cpld_remove(struct platform_device *pdev)
@@ -1287,7 +1287,7 @@ static int __exit cpld_remove(struct platform_device *pdev)
 
     if (!pdata) {
         dev_err(&pdev->dev, "Missing platform data\n");
-    } 
+    }
     else {
         if (pdata[cpu_cpld].client) {
             if (!parent) {
@@ -1600,7 +1600,7 @@ static ssize_t delta_bin_attr_read(struct file *filp, struct kobject *kobj, stru
             count = (count <= EEPROM_SIZE) ? count : EEPROM_SIZE;
             memcpy(buf, eeprom_data + off, count);
             break;
-        case EEPROM_SYS: 
+        case EEPROM_SYS:
             sprintf(attr_path, "/sys/bus/i2c/devices/10-0053/eeprom");
             if (access_user_space(attr_path, eeprom_data, EEPROM_SIZE, 0, ATTR_R) < 0) {
                 goto ACCESS_ERROR;
@@ -1611,7 +1611,7 @@ static ssize_t delta_bin_attr_read(struct file *filp, struct kobject *kobj, stru
         default:
             goto ACCESS_ERROR;
     }
-    mutex_unlock(&dni_lock);    
+    mutex_unlock(&dni_lock);
     return count;
 
 ACCESS_ERROR:
@@ -1965,7 +1965,7 @@ static int __init delta_et_c032if_platform_init(void)
         goto error_swpld3_driver;
     }
 
-    // register the i2c devices    
+    // register the i2c devices
     ret = platform_driver_register(&i2c_device_driver);
     if (ret) {
         printk(KERN_WARNING "Fail to register i2c device driver\n");
@@ -2025,7 +2025,7 @@ static int __init delta_et_c032if_platform_init(void)
     }
     ret = sysfs_create_group(kobj_sfp, &sfp_attr_grp);
     if (ret)
-    { 
+    {
         printk(KERN_WARNING "Fail to create sysfs of sfp group\n");
         goto error_create_sfp_group;
     }
@@ -2043,7 +2043,7 @@ error_et_c032if_i2c_device:
     }
     i = ARRAY_SIZE(et_c032if_cpld_mux);
     platform_device_unregister(&et_c032if_swpld3);
-error_swpld3_device:   
+error_swpld3_device:
     platform_device_unregister(&et_c032if_swpld2);
 error_swpld2_device:
     i2c_unregister_device(i2c_client_9548_1);
@@ -2097,4 +2097,4 @@ module_exit(delta_et_c032if_platform_exit);
 
 MODULE_DESCRIPTION("Delta et-c032if Platform Support");
 MODULE_AUTHOR("Johnson Lu <johnson.lu@deltaww.com>");
-MODULE_LICENSE("GPL"); 
+MODULE_LICENSE("GPL");

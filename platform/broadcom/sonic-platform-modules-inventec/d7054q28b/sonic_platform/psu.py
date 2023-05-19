@@ -2,7 +2,7 @@
 #
 # Name: psu.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -63,7 +63,7 @@ class Psu(PsuBase):
         presence = False
         attr_path = PSU_DIR+self.psu_presence_attr
         attr_normal = "0 : normal"
-        
+
         attr_rv = self.__get_attr_value(attr_path)
         if (attr_rv != 'ERR'):
             if (attr_rv == attr_normal):
@@ -84,7 +84,7 @@ class Psu(PsuBase):
         if (attr_rv != 'ERR'):
             model = attr_rv
 
-        return model 
+        return model
 
     def get_serial(self):
         """
@@ -100,7 +100,7 @@ class Psu(PsuBase):
         if (attr_rv != 'ERR'):
             serial = attr_rv
 
-        return serial 
+        return serial
 
     def get_status(self):
         """

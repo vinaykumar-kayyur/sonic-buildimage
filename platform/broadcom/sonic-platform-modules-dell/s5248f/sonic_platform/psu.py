@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ########################################################################
-# DellEMC S5248F 
+# DellEMC S5248F
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the PSUs' information which are available in the platform

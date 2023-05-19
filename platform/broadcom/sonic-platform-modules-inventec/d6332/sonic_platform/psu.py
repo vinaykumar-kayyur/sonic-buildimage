@@ -2,7 +2,7 @@
 #
 # Name: psu.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:

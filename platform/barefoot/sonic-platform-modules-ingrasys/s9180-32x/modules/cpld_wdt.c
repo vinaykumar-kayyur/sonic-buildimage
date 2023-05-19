@@ -118,7 +118,7 @@ MODULE_PARM_DESC(nowayout,
 	"Watchdog cannot be stopped once started (default="
 				__MODULE_STRING(WATCHDOG_NOWAYOUT) ")");
 
-   
+
 static int cpld_wdt_check_timeout_range(unsigned int tmrval)
 {
 	if (tmrval < 5 || tmrval > 20) {
@@ -141,7 +141,7 @@ static int cpld_wdt_stop(void *arg)
 	spin_lock(&cpld_wdt_private.io_lock);
 
 	outb(0x1, TCO1_STS);
-    
+
     DEBUG_PRINT("cpld_wdt_stop done");
 
 	spin_unlock(&cpld_wdt_private.io_lock);
@@ -157,7 +157,7 @@ static int cpld_wdt_ping(void *arg)
     outb(0x1, TCO1_STS);	/* write 1 to clear bit */
     udelay(100);
     outb(0x3, TCO1_STS);
-    
+
     DEBUG_PRINT("cpld_wdt_ping done");
 
 	spin_unlock(&cpld_wdt_private.io_lock);
@@ -210,9 +210,9 @@ static int cpld_wdt_probe(struct platform_device *dev)
 
 	/* Make sure the watchdog is not running */
 	cpld_wdt_stop(NULL);
-    
+
     cpld_wdt_check_timeout_range(heartbeat);
-    
+
     cpld_wdt_tsk = kthread_create(kthread_wdt_ping_loop, &data, "cpld_wdt_tsk");
     if (IS_ERR(cpld_wdt_tsk)) {
         ret = PTR_ERR(cpld_wdt_tsk);
@@ -271,10 +271,10 @@ static int __init cpld_wdt_init_module(void)
         printk(KERN_WARNING "Fail to create cpld device\n");
         goto error_cpld;
     }
-    
+
 
 	return 0;
-error_cpld:    
+error_cpld:
     platform_driver_unregister(&cpld_wdt_driver);
     return err;
 }

@@ -50,16 +50,16 @@ catfanspeed(){
     fan_rpm_normal_num=0
     fan1_rpm_normal_num=0
     fan1_rpm=`cat $FAN1_RPM`
-	
+
     if [ "${fan1_rpm}" -ne "960" ] && [ "${fan1_rpm}" -ne "0" ]; then
         fan1_rpm_normal_num=$((fan1_rpm_normal_num+1))
     elif [ "${fan1_rpm}" -eq "960" ] || [ "${fan1_rpm}" -eq "0" ]; then
         fan1_rpm_normal_num=$((fan1_rpm_normal_num))
     fi
-	
+
     fan2_rpm_normal_num=0
-    fan2_rpm=`cat $FAN2_RPM` 
-	
+    fan2_rpm=`cat $FAN2_RPM`
+
     if [ "${fan2_rpm}" -ne "960" ] && [ "${fan2_rpm}" -ne "0" ]; then
         fan2_rpm_normal_num=$((fan2_rpm_normal_num+1))
     elif [ "${fan2_rpm}" -eq "960" ] || [ "${fan2_rpm}" -eq "0" ]; then
@@ -85,7 +85,7 @@ setfantrayled(){
     else
         echo "0x01" > $FAN_TRAY1_LED
     fi
-	
+
     if [ "${fan2_rpm_normal_num}" -eq "1" ]; then
         echo "0x02" > $FAN_TRAY2_LED
     else
@@ -94,14 +94,14 @@ setfantrayled(){
 }
 
 catpsueeprom(){
-    psu_eeprom_num=0	
+    psu_eeprom_num=0
     i2cget $PSU1_EEPROM > /dev/null 2>&1
     if [ "`echo $?`" -eq "0" ]; then
         psu_eeprom_num=$((psu_eeprom_num+1))
     elif [ "`echo $?`" -ne "0" ]; then
         psu_eeprom_num=$((psu_eeprom_num))
     fi
-	
+
     i2cget $PSU2_EEPROM > /dev/null 2>&1
     if [ "`echo $?`" -eq "0" ]; then
         psu_eeprom_num=$((psu_eeprom_num+1))
@@ -144,17 +144,17 @@ setpsuled(){
     fi
 }
 
-platformstatus(){    
+platformstatus(){
     echo "1" > $SYS_LED_G
     echo "0" > $SYS_LED_R
     catfaneeprom
     catfanspeed
     setfanled
     setfantrayled
-	
+
     catpsueeprom
     catpsupowergood
-    setpsuled	
+    setpsuled
 }
 
 while true

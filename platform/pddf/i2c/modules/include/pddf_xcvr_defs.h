@@ -48,7 +48,7 @@ typedef struct XCVR_DATA
     int idx;                    // xcvr index
     XCVR_ATTR xcvr_attr;
     int len;             // no of valid attributes for this xcvr client
-    XCVR_ATTR xcvr_attrs[MAX_XCVR_ATTRS]; 
+    XCVR_ATTR xcvr_attrs[MAX_XCVR_ATTRS];
 }XCVR_DATA;
 
 typedef struct XCVR_PDATA
@@ -56,7 +56,7 @@ typedef struct XCVR_PDATA
     int idx;                    // xcvr index
     unsigned short addr;      // i2c address of the device
     int len;             // no of valid attributes for this xcvr client
-    XCVR_ATTR *xcvr_attrs; 
+    XCVR_ATTR *xcvr_attrs;
 }XCVR_PDATA;
 
 
@@ -118,4 +118,4 @@ enum xcvr_sysfs_attributes {
 extern int board_i2c_cpld_read_new(unsigned short cpld_addr, char *name, u8 reg);
 extern int board_i2c_cpld_write_new(unsigned short cpld_addr, char *name, u8 reg, u8 value);
 
-#endif 
+#endif

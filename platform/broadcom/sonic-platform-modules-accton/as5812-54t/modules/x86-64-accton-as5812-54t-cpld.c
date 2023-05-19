@@ -77,7 +77,7 @@ static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
     _ATTR_CONCAT(MODULE_##_attr##_, 51), \
     _ATTR_CONCAT(MODULE_##_attr##_, 52), \
     _ATTR_CONCAT(MODULE_##_attr##_, 53), \
-    _ATTR_CONCAT(MODULE_##_attr##_, 54) 
+    _ATTR_CONCAT(MODULE_##_attr##_, 54)
 
 
 enum as5812_54t_cpld_sysfs_attributes {
@@ -90,7 +90,7 @@ enum as5812_54t_cpld_sysfs_attributes {
     TRANSCEIVER_ATTR_ID(RESET),
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 
 /* transceiver attributes */
@@ -178,7 +178,7 @@ static int get_reg_index(struct sensor_device_attribute *attr, u8 *reg, u8 *inde
 	*revert = 1;
     }
     return 0;
-} 
+}
 
 static ssize_t set_1bit(struct device *dev, struct device_attribute *da,
             const char *buf, size_t count)
@@ -191,7 +191,7 @@ static ssize_t set_1bit(struct device *dev, struct device_attribute *da,
     u8 reg = 0, mask = 0;
 
     status = kstrtoint(buf, 10, &value);
-    if (status) 
+    if (status)
 	return status;
 
     get_reg_index(attr, &reg, &index, &revert);
@@ -350,14 +350,14 @@ static int as5812_54t_cpld_write_internal(struct i2c_client *client, u8 reg, u8 
 static void as5812_54t_cpld_add_client(struct i2c_client *client)
 {
     struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
-    
+
     if (!node) {
         dev_dbg(&client->dev, "Can't allocate cpld_client_node (0x%x)\n", client->addr);
         return;
     }
-    
+
     node->client = client;
-    
+
     mutex_lock(&list_lock);
     list_add(&node->list, &cpld_client_list);
     mutex_unlock(&list_lock);
@@ -368,24 +368,24 @@ static void as5812_54t_cpld_remove_client(struct i2c_client *client)
     struct list_head        *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
     int found = 0;
-    
+
     mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)
     {
         cpld_node = list_entry(list_node, struct cpld_client_node, list);
-        
+
         if (cpld_node->client == client) {
             found = 1;
             break;
         }
     }
-    
+
     if (found) {
         list_del(list_node);
         kfree(cpld_node);
     }
-    
+
     mutex_unlock(&list_lock);
 }
 
@@ -443,7 +443,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -464,19 +464,19 @@ int as5812_54t_cpld_read(unsigned short cpld_addr, u8 reg)
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
     int ret = -EPERM;
-    
+
     mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)
     {
         cpld_node = list_entry(list_node, struct cpld_client_node, list);
-        
+
         if (cpld_node->client->addr == cpld_addr) {
             ret = i2c_smbus_read_byte_data(cpld_node->client, reg);
             break;
         }
     }
-    
+
     mutex_unlock(&list_lock);
 
     return ret;
@@ -488,19 +488,19 @@ int as5812_54t_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
     int ret = -EIO;
-    
+
     mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)
     {
         cpld_node = list_entry(list_node, struct cpld_client_node, list);
-        
+
         if (cpld_node->client->addr == cpld_addr) {
             ret = i2c_smbus_write_byte_data(cpld_node->client, reg, value);
             break;
         }
     }
-    
+
     mutex_unlock(&list_lock);
 
     return ret;

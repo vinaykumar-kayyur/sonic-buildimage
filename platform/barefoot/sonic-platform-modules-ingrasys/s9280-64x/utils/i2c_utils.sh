@@ -405,7 +405,7 @@ function _i2c_init {
     else
         echo "pca9548 ${I2C_ADDR_MUX_9548_1} already init."
     fi
-    
+
     # add MUX PCA9546#0 on I801, assume to be i2c-17~20
     if [ ! -e ${PATH_MUX_9546_0_CH0} ]; then
         _retry "echo 'pca9546 ${I2C_ADDR_MUX_9546_0}' > ${PATH_I801_DEVICE}/new_device"
@@ -418,7 +418,7 @@ function _i2c_init {
         _retry "echo 'pca9548 ${I2C_ADDR_MUX_9548_2}' > ${PATH_MUX_9546_0_CH2}/new_device"
     else
         echo "pca9548 ${I2C_ADDR_MUX_9548_2} already init."
-    fi    
+    fi
 
     # add MUX PCA9546#1 on I801, assume to be i2c-29~32
     if [ ! -e ${PATH_MUX_9546_1_CH0} ]; then
@@ -962,7 +962,7 @@ function _qsfp_cpld_var_set {
     local port=$1
     local reg_port_base
     local reg_port_shift
-    
+
     if [[ $1 -le 12  && $1 -ge 1 ]]; then
         cpld_index=1
         reg_port_base=0

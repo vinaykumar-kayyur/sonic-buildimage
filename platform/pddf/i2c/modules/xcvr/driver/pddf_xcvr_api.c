@@ -359,7 +359,7 @@ int sonic_i2c_get_mod_reset(struct i2c_client *client, XCVR_ATTR *info, struct x
             modreset = ((status & BIT_INDEX(info->mask)) == info->cmpval) ? 1 : 0;
             sfp_dbg(KERN_INFO "\nMod Reset :0x%x, reg_value = 0x%x\n", modreset, status);
         }
-    } 
+    }
     else if ( strcmp(info->devtype, "fpgai2c") == 0)
     {
         status = xcvr_i2c_fpga_read(info);
@@ -488,7 +488,7 @@ int sonic_i2c_get_mod_lpmode(struct i2c_client *client, XCVR_ATTR *info, struct 
     {
         /* get client client for eeprom -  Not Applicable */
     }
-    
+
     data->lpmode = lpmode;
     return 0;
 }
@@ -509,7 +509,7 @@ int sonic_i2c_get_mod_rxlos(struct i2c_client *client, XCVR_ATTR *info, struct x
             rxlos = ((status & BIT_INDEX(info->mask)) == info->cmpval) ? 1 : 0;
             sfp_dbg(KERN_INFO "\nModule RxLOS :0x%x, reg_value = 0x%x\n", rxlos, status);
         }
-    } 
+    }
     else if ( strcmp(info->devtype, "fpgai2c") == 0)
     {
         status = xcvr_i2c_fpga_read(info);
@@ -576,7 +576,7 @@ int sonic_i2c_get_mod_txfault(struct i2c_client *client, XCVR_ATTR *info, struct
             sfp_dbg(KERN_INFO "\nModule TxFault :0x%x, reg_value = 0x%x\n", txflt, status);
         }
 
-    } 
+    }
     else if ( strcmp(info->devtype, "fpgai2c") == 0)
     {
         status = xcvr_i2c_fpga_read(info);
@@ -689,7 +689,7 @@ ssize_t get_module_presence(struct device *dev, struct device_attribute *da,
                 status = (attr_ops->pre_get)(client, attr_data, data);
                 if (status!=0)
                     dev_warn(&client->dev, "%s: pre_get function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-            } 
+            }
             if (attr_ops->do_get != NULL)
             {
                 status = (attr_ops->do_get)(client, attr_data, data);
@@ -734,7 +734,7 @@ ssize_t get_module_reset(struct device *dev, struct device_attribute *da,
                 status = (attr_ops->pre_get)(client, attr_data, data);
                 if (status!=0)
                     dev_warn(&client->dev, "%s: pre_get function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
-            } 
+            }
             if (attr_ops->do_get != NULL)
             {
                 status = (attr_ops->do_get)(client, attr_data, data);
@@ -757,7 +757,7 @@ ssize_t get_module_reset(struct device *dev, struct device_attribute *da,
     return sprintf(buf, "%s","");
 }
 
-ssize_t set_module_reset(struct device *dev, struct device_attribute *da, const char *buf, 
+ssize_t set_module_reset(struct device *dev, struct device_attribute *da, const char *buf,
         size_t count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -783,7 +783,7 @@ ssize_t set_module_reset(struct device *dev, struct device_attribute *da, const 
             data->reset = set_value;
 
             mutex_lock(&data->update_lock);
-            
+
             if (attr_ops->pre_set != NULL)
             {
                 status = (attr_ops->pre_set)(client, attr_data, data);
@@ -802,7 +802,7 @@ ssize_t set_module_reset(struct device *dev, struct device_attribute *da, const 
                 status = (attr_ops->post_set)(client, attr_data, data);
                 if (status!=0)
                     dev_warn(&client->dev, "%s: post_set function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-            } 
+            }
             mutex_unlock(&data->update_lock);
 
             return count;
@@ -835,7 +835,7 @@ ssize_t get_module_intr_status(struct device *dev, struct device_attribute *da,
                 status = (attr_ops->pre_get)(client, attr_data, data);
                 if (status!=0)
                     dev_warn(&client->dev, "%s: pre_get function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-            } 
+            }
             if (attr_ops->do_get != NULL)
             {
                 status = (attr_ops->do_get)(client, attr_data, data);
@@ -857,7 +857,7 @@ ssize_t get_module_intr_status(struct device *dev, struct device_attribute *da,
     return sprintf(buf, "%s","");
 }
 
-int get_xcvr_module_attr_data(struct i2c_client *client, struct device *dev, 
+int get_xcvr_module_attr_data(struct i2c_client *client, struct device *dev,
                             struct device_attribute *da)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -889,7 +889,7 @@ ssize_t get_module_lpmode(struct device *dev, struct device_attribute *da, char 
     idx = get_xcvr_module_attr_data(client, dev, da);
 
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
 
@@ -901,7 +901,7 @@ ssize_t get_module_lpmode(struct device *dev, struct device_attribute *da, char 
             status = (attr_ops->pre_get)(client, attr_data, data);
             if (status!=0)
                 dev_warn(&client->dev, "%s: pre_get function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-        } 
+        }
         if (attr_ops->do_get != NULL)
         {
             status = (attr_ops->do_get)(client, attr_data, data);
@@ -922,7 +922,7 @@ ssize_t get_module_lpmode(struct device *dev, struct device_attribute *da, char 
         return sprintf(buf,"%s","");
 }
 
-ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const char *buf, 
+ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const char *buf,
         size_t count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -935,9 +935,9 @@ ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const
     XCVR_SYSFS_ATTR_OPS *attr_ops = NULL;
 
     idx = get_xcvr_module_attr_data(client, dev, da);
-    
+
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
@@ -949,7 +949,7 @@ ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const
         data->lpmode = set_value;
 
         mutex_lock(&data->update_lock);
-        
+
         if (attr_ops->pre_set != NULL)
         {
             status = (attr_ops->pre_set)(client, attr_data, data);
@@ -968,7 +968,7 @@ ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const
             status = (attr_ops->post_set)(client, attr_data, data);
             if (status!=0)
                 dev_warn(&client->dev, "%s: post_set function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-        } 
+        }
         mutex_unlock(&data->update_lock);
     }
     return count;
@@ -986,9 +986,9 @@ ssize_t get_module_rxlos(struct device *dev, struct device_attribute *da,
     XCVR_SYSFS_ATTR_OPS *attr_ops = NULL;
 
     idx = get_xcvr_module_attr_data(client, dev, da);
-    
+
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
@@ -999,7 +999,7 @@ ssize_t get_module_rxlos(struct device *dev, struct device_attribute *da,
             status = (attr_ops->pre_get)(client, attr_data, data);
             if (status!=0)
                 dev_warn(&client->dev, "%s: pre_get function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-        } 
+        }
         if (attr_ops->do_get != NULL)
         {
             status = (attr_ops->do_get)(client, attr_data, data);
@@ -1030,11 +1030,11 @@ ssize_t get_module_txdisable(struct device *dev, struct device_attribute *da,
     int idx, status = 0;
     XCVR_ATTR *attr_data = NULL;
     XCVR_SYSFS_ATTR_OPS *attr_ops = NULL;
-    
+
     idx = get_xcvr_module_attr_data(client, dev, da);
-    
+
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
@@ -1066,7 +1066,7 @@ ssize_t get_module_txdisable(struct device *dev, struct device_attribute *da,
         return sprintf(buf,"%s","");
 }
 
-ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, const char *buf, 
+ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, const char *buf,
         size_t count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -1079,9 +1079,9 @@ ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, co
     XCVR_SYSFS_ATTR_OPS *attr_ops = NULL;
 
     idx = get_xcvr_module_attr_data(client, dev, da);
-    
+
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
@@ -1093,7 +1093,7 @@ ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, co
         data->txdisable = set_value;
 
         mutex_lock(&data->update_lock);
-        
+
         if (attr_ops->pre_set != NULL)
         {
             status = (attr_ops->pre_set)(client, attr_data, data);
@@ -1112,7 +1112,7 @@ ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, co
             status = (attr_ops->post_set)(client, attr_data, data);
             if (status!=0)
                 dev_warn(&client->dev, "%s: post_set function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-        } 
+        }
         mutex_unlock(&data->update_lock);
     }
     return count;
@@ -1130,9 +1130,9 @@ ssize_t get_module_txfault(struct device *dev, struct device_attribute *da,
     XCVR_SYSFS_ATTR_OPS *attr_ops = NULL;
 
     idx = get_xcvr_module_attr_data(client, dev, da);
-    
+
     if (idx>=0) attr_data = &pdata->xcvr_attrs[idx];
-    
+
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
@@ -1143,7 +1143,7 @@ ssize_t get_module_txfault(struct device *dev, struct device_attribute *da,
             status = (attr_ops->pre_get)(client, attr_data, data);
             if (status!=0)
                 dev_warn(&client->dev, "%s: pre_get function fails for %s attribute. ret %d\n", __FUNCTION__, attr_data->aname, status);
-        } 
+        }
         if (attr_ops->do_get != NULL)
         {
             status = (attr_ops->do_get)(client, attr_data, data);

@@ -89,8 +89,8 @@ class Psu(PsuBase):
         """
         Retrieves current PSU voltage output
         Returns:
-            A float number, the output voltage in volts, 
-            e.g. 12.1 
+            A float number, the output voltage in volts,
+            e.g. 12.1
         """
         if self.is_bmc:
             path = self.attr_path + 'psu{}_vout'.format(self.index+1)
@@ -156,7 +156,7 @@ class Psu(PsuBase):
         Retrieves current temperature reading from PSU
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         if self.is_bmc:
             path = self.attr_path+'psu{}_temp'.format(self.index+1)
@@ -181,8 +181,8 @@ class Psu(PsuBase):
         """
         Retrieves the high threshold PSU voltage output
         Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
         """
         return PSU_MAX_VOUT
 
@@ -190,7 +190,7 @@ class Psu(PsuBase):
         """
         Retrieves the low threshold PSU voltage output
         Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
         """
         return PSU_MIN_VOUT

@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  *
- * A pddf kernel module to create I2C client for FAN controller 
+ * A pddf kernel module to create I2C client for FAN controller
  */
 
 #include <linux/kernel.h>
@@ -160,14 +160,14 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 
         /* Populate the platform data for fan */
         client_ptr = i2c_new_client_device(adapter, board_info);
-        
+
         if(!IS_ERR(client_ptr))
         {
             i2c_put_adapter(adapter);
             pddf_dbg(FAN, KERN_ERR "Created a %s client: 0x%p\n", cdata->i2c_name, (void *)client_ptr);
             add_device_table(cdata->i2c_name, (void*)client_ptr);
         }
-        else 
+        else
         {
             i2c_put_adapter(adapter);
             goto free_data;
@@ -227,16 +227,16 @@ int __init pddf_data_init(void)
     pddf_dbg(FAN, "PDDF FAN MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     fan_kobj = kobject_create_and_add("fan", device_kobj);
-    if(!fan_kobj) 
+    if(!fan_kobj)
         return -ENOMEM;
     i2c_kobj = kobject_create_and_add("i2c", fan_kobj);
-    if(!i2c_kobj) 
+    if(!i2c_kobj)
         return -ENOMEM;
-    
+
     ret = sysfs_create_group(i2c_kobj, &pddf_clients_data_group);
     if (ret)
     {
@@ -255,7 +255,7 @@ int __init pddf_data_init(void)
         return ret;
     }
     pddf_dbg(FAN, "CREATED PDDF FAN DATA SYSFS GROUP\n");
-    
+
 
 
     return ret;

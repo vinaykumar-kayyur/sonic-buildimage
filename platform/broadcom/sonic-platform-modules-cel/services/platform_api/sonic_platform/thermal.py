@@ -32,7 +32,7 @@ class Thermal(ThermalBase):
         Returns:
         :param index: An integer, 1-based index of the thermal sensor of which to query status
         :return: String,
-            A string representing the name of the thermal sensor. 
+            A string representing the name of the thermal sensor.
         """
         return self._api_common.get_output(self._thermal_index, self._config['get_name'], Common.NULL_VAL)
 
@@ -44,7 +44,7 @@ class Thermal(ThermalBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         output = self._api_common.get_output(
             self._thermal_index, self._config['get_temperature'], Common.NULL_VAL)
@@ -83,8 +83,8 @@ class Thermal(ThermalBase):
             ipmitool sensor thresh [sensor name] unc [0>= temp_value <=62]
             if the current value of unc is 'na' ipmitool can't be set the value
 
-        Args : 
-            temperature: A float number up to nearest thousandth of one degree Celsius, 
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 
         Returns:
@@ -103,7 +103,7 @@ class Thermal(ThermalBase):
             ipmitool sensor thresh [sensor name] lnc [temp_value]
             if the current value of lnc is 'na' ipmitool can't be set the value
 
-        Args : 
+        Args :
             temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 

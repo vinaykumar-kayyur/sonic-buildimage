@@ -21,10 +21,10 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install     : install drivers and generate related sysfs nodes
-    clean       : uninstall drivers and remove related sysfs nodes    
+    clean       : uninstall drivers and remove related sysfs nodes
 """
 
 import commands

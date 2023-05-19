@@ -20,8 +20,8 @@ class Thermal(ThermalBase):
     """DellEMC Platform-specific Thermal class"""
 
     # [ Sensor-Name, Sensor-ID, high threshold, high critical_threshold ]
-    # TBD : 
-    #       high thershold/hich crit threshold 
+    # TBD :
+    #       high thershold/hich crit threshold
     #       need to be modified as True in case if it is supported
     #
     SENSOR_MAPPING = [

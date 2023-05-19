@@ -265,7 +265,7 @@ static SENSOR_DEVICE_ATTR(cpld_qsfp_port_status_12, S_IRUGO,
 static SENSOR_DEVICE_ATTR(cpld_qsfp_port_status_13, S_IRUGO,
         read_qsfp_port_status, NULL, CPLD_QSFP_PORT_STATUS_13);
 static SENSOR_DEVICE_ATTR(cpld_qsfp_port_config_1, S_IWUSR | S_IRUGO,
-                read_qsfp_port_config, write_qsfp_port_config, 
+                read_qsfp_port_config, write_qsfp_port_config,
                 CPLD_QSFP_PORT_CONFIG_1);
 static SENSOR_DEVICE_ATTR(cpld_qsfp_port_config_2, S_IWUSR | S_IRUGO,
                 read_qsfp_port_config, write_qsfp_port_config,
@@ -407,7 +407,7 @@ static struct attribute *s9280_64x_cpld1_attributes[] = {
     &sensor_dev_attr_cpld_bmc_status.dev_attr.attr,
     &sensor_dev_attr_cpld_bmc_watchdog.dev_attr.attr,
     &sensor_dev_attr_cpld_usb_status.dev_attr.attr,
-    &sensor_dev_attr_cpld_reset_control.dev_attr.attr,    
+    &sensor_dev_attr_cpld_reset_control.dev_attr.attr,
     &sensor_dev_attr_cpld_sfp_led.dev_attr.attr,
     &sensor_dev_attr_cpld_sfp_led_blink.dev_attr.attr,
     &sensor_dev_attr_cpld_rtmr_reset.dev_attr.attr,
@@ -1143,7 +1143,7 @@ static ssize_t write_qsfp_led(struct device *dev,
 /*
     each register for 2 port, each port has 4 channel for led blink
     bit   64       56       48       40      32     24     16     8     0
-    port   16/15  14/13  12/11  10/9   8/7   6/5   4/3  2/1  
+    port   16/15  14/13  12/11  10/9   8/7   6/5   4/3  2/1
   */
 static ssize_t read_qsfp_led_blink(struct device *dev,
                     struct device_attribute *da,
@@ -1174,7 +1174,7 @@ static ssize_t read_qsfp_led_blink(struct device *dev,
 /*
     each register for 2 port, each port has 4 channel for led blink
     bit   63     56     48     40    32   24   16   8   0
-    port    16/15  14/13  12/11  10/9  8/7  6/5  4/3 2/1  
+    port    16/15  14/13  12/11  10/9  8/7  6/5  4/3 2/1
   */
 static ssize_t write_qsfp_led_blink(struct device *dev,
                     struct device_attribute *da,

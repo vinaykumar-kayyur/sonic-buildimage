@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Script to stop and start the respective platforms default services. 
+# Script to stop and start the respective platforms default services.
 # This will be used while switching the pddf->non-pddf mode and vice versa
 from sonic_py_common.general import getstatusoutput_noshell
 
@@ -7,17 +7,17 @@ def check_pddf_support():
     return True
 
 def stop_platform_svc():
-    
+
     status, output = getstatusoutput_noshell(["systemctl", "stop", "as9716-32d-platform-monitor-fan.service"])
     if status:
         print("Stop as9716-32d-platform-fan.service failed %d"%status)
         return False
-    
+
     status, output = getstatusoutput_noshell(["systemctl", "stop", "as9716-32d-platform-monitor-psu.service"])
     if status:
         print("Stop as9716-32d-platform-psu.service failed %d"%status)
         return False
-    
+
     status, output = getstatusoutput_noshell(["systemctl", "stop", "as9716-32d-platform-monitor.service"])
     if status:
         print("Stop as9716-32d-platform-init.service failed %d"%status)
@@ -26,7 +26,7 @@ def stop_platform_svc():
     if status:
         print("Disable as9716-32d-platform-monitor.service failed %d"%status)
         return False
-    
+
     status, output = getstatusoutput_noshell(["/usr/local/bin/accton_as9716_32d_util.py", "clean"])
     if status:
         print("accton_as9716_32d_util.py clean command failed %d"%status)
@@ -39,7 +39,7 @@ def stop_platform_svc():
         return False
 
     return True
-    
+
 def start_platform_svc():
     status, output = getstatusoutput_noshell(["/usr/local/bin/accton_as9716_32d_util.py", "install"])
     if status:
@@ -54,7 +54,7 @@ def start_platform_svc():
     if status:
         print("Start as9716-32d-platform-monitor-fan.service failed %d"%status)
         return False
-        
+
     status, output = getstatusoutput_noshell(["systemctl", "start", "as9716-32d-platform-monitor-psu.service"])
     if status:
         print("Start as9716-32d-platform-monitor-psu.service failed %d"%status)
@@ -62,16 +62,16 @@ def start_platform_svc():
 
     return True
 
-def start_platform_pddf():   
+def start_platform_pddf():
 
     status, output = getstatusoutput_noshell(["systemctl", "start", "pddf-platform-init.service"])
     if status:
         print("Start pddf-platform-init.service failed %d"%status)
         return False
-    
+
     return True
 
-def stop_platform_pddf():   
+def stop_platform_pddf():
 
     status, output = getstatusoutput_noshell(["systemctl", "stop", "pddf-platform-init.service"])
     if status:

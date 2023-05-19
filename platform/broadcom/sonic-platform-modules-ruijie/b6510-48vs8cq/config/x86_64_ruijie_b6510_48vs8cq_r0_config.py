@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-fancontrol_loc        = "/usr/local/bin" 
-fancontrol_config_loc = "/usr/local/bin" 
+fancontrol_loc        = "/usr/local/bin"
+fancontrol_config_loc = "/usr/local/bin"
 
 GLOBALCONFIG       = "GLOBALCONFIG"
 MONITOR_CONST      = "MONITOR_CONST"
@@ -44,7 +44,7 @@ factest_module = {
     "sysinfo_showrestpsumsg":0
 }
 
-MONITOR_MAC_SOURCE_SYSFS = 0 #1 get mac temperature from sysfs ,0 get mac temperature from bcmcmd 
+MONITOR_MAC_SOURCE_SYSFS = 0 #1 get mac temperature from sysfs ,0 get mac temperature from bcmcmd
 MONITOR_MAC_SOURCE_PATH = None #sysfs path
 
 ###################################################################
@@ -144,7 +144,7 @@ MONITOR_MAC_ERROR_SPEED    = 0XBB  # MAC abnormal speed
 MONITOR_FAN_TOTAL_NUM      = 4     # 3+1 redundancy design, report to syslog if there exists a error
 MONITOR_MAC_UP_TEMP        = 50    # MAC compared with temperature inlet up
 MONITOR_MAC_LOWER_TEMP     = -50   # MAC compared with temperature outlet down
-MONITOR_MAC_MAX_TEMP       = 100   # 
+MONITOR_MAC_MAX_TEMP       = 100   #
 
 MONITOR_FALL_TEMP = 4               # speed-adjustment reduced temperature
 MONITOR_MAC_WARNING_THRESHOLD =  100 #100
@@ -157,7 +157,7 @@ MONITOR_MAC_CRITICAL_THRESHOLD = 105  #105
 MONITOR_OUTTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_BOARDTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_CPUTEMP_CRITICAL_THRESHOLD = 100 #100
-MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80 
+MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80
 MONITOR_CRITICAL_NUM              = 3 #retry times
 MONITOR_SHAKE_TIME                = 20 #anti-shake intervals
 MONITOR_INTERVAL                   = 60
@@ -176,7 +176,7 @@ MONITOR_FANS_LED = [
           {"bus":2,"devno":0x32, "addr":0x26, "green":0x09, "red":0x0a}]
 
 
-CPLDVERSIONS = [ 
+CPLDVERSIONS = [
         {"bus":2, "devno":0x33, "name":"MAC board CPLD-A"},
         {"bus":2, "devno":0x35, "name":"MAC board CPLD-B"},
         {"bus":2, "devno":0x37, "name":"CONNECT board CPLD-A"},
@@ -186,7 +186,7 @@ CPLDVERSIONS = [
 MONITOR_SYS_PSU_LED =[
           {"bus":2,"devno":0x33, "addr":0xb3, "yellow":0x06, "red":0x02,"green":0x04},
     ]
-    
+
 MONITOR_FAN_STATUS = [
     {'status':'green', 'minOkNum':4,'maxOkNum':4},
     {'status':'yellow', 'minOkNum':3,'maxOkNum':3},
@@ -308,7 +308,7 @@ MAC_DEFAULT_PARAM = {
 #####################MAC-Voltage-Adjustment-Parameters####################################
 
 ## Drivers List
-## 
+##
 DRIVERLISTS = [
         {"name":"i2c_dev", "delay":0},
         {"name":"i2c_gpio", "delay":0},
@@ -354,7 +354,7 @@ DEVICE = [
         {"name":"rg_fan","bus":3,"loc":0x53 },
         {"name":"rg_fan","bus":4,"loc":0x53 },
         {"name":"rg_fan","bus":5,"loc":0x53 },
-        {"name":"rg_fan","bus":6,"loc":0x53 }, 
+        {"name":"rg_fan","bus":6,"loc":0x53 },
         {"name":"rg_psu","bus":7,"loc":0x50 },
         {"name":"dps550","bus":7,"loc":0x58 },
         {"name":"rg_psu","bus":8,"loc":0x53 },
@@ -380,20 +380,20 @@ INIT_COMMAND = [
 ]
 
 ## Driver List
-## 
+##
 
 #####################FRU-Info-Adaption#################################
 E2TYPE = {"1": "tlveeprom",
           "2": "x86cpueeprom",
-          "3": "bmceeprom", 
-          "4": "cpueeprom", 
-          "5": "maceeprom", 
+          "3": "bmceeprom",
+          "4": "cpueeprom",
+          "5": "maceeprom",
           "6": "sloteeprom",
           "7": "fanconnecteeprom",
-          "8": "M1HFANI-F", 
-          "9": "M1HFANI-R", 
-          "A": "M2HFANI-F", 
-          "B": "M2HFANI-R", 
+          "8": "M1HFANI-F",
+          "9": "M1HFANI-R",
+          "A": "M2HFANI-F",
+          "B": "M2HFANI-R",
           "C": "psu"}
 FRULISTS = []
 ################################Manufacturing-Test-Adaption-Area#######################################################
@@ -474,7 +474,7 @@ alltest = [
         test_prbs_item,
         test_portbroadcast_item
         ]
-        
+
 looptest = [
         test_sys_item,
         test_temp_item,
@@ -484,11 +484,11 @@ looptest = [
         test_i2c_item,
         test_cpld_item,
         test_portframe_item,
-        test_fan_item, 
+        test_fan_item,
         test_power_item,
         test_usb_item,
         test_prbs_item,
-        test_portbroadcast_item , 
+        test_portbroadcast_item ,
 ]
 
 diagtestall = [
@@ -533,7 +533,7 @@ menuList =[
         ]},
         {
         "menuid":3, "parentid":2, "value":[
-                    log_level_critical , 
+                    log_level_critical ,
                     log_level_debug    ,
                     log_level_error    ,
                     log_level_info     ,
@@ -596,7 +596,7 @@ TESTCASE={
               {"name":"-> Red Led Off",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_red,1-0034/sfp_led2_red,1-0034/sfp_led3_red,1-0034/sfp_led8_red,1-0036/sfp_led4_red,1-0036/sfp_led5_red,1-0036/sfp_led6_red,1-0036/sfp_led7_red 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"},
               {"name":"-> Red Led On",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_red,1-0034/sfp_led2_red,1-0034/sfp_led3_red,1-0034/sfp_led8_red,1-0036/sfp_led4_red,1-0036/sfp_led5_red,1-0036/sfp_led6_red,1-0036/sfp_led7_red 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff"},
               {"name":"-> Recovery Red Led Off",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_red,1-0034/sfp_led2_red,1-0034/sfp_led3_red,1-0034/sfp_led8_red,1-0036/sfp_led4_red,1-0036/sfp_led5_red,1-0036/sfp_led6_red,1-0036/sfp_led7_red 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"},
-              
+
               {"name":"-> Yellow Led Off",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_yellow,1-0034/sfp_led2_yellow,1-0034/sfp_led3_yellow,1-0034/sfp_led8_yellow,1-0036/sfp_led4_yellow,1-0036/sfp_led5_yellow,1-0036/sfp_led6_yellow,1-0036/sfp_led7_yellow 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"},
               {"name":"-> Yellow Led On",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_yellow,1-0034/sfp_led2_yellow,1-0034/sfp_led3_yellow,1-0034/sfp_led8_yellow,1-0036/sfp_led4_yellow,1-0036/sfp_led5_yellow,1-0036/sfp_led6_yellow,1-0036/sfp_led7_yellow 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff"},
               {"name":"-> Recovery Yellow Led Off",        "cmd":"grtd_test.py  led loc 1-0034/sfp_led1_yellow,1-0034/sfp_led2_yellow,1-0034/sfp_led3_yellow,1-0034/sfp_led8_yellow,1-0036/sfp_led4_yellow,1-0036/sfp_led5_yellow,1-0036/sfp_led6_yellow,1-0036/sfp_led7_yellow 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00"},
@@ -672,7 +672,7 @@ TESTCASE={
                 {"name":"->Recovery LedOff","cmd":"grtd_test.py  led loc 2-0035/broad_front_lct 0xff"},
                 ]
         },
-        
+
         {"name":"Front panel pwr Led" ,"cases":[
               {"name":"-> LedOff",        "cmd":"grtd_test.py  led loc 2-0035/broad_front_pwr 0x00"},
               {"name":"-> Red Led Flashing",    "cmd":"grtd_test.py  led loc 2-0035/broad_front_pwr 0x01"},
@@ -730,7 +730,7 @@ TESTCASE={
                   {"name":" Port 16",        "cmd":"grtd_test.py  dev_rd  26 0050 0","deal_type":2},
                   {"name":" Port 17",        "cmd":"grtd_test.py  dev_rd  27 0050 0","deal_type":2},
                   {"name":" Port 18",        "cmd":"grtd_test.py  dev_rd  28 0050 0","deal_type":2},
-                  {"name":" Port 19",        "cmd":"grtd_test.py  dev_rd  29 0050 0","deal_type":2}, 
+                  {"name":" Port 19",        "cmd":"grtd_test.py  dev_rd  29 0050 0","deal_type":2},
                   {"name":" Port 20",        "cmd":"grtd_test.py  dev_rd  30 0050 0","deal_type":2},
                   {"name":" Port 21",        "cmd":"grtd_test.py  dev_rd  31 0050 0","deal_type":2},
                   {"name":" Port 22",        "cmd":"grtd_test.py  dev_rd  32 0050 0","deal_type":2},

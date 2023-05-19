@@ -2,7 +2,7 @@
 #
 # Name: fan.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -77,7 +77,7 @@ class Fan(FanBase):
         else:
                 logging.error("[FAN] Can't find path to eeprom : %s" % path)
                 return SyntaxError
-        
+
         return content[attr_idx:attr_idx+attr_length]
 
 

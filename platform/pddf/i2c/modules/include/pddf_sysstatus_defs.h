@@ -41,8 +41,8 @@ typedef struct SYSSTATUS_DATA
 {
   int len;
   SYSSTATUS_ADDR_ATTR sysstatus_addr_attr;
-  SYSSTATUS_ADDR_ATTR sysstatus_addr_attrs[MAX_ATTRS]; 
-  
+  SYSSTATUS_ADDR_ATTR sysstatus_addr_attrs[MAX_ATTRS];
+
 }SYSSTATUS_DATA;
 
 

@@ -3,7 +3,7 @@
 if [ -s /usr/local/bin/done_idt_init ];then
     echo "There is a done_idt_init file"
 else
-    
+
     cat /etc/init.d/opennsl-modules|grep idt_init.sh
     if [ $? -ne 0 ];then
         echo "Add idt_init.sh to opennsl-modules for TD3 MAC"

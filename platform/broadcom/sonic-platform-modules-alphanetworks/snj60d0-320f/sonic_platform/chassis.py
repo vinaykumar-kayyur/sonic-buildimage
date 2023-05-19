@@ -118,7 +118,7 @@ class Chassis(ChassisBase):
         return False, {}
 
     def get_transceiver_change_event(self, timeout=0):
-        start_time = time.time()       
+        start_time = time.time()
         # SFP status definition from xcvrd
         SFP_STATUS_INSERTED = '1'
         SFP_STATUS_REMOVED = '0'
@@ -130,7 +130,7 @@ class Chassis(ChassisBase):
             change_dict = {}
             for index in range(self.get_num_sfps()):
                 # get current status
-                state = self._sfp_list[index].get_presence() 
+                state = self._sfp_list[index].get_presence()
                 new_sfp_state.append(state)
 
                 if self.sfp_state == []:
@@ -253,7 +253,7 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        
+
         reboot_cause_path = (Chassis.HOST_REBOOT_CAUSE_PATH + Chassis.REBOOT_CAUSE_FILE)
         sw_reboot_cause = "Unknown"
         try:
@@ -261,5 +261,5 @@ class Chassis(ChassisBase):
                 sw_reboot_cause = fd.read().strip()
         except IOError:
             pass
-         
+
         return ('REBOOT_CAUSE_NON_HARDWARE', sw_reboot_cause)

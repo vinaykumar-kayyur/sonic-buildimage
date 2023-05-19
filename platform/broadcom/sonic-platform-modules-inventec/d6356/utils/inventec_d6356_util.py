@@ -21,7 +21,7 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install         : install drivers and generate related sysfs nodes
     clean           : uninstall drivers and remove related sysfs nodes
@@ -157,7 +157,7 @@ def system_install():
        status, output = exec_cmd(instantiate[i], 1)
     if status:
 	   print output
-	   if FORCE == 0:                
+	   if FORCE == 0:
 	      return status
 #
 # INV_FIX-4037

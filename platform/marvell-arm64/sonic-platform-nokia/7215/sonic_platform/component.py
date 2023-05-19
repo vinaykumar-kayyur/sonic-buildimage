@@ -55,7 +55,7 @@ class Component(ComponentBase):
             result = None
 
         return result
-    
+
     def _read_sysfs_file(self, sysfs_file):
         # On successful read, returns the value read from given
         # reg_name and on failure returns 'ERR'
@@ -203,8 +203,8 @@ class Component(ComponentBase):
         self.CPLD_UPDATE_COMMAND4[1] = image_name
 
         success_flag = False
- 
-        try:   
+
+        try:
             subprocess.check_call(self.CPLD_UPDATE_COMMAND1, stderr=subprocess.STDOUT)
             subprocess.check_call(self.CPLD_UPDATE_COMMAND2, stderr=subprocess.STDOUT)
             subprocess.check_call(self.CPLD_UPDATE_COMMAND3, stderr=subprocess.STDOUT)

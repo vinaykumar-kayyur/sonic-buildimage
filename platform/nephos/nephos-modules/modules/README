@@ -20,7 +20,7 @@ Step 1~4 show how to build and execute NPS kernel modules.
 
 2. Compile:
    cd nps-modules/ && make
-    
+
 3. The output kernel modules will be found in $(BUILD_OUTPUT_DIR)/modules/
    - nps_dev.ko
    - nps_netif.ko

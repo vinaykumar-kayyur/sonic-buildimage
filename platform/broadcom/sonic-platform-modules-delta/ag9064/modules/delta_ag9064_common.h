@@ -141,7 +141,7 @@ enum cpld_attributes {
     SWPLD4_REG_VALUE,
     PSU1_SCAN,
     PSU2_SCAN,
- //CPLD   
+ //CPLD
     CPLD_VER,
     CPU_BOARD_VER,
     CPU_ID,
@@ -290,7 +290,7 @@ static struct cpld_attribute_data attribute_data[] = {
     },
     [SWPLD4_REG_VALUE] = {
     },
-//CPLD    
+//CPLD
     [CPLD_VER] = {
         .bus  = BUS0,       .addr = CPUPLD_ADDR,
         .reg  = 0x01,       .mask = 0xFF,
@@ -416,7 +416,7 @@ static struct cpld_attribute_data attribute_data[] = {
         .bus  = BUS0,       .addr = SWPLD1_ADDR,
         .reg  = 0x13,       .mask = 1 << 5,
         .note = "“0”: Solid Green – Power Supply 2 is supplied to the switch & operating normally\n“1”: OFF"
-    },   
+    },
     [PSU2_RED_LED] = {
         .bus  = BUS0,       .addr = SWPLD1_ADDR,
         .reg  = 0x13,       .mask = 1 << 4,

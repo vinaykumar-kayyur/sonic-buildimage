@@ -19,7 +19,7 @@ ssize_t cpld_hw_ver_get(struct device *dev, struct device_attribute *da, char *b
     int status = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     switch (attr->index)
@@ -57,7 +57,7 @@ ssize_t wdt_enable_get(struct device *dev, struct device_attribute *da, char *bu
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == WDT_EN)
@@ -83,7 +83,7 @@ ssize_t wdt_enable_set(struct device *dev, struct device_attribute *da, const ch
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, WDT_EN_REG);
     if (attr->index == WDT_EN)
@@ -120,7 +120,7 @@ ssize_t eeprom_wp_get(struct device *dev, struct device_attribute *da, char *buf
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == EEPROM_WP)
@@ -146,7 +146,7 @@ ssize_t eeprom_wp_set(struct device *dev, struct device_attribute *da, const cha
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, EEPROM_WP_REG);
     if (attr->index == EEPROM_WP)
@@ -261,7 +261,7 @@ ssize_t usb_enable_get(struct device *dev, struct device_attribute *da, char *bu
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == USB_EN)
@@ -287,7 +287,7 @@ ssize_t usb_enable_set(struct device *dev, struct device_attribute *da, const ch
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, USB_EN_REG);
     if (attr->index == USB_EN)
@@ -328,7 +328,7 @@ ssize_t reset_mac_set(struct device *dev, struct device_attribute *da, const cha
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, MAC_RESET_REG);
     if (attr->index == RESET)
@@ -360,7 +360,7 @@ ssize_t shutdown_set(struct device *dev, struct device_attribute *da, const char
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, SHUTDOWN_REG);
     if (attr->index == SHUTDOWN_SET)
@@ -388,7 +388,7 @@ ssize_t bmc_enable_get(struct device *dev, struct device_attribute *da, char *bu
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == BMC_PRESENT)
@@ -411,7 +411,7 @@ ssize_t themal_int_get(struct device *dev, struct device_attribute *da, char *bu
     int result = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     switch (attr->index)
@@ -467,7 +467,7 @@ ssize_t themal_int_mask_get(struct device *dev, struct device_attribute *da, cha
     int result = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     switch (attr->index)
@@ -526,10 +526,10 @@ ssize_t themal_int_mask_set(struct device *dev, struct device_attribute *da, con
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, THERMAL_INT_MASK_REG);
-    
+
     input = simple_strtol(buf, NULL, 10);
     switch (attr->index)
     {
@@ -604,7 +604,7 @@ ssize_t sys_int_get(struct device *dev, struct device_attribute *da, char *buf)
     int result = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     switch (attr->index)
@@ -680,7 +680,7 @@ ssize_t sys_int_mask_get(struct device *dev, struct device_attribute *da, char *
     int result = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     switch (attr->index)
@@ -759,10 +759,10 @@ ssize_t sys_int_mask_set(struct device *dev, struct device_attribute *da, const 
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, SYS_INT_MASK_REG);
-    
+
     input = simple_strtol(buf, NULL, 10);
     switch (attr->index)
     {

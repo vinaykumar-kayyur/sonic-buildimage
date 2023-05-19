@@ -61,7 +61,7 @@ struct cpld_b_data {
 };
 
 struct cpld_b_data *cpld_data;
- 
+
 static ssize_t scratch_show(struct device *dev, struct device_attribute *devattr,
                 char *buf)
 {
@@ -296,8 +296,8 @@ static ssize_t sys_led_color_store(struct device *dev, struct device_attribute *
 }
 static DEVICE_ATTR_RW(sys_led_color);
 
-static ssize_t reboot_cause_show(struct device *dev, 
-                                 struct device_attribute *attr, 
+static ssize_t reboot_cause_show(struct device *dev,
+                                 struct device_attribute *attr,
                                  char *buf)
 {
         ssize_t status;
@@ -312,7 +312,7 @@ static ssize_t reboot_cause_show(struct device *dev,
         dev_dbg(dev,"reboot: 0x%x\n", (u8)reg);
         for(i = 0; i < ARRAY_SIZE(reboot_causes); i++){
                 if((u8)reg == reboot_causes[i].reset_code){
-                        status = sprintf(buf, "%s\n", 
+                        status = sprintf(buf, "%s\n",
                                          reboot_causes[i].reason);
                         break;
                 }

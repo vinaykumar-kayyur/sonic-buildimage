@@ -178,13 +178,13 @@ static ssize_t get_module_present(struct device *dev,
 				data->cpld_port + 1, group + 1, group_port + 1);
 
 	for (retry = 0; retry < 10; retry++)
-	{		
+	{
 	    value = i2c_smbus_read_word_data(client, get_group_cmd(group));
 		if (value >= 0)
 			break;
 		else
 			printk("%s: retry:%d\n", __FUNCTION__, retry);
-		msleep(1);		
+		msleep(1);
 	}
 	if (value < 0)
 		return -ENODEV;

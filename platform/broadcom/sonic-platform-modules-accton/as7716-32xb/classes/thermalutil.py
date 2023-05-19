@@ -85,7 +85,7 @@ class ThermalUtil(object):
         except:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
-      
+
         return int(content)
 
 
@@ -104,7 +104,7 @@ class ThermalUtil(object):
     def get_thermal_to_device_path(self, thermal_num):
         return self._thermal_to_device_path_mapping[thermal_num]
 
-    def get_thermal_1_val(self):      
+    def get_thermal_1_val(self):
         return self._get_thermal_node_val(self.THERMAL_NUM_1_IDX)
 
     def get_thermal_2_val(self):

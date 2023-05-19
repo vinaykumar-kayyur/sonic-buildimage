@@ -23,7 +23,7 @@ def getmac(interface):
     except:
         mac = "00:00:00:00:00:00"
     return mac[0:17]
-  
+
 class TLVINFO_HEADER(Structure):
     _fields_ = [("signature", c_char*8),
                 ("version",   c_ubyte),
@@ -54,7 +54,7 @@ def crc32(crc, p, len):
 		for j in range(8):
 			crc = (crc >> 1) ^ (0xedb88320 & -(crc & 1))
 	return 0xffffffff & ~crc
-  
+
 def crc(header, data):
 	r = '';
 	for m in header:
@@ -64,7 +64,7 @@ def crc(header, data):
 	c = crc32(0, bytearray(r), len(r))
 	s = struct.pack('>I', c)
 	return s
-   
+
 def main():
 
     tlvinfo_header = TLVINFO_HEADER('TlvInfo', 1, 0)
@@ -79,7 +79,7 @@ def main():
         tlvinfo_data.add_tlv_str(TLV_CODE_PRODUCT_NAME,  'Unknown')
 
     tlvinfo_data.add_tlv_str(TLV_CODE_MANUF_NAME,    'Broadcom')
-    
+
     eth0_mac_str = getmac('eth0')
     eth0_mac = eth0_mac_str.split(':')
     tlvinfo_data.add_tlv_mac(TLV_CODE_MAC_BASE, eth0_mac)

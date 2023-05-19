@@ -68,20 +68,20 @@
 #if (MULTIPAGE_SUPPORT == 1)
 /* fundamental unit of addressing for SFF_8472/SFF_8436 */
 #define SFF_8436_PAGE_SIZE 128
-/* 
+/*
  * The current 8436 (QSFP) spec provides for only 4 supported
- * pages (pages 0-3).  
- * This driver is prepared to support more, but needs a register in the 
+ * pages (pages 0-3).
+ * This driver is prepared to support more, but needs a register in the
  * EEPROM to indicate how many pages are supported before it is safe
  * to implement more pages in the driver.
  */
 #define SFF_8436_SPECED_PAGES 4
 #define SFF_8436_EEPROM_SIZE ((1 + SFF_8436_SPECED_PAGES) * SFF_8436_PAGE_SIZE)
 #define SFF_8436_EEPROM_UNPAGED_SIZE (2 * SFF_8436_PAGE_SIZE)
-/* 
- * The current 8472 (SFP) spec provides for only 3 supported 
+/*
+ * The current 8472 (SFP) spec provides for only 3 supported
  * pages (pages 0-2).
- * This driver is prepared to support more, but needs a register in the 
+ * This driver is prepared to support more, but needs a register in the
  * EEPROM to indicate how many pages are supported before it is safe
  * to implement more pages in the driver.
  */
@@ -198,19 +198,19 @@ static struct attribute *qsfp_attributes[] = {
 #define CPLD_PORT_TO_FRONT_PORT(port)  (port+1)
 
 enum port_numbers {
-as7816_64x_port1,  as7816_64x_port2,  as7816_64x_port3,  as7816_64x_port4,  
-as7816_64x_port5,  as7816_64x_port6,  as7816_64x_port7,  as7816_64x_port8, 
-as7816_64x_port9,  as7816_64x_port10, as7816_64x_port11, as7816_64x_port12, 
+as7816_64x_port1,  as7816_64x_port2,  as7816_64x_port3,  as7816_64x_port4,
+as7816_64x_port5,  as7816_64x_port6,  as7816_64x_port7,  as7816_64x_port8,
+as7816_64x_port9,  as7816_64x_port10, as7816_64x_port11, as7816_64x_port12,
 as7816_64x_port13, as7816_64x_port14, as7816_64x_port15, as7816_64x_port16,
 as7816_64x_port17, as7816_64x_port18, as7816_64x_port19, as7816_64x_port20,
-as7816_64x_port21, as7816_64x_port22, as7816_64x_port23, as7816_64x_port24, 
-as7816_64x_port25, as7816_64x_port26, as7816_64x_port27, as7816_64x_port28, 
-as7816_64x_port29, as7816_64x_port30, as7816_64x_port31, as7816_64x_port32, 
+as7816_64x_port21, as7816_64x_port22, as7816_64x_port23, as7816_64x_port24,
+as7816_64x_port25, as7816_64x_port26, as7816_64x_port27, as7816_64x_port28,
+as7816_64x_port29, as7816_64x_port30, as7816_64x_port31, as7816_64x_port32,
 as7816_64x_port33, as7816_64x_port34, as7816_64x_port35, as7816_64x_port36,
 as7816_64x_port37, as7816_64x_port38, as7816_64x_port39, as7816_64x_port40,
 as7816_64x_port41, as7816_64x_port42, as7816_64x_port43, as7816_64x_port44,
-as7816_64x_port45, as7816_64x_port46, as7816_64x_port47, as7816_64x_port48, 
-as7816_64x_port49, as7816_64x_port50, as7816_64x_port51, as7816_64x_port52, 
+as7816_64x_port45, as7816_64x_port46, as7816_64x_port47, as7816_64x_port48,
+as7816_64x_port49, as7816_64x_port50, as7816_64x_port51, as7816_64x_port52,
 as7816_64x_port53, as7816_64x_port54, as7816_64x_port55, as7816_64x_port56,
 as7816_64x_port57, as7816_64x_port58, as7816_64x_port59, as7816_64x_port60,
 as7816_64x_port61, as7816_64x_port62, as7816_64x_port63, as7816_64x_port64
@@ -355,16 +355,16 @@ static struct sfp_port_data *sfp_update_present(struct i2c_client *client)
 
 	/* Read present status of port 1~64 */
     data->present = 0;
-	
+
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
         status = accton_i2c_cpld_read(0x60, regs[i]);
-        
+
         if (status < 0) {
             DEBUG_PRINT("cpld(0x60) reg(0x%x) err %d", regs[i], status);
             goto exit;
         }
-        
-		DEBUG_PRINT("Present status = 0x%lx", data->present);		
+
+		DEBUG_PRINT("Present status = 0x%lx", data->present);
         data->present |= (u64)status << (i*8);
     }
 
@@ -399,7 +399,7 @@ static ssize_t show_present(struct device *dev, struct device_attribute *da,
 		int i;
 		u8 values[8]  = {0};
 		struct sfp_port_data *data = sfp_update_present(client);
-		
+
 		if (IS_ERR(data)) {
 			return PTR_ERR(data);
 		}
@@ -538,7 +538,7 @@ static ssize_t qsfp_set_tx_disable(struct device *dev, struct device_attribute *
 	int status;
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
-	struct sfp_port_data *data = i2c_get_clientdata(client);	
+	struct sfp_port_data *data = i2c_get_clientdata(client);
 
 	status = sfp_is_port_present(client, data->port);
 	if (IS_ERR_VALUE(status)) {
@@ -771,7 +771,7 @@ abort:
  * Task is to calculate the client (0 = i2c addr 50, 1 = i2c addr 51),
  * the page, and the offset.
  *
- * Handles both SFP and QSFP.  
+ * Handles both SFP and QSFP.
  *     For SFP, offset 0-255 are on client[0], >255 is on client[1]
  *     Offset 256-383 are on the lower half of client[1]
  *     Pages are accessible on the upper half of client[1].
@@ -785,7 +785,7 @@ abort:
  *     Callers must not read/write beyond the end of a client or a page
  *     without recomputing the client/page.  Hence offset (within page)
  *     plus length must be less than or equal to 128.  (Note that this
- *     routine does not have access to the length of the call, hence 
+ *     routine does not have access to the length of the call, hence
  *     cannot do the validity check.)
  *
  * Offset within Lower Page 00h and Upper Page 00h are not recomputed
@@ -1014,7 +1014,7 @@ static ssize_t sff_8436_eeprom_write(struct sfp_port_data *port_data,
 
 
 static ssize_t sff_8436_eeprom_update_client(struct sfp_port_data *port_data,
-				char *buf, loff_t off, 
+				char *buf, loff_t off,
 				size_t count, qsfp_opcode_e opcode)
 {
 	struct i2c_client *client;
@@ -1029,7 +1029,7 @@ static ssize_t sff_8436_eeprom_update_client(struct sfp_port_data *port_data,
 			"sff_8436_eeprom_update_client off %lld  page:%d phy_offset:%lld, count:%ld, opcode:%d\n",
 			off, page, phy_offset, (long int) count, opcode);
 	if (page > 0) {
-		ret = sff_8436_eeprom_write(port_data, client, &page, 
+		ret = sff_8436_eeprom_write(port_data, client, &page,
 			SFF_8436_PAGE_SELECT_REG, 1);
 		if (ret < 0) {
 			dev_dbg(&client->dev,
@@ -1064,7 +1064,7 @@ static ssize_t sff_8436_eeprom_update_client(struct sfp_port_data *port_data,
 	if (page > 0) {
 		/* return the page register to page 0 (why?) */
 		page = 0;
-		ret = sff_8436_eeprom_write(port_data, client, &page, 
+		ret = sff_8436_eeprom_write(port_data, client, &page,
 			SFF_8436_PAGE_SELECT_REG, 1);
 		if (ret < 0) {
 			dev_err(&client->dev,
@@ -1089,7 +1089,7 @@ static ssize_t sff_8436_eeprom_update_client(struct sfp_port_data *port_data,
  *     - access begins legal but is too long, len is truncated to fit.
  *     - initial offset exceeds supported pages, return -EINVAL
  */
-static ssize_t sff_8436_page_legal(struct sfp_port_data *port_data, 
+static ssize_t sff_8436_page_legal(struct sfp_port_data *port_data,
 		loff_t off, size_t len)
 {
 	struct i2c_client *client = port_data->client;
@@ -1105,7 +1105,7 @@ static ssize_t sff_8436_page_legal(struct sfp_port_data *port_data,
 		/* if offset exceeds possible pages, we're not good */
 		if (off >= SFF_8472_EEPROM_SIZE) return -EINVAL;
 		/* in between, are pages supported? */
-		status = sff_8436_eeprom_read(port_data, client, &regval, 
+		status = sff_8436_eeprom_read(port_data, client, &regval,
 				SFF_8472_PAGEABLE_REG, 1);
 		if (status < 0) return status;  /* error out (no module?) */
 		if (regval & SFF_8472_PAGEABLE) {
@@ -1119,7 +1119,7 @@ static ssize_t sff_8436_page_legal(struct sfp_port_data *port_data,
 		dev_dbg(&client->dev,
 			"page_legal, SFP, off %lld len %ld\n",
 			off, (long int) len);
-	} 
+	}
 	else if (port_data->driver_type == DRIVER_TYPE_QSFP ||
 		     port_data->driver_type == DRIVER_TYPE_XFP) {
 		/* QSFP case */
@@ -1128,7 +1128,7 @@ static ssize_t sff_8436_page_legal(struct sfp_port_data *port_data,
 		/* if offset exceeds possible pages, we're not good */
 		if (off >= SFF_8436_EEPROM_SIZE) return -EINVAL;
 		/* in between, are pages supported? */
-		status = sff_8436_eeprom_read(port_data, client, &regval, 
+		status = sff_8436_eeprom_read(port_data, client, &regval,
 				SFF_8436_PAGEABLE_REG, 1);
 		if (status < 0) return status;  /* error out (no module?) */
 		if (regval & SFF_8436_NOT_PAGEABLE) {
@@ -1168,9 +1168,9 @@ static ssize_t sfp_port_read_write(struct sfp_port_data *port_data,
 	 * from this host, but not from other I2C masters.
 	 */
 	mutex_lock(&port_data->update_lock);
-	
+
 	/*
-	 * Confirm this access fits within the device suppored addr range 
+	 * Confirm this access fits within the device suppored addr range
 	 */
 	len = sff_8436_page_legal(port_data, off, len);
 	if (len < 0) {
@@ -1183,7 +1183,7 @@ static ssize_t sfp_port_read_write(struct sfp_port_data *port_data,
 	 * separate call to sff_eeprom_update_client(), to
 	 * ensure that each access recalculates the client/page
 	 * and writes the page register as needed.
-	 * Note that chunk to page mapping is confusing, is different for 
+	 * Note that chunk to page mapping is confusing, is different for
 	 * QSFP and SFP, and never needs to be done.  Don't try!
 	 */
 	pending_len = len; /* amount remaining to transfer */
@@ -1224,15 +1224,15 @@ static ssize_t sfp_port_read_write(struct sfp_port_data *port_data,
 			off, (long int) len, chunk_start_offset, chunk_offset,
 			(long int) chunk_len, (long int) pending_len);
 
-		/* 
-		 * note: chunk_offset is from the start of the EEPROM, 
-		 * not the start of the chunk 
+		/*
+		 * note: chunk_offset is from the start of the EEPROM,
+		 * not the start of the chunk
 		 */
-		status = sff_8436_eeprom_update_client(port_data, buf, 
+		status = sff_8436_eeprom_update_client(port_data, buf,
 				chunk_offset, chunk_len, opcode);
 		if (status != chunk_len) {
 			/* This is another 'no device present' path */
-			dev_dbg(&client->dev, 
+			dev_dbg(&client->dev,
 	"sff_8436_update_client for chunk %d chunk_offset %lld chunk_len %ld failed %d!\n",
 				chunk, chunk_offset, (long int) chunk_len, status);
 			goto err;
@@ -1298,7 +1298,7 @@ static ssize_t sfp_bin_read(struct file *filp, struct kobject *kobj,
 	int present;
 	struct sfp_port_data *data;
 	DEBUG_PRINT("offset = (%d), count = (%d)", off, count);
-	
+
 	data = dev_get_drvdata(container_of(kobj, struct device, kobj));
 	present = sfp_is_port_present(data->client, data->port);
 	if (IS_ERR_VALUE(present)) {

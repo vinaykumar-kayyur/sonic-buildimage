@@ -185,7 +185,7 @@ static ssize_t show_byte(struct device *dev, struct device_attribute *da,
 {
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct ym2651y_data *data = ym2651y_update_device(dev);
-	
+
 	if (!data->valid) {
 		return 0;
 	}
@@ -200,7 +200,7 @@ static ssize_t show_word(struct device *dev, struct device_attribute *da,
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct ym2651y_data *data = ym2651y_update_device(dev);
 	u16 status = 0;
-	
+
 	if (!data->valid) {
 		return 0;
 	}
@@ -265,8 +265,8 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
 
 	if (!data->valid) {
 		return 0;
-	}	
-	
+	}
+
 	switch (attr->index) {
 	case PSU_V_OUT:
 		value = data->v_out;
@@ -330,8 +330,8 @@ static ssize_t show_fan_fault(struct device *dev, struct device_attribute *da,
 
 	if (!data->valid) {
 		return 0;
-	}	
-	
+	}
+
 	shift = (attr->index == PSU_FAN1_FAULT) ? 7 : 6;
 
 	return sprintf(buf, "%d\n", data->fan_fault >> shift);
@@ -344,8 +344,8 @@ static ssize_t show_over_temp(struct device *dev, struct device_attribute *da,
 
 	if (!data->valid) {
 		return 0;
-	}	
-	
+	}
+
 	return sprintf(buf, "%d\n", data->over_temp >> 7);
 }
 
@@ -358,8 +358,8 @@ static ssize_t show_ascii(struct device *dev, struct device_attribute *da,
 
 	if (!data->valid) {
 		return 0;
-	}	
-	
+	}
+
 	switch (attr->index) {
 	case PSU_FAN_DIRECTION: /* psu_fan_dir */
 		ptr = data->fan_dir + 1;  /* Skip the first byte since it is the length of string. */
@@ -627,14 +627,14 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
 		/* Read mfr_model */
 		command = 0x9a;
 		length  = 1;
-		
+
 		/* Read first byte to determine the length of data */
 		status = ym2651y_read_block(client, command, &buf, length);
 		if (status < 0) {
 			dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
 			goto exit;
 		}
-		
+
 		status = ym2651y_read_block(client, command, data->mfr_model, buf+1);
 		data->mfr_model[buf+1] = '\0';
 

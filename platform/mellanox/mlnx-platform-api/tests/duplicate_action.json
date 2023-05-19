@@ -1,7 +1,7 @@
 {
     "name": "any fan absence",
     "conditions": [
-        { 
+        {
             "type": "fan.any.absence"
         }
     ],

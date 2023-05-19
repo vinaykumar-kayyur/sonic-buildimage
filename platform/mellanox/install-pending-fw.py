@@ -63,7 +63,7 @@ for boot_type, components in update_status.items():
             _, parent_name, comp_name = comp_path
             fw_file = pcp.module_component_map[parent_name][comp_name]["firmware"]
             component = csp.module_component_map[parent_name][comp_name]
-        else: 
+        else:
             # Chassis component
             parent_name, comp_name = comp_path
             fw_file = pcp.chassis_component_map[parent_name][comp_name]["firmware"]

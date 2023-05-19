@@ -202,7 +202,7 @@ detect_transvr_type(struct transvr_obj_s* self){
         SWPS_INFO("%s: %s unexpected smbus return:%d \n",
                 __func__, self->swp_name, type);
         return TRANSVR_TYPE_ERROR;
-    }    
+    }
     /* Identify valid transceiver type */
     switch (type){
         case TRANSVR_TYPE_SFP:

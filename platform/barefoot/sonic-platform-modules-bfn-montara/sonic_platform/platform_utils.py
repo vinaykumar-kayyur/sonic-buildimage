@@ -16,7 +16,7 @@ def file_create(path, mode=None):
     Ensure that file is created with the appropriate permissions
     Args:
         path: full path of a file
-        mode: file permission in octal representation  
+        mode: file permission in octal representation
     """
     def run_cmd(cmd):
         if os.geteuid() != 0:

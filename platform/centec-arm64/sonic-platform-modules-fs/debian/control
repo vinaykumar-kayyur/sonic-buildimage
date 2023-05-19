@@ -1,7 +1,7 @@
 Source: sonic-platform-modules-fs
 Section: main
 Priority: extra
-Maintainer: Sec <sec@feisu.com> 
+Maintainer: Sec <sec@feisu.com>
 Build-Depends: debhelper (>= 8.0.0), bzip2
 Standards-Version: 3.9.3
 

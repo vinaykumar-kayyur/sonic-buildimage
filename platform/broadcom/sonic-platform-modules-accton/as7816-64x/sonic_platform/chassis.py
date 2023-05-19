@@ -36,7 +36,7 @@ class Chassis(PddfChassis):
 
         if now < (self.sfp_change_event_data['last'] + timeout) and self.sfp_change_event_data['valid']:
             return True, change_dict
-        
+
         bitmap = 0
         for i in range(64):
             modpres = self.get_sfp(i+1).get_presence()

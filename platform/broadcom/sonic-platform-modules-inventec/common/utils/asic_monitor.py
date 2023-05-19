@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #
 # Copyright (C) 2018 Inventec, Inc.
-# 
+#
 # Editor: James Huang ( Huang.James@inventec.com )
-#  
+#
 """
 Usage: %(scriptName)s [options] command object
 
@@ -12,7 +12,7 @@ Auto detecting the Chipset temperature and update
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-   
+
 """
 
 try:
@@ -22,7 +22,7 @@ try:
     import syslog
     from sonic_sfp.bcmshell import bcmshell
     from sonic_py_common.general import getstatusoutput_noshell
-    
+
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
@@ -45,45 +45,45 @@ def initialLoop():
 
     global bcm_obj
     initialNotOK = True
-    
-    while initialNotOK :        
-        try:                
+
+    while initialNotOK :
+        try:
             bcm_obj = BCMUtil()
             bcm_obj.execute_command("echo")
             initialNotOK = False
             print(bcm_obj)
-            log_message( syslog.LOG_INFO, "BCMUtil Object initialed successfully" )  
-        except Exception as e:   
+            log_message( syslog.LOG_INFO, "BCMUtil Object initialed successfully" )
+        except Exception as e:
             print("Exception. The warning is {0}".format(str(e)))
             time.sleep(10)
-            
+
 class BCMUtil(bcmshell):
 
     asic_temperature = 0
     platform = None
-    
+
     def get_platform(self):
         if self.platform is None:
             _, self.platform = getstatusoutput_noshell(["uname", "-n"]).strip()
         return self.platform
-        
+
     def get_asic_temperature( self ):
         return self.asic_temperature
-        
+
     def set_asic_temperature( self, temp ):
         self.asic_temperature = temp
-                
+
     def parsing_asic_temp(self):
         content = self.run("show temp")
         for line in content.split("\n"):
             TempObject = re.search(r"(average current temperature is)\s+(?P<temperature_high>\d+)\.(?P<temperature_low>\d+)",line)
             if TempObject is not None:
                 self.set_asic_temperature( int( TempObject.group("temperature_high") ) )
-        
+
     def execute_command(self, cmd):
         return self.run(cmd)
-     
-        
+
+
 def main():
 
     global bcm_obj
@@ -113,7 +113,7 @@ def main():
                                 break
         except Exception as e:
             log_message( syslog.LOG_WARNING, "Exception. The warning is {0}".format(str(e)) )
-            initialLoop()            
+            initialLoop()
         time.sleep(5)
 
     syslog.closelog()

@@ -11,7 +11,7 @@ function set_onie_boot()
 {
     # If reboot to ONIE is requested, set the ONIE boot mode (update/install/uninstall/rescue)
     # and reboot.
-    
+
     # Exit if not superuser
     if [[ "$EUID" -ne 0 ]]; then
         echo "This command must be run as root" >&2

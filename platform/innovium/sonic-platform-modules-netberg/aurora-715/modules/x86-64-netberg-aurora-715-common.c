@@ -64,9 +64,9 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
     struct Netberg_i2c_data *Netberg_CPLD_23_data;
     struct Netberg_i2c_data *Netberg_CPLD_35_data;
     struct Netberg_i2c_data *Netberg_BMC_14_data;
-    
+
     struct eeprom_data *Netberg_EEPROM_56_data;
-    
+
     int status;
 
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA))
@@ -81,7 +81,7 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
         status = -ENOMEM;
         goto exit;
     }
-    
+
     if (!(Netberg_CPLD_31_data = kzalloc(sizeof(struct Netberg_i2c_data), GFP_KERNEL)))
     {
         printk(KERN_ALERT "kzalloc fail\n");
@@ -95,21 +95,21 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
         status = -ENOMEM;
         goto exit;
     }
-    
+
     if (!(Netberg_CPLD_23_data = kzalloc(sizeof(struct Netberg_i2c_data), GFP_KERNEL)))
     {
         printk(KERN_ALERT "kzalloc fail\n");
         status = -ENOMEM;
         goto exit;
     }
-    
+
     if (!(Netberg_CPLD_35_data = kzalloc(sizeof(struct Netberg_i2c_data), GFP_KERNEL)))
     {
         printk(KERN_ALERT "kzalloc fail\n");
         status = -ENOMEM;
         goto exit;
     }
-    
+
     if (!(Netberg_BMC_14_data = kzalloc(sizeof(struct Netberg_i2c_data), GFP_KERNEL)))
     {
         printk(KERN_ALERT "kzalloc fail\n");
@@ -117,13 +117,13 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
         goto exit;
     }
 
-    if (!(Netberg_EEPROM_56_data = kzalloc(sizeof(struct eeprom_data), GFP_KERNEL))) 
+    if (!(Netberg_EEPROM_56_data = kzalloc(sizeof(struct eeprom_data), GFP_KERNEL)))
     {
         status = -ENOMEM;
         goto exit;
     }
     memset(Netberg_EEPROM_56_data->data, 0xff, EEPROM_SIZE);
-    
+
     i2c_set_clientdata(Netberg_CPLD_30_client, Netberg_CPLD_30_data);
     i2c_set_clientdata(Netberg_CPLD_31_client, Netberg_CPLD_31_data);
     i2c_set_clientdata(Netberg_CPLD_32_client, Netberg_CPLD_32_data);
@@ -150,7 +150,7 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
     {
         goto exit_free;
     }
-    
+
     status = sysfs_create_group(&client->dev.kobj, &NBA715_LED_group);
     if (status)
     {
@@ -162,19 +162,19 @@ static int Netberg_i2c_probe(struct i2c_client *client, const struct i2c_device_
     {
         goto exit_free;
     }
-    
+
     status = sysfs_create_group(&client->dev.kobj, &NBA715_THERMAL_group);
     if (status)
     {
         goto exit_free;
     }
-    
+
     status = sysfs_create_group(&client->dev.kobj, &NBA715_POWER_group);
     if (status)
     {
         goto exit_free;
     }
-    
+
     status = sysfs_create_group(&client->dev.kobj, &NBA715_QSFP_group);
     if (status)
     {
@@ -316,18 +316,18 @@ static int __init Netberg_i2c_init(void)
     char keyword[] = "SMBus I801";
     char buf1[128];
     struct i2c_adapter *i2c_adap;
-    struct file *fp;  
-    mm_segment_t fs;  
-    loff_t pos; 
+    struct file *fp;
+    mm_segment_t fs;
+    loff_t pos;
 
-    printk("Open file...\n");  
-    fp = filp_open("/sys/class/i2c-dev/i2c-0/name", O_RDONLY , 0644);  
-    if (IS_ERR(fp)) {  
-        printk("Open file FAILED\n");  
-        return -1;  
-    } 
+    printk("Open file...\n");
+    fp = filp_open("/sys/class/i2c-dev/i2c-0/name", O_RDONLY , 0644);
+    if (IS_ERR(fp)) {
+        printk("Open file FAILED\n");
+        return -1;
+    }
 
-    fs = get_fs();  
+    fs = get_fs();
     set_fs(KERNEL_DS);
     pos = 0;
     vfs_read(fp, buf1, sizeof(buf1), &pos);
@@ -361,14 +361,14 @@ static int __init Netberg_i2c_init(void)
     Netberg_BMC_14_client  = i2c_new_device(i2c_adap, &Netberg_BMC_14_info[0]);
     Netberg_EEPROM_56_client  = i2c_new_device(i2c_adap, &Netberg_EEPROM_56_info[0]);
 
-    if (Netberg_CPLD_30_info == NULL || Netberg_CPLD_31_info == NULL || Netberg_CPLD_32_info == NULL 
+    if (Netberg_CPLD_30_info == NULL || Netberg_CPLD_31_info == NULL || Netberg_CPLD_32_info == NULL
      || Netberg_CPLD_23_info == NULL || Netberg_CPLD_35_info == NULL || Netberg_BMC_14_info  == NULL
      || Netberg_EEPROM_56_info == NULL)
     {
         printk("ERROR: i2c_new_device FAILED!\n");
         return -1;
     }
-    
+
     i2c_put_adapter(i2c_adap);
     ret = i2c_add_driver(&Netberg_i2c_driver);
     printk(KERN_ALERT "NBA715 i2c Driver Version: %s\n", DRIVER_VERSION);

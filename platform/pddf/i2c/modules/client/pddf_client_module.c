@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Broadcom. 
+ * Copyright 2019 Broadcom.
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -231,7 +231,7 @@ void* get_device_table(char *name)
 {
     PDEVICE *dev=NULL;
     int i=0;
-    
+
     hash_for_each(htable, i, dev, node) {
         if(strcmp(dev->name, name)==0) {
             return (void *)dev->data;
@@ -246,7 +246,7 @@ void delete_device_table(char *name)
 {
     PDEVICE *dev=NULL;
     int i=0;
-    
+
     hash_for_each(htable, i, dev, node) {
         if(strcmp(dev->name, name)==0) {
             pddf_dbg(CLIENT, KERN_ERR "found entry to delete: %s  0x%p\n", dev->name, dev->data);

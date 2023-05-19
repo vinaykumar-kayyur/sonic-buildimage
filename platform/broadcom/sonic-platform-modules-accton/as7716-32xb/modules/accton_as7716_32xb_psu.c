@@ -43,11 +43,11 @@
 static int as7716_32xb_psu_read_block(struct i2c_client *client, u8 command, u8 *data,int data_len);
 extern int as7716_32xb_cpld_read (unsigned short cpld_addr, u8 reg);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7716_32xb_psu_data {
     struct device      *hwmon_dev;
@@ -69,7 +69,7 @@ enum as7716_32xb_psu_sysfs_attributes {
     PSU_FAN_DIR /* For DC12V only */
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t psu_info_store(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
@@ -116,7 +116,7 @@ static ssize_t psu_info_show(struct device *dev, struct device_attribute *da,
         case PSU_FAN_DIR:
             //printk("data->fan_dir=%s\n",data->fan_dir);
             status = snprintf(buf, PAGE_SIZE - 1, "%s\r\n", data->fan_dir);
-            break;             
+            break;
         default :
             break;
     }
@@ -146,7 +146,7 @@ static ssize_t psu_info_store(struct device *dev, struct device_attribute *da,
 		    data->present=keyin;
             break;
         case PSU_MODEL_NAME:
-            memcpy(data->model_name, buf, MAX_MODEL_NAME); 
+            memcpy(data->model_name, buf, MAX_MODEL_NAME);
             break;
         case PSU_POWER_GOOD:
             status = kstrtol(buf, STRING_TO_DEC_VALUE, &keyin);
@@ -158,13 +158,13 @@ static ssize_t psu_info_store(struct device *dev, struct device_attribute *da,
             break;
         case PSU_FAN_DIR:
             memcpy(data->fan_dir, buf, DC12V_FAN_DIR_LEN);
-            break;        
+            break;
         default :
             goto fail_exit;
     }
     mutex_unlock(&data->update_lock);
     return count;
-    
+
 fail_exit:
     mutex_unlock(&data->update_lock);
     return -EINVAL;
@@ -207,7 +207,7 @@ static int as7716_32xb_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -215,7 +215,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -226,13 +226,13 @@ static int as7716_32xb_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32xb_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
-enum psu_index 
-{ 
-    as7716_32xb_psu1, 
+enum psu_index
+{
+    as7716_32xb_psu1,
     as7716_32xb_psu2
 };
 
@@ -259,27 +259,27 @@ static int as7716_32xb_psu_read_block(struct i2c_client *client, u8 command, u8 
 {
     int result = 0;
     int retry_count = 5;
-	
+
 	while (retry_count) {
 	    retry_count--;
-	
+
 	    result = i2c_smbus_read_i2c_block_data(client, command, data_len, data);
-		
+
 		if (unlikely(result < 0)) {
 		    msleep(10);
 	        continue;
 		}
-		
+
         if (unlikely(result != data_len)) {
             result = -EIO;
 			msleep(10);
             continue;
         }
-		
+
 		result = 0;
 		break;
 	}
-	
+
     return result;
 }
 
@@ -315,7 +315,7 @@ static int as7716_32xb_psu_model_name_get(struct device *dev)
                                            data->model_name, models[i].length);
         if (status < 0) {
             data->model_name[0] = '\0';
-            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n", 
+            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
                                   client->addr, models[i].offset);
             return status;
         }

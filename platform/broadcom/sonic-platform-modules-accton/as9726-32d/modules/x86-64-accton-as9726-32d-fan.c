@@ -37,7 +37,7 @@
 static struct as9726_32d_fan_data *as9726_32d_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
-                              const char *buf, size_t count);                            
+                              const char *buf, size_t count);
 
 /* fan related data, the index should match sysfs_fan_attributes
  */

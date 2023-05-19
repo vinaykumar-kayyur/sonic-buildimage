@@ -64,7 +64,7 @@ switch_board_qsfp() {
                             echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
- 
+
         "delete_device")
                         for ((i=2;i<=57;i++));
                         do
@@ -119,7 +119,7 @@ platform_firmware_versions() {
 	echo "Slave CPLD 2: $((r_maj)).$((r_min))" >> $FIRMWARE_VERSION_FILE
 }
 
-#This enables the led control for CPU and default states 
+#This enables the led control for CPU and default states
 switch_board_led_default() {
 	resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
 	/usr/bin/pcisysfs.py --set --offset 0x24 --val 0x194 --res $resource  > /dev/null 2>&1

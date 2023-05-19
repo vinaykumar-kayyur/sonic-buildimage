@@ -139,7 +139,7 @@ static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *d
 	return size;
 }
 
-static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t 
+static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t
 count)
 {
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -178,7 +178,7 @@ static ssize_t show_cpld_version(struct device *dev, struct device_attribute *da
 		return 0;
 	}
 	mutex_unlock(&data->update_lock);
-	return sprintf(buf, "%02x %02x %02x %02x \n", data->data[0], data->data[1], data->data[2], 
+	return sprintf(buf, "%02x %02x %02x %02x \n", data->data[0], data->data[1], data->data[2],
 	data->data[3]);
 }
 
@@ -234,7 +234,7 @@ static ssize_t show_mac_temp_value(struct device *dev, struct device_attribute *
         DBG_ERROR("invalid cpld value : %d.\n", tmp_value);
         return snprintf(buf, CPLD_SIZE, "%d\n", -READ_TEMP_FAIL);
     }
-    
+
     DBG_DEBUG("tmp_value = 0x%x\n", tmp_value);
     value = 434100 - (12500000 / (tmp_value * 100 - 1) *535);
     if ((value / 1000 < -70) || (value / 1000 > 200)) {
@@ -242,7 +242,7 @@ static ssize_t show_mac_temp_value(struct device *dev, struct device_attribute *
     }
 
     return snprintf(buf, CPLD_SIZE, "%d\n", value);
-    
+
 }
 
 /* common */
@@ -508,7 +508,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
     if (!data) {
         return -ENOMEM;
     }
-    
+
     data->client = client;
     i2c_set_clientdata(client, data);
     mutex_init(&data->update_lock);
@@ -520,12 +520,12 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
         DBG_DEBUG("=========(addr:0x%x, nr:%d) sysfs_create_group status %d===========\n", client->addr, client->adapter->nr, status);
         if (status != 0) {
             DBG_ERROR("sysfs_create_group status %d.\n", status);
-            goto error; 
+            goto error;
         }
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no sysfs_create_group \n", client->addr, client->adapter->nr);
     }
-    
+
     hwmon_group = NULL;
     hwmon_group = cpld_get_attr_group(client, 1);
     if (hwmon_group) {
@@ -538,7 +538,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
         DBG_DEBUG("=========(addr:0x%x, nr:%d) hwmon_device_register_with_groups success===========\n", client->addr, client->adapter->nr);
         if (status != 0) {
             DBG_ERROR("sysfs_create_group status %d.\n", status);
-            goto error; 
+            goto error;
         }
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no hwmon_device_register_with_groups \n", client->addr, client->adapter->nr);
@@ -553,7 +553,7 @@ static int cpld_remove(struct i2c_client *client)
 {
     struct cpld_data *data = i2c_get_clientdata(client);
     const struct attribute_group *sysfs_group, *hwmon_group;
-    
+
     DBG_DEBUG("=========cpld_remove(addr:0x%x, nr:%d)===========\n", client->addr, client->adapter->nr);
 
     sysfs_group = NULL;
@@ -564,7 +564,7 @@ static int cpld_remove(struct i2c_client *client)
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no sysfs_remove_group \n", client->addr, client->adapter->nr);
     }
-    
+
     hwmon_group = NULL;
     hwmon_group = cpld_get_attr_group(client, 1);
     if (hwmon_group) {
@@ -572,8 +572,8 @@ static int cpld_remove(struct i2c_client *client)
         hwmon_device_unregister(data->hwmon_dev);
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no hwmon_device_unregister \n", client->addr, client->adapter->nr);
-    }   
-    
+    }
+
     return 0;
 }
 

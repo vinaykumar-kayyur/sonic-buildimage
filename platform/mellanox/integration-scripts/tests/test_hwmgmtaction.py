@@ -79,7 +79,7 @@ def mock_hwmgmt_args():
                                 "--hw_mgmt_ver", "7.0030.0937",
                                 "--sb_msg", "/tmp/sb_msg.log",
                                 "--slk_msg", "/tmp/slk_msg.log",
-                                "--build_root", "/sonic", 
+                                "--build_root", "/sonic",
                                 "--is_test"]):
         parser = create_parser()
         return parser.parse_args()
@@ -122,7 +122,7 @@ class TestHwMgmtPostAction(TestCase):
         print(Data.i_mlnx_start, Data.i_mlnx_end)
         assert Data.old_series[Data.i_mlnx_start].strip() == "###-> mellanox_hw_mgmt-start"
         assert Data.old_series[Data.i_mlnx_end].strip() == "###-> mellanox_hw_mgmt-end"
-    
+
     def test_check_kconfig_conflicts(self):
         # Add a line to create conflict
         print(Data.current_kcfg)
@@ -153,13 +153,13 @@ class TestHwMgmtPostAction(TestCase):
         shutil.copy(MOCK_INPUTS_DIR+"/kconfig-inclusions", MOCK_WRITE_FILE)
         FileHandler.write_lines_marker(MOCK_WRITE_FILE, KCFG.get_writable_opts(Data.updated_kcfg), MLNX_KFG_MARKER)
         assert check_file_content(MOCK_INPUTS_DIR+"expected_data/kconfig-inclusions")
-    
+
     @mock.patch('helper.FileHandler.write_lines', side_effect=write_lines_mock)
     def test_handle_exclusions(self, mock_write_lines):
         self.action.find_mlnx_hw_mgmt_markers()
         self.action.handle_exclusions()
         assert check_file_content(MOCK_INPUTS_DIR+"expected_data/kconfig-exclusions")
-    
+
     @mock.patch('helper.FileHandler.write_lines', side_effect=write_lines_mock)
     def test_write_series_diff(self, mock_write_lines):
         self.action.find_mlnx_hw_mgmt_markers()

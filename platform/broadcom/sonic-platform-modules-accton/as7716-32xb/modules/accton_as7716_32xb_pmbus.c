@@ -13,17 +13,17 @@
 #define STRING_TO_DEC_VALUE		10
 
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7716_32xb_pmbus_data {
     struct device      *hwmon_dev;
     struct mutex        update_lock;
     u8  index;
-    u8   capability; 
+    u8   capability;
     u16  status_word;
     u8   fan_fault;
     u8   over_temp;
@@ -35,7 +35,7 @@ struct as7716_32xb_pmbus_data {
     u16  fan_duty_cycle;
     u8   fan_dir[4];
     u8   pmbus_revision;
-    u8   mfr_id[10];     
+    u8   mfr_id[10];
     u8   mfr_model[10];
     u8   mfr_revision[3];
     u16  mfr_vin_min;
@@ -81,7 +81,7 @@ enum as7716_32xb_pmbus_sysfs_attributes {
     PSU_MFR_POUT_MAX
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t pmbus_info_show(struct device *dev, struct device_attribute *da,
              char *buf);
@@ -188,7 +188,7 @@ static ssize_t pmbus_info_show(struct device *dev, struct device_attribute *da,
             break;
         case PSU_I_OUT:
             status=snprintf(buf, PAGE_SIZE-1, "%d\r\n", data->i_out);
-            break;        
+            break;
         case PSU_P_OUT:
             printk("read PSU_P_OUT\n");
             status=snprintf(buf, PAGE_SIZE-1, "%d\r\n", data->p_out);
@@ -200,7 +200,7 @@ static ssize_t pmbus_info_show(struct device *dev, struct device_attribute *da,
         case PSU_TEMP1_INPUT:
             status=snprintf(buf, PAGE_SIZE-1, "%d\r\n", data->temp);
             break;
-        case PSU_FAN1_SPEED: 
+        case PSU_FAN1_SPEED:
             status=snprintf(buf, PAGE_SIZE-1, "%d\r\n", data->fan_speed);
             break;
         case PSU_FAN1_DUTY_CYCLE:
@@ -265,7 +265,7 @@ static ssize_t pmbus_info_store(struct device *dev, struct device_attribute *da,
         case PSU_POWER_ON:
             data->power_on=keyin;
             break;
-        case PSU_TEMP_FAULT: 
+        case PSU_TEMP_FAULT:
             data->temp_fault=keyin;
             break;
         case PSU_POWER_GOOD:
@@ -284,14 +284,14 @@ static ssize_t pmbus_info_store(struct device *dev, struct device_attribute *da,
             break;
         case PSU_I_OUT:
             data->i_out=keyin;
-            break;        
+            break;
         case PSU_P_OUT:
             printk("data->p_out=%d\n", data->p_out);
             data->p_out=keyin;
             break;
         case PSU_P_OUT_UV:
             //multiplier = 1000000;  /*For lm-sensors, unit is micro-Volt.*/
-            
+
             break;
         case PSU_TEMP1_INPUT:
             data->temp=keyin;
@@ -380,7 +380,7 @@ static int as7716_32xb_pmbus_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: pmbus '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -388,7 +388,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -399,13 +399,13 @@ static int as7716_32xb_pmbus_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32xb_pmbus_group);
     kfree(data);
-    
+
     return 0;
 }
 
 
 static const struct i2c_device_id as7716_32xb_pmbus_id[] = {
-    { "as7716_32xb_pmbus", 0 },    
+    { "as7716_32xb_pmbus", 0 },
     {}
 };
 MODULE_DEVICE_TABLE(i2c, as7716_32xb_pmbus_id);

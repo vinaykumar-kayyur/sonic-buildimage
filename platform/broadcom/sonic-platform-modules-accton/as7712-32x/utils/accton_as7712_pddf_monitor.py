@@ -75,9 +75,9 @@ def as7712_set_fan_duty_cycle(dc):
     if dc < 0 or dc > 100:
         print("Error: Wrong duty cycle value %d" % (dc))
         return -1
-    
+
     platform_chassis.get_fan(0).set_speed(dc)
-    
+
     return 0
 
 
@@ -137,7 +137,7 @@ class accton_as7712_monitor(object):
         global platform_chassis
         FAN_STATE_REMOVE = 0
         FAN_STATE_INSERT = 1
-       
+
         get_temp = 0
         for t in range(0, 3):
             get_temp = get_temp + platform_chassis.get_thermal(t).get_temperature()*1000
@@ -185,7 +185,7 @@ class accton_as7712_monitor(object):
                 if x == 4:
                     as7712_set_fan_duty_cycle(policy[0][0])
                     break
-                
+
                 if get_temp > policy[x][2] and x != 3:
                     new_duty_cycle = policy[x+1][0]
                     self.llog.debug('THERMAL temp UP, temp %d > %d , new_duty_cycle=%d',

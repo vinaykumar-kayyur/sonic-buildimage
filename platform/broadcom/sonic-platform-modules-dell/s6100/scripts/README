@@ -1,4 +1,4 @@
-Dell S6100 64x40G support 
+Dell S6100 64x40G support
 ------------------------
 
 summary:-
@@ -7,24 +7,24 @@ S6100 supports 4 IO Modules which are pluggable. Below section covers how to pow
 and initialize the device drivers and configure necessary mux to send traffic.
 
 
-Necessary drivers and scripts to package 
+Necessary drivers and scripts to package
 
 1) Users are expected to build necessary drivers for kernel and package to acess it on the target
 
-    a) Mgmt phy driver  
+    a) Mgmt phy driver
       This supports BCM 54616 phy driver ( enable CONFIG_IGB in kernel config)
-    b) driver-support-sff-8436-eeprom.patch 
+    b) driver-support-sff-8436-eeprom.patch
     c) driver-support-sff-8436-eeprom-update.patch
     This driver supports QSFP EEPROM
-    d) dell_s6100_iom_cpld.ko   
+    d) dell_s6100_iom_cpld.ko
     This driver provides support for cpld on 4 x 40Gig-IOM modules
     e) i2c_mux_pca954x.ko
     This driver provides support for i2c mux/switch (pca954x)
     f) dell_s6100_lpc.ko
-    This driver porivide support for reading all the platform info from SMF. 
+    This driver porivide support for reading all the platform info from SMF.
 
 
-2) Users are also expected to package below scripts for platform initialization and i2c tree creation 
+2) Users are also expected to package below scripts for platform initialization and i2c tree creation
 
     a) iom_power.sh
     This script is used to power on IO modules on S6100
@@ -33,10 +33,10 @@ This script is generic LPC/io read/write utility (can also access system cpld)
 
 steps to platform initialization (Tested with 3.16)
 
-1) After power up of S6100 
+1) After power up of S6100
 
      a) power up the io modules by executing (./iom_power.sh)
-     b) insert i2c_mux_pca954x.ko,dell_s6100_iom_cpld.ko,dell_s6100_lpc.ko 
+     b) insert i2c_mux_pca954x.ko,dell_s6100_iom_cpld.ko,dell_s6100_lpc.ko
 
     Above 2 steps can be called by including them in below 2 step
 
@@ -55,9 +55,9 @@ steps to platform initialization (Tested with 3.16)
     driver/        iom_cpld_vers  modalias       name           power/         qsfp_lpmode    qsfp_modprs    qsfp_reset     subsystem/     uevent
 
 4) step 2 script also builds/attach sfp device tress in sysfs
-   
+
     Example for reading EEPROM data
-        
+
             cat  /sys/bus/i2c/devices/19-0050/eeprom | hexdump -C
             00000000  0d 00 00 0f 00 00 00 00  00 00 00 00 00 00 00 00  |................|
             00000010  00 00 00 00 00 00 18 1b  00 00 82 20 00 00 00 00  |........... ....|
@@ -84,7 +84,7 @@ steps to platform initialization (Tested with 3.16)
             00000280
 
 5)SMF driver details/Readme are as below
-  
+
    S6100 SMF
    ---------
 

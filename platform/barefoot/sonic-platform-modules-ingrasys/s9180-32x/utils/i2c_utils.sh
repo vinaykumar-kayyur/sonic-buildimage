@@ -504,13 +504,13 @@ function _i2c_fan_init {
 function _set_gpio_offset {
     GPIO_OFFSET=0
     for d in `ls /sys/class/gpio/ | grep gpiochip`
-    do   
+    do
         gpiochip_no=${d##gpiochip}
-        if [ $gpiochip_no -gt 255 ]; then 
+        if [ $gpiochip_no -gt 255 ]; then
             GPIO_OFFSET=256
             break
-        fi   
-    done 
+        fi
+    done
     #echo "set GPIO_OFFSET=${GPIO_OFFSET}"
 }
 
@@ -584,7 +584,7 @@ function _i2c_gpio_init {
                 echo out > /sys/class/gpio/gpio${i}/direction
             ;;
         esac
-    
+
     done
     #echo 176 > /sys/class/gpio/export
     #echo 177 > /sys/class/gpio/export
@@ -660,7 +660,7 @@ function _i2c_gpio_init {
         #echo out > /sys/class/gpio/gpio${i}/direction
         #echo 0 > /sys/class/gpio/gpio${i}/value
     done
-    
+
     #PSU I/O on Dummy Board 0x25
     echo "pca9535 0x25" > /sys/bus/i2c/devices/i2c-${NUM_I801_DEVICE}/new_device
     #for i in {96..111};
@@ -1447,11 +1447,11 @@ function _i2c_psu1_led {
     local value=0
     local mask=8
 
-    if [ "${COLOR_SYS_LED}" == "green" ]; then 
+    if [ "${COLOR_SYS_LED}" == "green" ]; then
         value=0x00
-    elif [ "${COLOR_SYS_LED}" == "amber" ]; then 
+    elif [ "${COLOR_SYS_LED}" == "amber" ]; then
         value=0xFF
-    else 
+    else
         echo "Invalid Parameters ${COLOR_SYS_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1465,11 +1465,11 @@ function _i2c_psu2_led {
     local value=0
     local mask=16
 
-    if [ "${COLOR_SYS_LED}" == "green" ]; then 
+    if [ "${COLOR_SYS_LED}" == "green" ]; then
         value=0x00
-    elif [ "${COLOR_SYS_LED}" == "amber" ]; then 
+    elif [ "${COLOR_SYS_LED}" == "amber" ]; then
         value=0xFF
-    else 
+    else
         echo "Invalid Parameters ${COLOR_SYS_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1705,7 +1705,7 @@ function _main {
         exit ${FALSE}
     fi
 
-    if [ "$DEBUG" == "on" ]; then 
+    if [ "$DEBUG" == "on" ]; then
         echo "-----------------------------------------------------"
         end_time_str=`date`
         end_time_sec=$(date +%s)

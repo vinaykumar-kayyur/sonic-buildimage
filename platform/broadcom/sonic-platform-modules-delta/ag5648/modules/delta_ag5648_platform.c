@@ -42,10 +42,10 @@
 #define SFP_PRESENCE_6   0x08
 #define SFP_PRESENCE_7   0x09
 #define QSFP_PRESENCE    0x12
-        
+
 #define QSFP_RESPONSE    0x10
 #define QSFP_LP_MODE     0x11
-#define QSFP_RESET       0x13        
+#define QSFP_RESET       0x13
 
 
 #define SFF8436_INFO(data) \
@@ -53,7 +53,7 @@
 
 #define SFF_8436_PORT(eedata) \
     .byte_len = 256, .page_size = 1, .flags = SFF_8436_FLAG_READONLY
-	
+
 #define ag5648_i2c_device_num(NUM){                                           \
         .name                   = "delta-ag5648-i2c-device",                  \
         .id                     = NUM,                                        \
@@ -136,7 +136,7 @@ static struct i2c_board_info __initdata i2c_info_pca9548[] =
 {
         {
             I2C_BOARD_INFO("pca9548", 0x70),
-            .platform_data = &pca954x_data, 
+            .platform_data = &pca954x_data,
         },
 };
 
@@ -614,7 +614,7 @@ static struct platform_device ag5648_i2c_device[] = {
     ag5648_i2c_device_num(9),
     ag5648_i2c_device_num(10),
     ag5648_i2c_device_num(11),
-    ag5648_i2c_device_num(12),   
+    ag5648_i2c_device_num(12),
     ag5648_i2c_device_num(13),
     ag5648_i2c_device_num(14),
     ag5648_i2c_device_num(15),
@@ -670,7 +670,7 @@ static struct platform_device ag5648_i2c_device[] = {
     ag5648_i2c_device_num(65),
     ag5648_i2c_device_num(66),
 };
- 
+
 /*----------------   I2C device   - end   ------------- */
 
 /*----------------   I2C driver   - start   ------------- */
@@ -819,7 +819,7 @@ static ssize_t get_present(struct device *dev, struct device_attribute \
     return sprintf(buf, "0x%06x%x\n", data2, data);
 }
 
-static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u32 data = 0;
@@ -833,7 +833,7 @@ static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, 
     return sprintf(buf, "0x%02x%012x\n", data, 0);
 }
 
-static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     unsigned long data;
     int err;
@@ -843,14 +843,14 @@ static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, 
     err = kstrtoul(buf, 16, &data);
     if (err)
         return err;
-    
+
     data = data >> 48;
     i2c_smbus_write_byte_data(pdata[master_cpld].client, QSFP_LP_MODE, (u8)(data & 0xff));
 
     return count;
 }
 
-static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u32 data = 0;
@@ -865,12 +865,12 @@ static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, c
     return sprintf(buf, "0x%02x%012x\n", data, 0);
 }
 
-static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     unsigned long data;
     int err;
     struct cpld_platform_data *pdata = dev->platform_data;
-    
+
     err = kstrtoul(buf, 16, &data);
     if (err)
         return err;
@@ -880,7 +880,7 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, c
     return count;
 }
 
-static ssize_t get_response(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_response(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u8 data = 0;
@@ -895,7 +895,7 @@ static ssize_t get_response(struct device *dev, struct device_attribute *devattr
     return sprintf(buf, "0x%02x%012x\n", data, 0);
 }
 
-static ssize_t set_response(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_response(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     unsigned long data;
     int err;
@@ -915,7 +915,7 @@ struct platform_led_status{
 	char *led_status;
 	int led_id;
 };
-	
+
 static struct platform_led_status led_info[] = {
     {
         .reg_data = 0x00,//0000 0000
@@ -1038,43 +1038,43 @@ static struct platform_led_status led_info[] = {
         .led_id = 6,
     },
 };
-	
+
 struct platform_led_data{
-	int reg_addr;	
-	int mask;		
+	int reg_addr;
+	int mask;
 };
-	
-static struct platform_led_data led_data[] = {	
+
+static struct platform_led_data led_data[] = {
     {
 	.reg_addr = LED_REG,    //0x04
-	.mask = 0xc0,//1100 0000		
+	.mask = 0xc0,//1100 0000
     },
     {
 	.reg_addr = LED_REG,
-        .mask = 0x30,//0011 0000	
+        .mask = 0x30,//0011 0000
     },
     {
 	.reg_addr = LED_REG,
-        .mask = 0x06,//0000 0110	
+        .mask = 0x06,//0000 0110
     },
     {
         .reg_addr = FAN_LED_REG,//0x05
-        .mask = 0xc0,//1100 0000        
+        .mask = 0xc0,//1100 0000
     },
     {
         .reg_addr = FAN_LED_REG,
-        .mask = 0x30,//0011 0000    
+        .mask = 0x30,//0011 0000
     },
     {
         .reg_addr = FAN_LED_REG,
-        .mask = 0x0c,//0000 1100    
+        .mask = 0x0c,//0000 1100
     },
     {
         .reg_addr = FAN_LED_REG,
         .mask = 0x03,//0000 0011
-    },  
+    },
 };
-	
+
 
 static ssize_t get_led_color(struct device *dev, struct device_attribute *devattr, char *buf)
 {
@@ -1084,20 +1084,20 @@ static ssize_t get_led_color(struct device *dev, struct device_attribute *devatt
     int led_info_number;
     struct cpld_platform_data *pdata = dev->platform_data;
 
-    for(led_data_number = 0; led_data_number < ARRAY_SIZE(led_data); led_data_number++){	
-        board_data = i2c_smbus_read_byte_data(pdata[slave_cpld].client, led_data[led_data_number].reg_addr);	
+    for(led_data_number = 0; led_data_number < ARRAY_SIZE(led_data); led_data_number++){
+        board_data = i2c_smbus_read_byte_data(pdata[slave_cpld].client, led_data[led_data_number].reg_addr);
         if(board_data >= 0){
-                board_data &= led_data[led_data_number].mask;		
+                board_data &= led_data[led_data_number].mask;
                 for(led_info_number = 0; led_info_number < ARRAY_SIZE(led_info); led_info_number++){
                     if (led_data_number == led_info[led_info_number].led_id \
                           && board_data == led_info[led_info_number].reg_data){
                         sprintf(str[led_data_number], "%s", led_info[led_info_number].led_status);
-                    }		
+                    }
                 }
         }
         else
             printk( KERN_ERR "Missing LED board data\n");
-        }		    		
+        }
 	return sprintf(buf,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",str[0],str[1],str[2],str[3],str[4],str[5],str[6]);
 }
 
@@ -1108,16 +1108,16 @@ static ssize_t set_led_color(struct device *dev, struct device_attribute *devatt
 	int str_compar;
 	int led_reg_value;
     struct cpld_platform_data *pdata = dev->platform_data;
-	
+
 	for(led_info_number = 0; led_info_number < ARRAY_SIZE(led_info); led_info_number++){
 		str_compar = strncmp(buf,led_info[led_info_number].led_status,strlen(led_info[led_info_number].led_status));
-		if(str_compar == 0){									
-			for(led_data_number = 0; led_data_number < ARRAY_SIZE(led_data); led_data_number++){				
+		if(str_compar == 0){
+			for(led_data_number = 0; led_data_number < ARRAY_SIZE(led_data); led_data_number++){
 			    if(led_info[led_info_number].led_id == led_data_number){
 					led_reg_value = i2c_smbus_read_byte_data(pdata[slave_cpld].client, led_data[led_data_number].reg_addr);
-                    if(led_reg_value >= 0){					
-			            led_reg_value &= (~led_data[led_data_number].mask);					
-				        led_reg_value |= led_info[led_info_number].reg_data;					
+                    if(led_reg_value >= 0){
+			            led_reg_value &= (~led_data[led_data_number].mask);
+				        led_reg_value |= led_info[led_info_number].reg_data;
 					    i2c_smbus_write_byte_data(pdata[slave_cpld].client, (u8)(led_data[led_data_number].reg_addr & 0xff), (u8)(led_reg_value & 0xff));
 					}
 					else
@@ -1137,7 +1137,7 @@ static DEVICE_ATTR(sfp_reset,    S_IWUSR | S_IRUGO, get_reset,     set_reset    
 static DEVICE_ATTR(led_control,  S_IRUGO | S_IWUSR, get_led_color, set_led_color);
 
 static struct attribute *ag5648_cpld_attrs[] = {
-    &dev_attr_sfp_response.attr,    
+    &dev_attr_sfp_response.attr,
     &dev_attr_sfp_present.attr,
     &dev_attr_sfp_lpmode.attr,
     &dev_attr_sfp_reset.attr,
@@ -1184,7 +1184,7 @@ static int __init cpld_probe(struct platform_device *pdev)
 
     return 0;
 
-error:    
+error:
     i--;
     for (; i >= 0; i--) {
         if (pdata[i].client) {
@@ -1192,8 +1192,8 @@ error:
         }
     }
     i2c_put_adapter(parent);
-    
-    return -ENODEV; 
+
+    return -ENODEV;
 }
 
 static int __exit cpld_remove(struct platform_device *pdev)
@@ -1205,7 +1205,7 @@ static int __exit cpld_remove(struct platform_device *pdev)
 
     if (!pdata) {
         dev_err(&pdev->dev, "Missing platform data\n");
-    } 
+    }
     else {
         for (i = 0; i < ARRAY_SIZE(ag5648_cpld_platform_data); i++) {
             if (pdata[i].client) {
@@ -1250,8 +1250,8 @@ struct swpld_mux {
 
 static struct swpld_mux_platform_data ag5648_swpld_mux_platform_data[] = {
     {
-        .parent         = BUS4, 
-        .base_nr        = BUS4_BASE_NUM, 
+        .parent         = BUS4,
+        .base_nr        = BUS4_BASE_NUM,
         .cpld           = NULL,
         .reg_addr       = BUS4_MUX_REG ,
     },
@@ -1285,7 +1285,7 @@ static int cpld_reg_write_byte(struct i2c_client *client, u8 regaddr, u8 val)
 static int swpld_mux_select(struct i2c_adapter *adap, void *data, u8 chan)
 {
     struct swpld_mux *mux = data;
-    u8 swpld_mux_val=0; 
+    u8 swpld_mux_val=0;
     if ( mux->data.base_nr == BUS4_BASE_NUM )
     {
         swpld_mux_val = (chan + 0x01);
@@ -1302,7 +1302,7 @@ static int swpld_mux_select(struct i2c_adapter *adap, void *data, u8 chan)
 static int swpld_mux_select(struct i2c_mux_core *muxc, u32 chan)
 {
     struct swpld_mux *mux = i2c_mux_priv(muxc);
-    u8 swpld_mux_val=0; 
+    u8 swpld_mux_val=0;
     if ( mux->data.base_nr == BUS4_BASE_NUM )
     {
         swpld_mux_val = (chan + 0x01);
@@ -1343,7 +1343,7 @@ static int __init swpld_mux_probe(struct platform_device *pdev)
             dev_num = BUS4_DEV_NUM;
             break;
         default :
-            dev_num = DEFAULT_NUM;  
+            dev_num = DEFAULT_NUM;
             break;
     }
 
@@ -1426,7 +1426,7 @@ static int __init swpld_mux_probe(struct platform_device *pdev)
             dev_num = BUS4_DEV_NUM;
             break;
         default :
-            dev_num = DEFAULT_NUM;  
+            dev_num = DEFAULT_NUM;
             break;
     }
 
@@ -1491,7 +1491,7 @@ static int __exit swpld_mux_remove(struct platform_device *pdev)
             dev_num = BUS4_DEV_NUM;
             break;
         default :
-            dev_num = DEFAULT_NUM;  
+            dev_num = DEFAULT_NUM;
             break;
     }
 
@@ -1538,8 +1538,8 @@ static int __init delta_ag5648_platform_init(void)
     int ret,i = 0;
 
     //Use pca9548 in i2c_mux_pca954x.c
-    adapter = i2c_get_adapter(BUS1); 
-    
+    adapter = i2c_get_adapter(BUS1);
+
     i2c_client_9548 = i2c_new_device(adapter, &i2c_info_pca9548[0]);
     i2c_put_adapter(adapter);
 
@@ -1557,7 +1557,7 @@ static int __init delta_ag5648_platform_init(void)
         goto error_swpld_mux_driver;
     }
 
-    // register the i2c devices    
+    // register the i2c devices
     ret = platform_driver_register(&i2c_device_driver);
     if (ret) {
         printk(KERN_WARNING "Fail to register i2c device driver\n");
@@ -1575,13 +1575,13 @@ static int __init delta_ag5648_platform_init(void)
 
 
     swpld_pdata = ag5648_swpld_mux[0].dev.platform_data;
-    swpld_pdata->cpld = cpld_pdata[master_cpld].client;  
-    ret = platform_device_register(&ag5648_swpld_mux[0]);          
+    swpld_pdata->cpld = cpld_pdata[master_cpld].client;
+    ret = platform_device_register(&ag5648_swpld_mux[0]);
     if (ret) {
         printk(KERN_WARNING "Fail to create swpld mux %d\n", i);
         goto error_ag5648_swpld_mux;
     }
-    
+
     for (i = 0; i < ARRAY_SIZE(ag5648_i2c_device); i++)
     {
         ret = platform_device_register(&ag5648_i2c_device[i]);
@@ -1600,7 +1600,7 @@ error_ag5648_i2c_device:
     for (; i >= 0; i--) {
         platform_device_unregister(&ag5648_i2c_device[i]);
     }
-    i = ARRAY_SIZE(ag5648_swpld_mux);    
+    i = ARRAY_SIZE(ag5648_swpld_mux);
 error_ag5648_swpld_mux:
     i--;
     for (; i >= 0; i--) {
@@ -1641,4 +1641,4 @@ module_exit(delta_ag5648_platform_exit);
 
 MODULE_DESCRIPTION("DNI ag5648 Platform Support");
 MODULE_AUTHOR("Neal Tai <neal.tai@deltaww.com>");
-MODULE_LICENSE("GPL");    
+MODULE_LICENSE("GPL");

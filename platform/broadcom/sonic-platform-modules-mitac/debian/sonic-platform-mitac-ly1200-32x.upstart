@@ -2,4 +2,4 @@ description "SONiC platform service"
 
 respawn
 
-exec /etc/init.d/sonic-platform-mitac-ly1200-32x start 
+exec /etc/init.d/sonic-platform-mitac-ly1200-32x start

@@ -1,26 +1,26 @@
 #
 #  Copyright 2007-2020 Broadcom Inc. All rights reserved.
-#  
+#
 #  Permission is granted to use, copy, modify and/or distribute this
 #  software under either one of the licenses below.
-#  
+#
 #  License Option 1: GPL
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License, version 2, as
 #  published by the Free Software Foundation (the "GPL").
-#  
+#
 #  This program is distributed in the hope that it will be useful, but
 #  WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #  General Public License version 2 (GPLv2) for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  version 2 (GPLv2) along with this source code.
-#  
-#  
+#
+#
 #  License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
-#  
+#
 #  This software is governed by the Broadcom Open Network Switch APIs license:
 #  https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
 #
@@ -136,7 +136,7 @@ CROSS_GCC_VER ?= $(shell $(TOOLCHAIN_BIN_DIR)/$(CROSS_COMPILE)gcc -dumpversion)
 KFLAG_INCLD = $(TOOLCHAIN_BASE_DIR)/lib/gcc/$(TARGET_ARCHITECTURE)/$(CROSS_GCC_VER)/include
 
 ifeq (,$(KFLAGS))
-KFLAGS := -D__LINUX_ARM_ARCH__=8 -D__KERNEL__ -DPTRS_ARE_64BITS -DLONGS_ARE_64BITS -nostdinc -isystem $(KFLAG_INCLD) -I$(LINUX_INCLUDE) -include $(LINUX_INCLUDE)/generated/autoconf.h -I$(KERNDIR)/arch/arm64/include -I$(KERNDIR)/arch/arm64/include/generated -I$(KERNDIR)/arch/arm64/include/generated/asm -I$(KERNDIR)/include/uapi -I$(KERNDIR)/include/generated/uapi -I$(KERNDIR)/arch/arm64/include/uapi -Wall -Wstrict-prototypes -Wno-trigraphs -Os -fno-strict-aliasing -fno-common -fno-pic -pipe -ffreestanding -fomit-frame-pointer -g -fno-stack-protector -Wdeclaration-after-statement -Wno-pointer-sign 
+KFLAGS := -D__LINUX_ARM_ARCH__=8 -D__KERNEL__ -DPTRS_ARE_64BITS -DLONGS_ARE_64BITS -nostdinc -isystem $(KFLAG_INCLD) -I$(LINUX_INCLUDE) -include $(LINUX_INCLUDE)/generated/autoconf.h -I$(KERNDIR)/arch/arm64/include -I$(KERNDIR)/arch/arm64/include/generated -I$(KERNDIR)/arch/arm64/include/generated/asm -I$(KERNDIR)/include/uapi -I$(KERNDIR)/include/generated/uapi -I$(KERNDIR)/arch/arm64/include/uapi -Wall -Wstrict-prototypes -Wno-trigraphs -Os -fno-strict-aliasing -fno-common -fno-pic -pipe -ffreestanding -fomit-frame-pointer -g -fno-stack-protector -Wdeclaration-after-statement -Wno-pointer-sign
 endif
 
 ifdef LTSW_CHIPS

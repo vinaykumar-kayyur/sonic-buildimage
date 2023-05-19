@@ -267,7 +267,7 @@ def device_install():
             port = port + 3
         else:
             port = port + 1
-            
+
 
         status, output =log_os_system("echo cs5435_54p_sfp"+str(port)+" 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
         if status:

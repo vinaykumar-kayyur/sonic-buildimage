@@ -32,7 +32,7 @@
 #include <linux/slab.h>
 
 #define		TEMP_INT_MASK		(0xFFC0)
-#define 	V_IN_INT_MASK		(0xFFE0)	
+#define 	V_IN_INT_MASK		(0xFFE0)
 #define 	V_OUT_INT_MASK		(0xFF00)
 #define		INVALID_READING		(0xFFFF)
 #define 	TEMP_FR_LEN		6
@@ -106,9 +106,9 @@ static struct attribute *psu_attributes[] = {
 
 static short convert_to_decimal(u16 value,
 		u16 data_mask,
-		u8 fr_len) 
+		u8 fr_len)
 {
-        return (((short)value >= 0) ? ((value & data_mask) >> fr_len) : 
+        return (((short)value >= 0) ? ((value & data_mask) >> fr_len) :
                 (-((((~(value & data_mask)) >> fr_len) + 1))));
 }
 
@@ -121,13 +121,13 @@ static ssize_t show_word(struct device *dev, struct device_attribute *da,
 
     switch (attr->index) {
         case PSU_V_OUT:
-		value = 1000 * convert_to_decimal(data->v_out, 
-						V_OUT_INT_MASK, 
+		value = 1000 * convert_to_decimal(data->v_out,
+						V_OUT_INT_MASK,
 						V_OUT_FR_LEN);
 		break;
 	case PSU_V_IN:
-		value = convert_to_decimal(data->v_in, 
-						V_IN_INT_MASK, 
+		value = convert_to_decimal(data->v_in,
+						V_IN_INT_MASK,
 						V_IN_FR_LEN);
 		break;
 	case PSU_I_IN:
@@ -143,23 +143,23 @@ static ssize_t show_word(struct device *dev, struct device_attribute *da,
 		value = data->fan2_input;
 		break;
 	case PSU_TEMP1_INPUT:
-		value = 1000 * convert_to_decimal(data->temp1_input, 
-						TEMP_INT_MASK, 
+		value = 1000 * convert_to_decimal(data->temp1_input,
+						TEMP_INT_MASK,
 						TEMP_FR_LEN);
 		break;
 	case PSU_TEMP2_INPUT:
-		value = 1000 * convert_to_decimal(data->temp2_input, 
-						TEMP_INT_MASK, 
+		value = 1000 * convert_to_decimal(data->temp2_input,
+						TEMP_INT_MASK,
 						TEMP_FR_LEN);
 		break;
 	case PSU_TEMP3_INPUT:
-		value = 1000 * convert_to_decimal(data->temp3_input, 
-						TEMP_INT_MASK, 
+		value = 1000 * convert_to_decimal(data->temp3_input,
+						TEMP_INT_MASK,
 						TEMP_FR_LEN);
 		break;
 	case PSU_TEMP4_INPUT:
-		value = 1000 * convert_to_decimal(data->temp4_input, 
-						TEMP_INT_MASK, 
+		value = 1000 * convert_to_decimal(data->temp4_input,
+						TEMP_INT_MASK,
 						TEMP_FR_LEN);
 		break;
     }

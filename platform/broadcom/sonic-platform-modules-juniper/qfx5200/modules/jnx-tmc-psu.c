@@ -70,8 +70,8 @@ static ssize_t tmc_psu_presense_show(struct device *dev, struct device_attribute
 {
 	struct sensor_device_attribute *s_attr = to_sensor_dev_attr(attr);
 	struct platform_device *pdev = to_platform_device(dev);
-	struct tmc_psu_data *psu = platform_get_drvdata(pdev);	
-	
+	struct tmc_psu_data *psu = platform_get_drvdata(pdev);
+
 	return sprintf(buf, "%d\n", get_psu_presense(psu->tmc_membase, s_attr->index));
 
 }
@@ -102,13 +102,13 @@ static int tmc_psu_probe(struct platform_device *pdev)
 		dev_err(dev, "psu structure allocation failed\n");
 		return -ENOMEM;
 	}
-	
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
 		dev_err(dev, "res allocation failed\n");
 		return -ENODEV;
 	}
-	
+
 	addr = devm_ioremap(dev, res->start, resource_size(res));
 	if (!addr) {
 		dev_err(dev, "ioremap failed\n");
@@ -124,8 +124,8 @@ static int tmc_psu_probe(struct platform_device *pdev)
 	if (ret != 0) {
 		dev_err(dev, "jnx-tmc-psu: sysfs_create_group failed: %d\n", ret);
 		return ret;
-	} 
-	
+	}
+
 	return 0;
 }
 
@@ -155,7 +155,7 @@ static int __init jnx_tmc_psu_driver_init(void)
 	int ret = -1;
 
 	ret = platform_driver_register(&jnx_tmc_psu_driver);
-	
+
 	return ret;
 
 }

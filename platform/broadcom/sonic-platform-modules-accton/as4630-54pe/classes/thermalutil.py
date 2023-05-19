@@ -32,27 +32,27 @@ except ImportError as e:
 class ThermalUtil(object):
     """Platform-specific ThermalUtil class"""
     THERMAL_NUM_MAX = 4
-    THERMAL_NUM_1_IDX = 1 
-    THERMAL_NUM_2_IDX = 2 
-    THERMAL_NUM_3_IDX = 3 
+    THERMAL_NUM_1_IDX = 1
+    THERMAL_NUM_2_IDX = 2
+    THERMAL_NUM_3_IDX = 3
     THERMAL_NUM_4_IDX = 4
-    
+
     """ Dictionary where
         key1 = thermal id index (integer) starting from 1
         value = path to fan device file (string) """
-       
+
     thermal_sysfspath ={
         THERMAL_NUM_1_IDX: ["/sys/bus/i2c/devices/14-0048/hwmon/hwmon*/temp1_input"],
-        THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/24-004b/hwmon/hwmon*/temp1_input"],  
+        THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/24-004b/hwmon/hwmon*/temp1_input"],
         THERMAL_NUM_3_IDX: ["/sys/bus/i2c/devices/25-004a/hwmon/hwmon*/temp1_input"],
         THERMAL_NUM_4_IDX: ["/sys/class/hwmon/hwmon1/temp1_input"],
     }
-            
+
     def _get_thermal_val(self, thermal_num):
         if thermal_num < self.THERMAL_NUM_1_IDX or thermal_num > self.THERMAL_NUM_MAX:
             logging.debug('GET. Parameter error. thermal_num, %d', thermal_num)
             return None
-       
+
         device_path = self.get_thermal_path(thermal_num)
         for filename in glob.glob(device_path):
             try:
@@ -68,10 +68,10 @@ class ThermalUtil(object):
                 val_file.close()
             except:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
-                return None      
-              
+                return None
+
             return int(content)
-            
+
         return 0
 
     def get_num_thermals(self):
@@ -85,6 +85,6 @@ class ThermalUtil(object):
 
 def main():
     thermal = ThermalUtil()
-   
+
 if __name__ == '__main__':
     main()

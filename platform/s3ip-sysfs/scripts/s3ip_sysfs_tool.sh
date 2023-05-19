@@ -50,10 +50,10 @@ case "$1" in
     restart)
 	s3ip_stop
 	s3ip_start
-	;;	
+	;;
     *)
         echo "Usage: $0 {start|stop|status|restart}"
 	exit 1
 esac
-exit 
+exit
 

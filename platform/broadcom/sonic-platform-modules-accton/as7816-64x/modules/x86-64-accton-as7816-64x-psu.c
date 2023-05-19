@@ -44,11 +44,11 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da, char
 static struct as7816_64x_psu_data *as7816_64x_psu_update_device(struct device *dev);
 extern int accton_i2c_cpld_read (u8 cpld_addr, u8 reg);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7816_64x_psu_data {
     struct device      *hwmon_dev;
@@ -57,14 +57,14 @@ struct as7816_64x_psu_data {
     unsigned long       last_updated;    /* In jiffies */
     u8  index;           /* PSU index */
     u8  status;          /* Status(present/power_good) register read from CPLD */
-};             
+};
 
 enum as7816_64x_psu_sysfs_attributes {
 	PSU_PRESENT,
 	PSU_POWER_GOOD
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status, NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_power_good, S_IRUGO, show_status, NULL, PSU_POWER_GOOD);
@@ -138,7 +138,7 @@ static int as7816_64x_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -146,7 +146,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -157,12 +157,12 @@ static int as7816_64x_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7816_64x_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
-enum psu_index 
-{ 
+enum psu_index
+{
     as7816_64x_psu1,
 	as7816_64x_psu2
 };
@@ -189,7 +189,7 @@ static struct as7816_64x_psu_data *as7816_64x_psu_update_device(struct device *d
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct as7816_64x_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -201,7 +201,7 @@ static struct as7816_64x_psu_data *as7816_64x_psu_update_device(struct device *d
 
 		/* Read psu status */
         status = accton_i2c_cpld_read(PSU_STATUS_I2C_ADDR, PSU_STATUS_I2C_REG_OFFSET);
-		
+
 		if (status < 0) {
 			dev_dbg(&client->dev, "cpld reg (0x%x) err %d\n", PSU_STATUS_I2C_ADDR, status);
 			goto exit;

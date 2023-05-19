@@ -91,20 +91,20 @@
 
 typedef struct i2c_muxs_struct_flag
 {
-	int nr; 
-	char name[48]; 
-	struct mutex	update_lock; 
-	int flag; 
+	int nr;
+	char name[48];
+	struct mutex	update_lock;
+	int flag;
 }i2c_mux_flag;
 
 i2c_mux_flag pca_flag = {
 	.flag = -1,
 };
 
-int pca9641_setmuxflag(int nr, int flag) 
+int pca9641_setmuxflag(int nr, int flag)
 {
 	if (pca_flag.nr == nr) {
-	    pca_flag.flag = flag;		
+	    pca_flag.flag = flag;
 	}
 	return 0;
 }
@@ -391,7 +391,7 @@ static int pca9541_release_chan(struct i2c_mux_core *muxc, u32 chan)
 */
 static void pca9641_release_bus(struct i2c_client *client)
 {
-   pca9541_reg_write(client, PCA9641_CONTROL, 0x80); //master 0x80 
+   pca9541_reg_write(client, PCA9641_CONTROL, 0x80); //master 0x80
 }
 
 /*
@@ -601,12 +601,12 @@ static int pca9541_probe(struct i2c_client *client,
                  pca9641_select_chan, pca9641_release_chan);
     if (!muxc)
         return -ENOMEM;
-    
+
     data = i2c_mux_priv(muxc);
     data->client = client;
-    
+
     i2c_set_clientdata(client, muxc);
-    
+
     ret = i2c_mux_add_adapter(muxc, force, 0, 0);
     if (ret)
         return ret;

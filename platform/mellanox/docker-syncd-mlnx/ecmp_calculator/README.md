@@ -2,8 +2,8 @@
 
 ## Description
 An equal cost multipath (ECMP) is formed when routing table contains multiple next hop addresses for the same destination IP address.
-ECMP will load balance the outbound traffic between the IP interfaces. 
-The purpose of ECMP calculator is to calculate which IP interface ECMP will choose and return the physical interface packet will egress from. 
+ECMP will load balance the outbound traffic between the IP interfaces.
+The purpose of ECMP calculator is to calculate which IP interface ECMP will choose and return the physical interface packet will egress from.
 Packet is defined by a JSON file given as an argument to the tool.
 
 ## Usage notes
@@ -115,19 +115,19 @@ optional arguments:
                 "sip": "10.10.10.10",
                 "dip": "3.3.3.3",
                 "proto": 17
-            },                  
+            },
             "layer2": {
                 "smac": "24:8a:07:1e:82:ed",
                 "dmac": "1c:34:da:1c:a1:00",
                 "ethertype": 2048
-            },                  
+            },
             "tcp_udp": {
                 "sport": 100,
                 "dport": 4789
             },
             "vxlan_nvgre": {
                 "vni": 100
-            }       
+            }
         },
         "inner": {
             "layer2": {
@@ -143,8 +143,8 @@ optional arguments:
             },
             "tcp_udp": {
                 "sport": 100,
-                "dport": 200 
+                "dport": 200
             }
-        }       
+        }
     }
 }

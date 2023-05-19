@@ -74,7 +74,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._get_eeprom_value(self._TLV_CODE_MAC_BASE)
-        
+
     @default_return(return_value='Undefined.')
     def get_serial_number(self):
         """
@@ -142,8 +142,8 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                                 self._eeprom_info_dict[vendor_extension_tlv_code] = [value]
                             else:
                                 self._eeprom_info_dict[vendor_extension_tlv_code].append(value)
-            
-                # Get CRC 
+
+                # Get CRC
                 value = self._redis_hget('EEPROM_INFO|{}'.format(hex(self._TLV_CODE_CRC_32)), 'Value')
                 if value:
                     self._eeprom_info_dict[hex(self._TLV_CODE_CRC_32)] = value

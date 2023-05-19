@@ -57,7 +57,7 @@ class MellanoxFanDrawer(FanDrawerBase):
     def get_direction(self):
         if not self.get_presence():
             return FanBase.FAN_DIRECTION_NOT_APPLICABLE
-        
+
         from .fan import FAN_DIR, MlnxFan
         return MlnxFan.get_fan_direction(FAN_DIR.format(self._index))
 
@@ -109,7 +109,7 @@ class RealDrawer(MellanoxFanDrawer):
     def get_name(self):
         return self._name
 
-    
+
 class VirtualDrawer(MellanoxFanDrawer):
     def __init__(self, index):
         super(VirtualDrawer, self).__init__(index)

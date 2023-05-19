@@ -159,7 +159,7 @@ int fan_update_attr(struct device *dev, struct fan_attr_info *info, FAN_DATA_ATT
 
     mutex_lock(&info->update_lock);
 
-    if (time_after(jiffies, info->last_updated + HZ + HZ / 2) || !info->valid) 
+    if (time_after(jiffies, info->last_updated + HZ + HZ / 2) || !info->valid)
 	{
         dev_dbg(&client->dev, "Starting pddf_fan update\n");
         info->valid = 0;
@@ -185,7 +185,7 @@ int fan_update_attr(struct device *dev, struct fan_attr_info *info, FAN_DATA_ATT
 				dev_warn(&client->dev, "%s: post_get function fails for %s attribute.ret %d\n", __FUNCTION__, udata->aname, status);
 		}
 
-		
+
         info->last_updated = jiffies;
         info->valid = 1;
     }
@@ -532,12 +532,12 @@ int sonic_i2c_get_fan_present_default(void *client, FAN_DATA_ATTR *udata, void *
     {
 	    val = i2c_smbus_read_byte_data((struct i2c_client *)client, udata->offset);
     }
-	
+
 	if (val < 0)
 		status = val;
 	else
 		painfo->val.intval = ((val & udata->mask) == udata->cmpval);
-    
+
 
     return status;
 }
@@ -565,7 +565,7 @@ int sonic_i2c_get_fan_rpm_default(void *client, FAN_DATA_ATTR *udata, void *info
         else if (udata->len ==2)
         {
             val = i2c_smbus_read_word_swapped((struct i2c_client *)client, udata->offset);
-            
+
         }
     }
 
@@ -677,7 +677,7 @@ int sonic_i2c_get_fan_pwm_default(void *client, FAN_DATA_ATTR *udata, void *info
         else if (udata->len ==2)
         {
             val = i2c_smbus_read_word_swapped((struct i2c_client *)client, udata->offset);
-            
+
         }
     }
 

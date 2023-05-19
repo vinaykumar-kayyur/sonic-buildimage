@@ -283,7 +283,7 @@ enum as7312_54x_cpld1_sysfs_attributes {
 	TRANSCEIVER_TXFAULT_ATTR_ID(48),
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t show_status(struct device *dev, struct device_attribute *da,
              char *buf);
@@ -593,7 +593,7 @@ static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
 
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
         status = as7312_54x_cpld_read_internal(client, regs[i]);
-        
+
         if (status < 0) {
             goto exit;
         }
@@ -632,7 +632,7 @@ static ssize_t show_rxlos_all(struct device *dev, struct device_attribute *da,
 
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
         status = as7312_54x_cpld_read_internal(client, regs[i]);
-        
+
         if (status < 0) {
             goto exit;
         }
@@ -850,7 +850,7 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *da,
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-    
+
     mutex_unlock(&data->update_lock);
     return count;
 
@@ -925,7 +925,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-    
+
     mutex_unlock(&data->update_lock);
     return count;
 
@@ -1009,13 +1009,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-	
+
 	val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-	
+
     return sprintf(buf, "%d", val);
 }
 

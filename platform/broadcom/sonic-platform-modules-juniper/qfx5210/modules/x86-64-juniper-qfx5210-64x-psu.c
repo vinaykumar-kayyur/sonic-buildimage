@@ -5,7 +5,7 @@
  * Ciju Rajan K <crajank@juniper.net>
  *
  * Copyright (C) 2014 Accton Technology Corporation.
- * Brandon Chuang <brandon_chuang@accton.com.tw> 
+ * Brandon Chuang <brandon_chuang@accton.com.tw>
  *
  * Based on ad7414.c
  * Copyright 2006 Stefan Roese <sr at denx.de>, DENX Software Engineering
@@ -53,11 +53,11 @@ extern int juniper_i2c_cpld_read (u8 cpld_addr, u8 reg);
  */
 extern int juniper_i2c_cpld_write(unsigned short, u8, u8);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct qfx5210_64x_psu_data {
     struct device      *hwmon_dev;
@@ -66,14 +66,14 @@ struct qfx5210_64x_psu_data {
     unsigned long       last_updated;    /* In jiffies */
     u8  index;           /* PSU index */
     u8  status;          /* Status(present/power_good) register read from CPLD */
-};             
+};
 
 enum qfx5210_64x_psu_sysfs_attributes {
 	PSU_PRESENT,
 	PSU_POWER_GOOD
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status, NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_power_good, S_IRUGO, show_status, NULL, PSU_POWER_GOOD);
@@ -85,7 +85,7 @@ static struct attribute *qfx5210_64x_psu_attributes[] = {
 };
 
 static int qfx5210_cpld_soft_reset(struct notifier_block *nb,
-                                   unsigned long action, 
+                                   unsigned long action,
                                    void *data)
 {
     int ret = 0;
@@ -153,7 +153,7 @@ static void qfx5210_cpld_power_off(void)
 }
 
 /*
- * Default platform pm_power_off handler 
+ * Default platform pm_power_off handler
  */
 static void (*default_pm_power_off)(void);
 
@@ -195,7 +195,7 @@ static int qfx5210_64x_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -203,7 +203,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -218,8 +218,8 @@ static int qfx5210_64x_psu_remove(struct i2c_client *client)
     return 0;
 }
 
-enum psu_index 
-{ 
+enum psu_index
+{
     qfx5210_64x_psu1,
     qfx5210_64x_psu2
 };
@@ -246,7 +246,7 @@ static struct qfx5210_64x_psu_data *qfx5210_64x_psu_update_device(struct device 
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct qfx5210_64x_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -258,7 +258,7 @@ static struct qfx5210_64x_psu_data *qfx5210_64x_psu_update_device(struct device 
 
 		/* Read psu status */
         status = juniper_i2c_cpld_read(PSU_STATUS_I2C_ADDR, PSU_STATUS_I2C_REG_OFFSET);
-		
+
 		if (status < 0) {
 			dev_dbg(&client->dev, "cpld reg (0x%x) err %d\n", PSU_STATUS_I2C_ADDR, status);
 			goto exit;
@@ -280,7 +280,7 @@ exit:
 static int __init qfx5210_64x_psu_init(void)
 {
     /*
-     * Store the default poweroff handler for later usage 
+     * Store the default poweroff handler for later usage
      */
     default_pm_power_off = pm_power_off;
     /*

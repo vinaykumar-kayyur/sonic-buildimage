@@ -51,11 +51,11 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da, char
 static ssize_t show_string(struct device *dev, struct device_attribute *da, char *buf);
 extern int as5835_54x_cpld_read(unsigned short cpld_addr, u8 reg);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as5835_54x_psu_data {
 	struct device	  *hwmon_dev;
@@ -68,7 +68,7 @@ struct as5835_54x_psu_data {
 	char serial[SERIAL_NUM_LEN+1];		/* Serial number, read from eeprom*/
 };
 
-static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *dev);			 
+static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *dev);
 
 enum as5835_54x_psu_sysfs_attributes {
 	PSU_PRESENT,
@@ -77,7 +77,7 @@ enum as5835_54x_psu_sysfs_attributes {
 	PSU_SERIAL_NUMBER
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,	S_IRUGO, show_status,	NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_string,	NULL, PSU_MODEL_NAME);
@@ -130,7 +130,7 @@ static ssize_t show_string(struct device *dev, struct device_attribute *da,
 	else { /* PSU_SERIAL_NUBMER */
 		str = data->serial;
 	}
-	
+
 	return sprintf(buf, "%s\n", str);
 }
 
@@ -177,7 +177,7 @@ static int as5835_54x_psu_probe(struct i2c_client *client,
 
 	dev_info(&client->dev, "%s: psu '%s'\n",
 		 dev_name(data->hwmon_dev), client->name);
-	
+
 	return 0;
 
 exit_remove:
@@ -185,7 +185,7 @@ exit_remove:
 exit_free:
 	kfree(data);
 exit:
-	
+
 	return status;
 }
 
@@ -196,13 +196,13 @@ static int as5835_54x_psu_remove(struct i2c_client *client)
 	hwmon_device_unregister(data->hwmon_dev);
 	sysfs_remove_group(&client->dev.kobj, &as5835_54x_psu_group);
 	kfree(data);
-	
+
 	return 0;
 }
 
-enum psu_index 
-{ 
-	as5835_54x_psu1, 
+enum psu_index
+{
+	as5835_54x_psu1,
 	as5835_54x_psu2
 };
 
@@ -269,7 +269,7 @@ static int as5835_54x_psu_read_bytes(struct i2c_client *client, u8 command, u8 *
 		command  += 1;
 		data_len -= 1;
 	}
-    
+
     return ret;
 }
 
@@ -277,7 +277,7 @@ static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *d
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct as5835_54x_psu_data *data = i2c_get_clientdata(client);
-	
+
 	mutex_lock(&data->update_lock);
 
 	if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -289,7 +289,7 @@ static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *d
 
 		/* Read psu status */
 		status = as5835_54x_cpld_read(PSU_STATUS_I2C_ADDR, PSU_STATUS_I2C_REG_OFFSET);
-		
+
 		if (status < 0) {
 			dev_dbg(&client->dev, "cpld reg (0x%x) err %d\n", PSU_STATUS_I2C_ADDR, status);
 			goto exit;
@@ -297,14 +297,14 @@ static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *d
 		else {
 			data->status = status;
 		}
-		
-		
+
+
 		memset(data->model_name, 0, sizeof(data->model_name));
 		memset(data->serial, 0, sizeof(data->serial));
-		
+
 		if (IS_PRESENT(data->index, data->status)) {
 			/* Read model name */
-            status = as5835_54x_psu_read_bytes(client, MODEL_NAME_REG_OFFSET, data->model_name, 
+            status = as5835_54x_psu_read_bytes(client, MODEL_NAME_REG_OFFSET, data->model_name,
 											   ARRAY_SIZE(data->model_name)-1);
 			if (status < 0) {
 				data->model_name[0] = '\0';
@@ -313,7 +313,7 @@ static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *d
 			}
 
 			/* Read serial number */
-			status = as5835_54x_psu_read_bytes(client, SERIAL_NUM_REG_OFFSET, data->serial, 
+			status = as5835_54x_psu_read_bytes(client, SERIAL_NUM_REG_OFFSET, data->serial,
 											   ARRAY_SIZE(data->serial)-1);
 			if (status < 0) {
 				data->serial[0] = '\0';
@@ -324,7 +324,7 @@ static struct as5835_54x_psu_data *as5835_54x_psu_update_device(struct device *d
 				data->serial[SERIAL_NUM_LEN] = '\0';
 			}
 		}
-		
+
 		data->last_updated = jiffies;
 		data->valid = 1;
 	}

@@ -27,7 +27,7 @@ sys_eeprom() {
         echo "s5296f_platform: sys_eeprom : cannot find I2C bus!"
         return
     fi
-    
+
     case $1 in
         "new_device")    echo 24c16 0x50 > /sys/bus/i2c/devices/i2c-${b}/$1
                          ;;
@@ -50,7 +50,7 @@ switch_board_qsfp_mux() {
                 echo pca9548 0x74 > /sys/bus/i2c/devices/i2c-$i/$1
             done
             ;;
-        
+
         "delete_device")
             for ((i=603;i<=615;i++));
             do
@@ -58,7 +58,7 @@ switch_board_qsfp_mux() {
                 echo 0x74 > /sys/bus/i2c/devices/i2c-$i/$1
             done
             ;;
-        
+
         *)
             echo "s5296f_platform: switch_board_qsfp_mux: invalid command !"
             ;;
@@ -76,7 +76,7 @@ switch_board_qsfp() {
                 echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
             done
             ;;
-        
+
         "delete_device")
             for ((i=2;i<=105;i++));
             do
@@ -141,7 +141,7 @@ platform_firmware_versions() {
     echo "Slave CPLD 4: $((r_maj)).$((r_min))" >> $FIRMWARE_VERSION_FILE
 }
 
-#This enables the led control for CPU and default states 
+#This enables the led control for CPU and default states
 switch_board_led_default() {
     resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
     python /usr/bin/pcisysfs.py --set --offset 0x24 --val 0x194 --res $resource  > /dev/null 2>&1

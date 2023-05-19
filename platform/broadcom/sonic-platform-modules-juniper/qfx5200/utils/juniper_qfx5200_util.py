@@ -33,7 +33,7 @@ FORCE = 0
 
 if DEBUG == True:
     print(sys.argv[0])
-    print('ARGV      :', sys.argv[1:])   
+    print('ARGV      :', sys.argv[1:])
 
 i2c_prefix = '/sys/bus/i2c/devices/'
 
@@ -52,7 +52,7 @@ kos = [
 'modprobe adt7470'
 ]
 
-mknod =[   
+mknod =[
 'echo tmp435  0x48 > /sys/bus/i2c/devices/i2c-5/new_device',
 'echo tmp435  0x49 > /sys/bus/i2c/devices/i2c-5/new_device',
 'echo tmp435  0x4A > /sys/bus/i2c/devices/i2c-5/new_device',
@@ -68,18 +68,18 @@ mknod =[
 'echo adt7470 0x2F > /sys/bus/i2c/devices/i2c-7/new_device',
 'echo jpsu    0x58 > /sys/bus/i2c/devices/i2c-3/new_device',
 'echo jpsu    0x58 > /sys/bus/i2c/devices/i2c-4/new_device',
-] 
+]
 
 def my_log(txt):
     if DEBUG == True:
         print(txt)
     return
-    
+
 def log_os_system(cmd, show):
-    logging.info('Run :'+cmd)  
-    status, output = commands.getstatusoutput(cmd)    
+    logging.info('Run :'+cmd)
+    status, output = commands.getstatusoutput(cmd)
     my_log (cmd +"with result:" + str(status))
-    my_log ("      output:"+output)    
+    my_log ("      output:"+output)
     if status:
         logging.info('Failed :'+cmd)
         if show:
@@ -89,7 +89,7 @@ def log_os_system(cmd, show):
 def write_file(text, file):
     with open(file, 'w') as f:
         f.write(text + '\n')
-            
+
 def driver_install():
     global FORCE
     log_os_system("depmod", 1)
@@ -97,8 +97,8 @@ def driver_install():
         status, output = log_os_system(kos[i], 1)
         time.sleep(2)
         if status:
-            if FORCE == 0:        
-                return status              
+            if FORCE == 0:
+                return status
     return 0
 
 def device_exist():
@@ -119,19 +119,19 @@ def device_install():
 def do_install():
     status = driver_install()
     if status:
-        if FORCE == 0:        
+        if FORCE == 0:
             return  status
-    
+
     if not device_exist():
-        logging.info('No device, installing....')     
-        status = device_install() 
+        logging.info('No device, installing....')
+        status = device_install()
         if status:
-            if FORCE == 0:        
-                return  status        
+            if FORCE == 0:
+                return  status
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
     return
-    
+
 def main():
 
     hwmon_input_node_mapping = ['2c','2e','2f']
@@ -142,10 +142,10 @@ def main():
     hwmon_input_path_mapping = {}
     pwm_input_path_mapping = {}
     numsensors_input_path_mapping = {}
-    
 
-    # Enabling REFPGA	
-    EnableREFFGACmd = ['busybox', 'devmem', '0xFED50011', '8', '0x53'] 
+
+    # Enabling REFPGA
+    EnableREFFGACmd = ['busybox', 'devmem', '0xFED50011', '8', '0x53']
     try:
         subprocess.call(EnableREFFGACmd)
     except OSError:
@@ -153,8 +153,8 @@ def main():
         return False
 
     time.sleep(2)
-    
-    # Create CPU Board EEPROM device	
+
+    # Create CPU Board EEPROM device
     CreateEEPROMdeviceCmd = '24c02 0x51'
     file = '/sys/bus/i2c/devices/i2c-0/new_device'
     try:
@@ -165,19 +165,19 @@ def main():
 
     time.sleep(1)
 
-    #Retrieve the Base MAC Address from EEPROM	
+    #Retrieve the Base MAC Address from EEPROM
     status, macAddress = getstatusoutput_noshell(["decode-syseeprom", "-m", "0x24"])
     if status:
         print('Error: Could not retrieve BASE MAC Address from EEPROM')
         return False
 
-    #Make eth0 interface down	
+    #Make eth0 interface down
     status, eth0Down = getstatusoutput_noshell(["ifconfig", "eth0", "down"])
     if status:
         print('Error: Could not make eth0 interface down')
         return False
 
-    #Assign BASE MAC ADDRESS retieved from CPU board EEPROM to eth0 interface	
+    #Assign BASE MAC ADDRESS retieved from CPU board EEPROM to eth0 interface
     mac_address_prog = ["ifconfig", "eth0", "hw", "ether", str(macAddress)]
 
     status, MACAddressProg = getstatusoutput_noshell(mac_address_prog)
@@ -185,7 +185,7 @@ def main():
         print('Error: Could not set up "macAddress" for eth0 interface')
         return False
 
-    #Make eth0 interface up	
+    #Make eth0 interface up
     status, eth0UP = getstatusoutput_noshell(["ifconfig", "eth0", "up"])
     if status:
         print('Error: Could not make eth0 interface up')
@@ -195,7 +195,7 @@ def main():
     do_install()
     time.sleep(2)
 
-    # Juniper SFP Intialization	
+    # Juniper SFP Intialization
     JuniperSFPInitCmd = ['python', '/usr/share/sonic/device/x86_64-juniper_qfx5200-r0/plugins/qfx5200_sfp_init.py']
     try:
         subprocess.call(JuniperSFPInitCmd)
@@ -204,7 +204,7 @@ def main():
         return False
 
     time.sleep(1)
-    # Invoking the script which retrieves the data from CPU Board and Main Board EEPROM and storing in file	
+    # Invoking the script which retrieves the data from CPU Board and Main Board EEPROM and storing in file
     EEPROMDataCmd = ['python', '/usr/share/sonic/device/x86_64-juniper_qfx5200-r0/plugins/qfx5200_eeprom_data.py']
     try:
         subprocess.call(EEPROMDataCmd)
@@ -219,7 +219,7 @@ def main():
 	 hwmon_dir = ''
 	 for hwmon_name in hwmon_path:
 	     hwmon_dir = hwmon_name
-	    
+
 	 pwm_input_path_mapping[x] = PWM1FREQ_PATH.format(
 		                                 hwmon_input_node_mapping[x],
 				                 hwmon_dir)
@@ -236,7 +236,7 @@ def main():
          cmd = "0"
          write_file(cmd, numsensors_path)
 
-    return True              
-        
+    return True
+
 if __name__ == "__main__":
     main()

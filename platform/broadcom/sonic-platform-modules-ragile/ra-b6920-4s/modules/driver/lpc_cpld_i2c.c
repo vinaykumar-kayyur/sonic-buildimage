@@ -1,5 +1,5 @@
-#include <linux/kernel.h> /* Wd're doing kernel work */  
-#include <linux/module.h> /* specifically, a module */  
+#include <linux/kernel.h> /* Wd're doing kernel work */
+#include <linux/module.h> /* specifically, a module */
 #include <linux/types.h>
 #include <linux/init.h>   /* Need for the macros */
 #include <linux/moduleparam.h>
@@ -90,7 +90,7 @@ static int __init lpc_cpld_i2c_init(void)
 {
     struct pci_dev *pdev = NULL;
     int ret;
-    
+
     LPC_CPLD_I2C_VERBOSE("Enter.\n");
 
     pdev = pci_get_device(PCI_VENDOR_ID_INTEL, PCI_VENDOR_ID_D1527_LPC, pdev);

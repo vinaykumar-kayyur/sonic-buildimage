@@ -205,7 +205,7 @@ static int pca954x_reg_write(struct i2c_adapter *adap,
 }
 
  static int pca954x_setmuxflag(struct i2c_client *client, int flag)
- {	 
+ {
 	 struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
 	 pca9641_setmuxflag(adap->nr, flag);
 	 return 0;
@@ -1016,7 +1016,7 @@ static int dfd_get_my_dev_type_by_file(void)
         goto exit;
     }
 
-    card_type = simple_strtoul(buf, NULL, 10); 
+    card_type = simple_strtoul(buf, NULL, 10);
     PCA954X_DEBUG("card_type 0x%x.\n", card_type);
 
 exit:
@@ -1178,7 +1178,7 @@ static int pca954x_do_gpio_reset(pca9548_cfg_info_t *cfg_info, struct i2c_adapte
     } else {
         PCA954X_DEBUG("pca9548_reset_type invalid, pca954x_do_gpio_reset failed.\n");
     }
-    
+
     return ret;
 }
 
@@ -1504,7 +1504,7 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
     /*9641Ȩ����Ҫ��9548��λ֮���ͷţ����¹�һ��ͨ��ȷ��9641Ȩ�������ͷ�*/
     pca954x_setmuxflag(client, 1);
     (void)pca954x_reg_write(muxc->parent, client, data->last_chan);
-    
+
 	return ret;
 
 }

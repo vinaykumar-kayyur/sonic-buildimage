@@ -1,7 +1,7 @@
 Source: sonic-quanta-platform-modules
 Section: main
 Priority: extra
-Maintainer: Chih-Pei Chang <Chih-Pei.Chang@qct.io>, Jonathan Tsai <jonathan.tsai@quantatw.com> 
+Maintainer: Chih-Pei Chang <Chih-Pei.Chang@qct.io>, Jonathan Tsai <jonathan.tsai@quantatw.com>
 Build-Depends: debhelper (>= 9), bzip2
 Standards-Version: 3.9.3
 

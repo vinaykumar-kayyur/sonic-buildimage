@@ -110,7 +110,7 @@ class Chassis(ChassisBase):
         for i in range(MAX_7215_COMPONENT):
             component = Component(i)
             self._component_list.append(component)
-  
+
     def _read_sysfs_file(self, sysfs_file):
         # On successful read, returns the value read from given
         # reg_name and on failure returns 'ERR'
@@ -148,7 +148,7 @@ class Chassis(ChassisBase):
                 rv = 'ERR'
 
         return rv
-  
+
     def get_sfp(self, index):
         """
         Retrieves sfp represented by (1-based) index <index>
@@ -373,7 +373,7 @@ class Chassis(ChassisBase):
             return False
         # Write sys led
         status = self._write_sysfs_file(CPLD_DIR+"system_led", value)
-        
+
         if status == "ERR":
             return False
 
@@ -432,12 +432,12 @@ class Chassis(ChassisBase):
 
     def get_position_in_parent(self):
         """
-		Retrieves 1-based relative physical position in parent device. If the agent 
+		Retrieves 1-based relative physical position in parent device. If the agent
         cannot determine the parent-relative position
-        for some reason, or if the associated value of entPhysicalContainedIn is '0', 
+        for some reason, or if the associated value of entPhysicalContainedIn is '0',
         then the value '-1' is returned
 		Returns:
-		    integer: The 1-based relative physical position in parent device or -1 if 
+		    integer: The 1-based relative physical position in parent device or -1 if
             cannot determine the position
 		"""
         return -1

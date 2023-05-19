@@ -23,7 +23,7 @@ override_dh_auto_build:
 		fi;\
 		debian/netberg_platform_version.sh $${mod} $(MOD_SRC_DIR)/$${mod}; \
 	done)
-    
+
 
 override_dh_auto_install:
 	(for mod in $(MODULE_DIRS); do \

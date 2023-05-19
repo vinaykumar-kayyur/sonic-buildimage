@@ -42,7 +42,7 @@ class Sfp(SfpBase):
 
     def __init__(self, index):
         self._index = index
-        
+
         if os.path.isdir(CONTAINER_PLATFORM_PATH):
             platform_path = CONTAINER_PLATFORM_PATH
         else:

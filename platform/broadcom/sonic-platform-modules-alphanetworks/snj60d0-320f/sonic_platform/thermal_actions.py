@@ -10,19 +10,19 @@ class SetFanSpeedAction():
     """
     DEFAULT_SPEED = 50
     MAX_SPEED = 100
-    
+
     @classmethod
     def set_all_fan_speed(cls, thermal_info_dict, speed):
         from .thermal_infos import FanInfo
         if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
             fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
             for fan in fan_info_obj.get_presence_fans():
-                fan.set_speed(speed) 
-    
+                fan.set_speed(speed)
+
     @classmethod
     def set_all_fan_speed_default(cls, thermal_info_dict):
         cls.set_all_fan_speed(thermal_info_dict, cls.DEFAULT_SPEED)
-    
+
     @classmethod
     def set_all_fan_speed_max(cls, thermal_info_dict):
         cls.set_all_fan_speed(thermal_info_dict, cls.MAX_SPEED)
@@ -52,7 +52,7 @@ class SetAllFanSpeedDefaultAction(ThermalPolicyActionBase):
         :param thermal_info_dict: A dictionary stores all thermal information.
         :return:
         """
-        SetFanSpeedAction.set_all_fan_speed_default(thermal_info_dict)    
+        SetFanSpeedAction.set_all_fan_speed_default(thermal_info_dict)
 
 
 @thermal_json_object('thermal.temp_check_and_set_all_fan_speed')

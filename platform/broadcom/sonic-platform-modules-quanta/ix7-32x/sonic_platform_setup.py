@@ -6,7 +6,7 @@ setup(
     name='sonic-platform',
     version='1.0',
     description='SONiC platform API implementation on Quanta Platforms',
-    license='Apache 2.0',    
+    license='Apache 2.0',
     packages=['sonic_platform'],
     classifiers=[
         'Development Status :: 3 - Alpha',

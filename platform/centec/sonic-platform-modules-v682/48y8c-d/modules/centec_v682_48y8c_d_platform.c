@@ -82,9 +82,9 @@ static unsigned char port_led_mode[PORT_NUM] = {0};
 void v682_48y8c_d_led_port_set(struct led_classdev *led_cdev, enum led_brightness set_value)
 {
     int portNum = 0;
-    
+
     sscanf(led_cdev->name, "port%d", &portNum);
-    
+
     port_led_mode[portNum] = set_value;
 
     return;
@@ -93,9 +93,9 @@ void v682_48y8c_d_led_port_set(struct led_classdev *led_cdev, enum led_brightnes
 enum led_brightness v682_48y8c_d_led_port_get(struct led_classdev *led_cdev)
 {
     int portNum = 0;
-    
-    sscanf(led_cdev->name, "port%d", &portNum);    
-    
+
+    sscanf(led_cdev->name, "port%d", &portNum);
+
     return port_led_mode[portNum];
 }
 
@@ -113,7 +113,7 @@ static int v682_48y8c_d_init_led(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -184,7 +184,7 @@ static ssize_t v682_48y8c_d_sfp_write_presence(struct device *dev, struct device
     spin_lock_irqsave(&(sfp_info[portNum].lock), flags);
     sfp_info[portNum].presence = presence;
     spin_unlock_irqrestore(&(sfp_info[portNum].lock), flags);
-    
+
     return size;
 }
 
@@ -228,7 +228,7 @@ static ssize_t v682_48y8c_d_sfp_write_enable(struct device *dev, struct device_a
     spin_lock_irqsave(&(sfp_info[portNum].lock), flags);
     sfp_info[portNum].enable = enable;
     spin_unlock_irqrestore(&(sfp_info[portNum].lock), flags);
-    
+
     return size;
 }
 
@@ -274,7 +274,7 @@ static ssize_t v682_48y8c_d_sfp_write_eeprom(struct device *dev, struct device_a
     memcpy(sfp_info[portNum].eeprom[0], buf, size);
     sfp_info[portNum].data_len[0] = size;
     spin_unlock_irqrestore(&(sfp_info[portNum].lock), flags);
-    
+
     return size;
 }
 
@@ -286,7 +286,7 @@ static int v682_48y8c_d_init_sfp(void)
 {
     int ret = 0;
     int i = 0;
-    
+
     sfp_class = class_create(THIS_MODULE, "sfp");
     if (IS_INVALID_PTR(sfp_class))
     {
@@ -330,7 +330,7 @@ static int v682_48y8c_d_init_sfp(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -364,9 +364,9 @@ static int v682_48y8c_d_init(void)
 {
     int ret = 0;
     int failed = 0;
-    
+
     printk(KERN_ALERT "init v682_48y8c_d board dirver...\n");
-    
+
     ret = v682_48y8c_d_init_led();
     if (ret != 0)
     {
@@ -383,14 +383,14 @@ static int v682_48y8c_d_init(void)
         printk(KERN_INFO "init v682_48y8c_d board driver failed\n");
     else
         printk(KERN_ALERT "init v682_48y8c_d board dirver...ok\n");
-    
+
     return 0;
 }
 
 static void v682_48y8c_d_exit(void)
 {
     printk(KERN_INFO "deinit v682_48y8c_d board dirver...\n");
-    
+
     v682_48y8c_d_exit_sfp();
     v682_48y8c_d_exit_led();
 

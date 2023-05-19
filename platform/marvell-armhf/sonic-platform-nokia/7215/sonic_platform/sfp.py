@@ -70,7 +70,7 @@ class Sfp(SfpOptoeBase):
         logger.log_debug("Sfp __init__ index {} setting name to {} and eeprom_path to {}".format(index, self.name, self.eeprom_path))
 
         Sfp.instances.append(self)
-        
+
     def get_eeprom_path(self):
         return self.eeprom_path
 

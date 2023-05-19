@@ -62,7 +62,7 @@ extern ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, 
 
 static LED_STATUS find_state_index(const char* state_str) {
      int index;
-     char *ptr = (char *)state_str; 
+     char *ptr = (char *)state_str;
      while (*ptr && *ptr!= '\n' && *ptr !='\0') ptr++;
      *ptr='\0';
      for ( index = 0; index < MAX_LED_STATUS; index++) {
@@ -98,7 +98,7 @@ static LED_TYPE get_dev_type(char* name)
 static int dev_index_check(LED_TYPE type, int index)
 {
 #if DEBUG
-	pddf_dbg(LED, "dev_index_check: type:%s index:%d num_psus:%d num_fantrays:%d\n", 
+	pddf_dbg(LED, "dev_index_check: type:%s index:%d num_psus:%d num_fantrays:%d\n",
 		LED_TYPE_STR[type], index, num_psus, num_fantrays);
 #endif
         switch(type)
@@ -143,16 +143,16 @@ static void print_led_data(LED_OPS_DATA *ptr, LED_STATUS state)
 {
     int i = 0;
 	if(!ptr) return ;
-	pddf_dbg(LED, KERN_INFO "Print %s index:%d num_psus:%d num_fantrays:%d ADDR=%p\n", 
+	pddf_dbg(LED, KERN_INFO "Print %s index:%d num_psus:%d num_fantrays:%d ADDR=%p\n",
 					ptr->device_name, ptr->index, num_psus, num_fantrays, ptr);
-	pddf_dbg(LED, KERN_INFO "\tindex: %d\n", ptr->index); 
-	pddf_dbg(LED, KERN_INFO  "\tcur_state: %d; %s \n", ptr->cur_state.state, ptr->cur_state.color); 
+	pddf_dbg(LED, KERN_INFO "\tindex: %d\n", ptr->index);
+	pddf_dbg(LED, KERN_INFO  "\tcur_state: %d; %s \n", ptr->cur_state.state, ptr->cur_state.color);
         for (i = 0; i< MAX_LED_STATUS; i++) {
 	    if(ptr->data[i].swpld_addr && (i == state || state == -1)) {
-		pddf_dbg(LED, KERN_INFO "\t\t[%s]: addr/offset:0x%x;0x%x color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
+		pddf_dbg(LED, KERN_INFO "\t\t[%s]: addr/offset:0x%x;0x%x color:%s; value:%x; mask_bits: 0x%x; pos:%d\n",
                 LED_STATUS_STR[i],
 		ptr->data[i].swpld_addr, ptr->data[i].swpld_addr_offset,
-		LED_STATUS_STR[i], ptr->data[i].value, ptr->data[i].bits.mask_bits, ptr->data[i].bits.pos); 
+		LED_STATUS_STR[i], ptr->data[i].value, ptr->data[i].bits.mask_bits, ptr->data[i].bits.pos);
             }
         }
 }
@@ -200,7 +200,7 @@ ssize_t get_status_led(struct device_attribute *da)
 	LED_OPS_DATA* ops_ptr=find_led_ops_data(da);
 	uint32_t color_val=0, sys_val=0;
 	int state=0;
-	if (!ops_ptr) { 
+	if (!ops_ptr) {
 		pddf_dbg(LED, KERN_ERR "ERROR %s: Cannot find LED Ptr", __func__);
 		return (-1);
 	}
@@ -209,7 +209,7 @@ ssize_t get_status_led(struct device_attribute *da)
 			temp_data_ptr->device_name, temp_data_ptr->index);
 		return (-1);
 	}
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)	
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
         ret = get_sys_val(ops_ptr, &sys_val);
         if (ret < 0) {
                 pddf_dbg(LED, KERN_ERR "ERROR %s: Cannot get sys val\n", __func__);
@@ -222,7 +222,7 @@ ssize_t get_status_led(struct device_attribute *da)
 	if (sys_val < 0)
 		return sys_val;
 #endif
-	strcpy(temp_data.cur_state.color, "None"); 
+	strcpy(temp_data.cur_state.color, "None");
 	for (state=0; state<MAX_LED_STATUS; state++) {
         	color_val = (sys_val & ~ops_ptr->data[state].bits.mask_bits);
 		if ((color_val ^ (ops_ptr->data[state].value<<ops_ptr->data[state].bits.pos))==0) {
@@ -231,12 +231,12 @@ ssize_t get_status_led(struct device_attribute *da)
 	}
 #if DEBUG > 1
         pddf_dbg(LED, KERN_ERR "Get : %s:%d addr/offset:0x%x; 0x%x value=0x%x [%s]\n",
-		ops_ptr->device_name, ops_ptr->index, 
-                ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, sys_val, 
+		ops_ptr->device_name, ops_ptr->index,
+                ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, sys_val,
 		temp_data.cur_state.color);
 #endif
 
-	return(ret);	
+	return(ret);
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
@@ -281,7 +281,7 @@ ssize_t set_status_led(struct device_attribute *da)
 	LED_OPS_DATA* ops_ptr=find_led_ops_data(da);
 	char* _buf=temp_data_ptr->cur_state.color;
 
-	if (!ops_ptr) { 
+	if (!ops_ptr) {
 		pddf_dbg(LED, KERN_ERR "PDDF_LED ERROR %s: Cannot find LED Ptr", __func__);
 		return (-1);
 	}
@@ -317,7 +317,7 @@ ssize_t set_status_led(struct device_attribute *da)
                                 (ops_ptr->data[cur_state].value << ops_ptr->data[cur_state].bits.pos);
 
 	} else {
-		pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d state %d; %s not configured\n",__func__, 
+		pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d state %d; %s not configured\n",__func__,
 			ops_ptr->device_name, ops_ptr->index, cur_state, _buf);
 		return (-1);
 	}
@@ -375,7 +375,7 @@ ssize_t show_pddf_data(struct device *dev, struct device_attribute *da,
                         break;
         }
 #if DEBUG > 1
-        pddf_dbg(LED, "[ READ ] DATA ATTR PTR [%s] TYPE:%d, Value:[%s]\n", 
+        pddf_dbg(LED, "[ READ ] DATA ATTR PTR [%s] TYPE:%d, Value:[%s]\n",
 		ptr->dev_attr.attr.name, ptr->type, buf);
 #endif
         return ret;
@@ -391,7 +391,7 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
                         strncpy(ptr->addr, buf, strlen(buf)-1); // to discard newline char form buf
                         ptr->addr[strlen(buf)-1] = '\0';
 #if DEBUG
-        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_CHAR  VALUE:%s\n", 
+        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_CHAR  VALUE:%s\n",
 				ptr->dev_attr.attr.name, ptr->addr);
 #endif
                         break;
@@ -400,7 +400,7 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
                         if (ret==0)
                                 *(int *)(ptr->addr) = num;
 #if DEBUG
-        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_DEC  VALUE:%d\n", 
+        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_DEC  VALUE:%d\n",
 				ptr->dev_attr.attr.name, *(int *)(ptr->addr));
 #endif
                         break;
@@ -409,7 +409,7 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
                         if (ret==0)
                                 *(int *)(ptr->addr) = num;
 #if DEBUG
-        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_HEX  VALUE:0x%x\n", 
+        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_HEX  VALUE:0x%x\n",
 				ptr->dev_attr.attr.name, *(int *)(ptr->addr));
 #endif
                         break;
@@ -418,7 +418,7 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
                         if (ret==0)
                                 *(unsigned short *)(ptr->addr) = (unsigned short)num;
 #if DEBUG
-        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_USHORT  VALUE:%x\n", 
+        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_USHORT  VALUE:%x\n",
 				ptr->dev_attr.attr.name, *(unsigned short *)(ptr->addr));
 #endif
                         break;
@@ -427,7 +427,7 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
                         if (ret==0)
                                 *(uint32_t *)(ptr->addr) = (uint32_t)num;
 #if DEBUG
-        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_UINT32 VALUE:%d\n", 
+        		pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR [%s] PDDF_UINT32 VALUE:%d\n",
 				ptr->dev_attr.attr.name, *(uint32_t *)(ptr->addr));
 #endif
                         break;
@@ -445,11 +445,11 @@ static int load_led_ops_data(struct device_attribute *da, LED_STATUS state)
 	LED_OPS_DATA* ops_ptr=NULL;
 	if(!ptr || strlen(ptr->device_name)==0 ) {
 		pddf_dbg(LED, KERN_INFO "SYSTEM_LED: load_led_ops_data return -1 device_name:%s\n", ptr? ptr->device_name:"NULL");
-		return(-1); 
+		return(-1);
 	}
 	if(ptr->device_name)
     {
-        pddf_dbg(LED, KERN_INFO "[%s]: load_led_ops_data: index=%d addr=0x%x;0x%x valu=0x%x\n", 
+        pddf_dbg(LED, KERN_INFO "[%s]: load_led_ops_data: index=%d addr=0x%x;0x%x valu=0x%x\n",
 				ptr->device_name, ptr->index, ptr->swpld_addr, ptr->swpld_addr_offset, ptr->data[0].value);
     }
 	if((led_type=get_dev_type(ptr->device_name))==LED_TYPE_MAX) {
@@ -489,7 +489,7 @@ static int verify_led_ops_data(struct device_attribute *da)
 	LED_OPS_DATA* ptr=(LED_OPS_DATA*)_ptr->addr;
 	LED_OPS_DATA* ops_ptr=find_led_ops_data(da);
 
-	if(ops_ptr) 
+	if(ops_ptr)
 		memcpy(ptr, ops_ptr, sizeof(LED_OPS_DATA));
 	else
     {
@@ -538,7 +538,7 @@ ssize_t store_config_data(struct device *dev, struct device_attribute *da, const
 	       ret = kstrtoint(buf,10,&num);
                if (ret==0)
                       *(int *)(ptr->addr) = num;
-	       if(psu_led_ops_data == NULL) { 
+	       if(psu_led_ops_data == NULL) {
 	       		if ((psu_led_ops_data = kzalloc(num * sizeof(LED_OPS_DATA), GFP_KERNEL)) == NULL) {
 				printk(KERN_ERR "PDDF_LED ERROR failed to allocate memory for PSU LED\n");
 				return (count);
@@ -580,7 +580,7 @@ ssize_t store_bits_data(struct device *dev, struct device_attribute *da, const c
 	char *pptr=NULL;
 	char bits[NAME_SIZE];
 	struct pddf_data_attribute *ptr = (struct pddf_data_attribute *)da;
-	MASK_BITS* bits_ptr=(MASK_BITS*)(ptr->addr); 
+	MASK_BITS* bits_ptr=(MASK_BITS*)(ptr->addr);
 	strncpy(bits_ptr->bits, buf, strlen(buf)-1); // to discard newline char form buf
 	bits_ptr->bits[strlen(buf)-1] = '\0';
 	if((pptr=strstr(buf,":")) != NULL) {
@@ -610,19 +610,19 @@ ssize_t store_bits_data(struct device *dev, struct device_attribute *da, const c
         }
 	}
 #if DEBUG
-        pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR Bits [%s] VALUE:%s mask:0x%x; pos:0x%x\n", 
+        pddf_dbg(LED, KERN_ERR "[ WRITE ] ATTR PTR Bits [%s] VALUE:%s mask:0x%x; pos:0x%x\n",
 			ptr->dev_attr.attr.name, bits_ptr->bits, bits_ptr->mask_bits, bits_ptr->pos);
 #endif
 	return (count);
 }
 
 /**************************************************************************
- * platform/ attributes 
+ * platform/ attributes
  **************************************************************************/
-PDDF_LED_DATA_ATTR(platform, num_psus, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_config_data, PDDF_INT_DEC, sizeof(int), (void*)&num_psus); 
-PDDF_LED_DATA_ATTR(platform, num_fantrays, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_config_data, PDDF_INT_DEC, sizeof(int), (void*)&num_fantrays); 
+PDDF_LED_DATA_ATTR(platform, num_psus, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_config_data, PDDF_INT_DEC, sizeof(int), (void*)&num_psus);
+PDDF_LED_DATA_ATTR(platform, num_fantrays, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_config_data, PDDF_INT_DEC, sizeof(int), (void*)&num_fantrays);
 
 struct attribute* attrs_platform[]={
                 &pddf_dev_platform_attr_num_psus.dev_attr.attr,
@@ -634,33 +634,33 @@ struct attribute_group attr_group_platform={
 };
 
 /**************************************************************************
- * led/ attributes 
+ * led/ attributes
  **************************************************************************/
-PDDF_LED_DATA_ATTR(dev, device_name, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.device_name); 
-PDDF_LED_DATA_ATTR(dev, index, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_INT_DEC, sizeof(int), (void*)&temp_data.index); 
-PDDF_LED_DATA_ATTR(dev, swpld_addr, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_INT_HEX, sizeof(int), (void*)&temp_data.swpld_addr); 
-PDDF_LED_DATA_ATTR(dev, swpld_addr_offset, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_INT_HEX, sizeof(int), (void*)&temp_data.swpld_addr_offset); 
-PDDF_LED_DATA_ATTR(dev, dev_ops , S_IWUSR, NULL,  
-                dev_operation, PDDF_CHAR, NAME_SIZE, (void*)&temp_data);  
+PDDF_LED_DATA_ATTR(dev, device_name, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.device_name);
+PDDF_LED_DATA_ATTR(dev, index, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_pddf_data, PDDF_INT_DEC, sizeof(int), (void*)&temp_data.index);
+PDDF_LED_DATA_ATTR(dev, swpld_addr, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_pddf_data, PDDF_INT_HEX, sizeof(int), (void*)&temp_data.swpld_addr);
+PDDF_LED_DATA_ATTR(dev, swpld_addr_offset, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_pddf_data, PDDF_INT_HEX, sizeof(int), (void*)&temp_data.swpld_addr_offset);
+PDDF_LED_DATA_ATTR(dev, dev_ops , S_IWUSR, NULL,
+                dev_operation, PDDF_CHAR, NAME_SIZE, (void*)&temp_data);
 
-struct attribute* attrs_dev[]={ 
-                &pddf_dev_dev_attr_device_name.dev_attr.attr, 
-                &pddf_dev_dev_attr_index.dev_attr.attr, 
-                &pddf_dev_dev_attr_swpld_addr.dev_attr.attr, 
-                &pddf_dev_dev_attr_swpld_addr_offset.dev_attr.attr, 
-                &pddf_dev_dev_attr_dev_ops.dev_attr.attr, 
+struct attribute* attrs_dev[]={
+                &pddf_dev_dev_attr_device_name.dev_attr.attr,
+                &pddf_dev_dev_attr_index.dev_attr.attr,
+                &pddf_dev_dev_attr_swpld_addr.dev_attr.attr,
+                &pddf_dev_dev_attr_swpld_addr_offset.dev_attr.attr,
+                &pddf_dev_dev_attr_dev_ops.dev_attr.attr,
                 NULL,
-}; 
-struct attribute_group attr_group_dev={ 
-                .attrs = attrs_dev, 
-}; 
+};
+struct attribute_group attr_group_dev={
+                .attrs = attrs_dev,
+};
 
 /**************************************************************************
- * state_attr/ attributes 
+ * state_attr/ attributes
  **************************************************************************/
 #define LED_DEV_STATE_ATTR_GROUP(name, func) \
 	PDDF_LED_DATA_ATTR(name, bits, S_IWUSR|S_IRUGO, show_pddf_data, \
@@ -680,10 +680,10 @@ struct attribute_group attr_group_dev={
 LED_DEV_STATE_ATTR_GROUP(state_attr, (void*)&temp_data.data[0])
 
 /**************************************************************************
- * cur_state/ attributes 
+ * cur_state/ attributes
  **************************************************************************/
-PDDF_LED_DATA_ATTR(cur_state, color, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.cur_state.color); 
+PDDF_LED_DATA_ATTR(cur_state, color, S_IWUSR|S_IRUGO, show_pddf_data,
+                store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.cur_state.color);
 
 struct attribute* attrs_cur_state[]={
                 &pddf_dev_cur_state_attr_color.dev_attr.attr,
@@ -708,20 +708,20 @@ void free_kobjs(void)
 int KBOJ_CREATE(char* name, struct kobject* parent, struct kobject** child)
 {
 	if (parent) {
-        	*child = kobject_create_and_add(name, parent); 
+        	*child = kobject_create_and_add(name, parent);
 	} else {
 		printk(KERN_ERR "PDDF_LED ERROR to create %s kobj; null parent\n", name);
-                free_kobjs(); 
-                return (-ENOMEM); 
+                free_kobjs();
+                return (-ENOMEM);
 	}
 	return (0);
 }
 
-int LED_DEV_ATTR_CREATE(struct kobject *kobj, const struct attribute_group *attr, const char* name) 
+int LED_DEV_ATTR_CREATE(struct kobject *kobj, const struct attribute_group *attr, const char* name)
 {
-	int status = sysfs_create_group(kobj, attr);  
-    if(status) { 
-        pddf_dbg(LED, KERN_ERR "Driver ERROR: sysfs_create %s failed rc=%d\n", name, status); 
+	int status = sysfs_create_group(kobj, attr);
+    if(status) {
+        pddf_dbg(LED, KERN_ERR "Driver ERROR: sysfs_create %s failed rc=%d\n", name, status);
 	}
     return (status);
 }
@@ -732,7 +732,7 @@ static int __init led_init(void) {
 	pddf_dbg(LED, KERN_INFO "PDDF GENERIC LED MODULE init..\n");
 
         device_kobj = get_device_i2c_kobj();
-        if(!device_kobj) 
+        if(!device_kobj)
                 return -ENOMEM;
 
 	KBOJ_CREATE("platform", device_kobj, &platform_kobj);

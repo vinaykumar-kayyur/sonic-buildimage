@@ -73,7 +73,7 @@ class TestEeprom:
             return return_values.get((key, field))
         eeprom = Eeprom()
         eeprom._redis_hget = MagicMock(side_effect = side_effect)
-        
+
         info = eeprom.get_system_eeprom_info()
         assert eeprom.get_product_name() == 'MSN3420'
         assert eeprom.get_part_number() == 'MSN3420-CB2FO'
@@ -84,7 +84,7 @@ class TestEeprom:
 
     @patch('os.path.exists', MagicMock(return_value=True))
     @patch('os.path.islink', MagicMock(return_value=True))
-    def test_get_system_eeprom_info_from_hardware(self):    
+    def test_get_system_eeprom_info_from_hardware(self):
         eeprom = Eeprom()
         eeprom.p = os.path.join(test_path, 'mock_eeprom_data')
         eeprom._redis_hget = MagicMock()

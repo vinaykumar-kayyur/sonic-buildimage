@@ -179,13 +179,13 @@ static void nokia_7215_ixs_a1_cpld_write(struct cpld_data *data, u8 reg, u8 valu
     mutex_unlock(&data->update_lock);
 }
 
-static ssize_t show_mainboard_hwversion(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_mainboard_hwversion(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     return sprintf(buf,"0x%02x\n",data->mb_hw_version);
 }
 
-static ssize_t show_last_reset_cause(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_last_reset_cause(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     u8 val=0;
@@ -211,53 +211,53 @@ static ssize_t show_last_reset_cause(struct device *dev, struct device_attribute
     return sprintf(buf,"0x%02x %s\n",val, reason);
 }
 
-static ssize_t show_cpld_version(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_cpld_version(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     return sprintf(buf,"0x%02x\n",data->cpld_version);
 }
 
-static ssize_t show_sfp_present(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_sfp_present(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, SFP_PRESENCE_REG);
-    
+
     /* If the bit is set, SFP is not present. So, we are toggling intentionally */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 0:1);
 }
 
-static ssize_t show_sfp_los(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_sfp_los(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, SFP_LOS_REG);
-    
+
     /* If the bit is set, LOS condition */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 1:0);
 }
 
-static ssize_t show_sfp_tx_disable(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_sfp_tx_disable(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, SFP_TX_DISABLE_REG);
-    
+
     /* If the bit is set, Tx is disabled */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 1:0);
 }
 
-static ssize_t set_sfp_tx_disable(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_sfp_tx_disable(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 reg_val=0, usr_val=0, mask;
     int ret=kstrtou8(buf,10, &usr_val);
     if (ret != 0) {
-        return ret; 
+        return ret;
     }
     if (usr_val > 1) {
         return -EINVAL;
@@ -275,7 +275,7 @@ static ssize_t set_sfp_tx_disable(struct device *dev, struct device_attribute *d
 
 }
 
-static ssize_t show_system_led_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_system_led_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     u8 val=0;
@@ -286,7 +286,7 @@ static ssize_t show_system_led_status(struct device *dev, struct device_attribut
     return sprintf(buf,"%s\n",system_status_led_mode_str[val]);
 }
 
-static ssize_t set_system_led_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_system_led_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     int mode;
@@ -301,7 +301,7 @@ static ssize_t set_system_led_status(struct device *dev, struct device_attribute
     return count;
 }
 
-static ssize_t show_power_fan_led_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_power_fan_led_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
@@ -310,7 +310,7 @@ static ssize_t show_power_fan_led_status(struct device *dev, struct device_attri
     return sprintf(buf,"%s\n",power_fan_led_mode_str[val]);
 }
 
-static ssize_t set_power_fan_led_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_power_fan_led_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
@@ -332,48 +332,48 @@ static ssize_t set_power_fan_led_status(struct device *dev, struct device_attrib
     return count;
 }
 
-static ssize_t show_sfp_tx_fault(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_sfp_tx_fault(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, SFP_TX_FAULT_STATUS_REG);
-    
+
     /* If the bit is set, TX fault condition */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 1:0);
 }
 
 
-static ssize_t show_psu_pg_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_psu_pg_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, PSU1_PSU2_DEVICE_STATUS_REG);
-    
+
     /* If the bit is set, psu power is good */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 1:0);
 }
 
-static ssize_t show_fan_enable_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_fan_enable_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, FAN_ENABLE_REG);
-    
+
     /* If the bit is set, fan is disabled. So, toggling intentionally */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 0:1);
 }
 
-static ssize_t set_fan_enable_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_fan_enable_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 reg_val=0, usr_val=0, mask;
     int ret=kstrtou8(buf,10, &usr_val);
     if (ret != 0) {
-        return ret; 
+        return ret;
     }
     if (usr_val > 1) {
         return -EINVAL;
@@ -392,24 +392,24 @@ static ssize_t set_fan_enable_status(struct device *dev, struct device_attribute
 
 }
 
-static ssize_t show_usb_enable_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_usb_enable_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 val=0;
     val = nokia_7215_ixs_a1_cpld_read(data, USB_POWER_ENABLE_REG);
-    
+
     /* If the bit is set, usb power is disabled. So, toggling intentionally */
     return sprintf(buf,"%d\n",(val>>sda->index) & 0x1 ? 0:1);
 }
 
-static ssize_t set_usb_enable_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_usb_enable_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     u8 usr_val=0;
     int ret=kstrtou8(buf,16, &usr_val);
     if (ret != 0) {
-        return ret; 
+        return ret;
     }
     if(usr_val > 1) {
         return -EINVAL;
@@ -421,27 +421,27 @@ static ssize_t set_usb_enable_status(struct device *dev, struct device_attribute
     return count;
 }
 
-static ssize_t show_sfp_ledtest_status(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_sfp_ledtest_status(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     u8 val = nokia_7215_ixs_a1_cpld_read(data, SFP_LED_TEST_REG);
     return sprintf(buf,"0x%02x\n",val);
 }
 
-static ssize_t set_sfp_ledtest_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_sfp_ledtest_status(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     u8 usr_val=0;
     int ret=kstrtou8(buf,16, &usr_val);
     if (ret != 0) {
-        return ret; 
+        return ret;
     }
 
     nokia_7215_ixs_a1_cpld_write(data, SFP_LED_TEST_REG, usr_val);
     return count;
 }
 
-static ssize_t show_reset_reg(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t show_reset_reg(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
@@ -451,14 +451,14 @@ static ssize_t show_reset_reg(struct device *dev, struct device_attribute *devat
     return sprintf(buf,"0x%02x\n",(val>>sda->index) & 0x1 ? 1:0);
 }
 
-static ssize_t set_reset_reg(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_reset_reg(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(devattr);
     u8 reg_val=0, usr_val=0, mask;
     int ret=kstrtou8(buf,10, &usr_val);
     if (ret != 0) {
-        return ret; 
+        return ret;
     }
     if (usr_val > 1) {
         return -EINVAL;

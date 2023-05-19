@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Broadcom. 
+ * Copyright 2019 Broadcom.
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -142,14 +142,14 @@ int __init mux_data_init(void)
 	pddf_dbg(MUX, "MUX_DATA MODULE.. init\n");
 
 	device_kobj = get_device_i2c_kobj();
-	if(!device_kobj) 
+	if(!device_kobj)
 		return -ENOMEM;
 
 	mux_kobj = kobject_create_and_add("mux", device_kobj);
-	if(!mux_kobj) 
+	if(!mux_kobj)
 		return -ENOMEM;
-	
-	
+
+
 	ret = sysfs_create_group(mux_kobj, &pddf_clients_data_group);
 	if (ret)
     {

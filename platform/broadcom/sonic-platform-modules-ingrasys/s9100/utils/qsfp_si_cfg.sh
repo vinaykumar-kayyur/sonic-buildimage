@@ -164,7 +164,7 @@ function _qsfp_optical_si_set {
             bcmcmd "phy ce31 CL93N72_UT_CTL3r.1 CL93N72_TXFIR_MAIN=0x37;phy ce31 AMS_TX_CTL2r.1 AMS_TX_AMP_CTL=0xC AMS_TX_DRIVERMODE=0x0;phy ce31 CL93N72_UT_CTL2r.2 CL93N72_TXFIR_POST=0x30;phy ce31 CL93N72_UT_CTL3r.2 CL93N72_TXFIR_MAIN=0x40"
             bcmcmd "phy ce31 AMS_TX_CTL2r.2 AMS_TX_AMP_CTL=0x8 AMS_TX_DRIVERMODE=0x0;phy ce31 CL93N72_UT_CTL2r.3 CL93N72_TXFIR_POST=0x30;phy ce31 CL93N72_UT_CTL3r.3 CL93N72_TXFIR_MAIN=0x40;phy ce31 AMS_TX_CTL2r.3 AMS_TX_AMP_CTL=0x8 AMS_TX_DRIVERMODE=0x0"
         ;;
-        *) 
+        *)
             echo "Unknown Port"
             return
         ;;
@@ -301,7 +301,7 @@ function _qsfp_dac_si_set {
             bcmcmd "phy ce31 CL93N72_UT_CTL2r.2 CL93N72_TXFIR_PRE=0x1F;phy ce31 CL93N72_UT_CTL2r.2 CL93N72_TXFIR_POST=0x15;phy ce31 CL93N72_UT_CTL3r.2 CL93N72_TXFIR_MAIN=0x3C;phy ce31 AMS_TX_CTL2r.2 AMS_TX_AMP_CTL=0xF AMS_TX_DRIVERMODE=0x0"
             bcmcmd "phy ce31 CL93N72_UT_CTL2r.3 CL93N72_TXFIR_PRE=0x14;phy ce31 CL93N72_UT_CTL2r.3 CL93N72_TXFIR_POST=0x20;phy ce31 CL93N72_UT_CTL3r.3 CL93N72_TXFIR_MAIN=0x3C;phy ce31 AMS_TX_CTL2r.3 AMS_TX_AMP_CTL=0xE AMS_TX_DRIVERMODE=0x0"
         ;;
-        *) 
+        *)
             echo "Unknown Port"
             return
         ;;
@@ -323,7 +323,7 @@ function _help {
 #Main Function
 function _main {
 
-    if [ "${TYPE}" == "help" ]; then 
+    if [ "${TYPE}" == "help" ]; then
         _help
     elif [ "${TYPE}" == "optical" ]; then
         _qsfp_optical_si_set

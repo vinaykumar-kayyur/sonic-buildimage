@@ -23,7 +23,7 @@ options:
     -f | --force    : ignore error during installation or clean
 command:
     install     : install drivers and generate related sysfs nodes
-    clean       : uninstall drivers and remove related sysfs nodes    
+    clean       : uninstall drivers and remove related sysfs nodes
 """
 import subprocess
 import getopt
@@ -86,9 +86,9 @@ def main():
            do_uninstall()
         elif arg == 'api':
            do_sonic_platform_install()
-        elif arg == 'api_clean':   
+        elif arg == 'api_clean':
            do_sonic_platform_clean()
-        
+
         else:
             show_help()
 
@@ -147,7 +147,7 @@ def driver_install():
             if FORCE == 0:
                 return ret[0]
     print("Done driver_install")
-    
+
     return 0
 
 def driver_uninstall():
@@ -284,14 +284,14 @@ def device_install():
                 print(output)
                 if FORCE == 0:
                     return status
-                    
+
     # set all pca954x idle_disconnect
     cmd = 'echo -2 | tee /sys/bus/i2c/drivers/pca954x/*-00*/idle_state'
     status, output = log_os_system(cmd, 1)
     if status:
         print(output)
         if FORCE == 0:
-            return status                    
+            return status
 
     for i in range(49, 55): #Set qsfp port to normal state
         log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)
@@ -310,7 +310,7 @@ def device_install():
             if FORCE == 0:
                 return status
     print("Done device_install")
-    
+
     return
 
 def device_uninstall():
@@ -355,11 +355,11 @@ PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
 def do_sonic_platform_install():
     device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
     SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
-        
+
     #Check API2.0 on py whl file
     status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
-        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
                 print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3) )
@@ -368,17 +368,17 @@ def do_sonic_platform_install():
                 print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3) )
         else:
             print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
-    else:        
+    else:
         print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
-     
-    return 
-     
+
+    return
+
 def do_sonic_platform_clean():
-    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
-        
-    else:        
+
+    else:
         status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))

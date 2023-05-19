@@ -2,7 +2,7 @@
  * A hwmon driver for the CIG cs6436-56P fan
  *
  * Copyright (C) 2018 Cambridge, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -38,7 +38,7 @@
 
 
 
-#define  FAN_SPEED_DUTY_TO_CPLD_STEP 10 
+#define  FAN_SPEED_DUTY_TO_CPLD_STEP 10
 
 static struct cs6436_56p_fan_data *cs6436_56p_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
@@ -211,7 +211,7 @@ static struct attribute *cs6436_56p_fan_attributes[] = {
  */
 static u32 reg_val_to_duty_cycle(u8 reg_val)
 {
-	if (reg_val 
+	if (reg_val
 == 0xFF) {
 		return 100;
 	}
@@ -271,7 +271,7 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
         return -EINVAL;
 
     cig_cpld_write_register(fan_reg[FAN_DUTY_CYCLE_PERCENTAGE], duty_cycle_to_reg_val(value));
-    
+
     return count;
 }
 
@@ -285,10 +285,10 @@ static ssize_t set_fan_direction(struct device *dev, struct device_attribute *da
     error = kstrtoint(buf, 10, &value);
     if (error)
         return error;
-	
+
     if (!(value == 0 || value == 1))
         return -EINVAL;
-		
+
 
 	cig_cpld_read_register(fan_reg[FAN_DIRECTION],&reg_val);
 
@@ -302,13 +302,13 @@ static ssize_t set_fan_direction(struct device *dev, struct device_attribute *da
 	}
 
     cig_cpld_write_register(fan_reg[FAN_DIRECTION], reg_val);
-    
+
     return count;
 }
 
-							  
 
-						  
+
+
 
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
                               char *buf)
@@ -316,14 +316,14 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 
     cs6436_56p_fan_update_device(dev);
-	
+
     struct cs6436_56p_fan_data *data = fan_data;
-	
+
     ssize_t ret = 0;
 
     if (data->valid) {
 	switch (attr->index) {
-			
+
 	    case FAN1_STATE:
 	    case FAN2_STATE:
 	    case FAN3_STATE:
@@ -428,7 +428,7 @@ static int cs6436_56p_fan_probe(struct platform_device *pdev)
         goto exit;
 
     }
-    
+
 	fan_data->hwmon_dev = hwmon_device_register(&pdev->dev);
 	if (IS_ERR(fan_data->hwmon_dev)) {
 		status = PTR_ERR(fan_data->hwmon_dev);
@@ -436,9 +436,9 @@ static int cs6436_56p_fan_probe(struct platform_device *pdev)
 	}
 
     dev_info(&pdev->dev, "cs6436_56p_fan\n");
-    
+
     return 0;
-    
+
 exit_remove:
     sysfs_remove_group(&pdev->dev.kobj, &cs6436_56p_fan_group);
 exit:
@@ -449,7 +449,7 @@ static int cs6436_56p_fan_remove(struct platform_device *pdev)
 {
     hwmon_device_unregister(fan_data->hwmon_dev);
     sysfs_remove_group(&fan_data->pdev->dev.kobj, &cs6436_56p_fan_group);
-    
+
     return 0;
 }
 
@@ -488,7 +488,7 @@ static int __init cs6436_56p_fan_init(void)
 
 	mutex_init(&fan_data->update_lock);
     fan_data->valid = 0;
-	
+
     fan_data->pdev = platform_device_register_simple(DRVNAME, -1, NULL, 0);
     if (IS_ERR(fan_data->pdev)) {
         ret = PTR_ERR(fan_data->pdev);

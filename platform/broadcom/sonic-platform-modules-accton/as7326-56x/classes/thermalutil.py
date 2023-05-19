@@ -40,7 +40,7 @@ def log_os_system(cmd, show):
     status, output = subprocess.getstatusoutput(cmd)
     if show:
         print("ACC: " + str(cmd) + " , result:"+ str(status))
-   
+
     if status:
         logging.info('Failed :'+cmd)
         if show:
@@ -75,10 +75,10 @@ class ThermalUtil(object):
            }
     thermal_sysfspath ={
     THERMAL_NUM_1_IDX: ["/sys/bus/i2c/drivers/lm75/15-0048/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/drivers/lm75/15-0049/hwmon/hwmon*/temp1_input"],  
+    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/drivers/lm75/15-0049/hwmon/hwmon*/temp1_input"],
     THERMAL_NUM_3_IDX: ["/sys/bus/i2c/drivers/lm75/15-004a/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/drivers/lm75/15-004b/hwmon/hwmon*/temp1_input"],        
-    THERMAL_NUM_5_IDX: ["/sys/class/hwmon/hwmon0/temp1_input"],     
+    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/drivers/lm75/15-004b/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_5_IDX: ["/sys/class/hwmon/hwmon0/temp1_input"],
            }
 
     #def __init__(self):
@@ -90,7 +90,7 @@ class ThermalUtil(object):
 
         if thermal_num < self.THERMAL_NUM_6_IDX:
             device_path = self.get_thermal_to_device_path(thermal_num)
-            
+
             for filename in glob.glob(device_path):
                 try:
                     val_file = open(filename, 'r')
@@ -116,8 +116,8 @@ class ThermalUtil(object):
             try:
                 check_file = open(file_path)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e)) 
-                return 0  
+                print("Error: unable to open file: %s" % str(e))
+                return 0
             file_str = check_file.read()
             search_str="average current temperature is"
             str_len = len(search_str)
@@ -127,7 +127,7 @@ class ThermalUtil(object):
                 return 0
             else:
                 temp_str=file_str[idx+str_len+1] + file_str[idx+str_len+2] + file_str[idx+str_len+3]+file_str[idx+str_len+4] +file_str[idx+str_len+5]
-                check_file.close()                 
+                check_file.close()
                 return float(temp_str)*1000
 
     def get_num_thermals(self):
@@ -145,7 +145,7 @@ class ThermalUtil(object):
     def get_thermal_to_device_path(self, thermal_num):
         return self.thermal_sysfspath[thermal_num][0]
 
-    def get_thermal_1_val(self):      
+    def get_thermal_1_val(self):
         return self._get_thermal_node_val(self.THERMAL_NUM_1_IDX)
 
     def get_thermal_2_val(self):

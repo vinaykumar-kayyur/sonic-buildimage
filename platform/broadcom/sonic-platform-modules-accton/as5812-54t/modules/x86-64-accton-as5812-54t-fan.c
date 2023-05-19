@@ -38,7 +38,7 @@
 #define FAN_MAX_NUMBER                   5
 #define FAN_SPEED_CPLD_TO_RPM_STEP       150
 #define FAN_SPEED_PRECENT_TO_CPLD_STEP   5
-#define FAN_DUTY_CYCLE_MIN               0   
+#define FAN_DUTY_CYCLE_MIN               0
 #define FAN_DUTY_CYCLE_MAX               100  /* 100% */
 
 #define CPLD_REG_FAN_STATUS_OFFSET        0xC
@@ -65,7 +65,7 @@
 #define CPLD_FAN4_INFO_BIT_MASK           0x8
 #define CPLD_FAN5_INFO_BIT_MASK           0x10
 
-#define PROJECT_NAME                      
+#define PROJECT_NAME
 
 #define LOCAL_DEBUG                       0
 
@@ -91,7 +91,7 @@ struct accton_as5812_54t_fan {
     CPLD_FAN##type##2_##name,      \
     CPLD_FAN##type##3_##name,      \
     CPLD_FAN##type##4_##name,      \
-    CPLD_FAN##type##5_##name,          
+    CPLD_FAN##type##5_##name,
 
 /* fan related data
  */
@@ -115,7 +115,7 @@ static const u8 fanr_speed_reg[] = {
     FAN##id##_DIRECTION,  \
     FANR##id##_FAULT,    \
     FANR##id##_SPEED,
-    
+
 enum sysfs_fan_attributes {
     DEF_FAN_SET(1)
     DEF_FAN_SET(2)
@@ -127,10 +127,10 @@ enum sysfs_fan_attributes {
 static void accton_as5812_54t_fan_update_device(struct device *dev);
 static int accton_as5812_54t_fan_read_value(u8 reg);
 static int accton_as5812_54t_fan_write_value(u8 reg, u8 value);
-                                             
-static ssize_t fan_set_duty_cycle(struct device *dev, 
+
+static ssize_t fan_set_duty_cycle(struct device *dev,
                     struct device_attribute *da,const char *buf, size_t count);
-static ssize_t fan_show_value(struct device *dev, 
+static ssize_t fan_show_value(struct device *dev,
                     struct device_attribute *da, char *buf);
 static ssize_t show_name(struct device *dev,
                          struct device_attribute *da, char *buf);
@@ -138,7 +138,7 @@ static ssize_t show_name(struct device *dev,
 extern int as5812_54t_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int as5812_54t_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
-                    
+
 /*******************/
 #define _MAKE_SENSOR_DEVICE_ATTR(prj, id, id2) \
     static SENSOR_DEVICE_ATTR(prj##fan##id##_speed_rpm, S_IRUGO, fan_show_value, NULL, FAN##id##_SPEED); \
@@ -200,7 +200,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     struct  sensor_device_attribute *attr = to_sensor_dev_attr(da);
     ssize_t ret = 0;
     int     data_index, type_index;
-    
+
     accton_as5812_54t_fan_update_device(dev);
 
     if (fan_data->valid == 0) {
@@ -209,44 +209,44 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
 
     type_index = attr->index%FAN2_FAULT;
     data_index = attr->index/FAN2_FAULT;
-     
+
     switch (type_index) {
         case FAN1_FAULT:
             ret = sprintf(buf, "%d\n", fan_data->status[data_index]);
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
             break;
         case FAN1_SPEED:
             ret = sprintf(buf, "%d\n", fan_data->speed[data_index]);
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
             break;
         case FAN1_DUTY_CYCLE:
             ret = sprintf(buf, "%d\n", fan_data->duty_cycle[data_index]);
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
             break;
         case FAN1_DIRECTION:
             ret = sprintf(buf, "%d\n", fan_data->direction[data_index]);   /* presnet, need to modify*/
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
-            break;  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+            break;
         case FANR1_FAULT:
             ret = sprintf(buf, "%d\n", fan_data->r_status[data_index]);
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
             break;
         case FANR1_SPEED:
             ret = sprintf(buf, "%d\n", fan_data->r_speed[data_index]);
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);  
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
             break;
         default:
-            if (LOCAL_DEBUG)        
-                printk ("[Check !!][%s][%d] \n", __FUNCTION__, __LINE__);      
+            if (LOCAL_DEBUG)
+                printk ("[Check !!][%s][%d] \n", __FUNCTION__, __LINE__);
             break;
     }
-    
+
     return ret;
 }
 
@@ -260,16 +260,16 @@ static ssize_t fan_set_duty_cycle(struct device *dev, struct device_attribute *d
             const char *buf, size_t count) {
 
     int error, value;
-    
+
     error = kstrtoint(buf, 10, &value);
     if (error)
         return error;
-        
+
     if (value < FAN_DUTY_CYCLE_MIN || value > FAN_DUTY_CYCLE_MAX)
         return -EINVAL;
 
     accton_as5812_54t_fan_write_value(CPLD_REG_FAN_PWM_CYCLE_OFFSET, value/FAN_SPEED_PRECENT_TO_CPLD_STEP);
-    
+
     fan_data->valid = 0;
 
     return count;
@@ -293,77 +293,77 @@ static void accton_as5812_54t_fan_update_device(struct device *dev)
 {
     int speed, r_speed, fault, r_fault, ctrl_speed, direction;
     int i;
-    
+
     mutex_lock(&fan_data->update_lock);
 
-    if (LOCAL_DEBUG)        
-        printk ("Starting accton_as5812_54t_fan update \n");    
+    if (LOCAL_DEBUG)
+        printk ("Starting accton_as5812_54t_fan update \n");
 
     if (!(time_after(jiffies, fan_data->last_updated + HZ + HZ / 2) || !fan_data->valid)) {
         /* do nothing */
-        goto _exit; 
+        goto _exit;
     }
 
     fan_data->valid = 0;
-        
-    if (LOCAL_DEBUG)        
-        printk ("Starting accton_as5812_54t_fan update 2 \n");    
+
+    if (LOCAL_DEBUG)
+        printk ("Starting accton_as5812_54t_fan update 2 \n");
 
     fault      = accton_as5812_54t_fan_read_value(CPLD_REG_FAN_STATUS_OFFSET);
-    r_fault    = accton_as5812_54t_fan_read_value(CPLD_REG_FANR_STATUS_OFFSET);    
+    r_fault    = accton_as5812_54t_fan_read_value(CPLD_REG_FANR_STATUS_OFFSET);
     direction  = accton_as5812_54t_fan_read_value(CPLD_REG_FAN_DIRECTION_OFFSET);
     ctrl_speed = accton_as5812_54t_fan_read_value(CPLD_REG_FAN_PWM_CYCLE_OFFSET);
-    
+
     if ( (fault < 0) || (r_fault < 0) || (direction < 0) || (ctrl_speed < 0) )
-    {        
-        if (LOCAL_DEBUG)        
-            printk ("[Error!!][%s][%d] \n", __FUNCTION__, __LINE__);            
-        goto _exit; /* error */ 
+    {
+        if (LOCAL_DEBUG)
+            printk ("[Error!!][%s][%d] \n", __FUNCTION__, __LINE__);
+        goto _exit; /* error */
     }
 
-    if (LOCAL_DEBUG)        
-        printk ("[fan:] fault:%d, r_fault=%d, direction=%d, ctrl_speed=%d \n",fault, r_fault, direction, ctrl_speed);    
+    if (LOCAL_DEBUG)
+        printk ("[fan:] fault:%d, r_fault=%d, direction=%d, ctrl_speed=%d \n",fault, r_fault, direction, ctrl_speed);
 
     for (i=0; i<FAN_MAX_NUMBER; i++)
     {
         /* Update fan data
          */
 
-        /* fan fault 
+        /* fan fault
          * 0: normal, 1:abnormal
          * Each FAN-tray module has two fans.
          */
         fan_data->status[i]     = (fault     & fan_info_mask[i]) >> i;
-        if (LOCAL_DEBUG)        
-            printk ("[fan%d:] fail=%d \n",i, fan_data->status[i]);    
-        
+        if (LOCAL_DEBUG)
+            printk ("[fan%d:] fail=%d \n",i, fan_data->status[i]);
+
         fan_data->r_status[i]   = (r_fault   & fan_info_mask[i]) >> i;
         fan_data->direction[i]  = (direction & fan_info_mask[i]) >> i;
         fan_data->duty_cycle[i] = ctrl_speed * FAN_SPEED_PRECENT_TO_CPLD_STEP;
-        
-        /* fan speed 
+
+        /* fan speed
          */
         speed      = accton_as5812_54t_fan_read_value(fan_speed_reg[i]);
         r_speed    = accton_as5812_54t_fan_read_value(fanr_speed_reg[i]);
         if ( (speed < 0) || (r_speed < 0) )
-        {      
-            if (LOCAL_DEBUG)        
-                printk ("[Error!!][%s][%d] \n", __FUNCTION__, __LINE__);      
-            goto _exit; /* error */ 
+        {
+            if (LOCAL_DEBUG)
+                printk ("[Error!!][%s][%d] \n", __FUNCTION__, __LINE__);
+            goto _exit; /* error */
         }
 
-        if (LOCAL_DEBUG)        
-            printk ("[fan%d:] speed:%d, r_speed=%d \n", i, speed, r_speed);    
-        
+        if (LOCAL_DEBUG)
+            printk ("[fan%d:] speed:%d, r_speed=%d \n", i, speed, r_speed);
+
         fan_data->speed[i]   = speed   * FAN_SPEED_CPLD_TO_RPM_STEP;
         fan_data->r_speed[i] = r_speed * FAN_SPEED_CPLD_TO_RPM_STEP;
     }
-    
+
     /* finish to update */
     fan_data->last_updated = jiffies;
     fan_data->valid = 1;
 
-_exit:    
+_exit:
     mutex_unlock(&fan_data->update_lock);
 }
 
@@ -377,7 +377,7 @@ static int accton_as5812_54t_fan_probe(struct platform_device *pdev)
         goto exit;
 
     }
-    
+
 	fan_data->hwmon_dev = hwmon_device_register(&pdev->dev);
 	if (IS_ERR(fan_data->hwmon_dev)) {
 		status = PTR_ERR(fan_data->hwmon_dev);
@@ -385,9 +385,9 @@ static int accton_as5812_54t_fan_probe(struct platform_device *pdev)
 	}
 
     dev_info(&pdev->dev, "accton_as5812_54t_fan\n");
-    
+
     return 0;
-    
+
 exit_remove:
     sysfs_remove_group(&pdev->dev.kobj, &accton_as5812_54t_fan_group);
 exit:
@@ -398,7 +398,7 @@ static int accton_as5812_54t_fan_remove(struct platform_device *pdev)
 {
     hwmon_device_unregister(fan_data->hwmon_dev);
     sysfs_remove_group(&fan_data->pdev->dev.kobj, &accton_as5812_54t_fan_group);
-    
+
     return 0;
 }
 
@@ -415,12 +415,12 @@ static struct platform_driver accton_as5812_54t_fan_driver = {
 static int __init accton_as5812_54t_fan_init(void)
 {
     int ret;
-    
+
     ret = platform_driver_register(&accton_as5812_54t_fan_driver);
     if (ret < 0) {
         goto exit;
     }
-        
+
     fan_data = kzalloc(sizeof(struct accton_as5812_54t_fan), GFP_KERNEL);
     if (!fan_data) {
         ret = -ENOMEM;
@@ -430,7 +430,7 @@ static int __init accton_as5812_54t_fan_init(void)
 
 	mutex_init(&fan_data->update_lock);
     fan_data->valid = 0;
-	
+
     fan_data->pdev = platform_device_register_simple(DRVNAME, -1, NULL, 0);
     if (IS_ERR(fan_data->pdev)) {
         ret = PTR_ERR(fan_data->pdev);

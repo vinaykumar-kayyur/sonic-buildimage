@@ -38,7 +38,7 @@ class ThermalUtil(object):
     THERMAL_NUM_2_IDX = 2 # 2_ON_MAIN_BROAD. LM75
     THERMAL_NUM_3_IDX = 3 # 3_ON_MAIN_BROAD. LM75
     THERMAL_NUM_4_IDX = 4 # 4_ON_MAIN_BROAD. LM75
-    
+
     """ Dictionary where
         key1 = thermal id index (integer) starting from 1
         value = path to fan device file (string) """
@@ -62,9 +62,9 @@ class ThermalUtil(object):
         if thermal_num < self.THERMAL_NUM_1_IDX or thermal_num > self.THERMAL_NUM_MAX:
             logging.debug('GET. Parameter error. thermal_num, %d', thermal_num)
             return None
-       
+
         device_path = self.get_thermal_to_device_path(thermal_num)
-        if(os.path.isfile(device_path)):                
+        if(os.path.isfile(device_path)):
             for filename in glob.glob(device_path):
                 try:
                     val_file = open(filename, 'r')
@@ -79,9 +79,9 @@ class ThermalUtil(object):
 		        val_file.close()
             except:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
-                return None      
+                return None
             return int(content)
-            
+
         else:
             print("No such device_path=%s"%device_path)
             return 0
@@ -101,7 +101,7 @@ class ThermalUtil(object):
     def get_thermal_to_device_path(self, thermal_num):
         return self.thermal_sysfspath[thermal_num][0]
 
-    def get_thermal_1_val(self):      
+    def get_thermal_1_val(self):
         return self._get_thermal_val(self.THERMAL_NUM_1_IDX)
 
     def get_thermal_2_val(self):
@@ -118,7 +118,7 @@ def main():
     print("termal1=%d" %thermal._get_thermal_val(1))
     print("termal2=%d" %thermal._get_thermal_val(2))
     print("termal3=%d" %thermal._get_thermal_val(3))
-    print("termal4=%d" %thermal._get_thermal_val(4))   
+    print("termal4=%d" %thermal._get_thermal_val(4))
 #
 #    print 'get_size_node_map : %d' % thermal.get_size_node_map()
 #    print 'get_size_path_map : %d' % thermal.get_size_path_map()

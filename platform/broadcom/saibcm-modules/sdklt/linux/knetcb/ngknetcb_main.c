@@ -81,13 +81,13 @@ get_tag_status(uint32_t dev_type, uint32_t variant, void *meta)
     int tag_status = -1;
     uint32_t  match_id_minbit = 1;
     uint32_t  outer_tag_match = 0x10;
- 
+
     if ((dev_type == 0xb880) || (dev_type == 0xb780))
     {
         /* Field BCM_PKTIO_RXPMD_MATCH_ID_LO has tag status in RX PMD */
         fd_index = 2;
         valptr = (uint32_t *)meta;
-        match_id_minbit = (dev_type == 0xb780) ? 2 : 1;        
+        match_id_minbit = (dev_type == 0xb780) ? 2 : 1;
         outer_l2_hdr = (valptr[fd_index] >> match_id_minbit & 0xFF);
         outer_tag_match = ((dev_type == 0xb780 && variant == 1) ? 0x8 : 0x10);
         if (outer_l2_hdr & 0x1) {
@@ -111,7 +111,7 @@ get_tag_status(uint32_t dev_type, uint32_t variant, void *meta)
                     printk("  Outer Tagged\n");
                 }
 #endif
-                tag_status = 2;    
+                tag_status = 2;
                 if (outer_l2_hdr & 0x20) {
 #ifdef KNET_CB_DEBUG
                     if (debug & 0x1) {
@@ -325,7 +325,7 @@ ngknet_netif_create_cb(struct net_device *dev)
 {
     int retv = 0;
 #if IS_ENABLED(CONFIG_PSAMPLE)
-    retv = psample_netif_create_cb(dev); 
+    retv = psample_netif_create_cb(dev);
 #endif
     return retv;
 }
@@ -335,7 +335,7 @@ ngknet_netif_destroy_cb(struct net_device *dev)
 {
     int retv = 0;
 #if IS_ENABLED(CONFIG_PSAMPLE)
-    retv = psample_netif_destroy_cb(dev); 
+    retv = psample_netif_destroy_cb(dev);
 #endif
     return retv;
 }
@@ -413,7 +413,7 @@ static int __init
 ngknetcb_init_module(void)
 {
     int rv;
-    struct proc_dir_entry *entry = NULL; 
+    struct proc_dir_entry *entry = NULL;
 
     rv = register_chrdev(NGKNETCB_MODULE_MAJOR, NGKNETCB_MODULE_NAME, &ngknetcb_fops);
     if (rv < 0) {

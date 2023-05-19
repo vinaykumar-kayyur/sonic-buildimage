@@ -98,7 +98,7 @@ class cel_belgite_monitor(object):
                 cpu_temperature = float(f.read().strip())
         except Exception as E:
             logging.debug('Error: %s' % E)
-        u60_temperature = all_temperature_list[3]   
+        u60_temperature = all_temperature_list[3]
         return [u4_temperature, u7_temperature, cpu_temperature, u60_temperature]
 
     def get_fan_speed_by_temperature(self, temp_list):
@@ -176,7 +176,7 @@ class cel_belgite_monitor(object):
         return max([sensor_temp_speed, cpu_temp_speed, u60_temp_speed])
 
     def manage_fans(self):
-        fan_presence_list = [True, True, True]  # whether fan is absent or not 
+        fan_presence_list = [True, True, True]  # whether fan is absent or not
         for fan_index in range(FAN_NUMBER):
             if not self.platform_chassis_obj.get_fan(fan_index).get_presence() or not \
                     self.platform_chassis_obj.get_fan(fan_index).get_status():
@@ -189,14 +189,14 @@ class cel_belgite_monitor(object):
                 fan_presence_list[fan_index] = True
 
         fans_inserted_num = FAN_NUMBER - fan_presence_list.count(False)
-        if fans_inserted_num == 0:  # all fans broken, power off 
+        if fans_inserted_num == 0:  # all fans broken, power off
             self.syslog.critical("No fans inserted. Severe overheating hazard. "
                                  "Please insert Fans immediately or power off the device\n")
 
-            # power off 
-        elif fans_inserted_num in [1, 2]:   # 1 or 2 present, full speed 
+            # power off
+        elif fans_inserted_num in [1, 2]:   # 1 or 2 present, full speed
             self._new_perc = DUTY_MAX
-        else:   # 3 fans normal, manage the fans follow thermal policy 
+        else:   # 3 fans normal, manage the fans follow thermal policy
             self._new_perc = self.get_fan_speed_by_temperature(self.init_fan_temperature)
             logging.debug('INFO: 3 fans inserted: self._new_perc: %s' % str(self._new_perc))
             self.init_fan_temperature = self.get_all_temperature()

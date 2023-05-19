@@ -157,7 +157,7 @@ class Sfp(SfpBase):
 
     PLATFORM = "x86_64-inventec_d7054q28b-r0"
     HWSKU  = "INVENTEC-D7054Q28B-S48-Q6"
-    
+
     def __init__(self, sfp_index, sfp_type):
         # Init index
         self.index = sfp_index
@@ -330,7 +330,7 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.close()
 
         return eeprom_raw
-    
+
     def _dom_capability_detect(self):
         if not self.get_presence():
             self.dom_supported = False
@@ -1005,7 +1005,7 @@ class Sfp(SfpBase):
                 return None
 
         return tx_bias_list
- 
+
     def get_rx_power(self):
         """
         Retrieves the received optical power for this SFP

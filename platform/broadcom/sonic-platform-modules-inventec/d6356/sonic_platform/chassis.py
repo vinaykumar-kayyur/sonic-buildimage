@@ -2,7 +2,7 @@
 #
 # Name: chassis.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -170,7 +170,7 @@ class Chassis(ChassisBase):
                       has been inserted and sfp 11 has been removed.
         """
 
-        rc, xcvr_event = self.__xcvr_event.get_transceiver_change_event(timeout) 
+        rc, xcvr_event = self.__xcvr_event.get_transceiver_change_event(timeout)
 
         return rc, {'sfp': xcvr_event}
 

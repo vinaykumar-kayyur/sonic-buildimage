@@ -141,7 +141,7 @@ class Fan(FanBase):
 
             if speed > 100:
                 speed = 100
-        
+
         return speed
 
     def get_speed_rpm(self):
@@ -161,7 +161,7 @@ class Fan(FanBase):
                 frpm = int(speed.read())
         except IOError as e:
             return 0
-        
+
         return frpm
 
     def get_target_speed(self):
@@ -220,7 +220,7 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of variance from target speed which is
                  considered tolerable
-        """        
+        """
         return self.FAN_SPEED_TOLERANCE_PERCENTAGE
 
     def set_status_led(self, color):

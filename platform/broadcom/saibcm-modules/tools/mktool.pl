@@ -1,26 +1,26 @@
 #
 #  Copyright 2007-2020 Broadcom Inc. All rights reserved.
-#  
+#
 #  Permission is granted to use, copy, modify and/or distribute this
 #  software under either one of the licenses below.
-#  
+#
 #  License Option 1: GPL
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License, version 2, as
 #  published by the Free Software Foundation (the "GPL").
-#  
+#
 #  This program is distributed in the hope that it will be useful, but
 #  WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #  General Public License version 2 (GPLv2) for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  version 2 (GPLv2) along with this source code.
-#  
-#  
+#
+#
 #  License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
-#  
+#
 #  This software is governed by the Broadcom Open Network Switch APIs license:
 #  https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
 #
@@ -28,7 +28,7 @@
 # mktool.pl
 #
 # $Id: mktool.pl,v 1.5 Broadcom SDK $
-# 
+#
 # $Copyright: (c) 2005 Broadcom Corp.
 # All Rights Reserved. $
 
@@ -62,15 +62,15 @@ exit 0;
 #
 # mktool_execute
 #
-# Executes a command, returns exist status. 
-# Performs token special translation before execution. 
+# Executes a command, returns exist status.
+# Performs token special translation before execution.
 #
 
 sub mktool_execute
 {
     my $token = shift;
     my @cmds = @_;
-    
+
 #    printf("mktool_execute: token = '$token'\n");
     foreach $cmd (@cmds)
     {
@@ -93,7 +93,7 @@ sub mktool_execute
 
 $find_regexp = "";
 @find_cmd;
-    
+
 #
 # mktool_foreach
 #
@@ -105,7 +105,7 @@ sub mktool_foreach
 	$find_dir = shift;
 	$find_regexp = shift;
 	@find_cmds = @_;
-	
+
 	if(!($find_dir =~ /^\//))
 	{
 	    $find_dir = cwd() . "/" . $find_dir;
@@ -122,7 +122,7 @@ sub mktool_foreach
 	}
 
 	my @thingies = split(' ', shift);
-    
+
 	foreach $thingy (@thingies)
 	{
 	    chdir $thingy unless $subdir == 0;
@@ -250,10 +250,10 @@ MKTOOL
 	$line =~ s/(\s+)(\.\/)/  /g;    # remove leading ./
 
 	# insert SDK path before ../
-	$line =~ s/(\s+)(\.\.\/)/${1}$curdir\/${2}/g; 
+	$line =~ s/(\s+)(\.\.\/)/${1}$curdir\/${2}/g;
 
 	# insert SDK path
-	$line =~ s/(\s+)(\w+)/${1}$curdir\/${2}/g; 
+	$line =~ s/(\s+)(\w+)/${1}$curdir\/${2}/g;
 
 	$count=0;
         $tmp=$line;
@@ -264,7 +264,7 @@ MKTOOL
 		# this to the output and drop out of the loop, but do
 		# continue, this should not halt generation
 		if($count++>19)
-		{ 
+		{
 			print "mktool.pl: could not process $line \n\n";
 			print ":: curdir  $curdir\n";
 			print ":: target  $target\n";
@@ -274,7 +274,7 @@ MKTOOL
 	}
 
 	# set all the paths to use the $SDK variable
-	$line =~ s/$ENV{'SDK'}/\$\{SDK\}/g; 
+	$line =~ s/$ENV{'SDK'}/\$\{SDK\}/g;
 	$resultant=$resultant . $line;
 	}
 

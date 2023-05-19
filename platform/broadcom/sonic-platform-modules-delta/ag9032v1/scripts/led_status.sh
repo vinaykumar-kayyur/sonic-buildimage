@@ -62,64 +62,64 @@ catfaneeprom(){
 catfanspeed(){
     fan_rpm_normal_num=0
     fan1_rpm_normal_num=0
-    fan1_front_rpm=`cat $FAN1_FRONT_RPM` 
+    fan1_front_rpm=`cat $FAN1_FRONT_RPM`
     fan1_rear_rpm=`cat $FAN1_REAR_RPM`
     if [ "${fan1_front_rpm}" -ne "960" ] && [ "${fan1_rear_rpm}" -ne "960" ] && [ "${fan1_front_rpm}" -ne "0" ] && [ "${fan1_rear_rpm}" -ne "0" ]; then
         fan1_rpm_normal_num=$((fan1_rpm_normal_num+1))
     elif [ "${fan1_front_rpm}" -eq "960" ] || [ "${fan1_rear_rpm}" -eq "960" ] || [ "${fan1_front_rpm}" -eq "0" ] || [ "${fan1_rear_rpm}" -eq "0" ]; then
         fan1_rpm_normal_num=$((fan1_rpm_normal_num))
     fi
-	
+
     fan2_rpm_normal_num=0
-    fan2_front_rpm=`cat $FAN2_FRONT_RPM` 
+    fan2_front_rpm=`cat $FAN2_FRONT_RPM`
     fan2_rear_rpm=`cat $FAN2_REAR_RPM`
     if [ "${fan2_front_rpm}" -ne "960" ] && [ "${fan2_rear_rpm}" -ne "960" ] && [ "${fan2_front_rpm}" -ne "0" ] && [ "${fan2_rear_rpm}" -ne "0" ]; then
         fan2_rpm_normal_num=$((fan2_rpm_normal_num+1))
     elif [ "${fan2_front_rpm}" -eq "960" ] || [ "${fan2_rear_rpm}" -eq "960" ] || [ "${fan2_front_rpm}" -eq "0" ] || [ "${fan2_rear_rpm}" -eq "0" ]; then
         fan2_rpm_normal_num=$((fan2_rpm_normal_num))
     fi
-	
+
     fan3_rpm_normal_num=0
-    fan3_front_rpm=`cat $FAN3_FRONT_RPM` 
+    fan3_front_rpm=`cat $FAN3_FRONT_RPM`
     fan3_rear_rpm=`cat $FAN3_REAR_RPM`
     if [ "${fan3_front_rpm}" -ne "960" ] && [ "${fan3_rear_rpm}" -ne "960" ] && [ "${fan3_front_rpm}" -ne "0" ] && [ "${fan3_rear_rpm}" -ne "0" ]; then
         fan3_rpm_normal_num=$((fan3_rpm_normal_num+1))
     elif [ "${fan3_front_rpm}" -eq "960" ] || [ "${fan3_rear_rpm}" -eq "960" ] || [ "${fan3_front_rpm}" -eq "0" ] || [ "${fan3_rear_rpm}" -eq "0" ]; then
         fan3_rpm_normal_num=$((fan3_rpm_normal_num))
     fi
-	
+
     fan4_rpm_normal_num=0
-    fan4_front_rpm=`cat $FAN4_FRONT_RPM` 
+    fan4_front_rpm=`cat $FAN4_FRONT_RPM`
     fan4_rear_rpm=`cat $FAN4_REAR_RPM`
     if [ "${fan4_front_rpm}" -ne "960" ] && [ "${fan4_rear_rpm}" -ne "960" ] && [ "${fan4_front_rpm}" -ne "0" ] && [ "${fan4_rear_rpm}" -ne "0" ]; then
         fan4_rpm_normal_num=$((fan4_rpm_normal_num+1))
     elif [ "${fan4_front_rpm}" -eq "960" ] || [ "${fan4_rear_rpm}" -eq "960" ] || [ "${fan4_front_rpm}" -eq "0" ] || [ "${fan4_rear_rpm}" -eq "0" ]; then
         fan4_rpm_normal_num=$((fan4_rpm_normal_num))
     fi
-	
+
     fan5_rpm_normal_num=0
-    fan5_front_rpm=`cat $FAN5_FRONT_RPM` 
+    fan5_front_rpm=`cat $FAN5_FRONT_RPM`
     fan5_rear_rpm=`cat $FAN5_REAR_RPM`
     if [ "${fan5_front_rpm}" -ne "960" ] && [ "${fan5_rear_rpm}" -ne "960" ] && [ "${fan5_front_rpm}" -ne "0" ] && [ "${fan5_rear_rpm}" -ne "0" ]; then
         fan5_rpm_normal_num=$((fan5_rpm_normal_num+1))
     elif [ "${fan5_front_rpm}" -eq "960" ] || [ "${fan5_rear_rpm}" -eq "960" ] || [ "${fan5_front_rpm}" -eq "0" ] || [ "${fan5_rear_rpm}" -eq "0" ]; then
         fan5_rpm_normal_num=$((fan5_rpm_normal_num))
     fi
-	
+
     fan_rpm_normal_num=$((fan1_rpm_normal_num+fan2_rpm_normal_num+fan3_rpm_normal_num+fan4_rpm_normal_num+fan5_rpm_normal_num))
-	
+
 }
 
 catpsueeprom(){
-    psu1_eeprom_num=0	
+    psu1_eeprom_num=0
     i2cget $PSU1_EEPROM > /dev/null 2>&1
     if [ "`echo $?`" -eq "0" ]; then
         psu1_eeprom_num=$((psu1_eeprom_num+1))
     elif [ "`echo $?`" -eq "2" ]; then
         psu1_eeprom_num=$((psu1_eeprom_num))
     fi
-	
-    psu2_eeprom_num=0	
+
+    psu2_eeprom_num=0
     i2cget $PSU2_EEPROM > /dev/null 2>&1
     if [ "`echo $?`" -eq "0" ]; then
         psu2_eeprom_num=$((psu2_eeprom_num+1))
@@ -132,16 +132,16 @@ catpsufanspeed(){
 
     psu1_rpm_normal_num=0
     psu1_rpm=`cat $PSU1_FAN_RPM`
-	
+
     if [ "${psu1_rpm}" -ne "960" ] && [ "${psu1_rpm}" -ne "0" ]; then
         psu1_rpm_normal_num=$((psu1_rpm_normal_num+1))
     elif [ "${psu1_rpm}" -eq "960" ] || [ "${psu1_rpm}" -eq "0" ]; then
         psu1_rpm_normal_num=$((psu1_rpm_normal_num))
     fi
-	
+
     psu2_rpm_normal_num=0
-    psu2_rpm=`cat $PSU2_FAN_RPM` 
-	
+    psu2_rpm=`cat $PSU2_FAN_RPM`
+
     if [ "${psu2_rpm}" -ne "960" ] && [ "${psu2_rpm}" -ne "0" ]; then
         psu2_rpm_normal_num=$((psu2_rpm_normal_num+1))
     elif [ "${psu2_rpm}" -eq "960" ] || [ "${psu2_rpm}" -eq "0" ]; then
@@ -164,7 +164,7 @@ setpsuled(){
     elif [ "${psu1_eeprom_num}" -eq "0" ] || [ "${psu1_rpm_normal_num}" -eq "0" ]; then
         echo "pwr1_amber" > $LED_CONTROL
     fi
-	
+
 	if [ "${psu2_eeprom_num}" -eq "1" ] && [ "${psu2_rpm_normal_num}" -eq "1" ]; then
         echo "pwr2_green" > $LED_CONTROL
     elif [ "${psu2_eeprom_num}" -eq "0" ] || [ "${psu2_rpm_normal_num}" -eq "0" ]; then
@@ -178,25 +178,25 @@ setfantrayled(){
     else
         echo "fan1_red" > $LED_CONTROL
     fi
-	
+
     if [ "${fan2_rpm_normal_num}" -eq "1" ]; then
         echo "fan2_green" > $LED_CONTROL
     else
         echo "fan2_red" > $LED_CONTROL
     fi
-	
+
     if [ "${fan3_rpm_normal_num}" -eq "1" ]; then
         echo "fan3_green" > $LED_CONTROL
     else
         echo "fan3_red" > $LED_CONTROL
     fi
-	
+
     if [ "${fan4_rpm_normal_num}" -eq "1" ]; then
         echo "fan4_green" > $LED_CONTROL
     else
         echo "fan4_red" > $LED_CONTROL
     fi
-	
+
     if [ "${fan5_rpm_normal_num}" -eq "1" ]; then
         echo "fan5_green" > $LED_CONTROL
     else
@@ -205,16 +205,16 @@ setfantrayled(){
 }
 
 platformstatus(){
-    
+
     echo "sys_green" > $LED_CONTROL
     catfaneeprom
     catfanspeed
     setfanled
     setfantrayled
-	
+
     catpsueeprom
     catpsufanspeed
-    setpsuled	
+    setpsuled
 }
 
 while true

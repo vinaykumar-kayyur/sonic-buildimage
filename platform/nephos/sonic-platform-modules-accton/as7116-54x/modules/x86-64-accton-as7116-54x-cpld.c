@@ -44,29 +44,29 @@ static ssize_t show_cpld_version(struct device *dev, struct device_attribute *at
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-	
+
 	val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-	
+
     return sprintf(buf, "%d\n", val);
-}	
+}
 
 static struct device_attribute ver = __ATTR(version, 0600, show_cpld_version, NULL);
 
 static void as7116_54x_cpld_add_client(struct i2c_client *client)
 {
 	struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
-	
+
 	if (!node) {
 		dev_dbg(&client->dev, "Can't allocate cpld_client_node (0x%x)\n", client->addr);
 		return;
 	}
-	
+
 	node->client = client;
-	
+
 	mutex_lock(&list_lock);
 	list_add(&node->list, &cpld_client_list);
 	mutex_unlock(&list_lock);
@@ -77,24 +77,24 @@ static void as7116_54x_cpld_remove_client(struct i2c_client *client)
 	struct list_head		*list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int found = 0;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client == client) {
 			found = 1;
 			break;
 		}
 	}
-	
+
 	if (found) {
 		list_del(list_node);
 		kfree(cpld_node);
 	}
-	
+
 	mutex_unlock(&list_lock);
 }
 
@@ -116,7 +116,7 @@ static int as7116_54x_cpld_probe(struct i2c_client *client,
 
 	dev_info(&client->dev, "chip found\n");
 	as7116_54x_cpld_add_client(client);
-	
+
 	return 0;
 
 exit:
@@ -127,12 +127,12 @@ static int as7116_54x_cpld_remove(struct i2c_client *client)
 {
 	sysfs_remove_file(&client->dev.kobj, &ver.attr);
 	as7116_54x_cpld_remove_client(client);
-	
+
 	return 0;
 }
 
-enum cpld_chips 
-{ 
+enum cpld_chips
+{
     as7116_54x_cpld1,
 	as7116_54x_cpld2,
 	as7116_54x_cpld3
@@ -162,19 +162,19 @@ int as7116_54x_cpld_read(unsigned short cpld_addr, u8 reg)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EPERM;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_read_byte_data(cpld_node->client, reg);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -186,19 +186,19 @@ int as7116_54x_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EIO;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_write_byte_data(cpld_node->client, reg, value);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;

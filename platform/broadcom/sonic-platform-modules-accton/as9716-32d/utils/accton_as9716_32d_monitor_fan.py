@@ -43,12 +43,12 @@ class switch(object):
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -66,9 +66,9 @@ fan_status_state=[2, 2, 2, 2, 2, 2]  #init state=2, fault=1, normal=0
 class device_monitor(object):
 
     def __init__(self, log_file, log_level):
-        
+
         self.fan_num = 6
-        self.fan_path = "/sys/bus/i2c/devices/17-0066/"        
+        self.fan_path = "/sys/bus/i2c/devices/17-0066/"
         self.present = {
             0: "fan1_present",
             1: "fan2_present",
@@ -77,7 +77,7 @@ class device_monitor(object):
             4: "fan5_present",
             5: "fan6_present",
         }
-        
+
         self.fault = {
             0: "fan1_fault",
             1: "fan2_fault",
@@ -86,8 +86,8 @@ class device_monitor(object):
             4: "fan5_fault",
             5: "fan6_fault",
         }
-        
-        
+
+
         """Needs a logger and a logger level."""
         # set up logging to file
         logging.basicConfig(
@@ -97,7 +97,7 @@ class device_monitor(object):
             format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
             datefmt='%H:%M:%S'
         )
-        
+
         # set up logging to console
         if log_level == logging.DEBUG:
             console = logging.StreamHandler()
@@ -107,30 +107,30 @@ class device_monitor(object):
             logging.getLogger('').addHandler(console)
 
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        #sys_handler.setLevel(logging.WARNING)       
-        sys_handler.setLevel(logging.INFO)       
+        #sys_handler.setLevel(logging.WARNING)
+        sys_handler.setLevel(logging.INFO)
         logging.getLogger('').addHandler(sys_handler)
-        
+
 
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
-        
-    def manage_fan(self):      
-        
+
+    def manage_fan(self):
+
         FAN_STATE_REMOVE = 0
         FAN_STATE_INSERT = 1
-        
+
         FAN_STATUS_FAULT = 1
         FAN_STATUS_NORMAL = 0
-        
+
         global fan_state
         global fan_status_state
-        
-        for idx in range (0, self.fan_num):           
+
+        for idx in range (0, self.fan_num):
             node = self.fan_path + self.present[idx]
             try:
                 val_file = open(node)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))          
+                print("Error: unable to open file: %s" % str(e))
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
@@ -142,26 +142,26 @@ class device_monitor(object):
             else:
                 if fan_state[idx]!=0:
                     fan_state[idx]=FAN_STATE_REMOVE
-                    logging.warning("Alarm for FAN-%d absent is detected", idx+1)  
-                                    
-        for idx in range (0, self.fan_num):           
+                    logging.warning("Alarm for FAN-%d absent is detected", idx+1)
+
+        for idx in range (0, self.fan_num):
             node = self.fan_path + self.fault[idx]
             try:
                 val_file = open(node)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))          
+                print("Error: unable to open file: %s" % str(e))
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
             # content is a string, either "0" or "1"
             if content == "1":
-                if fan_status_state[idx]!=FAN_STATUS_FAULT:                    
+                if fan_status_state[idx]!=FAN_STATUS_FAULT:
                     if fan_state[idx] == FAN_STATE_INSERT:
                         logging.warning("Alarm for FAN-%d failed is detected", idx+1);
                         fan_status_state[idx]=FAN_STATUS_FAULT
             else:
                 fan_status_state[idx]=FAN_STATUS_NORMAL
-      
+
         return True
 
 def main(argv):

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Silverstone platform sensors. This script get the sensor data from BMC 
+# Silverstone platform sensors. This script get the sensor data from BMC
 # using ipmitool and display them in lm-sensor alike format.
 #
 # The following data is support:
@@ -32,7 +32,7 @@ def ipmi_sensor_dump(cmd):
 def get_reading_by_name(sensor_name, sdr_elist_dump):
     '''
         Search for the match sensor name, return sensor
-        reading value and unit, return object epmtry string 
+        reading value and unit, return object epmtry string
         if search not match.
 
         The output of sensor dump:

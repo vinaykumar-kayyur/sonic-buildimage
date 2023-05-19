@@ -328,7 +328,7 @@ static _dma_pool_t _dma_pool;
  * Returns:
  *    Nothing
  */
-static void 
+static void
 _cmic_interrupt(bde_ctrl_t *ctrl)
 {
     int d;
@@ -985,7 +985,7 @@ _cmicd_interrupt(bde_ctrl_t *ctrl)
 
 
 /* The actual interrupt handler of ethernet devices */
-static void 
+static void
 _ether_interrupt(bde_ctrl_t *ctrl)
 {
     SSOC_WRITEL(0, ctrl->ba + 0x024/4);
@@ -1423,7 +1423,7 @@ _pprint(struct seq_file *m)
 }
 
 #ifdef BCM_INSTANCE_SUPPORT
-/* 
+/*
  * Allocate the DMA resource from DMA pool
  * Parameter :
  * dma_size (IN): allocate dma_size in MB
@@ -1558,7 +1558,7 @@ _instance_attach(unsigned int inst_id, unsigned int dma_size, linux_bde_device_b
         _bde_inst_resource->is_active = 0;
         /*_bde_inst_resource->dev will not be used when _bde_inst_resource->is_active == 0 */
     }
-    
+
     /* Validate the resource with inst_devices */
     exist = _instance_validate(inst_id, dma_size, inst_devices);
 
@@ -1640,7 +1640,7 @@ _edk_instance_attach(unsigned int inst_id, unsigned int dma_size)
  * Returns:
  *    0 on success, <0 on error
  */
-static int 
+static int
 _ioctl(unsigned int cmd, unsigned long arg)
 {
     lubde_ioctl_t io;
@@ -1654,9 +1654,9 @@ _ioctl(unsigned int cmd, unsigned long arg)
     if (copy_from_user(&io, (void *)arg, sizeof(io))) {
         return -EFAULT;
     }
-  
+
     io.rc = LUBDE_SUCCESS;
-  
+
     switch(cmd) {
     case LUBDE_VERSION:
         io.d0 = KBDE_VERSION;
@@ -1770,7 +1770,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
             /* FIXME: for multiple chips */
             if (!_devices[io.dev].enabled) {
                 user_bde->interrupt_connect(io.dev,
-                                            (void(*)(void *))_ether_interrupt, 
+                                            (void(*)(void *))_ether_interrupt,
                                             _devices+io.dev);
                 _devices[io.dev].enabled = 1;
             }
@@ -1818,7 +1818,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
         if (_devices[io.dev].dev_type & BDE_SWITCH_DEV_TYPE) {
             res = &_bde_inst_resource[_devices[io.dev].inst];
 #ifdef BDE_LINUX_NON_INTERRUPTIBLE
-            wait_event_timeout(res->intr_wq, 
+            wait_event_timeout(res->intr_wq,
                                atomic_read(&res->intr) != 0, 100);
 
 #else
@@ -1851,21 +1851,21 @@ _ioctl(unsigned int cmd, unsigned long arg)
                                       atomic_read(&res->intr) != 0);
             }
 #endif
-            /* 
-             * Even if we get multiple interrupts, we 
+            /*
+             * Even if we get multiple interrupts, we
              * only run the interrupt handler once.
              */
             atomic_set(&res->intr, 0);
         } else {
 #ifdef BDE_LINUX_NON_INTERRUPTIBLE
-            wait_event_timeout(_ether_interrupt_wq,     
+            wait_event_timeout(_ether_interrupt_wq,
                                atomic_read(&_ether_interrupt_has_taken_place) != 0, 100);
 #else
-            wait_event_interruptible(_ether_interrupt_wq,     
+            wait_event_interruptible(_ether_interrupt_wq,
                                      atomic_read(&_ether_interrupt_has_taken_place) != 0);
 
 #endif
-            /* 
+            /*
              * Even if we get multiple interrupts, we
              * only run the interrupt handler once.
              */
@@ -1928,7 +1928,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
     case LUBDE_SPI_READ_REG:
         if (user_bde->spi_read(io.dev, io.d0, io.dx.buf, io.d1) == -1) {
             io.rc = LUBDE_FAIL;
-        } 
+        }
         break;
     case LUBDE_SPI_WRITE_REG:
         if (user_bde->spi_write(io.dev, io.d0, io.dx.buf, io.d1) == -1) {
@@ -2035,15 +2035,15 @@ _ioctl(unsigned int cmd, unsigned long arg)
 /* Workaround for broken Busybox/PPC insmod */
 static char _modname[] = LINUX_USER_BDE_NAME;
 
-static gmodule_t _gmodule = 
+static gmodule_t _gmodule =
 {
-    .name = LINUX_USER_BDE_NAME, 
-    .major = LINUX_USER_BDE_MAJOR, 
-    .init = _init, 
-    .cleanup = _cleanup, 
-    .pprint = _pprint, 
+    .name = LINUX_USER_BDE_NAME,
+    .major = LINUX_USER_BDE_MAJOR,
+    .init = _init,
+    .cleanup = _cleanup,
+    .pprint = _pprint,
     .ioctl = _ioctl,
-}; 
+};
 
 gmodule_t*
 gmodule_get(void)

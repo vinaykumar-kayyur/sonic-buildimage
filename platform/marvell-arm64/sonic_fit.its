@@ -1,9 +1,9 @@
 /dts-v1/;
-  
+
 / {
     description = "U-Boot fitImage for SONIC Marvell Arm64";
     #address-cells = <1>;
-  
+
     images {
         kernel_ac5x {
             description = "Linux Kernel for AC5x";

@@ -7,7 +7,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -23,7 +23,7 @@ To set system LEDs' color, run "accton_as5812_54t_util.py set led"
 For more information, run "accton_as5812_54t_util.py --help".
 
 ====================================================================
-Besides applying accton_as5812_54t_util.py to access peripherals, you can 
+Besides applying accton_as5812_54t_util.py to access peripherals, you can
 access peripherals by sysfs nodes directly after the installation is run.
 
 LED controls can be found under /sys/class/leds. The sysfs interface
@@ -35,7 +35,7 @@ Brightness:
   3 => red
   4 => blue
 
-There are 5 system LEDs, loc, diag, fan, ps1, and ps2. 
+There are 5 system LEDs, loc, diag, fan, ps1, and ps2.
 They are lit automatically by CPLD, but the loc and diag.
 The loc led has only 1 color, blue.
 The diag one has 3 colors: red, amber, and green.
@@ -44,17 +44,17 @@ Fan controls can be found in /sys/bus/i2c/devices/2-0066.
 There are 12 fans inside 6 fan modules.
 All fans share 1 duty setting, ranged from 0~100.
 
-Three temperature sensors are controlled by the lm75 kernel modules. 
+Three temperature sensors are controlled by the lm75 kernel modules.
 They should already be visible under /sys/bus/i2c/drivers/lm75/.
 
-Two power supplies are controlled by the CPLD. 
+Two power supplies are controlled by the CPLD.
 Here provide their status under
 /sys/bus/i2c/devices/10-0050 and /sys/bus/i2c/devices/11-0053.
 
-There are 32 QSFP+ modules are equipped. 
-Apply "accton_as5812_54t_util.py show" to get their status. 
+There are 32 QSFP+ modules are equipped.
+Apply "accton_as5812_54t_util.py show" to get their status.
 Apply "accton_as5812_54t_util.py set sfp" to turn on/off light transmission.
 Apply "accton_as5812_54t_util.py sff" to dump EEPROM information.
-Before operating on that QSFP+, please make sure it is well plugged. 
+Before operating on that QSFP+, please make sure it is well plugged.
 Otherwise, operation is going to fail.
 

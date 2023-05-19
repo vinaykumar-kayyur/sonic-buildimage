@@ -36,7 +36,7 @@ do
     msts=$((`pcisysfs.py --get --offset 0x10c --res /sys/devices/pci0000\:00/0000\:00\:13.0/resource0 | sed 's/^.*:/0x/'`))
     dbsts=$((`pcisysfs.py --get --offset 0x38c --res /sys/devices/pci0000\:00/0000\:00\:13.0/resource0 | sed 's/^.*:/0x/'`))
     msts_ip=$((msts&0x1))
-    
+
     mctrl=$((10#$mctrl))
     if [ $msts_ip = 0 ]; then
 	logger -p NOTICE "I2C_bitbang-Bit banging done on I2C bus"

@@ -17,7 +17,7 @@ KCFG_HDR_RE = "\[(.*)\]"
 HDRS = ["common", "amd64"]
 
 class FileHandler:
-    
+
     @staticmethod
     def write_lines(path, lines, raw=False):
         # Create the dir if it doesn't exist already
@@ -58,7 +58,7 @@ class FileHandler:
         if as_string:
             return "\n".join(filtered_data)
         return filtered_data
-       
+
     @staticmethod
     def read_dir(path, ext="*") -> list:
         return [os.path.basename(f) for f in glob.glob(os.path.join(path, ext))]
@@ -77,7 +77,7 @@ class FileHandler:
                         i_start = index
                     elif marker+"-end" in line:
                         i_end = index
-        # print(i_start, i_end)             
+        # print(i_start, i_end)
         return (i_start, i_end)
 
     @staticmethod
@@ -86,13 +86,13 @@ class FileHandler:
         if not marker:
             return lines
         i_start, i_end = FileHandler.find_marker_indices(lines, marker)
-        
+
         if i_start < 0 or i_end >= len(lines):
             print("-> WARNING No Marker Found")
             return []
 
         return lines[i_start+1:i_end]
-    
+
     @staticmethod
     def write_lines_marker(path, writable_opts: list, marker=None):
         # if marker is none, just write the opts into the file,
@@ -140,7 +140,7 @@ class KCFG:
         if len(tmp) != 2:
             print("-> DEBUG: Malformed kconfig opt, {}".format(opt))
             return ()
-        
+
         return (tmp[0], tmp[1])
 
     @staticmethod
@@ -148,7 +148,7 @@ class KCFG:
         opts = [] # list of tuples (CONFIG_*, "m|y|n")
         for kcfg in kcfg_sec:
             tmp = KCFG.parse_opt_str(kcfg)
-            if tmp: 
+            if tmp:
                 opts.append(tmp)
         return opts
 
@@ -163,7 +163,7 @@ class KCFG:
 class Action():
     def __init__(self, args):
         self.args = args
-    
+
     def perform(self):
         pass
 

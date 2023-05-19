@@ -39,45 +39,45 @@ void dni_kunlock(void)
 EXPORT_SYMBOL(dni_kunlock);
 
 /* pca9548 - add 8 bus */
-static struct pca954x_platform_mode pca954x_mode[] = 
+static struct pca954x_platform_mode pca954x_mode[] =
 {
-    { 
+    {
         .adap_id = 7,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 8,
         .deselect_on_exit = 1,
     },
-    {   
+    {
         .adap_id = 9,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 10,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 11,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 12,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 13,
         .deselect_on_exit = 1,
     },
-    { 
+    {
         .adap_id = 14,
         .deselect_on_exit = 1,
     },
 };
 
-static struct pca954x_platform_data pca954x_data = 
+static struct pca954x_platform_data pca954x_data =
 {
-    .modes = pca954x_mode, 
+    .modes = pca954x_mode,
     .num_modes = ARRAY_SIZE(pca954x_mode),
 };
 
@@ -127,7 +127,7 @@ EXPORT_SYMBOL(dni_log2);
 /*----------------   IPMI - start   ------------- */
 
 int dni_create_user(void)
-{ 
+{
     int rv, i;
 
     for (i=0,rv=1; i<IPMI_MAX_INTF && rv; i++)
@@ -149,15 +149,15 @@ int dni_bmc_cmd(char set_cmd, char *cmd_data, int cmd_data_len)
     struct kernel_ipmi_msg msg;
     struct completion comp;
 
-    addr.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE;   
-    addr.channel = IPMI_BMC_CHANNEL;                    
+    addr.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE;
+    addr.channel = IPMI_BMC_CHANNEL;
     addr.lun = 0;
 
     msg.netfn = DELTA_NETFN;
     msg.cmd = set_cmd;
     msg.data_len = cmd_data_len;
     msg.data = cmd_data;
-    
+
     init_completion(&comp);
     rv = ipmi_request_supply_msgs(ipmi_mh_user, (struct ipmi_addr*)&addr, 0,&msg, &comp, &halt_smi_msg, &halt_recv_msg, 0);
     if (rv) {
@@ -177,7 +177,7 @@ int dni_bmc_cmd(char set_cmd, char *cmd_data, int cmd_data_len)
                 printk(KERN_ERR "IPMI get error!\n");
                 return -6;
             }
-            break; 
+            break;
         case CMD_SETDATA:
             if( rv == 0)
             {
@@ -482,7 +482,7 @@ static struct i2c_device_platform_data ag9064_i2c_device_platform_data[] = {
         .client = NULL,
     },
     {
-        /* qsfp 43 (0x50) */ 
+        /* qsfp 43 (0x50) */
         .parent = 62,
         .info = { I2C_BOARD_INFO("optoe1", 0x50) },
         .client = NULL,
@@ -714,7 +714,7 @@ static int __init i2c_device_probe(struct platform_device *pdev)
     }
 
     return 0;
-    
+
 }
 
 static int __exit i2c_deivce_remove(struct platform_device *pdev)
@@ -767,7 +767,7 @@ static struct swpld_mux_platform_data ag9064_swpld_mux_platform_data[] = {
     },
 };
 
-static struct platform_device ag9064_swpld_mux[] = 
+static struct platform_device ag9064_swpld_mux[] =
 {
     {
         .name           = "delta-ag9064-swpld-mux",
@@ -848,7 +848,7 @@ static int __init swpld_mux_probe(struct platform_device *pdev)
     muxc->priv = mux;
     platform_set_drvdata(pdev, muxc);
 
-    for (i = 0; i < dev_num; i++) 
+    for (i = 0; i < dev_num; i++)
     {
         int nr = pdata->base_nr + i;
         unsigned int class = 0;
@@ -937,7 +937,7 @@ static ssize_t access_user_space(const char *name, char *buf, size_t len, loff_t
             }
             for(i = 0; i < ((len / EEPROM_ARCH_SIZE) + 1); i++)
             {
-                len = len - pos;  
+                len = len - pos;
                 vfs_ret = vfs_write(fp, buf + pos, len, &pos);
             }
             break;
@@ -1302,14 +1302,14 @@ static int __init delta_ag9064_platform_init(void)
         printk(KERN_WARNING "Fail to register swpld mux driver\n");
         goto error_swpld_mux_driver;
     }
-  
-    // register the i2c devices    
+
+    // register the i2c devices
     ret = platform_driver_register(&i2c_device_driver);
     if (ret) {
         printk(KERN_WARNING "Fail to register i2c device driver\n");
         goto error_i2c_device_driver;
     }
-	
+
     swpld_pdata = ag9064_swpld_mux[0].dev.platform_data;
     ret = platform_device_register(&ag9064_swpld_mux[0]);
     if (ret) {
@@ -1320,7 +1320,7 @@ static int __init delta_ag9064_platform_init(void)
     for (i = 0; i < ARRAY_SIZE(ag9064_i2c_device); i++)
     {
         ret = platform_device_register(&ag9064_i2c_device[i]);
-        if (ret) 
+        if (ret)
         {
             printk(KERN_WARNING "Fail to create i2c device %d\n", i);
             goto error_ag9064_i2c_device;
@@ -1371,7 +1371,7 @@ static void __exit delta_ag9064_platform_exit(void)
     }
 
     platform_device_unregister(&ag9064_swpld_mux[0]);
-    platform_driver_unregister(&i2c_device_driver);  
+    platform_driver_unregister(&i2c_device_driver);
     platform_driver_unregister(&swpld_mux_driver);
     i2c_unregister_device(i2c_client_9548);
 }
@@ -1381,4 +1381,4 @@ module_exit(delta_ag9064_platform_exit);
 
 MODULE_DESCRIPTION("DELTA ag9064 Platform Support");
 MODULE_AUTHOR("Johnson Lu <johnson.lu@deltaww.com>");
-MODULE_LICENSE("GPL");    
+MODULE_LICENSE("GPL");

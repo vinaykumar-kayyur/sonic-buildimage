@@ -36,11 +36,11 @@
 
 #define MAX_FAN_DUTY_CYCLE 100
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { 0x3c, 0x3d, 0x3e, 0x3f, I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct cpr_4011_4mxx_data {
     struct device      *hwmon_dev;
@@ -82,7 +82,7 @@ enum cpr_4011_4mxx_sysfs_attributes {
     PSU_FAN1_SPEED,
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_v_in,        S_IRUGO, show_linear,      NULL, PSU_V_IN);
 static SENSOR_DEVICE_ATTR(psu_v_out,       S_IRUGO, show_vout,        NULL, PSU_V_OUT);
@@ -176,7 +176,7 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
     u16 value = 0;
     int exponent, mantissa;
     int multiplier = 1000;
-    
+
     switch (attr->index) {
     case PSU_V_IN:
         value = data->v_in;
@@ -213,12 +213,12 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
     default:
         break;
     }
-    
+
     exponent = two_complement_to_int(value >> 11, 5, 0x1f);
     mantissa = two_complement_to_int(value & 0x7ff, 11, 0x7ff);
 
     return (exponent >= 0) ? sprintf(buf, "%d\n", (mantissa << exponent) * multiplier) :
-                             sprintf(buf, "%d\n", (mantissa * multiplier) / (1 << -exponent));                      
+                             sprintf(buf, "%d\n", (mantissa * multiplier) / (1 << -exponent));
 }
 
 static ssize_t show_fan_fault(struct device *dev, struct device_attribute *da,
@@ -256,7 +256,7 @@ static int cpr_4011_4mxx_probe(struct i2c_client *client,
     struct cpr_4011_4mxx_data *data;
     int status;
 
-    if (!i2c_check_functionality(client->adapter, 
+    if (!i2c_check_functionality(client->adapter,
         I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA)) {
         status = -EIO;
         goto exit;
@@ -288,7 +288,7 @@ static int cpr_4011_4mxx_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -296,7 +296,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -307,7 +307,7 @@ static int cpr_4011_4mxx_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &cpr_4011_4mxx_group);
     kfree(data);
-    
+
     return 0;
 }
 
@@ -357,7 +357,7 @@ static struct cpr_4011_4mxx_data *cpr_4011_4mxx_update_device(struct device *dev
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct cpr_4011_4mxx_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -379,10 +379,10 @@ static struct cpr_4011_4mxx_data *cpr_4011_4mxx_update_device(struct device *dev
 
         dev_dbg(&client->dev, "Starting cpr_4011_4mxx update\n");
 
-        /* Read byte data */        
+        /* Read byte data */
         for (i = 0; i < ARRAY_SIZE(regs_byte); i++) {
             status = cpr_4011_4mxx_read_byte(client, regs_byte[i].reg);
-            
+
             if (status < 0) {
                 dev_dbg(&client->dev, "reg %d, err %d\n",
                         regs_byte[i].reg, status);
@@ -392,11 +392,11 @@ static struct cpr_4011_4mxx_data *cpr_4011_4mxx_update_device(struct device *dev
                 *(regs_byte[i].value) = status;
             }
         }
-                    
-        /* Read word data */                    
+
+        /* Read word data */
         for (i = 0; i < ARRAY_SIZE(regs_word); i++) {
             status = cpr_4011_4mxx_read_word(client, regs_word[i].reg);
-            
+
             if (status < 0) {
                 dev_dbg(&client->dev, "reg %d, err %d\n",
                         regs_word[i].reg, status);
@@ -411,7 +411,7 @@ static struct cpr_4011_4mxx_data *cpr_4011_4mxx_update_device(struct device *dev
                 *(regs_word[i].value) = 0;
             }
         }
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }

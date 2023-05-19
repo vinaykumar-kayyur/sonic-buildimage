@@ -21,7 +21,7 @@ class Thermal(ThermalBase):
 
     THERMAL_NAME = (
         'CPU On-board', 'ASIC On-board Rear', 'System Front Left',
-        'System Front Right', 'CPU Core 0', 'CPU Core 1', 'CPU Core 2', 
+        'System Front Right', 'CPU Core 0', 'CPU Core 1', 'CPU Core 2',
         'CPU Core 3'
         )
 

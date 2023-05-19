@@ -41,7 +41,7 @@ static struct platform_device swpld4_device = {
     },
 };
 
-static ssize_t get_swpld_reg(struct device *dev, struct device_attribute *dev_attr, char *buf) 
+static ssize_t get_swpld_reg(struct device *dev, struct device_attribute *dev_attr, char *buf)
 {
     int ret;
     int mask;
@@ -49,7 +49,7 @@ static ssize_t get_swpld_reg(struct device *dev, struct device_attribute *dev_at
     int cmd_data_len;
     char note[200];
     uint8_t cmd_data[4]={0};
-    uint8_t get_cmd;       
+    uint8_t get_cmd;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
 
     dni_klock();
@@ -138,30 +138,30 @@ static ssize_t get_swpld_reg(struct device *dev, struct device_attribute *dev_at
             case 0x30:
                 value = value >> 4;
                 dni_kunlock();
-                return sprintf(buf, "0x%01x%s", value, note);       
+                return sprintf(buf, "0x%01x%s", value, note);
             default :
                 value = value >> dni_log2(mask);
                 dni_kunlock();
                 return sprintf(buf, "%d%s", value, note);
-        }        
+        }
     }
     dni_kunlock();
-    return sprintf(buf, "%d not found", attr->index); 
+    return sprintf(buf, "%d not found", attr->index);
 }
 
 static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_attr,
              const char *buf, size_t count)
 {
-    int err; 
-    int value; 
-    int set_data; 
-    int cmd_data_len;    
+    int err;
+    int value;
+    int set_data;
+    int cmd_data_len;
     uint8_t cmd_data[4]={0};
     uint8_t set_cmd;
     uint8_t get_cmd;
     unsigned long set_data_ul;
-    unsigned char mask;  
-    unsigned char mask_out;      
+    unsigned char mask;
+    unsigned char mask_out;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
 
     cmd_data_len = sizeof(cmd_data);
@@ -199,12 +199,12 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
             case SWPLD3_REG_ADDR:
                 swpld3_reg_addr = set_data;
                 dni_kunlock();
-                return count;         
+                return count;
             case SWPLD4_REG_ADDR:
                 swpld4_reg_addr = set_data;
                 dni_kunlock();
                 return count;
-        //reg_value       
+        //reg_value
             case SWPLD1_REG_VALUE:
                 cmd_data[1] = SWPLD1_ADDR;
                 cmd_data[2] = swpld1_reg_addr;
@@ -223,7 +223,7 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
                 break;
             default :
                 dni_kunlock();
-                return sprintf(buf, "%d not found", attr->index); 
+                return sprintf(buf, "%d not found", attr->index);
         }
         dni_bmc_cmd(set_cmd, cmd_data, cmd_data_len);
         dni_kunlock();
@@ -232,9 +232,9 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
     else{
         cmd_data[0] = BMC_BUS_5;
         cmd_data[2] = attribute_data[attr->index].reg;
-        cmd_data[3] = 1;        
+        cmd_data[3] = 1;
         switch (attr->index) {
-        //attributes      
+        //attributes
             case SWPLD1_MAJOR_VER ... PSU_LED_MODE://SWPLD1
                 cmd_data[1] = SWPLD1_ADDR;
                 break;
@@ -249,7 +249,7 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
                 break;
             default:
                 dni_kunlock();
-                return sprintf(buf, "%d not found", attr->index); 
+                return sprintf(buf, "%d not found", attr->index);
         }
 
         value = dni_bmc_cmd(get_cmd, cmd_data, cmd_data_len);
@@ -258,7 +258,7 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
         cmd_data[3] = set_data;
         switch (mask) {
             case 0xFF:
-                set_data = mask_out | (set_data & mask);  
+                set_data = mask_out | (set_data & mask);
                 break;
             case 0x0F:
                 set_data = mask_out | (set_data & mask);
@@ -266,7 +266,7 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
             case 0xF0:
                 set_data = set_data << 4;
                 set_data = mask_out | (set_data & mask);
-                break; 
+                break;
             case 0xC0:
                 set_data = set_data << 6;
                 set_data = mask_out | (set_data & mask);
@@ -276,8 +276,8 @@ static ssize_t set_swpld_reg(struct device *dev, struct device_attribute *dev_at
                 set_data = mask_out | (set_data & mask);
                 break;
             default :
-                set_data = mask_out | (set_data << dni_log2(mask) );        
-        }   
+                set_data = mask_out | (set_data << dni_log2(mask) );
+        }
         dni_bmc_cmd(set_cmd, cmd_data, cmd_data_len);
         dni_kunlock();
         return count;
@@ -606,7 +606,7 @@ error_swpld1_driver:
 static void __exit delta_ag9064_swpld_exit(void)
 {
     platform_device_unregister(&swpld1_device);
-    platform_driver_unregister(&swpld1_driver);  
+    platform_driver_unregister(&swpld1_driver);
     platform_device_unregister(&swpld2_device);
     platform_driver_unregister(&swpld2_driver);
     platform_device_unregister(&swpld3_device);
@@ -619,4 +619,4 @@ module_exit(delta_ag9064_swpld_exit);
 
 MODULE_DESCRIPTION("DNI ag9064 CPLD Platform Support");
 MODULE_AUTHOR("Stanley Chi <stanley.chi@deltaww.com>");
-MODULE_LICENSE("GPL"); 
+MODULE_LICENSE("GPL");

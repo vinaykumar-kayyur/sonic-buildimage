@@ -303,7 +303,7 @@ static int ocores_wait(struct ocores_i2c *i2c,
 		if (time_after(jiffies, j))
 			return -ETIMEDOUT;
         cpu_relax();
-        cond_resched();		
+        cond_resched();
 	}
 	return 0;
 }
@@ -429,7 +429,7 @@ static int ocores_xfer(struct i2c_adapter *adap,
 	int retry=0;
 	int max_retry = 0;
 	struct ocores_i2c *i2c = i2c_get_adapdata(adap);
-	
+
 	i2c->nack_retry = 0;
 
 	if (i2c->flags & OCORES_FLAG_POLL)

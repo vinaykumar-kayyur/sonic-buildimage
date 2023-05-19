@@ -2,15 +2,15 @@
 #
 # Copyright (C) 2019 Alphanetworks Technology Corporation.
 # Robin Chen <Robin_chen@Alphanetworks.com>
-# This program is free software: you can redistribute it and/or modify 
-# it under the terms of the GNU General Public License as published by 
-# the Free Software Foundation, either version 3 of the License, or 
-# any later version. 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
 #
-# This program is distributed in the hope that it will be useful, 
-# but WITHOUT ANY WARRANTY; without even the implied warranty of 
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-# GNU General Public License for more details. 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 # see <http://www.gnu.org/licenses/>
 #
 # Copyright (C) 2016 Accton Networks, Inc.
@@ -34,7 +34,7 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install     : install drivers and generate related sysfs nodes
     clean       : uninstall drivers and remove related sysfs nodes
@@ -62,10 +62,10 @@ def main():
     global DEBUG
     global args
     global FORCE
-        
+
     if len(sys.argv)<2:
         show_help()
-         
+
     options, args = getopt.getopt(sys.argv[1:], 'hdf', ['help',
                                                        'debug',
                                                        'force',
@@ -81,7 +81,7 @@ def main():
         elif opt in ('-d', '--debug'):
             DEBUG = True
             logging.basicConfig(level=logging.INFO)
-        elif opt in ('-f', '--force'): 
+        elif opt in ('-f', '--force'):
             FORCE = 1
         else:
             logging.info('no option')
@@ -105,8 +105,8 @@ def show_log(txt):
     return
 
 def log_os_system(cmd, show):
-    logging.info('Run :'+cmd)  
-    status, output = subprocess.getstatusoutput(cmd)    
+    logging.info('Run :'+cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     show_log(cmd +" with result: " + str(status))
     show_log("      output:"+output)
     if status:
@@ -119,7 +119,7 @@ def driver_check():
     ret, lsmod = log_os_system("lsmod | grep " + DRIVER_NAME, 0)
     logging.info('mods:'+lsmod)
     if len(lsmod) ==0:
-        return False   
+        return False
     return True
 
 
@@ -190,7 +190,7 @@ mknod =[
 'echo yesm1300am 0x59 > /sys/bus/i2c/devices/i2c-11/new_device',
 'echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/new_device',
 'echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-13/new_device',
-'echo snj60d0_320f_cpld1 0x5f > /sys/bus/i2c/devices/i2c-14/new_device', 
+'echo snj60d0_320f_cpld1 0x5f > /sys/bus/i2c/devices/i2c-14/new_device',
 'echo snj60d0_320f_cpld2 0x5f > /sys/bus/i2c/devices/i2c-15/new_device',
 'echo snj60d0_320f_cpld3 0x5f > /sys/bus/i2c/devices/i2c-16/new_device',
 'echo snj60d0_320f_cpld4 0x5f > /sys/bus/i2c/devices/i2c-17/new_device', ]
@@ -204,16 +204,16 @@ cpld_port_led_enable=[
 'echo {value} > /sys/bus/i2c/devices/17-005f/cpld_port_led_enable_4', ]
 
 def device_install():
-    global FORCE 
-    
+    global FORCE
+
     for i in range(0,len(mknod)):
-        #for pca954x need times to built new i2c buses            
+        #for pca954x need times to built new i2c buses
         if mknod[i].find('pca954') != -1:
-            time.sleep(1)         
-               
+            time.sleep(1)
+
         if mknod[i].find('lm75') != -1:
             time.sleep(1)
-        
+
         status, output = log_os_system(mknod[i], 1)
         if status:
             print(output)
@@ -258,8 +258,8 @@ def device_install():
             if FORCE == 0:
                 return status
 
-    return 
-    
+    return
+
 def device_uninstall():
     global FORCE
 
@@ -303,7 +303,7 @@ def device_uninstall():
 def system_ready():
     if driver_check() == False:
         return False
-    if not device_exist(): 
+    if not device_exist():
         return False
     return True
 
@@ -333,10 +333,10 @@ def do_uninstall():
         print(PROJECT_NAME.upper() + " has no device installed....")
     else:
         print("Removing device....")
-        status = device_uninstall() 
+        status = device_uninstall()
         if status:
             if FORCE == 0:
-                return  status  
+                return  status
 
     if driver_check()== False :
         print(PROJECT_NAME.upper() + " has no driver installed....")

@@ -114,7 +114,7 @@ static struct i2c_board_info __initdata i2c_info_pca9547[] =
 {
         {
             I2C_BOARD_INFO("pca9547", 0x71),
-            .platform_data = &pca954x_data, 
+            .platform_data = &pca954x_data,
         },
 };
 
@@ -131,9 +131,9 @@ static struct i2c_device_platform_data et6248brb_i2c_device_platform_data[] = {
         .info = { I2C_BOARD_INFO("tmp75", 0x48) },
         .client = NULL,
     },
-    { 
+    {
         /* EEPROM (0x54) */
-        .parent = 1, 
+        .parent = 1,
         .info = { I2C_BOARD_INFO("24c08", 0x54) },
         .client = NULL,
     },
@@ -247,16 +247,16 @@ static struct i2c_board_info __initdata i2c_info_pca9555[] =
 {
         {
             I2C_BOARD_INFO("pca9555", 0x20),
-            .platform_data = &pca9555_data_0, 
+            .platform_data = &pca9555_data_0,
         },
         {
             I2C_BOARD_INFO("pca9555", 0x21),
-            .platform_data = &pca9555_data_1, 
+            .platform_data = &pca9555_data_1,
         },
         {
             I2C_BOARD_INFO("pca9555", 0x23),
-            .platform_data = &pca9555_data_2, 
-        },        
+            .platform_data = &pca9555_data_2,
+        },
 };
 
 static struct i2c_device_platform_data et6248brb_gpio_device_platform_data[] = {
@@ -321,7 +321,7 @@ enum gpio_attributes {
 };
 
 static struct gpio_attribute_data attribute_data[] = {
-//PCA9555_A  
+//PCA9555_A
     [PSU1_SMB_ALERT] = {
         .bus  = BUS0,     .addr = PCA9555_A,
         .reg  = 0x00,     .mask = 1 << 0,
@@ -347,7 +347,7 @@ static struct gpio_attribute_data attribute_data[] = {
         .bus  = BUS0,     .addr = PCA9555_A,
         .reg  = 0x03,     .mask =  0xc0,
         .note = "00=LED off or FAN tray1 is not present\n01=LED Red,FAN tray1 fail\n10=LED Green,FAN tray1 is present\n11=reserved"
-    },   
+    },
 //PCA9555_B
     [D_FAN_ALERT] = {
         .bus  = BUS0,     .addr = PCA9555_B,
@@ -369,43 +369,43 @@ static struct gpio_attribute_data attribute_data[] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 1,
         .note ="0=FAN eeprom write protect is disable\n1=FAN eeprom write protect is enable and can not be programmed"
-    },  
+    },
     [D_FAN_M_PRESENT2] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 2,
         .note ="0=FAN2 module is present\n1=FAN2 module is NOT present"
-    }, 
+    },
     [D_FAN_M_PRESENT1] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 3,
         .note ="0=FAN1 moduel is present\n1=FAN1 module is NOT present"
-    }, 
+    },
     [PSU1_PG] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 4,
         .note ="0=PSU1 is FAIL or not present\n1=PSU1 is GOOD"
-    }, 
+    },
     [PSU2_PG] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 5,
         .note ="0=PSU2 is FAIL or not present\n1=PSU2 is GOOD"
-    }, 
+    },
     [BCM54282_INT] = {
         .bus  = BUS0,     .addr = PCA9555_B,
         .reg  = 0x01,     .mask = 1 << 6,
         .note ="0=BCM54282 PHY interrupt occurrs\n1=BCM54282 PHY interrupt is not occurrs"
-    }, 
+    },
 //PCA9555_C
     [SFP_MOD_P1] = {
         .bus  = BUS0,     .addr = PCA9555_C,
         .reg  = 0x00,     .mask = 1 << 0,
         .note ="0=SFP1 transceiver is present\n1=SFP1 transceiver is NOT present"
-    },  
+    },
     [SFP_RXLOS_P1] = {
         .bus  = BUS0,     .addr = PCA9555_C,
         .reg  = 0x00,     .mask = 1 << 1,
         .note ="0=SFP1 transceiver is NOT asserted Loss of signal\n1=SFP1 transceiver is asserted Loss of signal"
-    }, 
+    },
     [SFP_MOD_P2] = {
         .bus  = BUS0,     .addr = PCA9555_C,
         .reg  = 0x00,     .mask = 1 << 2,
@@ -456,7 +456,7 @@ void set_direction(struct i2c_device_platform_data *pdata, unsigned char reg, un
 
     int value;
     int read_only;
-    unsigned char mask_out;   
+    unsigned char mask_out;
     unsigned char set_data;
 
     read_only = 1;  //Configuration:GPI
@@ -479,7 +479,7 @@ void set_direction(struct i2c_device_platform_data *pdata, unsigned char reg, un
     return;
 }
 
-static ssize_t get_gpio_reg(struct device *dev, struct device_attribute *dev_attr, char *buf) 
+static ssize_t get_gpio_reg(struct device *dev, struct device_attribute *dev_attr, char *buf)
 {
     int ret;
     int mask;
@@ -494,13 +494,13 @@ static ssize_t get_gpio_reg(struct device *dev, struct device_attribute *dev_att
     switch(attribute_data[attr->index].addr){
         case PCA9555_A:
             pca9555_num = 0;
-            break; 
+            break;
         case PCA9555_B:
             pca9555_num = 1;
-            break; 
+            break;
         case PCA9555_C:
             pca9555_num = 2;
-            break; 
+            break;
         default:
             return sprintf(buf, "attribute address error");
     }
@@ -517,7 +517,7 @@ static ssize_t get_gpio_reg(struct device *dev, struct device_attribute *dev_att
             break;
         default:
             return sprintf(buf, "%d not found", attr->index);
-    } 
+    }
 
     switch (mask) {
         case 0xFF:
@@ -547,13 +547,13 @@ static ssize_t set_gpio_reg(struct device *dev, struct device_attribute *dev_att
     int value;
     unsigned long set_data;
     unsigned char set_reg;
-    unsigned char mask;  
+    unsigned char mask;
     unsigned char mask_out;
     unsigned char pca9555_num;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
     struct device *i2cdev = kobj_to_dev(kobj_gpio);
     struct i2c_device_platform_data *pdata = i2cdev->platform_data;
-    
+
     err = kstrtoul(buf, 0, &set_data);
     if (err){
         return err;
@@ -562,15 +562,15 @@ static ssize_t set_gpio_reg(struct device *dev, struct device_attribute *dev_att
     if (set_data > 0xff){
         printk(KERN_ALERT "address out of range (0x00-0xFF)\n");
         return count;
-    }    
+    }
 
     switch(attribute_data[attr->index].addr){
         case PCA9555_A:
             pca9555_num = 0;
-            break; 
+            break;
         case PCA9555_B:
             pca9555_num = 1;
-            break; 
+            break;
         case PCA9555_C:
             pca9555_num = 2;
             break;
@@ -838,9 +838,9 @@ static int __init delta_et6248brb_platform_init(void)
 
     int ret, i = 0, j = 0;
     printk("et6248brb_platform module initialization\n");
-    
+
     //Use pca9547 in i2c_mux_pca954x.c
-    adapter = i2c_get_adapter(BUS1); 
+    adapter = i2c_get_adapter(BUS1);
     i2c_client_9547 = i2c_new_device(adapter, &i2c_info_pca9547[0]);
     i2c_put_adapter(adapter);
 

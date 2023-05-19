@@ -191,13 +191,13 @@ err_lock_tobj_all:
 
 static int
 _update_auto_config_2_trnasvr(void) {
-    
+
     struct transvr_obj_s *tobj_p;
     char port_name[32] = "ERR";
     int port_id = 0;
     int curr    = 0;
     int retval  = 0;
-        
+
     for (curr=0; curr<port_total; curr++) {
         port_id = port_layout[curr].port_id;
         memset(port_name, 0, sizeof(port_name));
@@ -348,7 +348,7 @@ store_attr_auto_config(struct device *dev_p,
                        size_t count){
 
     int input_val = sscanf_2_int(buf_p);
-    
+
     if (input_val < 0){
         return -EBFONT;
     }
@@ -2919,7 +2919,7 @@ static int
 init_swps_common(void){
 
     char *err_msg = "ERR";
-    
+
     auto_config = 0;
     if ((SWP_AUTOCONFIG_ENABLE) && (SWP_POLLING_ENABLE)){
         auto_config = 1;

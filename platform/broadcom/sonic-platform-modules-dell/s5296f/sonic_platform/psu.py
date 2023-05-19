@@ -21,7 +21,7 @@ class Psu(PsuBase):
 
     # { PSU-ID: { Sensor-Name: Sensor-ID } }
     SENSOR_MAPPING = { 1: { "State": 0x31, "Current": 0x39,
-                            "Power": 0x37, "Voltage": 0x38, 
+                            "Power": 0x37, "Voltage": 0x38,
                             "InCurrent": 0x36, "InPower": 0x34,
                             "InVoltage": 0x35, "Temperature": 0xc },
                        2: { "State": 0x32, "Current": 0x3F,

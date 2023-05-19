@@ -128,7 +128,7 @@ static ssize_t show_present(struct device *dev, struct device_attribute *da,
 		VALIDATED_READ(buf, values[2], accton_i2c_cpld_read(I2C_ADDR_CPLD1, CPLD1_OFFSET_QSFP_PRESET3), 1);
 		/* QSFP_PRESENT Ports 25-32 */
 		VALIDATED_READ(buf, values[3], accton_i2c_cpld_read(I2C_ADDR_CPLD1, CPLD1_OFFSET_QSFP_PRESET4), 1);
-		
+
 		/* Return values 1 -> 32 in order */
 		return sprintf(buf, "%.2x %.2x %.2x %.2x\n",
 					   values[0], values[1], values[2], values[3]);
@@ -140,7 +140,7 @@ static ssize_t show_present(struct device *dev, struct device_attribute *da,
 		    printk("return -EIO\n");
 			return -EIO;
 		}
-	
+
 		return sprintf(buf, "%d\n", data->is_present);
 	}
 }

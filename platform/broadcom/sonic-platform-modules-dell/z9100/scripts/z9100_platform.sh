@@ -57,7 +57,7 @@ sys_eeprom() {
 #Attach/Detach cpld devices to drivers for each iom
 switch_board_cpld() {
     case $1 in
-        "new_device")    
+        "new_device")
                       for ((i=14;i<=17;i++));
                       do
                           i2c_config "echo  dell_z9100_iom_cpld 0x3e > /sys/bus/i2c/devices/i2c-$i/$1"

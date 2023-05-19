@@ -53,8 +53,8 @@ struct ioexp_addr_s {
     int read_offset[8];
     int write_offset[8];
     int conf_offset[8];
-    uint8_t data_default[8]; 
-    uint8_t conf_default[8]; 
+    uint8_t data_default[8];
+    uint8_t conf_default[8];
 };
 
 struct ioexp_i2c_s {

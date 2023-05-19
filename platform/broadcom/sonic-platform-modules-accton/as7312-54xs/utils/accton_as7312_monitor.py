@@ -64,7 +64,7 @@ global log_level
 
 
 
-     
+
 # Make a class we can use to capture stdout and sterr in the log
 class accton_as7312_monitor(object):
     # static temp var
@@ -79,7 +79,7 @@ class accton_as7312_monitor(object):
         sys_handler  = logging.handlers.SysLogHandler(address = '/dev/log')
         sys_handler.setFormatter(formatter)
         sys_handler.ident = 'common'
-        sys_handler.setLevel(log_level)       
+        sys_handler.setLevel(log_level)
         self.llog.addHandler(sys_handler)
 
         if log_file:
@@ -116,7 +116,7 @@ class accton_as7312_monitor(object):
            1: 45000,
            2: 50000,
         }
-  
+
         thermal = ThermalUtil()
         fan = FanUtil()
         for x in range(fan.get_idx_fan_start(), fan.get_num_fans()+1):
@@ -124,18 +124,18 @@ class accton_as7312_monitor(object):
             if fan_status is None:
                 self.llog.debug('SET new_perc to %d (FAN stauts is None. fan_num:%d)', max_duty, x)
                 return False
-            if fan_status is False:             
+            if fan_status is False:
                 self.llog.warning('SET new_perc to %d (FAN fault. fan_num:%d)', max_duty, x)
                 fan.set_fan_duty_cycle(max_duty)
                 return True
- 
+
         fan_dir=fan.get_fan_dir(1)
         if fan_dir == 1:
             fan_policy = fan_policy_f2b
         else:
             fan_policy = fan_policy_b2f
-       
-        #Decide fan duty by if any of sensors > fan_policy_single. 
+
+        #Decide fan duty by if any of sensors > fan_policy_single.
         new_duty_cycle = fan_policy[0][0]
         for x in range(thermal.get_idx_thermal_start(), thermal.get_num_thermals()+1):
             single_thm = thermal._get_thermal_node_val(x)
@@ -143,14 +143,14 @@ class accton_as7312_monitor(object):
                 if single_thm > fan_policy_single[y]:
                     if fan_policy[y+1][0] > new_duty_cycle:
                         new_duty_cycle = fan_policy[y+1][0]
-                        self.llog.debug('Single thermal sensor %d with temp %d > %d , new_duty_cycle=%d', 
+                        self.llog.debug('Single thermal sensor %d with temp %d > %d , new_duty_cycle=%d',
                                 x, single_thm, fan_policy_single[y], new_duty_cycle)
-	single_result = new_duty_cycle	
+	single_result = new_duty_cycle
 
 
-        #Find if current duty matched any of define duty. 
+        #Find if current duty matched any of define duty.
 	#If not, set it to highest one.
-        cur_duty_cycle = fan.get_fan_duty_cycle()       
+        cur_duty_cycle = fan.get_fan_duty_cycle()
         for x in range(0, len(fan_policy)):
             if cur_duty_cycle == fan_policy[x][0]:
                 break
@@ -159,7 +159,7 @@ class accton_as7312_monitor(object):
             cur_duty_cycle = max_duty
 
         #Decide fan duty by if sum of sensors falls into any of fan_policy{}
-        get_temp = thermal.get_thermal_temp()            
+        get_temp = thermal.get_thermal_temp()
         new_duty_cycle = cur_duty_cycle
         for x in range(0, len(fan_policy)):
             y = len(fan_policy) - x -1 #checked from highest
@@ -168,7 +168,7 @@ class accton_as7312_monitor(object):
                 self.llog.debug('Sum of temp %d > %d , new_duty_cycle=%d', get_temp, fan_policy[y][1], new_duty_cycle)
 
 	sum_result = new_duty_cycle
-	if (sum_result>single_result): 
+	if (sum_result>single_result):
 		new_duty_cycle = sum_result;
 	else:
 		new_duty_cycle = single_result
@@ -200,7 +200,7 @@ def main(argv):
                 print('Usage: %s [-d] [-l]' % sys.argv[0])
                 return 0
             elif opt in ('-d'):
-                log_console = 1 
+                log_console = 1
             elif opt in ('-l'):
                 log_file = '%s.log' % sys.argv[0]
 

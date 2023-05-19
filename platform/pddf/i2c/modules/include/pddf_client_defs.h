@@ -40,7 +40,7 @@
 #ifdef PDDF_DEBUG
 #define pddf_dbg(filter,...) printk("%s\t", filter); printk(KERN_CONT __VA_ARGS__)
 #else
-#define pddf_dbg(...) 
+#define pddf_dbg(...)
 #endif
 
 
@@ -107,7 +107,7 @@ void traverse_device_table(void );
 
 
 /*Various Ops hook which can be used by vendors to provide some deviation from usual pddf functionality*/
-struct pddf_ops_t 
+struct pddf_ops_t
 {
     /*Module init ops*/
     int (*pre_init)(void);

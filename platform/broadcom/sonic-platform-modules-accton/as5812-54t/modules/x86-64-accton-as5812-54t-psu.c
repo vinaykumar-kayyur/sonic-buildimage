@@ -46,11 +46,11 @@ static int as5812_54t_psu_read_block(struct i2c_client *client, u8 command, u8 *
 extern int as5812_54t_cpld_read(unsigned short cpld_addr, u8 reg);
 static int as5812_54t_psu_model_name_get(struct device *dev);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as5812_54t_psu_data {
     struct device      *hwmon_dev;
@@ -62,7 +62,7 @@ struct as5812_54t_psu_data {
     char model_name[14]; /* Model name, read from eeprom */
 };
 
-static struct as5812_54t_psu_data *as5812_54t_psu_update_device(struct device *dev);             
+static struct as5812_54t_psu_data *as5812_54t_psu_update_device(struct device *dev);
 
 enum as5812_54t_psu_sysfs_attributes {
     PSU_INDEX,
@@ -71,7 +71,7 @@ enum as5812_54t_psu_sysfs_attributes {
     PSU_POWER_GOOD
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_index,      S_IRUGO, show_index,     NULL, PSU_INDEX);
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status,    NULL, PSU_PRESENT);
@@ -91,7 +91,7 @@ static ssize_t show_index(struct device *dev, struct device_attribute *da,
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct as5812_54t_psu_data *data = i2c_get_clientdata(client);
-    
+
     return sprintf(buf, "%d\n", data->index);
 }
 
@@ -179,7 +179,7 @@ static int as5812_54t_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -187,7 +187,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -198,13 +198,13 @@ static int as5812_54t_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as5812_54t_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
-enum psu_index 
-{ 
-    as5812_54t_psu1, 
+enum psu_index
+{
+    as5812_54t_psu1,
     as5812_54t_psu2
 };
 
@@ -230,16 +230,16 @@ static int as5812_54t_psu_read_block(struct i2c_client *client, u8 command, u8 *
               int data_len)
 {
     int result = i2c_smbus_read_i2c_block_data(client, command, data_len, data);
-    
+
     if (unlikely(result < 0))
         goto abort;
     if (unlikely(result != data_len)) {
         result = -EIO;
         goto abort;
     }
-    
+
     result = 0;
-    
+
 abort:
     return result;
 }
@@ -286,7 +286,7 @@ static int as5812_54t_psu_model_name_get(struct device *dev)
                                            data->model_name, models[i].length);
         if (status < 0) {
             data->model_name[0] = '\0';
-            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n", 
+            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
                                   client->addr, models[i].offset);
             return status;
         }
@@ -318,7 +318,7 @@ static struct as5812_54t_psu_data *as5812_54t_psu_update_device(struct device *d
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct as5812_54t_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)

@@ -79,7 +79,7 @@ i2c_nodes = {
            'psu': ['psu_present ', 'psu_power_good']    ,
            'sfp': ['sfp_is_present ', 'sfp_tx_disable']}
 
-sfp_map = [1, 2, 3, 4, 5, 6, 7, 8, 
+sfp_map = [1, 2, 3, 4, 5, 6, 7, 8,
            9, 10, 11, 12, 13, 14, 15, 16,
            17, 18, 19, 20, 21, 22, 23, 24,
            25, 26, 27, 28, 29, 30, 31, 32]
@@ -99,7 +99,7 @@ mknod_xb =[
 'echo as7716_32xb_thermal 0x48 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo as7716_32xb_thermal 0x49 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo as7716_32xb_thermal 0x4a > /sys/bus/i2c/devices/i2c-0/new_device',
-#Fan 
+#Fan
 'echo as7716_32xb_fan 0x66 > /sys/bus/i2c/devices/i2c-0/new_device',
 # PSU-1
 'echo as7716_32xb_psu1 0x53 > /sys/bus/i2c/devices/i2c-0/new_device',
@@ -318,7 +318,7 @@ def device_install():
     #else:
     print("Prepar to create instance..............")
     for i in range(0,len(mknod_xb)):
-        print("Beginn to create instance..............") 
+        print("Beginn to create instance..............")
         status, output = log_os_system(mknod_xb[i], 1)
         print("status=%s" %status)
         print("output=%s" %output)

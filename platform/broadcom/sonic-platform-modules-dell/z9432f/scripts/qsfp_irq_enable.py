@@ -10,7 +10,7 @@ except ImportError as e:
 
 BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
 PORT_START = 0
-PORT_END = 32 
+PORT_END = 32
 
 
 def pci_mem_write(mm, offset, data):

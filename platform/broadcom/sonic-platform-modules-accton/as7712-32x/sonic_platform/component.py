@@ -1,5 +1,5 @@
 #############################################################################
-# 
+#
 # Component contains an implementation of SONiC Platform Base API and
 # provides the components firmware management function
 #
@@ -23,7 +23,7 @@ COMPONENT_LIST= [
    ("CPLD2", "CPLD 2"),
    ("CPLD3", "CPLD 3"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 
 class Component(ComponentBase):
@@ -59,7 +59,7 @@ class Component(ComponentBase):
                 return bios_version.strip()
         except Exception as e:
             return None
-   
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()

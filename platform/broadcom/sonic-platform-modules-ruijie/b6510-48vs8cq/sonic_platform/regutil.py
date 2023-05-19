@@ -19,7 +19,7 @@ class Reg(object):
         "value": {
             "loc": "/sys/bus/i2c/devices/2-0048/hwmon/hwmon*/temp1_input",
             "way": "sysfs",
-    
+
         "InputsStatus": {
             "bus": 8,
             "addr": 0x5B,

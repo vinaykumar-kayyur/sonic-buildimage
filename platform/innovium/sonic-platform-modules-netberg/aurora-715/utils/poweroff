@@ -3,7 +3,7 @@
 mr_reboot() {
 
     sudo rmmod x86-64-netberg-aurora-715
-    sudo i2cset -y 0 0x30 0xa1 0  
+    sudo i2cset -y 0 0x30 0xa1 0
 
 }
 

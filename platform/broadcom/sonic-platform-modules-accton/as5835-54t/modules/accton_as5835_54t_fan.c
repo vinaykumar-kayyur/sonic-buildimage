@@ -34,7 +34,7 @@
 #define DRVNAME "as5835_54t_fan"
 #define MAX_FAN_SPEED_RPM	21500
 
-static struct as5835_54t_fan_data *as5835_54t_fan_update_device(struct device *dev);                    
+static struct as5835_54t_fan_data *as5835_54t_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
             const char *buf, size_t count);
@@ -155,7 +155,7 @@ DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(1, 11);
 DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(2, 12);
 DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(3, 13);
 DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(4, 14);
-DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(5, 15); 
+DECLARE_FAN_FAULT_SENSOR_DEV_ATTR(5, 15);
 /* 5 fan speed(rpm) attributes in this platform */
 DECLARE_FAN_SPEED_RPM_SENSOR_DEV_ATTR(1, 11);
 DECLARE_FAN_SPEED_RPM_SENSOR_DEV_ATTR(2, 12);
@@ -221,17 +221,17 @@ static int as5835_54t_fan_write_value(struct i2c_client *client, u8 reg, u8 valu
 
 /* fan utility functions
  */
-static u32 reg_val_to_duty_cycle(u8 reg_val) 
+static u32 reg_val_to_duty_cycle(u8 reg_val)
 {
     return (reg_val & FAN_DUTY_CYCLE_REG_MASK) * 5;
 }
 
-static u8 duty_cycle_to_reg_val(u8 duty_cycle) 
+static u8 duty_cycle_to_reg_val(u8 duty_cycle)
 {
 	if (duty_cycle > FAN_MAX_DUTY_CYCLE) {
 		duty_cycle = FAN_MAX_DUTY_CYCLE;
 	}
-		
+
     return (duty_cycle / 5);
 }
 
@@ -256,12 +256,12 @@ static u8 is_fan_fault(struct as5835_54t_fan_data *data, enum fan_id id)
         (data->reg_val[FAN_REAR_FAULT_REG] & BIT(id)))  {
         return 1;
     }
-   
+
     return 0;
 }
 
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
-            const char *buf, size_t count) 
+            const char *buf, size_t count)
 {
     int error, value;
     struct i2c_client *client = to_i2c_client(dev);
@@ -285,7 +285,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct as5835_54t_fan_data *data = as5835_54t_fan_update_device(dev);
     ssize_t ret = 0;
-    
+
     if (data->valid) {
         switch (attr->index) {
             case FAN_DUTY_CYCLE_PERCENTAGE:
@@ -335,9 +335,9 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
 				ret = sprintf(buf, "%d\n", MAX_FAN_SPEED_RPM);
             default:
                 break;
-        }        
+        }
     }
-    
+
     return ret;
 }
 
@@ -352,18 +352,18 @@ static struct as5835_54t_fan_data *as5835_54t_fan_update_device(struct device *d
 
     mutex_lock(&data->update_lock);
 
-    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) || 
+    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) ||
         !data->valid) {
         int i;
 
         dev_dbg(&client->dev, "Starting as5835_54t_fan update\n");
         data->valid = 0;
-        
+
         /* Update fan data
          */
         for (i = 0; i < ARRAY_SIZE(data->reg_val); i++) {
             int status = as5835_54t_fan_read_value(client, fan_reg[i]);
-            
+
             if (status < 0) {
                 data->valid = 0;
                 mutex_unlock(&data->update_lock);
@@ -374,11 +374,11 @@ static struct as5835_54t_fan_data *as5835_54t_fan_update_device(struct device *d
                 data->reg_val[i] = status;
             }
         }
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }
-    
+
     mutex_unlock(&data->update_lock);
 
     return data;
@@ -388,13 +388,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-	
+
 	val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-	
+
     return sprintf(buf, "%d\n", val);
 }
 
@@ -443,7 +443,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -452,7 +452,7 @@ static int as5835_54t_fan_remove(struct i2c_client *client)
     struct as5835_54t_fan_data *data = i2c_get_clientdata(client);
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as5835_54t_fan_group);
-    
+
     return 0;
 }
 

@@ -60,7 +60,7 @@ class ThermalUtil(object):
             self._thermal_to_device_path_mapping[x+1] = thermal_path.format(
                 self._thermal_to_device_node_mapping[x][0],
                 self._thermal_to_device_node_mapping[x][1])
-            
+
     def _get_thermal_node_val(self, thermal_num):
         if thermal_num < self.THERMAL_NUM_1_IDX or thermal_num > self.THERMAL_NUM_ON_MAIN_BROAD:
             self.logger.debug('GET. Parameter error. thermal_num, %d', thermal_num)
@@ -85,7 +85,7 @@ class ThermalUtil(object):
         except:
             self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
-      
+
         return int(content)
 
 
@@ -112,9 +112,9 @@ class ThermalUtil(object):
         o = []
         for x in range(self.THERMAL_NUM_ON_MAIN_BROAD):
             sum += self._get_thermal_node_val(x+1)
-        avg = sum/self.THERMAL_NUM_ON_MAIN_BROAD    
+        avg = sum/self.THERMAL_NUM_ON_MAIN_BROAD
         avg = (avg/1000)*1000    #round down for hysteresis.
-        return avg 
+        return avg
 
 #def main():
 #    thermal = ThermalUtil()

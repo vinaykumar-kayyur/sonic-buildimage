@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  *
- * A pddf kernel driver module for a FAN controller 
+ * A pddf kernel driver module for a FAN controller
  */
 
 #include <linux/kernel.h>
@@ -106,53 +106,53 @@ EXPORT_SYMBOL(data_fan12_direction);
 
 
 FAN_SYSFS_ATTR_DATA data_fan1_input = {FAN1_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan1_input);                                                                                                              
+EXPORT_SYMBOL(data_fan1_input);
 FAN_SYSFS_ATTR_DATA data_fan2_input = {FAN2_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan2_input);                                                                                                              
+EXPORT_SYMBOL(data_fan2_input);
 FAN_SYSFS_ATTR_DATA data_fan3_input = {FAN3_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan3_input);                                                                                                              
+EXPORT_SYMBOL(data_fan3_input);
 FAN_SYSFS_ATTR_DATA data_fan4_input = {FAN4_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan4_input);                                                                                                              
+EXPORT_SYMBOL(data_fan4_input);
 FAN_SYSFS_ATTR_DATA data_fan5_input = {FAN5_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan5_input);                                                                                                              
+EXPORT_SYMBOL(data_fan5_input);
 FAN_SYSFS_ATTR_DATA data_fan6_input = {FAN6_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
 EXPORT_SYMBOL(data_fan6_input);
 FAN_SYSFS_ATTR_DATA data_fan7_input = {FAN7_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan7_input);             
+EXPORT_SYMBOL(data_fan7_input);
 FAN_SYSFS_ATTR_DATA data_fan8_input = {FAN8_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan8_input);             
+EXPORT_SYMBOL(data_fan8_input);
 FAN_SYSFS_ATTR_DATA data_fan9_input = {FAN9_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan9_input);             
+EXPORT_SYMBOL(data_fan9_input);
 FAN_SYSFS_ATTR_DATA data_fan10_input = {FAN10_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan10_input);              
+EXPORT_SYMBOL(data_fan10_input);
 FAN_SYSFS_ATTR_DATA data_fan11_input = {FAN11_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
-EXPORT_SYMBOL(data_fan11_input);             
+EXPORT_SYMBOL(data_fan11_input);
 FAN_SYSFS_ATTR_DATA data_fan12_input = {FAN12_INPUT, S_IRUGO, fan_show_default, NULL, sonic_i2c_get_fan_rpm_default, NULL, NULL, NULL, NULL, NULL, NULL};
 EXPORT_SYMBOL(data_fan12_input);
 
 
 FAN_SYSFS_ATTR_DATA data_fan1_pwm = {FAN1_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan1_pwm);             
+EXPORT_SYMBOL(data_fan1_pwm);
 FAN_SYSFS_ATTR_DATA data_fan2_pwm = {FAN2_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan2_pwm);             
+EXPORT_SYMBOL(data_fan2_pwm);
 FAN_SYSFS_ATTR_DATA data_fan3_pwm = {FAN3_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan3_pwm);             
+EXPORT_SYMBOL(data_fan3_pwm);
 FAN_SYSFS_ATTR_DATA data_fan4_pwm = {FAN4_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan4_pwm);              
+EXPORT_SYMBOL(data_fan4_pwm);
 FAN_SYSFS_ATTR_DATA data_fan5_pwm = {FAN5_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan5_pwm);             
+EXPORT_SYMBOL(data_fan5_pwm);
 FAN_SYSFS_ATTR_DATA data_fan6_pwm = {FAN6_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
 EXPORT_SYMBOL(data_fan6_pwm);
 FAN_SYSFS_ATTR_DATA data_fan7_pwm = {FAN7_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan7_pwm);             
+EXPORT_SYMBOL(data_fan7_pwm);
 FAN_SYSFS_ATTR_DATA data_fan8_pwm = {FAN8_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan8_pwm);             
+EXPORT_SYMBOL(data_fan8_pwm);
 FAN_SYSFS_ATTR_DATA data_fan9_pwm = {FAN9_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan9_pwm);             
+EXPORT_SYMBOL(data_fan9_pwm);
 FAN_SYSFS_ATTR_DATA data_fan10_pwm = {FAN10_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan10_pwm);              
+EXPORT_SYMBOL(data_fan10_pwm);
 FAN_SYSFS_ATTR_DATA data_fan11_pwm = {FAN11_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
-EXPORT_SYMBOL(data_fan11_pwm);             
+EXPORT_SYMBOL(data_fan11_pwm);
 FAN_SYSFS_ATTR_DATA data_fan12_pwm = {FAN12_PWM, S_IRUGO | S_IWUSR, fan_show_default, NULL, sonic_i2c_get_fan_pwm_default, NULL, fan_store_default, NULL, sonic_i2c_set_fan_pwm_default, NULL, NULL};
 EXPORT_SYMBOL(data_fan12_pwm);
 
@@ -378,7 +378,7 @@ static int pddf_fan_probe(struct i2c_client *client,
 			printk(KERN_ERR "%s: Wrong attribute name provided by user '%s'\n", __FUNCTION__, data_attr->aname);
 			continue;
 		}
-			
+
 		dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
         dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
         strcpy((char *)dy_ptr->dev_attr.attr.name, data_attr->aname);

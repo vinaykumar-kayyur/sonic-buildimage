@@ -2,7 +2,7 @@
 #
 # Name: chassis.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -74,7 +74,7 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_PSU):
             psu = Psu(index + 1)
             self._psu_list.append(psu)
-           
+
 ##############################################
 # Device methods
 ##############################################

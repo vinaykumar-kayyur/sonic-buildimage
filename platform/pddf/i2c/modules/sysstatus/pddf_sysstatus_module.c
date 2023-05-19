@@ -43,15 +43,15 @@ static ssize_t do_attr_operation(struct device *dev, struct device_attribute *da
 ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, char *buf);
 
 
-PDDF_DATA_ATTR(attr_name, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_CHAR, 32, 
+PDDF_DATA_ATTR(attr_name, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_CHAR, 32,
              (void*)&sysstatus_data.sysstatus_addr_attr.aname, NULL);
-PDDF_DATA_ATTR(attr_devaddr, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32, 
+PDDF_DATA_ATTR(attr_devaddr, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32,
               sizeof(uint32_t),  (void*)&sysstatus_data.sysstatus_addr_attr.devaddr , NULL);
 PDDF_DATA_ATTR(attr_offset, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32,
               sizeof(uint32_t), (void*)&sysstatus_data.sysstatus_addr_attr.offset, NULL);
-PDDF_DATA_ATTR(attr_mask, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32, 
+PDDF_DATA_ATTR(attr_mask, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32,
               sizeof(uint32_t), (void*)&sysstatus_data.sysstatus_addr_attr.mask , NULL);
-PDDF_DATA_ATTR(attr_len, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32, 
+PDDF_DATA_ATTR(attr_len, S_IWUSR|S_IRUGO, show_pddf_data, store_pddf_data, PDDF_UINT32,
               sizeof(uint32_t), (void*)&sysstatus_data.sysstatus_addr_attr.len , NULL);
 PDDF_DATA_ATTR(attr_ops, S_IWUSR, NULL, do_attr_operation, PDDF_CHAR, 8, (void*)&sysstatus_data, NULL);
 
@@ -127,7 +127,7 @@ ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, cha
 {
 
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     SYSSTATUS_DATA *data = &sysstatus_data;
     struct SYSSTATUS_ADDR_ATTR *sysstatus_addr_attrs = NULL;
     int i, status ;
@@ -138,7 +138,7 @@ ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, cha
         if (strcmp(data->sysstatus_addr_attrs[i].aname, attr->dev_attr.attr.name) == 0 )
         {
             sysstatus_addr_attrs = &data->sysstatus_addr_attrs[i];
-            
+
         }
     }
 
@@ -151,8 +151,8 @@ ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, cha
     {
         status = board_i2c_cpld_read( sysstatus_addr_attrs->devaddr, sysstatus_addr_attrs->offset);
     }
-    
-    return sprintf(buf, "0x%x\n", (status&sysstatus_addr_attrs->mask)); 
+
+    return sprintf(buf, "0x%x\n", (status&sysstatus_addr_attrs->mask));
 
 }
 
@@ -162,7 +162,7 @@ static ssize_t do_attr_operation(struct device *dev, struct device_attribute *da
 {
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
     SYSSTATUS_DATA *pdata = (SYSSTATUS_DATA *)(ptr->addr);
-    
+
     pdata->sysstatus_addr_attrs[pdata->len] = pdata->sysstatus_addr_attr;
     pdata->len++;
     pddf_dbg(SYSSTATUS, KERN_ERR "%s: Populating the data for %s\n", __FUNCTION__, pdata->sysstatus_addr_attr.aname);
@@ -184,18 +184,18 @@ int __init sysstatus_data_init(void)
     pddf_dbg(SYSSTATUS, "PDDF SYSSTATUS MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     sysstatus_addr_kobj = kobject_create_and_add("sysstatus", device_kobj);
-    if(!sysstatus_addr_kobj) 
+    if(!sysstatus_addr_kobj)
         return -ENOMEM;
-    
+
     sysstatus_data_kobj = kobject_create_and_add("sysstatus_data", sysstatus_addr_kobj);
-    if(!sysstatus_data_kobj) 
+    if(!sysstatus_data_kobj)
         return -ENOMEM;
-    
-    
+
+
     ret = sysfs_create_group(sysstatus_addr_kobj, &pddf_sysstatus_addr_group);
     if (ret)
     {

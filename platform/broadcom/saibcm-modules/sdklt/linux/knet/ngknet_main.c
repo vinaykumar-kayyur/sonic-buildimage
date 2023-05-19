@@ -6,16 +6,16 @@
 /*
  * $Copyright: Copyright 2018-2021 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
- * 
+ *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 
+ * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * A copy of the GNU General Public License version 2 (GPLv2) can
  * be found in the LICENSES folder.$
  */
@@ -493,7 +493,7 @@ ngknet_netif_recv(struct net_device *ndev, struct sk_buff *skb)
     }
 
     /* FIXME: File CSP on KASAN warning on use-after-free in ngknet_netif_recv */
-    skb_len = skb->len;    
+    skb_len = skb->len;
     napi_gro_receive(napi, skb);
 
     /* Update accounting */
