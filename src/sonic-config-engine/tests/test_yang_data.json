@@ -11,7 +11,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet0",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -22,7 +23,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet4",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -33,7 +35,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet8",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -44,7 +47,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet12",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -55,7 +59,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet16",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -66,7 +71,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet20",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -77,7 +83,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet24",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
@@ -88,7 +95,8 @@
                     "mtu": 9100,
                     "pfc_asym": "on",
                     "name": "Ethernet28",
-                    "speed": 40000
+                    "speed": 40000,
+                    "mode":"trunk"
                 }
             ]
         }
@@ -105,7 +113,8 @@
                     "min_links": "1",
                     "mtu": "9100",
                     "lacp_key": "auto",
-                    "name": "PortChannel1001"
+                    "name": "PortChannel1001",
+                    "mode":"trunk"
                 },
                 {
                     "admin_status": "up",
