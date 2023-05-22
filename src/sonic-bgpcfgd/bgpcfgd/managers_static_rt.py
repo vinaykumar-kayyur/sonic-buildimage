@@ -81,6 +81,18 @@ class StaticRouteMgr(Manager):
 
 
     def skip_appl_del(self, vrf, ip_prefix):
+        """
+        If a static route is bfd enabled, the processed static route is written into application DB by staticroutebfd.
+        When we disable bfd for that route at runtime, that static route entry will be removed from APPL_DB STATIC_ROUTE_TABLE.
+        In the case, the StaticRouteMgr(appl_db) cannot uninstall the static route from FRR if the static route is still in CONFIG_DB,
+        so need this checking (skip appl_db deletion) to avoid race condition between StaticRouteMgr(appl_db) and StaticRouteMgr(config_db)
+        For more detailed information:
+        https://github.com/sonic-net/SONiC/blob/master/doc/static-route/SONiC_static_route_bfd_hld.md#bfd-field-changes-from-true-to-false
+
+        :param vrf: vrf from the split_key(key) return
+        :param ip_prefix: ip_prefix from the split_key(key) return
+        :return: True if the deletion comes from APPL_DB and the vrf|ip_prefix exists in CONFIG_DB, otherwise return False
+        """
         if self.db_name == "CONFIG_DB":
             return False
 
