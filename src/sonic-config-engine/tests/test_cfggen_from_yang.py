@@ -106,13 +106,13 @@ class TestCfgGen(object):
                       'lacp_key': 'auto',
                       'members': ['Ethernet0', 'Ethernet4'],
                       'min_links': '1',
-                      'mode': 'trunk'
+                      'mode': 'trunk',
                       'mtu': '9100'},
             'PortChannel1002': {'admin_status': 'up',
                       'lacp_key': 'auto',
                       'members': ['Ethernet16', 'Ethernet20'],
-                      'min_links': '1',,
-                      'mode': 'trunk'
+                      'min_links': '1',
+                      'mode': 'trunk',
                       'mtu': '9100'}})
 
     def test_portchannel_member_table(self):

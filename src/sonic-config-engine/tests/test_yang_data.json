@@ -125,7 +125,8 @@
                     "min_links": "1",
                     "mtu": "9100",
                     "lacp_key": "auto",
-                    "name": "PortChannel1002"
+                    "name": "PortChannel1002",
+                    "mode":"trunk"
                 }
             ]
         },

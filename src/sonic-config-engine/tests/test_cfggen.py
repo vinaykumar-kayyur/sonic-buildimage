@@ -1033,6 +1033,8 @@ class TestCfgGen(TestCase):
     def test_minigraph_400g_to_100G_speed(self):
         argument = ["-j", self.macsec_profile, "-m", self.voq_sample_masic_graph, "-p", self.voq_port_config_400g, "-n",  "asic0", "-v", "PORT"]
         output = self.run_script(argument)
+        self.maxDiff = None
+
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -1063,6 +1065,8 @@ class TestCfgGen(TestCase):
         argument = ["-m", self.sample_cisco_100_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         self.assertTrue(self.yang.validate(argument))
         output = self.run_script(argument)
+        self.maxDiff = None
+
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -1075,6 +1079,8 @@ class TestCfgGen(TestCase):
     def test_minigraph_cisco_400G_to_400G_speed(self):
         argument = ["-m", self.sample_cisco_400_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         output = self.run_script(argument)
+        self.maxDiff = None
+
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
