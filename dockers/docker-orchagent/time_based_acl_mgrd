@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+
+import time
+import signal
+from swsscommon import swsscommon
+from swsscommon.swsscommon import ConfigDBConnector
+from sonic_py_common.logger import Logger 
+
+"""
+A script running as a daemon in swss container. It will do following check in loop
+1. Read end_time from CONFIG_DB
+2. Remove corresponding ACL rule both from CONFIG_DB and APP_DB if it expired
+3. Add new ACL rule from CONFIG_DB to APP_DB
+"""
+
+SYSLOG_IDENTIFIER = 'time_based_acl_mgrd'
+
+TIME_BASED_ACL_RULE_TABLE = "TIME_BASED_ACL_RULE"
+APP_ACL_RULE_TABLE_NAME = "ACL_RULE_TABLE"
+
+dynamic_acl_checker = None
+
+logger = Logger(SYSLOG_IDENTIFIER)
+logger.set_min_log_priority_info()
+
+class DynamicACLChecker(object):
+    
+    """
+    Worker for checking time-based ACL rules
+    """
+    def __init__(self, app_db, config_db, interval_in_second=10):
+        self.app_db = app_db
+        self.config_db = config_db
+        self.interval_in_second = interval_in_second
+        self.working = False
+
+    
+    def get_expired_acl_entries(self):
+        """
+        Retrieve all expired ACL rules from CONFIG_DB
+        @return: A list
+        """
+        expired_entry_keys = []
+        timenow = int(time.time())
+
+        # TIME_BASED_ACL_RULE|TEST1|TIME_BASED_RULE_1
+        keys = self.config_db.get_keys(TIME_BASED_ACL_RULE_TABLE)
+
+        for key in keys:
+            entry = self.config_db.get_entry(TIME_BASED_ACL_RULE_TABLE, key)
+            end_time = int(entry.pop('end_time', '0'))
+            if end_time <= timenow:
+                expired_entry_keys.append(key)
+
+        #logger.log_info("Get expired ACL rule entry keys: {}".format(expired_entry_keys))
+        return expired_entry_keys
+
+
+    def remove_expired_acl_entries(self, expired_entry_keys):
+        """
+        Remove expired ACL rules from CONFIG_DB and APPL_DB
+        @expired_entry_keys: exmaple: [('TEST1', 'TIME_BASED_RULE_1')]
+        @return: None
+        """
+        for key in expired_entry_keys:
+            self.config_db.set_entry(TIME_BASED_ACL_RULE_TABLE, key, None)
+            logger.log_info("Removed time-based ACL rule entry from CONFIG_DB: {}".format(key[0]+'|'+key[1]))
+
+        app_db_tbl = swsscommon.Table(self.app_db, APP_ACL_RULE_TABLE_NAME)
+        app_db_entry_keys = app_db_tbl.getKeys()
+        config_db_entry_keys = self.config_db.get_keys(TIME_BASED_ACL_RULE_TABLE)
+
+        for app_db_entry_key in app_db_entry_keys:
+            # ACL_RULE_TABLE:TEST1:TIME_BASED_RULE_1
+            v = app_db_entry_key.split(":")
+            if len(v) != 2:
+                logger.log_error("Invalid ACL_RULE_TABLE name to remove: {}".format(app_db_entry_key))
+                continue
+            table, rule = v[0], v[1]
+            
+            if (table, rule) not in config_db_entry_keys:
+                ps = swsscommon.ProducerStateTable(self.app_db, APP_ACL_RULE_TABLE_NAME)
+                ps._del(app_db_entry_key)
+                logger.log_info("Removed time-based ACL rule entry from APPL_DB: {}".format(app_db_entry_key))
+
+
+    def get_new_acl_entries(self):
+        '''
+        Get new added ACL rules from CONFIG_DB
+        @return: New added ACL rule key example: [('TEST1', 'TIME_BASED_RULE_1')]
+        '''
+        new_entry_keys = []
+        timenow = int(time.time())
+
+        config_db_entry_keys = self.config_db.get_keys(TIME_BASED_ACL_RULE_TABLE)
+        app_db_tbl = swsscommon.Table(self.app_db, APP_ACL_RULE_TABLE_NAME)
+        app_db_entry_keys = app_db_tbl.getKeys()
+
+        for config_db_entry_key in config_db_entry_keys:
+            table, rule = config_db_entry_key[0], config_db_entry_key[1]
+            app_db_entry_key = table + ":" + rule
+
+            if app_db_entry_key not in app_db_entry_keys:
+                entry = self.config_db.get_entry(TIME_BASED_ACL_RULE_TABLE, config_db_entry_key)
+                end_time = int(entry.pop('end_time', '0'))
+                start_time = int(entry.pop('start_time', '0'))
+                if timenow <= end_time and timenow >= start_time:
+                    new_entry_keys.append(config_db_entry_key)
+        #logger.log_info("Get new ACL rule entry names: {}".format(new_entry_keys))
+        return new_entry_keys
+
+    
+    def add_new_acl_entries(self, new_entry_keys):
+        '''
+        Add new added ACL rules to APPL_DB
+        @new_entry_names: New added ACL rules name from CONFIG_DB, example: [('TEST1', 'TIME_BASED_RULE_1')]
+        @return: None
+        '''
+        for key in new_entry_keys:
+            table, rule = key[0], key[1]
+            acl_rule_entry_key = table + ":" + rule
+
+            new_entry = self.config_db.get_entry(TIME_BASED_ACL_RULE_TABLE, key)
+            new_entry.pop('start_time', None)
+            new_entry.pop('end_time', None)
+
+            ps = swsscommon.ProducerStateTable(self.app_db, APP_ACL_RULE_TABLE_NAME)
+            fvs = swsscommon.FieldValuePairs(list(new_entry.items()))
+            ps.set(acl_rule_entry_key, fvs)
+            logger.log_info("Added time-based ACL RULE to APPL_DB: {}".format(acl_rule_entry_key))
+            logger.log_info(str(new_entry))
+
+
+    def start_working(self):
+        """
+        Main loop for checking TTL and remove expired ACL rules
+        """
+        self.working = True
+        logger.log_notice("time-based ACL manager starts working")
+        while self.working:
+            expired_entry_keys = self.get_expired_acl_entries()
+            self.remove_expired_acl_entries(expired_entry_keys)
+            new_entry_names = self.get_new_acl_entries()
+            self.add_new_acl_entries(new_entry_names)
+            if not self.working:
+                logger.log_info("time-based ACL manager quit")
+                break
+            time.sleep(self.interval_in_second)
+
+
+    def stop_working(self):
+        """
+        Stop main loop.
+        """
+        self.working = False
+        logger.log_notice("time-based ACL manager is going to quit")
+
+
+def sig_term_handler(signal, frame):
+    """
+    A signal handler to ensure the working is shutdown gracefully
+    """
+    global dynamic_acl_checker
+    if dynamic_acl_checker:
+        dynamic_acl_checker.stop_working()
+
+
+def main():
+    signal.signal(signal.SIGTERM, sig_term_handler)
+
+    app_db = swsscommon.DBConnector("APPL_DB", 0, True)
+    config_db = ConfigDBConnector()
+    config_db.connect()
+    
+    # Start working
+    global dynamic_acl_checker
+    dynamic_acl_checker = DynamicACLChecker(app_db, config_db)
+    dynamic_acl_checker.start_working()
+    
+
+if __name__ == "__main__":
+    main()
+

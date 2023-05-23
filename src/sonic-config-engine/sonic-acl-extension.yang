@@ -81,11 +81,43 @@ module sonic-acl-extension {
     }
   }
 
+  grouping timestamp-config {
+    description
+      "The start and end timestamp for an entry.";
+
+    leaf start_time {
+      type uint32;
+      description
+        "start timestamp";
+    }
+
+    leaf end_time {
+      type uint32;
+      description
+        "end timestamp";
+    }
+  }
+
+  grouping time-based-acl-fields-top {
+    description
+      "Configuration for time-based ACL.";
+
+    container time-range {
+      container config {
+        uses timestamp-config;
+      }
+    }
+  }
+
   augment "/oc-acl:acl/oc-acl:acl-sets/oc-acl:acl-set/oc-acl:acl-entries/oc-acl:acl-entry/oc-acl:l2/oc-acl:config" {
     uses extended-l2-match;
   }
 
   augment "/oc-acl:acl/oc-acl:acl-sets/oc-acl:acl-set/oc-acl:acl-entries/oc-acl:acl-entry" {
     uses icmp-protocol-fields-top;
+  }
+
+  augment "/oc-acl:acl/oc-acl:acl-sets/oc-acl:acl-set/oc-acl:acl-entries/oc-acl:acl-entry" {
+    uses time-based-acl-fields-top;
   }
 }
