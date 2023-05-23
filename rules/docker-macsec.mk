@@ -41,7 +41,6 @@ $(DOCKER_MACSEC)_PACKAGE_NAME = macsec
 $(DOCKER_MACSEC)_RUN_OPT += --privileged -t
 $(DOCKER_MACSEC)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_MACSEC)_RUN_OPT += -v /etc/timezone:/etc/timezone:ro 
-$(DOCKER_MACSEC)_RUN_OPT += -v /etc/localtime:/etc/localtime:ro 
 $(DOCKER_MACSEC)_RUN_OPT += -v /host/warmboot:/var/warmboot
 
 $(DOCKER_MACSEC)_SERVICE_REQUIRES = updategraph
