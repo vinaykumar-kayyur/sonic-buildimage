@@ -13,10 +13,6 @@ from collections import defaultdict
 from swsscommon import swsscommon
 
 from supervisor import childutils
-from supervisor.events import EventTypes, getEventNameByType
-
-PROCESS_COMMUNICATION_STDOUT = \
-    getEventNameByType(EventTypes.PROCESS_COMMUNICATION_STDOUT)
 
 # Each line of this file should specify one process, (as defined in supervisord.conf file), in the
 # following format:
@@ -144,78 +140,73 @@ def main(argv):
     childutils.listener.ready()
     events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
     while True:
-        try:
-            file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
-            if len(file_descriptor_list) > 0:
-                line = file_descriptor_list[0].readline()
-                headers = childutils.get_headers(line)
-                payload = sys.stdin.read(int(headers['len']))
+        file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
+        if len(file_descriptor_list) > 0:
+            line = file_descriptor_list[0].readline()
+            headers = childutils.get_headers(line)
+            payload = sys.stdin.read(int(headers['len']))
 
-                # Handle the PROCESS_STATE_EXITED event
-                if headers['eventname'] == 'PROCESS_STATE_EXITED':
-                    payload_headers, payload_data = childutils.eventdata(payload + '\n')
+            # Handle the PROCESS_STATE_EXITED event
+            if headers['eventname'] == 'PROCESS_STATE_EXITED':
+                payload_headers, payload_data = childutils.eventdata(payload + '\n')
 
-                    expected = int(payload_headers['expected'])
-                    process_name = payload_headers['processname']
-                    group_name = payload_headers['groupname']
+                expected = int(payload_headers['expected'])
+                process_name = payload_headers['processname']
+                group_name = payload_headers['groupname']
 
-                    if (process_name in critical_process_list or group_name in critical_group_list) and expected == 0:
-                        is_auto_restart = get_autorestart_state(container_name)
-                        if is_auto_restart != "disabled":
-                            MSG_FORMAT_STR = "Process '{}' exited unexpectedly. Terminating supervisor '{}'"
-                            msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
-                            syslog.syslog(syslog.LOG_INFO, msg)
-                            publish_events(events_handle, payload_headers['processname'], container_name)
-                            swsscommon.events_deinit_publisher(events_handle)
-                            os.kill(os.getppid(), signal.SIGTERM)
-                        else:
-                            process_under_alerting[process_name]["last_alerted"] = time.time()
-                            process_under_alerting[process_name]["dead_minutes"] = 0
+                if (process_name in critical_process_list or group_name in critical_group_list) and expected == 0:
+                    is_auto_restart = get_autorestart_state(container_name)
+                    if is_auto_restart != "disabled":
+                        MSG_FORMAT_STR = "Process '{}' exited unexpectedly. Terminating supervisor '{}'"
+                        msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
+                        syslog.syslog(syslog.LOG_INFO, msg)
+                        publish_events(events_handle, payload_headers['processname'], container_name)
+                        swsscommon.events_deinit_publisher(events_handle)
+                        os.kill(os.getppid(), signal.SIGTERM)
+                    else:
+                        process_under_alerting[process_name]["last_alerted"] = time.time()
+                        process_under_alerting[process_name]["dead_minutes"] = 0
 
-                # Handle the PROCESS_STATE_RUNNING event
-                elif headers['eventname'] == 'PROCESS_STATE_RUNNING':
-                    payload_headers, payload_data = childutils.eventdata(payload + '\n')
-                    process_name = payload_headers['processname']
+            # Handle the PROCESS_STATE_RUNNING event
+            elif headers['eventname'] == 'PROCESS_STATE_RUNNING':
+                payload_headers, payload_data = childutils.eventdata(payload + '\n')
+                process_name = payload_headers['processname']
 
-                    if process_name in process_under_alerting:
-                        process_under_alerting.pop(process_name)
+                if process_name in process_under_alerting:
+                    process_under_alerting.pop(process_name)
 
-                # Handle the PROCESS_COMMUNICATION_STDOUT event
-                elif headers['eventname'] == 'PROCESS_COMMUNICATION_STDOUT':
-                    payload_headers, payload_data = childutils.eventdata(payload + '\n')
-                    process_name = payload_headers['processname']
+            # Handle the PROCESS_COMMUNICATION_STDOUT event
+            elif headers['eventname'] == 'PROCESS_COMMUNICATION_STDOUT':
+                payload_headers, payload_data = childutils.eventdata(payload + '\n')
+                process_name = payload_headers['processname']
 
-                    # update process heart beat time
-                    if (process_name in watch_process_list):
-                        process_heart_beat_info[process_name]["last_heart_beat"] = time.time()
-
-
-            # Check whether we need write alerting messages into syslog
-            for process_name in process_under_alerting.keys():
-                epoch_time = time.time()
-                elapsed_secs = epoch_time - process_under_alerting[process_name]["last_alerted"]
-                if elapsed_secs >= ALERTING_INTERVAL_SECS:
-                    elapsed_mins = elapsed_secs // 60
-                    process_under_alerting[process_name]["last_alerted"] = epoch_time
-                    process_under_alerting[process_name]["dead_minutes"] += elapsed_mins
-                    generate_alerting_message(process_name, "not running", process_under_alerting[process_name]["dead_minutes"])
-
-            # Check whether we need write alerting messages into syslog
-            for process in process_heart_beat_info.keys():
-                epoch_time = time.time()
-                elapsed_secs = epoch_time - process_heart_beat_info[process]["last_heart_beat"]
-                if elapsed_secs >= ALERTING_INTERVAL_SECS:
-                    elapsed_mins = elapsed_secs // 60
-                    generate_alerting_message(process, "stuck", elapsed_mins)
-
-        except Exception as ex:
-            syslog.syslog(syslog.LOG_ERR, "Exception: {}".format(ex))
-        finally:
+                # update process heart beat time
+                if (process_name in watch_process_list):
+                    process_heart_beat_info[process_name]["last_heart_beat"] = time.time()
+            
             # Transition from BUSY to ACKNOWLEDGED
             childutils.listener.ok()
 
             # Transition from ACKNOWLEDGED to READY
             childutils.listener.ready()
+
+        # Check whether we need write alerting messages into syslog
+        for process_name in process_under_alerting.keys():
+            epoch_time = time.time()
+            elapsed_secs = epoch_time - process_under_alerting[process_name]["last_alerted"]
+            if elapsed_secs >= ALERTING_INTERVAL_SECS:
+                elapsed_mins = elapsed_secs // 60
+                process_under_alerting[process_name]["last_alerted"] = epoch_time
+                process_under_alerting[process_name]["dead_minutes"] += elapsed_mins
+                generate_alerting_message(process_name, "not running", process_under_alerting[process_name]["dead_minutes"])
+
+        # Check whether we need write alerting messages into syslog
+        for process in process_heart_beat_info.keys():
+            epoch_time = time.time()
+            elapsed_secs = epoch_time - process_heart_beat_info[process]["last_heart_beat"]
+            if elapsed_secs >= ALERTING_INTERVAL_SECS:
+                elapsed_mins = elapsed_secs // 60
+                generate_alerting_message(process, "stuck", elapsed_mins)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
