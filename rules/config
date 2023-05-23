@@ -184,10 +184,10 @@ TRUSTED_GPG_URLS = https://packages.trafficmanager.net/debian/public_key.gpg,htt
 #   web   : web packages, downloaded by wget, curl
 #   git   : git repositories, donloaded by git clone
 #   docker: docker base images
-SONIC_VERSION_CONTROL_COMPONENTS ?= none
+SONIC_VERSION_CONTROL_COMPONENTS ?= all
 
 # MIRROR_SNAPSHOT - support mirror snapshot flag
-MIRROR_SNAPSHOT ?= n
+MIRROR_SNAPSHOT ?= y
 
 # SONiC docker registry
 #
@@ -196,4 +196,4 @@ REGISTRY_PORT ?= 443
 REGISTRY_SERVER ?= sonicdev-microsoft.azurecr.io
 
 # reset default container registry from dockerhub to other
-DEFAULT_CONTAINER_REGISTRY ?=
+DEFAULT_CONTAINER_REGISTRY ?= publicmirror.azurecr.io
