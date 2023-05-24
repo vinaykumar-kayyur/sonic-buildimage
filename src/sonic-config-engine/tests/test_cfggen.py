@@ -943,8 +943,7 @@ class TestCfgGen(TestCase):
                 "mtu": "9100",
                 "tpid": "0x8100",
                 "pfc_asym": "off",
-                "admin_status": "up",
-                "mode": "trunk"
+                "admin_status": "up"
             })
 
     def test_minigraph_voq_recirc_ports(self):
@@ -962,8 +961,7 @@ class TestCfgGen(TestCase):
                 "mtu": "9100",
                 "tpid": "0x8100",
                 "pfc_asym": "off",
-                "admin_status": "up",
-                "mode": "trunk"
+                "admin_status": "up"
             })
 
         argument = ["-j", self.macsec_profile, "-m", self.sample_graph_voq, "-p", self.voq_port_config, "--var-json", "INTERFACE"]
