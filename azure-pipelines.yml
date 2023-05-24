@@ -49,6 +49,9 @@ stages:
   jobs:
   - job: tox
     steps:
+      - checkout: none
+        clean: true
+        displayName: 'Checkout code'
       - script: |
           ./scripts/tox_entry_point.sh
         displayName: 'Install and run tox'
