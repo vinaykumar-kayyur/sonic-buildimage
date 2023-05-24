@@ -21,7 +21,7 @@ class StaticRouteMgr(Manager):
             db,
             table,
         )
-        
+
         self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),], self.on_bgp_asn_change)
         self.static_routes = {}
         self.vrf_pending_redistribution = set()
