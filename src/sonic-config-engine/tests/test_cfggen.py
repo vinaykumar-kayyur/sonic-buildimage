@@ -993,7 +993,6 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict("{'rrclient': 0, 'name': 'str2-8808-lc0-ASIC1', 'local_addr': '8.0.0.3', 'nhopself': 0, 'admin_status': 'up', 'holdtime': '0', 'asn': '65100', 'keepalive': '0'}")
         )
-
     def test_minigraph_bgp_packet_chassis_static_route(self):
         argument = ['-m', self.packet_chassis_graph, '-p', self.packet_chassis_port_ini, '-v', "STATIC_ROUTE"]
         output = self.run_script(argument)
