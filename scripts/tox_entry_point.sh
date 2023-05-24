@@ -16,6 +16,7 @@
 
 cd $(dirname $0)
 cd ..
+cd linters
 export DEBIAN_FRONTEND=noninteractive
 sudo -E apt-get -qq -y update 2>&1 >/dev/null || \
         apt-get -qq -y update 2>&1 >/dev/null
