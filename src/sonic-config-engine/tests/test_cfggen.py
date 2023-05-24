@@ -1034,8 +1034,6 @@ class TestCfgGen(TestCase):
     def test_minigraph_400g_to_100G_speed(self):
         argument = ["-j", self.macsec_profile, "-m", self.voq_sample_masic_graph, "-p", self.voq_port_config_400g, "-n",  "asic0", "-v", "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
-
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
