@@ -932,6 +932,7 @@ class TestCfgGen(TestCase):
         argument = ["-j", self.macsec_profile, "-m", self.sample_graph_voq, "-p", self.voq_port_config, "--var-json", "PORT"]
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
+        self.maxDiff = None
         self.assertDictEqual(
             output_dict['Ethernet-IB0'], {
                 "lanes": "222",
@@ -943,7 +944,8 @@ class TestCfgGen(TestCase):
                 "mtu": "9100",
                 "tpid": "0x8100",
                 "pfc_asym": "off",
-                "admin_status": "up"
+                "admin_status": "up",
+                "mode":  "trunk"
             })
 
     def test_minigraph_voq_recirc_ports(self):
@@ -961,7 +963,8 @@ class TestCfgGen(TestCase):
                 "mtu": "9100",
                 "tpid": "0x8100",
                 "pfc_asym": "off",
-                "admin_status": "up"
+                "admin_status": "up",
+                "mode":  "trunk"
             })
 
         argument = ["-j", self.macsec_profile, "-m", self.sample_graph_voq, "-p", self.voq_port_config, "--var-json", "INTERFACE"]
