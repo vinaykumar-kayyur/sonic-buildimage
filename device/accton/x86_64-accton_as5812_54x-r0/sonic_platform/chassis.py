@@ -19,7 +19,7 @@ except ImportError as e:
 NUM_FAN_TRAY = 5
 NUM_FAN = 2
 NUM_PSU = 2
-NUM_THERMAL = 3
+NUM_THERMAL = 7
 PORT_END = 54
 QSFP_PORT_START = 49
 QSFP_PORT_END = 54
@@ -28,7 +28,8 @@ HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
-HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
+HOST_CHK_CMD = ["docker"]
+
 SYSLED_FNODE= "/sys/class/leds/accton_as5812_54x_led::diag/brightness"
 
 SYSLED_MODES = {
@@ -104,7 +105,11 @@ class Chassis(ChassisBase):
     
 
     def __is_host(self):
-        return os.system(HOST_CHK_CMD) == 0
+        try:
+            status, output = getstatusoutput_noshell(HOST_CHK_CMD)
+            return status == 0
+        except Exception:
+            return False
 
     def __read_txt_file(self, file_path):
         try:
@@ -224,6 +229,13 @@ class Chassis(ChassisBase):
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
+        
+    def get_port_or_cage_type(self, port):
+        from sonic_platform_base.sfp_base import SfpBase
+        if port in range(1, 49):
+            return SfpBase.SFP_PORT_TYPE_BIT_SFP |SFP_PORT_TYPE_BIT_SFP_PLUS
+        else:
+            return SfpBase.SFP_PORT_TYPE_BIT_QSFP | SfpBase.SFP_PORT_TYPE_BIT_QSFP_PLUS | SfpBase.SFP_PORT_TYPE_BIT_QSFP28
 
     def get_position_in_parent(self):
         """

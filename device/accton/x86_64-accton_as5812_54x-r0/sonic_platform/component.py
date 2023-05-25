@@ -17,16 +17,16 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CPLD_ADDR_MAPPING = {
-    "CPLD1": "0-0060",
-    "CPLD2": "0-0061",
-    "CPLD3": "0-0062",
+    "MB_CPLD1": "0-0060",
+    "MB_CPLD2": "0-0061",
+    "MB_CPLD3": "0-0062",
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
-   ("CPLD1", "CPLD 1"),
-   ("CPLD2", "CPLD 2"),
-   ("CPLD3", "CPLD 3"),
+   ("MB_CPLD1", "Mainboard CPLD(0x60)"),
+   ("MB_CPLD2", "Mainboard CPLD(0x61)"),
+   ("MB_CPLD3", "Mainboard CPLD(0x62)"),
    ("BIOS", "Basic Input/Output System")
    
 ]
@@ -125,7 +125,32 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        raise NotImplementedError
+        ret = subprocess.call(["tar", "-C", "/tmp", "-xzvf", image_path] )
+
+        if  ret == 0 and os.path.exists("/tmp/afulnx_64") and  os.path.exists("/tmp/cpldupd") and os.path.exists("/tmp/run_install.sh") :
+            ret = 0
+        else :
+            print("Installation failed without fwutil tool")
+            ret = 1
+        if ret == 0 and os.path.exists("/tmp/install.json") :
+            ret = 0
+            input_file = open ('/tmp/install.json')
+            json_array = json.load(input_file)
+            for item in json_array:
+                if self.name == item['id'] :
+                    real_path = item['path']
+            print( "Find ", self.name, real_path )
+        else :
+            print("Installation failed without jsonfile")
+            ret = 1
+        if ret == 1 :
+            return False
+        else :
+            #cmd = "{}{}{}{}".format('/tmp/run_install.sh ', self.name, ' ', image_path)
+            ret = subprocess.call(["/tmp/run_install.sh", self.name, real_path])
+        if ret == 0 :
+            return True
+        return False
 
     def get_presence(self):
         """

@@ -177,7 +177,7 @@ class Psu(PsuBase):
             A float number, the high threshold temperature of PSU in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return self._thermal_list[0].get_high_threshold() #Not supported
+        return self._thermal_list[0].get_high_threshold()
 
     def get_voltage_high_threshold(self):
         """
