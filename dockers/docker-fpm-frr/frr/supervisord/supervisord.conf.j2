@@ -30,7 +30,7 @@ stderr_logfile=syslog
 dependent_startup=true
 
 [program:zebra]
-command=/usr/lib/frr/zebra -A 127.0.0.1 -s 90000000 -M dplane_fpm_nl -M snmp --asic-offload=notify_on_offload
+command=/usr/lib/frr/zebra -A 127.0.0.1 -s 90000000 -M dplane_fpm_nl --asic-offload=notify_on_offload
 priority=4
 autostart=false
 autorestart=false
@@ -71,13 +71,13 @@ autostart=false
 autorestart=false
 startsecs=0
 stdout_logfile=syslog
-stderr_logfile=syslog
+stderr_logfile=syslogS
 dependent_startup=true
 dependent_startup_wait_for=zebra:running
 {% endif %}
 
 [program:bgpd]
-command=/usr/lib/frr/bgpd -A 127.0.0.1 -M snmp
+command=/usr/lib/frr/bgpd -A 127.0.0.1
 priority=5
 stopsignal=KILL
 autostart=false
