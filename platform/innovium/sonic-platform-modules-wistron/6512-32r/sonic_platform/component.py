@@ -91,7 +91,7 @@ class Component(ComponentBase):
             try:
                 cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
                 cpld_version_raw= int(self.__read_txt_file(cpld_path), 10)
-                cpld_version[cpld_name] = "{} {}".format("MP" if (cpld_version_raw & 0x10) else "Proto", cpld_version_raw & 0xf)
+                cpld_version[cpld_name] = "{}.{}".format((cpld_version_raw & 0xf0) >> 4, cpld_version_raw & 0xf)
             except Exception as e:
                 print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
@@ -122,13 +122,13 @@ class Component(ComponentBase):
         try:
             fpga_path = "{}{}{}".format(SYSFS_PATH, FPGA_ADDR_MAPPING['MB_FPGA'], '/version')
             fpga_version_raw= int(self.__read_txt_file(fpga_path), 10)
-            fpga_version["MB_FPGA"] = "{} {}.{}".format("Formal" if (fpga_version_raw & 0x80) else "Test", ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
+            fpga_version["MB_FPGA"] = "{}.{}.{}".format((fpga_version_raw & 0x80) >> 7, ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
         except Exception as e:
             print('Get exception when read fpga')
             fpga_version["MB_FPGA"] = 'None'
 
         fpga_version_raw= int(self.__get_cpu_fpga_ver(), 16)
-        fpga_version["CPU_FPGA"] = "{} {}.{}".format("Formal" if (fpga_version_raw & 0x80) else "Test", ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
+        fpga_version["CPU_FPGA"] = "{}.{}.{}".format((fpga_version_raw & 0x80) >> 7, ((fpga_version_raw & 0x70) >> 4), fpga_version_raw & 0xf)
 
         return fpga_version
 
