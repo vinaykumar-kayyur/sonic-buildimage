@@ -1,5 +1,5 @@
 SPATH       := $($(SONIC_PY_COMMON_PY3)_SRC_PATH)
-DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/sonic-py-common.mk rules/sonic-py-common.dep   
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/sonic-py-common.mk rules/sonic-py-common.dep
 DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
 DEP_FILES   += $(shell git ls-files $(SPATH))
 
