@@ -15,7 +15,7 @@ ssize_t fan_ctrl_mode_get(struct device *dev, struct device_attribute *da, char 
     int status = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == FANCTRL_MODE)
@@ -46,7 +46,7 @@ ssize_t fan_ctrl_rpm_get(struct device *dev, struct device_attribute *da, char *
     int status = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == FANCTRL_RPM)
@@ -79,7 +79,7 @@ ssize_t fan_status_get(struct device *dev, struct device_attribute *da, char *bu
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_23_data = i2c_get_clientdata(Netberg_CPLD_23_client);
     struct Netberg_i2c_data *Netberg_BMC_14_data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -93,7 +93,7 @@ ssize_t fan_status_get(struct device *dev, struct device_attribute *da, char *bu
         status = i2c_smbus_read_byte_data(Netberg_CPLD_23_client, FAN_STAT_REG);
         mutex_unlock(&Netberg_CPLD_23_data->update_lock);
     }
-    
+
     result = FAILED;
     switch (attr->index)
     {
@@ -142,7 +142,7 @@ ssize_t fan_present_get(struct device *dev, struct device_attribute *da, char *b
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_23_data = i2c_get_clientdata(Netberg_CPLD_23_client);
     struct Netberg_i2c_data *Netberg_BMC_14_data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -156,7 +156,7 @@ ssize_t fan_present_get(struct device *dev, struct device_attribute *da, char *b
         status = i2c_smbus_read_byte_data(Netberg_CPLD_23_client, FAN_PRESENT_REG);
         mutex_unlock(&Netberg_CPLD_23_data->update_lock);
     }
-    
+
     result = FAILED;
     switch (attr->index)
     {
@@ -205,7 +205,7 @@ ssize_t fan_power_get(struct device *dev, struct device_attribute *da, char *buf
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_23_data = i2c_get_clientdata(Netberg_CPLD_23_client);
     struct Netberg_i2c_data *Netberg_BMC_14_data = i2c_get_clientdata(Netberg_BMC_14_client);
-    
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -219,7 +219,7 @@ ssize_t fan_power_get(struct device *dev, struct device_attribute *da, char *buf
         status = i2c_smbus_read_byte_data(Netberg_CPLD_23_client, FAN_POWER_REG);
         mutex_unlock(&Netberg_CPLD_23_data->update_lock);
     }
-    
+
     result = FAILED;
     switch (attr->index)
     {
@@ -265,11 +265,11 @@ ssize_t fan_rpm_get(struct device *dev, struct device_attribute *da, char *buf)
 {
     int status          = -EPERM;
     int fan_location    = 0;
-    int fan_offset      = 0; 
+    int fan_offset      = 0;
     u16 fan_speed       = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *target_client = NULL; 
-    
+    struct i2c_client *target_client = NULL;
+
     sprintf(buf, "");
     if( bmc_enable() == ENABLE)
     {
@@ -279,48 +279,48 @@ ssize_t fan_rpm_get(struct device *dev, struct device_attribute *da, char *buf)
     {
         target_client = Netberg_CPLD_23_client;
     }
-    
+
     switch (attr->index)
     {
         case FAN1_FRONT_RPM:
             fan_location = 0;
-            fan_offset = 0; 
+            fan_offset = 0;
             break;
         case FAN2_FRONT_RPM:
             fan_location = 0;
-            fan_offset = 1; 
+            fan_offset = 1;
             break;
         case FAN3_FRONT_RPM:
             fan_location = 0;
-            fan_offset = 2; 
+            fan_offset = 2;
             break;
         case FAN4_FRONT_RPM:
             fan_location = 0;
-            fan_offset = 3; 
+            fan_offset = 3;
             break;
         case FAN5_FRONT_RPM:
             fan_location = 0;
-            fan_offset = 4; 
+            fan_offset = 4;
             break;
         case FAN1_REAR_RPM:
             fan_location = 1;
-            fan_offset = 0; 
+            fan_offset = 0;
             break;
         case FAN2_REAR_RPM:
             fan_location = 1;
-            fan_offset = 1; 
+            fan_offset = 1;
             break;
         case FAN3_REAR_RPM:
             fan_location = 1;
-            fan_offset = 2; 
+            fan_offset = 2;
             break;
         case FAN4_REAR_RPM:
             fan_location = 1;
-            fan_offset = 3; 
+            fan_offset = 3;
             break;
         case FAN5_REAR_RPM:
             fan_location = 1;
-            fan_offset = 4; 
+            fan_offset = 4;
             break;
     }
     if(fan_location == 0)
@@ -331,7 +331,7 @@ ssize_t fan_rpm_get(struct device *dev, struct device_attribute *da, char *buf)
         fan_speed = status;
         if(status < 0 || status == 0xff)
         {
-            fan_speed = 0; 
+            fan_speed = 0;
         }
         // read low byte
         status = i2c_smbus_read_byte_data(target_client, FAN_F_RPM_REG+(fan_offset*2));
@@ -349,7 +349,7 @@ ssize_t fan_rpm_get(struct device *dev, struct device_attribute *da, char *buf)
         fan_speed = status;
         if(status < 0 || status == 0xff)
         {
-            fan_speed = 0; 
+            fan_speed = 0;
         }
         // read low byte
         status = i2c_smbus_read_byte_data(target_client, FAN_R_RPM_REG+(fan_offset*2));

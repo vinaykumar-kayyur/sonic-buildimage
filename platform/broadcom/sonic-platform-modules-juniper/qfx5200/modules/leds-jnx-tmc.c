@@ -205,7 +205,7 @@ static int __init jnx_tmc_leds_driver_init(void)
 	int ret = -1;
 
 	ret = platform_driver_register(&jnx_tmc_leds_driver);
-	
+
 	return ret;
 
 }

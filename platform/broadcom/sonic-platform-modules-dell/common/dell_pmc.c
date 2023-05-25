@@ -36,7 +36,7 @@
 #define TCPU_MAX                15
 #define PSU_MAX                 4 /* TODO change to actual sensors */
 
-/* Where are the sensors address/data 
+/* Where are the sensors address/data
    registers relative to the region offset */
 
 #define IOREGION_OFFSET          0x10
@@ -331,7 +331,7 @@ static const char *const s6100_vsen_label[] = {
         "CPU XP1R5V_EARLY",
         /* Switch Board */
         "SW XP12R0V_MON",
-        "SW XP3R3V_MON", 
+        "SW XP3R3V_MON",
         "SW XP1R8V_MON",
         "SW XP1R25V_MON",
         "SW XP1R2V_MON",
@@ -486,17 +486,17 @@ static int smf_write_reg(struct smf_data *data, u16 reg, u16 dev_data)
         return res;
 }
 
-static int smf_read_reg(struct smf_data *data, u16 reg) 
-{ 
-        int res; 
+static int smf_read_reg(struct smf_data *data, u16 reg)
+{
+        int res;
 
-        mutex_lock(&data->lock); 
-        outb_p(reg>> 8, data->addr + SMF_ADDR_REG_OFFSET); 
-        outb_p(reg & 0xff, data->addr + SMF_ADDR_REG_OFFSET + 1); 
-        res = inb_p(data->addr + SMF_READ_DATA_REG_OFFSET); 
-        mutex_unlock(&data->lock); 
-        return res; 
-} 
+        mutex_lock(&data->lock);
+        outb_p(reg>> 8, data->addr + SMF_ADDR_REG_OFFSET);
+        outb_p(reg & 0xff, data->addr + SMF_ADDR_REG_OFFSET + 1);
+        res = inb_p(data->addr + SMF_READ_DATA_REG_OFFSET);
+        mutex_unlock(&data->lock);
+        return res;
+}
 
 
 static int smf_read_reg16(struct smf_data *data, u16 reg)
@@ -680,8 +680,8 @@ static ssize_t show_fan(struct device *dev,
                 case 12:
                         ret = (~smf_read_reg(data, FAN_TRAY_PRESENCE) & 0xff);
                         export_hex = 1;
-                        break; 
-		       
+                        break;
+
                 default:
                         return ret;
 		}
@@ -718,7 +718,7 @@ static ssize_t show_fan_fault(struct device *dev,
         if (ret < 0)
                 return ret;
 
-        return sprintf(buf, "%d\n", ret);  
+        return sprintf(buf, "%d\n", ret);
 }
 
 
@@ -750,7 +750,7 @@ static ssize_t show_fan_alarm(struct device *dev,
         else
                 ret=1;
 
-        return sprintf(buf, "%d\n", ret);  
+        return sprintf(buf, "%d\n", ret);
 }
 
 
@@ -767,7 +767,7 @@ static ssize_t show_fan_airflow(struct device *dev,
         fan_airflow = smf_read_reg(data, FAN_TRAY_AIRFLOW);
         ret = (fan_airflow >> index) & 1;
 
-        return sprintf(buf, "%d\n", ret);  
+        return sprintf(buf, "%d\n", ret);
 }
 
 
@@ -778,12 +778,12 @@ static ssize_t show_psu_fan(struct device *dev,
         struct smf_data *data = dev_get_drvdata(dev);
         int ret=0, fan_status;
 
-        if (index < FAN_601_FAULT){                               
+        if (index < FAN_601_FAULT){
                 fan_status = smf_read_reg(data, PSU_1_FAN_STATUS);
                 ret = (fan_status >> index) & 1;
 
         }
-        else{ 
+        else{
                 fan_status = smf_read_reg(data, PSU_2_FAN_STATUS);
                 ret = (fan_status >> (index - 3)) & 1;
         }
@@ -791,7 +791,7 @@ static ssize_t show_psu_fan(struct device *dev,
         if (ret < 0)
                 return ret;
 
-        return sprintf(buf, "%d\n", ret);  
+        return sprintf(buf, "%d\n", ret);
 }
 
 static ssize_t show_cpu_iom_control(struct device *dev,
@@ -820,7 +820,7 @@ static umode_t smf_fanin_is_visible(struct kobject *kobj,
 {
         struct device *dev = container_of(kobj, struct device, kobj);
         struct smf_data *data = dev_get_drvdata(dev);
-        
+
         if (data->fanin_mask & (1 << (n % FANIN_MAX)))
                 return a->mode;
 
@@ -951,7 +951,7 @@ static struct attribute *smf_fanin_attrs[] = {
 
 /* VSEN ATTR */
 static ssize_t
-show_voltage_label(struct device *dev, 
+show_voltage_label(struct device *dev,
                 struct device_attribute *attr, char *buf)
 {
         struct smf_data *data = dev_get_drvdata(dev);
@@ -980,11 +980,11 @@ static ssize_t show_voltage(struct device *dev,
 
         if (ret < 0)
                 return ret;
-        
+
         if(index < 44)
                 volt = ret*10;
         else
-                export_hex=1;        
+                export_hex=1;
 
         if(export_hex)
                 return sprintf(buf, "%x\n", ret);
@@ -1002,7 +1002,7 @@ static ssize_t show_psu_voltage(struct device *dev,
 
         if (index < 2)                        /* PSU1 */
                 ret = smf_read_reg16(data, PSU_1_INPUT_VOLTAGE + index * 2);
-        else                                  /* PSU2 */         
+        else                                  /* PSU2 */
                 ret = smf_read_reg16(data, PSU_2_INPUT_VOLTAGE + ((index - 2) * 2));
 
         if (ret < 0)
@@ -1017,7 +1017,7 @@ static ssize_t show_voltage_alarm(struct device *dev,
 {
         int index = to_sensor_dev_attr(devattr)->index;
         struct smf_data *data = dev_get_drvdata(dev);
-        unsigned status=0; 
+        unsigned status=0;
         int ret;
 
         if (index < 8) {
@@ -1105,11 +1105,11 @@ static SENSOR_DEVICE_ATTR(in26_input, S_IRUGO, show_voltage, NULL, 25);
 static SENSOR_DEVICE_ATTR(in27_input, S_IRUGO, show_voltage, NULL, 26);
 static SENSOR_DEVICE_ATTR(in28_input, S_IRUGO, show_voltage, NULL, 27);
 
-/* PSU1 Voltage*/ 
+/* PSU1 Voltage*/
 static SENSOR_DEVICE_ATTR(in29_input, S_IRUGO, show_psu_voltage, NULL, 0);
 static SENSOR_DEVICE_ATTR(in30_input, S_IRUGO, show_psu_voltage, NULL, 1);
 
-/* PSU2 Voltage*/ 
+/* PSU2 Voltage*/
 static SENSOR_DEVICE_ATTR(in31_input, S_IRUGO, show_psu_voltage, NULL, 2);
 static SENSOR_DEVICE_ATTR(in32_input, S_IRUGO, show_psu_voltage, NULL, 3);
 
@@ -1162,11 +1162,11 @@ static SENSOR_DEVICE_ATTR(in26_label, S_IRUGO, show_voltage_label, NULL, 25);
 static SENSOR_DEVICE_ATTR(in27_label, S_IRUGO, show_voltage_label, NULL, 26);
 static SENSOR_DEVICE_ATTR(in28_label, S_IRUGO, show_voltage_label, NULL, 27);
 
-/* PSU1 Voltage Label*/ 
+/* PSU1 Voltage Label*/
 static SENSOR_DEVICE_ATTR(in29_label, S_IRUGO, show_voltage_label, NULL, 28);
 static SENSOR_DEVICE_ATTR(in30_label, S_IRUGO, show_voltage_label, NULL, 29);
 
-/* PSU2 Voltage Label*/ 
+/* PSU2 Voltage Label*/
 static SENSOR_DEVICE_ATTR(in31_label, S_IRUGO, show_voltage_label, NULL, 30);
 static SENSOR_DEVICE_ATTR(in32_label, S_IRUGO, show_voltage_label, NULL, 31);
 
@@ -1499,7 +1499,7 @@ static ssize_t show_tcpu(struct device *dev,
 
         if (ret & 0x8000)
                 ret = - (ret & 0x7fff);
-	
+
 	temp = ret*100;
 
         return sprintf(buf, "%d\n", temp);
@@ -1696,18 +1696,18 @@ static struct attribute *smf_tcpu_attrs[] = {
         &sensor_dev_attr_temp1_crit.dev_attr.attr,
         &sensor_dev_attr_temp2_crit.dev_attr.attr,
         &sensor_dev_attr_temp3_crit.dev_attr.attr,
-        &sensor_dev_attr_temp4_crit.dev_attr.attr,     
+        &sensor_dev_attr_temp4_crit.dev_attr.attr,
         &sensor_dev_attr_temp5_crit.dev_attr.attr,
         &sensor_dev_attr_temp6_crit.dev_attr.attr,
         &sensor_dev_attr_temp7_crit.dev_attr.attr,
-        &sensor_dev_attr_temp8_crit.dev_attr.attr,     
+        &sensor_dev_attr_temp8_crit.dev_attr.attr,
         &sensor_dev_attr_temp9_crit.dev_attr.attr,
-        &sensor_dev_attr_temp10_crit.dev_attr.attr,     
-        &sensor_dev_attr_temp11_crit.dev_attr.attr,     
-        &sensor_dev_attr_temp12_crit.dev_attr.attr,     
-        &sensor_dev_attr_temp13_crit.dev_attr.attr,     
-        &sensor_dev_attr_temp14_crit.dev_attr.attr,     
-        &sensor_dev_attr_temp15_crit.dev_attr.attr,     
+        &sensor_dev_attr_temp10_crit.dev_attr.attr,
+        &sensor_dev_attr_temp11_crit.dev_attr.attr,
+        &sensor_dev_attr_temp12_crit.dev_attr.attr,
+        &sensor_dev_attr_temp13_crit.dev_attr.attr,
+        &sensor_dev_attr_temp14_crit.dev_attr.attr,
+        &sensor_dev_attr_temp15_crit.dev_attr.attr,
 
         &sensor_dev_attr_temp1_max.dev_attr.attr,
         &sensor_dev_attr_temp2_max.dev_attr.attr,
@@ -1743,7 +1743,7 @@ static struct attribute *smf_tcpu_attrs[] = {
 
 
         NULL
-};  
+};
 
 
 static const struct attribute_group smf_tcpu_group = {
@@ -1929,33 +1929,33 @@ static ssize_t show_ppid(struct device *dev,
 		ppid[ppid_pos++] = (char)smf_read_reg(data,reg++);
 	}
 	ppid[ppid_pos++] = '-';
-	if(index > 9){   //Applicable only for PSU 
+	if(index > 9){   //Applicable only for PSU
 		// Get Manufacture date
 		for( i = 0; i < EEPROM_MFG_DATE_SIZE; i++) {
 			psu_mfg_date[i] = (char)smf_read_reg(data,reg++);
 		}
 
-		/* Converting 6 digit date code [yymmdd] to 3 digit[ymd]  
+		/* Converting 6 digit date code [yymmdd] to 3 digit[ymd]
         	   Year  Starting from 2010 [0-9] , Day :  1-9 and A-V , Month : 1-9 and A-C */
 		// Year Validation and Conversion
-		if( ( psu_mfg_date[0] == '1' ) && ( psu_mfg_date[1] >= '0' ) && ( psu_mfg_date[1] <= '9') ) 
+		if( ( psu_mfg_date[0] == '1' ) && ( psu_mfg_date[1] >= '0' ) && ( psu_mfg_date[1] <= '9') )
 		{
-			psu_mfg_date_code[0] = psu_mfg_date[1];      
+			psu_mfg_date_code[0] = psu_mfg_date[1];
 		}
 		else
 		{
 			psu_mfg_date_code[0] = ' ';
 		}
-	
-		// Month Validation and Conversion 
+
+		// Month Validation and Conversion
 		temp = ( ( psu_mfg_date[2] - 0x30 ) * 10 ) + ( psu_mfg_date[3] - 0x30 );
-		if( ( temp >= 1) && ( temp < 10) ) 
+		if( ( temp >= 1) && ( temp < 10) )
 		{
 			psu_mfg_date_code[1] = temp + 0x30; // 0- 9
 		}
 		else if ( ( temp >= 10) && ( temp <= 12) )
 		{
-			psu_mfg_date_code[1] = temp + 0x37; // A-C 
+			psu_mfg_date_code[1] = temp + 0x37; // A-C
 		}
 		else
 		{
@@ -1965,12 +1965,12 @@ static ssize_t show_ppid(struct device *dev,
 		// Date	Validation and Conversion
 		temp = ( ( psu_mfg_date[4] - 0x30 ) * 10 ) + ( psu_mfg_date[5] - 0x30 );
 		if( ( temp >= 1) && ( temp < 10) )
-		{   
-			psu_mfg_date_code[2] = temp + 0x30; // 0- 9	
+		{
+			psu_mfg_date_code[2] = temp + 0x30; // 0- 9
 		}
 		else if( ( temp >= 10) && ( temp <= 31) )
 		{
-			psu_mfg_date_code[2] = temp + 0x37; // A-V 
+			psu_mfg_date_code[2] = temp + 0x37; // A-V
 		}
 		else
 		{
@@ -1994,11 +1994,11 @@ static ssize_t show_ppid(struct device *dev,
 	ppid[ppid_pos++] = '-';
 
 	if(index > 9){
-	// Skipping PSU service tag in PPID 
+	// Skipping PSU service tag in PPID
 		reg += EEPROM_SERVICE_TAG_SIZE;
     }
 	else{
-	// Skipping FAN partno tag in PPID 
+	// Skipping FAN partno tag in PPID
 		reg += EEPROM_PART_NO_SIZE;
     }
 
@@ -2015,7 +2015,7 @@ static umode_t smf_psu_is_visible(struct kobject *kobj,
 {
         struct device *dev = container_of(kobj, struct device, kobj);
         struct smf_data *data = dev_get_drvdata(dev);
-        
+
         if (data->psu_mask & (1 << (n % PSU_MAX)))
                 return a->mode;
         return 0;
@@ -2187,7 +2187,7 @@ static int smf_probe(struct platform_device *pdev)
         int err = 0;
 
         res = platform_get_resource(pdev, IORESOURCE_IO, 0);
-        if (!request_region(res->start, IOREGION_LENGTH, 
+        if (!request_region(res->start, IOREGION_LENGTH,
                                 smf_devices[sio_data->kind].name)) {
                 err = -EBUSY;
                 dev_err(dev, "Failed to request region 0x%lx-0x%lx\n",
@@ -2204,13 +2204,13 @@ static int smf_probe(struct platform_device *pdev)
         if (!data)
                 return -ENOMEM;
 
-        mutex_init(&data->lock); 
+        mutex_init(&data->lock);
 
         /* PSU attributes */
         data->psu_mask = smf_devices[data->kind].psu_mask;
         data->psu_label = smf_devices[data->kind].psu_label;
 
-        /* FANIN attributes */ 
+        /* FANIN attributes */
         data->fanin_mask = smf_devices[data->kind].fanin_mask;
         data->fan_label = smf_devices[data->kind].fan_label;
 

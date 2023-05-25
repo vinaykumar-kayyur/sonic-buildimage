@@ -55,7 +55,7 @@ struct serial_number_info serials[] = {
 {PSU_TYPE_YESM1300,   0x35, 20, 19, "YESM1300"},
 };
 
-struct pddf_psu_data {    
+struct pddf_psu_data {
     char model_name[MAX_MODEL_NAME+1];
     char serial_number[MAX_SERIAL_NUMBER+1];
 };
@@ -182,7 +182,7 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
 	struct i2c_client *client = to_i2c_client(dev);
 	struct pddf_psu_data data;
     int i, status;
-    
+
     for (i = 0; i < ARRAY_SIZE(models); i++) {
         memset(data.serial_number, 0, sizeof(data.serial_number));
 
@@ -200,11 +200,11 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
 
         /* Determine if the model name is known, if not, read next index
          */
-        
+
         if (strncmp(data.model_name, models[i].model_name, models[i].chk_length) == 0) {
             status = pddf_psu_read_block(client, serials[i].offset,
                                            data.serial_number, serials[i].length);
-            
+
             if (status < 0) {
                 data.serial_number[0] = '\0';
                 dev_dbg(&client->dev, "unable to read serial num from (0x%x) offset(0x%x)\n",
@@ -215,7 +215,7 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
                 data.serial_number[serials[i].length] = '\0';
 	            return sprintf(buf, "%s\n", data.serial_number);
             }
-                        
+
             return 0;
         }
         else {
@@ -225,15 +225,15 @@ ssize_t pddf_get_custom_psu_serial_num(struct device *dev, struct device_attribu
 
     return -ENODATA;
 
-	
+
 }
 
 ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribute *da, char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
-	struct pddf_psu_data data;	
+	struct pddf_psu_data data;
     int i, status;
-    
+
     for (i = 0; i < ARRAY_SIZE(models); i++) {
         memset(data.model_name, 0, sizeof(data.model_name));
 
@@ -260,7 +260,7 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
                     data.model_name[9]='M';
                     data.model_name[strlen("YESM1300AM")]='\0';
                 }
-                else  
+                else
                     data.model_name[strlen("YESM1300")]='\0';
             }
 
@@ -284,10 +284,10 @@ static int __init pddf_custom_psu_init(void)
 
 	access_psu_serial_num.show = pddf_get_custom_psu_serial_num;
 	access_psu_serial_num.do_get = NULL;
-	
+
 	access_psu_model_name.show = pddf_get_custom_psu_model_name;
-	access_psu_model_name.do_get = NULL;	
-	
+	access_psu_model_name.do_get = NULL;
+
 	return 0;
 }
 

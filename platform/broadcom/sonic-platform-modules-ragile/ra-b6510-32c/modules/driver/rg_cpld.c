@@ -105,7 +105,7 @@ static s32 cpld_i2c_smbus_read_i2c_block_data(const struct i2c_client *client,
     }
     return ret;
 }
-                
+
 static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *da, char *buf)
 {
     struct cpld_data *data = dev_get_drvdata(dev);
@@ -114,8 +114,8 @@ static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *d
     uint8_t size;
     s32 status;
 	s32 ret_t;
-    
-	ret_t = 0;    
+
+	ret_t = 0;
     status = -1;
     size = 0;
     mutex_lock(&data->update_lock);
@@ -145,7 +145,7 @@ static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *d
     return size;
 }
 
-static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t 
+static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t
 count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -153,7 +153,7 @@ count)
     struct cpld_data *data = i2c_get_clientdata(client);
     unsigned long val;
     int err;
-    
+
     err = kstrtoul(buf, 16, &val);
     if (err)
         return err;
@@ -184,7 +184,7 @@ static ssize_t show_cpld_version(struct device *dev, struct device_attribute *da
         return 0;
     }
     mutex_unlock(&data->update_lock);
-    return snprintf(buf, COMMON_STR_LEN, "%02x %02x %02x %02x \n", data->data[0], data->data[1], data->data[2], 
+    return snprintf(buf, COMMON_STR_LEN, "%02x %02x %02x %02x \n", data->data[0], data->data[1], data->data[2],
     data->data[3]);
 }
 
@@ -194,7 +194,7 @@ static ssize_t show_cpld_sysfs_value(struct device *dev, struct device_attribute
     struct i2c_client *client = to_i2c_client(dev);
     struct cpld_data *data = i2c_get_clientdata(client);
     s32 status;
-    
+
     status = -1;
     mutex_lock(&data->update_lock);
     status = cpld_i2c_smbus_read_byte_data(client, attr->index);
@@ -248,7 +248,7 @@ static SENSOR_DEVICE_ATTR(fan5_2_real_speed, S_IRUGO, show_fan_rpm_value, NULL, 
 static SENSOR_DEVICE_ATTR(fan5_led, S_IRUGO | S_IWUSR, show_cpld_sysfs_value, set_cpld_sysfs_value, 0x3f);
 
 /* sfp */
-static SENSOR_DEVICE_ATTR(sfp_enable, S_IRUGO| S_IWUSR, show_cpld_sysfs_value, set_cpld_sysfs_value, 
+static SENSOR_DEVICE_ATTR(sfp_enable, S_IRUGO| S_IWUSR, show_cpld_sysfs_value, set_cpld_sysfs_value,
 0x94);
 static SENSOR_DEVICE_ATTR(sfp_presence1, S_IRUGO, show_cpld_sysfs_value, NULL, 0x10);
 static SENSOR_DEVICE_ATTR(sfp_presence2, S_IRUGO, show_cpld_sysfs_value, NULL, 0x11);
@@ -267,27 +267,27 @@ static struct attribute *cpld_bus2_addr_0x0d_sysfs_attrs[] = {
     &sensor_dev_attr_cpld_version.dev_attr.attr,
     &sensor_dev_attr_fan_present.dev_attr.attr,
     &sensor_dev_attr_fan_status.dev_attr.attr,
-        
+
     &sensor_dev_attr_fan1_speed_set.dev_attr.attr,
     &sensor_dev_attr_fan1_1_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan1_2_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan1_led.dev_attr.attr,
-    
+
     &sensor_dev_attr_fan2_speed_set.dev_attr.attr,
     &sensor_dev_attr_fan2_1_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan2_2_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan2_led.dev_attr.attr,
-    
+
     &sensor_dev_attr_fan3_speed_set.dev_attr.attr,
     &sensor_dev_attr_fan3_1_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan3_2_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan3_led.dev_attr.attr,
-    
+
     &sensor_dev_attr_fan4_speed_set.dev_attr.attr,
     &sensor_dev_attr_fan4_1_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan4_2_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan4_led.dev_attr.attr,
-    
+
     &sensor_dev_attr_fan5_speed_set.dev_attr.attr,
     &sensor_dev_attr_fan5_1_real_speed.dev_attr.attr,
     &sensor_dev_attr_fan5_2_real_speed.dev_attr.attr,
@@ -298,7 +298,7 @@ static struct attribute *cpld_bus2_addr_0x0d_sysfs_attrs[] = {
 static struct attribute *cpld_bus6_addr_0x0d_sysfs_attrs[] = {
     &sensor_dev_attr_cpld_version.dev_attr.attr,
     &sensor_dev_attr_broad_back_sys.dev_attr.attr,
-    &sensor_dev_attr_broad_front_pwr.dev_attr.attr,    
+    &sensor_dev_attr_broad_front_pwr.dev_attr.attr,
     &sensor_dev_attr_broad_front_fan.dev_attr.attr,
     &sensor_dev_attr_sfp_enable.dev_attr.attr,
     NULL
@@ -358,7 +358,7 @@ static  const struct attribute_group *cpld_get_attr_group(struct i2c_client *cli
 {
     int i;
     struct cpld_attr_match_group *group;
-    
+
     for (i = 0; i < ARRAY_SIZE(g_cpld_attr_match); i++) {
         group = &g_cpld_attr_match[i];
         DBG_DEBUG("is_hwmon %d i %d client(nr:%d,addr:0x%x), group(nr:%d,addr:0x0%x) .\n", is_hwmon,
@@ -402,7 +402,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
     if (!data) {
         return -ENOMEM;
     }
-    
+
     data->client = client;
     i2c_set_clientdata(client, data);
     mutex_init(&data->update_lock);
@@ -414,12 +414,12 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
         DBG_DEBUG("=========(addr:0x%x, nr:%d) sysfs_create_group status %d===========\n", client->addr, client->adapter->nr, status);
         if (status != 0) {
             DBG_ERROR("sysfs_create_group status %d.\n", status);
-            goto error; 
+            goto error;
         }
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no sysfs_create_group \n", client->addr, client->adapter->nr);
     }
-    
+
     hwmon_group = NULL;
     hwmon_group = cpld_get_attr_group(client, 1);
     if (hwmon_group) {
@@ -432,7 +432,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
         DBG_DEBUG("=========(addr:0x%x, nr:%d) hwmon_device_register_with_groups success===========\n", client->addr, client->adapter->nr);
         if (status != 0) {
             DBG_ERROR("sysfs_create_group status %d.\n", status);
-            goto error; 
+            goto error;
         }
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no hwmon_device_register_with_groups \n", client->addr, client->adapter->nr);
@@ -447,7 +447,7 @@ static int cpld_remove(struct i2c_client *client)
 {
     struct cpld_data *data = i2c_get_clientdata(client);
     const struct attribute_group *sysfs_group, *hwmon_group;
-    
+
     DBG_DEBUG("=========cpld_remove(addr:0x%x, nr:%d)===========\n", client->addr, client->adapter->nr);
 
     sysfs_group = NULL;
@@ -458,7 +458,7 @@ static int cpld_remove(struct i2c_client *client)
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no sysfs_remove_group \n", client->addr, client->adapter->nr);
     }
-    
+
     hwmon_group = NULL;
     hwmon_group = cpld_get_attr_group(client, 1);
     if (hwmon_group) {
@@ -466,8 +466,8 @@ static int cpld_remove(struct i2c_client *client)
         hwmon_device_unregister(data->hwmon_dev);
     } else {
         DBG_DEBUG("=========(addr:0x%x, nr:%d) no hwmon_device_unregister \n", client->addr, client->adapter->nr);
-    }   
-    
+    }
+
     return 0;
 }
 

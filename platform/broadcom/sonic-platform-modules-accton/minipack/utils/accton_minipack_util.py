@@ -251,7 +251,7 @@ def device_install():
     log_os_system(rm_cmd, 1)
     mk_cmd= "mkdir /usr/local/bin/minipack_qsfp"
     log_os_system(mk_cmd, 1)
-   
+
     return
 
 def device_uninstall():
@@ -336,7 +336,7 @@ def devices_info():
                     for k in range(0,DEVICE_NO[key]):
                         bus = 1
                         node = key+str(k+1)
-                        path = i2c_prefix + str(bus) + lk + "/"+ nodes[j] + str(k+1) 
+                        path = i2c_prefix + str(bus) + lk + "/"+ nodes[j] + str(k+1)
                         my_log(node+": "+ path)
                         ALL_DEVICE[key][node].append(path)
                 else:

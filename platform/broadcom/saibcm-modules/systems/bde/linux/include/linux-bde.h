@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -38,30 +38,30 @@
  * 1. Linux Kernel BDE
  *
  *	This is a kernel module implementing a BDE
- *	for the driver running as part of the kernel. 
- * 	
- *	It manages the devices through the linux PCI interfaces, 
+ *	for the driver running as part of the kernel.
+ *
+ *	It manages the devices through the linux PCI interfaces,
  *	and manages a chunk of contiguous, boot-time allocated
  *	DMA memory. This is all that is needed if the BCM driver
- *	is run as part of the kernel (in another module). 
+ *	is run as part of the kernel (in another module).
  *
  * 2. Linux User BDE
  *
  *	This is a kernel module and userland library which implement
- * 	a complete BDE for applications running in userland. 
- *	
- *	The kernel module relies upon the real kernel bde, 
+ * 	a complete BDE for applications running in userland.
+ *
+ *	The kernel module relies upon the real kernel bde,
  *	and allows a user space application (through the user library)
- *	to talk directly to the devices. It also virtualized the device 
- *	interrupts, so the entire driver can be run as a userspace 
- *	application. 
- *	
- *	While this causes a significant degradation in performance, 
+ *	to talk directly to the devices. It also virtualized the device
+ *	interrupts, so the entire driver can be run as a userspace
+ *	application.
+ *
+ *	While this causes a significant degradation in performance,
  *	because the system runs as a user application, the development
- *	and debugging process is about a gillion times easier. 
+ *	and debugging process is about a gillion times easier.
  *	After the core logic is debugged, it can be retargeted using
- *	only the kernel bde and run in the kernel. 
- *	
+ *	only the kernel bde and run in the kernel.
+ *
  *
  **********************************************************************/
 
@@ -72,15 +72,15 @@
 #include <ibde.h>
 
 
-/* 
+/*
  * Device Major Numbers
- * 
+ *
  * The kernel and user bdes need unique major numbers
- * on systems that do not use devfs. 
- * 
- * They are defined here, along with the module names, 
- * to document them if you need to mknod them (or open) them, 
- * and to keep them unique. 
+ * on systems that do not use devfs.
+ *
+ * They are defined here, along with the module names,
+ * to document them if you need to mknod them (or open) them,
+ * and to keep them unique.
  *
  */
 
@@ -126,11 +126,11 @@
 #define LINUX_BDE_MAX_IPROC_UC_CORES    12 /* Maximum number of R5 cores per device */
 typedef uint32 linux_bde_device_bitmap_t[LINUX_BDE_NOF_DEVICE_BITMAP_WORDS];
 
-/* 
- * PCI devices will be initialized by the Linux Kernel, 
+/*
+ * PCI devices will be initialized by the Linux Kernel,
  * regardless of architecture.
  *
- * You need only provide bus endian settings. 
+ * You need only provide bus endian settings.
  */
 
 typedef struct linux_bde_bus_s {
@@ -143,8 +143,8 @@ typedef struct linux_bde_bus_s {
 
 /* Device state used for PCI hot swap case. */
 /*
- * BDE_DEV_STATE_NORMAL : A device is probed normally. Or when the device 
- * resource has been updated after "CHANGED", the state will move back to 
+ * BDE_DEV_STATE_NORMAL : A device is probed normally. Or when the device
+ * resource has been updated after "CHANGED", the state will move back to
  * "NORMAL".
  */
 #define BDE_DEV_STATE_NORMAL       (0)
@@ -155,10 +155,10 @@ typedef struct linux_bde_bus_s {
  * and re-probed.
  */
 #define BDE_DEV_STATE_REMOVED      (1)
-/* 
+/*
  * BDE_DEV_STATE_CHANGED : The device is re-probed after having been removed.
  * The resouces assigned to the device might have been changed after
- * re-probing, so we need to re-initialize our resource database accordingly. 
+ * re-probing, so we need to re-initialize our resource database accordingly.
  * The state will change to "NORMAL" when the resource have been updated.
  */
 #define BDE_DEV_STATE_CHANGED      (2)

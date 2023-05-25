@@ -43,12 +43,12 @@ class switch(object):
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -66,7 +66,7 @@ psu_power_status=[2, 2]
 class device_monitor(object):
 
     def __init__(self, log_file, log_level):
-        
+
         self.psu_num = 2
         self.psu_path = "/sys/bus/i2c/devices/"
         self.presence = "/psu_present"
@@ -75,7 +75,7 @@ class device_monitor(object):
             0: "17-0051",
             1: "13-0053",
         }
-        
+
         """Needs a logger and a logger level."""
         # set up logging to file
         logging.basicConfig(
@@ -86,7 +86,7 @@ class device_monitor(object):
             datefmt='%H:%M:%S'
         )
         # set up logging to console
-        
+
         if log_level == logging.DEBUG:
             console = logging.StreamHandler()
             console.setLevel(log_level)
@@ -95,29 +95,29 @@ class device_monitor(object):
             logging.getLogger('').addHandler(console)
 
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        #sys_handler.setLevel(logging.WARNING)       
-        sys_handler.setLevel(logging.INFO)       
+        #sys_handler.setLevel(logging.WARNING)
+        sys_handler.setLevel(logging.INFO)
         logging.getLogger('').addHandler(sys_handler)
 
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
-        
-    def manage_psu(self):      
-        
+
+    def manage_psu(self):
+
         PSU_STATE_REMOVE = 0
         PSU_STATE_INSERT = 1
-        
+
         PSU_STATUS_NO_POWER = 0
         PSU_STATUS_POWER_GOOD = 1
-        
+
         global psu_state
         global psu_power_status
-        
-        for idx in range (0, self.psu_num):           
+
+        for idx in range (0, self.psu_num):
             node = self.psu_path + self.mapping[idx] + self.presence
             try:
                 val_file = open(node)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))          
+                print("Error: unable to open file: %s" % str(e))
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
@@ -132,13 +132,13 @@ class device_monitor(object):
                     psu_state[idx]=PSU_STATE_REMOVE
                     logging.warning("Alarm for PSU-%d absent is detected", idx+1);
                     psu_power_status[idx]=PSU_STATUS_NO_POWER
-        
-        for idx in range (0, self.psu_num):           
+
+        for idx in range (0, self.psu_num):
             node = self.psu_path + self.mapping[idx] + self.oper_status
             try:
                 val_file = open(node)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))          
+                print("Error: unable to open file: %s" % str(e))
                 return False
             content = val_file.readline().rstrip()
             val_file.close()
@@ -153,8 +153,8 @@ class device_monitor(object):
                 if psu_power_status[idx] !=PSU_STATUS_POWER_GOOD:
                     logging.info("PSU-%d power_good is detected", idx+1);
                     psu_power_status[idx]=PSU_STATUS_POWER_GOOD
-                    
-      
+
+
         return True
 
 def main(argv):

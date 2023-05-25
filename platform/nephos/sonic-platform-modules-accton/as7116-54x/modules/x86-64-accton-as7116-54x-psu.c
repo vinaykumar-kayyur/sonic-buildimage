@@ -52,11 +52,11 @@ static int as7116_54x_psu_read_block(struct i2c_client *client, u8 command, u8 *
 extern int as7116_54x_cpld_read(unsigned short cpld_addr, u8 reg);
 static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *dev, u8 update_eeprom);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7116_54x_psu_data {
     struct device      *hwmon_dev;
@@ -67,7 +67,7 @@ struct as7116_54x_psu_data {
     u8  status;          /* Status(present/power_good) register read from CPLD */
 	char model_name[MODEL_NAME_LEN+1];	/* Model name, read from eeprom */
 	char serial[SERIAL_NUM_LEN+1];		/* Serial number, read from eeprom*/
-};             
+};
 
 enum as7116_54x_psu_sysfs_attributes {
 	PSU_PRESENT,
@@ -76,7 +76,7 @@ enum as7116_54x_psu_sysfs_attributes {
 	PSU_SERIAL_NUMBER
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status, NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_string, NULL, PSU_MODEL_NAME);
@@ -179,7 +179,7 @@ static int as7116_54x_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -187,7 +187,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -198,12 +198,12 @@ static int as7116_54x_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7116_54x_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
-enum psu_index 
-{ 
+enum psu_index
+{
     as7116_54x_psu1,
 	as7116_54x_psu2
 };
@@ -231,27 +231,27 @@ static int as7116_54x_psu_read_block(struct i2c_client *client, u8 command, u8 *
 {
     int result = 0;
     int retry_count = 5;
-    
+
     while (retry_count) {
         retry_count--;
-    
+
         result = i2c_smbus_read_i2c_block_data(client, command, data_len, data);
-        
+
         if (unlikely(result < 0)) {
             msleep(10);
             continue;
         }
-        
+
         if (unlikely(result != data_len)) {
             result = -EIO;
             msleep(10);
             continue;
         }
-        
+
         result = 0;
         break;
     }
-    
+
     return result;
 }
 
@@ -259,7 +259,7 @@ static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *d
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct as7116_54x_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -271,7 +271,7 @@ static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *d
 
 		/* Read psu status */
 		status = as7116_54x_cpld_read(PSU_STATUS_I2C_ADDR, PSU_STATUS_I2C_REG_OFFSET);
-		
+
 		if (status < 0) {
 			dev_dbg(&client->dev, "cpld reg (0x%x) err %d\n", PSU_STATUS_I2C_ADDR, status);
 			goto exit;
@@ -279,14 +279,14 @@ static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *d
 		else {
 			data->status = status;
 		}
-		
-		
+
+
 		memset(data->model_name, 0, sizeof(data->model_name));
 		memset(data->serial, 0, sizeof(data->serial));
-		
+
 		if (update_eeprom && IS_PRESENT(data->index, data->status)) {
 			/* Read model name */
-			status = as7116_54x_psu_read_block(client, MODEL_NAME_REG_OFFSET, data->model_name, 
+			status = as7116_54x_psu_read_block(client, MODEL_NAME_REG_OFFSET, data->model_name,
 											   ARRAY_SIZE(data->model_name)-1);
 
 			if (status < 0) {
@@ -302,7 +302,7 @@ static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *d
 			}
 
 			/* Read serial number */
-			status = as7116_54x_psu_read_block(client, SERIAL_NUM_REG_OFFSET, data->serial, 
+			status = as7116_54x_psu_read_block(client, SERIAL_NUM_REG_OFFSET, data->serial,
 											   ARRAY_SIZE(data->serial)-1);
 
 			if (status < 0) {
@@ -314,7 +314,7 @@ static struct as7116_54x_psu_data *as7116_54x_psu_update_device(struct device *d
 				data->serial[SERIAL_NUM_LEN] = '\0';
 			}
 		}
-		
+
 		data->last_updated = jiffies;
 		data->valid = 1;
 	}

@@ -35,28 +35,28 @@ class AliasedGroup(click.Group):
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
-    
+
 def fanwarninglog(s):
     #s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("FANCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_WARNING,s)
-    
+
 def fancriticallog(s):
     #s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("FANCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_CRIT,s)
-    
+
 def fanerror(s):
     #s = s.decode('utf-8').encode('gb2312')
     syslog.openlog("FANCONTROL",syslog.LOG_PID)
     syslog.syslog(syslog.LOG_ERR,s)
-    
+
 def fanwarningdebuglog(debuglevel,s):
     #s = s.decode('utf-8').encode('gb2312')
     if FANCTROLDEBUG & debuglevel:
         syslog.openlog("FANCONTROL",syslog.LOG_PID)
         syslog.syslog(syslog.LOG_DEBUG,s)
- 
+
 
 class FanControl(object):
     critnum = 0
@@ -82,15 +82,15 @@ class FanControl(object):
     @property
     def cputemp(self):
         return self._cputemp;
- 
+
     @property
     def intemp(self):
         return self._intemp;
-        
+
     @property
     def outtemp(self):
         return self._outtemp;
-        
+
     @property
     def boardtemp(self):
         return self._boardtemp;
@@ -343,9 +343,9 @@ class FanControl(object):
             raise Exception("%%policy: getCurrentSpeed None")
         elif value < MONITOR_CONST.MIN_SPEED:
             self.fanSpeedSet(MONITOR_CONST.MIN_SPEED)
-        
-    
-    def fanSpeedSet(self, level):        
+
+
+    def fanSpeedSet(self, level):
         if level >= MONITOR_CONST.MAX_SPEED:
             level = MONITOR_CONST.MAX_SPEED
         for item in fanloc:
@@ -356,14 +356,14 @@ class FanControl(object):
                 fanerror(str(e))
                 fanerror("%%policy: config fan runlevel error")
         self.checkCurrentSpeedSet() # guaranteed minimum
-    
+
     def fanSpeedSetMax(self):
         try:
             self.fanSpeedSet(MONITOR_CONST.MAX_SPEED)
         except Exception as e:
             fanerror("%%policy:fanSpeedSetMax failed")
             fanerror(str(e))
-    
+
     def fanStatusCheck(self): # fan status check , max speed if fan error
         if self.fanOKNum < MONITOR_CONST.FAN_TOTAL_NUM:
             fanwarninglog("%%DEV_MONITOR-FAN: Normal fan number: %d" % (self.fanOKNum))
@@ -393,7 +393,7 @@ class FanControl(object):
             curFanStatus = []
             ret = self.checkfan(curFanStatus)
             if ret == True:
-                self.setFanAttr(curFanStatus) 
+                self.setFanAttr(curFanStatus)
                 self.getFanPresentNum(curFanStatus)
                 fanwarningdebuglog(DEBUG_COMMON,"%%policy:getFanStatus success" )
                 return 0
@@ -517,7 +517,7 @@ class FanControl(object):
             fanerror(str(e))
         return 0
 
-    def fanctrol(self): #fan speed-adjustment 
+    def fanctrol(self): #fan speed-adjustment
         try:
             if self.preIntemp <= -1000:
                 self.preIntemp = self.intemp
@@ -539,7 +539,7 @@ class FanControl(object):
         except Exception as e:
             fanerror("%%policy: fancontrol error")
 
-    # start speed-adjustment 
+    # start speed-adjustment
     def startFanCtrol(self):
         self.checkCrit()
         if self.critnum == 0 and self.checkWarning() == False and self.fanStatusCheck() ==True:
@@ -567,7 +567,7 @@ class FanControl(object):
         except Exception as e:
             fanerror(str(e))
         return False
-    
+
     # device error algorithm    Tmac-Tin≥50℃, or Tmac-Tin≤-50℃
     def checkDevError(self):
         try:
@@ -776,7 +776,7 @@ class FanControl(object):
         except Exception as e:
             fanerror("%%policy: checkCrit failed")
             fanerror(str(e))
-            
+
 
 def callback():
     pass
@@ -789,7 +789,7 @@ def doFanCtrol(fanCtrol):
     else:
         fanCtrol.fanSpeedSetMax()
         fanwarningdebuglog(DEBUG_FANCONTROL,"%%policy:getBoardMonitorMsg error")
-    
+
 def doLedCtrol(fanCtrol):
     fanCtrol.getBoardMonitorMsg(ledcontrol = True) # get status
     fanCtrol.dealSysLedStatus()        # light system led
@@ -820,7 +820,7 @@ def run(interval, fanCtrol):
 def main():
     '''device operator'''
     pass
-    
+
 @main.command()
 def start():
     '''start fan control'''

@@ -237,7 +237,7 @@ cpld_reset_mux_all(struct mux_obj_s *self){
     }
     emsg = "Undefined case";
     goto err_cpld_reset_mux_all;
-    
+
 reset_cpld_rst_all_4_c0_a77_70_74_rst_all:
     if (self->_pull_low(self) < 0) {
         emsg = "_pull_low fail";
@@ -245,7 +245,7 @@ reset_cpld_rst_all_4_c0_a77_70_74_rst_all:
     }
     mdelay(MUX_RST_WAIT_MS_CPLD);
     return 0;
-    
+
 err_cpld_reset_mux_all:
     SWPS_INFO("%s: %s <type>:%d <err>:%d\n",
             __func__, emsg, self->gpio_num, err);

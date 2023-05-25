@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -28,10 +28,10 @@
  * $Id: gmodule.c,v 1.20 Broadcom SDK $
  * $Copyright: (c) 2005 Broadcom Corp.
  * All Rights Reserved.$
- * 
+ *
  * Generic Linux Module Framework
  *
- * Hooks up your driver to the kernel 
+ * Hooks up your driver to the kernel
  */
 
 #include <lkm.h>
@@ -74,7 +74,7 @@ gprintk(const char* fmt, ...)
     return rv;
 }
 
-int 
+int
 gdbg(const char* fmt, ...)
 {
     int rv = 0;
@@ -93,7 +93,7 @@ gdbg(const char* fmt, ...)
  * Proc FS Utilities
  */
 #if PROC_INTERFACE_KERN_VER_3_10
-int 
+int
 pprintf(struct seq_file *m, const char* fmt, ...)
 {
     va_list args;
@@ -162,21 +162,21 @@ gmodule_pprintf(char** page_ptr, const char* fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    rv = gmodule_vpprintf(page_ptr, fmt, args); 
+    rv = gmodule_vpprintf(page_ptr, fmt, args);
     va_end(args);
     return rv;
 }
 
 static char* _proc_buf = NULL;
 
-int 
+int
 pprintf(struct seq_file *m, const char* fmt, ...)
-{  
+{
     int rv;
 
     va_list args;
     va_start(args, fmt);
-    rv = gmodule_vpprintf(&_proc_buf, fmt, args); 
+    rv = gmodule_vpprintf(&_proc_buf, fmt, args);
     va_end(args);
     return rv;
 }
@@ -193,7 +193,7 @@ _gmodule_pprint(char* buf)
     return PEND(buf);
 }
 
-static int 
+static int
 _gmodule_read_proc(char *page, char **start, off_t off,
 		   int count, int *eof, void *data)
 {
@@ -201,7 +201,7 @@ _gmodule_read_proc(char *page, char **start, off_t off,
     return _gmodule_pprint(page);
 }
 
-static int 
+static int
 _gmodule_write_proc(struct file *file, const char *buffer,
 		    unsigned long count, void *data)
 {
@@ -237,7 +237,7 @@ _gmodule_create_proc(void)
     return -1;
 }
 
-static void 
+static void
 _gmodule_remove_proc(void)
 {
     remove_proc_entry(_gmodule->name, NULL);
@@ -252,7 +252,7 @@ _gmodule_open(struct inode *inode, struct file *filp)
     return 0;
 }
 
-static int 
+static int
 _gmodule_release(struct inode *inode, struct file *filp)
 {
     if(_gmodule->close) {
@@ -321,24 +321,24 @@ void __exit
 cleanup_module(void)
 {
     if(!_gmodule) return;
-  
+
     /* Specific Cleanup */
     if(_gmodule->cleanup) {
 	_gmodule->cleanup();
     }
-  
+
     /* Remove any proc entries */
     if(_gmodule->pprint) {
 	_gmodule_remove_proc();
     }
-  
+
     /* Finally, remove ourselves from the universe */
     unregister_chrdev(_gmodule->major, _gmodule->name);
 }
 
 int __init
 init_module(void)
-{  
+{
     int rc;
 
     /* Get our definition */
@@ -347,8 +347,8 @@ init_module(void)
 
 
     /* Register ourselves */
-    rc = register_chrdev(_gmodule->major, 
-			 _gmodule->name, 
+    rc = register_chrdev(_gmodule->major,
+			 _gmodule->name,
 			 &_gmodule_fops);
     if (rc < 0) {
 	printk(KERN_WARNING "%s: can't get major %d",
@@ -370,7 +370,7 @@ init_module(void)
     }
 
     /* Add a /proc entry, if valid */
-    if(_gmodule->pprint) {    
+    if(_gmodule->pprint) {
 	_gmodule_create_proc();
     }
 

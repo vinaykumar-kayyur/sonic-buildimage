@@ -83,7 +83,7 @@ class Thermal(ThermalBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         try:
             if isinstance(self.__reg_temperature, Reg):
@@ -129,8 +129,8 @@ class Thermal(ThermalBase):
         """
         Sets the high threshold temperature of thermal
 
-        Args : 
-            temperature: A float number up to nearest thousandth of one degree Celsius, 
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 
         Returns:
@@ -149,7 +149,7 @@ class Thermal(ThermalBase):
         """
         Sets the low threshold temperature of thermal
 
-        Args : 
+        Args :
             temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 

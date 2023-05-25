@@ -21,16 +21,16 @@
 #define  IOM_CPLD_SLAVE_VER   0x00
 
 //qsfp reset cntrl reg on each iom
-#define  QSFP_RST_CRTL_REG0  0x10 
-#define  QSFP_RST_CRTL_REG1  0x11 
+#define  QSFP_RST_CRTL_REG0  0x10
+#define  QSFP_RST_CRTL_REG1  0x11
 
 //qsfp lp mode reg on each iom
-#define  QSFP_LPMODE_REG0 0x12 
+#define  QSFP_LPMODE_REG0 0x12
 #define  QSFP_LPMODE_REG1 0x13
 
 //qsfp mod presence reg on each iom
-#define  QSFP_MOD_PRS_REG0 0x16 
-#define  QSFP_MOD_PRS_REG1 0x17 
+#define  QSFP_MOD_PRS_REG0 0x16
+#define  QSFP_MOD_PRS_REG1 0x17
 
 //qsfp interrupt registers
 #define  QSFP_INT_STA_REG0 0x14
@@ -102,7 +102,7 @@ int dell_z9100_iom_cpld_write(struct cpld_data *data,u8 reg, u8 value)
 
     return ret;
 }
-static ssize_t get_cpldver(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_cpldver(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u8 devdata=0;
@@ -115,7 +115,7 @@ static ssize_t get_cpldver(struct device *dev, struct device_attribute *devattr,
     return sprintf(buf,"IOM CPLD Version:0x%02x\n",devdata);
 }
 
-static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u16 devdata=0;
@@ -134,7 +134,7 @@ static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr, 
     return sprintf(buf,"0x%04x\n",devdata);
 }
 
-static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u16 devdata=0;
@@ -153,7 +153,7 @@ static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, 
     return sprintf(buf,"0x%04x\n",devdata);
 }
 
-static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     u16 devdata=0;
@@ -172,7 +172,7 @@ static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, c
     return sprintf(buf,"0x%04x\n",devdata);
 }
 
-static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     unsigned long devdata;
     int err;
@@ -188,7 +188,7 @@ static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, 
     return count;
 }
 
-static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     unsigned long devdata;
     int err;

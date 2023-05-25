@@ -297,7 +297,7 @@ INIT_PARAM = [
 E2_LOC = {"bus":1, "devno":0x56}
 E2_PROTECT = {"io_addr":0xb45, "gettype":"io", "open":0, "close":1}
 
-CPLDVERSIONS = [ 
+CPLDVERSIONS = [
         {"bus":13,  "devno":0x0d, "name":"FAN_CPLD_B"},
         {"bus":14, "devno":0x0d, "name":"FAN_CPLD_A"},
         {"bus":3, "devno":0x30, "name":"LC1_CPLD_1"},
@@ -601,7 +601,7 @@ MAC_AVS_PARAM ={
     0x87:0x0301 ,
     0x88:0x02fb ,
     0x89:0x02f5 ,
-    0x8A:0x02ee 
+    0x8A:0x02ee
 }
 
 

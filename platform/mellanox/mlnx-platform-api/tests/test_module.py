@@ -84,7 +84,7 @@ class TestModule:
     def get_sfp(self):
         DeviceDataManager.get_linecard_sfp_count = mock.MagicMock(return_value=3)
         utils.read_int_from_file = mock.MagicMock(return_value=1)
-    
+
         # Test get_num_sfps, it should not create any SFP objects
         m = Module(1)
         assert m.get_num_sfps() == 3
@@ -134,12 +134,12 @@ class TestModule:
         m._sfp_list.append(1)
         m._thermal_list.append(1)
         m._get_seq_no = mock.MagicMock(return_value=0)
-        # both seq number and state no change, do not re-init module 
+        # both seq number and state no change, do not re-init module
         m._check_state()
         assert len(m._sfp_list) > 0
         assert len(m._thermal_list) > 0
 
-        # seq number changes, but state keeps deactivated, no need re-init module 
+        # seq number changes, but state keeps deactivated, no need re-init module
         m._get_seq_no = mock.MagicMock(return_value=1)
         m._check_state()
         assert len(m._sfp_list) > 0

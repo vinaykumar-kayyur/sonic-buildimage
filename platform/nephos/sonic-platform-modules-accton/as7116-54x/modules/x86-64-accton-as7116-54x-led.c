@@ -54,7 +54,7 @@ static struct as7116_54x_led_data  *ledctl = NULL;
  */
 
 #define LED_CNTRLER_I2C_ADDRESS		(0x60)
- 
+
 #define LED_TYPE_DIAG_REG_MASK	 	(0x0C)
 #define LED_MODE_DIAG_GREEN_VALUE  	(0x08)
 #define LED_MODE_DIAG_AMBER_VALUE	(0x04)
@@ -88,7 +88,7 @@ static struct as7116_54x_led_data  *ledctl = NULL;
 static const u8 led_reg[] = {
 	0x0A,	/* LOC/DIAG/FAN LED */
 	0x0B,	/* PSU1/PSU2 LED */
-};	
+};
 
 enum led_type {
 	LED_TYPE_DIAG,
@@ -144,28 +144,28 @@ static struct led_type_mode led_type_mode_data[] = {
 
 static int led_reg_val_to_light_mode(enum led_type type, u8 reg_val) {
 	int i;
-	
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 		if (type != led_type_mode_data[i].type) {
 			continue;
 		}
 
-		if ((led_type_mode_data[i].type_mask & reg_val) == 
+		if ((led_type_mode_data[i].type_mask & reg_val) ==
 			 led_type_mode_data[i].mode_value) {
 			return led_type_mode_data[i].mode;
 		}
 	}
-	
+
 	return LED_MODE_UNKNOWN;
 }
 
-static u8 led_light_mode_to_reg_val(enum led_type type, 
+static u8 led_light_mode_to_reg_val(enum led_type type,
 									enum led_light_mode mode, u8 reg_val) {
 	int i;
-								  
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 		int type_mask, mode_value;
-        
+
 		if (type != led_type_mode_data[i].type)
 			continue;
 
@@ -205,39 +205,39 @@ static void as7116_54x_led_update(void)
 		 */
 		for (i = 0; i < ARRAY_SIZE(ledctl->reg_val); i++) {
 			int status = as7116_54x_led_read_value(led_reg[i]);
-			
+
 			if (status < 0) {
 				dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", led_reg[i], status);
 				goto exit;
 			}
 			else {
-				ledctl->reg_val[i] = status; 
+				ledctl->reg_val[i] = status;
 			}
 		}
-		
+
 		ledctl->last_updated = jiffies;
 		ledctl->valid = 1;
 	}
-	
-exit:	
+
+exit:
 	mutex_unlock(&ledctl->update_lock);
 }
 
 static void as7116_54x_led_set(struct led_classdev *led_cdev,
-									  enum led_brightness led_light_mode, 
+									  enum led_brightness led_light_mode,
 									  u8 reg, enum led_type type)
 {
 	int reg_val;
-	
+
 	mutex_lock(&ledctl->update_lock);
-	
+
 	reg_val = as7116_54x_led_read_value(reg);
-	
+
 	if (reg_val < 0) {
 		dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", reg, reg_val);
 		goto exit;
 	}
-	reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);  
+	reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);
 	as7116_54x_led_write_value(reg, reg_val);
 
 	/* to prevent the slow-update issue */
@@ -353,16 +353,16 @@ static int as7116_54x_led_probe(struct platform_device *pdev)
 
 	for (i = 0; i < ARRAY_SIZE(as7116_54x_leds); i++) {
 		ret = led_classdev_register(&pdev->dev, &as7116_54x_leds[i]);
-		
+
 		if (ret < 0) {
 			break;
 		}
 	}
-	
+
 	/* Check if all LEDs were successfully registered */
 	if (i != ARRAY_SIZE(as7116_54x_leds)){
 		int j;
-		
+
 		/* only unregister the LEDs that were successfully registered */
 		for (j = 0; j < i; j++) {
 			led_classdev_unregister(&as7116_54x_leds[i]);
@@ -402,7 +402,7 @@ static int __init as7116_54x_led_init(void)
         return -ENODEV;
     }
 #endif
-	
+
 	ret = platform_driver_register(&as7116_54x_led_driver);
 	if (ret < 0) {
 		goto exit;

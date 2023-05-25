@@ -72,8 +72,8 @@ static ssize_t read_cpld_version(struct device *dev, struct device_attribute *da
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
-    unsigned short cpld_reg = CPLD_VERSION_REG; 
+    struct i2c_client *client = to_i2c_client(dev);
+    unsigned short cpld_reg = CPLD_VERSION_REG;
     u8 reg;
 
     if(attr->index == CPLD_READ_VERSION) {
@@ -87,14 +87,14 @@ static ssize_t read_cpld_version(struct device *dev, struct device_attribute *da
 static void accton_i2c_cpld_add_client(struct i2c_client *client)
 {
 	struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
-	
+
 	if (!node) {
 		dev_dbg(&client->dev, "Can't allocate cpld_client_node (0x%x)\n", client->addr);
 		return;
 	}
-	
+
 	node->client = client;
-	
+
 	mutex_lock(&list_lock);
 	list_add(&node->list, &cpld_client_list);
 	mutex_unlock(&list_lock);
@@ -105,24 +105,24 @@ static void accton_i2c_cpld_remove_client(struct i2c_client *client)
 	struct list_head		*list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int found = 0;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client == client) {
 			found = 1;
 			break;
 		}
 	}
-	
+
 	if (found) {
 		list_del(list_node);
 		kfree(cpld_node);
 	}
-	
+
 	mutex_unlock(&list_lock);
 }
 
@@ -130,13 +130,13 @@ static int accton_i2c_cpld_probe(struct i2c_client *client,
 			const struct i2c_device_id *dev_id)
 {
 	int status;
-	
+
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
 		dev_dbg(&client->dev, "i2c_check_functionality failed (0x%x)\n", client->addr);
 		status = -EIO;
 		goto exit;
 	}
-	
+
     /* Register sysfs hooks */
     status = sysfs_create_group(&client->dev.kobj, &as5712_54x_cpld_group);
     if (status) {
@@ -145,17 +145,17 @@ static int accton_i2c_cpld_probe(struct i2c_client *client,
 
 	dev_info(&client->dev, "chip found\n");
 	accton_i2c_cpld_add_client(client);
-	
-	return 0; 
+
+	return 0;
 exit:
 	return status;
 }
 
 static int accton_i2c_cpld_remove(struct i2c_client *client)
 {
-    sysfs_remove_group(&client->dev.kobj, &as5712_54x_cpld_group);    
-  
-	accton_i2c_cpld_remove_client(client);	
+    sysfs_remove_group(&client->dev.kobj, &as5712_54x_cpld_group);
+
+	accton_i2c_cpld_remove_client(client);
 	return 0;
 }
 
@@ -181,19 +181,19 @@ int accton_i2c_cpld_read(unsigned short cpld_addr, u8 reg)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EPERM;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_read_byte_data(cpld_node->client, reg);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -205,19 +205,19 @@ int accton_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EIO;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_write_byte_data(cpld_node->client, reg, value);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -234,7 +234,7 @@ static void __exit accton_i2c_cpld_exit(void)
 {
 	i2c_del_driver(&accton_i2c_cpld_driver);
 }
-/*	
+/*
 static struct dmi_system_id as7712_dmi_table[] = {
 	{
 		.ident = "Accton AS7712",

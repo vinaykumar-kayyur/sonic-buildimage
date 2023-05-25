@@ -19,9 +19,9 @@ then
     type=qsfp
     id=${optics:4}
 
-    if [ $id -le 0 -o $id -gt 32 ] 
+    if [ $id -le 0 -o $id -gt 32 ]
     then
-        echo "Invalid QSFP id" 
+        echo "Invalid QSFP id"
         return -1
     fi
     if [ $id -le 12 ]
@@ -36,10 +36,10 @@ then
         #cpld=4
         cpld_bus=17
     fi
-    
+
     if [ $id -le 8 ]
     then
-        let qsfp_bus=42+$id 
+        let qsfp_bus=42+$id
     elif [ $id -le 16 ]
     then
         let qsfp_bus=34+${id}-8

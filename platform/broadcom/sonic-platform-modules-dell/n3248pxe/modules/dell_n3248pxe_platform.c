@@ -1173,7 +1173,7 @@ static int __init dell_n3248pxe_platform_init(void)
 
     sys_i2c_adap = i2c_get_adapter(sys_i2c_bus);
     mux_i2c_cli = i2c_new_client_device(sys_i2c_adap, sys_board_mux);
-    if (!mux_i2c_cli) 
+    if (!mux_i2c_cli)
         return PTR_ERR_OR_ZERO(mux_i2c_cli);
 
     ret = platform_driver_register(&cpld_driver);

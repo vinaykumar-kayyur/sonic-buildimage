@@ -14,11 +14,11 @@
 #define EEPROM_DATA_SIZE   		256
 
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 #define MAX_PORT_NAME_LEN 20
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7716_32xb_sys_data {
     struct device  *hwmon_dev;
@@ -28,14 +28,14 @@ struct as7716_32xb_sys_data {
 };
 
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 
 static ssize_t sys_info_store(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
 static ssize_t sys_info_show(struct device *dev, struct device_attribute *da,
              char *buf);
-       
+
 static SENSOR_DEVICE_ATTR(eeprom,  S_IWUSR|S_IRUGO, sys_info_show, sys_info_store, 0);
 
 
@@ -54,7 +54,7 @@ static ssize_t sys_info_show(struct device *dev, struct device_attribute *da,
     struct as7716_32xb_sys_data *data = i2c_get_clientdata(client);
 //    int status = -EINVAL;
     int i;
-    
+
     //printk("sys_info_show\n");
    // printk("attr->index=%d\n", attr->index);
     mutex_lock(&data->lock);
@@ -63,28 +63,28 @@ static ssize_t sys_info_show(struct device *dev, struct device_attribute *da,
     //printk("\n");
     memcpy(buf, data->eeprom, EEPROM_DATA_SIZE);
     //for(i=0; i < EEPROM_DATA_SIZE ; i++)
-    //{ 
+    //{
     //    buf[i]=data->eeprom[i];
      //   printk("buf[%d]=0x%x ",i, buf[i]);
     //}
     //status = EEPROM_DATA_SIZE+1;
-    
+
     //printk("\n");
     //status = sprintf(buf, "%x", 0xA);
     //data->eeprom[0]=0x0d;
     //data->eeprom[1]=0x0;
     //data->eeprom[2]=0x06;
    // buf[3]=0xFF;
-   
+
   // for(i=0; i< 16; i++)
     //  printk("buf[%d]=0x%x ",i, buf[i]);
     //printk("\n");
-    
+
     memcpy(buf, data->eeprom, 256);
-    
-    
+
+
     mutex_unlock(&data->lock);
-    
+
     return 256;
 }
 
@@ -96,20 +96,20 @@ static ssize_t sys_info_store(struct device *dev, struct device_attribute *da,
     int i=0, j=0, k=0;
     unsigned char str[3];
     unsigned int val;
-   
+
     //printk("sys_info_store\n");
     //printk("attr->index=%d\n", attr->index);
     //printk("buf[0]=0x%x, buf[1]=0x%x, buf[2]=0x%x, buf[3]=0x%x\n", buf[0], buf[1], buf[2], buf[3]);
-   
+
    // printk("strlen(buf)=%d\n",strlen(buf));
     k=0;
-    mutex_lock(&data->lock);  
-    memset(data->eeprom, 0xFF, EEPROM_DATA_SIZE);  
+    mutex_lock(&data->lock);
+    memset(data->eeprom, 0xFF, EEPROM_DATA_SIZE);
     memset(str, 0x0, 3);
     if(strlen(buf) >= 256 )
     {
         for(i=0; i < strlen(buf) ; i++)
-        {   
+        {
            // printk("i=%d ", i);
             for(j=0;j<2; j++)
             {
@@ -135,10 +135,10 @@ static ssize_t sys_info_store(struct device *dev, struct device_attribute *da,
          //   printk("\n");
     //}
     //printk("\n");
-     
-    //printk("eeprom[0]=0x%x, eeprom[1]=0x%x, eeprom[2]=0x%x, eeprom[3]=0x%x\n", 
+
+    //printk("eeprom[0]=0x%x, eeprom[1]=0x%x, eeprom[2]=0x%x, eeprom[3]=0x%x\n",
      //    data->eeprom[0], data->eeprom[1], data->eeprom[2], data->eeprom[3]);
-    
+
     mutex_unlock(&data->lock);
     return size;
 
@@ -179,7 +179,7 @@ static int as7716_32xb_sys_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: sys '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -187,7 +187,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -198,13 +198,13 @@ static int as7716_32xb_sys_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32xb_sys_group);
     kfree(data);
-    
+
     return 0;
 }
 
 
 static const struct i2c_device_id as7716_32xb_sys_id[] = {
-    { "as7716_32xb_sys", 0 },    
+    { "as7716_32xb_sys", 0 },
     {}
 };
 MODULE_DEVICE_TABLE(i2c, as7716_32xb_sys_id);

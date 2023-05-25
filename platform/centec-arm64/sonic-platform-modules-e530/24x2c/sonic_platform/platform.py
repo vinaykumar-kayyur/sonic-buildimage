@@ -11,8 +11,8 @@ try:
     from sonic_platform.chassis import Chassis
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
- 
- 
+
+
 class Platform(PlatformBase):
 
     def __init__(self):

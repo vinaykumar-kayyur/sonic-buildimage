@@ -9,6 +9,6 @@ Homepage: https://tencent.com
 Package: s3ip-sysfs
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends} 
+Depends: ${misc:Depends}
 Description: This package contains development files for s3ip sysfs
 

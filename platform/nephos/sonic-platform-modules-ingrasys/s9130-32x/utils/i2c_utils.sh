@@ -59,10 +59,10 @@ NUM_MUX_9545_1_CH2=$(( ${NUM_I801_DEVICE} + 11 )) # FAN board IO exander 0x20
 NUM_MUX_9545_1_CH3=$(( ${NUM_I801_DEVICE} + 12 )) # TMP75#0 0x4C TMP75#1 0x49
 
 # HOST MUX PCA9548#2 0X70
-NUM_MUX_9548_2_CH0=$(( ${NUM_I801_DEVICE} + 13 )) # PCA9548#3 0x71 
-NUM_MUX_9548_2_CH1=$(( ${NUM_I801_DEVICE} + 14 )) # PCA9548#4 0x71 
-NUM_MUX_9548_2_CH2=$(( ${NUM_I801_DEVICE} + 15 )) # PCA9548#5 0x71 
-NUM_MUX_9548_2_CH3=$(( ${NUM_I801_DEVICE} + 16 )) # PCA9548#6 0x71 
+NUM_MUX_9548_2_CH0=$(( ${NUM_I801_DEVICE} + 13 )) # PCA9548#3 0x71
+NUM_MUX_9548_2_CH1=$(( ${NUM_I801_DEVICE} + 14 )) # PCA9548#4 0x71
+NUM_MUX_9548_2_CH2=$(( ${NUM_I801_DEVICE} + 15 )) # PCA9548#5 0x71
+NUM_MUX_9548_2_CH3=$(( ${NUM_I801_DEVICE} + 16 )) # PCA9548#6 0x71
 NUM_MUX_9548_2_CH4=$(( ${NUM_I801_DEVICE} + 17 )) # PCA9535#3~6 0x20~0x23 ZQSFP ABS/INT
 NUM_MUX_9548_2_CH5=$(( ${NUM_I801_DEVICE} + 18 )) # PCA9535#7~10 0x20~0x23 ZQSFP LPMODE/RST
 NUM_MUX_9548_3_CH0=$(( ${NUM_I801_DEVICE} + 21 )) # QSFP 0 EEPROM
@@ -87,7 +87,7 @@ I2C_BUS_PSU2_EEPROM=${NUM_MUX_9545_1_CH0}
 PATH_SYS_I2C_DEVICES="/sys/bus/i2c/devices"
 PATH_SYS_GPIO="/sys/class/gpio"
 PATH_HWMON_ROOT_DEVICES="/sys/class/hwmon"
-PATH_HWMON_W83795_DEVICE="${PATH_HWMON_ROOT_DEVICES}/hwmon5" 
+PATH_HWMON_W83795_DEVICE="${PATH_HWMON_ROOT_DEVICES}/hwmon5"
 PATH_I801_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_I801_DEVICE}"
 PATH_MUX_9548_0_CH0="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9548_0_CH0}"
 PATH_MUX_9548_0_CH1="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9548_0_CH1}"
@@ -117,7 +117,7 @@ I2C_ADDR_MUX_9548_4=0x71 # ZQSFP MUX #2 EEPROM
 I2C_ADDR_MUX_9548_5=0x71 # ZQSFP MUX #3 EEPROM
 I2C_ADDR_MUX_9548_6=0x71 # ZQSFP MUX #4 EEPROM
 ### GPIO Expander
-I2C_ADDR_MUX_9539_0=0x76 # LED & HW ID 
+I2C_ADDR_MUX_9539_0=0x76 # LED & HW ID
 I2C_ADDR_MUX_9539_1=0x75 # BMC PRSNT & HWM reset
 I2C_ADDR_MUX_9539_2=0x74 # SYS SEL & RST
 I2C_ADDR_MUX_9535_3=0x20 # ZQSFP0~15 ABS
@@ -134,7 +134,7 @@ I2C_ADDR_MUX_9555_13=0x25 # on BMC board, PSU status
 I2C_ADDR_MUX_9555_14=0x26 # on BMC board, RST and SEL
 I2C_ADDR_MUX_9539_15=0x77 # on CPU board, STATUS and ERR from CPLD
 ### peripheral
-I2C_ADDR_MB_EEPROM=0x55 # on main board 
+I2C_ADDR_MB_EEPROM=0x55 # on main board
 I2C_ADDR_CB_EEPROM=0x51 # on cpu board
 I2C_ADDR_UCD9090=0x34
 I2C_ADDR_W83795=0x2F
@@ -173,7 +173,7 @@ REG_PORT1_POL=5
 # output
 REG_PORT0_OUT=2
 REG_PORT1_OUT=3
-# input 
+# input
 REG_PORT0_IN=0
 REG_PORT1_IN=1
 
@@ -296,7 +296,7 @@ function _i2c_init {
     else
         echo "pca9548 ${I2C_ADDR_MUX_9548_6} already init."
     fi
-    
+
     _i2c_hwm_init
     _util_rmmod eeprom
     modprobe eeprom_mb
@@ -307,7 +307,7 @@ function _i2c_init {
     modprobe gpio_ich
     _i2c_sensors_init
     _i2c_psu_init
-    
+
     # Init LED_CLR register (pull shift register out of reset), should be after io exp init
     _port_led_clr_init
     _i2c_qsfp_eeprom_init "new"
@@ -316,7 +316,7 @@ function _i2c_init {
     _i2c_fan_speed_init
     _i2c_led_psu_status_set
     _i2c_led_fan_status_set
-    
+
     # sync eeprom content
     _i2c_eeprom_sync
 
@@ -344,13 +344,13 @@ function _i2c_deinit {
 function _i2c_sensors_init {
     echo "SENSORS init..."
     local dev_path
-    # to make sure hwmon index in sysfs as expected, 
+    # to make sure hwmon index in sysfs as expected,
     # need to remove kernel module and then probe them in expected order
     # remove all sensors kernel module
     _util_rmmod coretemp
     _util_rmmod jc42
     _util_rmmod w83795
-    # probe coretemp kernel module 
+    # probe coretemp kernel module
     modprobe coretemp
     # probe hwmon kernel module
     modprobe w83795
@@ -442,7 +442,7 @@ function _i2c_hwm_init {
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x01 0x1C
     # select bank 2
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x00 0x82
-    # set PWM mode in FOMC 
+    # set PWM mode in FOMC
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x0F 0x00
     # set 25KHz fan output frequency in F1OPFP&F2OPFP
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x18 0x84
@@ -493,7 +493,7 @@ function _i2c_fan_init {
 
     # select bank 2
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x00 0x82
-    # set PWM mode in FOMC 
+    # set PWM mode in FOMC
     _util_i2cset -y -r ${I2C_BUS_HWM} ${I2C_ADDR_W83795} 0x0F 0x00
 
     echo "Done"
@@ -509,53 +509,53 @@ function _i2c_io_exp_init {
     echo "Init BMC INT & HW ID IO Expander"
     # all input
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT0_DIR} 0xFF
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT1_DIR} 0xFF 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT1_DIR} 0xFF
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_12} ${REG_PORT1_POL} 0x00
 
     echo "Init BMC PSU status IO Expander"
     # PWRON default  0 (ACTIVE_LOW)
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_OUT} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_OUT} 0x00
     # default 0 (ACTIVE_LOW)
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_OUT} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_OUT} 0x00
     # I/O 0.2 0.5 output(PWRON), rest input
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_DIR} 0xDB 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_DIR} 0xDB
     # I/O 1.0~1.1 input, 1.2~1.4 output (1.5~1.7 not enable)
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_DIR} 0xE3 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_DIR} 0xE3
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_13} ${REG_PORT1_POL} 0x00
 
     echo "Init BMC RST and SEL IO Expander"
     # RST default is 1 (ACTIVE_LOW)
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT0_OUT} 0x3F 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT0_OUT} 0x3F
     # SEL default is 0 (HOST), EN default is 1 (ACTIVE_HIGH)
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT1_OUT} 0x1F
     # I/O 0.0~0.5 output, 0.6~0.7 not use
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT0_DIR} 0xC0
     # all output
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT1_DIR} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT1_DIR} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9555_14} ${REG_PORT1_POL} 0x00
 
     echo "Init System LED & HW ID IO Expander"
     # I/O_0.x for System LED default 0, I/O_1.x for HW ID
-    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_OUT} 0x00 
-    # System LED => all output 
-    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_DIR} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_OUT} 0x00
+    # System LED => all output
+    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_DIR} 0x00
     # HW ID => all input
     _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT1_DIR} 0xFF
-    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_SYS_LED} ${I2C_ADDR_MUX_9539_0} ${REG_PORT1_POL} 0x00
 
     echo "Init System PRSNT and HWM RST IO Expander"
     # HWM_RST_L default 1 (ACTIVE_LOW)
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT0_OUT} 0x04 
-    # all input expect HWM_RST_L (0.2) 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT0_OUT} 0x04
+    # all input expect HWM_RST_L (0.2)
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT0_DIR} 0xFB
     # port1 not used
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT1_DIR} 0xFF
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_1} ${REG_PORT1_POL} 0x00
 
     echo "Init System SEL and RST IO Expander"
     # RST 0.0~0.3 default 1 (ACTIVE low), rest default 0
@@ -564,15 +564,15 @@ function _i2c_io_exp_init {
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT0_OUT} 0x0F
     #  RST 1.6~1.7 default 1 (ACTIVE low),  INT 1.0~1.4 default 1 (ACTIVE low)
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT1_OUT} 0xDF
-    # all output, but MAC_RST_L 0.0 need to set as input to prevent reboot issue 
+    # all output, but MAC_RST_L 0.0 need to set as input to prevent reboot issue
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT0_DIR} 0x09
     # RST 1.5 !~ 1.7 output, rest are input
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT1_DIR} 0x1F
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_2} ${REG_PORT1_POL} 0x00
 
     echo "Init FAN Board Status IO Expander"
-    # LED_G_L set to 0, LED_Y_L set to 1  (ACTIVE_LOW) 
+    # LED_G_L set to 0, LED_Y_L set to 1  (ACTIVE_LOW)
     _util_i2cset -y -r ${I2C_BUS_FAN_STATUS} ${I2C_ADDR_MUX_9535_11} ${REG_PORT0_OUT} 0x22
     _util_i2cset -y -r ${I2C_BUS_FAN_STATUS} ${I2C_ADDR_MUX_9535_11} ${REG_PORT1_OUT} 0x22
     # DIR/ABS is input, LED_Y/LED_G is output
@@ -581,83 +581,83 @@ function _i2c_io_exp_init {
     _util_i2cset -y -r ${I2C_BUS_FAN_STATUS} ${I2C_ADDR_MUX_9535_11} ${REG_PORT0_POL} 0x00
     _util_i2cset -y -r ${I2C_BUS_FAN_STATUS} ${I2C_ADDR_MUX_9535_11} ${REG_PORT1_POL} 0x00
 
-    echo "Init CPU CPLD IO Expander" 
-    # all input 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT0_DIR} 0xFF 
+    echo "Init CPU CPLD IO Expander"
+    # all input
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT0_DIR} 0xFF
     # all input
     _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT1_DIR} 0xFF
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT1_POL} 0x00 
-    
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${I2C_BUS_MAIN} ${I2C_ADDR_MUX_9539_15} ${REG_PORT1_POL} 0x00
+
     echo "Init ZQSFP IO Expender"
 
     echo "set ZQSFP ABS"
     #zQSFP 0-15 ABS
     # all input
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT0_DIR} 0xFF 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT0_DIR} 0xFF
     _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT1_DIR} 0xFF
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_3} ${REG_PORT1_POL} 0x00
     #zQSFP 16-31 ABS
     # all input
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT0_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT1_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT0_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT1_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_4} ${REG_PORT1_POL} 0x00
 
     echo "set ZQSFP INT"
     #zQSFP 0-15 INT
     # all input
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT0_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT1_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT0_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT1_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_5} ${REG_PORT1_POL} 0x00
     #zQSFP 16-31 INT
     # all input
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT0_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT1_DIR} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT0_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT1_DIR} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH4} ${I2C_ADDR_MUX_9535_6} ${REG_PORT1_POL} 0x00
 
     echo "set ZQSFP LP_MODE = 0"
-    #ZQSFP 0-15 LP_MODE 
+    #ZQSFP 0-15 LP_MODE
     # default is 0
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_OUT} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_OUT} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_OUT} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_OUT} 0x00
     # all output
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_POL} 0x00 
-    #ZQSFP 16-31 LP_MODE 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_7} ${REG_PORT1_POL} 0x00
+    #ZQSFP 16-31 LP_MODE
     # default is 0
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_OUT} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_OUT} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_OUT} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_OUT} 0x00
     # all output
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_8} ${REG_PORT1_POL} 0x00
 
     echo "set ZQSFP RST = 1"
-    #ZQSFP 0-15 RST 
+    #ZQSFP 0-15 RST
     # default is 1 (ACTIVE_LOW)
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_OUT} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_OUT} 0xFF 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_OUT} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_OUT} 0xFF
     # all output
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_POL} 0x00 
-    #ZQSFP 16-31 RST 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_9} ${REG_PORT1_POL} 0x00
+    #ZQSFP 16-31 RST
     # default is 1 (ACTIVE_LOW)
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_OUT} 0xFF 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_OUT} 0xFF 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_OUT} 0xFF
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_OUT} 0xFF
     # all output
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_DIR} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_POL} 0x00 
-    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_POL} 0x00 
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_DIR} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT0_POL} 0x00
+    _util_i2cset -y -r ${NUM_MUX_9548_2_CH5} ${I2C_ADDR_MUX_9535_10} ${REG_PORT1_POL} 0x00
 
 }
 
@@ -665,13 +665,13 @@ function _i2c_io_exp_init {
 function _set_gpio_offset {
     GPIO_OFFSET=0
     for d in `ls /sys/class/gpio/ | grep gpiochip`
-    do   
+    do
         gpiochip_no=${d##gpiochip}
-        if [ $gpiochip_no -gt 255 ]; then 
+        if [ $gpiochip_no -gt 255 ]; then
             GPIO_OFFSET=256
             break
-        fi   
-    done 
+        fi
+    done
     #echo "set GPIO_OFFSET=${GPIO_OFFSET}"
 }
 
@@ -688,74 +688,74 @@ function _i2c_gpio_init {
     start=$[ ${start}+${GPIO_OFFSET} ]
     end=$[ ${end}+${GPIO_OFFSET} ]
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))   
-    do        
-        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}
     done
 
     #ABS Port 16-31
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_4}" > ${PATH_MUX_9548_2_CH4}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_4}" > ${PATH_MUX_9548_2_CH4}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
-        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}
     done
 
     #INT Port 0-15
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_5}" > ${PATH_MUX_9548_2_CH4}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_5}" > ${PATH_MUX_9548_2_CH4}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
-        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}
     done
 
     #INT Port 16-31
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_6}" > ${PATH_MUX_9548_2_CH4}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_6}" > ${PATH_MUX_9548_2_CH4}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
-        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_IN} ${ACTIVE_LOW_EN}
     done
 
     #LP Mode Port 0-15
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_7}" > ${PATH_MUX_9548_2_CH5}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_7}" > ${PATH_MUX_9548_2_CH5}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
-        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_HIGH_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_HIGH_EN}
     done
 
     #LP Mode Port 16-31
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_8}" > ${PATH_MUX_9548_2_CH5}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_8}" > ${PATH_MUX_9548_2_CH5}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
-        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_HIGH_EN}     
+    for (( i=$start; i<=$end; i++ ))
+    do
+        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_HIGH_EN}
     done
 
     #RESET Port 0-15
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_9}" > ${PATH_MUX_9548_2_CH5}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_9}" > ${PATH_MUX_9548_2_CH5}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
+    for (( i=$start; i<=$end; i++ ))
+    do
         # need to set value to low (became ACTIVE_HIGH) to take port out of reset
-        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_LOW_EN} 0    
+        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_LOW_EN} 0
     done
 
     #RESET Port 16-31
     end=$[ ${start}-1]
-    echo "pca9535 ${I2C_ADDR_MUX_9535_10}" > ${PATH_MUX_9548_2_CH5}/new_device    
+    echo "pca9535 ${I2C_ADDR_MUX_9535_10}" > ${PATH_MUX_9548_2_CH5}/new_device
     start=$[ ${end}-${ch_num}+1]
-    for (( i=$start; i<=$end; i++ ))  
-    do        
+    for (( i=$start; i<=$end; i++ ))
+    do
         # need to set value to low (became ACTIVE_HIGH) to take port out of reset
-        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_LOW_EN} 0   
+        _util_gpio_export ${i} ${DIR_OUT} ${ACTIVE_LOW_EN} 0
     done
 }
 
@@ -784,13 +784,13 @@ function _i2c_led_fan_tray_status_set {
     FAN7_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan2_alarm`
     FAN8_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan1_alarm`
 
-    # check if io expander for fan tray exist 
+    # check if io expander for fan tray exist
     result=`i2cget -y ${I2C_BUS_FANTRAY_LED} ${I2C_ADDR_MUX_9535_11} ${REG_PORT0_IN} 2>/dev/null`
     err_code=$?
     if [ "$err_code" != "0" ]; then
         echo "fan tray not exist!"
         return
-    fi 
+    fi
 
     if [ "${FAN1_ALARM}" == "0" ] && [ "${FAN2_ALARM}" == "0" ]; then
         FAN_TRAY=1
@@ -1098,7 +1098,7 @@ function _qsfp_eeprom_var_set {
     # port 1 => zqsfp0
     # port 2 => zqsfp1
     # ...
-    eeprombusidx=$(( (${port} - 1) % 8)) 
+    eeprombusidx=$(( (${port} - 1) % 8))
     eeprombus=$(( ${eeprombusbase} + ${eeprombusidx} ))
     eepromAddr=${I2C_ADDR_QSFP_EEPROM}
 }
@@ -1141,7 +1141,7 @@ function _i2c_qsfp_eeprom_init {
         _qsfp_port_i2c_var_set ${i}
 
         _qsfp_eeprom_var_set ${i}
-        
+
         if [ "${action}" == "new" ] && \
            ! [ -L ${PATH_SYS_I2C_DEVICES}/$eeprombus-$(printf "%04x" $eepromAddr) ]; then
             echo "sff8436 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eeprombus/new_device
@@ -1295,7 +1295,7 @@ function _i2c_sys_eeprom_get {
     fi
 
     # check if eeprom device exist in sysfs
-    if [ ! -f ${eeprom_dev} ]; then  
+    if [ ! -f ${eeprom_dev} ]; then
         echo "eeprom device not init"
 	return
     fi
@@ -1314,16 +1314,16 @@ function _i2c_eeprom_sync {
     local cb_eeprom_dev="${PATH_SYS_I2C_DEVICES}/${I2C_BUS_CB_EEPROM}-$(printf "%04x" $I2C_ADDR_CB_EEPROM)/eeprom"
 
     # check if eeprom device exist in sysfs
-    if [[ ! -f ${mb_eeprom_dev} || ! -f ${cb_eeprom_dev} ]]; then  
+    if [[ ! -f ${mb_eeprom_dev} || ! -f ${cb_eeprom_dev} ]]; then
         echo "eeprom device not init"
 	return
     fi
 
     ## check if MB eeprom is empty
-    if [ ! -z "$(cat ${mb_eeprom_dev} | hexdump -n2 | grep ffff)" ]; then  
+    if [ ! -z "$(cat ${mb_eeprom_dev} | hexdump -n2 | grep ffff)" ]; then
         echo "copy cb eeprom to mb eeprom..."
         cat ${cb_eeprom_dev} > ${mb_eeprom_dev}
-    else 
+    else
         echo "no need to sync"
     fi
 
@@ -1332,7 +1332,7 @@ function _i2c_eeprom_sync {
 
 #Set System Status LED
 function _i2c_sys_led {
-    # only green/amber, on/off can't control 
+    # only green/amber, on/off can't control
     if [ "${COLOR_LED}" == "green" ]; then
         # set sys_led_g (0.7) = 1
         output_reg=${REG_PORT0_OUT}
@@ -1575,7 +1575,7 @@ function _util_rmmod {
     [ "$(lsmod | grep "^$mod ")" != "" ] && rmmod $mod
 }
 
-# get qsfp presence 
+# get qsfp presence
 function _util_get_qsfp_abs {
     _qsfp_port_i2c_var_set ${QSFP_PORT}
 
@@ -1585,9 +1585,9 @@ function _util_get_qsfp_abs {
 
 # gpio init util function
 function _util_gpio_export {
-    local gpio_n=$1    
-    local direction=$2     
-    local active_low=$3    
+    local gpio_n=$1
+    local direction=$2
+    local active_low=$3
     local value=$4
 
     if [ -z "${gpio_n}" ]; then
@@ -1596,7 +1596,7 @@ function _util_gpio_export {
     fi
     if [[ ${gpio_n} < 0 || ${gpio_n} > $(( 255+${GPIO_OFFSET} )) ]]; then
         echo "[gpio_init]  gpio_n(${gpio_n}) is invalid value"
-        return    
+        return
     fi
 
     #export gpio
@@ -1615,7 +1615,7 @@ function _util_gpio_export {
 function _util_input_check {
     # input parameter validation
     if [[ $1 -lt $2  || $1 -gt $3 ]]; then
-        echo "Please input number $2~$3"        
+        echo "Please input number $2~$3"
         exit
     fi
 }

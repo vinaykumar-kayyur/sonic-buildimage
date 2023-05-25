@@ -3,7 +3,7 @@
 # autonomous subsystem provides monitoring and management
 # facility independent of the host CPU. IPMI standard
 # protocol is used with ipmitool to fetch sensor details.
-# Current script support X00 board only. X01 support will 
+# Current script support X00 board only. X01 support will
 # be added soon. This provies support for the
 # following objects:
 #   * Onboard temperature sensors

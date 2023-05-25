@@ -40,28 +40,28 @@ led_nodes = ['sys_led', 'pwr_led', 'loc_led', 'fan_led', "cpld_allled_ctrl", "se
 
 def dbg_print(string):
 	if DEBUG == True:
-		print string    
+		print string
 	return
 
 def do_cmd(cmd, show):
-	logging.info('Run :' + cmd)  
-	status, output = commands.getstatusoutput(cmd)    
+	logging.info('Run :' + cmd)
+	status, output = commands.getstatusoutput(cmd)
 	dbg_print(cmd + "with result:" + str(status))
-	dbg_print("output:" + output)    
+	dbg_print("output:" + output)
 	if status:
 		logging.info('Failed :' + cmd)
 		if show:
 			print('Failed :' + cmd)
 	return  status, output
 
-def check_device_position(num):  
+def check_device_position(num):
 	for i in range(0, len(i2c_check_node)):
 		status, output = do_cmd("echo " + moduleID[num] + " " + device_address[num] + " > " + i2c_prefix + i2c_check_node[i] + "/new_device", 0)
 		status, output = do_cmd("ls " + i2c_prefix + device_node[num], 0)
 		device_node[num] = i2c_check_node[i]
 
 		if status:
-			status, output = do_cmd("echo " + device_address[num] + " > " + i2c_prefix + i2c_check_node[i] + "/delete_device", 0) 
+			status, output = do_cmd("echo " + device_address[num] + " > " + i2c_prefix + i2c_check_node[i] + "/delete_device", 0)
 		else:
 			return
 
@@ -74,7 +74,7 @@ def install_device():
 		else:
 			status, output = do_cmd("echo " + moduleID[i] + " " + device_address[i] + " > " + i2c_prefix + device_node[i] + "/new_device", 1)
 
-	return 
+	return
 
 def check_driver():
 	for i in range(0, len(kernel_module)):
@@ -138,7 +138,7 @@ def set_device(args):
 	Usage: %(scriptName)s command object
 
 	command:
-		led     : set status led sys_led|pwr_led|loc_led|mst_led|fan_led|digit_led      
+		led     : set status led sys_led|pwr_led|loc_led|mst_led|fan_led|digit_led
 	"""
 
 	if args[0] == 'led':
@@ -146,7 +146,7 @@ def set_device(args):
 		return
 	else:
 		print set_device.__doc__
-																		   
+
 	return
 
 device_init = {'led': [['led', 'sys_led', 'green'], ['led', 'pwr_led', 'green'], ['led', 'fan_led', 'green'], ['led', 'cpld_allled_ctrl', 'normal'], ['led', 'serial_led_enable', 'enable']]}
@@ -177,7 +177,7 @@ def main():
 
 	command:
 		install     : install drivers and generate related sysfs nodes
-		clean       : uninstall drivers and remove related sysfs nodes  
+		clean       : uninstall drivers and remove related sysfs nodes
 		set         : change board setting [led]
 		debug       : debug info [on/off]
 	"""
@@ -185,17 +185,17 @@ def main():
 	if len(sys.argv)<2:
 		print main.__doc__
 
-	for arg in sys.argv[1:]:           
+	for arg in sys.argv[1:]:
 		if arg == 'install':
 			do_install()
 			pega_init()
 		elif arg == 'uninstall':
-			do_uninstall()        
+			do_uninstall()
 		elif arg == 'set':
 			if len(sys.argv[2:])<1:
 				print main.__doc__
 			else:
-				set_device(sys.argv[2:])                
+				set_device(sys.argv[2:])
 			return
 		elif arg == 'debug':
 			if sys.argv[2] == 'on':

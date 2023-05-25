@@ -41,7 +41,7 @@ enum swpld1_attr{
     SWPLD1_VER_TYPE,
     SWPLD1_VER,
     USB_HUB_RST,
-    SYNCE_RST,    
+    SYNCE_RST,
     BMC_RST,
     LPC_RST,
     OOB_PCIE_RST,
@@ -100,7 +100,7 @@ enum swpld2_attr{
     SWPLD2_VER_TYPE = 0,
     SWPLD2_VER,
     QSFP_P01_RST,
-    QSFP_P02_RST,    
+    QSFP_P02_RST,
     QSFP_P03_RST,
     QSFP_P04_RST,
     QSFP_P05_RST,
@@ -772,7 +772,7 @@ static ssize_t swpld1_data_store(struct device *dev, struct device_attribute *de
             offset = 0x23;
             shift = 4;
             mask = (1 << shift);
-            break; 
+            break;
         case VCC_MAC_1V2_EN:
             offset = 0x23;
             shift = 3;
@@ -1774,7 +1774,7 @@ static struct attribute *swpld2_device_attrs[] = {
     &sensor_dev_attr_qsfp_p14_intr.dev_attr.attr,
     &sensor_dev_attr_qsfp_p15_intr.dev_attr.attr,
     &sensor_dev_attr_qsfp_p16_intr.dev_attr.attr,
-};  
+};
 
 
 static ssize_t swpld3_data_show(struct device *dev, struct device_attribute *dev_attr, char *buf)
@@ -2696,7 +2696,7 @@ static int __init swpld_probe(struct platform_device *pdev)
         printk(KERN_ERR "Fail to create directory");
         goto error_swpld3;
     }
- 
+
     kobj_swpld2 = kobject_create_and_add("SWPLD2", &pdev->dev.kobj);
     if (!kobj_swpld2){
         printk(KERN_ERR "Fail to create directory");
@@ -2708,8 +2708,8 @@ static int __init swpld_probe(struct platform_device *pdev)
         printk(KERN_ERR "Fail to create directory");
         goto error_swpld3;
     }
-#endif    
-#if 1 
+#endif
+#if 1
     ret = sysfs_create_group(kobj_swpld1, &swpld1_device_attr_group);
     if (ret) {
         printk(KERN_ERR "Fail to create SWPLD1 attribute group");

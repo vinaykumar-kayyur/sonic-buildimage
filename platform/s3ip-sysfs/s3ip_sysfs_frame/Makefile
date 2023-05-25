@@ -22,6 +22,6 @@ all:
 	@if [ ! -d $(sysfs_out_put_dir) ]; then mkdir -p $(sysfs_out_put_dir) ;fi
 	cp -p  $(PWD)/*.ko $(sysfs_out_put_dir)
 clean:
-	rm -f $(PWD)/*.o $(PWD)/*.ko $(PWD)/*.mod.c $(PWD)/.*.cmd 
-	rm -f $(PWD)/Module.markers $(PWD)/Module.symvers $(PWD)/modules.order 
-	rm -rf $(PWD)/.tmp_versions  
+	rm -f $(PWD)/*.o $(PWD)/*.ko $(PWD)/*.mod.c $(PWD)/.*.cmd
+	rm -f $(PWD)/Module.markers $(PWD)/Module.symvers $(PWD)/modules.order
+	rm -rf $(PWD)/.tmp_versions

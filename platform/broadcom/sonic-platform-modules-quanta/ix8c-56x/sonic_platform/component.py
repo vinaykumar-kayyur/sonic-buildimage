@@ -172,7 +172,7 @@ class ComponentCPLD(Component):
 
         Returns:
             A string containing the firmware version of the component
-        """  
+        """
         self._get_command_result(["ipmitool", "raw", "0x30", "0xe0", "0xd0", "0x01", "0x01"])
         res = self._get_command_result(["ipmitool", "raw", "0x32", "0xff", "0x02", str(self.cplds[self.index].cmd_index)])
         self._get_command_result(["ipmitool", "raw", "0x30", "0xe0", "0xd0", "0x01", "0x00"])

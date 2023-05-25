@@ -2,7 +2,7 @@
 #
 # Name: chassis.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -30,15 +30,15 @@ class Chassis(ChassisBase):
 
         # Initialize EEPROM
         self._eeprom = Eeprom()
-       
+
         # Initialize watchdog
         #self._watchdog = Watchdog()
 
-        # Initialize FAN 
+        # Initialize FAN
         for index in range(1, self.__num_of_fans + 1):
             fan = Fan(index)
             self._fan_list.append(fan)
-        
+
         # Initialize thermal
         for index in range(1, self.__num_of_thermals + 1):
             thermal = Thermal(index)
@@ -59,7 +59,7 @@ class Chassis(ChassisBase):
                sfp = Sfp(index, 'QSFP')
 
            self._sfp_list.append(sfp)
-           
+
 ##############################################
 # Device methods
 ##############################################

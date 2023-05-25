@@ -545,7 +545,7 @@ common_ioexp_fsm_4_direct(struct ioexp_obj_s *self){
  */
 static struct ioexp_map_s *
 get_ioexp_map(int ioexp_type){
-    switch (ioexp_type){ 
+    switch (ioexp_type){
         case IOEXP_TYPE_CYPRESS_NABC:
             return &ioexp_map_cypress_nabc;
         case IOEXP_TYPE_CYPRESS_7ABC:

@@ -667,7 +667,7 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
         status = ym2651y_read_block(client, command, data->mfr_model, buf+1);
 
         if ((buf+1) >= (ARRAY_SIZE(data->mfr_model)-1))
-        {            
+        {
             data->mfr_model[ARRAY_SIZE(data->mfr_model)-1] = '\0';
         }
         else

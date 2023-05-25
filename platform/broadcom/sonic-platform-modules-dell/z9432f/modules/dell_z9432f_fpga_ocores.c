@@ -1379,7 +1379,7 @@ static int fpgapci_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		}
         /* Enable interrupt after config msi */
         fpgai2c_interrupt_enable(fpgapci);
-        
+
 	}
 
 

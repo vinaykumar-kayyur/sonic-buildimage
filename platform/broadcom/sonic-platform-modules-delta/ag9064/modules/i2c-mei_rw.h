@@ -5,7 +5,7 @@
 
 #define HECI_READ_TIMEOUT        12500000  // 12.5sec
 #define HECI_SEND_TIMEOUT        12500000  // 12.5sec
-#define HECI_TIMEOUT_UNIT        10      
+#define HECI_TIMEOUT_UNIT        10
 
 
 // HECI functions location
@@ -31,8 +31,8 @@
 #define HECI_REG_GS_SHDW5  0x6C
 #define HECI_REG_H_GS2     0x70
 #define HECI_REG_H_GS3     0x74
-#define HECI_REG_MEFS1     HECI_REG_HFS 
-#define HECI_REG_MEFS2     HECI_REG_GS_SHDW 
+#define HECI_REG_MEFS1     HECI_REG_HFS
+#define HECI_REG_MEFS2     HECI_REG_GS_SHDW
 
 #define HECI_MBAR_DEFAULT 0xFEDB0000
 
@@ -81,15 +81,15 @@ typedef union
 } HECI_MEFS1;
 
 
-typedef struct 
-{ 
+typedef struct
+{
 
   UINT8      Bus;     // PCI bus
-  UINT8      Dev;     // PCI device 
-  UINT8      Fun;     // PCI function number 
-  
+  UINT8      Dev;     // PCI device
+  UINT8      Fun;     // PCI function number
+
   UINTN      PciCfg;
-  UINT16     Vid;     // Device ID 
+  UINT16     Vid;     // Device ID
   UINT16     Did;     // Vendor ID
   UINT8      Hidm;    // interrupt mode
   UINT64     Mbar;
@@ -139,5 +139,5 @@ EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
                             HECI_MSG_HEADER *pMessage);
 
 
-  
+
 #define HeciPciReadMefs1()   PciRead32(PCI_LIB_ADDRESS(HECI_BUS, HECI_DEV, HECI_FUN, HECI_REG_MEFS1))

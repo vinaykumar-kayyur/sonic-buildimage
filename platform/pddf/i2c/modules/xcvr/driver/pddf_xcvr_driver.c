@@ -61,7 +61,7 @@ XCVR_SYSFS_ATTR_OPS xcvr_ops[XCVR_ATTR_MAX] = {
 EXPORT_SYMBOL(xcvr_ops);
 
 
-/* sysfs attributes  
+/* sysfs attributes
  */
 static SENSOR_DEVICE_ATTR(xcvr_present, S_IWUSR|S_IRUGO, get_module_presence,   NULL, XCVR_PRESENT);
 static SENSOR_DEVICE_ATTR(xcvr_reset,   S_IWUSR|S_IRUGO, get_module_reset, set_module_reset, XCVR_RESET);
@@ -71,9 +71,9 @@ static SENSOR_DEVICE_ATTR(xcvr_rxlos,   S_IWUSR|S_IRUGO, get_module_rxlos, NULL,
 static SENSOR_DEVICE_ATTR(xcvr_txdisable,   S_IWUSR|S_IRUGO, get_module_txdisable, set_module_txdisable, XCVR_TXDISABLE);
 static SENSOR_DEVICE_ATTR(xcvr_txfault, S_IWUSR|S_IRUGO, get_module_txfault, NULL, XCVR_TXFAULT);
 
-/* List of all the xcvr attribute structures 
+/* List of all the xcvr attribute structures
  * to get name, use sensor_dev_attr_<>.dev_attr.attr.name
- * to get the id, use sensor_dev_attr_<>.dev_attr.index 
+ * to get the id, use sensor_dev_attr_<>.dev_attr.index
  */
 static struct sensor_device_attribute *xcvr_attr_list[MAX_XCVR_ATTRS] = {
     &sensor_dev_attr_xcvr_present,
@@ -146,7 +146,7 @@ static int xcvr_probe(struct i2c_client *client,
             if (strncmp(aptr->name, attr_data->aname, strlen(attr_data->aname))==0)
                 break;
         }
-        
+
         if (j<XCVR_ATTR_MAX)
             xcvr_attributes[i] = &xcvr_attr_list[j]->dev_attr.attr;
 
@@ -167,7 +167,7 @@ static int xcvr_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: xcvr '%s'\n",
          dev_name(data->xdev), client->name);
-    
+
     /* Add a support for post probe function */
     if (pddf_xcvr_ops.post_probe)
     {
@@ -185,7 +185,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -215,7 +215,7 @@ static int xcvr_remove(struct i2c_client *client)
         pddf_dbg(XCVR, KERN_DEBUG "%s: Freeing platform data\n", __FUNCTION__);
         kfree(platdata);
     }
-    
+
     if (pddf_xcvr_ops.post_remove)
     {
         ret = (pddf_xcvr_ops.post_remove)(client);
@@ -226,7 +226,7 @@ static int xcvr_remove(struct i2c_client *client)
     return 0;
 }
 
-enum xcvr_intf 
+enum xcvr_intf
 {
     XCVR_CTRL_INTF,
 };
@@ -273,7 +273,7 @@ int xcvr_init(void)
         if (ret!=0)
             return ret;
     }
-    
+
     return ret;
 }
 EXPORT_SYMBOL(xcvr_init);

@@ -211,7 +211,7 @@ enum as6712_32x_cpld_sysfs_attributes {
     TRANSCEIVER_LPMODE_ATTR_ID(32),
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t show_status(struct device *dev, struct device_attribute *da,
              char *buf);
@@ -354,7 +354,7 @@ static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
 
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
         status = as6712_32x_cpld_read_internal(client, regs[i]);
-        
+
         if (status < 0) {
             goto exit;
         }
@@ -379,7 +379,7 @@ static ssize_t set_status(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);
     struct i2c_mux_core *muxc = i2c_get_clientdata(client);
     struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
-    
+
     int status = 0, reverse = 0;
     u8  reg = 0, mask = 0;
     u32 val, para;
@@ -430,7 +430,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
     struct i2c_mux_core *muxc = i2c_get_clientdata(client);
-    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);    
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
     int status = 0;
     u8 reg = 0, mask = 0;
 
@@ -617,13 +617,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-    
+
     val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-    
+
     return sprintf(buf, "%d", val);
 }
 
@@ -656,7 +656,7 @@ static int as6712_32x_cpld_mux_probe(struct i2c_client *client,
     data = i2c_mux_priv(muxc);
     data->client = client;
     mutex_init(&data->update_lock);
-    
+
     if (data->type == as6712_32x_cpld2 || data->type == as6712_32x_cpld3) {
         data->type = id->driver_data;
         data->last_chan = chips[data->type].deselectChan; /* force the first selection */
@@ -675,7 +675,7 @@ static int as6712_32x_cpld_mux_probe(struct i2c_client *client,
             }
         }
 
-        dev_info(&client->dev, "registered %d multiplexed busses for I2C mux %s\n", 
+        dev_info(&client->dev, "registered %d multiplexed busses for I2C mux %s\n",
                                 chan, client->name);
     }
 
@@ -719,7 +719,7 @@ exit_mux_register:
     i2c_mux_del_adapters(muxc);
     kfree(data);
     return ret;
-} 
+}
 
 static int as6712_32x_cpld_mux_remove(struct i2c_client *client)
 {

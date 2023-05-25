@@ -60,15 +60,15 @@
 };
 
 &qspi {
-	status = "okay";	
-		
+	status = "okay";
+
 	qspiflash: mx25u3235f@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0x0>;
-		spi-cpha; 
+		spi-cpha;
 		spi-cpol;
 		spi-max-frequency = <25000000>;
-		
+
 		partitions {
 			compatible = "fixed-partitions";
 			#address-cells = <1>;
@@ -85,7 +85,7 @@
 			partition@310000 {
 				label = "system";
 				reg = <0x310000 0x10000>;
-				};	
+				};
             partition@320000 {
                     label = "hw-info";
                     reg = <0x320000 0x10000>;
@@ -117,23 +117,23 @@
 &i2c0{
 	status = "okay";
 	clock-frequency = <400000>;
-	
-	eeprom_0:eeprom_0@57 { 
+
+	eeprom_0:eeprom_0@57 {
 		compatible = "atmel,24c64";
 		reg = <0x57>;
-		pagesize = <32>; 
+		pagesize = <32>;
 	};
-		
+
 	rtc_0:rtc_0@32{
 		compatible = "sd2405";
 		reg = <0x32>;
 	};
-};  
+};
 
 &i2c1{
 	status = "okay";
 	clock-frequency = <400000>;
-};  
+};
 
 &ehci0 {
 	status = "okay";
@@ -158,7 +158,7 @@
 	no-sd;
 	no-sdio;
 	cap-mmc-hw-reset;
-	voltage-ranges = <3300 3300>;	
+	voltage-ranges = <3300 3300>;
 	status = "okay";
 };
 

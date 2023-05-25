@@ -199,7 +199,7 @@ static ssize_t porsche_sfp_read(struct porsche_sfp_data *data,
 	return retval;
 }
 
-static ssize_t 
+static ssize_t
 porsche_sfp_bin_read(struct file *filp, struct kobject *kobj,
 		struct bin_attribute *attr,
 		char *buf, loff_t off, size_t count)
@@ -345,7 +345,7 @@ static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_
 
 err_clients:
 	kfree(data);
-	return err;	
+	return err;
 }
 
 static int porsche_sfp_device_remove(struct i2c_client *client)

@@ -246,7 +246,7 @@ static int xeon_gpio_direction_out(struct gpio_chip *gc,
 
     return 0;
 }
-                    
+
 static int xeon_gpio_request(struct gpio_chip *chip, unsigned int offset)
 {
     unsigned int data;
@@ -255,7 +255,7 @@ static int xeon_gpio_request(struct gpio_chip *chip, unsigned int offset)
 
     bank = offset / BANKSIZE;
     tmp_offset = offset % BANKSIZE;
-    
+
     GPIO_XEON_SPIN_LOCK(sio_lock, flags);
     if (bank == 0) {
         data = inl(GPIO_USE_SEL);
@@ -281,7 +281,7 @@ static void xeon_gpio_free(struct gpio_chip *chip, unsigned int offset)
     unsigned long flags;
 
     bank = offset / BANKSIZE;
-    tmp_offset = offset % BANKSIZE;  
+    tmp_offset = offset % BANKSIZE;
 
     GPIO_XEON_SPIN_LOCK(sio_lock, flags);
     if (bank == 0) {

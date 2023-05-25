@@ -34,7 +34,7 @@ try:
     import re
     import time
     from select import select
-    #from ctypes import fbfpgaio 
+    #from ctypes import fbfpgaio
 
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
@@ -109,7 +109,7 @@ dom = {
   "dom_control_config": 0x410,
   "dom_global_status": 0x414,
   "dom_data": 0x4000,
-  
+
 
   "mdio": {
     "config":  0x0200,
@@ -158,7 +158,7 @@ def pim_io(pim, offset, data=None):
 
 def show_pim_present():
   pim_status = fpga_io(iob["pim_status"])
-  
+
   header =     "PIM # "
   status_str = "      "
   for shift in range(0,8):
@@ -204,14 +204,14 @@ class PimUtil(object):
     PORT_END = 127
 
     def __init__(self):
-        self.value=1        
+        self.value=1
 
     def __del__(self):
         self.value=0
-        
+
     def init_pim_fpga(self):
-        init_resources()    
-    
+        init_resources()
+
     def release_pim_fpga(self):
         release_resources()
 
@@ -220,14 +220,14 @@ class PimUtil(object):
             return False
         pim_num=port_num/16
         return True, pim_num+1
-    
+
     def get_onepimport_by_port(self, port_num):
         if port_num < self.PORT_START or port_num > self.PORT_END:
             return False
         if port_num < 16:
             return True, port_num
         else:
-            return True, port_num%16   
+            return True, port_num%16
 
     def get_pim_presence(self, pim_num):
         if pim_num <0 or pim_num > 7:
@@ -257,11 +257,11 @@ class PimUtil(object):
         power_status =0
         #device_power_bad_status
         status=fpga_io(dom_base[pim_num+1]+dom["device_power_bad_status"])
-        
+
         for x in range(0, 5):
             if status & ( (0xf) << (4*x) ) :
                 power_status = power_status | (0x1 << x)
-        
+
         if ( status & 0x1000000):
             power_status=power_status | (0x1 << 5)
         if ( status & 0x2000000):
@@ -281,12 +281,12 @@ class PimUtil(object):
         if pim_num <0 or pim_num > 7:
             return False
         status= pim_io(pim_num+1, dom["mdio"]["source_sel"])
-        
+
         if path==1:
             status = status | 0x2
         else:
             status = status & 0xfffffffd
-        
+
         pim_io(pim_num+1, dom["mdio"]["source_sel"], status)
         return True
     #retrun code=0, path is TH3. retrun code=1, path is FPGA
@@ -299,15 +299,15 @@ class PimUtil(object):
             return 1
         else:
             return 0
-    
+
     #This api will set mdio path to MAC side.(At default, mdio path is set to FPGA side).
     def pim_init(self, pim_num):
         if pim_num <0 or pim_num > 7:
             return False
         status=self.set_pim_mdio_source_sel(pim_num, 0)
         #put init phy cmd here
-    
-    
+
+
     #return code="pim_dict[pim_num]='1' ":insert evt. return code="pim_dict[pim_num]='0' ":remove evt
     def get_pim_change_event(self, timeout=0):
         start_time = time.time()
@@ -330,18 +330,18 @@ class PimUtil(object):
             return False, {} # Time wrap or possibly incorrect timeout
 
         pim_mask_status = fpga_io(iob["pim_present_intr_mask"], 0xffff00000)
-        
-        while timeout >= 0: 
-            new_pim_status=0           
+
+        while timeout >= 0:
+            new_pim_status=0
             pim_status = fpga_io(iob["pim_status"])
             present_status= pim_status & 0xff0000
-            change_status=pim_status & 0xff 
+            change_status=pim_status & 0xff
             interrupt_status = fpga_io(iob["interrupt_status"])
-            
+
             for pim_num in range(0,8):
                 if change_status & (0x1 << pim_num) :
                      status = present_status & (0x10000 << pim_num)
-                     new_pim_status = new_pim_status | (0x1 << pim_num) #prepare to W1C to clear                     
+                     new_pim_status = new_pim_status | (0x1 << pim_num) #prepare to W1C to clear
                      if  status:
                         pim_dict[pim_num]='1'
                      else:
@@ -367,16 +367,16 @@ class PimUtil(object):
 
     def get_pim_max_number(self):
         return 8
-        
+
     #pim_num start from 0 to 7
     #color:0=amber, 1=blue
-    #contrl:off(0),on(1), flash(2)    
+    #contrl:off(0),on(1), flash(2)
     def set_pim_led(self, pim_num, color, control):
         if pim_num <0 or pim_num > 7:
             return False
-        
+
         led_val=fpga_io(dom_base[pim_num+1]+dom["system_led"])
-        
+
         if color==1:
             led_val = led_val | (0x8000 | 0x4000) #blue
         elif color==0:
@@ -386,7 +386,7 @@ class PimUtil(object):
             led_val = led_val & (~ 0x4000)
             led_val = led_val & (~ 0xfff)
             led_val = led_val | 0x0f0 #B.G.R Birghtness, set to Green
-        
+
         if control==0:
            led_val = led_val & ( ~ 0x3000) #Off
         elif control==1:
@@ -394,9 +394,9 @@ class PimUtil(object):
            led_val = led_val | 0x1000 #On
         else:
             led_val = led_val | 0x3000  #Flash
-        
+
         fpga_io(dom_base[pim_num+1]+dom["system_led"], led_val)
-     
+
     def get_qsfp_presence(self, port_num):
          #xlate port to get pim_num
          status, pim_num=self.get_pim_by_port(port_num)
@@ -417,12 +417,12 @@ class PimUtil(object):
     #return code: low_power(1) or high_power(0)
     def get_low_power_mode(self, port_num):
         status, pim_num=self.get_pim_by_port(port_num)
-        
+
         if status==0:
             return False
         else:
             lp_mode = fpga_io(dom_base[pim_num]+dom["qsfp_lp_mode"])
-        
+
         status, shift=self.get_onepimport_by_port(port_num)
         if status==0:
             return False
@@ -434,11 +434,11 @@ class PimUtil(object):
 
     #lpmode=1 to hold QSFP in low power mode. lpmode=0 to release QSFP from low power mode.
     def set_low_power_mode(self, port_num, mode):
-        status, pim_num=self.get_pim_by_port(port_num)        
+        status, pim_num=self.get_pim_by_port(port_num)
         if status==0:
-            return False        
-        val = fpga_io(dom_base[pim_num]+dom["qsfp_lp_mode"])        
-        status, shift=self.get_onepimport_by_port(port_num)        
+            return False
+        val = fpga_io(dom_base[pim_num]+dom["qsfp_lp_mode"])
+        status, shift=self.get_onepimport_by_port(port_num)
         if status==0:
             return False
         else:
@@ -448,7 +448,7 @@ class PimUtil(object):
                 new_val=val|(0x1 << shift)
         status=fpga_io(dom_base[pim_num]+dom["qsfp_lp_mode"], new_val)
         return status
-    
+
     #port_dict[idx]=1 means get interrupt(change evt), port_dict[idx]=0 means no get interrupt
     def get_qsfp_interrupt(self):
         port_dict={}
@@ -456,11 +456,11 @@ class PimUtil(object):
         for pim_num in range(0, 8):
             fpga_io(dom_base[pim_num+1]+dom["qsfp_present_intr_mask"], 0xffff0000)
             fpga_io(dom_base[pim_num+1]+dom["qsfp_intr_mask"], 0xffff0000)
-        for pim_num in range(0, 8):            
-            clear_bit=0            
+        for pim_num in range(0, 8):
+            clear_bit=0
             qsfp_present_intr_status = fpga_io(dom_base[pim_num+1]+dom["qsfp_present_intr"])
             interrupt_status = qsfp_present_intr_status & 0xffff
-            #time.sleep(2)            
+            #time.sleep(2)
             if interrupt_status:
                 for idx in range (0,16):
                     port_idx=idx + (pim_num*16)
@@ -469,29 +469,29 @@ class PimUtil(object):
                         clear_bit=clear_bit | (0x1<<idx)  #W1C to clear
                     else:
                         port_dict[port_idx]=0
-                
+
                 #W1C to clear
-                fpga_io(dom_base[pim_num+1]+dom["qsfp_present_intr"], qsfp_present_intr_status | clear_bit) 
-                
+                fpga_io(dom_base[pim_num+1]+dom["qsfp_present_intr"], qsfp_present_intr_status | clear_bit)
+
         return port_dict
-        
+
     def reset(self, port_num):
         status, pim=self.get_pim_by_port(port_num)
         if status==0:
             return False
-        
-        val=fpga_io(dom_base[pim]+dom["qsfp_reset"])        
+
+        val=fpga_io(dom_base[pim]+dom["qsfp_reset"])
         status, shift=self.get_onepimport_by_port(port_num)
         if status==0:
             return False
-        else:               
+        else:
             val = val & (~(0x1 << shift))
         fpga_io(dom_base[pim]+dom["qsfp_reset"], val)
         return True
 
     #color:white(0), blue(1),red(2), orange(3),green(4)
     def set_port_led(self, port_num, color, control):
-        status, pim_num=self.get_pim_by_port(port_num)        
+        status, pim_num=self.get_pim_by_port(port_num)
         if status==0:
             return False
         status, port=self.get_onepimport_by_port(port_num)
@@ -503,12 +503,12 @@ class PimUtil(object):
             led_val = led_val & (~ 0x3) #Off
             led_val = led_val | 0x1     #On
         else:
-            led_val = led_val | 0x3     #Flash        
-            
-        led_val=led_val & (~ 0x1C)    
+            led_val = led_val | 0x3     #Flash
+
+        led_val=led_val & (~ 0x1C)
         if color==0:
             led_val=led_val & (~ 0x1C) #white
-        elif color==1:            
+        elif color==1:
             led_val=led_val | 0x8  #blue
         elif color==2:
             led_val=led_val | 0x10 #red
@@ -516,13 +516,13 @@ class PimUtil(object):
             led_val=led_val | 0x14 #oragne
         else:
             led_val=led_val | 0x1C #green
-        
+
         fpga_io(dom_base[pim_num] + dom["port_led_control"][port], led_val)
-        
+
         return True
-    
+
     def get_port_led(self, port_num):
-        status, pim_num=self.get_pim_by_port(port_num)        
+        status, pim_num=self.get_pim_by_port(port_num)
         if status==0:
             return False
         status, port=self.get_onepimport_by_port(port_num)
@@ -534,11 +534,11 @@ class PimUtil(object):
             control=1
         else:
             control=0
-        
+
         color = led_val & 0x1C
         if color==0:
             color=0 #white
-        elif color==0xC:            
+        elif color==0xC:
             color=1 #blue
         elif color==0x14:
             color=2 #red
@@ -547,11 +547,11 @@ class PimUtil(object):
         elif color==0x1C:
             color=4 #green
 
-        print("color=%d, control=%d"%(color, control))         
+        print("color=%d, control=%d"%(color, control))
         return color, control
-        
+
 def main(argv):
-    init_resources()    
+    init_resources()
     pim=PimUtil()
     print("Test Board ID")
     for x in range(0,8):
@@ -561,17 +561,17 @@ def main(argv):
             print("100G board")
         else:
             print("400G board")
-    
+
     print("Test pim presence")
     for x in range(0,8):
         pres=pim.get_pim_presence(x)
-        print("pim=%d, presence=%d"%(x, pres))   
-        
+        print("pim=%d, presence=%d"%(x, pres))
+
     print("Test pim status")
     for x in range(0,8):
         power_status=pim.get_pim_status(x)
         print("pim=%d power_status=0x%x"%(x, power_status))
-    
+
     release_resources()
 
 if __name__ == '__main__':

@@ -3,15 +3,15 @@
  *
  * Copyright (C) 2020 Alphanetworks Technology Corporation.
  * Robin Chen <Robin_chen@Alphanetworks.com>
- * This program is free software: you can redistribute it and/or modify 
- * it under the terms of the GNU General Public License as published by 
- * the Free Software Foundation, either version 3 of the License, or 
- * any later version. 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
  *
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details. 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  * see <http://www.gnu.org/licenses/>
  *
  * Based on ad7414.c
@@ -45,7 +45,7 @@
 static ssize_t onie_read(struct device *dev, struct device_attribute *attr, char *buf);
 static ssize_t onie_write(struct device *dev, struct device_attribute *attr, const char *buf, size_t count);
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 
 struct snj60d0_320f_onie_eeprom_data
@@ -104,7 +104,7 @@ static ssize_t onie_read(struct device *dev, struct device_attribute *attr, char
       }
     }
     memcpy(buf, data->onie_eeprom, EEPROM_SIZE);
-    
+
     mutex_unlock(&data->update_lock);
 
     return EEPROM_SIZE;

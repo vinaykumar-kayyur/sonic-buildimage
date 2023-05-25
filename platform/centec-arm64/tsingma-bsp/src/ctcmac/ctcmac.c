@@ -984,8 +984,8 @@ static void ctcmac_mac_filter_init(struct ctcmac_private *priv)
 		return;
 
 	/*  mac filter table 0~3 are assigned to cpumac0
-	   mac filter table 4~7 are assigned to cpumac1  
-	   mac filter table 0/4:white list to receive pacekt with local mac address 
+	   mac filter table 4~7 are assigned to cpumac1
+	   mac filter table 0/4:white list to receive pacekt with local mac address
 	   mac filter table 1/5:white list to receive pacekt with broadcast mac address
 	   mac filter table 2/6:white list to receive pacekt with multicast mac address
 	   mac filter table 3/7:white list to receive pacekt with multicast mac address
@@ -1363,7 +1363,7 @@ static void ctcmac_cfg_flow_ctrl(struct ctcmac_private *priv, u8 tx_pause_en,
 *
 *      Local           Remote       Local Resolution   Remote Resolution
 *  PAUSE  ASM_DIR   PAUSE ASM_DIR      TX    RX          TX    RX
-*  
+*
 *    0       0        x      x         0     0           0     0
 *    0       1        0      x         0     0           0     0
 *    0       1        1      0         0     0           0     0
@@ -2644,7 +2644,7 @@ static int skb_to_txbuff(struct ctcmac_private *priv, struct sk_buff *skb)
 			to_use =
 			    to_use >=
 			    tx_queue->tx_ring_size - 1 ? 0 : to_use + 1;
-			//printk(KERN_ERR "skb_to_txbuff1 %llx %d %d %d\n", 
+			//printk(KERN_ERR "skb_to_txbuff1 %llx %d %d %d\n",
 			//      (u64)skb_frag_address(frag), skb_frag_size(frag), to_use, frag_index);
 		}
 	} else {
@@ -2935,7 +2935,7 @@ static void ctcmac_set_multi(struct net_device *dev)
 
 	/* receive packets with local mac address
 	   receive packets with broadcast mac address
-	   receive packets with multicast mac address 
+	   receive packets with multicast mac address
 	 */
 	if ((dev->flags & IFF_ALLMULTI) || (netdev_mc_count(dev) > 2)) {
 		/* mac filter table 2/6:white list to receive all pacekt with multicast mac address  */

@@ -22,7 +22,7 @@ class Psu(PsuBase):
         fan = Fan(psu_index, True)
         self._fan_list.append(fan)
         self.index = psu_index + 1
-        
+
         self.pus_type = "AC"
         # driver attribute
         self.psu_presence = "/psu{}_present".format(psu_index+1)
@@ -142,15 +142,15 @@ class Psu(PsuBase):
                 return None
         except IOError:
             return None
-        return serial.decode("utf-8") 
+        return serial.decode("utf-8")
 
     def get_voltage(self):
         """
         Retrieves current PSU voltage output
 
         Returns:
-            A float number, the output voltage in volts, 
-            e.g. 12.1 
+            A float number, the output voltage in volts,
+            e.g. 12.1
         """
         vout = 0.0
         node = self.psu_pmbus + self.psu_v_out
@@ -253,7 +253,7 @@ class Psu(PsuBase):
         except IOError:
             return vin
         return float(vin) / 1000
-        
+
 
     def get_input_current(self):
         """
@@ -301,7 +301,7 @@ class Psu(PsuBase):
         except IOError:
             return temp1in
         return float(temp1in) / 1000
-        
+
     def get_type(self):
         """
         Gets the type of the PSU

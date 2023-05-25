@@ -182,7 +182,7 @@ function _i2c_init {
     echo "tmp75 0x49" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN3_DEVICE}/new_device
     echo "Mount Main Board EEPROM"
     echo "mb_eeprom 0x54" > /sys/bus/i2c/devices/i2c-7/new_device
-    
+
     _config_rmem
 }
 
@@ -741,7 +741,7 @@ function _i2c_qsfp_type_get {
 
     #status: 0 -> Down, 1 -> Up
     status=$(( $(($regData & ( 1 << $port_num)))  != 0 ? 0 : 1 ))
-    
+
     if [ $status = 0 ]; then
         echo "Module not present."
         exit

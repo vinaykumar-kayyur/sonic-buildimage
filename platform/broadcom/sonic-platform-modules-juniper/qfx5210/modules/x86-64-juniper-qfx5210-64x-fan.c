@@ -35,7 +35,7 @@
 
 #define DRVNAME "qfx5210_64x_fan"
 
-static struct qfx5210_64x_fan_data *qfx5210_64x_fan_update_device(struct device *dev);                    
+static struct qfx5210_64x_fan_data *qfx5210_64x_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
             const char *buf, size_t count);
@@ -193,7 +193,7 @@ static int qfx5210_64x_fan_write_value(struct i2c_client *client, u8 reg, u8 val
 
 /* fan utility functions
  */
-static u32 reg_val_to_duty_cycle(u8 reg_val) 
+static u32 reg_val_to_duty_cycle(u8 reg_val)
 {
 	reg_val &= FAN_DUTY_CYCLE_REG_MASK;
 
@@ -208,7 +208,7 @@ static u32 reg_val_to_duty_cycle(u8 reg_val)
     return (reg_val * 6) + 10;
 }
 
-static u8 duty_cycle_to_reg_val(u8 duty_cycle) 
+static u8 duty_cycle_to_reg_val(u8 duty_cycle)
 {
 	if (duty_cycle < 16) {
 		return 0;
@@ -244,7 +244,7 @@ static u8 is_fan_fault(struct qfx5210_64x_fan_data *data, enum fan_id id)
     int front_fan_index = FAN1_FRONT_SPEED_RPM + id;
     int rear_fan_index  = FAN1_REAR_SPEED_RPM  + id;
 
-    /* Check if the speed of front or rear fan is ZERO,  
+    /* Check if the speed of front or rear fan is ZERO,
      */
     if (reg_val_to_speed_rpm(data->reg_val[front_fan_index]) &&
         reg_val_to_speed_rpm(data->reg_val[rear_fan_index]))  {
@@ -255,11 +255,11 @@ static u8 is_fan_fault(struct qfx5210_64x_fan_data *data, enum fan_id id)
 }
 
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
-            const char *buf, size_t count) 
+            const char *buf, size_t count)
 {
     int error, value;
     struct i2c_client *client = to_i2c_client(dev);
-    
+
     error = kstrtoint(buf, 10, &value);
     if (error)
         return error;
@@ -267,7 +267,7 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
         value = FAN_MAX_DUTY_CYCLE;
     if (value < 0)
         return -EINVAL;
-	
+
     qfx5210_64x_fan_write_value(client, 0x28, 0); /* Disable fan speed watch dog */
     qfx5210_64x_fan_write_value(client, fan_reg[FAN_DUTY_CYCLE_PERCENTAGE], duty_cycle_to_reg_val(value));
     return count;
@@ -279,7 +279,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct qfx5210_64x_fan_data *data = qfx5210_64x_fan_update_device(dev);
     ssize_t ret = 0;
-    
+
     if (data->valid) {
         switch (attr->index) {
             case FAN_DUTY_CYCLE_PERCENTAGE:
@@ -324,9 +324,9 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
                 break;
             default:
                 break;
-        }        
+        }
     }
-    
+
     return ret;
 }
 
@@ -341,18 +341,18 @@ static struct qfx5210_64x_fan_data *qfx5210_64x_fan_update_device(struct device 
 
     mutex_lock(&data->update_lock);
 
-    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) || 
+    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) ||
         !data->valid) {
         int i;
 
         dev_dbg(&client->dev, "Starting qfx5210_64x_fan update\n");
         data->valid = 0;
-        
+
         /* Update fan data
          */
         for (i = 0; i < ARRAY_SIZE(data->reg_val); i++) {
             int status = qfx5210_64x_fan_read_value(client, fan_reg[i]);
-            
+
             if (status < 0) {
                 data->valid = 0;
                 mutex_unlock(&data->update_lock);
@@ -363,11 +363,11 @@ static struct qfx5210_64x_fan_data *qfx5210_64x_fan_update_device(struct device 
                 data->reg_val[i] = status;
             }
         }
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }
-    
+
     mutex_unlock(&data->update_lock);
 
     return data;
@@ -410,7 +410,7 @@ static int qfx5210_64x_fan_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: fan '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -418,7 +418,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -427,7 +427,7 @@ static int qfx5210_64x_fan_remove(struct i2c_client *client)
     struct qfx5210_64x_fan_data *data = i2c_get_clientdata(client);
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &qfx5210_64x_fan_group);
-    
+
     return 0;
 }
 

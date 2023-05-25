@@ -92,7 +92,7 @@ endif
 							--build_root $(BUILD_WORKDIR) \
 							--sb_msg $(SB_COM_MSG) \
 							--slk_msg $(SLK_COM_MSG) $(LOG_SIMPLE)
-	
+
 	# Commit the changes in linux kernel and and log the diff
 	pushd $(BUILD_WORKDIR)/src/sonic-linux-kernel
 	git add -- patch/
@@ -130,7 +130,7 @@ endif
 
 	echo -en '\n###-> hw-management make file version change <-###\n' >> ${HWMGMT_USER_OUTFILE}
 	git diff --no-color --staged -- $(PLATFORM_PATH)/hw-management.mk >> ${HWMGMT_USER_OUTFILE}
-	
+
 	echo -en '\n###-> Summary of buildimage changes <-###\n' >> ${HWMGMT_USER_OUTFILE}
 	git diff --no-color --staged --stat --output=${TMPFILE_OUT} -- $(PLATFORM_PATH)
 	cat ${TMPFILE_OUT} | tee -a ${HWMGMT_USER_OUTFILE}

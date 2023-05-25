@@ -1121,7 +1121,7 @@ common_ioexp_init(struct ioexp_obj_s *self) {
 
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
-    
+
     if (self->mode == IOEXP_MODE_DIRECT) {
         goto update_common_ioexp_init;
     }
@@ -1136,11 +1136,11 @@ common_ioexp_init(struct ioexp_obj_s *self) {
         }
         /* Setup default value */
         for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
-            
+
             /* [Desc] Skip the setup default value behavior
                [Note] Setup default value = -1 if you don't want to write the value to IOEXP or CPLD
             */
-            if(addr_p->write_offset[offset] < 0){ 
+            if(addr_p->write_offset[offset] < 0){
                 SWPS_DEBUG("skip a write_offset <%d>\n", addr_p->conf_offset[offset]);
                 continue;
             }
@@ -1669,11 +1669,11 @@ setup_ioexp_config(struct ioexp_obj_s *self) {
             return -1;
         }
         for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
-            
+
             /* [Desc] Skip the setup config value behavior
                [Note] Setup config value = -1 if you don't want to write the value to IOEXP or CPLD
             */
-            if(addr_p->conf_offset[offset] < 0){ 
+            if(addr_p->conf_offset[offset] < 0){
                 SWPS_DEBUG("skip a config_offset <%d>\n", addr_p->conf_offset[offset]);
                 continue;
             }

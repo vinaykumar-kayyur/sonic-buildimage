@@ -107,7 +107,7 @@ static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *d
     uint8_t size;
     s32 status;
 	s32 ret_t;
-    
+
 	ret_t = 0;
     status = -1;
     size = 0;
@@ -138,7 +138,7 @@ static ssize_t show_fan_rpm_value(struct device *dev, struct device_attribute *d
     return size;
 }
 
-static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t 
+static ssize_t set_cpld_sysfs_value(struct device *dev, struct device_attribute *da, const char *buf, size_t
 count)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -146,7 +146,7 @@ count)
     struct cpld_data *data = i2c_get_clientdata(client);
     unsigned long val;
 	int err;
-    
+
     err = kstrtoul(buf, 16, &val);
 	if (err)
 		return err;
@@ -187,7 +187,7 @@ static ssize_t show_cpld_sysfs_value(struct device *dev, struct device_attribute
     struct i2c_client *client = to_i2c_client(dev);
     struct cpld_data *data = i2c_get_clientdata(client);
     s32 status;
-    
+
     status = -1;
     mutex_lock(&data->update_lock);
     status = cpld_i2c_smbus_read_byte_data(client, attr->index);
@@ -302,7 +302,7 @@ static struct attribute *cpld34_sysfs_attrs[] = {
     &sensor_dev_attr_sfp_presence1.dev_attr.attr,
     &sensor_dev_attr_sfp_presence2.dev_attr.attr,
     &sensor_dev_attr_sfp_presence3.dev_attr.attr,
-    &sensor_dev_attr_sfp_presence8.dev_attr.attr,    
+    &sensor_dev_attr_sfp_presence8.dev_attr.attr,
     &sensor_dev_attr_sfp_enable.dev_attr.attr,
     &sensor_dev_attr_sfp_led1_red.dev_attr.attr,
     &sensor_dev_attr_sfp_led2_red.dev_attr.attr,
@@ -412,7 +412,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
     if (!data) {
         return -ENOMEM;
     }
-    
+
     data->client = client;
     i2c_set_clientdata(client, data);
     mutex_init(&data->update_lock);
@@ -447,7 +447,7 @@ static int cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
         default:
             break;
     }
-    
+
     if (status !=0) {
         DBG_ERROR("%s %d sysfs_create_group err\n", __func__, __LINE__);
     }
@@ -481,7 +481,7 @@ static int cpld_remove(struct i2c_client *client)
         default:
             break;
     }
-    
+
     return 0;
 }
 

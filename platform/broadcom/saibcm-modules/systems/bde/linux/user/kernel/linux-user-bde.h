@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -53,7 +53,7 @@ typedef struct  {
     unsigned int d0;    /* Operation specific data */
     unsigned int d1;
     unsigned int d2;
-    unsigned int d3;    
+    unsigned int d3;
     bde_kernel_addr_t p0;
     union {
         uint32_t dw[16];
@@ -110,9 +110,9 @@ typedef struct  {
 #define LUBDE_FAIL ((unsigned int)-1)
 
 
-/* 
+/*
  * Version history
- * 1: add LUBDE_GET_DEVICE_STATE to support PCI hot plug 
+ * 1: add LUBDE_GET_DEVICE_STATE to support PCI hot plug
  * 2: add LUBDE_REPROBE to support reprobe available devices
  */
 #define KBDE_VERSION    2

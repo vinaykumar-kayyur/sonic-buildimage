@@ -135,7 +135,7 @@ class Data:
     # List of new opts written by hw_mgmt integration script
     updated_kcfg = list(tuple())
     # index of the mlnx_hw_mgmt patches start marker in old_series
-    i_mlnx_start = -1 
+    i_mlnx_start = -1
     # index of the mlnx_hw_mgmt patches end marker in old_series
     i_mlnx_end = -1
     # Updated sonic-linux-kernel/patch/series file contents
@@ -158,7 +158,7 @@ class HwMgmtAction(Action):
             action = PreProcess(args)
         elif args.action.lower() == "post":
             action = PostProcess(args)
-        
+
         if not action.check():
             print("-> ERR: Argument Checks Failed")
             sys.exit(1)
@@ -173,11 +173,11 @@ class HwMgmtAction(Action):
         if not self.args.build_root:
             print("-> ERR: build_root is missing")
             return False
-        
+
         if not os.path.isfile(self.args.config_inclusion):
             print("-> ERR: config_inclusion {} doesn't exist".format(self.args.config_inclusion))
             return False
-        
+
         if not os.path.exists(self.args.build_root):
             print("-> ERR: Build Root {} doesn't exist".format(self.args.build_root))
             return False
@@ -197,11 +197,11 @@ class PreProcess(HwMgmtAction):
         writable_opts = KCFG.get_writable_opts(KCFG.parse_opts_strs(kcfg_sec))
         FileHandler.write_lines(self.args.config_inclusion, writable_opts)
         print("-> OPTS written to temp config_inclusion file: \n{}".format(FileHandler.read_strip(self.args.config_inclusion, True)))
-    
+
 class PostProcess(HwMgmtAction):
     def __init__(self, args):
         super().__init__(args)
-    
+
     def check(self):
         if not super(PostProcess, self).check():
             return False
@@ -286,7 +286,7 @@ class PostProcess(HwMgmtAction):
         FileHandler.write_lines(os.path.join(self.args.build_root, SLK_SERIES), Data.up_slk_series, True)
 
     def rm_old_non_up_mlnx(self):
-        """ Remove the old non-upstream patches 
+        """ Remove the old non-upstream patches
         """
         print("\n -> POST: Removed the following supposedly non-upstream patches:")
         # Remove all the old patches and any patches that got accepted with this kernel version
@@ -302,14 +302,14 @@ class PostProcess(HwMgmtAction):
             # TODO: When there are SDK non-upstream patches, the logic has to be updated
             print("\n -> FATAL: Patches Remaining in {}: \n{}".format(NON_UP_PATCH_LOC, files))
             sys.exit(1)
-        
+
     def mv_new_non_up_mlnx(self):
         for patch in Data.new_non_up:
             src_path = os.path.join(self.args.non_up_patches, patch)
             shutil.copy(src_path, os.path.join(self.args.build_root, NON_UP_PATCH_LOC))
-    
+
     def construct_series_with_non_up(self):
-        Data.agg_slk_series = copy.deepcopy(Data.up_slk_series) 
+        Data.agg_slk_series = copy.deepcopy(Data.up_slk_series)
         lines = ["# Current non-upstream patch list, should be updated by hwmgmt_kernel_patches.py script"]
         for index, patch in enumerate(Data.new_series):
             patch = patch + "\n"
@@ -317,7 +317,7 @@ class PostProcess(HwMgmtAction):
                 if index == 0:
                     # if the first patch is a non-upstream patch, then use the marker as the prev index
                     prev_patch = Data.old_series[Data.i_mlnx_start]
-                else:    
+                else:
                     prev_patch = Data.new_series[index-1] + "\n"
                 if prev_patch not in Data.agg_slk_series:
                     print("\n -> FATAL: ERR: patch {} is not found in agg_slk_series list: \n {}".format(prev_patch, "".join(Data.agg_slk_series)))
@@ -341,7 +341,7 @@ class PostProcess(HwMgmtAction):
             lines.append(line)
         print("\n -> POST: final series.diff \n{}".format("".join(lines)))
         FileHandler.write_lines(os.path.join(self.args.build_root, NON_UP_PATCH_DIFF), lines, True)
-    
+
     def check_kconfig_conflicts(self):
         # current config under mellanox marker
         old_mlnx_kcfg =  FileHandler.read_kconfig_inclusion(os.path.join(self.args.build_root, SLK_KCONFIG))
@@ -400,7 +400,7 @@ class PostProcess(HwMgmtAction):
         return id_
 
     def create_commit_msg(self, table):
-        title = COMMIT_TITLE.format(self.args.hw_mgmt_ver) 
+        title = COMMIT_TITLE.format(self.args.hw_mgmt_ver)
         changes_slk, changes_sb = {}, {}
         old_up_patches, old_non_up_patches = self.list_patches()
         for patch in table:
@@ -421,7 +421,7 @@ class PostProcess(HwMgmtAction):
         return sb_commit_msg, slk_commit_msg
 
     def perform(self):
-        """ Read the data output from the deploy_kernel_patches.py script 
+        """ Read the data output from the deploy_kernel_patches.py script
             and move to appropriate locations """
         self.read_data()
         self.find_mlnx_hw_mgmt_markers()
@@ -446,7 +446,7 @@ class PostProcess(HwMgmtAction):
 
         path = os.path.join(self.args.build_root, PATCH_TABLE_LOC)
         patch_table = load_patch_table(path, self.args.kernel_version)
-        
+
         sb_msg, slk_msg = self.create_commit_msg(patch_table)
 
         if self.args.sb_msg and sb_msg:
@@ -455,7 +455,7 @@ class PostProcess(HwMgmtAction):
 
         if self.args.slk_msg:
             with open(self.args.slk_msg, 'w') as f:
-                f.write(slk_msg) 
+                f.write(slk_msg)
 
 def create_parser():
     # Create argument parser

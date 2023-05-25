@@ -158,8 +158,8 @@ class Component(ComponentBase):
         self.CPLD_UPDATE_COMMAND4[1] = image_name
 
         success_flag = False
- 
-        try:   
+
+        try:
             subprocess.check_call(self.CPLD_UPDATE_COMMAND1, stderr=subprocess.STDOUT)
             subprocess.check_call(self.CPLD_UPDATE_COMMAND2, stderr=subprocess.STDOUT)
             subprocess.check_call(self.CPLD_UPDATE_COMMAND3, stderr=subprocess.STDOUT)

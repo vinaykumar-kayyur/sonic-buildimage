@@ -21,7 +21,7 @@ start)
     ;;
 
 stop)
-    
+
     i2c_utils.sh i2c_deinit
 
     echo "done."

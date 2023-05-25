@@ -1,4 +1,4 @@
- Platform Driver Development Framework (PDDF) is part of SONiC Platform Development Kit (PDK) which optimizes the platform developement. 
+ Platform Driver Development Framework (PDDF) is part of SONiC Platform Development Kit (PDK) which optimizes the platform developement.
 
  SONiC PDDF (Platform driver development framework) supports the following HW devices on a given platform:
 

@@ -143,7 +143,7 @@ class device_monitor(object):
             3: [61000, 66000,   LEVEL_TEMP_HIGH],
             4: [66000, 200000,  LEVEL_TEMP_CRITICAL],
         }
-        
+
         ori_perc = platform_chassis.get_fan(0).get_speed()
         #logging.debug('test_temp=%d', test_temp)
         if test_temp == 0:

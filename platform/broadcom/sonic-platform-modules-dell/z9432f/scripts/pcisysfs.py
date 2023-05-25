@@ -63,7 +63,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hgsv:" , \
         ["val=","res=","offset=","help", "get", "set"])
-	
+
     except getopt.GetoptError:
         usage()
 

@@ -49,103 +49,103 @@ COLOR_ERROR="\e[1;31m"   ### Red ###
 COLOR_END="\e[0m"        ### END ###
 
 I2C_NUM=0
-NUM_I801_DEVICE=$((I2C_NUM++)) #0 
+NUM_I801_DEVICE=$((I2C_NUM++)) #0
 
 #MUX PCA9548#0 CPLD (I2C_NUM 1~8)
 NUM_MUX_9548_CPLD_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_CPLD_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548#1 UCD (I2C_NUM 9~16)
 NUM_MUX_9548_UCD_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_UCD_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9545 PSU (I2C_NUM 17~20)
 NUM_MUX_9545_PSU_CHAN=()
 for (( i=0; i<4; ++i ))
-do  
+do
     NUM_MUX_9545_PSU_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP ROOT (I2C_NUM 21~28)
 NUM_MUX_9548_QSFP_ROOT_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_ROOT_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 0~7 (I2C_NUM 29~36)
 NUM_MUX_9548_QSFP_0_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_0_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 8~15 (I2C_NUM 37~44)
 NUM_MUX_9548_QSFP_1_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_1_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 16~23 (I2C_NUM 45~52)
 NUM_MUX_9548_QSFP_2_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_2_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 24~31 (I2C_NUM 53~60)
 NUM_MUX_9548_QSFP_3_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_3_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 32~39 (I2C_NUM 61~68)
 NUM_MUX_9548_QSFP_4_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_4_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 40~47 (I2C_NUM 69~76)
 NUM_MUX_9548_QSFP_5_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_5_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 48~55 (I2C_NUM 77~84)
 NUM_MUX_9548_QSFP_6_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_6_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 QSFP Port 56~63 (I2C_NUM 85~92)
 NUM_MUX_9548_QSFP_7_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_QSFP_7_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9545 SFP (I2C_NUM 93~96)
 NUM_MUX_9545_SFP_CHAN=()
 for (( i=0; i<4; ++i ))
-do  
+do
     NUM_MUX_9545_SFP_CHAN[i]=$((I2C_NUM++))
 done
 
 #MUX PCA9548 CPLD SW Upgrade  (I2C_NUM 97~104)
 NUM_MUX_9548_CPLD_SW_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     NUM_MUX_9548_CPLD_SW_CHAN[i]=$((I2C_NUM++))
 done
 
@@ -189,13 +189,13 @@ PATH_10GMUX=${PATH_SYS_I2C_DEVICES}/i2c-${I2C_BUS_10GMUX}
 PATH_MUX_9548_QSFP_ROOT="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9545_PSU_CHAN[2]}"
 PATH_MUX_9548_QSFP_ROOT_CHAN=()
 for (( i=0; i<8; ++i ))
-do  
+do
     PATH_MUX_9548_QSFP_ROOT_CHAN[i]="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9548_QSFP_ROOT_CHAN[i]}"
 done
 PATH_MUX_9545_SFP="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9545_PSU_CHAN[3]}"
 PATH_MUX_9545_SFP_CHAN=()
 for (( i=0; i<4; ++i ))
-do  
+do
     PATH_MUX_9545_SFP_CHAN[i]="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX_9545_SFP_CHAN[i]}"
 done
 
@@ -352,32 +352,32 @@ function _retry {
 
 #logical(front panel) to physical (falcon core) port mapping
 function _port_logic2phy {
-    
+
     local logic_port=$1
     local phy_port=0
-    
+
     if (( $logic_port >=1  && $logic_port <= 32 )) ; then
         phy_port=$(( (logic_port-1)/2*4 + (logic_port-1)%2 + 1))
     elif (( $logic_port >=33  && $logic_port <= 64 )) ; then
         phy_port=$(( (((logic_port-1)%32))/2*4 + (logic_port-1)%2 + 3))
-    fi 
-    
-    echo $phy_port 
+    fi
+
+    echo $phy_port
 }
 
 #set i2cmap
 function _set_i2cmap {
     local i2c_n=$1
     local alias=$2
-    
+
     #create i2cmap dir if not exist
     mkdir -p $PATH_I2CMAP
 
     #check i2c_n exists in sysfs
-    if [ ! -L ${PATH_SYS_I2C_DEVICES}/i2c-${i2c_n} ]; then 
+    if [ ! -L ${PATH_SYS_I2C_DEVICES}/i2c-${i2c_n} ]; then
         echo "${PATH_SYS_I2C_DEVICES}/i2c-${i2c_n} does not exist."
-        return 
-    fi   
+        return
+    fi
 
     #create or update link
     ln -sf ${PATH_SYS_I2C_DEVICES}/i2c-${i2c_n} ${PATH_I2CMAP}/${alias}
@@ -401,7 +401,7 @@ function _create_i2c_mux_device {
     local mux_parent_chan=$3
     local mux_chan0=$4
     local mux_desc=$5
-    
+
     if [ ! -e "${PATH_SYS_I2C_DEVICES}/i2c-${mux_chan0}" ]; then
         _retry "echo '$mux_type ${mux_addr}' > ${mux_parent_chan}/new_device"
         _set_i2cmap ${mux_chan0} "${mux_desc}"
@@ -495,8 +495,8 @@ function _i2c_init {
 #I2C Deinit
 function _i2c_deinit {
     for mod in cpld coretemp jc42 w83795 lm75 eeprom eeprom_mb gpio-pca953x i2c_mux_pca954x i2c_i801 ingrasys_s9200_64x_psu;
-    do   
-        _util_rmmod $mod 
+    do
+        _util_rmmod $mod
     done
     _clear_i2cmap
 }
@@ -580,7 +580,7 @@ function _i2c_io_exp_init {
 
     echo "Init PCA9539 TH RESET IO Expander"
     #PCA9539 TH RESET
-    #0.0 TH_RST_L               OUT 1 
+    #0.0 TH_RST_L               OUT 1
     #0.1 TH_PCIE_RST_L          OUT 1
     #0.2 LED_CLR                OUT 1
     #0.3 HOST_TO_BMC_I2C_GPIO   OUT 0
@@ -588,11 +588,11 @@ function _i2c_io_exp_init {
     #0.5 UART_MUX_SEL           OUT 0
     #0.6 FIN0                   OUT 0
     #0.7 FIN7                   OUT 0
-    #1.0 TH_INT_L               IN 
-    #1.1 CPLD4_TO_CPU_INT_L     IN  
-    #1.2 CPLD3_TO_CPU_INT_L     IN  
-    #1.3 CPLD2_TO_CPU_INT_L     IN  
-    #1.4 CPLD1_TO_CPU_INT_L     IN  
+    #1.0 TH_INT_L               IN
+    #1.1 CPLD4_TO_CPU_INT_L     IN
+    #1.2 CPLD3_TO_CPU_INT_L     IN
+    #1.3 CPLD2_TO_CPU_INT_L     IN
+    #1.4 CPLD1_TO_CPU_INT_L     IN
     #1.5 REF_SEL                OUT 0
     #1.6 I210_PE_RST_L          OUT 1
     #1.7 I210_RST_L             OUT 1
@@ -600,13 +600,13 @@ function _i2c_io_exp_init {
     i2c_addr=${I2C_ADDR_MUX_9539_TH_RST}
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_0} $((2#00000111))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_1} $((2#11000000))
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} $((2#00011111))
 
     #PCA9555 on BMC Dummy Board
-    #set SYSTEM_LED_RST_L before init PCA9539 LED BOARD IO Expander 
+    #set SYSTEM_LED_RST_L before init PCA9539 LED BOARD IO Expander
     echo "Init PCA9555 MUX RST IO Expander"
     #PCA9555 MUX RST Expander
     #0.0 FRU_I2C_MUX_RST_L   OUT 1
@@ -615,7 +615,7 @@ function _i2c_io_exp_init {
     #0.3 BMC_TO_UCD_RST_L    OUT 1
     #0.4 BMC_TO_HOST_RST_L   OUT 1
     #0.5 ETHX_RST_L          OUT 1
-    #0.6 GPIOF4              IN 
+    #0.6 GPIOF4              IN
     #0.7 N/A
     #1.0 CPU_to_FRU_I2C_EN   OUT 1
     #1.1 CPU_to_MAIN_I2C_EN  OUT 1
@@ -629,14 +629,14 @@ function _i2c_io_exp_init {
     i2c_addr=${I2C_ADDR_MUX_RST}
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_0} $((2#00111111))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_1} $((2#00011111))
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} $((2#01000000))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} 0x00
 
     echo "Init PCA9539 LED BOARD IO Expander"
     #PCA9539 LED BOARD
-    #0.0 SYS_LED_G    OUT 1 
+    #0.0 SYS_LED_G    OUT 1
     #0.1 FAN_LED_EN   OUT 1
     #0.2 FAN_LED_Y    OUT 0
     #0.3 PSU1_LED_Y   OUT 0
@@ -648,19 +648,19 @@ function _i2c_io_exp_init {
     i2c_addr=${I2C_ADDR_LED_BOARD}
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_0} $((2#00000011))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_1} $((2#00000011))
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} 0x00
 
     echo "Init PCA9535 ID_GPIO IO Expander"
     #PCA9535 ID_GPIO
-    #0.0 ~ 0.7 X  
-    #1.0 Build_REV_0  IN 
-    #1.1 Build_REV_1  IN  
-    #1.2 HW_REV_0     IN  
-    #1.3 HW_REV_1     IN  
-    #1.4 Board_ID_0   IN  
+    #0.0 ~ 0.7 X
+    #1.0 Build_REV_0  IN
+    #1.1 Build_REV_1  IN
+    #1.2 HW_REV_0     IN
+    #1.3 HW_REV_1     IN
+    #1.4 Board_ID_0   IN
     #1.5 Board_ID_1   IN
     #1.6 Board_ID_2   IN
     #1.7 Board_ID_3   IN
@@ -670,10 +670,10 @@ function _i2c_io_exp_init {
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} 0xFF
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} 0xFF
-    
+
     #I2C_ADDR_FAN_BOARD
     echo "Init PCA9535 FAN_BOARD IO Expander"
-    #PCA9535 FAN_BOARD 
+    #PCA9535 FAN_BOARD
     #0.0 EN_FAN1_LED_G_H OUT 1
     #0.1 EN_FAN1_LED_Y_H OUT 0
     #0.2 FAN1_ABS#       IN  0
@@ -694,7 +694,7 @@ function _i2c_io_exp_init {
     i2c_addr=${I2C_ADDR_FAN_BOARD}
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_0} $((2#00010001))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_1} $((2#00010001))
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} $((2#11001100))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} $((2#11001100))
@@ -702,25 +702,25 @@ function _i2c_io_exp_init {
     #PCA9555 on BMC Dummy Board
     echo "Init PCA9555 Interrupt IO Expander"
     #PCA9555 Interrupt Expander
-    #0.0 HWM_INT_L         IN 
-    #0.1 UCD9090_INT_L     IN 
-    #0.2 ETHX_INT_L        IN 
-    #0.3 HOST_TO_BMC_INT_L IN 
-    #0.4 THERMAL_ALT1#     IN 
+    #0.0 HWM_INT_L         IN
+    #0.1 UCD9090_INT_L     IN
+    #0.2 ETHX_INT_L        IN
+    #0.3 HOST_TO_BMC_INT_L IN
+    #0.4 THERMAL_ALT1#     IN
     #0.5 FAN_STATUS_INT_L  IN
-    #0.6 PSU0_INT_L        IN 
-    #0.7 PSU1_INT_L        IN 
+    #0.6 PSU0_INT_L        IN
+    #0.7 PSU1_INT_L        IN
     #1.0 Build_REV_0       IN
     #1.1 Build_REV_1       IN
-    #1.2 HW_REV_0          IN 
+    #1.2 HW_REV_0          IN
     #1.3 HW_REV_1          IN
     #1.4 Board_ID_0        IN
-    #1.5 Board_ID_1        IN 
-    #1.6 Board_ID_2        IN 
+    #1.5 Board_ID_1        IN
+    #1.6 Board_ID_2        IN
     #1.7 Board_ID_3        IN
     i2c_bus=${I2C_BUS_PSU_INT}
     i2c_addr=${I2C_ADDR_PSU_INT}
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} 0xFF
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} 0xFF
@@ -728,27 +728,27 @@ function _i2c_io_exp_init {
     #PCA9555 on BMC Dummy Board
     echo "Init PCA9555 PSU0_PWROK IO Expander"
     #PCA9555 PSU0_PWROK Expander
-    #0.0 PSU0_PWROK           IN 
-    #0.1 PSU0_PRSNT_L         IN 
-    #0.2 PSU0_PWRON_L         OUT 0 
-    #0.3 PSU1_PWROK           IN 
-    #0.4 PSU1_PRSNT_L         IN 
+    #0.0 PSU0_PWROK           IN
+    #0.1 PSU0_PRSNT_L         IN
+    #0.2 PSU0_PWRON_L         OUT 0
+    #0.3 PSU1_PWROK           IN
+    #0.4 PSU1_PRSNT_L         IN
     #0.5 PSU1_PWRON_L         OUT 0
-    #0.6 TMP75_INT_L          IN 
-    #0.7 GPIOF7               IN 
+    #0.6 TMP75_INT_L          IN
+    #0.7 GPIOF7               IN
     #1.0 ALL_PWR_GOOD         IN
     #1.1 CPU_PRSNT_L          IN
     #1.2 FP_BTN_UARTSEL_EN_L  OUT 0
     #1.3 HOST_TO_BMC_I2C_GPIO OUT 0
     #1.4 HOST_CPU_PWRBTN_L    OUT 1
-    #1.5 N/A 
+    #1.5 N/A
     #1.6 N/A
     #1.7 N/A
     i2c_bus=${I2C_BUS_PSU_STATUS}
     i2c_addr=${I2C_ADDR_PSU_STATUS}
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_OUT_1} $((2#00010000))
-    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00 
+    i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_0} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_POLARITY_1} 0x00
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_0} $((2#11011011))
     i2cset -y -r ${i2c_bus} ${i2c_addr} ${REG_CFG_1} $((2#11100011))
@@ -769,7 +769,7 @@ function _i2c_sensors_init {
     dev_path="${PATH_SYS_I2C_DEVICES}/${I2C_BUS_HWM}-$(printf "%04x" ${I2C_ADDR_HWM})"
     if ! [ -L ${dev_path} ]; then
         echo "w83795adg ${I2C_ADDR_HWM}" > ${PATH_SYS_I2C_DEVICES}/i2c-${I2C_BUS_HWM}/new_device
-        while [ ! -e "${PATH_HWMON_W83795_DEVICE}" ]; do 
+        while [ ! -e "${PATH_HWMON_W83795_DEVICE}" ]; do
         sleep 1
     done
     else
@@ -796,7 +796,7 @@ function _i2c_led_fan_tray_status_set {
     #check W83795 exists
     if [ ! -e "${PATH_HWMON_W83795_DEVICE}" ]; then
         echo "FAIL, W83795 not found in path ${PATH_HWMON_W83795_DEVICE}"
-        return 
+        return
     fi
     #FAN Status get
     FAN1_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan1_alarm`
@@ -930,9 +930,9 @@ function _i2c_led_fan_status_set {
     echo "========================================================="
 
     #check W83795 exists in hwmon2
-    if [ ! -e "${PATH_HWMON_W83795_DEVICE}" ]; then 
+    if [ ! -e "${PATH_HWMON_W83795_DEVICE}" ]; then
         echo "FAIL, W83795 not found in path ${PATH_HWMON_W83795_DEVICE}"
-        return 
+        return
     fi
 
     #PSU Status set
@@ -1142,7 +1142,7 @@ function _i2c_set {
 function _qsfp_eeprom_var_set {
     #local variables
     local port=$1
-    
+
     #global variables
     eeprombusidx=$(( (port - 1)%8 ))
 
@@ -1179,7 +1179,7 @@ function _qsfp_eeprom_var_set {
 function _i2c_qsfp_eeprom_get {
     local value=0
     local status=0
- 
+
     echo "========================================================="
     echo "# Description: QSFP EEPROM GET"
     echo "========================================================="
@@ -1241,7 +1241,7 @@ function _i2c_qsfp_signal_get {
     local phy_port=0
     local active="low_active"
 
-    #global 
+    #global
     qsfp_signal=0
     qsfp_signals=0
 
@@ -1328,12 +1328,12 @@ function _i2c_qsfp_signal_set {
     _i2c_qsfp_signal_get $port $signal
     value_ori=$qsfp_signal
     values_ori=$qsfp_signals
-    
+
     #if signal value is not changed, return
     if [ "${value}" == "${value_ori}" ]; then
         echo "value not changed, skip set operation"
         return
-    fi 
+    fi
 
     #toggle the bit for update
     values=$(( values_ori ^ (1 << (port-1))))
@@ -1342,7 +1342,7 @@ function _i2c_qsfp_signal_set {
     echo "$(printf "%016x" $values)" > ${PATH_SYS_CPLD}/${attr_file}
 
     #get updated signal values
-    _i2c_qsfp_signal_get $port $signal 
+    _i2c_qsfp_signal_get $port $signal
     values=$qsfp_signals
 
     #result
@@ -1577,11 +1577,11 @@ function _i2c_sys_led {
     local value=0
     local mask=${BIT_MASK[0]}
 
-    if [ "${COLOR_LED}" == "green" ]; then 
+    if [ "${COLOR_LED}" == "green" ]; then
         value=0xFF
-    elif [ "${COLOR_LED}" == "amber" ]; then 
+    elif [ "${COLOR_LED}" == "amber" ]; then
         value=0x00
-    else 
+    else
         echo "Invalid Parameters ${COLOR_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1595,11 +1595,11 @@ function _i2c_fan_led {
     local value=0
     local mask=${BIT_MASK[2]}
 
-    if [ "${COLOR_LED}" == "green" ]; then 
+    if [ "${COLOR_LED}" == "green" ]; then
         value=0x00
-    elif [ "${COLOR_LED}" == "amber" ]; then 
+    elif [ "${COLOR_LED}" == "amber" ]; then
         value=0xFF
-    else 
+    else
         echo "Invalid Parameters ${COLOR_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1613,11 +1613,11 @@ function _i2c_psu1_led {
     local value=0
     local mask=${BIT_MASK[3]}
 
-    if [ "${COLOR_LED}" == "green" ]; then 
+    if [ "${COLOR_LED}" == "green" ]; then
         value=0x00
-    elif [ "${COLOR_LED}" == "amber" ]; then 
+    elif [ "${COLOR_LED}" == "amber" ]; then
         value=0xFF
-    else 
+    else
         echo "Invalid Parameters ${COLOR_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1632,11 +1632,11 @@ function _i2c_psu2_led {
     local value=0
     local mask=${BIT_MASK[4]}
 
-    if [ "${COLOR_LED}" == "green" ]; then 
+    if [ "${COLOR_LED}" == "green" ]; then
         value=0x00
-    elif [ "${COLOR_LED}" == "amber" ]; then 
+    elif [ "${COLOR_LED}" == "amber" ]; then
         value=0xFF
-    else 
+    else
         echo "Invalid Parameters ${COLOR_LED}, Exit!!!"
         _help
         exit ${FALSE}
@@ -1667,7 +1667,7 @@ function _i2c_reset_led {
     _i2c_set $i2c_bus $i2c_addr $reg $mask $value
 }
 
-#Get Mother Board Version and Type 
+#Get Mother Board Version and Type
 function _i2c_board_type_get {
     echo "========================================================="
     echo "# Description: I2C MB Board Type Get"
@@ -1756,7 +1756,7 @@ function _i2c_10g_mux {
     local mask=0xff
     local value=0
     local file_10g_mux="${PATH_SYS_CPLD}/cpld_10g_mux"
-    
+
     #get current 10g mux register value on CPLD
     value=`cat ${file_10g_mux}`
 
@@ -1797,7 +1797,7 @@ function _i2c_10g_mux {
         #switch 10G MUX to cpu on CPLD
         value=$(( value & 0xf3 ))
         echo "$(printf "%x" ${value})" > ${file_10g_mux}
-    
+
         echo "Switch 10G Mux to [CPU]"
 
     elif [ "${COLOR_LED}" == "fp" ]; then
@@ -1830,7 +1830,7 @@ function _i2c_10g_mux {
         #Enable auto negotiation of XE ports
         eval "bcmcmd 'port xe0,xe1 an=0 if=kr en=1'"
         #delay 1 sec
-        sleep 1 
+        sleep 1
 
         #switch 10G MUX to front panel on CPLD
         value=$(( value | 0x0c ))

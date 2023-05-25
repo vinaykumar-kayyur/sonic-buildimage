@@ -61,7 +61,7 @@ switch_board_sfp() {
                             echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
- 
+
         "delete_device")
                         for ((i=34;i<=35;i++));
                         do
@@ -84,7 +84,7 @@ switch_board_qsfp() {
                             echo optoe3 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
- 
+
         "delete_device")
                         for ((i=2;i<=33;i++));
                         do
@@ -139,7 +139,7 @@ platform_firmware_versions() {
 	echo "Slave CPLD 2: $((r_maj)).$((r_min))" >> $FIRMWARE_VERSION_FILE
 }
 
-#This enables the led control for CPU and default states 
+#This enables the led control for CPU and default states
 switch_board_led_default() {
 	resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
 	python /usr/bin/pcisysfs.py --set --offset 0x24 --val 0x194 --res $resource  > /dev/null 2>&1
@@ -180,7 +180,7 @@ if [ "$1" == "init" ]; then
     modprobe i2c-dev
     modprobe i2c-mux-pca954x force_deselect_on_exit=1
     modprobe ipmi_devintf
-    modprobe ipmi_si kipmid_max_busy_us=1000  
+    modprobe ipmi_si kipmid_max_busy_us=1000
     modprobe i2c_ocores
     modprobe dell_z9432f_fpga_ocores
     modprobe mc24lc64t

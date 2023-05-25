@@ -5223,7 +5223,7 @@ detect_transvr_type(struct transvr_obj_s* self){
         SWPS_INFO("%s: %s unexpected smbus return:%d \n",
                 __func__, self->swp_name, type);
         return TRANSVR_TYPE_ERROR;
-    }    
+    }
     /* Identify valid transceiver type */
     switch (type){
         case TRANSVR_TYPE_SFP:
@@ -5896,7 +5896,7 @@ _sfp_set_bf_tofino_if_type(struct transvr_obj_s* self,
      *  Due to BF looks like doesn't have interface type.
      *  We bypass it currently.
      */
-    int lmax = 8;    
+    int lmax = 8;
     return snprintf(result, lmax, TRANSVR_UEVENT_UNKNOW);
 }
 
@@ -5918,7 +5918,7 @@ _sfp_detect_if_type(struct transvr_obj_s* self,
 
         case BF_CHIP_TYPE_TOFINO:
             return _sfp_set_bf_tofino_if_type(self, detect_cls, result);
-            
+
         default:
             SWPS_INFO("%s: non-defined chipset_type:%d <port>:%s\n",
                       __func__, self->chipset_type, self->swp_name);
@@ -6525,7 +6525,7 @@ _qsfp_set_bf_tofino_if_type(struct transvr_obj_s* self,
      *  Due to BF looks like doesn't have interface type.
      *  We bypass it currently.
      */
-    int lmax = 8;    
+    int lmax = 8;
     return snprintf(result, lmax, TRANSVR_UEVENT_UNKNOW);
 }
 
@@ -6547,7 +6547,7 @@ _qsfp_detect_if_type(struct transvr_obj_s* self,
 
         case BF_CHIP_TYPE_TOFINO:
             return _qsfp_set_bf_tofino_if_type(self, detect_cls, result);
-            
+
         default:
             SWPS_INFO("%s: non-defined chipset_type:%d <port>:%s\n",
                       __func__, self->chipset_type, self->swp_name);

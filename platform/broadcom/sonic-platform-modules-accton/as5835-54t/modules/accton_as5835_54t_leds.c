@@ -69,8 +69,8 @@ static struct accton_as5835_54t_led_data  *ledctl = NULL;
 static const u8 led_reg[] = {
 	0xA,	/* LOC/DIAG/FAN LED */
 	0xB,	/* PSU LED */
-};	
-	
+};
+
 enum led_type {
 	LED_TYPE_DIAG,
 	LED_TYPE_LOC,
@@ -113,25 +113,25 @@ static struct led_type_mode led_type_mode_data[] = {
 
 static int led_reg_val_to_light_mode(enum led_type type, u8 reg_val) {
 	int i;
-	
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 		if (type != led_type_mode_data[i].type) {
 			continue;
 		}
 
-		if ((led_type_mode_data[i].type_mask & reg_val) == 
+		if ((led_type_mode_data[i].type_mask & reg_val) ==
 			 led_type_mode_data[i].mode_value) {
 			return led_type_mode_data[i].mode;
 		}
 	}
-	
+
 	return LED_MODE_UNKNOWN;
 }
 
-static u8 led_light_mode_to_reg_val(enum led_type type, 
+static u8 led_light_mode_to_reg_val(enum led_type type,
 									enum led_light_mode mode, u8 reg_val) {
 	int i;
-								  
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 		int type_mask, mode_value;
 
@@ -169,12 +169,12 @@ static void accton_as5835_54t_led_update(void)
 
 		dev_dbg(&ledctl->pdev->dev, "Starting accton_as5835_54t_led update\n");
 		ledctl->valid = 0;
-		
+
 		/* Update LED data
 		 */
 		for (i = 0; i < ARRAY_SIZE(ledctl->reg_val); i++) {
 			int status = accton_as5835_54t_led_read_value(led_reg[i]);
-			
+
 			if (status < 0) {
 				dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", led_reg[i], status);
 				goto exit;
@@ -182,7 +182,7 @@ static void accton_as5835_54t_led_update(void)
 			else
 				ledctl->reg_val[i] = status;
 		}
-		
+
 		ledctl->last_updated = jiffies;
 		ledctl->valid = 1;
 	}
@@ -192,14 +192,14 @@ exit:
 }
 
 static void accton_as5835_54t_led_set(struct led_classdev *led_cdev,
-									  enum led_brightness led_light_mode, 
+									  enum led_brightness led_light_mode,
 									  u8 reg, enum led_type type)
 {
 	int reg_val;
-	
+
 	mutex_lock(&ledctl->update_lock);
 	reg_val = accton_as5835_54t_led_read_value(reg);
-	
+
 	if (reg_val < 0) {
 		dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", reg, reg_val);
 		goto exit;
@@ -208,7 +208,7 @@ static void accton_as5835_54t_led_set(struct led_classdev *led_cdev,
 	reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);
 	accton_as5835_54t_led_write_value(reg, reg_val);
 	ledctl->valid = 0;
-	
+
 exit:
 	mutex_unlock(&ledctl->update_lock);
 }
@@ -288,19 +288,19 @@ static struct led_classdev accton_as5835_54t_leds[] = {
 static int accton_as5835_54t_led_probe(struct platform_device *pdev)
 {
 	int ret, i;
-	
+
 	for (i = 0; i < ARRAY_SIZE(accton_as5835_54t_leds); i++) {
 		ret = led_classdev_register(&pdev->dev, &accton_as5835_54t_leds[i]);
-		
+
 		if (ret < 0) {
 			break;
 		}
 	}
-	
+
 	/* Check if all LEDs were successfully registered */
 	if (i != ARRAY_SIZE(accton_as5835_54t_leds)){
 		int j;
-		
+
 		/* only unregister the LEDs that were successfully registered */
 		for (j = 0; j < i; j++) {
 			led_classdev_unregister(&accton_as5835_54t_leds[i]);
@@ -313,7 +313,7 @@ static int accton_as5835_54t_led_probe(struct platform_device *pdev)
 static int accton_as5835_54t_led_remove(struct platform_device *pdev)
 {
 	int i;
-	
+
 	for (i = 0; i < ARRAY_SIZE(accton_as5835_54t_leds); i++) {
 		led_classdev_unregister(&accton_as5835_54t_leds[i]);
 	}
@@ -333,7 +333,7 @@ static struct platform_driver accton_as5835_54t_led_driver = {
 static int __init accton_as5835_54t_led_init(void)
 {
 	int ret;
-	
+
 	ret = platform_driver_register(&accton_as5835_54t_led_driver);
 	if (ret < 0) {
 		goto exit;

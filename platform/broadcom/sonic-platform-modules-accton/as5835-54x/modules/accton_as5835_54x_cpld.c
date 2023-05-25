@@ -290,7 +290,7 @@ enum as5835_54x_cpld1_sysfs_attributes {
 	TRANSCEIVER_RESET_ATTR_ID(54),
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t show_status(struct device *dev, struct device_attribute *da,
              char *buf);
@@ -708,7 +708,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 	case MODULE_PRESENT_47 ... MODULE_PRESENT_48:
 		reg  = 0x7;
 		mask = 0x1 << (attr->index - MODULE_PRESENT_47);
-		break;   
+		break;
 	case MODULE_PRESENT_49 ... MODULE_PRESENT_54:
 		reg  = 0x14;
 		mask = 0x1 << (attr->index - MODULE_PRESENT_49);
@@ -906,7 +906,7 @@ static ssize_t set_control(struct device *dev, struct device_attribute *da,
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-    
+
     mutex_unlock(&data->update_lock);
     return count;
 
@@ -990,13 +990,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-	
+
 	val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-	
+
     return sprintf(buf, "%d\n", val);
 }
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Set U60 shutdown threhold 80 
+# Set U60 shutdown threhold 80
 sudo i2cset -y -f 6 0x49 0x3 0x4e 0x00 i
 sleep 0.1
 sudo i2cset -y -f 6 0x49 0x1 0x2

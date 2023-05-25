@@ -204,9 +204,9 @@ static int as5812_54x_psu_remove(struct i2c_client *client)
     return 0;
 }
 
-enum psu_index 
-{ 
-    as5812_54x_psu1, 
+enum psu_index
+{
+    as5812_54x_psu1,
     as5812_54x_psu2
 };
 
@@ -288,7 +288,7 @@ static int as5812_54x_psu_model_name_get(struct device *dev)
                                            data->model_name, models[i].length);
         if (status < 0) {
             data->model_name[0] = '\0';
-            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n", 
+            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
                                   client->addr, models[i].offset);
             return status;
         }
@@ -353,7 +353,7 @@ exit:
 }
 
 static int __init as5812_54x_psu_init(void)
-{  
+{
     return i2c_add_driver(&as5812_54x_psu_driver);
 }
 

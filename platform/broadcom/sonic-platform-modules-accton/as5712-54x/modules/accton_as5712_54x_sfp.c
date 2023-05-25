@@ -98,11 +98,11 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 static ssize_t get_lp_mode(struct device *dev, struct device_attribute *da,
 			char *buf);
 static ssize_t set_lp_mode(struct device *dev, struct device_attribute *da,
-			const char *buf, size_t count);		
+			const char *buf, size_t count);
 static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
 			char *buf);
 static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
-			const char *buf, size_t count);								
+			const char *buf, size_t count);
 extern int as5712_54x_i2c_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int as5712_54x_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
@@ -249,14 +249,14 @@ static ssize_t get_lp_mode(struct device *dev, struct device_attribute *da,
     struct as5712_54x_sfp_data *data = i2c_get_clientdata(client);
     u8  cpld_val = 0;
     int port_bit;
-    int status = -EINVAL;    
-    
+    int status = -EINVAL;
+
     /* Low power mode is not supported for SFP ports(1-48) */
     if (data->port < SFP_PORT_MAX) {
         return -EINVAL;
     }
     mutex_lock(&data->update_lock);
-    
+
     port_bit = data->port - SFP_PORT_MAX;
     cpld_val = as5712_54x_i2c_cpld_read(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_LPMODE);
     cpld_val = cpld_val & 0x3F;
@@ -287,15 +287,15 @@ static ssize_t set_lp_mode(struct device *dev, struct device_attribute *da,
         return error;
     }
     mutex_lock(&data->update_lock);
-    
+
     cpld_val = as5712_54x_i2c_cpld_read(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_LPMODE);
     /* Update lp_mode status */
     if (mode)
-    {       
+    {
         cpld_val |= BIT_INDEX(port_bit);
     }
     else
-    {       
+    {
         cpld_val &=~BIT_INDEX(port_bit);
     }
     as5712_54x_i2c_cpld_write(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_LPMODE, cpld_val);
@@ -313,14 +313,14 @@ static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
     struct as5712_54x_sfp_data *data = i2c_get_clientdata(client);
     u8  cpld_val = 0;
     int port_bit;
-    int status = -EINVAL;    
-    
+    int status = -EINVAL;
+
     /* Low power mode is not supported for SFP ports(1-48) */
     if (data->port < SFP_PORT_MAX) {
         return -EINVAL;
     }
     mutex_lock(&data->update_lock);
-    
+
     port_bit = data->port - SFP_PORT_MAX;
     cpld_val = as5712_54x_i2c_cpld_read(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_MOD_RST);
     cpld_val = cpld_val & 0x3F;
@@ -351,15 +351,15 @@ static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
         return error;
     }
     mutex_lock(&data->update_lock);
-    
+
     cpld_val = as5712_54x_i2c_cpld_read(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_MOD_RST);
     /* Update lp_mode status */
     if (reset)
-    {       
+    {
         cpld_val |= BIT_INDEX(port_bit);
     }
     else
-    {       
+    {
         cpld_val &=~BIT_INDEX(port_bit);
     }
     as5712_54x_i2c_cpld_write(I2C_ADDR_CPLD3, CPLD3_OFFSET_QSFP_MOD_RST, cpld_val);

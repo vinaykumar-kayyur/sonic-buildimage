@@ -202,7 +202,7 @@ static  int mei_TxRx(u8 sensor_bus, u16 addr,  u8 command, char read_write, int 
 			msg->data.Flag = 0x5C;
 			msg->data.W_Length = data->block[0];
 		}
-		
+
 		msg->data.R_Length = 0x0;
 		if(data !=NULL){
 			if(size == I2C_SMBUS_WORD_DATA){
@@ -222,7 +222,7 @@ static  int mei_TxRx(u8 sensor_bus, u16 addr,  u8 command, char read_write, int 
 
     if (pec == 1)
         msg->data.Flag |= HECI_PEC_FLAG;
-    
+
 	msg->data.Sensor_Bus = sensor_bus;
 	msg->data.Psu_Addr =(char) addr << 1;
 	msg->data.Mux_Addr = 0x0;
@@ -230,8 +230,8 @@ static  int mei_TxRx(u8 sensor_bus, u16 addr,  u8 command, char read_write, int 
 	msg->data.Mux_Conf = 0x0;
 	msg->data.Reserved = 0x0;
 	msg->data.PMbus_data[0] = command;
-		
-	
+
+
 	msg->hdr.host_addr = 0;//mei_cl_host_addr(cl);
 	msg->hdr.me_addr = 0x20;
 	msg->hdr.reserved = 0;
@@ -287,7 +287,7 @@ static  int mei_TxRx(u8 sensor_bus, u16 addr,  u8 command, char read_write, int 
 		}else{
 			printk("recv_len %d recv: 0x%02x%02x%02x%02x\n0x%02x , 0x%02x , 0x%02x,  0x%02x \n", blen, recv_buf[3], recv_buf[2], recv_buf[1], recv_buf[0], recv_buf[4], recv_buf[5], recv_buf[6], recv_buf[7]);
 		}
-#endif		
+#endif
 		if(data !=NULL){
 			if(size == I2C_SMBUS_WORD_DATA){
 				data->word =  ((recv_buf[7]  << 8) & 0xff00) | (recv_buf[6] & 0xff);
@@ -312,7 +312,7 @@ static  int mei_TxRx(u8 sensor_bus, u16 addr,  u8 command, char read_write, int 
 	}
 
 	rets = recv_buf[5];
-	
+
 	kfree(recv_buf);
 	kfree(msg);
 	if(rets)
@@ -335,7 +335,7 @@ static s32 mei_i2c_access(struct i2c_adapter *adap, u16 addr,
 
     if (flags & I2C_CLIENT_PEC)
         pec = 1;
-    
+
 	switch (size) {
 	case I2C_SMBUS_QUICK:
 
@@ -479,7 +479,7 @@ static int mei_i2c_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (err) {
 		dev_err(&pdev->dev, "Failed to add SMBus adapter ME-SMLINK0\n");
 		return err;
-	}	
+	}
 
 	snprintf(priv_sml_1->adapter.name, sizeof(priv_sml_1->adapter.name),
 		"ME-SMLINK1");
@@ -495,8 +495,8 @@ static int mei_i2c_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (err) {
 		dev_err(&pdev->dev, "Failed to add SMBus adapter ME-SMLINK2\n");
 		return err;
-	}	
-    
+	}
+
 	snprintf(priv_sml_3->adapter.name, sizeof(priv_sml_3->adapter.name),
 		"ME-SMLINK3");
 	err = i2c_add_adapter(&priv_sml_3->adapter);
@@ -511,8 +511,8 @@ static int mei_i2c_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (err) {
 		dev_err(&pdev->dev, "Failed to add SMBus adapter ME-SMLINK4\n");
 		return err;
-	}	
-    
+	}
+
 	priv_table->count = 0;
 	priv_table->priv_tbl[priv_table->count++] = priv_sml_0;
 	priv_table->priv_tbl[priv_table->count++] = priv_sml_1;

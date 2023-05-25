@@ -269,7 +269,7 @@ class Sfp(SfpBase):
         self.sfp_type = sfp_type
         self.cpld_index = int(self.index / self.CPLD_PORT_NUM) + 1
         self.cpld_subindex = (self.index % self.CPLD_PORT_NUM) + 1
-        
+
         port_cpld_to_i2c_mapping = {
             1 : 14,
             2 : 15,
@@ -315,7 +315,7 @@ class Sfp(SfpBase):
 
         port_mask = {
             32 : 0x2,
-            33 : 0x1 
+            33 : 0x1
         }
 
         sfpplus_path = "/sys/bus/i2c/devices/1-005e"
@@ -346,7 +346,7 @@ class Sfp(SfpBase):
         self._dom_capability_detect()
 
         self.info_dict_keys = ['type', 'vendor_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
-            'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 
+            'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date',
             'vendor_oui', 'application_advertisement', 'type_abbrv_name']
 
         SfpBase.__init__(self)
@@ -1869,7 +1869,7 @@ class Sfp(SfpBase):
                sfpd_obj = qsfp_dd_Dom()
                if sfpd_obj is None:
                    return None
-            
+
                if self.dom_tx_power_supported:
                    dom_tx_power_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_POWER_OFFSET), QSFP_DD_TX_POWER_WIDTH)
                    if dom_tx_power_raw is not None:

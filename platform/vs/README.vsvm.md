@@ -15,16 +15,16 @@ Welcome to virsh, the virtualization interactive terminal.
 Type:  'help' for help with commands
        'quit' to quit
 
-virsh # 
+virsh #
 virsh # create sonic.xml
 Domain sonic created from sonic.xml
 
-virsh # 
+virsh #
 ```
 
 2. Create SONiC VM for multi-ASIC HWSKU
 
-- Based on the number of asics of hwsku, update device/x86_64-kvm_x86_64-r0/asic.conf 
+- Based on the number of asics of hwsku, update device/x86_64-kvm_x86_64-r0/asic.conf
 ```
 NUM_ASIC=<n>
 DEV_ID_ASIC_0=0
@@ -47,7 +47,7 @@ the specific hwsku.
 For example, for msft_multi_asic_vs:
 https://github.com/Azure/sonic-buildimage/blob/master/device/virtual/x86_64-kvm_x86_64-r0/msft_multi_asic_vs/topology.sh
 
-- With the updated asic.conf and topology.sh, build sonic-vs.img which can be used to 
+- With the updated asic.conf and topology.sh, build sonic-vs.img which can be used to
 bring up multi-asic virtual switch.
 
 - Update platform/vs/sonic_multiasic.xml with higher memory and vcpu as required.
@@ -68,7 +68,7 @@ Type:  'help' for help with commands
        'quit' to quit
 
 virsh #
-virsh # create sonic_multiasic.xml 
+virsh # create sonic_multiasic.xml
 Domain sonic created from sonic.xml
 
 virsh #
@@ -78,7 +78,7 @@ virsh #
   - Use the updated sonic_multiasic.xml file and bring up virtual switch.
   - Update /usr/share/sonic/device/x86_64-kvm_x86_64-r0/asic.conf as above.
   - Add topology.sh in /usr/share/sonic/device/x86_64-kvm_x86_64-r0/<HWSKU>
-  - stop database service and remove database docker, so that when vs is 
+  - stop database service and remove database docker, so that when vs is
 rebooted, database_global.json is created with the right namespaces.
     - systemctl stop database
     - docker rm database
@@ -98,18 +98,18 @@ sudo systemctl start topology.
     ```
     $ telnet 127.0.0.1 7000
     ```
-    
+
     OR
 
     2. Connect SONiC VM via SSH
-        
+
         1. Connect via console (see 3.1 above)
 
         2. Request a new DHCP address
         ```
         sudo dhclient -v
         ```
-        
+
         3. Connect via SSH
         ```
         $ ssh -p 3040 admin@127.0.0.1

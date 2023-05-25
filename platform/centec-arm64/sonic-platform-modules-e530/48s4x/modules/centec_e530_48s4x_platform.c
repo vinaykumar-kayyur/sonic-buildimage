@@ -100,7 +100,7 @@ static int e530_48s4x_smbus_read_reg(struct i2c_client *client, unsigned char re
         printk(KERN_CRIT "invalid i2c client");
         return -1;
     }
-    
+
     ret = i2c_smbus_read_byte_data(client, reg);
     if (ret >= 0) {
         *value = (unsigned char)ret;
@@ -118,13 +118,13 @@ static int e530_48s4x_smbus_read_reg(struct i2c_client *client, unsigned char re
 static int e530_48s4x_smbus_write_reg(struct i2c_client *client, unsigned char reg, unsigned char value)
 {
     int ret = 0;
-    
+
     if (IS_INVALID_PTR(client))
     {
         printk(KERN_CRIT "invalid i2c client");
         return -1;
     }
-    
+
     ret = i2c_smbus_write_byte_data(client, reg, value);
     if (ret != 0)
     {
@@ -149,7 +149,7 @@ static int e530_48s4x_init_i2c_master(void)
         printk(KERN_CRIT "e530_48s4x_init_i2c_master can't find i2c-core bus\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -160,7 +160,7 @@ static int e530_48s4x_exit_i2c_master(void)
         i2c_put_adapter(i2c_adp_master);
         i2c_adp_master = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -236,7 +236,7 @@ static int e530_48s4x_exit_i2c_gpio(void)
         i2c_client_gpio0 = NULL;
     }
 
-    if(IS_VALID_PTR(i2c_adp_gpio0)) 
+    if(IS_VALID_PTR(i2c_adp_gpio0))
     {
         i2c_put_adapter(i2c_adp_gpio0);
         i2c_adp_gpio0 = NULL;
@@ -247,7 +247,7 @@ static int e530_48s4x_exit_i2c_gpio(void)
         i2c_client_gpio1 = NULL;
     }
 
-    if(IS_VALID_PTR(i2c_adp_gpio1)) 
+    if(IS_VALID_PTR(i2c_adp_gpio1))
     {
         i2c_put_adapter(i2c_adp_gpio1);
         i2c_adp_gpio1 = NULL;
@@ -272,7 +272,7 @@ static int e530_48s4x_init_i2c_epld(void)
          printk(KERN_CRIT "e530_48s4x_init_i2c_epld can't find i2c-core bus\n");
          return -1;
     }
-    
+
     i2c_client_epld = i2c_new_client_device(i2c_adp_master, &i2c_dev_epld);
     if(IS_INVALID_PTR(i2c_client_epld))
     {
@@ -296,7 +296,7 @@ static int e530_48s4x_init_i2c_epld(void)
     //ret += e530_48s4x_smbus_write_reg(i2c_client_epld, 0x12, 0x00);
     //ret += e530_48s4x_smbus_write_reg(i2c_client_epld, 0x13, 0x00);
     //ret += e530_48s4x_smbus_write_reg(i2c_client_epld, 0x14, 0x00);
-    
+
     return ret;
 }
 
@@ -306,7 +306,7 @@ static int e530_48s4x_exit_i2c_epld(void)
         i2c_unregister_device(i2c_client_epld);
         i2c_client_epld = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -351,7 +351,7 @@ static ssize_t e530_48s4x_psu_read_presence(struct device *dev, struct device_at
     }
 
     value = ((present & (1<<(present_no%8))) ? 1 : 0 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -390,7 +390,7 @@ static ssize_t e530_48s4x_psu_read_status(struct device *dev, struct device_attr
     }
 
     value = ((workstate & (1<<(workstate_no%8))) ? 0 : 1 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -400,7 +400,7 @@ static DEVICE_ATTR(psu_status, S_IRUGO, e530_48s4x_psu_read_status, NULL);
 static int e530_48s4x_init_psu(void)
 {
     int ret = 0;
-    
+
     psu_class = class_create(THIS_MODULE, "psu");
     if (IS_INVALID_PTR(psu_class))
     {
@@ -452,7 +452,7 @@ static int e530_48s4x_init_psu(void)
         printk(KERN_CRIT "create e530_48s4x psu2 device attr:status failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -642,7 +642,7 @@ void e530_48s4x_led_set(struct led_classdev *led_cdev, enum led_brightness set_v
     }
 
     led_value = ((led_value & (~mask)) | ((set_value << shift) & (mask)));
-    
+
     ret = e530_48s4x_smbus_write_reg(i2c_led_client, reg, led_value);
     if (ret != 0)
     {
@@ -651,7 +651,7 @@ void e530_48s4x_led_set(struct led_classdev *led_cdev, enum led_brightness set_v
     }
 
     return;
-    
+
 not_support:
 
     printk(KERN_INFO "Error: led not support device:%s\n", led_cdev->name);
@@ -718,7 +718,7 @@ enum led_brightness e530_48s4x_led_get(struct led_classdev *led_cdev)
     led_value = ((led_value & mask) >> shift);
 
     return led_value;
-    
+
 not_support:
 
     printk(KERN_INFO "Error: not support device:%s\n", led_cdev->name);
@@ -728,9 +728,9 @@ not_support:
 void e530_48s4x_led_port_set(struct led_classdev *led_cdev, enum led_brightness set_value)
 {
     int portNum = 0;
-    
+
     sscanf(led_cdev->name, "port%d", &portNum);
-    
+
     port_led_mode[portNum-1] = set_value;
 
     return;
@@ -739,9 +739,9 @@ void e530_48s4x_led_port_set(struct led_classdev *led_cdev, enum led_brightness 
 enum led_brightness e530_48s4x_led_port_get(struct led_classdev *led_cdev)
 {
     int portNum = 0;
-    
-    sscanf(led_cdev->name, "port%d", &portNum);    
-    
+
+    sscanf(led_cdev->name, "port%d", &portNum);
+
     return port_led_mode[portNum-1];
 }
 
@@ -815,7 +815,7 @@ static int e530_48s4x_init_led(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -893,7 +893,7 @@ static ssize_t e530_48s4x_sfp_write_presence(struct device *dev, struct device_a
     spin_lock_irqsave(&(sfp_info[portNum].lock), flags);
     sfp_info[portNum].presence = presence;
     spin_unlock_irqrestore(&(sfp_info[portNum].lock), flags);
-    
+
     return size;
 }
 
@@ -926,7 +926,7 @@ static ssize_t e530_48s4x_sfp_read_enable(struct device *dev, struct device_attr
     }
 
     value = ((value & (1<<(reg_no%8))) ? 0 : 1 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -971,7 +971,7 @@ static ssize_t e530_48s4x_sfp_write_enable(struct device *dev, struct device_att
     {
         value = (value & (~(1<<(reg_no % 8))));
     }
-    
+
     output_bank = (reg_no/8) + 0xe;
     ret = e530_48s4x_smbus_write_reg(i2c_sfp_client, output_bank, value);
     if (ret != 0)
@@ -979,7 +979,7 @@ static ssize_t e530_48s4x_sfp_write_enable(struct device *dev, struct device_att
         printk(KERN_CRIT "Error: write %s enable failed\n", name);
         return size;
     }
-    
+
     return size;
 }
 
@@ -1025,7 +1025,7 @@ static ssize_t e530_48s4x_sfp_write_eeprom(struct device *dev, struct device_att
     memcpy(sfp_info[portNum].data, buf, size);
     sfp_info[portNum].data_len = size;
     spin_unlock_irqrestore(&(sfp_info[portNum].lock), flags);
-    
+
     return size;
 }
 
@@ -1036,7 +1036,7 @@ static int e530_48s4x_init_sfp(void)
 {
     int ret = 0;
     int i = 0;
-    
+
     sfp_class = class_create(THIS_MODULE, "sfp");
     if (IS_INVALID_PTR(sfp_class))
     {
@@ -1080,7 +1080,7 @@ static int e530_48s4x_init_sfp(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -1114,12 +1114,12 @@ static int e530_48s4x_init(void)
 {
     int ret = 0;
     int failed = 0;
-    
+
     printk(KERN_ALERT "install e530_48s4x board dirver...\n");
 
     ctc_irq_init();
     ctc_pincrtl_init();
-    
+
     ret = e530_48s4x_init_i2c_master();
     if (ret != 0)
     {
@@ -1160,14 +1160,14 @@ static int e530_48s4x_init(void)
         printk(KERN_INFO "install e530_48s4x board driver failed\n");
     else
         printk(KERN_ALERT "install e530_48s4x board dirver...ok\n");
-    
+
     return 0;
 }
 
 static void e530_48s4x_exit(void)
 {
     printk(KERN_INFO "uninstall e530_48s4x board dirver...\n");
-    
+
     e530_48s4x_exit_sfp();
     e530_48s4x_exit_led();
     e530_48s4x_exit_psu();

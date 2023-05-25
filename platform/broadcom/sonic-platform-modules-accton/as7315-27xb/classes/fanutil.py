@@ -57,11 +57,11 @@ class FanUtil(object):
         key2 = fan node index (interger) starting from 1
         value = path to fan device file (string) """
     dev_paths = {}
-    
+
     node_postfix = ["fault", "direction"]
     def _get_fan_to_device_node(self, fan_num, node_num):
         return "fan{0}_{1}".format(fan_num, self.node_postfix[node_num-1])
-    
+
     def _get_fan_i2c_bus_addr(self):
         cmd_template = ['i2cget', '-f', '-y', '', '', '0']
         for bus_no, dev_addr in self.I2CADDR_CANDIDATES:
@@ -88,7 +88,7 @@ class FanUtil(object):
             return None
 
         device_path = self.get_fan_to_device_path(fan_num, node_num)
-       
+
         try:
             val_file = open(device_path, 'r')
         except IOError as e:
@@ -96,7 +96,7 @@ class FanUtil(object):
             return None
 
         content = val_file.readline().rstrip()
-        
+
         if content == '':
             self.logger.debug('GET. content is NULL. device_path:%s', device_path)
             return None
@@ -147,12 +147,12 @@ class FanUtil(object):
         self.logger.addHandler(ch)
 
         self._init_fnode_basepath()
-        fan_path = self.BASE_VAL_PATH 
+        fan_path = self.BASE_VAL_PATH
         for fan_num in range(self.FAN_NUM_1_IDX, self.FAN_TOTAL_NUM+1):
             for node_num in range(1, self.FAN_NODE_NUM+1):
                 node = self._get_fan_to_device_node(fan_num, node_num)
                 self.dev_paths[(fan_num, node_num)] = fan_path.format(node)
-               
+
     def get_num_fans(self):
         return self.FAN_TOTAL_NUM
 
@@ -187,7 +187,7 @@ class FanUtil(object):
         try:
             val_file = open(self.FAN_DUTY_PATH.format(1))
         except IOError as e:
-            print("Error: unable to open file: %s" % str(e))          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = val_file.readline().rstrip()
@@ -199,7 +199,7 @@ class FanUtil(object):
             try:
                 fan_file = open(self.FAN_DUTY_PATH.format(fan_num), 'r+')
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))          
+                print("Error: unable to open file: %s" % str(e))
                 return False
             fan_file.write(str(val))
             fan_file.close()

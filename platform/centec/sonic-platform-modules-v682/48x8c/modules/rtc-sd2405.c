@@ -64,7 +64,7 @@ static int sd2405_i2c_write_regs(struct i2c_client *client, u8 const *buf)
 {
 	int i;
 
-	for (i = 0; i < SD2405_REG_LEN; i++) { 
+	for (i = 0; i < SD2405_REG_LEN; i++) {
 		i2c_smbus_write_byte_data(client, SD2405_REG_SC+i, buf[i]);
 		msleep(SD2405_IDLE_TIME_AFTER_WRITE);
 	}
@@ -94,10 +94,10 @@ static int sd2405_i2c_read_regs(struct i2c_client *client, u8 *buf)
 static int sd2405_i2c_write_regs(struct i2c_client *client, u8 const *buf)
 {
 	int rc;
-   
+
     u8 temp_reg[SD2405_REG_LEN+1] = {0};
     memcpy(&temp_reg[1], buf, SD2405_REG_LEN);
-    
+
 	struct i2c_msg msgs[1] = {
 		{
 		 .addr = client->addr,
@@ -105,7 +105,7 @@ static int sd2405_i2c_write_regs(struct i2c_client *client, u8 const *buf)
 		 .len = SD2405_REG_LEN+1,
 		 .buf = temp_reg}
 	};
-   
+
 	rc = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
 	if (rc != ARRAY_SIZE(msgs))
 		goto write_failed;
@@ -143,7 +143,7 @@ static int sd2405_i2c_set_write_protect(struct i2c_client *client)
 {
 	int rc;
 	rc = i2c_smbus_write_byte_data(client, SD2405_REG_CTRL1, 0);
-	rc += i2c_smbus_write_byte_data(client, SD2405_REG_CTRL2, 0);    
+	rc += i2c_smbus_write_byte_data(client, SD2405_REG_CTRL2, 0);
 	if (rc < 0) {
 		dev_err(&client->dev, "%s: control register write failed\n",
 			__func__);
@@ -155,7 +155,7 @@ static int sd2405_i2c_set_write_protect(struct i2c_client *client)
 static int sd2405_i2c_clear_write_protect(struct i2c_client *client)
 {
 	int rc;
-	rc = i2c_smbus_write_byte_data(client, SD2405_REG_CTRL2, SD2405_REG_CONTROL1_WRITE);    
+	rc = i2c_smbus_write_byte_data(client, SD2405_REG_CTRL2, SD2405_REG_CONTROL1_WRITE);
 	rc += i2c_smbus_write_byte_data(client, SD2405_REG_CTRL1, SD2405_REG_CONTROL2_WRITE);
 	if (rc < 0) {
 		dev_err(&client->dev, "%s: control register write failed\n",
@@ -186,11 +186,11 @@ sd2405_i2c_set_time(struct i2c_client *client, struct rtc_time const *tm)
 	rc = sd2405_i2c_write_regs(client, regs);
 	if (rc < 0)
 		return rc;
-    
+
     rc = sd2405_i2c_set_write_protect(client);
 	if (rc < 0)
 		return rc;
-    
+
 	return 0;
 }
 

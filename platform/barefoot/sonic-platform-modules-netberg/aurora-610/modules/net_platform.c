@@ -126,29 +126,29 @@ static struct pca954x_platform_data mux_data_0_6 = {
 
 static struct i2c_board_info i2c_device_info0[] __initdata = {
 //        {"net_cpld",         0, 0x77, 0, 0, 0},//cpld
-        {"pca9548",          0, 0x70, "pca9548-1", (void *)&mux_data_0, 0, 0},	
+        {"pca9548",          0, 0x70, "pca9548-1", (void *)&mux_data_0, 0, 0},
 };
 
 static struct i2c_board_info i2c_device_info2[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-2", (void *)&mux_data_0_0, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-2", (void *)&mux_data_0_0, 0, 0},
 };
 static struct i2c_board_info i2c_device_info3[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-3", (void *)&mux_data_0_1, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-3", (void *)&mux_data_0_1, 0, 0},
 };
 static struct i2c_board_info i2c_device_info4[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-4", (void *)&mux_data_0_2, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-4", (void *)&mux_data_0_2, 0, 0},
 };
 static struct i2c_board_info i2c_device_info5[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-5", (void *)&mux_data_0_3, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-5", (void *)&mux_data_0_3, 0, 0},
 };
 static struct i2c_board_info i2c_device_info6[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-6", (void *)&mux_data_0_4, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-6", (void *)&mux_data_0_4, 0, 0},
 };
 static struct i2c_board_info i2c_device_info7[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-7", (void *)&mux_data_0_5, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-7", (void *)&mux_data_0_5, 0, 0},
 };
 static struct i2c_board_info i2c_device_info8[] __initdata = {
-        {"pca9548",         0, 0x72, "pca9548-8", (void *)&mux_data_0_6, 0, 0},	
+        {"pca9548",         0, 0x72, "pca9548-8", (void *)&mux_data_0_6, 0, 0},
 };
 
 
@@ -161,7 +161,7 @@ static struct net_i2c_board_info i2cdev_list[] = {
     {bus_id(5), ARRAY_SIZE(i2c_device_info5),  i2c_device_info5, 0},  //mux 3
     {bus_id(6), ARRAY_SIZE(i2c_device_info6),  i2c_device_info6, 0},  //mux 4
     {bus_id(7), ARRAY_SIZE(i2c_device_info7),  i2c_device_info7, 0},  //mux 5
-    {bus_id(8), ARRAY_SIZE(i2c_device_info8),  i2c_device_info8, 0},  //mux 6  
+    {bus_id(8), ARRAY_SIZE(i2c_device_info8),  i2c_device_info8, 0},  //mux 6
 };
 
 static struct gpiod_lookup_table net_i2c_gpiod_table = {
@@ -207,7 +207,7 @@ static int __init net_platform_init(void)
 
     //printk("%s  \n", __func__);
 
-    //use i2c-gpio    
+    //use i2c-gpio
     //register i2c gpio
     //config gpio58,75 to gpio function 58=32+3*8+2 75=32*2+8*1+3 gpio69=32*2+8*0+5
     outl( inl(0x533) | (1<<2), 0x533);  //i2c-gpio sdl (GPIO58)
@@ -216,7 +216,7 @@ static int __init net_platform_init(void)
     outl( inl(0x500) | (1<<7), 0x500);  //SYS_RDY_N (GPIO7)
     outl( inl(0x501) | (1<<7), 0x501);  //BMC_HEART_BEAT (GPIO15)
     outl( inl(0x503) | (1<<2)|(1<<3), 0x503); //PSOC_HEART_BEAT(26),CPLD_HEART_BEAT(27)
-   
+
     gpiod_add_lookup_table(&net_i2c_gpiod_table);
 
     ret = platform_device_register(&device_i2c_gpio0);
@@ -257,7 +257,7 @@ static int __init net_platform_init(void)
     }
 
     printk("net_platform module initialized\n");
-    return ret;    
+    return ret;
 }
 
 static void __exit net_platform_exit(void)

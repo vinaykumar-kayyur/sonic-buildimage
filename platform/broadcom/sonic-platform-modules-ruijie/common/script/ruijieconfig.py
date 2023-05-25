@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 #-------------------------------------------------------------------------------
-# Name:         ruijieconfig.py 
+# Name:         ruijieconfig.py
 # Purpose:      block the difference between various product/onie version for other module
 #
 # Author:      rd
@@ -15,10 +15,10 @@ from rjutil.baseutil import get_machine_info
 from rjutil.baseutil import get_platform_info
 
 __all__ = ["getdeviceplatform", "get_rjconfig_info", "MONITOR_CONST", "MAILBOX_DIR", "DEVICE",
-           "GLOBALCONFIG", "GLOBALINITPARAM", "GLOBALINITCOMMAND", "MAC_LED_RESET", "STARTMODULE", 
+           "GLOBALCONFIG", "GLOBALINITPARAM", "GLOBALINITCOMMAND", "MAC_LED_RESET", "STARTMODULE",
            "fanloc", "RUIJIE_CARDID", "RUIJIE_PRODUCTNAME", "RUIJIE_PART_NUMBER",
            "RUIJIE_LABEL_REVISION", "RUIJIE_MAC_SIZE", "RUIJIE_MANUF_NAME", "RUIJIE_MANUF_COUNTRY",
-           "RUIJIE_VENDOR_NAME", "RUIJIE_DIAG_VERSION", "RUIJIE_SERVICE_TAG", "E2_PROTECT", 
+           "RUIJIE_VENDOR_NAME", "RUIJIE_DIAG_VERSION", "RUIJIE_SERVICE_TAG", "E2_PROTECT",
            "E2_LOC", "FAN_PROTECT", "FANS_DEF", "MONITOR_FANS_LED", "MONITOR_SYS_FAN_LED",
            "MONITOR_SYS_PSU_LED", "MONITOR_FAN_STATUS", "MONITOR_PSU_STATUS", "MONITOR_DEV_STATUS",
            "MONITOR_DEV_STATUS_DECODE", "DEV_LEDS", "MAC_AVS_PARAM", "MAC_DEFAULT_PARAM",
@@ -161,7 +161,7 @@ class MONITOR_CONST:
     MAC_UP_TEMP =module_product.MONITOR_MAC_UP_TEMP
     MAC_LOWER_TEMP =module_product.MONITOR_MAC_LOWER_TEMP
     MAC_MAX_TEMP   = module_product.MONITOR_MAC_MAX_TEMP
-    
+
     MAC_WARNING_THRESHOLD =  module_product.MONITOR_MAC_WARNING_THRESHOLD
     OUTTEMP_WARNING_THRESHOLD = module_product.MONITOR_OUTTEMP_WARNING_THRESHOLD
     BOARDTEMP_WARNING_THRESHOLD = module_product.MONITOR_BOARDTEMP_WARNING_THRESHOLD

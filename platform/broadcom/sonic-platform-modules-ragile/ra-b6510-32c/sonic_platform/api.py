@@ -27,17 +27,17 @@ class newapi(PddfApi):
         attr_list = dev['i2c']['attr_list']
         KEY = "eeprom"
         dsysfs_path = ""
-    
+
         if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY] = []
-    
+
         for attr in attr_list:
             if attr_name == attr['attr_name'] or attr_name == 'all':
                 if 'drv_attr_name' in attr.keys():
                     real_name = attr['drv_attr_name']
                 else:
                     real_name = attr['attr_name']
-    
+
                 dsysfs_path = self.show_device_sysfs(dev, ops) + \
                     "/%d-00%02x" % (int(dev['i2c']['topo_info']['parent_bus'], 0),
                                   int(dev['i2c']['topo_info']['dev_addr'], 0)) + \

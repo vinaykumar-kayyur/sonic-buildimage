@@ -82,7 +82,7 @@ static void mb_eeprom_update_client(struct i2c_client *client, u8 slice)
 				data->data[j] = res & 0xFF;
 			}
 		}
-		
+
 		data->last_updated[slice] = jiffies;
 		data->valid |= (1 << slice);
 	}

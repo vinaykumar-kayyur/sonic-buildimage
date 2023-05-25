@@ -68,7 +68,7 @@ class Thermal(ThermalBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         temp = 0
         node = glob.glob(self.tmp_node + "hwmon*")
@@ -106,14 +106,14 @@ class Thermal(ThermalBase):
         """
         Sets the high threshold temperature of thermal
 
-        Args : 
-            temperature: A float number up to nearest thousandth of one degree Celsius, 
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        temp = temperature * 1000 
+        temp = temperature * 1000
         node = glob.glob(self.tmp_node + "hwmon*")
         if len(node) == 0:
             return None

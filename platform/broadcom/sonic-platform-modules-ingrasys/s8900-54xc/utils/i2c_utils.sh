@@ -636,7 +636,7 @@ function _i2c_gpio_init {
     #echo out > /sys/class/gpio/gpio237/direction
     #echo out > /sys/class/gpio/gpio238/direction
     #echo out > /sys/class/gpio/gpio239/direction
-    
+
     #QSFP RST
     echo "pca9535 0x23" > /sys/bus/i2c/devices/i2c-${NUM_MUX2_CHAN5_DEVICE}/new_device
     for((i=${GPIO_OFFSET}+208;i<=${GPIO_OFFSET}+213;i++));
@@ -686,8 +686,8 @@ function _i2c_gpio_init {
     #echo 0 > /sys/class/gpio/gpio211/value
     #echo 0 > /sys/class/gpio/gpio212/value
     #echo 0 > /sys/class/gpio/gpio213/value
-    
-	
+
+
     #SFP+ ABS 0-15
     echo "pca9535 0x20" > /sys/bus/i2c/devices/i2c-${NUM_MUX2_CHAN0_DEVICE}/new_device
     for((i=${GPIO_OFFSET}+192;i<=${GPIO_OFFSET}+207;i++));
@@ -728,7 +728,7 @@ function _i2c_gpio_init {
     #echo 1 > /sys/class/gpio/gpio205/active_low #SFP+13
     #echo 1 > /sys/class/gpio/gpio206/active_low #SFP+14
     #echo 1 > /sys/class/gpio/gpio207/active_low #SFP+15
-    
+
     #SFP+ ABS 16-31
     echo "pca9535 0x21" > /sys/bus/i2c/devices/i2c-${NUM_MUX2_CHAN0_DEVICE}/new_device
     for((i=${GPIO_OFFSET}+176;i<=${GPIO_OFFSET}+191;i++));
@@ -769,7 +769,7 @@ function _i2c_gpio_init {
     #echo 1 > /sys/class/gpio/gpio189/active_low #SFP+29
     #echo 1 > /sys/class/gpio/gpio190/active_low #SFP+30
     #echo 1 > /sys/class/gpio/gpio191/active_low #SFP+31
-    
+
     #SFP+ ABS 32-47
     echo "pca9535 0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX2_CHAN0_DEVICE}/new_device
     for((i=${GPIO_OFFSET}+160;i<=${GPIO_OFFSET}+175;i++));

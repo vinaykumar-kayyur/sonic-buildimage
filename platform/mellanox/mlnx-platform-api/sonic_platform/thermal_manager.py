@@ -56,7 +56,7 @@ class ThermalManager(ThermalManagerBase):
 
         cls.cpu_thermal_control = CPUThermalControl()
         cls.cpu_thermal_control.task_run()
-        
+
     @classmethod
     def stop_cpu_thermal_control_algoritm(cls):
         if cls.cpu_thermal_control:

@@ -31,7 +31,7 @@ static int e582_48x6q_init_i2c_master(void)
         printk(KERN_CRIT "e582_48x6q_init_i2c_master can't find i2c-core bus\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -42,7 +42,7 @@ static int e582_48x6q_exit_i2c_master(void)
         i2c_put_adapter(i2c_adp_master);
         i2c_adp_master = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -117,7 +117,7 @@ static int e582_48x6q_init_i2c_pca9548(void)
         printk(KERN_CRIT "install e582_48x6q board pca9548 failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -128,7 +128,7 @@ static int e582_48x6q_exit_i2c_pca9548(void)
         i2c_unregister_device(i2c_client_pca9548x);
         i2c_client_pca9548x = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -149,14 +149,14 @@ static int e582_48x6q_init_i2c_adt7470(void)
         printk(KERN_CRIT "install e582_48x6q board adt7470 failed\n");
         return -1;
     }
-    
+
     i2c_client_adt7470 = i2c_new_client_device(i2c_adp_adt7470, &i2c_dev_adt7470);
     if(IS_INVALID_PTR(i2c_client_adt7470)){
         i2c_client_adt7470 = NULL;
         printk(KERN_CRIT "install e582_48x6q board adt7470 failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -166,12 +166,12 @@ static int e582_48x6q_exit_i2c_adt7470(void)
         i2c_unregister_device(i2c_client_adt7470);
         i2c_client_adt7470 = NULL;
     }
-    
+
     if(IS_VALID_PTR(i2c_adp_adt7470)) {
         i2c_put_adapter(i2c_adp_adt7470);
         i2c_adp_adt7470 = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -205,7 +205,7 @@ static int e582_48x6q_init_i2c_psu(void)
         printk(KERN_CRIT "get e582_48x6q psu2 i2c-adp failed\n");
         return -1;
     }
-    
+
     i2c_client_psu1 = i2c_new_client_device(i2c_adp_psu1, &i2c_dev_psu1);
     if(IS_INVALID_PTR(i2c_client_psu1)){
         i2c_client_psu1 = NULL;
@@ -219,7 +219,7 @@ static int e582_48x6q_init_i2c_psu(void)
         printk(KERN_CRIT "create e582_48x6q board i2c client psu2 failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -235,18 +235,18 @@ static int e582_48x6q_exit_i2c_psu(void)
         i2c_client_psu2 = NULL;
     }
 
-    if(IS_VALID_PTR(i2c_adp_psu1)) 
+    if(IS_VALID_PTR(i2c_adp_psu1))
     {
         i2c_put_adapter(i2c_adp_psu1);
         i2c_adp_psu1 = NULL;
     }
 
-    if(IS_VALID_PTR(i2c_adp_psu2)) 
+    if(IS_VALID_PTR(i2c_adp_psu2))
     {
         i2c_put_adapter(i2c_adp_psu2);
         i2c_adp_psu2 = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -264,7 +264,7 @@ static int e582_48x6q_init_i2c_epld(void)
          printk(KERN_CRIT "e582_48x6q_init_i2c_epld can't find i2c-core bus\n");
          return -1;
     }
-    
+
     i2c_client_epld = i2c_new_client_device(i2c_adp_master, &i2c_dev_epld);
     if(IS_INVALID_PTR(i2c_client_epld))
     {
@@ -272,7 +272,7 @@ static int e582_48x6q_init_i2c_epld(void)
         printk(KERN_CRIT "create e582_48x6q board i2c client epld failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -282,7 +282,7 @@ static int e582_48x6q_exit_i2c_epld(void)
         i2c_unregister_device(i2c_client_epld);
         i2c_client_epld = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -316,7 +316,7 @@ static int e582_48x6q_init_i2c_gpio(void)
          printk(KERN_CRIT "e582_48x6q_init_i2c_gpio can't find i2c-core bus\n");
          return -1;
     }
-    
+
     i2c_client_gpio0 = i2c_new_client_device(i2c_adp_master, &i2c_dev_gpio0);
     if(IS_INVALID_PTR(i2c_client_gpio0))
     {
@@ -355,7 +355,7 @@ static int e582_48x6q_init_i2c_gpio(void)
         i2c_client_gpio4 = NULL;
         printk(KERN_CRIT "create e582_48x6q board i2c client gpio4 failed\n");
         return -1;
-    }    
+    }
 
     return 0;
 }
@@ -386,7 +386,7 @@ static int e582_48x6q_exit_i2c_gpio(void)
         i2c_unregister_device(i2c_client_gpio4);
         i2c_client_gpio4 = NULL;
     }
-    
+
     return 0;
 }
 #endif
@@ -401,7 +401,7 @@ static int e582_48x6q_smbus_read_reg(struct i2c_client *client, unsigned char re
         printk(KERN_CRIT "invalid i2c client");
         return -1;
     }
-    
+
     ret = i2c_smbus_read_byte_data(client, reg);
     if (ret >= 0) {
         *value = (unsigned char)ret;
@@ -419,13 +419,13 @@ static int e582_48x6q_smbus_read_reg(struct i2c_client *client, unsigned char re
 static int e582_48x6q_smbus_write_reg(struct i2c_client *client, unsigned char reg, unsigned char value)
 {
     int ret = 0;
-    
+
     if (IS_INVALID_PTR(client))
     {
         printk(KERN_CRIT "invalid i2c client");
         return -1;
     }
-    
+
     ret = i2c_smbus_write_byte_data(client, reg, value);
     if (ret != 0)
     {
@@ -477,7 +477,7 @@ static ssize_t e582_48x6q_psu_read_presence(struct device *dev, struct device_at
     }
 
     value = ((present & (1<<(present_no%8))) ? 1 : 0 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -521,7 +521,7 @@ static ssize_t e582_48x6q_psu_read_status(struct device *dev, struct device_attr
     }
 
     value = ((workstate & (1<<(workstate_no%8))) ? 1 : 0 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -531,7 +531,7 @@ static DEVICE_ATTR(psu_status, S_IRUGO, e582_48x6q_psu_read_status, NULL);
 static int e582_48x6q_init_psu(void)
 {
     int ret = 0;
-    
+
     psu_class = class_create(THIS_MODULE, "psu");
     if (IS_INVALID_PTR(psu_class))
     {
@@ -583,7 +583,7 @@ static int e582_48x6q_init_psu(void)
         printk(KERN_CRIT "create e582_48x6q psu2 device attr:status failed\n");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -775,7 +775,7 @@ void e582_48x6q_led_set(struct led_classdev *led_cdev, enum led_brightness set_v
     }
 
     led_value = ((led_value & mask) | ((set_value << shift) & (~mask)));
-    
+
     ret = e582_48x6q_smbus_write_reg(i2c_led_client, reg, led_value);
     if (ret != 0)
     {
@@ -784,7 +784,7 @@ void e582_48x6q_led_set(struct led_classdev *led_cdev, enum led_brightness set_v
     }
 
     return;
-    
+
 not_support:
 
     printk(KERN_INFO "Error: not support device:%s\n", led_cdev->name);
@@ -851,7 +851,7 @@ enum led_brightness e582_48x6q_led_get(struct led_classdev *led_cdev)
     led_value = ((led_value & mask) >> shift);
 
     return led_value;
-    
+
 not_support:
 
     printk(KERN_INFO "Error: not support device:%s\n", led_cdev->name);
@@ -861,9 +861,9 @@ not_support:
 void e582_48x6q_led_port_set(struct led_classdev *led_cdev, enum led_brightness set_value)
 {
     int portNum = 0;
-    
+
     sscanf(led_cdev->name, "port%d", &portNum);
-    
+
     port_led_mode[portNum-1] = set_value;
 
     return;
@@ -872,9 +872,9 @@ void e582_48x6q_led_port_set(struct led_classdev *led_cdev, enum led_brightness 
 enum led_brightness e582_48x6q_led_port_get(struct led_classdev *led_cdev)
 {
     int portNum = 0;
-    
-    sscanf(led_cdev->name, "port%d", &portNum);    
-    
+
+    sscanf(led_cdev->name, "port%d", &portNum);
+
     return port_led_mode[portNum-1];
 }
 
@@ -948,14 +948,14 @@ static int e582_48x6q_init_led(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
 static int e582_48x6q_exit_led(void)
 {
     int i = 0;
-	
+
     led_classdev_unregister(&led_dev_system);
     led_classdev_unregister(&led_dev_idn);
     led_classdev_unregister(&led_dev_fan1);
@@ -1039,7 +1039,7 @@ static ssize_t e582_48x6q_sfp_read_presence(struct device *dev, struct device_at
     {
         return sprintf(buf, "Error: read sfp data:%s set dir-ctl failed\n", attr->attr.name);
     }
-    
+
     input_bank = (reg_no/8) + 0x0;
     ret = e582_48x6q_smbus_read_reg(i2c_sfp_client, input_bank, &value);
     if (ret != 0)
@@ -1048,7 +1048,7 @@ static ssize_t e582_48x6q_sfp_read_presence(struct device *dev, struct device_at
     }
 
     value = ((value & (1<<(reg_no%8))) ? 0 : 1 );/*1:PRESENT 0:ABSENT*/
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -1113,7 +1113,7 @@ static ssize_t e582_48x6q_sfp_read_enable(struct device *dev, struct device_attr
     {
         return sprintf(buf, "Error: read sfp data:%s set dir-ctl failed\n", attr->attr.name);
     }
-    
+
     input_bank = (reg_no/8) + 0x8;
     ret = e582_48x6q_smbus_read_reg(i2c_sfp_client, input_bank, &value);
     if (ret != 0)
@@ -1122,7 +1122,7 @@ static ssize_t e582_48x6q_sfp_read_enable(struct device *dev, struct device_attr
     }
 
     value = ((value & (1<<(reg_no%8))) ? 0 : 1 );
-    
+
     return sprintf(buf, "%d\n", value);
 }
 
@@ -1192,7 +1192,7 @@ static ssize_t e582_48x6q_sfp_write_enable(struct device *dev, struct device_att
         printk(KERN_CRIT "Error: read sfp data:%s set dir-ctl failed\n", attr->attr.name);
         return size;
     }
-    
+
     input_bank = (reg_no/8) + 0x8;
     ret = e582_48x6q_smbus_read_reg(i2c_sfp_client, input_bank, &value);
     if (ret != 0)
@@ -1209,7 +1209,7 @@ static ssize_t e582_48x6q_sfp_write_enable(struct device *dev, struct device_att
     {
         value = (value & (~(1<<(reg_no % 8))));
     }
-    
+
     output_bank = (reg_no/8) + 0x8;
     ret = e582_48x6q_smbus_write_reg(i2c_sfp_client, output_bank, value);
     if (ret != 0)
@@ -1217,7 +1217,7 @@ static ssize_t e582_48x6q_sfp_write_enable(struct device *dev, struct device_att
         printk(KERN_CRIT "Error: write %s presence failed\n", name);
         return size;
     }
-    
+
     return size;
 }
 
@@ -1227,7 +1227,7 @@ static int e582_48x6q_init_sfp(void)
 {
     int ret = 0;
     int i = 0;
-    
+
     sfp_class = class_create(THIS_MODULE, "sfp");
     if (IS_INVALID_PTR(sfp_class))
     {
@@ -1260,7 +1260,7 @@ static int e582_48x6q_init_sfp(void)
             continue;
         }
     }
-    
+
     return ret;
 }
 
@@ -1293,15 +1293,15 @@ static int e582_48x6q_init(void)
 {
     int ret = 0;
     int failed = 0;
-    
+
     printk(KERN_ALERT "install e582_48x6q board dirver...\n");
-    
+
     ret = e582_48x6q_init_i2c_master();
     if (ret != 0)
     {
         failed = 1;
     }
-    
+
     ret = e582_48x6q_init_i2c_pca9548();
     if (ret != 0)
     {
@@ -1354,14 +1354,14 @@ static int e582_48x6q_init(void)
         printk(KERN_INFO "install e582_48x6q board driver failed\n");
     else
         printk(KERN_ALERT "install e582_48x6q board dirver...ok\n");
-    
+
     return 0;
 }
 
 static void e582_48x6q_exit(void)
 {
     printk(KERN_INFO "uninstall e582_48x6q board dirver...\n");
-    
+
     e582_48x6q_exit_sfp();
     e582_48x6q_exit_led();
     e582_48x6q_exit_psu();

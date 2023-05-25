@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -142,7 +142,7 @@ sal_sem_take(sal_sem_t b, int usec)
                     err = 1;
                     break;
                 }
-                err = wait_event_interruptible_timeout(s->wq, cnt != s->cnt, 
+                err = wait_event_interruptible_timeout(s->wq, cnt != s->cnt,
                                                        USEC_TO_JIFFIES(usec));
                 if (err < 0) {
                     break;
@@ -158,9 +158,9 @@ sal_sem_take(sal_sem_t b, int usec)
                 }
 
                 sal_usleep(time_wait);
-                
+
                 usec -= time_wait;
-            
+
                 if (usec == 0) {
                     err = ETIMEDOUT;
                     break;
@@ -207,7 +207,7 @@ sal_time_usecs(void)
 #endif
 #endif
 }
-    
+
 void
 sal_usleep(uint32 usec)
 {
@@ -263,7 +263,7 @@ sal_udelay(uint32 usec)
             stop = jiffies;
         }
     }
-   
+
     for (iy = 0; iy < usec; iy++) {
         for (ix = 0; ix < loops; ix++) {
             _sal_udelay_counter++;      /* Prevent optimizations */

@@ -62,10 +62,10 @@ def log_os_system(cmd, show):
             print(('Failed :'+cmd))
     return  status, output
 
-      
+
 # Make a class we can use to capture stdout and sterr in the log
-class accton_as7716xb_drv_handler(object):    
-    
+class accton_as7716xb_drv_handler(object):
+
     QSFP_PORT_START = 1
     QSFP_PORT_END = 32
     BASE_PATH = "/usr/local/bin/"
@@ -74,7 +74,7 @@ class accton_as7716xb_drv_handler(object):
     QSFP_RESET_PATH = "/sys/bus/i2c/devices/0-0060/module_reset_"
     QSFP_PRESENT_FILE = "/tmp/ipmi_qsfp_pres"
     QSFP_EEPROM_FILE = "/tmp/ipmi_qsfp_ee_"
-    THERMAL_FILE = "/tmp/ipmi_thermal"    
+    THERMAL_FILE = "/tmp/ipmi_thermal"
     IPMI_CMD_QSFP = "ipmitool raw 0x34 0x10 "
     IPMI_CMD_THERMAL = "ipmitool raw 0x34 0x12 "
     IPMI_CMD_FAN     = "ipmitool raw 0x34 0x14 "
@@ -95,7 +95,7 @@ class accton_as7716xb_drv_handler(object):
     SYS_EEPROM_FILE_1 = "/tmp/ipmi_sys_eeprom_1"
     SYS_EEPROM_FILE_2 = "/tmp/ipmi_sys_eeprom_2"
     SYS_EEPROM_PATH = "/sys/bus/i2c/devices/0-0056/eeprom"
-    
+
 
     def __init__(self, log_file, log_level):
         """Needs a logger and a logger level."""
@@ -118,7 +118,7 @@ class accton_as7716xb_drv_handler(object):
 
         logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
 
-    def manage_ipmi_qsfp(self):        
+    def manage_ipmi_qsfp(self):
         logging.debug ("drv hanlder-manage_ipmi_qsfp")
         print("drv hanlder")
         #Handle QSFP case
@@ -129,18 +129,18 @@ class accton_as7716xb_drv_handler(object):
         try:
             check_file = open(file_path)
         except IOError as e:
-            print("Error: unable to open file: %s" % str(e))   
+            print("Error: unable to open file: %s" % str(e))
         line = check_file.readline()
         pres_line= line.rstrip().replace(" ","")
         while line:
-            line = check_file.readline()            
+            line = check_file.readline()
             pres_line+=line.rstrip().replace(" ","")
-        check_file.close() 
-        
-        
+        check_file.close()
+
+
         for i in range(self.QSFP_PORT_START, self.QSFP_PORT_END+1, 1):
             if i>1:
-                k=(i-1)*2 +1 
+                k=(i-1)*2 +1
             else:
                 k=1;
             if pres_line[k] == '1':
@@ -162,7 +162,7 @@ class accton_as7716xb_drv_handler(object):
                 line = check_file.readline()
                 str_line= line.rstrip().replace(" ","")
                 while line:
-                    line = check_file.readline()            
+                    line = check_file.readline()
                     str_line+=line.rstrip().replace(" ","")
                 check_file.close()
                 file_path = self.QSFP_EEPROM_FILE + str(i) + "_2"
@@ -173,7 +173,7 @@ class accton_as7716xb_drv_handler(object):
                     print("Error: unable to open file: %s" % str(e))
                 line = check_file.readline()
                 str_line+= line.rstrip().replace(" ","")
-                
+
                 while line:
                     line = check_file.readline()
                     str_line+=line.rstrip().replace(" ","")
@@ -194,15 +194,15 @@ class accton_as7716xb_drv_handler(object):
                     set_drv_cmd = "echo 0 > " + self.BASE_I2C_PATH + "0-00"+str(i) +"/eeprom"
                 #print(set_drv_cmd)
                 log_os_system(set_drv_cmd, 0)
-                
-            time.sleep(0.01) 
+
+            time.sleep(0.01)
         return True
-        
+
     def manage_ipmi_thermal(self):
         logging.debug ("drv hanlder-manage_ipmi_thermal")
         #Handle thermal case
-        #ipmitool raw 0x34 0x12 
-        ipmi_cmd = self.IPMI_CMD_THERMAL + " > " +self.THERMAL_FILE  
+        #ipmitool raw 0x34 0x12
+        ipmi_cmd = self.IPMI_CMD_THERMAL + " > " +self.THERMAL_FILE
         log_os_system(ipmi_cmd, 0)
         file_path = self.THERMAL_FILE
         check_file = open(file_path)
@@ -213,9 +213,9 @@ class accton_as7716xb_drv_handler(object):
         line = check_file.readline()
         str_line= line.rstrip().replace(" ","")
         while line:
-            line = check_file.readline()            
+            line = check_file.readline()
             str_line+=line.rstrip().replace(" ","")
-        check_file.close()       
+        check_file.close()
         val_str= "0x" + str(str_line[4])+str(str_line[5])
         val_int=int(val_str, 16)*1000
         check_file.close()
@@ -229,14 +229,14 @@ class accton_as7716xb_drv_handler(object):
         val_int=int(val_str, 16) * 1000
         set_drv_cmd = "echo "+str(val_int) + " > " + self.BASE_I2C_PATH + "0-004a/temp1_input"
         log_os_system(set_drv_cmd, 0)
-        
+
         return True
-         
+
     def manage_ipmi_fan(self):
         logging.debug ("drv hanlder-manage_ipmi_fan")
         #Handle fan case
         #ipmitool raw  0x34 0x14
-        ipmi_cmd = self.IPMI_CMD_FAN + " > " +self.FAN_FILE  
+        ipmi_cmd = self.IPMI_CMD_FAN + " > " +self.FAN_FILE
         log_os_system(ipmi_cmd, 0)
         file_path = self.FAN_FILE
         #print(file_path)
@@ -244,13 +244,13 @@ class accton_as7716xb_drv_handler(object):
         try:
             check_file = open(file_path)
         except IOError as e:
-            print("Error: unable to open file: %s" % str(e))   
+            print("Error: unable to open file: %s" % str(e))
         line = check_file.readline()
         str_line= line.rstrip().replace(" ","")
         while line:
-            line = check_file.readline()            
+            line = check_file.readline()
             str_line+=line.rstrip().replace(" ","")
-        check_file.close()        
+        check_file.close()
         #print (str_line)
         k=0
         for i in range(self.FAN_ID_START, self.FAN_ID_END+1, 1):
@@ -260,9 +260,9 @@ class accton_as7716xb_drv_handler(object):
             else:
                 set_drv_cmd = "echo 0 > " + self.FAN_PATH + str(i) + "_present"
             log_os_system(set_drv_cmd, 0)
-        
+
             val_str= "0x" + str(str_line[k+6])+str(str_line[k+7]) + str(str_line[k+4])+str(str_line[k+5])
-            val_int=int(val_str, 16)        
+            val_int=int(val_str, 16)
             set_drv_cmd = "echo " + str(val_int) + " > " + self.FAN_PATH + str(i) + "_front_speed_rpm"
             log_os_system(set_drv_cmd, 0)
             val_str= "0x" + str(str_line[k+54])+str(str_line[k+55]) + str(str_line[k+52])+str(str_line[k+53])
@@ -271,17 +271,17 @@ class accton_as7716xb_drv_handler(object):
             log_os_system(set_drv_cmd, 0)
             k+=8;
         return True
-        
-        
+
+
     def manage_ipmi_psu(self):
         logging.debug ("drv hanlder-manage_ipmi_psu")
         #Handle psu case
         #present: ipmitool raw  0x34 0x16 '0x1' .   Param-1 is psu id(id_1:0x1, id_2:0x2)
-       
+
         #cpld access psu
         for i in range(self.PSU_ID_START, self.PSU_ID_END+1, 1):
             #present case
-            ipmi_cmd = self.IPMI_CMD_PSU + str(i) + " > " +self.PSU_FILE + str(i)  
+            ipmi_cmd = self.IPMI_CMD_PSU + str(i) + " > " +self.PSU_FILE + str(i)
             log_os_system(ipmi_cmd, 0)
             if i==1:
                psu_sysfs_path = self.PSU1_PATH
@@ -293,48 +293,48 @@ class accton_as7716xb_drv_handler(object):
             try:
                 check_file = open(file_path)
             except IOError as e:
-                print("Error: unable to open file: %s" % str(e))   
+                print("Error: unable to open file: %s" % str(e))
             line = check_file.readline()
             str_line= line.rstrip().replace(" ","")
             while line:
-                line = check_file.readline()            
+                line = check_file.readline()
                 str_line+=line.rstrip().replace(" ","")
-            check_file.close()  
-            #print (line)            
-            if str_line[1]=='0': 
+            check_file.close()
+            #print (line)
+            if str_line[1]=='0':
                 int_val=1 #psu insert
                 #print "psu_%d present"%i
                 set_drv_cmd = "echo " +str(int_val) + " > " + psu_sysfs_path + "psu_present"
-                log_os_system(set_drv_cmd, 0) 
+                log_os_system(set_drv_cmd, 0)
                 set_drv_cmd = "echo " + str(str_line[5]) + " > " + psu_sysfs_path + "psu_power_good"
-                log_os_system(set_drv_cmd, 0)                 
+                log_os_system(set_drv_cmd, 0)
             else:
                 int_val=0
                 set_drv_cmd = "echo " +str(int_val) + " > " + psu_sysfs_path + "psu_present"
                 log_os_system(set_drv_cmd, 0)
                 set_drv_cmd = "echo " + str(int_val) + " > " + psu_sysfs_path + "psu_power_good"
-                log_os_system(set_drv_cmd, 0)      
-               
+                log_os_system(set_drv_cmd, 0)
+
         #pmbus
             if i==1:
                psu_sysfs_path = self.PSU1_PMBUS_PATH
             else:
-               psu_sysfs_path = self.PSU2_PMBUS_PATH            
-            
+               psu_sysfs_path = self.PSU2_PMBUS_PATH
+
             if str_line[5]=='1': #power_on
                 val_str= "0x" + str(str_line[28])+str(str_line[29]) + str(str_line[26])+str(str_line[27])
-                val_int=int(val_str, 16) * 1000                
+                val_int=int(val_str, 16) * 1000
                 set_drv_cmd = "echo " + str(val_int) + " > " + psu_sysfs_path + "psu_temp1_input"
                 log_os_system(set_drv_cmd, 0)
-                #print "val_int=%d"%val_int               
+                #print "val_int=%d"%val_int
                 val_str= "0x" + str(str_line[32])+str(str_line[33]) + str(str_line[30])+str(str_line[31])
                 val_int=int(val_str, 16)
-                #print "fan:val_int=%d"%val_int               
+                #print "fan:val_int=%d"%val_int
                 set_drv_cmd = "echo " + str(val_int) + " > " + psu_sysfs_path + "psu_fan1_speed_rpm"
                 log_os_system(set_drv_cmd, 0)
                 val_str= "0x" + str(str_line[36])+str(str_line[37]) + str(str_line[34])+str(str_line[35])
                 val_int=int(val_str, 16)
-                #print "pout val_int=%d"%val_int               
+                #print "pout val_int=%d"%val_int
                 set_drv_cmd = "echo " + str(val_int) + " > " + psu_sysfs_path + "psu_p_out"
                 log_os_system(set_drv_cmd, 0)
             else: #power_off
@@ -345,21 +345,21 @@ class accton_as7716xb_drv_handler(object):
                 log_os_system(set_drv_cmd, 0)
                 set_drv_cmd = "echo " + str(val_int) + " > " + psu_sysfs_path + "psu_p_out"
                 log_os_system(set_drv_cmd, 0)
-         
-        time.sleep(2)     
+
+        time.sleep(2)
         return True
-        
+
     def manage_ipmi_sys(self):
         logging.debug ("drv hanlder-manage_ipmi_sys")
         #Handle sys case
         #ipmitool -raw 0x34 0x18 0x00 0x80
         #ipmitool -raw 0x34 0x18 0x80 0x80
-        
+
         ipmi_cmd = self.IPMI_CMD_SYS_EEPROM_1 + " > " + self.SYS_EEPROM_FILE_1
-        log_os_system(ipmi_cmd, 0)        
+        log_os_system(ipmi_cmd, 0)
         ipmi_cmd = self.IPMI_CMD_SYS_EEPROM_2 + " > " + self.SYS_EEPROM_FILE_2
         log_os_system(ipmi_cmd, 0)
-        
+
         #Read SYS EEPROM
         file_path = self.SYS_EEPROM_FILE_1
         check_file = open(file_path)
@@ -370,10 +370,10 @@ class accton_as7716xb_drv_handler(object):
         line = check_file.readline()
         str_line= line.rstrip().replace(" ","")
         while line:
-            line = check_file.readline()            
+            line = check_file.readline()
             str_line+=line.rstrip().replace(" ","")
         check_file.close()
-        
+
         file_path = self.SYS_EEPROM_FILE_2
         check_file = open(file_path)
         try:
@@ -391,8 +391,8 @@ class accton_as7716xb_drv_handler(object):
         set_drv_cmd = "echo " + str_line+ " > " + self.SYS_EEPROM_PATH
         #print(set_drv_cmd)
         log_os_system(set_drv_cmd, 0)
-        
-        return True  
+
+        return True
 
 def main(argv):
     log_file = '%s.log' % FUNCTION_NAME
@@ -411,11 +411,11 @@ def main(argv):
                 log_level = logging.DEBUG
             elif opt in ('-l', '--lfile'):
                 log_file = arg
-                
+
     set_drv_cmd = "echo 100 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us"
-    log_os_system(set_drv_cmd, 0) 
+    log_os_system(set_drv_cmd, 0)
     monitor = accton_as7716xb_drv_handler(log_file, log_level)
-   
+
     set_sys_eeprom=0
     thermal_chk_time=0
     psu_chk_time=0
@@ -426,12 +426,12 @@ def main(argv):
             monitor.manage_ipmi_sys()
             set_sys_eeprom=1
         monitor.manage_ipmi_qsfp()
-        time.sleep(0.1)        
+        time.sleep(0.1)
         monitor.manage_ipmi_thermal()
         monitor.manage_ipmi_psu()
-        time.sleep(0.1)        
+        time.sleep(0.1)
         monitor.manage_ipmi_fan()
-        time.sleep(0.05)        
+        time.sleep(0.05)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

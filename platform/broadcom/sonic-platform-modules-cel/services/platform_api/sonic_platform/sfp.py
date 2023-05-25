@@ -478,7 +478,7 @@ class Sfp(SfpBase):
         Returns:
         :param index: An integer, 1-based index of the sfp of which to query status
         :return: String,
-            A string representing the name of the sfp. 
+            A string representing the name of the sfp.
         """
         return self._sfputil_helper.logical[self._sfp_index] or "Unknown"
 
@@ -525,7 +525,7 @@ class Sfp(SfpBase):
         Returns:
             A dict which contains following keys/values :
         ================================================================================
-        keys                       |Value Format   |Information	
+        keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
         vendor_rev                 |1*255VCHAR     |vendor revision of SFP
@@ -1444,7 +1444,7 @@ class Sfp(SfpBase):
         Returns:
             A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
             TX channels which have been disabled in this SFP.
-            As an example, a returned value of 0x5 indicates that channel 0 
+            As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
         tx_disable_list = self.get_tx_disable()
@@ -1992,7 +1992,7 @@ class Sfp(SfpBase):
         Sets SFP power level using power_override and power_set
 
         Args:
-            power_override : 
+            power_override :
                     A Boolean, True to override set_lpmode and use power_set
                     to control SFP power, False to disable SFP power control
                     through power_override/power_set and use set_lpmode

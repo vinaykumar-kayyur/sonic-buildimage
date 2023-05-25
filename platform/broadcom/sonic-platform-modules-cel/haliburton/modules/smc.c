@@ -129,7 +129,7 @@ enum MASTER_LED {
 
 /* SFP PORT INT TRIGGER MODE
  * [7:6] RESERVED
- * [5:4] RXLOS 
+ * [5:4] RXLOS
  * [3:2] MODABS
  * [1:0] TXFAULT
  * 00: falling edge,
@@ -577,7 +577,7 @@ static ssize_t txfault_trig_show(struct device *dev, struct device_attribute *at
  * @brief      Set the trigger mode of each interrupt type.
  *             Only one trigger mode allow in a type.
  *
- * @param      buf   The trigger mode of follwings 
+ * @param      buf   The trigger mode of follwings
  *                   "falling", "rising", "both"
  */
 static ssize_t txfault_trig_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
@@ -630,8 +630,8 @@ static ssize_t modabs_trig_show(struct device *dev, struct device_attribute *att
  * @brief      Set the trigger mode of each interrupt type.
  *             Only one trigger mode allow in a type.
  *
- * @param      buf   The trigger mode of follwings 
- *                   "falling", "rising", "both", "low"            
+ * @param      buf   The trigger mode of follwings
+ *                   "falling", "rising", "both", "low"
  */
 static ssize_t modabs_trig_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
 {
@@ -683,7 +683,7 @@ static ssize_t rxlos_trig_show(struct device *dev, struct device_attribute *attr
  * @brief      Set the trigger mode of each interrupt type.
  *             Only one trigger mode allow in a type.
  *
- * @param      buf   The trigger mode of follwings 
+ * @param      buf   The trigger mode of follwings
  *                   "falling", "rising", "both", "low"
  */
 static ssize_t rxlos_trig_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)

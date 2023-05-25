@@ -267,7 +267,7 @@ int sysfs_detect_hwmon_index(void)
 	inventec_show_attr(hwmon_buf, hwmon_path);
 	if (strncmp(hwmon_buf, "inv_psoc", 8) == 0) {
 	    hwm_psoc = hwid;
-	} 
+	}
 	else
 	if (strncmp(hwmon_buf, "inv_bmc", 7) == 0) {
 	    hwm_psoc = hwid;

@@ -102,7 +102,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
         if(data->index==0)
            status = ( (data->status >> 2) & 0x1);
         else
-           status = ( (data->status >> 3) & 0x1); 
+           status = ( (data->status >> 3) & 0x1);
     }
 
     return sprintf(buf, "%d\n", status);
@@ -280,10 +280,10 @@ static struct as9726_32d_psu_data *as9726_32d_psu_update_device(struct device *d
         memset(data->model_name, 0, sizeof(data->model_name));
         memset(data->serial_number, 0, sizeof(data->serial_number));
         psu_present = (data->status >> (data->index) & 0x1); //0:present, 1:not present
-       
+
         if (!psu_present) {
             status = as9726_32d_psu_read_block(client, 0x20, data->model_name,
-                                               ARRAY_SIZE(data->model_name)-1);                                               
+                                               ARRAY_SIZE(data->model_name)-1);
             if (status < 0) {
                 data->model_name[0] = '\0';
                 dev_dbg(&client->dev, "unable to read model name from (0x%x)\n", client->addr);
@@ -291,7 +291,7 @@ static struct as9726_32d_psu_data *as9726_32d_psu_update_device(struct device *d
             }
             else {
                 data->model_name[ARRAY_SIZE(data->model_name)-1] = '\0';
-                
+
             }
              /* Read from offset 0x35 ~ 0x46 (18 bytes) */
             status = as9726_32d_psu_read_block(client, 0x35,data->serial_number, MAX_SERIAL_NUMBER);

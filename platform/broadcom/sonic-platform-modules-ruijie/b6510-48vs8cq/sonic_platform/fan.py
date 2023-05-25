@@ -25,7 +25,7 @@ class Fan(FanBase):
 
     def __init__(self, index, config=None, hal_fan=None, is_psu_fan=False):
         self.index = index
-        self.is_psu_fan = is_psu_fan   
+        self.is_psu_fan = is_psu_fan
         if config:
             if self.is_psu_fan:
                 self.name = "Psu{}-{}".format(self.index, config.get("name"))

@@ -109,7 +109,7 @@ static const unsigned char avoton_gpio_regs[] = {
 #define GPIO_ROUT_OFFSET_SUS0	0
 #define GPIO_ROUT_OFFSET_SUS1	2
 #define GPIO_ROUT_OFFSET_SUS2	4
-#define GPIO_ROUT_OFFSET_SUS3	6	
+#define GPIO_ROUT_OFFSET_SUS3	6
 // GPIO_ROUT_OFFSET_SUS4 : unused
 // GPIO_ROUT_OFFSET_SUS5 : unused
 #define GPIO_ROUT_OFFSET_SUS6	12
@@ -121,7 +121,7 @@ static const unsigned char avoton_gpio_regs[] = {
 #define GPIO_ROUT_OFFSET_CORE3   22
 #define GPIO_ROUT_OFFSET_CORE4   24
 #define GPIO_ROUT_OFFSET_CORE5   26
-#define GPIO_ROUT_OFFSET_CORE6   28 
+#define GPIO_ROUT_OFFSET_CORE6   28
 #define GPIO_ROUT_OFFSET_CORE7   30
 
 enum GPIO_ROUT {
@@ -876,7 +876,7 @@ static int dell_ich_probe(struct platform_device *pdev)
 	ich_data->pmc_base = ioremap(res->start, resource_size(res));
         if(!ich_data->pmc_base) {
 		pr_info("dell_ich pmc ioremap failed\n");
-		ret = -ENOMEM;	
+		ret = -ENOMEM;
 		goto probe_err;
         }
 

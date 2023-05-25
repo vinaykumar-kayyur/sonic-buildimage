@@ -1562,7 +1562,7 @@ common_ioexp_init(struct ioexp_obj_s *self) {
 
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
-    
+
     if (self->mode == IOEXP_MODE_DIRECT) {
         goto update_common_ioexp_init;
     }
@@ -1579,11 +1579,11 @@ common_ioexp_init(struct ioexp_obj_s *self) {
             }
             /* Setup default value */
             for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
-                
+
                 /* [Desc] Skip the setup default value behavior
                    [Note] Setup default value = -1 if you don't want to write the value to IOEXP or CPLD
                 */
-                if(addr_p->write_offset[offset] < 0){ 
+                if(addr_p->write_offset[offset] < 0){
                     SWPS_DEBUG("skip a write_offset <%d>\n", addr_p->conf_offset[offset]);
                     continue;
                 }
@@ -1617,7 +1617,7 @@ _is_channel_ready(struct ioexp_obj_s *self){
 
     int chip_id = 0;
     int byte_id = 0;
-    int getval  = ERR_IOEXP_UNEXCPT; 
+    int getval  = ERR_IOEXP_UNEXCPT;
     int chkval  = ERR_IOEXP_UNEXCPT;
     char *emsg  = "ERR";
     struct ioexp_addr_s *addr_p = NULL;
@@ -1643,23 +1643,23 @@ _is_channel_ready(struct ioexp_obj_s *self){
     }
     chip_id = 0;
     byte_id = 0;
-    
+
 go_is_channel_ready:
     addr_p = &(self->ioexp_map_p->map_addr[chip_id]);
     chkval = addr_p->conf_default[byte_id];
     getval = i2c_smbus_read_byte_data(_get_i2c_client(self, chip_id),
                                       addr_p->conf_offset[byte_id]);
-    
+
     SWPS_DEBUG("%s: target info <ioexp>:%d <chip>:%d <byte>:%d <chkv>:%d <getv>:%d\n",
                __func__, self->ioexp_id, chip_id, byte_id, chkval, getval);
-    
+
     if ((getval >= 0) && (getval == chkval)) {
         return 1;
     }
     return 0;
 
 err_is_channel_ready:
-    SWPS_ERR("%s: %s <ioexp>:%d <chip>:%d <byte>:%d <chkv>:%d <getv>:%d\n", 
+    SWPS_ERR("%s: %s <ioexp>:%d <chip>:%d <byte>:%d <chkv>:%d <getv>:%d\n",
              __func__, emsg, self->ioexp_id, chip_id, byte_id, chkval, getval);
     return ERR_IOEXP_UNEXCPT;
 }
@@ -2170,7 +2170,7 @@ setup_ioexp_config(struct ioexp_obj_s *self) {
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
     if (io_no_init) {
-        
+
         SWPS_INFO("io_no_init:%d \n", io_no_init);
         return 0;
     }
@@ -2182,11 +2182,11 @@ setup_ioexp_config(struct ioexp_obj_s *self) {
             return -1;
         }
         for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
-            
+
             /* [Desc] Skip the setup config value behavior
                [Note] Setup config value = -1 if you don't want to write the value to IOEXP or CPLD
             */
-            if(addr_p->conf_offset[offset] < 0){ 
+            if(addr_p->conf_offset[offset] < 0){
                 SWPS_DEBUG("skip a config_offset <%d>\n", addr_p->conf_offset[offset]);
                 continue;
             }

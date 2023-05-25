@@ -22,7 +22,7 @@ start)
     modprobe baseboard_cpld
     modprobe switchboard_fpga
     modprobe mc24lc64t
-        
+
     # Add driver to support TLV - EEPROM
     for devnum in 0 1; do
         devname=`cat /sys/bus/i2c/devices/i2c-${devnum}/name`

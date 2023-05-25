@@ -5,7 +5,7 @@
 /****** Parameter *****/
 
 /****** Struct *****/
-typedef struct 
+typedef struct
 {
   volatile UINT32 CB_WW;   // Circular Buffer Write Window
   volatile UINT32 H_CSR;   // Host Control and Status Register
@@ -14,10 +14,10 @@ typedef struct
 } HECI_MBAR_REGS;
 
 
-typedef union 
+typedef union
 {
   UINT32    DWord;
-  struct 
+  struct
   {
     UINT32  H_IE    : 1,  // 0 -  Interrupt Enable ME
             H_IS    : 1,  // 1 -  Interrupt Status ME
@@ -32,10 +32,10 @@ typedef union
 } HECI_HOST_CSR;
 
 // HECI_MBAR_REGS::ME_CSR - ME Control and Status Register
-typedef union 
+typedef union
 {
   UINT32   DWord;
-  struct 
+  struct
   {
     UINT32 ME_IE   : 1,  // 0 -  Interrupt Enable (Host Read Access)
            ME_IS   : 1,  // 1 -  Interrupt Status (Host Read Access)
@@ -62,7 +62,7 @@ EFI_STATUS HeciInit (   HECI_DEVICE   *pThis,
   HECI_ME_CSR     sMeCsr;
   HECI_MBAR_REGS *pMbarRegs;
   VOID *pAddrPoint;
-  
+
   if (pThis == NULL || (pThis->Mbar & 0xF) != 0 || pThis->Hidm > HECI_HIDM_LAST)
   {
     printk("Heci Init Failed");
@@ -84,8 +84,8 @@ EFI_STATUS HeciInit (   HECI_DEVICE   *pThis,
            pThis->Bus, pThis->Dev, pThis->Fun, pThis->Vid, pThis->Did);
     return EFI_DEVICE_ERROR;
   }
-  
-  // Check MBAR, 
+
+  // Check MBAR,
   pAddrPoint = HeciMbarRead(pThis);
   pMbarRegs = (HECI_MBAR_REGS*)ioremap_nocache(pAddrPoint, 0x1000);
   if (pMbarRegs == NULL)
@@ -95,13 +95,13 @@ EFI_STATUS HeciInit (   HECI_DEVICE   *pThis,
     Status = EFI_DEVICE_ERROR;
     goto GO_FAIL;
   }
-  
+
   // Set HECI interrupt delivery mode.
   sHCsr.DWord = pMbarRegs->H_CSR;
   sHCsr.Bits.H_IE = 0;
   pMbarRegs->H_CSR = sHCsr.DWord;
   PciWrite8(pThis->PciCfg + HECI_REG_HIDM, pThis->Hidm);
- 
+
   // Check HECI was free
   sMeCsr.DWord = pMbarRegs->ME_CSR;
   if (!sMeCsr.Bits.ME_RDY)
@@ -120,7 +120,7 @@ EFI_STATUS HeciInit (   HECI_DEVICE   *pThis,
     pThis->HMtu = sHCsr.Bits.H_CBD * sizeof(UINT32) - sizeof(HECI_MSG_HEADER);
     pThis->MeMtu = sMeCsr.Bits.ME_CBD * sizeof(UINT32) - sizeof(HECI_MSG_HEADER);
   }
-  
+
  GO_FAIL:
   if (pTimeout != NULL)
   {
@@ -129,7 +129,7 @@ EFI_STATUS HeciInit (   HECI_DEVICE   *pThis,
   pThis->Mefs1.DWord = HeciPciReadMefs1();
   iounmap((VOID *)pMbarRegs);
   return Status;
-} 
+}
 
 EFI_STATUS HecClearQue (    HECI_DEVICE   *pThis,
                             UINT32        *pTimeout)
@@ -140,13 +140,13 @@ EFI_STATUS HecClearQue (    HECI_DEVICE   *pThis,
   HECI_ME_CSR     sMeCsr;
   HECI_MBAR_REGS *pMbarRegs;
   VOID *pAddrPoint;
-  
+
   if (pThis == NULL)
   {
     printk("Failed");
     return EFI_INVALID_PARAMETER;
   }
-  
+
   // Check for HECI availability on PCI
   pAddrPoint = HeciMbarRead(pThis);
   pMbarRegs = (HECI_MBAR_REGS*)ioremap_nocache(pAddrPoint, 0x1000);
@@ -164,7 +164,7 @@ EFI_STATUS HecClearQue (    HECI_DEVICE   *pThis,
   }
   printk("[HECI-%d] Resetting HECI interface (CSR %X/%X)\n",
          pThis->Fun, pMbarRegs->H_CSR, pMbarRegs->ME_CSR);
-  
+
   sHCsr.DWord = pMbarRegs->H_CSR;
   if (!sHCsr.Bits.H_RST)
   {
@@ -210,19 +210,19 @@ EFI_STATUS HecClearQue (    HECI_DEVICE   *pThis,
     MicroSecondDelay(HECI_TIMEOUT_UNIT);
     Timeout--;
   }
-  
+
   // ME side is ready, signal host side is ready too.
   sHCsr.DWord = pMbarRegs->H_CSR;
   sHCsr.Bits.H_RST = 0;
   sHCsr.Bits.H_RDY = 1;
   sHCsr.Bits.H_IG = 1;
   pMbarRegs->H_CSR = sHCsr.DWord;
-  
+
   // Update MTU, ME could change it during reset.
   pThis->HMtu = sHCsr.Bits.H_CBD * sizeof(UINT32) - sizeof(HECI_MSG_HEADER);
   pThis->MeMtu = sMeCsr.Bits.ME_CBD * sizeof(UINT32) - sizeof(HECI_MSG_HEADER);
   Status = EFI_SUCCESS;
-  
+
 GO_FAIL:
   if (pTimeout != NULL)
   {
@@ -231,7 +231,7 @@ GO_FAIL:
   pThis->Mefs1.DWord = HeciPciReadMefs1();
   iounmap((VOID *)pMbarRegs);
   return Status;
-} 
+}
 
 EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
                             UINT32          *pTimeout,
@@ -246,7 +246,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
   HECI_ME_CSR     sMeCsr;
   HECI_MBAR_REGS  *pMbarRegs;
   VOID *pAddrPoint;
-  
+
   if (pThis == NULL || pMsgBuf == NULL ||
       pBufLen == NULL || *pBufLen < sizeof(HECI_MSG_HEADER))
   {
@@ -267,8 +267,8 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
   {
     Timeout = *pTimeout;
   }
-  
-  
+
+
   //  read from queue.
   dwBufLen = *pBufLen;
   *pBufLen = dwDataReads = 0;
@@ -276,7 +276,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
   {
     sHCsr.DWord = pMbarRegs->H_CSR;
     sMeCsr.DWord = pMbarRegs->ME_CSR;
-    
+
     bFilledSlots = (UINT8)((INT8)sMeCsr.Bits.ME_CBWP - (INT8)sMeCsr.Bits.ME_CBRP);
     // Is it ready ?
     if (!sMeCsr.Bits.ME_RDY || !sHCsr.Bits.H_RDY || bFilledSlots > sHCsr.Bits.H_CBD)
@@ -289,14 +289,14 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
       continue;
     }
 
-    // Read queue 
+    // Read queue
     while (bFilledSlots-- > 0)
     {
-      
+
       DWord = pMbarRegs->CB_RW;
       if (*pBufLen < dwBufLen)
       {
-        
+
         if (dwDataReads < dwBufLen / sizeof(UINT32))
         {
           ((UINT32*)pMsgBuf)[dwDataReads] = DWord;
@@ -309,7 +309,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
             case 3: ((UINT8*)pMsgBuf)[*pBufLen + 2] = (UINT8)(DWord >> 16);
             case 2: ((UINT8*)pMsgBuf)[*pBufLen + 1] = (UINT8)(DWord >> 8);
             case 1: ((UINT8*)pMsgBuf)[*pBufLen + 0] = (UINT8)DWord;
-          } 
+          }
           *pBufLen += dwBufLen % sizeof(UINT32);
         }
       }
@@ -319,7 +319,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
                pThis->Fun, pMsgBuf[0].DWord, dwBufLen);
       }
       dwDataReads++;
-      
+
       // Read message length.
       if (bMsgLen == 0)
       {
@@ -342,12 +342,12 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
           break; // while (bFilledSlots)
         }
       }
-      
+
       // If message is complete set interrupt to ME to let it know that next
       // message can be sent and exit.
       if (dwDataReads >= bMsgLen)
       {
-       
+
         sMeCsr.DWord = pMbarRegs->ME_CSR;
         sHCsr.DWord = pMbarRegs->H_CSR;
         if (!sMeCsr.Bits.ME_RDY)
@@ -363,7 +363,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
         }
         goto GO_FAIL;
       }
-    } 
+    }
     if (Timeout == 0)
     {
       printk("[HECI-%d] Receive failed (timeout)\n", pThis->Fun);
@@ -381,7 +381,7 @@ EFI_STATUS HeciMsgRecv (    HECI_DEVICE     *pThis,
   pThis->Mefs1.DWord = HeciPciReadMefs1();
   iounmap((VOID *)pMbarRegs);
   return Status;
-} 
+}
 
 EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
                             UINT32          *pTimeout,
@@ -395,15 +395,15 @@ EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
   HECI_ME_CSR     sMeCsr;
   HECI_MBAR_REGS *pMbarRegs;
   VOID *pAddrPoint;
-  
+
   if (pThis == NULL || pMessage == NULL)
   {
     printk("HeciMsgSend Failed\n");
     return EFI_INVALID_PARAMETER;
   }
   HeciTrace(pThis, "Send msg: ", pMessage, sizeof(HECI_MSG_HEADER) + pMessage->Bits.Length);
-  
-  // Check for HECI availability 
+
+  // Check for HECI availability
   pAddrPoint = HeciMbarRead(pThis);
   pMbarRegs = (HECI_MBAR_REGS*)ioremap_nocache(pAddrPoint, 0x1000);
   if (pMbarRegs == NULL)
@@ -416,14 +416,14 @@ EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
   {
     Timeout = *pTimeout;
   }
-  
+
   bMsgLen = (UINT8)((pMessage->Bits.Length + sizeof(UINT32) - 1) / sizeof(UINT32));
   bMsgLen++; //message header
   while (1)
   {
               sHCsr.DWord = pMbarRegs->H_CSR;
               sMeCsr.DWord = pMbarRegs->ME_CSR;
-              
+
               // If message is more than queue length go fail.
               if (bMsgLen > sHCsr.Bits.H_CBD)
               {
@@ -445,31 +445,31 @@ EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
                         }
                         continue;
               }
-              
+
               if (bMsgLen <= bEmptySlots)
               {
                       for (i = 0; i < bMsgLen; i++)
                       {
                       pMbarRegs->CB_WW = ((UINT32*)pMessage)[i];
                       }
-                      
-                      
+
+
                       sMeCsr.DWord = pMbarRegs->ME_CSR;
                       if (!sMeCsr.Bits.ME_RDY)
                       {
                               printk("[HECI-%d] Queue has been reset while sending\n", pThis->Fun);
                               continue;
                       }
-                      
+
                       sHCsr.DWord = pMbarRegs->H_CSR;
-                      sHCsr.Bits.H_IS = 0; 
+                      sHCsr.Bits.H_IS = 0;
                       sHCsr.Bits.H_IG = 1;
                       pMbarRegs->H_CSR = sHCsr.DWord;
                       Status = EFI_SUCCESS;
                       goto GO_FAIL;
               }
-             
-              
+
+
               if (Timeout == 0)
               {
                 printk("[HECI-%d] Send failed (timeout)\n", pThis->Fun);
@@ -487,7 +487,7 @@ EFI_STATUS HeciMsgSend (    HECI_DEVICE     *pThis,
   pThis->Mefs1.DWord = HeciPciReadMefs1();
   iounmap((VOID *)pMbarRegs);
   return Status;
-} 
+}
 
 
 VOID *HeciMbarRead(HECI_DEVICE *pThis)
@@ -504,9 +504,9 @@ VOID *HeciMbarRead(HECI_DEVICE *pThis)
       UINT32 DWordH;
     } Bits;
   } Mbar;
-  
+
   //
-  // Read MBAR. 
+  // Read MBAR.
   Mbar.QWord = 0;
   Mbar.Bits.DWordL = PciRead32(pThis->PciCfg + HECI_REG_MBAR);
   if (Mbar.Bits.DWordL == 0xFFFFFFFF)
@@ -519,7 +519,7 @@ VOID *HeciMbarRead(HECI_DEVICE *pThis)
   {
     Mbar.Bits.DWordH = PciRead32(pThis->PciCfg + HECI_REG_MBAR + 4);
   }
-  Mbar.Bits.DWordL &= 0xFFFFFFF0; 
+  Mbar.Bits.DWordL &= 0xFFFFFFF0;
   if (Mbar.QWord == 0)
   {
     if (pThis->Mbar == 0)
@@ -552,7 +552,7 @@ VOID *HeciMbarRead(HECI_DEVICE *pThis)
   }
  GO_FAIL:
   return (VOID*)(INTN)Mbar.QWord;
-} 
+}
 
 
 
@@ -567,7 +567,7 @@ VOID HeciTrace(     HECI_DEVICE     *pThis,
         UINT32  dwLineBreak = 0;
         UINT32  dwIndex = 0;
         UINT8   *pMsgBody = (UINT8*)&pMsg[1];
-    
+
         MsgLen -= 4;
         while (MsgLen-- > 0)
         {
@@ -588,4 +588,4 @@ VOID HeciTrace(     HECI_DEVICE     *pThis,
         printk("\n");
     }
 #endif
-} 
+}

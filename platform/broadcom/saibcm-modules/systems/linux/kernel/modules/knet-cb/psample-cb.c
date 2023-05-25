@@ -22,10 +22,10 @@
 /*
  * Driver for call-back functions for Linux KNET driver.
  *
- * This code is used to integrate packet sampling KNET callback to 
- * the psample infra for sending sampled pkts to userspace sflow 
- * applications such as Host Sflow (https://github.com/sflow/host-sflow) 
- * using genetlink interfaces.  
+ * This code is used to integrate packet sampling KNET callback to
+ * the psample infra for sending sampled pkts to userspace sflow
+ * applications such as Host Sflow (https://github.com/sflow/host-sflow)
+ * using genetlink interfaces.
  *
  * The module can be built from the standard Linux user mode target
  * directories using the following command (assuming bash), e.g.
@@ -47,7 +47,7 @@
 #include "psample-cb.h"
 
 #define PSAMPLE_CB_DBG
-#ifdef PSAMPLE_CB_DBG 
+#ifdef PSAMPLE_CB_DBG
 extern int debug;
 #define PSAMPLE_CB_DBG_PRINT(...) \
     if (debug & 0x1) {         \
@@ -173,7 +173,7 @@ psample_netif_lookup_by_port(int unit, int port)
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
     return (NULL);
 }
-        
+
 static int
 psample_info_get (int unit, psample_info_t *psample_info)
 {
@@ -213,17 +213,17 @@ psample_meta_srcport_get(uint8_t *pkt, void *pkt_meta)
             break;
     }
 
-    if (SOC_HIGIG2_START(metadata) == SOC_HIGIG2_SOP) 
+    if (SOC_HIGIG2_START(metadata) == SOC_HIGIG2_SOP)
     {
         srcport = SOC_HIGIG2_SRCPORT(metadata);
-    } 
-    else if (SOC_HIGIG_START(metadata) == SOC_HIGIG_SOP) 
+    }
+    else if (SOC_HIGIG_START(metadata) == SOC_HIGIG_SOP)
     {
         srcport = SOC_HIGIG_SRCPORT(metadata);
-    } 
-    else 
+    }
+    else
     {
-        PSAMPLE_CB_DBG_PRINT("%s: Could not detect metadata sop type: 0x%02x (w[0]: 0x%04x)\n", __func__, 
+        PSAMPLE_CB_DBG_PRINT("%s: Could not detect metadata sop type: 0x%02x (w[0]: 0x%04x)\n", __func__,
                 SOC_HIGIG_START(metadata), metadata[0]);
         return -1;
     }
@@ -247,8 +247,8 @@ psample_meta_dstport_get(uint8_t *pkt, void *pkt_meta)
             metadata += SOC_DCB32_HG_OFFSET;
             break;
     }
-    
-    if (SOC_HIGIG2_START(metadata) == SOC_HIGIG2_SOP) 
+
+    if (SOC_HIGIG2_START(metadata) == SOC_HIGIG2_SOP)
     {
         if (SOC_HIGIG2_IS_MC(metadata))
         {
@@ -258,15 +258,15 @@ psample_meta_dstport_get(uint8_t *pkt, void *pkt_meta)
         else
         {
         dstport = SOC_HIGIG2_DSTPORT(metadata);
-    } 
-    } 
-    else if (SOC_HIGIG_START(metadata) == SOC_HIGIG_SOP) 
+    }
+    }
+    else if (SOC_HIGIG_START(metadata) == SOC_HIGIG_SOP)
     {
         dstport = SOC_HIGIG_DSTPORT(metadata);
-    } 
-    else 
+    }
+    else
     {
-        PSAMPLE_CB_DBG_PRINT("%s: Could not detect metadata sop type: 0x%02x (w[0]: 0x%04x)\n", __func__, 
+        PSAMPLE_CB_DBG_PRINT("%s: Could not detect metadata sop type: 0x%02x (w[0]: 0x%04x)\n", __func__,
                 SOC_HIGIG_START(metadata), metadata[0]);
         return (-1);
     }
@@ -298,13 +298,13 @@ psample_meta_sample_reason(uint8_t *pkt, void *pkt_meta)
             sample_rx_reason_mask = (1 << 5);
             break;
     }
-        
-    PSAMPLE_CB_DBG_PRINT("%s: DCB%d sample_rx_reason_mask: 0x%08x, reason: 0x%08x, reason_hi: 0x%08x\n", 
+
+    PSAMPLE_CB_DBG_PRINT("%s: DCB%d sample_rx_reason_mask: 0x%08x, reason: 0x%08x, reason_hi: 0x%08x\n",
             __func__, g_psample_info.hw.dcb_type, sample_rx_reason_mask, reason, reason_hi);
 
     /* Check if only sample reason code is set.
      * If only sample reason code, then consume pkt.
-     * If other reason codes exist, then pkt should be 
+     * If other reason codes exist, then pkt should be
      * passed through to Linux network stack.
      */
     if ((reason & ~sample_rx_reason_mask) || reason_hi) {
@@ -331,7 +331,7 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
         uint8_t *meta = (uint8_t*)pkt_meta;
         PSAMPLE_CB_DBG_PRINT("%s: psample pkt metadata\n", __func__);
         for (i=0; i<64; i+=16) {
-            PSAMPLE_CB_DBG_PRINT("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+            PSAMPLE_CB_DBG_PRINT("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
                     meta[i+0], meta[i+1], meta[i+2], meta[i+3], meta[i+4], meta[i+5], meta[i+6], meta[i+7],
                     meta[i+8], meta[i+9], meta[i+10], meta[i+11], meta[i+12], meta[i+13], meta[i+14], meta[i+15]);
         }
@@ -376,7 +376,7 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
         }
     }
 
-    PSAMPLE_CB_DBG_PRINT("%s: srcport %d, dstport %d, src_ifindex 0x%x, dst_ifindex 0x%x, trunc_size %d, sample_rate %d\n", 
+    PSAMPLE_CB_DBG_PRINT("%s: srcport %d, dstport %d, src_ifindex 0x%x, dst_ifindex 0x%x, trunc_size %d, sample_rate %d\n",
             __func__, srcport, dstport, src_ifindex, dst_ifindex, sample_size, sample_rate);
 
     sflow_meta->src_ifindex = src_ifindex;
@@ -403,23 +403,23 @@ psample_task(struct work_struct *work)
         list_del(list_ptr);
         g_psample_stats.pkts_c_qlen_cur--;
         spin_unlock_irqrestore(&psample_work->lock, flags);
- 
+
         /* send to psample */
         if (pkt) {
             PSAMPLE_CB_DBG_PRINT("%s: group 0x%x, trunc_size %d, src_ifdx 0x%x, dst_ifdx 0x%x, sample_rate %d\n",
-                    __func__, pkt->group->group_num, 
-                    pkt->meta.trunc_size, pkt->meta.src_ifindex, 
+                    __func__, pkt->group->group_num,
+                    pkt->meta.trunc_size, pkt->meta.src_ifindex,
                     pkt->meta.dst_ifindex, pkt->meta.sample_rate);
 
             md.trunc_size = pkt->meta.trunc_size;
             md.in_ifindex = pkt->meta.src_ifindex;
             md.out_ifindex = pkt->meta.dst_ifindex;
-            psample_sample_packet(pkt->group, 
+            psample_sample_packet(pkt->group,
                                   pkt->skb,
                                   pkt->meta.sample_rate,
                                   &md);
             g_psample_stats.pkts_f_psample_mod++;
- 
+
             dev_kfree_skb_any(pkt->skb);
             kfree(pkt);
         }
@@ -428,12 +428,12 @@ psample_task(struct work_struct *work)
     spin_unlock_irqrestore(&psample_work->lock, flags);
 }
 
-int 
+int
 psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
                   int chan, kcom_filter_t *kf)
 {
     struct psample_group *group;
-    psample_meta_t meta;   
+    psample_meta_t meta;
     int rv = 0;
     static int info_get = 0;
 
@@ -471,7 +471,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         g_psample_stats.pkts_d_invalid_size++;
         goto PSAMPLE_FILTER_CB_PKT_HANDLED;
     } else {
-       size -= FCS_SZ; 
+       size -= FCS_SZ;
     }
 
     /* Account for padding in libnl used by psample */
@@ -515,8 +515,8 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         psample_pkt->skb = skb;
 
         spin_lock_irqsave(&g_psample_work.lock, flags);
-        list_add_tail(&psample_pkt->list, &g_psample_work.pkt_list); 
-        
+        list_add_tail(&psample_pkt->list, &g_psample_work.pkt_list);
+
         g_psample_stats.pkts_c_qlen_cur++;
         if (g_psample_stats.pkts_c_qlen_cur > g_psample_stats.pkts_c_qlen_hi) {
             g_psample_stats.pkts_c_qlen_hi = g_psample_stats.pkts_c_qlen_cur;
@@ -526,7 +526,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         spin_unlock_irqrestore(&g_psample_work.lock, flags);
     } else {
         g_psample_stats.pkts_d_sampling_disabled++;
-    }    
+    }
 
 PSAMPLE_FILTER_CB_PKT_HANDLED:
     /* if sample reason only, consume pkt. else pass through */
@@ -539,7 +539,7 @@ PSAMPLE_FILTER_CB_PKT_HANDLED:
     return rv;
 }
 
-int 
+int
 psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
 {
     int found;
@@ -548,7 +548,7 @@ psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
     unsigned long flags;
 
     if ((psample_netif = kmalloc(sizeof(psample_netif_t), GFP_ATOMIC)) == NULL) {
-        gprintk("%s: failed to alloc psample mem for netif '%s'\n", 
+        gprintk("%s: failed to alloc psample mem for netif '%s'\n",
                 __func__, dev->name);
         return (-1);
     }
@@ -569,7 +569,7 @@ psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
         lpsample_netif = (psample_netif_t*)list;
         if (netif->id < lpsample_netif->id) {
             found = 1;
-            g_psample_info.netif_count++; 
+            g_psample_info.netif_count++;
             break;
         }
     }
@@ -581,7 +581,7 @@ psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
         /* No holes - add to end of list */
         list_add_tail(&psample_netif->list, &g_psample_info.netif_list);
     }
-    
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     PSAMPLE_CB_DBG_PRINT("%s: added psample netif '%s'\n", __func__, dev->name);
@@ -594,7 +594,7 @@ psample_netif_destroy_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
     int found;
     struct list_head *list;
     psample_netif_t *psample_netif;
-    unsigned long flags; 
+    unsigned long flags;
 
     if (!netif || !dev) {
         gprintk("%s: netif or net_device is NULL\n", __func__);
@@ -602,22 +602,22 @@ psample_netif_destroy_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
     }
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (netif->id == psample_netif->id) {
-            found = 1; 
+            found = 1;
             list_del(&psample_netif->list);
             PSAMPLE_CB_DBG_PRINT("%s: removing psample netif '%s'\n", __func__, dev->name);
             kfree(psample_netif);
-            g_psample_info.netif_count--; 
+            g_psample_info.netif_count--;
             break;
         }
     }
 
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
-    
-    if (!found) {    
+
+    if (!found) {
         gprintk("%s: netif ID %d not found!\n", __func__, netif->id);
         return (-1);
     }
@@ -632,17 +632,17 @@ psample_proc_rate_show(struct seq_file *m, void *v)
 {
     struct list_head *list;
     psample_netif_t *psample_netif;
-    unsigned long flags; 
+    unsigned long flags;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %d\n", psample_netif->dev->name, psample_netif->sample_rate);
     }
 
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
- 
+
     return 0;
 }
 
@@ -696,18 +696,18 @@ psample_proc_rate_write(struct file *file, const char *buf,
     *ptr++ = 0;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-   
-    found = 0; 
+
+    found = 0;
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (strcmp(psample_netif->dev->name, sample_str) == 0) {
             psample_netif->sample_rate = simple_strtol(ptr, NULL, 10);
             // TODO MLI@BRCM - check valid sample rate
-            found = 1; 
+            found = 1;
             break;
         }
     }
-    
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     if (!found) {
@@ -736,7 +736,7 @@ psample_proc_size_show(struct seq_file *m, void *v)
     unsigned long flags;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %d\n", psample_netif->dev->name, psample_netif->sample_size);
@@ -795,18 +795,18 @@ psample_proc_size_write(struct file *file, const char *buf,
     *ptr++ = 0;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-   
-    found = 0; 
+
+    found = 0;
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (strcmp(psample_netif->dev->name, sample_str) == 0) {
             psample_netif->sample_size = simple_strtol(ptr, NULL, 10);
             // TODO MLI@BRCM - check valid sample size
             found = 1;
-            break; 
+            break;
         }
     }
-    
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     if (!found) {
@@ -837,7 +837,7 @@ psample_proc_map_show(struct seq_file *m, void *v)
     seq_printf(m, "  Interface      logical port   ifindex\n");
     seq_printf(m, "-------------    ------------   -------\n");
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %-14d %d\n",

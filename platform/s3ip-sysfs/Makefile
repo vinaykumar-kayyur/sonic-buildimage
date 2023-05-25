@@ -23,7 +23,7 @@ clean :
 
 
 
-install: 
+install:
 	install -d $(DESTDIR)/lib/modules/s3ip/
 	install -D $(sysfs_out_put_dir)/*.ko \
 		$(DESTDIR)/lib/modules/s3ip/

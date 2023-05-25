@@ -271,7 +271,7 @@ int sysfs_detect_hwmon_index(void)
 	inventec_show_attr(hwmon_buf, hwmon_path);
 	if (strncmp(hwmon_buf, "inv_psoc", 8) == 0) {
 	    hwm_psoc = hwid;
-	} 
+	}
 	else
 	if (strncmp(hwmon_buf, "inv_bmc", 7) == 0) {
 	    hwm_psoc = hwid;
@@ -616,10 +616,10 @@ void sysfs_psu_path_init(void)
 {
     sprintf(&psu_dev_path_state[0],		PSU_DEV_PATH_TEMPLATE,	get_hwm_cpld(), "\%s" );
     sprintf(&psu_dev_path_psu_voltin[0], 	PSU_DEV_PATH_TEMPLATE,	get_hwm_psoc(), "\%s" );
-  
+
     sprintf(&psu_0_dev_path_state[0],           PSU_DEV_PATH_TEMPLATE, get_hwm_cpld(), "psu0" );
     sprintf(&psu_1_dev_path_state[0],           PSU_DEV_PATH_TEMPLATE, get_hwm_cpld(), "psu1" );
-  
+
 #if 0
     sprintf(&psu_dev_path_vendor[0], 		PSU_DEV_PATH_TEMPLATE,	get_hwm_psoc(), "\%s" );
     sprintf(&psu_dev_path_version[0], 		PSU_DEV_PATH_TEMPLATE,	get_hwm_psoc(), "\%s" );
@@ -950,7 +950,7 @@ void sysfs_led_path_init(void)
     sprintf(&status_led_grn_path[0], STATUS_LED_GRN_PATH, get_hwm_cpld());
     sprintf(&status_led_red_path[0], STATUS_LED_RED_PATH, get_hwm_cpld());
     sprintf(&status_led_fan_path[0], STATUS_LED_FAN_PATH, get_hwm_cpld());
-    sprintf(&status_led_psu_path[0], STATUS_LED_PSU_PATH, get_hwm_cpld());  
+    sprintf(&status_led_psu_path[0], STATUS_LED_PSU_PATH, get_hwm_cpld());
 
     sprintf(&fan_led_grn1_path[0], FAN_LED_GRN1_PATH, get_hwm_psoc());
     sprintf(&fan_led_grn2_path[0], FAN_LED_GRN2_PATH, get_hwm_psoc());
@@ -1329,7 +1329,7 @@ static int thread_fn(void *unused)
 	//switch_temp_update();
 
         if (fans_control() > 0)  //has at least one failed fan
-        { 
+        {
 	    psus_control(0); //now we have separate led for FAN and PSU
             fan_issue = true;
         }

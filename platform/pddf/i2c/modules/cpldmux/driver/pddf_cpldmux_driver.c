@@ -27,7 +27,7 @@
 
 extern PDDF_CPLDMUX_DATA pddf_cpldmux_data;
 
-/* Users may overwrite these select and delsect functions as per their requirements 
+/* Users may overwrite these select and delsect functions as per their requirements
  * by overwriting them in custom driver
  */
 PDDF_CPLDMUX_OPS pddf_cpldmux_ops = {
@@ -116,10 +116,10 @@ static int cpld_mux_probe(struct platform_device *pdev)
         printk(KERN_ERR "Failed to allocate memory for priv data\n");
         return -ENOMEM;
     }
-    
+
     private->last_chan = 0xff; /*Giving imaginary high value so that proper channel is selected at first iteration*/
     memcpy(&private->data, pdata, sizeof(PDDF_CPLDMUX_PDATA));
-    
+
     adap = i2c_get_adapter(pdata->parent_bus);
     if (!adap) {
         kfree(private);
@@ -199,7 +199,7 @@ static void __exit board_i2c_cpldmux_exit(void)
 {
 	platform_driver_unregister(&cpld_mux_driver);
 }
-	
+
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("board_i2c_cpldmux driver");
 MODULE_LICENSE("GPL");

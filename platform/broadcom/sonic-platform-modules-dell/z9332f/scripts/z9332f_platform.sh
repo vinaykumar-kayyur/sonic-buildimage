@@ -61,7 +61,7 @@ switch_board_qsfp() {
                             echo optoe3 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
- 
+
         "delete_device")
                         for ((i=10;i<=41;i++));
                         do
@@ -84,7 +84,7 @@ switch_board_sfp() {
                             echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
- 
+
         "delete_device")
                         for ((i=1;i<=2;i++));
                         do
@@ -110,7 +110,7 @@ switch_board_modsel() {
 	done
 }
 
-#This enables the led control for CPU and default states 
+#This enables the led control for CPU and default states
 switch_board_led_default() {
 	/usr/sbin/i2cset -y 5 0x0d 0x62 0xd0
 }
@@ -183,8 +183,8 @@ if [ "$1" == "init" ]; then
     modprobe ipmi_devintf
     modprobe ipmi_si kipmid_max_busy_us=2500
     modprobe cls-i2c-ocore
-    modprobe cls-switchboard 
-    modprobe mc24lc64t 
+    modprobe cls-switchboard
+    modprobe mc24lc64t
     #insmod /lib/modules/`uname -r`/extra/mc24lc64t.ko
     sys_eeprom "new_device"
     switch_board_qsfp "new_device"

@@ -41,8 +41,8 @@ static void inv_eeprom_update_client(struct i2c_client *client, u8 slice)
 	int i, j;
 	int ret;
 	int addr;
-	
-	
+
+
 	mutex_lock(&data->update_lock);
 
 	if (!(data->valid & (1 << slice)) ||
@@ -74,7 +74,7 @@ static void inv_eeprom_update_client(struct i2c_client *client, u8 slice)
 				data->data[j] = res & 0xFF;
 			}
 		}
-		
+
 		data->last_updated[slice] = jiffies;
 		data->valid |= (1 << slice);
 	}
@@ -90,7 +90,7 @@ static ssize_t inv_eeprom_read(struct file *filp, struct kobject *kobj,
 	struct i2c_client *client = to_i2c_client(container_of(kobj, struct device, kobj));
 	struct eeprom_data *data = i2c_get_clientdata(client);
 	u8 slice;
-	
+
 
 	if (off > EEPROM_SIZE) {
 		return 0;
@@ -126,7 +126,7 @@ static int inv_eeprom_probe(struct i2c_client *client,
 {
 	struct eeprom_data *data;
 	int err;
-	
+
 	if (!(data = kzalloc(sizeof(struct eeprom_data), GFP_KERNEL))) {
 		err = -ENOMEM;
 		goto exit;
@@ -141,7 +141,7 @@ static int inv_eeprom_probe(struct i2c_client *client,
 	if (err) {
 		goto exit_kfree;
 	}
-	
+
 	return 0;
 
 exit_kfree:

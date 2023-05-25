@@ -46,7 +46,7 @@ class Chassis(ChassisBase):
         self.write_value = ["i2cset", "-f", "-y", "2", "0x35", "0x21", "0x0a"]
         self.set_sys_led_cmd = ["i2cset", "-f", "-y", "2", "0x33", "0xb2"]
         self.get_sys_led_cmd = ["i2cget", "-f", "-y", "2", "0x33", "0xb2"]
-        self.led_status = "red" 
+        self.led_status = "red"
         # Initialize SFP list
         # sfp.py will read eeprom contents and retrive the eeprom data.
         # It will also provide support sfp controls like reset and setting

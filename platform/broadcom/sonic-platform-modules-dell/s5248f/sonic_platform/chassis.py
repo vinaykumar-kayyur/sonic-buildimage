@@ -69,8 +69,8 @@ class Chassis(ChassisBase):
                 6:  7,
                 7:  8,
                 8:  9,
-                9:  10, 
-                10: 11, 
+                9:  10,
+                10: 11,
                 11: 12,
                 12: 13,
                 13: 14,
@@ -109,7 +109,7 @@ class Chassis(ChassisBase):
                 46: 47,
                 47: 48,
                 48: 49,
-                # DD + QSFP28 
+                # DD + QSFP28
                 49: 50,
                 50: 50,
                 51: 51,
@@ -125,7 +125,7 @@ class Chassis(ChassisBase):
         # sfp.py will read eeprom contents and retrive the eeprom data.
         # We pass the eeprom path from chassis.py
         self.PORT_START = 1
-        self.PORT_END = 56 
+        self.PORT_END = 56
         self.PORTS_IN_BLOCK = (self.PORT_END + 1)
         _sfp_port = range(49, self.PORTS_IN_BLOCK)
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
@@ -187,12 +187,12 @@ class Chassis(ChassisBase):
                     port_dict[port_num] = '0'
 
             if(len(port_dict) > 0):
-                return True, change_dict 
+                return True, change_dict
 
             if timeout:
                 now_ms = time.time() * 1000
                 if (now_ms - start_ms >= timeout):
-                    return True, change_dict 
+                    return True, change_dict
 
 
     def get_sfp(self, index):
@@ -300,7 +300,7 @@ class Chassis(ChassisBase):
         Returns :
             An integer represents the number of Fans on the chassis.
         """
-        return self._num_fans 
+        return self._num_fans
 
     def get_num_sfps(self):
         """

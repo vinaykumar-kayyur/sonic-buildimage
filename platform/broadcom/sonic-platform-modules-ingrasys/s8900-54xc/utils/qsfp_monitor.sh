@@ -50,7 +50,7 @@ function _qsfp_type_check {
                     ${QSFP_SI_SCRIPT} dac $port >/dev/null
                 fi
             ;;
-            *) 
+            *)
                 #AOC
                 if [ "${QSFP_ARRAY[$port]}" != "${connector}" ]; then
                     echo "Change Port $(expr $port + 1) to AOC"

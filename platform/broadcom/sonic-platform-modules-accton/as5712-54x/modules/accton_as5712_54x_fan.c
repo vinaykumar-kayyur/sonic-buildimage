@@ -150,7 +150,7 @@ extern int as5712_54x_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
     static SENSOR_DEVICE_ATTR(prj##fan##id2##_input, S_IRUGO, fan_show_value, NULL, FANR##id##_SPEED);\
     static SENSOR_DEVICE_ATTR(prj##fan##id##_fault, S_IRUGO, fan_show_value, NULL, FAN##id##_FAULT); \
     static SENSOR_DEVICE_ATTR(prj##fan##id2##_fault, S_IRUGO, fan_show_value, NULL, FANR##id##_FAULT);
- 
+
 #define MAKE_SENSOR_DEVICE_ATTR(prj,id, id2) _MAKE_SENSOR_DEVICE_ATTR(prj,id, id2)
 
 MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 1, 11)

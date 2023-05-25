@@ -1,9 +1,9 @@
 Juniper Networks Platform Support for SONiC
 ===========================================
 
-This readme provides information on how to install and upgrade ONIE and SONiC images on the Juniper Networks switches. 
+This readme provides information on how to install and upgrade ONIE and SONiC images on the Juniper Networks switches.
 
-Note: Switches ship with ONIE and SONiC images preinstalled. 
+Note: Switches ship with ONIE and SONiC images preinstalled.
 
 ## Supported platforms
 
@@ -161,8 +161,8 @@ e. After a few seconds, the switch would restart and boot from the USB memory de
       Press enter to boot the selected OS, `e' to edit the commands before booting or `c' for a command-line.
 ```
 
-f. Select "ONIE: Embed ONIE" to create a fresh partition to install ONIE automatically. 
-	
+f. Select "ONIE: Embed ONIE" to create a fresh partition to install ONIE automatically.
+
 	Warning: All the data on the hard disk drive will be erased.
 
 g. Select "ONIE: Rescue" to enter the ONIE recovery command-line shell (Optional).
@@ -192,12 +192,12 @@ You can use the onie-recovery-x86_64-juniper_qfx5210-r0.efi64.pxe image to recov
 
 The following links provide more information about ONIE:
 
-	1. ONIE documentation: https://opencomputeproject.github.io/onie/. 
-	2. How to build and install ONIE on QFX5210-64C-S switch, see 		https://github.com/opencomputeproject/onie/blob/master/machine/juniper/juniper_qfx5210/INSTALL. 
+	1. ONIE documentation: https://opencomputeproject.github.io/onie/.
+	2. How to build and install ONIE on QFX5210-64C-S switch, see 		https://github.com/opencomputeproject/onie/blob/master/machine/juniper/juniper_qfx5210/INSTALL.
 
 ## SONiC Build Process:
 
-The instruction on how to build an ONIE compatible network operating system (NOS) installer image for Juniper Networks switches, and how to build docker images running inside the NOS is available at https://github.com/Azure/sonic-buildimage#usage. 
+The instruction on how to build an ONIE compatible network operating system (NOS) installer image for Juniper Networks switches, and how to build docker images running inside the NOS is available at https://github.com/Azure/sonic-buildimage#usage.
 
 
 ## Install SONiC on the Juniper Networks switch:es
@@ -207,23 +207,23 @@ You need to copy the SONiC image 'sonic-broadcom.bin' to the switch. You can cop
 Note: Unmount the USB memory device after copying the sonic-broadcom.bin. For example, umount /dev/sdX, where X is the name of the drive of the USB memory device.
 
 Run the following command to install SONIC:
-   
+
 ```
-For example, 
+For example,
 ONIE:/var/tmp # onie-nos-install /var/tmp/sonic-broadcom.bin
 ```
 
-## Booting SONiC 
+## Booting SONiC
 
-The switch restarts automatically after the SONiC image has been successfully installed. 
+The switch restarts automatically after the SONiC image has been successfully installed.
 
-1) Select SONiC from the GRUB boot manager. 
+1) Select SONiC from the GRUB boot manager.
 
 ```
                       GNU GRUB  version 2.02
 
  +----------------------------------------------------------------------------+
- |*SONiC-OS-master.0-dirty-20190913.060138                                    | 
+ |*SONiC-OS-master.0-dirty-20190913.060138                                    |
  | ONIE                                                                       |
  |                                                                            |
  |                                                                            |
@@ -234,28 +234,28 @@ The switch restarts automatically after the SONiC image has been successfully in
  |                                                                            |
  |                                                                            |
  |                                                                            |
- |                                                                            | 
+ |                                                                            |
  +----------------------------------------------------------------------------+
 
-      Use the ^ and v keys to select which entry is highlighted.          
-      Press enter to boot the selected OS, `e' to edit the commands       
-      before booting or `c' for a command-line. 
+      Use the ^ and v keys to select which entry is highlighted.
+      Press enter to boot the selected OS, `e' to edit the commands
+      before booting or `c' for a command-line.
 ```
 
 2. At the SONiC login prompt, enter the username as admin and password as YourPaSsWoRd.
 
-You can now start configuring the Juniper Networks switch running SONiC as its operating system. 
+You can now start configuring the Juniper Networks switch running SONiC as its operating system.
 
 
 ## Upgrading SONiC image
 
-To upgrade the SONiC operating system to a latest version, you need to: 
+To upgrade the SONiC operating system to a latest version, you need to:
 
- 1. Copy the latest image of the SONiC image to the switch. 
+ 1. Copy the latest image of the SONiC image to the switch.
  2. Run the following command from the directory where the latest SONiC image has been copied.
 
 ```
-$ sudo ./sonic-braodcom.bin 
+$ sudo ./sonic-braodcom.bin
 ```
 
 or
@@ -281,10 +281,10 @@ For more details on drivers and platform scripts see the following links:
 ## Related Documentation for SONiC:
 
 The following links provide more information about SONiC:
- 1. SONiC documentation: https://github.com/azure/sonic/wiki. 
+ 1. SONiC documentation: https://github.com/azure/sonic/wiki.
 
 ## Viewing the Device Revision of the FRU Model from IDEEPROM
 
 You can view the device revisions of the FRU model from IDEEPROM by using the show platform syseeprom CLI command.
 
-Note: The Device version shown is the HEX ASCII equivalent of the FRU model. For example, if the device version shows 41, then the HEX ASCII equivalent is character A. 
+Note: The Device version shown is the HEX ASCII equivalent of the FRU model. For example, if the device version shows 41, then the HEX ASCII equivalent is character A.

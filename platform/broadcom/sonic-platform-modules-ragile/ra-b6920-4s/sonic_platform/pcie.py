@@ -11,7 +11,7 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + " - required module not found")
 
-class PcieBase(object): 
+class PcieBase(object):
     def __init__(self, path):
        """
          Constructor
@@ -25,7 +25,7 @@ class PcieBase(object):
     def get_pcie_device(self):
         """
          get current device pcie info
-        
+
           Returns:
             A list including pcie device info
          """

@@ -18,10 +18,10 @@ ssize_t led_ctrl_get(struct device *dev, struct device_attribute *da, char *buf)
     int led_g_status = 0;
     int led_b_status = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_CTRL_REG);
     sprintf(buf, "");
-    
+
     for (i = 1; i <= 4; i++)
     {
         if ( i == attr->index)
@@ -51,7 +51,7 @@ ssize_t led_ctrl_get(struct device *dev, struct device_attribute *da, char *buf)
     }
     res = 0x1;
 
-    status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_BLINK_REG); 
+    status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_BLINK_REG);
     for (i = 1; i <= 4; i++)
     {
         if ( i == attr->index)
@@ -87,7 +87,7 @@ ssize_t led_ctrl_get(struct device *dev, struct device_attribute *da, char *buf)
     {
         sprintf(buf, "%s0\n", buf);
     }
-    
+
     return sprintf(buf, "%s", buf);
 }
 
@@ -100,7 +100,7 @@ ssize_t led_ctrl_set(struct device *dev, struct device_attribute *da, const char
     u16 i;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     led_value = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_CTRL_REG);
     blk_value = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_BLINK_REG);
@@ -160,7 +160,7 @@ ssize_t led_fiber_get(struct device *dev, struct device_attribute *da, char *buf
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     sprintf(buf, "");
     if (attr->index == LED_FIBER)
@@ -185,7 +185,7 @@ ssize_t led_fiber_set(struct device *dev, struct device_attribute *da, const cha
     int input;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *data = i2c_get_clientdata(Netberg_CPLD_30_client);
-    
+
     mutex_lock(&data->update_lock);
     status = i2c_smbus_read_byte_data(Netberg_CPLD_30_client, LED_CTRL_REG);
     if (attr->index == LED_FIBER)

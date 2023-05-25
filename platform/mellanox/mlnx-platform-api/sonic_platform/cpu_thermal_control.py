@@ -67,4 +67,3 @@ class CPUThermalControl(ThreadTaskBase):
     def read_cpu_temp(self):
         cpu_temp = utils.read_int_from_file(self.CPU_TEMP_FILE, default=self.temp_high, log_func=None)
         return cpu_temp if cpu_temp <= 1000 else int(cpu_temp / 1000)
-  

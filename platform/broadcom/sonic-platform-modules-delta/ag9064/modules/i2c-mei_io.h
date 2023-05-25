@@ -3,7 +3,7 @@
 
 
 
-/* ========== PciLib.h ========= */ 
+/* ========== PciLib.h ========= */
 
 /**
   Macro that converts PCI Bus, PCI Device, PCI Function and PCI Register to an
@@ -23,7 +23,7 @@
 
 
 
-/* ========== Qubbing ========= */ 
+/* ========== Qubbing ========= */
 
 UINT8 PciRead8(UINT64 addr);
 

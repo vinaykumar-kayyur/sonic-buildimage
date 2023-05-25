@@ -44,8 +44,8 @@ global log_level
 
 
 #Default FAN speed: 37.5%(0x05)
-#Ori is that detect: (U45_BCM56873 + Thermal sensor_LM75_CPU:0x4B) /2 
-#New Detect: (sensor_LM75_49 + Thermal sensor_LM75_CPU_4B) /2 
+#Ori is that detect: (U45_BCM56873 + Thermal sensor_LM75_CPU:0x4B) /2
+#New Detect: (sensor_LM75_49 + Thermal sensor_LM75_CPU_4B) /2
 #Thermal policy: Both F2B and B2F
 #1.	(sensor_LM75_49 + Thermal sensor_LM75_CPU) /2 =< 39C   , Keep 37.5%(0x05) Fan speed
 #2.	(sensor_LM75_49 + Thermal sensor_LM75_CPU) /2 > 39C   , Change Fan speed from 37.5%(0x05) to % 75%(0x0B)
@@ -54,21 +54,21 @@ global log_level
 #5.	(sensor_LM75_49 + Thermal sensor_LM75_CPU) /2 > 66C   , Shutdown system
 #6.	One Fan fail      , Change Fan speed to 100%(0x0F)
 
-#fan-dev 0-11 speed 0x05     Setup fan speed 37.50%		
-#fan-dev 0-11 speed 0xB      Setup fan speed 75%		
-#fan-dev 0-11 speed 0xF      Setup fan speed 100.00%		
+#fan-dev 0-11 speed 0x05     Setup fan speed 37.50%
+#fan-dev 0-11 speed 0xB      Setup fan speed 75%
+#fan-dev 0-11 speed 0xF      Setup fan speed 100.00%
 
 
 class switch(object):
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -114,11 +114,11 @@ class device_monitor(object):
             logging.getLogger('').addHandler(console)
 
         sys_handler = handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        sys_handler.setLevel(logging.WARNING)       
+        sys_handler.setLevel(logging.WARNING)
         logging.getLogger('').addHandler(sys_handler)
 
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
-          
+
     def get_state_from_fan_policy(self, temp, policy):
         state=0
         logging.debug('temp=%d', temp)
@@ -133,20 +133,20 @@ class device_monitor(object):
             state=policy[0][2] #below fan_min, set to default pwm
             logging.debug('set default state')
         return state
-    
+
     def manage_fans(self):
-        
+
         thermal_pwm_list = {} #Ori sort is lm75_48, 49, 4a, 4b, cpu, bcm
                               # After get pwm, do sort to get max pwm.
         LEVEL_FAN_DEF=1
-        LEVEL_FAN_MID=2       
+        LEVEL_FAN_MID=2
         LEVEL_FAN_MAX=3
         LEVEL_TEMP_HIGH=4
-        LEVEL_TEMP_CRITICAL=5         
-        
+        LEVEL_TEMP_CRITICAL=5
+
         fan_policy_state_pwm_tlb = {
         LEVEL_FAN_DEF:          [38,  0x4],
-        LEVEL_FAN_MID:          [75,  0xB],     
+        LEVEL_FAN_MID:          [75,  0xB],
         LEVEL_FAN_MAX:          [100, 0xE],
         LEVEL_TEMP_HIGH:        [100, 0xE],
         LEVEL_TEMP_CRITICAL:    [100, 0xE],
@@ -154,28 +154,28 @@ class device_monitor(object):
         global fan_policy_state
         global fan_fail
         global test_temp
-        global test_temp_list        
+        global test_temp_list
         global alarm_state
         fan_policy ={
         0: [0,     39000,   LEVEL_FAN_DEF],  #F2B_policy, B2F_plicy, PWM, reg_val
-        1: [39000, 45000,   LEVEL_FAN_MID],  
+        1: [39000, 45000,   LEVEL_FAN_MID],
         2: [45000, 61000,   LEVEL_FAN_MAX],
-        3: [61000, 66000,   LEVEL_TEMP_HIGH],        
-        4: [66000, 200000,  LEVEL_TEMP_CRITICAL],        
+        3: [61000, 66000,   LEVEL_TEMP_HIGH],
+        4: [66000, 200000,  LEVEL_TEMP_CRITICAL],
         }
-              
+
         thermal = ThermalUtil()
         fan = FanUtil()
-        #fan_dir=fan.get_fan_dir(1)            
+        #fan_dir=fan.get_fan_dir(1)
         #if fan_dir > 1:
         #    fan_dri=1 #something wrong, set fan_dir to default val
         #if fan_dir < 0:
         #    fan_dri=1 #something wrong, set fan_dir to default val
         ori_pwm=fan.get_fan_duty_cycle()
-        new_pwm=0  
+        new_pwm=0
         #logging.debug('fan_dir=%d, ori_pwm=%d', fan_dir, ori_pwm)
         logging.debug('test_temp=%d', test_temp)
-        if test_temp==0: 
+        if test_temp==0:
             temp1 = thermal._get_thermal_val(1)
             temp2 = thermal._get_thermal_val(2)
             temp3 = thermal._get_thermal_val(3)
@@ -190,28 +190,28 @@ class device_monitor(object):
             temp5 = test_temp_list[4]
             temp6=0
             fan_fail=0
-       
+
         if temp2==0:
-            temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75% 
+            temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75%
             logging.debug('lm75_49 detect fail, so set temp_get=50000, let fan to 75%')
-        elif temp2==0:        
-            temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75% 
+        elif temp2==0:
+            temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75%
             logging.debug('lm75_4b detect fail, so set temp_get=50000, let fan to 75%')
-        else:    
-            temp_get= (temp2 + temp4)/2  # Use (sensor_LM75_49 + Thermal sensor_LM75_CPU_4B) /2 
+        else:
+            temp_get= (temp2 + temp4)/2  # Use (sensor_LM75_49 + Thermal sensor_LM75_CPU_4B) /2
         ori_state=fan_policy_state
-        fan_policy_state=self.get_state_from_fan_policy(temp_get, fan_policy)    
+        fan_policy_state=self.get_state_from_fan_policy(temp_get, fan_policy)
         logging.debug('lm75_48=%d, lm75_49=%d, lm75_4a=%d, lm_4b=%d, cpu=%d, bcm=%d', temp1,temp2,temp3,temp4,temp5,temp6)
         logging.debug('ori_state=%d, fan_policy_state=%d', ori_state, fan_policy_state)
         new_pwm = fan_policy_state_pwm_tlb[fan_policy_state][0]
         if fan_fail==0:
             logging.debug('new_pwm=%d', new_pwm)
-        
+
         if fan_fail==0:
             if new_pwm!=ori_pwm:
                 fan.set_fan_duty_cycle(new_pwm)
                 logging.info('Set fan speed from %d to %d', ori_pwm, new_pwm)
-        
+
         for i in range (fan.FAN_NUM_1_IDX, fan.FAN_NUM_ON_MAIN_BROAD+1):
             if fan.get_fan_status(i)==0:
                 new_pwm=100
@@ -221,11 +221,11 @@ class device_monitor(object):
                     fan.set_fan_duty_cycle(new_pwm)
                     break
             else:
-                fan_fail=0        
-       
-        new_state = fan_policy_state       
-        
-        if ori_state==LEVEL_FAN_DEF:            
+                fan_fail=0
+
+        new_state = fan_policy_state
+
+        if ori_state==LEVEL_FAN_DEF:
            if new_state==LEVEL_TEMP_HIGH:
                if alarm_state==0:
                    logging.warning('Alarm for temperature high is detected')
@@ -238,7 +238,7 @@ class device_monitor(object):
             if new_state==LEVEL_TEMP_HIGH:
                 if alarm_state==0:
                     logging.warning('Alarm for temperature high is detected')
-                alarm_state=1 
+                alarm_state=1
             if new_state==LEVEL_TEMP_CRITICAL:
                 logging.critical('Alarm for temperature critical is detected')
                 time.sleep(2)
@@ -246,7 +246,7 @@ class device_monitor(object):
         if ori_state==LEVEL_FAN_MAX:
             if new_state==LEVEL_TEMP_HIGH:
                 if alarm_state==0:
-                    logging.warning('Alarm for temperature high is detected') 
+                    logging.warning('Alarm for temperature high is detected')
                 alarm_state=1
             if new_state==LEVEL_TEMP_CRITICAL:
                 logging.critical('Alarm for temperature critical is detected')
@@ -268,10 +268,10 @@ class device_monitor(object):
                 if temp_get < (fan_policy[3][0] - 5000):  #below 65 C, clear alarm
                     logging.warning('Alarm for temperature high is cleared')
                     alarm_state=0
-        if ori_state==LEVEL_TEMP_CRITICAL:            
+        if ori_state==LEVEL_TEMP_CRITICAL:
             if new_state <= LEVEL_FAN_MAX:
                 logging.warning('Alarm for temperature critical is cleared')
-      
+
         return True
 
 def main(argv):
@@ -291,21 +291,21 @@ def main(argv):
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG
             elif opt in ('-l', '--lfile'):
-                log_file = arg            
-        
+                log_file = arg
+
         if sys.argv[1]== '-t':
             if len(sys.argv)!=8:
                 print("temp test, need input six temp")
                 return 0
-            
+
             i=0
             for x in range(2, 8):
                test_temp_list[i]= int(sys.argv[x])*1000
                i=i+1
-            test_temp = 1   
+            test_temp = 1
             log_level = logging.DEBUG
-            print(test_temp_list)                       
-    
+            print(test_temp_list)
+
     fan = FanUtil()
     fan.set_fan_duty_cycle(38)
     print("set default fan speed to 37.5%")
@@ -317,4 +317,4 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-    
+

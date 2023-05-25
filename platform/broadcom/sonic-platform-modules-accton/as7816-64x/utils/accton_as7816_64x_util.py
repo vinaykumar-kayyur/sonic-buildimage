@@ -40,7 +40,7 @@ version = '0.1.0'
 verbose = False
 DEBUG = False
 args = []
-ALL_DEVICE = {}               
+ALL_DEVICE = {}
 
 FORCE = 0
 #logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
@@ -56,10 +56,10 @@ def main():
     global DEBUG
     global args
     global FORCE
-        
+
     if len(sys.argv)<2:
         show_help()
-         
+
     options, args = getopt.getopt(sys.argv[1:], 'hdf', ['help',
                                                        'debug',
                                                        'force',
@@ -86,9 +86,9 @@ def main():
            do_uninstall()
         elif arg == 'api':
            do_sonic_platform_install()
-        elif arg == 'api_clean':   
+        elif arg == 'api_clean':
            do_sonic_platform_clean()
-        
+
         else:
             show_help()
 
@@ -126,18 +126,18 @@ def my_log(txt):
     if DEBUG == True:
         print("[ROY]"+txt)
     return
-    
+
 def log_os_system(cmd, show):
-    logging.info('Run :'+cmd)  
-    status, output = subprocess.getstatusoutput(cmd)    
+    logging.info('Run :'+cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     my_log (cmd +"with result:" + str(status))
-    my_log ("      output:"+output)    
+    my_log ("      output:"+output)
     if status:
         logging.info('Failed :'+cmd)
         if show:
             print('Failed :'+cmd)
     return  status, output
-            
+
 def driver_check():
     ret, lsmod = log_os_system("ls /sys/module/*accton*", 0)
     logging.info('mods:'+lsmod)
@@ -165,13 +165,13 @@ def driver_install():
     for i in range(0,len(kos)):
         status, output = log_os_system(kos[i], 1)
         if status:
-            if FORCE == 0:        
-                return status              
-    
+            if FORCE == 0:
+                return status
+
     print("Done driver_install")
-    
+
     return 0
-    
+
 def driver_uninstall():
     global FORCE
     for i in range(0,len(kos)):
@@ -184,11 +184,11 @@ def driver_uninstall():
 
         #Change to removing commands
         rm = rm.replace("modprobe", "modprobe -rq")
-        rm = rm.replace("insmod", "rmmod")        
+        rm = rm.replace("insmod", "rmmod")
         status, output = log_os_system(rm, 1)
         if status:
-            if FORCE == 0:        
-                return status              
+            if FORCE == 0:
+                return status
     return 0
 
 
@@ -196,13 +196,13 @@ i2c_prefix = '/sys/bus/i2c/devices/'
 '''
 i2c_bus = {'fan': ['17-0068']                 ,
            'thermal': ['18-0048','18-0049', '18-004a' , '18-004b', '17-004d', '17-004e'] ,
-           'psu': ['10-0053','9-0050'], 
+           'psu': ['10-0053','9-0050'],
            'sfp': ['-0050']}
 i2c_nodes = {'fan': ['present', 'front_speed_rpm', 'rear_speed_rpm'] ,
            'thermal': ['hwmon/hwmon*/temp1_input'] ,
            'psu': ['psu_present', 'psu_power_good']    ,
            'sfp': ['module_present']}
-'''                  
+'''
 
 sfp_map =  [37,38,39,40,42,41,44,43,33,34,35,36,45,46,47,48,49,50,51,52,
            61,62,63,64,53,54,55,56,57,58,59,60,69,70,71,72,77,78,79,80,65,
@@ -210,7 +210,7 @@ sfp_map =  [37,38,39,40,42,41,44,43,33,34,35,36,45,46,47,48,49,50,51,52,
            27,28]
 
 
-mknod =[   
+mknod =[
 'echo pca9548  0x77 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo pca9548  0x71 > /sys/bus/i2c/devices/i2c-1/new_device',
 'echo pca9548  0x76 > /sys/bus/i2c/devices/i2c-1/new_device',
@@ -238,51 +238,51 @@ mknod =[
 'echo cpld_plain  0x62 > /sys/bus/i2c/devices/i2c-20/new_device',
 'echo cpld_plain  0x64 > /sys/bus/i2c/devices/i2c-21/new_device',
 'echo cpld_plain  0x66 > /sys/bus/i2c/devices/i2c-22/new_device']
-       
-def i2c_order_check():    
+
+def i2c_order_check():
     return 0
-                     
+
 def device_install():
     global FORCE
-    
+
     for i in range(0,len(mknod)):
-        #for pca954x need times to built new i2c buses            
+        #for pca954x need times to built new i2c buses
         if mknod[i].find('pca954') != -1:
-           time.sleep(1)         
-           
+           time.sleep(1)
+
         status, output = log_os_system(mknod[i], 1)
         if status:
             print(output)
-            if FORCE == 0:                
-                return status  
+            if FORCE == 0:
+                return status
 
     for i in range(0,len(sfp_map)):
         path = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device"
         status, output =log_os_system("echo optoe1 0x50 > " + path, 1)
         if status:
             print(output)
-            if FORCE == 0:            
-                return status                                  
-     
+            if FORCE == 0:
+                return status
+
     print("Done device_install")
-     
-    return 
-    
+
+    return
+
 def device_uninstall():
     global FORCE
-    
+
     status, output =log_os_system("ls /sys/bus/i2c/devices/1-0076", 0)
-    
+
     for i in range(0,len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/delete_device"
         status, output =log_os_system("echo 0x50 > "+ target, 1)
         if status:
             print(output)
-            if FORCE == 0:            
+            if FORCE == 0:
                 return status
-       
+
     nodelist = mknod
-           
+
     for i in range(len(nodelist)):
         target = nodelist[-(i+1)]
         temp = target.split()
@@ -291,15 +291,15 @@ def device_uninstall():
         status, output = log_os_system(" ".join(temp), 1)
         if status:
             print(output)
-            if FORCE == 0:            
-                return status  
-                                  
-    return 
-        
+            if FORCE == 0:
+                return status
+
+    return
+
 def system_ready():
     if driver_check() == False:
         return False
-    if not device_exist(): 
+    if not device_exist():
         return False
     return True
 
@@ -308,11 +308,11 @@ PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
 def do_sonic_platform_install():
     device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
     SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
-        
+
     #Check API2.0 on py whl file
     status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
-        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):
             status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
                 print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3))
@@ -321,17 +321,17 @@ def do_sonic_platform_install():
                 print("Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3))
         else:
             print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
-    else:        
+    else:
         print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
-     
-    return 
-     
+
+    return
+
 def do_sonic_platform_clean():
-    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
-        
-    else:        
+
+    else:
         status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
@@ -343,10 +343,10 @@ def do_sonic_platform_clean():
 def do_install():
     print("Checking system....")
     if driver_check() == False:
-        print("No driver, installing....")    
+        print("No driver, installing....")
         status = driver_install()
         if status:
-            if FORCE == 0:        
+            if FORCE == 0:
                 return  status
     else:
         print(PROJECT_NAME.upper()+" drivers detected....")
@@ -355,39 +355,39 @@ def do_install():
 
     if not device_exist():
         print("No device, installing....")
-        status = device_install() 
+        status = device_install()
         if status:
-            if FORCE == 0:        
-                return  status        
+            if FORCE == 0:
+                return  status
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
     do_sonic_platform_install()
 
     return
-    
+
 def do_uninstall():
     print("Checking system....")
     if not device_exist():
         print(PROJECT_NAME.upper() +" has no device installed....")
     else:
         print("Removing device....")
-        status = device_uninstall() 
+        status = device_uninstall()
         if status:
-            if FORCE == 0:            
-                return  status  
-                
+            if FORCE == 0:
+                return  status
+
     if driver_check()== False :
         print(PROJECT_NAME.upper() +" has no driver installed....")
     else:
         print("Removing installed driver....")
         status = driver_uninstall()
         if status:
-            if FORCE == 0:        
-                return  status                          
-                    
-    do_sonic_platform_clean() 
+            if FORCE == 0:
+                return  status
 
-    return       
+    do_sonic_platform_clean()
+
+    return
 
 def device_exist():
     ret1, log = log_os_system("ls "+i2c_prefix+"*0076", 0)

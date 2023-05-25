@@ -37,7 +37,7 @@ class KernelEventMonitor(object):
         data = self.socket.recv(16384)
         event = {}
         for item in data.split(b'\x00'):
-            if not item:        
+            if not item:
                 #check if we have an event and if we already received it
                 if event and event['SEQNUM'] not in self.received_events:
                     self.received_events[event['SEQNUM']] = None
@@ -61,5 +61,5 @@ if __name__ == '__main__':
             # Receive thermaltrip event
             if event['ACTION'] == 'remove' and event['DEVPATH'] == '/kernel/platform_status/fan':
                 subprocess.call(["shutdown", "-h", "now"])
-                
+
 

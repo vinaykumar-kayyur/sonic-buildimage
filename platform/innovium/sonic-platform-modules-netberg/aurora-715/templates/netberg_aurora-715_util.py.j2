@@ -7,13 +7,13 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install     : install drivers and generate related sysfs nodes
     clean       : uninstall drivers and remove related sysfs nodes
     show        : show all systen status
     sff         : dump SFP eeprom
-    set         : change board setting with fan|led|sfp    
+    set         : change board setting with fan|led|sfp
 """
 
 import os
@@ -265,7 +265,7 @@ def driver_install():
     os.system('modprobe i2c_dev')
     os.system('modprobe x86-64-netberg-aurora-715')
     os.system('modprobe i2c_mux_pca954x force_deselect_on_exit=1')
-    
+
     return 0
 
 
@@ -284,14 +284,14 @@ def install_i2c_switch():
     os.system("echo {} {} > {}/new_device".format(root_sw['driver'], root_sw['i2caddr'], BASE_BUS_PATH))
     #  make sure the root switch for sfp is installed
     time.sleep(2)
-    
-    
+
+
     for switch_name in switch_install_order:
         switch = I2C_SWITCH_LIST[switch_name]
-        
+
         install_path = I2C_SWITCH_LIST[switch['parent']]['path']
         install_path = install_path+"/channel-{}".format(switch['parent_ch'])
-    
+
         cmd = "echo {} {} > {}/new_device".format(switch['driver'], switch['i2caddr'], install_path)
         print(cmd)
         os.system(cmd)
@@ -300,36 +300,36 @@ def install_sfp():
     for sfp_group_name in SFP_GROUPS.keys():
         sfp_group = SFP_GROUPS[sfp_group_name]
         install_path = I2C_SWITCH_LIST[sfp_group['parent']]['path']
-        
+
         for n in range(0,sfp_group['number']):
             sfp_install_path = install_path+"/channel-{}".format(sfp_group['channels'][n])
             cmd = "echo {} {} > {}/new_device".format(sfp_group['driver'], sfp_group['i2caddr'], sfp_install_path)
             print(cmd)
             os.system(cmd)
-                
+
             # sfp_group['paths'].append("/sys/bus/i2c/devices/{}-00{}".format(I2C_SWITCH_LIST[sfp_group['parent']]['bus_map'][sfp_group['channels'][n]],sfp_group['i2caddr'][-2:]))
             print("/sys/bus/i2c/devices/{}-00{}".format(I2C_SWITCH_LIST[sfp_group['parent']]['bus_map'][sfp_group['channels'][n]],sfp_group['i2caddr'][-2:]))
 
-        
+
 def uninstall_sfp():
     for sfp_group_name in SFP_GROUPS.keys():
         sfp_group = SFP_GROUPS[sfp_group_name]
-       
+
         uninst_path = I2C_SWITCH_LIST[sfp_group['parent']]['path']
-        
+
         for n in range(0,sfp_group['number']):
             sfp_uninst_path = uninst_path+"/channel-{}".format(sfp_group['channels'][n])
             cmd = "echo {} > {}/delete_device".format(sfp_group['i2caddr'], sfp_uninst_path)
             print(cmd)
             os.system(cmd)
-            
+
 def uninstall_i2c_switch():
     for switch_name in reversed(switch_install_order):
         switch = I2C_SWITCH_LIST[switch_name]
         uninst_path = I2C_SWITCH_LIST[switch['parent']]['path'] + "/channel-{}".format(switch['parent_ch'])
-            
+
         cmd = "echo {} > {}/delete_device".format(switch['i2caddr'], uninst_path)
-        
+
         print(cmd)
         os.system(cmd)
 
@@ -352,17 +352,17 @@ def device_install():
     install_i2c_switch()
     # delay to make sure all switches are installed completely,
     time.sleep(1)
-    
+
     # install_i2c_device()
-    
+
     install_sfp()
     return 0
-    
+
 def device_uninstall():
     global SFP_GROUPS
     # global I2C_DEVICES
     global I2C_SWITCH_LIST
-            
+
     uninstall_sfp()
 #   uninstall_i2c_device()
     uninstall_i2c_switch()

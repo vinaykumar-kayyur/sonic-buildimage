@@ -63,8 +63,8 @@ global log_level
  #		[LM75(48) + LM75(49) + LM75(4A)] < 145  => set Fan speed value from 7 to 5
  #		[LM75(48) + LM75(49) + LM75(4A)] < 155  => set Fan speed value from 10 to 7
  #
- 
- 
+
+
  # 2.If no matched fan speed is found from the policy,
  #     use FAN_DUTY_CYCLE_MIN as default speed
  # Get current temperature
@@ -72,7 +72,7 @@ global log_level
 
 
 
-     
+
 # Make a class we can use to capture stdout and sterr in the log
 class accton_as7716_monitor(object):
     # static temp var
@@ -102,7 +102,7 @@ class accton_as7716_monitor(object):
         logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
 
     def manage_fans(self):
-        
+
         fan_policy_f2b = {
            0: [32, 0,      174000],
            1: [38, 170000, 182000],
@@ -115,33 +115,33 @@ class accton_as7716_monitor(object):
            2: [50, 145000, 160000],
            3: [69, 15500, 0],
         }
-  
+
         thermal = ThermalUtil()
         fan = FanUtil()
-        get_temp = thermal.get_thermal_temp()            
-        
+        get_temp = thermal.get_thermal_temp()
+
         cur_duty_cycle = fan.get_fan_duty_cycle()
-       
+
         for x in range(fan.get_idx_fan_start(), fan.get_num_fans()+1):
             fan_status = fan.get_fan_status(x)
             if fan_status is None:
                 logging.debug('INFO. SET new_perc to %d (FAN stauts is None. fan_num:%d)', 100, x)
                 return False
-            if fan_status is False:             
+            if fan_status is False:
                 logging.debug('INFO. SET new_perc to %d (FAN fault. fan_num:%d)', 100, x)
                 fan.set_fan_duty_cycle(45)
                 return True
             logging.debug('INFO. fan_status is True (fan_num:%d)', x)
-        
+
         if fan_status is not None and fan_status is not False:
             fan_dir=fan.get_fan_dir(1)
             for x in range(0, 4):
                 if cur_duty_cycle == fan_policy_f2b[x][0]:
                     break
-           
+
             if fan_dir == 1:
                 if x == 4 :
-                    fan.set_fan_duty_cycle(fan_policy_f2b[0][0])                
+                    fan.set_fan_duty_cycle(fan_policy_f2b[0][0])
                 new_duty_cycle=cur_duty_cycle
                 # if temp > up_levle, else if temp < down_level
                 if get_temp > fan_policy_f2b[x][2] and x != 3 :
@@ -154,7 +154,7 @@ class accton_as7716_monitor(object):
                     return True
             else:
                 if x == 4 :
-                    fan.set_fan_duty_cycle(fan_policy_b2f[0][0])                
+                    fan.set_fan_duty_cycle(fan_policy_b2f[0][0])
                 new_duty_cycle=cur_duty_cycle
                 # if temp > up_levle, else if temp < down_level
                 if get_temp > fan_policy_b2f[x][1] and x != 3 :
@@ -162,14 +162,14 @@ class accton_as7716_monitor(object):
                     logging.debug('INFO. THERMAL temp UP, temp %d > %d , new_duty_cycle=%d', get_temp, fan_policy_b2f[x][2], new_duty_cycle)
                 elif get_temp < fan_policy_b2f[x][0] and x != 0 :
                     new_duty_cycle= fan_policy_b2f[x-1][0]
-                    logging.debug('INFO. THERMAL temp down, temp %d < %d , new_duty_cycle=%d', get_temp, fan_policy_b2f[x][1], new_duty_cycle)                
+                    logging.debug('INFO. THERMAL temp down, temp %d < %d , new_duty_cycle=%d', get_temp, fan_policy_b2f[x][1], new_duty_cycle)
                 if new_duty_cycle == cur_duty_cycle :
-                    return True  
-                
+                    return True
+
             fan.set_fan_duty_cycle(new_duty_cycle)
-           
+
             return True
-         
+
 
 
 def main(argv):

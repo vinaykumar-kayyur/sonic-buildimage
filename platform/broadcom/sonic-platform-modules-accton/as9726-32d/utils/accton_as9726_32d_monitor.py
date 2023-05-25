@@ -13,9 +13,9 @@
 #
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
-# 
+#
 # HISTORY:
-#    mm/dd/yyyy (A.D.)#   
+#    mm/dd/yyyy (A.D.)#
 #    04/23/2021: Michael_Shih create for as9726_32d thermal plan
 # ------------------------------------------------------------------
 
@@ -40,12 +40,12 @@ class switch(object):
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -121,7 +121,7 @@ class switch(object):
 #CPU Board
 #Core>=62
 #LM75-1(0X4B)>=51.8
- 
+
 # 2. For AFO:
 #  At default, FAN duty_cycle was 100%(LEVEL_FAN_MAX). If all below case meet with, set to 75%(LEVEL_FAN_MID).
 # (MB board)
@@ -144,7 +144,7 @@ class switch(object):
 # (CPU board)
 # Core<=56
 # LM75-1(0X4B)<=38.8
- 
+
 # When fan_speed 50%(LEVEL_FAN_DEF).
 # Meet with below case, Fan duty_cycle will be 75%(LEVEL_FAN_MID)
 # (MB board)
@@ -214,7 +214,7 @@ def power_off_dut():
 # Return 0: Not full load
 def check_psu_loading():
     psu_power_status=[1, 1]
-            
+
     psu_power_good = {
         2: "/sys/bus/i2c/devices/9-0051/psu_power_good",
         1: "/sys/bus/i2c/devices/9-0050/psu_power_good",
@@ -223,7 +223,7 @@ def check_psu_loading():
         2: "/sys/bus/i2c/devices/9-0059/psu_p_out",
         1: "/sys/bus/i2c/devices/9-0058/psu_p_out",
     }
-    
+
     check_psu_watt=0
     for i in range(1,3):
         node = psu_power_good[i]
@@ -232,11 +232,11 @@ def check_psu_loading():
                 status = int(power_status.read())
         except IOError:
             return None
-            
+
         psu_power_status[i-1]=int(status)
         if status==0:
-            check_psu_watt=1           
-    
+            check_psu_watt=1
+
     if check_psu_watt:
         for i in range(1,3):
             if psu_power_status[i-1]==1:
@@ -252,8 +252,8 @@ def check_psu_loading():
                     return True
     else:
         return False
-    
-    
+
+
     return False
 
 fan_policy_state=0
@@ -275,7 +275,7 @@ class device_monitor(object):
     new_duty_cycle = 0
     duty_cycle=0
     ori_duty_cycle = 0
-   
+
 
     def __init__(self, log_file, log_level):
         """Needs a logger and a logger level."""
@@ -299,13 +299,13 @@ class device_monitor(object):
             logging.getLogger('').addHandler(console)
 
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        sys_handler.setLevel(logging.WARNING)       
+        sys_handler.setLevel(logging.WARNING)
         logging.getLogger('').addHandler(sys_handler)
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
-          
-    
+
+
     def manage_fans(self):
-       
+
         global fan_policy_state
         global fan_policy_alarm
         global send_yellow_alarm
@@ -316,17 +316,17 @@ class device_monitor(object):
         global test_temp_list
         global temp_test_data
         global test_temp_revert
-      
+
         CHECK_TIMES=3
-           
+
         LEVEL_FAN_INIT=0
         LEVEL_FAN_MIN=1
-        LEVEL_FAN_MID=2       
+        LEVEL_FAN_MID=2
         LEVEL_FAN_MAX=3
         LEVEL_FAN_YELLOW_ALARM=4
         LEVEL_FAN_RED_ALARM=5
         LEVEL_FAN_SHUTDOWN=6
-    
+
         fan_policy_f2b = {  #AFO
             LEVEL_FAN_MIN: [50,  0x7],
             LEVEL_FAN_MID: [75,  0xb],
@@ -336,12 +336,12 @@ class device_monitor(object):
             LEVEL_FAN_MID: [75,  0xb],
             LEVEL_FAN_MAX: [100, 0xf]
         }
-         
+
         afi_thermal_spec={
             "mid_to_max_temp":[61500, 51500, 49400, 49400, 45100, 46750, 48000, 38500],
             "max_to_mid_temp":[57000, 47300, 45000, 45100, 40750, 42100, 44000, 35000],
-            "max_to_yellow_alarm":   [57900, 51900, 48900, 55900, 48500, 52000, 41800], 
-            "yellow_to_red_alarm":   [62900, 56900, 53900, 58900, 53500, 57000, 46800], 
+            "max_to_yellow_alarm":   [57900, 51900, 48900, 55900, 48500, 52000, 41800],
+            "yellow_to_red_alarm":   [62900, 56900, 53900, 58900, 53500, 57000, 46800],
             "red_alarm_to_shutdown": [67900, 61900, 58900, 63900, 58500, 62000, 51800]
         }
         afo_thermal_spec={
@@ -349,47 +349,47 @@ class device_monitor(object):
             "mid_to_max_temp": [63000, 60000, 60000, 59000, 60000, 69000, 51500],
             "max_to_mid_temp": [56000, 53500, 52500, 52000, 52800, 62000, 45800],
             "mid_to_min_temp": [50000, 47300, 46400, 44600, 47000, 56000, 38800],
-            "max_to_yellow_alarm":   [67000, 65000, 64000, 62000, 64000, 73000, 67000], 
-            "yellow_to_red_alarm":   [72000, 70000, 69000, 67000, 69000, 78000, 72000], 
-            "red_alarm_to_shutdown": [77000, 75000, 74000, 72000, 74000, 83000, 77000] 
+            "max_to_yellow_alarm":   [67000, 65000, 64000, 62000, 64000, 73000, 67000],
+            "yellow_to_red_alarm":   [72000, 70000, 69000, 67000, 69000, 78000, 72000],
+            "red_alarm_to_shutdown": [77000, 75000, 74000, 72000, 74000, 83000, 77000]
         }
 
-        thermal_val=[0,0,0,0,0,0,0]        
+        thermal_val=[0,0,0,0,0,0,0]
         max_to_mid=0
         mid_to_min=0
-        
+
         fan = self.fan
         if fan_policy_state==LEVEL_FAN_INIT:
             fan_policy_state=LEVEL_FAN_MAX #This is default state
             logging.debug("fan_policy_state=LEVEL_FAN_MAX")
             return
-    
+
         count_check=count_check+1
         if count_check < CHECK_TIMES:
             return
         else:
             count_check=0
-        
+
         thermal = self.thermal
         fan_dir=fan.get_fan_dir(1)
-       
+
         if fan_dir==1:   # AFI
             fan_thermal_spec = afi_thermal_spec
             fan_policy=fan_policy_b2f
         elif fan_dir==0: # AFO
             fan_thermal_spec = afo_thermal_spec
-            fan_policy=fan_policy_f2b           
+            fan_policy=fan_policy_f2b
         else:
             logging.debug( "NULL case")
-        
+
         ori_duty_cycle=fan.get_fan_duty_cycle()
         new_duty_cycle=0
 
         if test_temp_revert==0:
             temp_test_data=temp_test_data+2000
-        else:            
+        else:
             temp_test_data=temp_test_data-2000
-            
+
         if test_temp==0:
             for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_MAX+1):
                 thermal_val[i-1]=thermal._get_thermal_val(i)
@@ -399,10 +399,10 @@ class device_monitor(object):
                 thermal_val[i-1]= thermal_val[i-1] + temp_test_data
             logging.debug(thermal_val)
             fan_fail=0
-       
+
         ori_state=fan_policy_state;
         current_state=fan_policy_state;
-       
+
         if fan_dir==1: #AFI
             for i in range (0, thermal.THERMAL_NUM_MAX):
                 if ori_state==LEVEL_FAN_MID:
@@ -413,7 +413,7 @@ class device_monitor(object):
                 else:
                     if (thermal_val[i] <= fan_thermal_spec["max_to_mid_temp"][i]):
                         max_to_mid=max_to_mid+1
-                    if fan_policy_alarm==0: 
+                    if fan_policy_alarm==0:
                         if thermal_val[i] >= fan_thermal_spec["max_to_yellow_alarm"][i]:
                             if send_yellow_alarm==0:
                                 logging.warning('Alarm-Yellow for temperature high is detected')
@@ -427,11 +427,11 @@ class device_monitor(object):
                                 send_red_alarm=1
                     elif fan_policy_alarm==LEVEL_FAN_RED_ALARM:
                         if thermal_val[i] >= fan_thermal_spec["red_alarm_to_shutdown"][i]:
-                            logging.critical('Alarm-Critical for temperature high is detected, shutdown DUT')                            
+                            logging.critical('Alarm-Critical for temperature high is detected, shutdown DUT')
                             fan_policy_alarm=LEVEL_FAN_SHUTDOWN
                             time.sleep(2)
                             power_off_dut()
-        
+
             if max_to_mid==thermal.THERMAL_NUM_MAX and  fan_policy_state==LEVEL_FAN_MAX:
                 current_state=LEVEL_FAN_MID
                 if fan_policy_alarm!=0:
@@ -441,7 +441,7 @@ class device_monitor(object):
                     send_red_alarm=0
                     test_temp_revert=0
                 logging.debug("current_state=LEVEL_FAN_MID")
-                
+
         else: #AFO
             psu_full_load=check_psu_loading()
             for i in range (0, thermal.THERMAL_NUM_MAX):
@@ -463,7 +463,7 @@ class device_monitor(object):
                 else:
                     if thermal_val[i] <= fan_thermal_spec["max_to_mid_temp"][i] :
                         max_to_mid=max_to_mid+1
-                    if fan_policy_alarm==0: 
+                    if fan_policy_alarm==0:
                         if thermal_val[i] >= fan_thermal_spec["max_to_yellow_alarm"][i]:
                             if send_yellow_alarm==0:
                                 logging.warning('Alarm-Yellow for temperature high is detected')
@@ -477,11 +477,11 @@ class device_monitor(object):
                                 send_red_alarm=1
                     elif fan_policy_alarm==LEVEL_FAN_RED_ALARM:
                         if thermal_val[i] >= fan_thermal_spec["red_alarm_to_shutdown"][i]:
-                            logging.critical('Alarm-Critical for temperature high is detected, shutdown DUT')                            
+                            logging.critical('Alarm-Critical for temperature high is detected, shutdown DUT')
                             fan_policy_alarm=LEVEL_FAN_SHUTDOWN
                             time.sleep(2)
                             power_off_dut()
-                        
+
             if max_to_mid==thermal.THERMAL_NUM_MAX and ori_state==LEVEL_FAN_MAX:
                 current_state=LEVEL_FAN_MID
                 if fan_policy_alarm!=0:
@@ -491,18 +491,18 @@ class device_monitor(object):
                     send_red_alarm=0
                     test_temp_revert=0
                 logging.debug("current_state=LEVEL_FAN_MID")
-            
+
             if mid_to_min==thermal.THERMAL_NUM_MAX and ori_state==LEVEL_FAN_MID:
                 if psu_full_load==0:
                     current_state=LEVEL_FAN_MIN
                     logging.debug("current_state=LEVEL_FAN_MIN")
-           
+
         #Check Fan fault status. True: fan not fault/present, 1: fan fault/un-present
         for i in range (fan.FAN_NUM_1_IDX, fan.FAN_NUM_ON_MAIN_BROAD+1):
             if fan.get_fan_status(i)==False:
                 new_duty_cycle=100
                 current_state=LEVEL_FAN_MAX
-                logging.debug('fan_%d fail, set duty_cycle to 100',i)                
+                logging.debug('fan_%d fail, set duty_cycle to 100',i)
                 if test_temp==0:
                     fan_fail=1
                     fan.set_fan_duty_cycle(new_duty_cycle)
@@ -539,8 +539,8 @@ def main(argv):
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG
             elif opt in ('-l', '--lfile'):
-                log_file = arg            
-        
+                log_file = arg
+
         if sys.argv[1]== '-t':
             if len(sys.argv)!=9:
                 print("temp test, need input 7 temp")
@@ -552,7 +552,7 @@ def main(argv):
             test_temp = 1
             log_level = logging.DEBUG
             print(test_temp_list)
-    
+
     fan = FanUtil()
     fan.set_fan_duty_cycle(100)
     monitor = device_monitor(log_file, log_level)

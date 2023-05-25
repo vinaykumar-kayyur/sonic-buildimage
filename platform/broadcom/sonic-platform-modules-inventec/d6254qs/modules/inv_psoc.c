@@ -20,20 +20,20 @@
 
 #define USE_SMBUS    1
 
-#define FAN_NUM  4 
-#define PSU_NUM  2 
+#define FAN_NUM  4
+#define PSU_NUM  2
 
 struct __attribute__ ((__packed__))  psoc_psu_layout {
     u16 psu1_iin;
     u16 psu2_iin;
     u16 psu1_iout;
     u16 psu2_iout;
-    
+
     u16 psu1_pin;
     u16 psu2_pin;
     u16 psu1_pout;
     u16 psu2_pout;
-    
+
     u16 psu1_vin;
     u16 psu2_vin;
     u16 psu1_vout;
@@ -62,7 +62,7 @@ struct __attribute__ ((__packed__))  psoc_layout {
     u8 i2c_st;              //offset: 5
     u8 i2c_ctl;             //offset: 6
     u8 i2c_addr;            //offset: 7
-    u8 i2c_data[0x20];      //offset: 8 
+    u8 i2c_data[0x20];      //offset: 8
 
     //gpo
     u8 led_ctl;             //offset: 28
@@ -75,11 +75,11 @@ struct __attribute__ ((__packed__))  psoc_layout {
 
     //fan rpm
     u16 fan[FAN_NUM*2];     //offset: 30
-    
+
     u8  reserve1[4];        //offset: 40
 
-    //gpi 
-    u8 gpi_fan;             //offset: 44 
+    //gpi
+    u8 gpi_fan;             //offset: 44
 
     //psu state
     u8 psu_state;           //offset: 45
@@ -90,10 +90,10 @@ struct __attribute__ ((__packed__))  psoc_layout {
 
     //version
     u8 version[2];          //offset: 54
-    
+
     u8  reserve2[4];        //offset: 56
     struct psoc_psu_layout psu_info;      //offset: 5a
-};        
+};
 
 /* definition */
 /* definition */
@@ -122,12 +122,12 @@ struct psoc_data {
 
 static ssize_t psoc_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size_t count)
 {
-#if USE_SMBUS    
+#if USE_SMBUS
 	int i;
-	
+
     for(i=0; i<count; i++) {
         buf[i] = i2c_smbus_read_byte_data(client, offset+i);
-    }	
+    }
     return count;
 #else
 	struct i2c_msg msg[2];
@@ -135,9 +135,9 @@ static ssize_t psoc_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 	int status;
 
 	memset(msg, 0, sizeof(msg));
-	
+
 	msgbuf[0] = offset;
-	
+
 	msg[0].addr = client->addr;
 	msg[0].buf = msgbuf;
 	msg[0].len = 1;
@@ -146,30 +146,30 @@ static ssize_t psoc_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 	msg[1].flags = I2C_M_RD;
 	msg[1].buf = buf;
 	msg[1].len = count;
-	
+
 	status = i2c_transfer(client->adapter, msg, 2);
-	
+
 	if(status == 2)
 	    status = count;
-	    
-	return status;    
-#endif	
+
+	return status;
+#endif
 }
 
 static ssize_t psoc_i2c_write(struct i2c_client *client, char *buf, unsigned offset, size_t count)
 {
-#if USE_SMBUS    
+#if USE_SMBUS
 	int i;
-	
+
     for(i=0; i<count; i++) {
         i2c_smbus_write_byte_data(client, offset+i, buf[i]);
-    }	
+    }
     return count;
 #else
 	struct i2c_msg msg;
 	int status;
     u8 writebuf[256];
-	
+
 	int i = 0;
 
 	msg.addr = client->addr;
@@ -177,17 +177,17 @@ static ssize_t psoc_i2c_write(struct i2c_client *client, char *buf, unsigned off
 
 	/* msg.buf is u8 and casts will mask the values */
 	msg.buf = writebuf;
-	
+
 	msg.buf[i++] = offset;
 	memcpy(&msg.buf[i], buf, count);
 	msg.len = i + count;
-	
+
 	status = i2c_transfer(client->adapter, &msg, 1);
 	if (status == 1)
 		status = count;
-	
-    return status;	
-#endif    
+
+    return status;
+#endif
 }
 
 #if 0
@@ -195,10 +195,10 @@ static u32 psoc_read32(struct i2c_client *client, u8 offset)
 {
 	u32 value = 0;
 	u8 buf[4];
-    
+
     if( psoc_i2c_read(client, buf, offset, 4) == 4)
         value = (buf[0]<<24 | buf[1]<<16 | buf[2]<<8 | buf[3]);
-    
+
 	return value;
 }
 #endif
@@ -207,10 +207,10 @@ static u16 psoc_read16(struct i2c_client *client, u8 offset)
 {
 	u16 value = 0;
 	u8 buf[2];
-    
+
     if(psoc_i2c_read(client, buf, offset, 2) == 2)
         value = (buf[0]<<8 | buf[1]<<0);
-    
+
 	return value;
 }
 
@@ -218,10 +218,10 @@ static u8 psoc_read8(struct i2c_client *client, u8 offset)
 {
 	u8 value = 0;
 	u8 buf = 0;
-    
+
     if(psoc_i2c_read(client, &buf, offset, 1) == 1)
         value = buf;
-    
+
 	return value;
 }
 
@@ -253,14 +253,14 @@ static u8 psoc_read8(struct i2c_client *client, u8 offset)
 #define PMBUS_MFR_SERIAL				(0x9E)
 
 static int psoc_i2c_bridge_read(struct i2c_client *client,
-                                unsigned char bus, 
-                                unsigned char chip, 
-                                char *addr,          int alen, 
+                                unsigned char bus,
+                                unsigned char chip,
+                                char *addr,          int alen,
                                 unsigned char *data, int len )
 {
     unsigned char txdata[28], rxdata[28];
     int index, timeout;
-    
+
 	txdata[PSOC_I2C_STATUS] = 0;		/* the status */
 	txdata[PSOC_I2C_CNTRL] = ((alen & 3) << 5) | (len & 0x1f);	/* the sizes */
 	txdata[PSOC_I2C_ADDR] = (chip << 1) | PSOC_I2C_READ;		/* read address */
@@ -268,20 +268,20 @@ static int psoc_i2c_bridge_read(struct i2c_client *client,
 		txdata[PSOC_I2C_DATA + index] = addr[index];		/* the chip address */
 	for(; index < alen+len; index++)
 		txdata[PSOC_I2C_DATA + index] = 0;		/* clear the chip data */
-		
+
     psoc_i2c_write(client, &txdata[PSOC_I2C_CNTRL], PSOC_I2C_CNTRL, 2 + alen + len);
-    
+
     //delay a while ???
     //---------------------------------------------------------------------
     //start write
 	txdata[PSOC_I2C_STATUS] = PSOC_I2C_START | PSOC_PMB_SEL;	/* the start bit for the PM bus */
     psoc_i2c_write(client, &txdata[PSOC_I2C_STATUS], PSOC_I2C_STATUS, 1);
-    
+
     //delay a while
     timeout = 40; //40*20==>800 ms
     do {
         psoc_i2c_read(client, &rxdata[PSOC_I2C_STATUS], PSOC_I2C_STATUS, 1);
-        
+
         //check rxdata[5] error bit(1) and complete bit(0) ,TBD
 		if((rxdata[PSOC_I2C_STATUS] & 0x2) == 0x2) {
 		    //printk("i2c bridge fail!!!\n");
@@ -291,9 +291,9 @@ static int psoc_i2c_bridge_read(struct i2c_client *client,
 		if((rxdata[PSOC_I2C_STATUS] & PSOC_I2C_START) == 0) {
 		    /* comand complete */
             psoc_i2c_read(client, &rxdata[PSOC_I2C_DATA+alen], PSOC_I2C_DATA+alen, len);
-			break;	
+			break;
 		}
-		
+
         //delay
         msleep(20);
     } while(timeout--);
@@ -301,13 +301,13 @@ static int psoc_i2c_bridge_read(struct i2c_client *client,
  	if(timeout <= 0) {
  	    return -1;
  	}
-    
+
     //---------------------------------------------------------------------
-    
+
     for(index=0; index < len; index++) {
         data[index] = rxdata[PSOC_I2C_DATA + alen + index];
     }
-    
+
     return 0;
 }
 
@@ -343,15 +343,15 @@ static ssize_t show_psu_st(struct device *dev, struct device_attribute *da,
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 byte;
 	int shift = (attr->index == 0)?3:0;
-    
+
 	mutex_lock(&data->update_lock);
     status = psoc_i2c_read(client, &byte, PSOC_PSU_OFFSET, 1);
 	mutex_unlock(&data->update_lock);
-	
+
     byte = (byte >> shift) & 0x7;
-	
+
 	status = sprintf (buf, "%d : %s\n", byte, psu_str[byte]);
-	    
+
 	return strlen(buf);
 }
 
@@ -367,13 +367,13 @@ static ssize_t show_thermal(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 offset = attr->index * 2 + THERMAL_OFFSET;
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read16(client, offset);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "%d\n",
 		       (s8)(status>>8) * 1000  );
 }
@@ -387,13 +387,13 @@ static ssize_t show_pwm(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 offset = attr->index  + PWM_OFFSET;
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read8(client, offset);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "%d\n",
 		       status);
 }
@@ -409,13 +409,13 @@ static ssize_t set_pwm(struct device *dev,
 
 	u8 pwm = simple_strtol(buf, NULL, 10);
 	if(pwm > 255) pwm = 255;
-	
-	if(data->diag) {    
+
+	if(data->diag) {
     	mutex_lock(&data->update_lock);
     	psoc_i2c_write(client, &pwm, offset, 1);
     	mutex_unlock(&data->update_lock);
     }
-	
+
 	return count;
 }
 
@@ -428,13 +428,13 @@ static ssize_t show_rpm(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 offset = attr->index*2  + RPM_OFFSET;
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read16(client, offset);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "%d\n",
 		       status);
 }
@@ -446,13 +446,13 @@ static ssize_t show_switch_tmp(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u16 temp = 0;
-    
+
 	mutex_lock(&data->update_lock);
     status = psoc_i2c_read(client, (u8*)&temp, SWITCH_TMP_OFFSET, 2);
 	mutex_unlock(&data->update_lock);
-	
+
 	status = sprintf (buf, "%d\n",  (s8)(temp>>8) * 1000  );
-	    
+
 	return strlen(buf);
 }
 
@@ -466,13 +466,13 @@ static ssize_t set_switch_tmp(struct device *dev,
 
 	long temp = simple_strtol(buf, NULL, 10);
     u16 temp2 =  ( (temp/1000) <<8 ) & 0xFF00 ;
-    
+
     //printk("set_switch_tmp temp=%d, temp2=0x%x (%x,%x)\n", temp, temp2, ( ( (temp/1000) <<8 ) & 0xFF00 ),  (( (temp%1000) / 10 ) & 0xFF));
-    
+
 	mutex_lock(&data->update_lock);
 	psoc_i2c_write(client, (u8*)&temp2, SWITCH_TMP_OFFSET, 2);
 	mutex_unlock(&data->update_lock);
-	
+
 	return count;
 }
 
@@ -483,14 +483,14 @@ static ssize_t show_diag(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 diag_flag = 0;
-    
+
 	mutex_lock(&data->update_lock);
     status = psoc_i2c_read(client, (u8*)&diag_flag, DIAG_FLAG_OFFSET, 1);
 	mutex_unlock(&data->update_lock);
-	
+
 	data->diag = (diag_flag & 0x80)?1:0;
 	status = sprintf (buf, "%d\n", data->diag);
-	    
+
 	return strlen(buf);
 }
 
@@ -503,17 +503,17 @@ static ssize_t set_diag(struct device *dev,
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 value = 0;
 	u8 diag = simple_strtol(buf, NULL, 10);
-	
+
     diag = diag?1:0;
 	data->diag = diag;
-	    
+
 	mutex_lock(&data->update_lock);
 	psoc_i2c_read(client, (u8*)&value, DIAG_FLAG_OFFSET, 1);
 	if(diag) value |= (1<<7);
 	else     value &= ~(1<<7);
 	psoc_i2c_write(client, (u8*)&value, DIAG_FLAG_OFFSET, 1);
 	mutex_unlock(&data->update_lock);
-	
+
 	return count;
 }
 
@@ -524,13 +524,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *da,
 	//struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read16(client, VERSION_OFFSET);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "ver: %x.%x\n", (status & 0xFF00)>>8,  (status & 0xFF) );
 }
 
@@ -543,13 +543,13 @@ static ssize_t show_fan_led(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 bit = attr->index;
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read8(client, FAN_LED_OFFSET);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "%d\n",
 		       (status & (1<<bit))?1:0 );
 }
@@ -565,16 +565,16 @@ static ssize_t set_fan_led(struct device *dev,
 	u8 led_state = 0;
 
 	u8 v = simple_strtol(buf, NULL, 10);
-	
-	if(data->diag) {    
+
+	if(data->diag) {
     	mutex_lock(&data->update_lock);
     	led_state = psoc_read8(client, FAN_LED_OFFSET);
     	if(v) led_state |=  (1<<bit);
-    	else  led_state &= ~(1<<bit);    
+    	else  led_state &= ~(1<<bit);
     	psoc_i2c_write(client, &led_state, FAN_LED_OFFSET, 1);
     	mutex_unlock(&data->update_lock);
     }
-	
+
 	return count;
 }
 
@@ -586,13 +586,13 @@ static ssize_t show_value8(struct device *dev, struct device_attribute *da,
 	struct i2c_client *client = to_i2c_client(dev);
 	struct psoc_data *data = i2c_get_clientdata(client);
 	u8 offset = attr->index;
-    
+
 	mutex_lock(&data->update_lock);
-	
+
 	status = psoc_read8(client, offset);
-	
+
 	mutex_unlock(&data->update_lock);
-	
+
 	return sprintf(buf, "0x%02X\n", status );
 }
 
@@ -610,7 +610,7 @@ static long pmbus_reg2data_linear(int data, int linear16)
         exponent = ((s16)( data & 0xF800) ) >> 11;
         mantissa = ((s32)((data & 0x7ff) << 5)) >> 5;
     }
-    
+
     //printk("data=%d,  m=%d, e=%d\n", data, exponent, mantissa);
     val = mantissa;
 
@@ -636,17 +636,17 @@ static ssize_t show_psu(struct device *dev, struct device_attribute *da,
     u8 len  = ((attr->index & 0xFF00) >> 8);
 	u8 chip = (attr->index >> 16)? 0x59:0x58;
 	u8 bus  = 1;
-	unsigned char value[2] = {0,0};;    
+	unsigned char value[2] = {0,0};;
 
 	if (len == 2)
 	{
 		mutex_lock(&data->update_lock);
 		psoc_i2c_bridge_read(client, bus, chip, &reg, 1, value, 2);
 		mutex_unlock(&data->update_lock);
-	
+
 		status =  value[1]<<8 | value[0];
 		//status1 =  value[1]<<8 | value[0];
-	
+
 		return sprintf(buf, "%ld\n", pmbus_reg2data_linear(status, (reg==PMBUS_READ_VOUT)?1:0) );
 	}
 	else
@@ -656,10 +656,10 @@ static ssize_t show_psu(struct device *dev, struct device_attribute *da,
         //length of block read
 		psoc_i2c_bridge_read(client, bus, chip, &reg, 1, &len, 1);
         //data included length
-		psoc_i2c_bridge_read(client, bus, chip, &reg, 1, tmpbuf, len+1); 
+		psoc_i2c_bridge_read(client, bus, chip, &reg, 1, tmpbuf, len+1);
 		mutex_unlock(&data->update_lock);
 
-		memcpy(buf, tmpbuf+1, len);	
+		memcpy(buf, tmpbuf+1, len);
 		buf[len]='\n';
 
 		return len+1;
@@ -681,7 +681,7 @@ static ssize_t show_psu_psoc(struct device *dev, struct device_attribute *da,
 		mutex_lock(&data->update_lock);
 		status = psoc_read16(client, offset);
 		mutex_unlock(&data->update_lock);
-	
+
 		return sprintf(buf, "%ld \n", pmbus_reg2data_linear(status, strstr(attr->dev_attr.attr.name, "vout")? 1:0 ));
 	}
 	else
@@ -773,11 +773,11 @@ static SENSOR_DEVICE_ATTR(psoc_psu1_pin,      S_IRUGO,			        show_psu_psoc, 
 static SENSOR_DEVICE_ATTR(psoc_psu1_pout,     S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu1_pout));
 
 
-static SENSOR_DEVICE_ATTR(psoc_psu2_vin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_vin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_vin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_vin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_vout,     S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_vout));
-static SENSOR_DEVICE_ATTR(psoc_psu2_iin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_iin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_iin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_iin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_iout,     S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_iout));
-static SENSOR_DEVICE_ATTR(psoc_psu2_pin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_pin)); 
+static SENSOR_DEVICE_ATTR(psoc_psu2_pin,      S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_pin));
 static SENSOR_DEVICE_ATTR(psoc_psu2_pout,     S_IRUGO,			        show_psu_psoc,  0,      (0x02<<8)|PSOC_PSU_OFF(psu2_pout));
 
 static SENSOR_DEVICE_ATTR(psoc_psu1_vendor,   S_IRUGO,                          show_psu_psoc,  0,   (0x10<<8)|PSOC_PSU_OFF(psu1_vendor));
@@ -790,7 +790,7 @@ static SENSOR_DEVICE_ATTR(psoc_psu2_model,    S_IRUGO,                          
 static SENSOR_DEVICE_ATTR(psoc_psu2_version,  S_IRUGO,                          show_psu_psoc,  0,   (0x08<<8)|PSOC_PSU_OFF(psu2_version));
 static SENSOR_DEVICE_ATTR(psoc_psu2_date,     S_IRUGO,                          show_psu_psoc,  0,   (0x06<<8)|PSOC_PSU_OFF(psu2_date));
 static SENSOR_DEVICE_ATTR(psoc_psu2_sn,       S_IRUGO,                          show_psu_psoc,  0,   (0x14<<8)|PSOC_PSU_OFF(psu2_sn));
-			
+
 static struct attribute *psoc_attributes[] = {
     //thermal
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
@@ -798,7 +798,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_temp3_input.dev_attr.attr,
 	&sensor_dev_attr_temp4_input.dev_attr.attr,
 	&sensor_dev_attr_temp5_input.dev_attr.attr,
-	
+
 	&sensor_dev_attr_thermal_psu1.dev_attr.attr,
 	&sensor_dev_attr_thermal_psu2.dev_attr.attr,
 
@@ -810,7 +810,7 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_pwm4.dev_attr.attr,
 	&sensor_dev_attr_pwm_psu1.dev_attr.attr,
 	&sensor_dev_attr_pwm_psu2.dev_attr.attr,
-	
+
 	//rpm
 	&sensor_dev_attr_fan1_input.dev_attr.attr,
 	&sensor_dev_attr_fan2_input.dev_attr.attr,
@@ -820,20 +820,20 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_fan6_input.dev_attr.attr,
 	&sensor_dev_attr_fan7_input.dev_attr.attr,
 	&sensor_dev_attr_fan8_input.dev_attr.attr,
-	
+
 	&sensor_dev_attr_rpm_psu1.dev_attr.attr,
 	&sensor_dev_attr_rpm_psu2.dev_attr.attr,
-    
+
     //switch temperature
 	&sensor_dev_attr_switch_tmp.dev_attr.attr,
         &sensor_dev_attr_temp6_input.dev_attr.attr,
     //diag flag
 	&sensor_dev_attr_diag.dev_attr.attr,
-	
+
 	//version
 	&sensor_dev_attr_version.dev_attr.attr,
-	
-	//fan led 
+
+	//fan led
 	&sensor_dev_attr_fan_led_grn1.dev_attr.attr,
 	&sensor_dev_attr_fan_led_grn2.dev_attr.attr,
 	&sensor_dev_attr_fan_led_grn3.dev_attr.attr,
@@ -843,9 +843,9 @@ static struct attribute *psoc_attributes[] = {
 	&sensor_dev_attr_fan_led_red3.dev_attr.attr,
 	&sensor_dev_attr_fan_led_red4.dev_attr.attr,
 
-	//fan GPI 
+	//fan GPI
 	&sensor_dev_attr_fan_gpi.dev_attr.attr,
-	
+
 	//psu
 	&sensor_dev_attr_psu1_vin.dev_attr.attr,
 	&sensor_dev_attr_psu1_vout.dev_attr.attr,
@@ -918,7 +918,7 @@ psoc_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	int status;
 
     printk("+%s\n", __func__);
-    
+
 	if (!i2c_check_functionality(client->adapter,
 			I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA))
 		return -EIO;
@@ -930,7 +930,7 @@ psoc_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	i2c_set_clientdata(client, data);
 	mutex_init(&data->update_lock);
 	data->diag    = 0;
-	
+
 	/* Register sysfs hooks */
 	status = sysfs_create_group(&client->dev.kobj, &psoc_group);
 	if (status)

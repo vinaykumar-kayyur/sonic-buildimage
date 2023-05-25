@@ -137,7 +137,7 @@ class TestFilehandler:
         print(i_start, i_end)
         assert i_start == -1
         assert i_end == len(lines)
-    
+
     @mock.patch('helper.FileHandler.read_raw', side_effect=read_raw_mock)
     def test_read_kconfig_parser(self, mock_read_raw):
         global LINES_READ
@@ -148,7 +148,7 @@ class TestFilehandler:
         assert all_cfg['common'] == ['CONFIG_LOG_BUF_SHIFT=20']
         assert all_cfg['amd64'] == ['CONFIG_SENSORS_DPS1900=m', 'CONFIG_OF=y', 'CONFIG_THERMAL_OF=y', 'CONFIG_DW_DMAC_PCI=y']
         assert all_cfg['armhf'] == ['CONFIG_EEPROM_SFF_8436=m', 'CONFIG_EEPROM_OPTOE=m', 'CONFIG_I2C_MUX_GPIO=y']
-    
+
     @mock.patch('helper.FileHandler.write_lines', side_effect=writer_mock)
     @mock.patch('helper.FileHandler.read_raw', side_effect=read_raw_mock)
     def test_write_lines_marker(self, mock_read_raw, mock_write_lines_marker):

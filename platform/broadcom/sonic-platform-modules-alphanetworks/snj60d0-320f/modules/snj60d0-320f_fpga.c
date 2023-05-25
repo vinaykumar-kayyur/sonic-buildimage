@@ -3,15 +3,15 @@
  *
  * Copyright (C) 2020 Alphanetworks Technology Corporation.
  * Robin Chen <Robin_chen@Alphanetworks.com>
- * This program is free software: you can redistribute it and/or modify 
- * it under the terms of the GNU General Public License as published by 
- * the Free Software Foundation, either version 3 of the License, or 
- * any later version. 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
  *
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details. 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  * see <http://www.gnu.org/licenses/>
  *
  * Based on ad7414.c
@@ -355,7 +355,7 @@ static ssize_t psu_show_status(struct device *dev, struct device_attribute *attr
     switch(sda->index) {
         case PSU1_PRESENT:
         case PSU2_PRESENT:
-          res = (val & PSU_PRESENT_BIT ? 0 : 1 );  
+          res = (val & PSU_PRESENT_BIT ? 0 : 1 );
           break;
         case PSU1_POWER_GOOD:
         case PSU2_POWER_GOOD:
@@ -525,7 +525,7 @@ static ssize_t fan_show_status_reg(struct device *dev, struct device_attribute *
         default:
             break;
     }
-    
+
     return ret;
 }
 
@@ -538,11 +538,11 @@ static ssize_t sys_led_read(struct device *dev, struct device_attribute *attr, c
 
     switch(sda->index) {
         case SYS_LOCATOR:
-        case SYS_PWR:			
+        case SYS_PWR:
         case PORT_LED_DISABLE:
             command = SYS_LED_REG;
             break;
-        case SYS_STATUS: 
+        case SYS_STATUS:
         case FAN1_LED:
         case FAN2_LED:
         case FAN3_LED:
@@ -616,13 +616,13 @@ static ssize_t sys_led_write(struct device *dev, struct device_attribute *attr, 
     switch(sda->index) {
         case SYS_LOCATOR:
         case SYS_PWR:
-        case PORT_LED_DISABLE:			
-		  if(write < 0 || write > 7) 
+        case PORT_LED_DISABLE:
+		  if(write < 0 || write > 7)
             return -EINVAL;
 		  command = SYS_LED_REG;
 		  break;
         case SYS_STATUS:
-          if (write < 0 || write > 7) 
+          if (write < 0 || write > 7)
             return -EINVAL;
           command = SYS2_LED_REG;
           break;

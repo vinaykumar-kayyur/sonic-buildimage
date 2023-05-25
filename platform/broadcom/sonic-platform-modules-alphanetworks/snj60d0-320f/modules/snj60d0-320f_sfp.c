@@ -4,15 +4,15 @@
  * Copyright (C) 2019 Alphanetworks Technology Corporation.
  * Philip Wang <philip_wang@alphanetworks.com>
  *
- * This program is free software: you can redistribute it and/or modify 
- * it under the terms of the GNU General Public License as published by 
- * the Free Software Foundation, either version 3 of the License, or 
- * any later version. 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details. 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  * see <http://www.gnu.org/licenses/>
  *
  * Copyright (C)  Brandon Chuang <brandon_chuang@accton.com.tw>
@@ -111,7 +111,7 @@ static const unsigned short normal_i2c[] = { SFP_EEPROM_A0_I2C_ADDR, SFP_EEPROM_
 #define CPLD_PORT_TO_FRONT_PORT(port)  (port+1)
 
 enum port_numbers {
-sfp1,  sfp2,  sfp3,  sfp4,  sfp5,  sfp6,  sfp7,  sfp8, 
+sfp1,  sfp2,  sfp3,  sfp4,  sfp5,  sfp6,  sfp7,  sfp8,
 sfp9,  sfp10, sfp11, sfp12, sfp13, sfp14, sfp15, sfp16,
 sfp17, sfp18, sfp19, sfp20, sfp21, sfp22, sfp23, sfp24,
 sfp25, sfp26, sfp27, sfp28, sfp29, sfp30, sfp31, sfp32
@@ -130,9 +130,9 @@ static const struct i2c_device_id qsfp_device_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, qsfp_device_id);
 
-/* 
+/*
  * list of valid port types
- * note OOM_PORT_TYPE_NOT_PRESENT to indicate no 
+ * note OOM_PORT_TYPE_NOT_PRESENT to indicate no
  * module is present in this port
  */
 typedef enum oom_driver_port_type_e {
@@ -157,15 +157,15 @@ enum driver_type_e {
 struct eeprom_data {
 	char				 valid;			/* !=0 if registers are valid */
 	unsigned long		 last_updated;	/* In jiffies */
-	struct bin_attribute bin;			/* eeprom data */		
+	struct bin_attribute bin;			/* eeprom data */
 };
 
 struct sfp_msa_data {
 	char			valid;		  	/* !=0 if registers are valid */
 	unsigned long	last_updated;   /* In jiffies */
 	u64				status[2];	   	/* index 0 => device id
-											 1 => 10G Ethernet Compliance Codes 
-												  to distinguish SFP or SFP+ 
+											 1 => 10G Ethernet Compliance Codes
+												  to distinguish SFP or SFP+
 											 2 => DIAGNOSTIC MONITORING TYPE */
 	struct eeprom_data				eeprom;
 };
@@ -187,7 +187,7 @@ struct qsfp_data {
 									/* index 0 => reset
 											 1 => low power mode */
 
-	u8					device_id;	
+	u8					device_id;
 	struct eeprom_data	eeprom;
 };
 
@@ -350,16 +350,16 @@ static struct sfp_port_data *qsfp_update_present(struct i2c_client *client)
 
 	/* Read present status of port 1~32 */
     data->present = 0;
-	
+
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
 		status = i2c_smbus_read_byte_data(client, regs[i]);
-        
+
         if (status < 0) {
             DEBUG_PRINT("cpld(%d) reg(0x%x) err %d", SFP_CPLD_I2C_ADDR, regs[i], status);
             goto exit;
         }
         DEBUG_PRINT("Present status = 0x%x", status);
-        
+
 		data->present |= (u64)status << (i*8);
         DEBUG_PRINT("Present status = 0x%llx", data->present);
     }
@@ -399,7 +399,7 @@ static struct sfp_port_data *sfp_update_port_type(struct device *dev)
     switch (data->driver_type) {
         case DRIVER_TYPE_SFP_MSA:
         {
-            status = sfp_eeprom_read(data->client, SFF8024_PHYSICAL_DEVICE_ID_ADDR, &buf, sizeof(buf));	
+            status = sfp_eeprom_read(data->client, SFF8024_PHYSICAL_DEVICE_ID_ADDR, &buf, sizeof(buf));
             if (status < 0) {
                 data->port_type = OOM_DRIVER_PORT_TYPE_INVALID;
                 break;
@@ -410,7 +410,7 @@ static struct sfp_port_data *sfp_update_port_type(struct device *dev)
                 break;
             }
 
-            status = sfp_eeprom_read(data->client, SFF8472_10G_ETH_COMPLIANCE_ADDR, &buf, sizeof(buf));	
+            status = sfp_eeprom_read(data->client, SFF8472_10G_ETH_COMPLIANCE_ADDR, &buf, sizeof(buf));
             if (status < 0) {
                 data->port_type = OOM_DRIVER_PORT_TYPE_INVALID;
                 break;
@@ -422,7 +422,7 @@ static struct sfp_port_data *sfp_update_port_type(struct device *dev)
         }
         case DRIVER_TYPE_QSFP:
         {
-            status = sfp_eeprom_read(data->client, SFF8024_PHYSICAL_DEVICE_ID_ADDR, &buf, sizeof(buf));	
+            status = sfp_eeprom_read(data->client, SFF8024_PHYSICAL_DEVICE_ID_ADDR, &buf, sizeof(buf));
             if (status < 0) {
                 data->port_type = OOM_DRIVER_PORT_TYPE_INVALID;
                 break;
@@ -438,10 +438,10 @@ static struct sfp_port_data *sfp_update_port_type(struct device *dev)
                 break;
             case SFF8024_DEVICE_ID_QSFP28:
                 data->port_type = OOM_DRIVER_PORT_TYPE_QSFP28;
-                break;				
+                break;
             case SFF8024_DEVICE_ID_QSFPDD:
                 data->port_type = OOM_DRIVER_PORT_TYPE_QSFPDD;
-                break;				
+                break;
             default:
                 data->port_type = OOM_DRIVER_PORT_TYPE_INVALID;
                 break;
@@ -491,7 +491,7 @@ static struct sfp_port_data *qsfp_update_port_reset(struct i2c_client *client)
             DEBUG_PRINT("cpld(0x%x) reg(0x%x) err %d", SFP_CPLD_REG_ADDR_RESET, regs[i], status);
             goto exit;
         }
-        
+
         DEBUG_PRINT("reset status = 0x%x", status);
         data->port_reset |= (u64)status << (i*8);
     }
@@ -578,7 +578,7 @@ static struct sfp_port_data *qsfp_update_port_led(struct i2c_client *client)
         DEBUG_PRINT("cpld reg(0x%x) err %d", reg, status);
         goto exit;
     }
-        
+
     data->port_led = status;
 
     DEBUG_PRINT("led status = %llu", data->port_led);
@@ -607,12 +607,12 @@ static ssize_t qsfp_set_port_led(struct device *dev, struct device_attribute *da
     long led_state;
     int error;
     int result;
-	
+
     error = kstrtol(buf, 10, &led_state);
     if (error) {
         return error;
     }
-	
+
     mutex_lock(&data->update_lock);
 
     cpld_reg = SFP_CPLD_REG_ADDR_LED;
@@ -627,13 +627,13 @@ static ssize_t qsfp_set_port_led(struct device *dev, struct device_attribute *da
 	if (cpld_val != led_state){
         data->port_led = led_state;
 
-	    result = i2c_smbus_write_byte_data(client, cpld_reg, led_state);	
+	    result = i2c_smbus_write_byte_data(client, cpld_reg, led_state);
 	    if (result < 0) {
 		    dev_info(&client->dev, "%s, i2c_smbus_write_byte_data fail(%d)", __FUNCTION__, result);
 	    }
         DEBUG_PRINT("write cpld reg = 0x%x value = %lu", cpld_reg, led_state);
     }
-    
+
     mutex_unlock(&data->update_lock);
 
     return count;
@@ -658,7 +658,7 @@ static struct sfp_port_data *qsfp_update_port_lpmode(struct i2c_client *client)
             DEBUG_PRINT("cpld reg(0x%x) err %d", regs[i], status);
             goto exit;
         }
-        
+
         DEBUG_PRINT("lpmode status = 0x%x", status);
         data->port_lpmode |= (u64)status << (i*8);
     }
@@ -743,7 +743,7 @@ static ssize_t sfp_show_eeprom(struct device *dev, struct device_attribute *da,
     }
 
     snprintf(devfile, sizeof(devfile), "/sys/bus/i2c/devices/0-0070/name");
-		
+
 	/* Read SFP EEPROM */
     sfd = filp_open(devfile, O_RDONLY, 0);
     if (IS_ERR(sfd)) {
@@ -767,9 +767,9 @@ static ssize_t sfp_show_eeprom(struct device *dev, struct device_attribute *da,
     if (result < 0) {
         dev_info(&client->dev, "%s, i2c_smbus_write_byte_data fail(%d)", __FUNCTION__, result);
     }
-	
+
     snprintf(devfile, sizeof(devfile), "/sys/bus/i2c/devices/%d-0050/sfp_eeprom", i2c_index);
-		
+
 	/* Read SFP EEPROM */
     sfd = filp_open(devfile, O_RDONLY, 0);
     if (IS_ERR(sfd)) {
@@ -790,10 +790,10 @@ static ssize_t sfp_show_eeprom(struct device *dev, struct device_attribute *da,
         rc = 0;
         goto exit;
     }
-	
+
     rc = sizeof(buffer);
     memcpy(buf, buffer, rc);
-			
+
     /* Reset module select register */
     if(strcmp(client->name, "sfpcpld33") != 0){
         /* Port number is 1-8 */
@@ -828,7 +828,7 @@ exit:
 	&sensor_dev_attr_sfp##PORT5##_port_number.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT6##_port_number.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT7##_port_number.dev_attr.attr, \
-	&sensor_dev_attr_sfp##PORT8##_port_number.dev_attr.attr,	
+	&sensor_dev_attr_sfp##PORT8##_port_number.dev_attr.attr,
 DECLARE_PORT_NUMBER_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
 #define DECLARE_PORT_IS_PRESENT_SENSOR_DEVICE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
@@ -867,7 +867,7 @@ DECLARE_PORT_IS_PRESENT_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	&sensor_dev_attr_sfp##PORT5##_port_type.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT6##_port_type.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT7##_port_type.dev_attr.attr, \
-	&sensor_dev_attr_sfp##PORT8##_port_type.dev_attr.attr,	
+	&sensor_dev_attr_sfp##PORT8##_port_type.dev_attr.attr,
 DECLARE_PORT_TYPE_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
 #define DECLARE_PORT_RESET_SENSOR_DEVICE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
@@ -887,13 +887,13 @@ DECLARE_PORT_TYPE_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	&sensor_dev_attr_sfp##PORT5##_port_reset.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT6##_port_reset.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT7##_port_reset.dev_attr.attr, \
-	&sensor_dev_attr_sfp##PORT8##_port_reset.dev_attr.attr,	
+	&sensor_dev_attr_sfp##PORT8##_port_reset.dev_attr.attr,
 DECLARE_PORT_RESET_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
 #define DECLARE_PORT_LED_DEVICE_ATTR() \
 	static SENSOR_DEVICE_ATTR(sfp_led_disable, S_IWUSR | S_IRUGO, qsfp_show_port_led, qsfp_set_port_led, PORT_LED);
 #define DECLARE_PORT_LED_ATTR() \
-	&sensor_dev_attr_sfp_led_disable.dev_attr.attr,	
+	&sensor_dev_attr_sfp_led_disable.dev_attr.attr,
 DECLARE_PORT_LED_DEVICE_ATTR()
 
 #define DECLARE_PORT_EEPROM_SENSOR_DEVICE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
@@ -913,7 +913,7 @@ DECLARE_PORT_LED_DEVICE_ATTR()
 	&sensor_dev_attr_sfp##PORT5##_eeprom.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT6##_eeprom.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT7##_eeprom.dev_attr.attr, \
-	&sensor_dev_attr_sfp##PORT8##_eeprom.dev_attr.attr,	
+	&sensor_dev_attr_sfp##PORT8##_eeprom.dev_attr.attr,
 DECLARE_PORT_EEPROM_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
 #define DECLARE_PORT_LPMODE_SENSOR_DEVICE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
@@ -933,13 +933,13 @@ DECLARE_PORT_EEPROM_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	&sensor_dev_attr_sfp##PORT5##_lpmode.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT6##_lpmode.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT7##_lpmode.dev_attr.attr, \
-	&sensor_dev_attr_sfp##PORT8##_lpmode.dev_attr.attr,	
+	&sensor_dev_attr_sfp##PORT8##_lpmode.dev_attr.attr,
 DECLARE_PORT_LPMODE_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
 #define DECLARE_PORT_CPLD_REVISION() \
 	static SENSOR_DEVICE_ATTR(cpld_revision, (0660), show_cpld_version, NULL, CPLD_REVISION);
 #define DECLARE_PORT_CPLD_REVISION_ATTR() \
-	&sensor_dev_attr_cpld_revision.dev_attr.attr,	
+	&sensor_dev_attr_cpld_revision.dev_attr.attr,
 DECLARE_PORT_CPLD_REVISION()
 
 static struct attribute *qsfp_attributes[] = {
@@ -962,7 +962,7 @@ static ssize_t sfp_eeprom_write(struct i2c_client *client, u8 command, const cha
 
 	if (data_len > I2C_SMBUS_BLOCK_MAX) {
 		data_len = I2C_SMBUS_BLOCK_MAX;
-	} 
+	}
 
 	while (retry) {
 		result = i2c_smbus_write_i2c_block_data(client, command, data_len, data);
@@ -971,13 +971,13 @@ static ssize_t sfp_eeprom_write(struct i2c_client *client, u8 command, const cha
 			retry--;
 			continue;
 		}
- 
+
 		break;
 	}
 
 	if (unlikely(result < 0)) {
 		return result;
-	}		
+	}
 
 	return data_len;
 #else
@@ -990,10 +990,10 @@ static ssize_t sfp_eeprom_write(struct i2c_client *client, u8 command, const cha
 			retry--;
 			continue;
 		}
- 
+
 		break;
 	}
-	
+
 	if (unlikely(result < 0)) {
 		return result;
 	}
@@ -1002,21 +1002,21 @@ static ssize_t sfp_eeprom_write(struct i2c_client *client, u8 command, const cha
 #endif
 }
 
-static ssize_t sfp_port_write(struct sfp_port_data *data, 
+static ssize_t sfp_port_write(struct sfp_port_data *data,
 						  const char *buf, loff_t off, size_t count)
 {
 	ssize_t retval = 0;
-	
+
 	if (unlikely(!count)) {
 		return count;
 	}
-	
+
 	/*
 	 * Write data to chip, protecting against concurrent updates
 	 * from this host, but not from other I2C masters.
 	 */
 	mutex_lock(&data->update_lock);
-	
+
 	while (count) {
 		ssize_t status;
 
@@ -1032,7 +1032,7 @@ static ssize_t sfp_port_write(struct sfp_port_data *data,
 		count -= status;
 		retval += status;
 	}
-	
+
 	mutex_unlock(&data->update_lock);
 	return retval;
 }
@@ -1067,16 +1067,16 @@ static ssize_t sfp_eeprom_read(struct i2c_client *client, u8 command, u8 *data,
 
 		break;
 	}
-	
+
 	if (unlikely(result < 0))
 		goto abort;
 	if (unlikely(result != data_len)) {
 		result = -EIO;
 		goto abort;
 	}
-	
+
 	/* result = data_len; */
-	
+
 abort:
 	return result;
 #else
@@ -1089,7 +1089,7 @@ abort:
 			retry--;
 			continue;
 		}
- 
+
 		break;
 	}
 
@@ -1102,7 +1102,7 @@ abort:
 	result = 1;
 
 abort:
-	return result;	
+	return result;
 #endif
 }
 
@@ -1110,12 +1110,12 @@ static ssize_t sfp_port_read(struct sfp_port_data *data,
 				char *buf, loff_t off, size_t count)
 {
 	ssize_t retval = 0;
-	
+
 	if (unlikely(!count)) {
 		DEBUG_PRINT("Count = 0, return");
 		return count;
 	}
-	
+
 	/*
 	 * Read data from chip, protecting against concurrent updates
 	 * from this host, but not from other I2C masters.
@@ -1124,7 +1124,7 @@ static ssize_t sfp_port_read(struct sfp_port_data *data,
 
 	while (count) {
 		ssize_t status;
-	
+
 		status = sfp_eeprom_read(data->client, off, buf, count);
 		if (status <= 0) {
 			if (retval == 0) {
@@ -1132,13 +1132,13 @@ static ssize_t sfp_port_read(struct sfp_port_data *data,
 			}
 			break;
 		}
-		
+
 		buf += status;
 		off += status;
 		count -= status;
 		retval += status;
 	}
-	
+
 	mutex_unlock(&data->update_lock);
 	return retval;
 
@@ -1163,14 +1163,14 @@ static int sfp_sysfs_eeprom_init(struct kobject *kobj, struct bin_attribute *eep
 	eeprom->attr.mode = S_IWUSR | S_IRUGO;
 	eeprom->read  	  = sfp_bin_read;
 	eeprom->write 	  = sfp_bin_write;
-	eeprom->size  	  = EEPROM_SIZE;	
+	eeprom->size  	  = EEPROM_SIZE;
 
 	/* Create eeprom file */
 	err = sysfs_create_bin_file(kobj, eeprom);
 	if (err) {
 		return err;
 	}
-	
+
 	return 0;
 }
 
@@ -1203,7 +1203,7 @@ static int qsfp_probe(struct i2c_client *client, const struct i2c_device_id *dev
 
     if (!sfp_i2c_check_functionality(client)) {
         status = -EIO;
-        goto exit;		
+        goto exit;
     }
 
     qsfp = kzalloc(sizeof(struct qsfp_data), GFP_KERNEL);
@@ -1243,7 +1243,7 @@ exit_free:
     kfree(qsfp);
 exit:
 
-    return status;	
+    return status;
 }
 
 static int qsfp_device_probe(struct i2c_client *client,

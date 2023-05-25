@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  *
- * A pddf kernel module to create i2C client for optics 
+ * A pddf kernel module to create i2C client for optics
  */
 
 #include <linux/kernel.h>
@@ -107,7 +107,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
         {
             int num = pdata->len;
             XCVR_PDATA *xcvr_platform_data;
-            
+
             adapter = i2c_get_adapter(cdata->parent_bus);
             /* Allocate the xcvr_platform_data */
             xcvr_platform_data = (XCVR_PDATA *)kzalloc(sizeof(XCVR_PDATA), GFP_KERNEL);
@@ -141,7 +141,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
                 goto free_data;
             }
         }
-        else if((strcmp(cdata->dev_type, "optoe1")==0) || (strcmp(cdata->dev_type, "optoe2")==0)) 
+        else if((strcmp(cdata->dev_type, "optoe1")==0) || (strcmp(cdata->dev_type, "optoe2")==0))
         {
 
             adapter = i2c_get_adapter(cdata->parent_bus);
@@ -222,16 +222,16 @@ int __init pddf_data_init(void)
     pddf_dbg(XCVR, KERN_ERR "XCVR PDDF MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     xcvr_kobj = kobject_create_and_add("xcvr", device_kobj);
-    if(!xcvr_kobj) 
+    if(!xcvr_kobj)
         return -ENOMEM;
     i2c_kobj = kobject_create_and_add("i2c", xcvr_kobj);
-    if(!i2c_kobj) 
+    if(!i2c_kobj)
         return -ENOMEM;
-    
+
     ret = sysfs_create_group(i2c_kobj, &pddf_clients_data_group);
     if (ret)
     {
@@ -250,7 +250,7 @@ int __init pddf_data_init(void)
         return ret;
     }
     pddf_dbg(XCVR, "CREATED PDDF SFP DATA SYSFS GROUP\n");
-    
+
     return ret;
 }
 

@@ -154,10 +154,10 @@ enum as9726_32d_cpld_sysfs_attributes {
 	CPLD_INTR_ATTR_ID(2),
 	CPLD_INTR_ATTR_ID(3),
 	CPLD_INTR_ATTR_ID(4),
-	
+
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static ssize_t show_interrupt(struct device *dev, struct device_attribute *da,
              char *buf);
@@ -184,13 +184,13 @@ static int as9726_32d_cpld_write_internal(struct i2c_client *client, u8 reg, u8 
 #define DECLARE_SFP_TRANSCEIVER_SENSOR_DEVICE_ATTR(index) \
 	static SENSOR_DEVICE_ATTR(module_tx_disable_##index, S_IRUGO | S_IWUSR, show_status, set_tx_disable, MODULE_TXDISABLE_##index); \
 	static SENSOR_DEVICE_ATTR(module_rx_los_##index, S_IRUGO, show_status, NULL, MODULE_RXLOS_##index);  \
-	static SENSOR_DEVICE_ATTR(module_tx_fault_##index, S_IRUGO, show_status, NULL, MODULE_RXLOS_##index); 
-	
+	static SENSOR_DEVICE_ATTR(module_tx_fault_##index, S_IRUGO, show_status, NULL, MODULE_RXLOS_##index);
+
 #define DECLARE_SFP_TRANSCEIVER_ATTR(index)  \
 	&sensor_dev_attr_module_tx_disable_##index.dev_attr.attr, \
 	&sensor_dev_attr_module_rx_los_##index.dev_attr.attr,     \
 	&sensor_dev_attr_module_tx_fault_##index.dev_attr.attr
-	
+
 /*reset*/
 #define DECLARE_TRANSCEIVER_SENSOR_DEVICE_RESET_ATTR(index) \
 	static SENSOR_DEVICE_ATTR(module_reset_##index, S_IWUSR | S_IRUGO, get_mode_reset, set_mode_reset, MODULE_RESET_##index)
@@ -337,7 +337,7 @@ static const struct attribute_group as9726_32d_cpld2_group = {
 
 static struct attribute *as9726_32d_cpld3_attributes[] = {
     &sensor_dev_attr_version.dev_attr.attr,
-    &sensor_dev_attr_access.dev_attr.attr,	
+    &sensor_dev_attr_access.dev_attr.attr,
     DECLARE_TRANSCEIVER_PRESENT_ATTR(17),
 	DECLARE_TRANSCEIVER_PRESENT_ATTR(18),
 	DECLARE_TRANSCEIVER_PRESENT_ATTR(19),
@@ -399,10 +399,10 @@ static  ssize_t show_interrupt(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);
     struct as9726_32d_cpld_data *data = i2c_get_clientdata(client);
     int status = 0;
-    u8 reg = 0; 
-    
+    u8 reg = 0;
+
     switch (attr->index)
-	{   
+	{
         case CPLD_INTR_1:
             reg  = 0x10;
             break;
@@ -414,7 +414,7 @@ static  ssize_t show_interrupt(struct device *dev, struct device_attribute *da,
             break;
         case CPLD_INTR_4:
             reg  = 0x11;
-            break; 
+            break;
         default:
             return -ENODEV;
     }
@@ -441,7 +441,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     struct as9726_32d_cpld_data *data = i2c_get_clientdata(client);
 	int status = 0;
 	u8 reg = 0, mask = 0, revert = 0;
-    
+
 	switch (attr->index) {
 	case MODULE_PRESENT_1 ... MODULE_PRESENT_8:
 		reg  = 0x12;
@@ -474,7 +474,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
      case MODULE_RXLOS_34:
         reg  = 0x26;
         mask = 0x2;
-        break;    
+        break;
 	case MODULE_TXDISABLE_33:
 		reg  = 0x21;
 		mask = 0x1;
@@ -482,8 +482,8 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 	case MODULE_TXDISABLE_34:
 		reg  = 0x21;
 		mask = 0x2;
-		break;	
-	
+		break;
+
 	default:
 		return 0;
 	}
@@ -515,7 +515,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 	long disable;
 	int status;
     u8 reg = 0, mask = 0;
-     
+
 	status = kstrtol(buf, 10, &disable);
 	if (status) {
 		return status;
@@ -553,7 +553,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-    
+
     mutex_unlock(&data->update_lock);
     return count;
 
@@ -569,7 +569,7 @@ static ssize_t access(struct device *dev, struct device_attribute *da,
 	u32 addr, val;
     struct i2c_client *client = to_i2c_client(dev);
     struct as9726_32d_cpld_data *data = i2c_get_clientdata(client);
-    
+
 	if (sscanf(buf, "0x%x 0x%x", &addr, &val) != 2) {
 		return -EINVAL;
 	}
@@ -637,13 +637,13 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 {
     int val = 0;
     struct i2c_client *client = to_i2c_client(dev);
-	
+
 	val = i2c_smbus_read_byte_data(client, 0x1);
 
     if (val < 0) {
         dev_dbg(&client->dev, "cpld(0x%x) reg(0x1) err %d\n", client->addr, val);
     }
-	
+
     return sprintf(buf, "0x%x\n", val);
 }
 
@@ -655,7 +655,7 @@ static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
     struct as9726_32d_cpld_data *data = i2c_get_clientdata(client);
 	int status = 0;
 	u8 reg = 0, mask = 0;
-    
+
 	switch (attr->index) {
 	case MODULE_RESET_1 ... MODULE_RESET_8:
 		reg  = 0x14;
@@ -676,39 +676,39 @@ static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
 	default:
 		return 0;
 	}
-	
+
 
     mutex_lock(&data->update_lock);
 	status = as9726_32d_cpld_read_internal(client, reg);
-	
+
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
 	mutex_unlock(&data->update_lock);
 
 	return sprintf(buf, "%d\r\n", !(status & mask));
-	
+
 exit:
 	mutex_unlock(&data->update_lock);
-	return status;	
+	return status;
 }
 
 static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count)
-{    
+{
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
     struct as9726_32d_cpld_data *data = i2c_get_clientdata(client);
     long reset;
     int status=0, val, error;
 	u8 reg = 0, mask = 0;
-	
+
 
     error = kstrtol(buf, 10, &reset);
     if (error) {
         return error;
     }
-    
+
     switch (attr->index) {
 	case MODULE_RESET_1 ... MODULE_RESET_8:
 		reg  = 0x14;
@@ -730,22 +730,22 @@ static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
 		return 0;
 	}
 	mutex_lock(&data->update_lock);
-	
+
 	status = as9726_32d_cpld_read_internal(client, reg);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-	
+
 	/* Update lp_mode status */
     if (reset)
-    {       
+    {
         val = status&(~mask);
     }
     else
-    {       
+    {
         val =status | (mask);
     }
-	
+
 	status = as9726_32d_cpld_write_internal(client, reg, val);
 	if (unlikely(status < 0)) {
 		goto exit;
@@ -769,7 +769,7 @@ static int as9726_32d_cpld_probe(struct i2c_client *client,
 	struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
 	struct as9726_32d_cpld_data *data;
 	int ret = -ENODEV;
-	int status;	
+	int status;
 	const struct attribute_group *group = NULL;
 
 	if (!i2c_check_functionality(adap, I2C_FUNC_SMBUS_BYTE))
@@ -785,7 +785,7 @@ static int as9726_32d_cpld_probe(struct i2c_client *client,
     mutex_init(&data->update_lock);
 	data->type = id->driver_data;
 
-   
+
     /* Register sysfs hooks */
     switch (data->type) {
     case as9726_32d_fpga:
@@ -794,29 +794,29 @@ static int as9726_32d_cpld_probe(struct i2c_client *client,
     case as9726_32d_cpld2:
         group = &as9726_32d_cpld2_group;
         /*Set interrupt mask to 0, and then can get intr from 0x8*/
-        status=as9726_32d_cpld_write_internal(client, 0x9, 0x0); 
+        status=as9726_32d_cpld_write_internal(client, 0x9, 0x0);
         if (status < 0)
         {
-           dev_dbg(&client->dev, "cpld2 reg 0x9 err %d\n", status);            
-        } 
+           dev_dbg(&client->dev, "cpld2 reg 0x9 err %d\n", status);
+        }
         break;
     case as9726_32d_cpld3:
         group = &as9726_32d_cpld3_group;
         /*Set interrupt mask to 0, and then can get intr from 0x8*/
-        status=as9726_32d_cpld_write_internal(client, 0x9, 0x0); 
+        status=as9726_32d_cpld_write_internal(client, 0x9, 0x0);
         if (status < 0)
         {
-           dev_dbg(&client->dev, "cpld3 reg 0x9 err %d\n", status);            
-        } 
-         break; 
+           dev_dbg(&client->dev, "cpld3 reg 0x9 err %d\n", status);
+        }
+         break;
      case as9726_32d_cpld_cpu:
 	    group = &as9726_32d_cpld_cpu_group;
          /* Disable CPLD reset to avoid DUT will be reset.
           */
-//         status=as9726_32d_cpld_write_internal(client, 0x3, 0x0); 
+//         status=as9726_32d_cpld_write_internal(client, 0x3, 0x0);
 //         if (status < 0)
 //         {
-//            dev_dbg(&client->dev, "cpu_cpld reg 0x65 err %d\n", status);            
+//            dev_dbg(&client->dev, "cpu_cpld reg 0x65 err %d\n", status);
 //         }
         break;
     default:
@@ -894,7 +894,7 @@ static int as9726_32d_cpld_read_internal(struct i2c_client *client, u8 reg)
 static int as9726_32d_cpld_write_internal(struct i2c_client *client, u8 reg, u8 value)
 {
 	int status = 0, retry = I2C_RW_RETRY_COUNT;
-    
+
 	while (retry) {
 		status = i2c_smbus_write_byte_data(client, reg, value);
 		if (unlikely(status < 0)) {
@@ -938,7 +938,7 @@ int as9726_32d_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
     int ret = -EIO;
-    
+
 	mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)

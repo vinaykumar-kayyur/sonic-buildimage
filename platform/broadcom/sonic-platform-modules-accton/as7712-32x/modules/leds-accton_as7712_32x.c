@@ -19,7 +19,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/*#define DEBUG*/ 
+/*#define DEBUG*/
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -54,7 +54,7 @@ static struct accton_as7712_32x_led_data  *ledctl = NULL;
  */
 
 #define LED_CNTRLER_I2C_ADDRESS		(0x60)
- 
+
 #define LED_TYPE_DIAG_REG_MASK	 	(0x3)
 #define LED_MODE_DIAG_GREEN_VALUE  	(0x02)
 #define LED_MODE_DIAG_RED_VALUE		(0x01)
@@ -164,7 +164,7 @@ enum led_light_mode {
 
 struct led_type_mode {
 	enum led_type type;
-	enum led_light_mode mode;	
+	enum led_light_mode mode;
 	int  reg_bit_mask;
 	int  mode_value;
 };
@@ -182,9 +182,9 @@ static void accton_as7712_32x_led_set(struct led_classdev *led_cdev,
 									  enum led_brightness led_light_mode, enum led_type type);
 
 static int accton_getLedReg(enum led_type type, u8 *reg)
-{	 
+{
 	int i;
-	for (i = 0; i < ARRAY_SIZE(led_reg_map); i++) {	
+	for (i = 0; i < ARRAY_SIZE(led_reg_map); i++) {
 		if(led_reg_map[i].types & (type<<1)){
 			*reg = led_reg_map[i].reg_addr;
 			return 0;
@@ -196,26 +196,26 @@ static int accton_getLedReg(enum led_type type, u8 *reg)
 
 static int led_reg_val_to_light_mode(enum led_type type, u8 reg_val) {
 	int i;
-	
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 
 		if (type != led_type_mode_data[i].type)
 			continue;
-		   
-		if ((led_type_mode_data[i].reg_bit_mask & reg_val) == 
+
+		if ((led_type_mode_data[i].reg_bit_mask & reg_val) ==
 			 led_type_mode_data[i].mode_value)
 		{
 			return led_type_mode_data[i].mode;
 		}
 	}
-	
+
 	return 0;
 }
 
-static u8 led_light_mode_to_reg_val(enum led_type type, 
+static u8 led_light_mode_to_reg_val(enum led_type type,
 									enum led_light_mode mode, u8 reg_val) {
 	int i;
-									  
+
 	for (i = 0; i < ARRAY_SIZE(led_type_mode_data); i++) {
 		if (type != led_type_mode_data[i].type)
 			continue;
@@ -223,11 +223,11 @@ static u8 led_light_mode_to_reg_val(enum led_type type,
 		if (mode != led_type_mode_data[i].mode)
 			continue;
 
-		reg_val = led_type_mode_data[i].mode_value | 
+		reg_val = led_type_mode_data[i].mode_value |
 					 (reg_val & (~led_type_mode_data[i].reg_bit_mask));
 		break;
 	}
-	
+
 	return reg_val;
 }
 
@@ -255,7 +255,7 @@ static void accton_as7712_32x_led_update(void)
 		 */
 		for (i = 0; i < ARRAY_SIZE(ledctl->reg_val); i++) {
 			int status = accton_as7712_32x_led_read_value(led_reg_map[i].reg_addr);
-			
+
 			if (status < 0) {
 				ledctl->valid = 0;
 				dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", led_reg_map[i].reg_addr, status);
@@ -263,20 +263,20 @@ static void accton_as7712_32x_led_update(void)
 			}
 			else
 			{
-				ledctl->reg_val[i] = status; 
+				ledctl->reg_val[i] = status;
 			}
 		}
-		
+
 		ledctl->last_updated = jiffies;
 		ledctl->valid = 1;
 	}
-	
-exit:	
+
+exit:
 	mutex_unlock(&ledctl->update_lock);
 }
 
 static void accton_as7712_32x_led_set(struct led_classdev *led_cdev,
-									  enum led_brightness led_light_mode, 
+									  enum led_brightness led_light_mode,
 									  enum led_type type)
 {
 	int reg_val;
@@ -287,14 +287,14 @@ static void accton_as7712_32x_led_set(struct led_classdev *led_cdev,
 	{
 		dev_dbg(&ledctl->pdev->dev, "Not match item for %d.\n", type);
 	}
-	
+
 	reg_val = accton_as7712_32x_led_read_value(reg);
-	
+
 	if (reg_val < 0) {
 		dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", reg, reg_val);
 		goto exit;
 	}
-	reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);  
+	reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);
 	accton_as7712_32x_led_write_value(reg, reg_val);
 
 	/* to prevent the slow-update issue */
@@ -387,7 +387,7 @@ static int port_led_mode_to_cpld_val(int mode)
 			break;
 		case LED_MODE_GREEN_BLINKING:  blinking = 1 << 1; /* fall through */
 		case LED_MODE_GREEN:  color = 0x6 << 2;
-			break;	
+			break;
 		case LED_MODE_BLUE_BLINKING:   blinking = 1 << 1; /* fall through */
 		case LED_MODE_BLUE:   color = 0x7 << 2;
 			break;
@@ -473,7 +473,7 @@ static enum led_brightness accton_as7712_32x_port_led_get(struct led_classdev *c
 	cpld_addr = (port < 16) ? 0x64 : 0x62;
 	reg       = (0x50 + (port % 16) * 4 + lid);
 	value 	  = accton_as7712_32x_port_led_read_value(cpld_addr, reg);
-	
+
 	if (value < 0) {
 		dev_dbg(&ledctl->pdev->dev, "Unable to read reg value from cpld(0x%x), reg(0x%x)\n", cpld_addr, reg);
 		return value;
@@ -579,7 +579,7 @@ static int accton_as7712_32x_led_suspend(struct platform_device *dev,
 		pm_message_t state)
 {
 	int i = 0;
-	
+
 	for (i = 0; i < ARRAY_SIZE(accton_as7712_32x_leds); i++) {
 		led_classdev_suspend(&accton_as7712_32x_leds[i]);
 	}
@@ -590,7 +590,7 @@ static int accton_as7712_32x_led_suspend(struct platform_device *dev,
 static int accton_as7712_32x_led_resume(struct platform_device *dev)
 {
 	int i = 0;
-	
+
 	for (i = 0; i < ARRAY_SIZE(accton_as7712_32x_leds); i++) {
 		led_classdev_resume(&accton_as7712_32x_leds[i]);
 	}
@@ -604,15 +604,15 @@ static int accton_as7712_32x_led_probe(struct platform_device *pdev)
 
 	for (i = 0; i < ARRAY_SIZE(accton_as7712_32x_leds); i++) {
 		ret = led_classdev_register(&pdev->dev, &accton_as7712_32x_leds[i]);
-		
+
 		if (ret < 0)
 			break;
 	}
-	
+
 	/* Check if all LEDs were successfully registered */
 	if (i != ARRAY_SIZE(accton_as7712_32x_leds)){
 		int j;
-		
+
 		/* only unregister the LEDs that were successfully registered */
 		for (j = 0; j < i; j++) {
 			led_classdev_unregister(&accton_as7712_32x_leds[i]);

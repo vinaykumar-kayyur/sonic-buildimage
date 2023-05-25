@@ -22,7 +22,7 @@ class Psu(PsuBase):
         self._index = index
         self._fan_list = []
         PsuBase.__init__(self)
-        
+
         if os.path.isdir(CONTAINER_PLATFORM_PATH):
             platform_path = CONTAINER_PLATFORM_PATH
         else:

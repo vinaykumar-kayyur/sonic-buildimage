@@ -1718,7 +1718,7 @@ struct inv_port_layout_s peony_copper_port_layout[] = {
 
 
 /* ===========================================================
- *   Cedar Layout configuration 
+ *   Cedar Layout configuration
  * ===========================================================
  */
 #ifdef SWPS_CEDAR_GA

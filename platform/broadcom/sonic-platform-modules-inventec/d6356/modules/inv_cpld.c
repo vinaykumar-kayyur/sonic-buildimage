@@ -67,11 +67,11 @@ static ssize_t cpld_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 {
 	int i;
 	s32 temp = 0;
-	
+
 	for(i=0; i<count; i++)
 	{
 		temp = i2c_smbus_read_byte_data(client, offset+i);
-		if(temp<0) 
+		if(temp<0)
 		{
 //			printk("CPLD Read fail! Error Code: %d\n",temp);
 			return 0;
@@ -82,9 +82,9 @@ static ssize_t cpld_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 }
 
 static ssize_t cpld_i2c_write(struct i2c_client *client, char *buf, unsigned offset, size_t count)
-{   
+{
 	int i;
-	
+
 	for(i=0; i<count; i++)
 	{
 		i2c_smbus_write_byte_data(client, offset+i, buf[i]);
@@ -214,7 +214,7 @@ static int cpld_thread(void *p)
 	u8 byte[9];
 	uint8_t result[MAX_IPMI_RECV_LENGTH];
 	int result_len=0;
-	
+
 	//Handle LED control by the driver
 	byte[0]=0x01;
 	cpld_i2c_write(client, byte, CPLD_CTL_OFFSET, 1);
@@ -246,7 +246,7 @@ static ssize_t show_info(struct device *dev, struct device_attribute *da,
 	mutex_unlock(&data->update_lock);
 	if (len==0) return 0;
 
-	sprintf (buf, "The CPLD release date is %02d/%02d/%d.\n", 
+	sprintf (buf, "The CPLD release date is %02d/%02d/%d.\n",
 	byte[2] & 0xf, (byte[3] & 0x1f), 2014+(byte[2] >> 4));	/* mm/dd/yyyy*/
 	sprintf (buf, "%sThe PCB  version is %X\n", buf,  byte[0]&0xf);
 	sprintf (buf, "%sThe CPLD version is %d.%d\n", buf, byte[1]>>4, byte[1]&0xf);
@@ -256,11 +256,11 @@ static ssize_t show_info(struct device *dev, struct device_attribute *da,
 		cpld_i2c_read(client2, byte, CPLD_INFO_OFFSET, 4);
 		mutex_unlock(&data->update_lock);
 
-		sprintf (buf, "%s\nThe CPLD2 release date is %02d/%02d/%d.\n", buf, 
+		sprintf (buf, "%s\nThe CPLD2 release date is %02d/%02d/%d.\n", buf,
 		byte[2] & 0xf, (byte[3] & 0x1f), 2014+(byte[2] >> 4));	/* mm/dd/yyyy*/
 		sprintf (buf, "%sThe CPLD2 version is %d.%d\n", buf, byte[1]>>4, byte[1]&0xf);
 	}
-	
+
 	return strlen(buf);
 }
 
@@ -442,7 +442,7 @@ static ssize_t show_led(struct device *dev, struct device_attribute *da,
 	if (len==0) return 0;
 
 	byte = (byte >> shift) & 0x3;
-	
+
 	return sprintf (buf, "%d:%s\n", byte, led_str[byte]);
 }
 
@@ -455,7 +455,7 @@ static ssize_t set_led(struct device *dev, struct device_attribute *da,
 
 	u8 temp = simple_strtol(buf, NULL, 16);
 	u8 byte = 0;
-	int shift = attr->index;  
+	int shift = attr->index;
 	temp &= 0x3;
 
 	mutex_lock(&data->update_lock);
@@ -488,14 +488,14 @@ static ssize_t show_sysled(struct device *dev, struct device_attribute *da,
 	struct cpld_data *data = i2c_get_clientdata(client);
 	u8 byte;
 	int shift = (attr->index == 0)?3:0;
-    
+
 	mutex_lock(&data->update_lock);
 	status = cpld_i2c_read(client, &byte, CPLD_SYSLED_OFFSET, 1);
 	mutex_unlock(&data->update_lock);
-	
+
 	byte = (byte >> shift) & 0x7;
 	status = sprintf (buf, "%d:%s\n", byte, sysled_str[byte]);
-	    
+
 	return strlen(buf);
 }
 
@@ -510,8 +510,8 @@ static ssize_t set_sysled(struct device *dev,
 	u8 temp = simple_strtol(buf, NULL, 16);
 	u8 byte;
 	int shift = (attr->index == 0)?3:0;
-    
-	temp &= 0x7;    
+
+	temp &= 0x7;
 
 	mutex_lock(&data->update_lock);
 	cpld_i2c_read(client, &byte, CPLD_SYSLED_OFFSET, 1);
@@ -662,8 +662,8 @@ static ssize_t set_fanled(struct device *dev,
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
 	struct cpld_data *data = i2c_get_clientdata(client);
-	u8 byte[2] = {0,0};	
-	u8 temp = simple_strtol(buf, NULL, 16);	
+	u8 byte[2] = {0,0};
+	u8 temp = simple_strtol(buf, NULL, 16);
 	int shift = attr->index;
 
 	temp &= 0x3;
@@ -733,7 +733,7 @@ static ssize_t set_watchdog_config(struct device *dev,
 	struct cpld_data *data = i2c_get_clientdata(client);
 	u8 byte = simple_strtol(buf, NULL, 10);
 
-	if (byte<6) byte=6; 
+	if (byte<6) byte=6;
 	mutex_lock(&data->update_lock);
 	cpld_i2c_write(client, &byte, CPLD_WATCHDOGCONFIG_OFFSET, 1);
 	mutex_unlock(&data->update_lock);
@@ -832,12 +832,12 @@ static SENSOR_DEVICE_ATTR(watchdog_config,	S_IWUSR|S_IRUGO,	show_watchdog_config
 static SENSOR_DEVICE_ATTR(watchdog_counter,	S_IRUGO,           	show_watchdog_counter,  0, 0);
 
 static SENSOR_DEVICE_ATTR(bios_cs,      	S_IWUSR|S_IRUGO,   	show_bios_cs, set_bios_cs, 0);
-			
+
 static struct attribute *cpld_attributes[] = {
 	&sensor_dev_attr_info.dev_attr.attr,
 	&sensor_dev_attr_diag.dev_attr.attr,
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
-	
+
 	&sensor_dev_attr_fan_led.dev_attr.attr,
 	&sensor_dev_attr_power_led.dev_attr.attr,
 	&sensor_dev_attr_location_led.dev_attr.attr,
@@ -846,32 +846,32 @@ static struct attribute *cpld_attributes[] = {
 	&sensor_dev_attr_red_led.dev_attr.attr,
 
 	&sensor_dev_attr_interrupt.dev_attr.attr,
-	
+
 	&sensor_dev_attr_psu1.dev_attr.attr,
 	&sensor_dev_attr_psu2.dev_attr.attr,
 	&sensor_dev_attr_power_status.dev_attr.attr,
-	
+
 	&sensor_dev_attr_pwm1.dev_attr.attr,
 	&sensor_dev_attr_pwm2.dev_attr.attr,
 	&sensor_dev_attr_pwm3.dev_attr.attr,
 	&sensor_dev_attr_pwm4.dev_attr.attr,
 #if FAN_NUM>4
 	&sensor_dev_attr_pwm5.dev_attr.attr,
-#endif	
+#endif
 	&sensor_dev_attr_fanmodule1_type.dev_attr.attr,
 	&sensor_dev_attr_fanmodule2_type.dev_attr.attr,
 	&sensor_dev_attr_fanmodule3_type.dev_attr.attr,
 	&sensor_dev_attr_fanmodule4_type.dev_attr.attr,
 #if FAN_NUM>4
 	&sensor_dev_attr_fanmodule5_type.dev_attr.attr,
-#endif	
+#endif
 	&sensor_dev_attr_fanmodule1_led.dev_attr.attr,
 	&sensor_dev_attr_fanmodule2_led.dev_attr.attr,
 	&sensor_dev_attr_fanmodule3_led.dev_attr.attr,
 	&sensor_dev_attr_fanmodule4_led.dev_attr.attr,
 #if FAN_NUM>4
 	&sensor_dev_attr_fanmodule5_led.dev_attr.attr,
-#endif	
+#endif
 	&sensor_dev_attr_fan1_input.dev_attr.attr,
 	&sensor_dev_attr_fan2_input.dev_attr.attr,
 	&sensor_dev_attr_fan3_input.dev_attr.attr,
@@ -888,7 +888,7 @@ static struct attribute *cpld_attributes[] = {
 	&sensor_dev_attr_watchdog_enable.dev_attr.attr,
 	&sensor_dev_attr_watchdog_config.dev_attr.attr,
 	&sensor_dev_attr_watchdog_counter.dev_attr.attr,
-	
+
 	&sensor_dev_attr_bios_cs.dev_attr.attr,
 	NULL
 };
@@ -904,7 +904,7 @@ cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct cpld_data *data;
 	int status;
-   
+
 	if (!i2c_check_functionality(client->adapter,
 			I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA))
 		return -EIO;
@@ -928,7 +928,7 @@ cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		goto exit_remove;
 	}
 
-	//Check CPLD2 exist or not 
+	//Check CPLD2 exist or not
 	client2 = i2c_new_dummy(client->adapter, CPLD2_ADDRESS);
 	if(!client2) {
 		hasCPLD2 = 0;
@@ -939,14 +939,14 @@ cpld_probe(struct i2c_client *client, const struct i2c_device_id *id)
 			i2c_unregister_device(client2);
 			i2c_set_clientdata(client2, NULL);
 			hasCPLD2 = 0;
-			client2 = client;		
+			client2 = client;
 		}
 	}
 
 	data->tsk = kthread_run(cpld_thread,client,"%s",dev_name(data->hwmon_dev));
 	dev_info(&client->dev, "%s: sensor '%s'\n",
 		 dev_name(data->hwmon_dev), client->name);
-	
+
 	return 0;
 
 exit_remove:
@@ -958,7 +958,7 @@ exit_free:
 }
 
 static int cpld_remove(struct i2c_client *client)
-{	
+{
 	struct cpld_data *data = i2c_get_clientdata(client);
 
 	sysfs_remove_group(&client->dev.kobj, &cpld_group);
@@ -968,7 +968,7 @@ static int cpld_remove(struct i2c_client *client)
 		i2c_unregister_device(client2);
 		i2c_set_clientdata(client2, NULL);
 	}
-	
+
 	kfree(data);
 	return 0;
 }

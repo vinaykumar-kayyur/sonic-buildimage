@@ -71,7 +71,7 @@ function LoadConfig
     THYST=`egrep '^THYST=.*$' $1 | sed -e 's/THYST=//g'`
     MAXTEMPCRIT=`egrep '^MAXTEMPCRIT=.*$' $1 | sed -e 's/MAXTEMPCRIT=//g'`
     MAXTEMPTYPE=`egrep '^MAXTEMPTYPE=.*$' $1 | sed -e 's/MAXTEMPTYPE=//g'`
-    echo 
+    echo
     # Check whether all mandatory settings are set
     if [[ -z ${INTERVAL} || -z ${FCTEMPS} || -z ${MINTEMP} || -z ${MAXTEMP} || -z ${MINSTART} || -z ${MINSTOP} ]]
     then

@@ -15,7 +15,7 @@ sensors_type = {'fan_rpm': ['Inner RPM', 'Outer RPM'],
 
 # Get sysfs attribute
 def get_attr_value(attr_path):
-    retval = 'ERR'        
+    retval = 'ERR'
     if (not os.path.isfile(attr_path)):
         return retval
 
@@ -65,7 +65,7 @@ def get_fan():
         print "FAN " + str(i+1) + ":" + ' ' + string
         if string=='Disconnect':
             continue
-            
+
         #alert
         string = get_fan_alert(i)
         print "     Status:"+ ' ' + string
@@ -109,15 +109,15 @@ def main():
 
     command:
         install     : install drivers and generate related sysfs nodes
-        clean       : uninstall drivers and remove related sysfs nodes  
+        clean       : uninstall drivers and remove related sysfs nodes
         show        : show all systen status
-        set         : change board setting with fan|led|sfp    
+        set         : change board setting with fan|led|sfp
     """
 
     if len(sys.argv)<2:
         print main.__doc__
 
-    for arg in sys.argv[1:]:           
+    for arg in sys.argv[1:]:
         if arg == 'fan_init':
             init_fan()
         elif arg == 'get_sensors':
@@ -127,13 +127,13 @@ def main():
             print 'SW Version: ' + ver
             get_fan()
             get_hwmon()
-            get_voltage()                      
+            get_voltage()
         elif arg == 'fan_set':
             if len(sys.argv[1:])<1:
                 print main.__doc__
             else:
-                set_fan(sys.argv[1:])                
-            return            
+                set_fan(sys.argv[1:])
+            return
         else:
             print main.__doc__
 

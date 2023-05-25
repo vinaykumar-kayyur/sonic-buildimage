@@ -24,4 +24,4 @@ def io_reg_write(resource, offset, val):
 
 
 if __name__ == "__main__":
-    io_reg_write(PORT_RES, RESET_REG, COLD_RESET) 
+    io_reg_write(PORT_RES, RESET_REG, COLD_RESET)

@@ -1,7 +1,7 @@
 /*******************************************************************************
  Barefoot Networks Switch ASIC Linux driver
  Copyright(c) 2015 - 2019 Barefoot Networks, Inc.
- 
+
  This program is free software; you can redistribute it and/or modify it
  under the terms and conditions of the GNU General Public License,
  version 2, as published by the Free Software Foundation.

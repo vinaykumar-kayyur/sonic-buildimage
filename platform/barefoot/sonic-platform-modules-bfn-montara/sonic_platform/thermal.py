@@ -142,7 +142,7 @@ class Thermal(ThermalBase):
     def check_in_range(self, temperature):
         temp_f = float(temperature)
         return temp_f > self._min_temperature and temp_f <= self._max_temperature
-    
+
     def check_high_threshold(self, temperature, attr_suffix):
         temp_f = float(temperature)
         check_range = True

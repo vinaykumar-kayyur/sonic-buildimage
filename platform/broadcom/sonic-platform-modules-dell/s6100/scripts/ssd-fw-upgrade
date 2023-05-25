@@ -23,7 +23,7 @@ mp_tool_reboot() {
     cd /mnt/ramdisk
     unzip -q SSD.zip
     chmod +x SSD/mp_64
-    
+
     #stopped journal and syslog services to unmount /host
     systemctl stop systemd-journald.service
     systemctl stop systemd-journald.socket
@@ -52,7 +52,7 @@ mp_tool_reboot() {
         echo 1 > /sys/class/scsi_device/4\:0\:0\:0/device/delete
         echo "0 0 0" > /sys/class/scsi_host/host4/scan
         sleep 3
-        DEVICE=$(dmesg | grep "Attached SCSI disk" |  sed -n \$p | 
+        DEVICE=$(dmesg | grep "Attached SCSI disk" |  sed -n \$p |
 	    grep -o -P '(sd[a-z])')
         cd /mnt/ramdisk/SSD
         ./mp_64 -d /dev/${DEVICE} -c 1 -u -k -r
@@ -70,7 +70,7 @@ platform_check() {
     platform=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
     version_type=$(dmesg | grep "mSATA")
     md5sum_value=$(md5sum /tmp/SSD.zip | cut -d ' ' -f1)
-    if [[ "$md5sum_value" != "$CHECKSUM_VALUE" || "$platform" != *"s6100"* || 
+    if [[ "$md5sum_value" != "$CHECKSUM_VALUE" || "$platform" != *"s6100"* ||
         "$version_type" != *"3IE3"* || "$version_type" != *"S16425c1"*  ]];then
         exit 1
     fi

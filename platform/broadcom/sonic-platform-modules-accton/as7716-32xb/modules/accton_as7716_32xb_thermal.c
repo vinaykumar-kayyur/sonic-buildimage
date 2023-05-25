@@ -15,11 +15,11 @@
 
 #define TEMP1_MAX_HYST_DEFAULT  75000
 #define TEMP1_MAX_DEFAULT       80000
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7716_32xb_thermal_data {
     struct device      *hwmon_dev;
@@ -38,7 +38,7 @@ enum as7716_32xb_thermal_sysfs_attributes {
     TEMP1_MAX
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 
 static ssize_t temp_info_store(struct device *dev, struct device_attribute *da,
@@ -65,7 +65,7 @@ static ssize_t temp_info_show(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);
     struct as7716_32xb_thermal_data *data = i2c_get_clientdata(client);
     int status = -EINVAL;
-    
+
     mutex_lock(&data->update_lock);
     switch (attr->index)
     {
@@ -93,7 +93,7 @@ static ssize_t temp_info_store(struct device *dev, struct device_attribute *da,
     struct as7716_32xb_thermal_data *data = i2c_get_clientdata(client);
     long keyin = 0;
     int status = -EINVAL;
-    
+
     mutex_lock(&data->update_lock);
     status = kstrtol(buf, STRING_TO_DEC_VALUE, &keyin);
     switch (attr->index)
@@ -150,7 +150,7 @@ static int as7716_32xb_thermal_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: thermal '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -158,7 +158,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -169,13 +169,13 @@ static int as7716_32xb_thermal_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32xb_thermal_group);
     kfree(data);
-    
+
     return 0;
 }
 
 
 static const struct i2c_device_id as7716_32xb_thermal_id[] = {
-    { "as7716_32xb_thermal", 0 },    
+    { "as7716_32xb_thermal", 0 },
     {}
 };
 MODULE_DEVICE_TABLE(i2c, as7716_32xb_thermal_id);

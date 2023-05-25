@@ -13,7 +13,7 @@ if [ $? -ne 0 ];then
 
     echo "Sleep 1s"
     sleep 1
-    
+
     echo "Pull back MAC reset, keep PCIE reset (write 0xEF)"
     i2cset -y 0 0x60 0x7 0xef
 
@@ -22,8 +22,8 @@ if [ $? -ne 0 ];then
 
     echo "Set to default normal state (write 0xFF)"
     i2cset -y 0 0x60 0x8 0xff
-    
- 
+
+
     echo "remove PCI device"
     echo 1 > /sys/bus/pci/devices/0000:07:00.0/remove
     ls /sys/bus/pci/devices/
@@ -41,7 +41,7 @@ if [ $? -ne 0 ];then
         lspci -n|grep 07:00.0
         if [ $? -ne 0 ];then
             echo "Broadcom Corporation Device NG">>$test_log
-            echo "rescan PCI again-2" >>$test_log    
+            echo "rescan PCI again-2" >>$test_log
             echo 1 > /sys/bus/pci/rescan
             sleep 1
         else
@@ -65,11 +65,11 @@ i2cset -y 0 0x54 0x73 0x40
 i2cset -y 0 0x54 0x72 0x40
 
 # OUT3:25MHz
-i2cset -y 0 0x54 0x71 0x0A 
+i2cset -y 0 0x54 0x71 0x0A
 i2cset -y 0 0x54 0x70 0x00
 
 # OUT1:1pps
-i2cset -y 0 0x54 0x6B 0x4E 
+i2cset -y 0 0x54 0x6B 0x4E
 i2cset -y 0 0x54 0x69 0x00
 i2cset -y 0 0x54 0x68 0x00
 i2cset -y 0 0x54 0x67 0x19
@@ -90,7 +90,7 @@ i2cset -y 0 0x54 0x57 0x6C
 i2cset -y 0 0x54 0x56 0x6C
 
 # Lock to DPLL, output 625MHz
-i2cset -y 0 0x54 0x55 0x80 
+i2cset -y 0 0x54 0x55 0x80
 i2cset -y 0 0x54 0x53 0x00
 i2cset -y 0 0x54 0x52 0x81
 i2cset -y 0 0x54 0x50 0x00
@@ -151,15 +151,15 @@ i2cset -y 0 0x54 0x00 0x91
 echo "idt init 2"
 # PreDivider_Parameters
 #IN1
-i2cset -y 0 0x54 0x23 0x05 
+i2cset -y 0 0x54 0x23 0x05
 i2cset -y 0 0x54 0x24 0x03
 i2cset -y 0 0x54 0x25 0x00
 #IN2
-i2cset -y 0 0x54 0x23 0x06 
+i2cset -y 0 0x54 0x23 0x06
 i2cset -y 0 0x54 0x24 0x03
 i2cset -y 0 0x54 0x25 0x00
 #IN3
-i2cset -y 0 0x54 0x23 0x03 
+i2cset -y 0 0x54 0x23 0x03
 i2cset -y 0 0x54 0x24 0x00
 i2cset -y 0 0x54 0x25 0x00
 
@@ -203,7 +203,7 @@ i2cset -y 0 0x76 0x4
 
     echo "Sleep 1s"
     sleep 1
-    
+
     echo "Pull back MAC reset, keep PCIE reset (write 0xEF)"
     i2cset -y 0 0x60 0x7 0xef
 
@@ -212,8 +212,8 @@ i2cset -y 0 0x76 0x4
 
     echo "Set to default normal state (write 0xFF)"
     i2cset -y 0 0x60 0x8 0xff
-    
- 
+
+
     echo "remove PCI device"
     echo 1 > /sys/bus/pci/devices/0000:07:00.0/remove
     ls /sys/bus/pci/devices/
@@ -231,7 +231,7 @@ i2cset -y 0 0x76 0x4
         lspci -n|grep 07:00.0
         if [ $? -ne 0 ];then
             echo "Broadcom Corporation Device NG">>$test_log
-            echo "rescan PCI again-2" >>$test_log    
+            echo "rescan PCI again-2" >>$test_log
             echo 1 > /sys/bus/pci/rescan
             sleep 1
         else

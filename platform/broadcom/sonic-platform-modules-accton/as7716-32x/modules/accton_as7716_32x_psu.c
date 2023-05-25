@@ -44,11 +44,11 @@ static ssize_t show_string(struct device *dev, struct device_attribute *da, char
 static int as7716_32x_psu_read_block(struct i2c_client *client, u8 command, u8 *data,int data_len);
 extern int as7716_32x_cpld_read (unsigned short cpld_addr, u8 reg);
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct as7716_32x_psu_data {
     struct device      *hwmon_dev;
@@ -61,7 +61,7 @@ struct as7716_32x_psu_data {
     char fan_dir[DC12V_FAN_DIR_LEN+1]; /* DC12V fan direction */
 };
 
-static struct as7716_32x_psu_data *as7716_32x_psu_update_device(struct device *dev);             
+static struct as7716_32x_psu_data *as7716_32x_psu_update_device(struct device *dev);
 
 enum as7716_32x_psu_sysfs_attributes {
     PSU_PRESENT,
@@ -70,7 +70,7 @@ enum as7716_32x_psu_sysfs_attributes {
     PSU_FAN_DIR /* For DC12V only */
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status, NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_string, NULL, PSU_MODEL_NAME);
@@ -169,7 +169,7 @@ static int as7716_32x_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -177,7 +177,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -188,13 +188,13 @@ static int as7716_32x_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32x_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
-enum psu_index 
-{ 
-    as7716_32x_psu1, 
+enum psu_index
+{
+    as7716_32x_psu1,
     as7716_32x_psu2
 };
 
@@ -221,27 +221,27 @@ static int as7716_32x_psu_read_block(struct i2c_client *client, u8 command, u8 *
 {
     int result = 0;
     int retry_count = 5;
-	
+
 	while (retry_count) {
 	    retry_count--;
-	
+
 	    result = i2c_smbus_read_i2c_block_data(client, command, data_len, data);
-		
+
 		if (unlikely(result < 0)) {
 		    msleep(10);
 	        continue;
 		}
-		
+
         if (unlikely(result != data_len)) {
             result = -EIO;
 			msleep(10);
             continue;
         }
-		
+
 		result = 0;
 		break;
 	}
-	
+
     return result;
 }
 
@@ -277,7 +277,7 @@ static int as7716_32x_psu_model_name_get(struct device *dev)
                                            data->model_name, models[i].length);
         if (status < 0) {
             data->model_name[0] = '\0';
-            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n", 
+            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
                                   client->addr, models[i].offset);
             return status;
         }
@@ -302,7 +302,7 @@ static struct as7716_32x_psu_data *as7716_32x_psu_update_device(struct device *d
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct as7716_32x_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -315,7 +315,7 @@ static struct as7716_32x_psu_data *as7716_32x_psu_update_device(struct device *d
 
         /* Read psu status */
         status = as7716_32x_cpld_read(0x60, 0x2);
-        
+
         if (status < 0) {
             dev_dbg(&client->dev, "cpld reg 0x60 err %d\n", status);
             goto exit;
@@ -323,35 +323,35 @@ static struct as7716_32x_psu_data *as7716_32x_psu_update_device(struct device *d
         else {
             data->status = status;
         }
-		
+
         /* Read model name */
         memset(data->model_name, 0, sizeof(data->model_name));
         memset(data->fan_dir, 0, sizeof(data->fan_dir));
         power_good = (data->status >> (3-data->index) & 0x1);
-		
+
         if (power_good) {
             if (as7716_32x_psu_model_name_get(dev) < 0) {
                 goto exit;
             }
-            
-            if (strncmp(data->model_name, 
+
+            if (strncmp(data->model_name,
                         models[PSU_TYPE_DC_12V].model_name,
                         models[PSU_TYPE_DC_12V].length) == 0)
             {
                 /* Read fan direction */
-                
-                status = as7716_32x_psu_read_block(client, DC12V_FAN_DIR_OFFSET, 
+
+                status = as7716_32x_psu_read_block(client, DC12V_FAN_DIR_OFFSET,
                                                    data->fan_dir, DC12V_FAN_DIR_LEN);
-                
+
                 if (status < 0) {
                     data->fan_dir[0] = '\0';
-                    dev_dbg(&client->dev, "unable to read fan direction from (0x%x) offset(0x%x)\n", 
+                    dev_dbg(&client->dev, "unable to read fan direction from (0x%x) offset(0x%x)\n",
                                           client->addr, DC12V_FAN_DIR_OFFSET);
                     goto exit;
                 }
             }
         }
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }

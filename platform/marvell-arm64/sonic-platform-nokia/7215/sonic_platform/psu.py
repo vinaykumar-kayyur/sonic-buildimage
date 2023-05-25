@@ -28,7 +28,7 @@ class Psu(PsuBase):
         # PSU is 1-based in Nokia platforms
         self.index = psu_index + 1
         self._fan_list = []
-        
+
 
         # PSU eeprom
         self.eeprom = Eeprom(is_psu=True, psu_index=self.index)
@@ -70,7 +70,7 @@ class Psu(PsuBase):
                 rv = 'ERR'
 
         return rv
-    
+
     def _get_active_psus(self):
         """
         Retrieves the operational status of the PSU and
@@ -78,13 +78,13 @@ class Psu(PsuBase):
 
         Returns:
             Integer: Number of active PSU's
-        """  
+        """
         active_psus = 0
         psu1_good = self._read_sysfs_file(CPLD_DIR+"psu1_power_good")
         psu2_good = self._read_sysfs_file(CPLD_DIR+"psu2_power_good")
 
         active_psus = int(psu1_good) + int(psu2_good)
-        
+
         return active_psus
 
     def get_name(self):
@@ -170,11 +170,11 @@ class Psu(PsuBase):
             psu_voltage = self._read_sysfs_file(INA230_DIR+"in_voltage1_scale")
         else:
             psu_voltage = 0.0
-        
+
         psu_voltage = float(psu_voltage)*10
 
         return psu_voltage
-    
+
     def get_current(self):
         """
         Retrieves present electric current supplied by PSU
@@ -190,7 +190,7 @@ class Psu(PsuBase):
             psu_current = 0.0
 
         return psu_current
-    
+
     def get_power(self):
         """
         Retrieves current energy supplied by PSU

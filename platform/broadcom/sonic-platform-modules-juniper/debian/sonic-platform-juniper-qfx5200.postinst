@@ -21,7 +21,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     cd /tmp
     umount sda1
     # This code block ensures that no additional entries
-    # are added. This is applicable during SONiC image 
+    # are added. This is applicable during SONiC image
     # upgrades.
     entries=`efibootmgr -v | grep "BOOTX64"`
     if [ -z "$entries" ]; then

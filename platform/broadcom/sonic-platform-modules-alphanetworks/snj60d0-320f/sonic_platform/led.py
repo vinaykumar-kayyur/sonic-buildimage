@@ -13,7 +13,7 @@ class Led(object):
         1: STATUS_LED_COLOR_GREEN,
         4: STATUS_LED_COLOR_AMBER_BLINK
     }
-    
+
     @staticmethod
     def get_path():
         path = "/sys/bus/i2c/devices/1-005e/"
@@ -25,7 +25,7 @@ class Led(object):
                 led.write(str(value))
         except IOError:
             return False
-            
+
         return True
 
     def get_status(self):
@@ -46,15 +46,15 @@ class SystemLed(Led):
     def get_systemLed():
         if SystemLed._systemLed is None:
             SystemLed()
-        return SystemLed._systemLed 
-    
+        return SystemLed._systemLed
+
     def __init__(self):
         if SystemLed._systemLed  is not None:
             raise Exception('only one SystemLed can exist')
         else:
             self.led_path = self.get_path() + "sys_status"
             SystemLed._systemLed = self
-   
+
     def set_status(self, color):
         if color == Led.STATUS_LED_COLOR_GREEN:
             return self.set_value(Led.value_map["on"])
@@ -72,7 +72,7 @@ class PsuLed(Led):
         if PsuLed._psuLed is None:
             PsuLed()
         return PsuLed._psuLed
-    
+
     def __init__(self):
         if PsuLed._psuLed is not None:
             raise Exception('only one psuLed can exist')
@@ -82,13 +82,13 @@ class PsuLed(Led):
 
     def set_psus(self, psu_list):
         self._psu_list = psu_list
-    
+
     def update_status(self):
         is_power_all_OK = True
         for psu in self._psu_list:
             if not psu.get_presence() or not psu.get_status():
                 is_power_all_OK = False
-            
+
         status = self.value_map["on"] if is_power_all_OK else self.value_map["blink"]
         # update led status
         return self.set_value(status)
@@ -102,7 +102,7 @@ class FanLed(Led):
         if FanLed._fanLed is None:
             FanLed()
         return FanLed._fanLed
-    
+
     def __init__(self):
         if FanLed._fanLed is not None:
             raise Exception('only one fanLed can exist')
@@ -112,13 +112,13 @@ class FanLed(Led):
 
     def set_fans(self, fan_lsit):
         self._fan_list = fan_lsit
-    
+
     def update_status(self):
         is_fan_all_OK = True
         for fan in self._fan_list:
             if not fan.get_status():
                 is_fan_all_OK = False
-        
+
         status = self.value_map["on"] if is_fan_all_OK else self.value_map["blink"]
         # update led status
         return self.set_value(status)

@@ -34,7 +34,7 @@ while read -r line; do
     if [ $fan_led_red_check -eq 1 ]
     then
     let FAN_UNPLUG_NUM=FAN_UNPLUG_NUM+1
-    fi 
+    fi
 done <<< "$FAN_ARR"
 FIRST_READ=$FAN_UNPLUG_NUM
 
@@ -47,7 +47,7 @@ while read -r line; do
     if [ $fan_led_red_check -eq 1 ]
     then
     let FAN_UNPLUG_NUM=FAN_UNPLUG_NUM+1
-    fi 
+    fi
 done <<< "$FAN_ARR"
 SECOND_READ=$FAN_UNPLUG_NUM
 
@@ -55,11 +55,11 @@ if [ $FIRST_READ -ne $SECOND_READ ]
 then
   #echo "not equl:$FIRST_READ != $SECOND_READ"
   continue
-fi 
+fi
 
 if [ $FAN_UNPLUG_NUM -ge 2 ]
 then
-  #echo "solid red"  
+  #echo "solid red"
   echo 7 > $CPLD_ADDR/red_led
   echo 0 > $CPLD_ADDR/grn_led
   sleep 1
@@ -84,7 +84,7 @@ fi
       echo 7 > $CPLD_ADDR/grn_led
       echo 0 > $CPLD_ADDR/red_led
       #echo "solid green"
-   else  
+   else
       if [ "$psu0var" = "$unpowered" ] ||
       [ "$psu1var" = "$unpowered" ]
       then
@@ -92,8 +92,8 @@ fi
         echo 7 > $CPLD_ADDR/grn_led
         echo 7 > $CPLD_ADDR/red_led
       fi
-      
-   fi 
+
+   fi
 
 
 sleep 1

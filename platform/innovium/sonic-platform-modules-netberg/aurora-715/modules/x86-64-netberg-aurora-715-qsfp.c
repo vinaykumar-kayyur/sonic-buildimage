@@ -18,7 +18,7 @@ ssize_t qsfp_low_power_all_get(struct device *dev, struct device_attribute *da, 
     u8 status   = -EPERM;
     u32 result  = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     if (attr->index == QSFP_LOW_POWER_ALL)
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, QSFP_REAR_LOW_POWER_REG);  //25-32
@@ -42,7 +42,7 @@ ssize_t qsfp_low_power_all_set(struct device *dev, struct device_attribute *da, 
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    
+
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
     mutex_lock(&Netberg_CPLD_32_data->update_lock);
     if (attr->index == QSFP_LOW_POWER_ALL)
@@ -65,7 +65,7 @@ ssize_t qsfp_low_power_all_set(struct device *dev, struct device_attribute *da, 
         result += i2c_smbus_write_byte_data(Netberg_CPLD_31_client, QSFP_REAR_LOW_POWER_REG, value);
         result += i2c_smbus_write_byte_data(Netberg_CPLD_32_client, QSFP_FRONT_LOW_POWER_REG, value);
         result += i2c_smbus_write_byte_data(Netberg_CPLD_32_client, QSFP_REAR_LOW_POWER_REG, value);
-        
+
         if(result != 0)
         {
             printk(KERN_ALERT "qsfp_low_power_all_set FAILED\n");
@@ -82,7 +82,7 @@ ssize_t qsfp_low_power_get(struct device *dev, struct device_attribute *da, char
     int status = -EPERM;
     int port_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     port_index = attr->index;
     sprintf(buf, "");
 
@@ -94,7 +94,7 @@ ssize_t qsfp_low_power_get(struct device *dev, struct device_attribute *da, char
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_low_power_regs[port_index][0]);
     }
-    
+
     if (status & qsfp_low_power_regs[port_index][1])
     {
         sprintf(buf, "%s%d\n", buf, ENABLE);
@@ -103,7 +103,7 @@ ssize_t qsfp_low_power_get(struct device *dev, struct device_attribute *da, char
     {
         sprintf(buf, "%s%d\n", buf, DISABLE);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -116,8 +116,8 @@ ssize_t qsfp_low_power_set(struct device *dev, struct device_attribute *da, cons
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    struct i2c_client *target_client = NULL; 
-    
+    struct i2c_client *target_client = NULL;
+
     port_index = attr->index;
     input = simple_strtol(buf, NULL, 10);
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
@@ -132,7 +132,7 @@ ssize_t qsfp_low_power_set(struct device *dev, struct device_attribute *da, cons
     {
         target_client = Netberg_CPLD_32_client;
     }
-    
+
     status = i2c_smbus_read_byte_data(target_client, qsfp_low_power_regs[port_index][0]);
     if( input == ENABLE)
     {
@@ -156,10 +156,10 @@ ssize_t qsfp_low_power_set(struct device *dev, struct device_attribute *da, cons
     {
         printk(KERN_ALERT "ERROR: qsfp_low_power_set WRONG VALUE\n");
     }
-    
+
     mutex_unlock(&Netberg_CPLD_31_data->update_lock);
     mutex_unlock(&Netberg_CPLD_32_data->update_lock);
-    
+
     return count;
 }
 
@@ -171,7 +171,7 @@ ssize_t qsfp_reset_all_set(struct device *dev, struct device_attribute *da, cons
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    
+
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
     mutex_lock(&Netberg_CPLD_32_data->update_lock);
     if (attr->index == QSFP_RESET_ALL)
@@ -190,7 +190,7 @@ ssize_t qsfp_reset_all_set(struct device *dev, struct device_attribute *da, cons
         result += i2c_smbus_write_byte_data(Netberg_CPLD_31_client, QSFP_REAR_RESET_REG, value);
         result += i2c_smbus_write_byte_data(Netberg_CPLD_32_client, QSFP_FRONT_RESET_REG, value);
         result += i2c_smbus_write_byte_data(Netberg_CPLD_32_client, QSFP_REAR_RESET_REG, value);
-        
+
         if(result != 0)
         {
             printk(KERN_ALERT "qsfp_reset_all_set FAILED\n");
@@ -211,8 +211,8 @@ ssize_t qsfp_reset_set(struct device *dev, struct device_attribute *da, const ch
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    struct i2c_client *target_client = NULL; 
-    
+    struct i2c_client *target_client = NULL;
+
     port_index = attr->index;
     input = simple_strtol(buf, NULL, 10);
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
@@ -227,7 +227,7 @@ ssize_t qsfp_reset_set(struct device *dev, struct device_attribute *da, const ch
     {
         target_client = Netberg_CPLD_32_client;
     }
-    
+
     status = i2c_smbus_read_byte_data(target_client, qsfp_reset_regs[port_index][0]);
     if( input == QSFP_RESET)
     {
@@ -242,10 +242,10 @@ ssize_t qsfp_reset_set(struct device *dev, struct device_attribute *da, const ch
     {
         printk(KERN_ALERT "ERROR: qsfp_reset_set WRONG VALUE\n");
     }
-    
+
     mutex_unlock(&Netberg_CPLD_31_data->update_lock);
     mutex_unlock(&Netberg_CPLD_32_data->update_lock);
-    
+
     return count;
 }
 
@@ -254,7 +254,7 @@ ssize_t qsfp_present_all_get(struct device *dev, struct device_attribute *da, ch
     u8 status   = -EPERM;
     u32 result  = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     if (attr->index == QSFP_PRESENT_ALL)
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, QSFP_REAR_PRESENT_REG);  //25-32
@@ -276,7 +276,7 @@ ssize_t qsfp_present_get(struct device *dev, struct device_attribute *da, char *
     int status = -EPERM;
     int port_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     port_index = attr->index;
     sprintf(buf, "");
 
@@ -288,7 +288,7 @@ ssize_t qsfp_present_get(struct device *dev, struct device_attribute *da, char *
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_present_regs[port_index][0]);
     }
-    
+
     if (status & qsfp_present_regs[port_index][1])
     {
         sprintf(buf, "%s%d\n", buf, DISABLE);
@@ -297,7 +297,7 @@ ssize_t qsfp_present_get(struct device *dev, struct device_attribute *da, char *
     {
         sprintf(buf, "%s%d\n", buf, ENABLE);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 ssize_t qsfp_int_all_get(struct device *dev, struct device_attribute *da, char *buf)
@@ -305,7 +305,7 @@ ssize_t qsfp_int_all_get(struct device *dev, struct device_attribute *da, char *
     u8 status   = -EPERM;
     u32 result  = -EPERM;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     if (attr->index == QSFP_INT_ALL)
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, QSFP_REAR_INT_REG);  //25-32
@@ -325,7 +325,7 @@ ssize_t qsfp_int_get(struct device *dev, struct device_attribute *da, char *buf)
     int status = -EPERM;
     int port_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     port_index = attr->index;
     sprintf(buf, "");
 
@@ -337,7 +337,7 @@ ssize_t qsfp_int_get(struct device *dev, struct device_attribute *da, char *buf)
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_int_regs[port_index][0]);
     }
-    
+
     if (status & qsfp_int_regs[port_index][1])
     {
         sprintf(buf, "%s%d\n", buf, ENABLE);
@@ -346,7 +346,7 @@ ssize_t qsfp_int_get(struct device *dev, struct device_attribute *da, char *buf)
     {
         sprintf(buf, "%s%d\n", buf, DISABLE);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -355,7 +355,7 @@ ssize_t qsfp_quter_int_get(struct device *dev, struct device_attribute *da, char
     int status = -EPERM;
     int quter_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     quter_index = attr->index;
     sprintf(buf, "");
 
@@ -367,7 +367,7 @@ ssize_t qsfp_quter_int_get(struct device *dev, struct device_attribute *da, char
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_quter_int_regs[quter_index][0]);
     }
-    
+
     if (status & qsfp_quter_int_regs[quter_index][1])
     {
         sprintf(buf, "%s%d\n", buf, NORMAL);
@@ -376,7 +376,7 @@ ssize_t qsfp_quter_int_get(struct device *dev, struct device_attribute *da, char
     {
         sprintf(buf, "%s%d\n", buf, ABNORMAL);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -385,7 +385,7 @@ ssize_t qsfp_quter_int_mask_get(struct device *dev, struct device_attribute *da,
     int status = -EPERM;
     int quter_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     quter_index = attr->index;
     sprintf(buf, "");
 
@@ -397,7 +397,7 @@ ssize_t qsfp_quter_int_mask_get(struct device *dev, struct device_attribute *da,
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_quter_int_mask_regs[quter_index][0]);
     }
-    
+
     if (status & qsfp_quter_int_mask_regs[quter_index][1])
     {
         sprintf(buf, "%s%d\n", buf, DISABLE);
@@ -406,7 +406,7 @@ ssize_t qsfp_quter_int_mask_get(struct device *dev, struct device_attribute *da,
     {
         sprintf(buf, "%s%d\n", buf, ENABLE);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -419,8 +419,8 @@ ssize_t qsfp_quter_int_mask_set(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    struct i2c_client *target_client = NULL; 
-    
+    struct i2c_client *target_client = NULL;
+
     quter_index = attr->index;
     input = simple_strtol(buf, NULL, 10);
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
@@ -435,7 +435,7 @@ ssize_t qsfp_quter_int_mask_set(struct device *dev, struct device_attribute *da,
     {
         target_client = Netberg_CPLD_32_client;
     }
-    
+
     status = i2c_smbus_read_byte_data(target_client, qsfp_quter_int_mask_regs[quter_index][0]);
     if( input == DISABLE)
     {
@@ -459,10 +459,10 @@ ssize_t qsfp_quter_int_mask_set(struct device *dev, struct device_attribute *da,
     {
         printk(KERN_ALERT "ERROR: qsfp_quter_int_mask_set WRONG VALUE\n");
     }
-    
+
     mutex_unlock(&Netberg_CPLD_31_data->update_lock);
     mutex_unlock(&Netberg_CPLD_32_data->update_lock);
-    
+
     return count;
 }
 
@@ -471,7 +471,7 @@ ssize_t qsfp_modprs_int_get(struct device *dev, struct device_attribute *da, cha
     int status = -EPERM;
     int quter_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     quter_index = attr->index;
     sprintf(buf, "");
 
@@ -483,7 +483,7 @@ ssize_t qsfp_modprs_int_get(struct device *dev, struct device_attribute *da, cha
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_modprs_int_regs[quter_index][0]);
     }
-    
+
     if (status & qsfp_modprs_int_regs[quter_index][1])
     {
         sprintf(buf, "%s%d\n", buf, NORMAL);
@@ -492,7 +492,7 @@ ssize_t qsfp_modprs_int_get(struct device *dev, struct device_attribute *da, cha
     {
         sprintf(buf, "%s%d\n", buf, ABNORMAL);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -501,7 +501,7 @@ ssize_t qsfp_modprs_int_mask_get(struct device *dev, struct device_attribute *da
     int status = -EPERM;
     int quter_index = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    
+
     quter_index = attr->index;
     sprintf(buf, "");
 
@@ -513,7 +513,7 @@ ssize_t qsfp_modprs_int_mask_get(struct device *dev, struct device_attribute *da
     {
         status = i2c_smbus_read_byte_data(Netberg_CPLD_32_client, qsfp_modprs_int_mask_regs[quter_index][0]);
     }
-    
+
     if (status & qsfp_modprs_int_mask_regs[quter_index][1])
     {
         sprintf(buf, "%s%d\n", buf, DISABLE);
@@ -522,7 +522,7 @@ ssize_t qsfp_modprs_int_mask_get(struct device *dev, struct device_attribute *da
     {
         sprintf(buf, "%s%d\n", buf, ENABLE);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -535,8 +535,8 @@ ssize_t qsfp_modprs_int_mask_set(struct device *dev, struct device_attribute *da
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct Netberg_i2c_data *Netberg_CPLD_31_data = i2c_get_clientdata(Netberg_CPLD_31_client);
 	struct Netberg_i2c_data *Netberg_CPLD_32_data = i2c_get_clientdata(Netberg_CPLD_32_client);
-    struct i2c_client *target_client = NULL; 
-    
+    struct i2c_client *target_client = NULL;
+
     quter_index = attr->index;
     input = simple_strtol(buf, NULL, 10);
     mutex_lock(&Netberg_CPLD_31_data->update_lock);
@@ -551,7 +551,7 @@ ssize_t qsfp_modprs_int_mask_set(struct device *dev, struct device_attribute *da
     {
         target_client = Netberg_CPLD_32_client;
     }
-    
+
     status = i2c_smbus_read_byte_data(target_client, qsfp_modprs_int_mask_regs[quter_index][0]);
     if( input == DISABLE)
     {
@@ -575,10 +575,10 @@ ssize_t qsfp_modprs_int_mask_set(struct device *dev, struct device_attribute *da
     {
         printk(KERN_ALERT "ERROR: qsfp_modprs_int_mask_set WRONG VALUE\n");
     }
-    
+
     mutex_unlock(&Netberg_CPLD_31_data->update_lock);
     mutex_unlock(&Netberg_CPLD_32_data->update_lock);
-    
+
     return count;
 }
 /* end of implement i2c_function */

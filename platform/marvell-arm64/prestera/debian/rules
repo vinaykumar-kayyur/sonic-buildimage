@@ -29,7 +29,7 @@ build:
 binary: binary-arch binary-indep
 	# Nothing to do
 
-binary-arch: 
+binary-arch:
 	# Nothing to do
 
 binary-indep:

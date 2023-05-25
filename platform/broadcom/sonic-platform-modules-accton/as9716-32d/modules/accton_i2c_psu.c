@@ -46,11 +46,11 @@
 #define I2C_RW_RETRY_COUNT		10
 #define I2C_RW_RETRY_INTERVAL	60 /* ms */
 
-/* Addresses scanned 
+/* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
-/* Each client has this additional data 
+/* Each client has this additional data
  */
 struct accton_i2c_psu_data {
     struct device      *hwmon_dev;
@@ -83,7 +83,7 @@ static ssize_t show_ascii(struct device *dev, struct device_attribute *da,
 			 char *buf);
 static ssize_t show_byte(struct device *dev, struct device_attribute *da,
 			 char *buf);
-			 			 
+
 static int accton_i2c_psu_write_word(struct i2c_client *client, u8 reg, u16 value);
 static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *dev);
 
@@ -106,7 +106,7 @@ enum accton_i2c_psu_sysfs_attributes {
 	PSU_MFR_SERIAL,
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_v_in,        S_IRUGO, show_linear,      NULL, PSU_V_IN);
 static SENSOR_DEVICE_ATTR(psu_v_out,       S_IRUGO, show_vout,        NULL, PSU_V_OUT);
@@ -202,7 +202,7 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
     u16 value = 0;
     int exponent, mantissa;
     int multiplier = 0;
-    
+
     switch (attr->index) {
     case PSU_V_IN:
         value = data->v_in;
@@ -235,7 +235,7 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
     default:
         break;
     }
-    
+
     exponent = two_complement_to_int(value >> 11, 5, 0x1f);
     mantissa = two_complement_to_int(value & 0x7ff, 11, 0x7ff);
 
@@ -243,9 +243,9 @@ static ssize_t show_linear(struct device *dev, struct device_attribute *da,
         multiplier = PMBUS_LITERAL_DATA_MULTIPLIER;
     if(attr->index==PSU_P_OUT_UV)
         multiplier = 1000000;
-    
+
     return (exponent >= 0) ? sprintf(buf, "%d\n", (mantissa << exponent) * multiplier) :
-                             sprintf(buf, "%d\n", (mantissa * multiplier) / (1 << -exponent));                      
+                             sprintf(buf, "%d\n", (mantissa * multiplier) / (1 << -exponent));
 }
 
 static ssize_t show_fan_fault(struct device *dev, struct device_attribute *da,
@@ -263,7 +263,7 @@ static ssize_t show_vout(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct accton_i2c_psu_data *data = accton_i2c_psu_update_device(dev);
-    int exponent, mantissa;    
+    int exponent, mantissa;
 
     exponent = two_complement_to_int(data->vout_mode, 5, 0x1f);
     mantissa = data->v_out;
@@ -277,7 +277,7 @@ static ssize_t show_byte(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct accton_i2c_psu_data *data = accton_i2c_psu_update_device(dev);
-	
+
 	if (!data->valid) {
 		return 0;
 	}
@@ -295,7 +295,7 @@ static ssize_t show_ascii(struct device *dev, struct device_attribute *da,
 
 	if (!data->valid) {
 		return 0;
-	}	
+	}
 	switch (attr->index) {
 
 	case PSU_MFR_ID:
@@ -328,7 +328,7 @@ static int accton_i2c_psu_probe(struct i2c_client *client,
     struct accton_i2c_psu_data *data;
     int status;
 
-    if (!i2c_check_functionality(client->adapter, 
+    if (!i2c_check_functionality(client->adapter,
         I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA)) {
         status = -EIO;
         goto exit;
@@ -360,7 +360,7 @@ static int accton_i2c_psu_probe(struct i2c_client *client,
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
-    
+
     return 0;
 
 exit_remove:
@@ -368,7 +368,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -379,7 +379,7 @@ static int accton_i2c_psu_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &accton_i2c_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 /* Support psu moduel
@@ -450,7 +450,7 @@ static int accton_i2c_psu_read_block_data(struct i2c_client *client, u8 command,
         status = -EIO;
         goto EXIT_READ_BLOCK_DATA;
     }
-  
+
     status = (status & 0xFF) + 1;
     if ( status > 128)
     {
@@ -458,7 +458,7 @@ static int accton_i2c_psu_read_block_data(struct i2c_client *client, u8 command,
         status = -EINVAL;
         goto EXIT_READ_BLOCK_DATA;
     }
-    
+
     length = status;
     status = accton_i2c_psu_read_block(client, command, buffer, length);
     if (unlikely(status < 0))
@@ -466,8 +466,8 @@ static int accton_i2c_psu_read_block_data(struct i2c_client *client, u8 command,
     if (unlikely(status != length)) {
         status = -EIO;
         goto EXIT_READ_BLOCK_DATA;
-    } 
-    /* The first byte is the count byte of string. */   
+    }
+    /* The first byte is the count byte of string. */
     ptr++;
     status--;
 
@@ -476,7 +476,7 @@ static int accton_i2c_psu_read_block_data(struct i2c_client *client, u8 command,
     data[length-1] = 0;
 
 EXIT_READ_BLOCK_DATA:
-    
+
     return status;
 }
 
@@ -495,7 +495,7 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
 {
     struct i2c_client *client = to_i2c_client(dev);
     struct accton_i2c_psu_data *data = i2c_get_clientdata(client);
-    
+
     mutex_lock(&data->update_lock);
 
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2)
@@ -519,10 +519,10 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
 
         dev_dbg(&client->dev, "Starting accton_i2c_psu update\n");
 
-        /* Read byte data */        
+        /* Read byte data */
         for (i = 0; i < ARRAY_SIZE(regs_byte); i++) {
             status = accton_i2c_psu_read_byte(client, regs_byte[i].reg);
-            
+
             if (status < 0) {
                 dev_dbg(&client->dev, "reg %d, err %d\n",
                         regs_byte[i].reg, status);
@@ -531,11 +531,11 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
                 *(regs_byte[i].value) = status;
             }
         }
-                    
-        /* Read word data */                    
+
+        /* Read word data */
         for (i = 0; i < ARRAY_SIZE(regs_word); i++) {
             status = accton_i2c_psu_read_word(client, regs_word[i].reg);
-            
+
             if (status < 0) {
                 dev_dbg(&client->dev, "reg %d, err %d\n",
                         regs_word[i].reg, status);
@@ -543,7 +543,7 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
             else {
                 *(regs_word[i].value) = status;
             }
-            
+
         }
         /* Read mfr_id */
 		status = accton_i2c_psu_read_block_data(client, PMBUS_REGISTER_MFR_ID, data->mfr_id,
@@ -551,15 +551,15 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
 		if (status < 0) {
 			dev_dbg(&client->dev, "reg %d, err %d\n", PMBUS_REGISTER_MFR_ID, status);
 			goto exit;
-		}		
-		/* Read mfr_model */		
+		}
+		/* Read mfr_model */
 		status = accton_i2c_psu_read_block_data(client, PMBUS_REGISTER_MFR_MODEL, data->mfr_model,
 										 ARRAY_SIZE(data->mfr_model));
 		if (status < 0) {
 			dev_dbg(&client->dev, "reg %d, err %d\n", PMBUS_REGISTER_MFR_MODEL, status);
 			goto exit;
 		}
-        /* Read mfr_revsion */		
+        /* Read mfr_revsion */
 		status = accton_i2c_psu_read_block_data(client, PMBUS_REGISTER_MFR_REVISION, data->mfr_revsion,
 										 ARRAY_SIZE(data->mfr_revsion));
 		if (status < 0) {
@@ -573,7 +573,7 @@ static struct accton_i2c_psu_data *accton_i2c_psu_update_device(struct device *d
 			dev_dbg(&client->dev, "reg %d, err %d\n", PMBUS_REGISTER_MFR_SERIAL, status);
 			goto exit;
 		}
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }

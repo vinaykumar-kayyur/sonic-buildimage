@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script is used to power on IO modules
-# IOM can be controlled via SMF using mailbox registers 
+# IOM can be controlled via SMF using mailbox registers
 
 # write 0x1 to 0x04D9 to power up IOM 1
 /usr/local/bin/io_rd_wr.py --set --val 0x04 --offset 0x210

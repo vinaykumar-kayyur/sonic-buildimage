@@ -19,7 +19,7 @@
 
 
 /*****************************************
- *  kobj list 
+ *  kobj list
  *****************************************/
 
 struct kobject *platform_kobj=NULL;
@@ -29,7 +29,7 @@ struct kobject *state_attr_kobj=NULL;
 struct kobject *cur_state_kobj=NULL;
 
 /*****************************************
- * Static Data provided from user 
+ * Static Data provided from user
  * space JSON data file
  *****************************************/
 #define NAME_SIZE 32
@@ -64,10 +64,10 @@ char*  LED_STATUS_STR[] = {
 };
 
 
-typedef struct 
+typedef struct
 {
-    char bits[NAME_SIZE]; 
-    int pos; 
+    char bits[NAME_SIZE];
+    int pos;
     int mask_bits;
 }MASK_BITS;
 
@@ -85,7 +85,7 @@ typedef struct
 typedef struct
 {
     int state;
-    char color[NAME_SIZE]; 
+    char color[NAME_SIZE];
 /* S3IP System LED RW sysfs */
     int sys_led;
     int bmc_led;
@@ -114,7 +114,7 @@ typedef struct
     int swpld_addr_offset;
     char attr_devtype[NAME_SIZE];
     char attr_devname[NAME_SIZE];
-} LED_OPS_DATA; 
+} LED_OPS_DATA;
 
 typedef enum{
 	LED_SYS,
@@ -126,7 +126,7 @@ typedef enum{
     LED_BMC,
 	LED_TYPE_MAX
 } LED_TYPE;
-char* LED_TYPE_STR[LED_TYPE_MAX] = 
+char* LED_TYPE_STR[LED_TYPE_MAX] =
 {
 	"LED_SYS",
 	"LED_PSU",
@@ -138,7 +138,7 @@ char* LED_TYPE_STR[LED_TYPE_MAX] =
 };
 
 /*****************************************
- * Data exported from kernel for  
+ * Data exported from kernel for
  * user space plugin to get/set
  *****************************************/
 #define PDDF_LED_DATA_ATTR( _prefix, _name, _mode, _show, _store, _type, _len, _addr)    \

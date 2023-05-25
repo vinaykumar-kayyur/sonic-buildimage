@@ -1,26 +1,26 @@
 /*
  * Copyright 2007-2020 Broadcom Inc. All rights reserved.
- * 
+ *
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
- * 
+ *
  * License Option 1: GPL
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
- * 
- * 
+ *
+ *
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
- * 
+ *
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
@@ -36,7 +36,7 @@
 #include <sal/types.h>
 
 /*
- * Represents a collection of devices 
+ * Represents a collection of devices
  */
 
 typedef struct ibde_dev_s {
@@ -57,11 +57,11 @@ typedef struct ibde_dev_s {
 typedef struct ibde_s {
 
     const char *(*name)(void);
-  
+
     /* Returns the number of devices available */
     /* Each device is is accessed through a handle */
     /* Handles are assumed to index the array of devices */
-  
+
     /* Support SWITCH or ETHERNET or CPU devices */
     int     (*num_devices)(int type);
 #define BDE_ALL_DEVICES         0
@@ -71,7 +71,7 @@ typedef struct ibde_s {
 
     const   ibde_dev_t *(*get_dev)(int d);
 
-    /* 
+    /*
      * Get types of underlaying devices.
      * A combination of bus type and functional type is returned.
      * In case of bus type, support PCI and SPI device types.
@@ -93,7 +93,7 @@ typedef struct ibde_s {
 #define BDE_DEV_BUS_MSI       SAL_DEV_BUS_MSI     /* Message-signaled interrupts */
 
 #define BDE_DEV_BUS_TYPE_MASK SAL_DEV_BUS_TYPE_MASK
-    
+
 #define BDE_SWITCH_DEV_TYPE   SAL_SWITCH_DEV_TYPE /* Switch device */
 #define BDE_ETHER_DEV_TYPE    SAL_ETHER_DEV_TYPE  /* Ethernet device */
 #define BDE_CPU_DEV_TYPE      SAL_CPU_DEV_TYPE    /* CPU device */
@@ -108,7 +108,7 @@ typedef struct ibde_s {
 
 
 /* Bus supports only 16bit reads */
-#define BDE_DEV_BUS_RD_16BIT  SAL_DEV_BUS_RD_16BIT 
+#define BDE_DEV_BUS_RD_16BIT  SAL_DEV_BUS_RD_16BIT
 
 /* Bus supports only 16bit writes */
 #define BDE_DEV_BUS_WR_16BIT  SAL_DEV_BUS_WR_16BIT
@@ -120,7 +120,7 @@ typedef struct ibde_s {
     ((_d) & (BDE_PCI_DEV_TYPE | BDE_ICS_DEV_TYPE | BDE_EB_DEV_TYPE |\
              BDE_EMMI_DEV_TYPE | BDE_AXI_DEV_TYPE))
 
-    /* 
+    /*
      * PCI Bus Access
      */
     uint32  (*pci_conf_read)(int d, uint32 addr);
@@ -136,13 +136,13 @@ typedef struct ibde_s {
     int     (*sflush)(int d, void *addr, int length);
     int     (*sinval)(int d, void *addr, int length);
 
-    int     (*interrupt_connect)(int d, void (*)(void*), void *data);  
+    int     (*interrupt_connect)(int d, void (*)(void*), void *data);
     int     (*interrupt_disconnect)(int d);
 
     sal_paddr_t  (*l2p)(int d, void *laddr);
     void* (*p2l)(int d, sal_paddr_t paddr);
 
-    /* 
+    /*
      * SPI Access via SMP
      */
     int  (*spi_read)(int d, uint32 addr, uint8 *buf, int len);
@@ -150,13 +150,13 @@ typedef struct ibde_s {
     /* Special SPI access addresses */
 #define BDE_DEV_OP_EMMI_INIT    SAL_DEV_OP_EMMI_INIT
 
-    /* 
+    /*
      * iProc register access
      */
     uint32  (*iproc_read)(int d, uint32 addr);
     int     (*iproc_write)(int d, uint32 addr, uint32 data);
 
-    /* 
+    /*
      * Shared memory access
      */
     uint32  (*shmem_read)(int dev, uint32 addr, uint8 *buf, uint32 len);

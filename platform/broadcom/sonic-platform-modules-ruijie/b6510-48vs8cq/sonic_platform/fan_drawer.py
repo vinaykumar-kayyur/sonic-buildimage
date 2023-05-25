@@ -30,7 +30,7 @@ class FanDrawer(FanDrawerBase):
         Returns:
             string: The name of the device
         """
-        
+
         return "fan {}".format(self._index)
 
     def get_num_fans(self):

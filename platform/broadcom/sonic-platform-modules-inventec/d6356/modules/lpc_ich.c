@@ -493,7 +493,7 @@ static struct lpc_ich_info lpc_chipset_info[] = {
 	[LPC_LPT] = {
 		.name = "Lynx Point",
 		.iTCO_version = 2,
-		.gpio_version = ICH_V5_GPIO,        
+		.gpio_version = ICH_V5_GPIO,
 	},
 	[LPC_LPT_LP] = {
 		.name = "Lynx Point_LP",

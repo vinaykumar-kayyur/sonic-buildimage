@@ -56,7 +56,7 @@
 #define CLEAR_BIT(data, bit)            data &= ~(1 << bit)
 
 enum chips
-{   
+{
     mercedes3 = 0,
     cadillac,
     porsche,
@@ -65,7 +65,7 @@ enum chips
 enum fan_alert
 {
     FAN_OUTER_RPM_OVER_ALERT_BIT = 0,
-    FAN_OUTER_RPM_UNDER_ALERT_BIT, 
+    FAN_OUTER_RPM_UNDER_ALERT_BIT,
     FAN_INNER_RPM_OVER_ALERT_BIT,
     FAN_INNER_RPM_UNDER_ALERT_BIT,
     FAN_CONNECT_ALERT_BIT,
@@ -75,7 +75,7 @@ enum fan_alert
 enum fan_status
 {
     FAN_ALERT_BIT = 2,
-    FAN_LED_AMBER_BIT, 
+    FAN_LED_AMBER_BIT,
     FAN_LED_GREEN_BIT,
     FAN_LED_AUTO_BIT,
     FAN_ENABLE_BIT,
@@ -83,7 +83,7 @@ enum fan_status
 };
 
 enum hwmon_mcu_register
-{ 
+{
     MB_FW_UG_REG = 0,
     FB_FW_UG_REG,
     MB_HW_VER_REG,
@@ -141,7 +141,7 @@ enum hwmon_mcu_register
     LM_0X48_TEMP_REG,
     SA56004X_LOCAL_TEMP_REG,
     SA56004X_REMOTE_TEMP_REG,
-    
+
 };
 
 static struct mutex pega_hwmon_mcu_lock;
@@ -149,11 +149,11 @@ static struct mutex pega_hwmon_mcu_lock;
 static int pega_hwmon_mcu_read(struct i2c_client *client, u8 reg)
 {
     int data = -EPERM;
-    
+
     mutex_lock(&pega_hwmon_mcu_lock);
 
     data = i2c_smbus_read_word_data(client, reg);
-    
+
     mutex_unlock(&pega_hwmon_mcu_lock);
 
     return data;
@@ -162,11 +162,11 @@ static int pega_hwmon_mcu_read(struct i2c_client *client, u8 reg)
 static int pega_hwmon_mcu_write(struct i2c_client *client, u8 reg, u8 val)
 {
     int ret = -EIO;
-    
+
     mutex_lock(&pega_hwmon_mcu_lock);
 
     ret = i2c_smbus_write_byte_data(client, reg, val);
-    
+
     mutex_unlock(&pega_hwmon_mcu_lock);
 
     return ret;
@@ -175,7 +175,7 @@ static int pega_hwmon_mcu_write(struct i2c_client *client, u8 reg, u8 val)
 static ssize_t mainBoardUpgrade(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = MB_FW_UG_REG;
     long val = 0;
@@ -198,7 +198,7 @@ static ssize_t mainBoardUpgrade(struct device *dev, struct device_attribute *da,
 static ssize_t fanBoardUpgrade(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = FB_FW_UG_REG;
     long val = 0;
@@ -221,7 +221,7 @@ static ssize_t fanBoardUpgrade(struct device *dev, struct device_attribute *da,
 static ssize_t get_MB_HW_version(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = MB_HW_VER_REG;
 
@@ -237,7 +237,7 @@ static ssize_t get_MB_HW_version(struct device *dev, struct device_attribute *da
 static ssize_t get_FB_HW_version(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = FB_HW_SKUVER_REG;
 
@@ -253,7 +253,7 @@ static ssize_t get_FB_HW_version(struct device *dev, struct device_attribute *da
 static ssize_t get_FB_boardId(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = FB_HW_SKUVER_REG;
 
@@ -267,7 +267,7 @@ static ssize_t get_FB_boardId(struct device *dev, struct device_attribute *da,
 static ssize_t get_MB_FW_version(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, major_ver = 0, minor_ver = 0;
     u8 reg = MB_FW_VER_REG;
 
@@ -282,7 +282,7 @@ static ssize_t get_MB_FW_version(struct device *dev, struct device_attribute *da
 static ssize_t get_FB_FW_version(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, major_ver = 0, minor_ver = 0;
     u8 reg = FB_FW_VER_REG;
 
@@ -297,7 +297,7 @@ static ssize_t get_FB_FW_version(struct device *dev, struct device_attribute *da
 static ssize_t get_fan_PWM(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = FAN_PWM_REG;
 
@@ -310,7 +310,7 @@ static ssize_t get_fan_PWM(struct device *dev, struct device_attribute *da,
 static ssize_t set_fan_pwm(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = FAN_PWM_REG;
     long val = 0;
@@ -329,7 +329,7 @@ static ssize_t set_fan_pwm(struct device *dev, struct device_attribute *da,
 static ssize_t get_smartFan_enable(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = SF_ENABLE_REG;
 
@@ -343,7 +343,7 @@ static ssize_t get_smartFan_enable(struct device *dev, struct device_attribute *
 static ssize_t set_smartFan_enable(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_ENABLE_REG;
     long val = 0;
@@ -368,7 +368,7 @@ static ssize_t set_smartFan_enable(struct device *dev, struct device_attribute *
 static ssize_t get_smartFan_setting_enable(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = SF_SETTING_ENABLE_REG;
 
@@ -382,7 +382,7 @@ static ssize_t get_smartFan_setting_enable(struct device *dev, struct device_att
 static ssize_t set_smartFan_setting_enable(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_SETTING_ENABLE_REG;
     long val = 0;
@@ -407,7 +407,7 @@ static ssize_t set_smartFan_setting_enable(struct device *dev, struct device_att
 static ssize_t get_smartFan_device(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_DEVICE_REG;
 
@@ -420,7 +420,7 @@ static ssize_t get_smartFan_device(struct device *dev, struct device_attribute *
 static ssize_t set_smartFan_device(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_DEVICE_REG;
     long val = 0;
@@ -440,7 +440,7 @@ static ssize_t set_smartFan_device(struct device *dev, struct device_attribute *
 static ssize_t get_smartFan_update(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_UPDATE_REG;
 
@@ -453,7 +453,7 @@ static ssize_t get_smartFan_update(struct device *dev, struct device_attribute *
 static ssize_t set_smartFan_update(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_UPDATE_REG;
     long val = 0;
@@ -473,7 +473,7 @@ static ssize_t set_smartFan_update(struct device *dev, struct device_attribute *
 static ssize_t get_smartFan_max_temp(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MAX_REG;
 
@@ -486,7 +486,7 @@ static ssize_t get_smartFan_max_temp(struct device *dev, struct device_attribute
 static ssize_t set_smartFan_max_temp(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MAX_REG;
     long val = 0;
@@ -506,7 +506,7 @@ static ssize_t set_smartFan_max_temp(struct device *dev, struct device_attribute
 static ssize_t get_smartFan_mid_temp(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MID_REG;
 
@@ -519,7 +519,7 @@ static ssize_t get_smartFan_mid_temp(struct device *dev, struct device_attribute
 static ssize_t set_smartFan_mid_temp(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MID_REG;
     long val = 0;
@@ -539,7 +539,7 @@ static ssize_t set_smartFan_mid_temp(struct device *dev, struct device_attribute
 static ssize_t get_smartFan_min_temp(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MID_REG;
 
@@ -552,7 +552,7 @@ static ssize_t get_smartFan_min_temp(struct device *dev, struct device_attribute
 static ssize_t set_smartFan_min_temp(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_TEMP_MID_REG;
     long val = 0;
@@ -572,7 +572,7 @@ static ssize_t set_smartFan_min_temp(struct device *dev, struct device_attribute
 static ssize_t get_smartFan_max_pwm(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MAX_REG;
 
@@ -585,7 +585,7 @@ static ssize_t get_smartFan_max_pwm(struct device *dev, struct device_attribute 
 static ssize_t set_smartFan_max_pwm(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MAX_REG;
     long val = 0;
@@ -605,7 +605,7 @@ static ssize_t set_smartFan_max_pwm(struct device *dev, struct device_attribute 
 static ssize_t get_smartFan_mid_pwm(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
 
@@ -618,7 +618,7 @@ static ssize_t get_smartFan_mid_pwm(struct device *dev, struct device_attribute 
 static ssize_t set_smartFan_mid_pwm(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
     long val = 0;
@@ -638,7 +638,7 @@ static ssize_t set_smartFan_mid_pwm(struct device *dev, struct device_attribute 
 static ssize_t get_smartFan_min_pwm(struct device *dev, struct device_attribute *da,
              char *buf)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MIN_REG;
 
@@ -651,7 +651,7 @@ static ssize_t get_smartFan_min_pwm(struct device *dev, struct device_attribute 
 static ssize_t set_smartFan_min_pwm(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MIN_REG;
     long val = 0;
@@ -672,7 +672,7 @@ static ssize_t get_fan_inner_rpm(struct device *dev, struct device_attribute *da
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u16 data = 0;
     u8 reg = FAN1_INNER_RPM_REG + attr->index;
 
@@ -686,7 +686,7 @@ static ssize_t get_fan_outer_rpm(struct device *dev, struct device_attribute *da
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u16 data = 0;
     u8 reg = FAN1_OUTER_RPM_REG + attr->index;
 
@@ -700,7 +700,7 @@ static ssize_t get_fan_present(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -715,7 +715,7 @@ static ssize_t get_fan_enable(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -730,7 +730,7 @@ static ssize_t get_fan_enable(struct device *dev, struct device_attribute *da,
 static ssize_t set_fan_enable(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
     long val = 0;
@@ -754,7 +754,7 @@ static ssize_t get_fan_led_auto(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -769,7 +769,7 @@ static ssize_t get_fan_led_auto(struct device *dev, struct device_attribute *da,
 static ssize_t set_fan_led_auto(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
     long val = 0;
@@ -793,7 +793,7 @@ static ssize_t get_fan_led_green(struct device *dev, struct device_attribute *da
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -808,7 +808,7 @@ static ssize_t get_fan_led_green(struct device *dev, struct device_attribute *da
 static ssize_t set_fan_led_green(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
     long val = 0;
@@ -832,7 +832,7 @@ static ssize_t get_fan_led_amber(struct device *dev, struct device_attribute *da
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -847,7 +847,7 @@ static ssize_t get_fan_led_amber(struct device *dev, struct device_attribute *da
 static ssize_t set_fan_led_amber(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = SF_PWM_MID_REG;
     long val = 0;
@@ -871,7 +871,7 @@ static ssize_t get_fan_status_alert(struct device *dev, struct device_attribute 
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_STATUS_REG + attr->index;
 
@@ -886,7 +886,7 @@ static ssize_t get_adc_under_vol_alert(struct device *dev, struct device_attribu
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = ADC_UNDER_VOL_ALERT_REG;
 
@@ -901,7 +901,7 @@ static ssize_t get_adc_over_vol_alert(struct device *dev, struct device_attribut
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = ADC_OVER_VOL_ALERT_REG;
 
@@ -916,7 +916,7 @@ static ssize_t get_temp_alert(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = TS_OVER_TEMP_ALERT_REG;
 
@@ -931,7 +931,7 @@ static ssize_t get_fan_outerRPMOver_alert(struct device *dev, struct device_attr
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -946,7 +946,7 @@ static ssize_t get_fan_outerRPMUnder_alert(struct device *dev, struct device_att
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -961,7 +961,7 @@ static ssize_t get_fan_innerRPMOver_alert(struct device *dev, struct device_attr
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -976,7 +976,7 @@ static ssize_t get_fan_innerRPMUnder_alert(struct device *dev, struct device_att
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -991,7 +991,7 @@ static ssize_t get_fan_connect_alert(struct device *dev, struct device_attribute
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -1006,7 +1006,7 @@ static ssize_t get_fan_disconnect_alert(struct device *dev, struct device_attrib
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = FAN1_ALERT_REG + attr->index;
 
@@ -1021,7 +1021,7 @@ static ssize_t get_i2c_timeout(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = I2C_BUS_ALERT_REG;
 
@@ -1036,7 +1036,7 @@ static ssize_t get_alert_mode(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0, val = 0;
     u8 reg = ALERT_MODE_REG;
 
@@ -1050,7 +1050,7 @@ static ssize_t get_alert_mode(struct device *dev, struct device_attribute *da,
 static ssize_t set_alert_mode(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u8 data = 0;
     u8 reg = ALERT_MODE_REG;
     long val = 0;
@@ -1075,7 +1075,7 @@ static ssize_t get_adc_vol(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev);   
+    struct i2c_client *client = to_i2c_client(dev);
     u16 data = 0, reg = MONITOR_ADC_VOLTAGE_REG + attr->index;
 
     data = pega_hwmon_mcu_read(client, reg);
@@ -1088,8 +1088,8 @@ static ssize_t get_hwmon_temp(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct i2c_client *client = to_i2c_client(dev); 
-    u8 data = 0;  
+    struct i2c_client *client = to_i2c_client(dev);
+    u8 data = 0;
     u8 reg = LM_0X49_TEMP_REG + attr->index;
 
     data = pega_hwmon_mcu_read(client, reg);
@@ -1315,7 +1315,7 @@ static const struct attribute_group pega_hwmon_mcu_group = { .attrs = pega_hwmon
 
 static int pega_hwmon_mcu_probe(struct i2c_client *client,
             const struct i2c_device_id *dev_id)
-{  
+{
     int status;
 
     status = sysfs_create_group(&client->dev.kobj, &pega_hwmon_mcu_group);
@@ -1325,8 +1325,8 @@ static int pega_hwmon_mcu_probe(struct i2c_client *client,
     }
 
     dev_info(&client->dev, "chip found\n");
-    
-    return 0; 
+
+    return 0;
 
 exit:
     return status;

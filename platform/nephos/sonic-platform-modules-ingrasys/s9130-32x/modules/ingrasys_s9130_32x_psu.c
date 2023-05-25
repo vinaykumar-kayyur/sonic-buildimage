@@ -30,20 +30,20 @@
 #include <linux/dmi.h>
 #include "ingrasys_s9130_32x_platform.h"
 
-static ssize_t show_psu_eeprom(struct device *dev, 
-                               struct device_attribute *da, 
+static ssize_t show_psu_eeprom(struct device *dev,
+                               struct device_attribute *da,
                                char *buf);
 static struct s9130_psu_data *s9130_psu_update_status(struct device *dev);
 static struct s9130_psu_data *s9130_psu_update_eeprom(struct device *dev);
-static int s9130_psu_read_block(struct i2c_client *client, 
-                                u8 command, 
+static int s9130_psu_read_block(struct i2c_client *client,
+                                u8 command,
                                 u8 *data,
                                 int data_len);
 
 
 #define DRIVER_NAME "psu"
 
-// Addresses scanned 
+// Addresses scanned
 static const unsigned short normal_i2c[] = { 0x50, I2C_CLIENT_END };
 
 /* PSU EEPROM SIZE */
@@ -74,51 +74,51 @@ struct s9130_psu_data {
     char psuPG;                      /* PSU power good */
 };
 
-enum psu_index 
-{ 
-    s9130_psu1, 
+enum psu_index
+{
+    s9130_psu1,
     s9130_psu2
 };
 
 /*
- * display power good attribute 
+ * display power good attribute
  */
-static ssize_t 
-show_psu_pg(struct device *dev, 
-            struct device_attribute *devattr, 
+static ssize_t
+show_psu_pg(struct device *dev,
+            struct device_attribute *devattr,
             char *buf)
 {
     struct s9130_psu_data *data = s9130_psu_update_status(dev);
     unsigned int value;
 
     mutex_lock(&data->lock);
-    value = data->psuPG;        
+    value = data->psuPG;
     mutex_unlock(&data->lock);
 
     return sprintf(buf, "%d\n", value);
 }
 
 /*
- * display power absent attribute 
+ * display power absent attribute
  */
-static ssize_t 
-show_psu_abs(struct device *dev, 
-             struct device_attribute *devattr, 
+static ssize_t
+show_psu_abs(struct device *dev,
+             struct device_attribute *devattr,
              char *buf)
 {
     struct s9130_psu_data *data = s9130_psu_update_status(dev);
     unsigned int value;
 
     mutex_lock(&data->lock);
-    value = data->psuABS;       
+    value = data->psuABS;
     mutex_unlock(&data->lock);
 
     return sprintf(buf, "%d\n", value);
 }
 
 
-/* 
- * sysfs attributes for psu 
+/*
+ * sysfs attributes for psu
  */
 static DEVICE_ATTR(psu_pg, S_IRUGO, show_psu_pg, NULL);
 static DEVICE_ATTR(psu_abs, S_IRUGO, show_psu_abs, NULL);
@@ -131,16 +131,16 @@ static struct attribute *s9130_psu_attributes[] = {
     NULL
 };
 
-/* 
+/*
  * display psu eeprom content
  */
-static ssize_t 
-show_psu_eeprom(struct device *dev, 
+static ssize_t
+show_psu_eeprom(struct device *dev,
                 struct device_attribute *da,
                 char *buf)
 {
     struct s9130_psu_data *data = s9130_psu_update_eeprom(dev);
-    
+
     memcpy(buf, (char *)data->eeprom, EEPROM_SZ);
     return EEPROM_SZ;
 }
@@ -149,10 +149,10 @@ static const struct attribute_group s9130_psu_group = {
     .attrs = s9130_psu_attributes,
 };
 
-/* 
+/*
  * check gpio expander is accessible
  */
-static int 
+static int
 pca9555_detect(struct i2c_client *client)
 {
     if (i2c_smbus_read_byte_data(client, REG_PORT0_DIR) < 0) {
@@ -162,17 +162,17 @@ pca9555_detect(struct i2c_client *client)
     return 0;
 }
 
-/* 
+/*
  * client address init
  */
-static void 
+static void
 i2c_devices_client_address_init(struct i2c_client *client)
 {
     pca9555_client = *client;
     pca9555_client.addr = 0x25;
 }
 
-static int 
+static int
 s9130_psu_probe(struct i2c_client *client,
                 const struct i2c_device_id *dev_id)
 {
@@ -199,7 +199,7 @@ s9130_psu_probe(struct i2c_client *client,
 
     err = pca9555_detect(&pca9555_client);
     if (err) {
-        return err; 
+        return err;
     }
 
     dev_info(&client->dev, "chip found\n");
@@ -217,28 +217,28 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
-static int 
+static int
 s9130_psu_remove(struct i2c_client *client)
 {
     struct s9130_psu_data *data = i2c_get_clientdata(client);
 
     sysfs_remove_group(&client->dev.kobj, &s9130_psu_group);
     kfree(data);
-    
+
     return 0;
 }
 
 
-/* 
+/*
  * psu eeprom read utility
  */
-static int 
-s9130_psu_read_block(struct i2c_client *client, 
-                     u8 command, 
+static int
+s9130_psu_read_block(struct i2c_client *client,
+                     u8 command,
                      u8 *data,
                      int data_len)
 {
@@ -247,7 +247,7 @@ s9130_psu_read_block(struct i2c_client *client,
 
     /* read eeprom, 32 * 8 = 256 bytes */
     for (i=0; i < EEPROM_SZ/blk_max; i++) {
-        ret = i2c_smbus_read_i2c_block_data(client, (i*blk_max), blk_max, 
+        ret = i2c_smbus_read_i2c_block_data(client, (i*blk_max), blk_max,
                                             data + (i*blk_max));
         if (ret < 0) {
             return ret;
@@ -256,10 +256,10 @@ s9130_psu_read_block(struct i2c_client *client,
     return ret;
 }
 
-/* 
+/*
  * update eeprom content
  */
-static struct s9130_psu_data 
+static struct s9130_psu_data
 *s9130_psu_update_eeprom(struct device *dev)
 {
     struct i2c_client *client = to_i2c_client(dev);
@@ -267,14 +267,14 @@ static struct s9130_psu_data
     s32 status = 0;
     int psu_pwrok = 0;
     int psu_prsnt_l = 0;
-    
+
     mutex_lock(&data->lock);
 
     if (time_after(jiffies, data->last_updated + 300 * HZ)
         || !data->valid) {
 
         /* Read psu status */
-        
+
         status = i2c_smbus_read_word_data(&(pca9555_client), REG_PORT0_IN);
         data->status = status;
 
@@ -288,15 +288,15 @@ static struct s9130_psu_data
             psu_prsnt_l = PSU2_PRSNT_L;
         }
         data->psuPG = (status >> psu_pwrok) & 0x1;
-        data->psuABS = (status >> psu_prsnt_l) & 0x1; 
-        
+        data->psuABS = (status >> psu_prsnt_l) & 0x1;
+
         /* Read eeprom */
         if (!data->psuABS) {
             //clear local eeprom data
             memset(data->eeprom, 0, EEPROM_SZ);
 
             //read eeprom
-            status = s9130_psu_read_block(client, 0, data->eeprom, 
+            status = s9130_psu_read_block(client, 0, data->eeprom,
                                                ARRAY_SIZE(data->eeprom));
 
             if (status < 0) {
@@ -316,10 +316,10 @@ static struct s9130_psu_data
     return data;
 }
 
-/* 
+/*
  * update psu status
  */
-static struct s9130_psu_data 
+static struct s9130_psu_data
 *s9130_psu_update_status(struct device *dev)
 {
     struct i2c_client *client = to_i2c_client(dev);
@@ -327,11 +327,11 @@ static struct s9130_psu_data
     s32 status = 0;
     int psu_pwrok = 0;
     int psu_prsnt_l = 0;
-    
+
     mutex_lock(&data->lock);
 
     /* Read psu status */
-        
+
     status = i2c_smbus_read_word_data(&(pca9555_client), REG_PORT0_IN);
     data->status = status;
 
@@ -345,7 +345,7 @@ static struct s9130_psu_data
         psu_prsnt_l = PSU2_PRSNT_L;
     }
     data->psuPG = (status >> psu_pwrok) & 0x1;
-    data->psuABS = (status >> psu_prsnt_l) & 0x1; 
+    data->psuABS = (status >> psu_prsnt_l) & 0x1;
 
     mutex_unlock(&data->lock);
 

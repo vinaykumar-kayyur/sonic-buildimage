@@ -8,7 +8,7 @@
 #define CPUPLD_REG 0x31
 
 enum cpld_type {
-    cpld,       
+    cpld,
 };
 
 struct platform_data {
@@ -61,7 +61,7 @@ static struct platform_device ag9032v1_cpld = {
     },
 };
 static unsigned char cpld_reg_addr;
-static ssize_t get_cpld_reg_value(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_cpld_reg_value(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int ret;
     struct platform_data *pdata = dev->platform_data;
@@ -92,7 +92,7 @@ static ssize_t set_cpld_reg_value(struct device *dev, struct device_attribute *a
     return count;
 }
 
-static ssize_t get_cpld_reg_addr(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_cpld_reg_addr(struct device *dev, struct device_attribute *devattr, char *buf)
 {
 
     return sprintf(buf, "0x%02x\n", cpld_reg_addr);
@@ -117,7 +117,7 @@ static ssize_t set_cpld_reg_addr(struct device *dev, struct device_attribute *at
     return count;
 }
 
-static ssize_t get_cpld_data(struct device *dev, struct device_attribute *dev_attr, char *buf) 
+static ssize_t get_cpld_data(struct device *dev, struct device_attribute *dev_attr, char *buf)
 {
     int ret;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
@@ -165,7 +165,7 @@ static ssize_t get_cpld_data(struct device *dev, struct device_attribute *dev_at
     case MB_PWR:
         reg  = 0x08;
         mask = 4;
-        sprintf(note, "\n“1” = Power rail is good\n“0” = Power rail is failed\n");        
+        sprintf(note, "\n“1” = Power rail is good\n“0” = Power rail is failed\n");
         break;
     case PSU_FAN_INT:
         reg  = 0x0A;
@@ -193,9 +193,9 @@ static ssize_t get_cpld_data(struct device *dev, struct device_attribute *dev_at
 static ssize_t set_cpld_data(struct device *dev, struct device_attribute *dev_attr,
              const char *buf, size_t count)
 {
-    int mask;    
+    int mask;
     int err;
-    int ret;    
+    int ret;
     unsigned long data;
     unsigned char reg;
     unsigned char mask_shift;
@@ -312,7 +312,7 @@ static int __init cpld_probe(struct platform_device *pdev)
 error:
     i2c_unregister_device(pdata[cpld].client);
     i2c_put_adapter(parent);
-    return -ENODEV; 
+    return -ENODEV;
 }
 
 static int __exit cpld_remove(struct platform_device *pdev)
@@ -323,7 +323,7 @@ static int __exit cpld_remove(struct platform_device *pdev)
 
     if (!pdata) {
         dev_err(&pdev->dev, "Missing platform data\n");
-    } 
+    }
     else {
         if (pdata[cpld].client) {
             if (!parent) {
@@ -377,7 +377,7 @@ error_cpupld_driver:
 static void __exit delta_ag9032v1_cpupld_exit(void)
 {
     platform_device_unregister(&ag9032v1_cpld);
-    platform_driver_unregister(&cpld_driver);  
+    platform_driver_unregister(&cpld_driver);
 }
 module_init(delta_ag9032v1_cpupld_init);
 module_exit(delta_ag9032v1_cpupld_exit);

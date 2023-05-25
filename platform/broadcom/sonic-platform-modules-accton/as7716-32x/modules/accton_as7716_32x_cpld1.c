@@ -110,23 +110,23 @@ enum as7716_32x_cpld_sysfs_attributes {
 	TRANSCEIVER_PRESENT_ATTR_ID(30),
 	TRANSCEIVER_PRESENT_ATTR_ID(31),
 	TRANSCEIVER_PRESENT_ATTR_ID(32),
-	TRANSCEIVER_RESET_ATTR_ID(1),	
-	TRANSCEIVER_RESET_ATTR_ID(2),	
-	TRANSCEIVER_RESET_ATTR_ID(3),	
-	TRANSCEIVER_RESET_ATTR_ID(4),	
-	TRANSCEIVER_RESET_ATTR_ID(5),	
-	TRANSCEIVER_RESET_ATTR_ID(6),	
+	TRANSCEIVER_RESET_ATTR_ID(1),
+	TRANSCEIVER_RESET_ATTR_ID(2),
+	TRANSCEIVER_RESET_ATTR_ID(3),
+	TRANSCEIVER_RESET_ATTR_ID(4),
+	TRANSCEIVER_RESET_ATTR_ID(5),
+	TRANSCEIVER_RESET_ATTR_ID(6),
 	TRANSCEIVER_RESET_ATTR_ID(7),
-	TRANSCEIVER_RESET_ATTR_ID(8),	
+	TRANSCEIVER_RESET_ATTR_ID(8),
 	TRANSCEIVER_RESET_ATTR_ID(9),
-	TRANSCEIVER_RESET_ATTR_ID(10),	
+	TRANSCEIVER_RESET_ATTR_ID(10),
 	TRANSCEIVER_RESET_ATTR_ID(11),
-	TRANSCEIVER_RESET_ATTR_ID(12),	
-	TRANSCEIVER_RESET_ATTR_ID(13),	
-	TRANSCEIVER_RESET_ATTR_ID(14),	
-	TRANSCEIVER_RESET_ATTR_ID(15),	
+	TRANSCEIVER_RESET_ATTR_ID(12),
+	TRANSCEIVER_RESET_ATTR_ID(13),
+	TRANSCEIVER_RESET_ATTR_ID(14),
+	TRANSCEIVER_RESET_ATTR_ID(15),
 	TRANSCEIVER_RESET_ATTR_ID(16),
-	TRANSCEIVER_RESET_ATTR_ID(17),	
+	TRANSCEIVER_RESET_ATTR_ID(17),
 	TRANSCEIVER_RESET_ATTR_ID(18),
 	TRANSCEIVER_RESET_ATTR_ID(19),
 	TRANSCEIVER_RESET_ATTR_ID(20),
@@ -144,7 +144,7 @@ enum as7716_32x_cpld_sysfs_attributes {
 	TRANSCEIVER_RESET_ATTR_ID(32),
 };
 
-/* sysfs attributes for hwmon 
+/* sysfs attributes for hwmon
  */
 
 /* transceiver attributes */
@@ -275,11 +275,11 @@ static struct attribute *as7716_32x_cpld_attributes[] = {
 	DECLARE_TRANSCEIVER_RESET_ATTR(7),
 	DECLARE_TRANSCEIVER_RESET_ATTR(8),
 	DECLARE_TRANSCEIVER_RESET_ATTR(9),
-	DECLARE_TRANSCEIVER_RESET_ATTR(10),	
+	DECLARE_TRANSCEIVER_RESET_ATTR(10),
 	DECLARE_TRANSCEIVER_RESET_ATTR(11),
 	DECLARE_TRANSCEIVER_RESET_ATTR(12),
 	DECLARE_TRANSCEIVER_RESET_ATTR(13),
-	DECLARE_TRANSCEIVER_RESET_ATTR(14),	
+	DECLARE_TRANSCEIVER_RESET_ATTR(14),
 	DECLARE_TRANSCEIVER_RESET_ATTR(15),
 	DECLARE_TRANSCEIVER_RESET_ATTR(16),
 	DECLARE_TRANSCEIVER_RESET_ATTR(17),
@@ -287,11 +287,11 @@ static struct attribute *as7716_32x_cpld_attributes[] = {
 	DECLARE_TRANSCEIVER_RESET_ATTR(19),
 	DECLARE_TRANSCEIVER_RESET_ATTR(20),
 	DECLARE_TRANSCEIVER_RESET_ATTR(21),
-	DECLARE_TRANSCEIVER_RESET_ATTR(22),	
+	DECLARE_TRANSCEIVER_RESET_ATTR(22),
 	DECLARE_TRANSCEIVER_RESET_ATTR(23),
 	DECLARE_TRANSCEIVER_RESET_ATTR(24),
 	DECLARE_TRANSCEIVER_RESET_ATTR(25),
-	DECLARE_TRANSCEIVER_RESET_ATTR(26),	
+	DECLARE_TRANSCEIVER_RESET_ATTR(26),
 	DECLARE_TRANSCEIVER_RESET_ATTR(27),
 	DECLARE_TRANSCEIVER_RESET_ATTR(28),
 	DECLARE_TRANSCEIVER_RESET_ATTR(29),
@@ -318,7 +318,7 @@ static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
 
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
         status = as7716_32x_cpld_read_internal(client, regs[i]);
-        
+
         if (status < 0) {
             goto exit;
         }
@@ -482,14 +482,14 @@ static int as7716_32x_cpld_write_internal(struct i2c_client *client, u8 reg, u8 
 static void as7716_32x_cpld_add_client(struct i2c_client *client)
 {
 	struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
-	
+
 	if (!node) {
 		dev_dbg(&client->dev, "Can't allocate cpld_client_node (0x%x)\n", client->addr);
 		return;
 	}
-	
+
 	node->client = client;
-	
+
 	mutex_lock(&list_lock);
 	list_add(&node->list, &cpld_client_list);
 	mutex_unlock(&list_lock);
@@ -500,24 +500,24 @@ static void as7716_32x_cpld_remove_client(struct i2c_client *client)
 	struct list_head		*list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int found = 0;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client == client) {
 			found = 1;
 			break;
 		}
 	}
-	
+
 	if (found) {
 		list_del(list_node);
 		kfree(cpld_node);
 	}
-	
+
 	mutex_unlock(&list_lock);
 }
 
@@ -567,7 +567,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -588,19 +588,19 @@ int as7716_32x_cpld_read(unsigned short cpld_addr, u8 reg)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EPERM;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_read_byte_data(cpld_node->client, reg);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -612,19 +612,19 @@ int as7716_32x_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 	struct list_head   *list_node = NULL;
 	struct cpld_client_node *cpld_node = NULL;
 	int ret = -EIO;
-	
+
 	mutex_lock(&list_lock);
 
 	list_for_each(list_node, &cpld_client_list)
 	{
 		cpld_node = list_entry(list_node, struct cpld_client_node, list);
-		
+
 		if (cpld_node->client->addr == cpld_addr) {
 			ret = i2c_smbus_write_byte_data(cpld_node->client, reg, value);
 			break;
 		}
 	}
-	
+
 	mutex_unlock(&list_lock);
 
 	return ret;
@@ -639,7 +639,7 @@ static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
     struct as7716_32x_cpld_data *data = i2c_get_clientdata(client);
 	int status = 0;
 	u8 reg = 0, mask = 0;
-    
+
 	switch (attr->index) {
 	case MODULE_RESET_1 ... MODULE_RESET_8:
 		reg  = 0x04;
@@ -660,39 +660,39 @@ static ssize_t get_mode_reset(struct device *dev, struct device_attribute *da,
 	default:
 		return 0;
 	}
-	
+
 
     mutex_lock(&data->update_lock);
 	status = as7716_32x_cpld_read_internal(client, reg);
-	
+
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
 	mutex_unlock(&data->update_lock);
 
 	return sprintf(buf, "%d\r\n", !(status & mask));
-	
+
 exit:
 	mutex_unlock(&data->update_lock);
-	return status;	
+	return status;
 }
 
 static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count)
-{    
+{
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
     struct as7716_32x_cpld_data *data = i2c_get_clientdata(client);
     long reset;
     int status=0, val, error;
 	u8 reg = 0, mask = 0;
-	
+
 
     error = kstrtol(buf, 10, &reset);
     if (error) {
         return error;
     }
-    
+
     switch (attr->index) {
 	case MODULE_RESET_1 ... MODULE_RESET_8:
 		reg  = 0x04;
@@ -714,22 +714,22 @@ static ssize_t set_mode_reset(struct device *dev, struct device_attribute *da,
 		return 0;
 	}
 	mutex_lock(&data->update_lock);
-	
+
 	status = as7716_32x_cpld_read_internal(client, reg);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
-	
+
 	/* Update lp_mode status */
     if (reset)
-    {       
+    {
         val = status&(~mask);
     }
     else
-    {       
+    {
         val =status | (mask);
     }
-	
+
 	status = as7716_32x_cpld_write_internal(client, reg, val);
 	if (unlikely(status < 0)) {
 		goto exit;

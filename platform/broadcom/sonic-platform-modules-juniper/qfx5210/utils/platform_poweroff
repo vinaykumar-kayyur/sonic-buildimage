@@ -2,15 +2,15 @@
 #
 # Name: platform_poweroff  version: 1.0
 #
-# Description: This file contains the implementation of qfx5210 poweroff 
+# Description: This file contains the implementation of qfx5210 poweroff
 # sequences
 #
 # Copyright (c) 2019, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 2 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 2 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -19,19 +19,19 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
-# components is subject to the terms and conditions of the respective license 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
+# components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
 LOGFILE="/var/log/poweroff_log"

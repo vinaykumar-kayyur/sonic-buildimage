@@ -6,21 +6,21 @@
 /dts-v1/;
 
 / {
-	description = "arm64 kernel, initramfs and FDT blob";	
+	description = "arm64 kernel, initramfs and FDT blob";
 	#address-cells = <1>;
-    
+
 	images {
 		kernel_ctc {
-			description = "ARM64 Kernel";			
+			description = "ARM64 Kernel";
 			data = /incbin/("./vmlinuz-5.10.0-18-2-arm64");
-			type = "kernel";			
-			arch = "arm64";			
-			os = "linux";			
-			compression = "none";			
-			load = <0x80080000>;			
-			entry = <0x80080000>;			
-			hash {				
-				algo = "crc32";			
+			type = "kernel";
+			arch = "arm64";
+			os = "linux";
+			compression = "none";
+			load = <0x80080000>;
+			entry = <0x80080000>;
+			hash {
+				algo = "crc32";
 			};
 		};
 		initramfs {
@@ -32,26 +32,26 @@
 			compression = "gzip";
 			load = <0x85000000>;
 			entry = <0x85000000>;
-			hash {				
-				algo = "crc32";			
+			hash {
+				algo = "crc32";
 			};
 		};
 		ctc_fdt {
-			description = "dtb for tm_ctc5236";			
-			data = /incbin/("./e530-ctc5236.dtb");			
+			description = "dtb for tm_ctc5236";
+			data = /incbin/("./e530-ctc5236.dtb");
 			type = "flat_dt";
-			arch = "arm64";			
-			os = "linux";			
-			compression = "none";			
-			load = <0x88000000>;			
-			hash {				
-				algo = "crc32";			
+			arch = "arm64";
+			os = "linux";
+			compression = "none";
+			load = <0x88000000>;
+			hash {
+				algo = "crc32";
 			};
 		};
 	};
 	configurations {
 		default = "arm64-centec_e530_24x2c-r0";
-					
+
 		arm64-centec_e530_24x2c-r0 {
 			description = "config for arm64-centec_e530_24x2c-r0";
 			kernel = "kernel_ctc";

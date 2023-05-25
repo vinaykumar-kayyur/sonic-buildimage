@@ -1521,7 +1521,7 @@ struct SysCtl_regs {
 #define SYS_GPIO_HS_MULTI_CTL_W1_CFG_GPIO_HS16_SEL_MASK              0x00000003
 
 /* ################################################################################
- * # SysPcieMemCtl Definition 
+ * # SysPcieMemCtl Definition
  */
 #define SYS_PCIE_MEM_CTL_W0_CFG_AXI4_LITE_BYTE	                 	 BIT(4)
 #define SYS_PCIE_MEM_CTL_W0_CFG_AXI4_LITE_MASK                  	 BIT(0)
@@ -2388,8 +2388,8 @@ struct SysCtl_regs {
 #define DEBUG_GIC_RESP_CNT_W0_MON_GIC_RD_RESP_ERROR_CNT_MASK         0x000000ff
 #define DEBUG_GIC_RESP_CNT_W0_MON_GIC_WR_RESP_ERROR_CNT_MASK         0x0000ff00
 
-/* ################################################################################ 
- * # SysDdrEccCtl Definition 
+/* ################################################################################
+ * # SysDdrEccCtl Definition
  */
 #define SYS_DDR_ECC_CTL_W0_DDR_ECC_CLEAR_EN                      	 BIT(0)
 #define SYS_DDR_ECC_CTL_W0_DDR_ECC_ONE_BIT_ERR_CNT                   BIT(8)
@@ -2399,7 +2399,7 @@ struct SysCtl_regs {
 #define SYS_DDR_ECC_CTL_W0_DDR_ECC_ONE_BIT_ERR_CNT_MASK              0x00000f00
 #define SYS_DDR_ECC_CTL_W0_DDR_ECC_TWO_BIT_ERR_CNT_MASK              0x0000f000
 
-/* ################################################################################ 
+/* ################################################################################
  * # SysDdrInitStartAddr Definition
  */
 #define SYS_DDR_INIT_START_ADDR_W0_CFG_INIT_START_ADDR0          	 BIT(0)
@@ -2408,8 +2408,8 @@ struct SysCtl_regs {
 #define SYS_DDR_INIT_START_ADDR_W0_CFG_INIT_START_ADDR0_MASK         0xffffffff
 #define SYS_DDR_INIT_START_ADDR_W1_CFG_INIT_START_ADDR1_MASK         0x0000000f
 
-/* ################################################################################ 
- * # SysDdrInitLastAddr Definition 
+/* ################################################################################
+ * # SysDdrInitLastAddr Definition
  */
 #define SYS_DDR_INIT_LAST_ADDR_W0_CFG_INIT_LAST_ADDR0           	 BIT(0)
 #define SYS_DDR_INIT_LAST_ADDR_W1_CFG_INIT_LAST_ADDR1            	 BIT(0)
@@ -2417,7 +2417,7 @@ struct SysCtl_regs {
 #define SYS_DDR_INIT_LAST_ADDR_W0_CFG_INIT_LAST_ADDR0_MASK           0xffffffff
 #define SYS_DDR_INIT_LAST_ADDR_W1_CFG_INIT_LAST_ADDR1_MASK           0x0000000f
 
-/* ################################################################################ 
+/* ################################################################################
  * # SysDdrInitData Definition
  */
 #define SYS_DDR_INIT_DATA_W0_CFG_INIT_WR_DATA0                   	 BIT(0)
@@ -2426,7 +2426,7 @@ struct SysCtl_regs {
 #define SYS_DDR_INIT_DATA_W0_CFG_INIT_WR_DATA0_MASK                  0xffffffff
 #define SYS_DDR_INIT_DATA_W1_CFG_INIT_WR_DATA1_MASK                  0xffffffff
 
-/* ################################################################################ 
+/* ################################################################################
  * # SysDdrInitMode Definition */
 #define SYS_DDR_INIT_MODE_W0_CFG_INIT_AXI_CRITICAL                   BIT(0)
 #define SYS_DDR_INIT_MODE_W0_CFG_INIT_AXI_LEN                    	 BIT(8)
@@ -2440,8 +2440,8 @@ struct SysCtl_regs {
 #define SYS_DDR_INIT_MODE_W0_CFG_INIT_AXI_STRB_MASK                  0x00ff0000
 #define SYS_DDR_INIT_MODE_W0_CFG_INIT_AXI_THRD_MASK                  0x0f000000
 
-/* ################################################################################ 
- * # SysDdrInitCtl Definition 
+/* ################################################################################
+ * # SysDdrInitCtl Definition
  */
 #define SYS_DDR_INIT_CTL_W0_CFG_DDR_INIT_EN                          BIT(0)
 #define SYS_DDR_INIT_CTL_W0_LOG_DDR_INIT_DONE                  	     BIT(4)
@@ -2692,7 +2692,7 @@ struct SysCtl_regs {
 
 #define SUP_MISC_INFO3_W0_SUP_MISC_INFO3_MASK                        0xffffffff
 
-/* ################################################################################ 
+/* ################################################################################
  * # SysBusDbgEn Definition
  */
 #define SYS_BUS_DBG_EN_W0_CFG_DBG_EN_VEC0                            BIT(0)
@@ -2701,22 +2701,22 @@ struct SysCtl_regs {
 #define SYS_BUS_DBG_EN_W0_CFG_DBG_EN_VEC0_MASK                       0xffffffff
 #define SYS_BUS_DBG_EN_W1_CFG_DBG_EN_VEC1_MASK                       0x001fffff
 
-/* ################################################################################ 
- * # SysApbErrLog Definition 
+/* ################################################################################
+ * # SysApbErrLog Definition
  */
 #define SYS_APB_ERR_LOG_W0_APB_SYS_ERR_LOG                           BIT(0)
 
 #define SYS_APB_ERR_LOG_W0_APB_SYS_ERR_LOG_MASK                      0x00000fff
 
-/* ################################################################################ 
- * # MshClkPadSchmitEn Definition 
+/* ################################################################################
+ * # MshClkPadSchmitEn Definition
  */
 #define MSH_CLK_PAD_SCHMIT_EN_W0_MSH_CLK_PAD_SCHMIT_EN               BIT(0)
 
 #define MSH_CLK_PAD_SCHMIT_EN_W0_MSH_CLK_PAD_SCHMIT_EN_MASK          0x00000001
 
-/* ################################################################################ 
- * # SysI2C0DebugStatus Definition 
+/* ################################################################################
+ * # SysI2C0DebugStatus Definition
  */
 #define SYS_I2_C0_DEBUG_STATUS_W0_DBG_I2_C0_ADDR10_BIT               BIT(6)
 #define SYS_I2_C0_DEBUG_STATUS_W0_DBG_I2_C0_ADDR_PROC                BIT(0)
@@ -2743,7 +2743,7 @@ struct SysCtl_regs {
 #define SYS_I2_C0_DEBUG_STATUS_W0_DBG_I2_C0_WR_PROC_MASK             0x00000008
 
 /* ################################################################################
- * # SysI2C1DebugStatus Definition 
+ * # SysI2C1DebugStatus Definition
  */
 #define SYS_I2_C1_DEBUG_STATUS_W0_DBG_I2_C1_ADDR10_BIT               BIT(6)
 #define SYS_I2_C1_DEBUG_STATUS_W0_DBG_I2_C1_ADDR_PROC                BIT(0)
@@ -2862,8 +2862,8 @@ struct SysCtl_mems {
 #define SEC_APB_MEM_W2_WR_EN_MASK                                    0x00000001
 #define SEC_APB_MEM_W2_SLV_ERR_MASK                                  0x00000002
 
-/* ################################################################################ 
- * # SysPcieMem Definition 
+/* ################################################################################
+ * # SysPcieMem Definition
  */
 #define SYS_PCIE_MEM_W0_DATA_BIT                                     BIT(0)
 

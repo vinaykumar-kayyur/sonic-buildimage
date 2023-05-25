@@ -357,7 +357,7 @@ static struct sfp_port_data *sfp_update_present(struct i2c_client *client)
 				goto exit;
 			}
 
-			DEBUG_PRINT("Present status = 0x%lx\r\n", data->present);		
+			DEBUG_PRINT("Present status = 0x%lx\r\n", data->present);
 			data->present |= (u64)status << ((i*24) + (j%3)*8);
 		}
 	}
@@ -373,7 +373,7 @@ static struct sfp_port_data *sfp_update_present(struct i2c_client *client)
 	}
 	else {
 		data->present |= (u64)status << 48;
-	}	
+	}
 
 	DEBUG_PRINT("Present status = 0x%lx", data->present);
 exit:
@@ -404,7 +404,7 @@ static struct sfp_port_data *sfp_update_tx_rx_status(struct device *dev)
 			unsigned short cpld_addr;
 			reg 	  = 0x9+j;
 			cpld_addr = 0x61+i;
-			
+
 			status	= as7116_54x_cpld_read(cpld_addr, reg);
 			if (unlikely(status < 0)) {
 				dev_dbg(&client->dev, "cpld(0x%x) reg(0x%x) err %d\n", cpld_addr, reg, status);
@@ -497,7 +497,7 @@ static ssize_t show_present(struct device *dev, struct device_attribute *da,
 		int i;
 		u8 values[7]  = {0};
 		struct sfp_port_data *data = sfp_update_present(client);
-		
+
 		if (IS_ERR(data)) {
 			return PTR_ERR(data);
 		}
@@ -597,7 +597,7 @@ static ssize_t show_port_type(struct device *dev, struct device_attribute *da,
 			 char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
-	struct sfp_port_data *data = i2c_get_clientdata(client);	
+	struct sfp_port_data *data = i2c_get_clientdata(client);
 	int present = sfp_is_port_present(client, data->port);
 
 	if (IS_ERR_VALUE(present)) {
@@ -737,7 +737,7 @@ static ssize_t qsfp_set_tx_disable(struct device *dev, struct device_attribute *
 	int status;
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
-	struct sfp_port_data *data = i2c_get_clientdata(client);	
+	struct sfp_port_data *data = i2c_get_clientdata(client);
 
 	status = sfp_is_port_present(client, data->port);
 	if (IS_ERR_VALUE(status)) {
@@ -837,13 +837,13 @@ static ssize_t sfp_show_tx_rx_status(struct device *dev, struct device_attribute
 		for (i = 0; i < ARRAY_SIZE(values); i++) {
 			values[i] = (u8)(data->msa->status[2] >> (i * 8));
 		}
-		
+
 		/** Return values 1 -> 48 in order */
 		return sprintf(buf, "%.2x %.2x %.2x %.2x %.2x %.2x\n",
 						values[0], values[1], values[2],
-						values[3], values[4], values[5]);	
+						values[3], values[4], values[5]);
 	}
-	
+
 	switch (attr->index) {
 	case TX_FAULT:
 		index = 0;
@@ -853,7 +853,7 @@ static ssize_t sfp_show_tx_rx_status(struct device *dev, struct device_attribute
 		break;
 	case RX_LOS:
 		index = 2;
-		break;		
+		break;
 	default:
 		break;
 	}
@@ -1301,7 +1301,7 @@ static int sfp_device_probe(struct i2c_client *client,
 			return qsfp_probe(client, dev_id, &data->qsfp);
 		}
 	}
-	
+
 	return -ENODEV;
 }
 /* Platform dependent --- */

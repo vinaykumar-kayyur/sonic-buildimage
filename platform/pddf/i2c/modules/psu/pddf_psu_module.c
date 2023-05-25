@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  *
- * A pddf kernel module to create I2C client for PSU 
+ * A pddf kernel module to create I2C client for PSU
  */
 
 #include <linux/kernel.h>
@@ -110,8 +110,8 @@ struct i2c_board_info *i2c_get_psu_board_info(PSU_DATA *pdata, NEW_DEV_ATTR *cda
     int i = 0;
     static struct i2c_board_info board_info;
     PSU_PDATA *psu_platform_data;
-    
-    
+
+
     if (strcmp(cdata->dev_type, "psu_pmbus")==0 || strcmp(cdata->dev_type, "psu_eeprom")==0 )
     {
         /* Allocate the psu_platform_data */
@@ -161,7 +161,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
 
         /* Populate the platform data for psu */
         client_ptr = i2c_new_client_device(adapter, board_info);
-        
+
         if(!IS_ERR(client_ptr))
         {
             i2c_put_adapter(adapter);
@@ -230,16 +230,16 @@ int __init pddf_data_init(void)
     pddf_dbg(PSU, "PDDF_DATA MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     psu_kobj = kobject_create_and_add("psu", device_kobj);
-    if(!psu_kobj) 
+    if(!psu_kobj)
         return -ENOMEM;
     i2c_kobj = kobject_create_and_add("i2c", psu_kobj);
-    if(!i2c_kobj) 
+    if(!i2c_kobj)
         return -ENOMEM;
-    
+
     ret = sysfs_create_group(i2c_kobj, &pddf_clients_data_group);
     if (ret)
     {
@@ -258,7 +258,7 @@ int __init pddf_data_init(void)
         return ret;
     }
     pddf_dbg(PSU, "CREATED PDDF PSU DATA SYSFS GROUP\n");
-    
+
     return ret;
 }
 

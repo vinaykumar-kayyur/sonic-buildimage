@@ -210,7 +210,7 @@ static int mcp2221_init(struct i2c_mcp2221 *dev)
 
 	/* initialize the MCP2221 and bring it to "idle/ready" state */
 	dev_info(&dev->interface->dev,
-		 "MCP2221 at USB bus %03d address %03d Freq=%dKhz-- mcp2221_init()\n", 
+		 "MCP2221 at USB bus %03d address %03d Freq=%dKhz-- mcp2221_init()\n",
 		 dev->usb_dev->bus->busnum, dev->usb_dev->devnum, frequency/1000);
 
 	/* initialize unlocked mutex */

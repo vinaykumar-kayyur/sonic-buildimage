@@ -34,13 +34,13 @@ Please see the LICENSE file for copies of both licenses.
 
 ## Kernel modules and drivers
 
-The driver for interacting with Ingrasys S9100-32X is contained in the I2C 
-kernel module and initialization script. The initialization script loads 
+The driver for interacting with Ingrasys S9100-32X is contained in the I2C
+kernel module and initialization script. The initialization script loads
 the modules in the correct order. It has been built and tested against
-the Linux 3.16 kernel. 
+the Linux 3.16 kernel.
 
-The initialization script will modprobe the needed modules, navigate to the 
-module's device directory in sysfs, and write configuration data to 
+The initialization script will modprobe the needed modules, navigate to the
+module's device directory in sysfs, and write configuration data to
 the kernel module.
 
 ### IGB
@@ -54,7 +54,7 @@ The IGB module must be loaded first on Ingrasys S9100-32X platform.
 The I2C i801 on Ingrasys S9100-32X can be found in
 `/sys/bus/i2c/devices/i2c-0/`
 
-This is I2C bus for Clock Gen, DIMM channel and digital potentiometers. 
+This is I2C bus for Clock Gen, DIMM channel and digital potentiometers.
 
 The i801 module must be loaded second on Ingrasys S9100-32X.
 
@@ -69,24 +69,24 @@ The i801 module must be loaded third on Ingrasys S9100-32X.
 
 ### I2C PCA9548
 The PCA9548 module on S9100-32X can be found in
-`/sys/bus/i2c/devices/i2c-2/` , `/sys/bus/i2c/devices/i2c-3/`, 
+`/sys/bus/i2c/devices/i2c-2/` , `/sys/bus/i2c/devices/i2c-3/`,
 `/sys/bus/i2c/devices/i2c-4/`, `/sys/bus/i2c/devices/i2c-5/`,
 `/sys/bus/i2c/devices/i2c-6/`, `/sys/bus/i2c/devices/i2c-7/`,
 `/sys/bus/i2c/devices/i2c-8/`, `/sys/bus/i2c/devices/i2c-9/`.
 
-The pca9548 module for zQSFP module get/set functions, PSU information, 
+The pca9548 module for zQSFP module get/set functions, PSU information,
 fan status and EEPROM.
 
 ## Hardware components
 
-The hardware components are initialized in the init script on S9100-32X. 
+The hardware components are initialized in the init script on S9100-32X.
 The following describes manual initialization as well as interaction.
 The examples below are just for Ingrasys S9100-32X platform.
 
 ### Hardware initialization
 
 When the sonic-platform-ingrasys-s9100 package is installed on the S9100-32X,
-it is automatically initialized. If you want to manual initialization, the 
+it is automatically initialized. If you want to manual initialization, the
 utility command usage as follows:
 ```
     i2c_utils.sh i2c_init
@@ -94,11 +94,11 @@ utility command usage as follows:
 
 ### EEPROM
 
-The EEPROM is including the board SKU, model name, vendor name, serial number, 
+The EEPROM is including the board SKU, model name, vendor name, serial number,
 and other information can be accessed with the specific eeprom kernel module.
 After using `modprobe eeprom_mb` to detect the eeprom, it will show up in sysfs.
 
-The hexdump utility can be used to decode the raw output of the EEPROM. 
+The hexdump utility can be used to decode the raw output of the EEPROM.
 For example,
 ```
     bash# echo "mb_eeprom 0x54" > /sys/bus/i2c/devices/i2c-9/new_device
@@ -129,11 +129,11 @@ QSFP Module Port LEDs control by ASIC library.
 
 ### Fan speed
 
-Fan speed are controlled by the w83795 kernel module. 
+Fan speed are controlled by the w83795 kernel module.
 It can be found in `/sys/class/hwmon/hwmon1/device/`.
 If they were compiled as modules, you will need to modprobe w83795 for
-their sysfs entries to show up. Each fan has an `fan<N>_input` file 
-for reading the fan speed. And `pwm1` setting fan1 to fan4, 
+their sysfs entries to show up. Each fan has an `fan<N>_input` file
+for reading the fan speed. And `pwm1` setting fan1 to fan4,
 `pwm2` setting fan5 to fan8.
 
 There is docker-platform-monitor container installed fancontrol package that can
@@ -143,19 +143,19 @@ automatic control platform fan speed.
 ### Temperature sensors
 
 Temperature sensors are controlled by the w83795 kernel
-module. It can be found in `/sys/class/hwmon/hwmon1/device/`. 
+module. It can be found in `/sys/class/hwmon/hwmon1/device/`.
 If they were compiled as modules, then you will need to modprobe w83795 for
 their sysfs entries to show up.
-`temp1_input` is front MAC temperature sensor. `temp2_input` is rear MAC 
-temperature sensor. 
+`temp1_input` is front MAC temperature sensor. `temp2_input` is rear MAC
+temperature sensor.
 
 There is docker-platform-monitor container installed lm-sensors package that can
-monitor platform temperature. And `sensors` command can show each 
+monitor platform temperature. And `sensors` command can show each
 temperature sensors status.
 
 ### Power supplies
 
-Power supplies status and its EEPROM info can be used i2c utility 
+Power supplies status and its EEPROM info can be used i2c utility
 `/usr/sbin/i2c_utils.sh` to get.
 The usage as follows:
 ```

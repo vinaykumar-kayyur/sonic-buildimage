@@ -17,7 +17,7 @@
  */
 
 /* enable dev_dbg print out */
-//#define DEBUG 
+//#define DEBUG
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -85,7 +85,7 @@ static void mb_eeprom_update_client(struct i2c_client *client, u8 slice)
                 data->data[j] = res & 0xFF;
             }
         }
-        
+
         data->last_updated[slice] = jiffies;
         data->valid |= (1 << slice);
     }
@@ -159,7 +159,7 @@ static ssize_t mb_eeprom_write(struct file *filp, struct kobject *kobj,
         }
 
         off++;
-        
+
         /* need to wait for write complete */
         udelay(10000);
     }

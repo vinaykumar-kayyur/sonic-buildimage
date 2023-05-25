@@ -519,7 +519,7 @@ _common_update_string_attr(struct transvr_obj_s *self,
             goto err_common_update_string_attr;
         }
     #endif
-    
+
     return 0;
 
 err_common_update_string_attr:
@@ -5281,7 +5281,7 @@ detect_transvr_type(struct transvr_obj_s* self){
         SWPS_INFO("%s: %s unexpected smbus return:%d \n",
                 __func__, self->swp_name, type);
         return TRANSVR_TYPE_ERROR;
-    }    
+    }
     /* Identify valid transceiver type */
     switch (type){
         case TRANSVR_TYPE_SFP:
@@ -5954,7 +5954,7 @@ _sfp_set_lavender_if_type(struct transvr_obj_s* self,
      *  Due to 'LAV' looks like doesn't have interface type.
      *  We bypass it currently.
      */
-    int lmax = 8;    
+    int lmax = 8;
     return snprintf(result, lmax, TRANSVR_UEVENT_UNKNOW);
 }
 
@@ -5970,7 +5970,7 @@ _sfp_detect_if_type(struct transvr_obj_s* self,
     switch (self->chipset_type) {
         case CHIP_TYPE_MAGNOLIA:
             return _sfp_set_magnolia_if_type(self, detect_cls, result);
-        
+
         case CHIP_TYPE_MAPLE:
         case CHIP_TYPE_REDWOOD:
             return _sfp_set_redwood_if_type(self, detect_cls, result);
@@ -6584,7 +6584,7 @@ _qsfp_set_lavender_if_type(struct transvr_obj_s* self,
      *  Due to 'LAV' looks like doesn't have interface type.
      *  We bypass it currently.
      */
-    int lmax = 8;    
+    int lmax = 8;
     return snprintf(result, lmax, TRANSVR_UEVENT_UNKNOW);
 }
 
@@ -6600,14 +6600,14 @@ _qsfp_detect_if_type(struct transvr_obj_s* self,
     switch (self->chipset_type) {
         case CHIP_TYPE_MAGNOLIA:
             return _qsfp_set_magnolia_if_type(self, detect_cls, result);
-        
+
         case CHIP_TYPE_MAPLE:
         case CHIP_TYPE_REDWOOD:
             return _qsfp_set_redwood_if_type(self, detect_cls, result);
 
         case CHIP_TYPE_LAVENDER:
             return _qsfp_set_lavender_if_type(self, detect_cls, result);
-            
+
         default:
             SWPS_INFO("%s: non-defined chipset_type:%d <port>:%s\n",
                       __func__, self->chipset_type, self->swp_name);

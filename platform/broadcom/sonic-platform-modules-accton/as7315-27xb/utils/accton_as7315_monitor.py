@@ -44,7 +44,7 @@ DUTY_DEF = 40
 global log_file
 global log_console
 
-     
+
 # Make a class we can use to capture stdout and sterr in the log
 class accton_as7315_monitor(object):
     # static temp var
@@ -87,7 +87,7 @@ class accton_as7315_monitor(object):
            3: [88, 52000, 57000],
            4: [max_duty, 57000, sys.maxsize],
         }
-  
+
         thermal = ThermalUtil()
         fan = FanUtil()
         for x in range(fan.get_idx_fan_start(), fan.get_num_fans()+1):
@@ -95,14 +95,14 @@ class accton_as7315_monitor(object):
             if fan_status is None:
                 self.llog.debug('SET new_perc to %d (FAN stauts is None. fan_num:%d)', max_duty, x)
                 return False
-            if fan_status is False:             
+            if fan_status is False:
                 self.llog.debug('SET new_perc to %d (FAN fault. fan_num:%d)', max_duty, x)
                 fan.set_fan_duty_cycle(max_duty)
                 return True
- 
-        #Find if current duty matched any of define duty. 
+
+        #Find if current duty matched any of define duty.
 	#If not, set it to highest one.
-        cur_duty_cycle = fan.get_fan_duty_cycle()       
+        cur_duty_cycle = fan.get_fan_duty_cycle()
         new_duty_cycle = DUTY_DEF
         for x in range(0, len(fan_policy)):
             if cur_duty_cycle == fan_policy[x][0]:
@@ -112,7 +112,7 @@ class accton_as7315_monitor(object):
             cur_duty_cycle = max_duty
 
         #Decide fan duty by if sum of sensors falls into any of fan_policy{}
-        get_temp = thermal.get_thermal_temp()            
+        get_temp = thermal.get_thermal_temp()
         for x in range(0, len(fan_policy)):
             y = len(fan_policy) - x -1 #checked from highest
             if get_temp > fan_policy[y][1] and get_temp < fan_policy[y][2] :

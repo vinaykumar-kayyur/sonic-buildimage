@@ -86,9 +86,9 @@ i2c_nodes = {
            'psu': ['psu_present ', 'psu_power_good']    ,
            'sfp': ['module_present_', 'sfp_tx_disable']}
 
-sfp_map =  [ 2,  3,  4,  5,  6,  7,  8,  9, 
-            10, 11, 12, 13, 14, 15, 16, 17, 
-            18, 19, 20, 21, 22, 23, 24, 25, 
+sfp_map =  [ 2,  3,  4,  5,  6,  7,  8,  9,
+            10, 11, 12, 13, 14, 15, 16, 17,
+            18, 19, 20, 21, 22, 23, 24, 25,
             26, 27, 28, 29, 30, 31, 32, 33
             ]
 
@@ -346,7 +346,7 @@ def device_install():
                 print(output)
                 if FORCE == 0:
                     return status
-         
+
     for i in range(0,len(sfp_map)):
         status, output =log_os_system("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
         if status:
@@ -358,7 +358,7 @@ def device_install():
             print(output)
             if FORCE == 0:
                 return status
-   
+
     return
 
 def device_uninstall():
@@ -472,7 +472,7 @@ def devices_info():
                             if k in cpld_of_module[lk]:
                                  bus = bus_of_cpld[order]
                                  node = key+str(k+1)
-                                 path = i2c_prefix + str(bus) + lk + "/"+ nodes[j] + str(k+1) 
+                                 path = i2c_prefix + str(bus) + lk + "/"+ nodes[j] + str(k+1)
                                  my_log(node+": "+ path)
                                  ALL_DEVICE[key][node].append(path)
                 else:

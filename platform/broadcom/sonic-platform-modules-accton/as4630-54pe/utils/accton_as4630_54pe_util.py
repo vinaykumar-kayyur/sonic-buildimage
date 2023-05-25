@@ -124,7 +124,7 @@ def main():
         if arg == 'install':
            do_install()
         elif arg == 'clean':
-           do_uninstall()        
+           do_uninstall()
         elif arg == 'api':
            do_sonic_platform_install()
         elif arg == 'api_clean':
@@ -190,13 +190,13 @@ def driver_install():
                 return status
 
     print("Done driver_install")
-    
+
     return 0
 
 def driver_uninstall():
     global FORCE
     for i in range(0,len(kos)):
-        rm = kos[-(i+1)].replace("modprobe", "modprobe -rq")        
+        rm = kos[-(i+1)].replace("modprobe", "modprobe -rq")
         lst = rm.split(" ")
 
         if len(lst) > 3:
@@ -215,8 +215,8 @@ def device_install():
         #for pca954x need times to built new i2c buses
         if mknod[i].find('pca954') != -1:
             time.sleep(2)
-        
-        status, output = log_os_system(mknod[i], 1)        
+
+        status, output = log_os_system(mknod[i], 1)
         if status:
             print(output)
             if FORCE == 0:
@@ -239,7 +239,7 @@ def device_install():
             print(output)
             if FORCE == 0:
                 return status
-        
+
         status, output =log_os_system("echo port"+str(i+49) + " > /sys/bus/i2c/devices/"+str(sfp_map[i])+"-0050/port_name", 1)
         if status:
             print(output)
@@ -266,7 +266,7 @@ def device_uninstall():
             print(output)
             if FORCE == 0:
                 return status
-                
+
     nodelist = mknod
 
     for i in range(len(nodelist)):
@@ -283,7 +283,7 @@ def device_uninstall():
     return
 
 def system_ready():
-    if driver_inserted() == False:        
+    if driver_inserted() == False:
         return False
     if not device_exist():
         print("not device_exist()")

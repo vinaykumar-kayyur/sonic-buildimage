@@ -15,7 +15,7 @@ case "$1" in
 start)
     echo "Setting up board... " >> /dev/kmsg
     INIT_ERROR="FALSE"
-    
+
     depmod -a
 
     # Insert modules by order

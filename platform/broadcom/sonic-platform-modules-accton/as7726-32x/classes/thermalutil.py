@@ -41,7 +41,7 @@ class ThermalUtil(object):
     THERMAL_NUM_3_IDX = 3 # 3_ON_MAIN_BROAD. LM75
     THERMAL_NUM_4_IDX = 4 # 4_ON_MAIN_BROAD. LM75
     THERMAL_NUM_5_IDX = 5 # 5_ON_MAIN_BROAD. LM75
-    
+
     """ Dictionary where
         key1 = thermal id index (integer) starting from 1
         value = path to fan device file (string) """
@@ -55,20 +55,20 @@ class ThermalUtil(object):
             THERMAL_NUM_5_IDX: ['54', '4c'],
            }
     thermal_sysfspath ={
-    THERMAL_NUM_1_IDX: ["/sys/bus/i2c/devices/55-0048/hwmon/hwmon*/temp1_input"],  
-    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/55-0049/hwmon/hwmon*/temp1_input"],  
+    THERMAL_NUM_1_IDX: ["/sys/bus/i2c/devices/55-0048/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_2_IDX: ["/sys/bus/i2c/devices/55-0049/hwmon/hwmon*/temp1_input"],
     THERMAL_NUM_3_IDX: ["/sys/bus/i2c/devices/55-004a/hwmon/hwmon*/temp1_input"],
-    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/devices/55-004b/hwmon/hwmon*/temp1_input"],        
-    THERMAL_NUM_5_IDX: ["/sys/bus/i2c/devices/54-004c/hwmon/hwmon*/temp1_input"],     
+    THERMAL_NUM_4_IDX: ["/sys/bus/i2c/devices/55-004b/hwmon/hwmon*/temp1_input"],
+    THERMAL_NUM_5_IDX: ["/sys/bus/i2c/devices/54-004c/hwmon/hwmon*/temp1_input"],
     }
-  
+
     def _get_thermal_val(self, thermal_num):
         if thermal_num < self.THERMAL_NUM_1_IDX or thermal_num > self.THERMAL_NUM_MAX:
             logging.debug('GET. Parameter error. thermal_num, %d', thermal_num)
             return None
-       
+
         device_path = self.get_thermal_to_device_path(thermal_num)
-        
+
         for filename in glob.glob(device_path):
             try:
                 val_file = open(filename, 'r')
@@ -83,9 +83,9 @@ class ThermalUtil(object):
 	            val_file.close()
             except:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
-                return None      
+                return None
             return int(content)
-        
+
         return 0
 
     def get_num_thermals(self):
@@ -103,7 +103,7 @@ class ThermalUtil(object):
     def get_thermal_to_device_path(self, thermal_num):
         return self.thermal_sysfspath[thermal_num][0]
 
-    def get_thermal_1_val(self):      
+    def get_thermal_1_val(self):
         return self._get_thermal_node_val(self.THERMAL_NUM_1_IDX)
 
     def get_thermal_2_val(self):

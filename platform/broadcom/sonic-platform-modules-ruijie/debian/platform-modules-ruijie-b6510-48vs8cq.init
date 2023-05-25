@@ -14,7 +14,7 @@
 case "$1" in
 start)
     echo -n "Setting up board... "
-	
+
     /usr/local/bin/b6510-48vs8cq_platform.sh init
 
     echo "done."

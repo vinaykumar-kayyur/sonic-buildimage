@@ -142,7 +142,7 @@ struct i2c_init_data {
     __u16 ch;
     __u16 addr;
     __u8  reg;
-    __u8  value; 
+    __u8  value;
 };
 
 #endif

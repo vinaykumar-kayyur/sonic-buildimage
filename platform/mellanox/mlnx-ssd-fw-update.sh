@@ -76,7 +76,7 @@ function init_script() {
 function usage() {
     echo
     echo -e "$UTIL_TITLE"
-    echo 
+    echo
     echo -e "Usage:"
     echo -e "\tmlnx_ssd_fw_update.sh [OPTION]"
     echo -e "Commands:"
@@ -190,7 +190,7 @@ function check_usage() {
             ;;
     esac
     done
-    
+
     if [[ ("$ARG_IMAGE_FLAG" == "$TRUE"  && ( $argument_count -lt 3 )) ||
           ("$ARG_IMAGE_FLAG" == "$TRUE"  && ( $argument_count -gt 5 )) ||
           ("$ARG_PACKAGE_INFO_FLAG" == "$TRUE"  && ( $argument_count -ne 3 )) ||
@@ -369,7 +369,7 @@ function ini_parser {
    ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
    ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
    ini=( ${ini[*]/%\} \)/\}} )  # remove extra parenthesis
-   ini=( ${ini[*]/%\{/\{$'\n''ini_unset ${FUNCNAME/#'$INI_PREFIX'}'$'\n'} )  # clean previous definition of section 
+   ini=( ${ini[*]/%\{/\{$'\n''ini_unset ${FUNCNAME/#'$INI_PREFIX'}'$'\n'} )  # clean previous definition of section
    ini[0]=""                    # remove first element
    ini[${#ini[*]} + 1]='}'      # add the last brace
    eval "$(echo "${ini[*]}")"   # eval the result
@@ -389,7 +389,7 @@ function ini_unset {
    SECTION=$1
    OLDIFS="$IFS"
    IFS=' '$'\n'
-   if [ -z "$SECTION" ] 
+   if [ -z "$SECTION" ]
    then
       fun="$(declare -F)"
    else
@@ -428,7 +428,7 @@ function ini_unset {
 #=
 function check_package_signing() {
     LOG_MSG "func: ${FUNCNAME[0]}()" ${DEBUG_MSG}
-    
+
     [ $1 ] || { LOG_MSG_AND_EXIT "Wrong usage - ${FUNCNAME[0]}()"; }
 
     local package_path=$1
@@ -456,7 +456,7 @@ function check_package_signing() {
     LOG_MSG "cd into: ${package_path}" ${DEBUG_MSG}
     cd $package_path > /dev/null 2>&1
     sha256sum -c $CHECKSUM_NAME > /dev/null 2>&1
-    [ $? -ne 0 ] && LOG_MSG_AND_EXIT "Error: fault package SHA signing, file has been compromised" 
+    [ $? -ne 0 ] && LOG_MSG_AND_EXIT "Error: fault package SHA signing, file has been compromised"
     LOG_MSG "backing back:" ${DEBUG_MSG}
     cd - > /dev/null 2>&1
     LOG_MSG "exiting:" ${DEBUG_MSG}
@@ -474,7 +474,7 @@ function string_supported_model() {
     && [[ ! -z "${SSD_Size[*]}" ]] && [[ ! -z ${Shutdown_Policy[*]} ]]; then
         printf 'o %-10s | %-30s | %-12s | %-6sGB |     %-7s |\n' \
                 "$( IFS=$'\n'; echo "${Vendor[@]}" )" "$( IFS=$'\n'; echo "${SSD_FW_Model[@]}" )" \
-                "${SSD_FW_Version[@]}" "${SSD_Size[@]}" "${Shutdown_Policy[@],,}" 
+                "${SSD_FW_Version[@]}" "${SSD_Size[@]}" "${Shutdown_Policy[@],,}"
     fi
 
 }
@@ -498,10 +498,10 @@ function extract_package() {
 ### Check if full path available
     if [ -d $folder_name ]; then
         LOG_MSG "Path:$folder_name already exists, removing folder." ${DEBUG_MSG}
-        rm -rf ${folder_name} 
+        rm -rf ${folder_name}
         [ $? -ne 0 ] && LOG_MSG_AND_EXIT "Error: folder:$folder_name is already in use and can't be overwrite, please remove it and retry."
     fi
-    
+
     mkdir ${folder_name} && tar xf ${filename} -C ${folder_name} --strip-components 1 --warning=no-timestamp > /dev/null 2>&1
     #tar -xf $filename --directory /tmp/  --warning=no-timestamp > /dev/null 2>&1
 ### Check if untar succeed.
@@ -515,7 +515,7 @@ function extract_package() {
     PKG_EXTRACTED=$TRUE
 
     check_package_signing $folder_name
-    
+
     LOG_MSG "successfully untar file." ${DEBUG_MSG}
 }
 
@@ -539,10 +539,10 @@ function erase_extract_package() {
     fi
     rm -rf $folder_name
 ### Check if untar succeed.
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         LOG_MSG "Error: fail to delete $folder_name folder." "$ERR_MSG"
         LOG_MSG "Exiting..."
-        exit 1    
+        exit 1
     fi
 
     PKG_EXTRACTED=$FALSE
@@ -627,7 +627,7 @@ elif [ $ARG_QUERY_FLAG == $TRUE ]; then
             if [[ "$SSD_DEVICE_MODEL" == "$( IFS=$'\n'; echo "${SSD_FW_Model[@]}" )" ]] && \
                [[ "$SSD_FW_VER" == "${SSD_FW_Version[@]}" ]] && \
                [[ "$SSD_SIZE" == "${SSD_Size[@]}" ]]; then
-  
+
                 match_found=$TRUE
                 break
             fi
@@ -658,9 +658,9 @@ elif [ $ARG_QUERY_FLAG == $TRUE ]; then
 elif [ $ARG_PACKAGE_INFO_FLAG == $TRUE ]; then
     check_tool_dependencies
     extract_package $ARG_IMAGE_VAL extraction_path
-    # 2. check signing 
+    # 2. check signing
     ini_parser "$extraction_path/list.ini"
-    
+
     call_ini_section "main"
     LOG_MSG "Package Name: $ARG_IMAGE_VAL"
     [[ ! -z ${description[@]} ]]    && LOG_MSG "Description: ${description[@]}"
@@ -679,13 +679,13 @@ elif [ $ARG_PACKAGE_INFO_FLAG == $TRUE ]; then
     done
     echo -e ""
     erase_extract_package "$extraction_path"
-    exit 0 
+    exit 0
 # operate SSD fw update
 elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
     check_tool_dependencies
     get_ssd_info
     extract_package $ARG_IMAGE_VAL extraction_path
-    # 2. check signing 
+    # 2. check signing
     UPDATE_DONE=$FALSE
     ini_parser "$extraction_path/list.ini"
     for section in $SECTIONS; do
@@ -740,7 +740,7 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
                         if [[ $ARG_FORCE_NO_POWER_CYCLE_FLAG == $TRUE ]]; then
                             LOG_MSG_AND_EXIT "An IMMEDIATE power cycle is REQUIRED to upgrade the SSD. Please perform a cold reboot as soon as possible."
                         fi
-                        
+
                         LOG_MSG "Execute power cycle..."
                         sleep 1
                         sync
@@ -751,14 +751,14 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
                         erase_extract_package "$extraction_path"
 
                     fi
-                        
+
                 fi
 
                 break       # Exit the for loop
-            fi  
+            fi
             ini_unset $section
         fi
-    done  
+    done
     if [ $UPDATE_DONE == $FALSE ]; then
         LOG_MSG "SSD FW upgrade is not required, latest version based on given package is in use."
         print_ssd_info "no"
@@ -766,7 +766,7 @@ elif [ $ARG_UPDATE_FLAG == $TRUE ]; then
 
     echo -e ""
     erase_extract_package "$extraction_path"
-    exit 0 
+    exit 0
 fi
 
 exit 0

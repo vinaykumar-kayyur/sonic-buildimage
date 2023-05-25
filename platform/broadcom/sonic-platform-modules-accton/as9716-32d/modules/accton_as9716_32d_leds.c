@@ -90,7 +90,7 @@ struct led_reg {
     u8   reg_addr;
 };
 
-static const struct led_reg led_reg_map[] = {    
+static const struct led_reg led_reg_map[] = {
     {(1<<LED_TYPE_DIAG), 0x31},
     {(1<<LED_TYPE_PSU2) | (1<<LED_TYPE_PSU1) | (1<<LED_TYPE_FAN) | (1<<LED_TYPE_LOC), 0x30},
 };
@@ -120,23 +120,23 @@ struct led_type_mode {
 static struct led_type_mode led_type_mode_data[] = {
   {LED_TYPE_LOC, LED_MODE_OFF,         LED_TYPE_LOC_REG_MASK, LED_MODE_LOC_OFF_VALUE},
   {LED_TYPE_LOC, LED_MODE_GREEN_BLINK, LED_TYPE_LOC_REG_MASK, LED_MODE_LOC_GREEN_BLIKN_VALUE},
-  {LED_TYPE_LOC, LED_MODE_AMBER,	   LED_TYPE_LOC_REG_MASK, LED_MODE_LOC_AMBER_VALUE},  
+  {LED_TYPE_LOC, LED_MODE_AMBER,	   LED_TYPE_LOC_REG_MASK, LED_MODE_LOC_AMBER_VALUE},
   {LED_TYPE_DIAG,LED_MODE_OFF,   LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_OFF_VALUE},
-  {LED_TYPE_DIAG,LED_MODE_GREEN, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_GREEN_VALUE},  
+  {LED_TYPE_DIAG,LED_MODE_GREEN, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_GREEN_VALUE},
   {LED_TYPE_DIAG,LED_MODE_AMBER, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_AMBER_VALUE},
-  {LED_TYPE_DIAG,LED_MODE_GREEN_BLINK, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_GREEN_BLINK_VALUE},  
+  {LED_TYPE_DIAG,LED_MODE_GREEN_BLINK, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_GREEN_BLINK_VALUE},
   {LED_TYPE_FAN,LED_MODE_OFF,   LED_TYPE_FAN_REG_MASK,  LED_MODE_FAN_OFF_VALUE},
-  {LED_TYPE_FAN,LED_MODE_GREEN, LED_TYPE_FAN_REG_MASK,  LED_MODE_FAN_GREEN_VALUE},  
+  {LED_TYPE_FAN,LED_MODE_GREEN, LED_TYPE_FAN_REG_MASK,  LED_MODE_FAN_GREEN_VALUE},
   {LED_TYPE_FAN,LED_MODE_AMBER, LED_TYPE_FAN_REG_MASK,  LED_MODE_FAN_AMBER_VALUE},
-  
+
   {LED_TYPE_PSU1,LED_MODE_OFF,   LED_TYPE_PSU1_REG_MASK,  LED_MODE_PSU1_OFF_VALUE},
-  {LED_TYPE_PSU1,LED_MODE_GREEN, LED_TYPE_PSU1_REG_MASK,  LED_MODE_PSU1_GREEN_VALUE},  
+  {LED_TYPE_PSU1,LED_MODE_GREEN, LED_TYPE_PSU1_REG_MASK,  LED_MODE_PSU1_GREEN_VALUE},
   {LED_TYPE_PSU1,LED_MODE_AMBER, LED_TYPE_PSU1_REG_MASK,  LED_MODE_PSU1_AMBER_VALUE},
-  
+
   {LED_TYPE_PSU2,LED_MODE_OFF,   LED_TYPE_PSU2_REG_MASK,  LED_MODE_PSU2_OFF_VALUE},
-  {LED_TYPE_PSU2,LED_MODE_GREEN, LED_TYPE_PSU2_REG_MASK,  LED_MODE_PSU2_GREEN_VALUE},  
+  {LED_TYPE_PSU2,LED_MODE_GREEN, LED_TYPE_PSU2_REG_MASK,  LED_MODE_PSU2_GREEN_VALUE},
   {LED_TYPE_PSU2,LED_MODE_AMBER, LED_TYPE_PSU2_REG_MASK,  LED_MODE_PSU2_AMBER_VALUE},
-  
+
 };
 
 
@@ -151,14 +151,14 @@ static void accton_as9716_32d_led_set(struct led_classdev *led_cdev,
 static int accton_getLedReg(enum led_type type, u8 *reg)
 {
     int i;
-    
-    for (i = 0; i < ARRAY_SIZE(led_reg_map); i++) {        
+
+    for (i = 0; i < ARRAY_SIZE(led_reg_map); i++) {
         if(led_reg_map[i].types & (1<<type)) {
             *reg = led_reg_map[i].reg_addr;
             return 0;
         }
     }
-    
+
     return 1;
 }
 
@@ -191,7 +191,7 @@ static u8 led_light_mode_to_reg_val(enum led_type type,
 
         if (mode != led_type_mode_data[i].mode)
             continue;
-        
+
         reg_val = led_type_mode_data[i].mode_value |
                   (reg_val & (~led_type_mode_data[i].reg_bit_mask));
         break;
@@ -256,15 +256,15 @@ static void accton_as9716_32d_led_set(struct led_classdev *led_cdev,
     {
         dev_dbg(&ledctl->pdev->dev, "Not match item for %d.\n", type);
     }
-    
+
     reg_val = accton_as9716_32d_led_read_value(reg);
-    
+
     if (reg_val < 0) {
         dev_dbg(&ledctl->pdev->dev, "reg %d, err %d\n", reg, reg_val);
         goto exit;
     }
     reg_val = led_light_mode_to_reg_val(type, led_light_mode, reg_val);
-    
+
     accton_as9716_32d_led_write_value(reg, reg_val);
 
     /* to prevent the slow-update issue */

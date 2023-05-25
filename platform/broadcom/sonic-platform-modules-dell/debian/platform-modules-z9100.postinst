@@ -1,7 +1,7 @@
 # postinst script for Z9100
 
 # Enable Dell-Z9100-platform-service
-depmod -a 
+depmod -a
 systemctl enable platform-modules-z9100.service
 systemctl start platform-modules-z9100.service
 

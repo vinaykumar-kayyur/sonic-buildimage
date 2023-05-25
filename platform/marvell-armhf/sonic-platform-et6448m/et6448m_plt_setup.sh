@@ -15,7 +15,7 @@ fw_uboot_env_cfg()
             UBOOT_ENV_ERASE_SIZ="0x$(grep uboot-env /proc/mtd | awk '{print $3}')"
             if [[ -n "$UBOOT_ENV_SIZ" && -n "$UBOOT_ENV_ERASE_SIZ" ]]
             then
-                # Env info from DTB 
+                # Env info from DTB
                 FW_ENV_DTB="/dev/$DTB_HAS_ENV_BLK 0x00000000 $UBOOT_ENV_SIZ $UBOOT_ENV_ERASE_SIZ"
             fi
         fi

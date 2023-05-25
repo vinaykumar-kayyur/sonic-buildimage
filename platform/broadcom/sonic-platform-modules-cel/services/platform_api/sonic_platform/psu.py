@@ -41,8 +41,8 @@ class Psu(PsuBase):
         Retrieves current PSU voltage output
 
         Returns:
-            A float number, the output voltage in volts, 
-            e.g. 12.1 
+            A float number, the output voltage in volts,
+            e.g. 12.1
         """
         return self._api_common.get_output(self._psu_index, self._config['get_voltage'], 0.0)
 
@@ -79,7 +79,7 @@ class Psu(PsuBase):
         Sets the state of the PSU status LED
         Note:
             Seastone2 CPLD able to set only AMBER color.
-            This function should be disable auto mode before execute 
+            This function should be disable auto mode before execute
             command: ipmitool raw 0x3a 0x0f 0x02 0x00
         Args:
             color: A string representing the color with which to set the
@@ -106,7 +106,7 @@ class Psu(PsuBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         return self._api_common.get_output(self._psu_index, self._config['get_temperature'], 0.0)
 
@@ -125,8 +125,8 @@ class Psu(PsuBase):
 
         Returns:
             ucr as float number and return 0 if the BMC output is na.
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
         """
         return self._api_common.get_output(self._psu_index, self._config['get_voltage_high_threshold'], 0.0)
 
@@ -136,8 +136,8 @@ class Psu(PsuBase):
 
         Returns:
             lcr as float number and return 0 if the BMC output is na.
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
         """
         return self._api_common.get_output(self._psu_index, self._config['get_voltage_low_threshold'], 0.0)
 

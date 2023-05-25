@@ -2,7 +2,7 @@
 #
 # Name: thermal.py, version: 1.0
 #
-# Description: Module contains the definitions of SONiC platform APIs 
+# Description: Module contains the definitions of SONiC platform APIs
 #
 
 try:
@@ -37,7 +37,7 @@ class Thermal(ThermalBase):
             "PSU1 Temperature3",
             "PSU2 Temperature1",
             "PSU2 Temperature2",
-            "PSU2 Temperature3"            
+            "PSU2 Temperature3"
         ]
     __thermal_path_list = [
             __core_temp_path.format(1),
@@ -54,7 +54,7 @@ class Thermal(ThermalBase):
             __psu_thermal_path.format(1,3),
             __psu_thermal_path.format(2,1),
             __psu_thermal_path.format(2,2),
-            __psu_thermal_path.format(2,3)            
+            __psu_thermal_path.format(2,3)
         ]
     __max_temp_path_list = [
             __max_temp_path.format(1),
@@ -71,7 +71,7 @@ class Thermal(ThermalBase):
             "",
             "",
             "",
-            "",            
+            "",
             "",
             ""
         ]
@@ -181,7 +181,7 @@ class Thermal(ThermalBase):
 
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
         temperature = 0.0
         attr_path = self.__thermal_temp_attr
@@ -230,8 +230,8 @@ class Thermal(ThermalBase):
         """
         Sets the high threshold temperature of thermal
 
-        Args : 
-            temperature: A float number up to nearest thousandth of one degree Celsius, 
+        Args :
+            temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 
         Returns:
@@ -243,7 +243,7 @@ class Thermal(ThermalBase):
         """
         Sets the low threshold temperature of thermal
 
-        Args : 
+        Args :
             temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
 

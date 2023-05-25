@@ -9,7 +9,7 @@
 #define TEMP_R_B_B_MIN_REG      0x17
 #define TEMP_R_B_B_CRIT_REG     0x18
 #define TEMP_R_B_B_LCRIT_REG    0x19
-    
+
 #define TEMP_L_B_F_REG          0x20
 #define TEMP_L_B_B_REG          0x21
 #define TEMP_L_B_F_MAX_REG      0x22
@@ -31,7 +31,7 @@
 #define TEMP_R_T_B_MIN_REG      0x37
 #define TEMP_R_T_B_CRIT_REG     0x38
 #define TEMP_R_T_B_LCRIT_REG    0x39
-    
+
 #define TEMP_L_T_F_REG          0x40
 #define TEMP_L_T_B_REG          0x41
 #define TEMP_L_T_F_MAX_REG      0x42

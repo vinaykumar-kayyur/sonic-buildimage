@@ -68,7 +68,7 @@ class Component(ComponentBase):
             logging.error("Error: unable to open file: %s" % str(e))
             return False
 
-        return True 
+        return True
 
     def __get_current_bios(self):
         current_bios=self.__get_attr_value(BIOS_CS_PATH)
@@ -109,7 +109,7 @@ class Component(ComponentBase):
                     ret_str = file.read()
             except Exception as error:
                 logging.error("Unable to open file %s", path)
-            
+
             if ret_str!=None:
                 start_idx=ret_str.find(target)
                 if start_idx > 0:
@@ -145,7 +145,7 @@ class Component(ComponentBase):
     def __install_cpld_firmware(self,image_path):
         logging.error("[Component][__install_cpld_firmware] Currently not support FW update on platform D6332")
         raise NotImplementedError
-        
+
     def __install_bios_firmware(self,image_path):
         logging.error("[Component][__install_bios_firmware] Currently not support FW update on platform D6332")
         raise NotImplementedError

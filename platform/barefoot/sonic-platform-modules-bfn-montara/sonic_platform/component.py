@@ -35,7 +35,7 @@ def get_bmc_version():
     ver = "N/A"
     def bmc_get(client):
         return client.pltfm_mgr.pltfm_mgr_chss_mgmt_bmc_ver_get()
-    try:    
+    try:
         ver = thrift_try(bmc_get)
     except Exception:
         pass
@@ -101,7 +101,7 @@ class BFPlatformComponentsParser(object):
                 for key2, value2 in value1.items():
                     if not self.__is_str(value2):
                         self.__parser_component_fail("string is expected: key={}".format(key2))
-                
+
                 self.__chassis_component_map[section][key1] = value1
 
         if missing_key is not None:
@@ -139,7 +139,7 @@ class BFPlatformComponentsParser(object):
         self.__component_list = []
         for key, value in self.__chassis_component_map[self.__bf_model].items():
             self.__component_list.append(key)
-        
+
         return self.__component_list
 
     def get_chassis_component_map(self):
@@ -150,7 +150,7 @@ class BFPlatformComponentsParser(object):
             data = json.load(platform_components)
             kkey, val  = list(data[self.CHASSIS_KEY].items())[0]
             self.__bf_model = kkey
-            
+
             if not self.__is_dict(data):
                 self.__parser_platform_fail("dictionary is expected: key=root")
 
@@ -179,7 +179,7 @@ class Components(ComponentBase):
             self.name = "N/A"
             self.version = "N/A"
             self.description = "N/A"
-            self.name = self.bpcp.get_components_list()[self.index]            
+            self.name = self.bpcp.get_components_list()[self.index]
         except IndexError as e:
             print("Error: No components found in plaform_components.json")
 
@@ -281,7 +281,7 @@ class Components(ComponentBase):
             bool: True if it is replaceable.
         """
         return False
-    
+
     def get_available_firmware_version(self, image_path):
         return 'None'
 

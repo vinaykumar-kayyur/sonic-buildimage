@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Script to stop and start the respective platforms default services. 
+# Script to stop and start the respective platforms default services.
 # This will be used while switching the pddf->non-pddf mode and vice versa
 
 from sonic_py_common.general import getstatusoutput_noshell
@@ -32,7 +32,7 @@ def stop_platform_svc():
     if status:
         print("Disable as7726-32x-platform-monitor.service failed %d"%status)
         return False
-    
+
     status, output = getstatusoutput_noshell(["/usr/local/bin/accton_as7726_32x_util.py", "clean"])
     if status:
         print("accton_as7726_32x_util.py clean command failed %d"%status)
@@ -45,7 +45,7 @@ def stop_platform_svc():
         return False
 
     return True
-    
+
 def start_platform_svc():
     status, output = getstatusoutput_noshell(["/usr/local/bin/accton_as7726_32x_util.py install"])
     if status:
@@ -84,7 +84,7 @@ def start_platform_pddf():
     if status:
         print("Start pddf-platform-init.service failed %d"%status)
         return False
-    
+
     return True
 
 def stop_platform_pddf():

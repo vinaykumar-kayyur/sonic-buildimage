@@ -82,7 +82,7 @@ struct i2c_board_info *i2c_get_gpio_board_info(GPIO_DATA* mdata, NEW_DEV_ATTR *d
         printk(KERN_ERR "%s: Unknown type of gpio device\n", __FUNCTION__);
         return NULL;
     }
-    
+
     if(mdata->gpio_base == 0) {
         base = base_gpio_num;
         base_gpio_num += def_num_gpios;
@@ -127,7 +127,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
             pddf_dbg(GPIO, KERN_ERR "Created %s client: 0x%p\n", device_ptr->i2c_name, (void *)client_ptr);
             add_device_table(device_ptr->i2c_name, (void*)client_ptr);
         }
-        else 
+        else
         {
             kfree(board_info);
             goto free_data;
@@ -177,14 +177,14 @@ int __init gpio_data_init(void)
     pddf_dbg(GPIO, "GPIO_DATA MODULE.. init\n");
 
     device_kobj = get_device_i2c_kobj();
-    if(!device_kobj) 
+    if(!device_kobj)
         return -ENOMEM;
 
     gpio_kobj = kobject_create_and_add("gpio", device_kobj);
-    if(!gpio_kobj) 
+    if(!gpio_kobj)
         return -ENOMEM;
-    
-    
+
+
     ret = sysfs_create_group(gpio_kobj, &pddf_clients_data_group);
     if (ret)
     {

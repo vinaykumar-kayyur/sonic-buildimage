@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# 
+#
 # Watchdog contains an implementation of SONiC Platform Base Watchdog API
 #
 #############################################################################

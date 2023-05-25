@@ -28,7 +28,7 @@ class Component(ComponentBase):
         self.index = component_index
         self.name = self.get_name()
         self.cpld_mapping = {
-                0: ['3', '0x60']                
+                0: ['3', '0x60']
             }
 
 
@@ -47,7 +47,7 @@ class Component(ComponentBase):
             A string containing the description of the component
         """
         return COMPONENT_LIST[self.index][1]
-    
+
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
         try:
@@ -56,7 +56,7 @@ class Component(ComponentBase):
                 return bios_version.strip()
         except Exception as e:
             return None
-    
+
     def get_firmware_version(self):
         """
         Retrieves the firmware version of module

@@ -58,7 +58,7 @@ class Component(ComponentBase):
             pass
 
         return version
-                
+
     def get_name(self):
         """
         Retrieves the name of the component
@@ -82,12 +82,12 @@ class Component(ComponentBase):
             string: The firmware versions of the module
         """
         fw_version = None
-        
+
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
             fw_version = self.__get_cpld_version()
-            
+
         return fw_version
 
     def install_firmware(self, image_path):
@@ -117,7 +117,7 @@ class Component(ComponentBase):
 
     def get_presence(self):
         return True
- 
+
     def get_serial(self):
         return 'N/A'
 

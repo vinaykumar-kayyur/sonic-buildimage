@@ -203,7 +203,7 @@ static int psu_probe(struct i2c_client *client,
 			printk(KERN_ERR "%s: Wrong attribute name provided by user '%s'\n", __FUNCTION__, data_attr->aname);
 			continue;
 		}
-		
+
 		dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
 		dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
 		strcpy((char *)dy_ptr->dev_attr.attr.name, data_attr->aname);
@@ -211,7 +211,7 @@ static int psu_probe(struct i2c_client *client,
 		dy_ptr->dev_attr.show = sysfs_data_entry->a_ptr->show;
 		dy_ptr->dev_attr.store = sysfs_data_entry->a_ptr->store;
 		dy_ptr->index = sysfs_data_entry->a_ptr->index;
-		
+
 		data->psu_attribute_list[i] = &dy_ptr->dev_attr.attr;
 		strcpy(data->attr_info[i].name, data_attr->aname);
 		data->attr_info[i].valid = 0;
@@ -371,7 +371,7 @@ int psu_init(void)
     status = i2c_add_driver(&psu_driver);
     if (status!=0)
         return status;
-	
+
     if (pddf_psu_ops.post_init)
     {
         status = (pddf_psu_ops.post_init)();

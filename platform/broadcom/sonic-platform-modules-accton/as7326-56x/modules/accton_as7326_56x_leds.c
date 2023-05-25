@@ -121,7 +121,7 @@ static struct led_type_mode led_type_mode_data[] = {
     {LED_TYPE_LOC, LED_MODE_GREEN_BLINK, LED_TYPE_LOC_REG_MASK,  LED_MODE_LOC_GREEN_BLINK_VALUE},
     {LED_TYPE_LOC, LED_MODE_RED_BLINK, LED_TYPE_LOC_REG_MASK,  LED_MODE_LOC_RED_BLINK_VALUE},
     {LED_TYPE_LOC, LED_MODE_BLUE_BLINK, LED_TYPE_LOC_REG_MASK,  LED_MODE_LOC_BLUE_BLINK_VALUE},
-    
+
     {LED_TYPE_DIAG, LED_MODE_OFF,   LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_OFF_VALUE},
     {LED_TYPE_DIAG, LED_MODE_GREEN, LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_GREEN_VALUE},
     {LED_TYPE_DIAG, LED_MODE_RED,   LED_TYPE_DIAG_REG_MASK,  LED_MODE_DIAG_RED_VALUE},
@@ -144,7 +144,7 @@ static void accton_as7326_56x_led_set(struct led_classdev *led_cdev,
 static int accton_getLedReg(enum led_type type, u8 *reg)
 {
     int i;
-    
+
     for (i = 0; i < ARRAY_SIZE(led_reg_map); i++) {
         if (led_reg_map[i].types ==type) {
             *reg = led_reg_map[i].reg_addr;

@@ -95,7 +95,7 @@ static ssize_t ctc_show_fan(struct device *dev, struct device_attribute *devattr
     struct pwm_capture result;
     int ret = 0;
     int ratio = 0;
-    
+
     mutex_lock(&data->lock);
 
     ret = pwm_capture(data->pwm[attr->index], &result, jiffies_to_msecs(HZ));
@@ -121,7 +121,7 @@ static ssize_t ctc_show_temp(struct device *dev,
             struct device_attribute *devattr, char *buf)
 {
     struct fan_ctc5236_data *data = dev_get_drvdata(dev);
-    
+
     return sprintf(buf, "%ld\n", data->temp);
 }
 

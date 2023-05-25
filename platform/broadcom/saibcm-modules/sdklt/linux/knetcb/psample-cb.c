@@ -22,10 +22,10 @@
 /*
  * Driver for call-back functions for Linux KNET driver.
  *
- * This code is used to integrate packet sampling KNET callback to 
- * the psample infra for sending sampled pkts to userspace sflow 
- * applications such as Host Sflow (https://github.com/sflow/host-sflow) 
- * using genetlink interfaces.  
+ * This code is used to integrate packet sampling KNET callback to
+ * the psample infra for sending sampled pkts to userspace sflow
+ * applications such as Host Sflow (https://github.com/sflow/host-sflow)
+ * using genetlink interfaces.
  *
  * The module can be built from the standard Linux user mode target
  * directories using the following command (assuming bash), e.g.
@@ -46,7 +46,7 @@
 #include "psample-cb.h"
 
 #define PSAMPLE_CB_DBG
-#ifdef PSAMPLE_CB_DBG 
+#ifdef PSAMPLE_CB_DBG
 extern int debug;
 #define PSAMPLE_CB_DBG_LVL_VERB (0x1)
 #define PSAMPLE_CB_DBG_LVL_PMD  (0x2)
@@ -151,7 +151,7 @@ psample_netif_lookup_by_ifindex(int ifindex)
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
     return (NULL);
 }
-        
+
 static psample_netif_t*
 psample_netif_lookup_by_port(int port)
 {
@@ -225,7 +225,7 @@ psample_meta_get(struct sk_buff *skb, psample_meta_t *sflow_meta)
     psample_netif_t *psample_netif = NULL;
     const struct ngknet_callback_desc *cbd = NGKNET_SKB_CB(skb);
     const struct ngknet_private *netif = cbd->priv;
-    memset(sflow_meta, 0, sizeof(psample_meta_t));    
+    memset(sflow_meta, 0, sizeof(psample_meta_t));
 
     /* find src port */
     if ((psample_netif = psample_netif_lookup_by_ifindex(netif->net_dev->ifindex))) {
@@ -234,7 +234,7 @@ psample_meta_get(struct sk_buff *skb, psample_meta_t *sflow_meta)
         sample_size = psample_netif->sample_size;
     } else {
         g_psample_stats.pkts_d_meta_srcport++;
-        PSAMPLE_CB_DBG_PRINT("%s: could not find psample netif for src dev %s (ifidx %d)\n", 
+        PSAMPLE_CB_DBG_PRINT("%s: could not find psample netif for src dev %s (ifidx %d)\n",
                              __func__, netif->net_dev->name, netif->net_dev->ifindex);
     }
 
@@ -260,23 +260,23 @@ psample_task(struct work_struct *work)
         list_del(list_ptr);
         g_psample_stats.pkts_c_qlen_cur--;
         spin_unlock_irqrestore(&psample_work->lock, flags);
- 
+
         /* send to psample */
         if (pkt) {
             PSAMPLE_CB_DBG_PRINT("%s: group 0x%x, trunc_size %d, src_ifdx 0x%x, dst_ifdx 0x%x, sample_rate %d\n",
-                    __func__, pkt->group->group_num, 
-                    pkt->meta.trunc_size, pkt->meta.src_ifindex, 
+                    __func__, pkt->group->group_num,
+                    pkt->meta.trunc_size, pkt->meta.src_ifindex,
                     pkt->meta.dst_ifindex, pkt->meta.sample_rate);
 
             md.trunc_size = pkt->meta.trunc_size;
             md.in_ifindex = pkt->meta.src_ifindex;
             md.out_ifindex = pkt->meta.dst_ifindex;
-            psample_sample_packet(pkt->group, 
-                                  pkt->skb, 
+            psample_sample_packet(pkt->group,
+                                  pkt->skb,
                                   pkt->meta.sample_rate,
                                   &md);
             g_psample_stats.pkts_f_psample_mod++;
- 
+
             dev_kfree_skb_any(pkt->skb);
             kfree(pkt);
         }
@@ -289,7 +289,7 @@ struct sk_buff*
 psample_rx_cb(struct sk_buff *skb)
 {
     struct psample_group *group;
-    psample_meta_t meta;   
+    psample_meta_t meta;
     int rv = 0, size;
     const struct ngknet_callback_desc *cbd = NULL;
     const struct ngknet_private *netif = NULL;
@@ -307,19 +307,19 @@ psample_rx_cb(struct sk_buff *skb)
     filt = netif->filt_cb;
 
     if (!cbd || !netif || !filt_src) {
-        printk("%s: cbd(0x%p) or priv(0x%p) or filter src(0x%p) is NULL\n", 
+        printk("%s: cbd(0x%p) or priv(0x%p) or filter src(0x%p) is NULL\n",
             __func__, cbd, netif, filt_src);
         g_psample_stats.pkts_d_skb_cbd++;
         return (skb);
     }
 
     /* Enable PMD output in dmesg: "echo "debug=0x2" > /proc/bcm/knet-cb/psample/debug"
-     * Use bshell cmd "pmddecode rxpmd ..." to decode pkt metadata 
+     * Use bshell cmd "pmddecode rxpmd ..." to decode pkt metadata
      */
     if (debug & PSAMPLE_CB_DBG_LVL_PMD) {
         char str[128];
         int i, len = cbd->pmd_len > 128? 128 : cbd->pmd_len;
-        PSAMPLE_CB_PMD_PRINT("PMD (%d bytes): %s\n", 
+        PSAMPLE_CB_PMD_PRINT("PMD (%d bytes): %s\n",
                 cbd->pmd_len, skb->dev->name);
         for (i=0; i<len; i+=4) {
             if ((i & 0x1f) == 0) {
@@ -339,7 +339,7 @@ psample_rx_cb(struct sk_buff *skb)
     }
 
     /* check if this packet is sampled packet (from sample filter) */
-    if (!filt || 
+    if (!filt ||
         (NGKNET_FILTER_DEST_T_CB != filt->dest_type) ||
         (strncmp(filt->desc, PSAMPLE_CB_NAME, NGKNET_FILTER_DESC_MAX) != 0)) {
         return (skb);
@@ -371,7 +371,7 @@ psample_rx_cb(struct sk_buff *skb)
         g_psample_stats.pkts_d_invalid_size++;
         goto PSAMPLE_FILTER_CB_PKT_HANDLED;
     } else {
-       size -= FCS_SZ; 
+       size -= FCS_SZ;
     }
 
     /* Account for padding in libnl used by psample */
@@ -415,7 +415,7 @@ psample_rx_cb(struct sk_buff *skb)
         psample_pkt->skb = skb_psample;
 
         spin_lock_irqsave(&g_psample_work.lock, flags);
-        list_add_tail(&psample_pkt->list, &g_psample_work.pkt_list); 
+        list_add_tail(&psample_pkt->list, &g_psample_work.pkt_list);
 
         g_psample_stats.pkts_c_qlen_cur++;
         if (g_psample_stats.pkts_c_qlen_cur > g_psample_stats.pkts_c_qlen_hi) {
@@ -440,7 +440,7 @@ PSAMPLE_FILTER_CB_PKT_HANDLED:
     return skb;
 }
 
-int 
+int
 psample_netif_create_cb(struct net_device *dev)
 {
     int found;
@@ -456,7 +456,7 @@ psample_netif_create_cb(struct net_device *dev)
     netif = netdev_priv(dev);
 
     if ((psample_netif = kmalloc(sizeof(psample_netif_t), GFP_ATOMIC)) == NULL) {
-        printk("%s: failed to alloc psample mem for netif '%s'\n", 
+        printk("%s: failed to alloc psample mem for netif '%s'\n",
                 __func__, dev->name);
         return (-1);
     }
@@ -481,7 +481,7 @@ psample_netif_create_cb(struct net_device *dev)
         lpsample_netif = (psample_netif_t*)list;
         if (netif->id < lpsample_netif->id) {
             found = 1;
-            g_psample_info.netif_count++; 
+            g_psample_info.netif_count++;
             break;
         }
     }
@@ -493,7 +493,7 @@ psample_netif_create_cb(struct net_device *dev)
         /* No holes - add to end of list */
         list_add_tail(&psample_netif->list, &g_psample_info.netif_list);
     }
-   
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     PSAMPLE_CB_DBG_PRINT("%s: added psample netif '%s'\n", __func__, dev->name);
@@ -506,7 +506,7 @@ psample_netif_destroy_cb(struct net_device *dev)
     int found;
     struct list_head *list;
     psample_netif_t *psample_netif;
-    unsigned long flags; 
+    unsigned long flags;
     struct ngknet_private *netif = NULL;
 
     if (!dev) {
@@ -516,22 +516,22 @@ psample_netif_destroy_cb(struct net_device *dev)
     netif = netdev_priv(dev);
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (netif->id == psample_netif->id) {
-            found = 1; 
+            found = 1;
             list_del(&psample_netif->list);
             PSAMPLE_CB_DBG_PRINT("%s: removing psample netif '%s'\n", __func__, dev->name);
             kfree(psample_netif);
-            g_psample_info.netif_count--; 
+            g_psample_info.netif_count--;
             break;
         }
     }
 
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
-    
-    if (!found) {    
+
+    if (!found) {
         printk("%s: netif ID %d not found!\n", __func__, netif->id);
         return (-1);
     }
@@ -546,17 +546,17 @@ psample_proc_rate_show(struct seq_file *m, void *v)
 {
     struct list_head *list;
     psample_netif_t *psample_netif;
-    unsigned long flags; 
+    unsigned long flags;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %d\n", psample_netif->dev->name, psample_netif->sample_rate);
     }
 
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
- 
+
     return 0;
 }
 
@@ -610,18 +610,18 @@ psample_proc_rate_write(struct file *file, const char *buf,
     *ptr++ = 0;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-   
-    found = 0; 
+
+    found = 0;
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (strcmp(psample_netif->dev->name, sample_str) == 0) {
             psample_netif->sample_rate = simple_strtol(ptr, NULL, 10);
             // TODO MLI@BRCM - check valid sample rate
-            found = 1; 
+            found = 1;
             break;
         }
     }
-    
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     if (!found) {
@@ -649,7 +649,7 @@ psample_proc_size_show(struct seq_file *m, void *v)
     unsigned long flags;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %d\n", psample_netif->dev->name, psample_netif->sample_size);
@@ -708,18 +708,18 @@ psample_proc_size_write(struct file *file, const char *buf,
     *ptr++ = 0;
 
     spin_lock_irqsave(&g_psample_info.lock, flags);
-   
-    found = 0; 
+
+    found = 0;
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (strcmp(psample_netif->dev->name, sample_str) == 0) {
             psample_netif->sample_size = simple_strtol(ptr, NULL, 10);
             // TODO MLI@BRCM - check valid sample size
             found = 1;
-            break; 
+            break;
         }
     }
-    
+
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
 
     if (!found) {
@@ -749,7 +749,7 @@ psample_proc_map_show(struct seq_file *m, void *v)
     seq_printf(m, "  Interface      logical port   ifindex\n");
     seq_printf(m, "-------------    ------------   -------\n");
     spin_lock_irqsave(&g_psample_info.lock, flags);
-    
+
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         seq_printf(m, "  %-14s %-14d %d\n",
@@ -877,7 +877,7 @@ psample_proc_stats_open(struct inode * inode, struct file * file)
  * psample stats Proc Write Entry
  *
  *   Syntax:
- *   write any value to clear stats 
+ *   write any value to clear stats
  */
 static ssize_t
 psample_proc_stats_write(struct file *file, const char *buf,
@@ -951,7 +951,7 @@ int psample_init(void)
         printk("%s: Unable to create procfs entry '/procfs/%s/size'\n", __func__, psample_procfs_path);
         return -1;
     }
-    
+
     /* create procfs for getting netdev mapping */
     PROC_CREATE(entry, "map", 0666, psample_proc_root, &psample_proc_map_file_ops);
     if (entry == NULL) {
@@ -975,21 +975,21 @@ int psample_init(void)
     //g_psample_info.dcb_type
 
     /* setup psample_info struct */
-    INIT_LIST_HEAD(&g_psample_info.netif_list); 
+    INIT_LIST_HEAD(&g_psample_info.netif_list);
     spin_lock_init(&g_psample_info.lock);
 
     /* setup psample work queue */
-    spin_lock_init(&g_psample_work.lock); 
-    INIT_LIST_HEAD(&g_psample_work.pkt_list); 
+    spin_lock_init(&g_psample_work.lock);
+    INIT_LIST_HEAD(&g_psample_work.pkt_list);
     INIT_WORK(&g_psample_work.wq, psample_task);
 
-    /* get net namespace */ 
+    /* get net namespace */
     g_psample_info.netns = get_net_ns_by_pid(current->pid);
     if (!g_psample_info.netns) {
         printk("%s: Could not get network namespace for pid %d\n", __func__, current->pid);
         return (-1);
     }
-    PSAMPLE_CB_DBG_PRINT("%s: current->pid %d, netns 0x%p, sample_size %d\n", __func__, 
+    PSAMPLE_CB_DBG_PRINT("%s: current->pid %d, netns 0x%p, sample_size %d\n", __func__,
             current->pid, g_psample_info.netns, psample_size);
 
 

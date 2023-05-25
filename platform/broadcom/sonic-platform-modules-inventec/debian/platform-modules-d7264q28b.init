@@ -39,15 +39,15 @@ do_monitor_stop() {
 case "$1" in
 start)
 	echo -n "Setting up board... "
-	
-	depmod -a    
+
+	depmod -a
 	/usr/local/bin/inventec_d7264_util.py -f install
         do_monitor_${1}
 	echo "done."
 	;;
 
 stop)
-    
+
         /usr/local/bin/inventec_d7264_util.py -f clean
         do_monitor_${1}
 	echo "done."

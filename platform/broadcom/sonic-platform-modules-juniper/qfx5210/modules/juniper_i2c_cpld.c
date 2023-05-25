@@ -3,7 +3,7 @@
  *
  * Tested and validated on Juniper QFX5210
  * Ciju Rajan K <crajank@juniper.net>
- * 
+ *
  * Copyright (C) 2013 Accton Technology Corporation.
  * Brandon Chuang <brandon_chuang@accton.com.tw>
  *
@@ -274,14 +274,14 @@ static int get_sfp_spec(int model, u16 *num, u8 *types)
     case qfx5210_64X:
         *num = 64;
         *types = HAS_QSFP;
-        break;        
+        break;
     case AS7312_54X:
         *num = 54;
-        *types = HAS_QSFP|HAS_SFP;        
+        *types = HAS_QSFP|HAS_SFP;
     default:
         *types = 0;
         *num = 0;
-        break;        
+        break;
     }
 
     return 0;
@@ -290,7 +290,7 @@ static int get_sfp_spec(int model, u16 *num, u8 *types)
 static int get_present_reg(int model, u8 port, u8 *cpld_addr, u8 *reg, u8 *num)
 {
     u8 cpld_address[] = CPLD_ADDRS;
-    
+
     switch (model) {
     case AS7312_54X:
         if (port < 48) {
@@ -306,10 +306,10 @@ static int get_present_reg(int model, u8 port, u8 *cpld_addr, u8 *reg, u8 *num)
         }
         break;
     default:
-        return -EINVAL;      
+        return -EINVAL;
     }
 }
-        
+
 
 /*Assume the bits for ports are listed in-a-row.*/
 static int get_reg_bit(u8 reg_start, int port,
@@ -360,7 +360,7 @@ static int cpld_read_internal(struct i2c_client *client, u8 reg)
 
 
 /*Turn a numberic array into string with " " between each element.
- * e.g., {0x11, 0x33, 0xff, 0xf1}  => "11 33 ff f1" 
+ * e.g., {0x11, 0x33, 0xff, 0xf1}  => "11 33 ff f1"
  */
 static ssize_t array_stringify(char *buf, u8 *input, size_t size) {
 
@@ -386,25 +386,25 @@ static ssize_t show_presnet_all_distinct(struct device *dev,
     struct cpld_data *data = i2c_get_clientdata(client);
     u8 i, value, reg;
     u8 cpld_addr, num;
-    u8 _value[8];    
+    u8 _value[8];
     u64 *values = (u64 *)_value;
-    
+
     values = 0;
     mutex_lock(&data->update_lock);
     while(i < data->sfp_num)
     {
         get_present_reg(data->model, i, &cpld_addr, &reg, &num);
         if(cpld_addr == client->addr)
-           value = cpld_read_internal(client, reg);    
-        else           
+           value = cpld_read_internal(client, reg);
+        else
            value = juniper_i2c_cpld_read(cpld_addr, reg);
-           
+
         if (unlikely(value < 0)) {
             goto exit;
-        }        
+        }
 
         *values |= (value&((1<<(num))-1)) << i;
-        i += num; 
+        i += num;
     }
     mutex_unlock(&data->update_lock);
 
@@ -412,7 +412,7 @@ static ssize_t show_presnet_all_distinct(struct device *dev,
     return array_stringify(buf, _value, i);
 exit:
     mutex_unlock(&data->update_lock);
-    return value;    
+    return value;
 }
 
 static ssize_t show_presnet_all(struct device *dev,
@@ -426,7 +426,7 @@ static ssize_t show_presnet_all(struct device *dev,
     if (sensor->reg < 0) {
         return show_presnet_all_distinct(dev, devattr, buf);
     }
-    
+
     mutex_lock(&data->update_lock);
     for (i = 0; i < ((data->sfp_num+7)/8); i++) {
         values[i] = cpld_read_internal(client, sensor->reg + i);
@@ -436,7 +436,7 @@ static ssize_t show_presnet_all(struct device *dev,
     }
     mutex_unlock(&data->update_lock);
     return array_stringify(buf, values, i);
-    
+
 exit:
     mutex_unlock(&data->update_lock);
     return values[i];
@@ -855,7 +855,7 @@ static const struct i2c_device_id juniper_i2c_cpld_id[] = {
     { "cpld_as7712", AS7712_32X},
     { "cpld_as7716", AS7716_32X},
     { "cpld_qfx5210", qfx5210_64X},
-    { "cpld_as7312", AS7312_54X},    
+    { "cpld_as7312", AS7312_54X},
     { "cpld_plain", PLAIN_CPLD},
     { },
 };

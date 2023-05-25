@@ -29,7 +29,7 @@ function _led_monitor {
 function _main {
     while true
     do
-        #PSU controlled by dummy board, 
+        #PSU controlled by dummy board,
         #but fan LED and fan tray LED must controlled by this service
         _led_monitor
 

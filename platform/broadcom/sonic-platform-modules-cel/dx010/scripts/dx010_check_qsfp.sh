@@ -3,5 +3,5 @@
 #Usage:
 # TBD
 
-echo "Do we need to check qsfp?" 
+echo "Do we need to check qsfp?"
 

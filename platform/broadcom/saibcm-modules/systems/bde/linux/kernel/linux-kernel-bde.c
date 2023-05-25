@@ -300,7 +300,7 @@ typedef struct bde_ctrl_s {
 
     /* Secondary mapped base address */
     sal_vaddr_t alt_base_addr;
-    
+
     /* BDE device description */
     ibde_dev_t bde_dev;
 
@@ -416,7 +416,7 @@ static void *cpu_address = NULL;
 #define BCM53000PCIE_DEFAULT_STATUS 0x00100146
 
 /* 16bit wide register. offset 14, 14*2 = 0x1c */
-#define BCM53000PCIE_SPROM_OFFSET 0x1c  
+#define BCM53000PCIE_SPROM_OFFSET 0x1c
 /* bit 15:13 spromData.MaxPayloadSize. 1: 256 bytes */
 #define BCM53000PCIE_SPROM_MAX_PAYLOAD_MASK 0xe000
 #define BCM53000PCIE_SPROM_MAX_PAYLOAD_256B (1 << 13)
@@ -1263,13 +1263,13 @@ static const struct pci_device_id _id_table[] = {
     { BROADCOM_VENDOR_ID, BCM56844_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56845_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56846_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
-    { BROADCOM_VENDOR_ID, BCM56847_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },    
+    { BROADCOM_VENDOR_ID, BCM56847_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56549_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56053_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56838_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56831_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
-    { BROADCOM_VENDOR_ID, BCM56835_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },    
-    { BROADCOM_VENDOR_ID, BCM56849_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },    
+    { BROADCOM_VENDOR_ID, BCM56835_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
+    { BROADCOM_VENDOR_ID, BCM56849_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56742_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56743_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56744_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
@@ -1358,7 +1358,7 @@ static const struct pci_device_id _id_table[] = {
     { BROADCOM_VENDOR_ID, BCM56853_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56854_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56855_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
-    { BROADCOM_VENDOR_ID, BCM56834_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },    
+    { BROADCOM_VENDOR_ID, BCM56834_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56750_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM56830_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM55440_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
@@ -1450,7 +1450,7 @@ static const struct pci_device_id _id_table[] = {
     { PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9656, PCI_ANY_ID, PCI_ANY_ID },
     { PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9056, PCI_ANY_ID, PCI_ANY_ID },
     { BCM53000_VENDOR_ID, BCM53000PCIE_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
-#ifdef BCM_PETRA_SUPPORT 
+#ifdef BCM_PETRA_SUPPORT
     { BROADCOM_VENDOR_ID, BCM88350_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM88351_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
     { BROADCOM_VENDOR_ID, BCM88450_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID },
@@ -1778,7 +1778,7 @@ pci_do_bus_find(struct pci_bus* bus, int rc, int vendor, int device)
         func = dev->devfn & 0x7;
         if (dev->vendor == vendor && dev->device == device && rc == func) {
             if (debug >= 1) {
-                gprintk("pci_do_bus_find: dev->vendor = 0x%x, dev->device = 0x%x on rc(%d)\n", 
+                gprintk("pci_do_bus_find: dev->vendor = 0x%x, dev->device = 0x%x on rc(%d)\n",
                         dev->vendor, dev->device, rc);
             }
             return sub_bus;
@@ -1948,9 +1948,9 @@ p2p_bridge(void)
         uint32 tmp, maxpayld, device_bmp=0, mask;
         unsigned long addr;
         uint16 tmp16, tmp161;
-        int i, bus0 = -1, bus1 = -1, port;        
+        int i, bus0 = -1, bus1 = -1, port;
         struct pci_dev *pcie0, *pcie1;
-        
+
         pcie0 = dev;
         bus0 = dev->bus->number;
         if ((pcie1 = PCI_FIND_DEV(BCM53000_VENDOR_ID, BCM53000PCIE_DEVICE_ID, pcie0)) != NULL) {
@@ -1969,7 +1969,7 @@ p2p_bridge(void)
                     device_bmp |= 1 << 1;
                 }
             }
-        }        
+        }
 
         /* configure the PCIE cap: Max payload size: 256, Max Read
          * Request size: 256, disabling relax ordering.
@@ -1979,8 +1979,8 @@ p2p_bridge(void)
         i = 0;
         while(device_bmp) {
             if (device_bmp & (1 << i)){
-                port = i ;                                  
-                pci_read_config_dword(BCM53000PCIE_DEV(port), 
+                port = i ;
+                pci_read_config_dword(BCM53000PCIE_DEV(port),
                                       BCM53000PCIE_DEV_CAP_REG, &tmp);
                 maxpayld = (tmp & BCM53000PCIE_MAX_PAYLOAD_MASK);
                 if (debug >= 1) {
@@ -1991,44 +1991,44 @@ p2p_bridge(void)
                 if (maxpayld != BCM53000PCIE_CAP_MAX_PAYLOAD_256B) {
                     addr = BCM53000PCIE_BASE(port);
                     addr |= (BCM53000PCIE_SROM_SPACE | BCM53000PCIE_SPROM_OFFSET);
-                    tmp16 = *((uint16 *)addr);                                                       
+                    tmp16 = *((uint16 *)addr);
                     if (debug >= 1){
                         gprintk("addr %lx spromData.MaxPayloadSize: 0x%x\n", addr, tmp16);
                     }
                     mask = BCM53000PCIE_SPROM_MAX_PAYLOAD_MASK;
                     if ((tmp16 & mask) != BCM53000PCIE_SPROM_MAX_PAYLOAD_256B) {
                         tmp161 = (tmp16 & ~mask) | BCM53000PCIE_SPROM_MAX_PAYLOAD_256B;
-                        *((uint16 *)addr) = tmp161;                                                  
+                        *((uint16 *)addr) = tmp161;
                         if (debug >= 1) {
-                            tmp16 = 0;                                                                         
-                            tmp16 = *((uint16 *)addr);                                                   
+                            tmp16 = 0;
+                            tmp16 = *((uint16 *)addr);
                             gprintk("Enable spromData.MaxPayloadSize to 1 (256 bytes): "
                                     "0x%x (%s w/ 0x%x)\n", tmp161,
-                                    ((tmp16 & mask) == BCM53000PCIE_SPROM_MAX_PAYLOAD_256B) ? 
+                                    ((tmp16 & mask) == BCM53000PCIE_SPROM_MAX_PAYLOAD_256B) ?
                                     "Success":"Fail",
                                     tmp16);
                         }
-                    }                                                                                      
-                    pci_read_config_dword(BCM53000PCIE_DEV(port), 
-                                          BCM53000PCIE_DEV_CAP_REG, &tmp);                            
-                    if (debug >= 1){
-                        gprintk("DevCap (@%x): now is 0x%x\n\n", 
-                                BCM53000PCIE_DEV_CAP_REG, tmp);        
                     }
-                }                                                                                          
+                    pci_read_config_dword(BCM53000PCIE_DEV(port),
+                                          BCM53000PCIE_DEV_CAP_REG, &tmp);
+                    if (debug >= 1){
+                        gprintk("DevCap (@%x): now is 0x%x\n\n",
+                                BCM53000PCIE_DEV_CAP_REG, tmp);
+                    }
+                }
 
                 addr = BCM53000PCIE_BASE(port);
                 addr |= (BCM53000PCIE_FUNC0_COFIG_SPACE | BCM53000PCIE_DEV_CTRL_REG);
-                tmp16 = *((uint16 *)addr);                                                           
+                tmp16 = *((uint16 *)addr);
                 if (debug >= 1) {
-                    gprintk("DevControl (@%x): 0x%x\n", BCM53000PCIE_DEV_CTRL_REG, tmp16);                      
+                    gprintk("DevControl (@%x): 0x%x\n", BCM53000PCIE_DEV_CTRL_REG, tmp16);
                 }
-                if (!(tmp16 & MAX_PAYLOAD_256B) || !(tmp16 & MAX_READ_REQ_256B)) {                         
-                    tmp161 = tmp16 | MAX_PAYLOAD_256B | MAX_READ_REQ_256B;                                 
-                    *((uint16 *)addr) = tmp161;                                                                                                          
+                if (!(tmp16 & MAX_PAYLOAD_256B) || !(tmp16 & MAX_READ_REQ_256B)) {
+                    tmp161 = tmp16 | MAX_PAYLOAD_256B | MAX_READ_REQ_256B;
+                    *((uint16 *)addr) = tmp161;
                     if (debug >= 1) {
-                        tmp16 = 0;                                                                             
-                        tmp16 = *((uint16 *)addr);   
+                        tmp16 = 0;
+                        tmp16 = *((uint16 *)addr);
                         gprintk("addr %lx Enable DevControl MaxPayloadSize to 1 (256 bytes): "
                                 "0x%x (%s w/ 0x%x)\n", addr, tmp161,
                                 (tmp16 & MAX_PAYLOAD_256B) ? "Success":"Fail",
@@ -2037,22 +2037,22 @@ p2p_bridge(void)
                                 "0x%x (%s w/ 0x%x)\n\n", tmp161,
                                 (tmp16 & MAX_READ_REQ_256B) ? "Success":"Fail",
                                 tmp16);
-                    }                    
-                }             
+                    }
+                }
                 device_bmp &= ~(1 << i);
             }
             i++;
         }
     }
 
-    /* 
+    /*
      * Configure max payload to 512 on all ports in the PLX8608/PLX8617.
-     * The device supports 128, 512, and 1024 max payload sizes. 
+     * The device supports 128, 512, and 1024 max payload sizes.
      */
     dev = NULL;
     while ((dev = PCI_FIND_DEV(PCI_VENDOR_ID_PLX, PCI_ANY_ID, dev)) != NULL) {
         if ((dev->device == PLX_PEX8608_DEV_ID) ||
-            (dev->device == PLX_PEX8617_DEV_ID)) { 
+            (dev->device == PLX_PEX8617_DEV_ID)) {
             uint16 ctrl_reg;
             pci_read_config_word(dev, PLX_PEX86XX_DEV_CTRL_REG, &ctrl_reg);
             ctrl_reg = (ctrl_reg & ~(7<<5)) | MAX_PAYLOAD_512B;
@@ -2072,7 +2072,7 @@ p2p_bridge(void)
 #define PLX_LAS0_PCIBAR2    2           /* Local Address Space 0 (PCIBAR2) */
 #define PLX_LAS1_PCIBAR3    3           /* Local Address Space 1 (PCIBAR3) */
 
-STATIC int 
+STATIC int
 _plx_las_bar_get(struct pci_dev *dev)
 {
     void           *local_config_addr;
@@ -2081,8 +2081,8 @@ _plx_las_bar_get(struct pci_dev *dev)
     local_config_addr = ioremap(pci_resource_start(dev, PLX_MMAP_PCIBAR0),
                                 pci_resource_len(dev, PLX_MMAP_PCIBAR0));
     if (local_config_addr) {
-        uint32          las_remap_reg;        
-        /* 
+        uint32          las_remap_reg;
+        /*
          * Make sure LAS0BA or LAS1BA is enabled before returning
          * BAR that will be used to access the Local Bus
          */
@@ -2094,7 +2094,7 @@ _plx_las_bar_get(struct pci_dev *dev)
             if (las_remap_reg & PLX_LAS_EN) {
                 bar = PLX_LAS1_PCIBAR3;
             }
-        } 
+        }
     }
     iounmap(local_config_addr);
     return bar;
@@ -2117,7 +2117,7 @@ _shbde_log_func(int level, const char *str, int param)
  * Parameters:
  *    dev - Linux PCI device structure
  * Returns:
- *    >= 0 : dev is ever probed 
+ *    >= 0 : dev is ever probed
  *           reutrn value is the index point to the _devices[]
  *    -1   : dev is not probed before.
  */
@@ -2377,7 +2377,7 @@ _pci_probe(struct pci_dev *dev, const struct pci_device_id *ent)
 
     if (debug >= 4) {gprintk("probing: vendor_id=0x%x, device_id=0x%x\n", dev->vendor, dev->device);}
     if (nodevices == 1) {
-        return 0; 
+        return 0;
     }
 
     /* Initialize Linux hardware abstraction for shared BDE functions */
@@ -2400,10 +2400,10 @@ _pci_probe(struct pci_dev *dev, const struct pci_device_id *ent)
             if ((ctrl->dev_type & mask) == mask) {
                 return 0;
             }
-        }        
+        }
     }
 #endif /* IPROC_CMICD */
-    
+
     /*
      * Note that a few supported devices have a non-Broadcom PCI vendor ID,
      * but since none of their associated PCI device IDs collide with the
@@ -2721,7 +2721,7 @@ _pci_probe(struct pci_dev *dev, const struct pci_device_id *ent)
     paddr = pci_resource_start(dev, baroff);
 
     switch (dev->device) {
-#if defined(BCM_PETRA_SUPPORT) && defined(__DUNE_LINUX_BCM_CPU_PCIE__) 
+#if defined(BCM_PETRA_SUPPORT) && defined(__DUNE_LINUX_BCM_CPU_PCIE__)
     case GEDI_DEVICE_ID:
     case PCP_PCI_DEVICE_ID:
         bar_len = 0x1000000;
@@ -2864,7 +2864,7 @@ _pci_remove(struct pci_dev* dev)
     bde_ctrl_t *ctrl;
 
     if (nodevices == 1) {
-        return; 
+        return;
     }
 
 #if defined(BCM_DFE_SUPPORT)
@@ -3847,7 +3847,7 @@ _interrupt_disconnect(int d)
         ctrl->fmask = 0;
         if (ctrl->isr) {
             /* Primary handler still active */
-            SYNC_IRQ(ctrl->iLine); 
+            SYNC_IRQ(ctrl->iLine);
             return 0;
         }
     } else {
@@ -3858,7 +3858,7 @@ _interrupt_disconnect(int d)
         ctrl->isr_data = NULL;
         if (ctrl->isr2) {
             /* Secondary handler still active */
-            SYNC_IRQ(ctrl->iLine); 
+            SYNC_IRQ(ctrl->iLine);
             return 0;
         }
     }
@@ -3932,7 +3932,7 @@ _iproc_ihost_write(int d, uint32_t addr, uint32_t data)
     writel(data, mapaddr);
     iounmap(mapaddr);
     return 0;
-}   
+}
 
 static uint32_t
 _iproc_read(int d, uint32_t addr)
@@ -4083,7 +4083,7 @@ lkbde_cpu_pci_register(int d)
         gprintk("Cannot enable pci device : vendor_id = %x, device_id = %x\n",
                 ctrl->pci_device->vendor, ctrl->pci_device->device);
     }
-    
+
     /* Add PCI_COMMAND_MEMORY and PCI_COMMAND_MASTER */
     pci_read_config_word(ctrl->pci_device, PCI_COMMAND, &cmd);
     if (!(cmd & PCI_COMMAND_MEMORY) || !(cmd & PCI_COMMAND_MASTER)) {
@@ -4110,7 +4110,7 @@ lkbde_cpu_pci_register(int d)
     case BCM88953_DEVICE_ID:
     case BCM88954_DEVICE_ID:
     case BCM88955_DEVICE_ID:
-    case BCM88956_DEVICE_ID:                        
+    case BCM88956_DEVICE_ID:
     case BCM88772_DEVICE_ID:
     case BCM88952_DEVICE_ID:
     case ACP_PCI_DEVICE_ID:
@@ -4165,12 +4165,12 @@ lkbde_cpu_pci_register(int d)
     case BCM88278_DEVICE_ID:
     case BCM88350_DEVICE_ID:
     case BCM88351_DEVICE_ID:
-    case BCM88450_DEVICE_ID:      
+    case BCM88450_DEVICE_ID:
     case BCM88451_DEVICE_ID:
     case BCM88550_DEVICE_ID:
     case BCM88551_DEVICE_ID:
     case BCM88552_DEVICE_ID:
-    case BCM88660_DEVICE_ID:      
+    case BCM88660_DEVICE_ID:
     case BCM88360_DEVICE_ID:
     case BCM88361_DEVICE_ID:
     case BCM88363_DEVICE_ID:
@@ -4180,7 +4180,7 @@ lkbde_cpu_pci_register(int d)
     case BCM88561_DEVICE_ID:
     case BCM88562_DEVICE_ID:
     case BCM88661_DEVICE_ID:
-    case BCM88664_DEVICE_ID: 
+    case BCM88664_DEVICE_ID:
         /* Fix bar 0 address */ /* FIXME: write full phy address */
         pci_write_config_byte(ctrl->pci_device, 0x12, 0x10);
         pci_write_config_byte(ctrl->pci_device, 0x13, 0x60);
@@ -4242,8 +4242,8 @@ lkbde_cpu_pci_register(int d)
     return 0;
 }
 
-/* 
- * Export Low level access function - currently for PCP DMA Kernel module. 
+/*
+ * Export Low level access function - currently for PCP DMA Kernel module.
  */
 int
 lkbde_mem_write(int d, uint32 addr, uint32 *buf)
@@ -4253,7 +4253,7 @@ lkbde_mem_write(int d, uint32 addr, uint32 *buf)
 
     if (!VALID_DEVICE(d)) return -1;
     ctrl = &_devices[d];
-    
+
     full_addr   = (void *)ctrl->bde_dev.base_address + addr;
    *((uint32_t*)full_addr) = *buf;
     return 0;
@@ -4588,7 +4588,7 @@ lkbde_irq_mask_set(int d, uint32_t addr, uint32_t mask, uint32_t fmask)
 
 /*
  * When a secondary interrupt handler is installed, this function
- * is used to avoid activating the user mode interrupt handler 
+ * is used to avoid activating the user mode interrupt handler
  * thread if all pending interrupts are handled in kernel space.
  *
  * The mask returned is the mask of all interrupts,  it can be used
@@ -4618,7 +4618,7 @@ lkbde_irq_mask_get(int d, uint32_t *mask, uint32_t *fmask)
 
     *fmask = ctrl->fmask;
     *mask = ctrl->imask | ctrl->imask2;
-    
+
     return 0;
 }
 

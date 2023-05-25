@@ -641,7 +641,7 @@ function _i2c_gpio_init {
 
     #RST Port 0-15
     echo "pca9535 0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/new_device
-    for((i=${GPIO_OFFSET}+144;i<=${GPIO_OFFSET}+159;i++));        
+    for((i=${GPIO_OFFSET}+144;i<=${GPIO_OFFSET}+159;i++));
     do
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low

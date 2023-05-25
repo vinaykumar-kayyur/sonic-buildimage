@@ -987,7 +987,7 @@ common_ioexp_init(struct ioexp_obj_s *self) {
 
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
-    
+
     if (self->mode == IOEXP_MODE_DIRECT) {
         goto update_common_ioexp_init;
     }

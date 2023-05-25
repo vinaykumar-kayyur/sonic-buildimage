@@ -1,1 +1,1 @@
-obj-m:= minipack_psensor.o 
+obj-m:= minipack_psensor.o

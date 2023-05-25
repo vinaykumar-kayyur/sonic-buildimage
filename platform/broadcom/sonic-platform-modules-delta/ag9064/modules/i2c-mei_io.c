@@ -2,7 +2,7 @@
 #include "i2c-mei_rw.h"
 
 
-/* ========== IoLibGcc.c ========= */ 
+/* ========== IoLibGcc.c ========= */
 
 /**
   Reads an 8-bit I/O port.
@@ -94,7 +94,7 @@ IoRead16 (
 
   If 16-bit I/O port operations are not supported, then ASSERT().
   If Port is not aligned on a 16-bit boundary, then ASSERT().
-  
+
   @param  Port  The I/O port to write.
   @param  Value The value to write to the I/O port.
 
@@ -123,7 +123,7 @@ IoWrite16 (
 
   If 32-bit I/O port operations are not supported, then ASSERT().
   If Port is not aligned on a 32-bit boundary, then ASSERT().
-  
+
   @param  Port  The I/O port to read.
 
   @return The value read.
@@ -152,7 +152,7 @@ IoRead32 (
 
   If 32-bit I/O port operations are not supported, then ASSERT().
   If Port is not aligned on a 32-bit boundary, then ASSERT().
-  
+
   @param  Port  The I/O port to write.
   @param  Value The value to write to the I/O port.
 
@@ -174,7 +174,7 @@ IoWrite32 (
 
 
 
-/* ========== GccInline.c ========= */ 
+/* ========== GccInline.c ========= */
 
 /**
   Enables CPU interrupts.
@@ -200,7 +200,7 @@ VOID
 DisableInterrupts (
   VOID
   )
-{  
+{
   __asm__ __volatile__ ("cli"::: "memory");
 }
 
@@ -220,19 +220,19 @@ AsmReadEflags (
   )
 {
   UINTN Eflags;
-  
+
   __asm__ __volatile__ (
     "pushfq         \n\t"
     "pop     %0         "
     : "=r" (Eflags)       // %0
     );
-    
+
   return Eflags;
 }
 
 
 
-/* ========== X86GetInterruptState.c ========= */ 
+/* ========== X86GetInterruptState.c ========= */
 
 /**
   Retrieves the current CPU interrupt state.
@@ -257,7 +257,7 @@ GetInterruptState (
 
 
 
-/* ========== Cpu.c ========= */ 
+/* ========== Cpu.c ========= */
 
 /**
   Disables CPU interrupts and returns the interrupt state prior to the disable
@@ -308,7 +308,7 @@ SetInterruptState (
 
 
 
-/* ========== pciLib.c ========= */ 
+/* ========== pciLib.c ========= */
 
 //
 // Declare I/O Ports used to perform PCI Confguration Cycles
@@ -362,7 +362,7 @@ PciCf8Read8 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT8    Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -398,7 +398,7 @@ PciCf8Write8 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT8    Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -436,7 +436,7 @@ PciCf8Read16 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT16   Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -473,7 +473,7 @@ PciCf8Write16 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT16   Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -511,7 +511,7 @@ PciCf8Read32 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT32   Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -548,7 +548,7 @@ PciCf8Write32 (
   BOOLEAN  InterruptState;
   UINT32   AddressPort;
   UINT32   Result;
-  
+
   InterruptState = SaveAndDisableInterrupts ();
   AddressPort = IoRead32 (PCI_CONFIGURATION_ADDRESS_PORT);
   IoWrite32 (PCI_CONFIGURATION_ADDRESS_PORT, PCI_TO_CF8_ADDRESS (Address));
@@ -563,7 +563,7 @@ PciCf8Write32 (
 
 
 
-/* ========== Other ========= */ 
+/* ========== Other ========= */
 
 // UINT8 PciRead8(UINT64 addr)
 // {
@@ -574,7 +574,7 @@ PciCf8Write32 (
 // UINT8 PciWrite8(UINT64 addr, UINT8 data)
 // {
 // 	printf("[%s] addr: %8X	data: %2X.\n", __func__, addr, data);
-// 	return 0x02;	
+// 	return 0x02;
 // }
 
 
@@ -610,7 +610,7 @@ UINT8 PciRead8(UINT64 addr)
 
 UINT8 PciWrite8(UINT64 addr, UINT8 data)
 {
-	return PciCf8Write8 (addr, data);	
+	return PciCf8Write8 (addr, data);
 }
 
 

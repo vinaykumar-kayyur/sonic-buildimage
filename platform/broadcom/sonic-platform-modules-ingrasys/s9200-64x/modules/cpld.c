@@ -1,4 +1,4 @@
-#include <linux/module.h>   
+#include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sysfs.h>
 #include <linux/slab.h>
@@ -29,7 +29,7 @@ static void device_release(struct device *dev)
 }
 
 /*
- * S9200 CPLD register addresses 
+ * S9200 CPLD register addresses
  */
 static const int int_abs_reg[CPLD_DEVICE_NUM][2]= {
     {0x20, 0x2B},
@@ -118,7 +118,7 @@ static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *devattr
     int ret;
     u64 data = 0;
     u64 shift = 0;
-    int i = 0; 
+    int i = 0;
     int j = 0;
     int port = 0;
     int bit = 0;
@@ -165,7 +165,7 @@ static ssize_t get_cpld_reg(struct device *dev, struct device_attribute *devattr
     return sprintf(buf, "0x%016llx\n", data);
 }
 
-static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count, int signal) 
+static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count, int signal)
 {
     unsigned long data;
     int err;
@@ -221,10 +221,10 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *devattr
                 new_reg_val = current_reg_val | (u8) (0x1 << bit);
             } else {
                 new_reg_val = current_reg_val & (u8) ~(0x1 << bit);
-            } 
+            }
             //write reg value if changed
             if (current_reg_val != new_reg_val) {
-                ret = i2c_smbus_write_byte_data(pdata[i].client, j, 
+                ret = i2c_smbus_write_byte_data(pdata[i].client, j,
                                                 (u8)(new_reg_val));
                 if (ret < 0){
                     return ret;
@@ -237,40 +237,40 @@ static ssize_t set_cpld_reg(struct device *dev, struct device_attribute *devattr
     return count;
 }
 
-static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_lpmode(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     return get_cpld_reg(dev, devattr, buf, sig_lpm);
 }
 
-static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_lpmode(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     return set_cpld_reg(dev, devattr, buf, count, sig_lpm);
 }
 
-static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_reset(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     return get_cpld_reg(dev, devattr, buf, sig_rst);
 }
 
-static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_reset(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     return set_cpld_reg(dev, devattr, buf, count, sig_rst);
 }
 
-static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_modprs(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     return get_cpld_reg(dev, devattr, buf, sig_abs);
 }
 
-static ssize_t get_int(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_int(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     return get_cpld_reg(dev, devattr, buf, sig_int);
 }
 
-static ssize_t get_cpld_version(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_cpld_version(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int i = 0;
-    int cnt = 0; 
+    int cnt = 0;
     u8 reg_val_rev[CPLD_DEVICE_NUM];
     u8 reg_val_id[CPLD_DEVICE_NUM];
 
@@ -291,12 +291,12 @@ static ssize_t get_cpld_version(struct device *dev, struct device_attribute *dev
     //output reg value
     for (i=0; i<CPLD_DEVICE_NUM; ++i) {
 
-        cnt += sprintf(buf + cnt, 
+        cnt += sprintf(buf + cnt,
                 "CPLD[%d]:\n"
                 "  [1] Code Revision Bit = %d\n"
                 "  [2] Release Bit       = %d\n"
-                "  [3] ID                = %d\n", 
-                i, 
+                "  [3] ID                = %d\n",
+                i,
                 reg_val_rev[i] & 0x1F,
                 reg_val_rev[i] >> 6 & 0x1,
                 reg_val_id[i] & 0x7);
@@ -305,7 +305,7 @@ static ssize_t get_cpld_version(struct device *dev, struct device_attribute *dev
     return cnt;
 }
 
-static ssize_t set_10g_mux(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count) 
+static ssize_t set_10g_mux(struct device *dev, struct device_attribute *devattr, const char *buf, size_t count)
 {
     u8 data;
     u8 current_reg_val = 0;
@@ -319,7 +319,7 @@ static ssize_t set_10g_mux(struct device *dev, struct device_attribute *devattr,
     int port = 0;
     int ret = 0;
     int bit = 0;
-    
+
     err = kstrtou8(buf, 16, &new_reg_val);
     if (err)
         return err;
@@ -342,7 +342,7 @@ static ssize_t set_10g_mux(struct device *dev, struct device_attribute *devattr,
     return count;
 }
 
-static ssize_t get_10g_mux(struct device *dev, struct device_attribute *devattr, char *buf) 
+static ssize_t get_10g_mux(struct device *dev, struct device_attribute *devattr, char *buf)
 {
     int cpld_dev_num=cpld_1;
     int reg_offset=CPLD_REG_10G_MUX;
@@ -407,7 +407,7 @@ static int __init cpld_probe(struct platform_device *pdev)
     }
 
     ret = sysfs_create_group(&pdev->dev.kobj, &s9200_cpld_attr_grp);
-    if (ret) 
+    if (ret)
         goto error;
 
     return 0;
@@ -421,8 +421,8 @@ error:
             i2c_put_adapter(parent[i]);
         }
     }
-    
-    return -ENODEV; 
+
+    return -ENODEV;
 }
 
 static int __exit cpld_remove(struct platform_device *pdev)
@@ -464,7 +464,7 @@ static int __init ingrasys_s9200_platform_init(void)
     printk("ingrasysl_s9200_platform module initialization\n");
 
     mdelay(10000);
-    
+
     ret = platform_driver_register(&cpld_driver);
     if (ret) {
         printk(KERN_WARNING "Fail to register cpld driver\n");
@@ -478,7 +478,7 @@ static int __init ingrasys_s9200_platform_init(void)
 
     return 0;
 
-error_cpld:    
+error_cpld:
     platform_driver_unregister(&cpld_driver);
 error_cpld_driver:
     return ret;

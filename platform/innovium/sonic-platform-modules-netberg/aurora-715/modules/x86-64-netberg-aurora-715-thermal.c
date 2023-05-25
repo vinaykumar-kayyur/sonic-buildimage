@@ -57,7 +57,7 @@ ssize_t themal_temp_get(struct device *dev, struct device_attribute *da, char *b
     {
         sprintf(buf, "%sAccess BMC module FAILED\n", buf);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -109,7 +109,7 @@ ssize_t themal_temp_max_get(struct device *dev, struct device_attribute *da, cha
     {
         sprintf(buf, "%sAccess BMC module FAILED\n", buf);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -161,7 +161,7 @@ ssize_t themal_temp_min_get(struct device *dev, struct device_attribute *da, cha
     {
         sprintf(buf, "%sAccess BMC module FAILED\n", buf);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -213,7 +213,7 @@ ssize_t themal_temp_crit_get(struct device *dev, struct device_attribute *da, ch
     {
         sprintf(buf, "%sAccess BMC module FAILED\n", buf);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 
@@ -265,7 +265,7 @@ ssize_t themal_temp_lcrit_get(struct device *dev, struct device_attribute *da, c
     {
         sprintf(buf, "%sAccess BMC module FAILED\n", buf);
     }
-    
+
     return sprintf(buf, "%s\n", buf);
 }
 /* end of implement i2c_function */

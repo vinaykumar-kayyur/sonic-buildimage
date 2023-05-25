@@ -555,14 +555,14 @@ static struct attribute_group fpga_attr_grp = {
     .attrs = fpga_attrs,
 };
 
-static ssize_t cpld1_version_show(struct device *dev, 
+static ssize_t cpld1_version_show(struct device *dev,
                                   struct device_attribute *attr, char *buf)
 {
     u8 version;
     int err;
-    err = fpga_i2c_access(fpga_data->i2c_adapter[SW_I2C_CPLD_INDEX], 
-                          CPLD1_SLAVE_ADDR, 0x00, I2C_SMBUS_READ, 0x00, 
-                          I2C_SMBUS_BYTE_DATA, 
+    err = fpga_i2c_access(fpga_data->i2c_adapter[SW_I2C_CPLD_INDEX],
+                          CPLD1_SLAVE_ADDR, 0x00, I2C_SMBUS_READ, 0x00,
+                          I2C_SMBUS_BYTE_DATA,
                           (union i2c_smbus_data *)&version);
     if (err < 0)
         return err;
@@ -667,14 +667,14 @@ static struct attribute_group cpld1_attr_grp = {
     .attrs = cpld1_attrs,
 };
 
-static ssize_t cpld2_version_show(struct device *dev, 
+static ssize_t cpld2_version_show(struct device *dev,
                                   struct device_attribute *attr, char *buf)
 {
     u8 version;
     int err;
-    err = fpga_i2c_access(fpga_data->i2c_adapter[SW_I2C_CPLD_INDEX], 
-                          CPLD2_SLAVE_ADDR, 0x00, I2C_SMBUS_READ, 0x00, 
-                          I2C_SMBUS_BYTE_DATA, 
+    err = fpga_i2c_access(fpga_data->i2c_adapter[SW_I2C_CPLD_INDEX],
+                          CPLD2_SLAVE_ADDR, 0x00, I2C_SMBUS_READ, 0x00,
+                          I2C_SMBUS_BYTE_DATA,
                           (union i2c_smbus_data *)&version);
     if (err < 0)
         return err;
@@ -1036,9 +1036,9 @@ static ssize_t port_led_color_show(struct device *dev, struct device_attribute *
     if (err < 0)
         return err;
     return sprintf(buf, "%s %s\n",
-                   led_color1 == 0x07 ? "off" : led_color1 == 0x06 ? "green" : led_color1 == 0x05 ?  "red" : led_color1 == 0x04 ? 
+                   led_color1 == 0x07 ? "off" : led_color1 == 0x06 ? "green" : led_color1 == 0x05 ?  "red" : led_color1 == 0x04 ?
                     "yellow" : led_color1 == 0x03 ? "blue" : led_color1 == 0x02 ?  "cyan" : led_color1 == 0x01 ?  "magenta" : "white",
-                   led_color1 == 0x07 ? "off" : led_color1 == 0x06 ? "green" : led_color1 == 0x05 ?  "red" : led_color1 == 0x04 ? 
+                   led_color1 == 0x07 ? "off" : led_color1 == 0x06 ? "green" : led_color1 == 0x05 ?  "red" : led_color1 == 0x04 ?
                     "yellow" : led_color1 == 0x03 ? "blue" : led_color1 == 0x02 ?  "cyan" : led_color1 == 0x01 ?  "magenta" : "white");
 }
 

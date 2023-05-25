@@ -119,12 +119,12 @@ class Chassis(PddfChassis):
             description = 'Soft-Set Warm Reset'
         elif hw_reboot_cause == "0x11":
             reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
-            description = 'Power Loss'			
+            description = 'Power Loss'
         else:
             reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
             description = 'Unkown Reason'
 
-        return (reboot_cause, description)	
+        return (reboot_cause, description)
 
     def get_revision(self):
         version_str = self._eeprom.revision_str()
@@ -133,11 +133,11 @@ class Chassis(PddfChassis):
             return str(bytearray(version_str, 'ascii')[0])
 
         return version_str
-		
+
     @staticmethod
     def get_position_in_parent():
         return -1
-		
+
     @staticmethod
     def is_replaceable():
         return False
