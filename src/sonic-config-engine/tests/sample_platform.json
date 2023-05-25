@@ -36,7 +36,7 @@
         "Ethernet8": {
             "index": "3,3,3,3",
             "lanes": "8,9,10,11",
-            "mode":  S"trunk",
+            "mode":  "trunk",
             "breakout_modes": {
                 "1x100G[40G]": ["Eth3"],
                 "2x50G": ["Eth3/1", "Eth3/2"],
