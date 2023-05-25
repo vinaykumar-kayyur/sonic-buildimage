@@ -90,6 +90,9 @@ class device_monitor(object):
 
     def __init__(self, log_file, log_level):
         """Needs a logger and a logger level."""
+
+        self.thermal = ThermalUtil()
+        self.fan = FanUtil()
         # set up logging to file
         logging.basicConfig(
             filename=log_file,
@@ -140,8 +143,8 @@ class device_monitor(object):
             LEVEL_TEMP_CRITICAL: [100, 16, 105000, 145000],
         }
         temp = [0, 0, 0]
-        thermal = ThermalUtil()
-        fan = FanUtil()
+        thermal = self.thermal
+        fan = self.fan
         ori_duty_cycle = fan.get_fan_duty_cycle()
         new_duty_cycle = 0
 
