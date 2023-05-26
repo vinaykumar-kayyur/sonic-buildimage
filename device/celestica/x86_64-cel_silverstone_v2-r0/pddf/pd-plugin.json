@@ -2,15 +2,10 @@
     "XCVR":
     {
         "xcvr_present": {
-            "i2c":{
-                "valmap-QSFP-DD": {
-                    "0": true,
-                    "1": false
-                },
-                "valmap-SFP+": {
-                    "0": true,
-                    "1": false
-                }
+            "i2c":
+            {
+                "valmap-QSFP-DD": {"0": true,"1": false},
+                "valmap-SFP+": { "0": true, "1": false}
             }
         }
     },
@@ -21,19 +16,48 @@
         {
             "bmc":
             {
-                "valmap": { "0":true, "1":false}
+                "valmap": {"0":true, "1":false}
+            },
+            "i2c":
+            {
+                "valmap": {"0":true, "1":false}
             }
         },
         "psu_fan_dir":
         {
             "bmc":
             {
-                "valmap": { "1":"INTAKE", "0":"EXHAUST" }
+                "valmap": {"1":"INTAKE", "0":"EXHAUST"}
+            },
+            "i2c":
+            {
+                "valmap":
+                {
+                    "TDPS-1500AB-A 6":"EXHAUST",
+                    "SAC1500D12AA":"EXHAUST",
+                    "TDPS-1500AB-6 B":"EXHAUST",
+                    "TDPS-1500AB-6 D":"EXHAUST",
+                    "TDPS-1500AB-6 E":"EXHAUST",
+                    "SAC1500D12RA":"INTAKE",
+                    "TDPS-1500AB-6 C":"INTAKE",
+                    "TDPS-1500AB-7 C":"INTAKE"
+                }
             }
         },
         "psu_led_color":
         {
             "colmap": {"green":"green", "red":"red"}
+        },
+        "psu_power_good":
+        {
+            "bmc":
+            {
+                "valmap": {"0x0180":true}
+            },
+            "i2c":
+            {
+                "valmap": {"1":true, "0":false}
+            }
         },
         "PSU_FAN_MAX_SPEED":"29000"
     },
@@ -44,30 +68,31 @@
         {
             "bmc":
             {
-                "valmap": { "1":"INTAKE", "0":"EXHAUST" }
+                "valmap": {"1":"INTAKE", "0":"EXHAUST"}
+            },
+            "i2c":
+            {
+                "valmap": {"0":"INTAKE", "1":"EXHAUST"}
             }
+
         },
 
         "present":
         {
             "i2c":
             {
-                "valmap": {"1":true, "0":false}
+                "valmap": {"0":true, "1":false}
             },
             "bmc":
             {
-               "valmap": {"0":true, "1":false}
+                "valmap": {"0":true, "1":false}
             }
         },
 
-        "fan_master_led_color":
-        {
-            "colmap": {"green":"green", "amber":"amber", "red": "red", "off": "off"}
-        },
         "FAN_MAX_RPM_SPEED":
         {
-            "0": {"Front": "30200", "Rear": "32000"},
-            "1": {"Front": "28000", "Rear": "32000"}
+            "EXHAUST": {"Front": "30200", "Rear": "32000"},
+            "INTAKE": {"Front": "28000", "Rear": "32000"}
         },
         "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)"
     }
