@@ -316,7 +316,7 @@ class Sfp(SfpBase):
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
         hwsku_path = "/".join([platform_path, self.HWSKU]
-                              ) if self.__is_host() else self.PMON_HWSKU_PATH
+                              ) if self._api_helper.is_host() else self.PMON_HWSKU_PATH
         return "/".join([hwsku_path, "port_config.ini"])
 
     def _convert_string_to_num(self, value_str):
