@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/2/18 15:43
+# @Time    : 2023/5/26 16:36
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 try:
@@ -10,8 +10,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-Fan_Direction_Cmd = "0x3a 0x62 {}"
-Set_Pwm_Cmd = "0x3a 0x26 0x02 {} {}"
+
 Disable_Fcs_mode = "0x3a 0x26 0x01 0x00"
 Led_Manual_Control = "0x3a 0x42 0x02 0x00"
 Set_Led_Color = "0x3a 0x39 0x02 {} {}"
@@ -58,20 +57,24 @@ class Fan(PddfFan):
             max_psu_fan_rpm = eval(self.plugin_data['PSU']['PSU_FAN_MAX_SPEED'])
             psu_speed_percentage = round(speed_rpm / max_psu_fan_rpm * 100)
             return speed_rpm if psu_speed_percentage > 100 else psu_speed_percentage
-
-        speed_rpm = speed_rpm * 150
         # if use 'get_direction' to get the fan direction, it will make python maximum recursion depth exceeded.
-        fan_index = int(re.findall(r"Fantray(\d+)_\d+", fan_name)[0])
-        direction_cmd = Fan_Direction_Cmd.format(fan_index - 1)
-        status, direction = self.helper.ipmi_raw(direction_cmd)
-        if status:
-            direction = str(int(direction, 16))
-            f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
-            max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
-            speed_percentage = round(speed_rpm / max_fan_rpm * 100)
-            return speed_rpm if speed_percentage > 100 else speed_percentage
-        else:
+        idx = (self.fantray_index - 1) * self.platform['num_fans_pertray'] + self.fan_index
+        attr = "fan" + str(idx) + "_direction"
+        output = self.pddf_obj.get_attr_name_output("FAN-CTRL", attr)
+        if not output:
             return 0
+        mode = output['mode']
+        val = output['status']
+        val = val.rstrip()
+        vmap = self.plugin_data['FAN']['direction'][mode]['valmap']
+        if val in vmap:
+            direction = vmap[val]
+        else:
+            direction = val
+        f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
+        max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
+        speed_percentage = round(speed_rpm / max_fan_rpm * 100)
+        return speed_rpm if speed_percentage > 100 else speed_percentage
 
     def set_status_led(self, color):
         """
@@ -104,7 +107,7 @@ class Fan(PddfFan):
 
     def set_speed(self, speed):
         """
-        Sets the fan speed(pwm)
+        Set the fan speed(pwm)
 
         Args:
             speed: An integer, the percentage of full fan speed to set fan to,
