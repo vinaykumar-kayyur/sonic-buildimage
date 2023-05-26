@@ -64,15 +64,9 @@ class Fan(PddfFan):
         if not output:
             return 0
         mode = output['mode']
-        val = output['status']
-        val = val.rstrip()
-        vmap = self.plugin_data['FAN']['direction'][mode]['valmap']
-        if val in vmap:
-            direction = vmap[val]
-        else:
-            direction = val
+        val = output['status'].rstrip()
         f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
-        max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
+        max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][val][f_r_fan])
         speed_percentage = round(speed_rpm / max_fan_rpm * 100)
         return speed_rpm if speed_percentage > 100 else speed_percentage
 
