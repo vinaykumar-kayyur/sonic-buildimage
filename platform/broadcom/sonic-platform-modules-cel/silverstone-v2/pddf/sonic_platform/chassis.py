@@ -12,9 +12,6 @@ try:
     from . import helper
     from . import component
     from .watchdog import Watchdog
-    import subprocess
-    from .event import XcvrEvent
-    from sonic_py_common import logger
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -117,35 +114,3 @@ class Chassis(PddfChassis):
         except Exception as E:
             syslog.syslog(syslog.LOG_ERR, "Fail to load watchdog due to {}".format(E))
         return self._watchdog
-
-    def get_change_event(self, timeout=0):
-        """
-        Returns a nested dictionary containing all devices which have
-        experienced a change at chassis level
-        Args:
-            timeout: Timeout in milliseconds (optional). If timeout == 0,
-                this method will block until a change is detected.
-        Returns:
-            (bool, dict):
-                - True if call successful, False if not;
-                - A nested dictionary where key is a device type,
-                  value is a dictionary with key:value pairs in the format of
-                  {'device_id':'device_event'},
-                  where device_id is the device ID for this device and
-                        device_event,
-                             status='1' represents device inserted,
-                             status='0' represents device removed.
-                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
-                      indicates that fan 0 has been removed, fan 2
-                      has been inserted and sfp 11 has been removed.
-        """
-        # SFP event
-        if self.get_num_sfps() == 0:
-            for index in range(self.platform_inventory['num_ports']):
-                sfp = Sfp(index, self.pddf_obj, self.plugin_data)
-                self._sfp_list.append(sfp)
-
-        succeed, sfp_event = XcvrEvent(self._sfp_list).get_xcvr_event(timeout)
-        if succeed:
-            return True, {'sfp': sfp_event}
-        return False, {'sfp': {}}
