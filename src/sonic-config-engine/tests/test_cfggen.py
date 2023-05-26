@@ -912,7 +912,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'mode': 'trunk'}")
+            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}")
         )
 
     def test_minigraph_voq_inband_interface_port(self):
