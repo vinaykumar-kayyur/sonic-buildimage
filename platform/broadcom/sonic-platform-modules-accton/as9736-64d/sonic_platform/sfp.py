@@ -611,16 +611,20 @@ class Sfp(SfpOptoeBase):
             if checksum_test != eeprom_raw[127]:
                 return False
 
-        checksum_test = 0
-        eeprom_raw = self.read_eeprom(640, 128)
-        if eeprom_raw is None:
-            return None
+        # EEPROM byte_1: Get '40h' indicates version 4.0, '52h' indicates version 5.2.
+        # CMIS_5.0 starts to support the checksum of page 04h
+        cmis_rev_byte_raw = self.read_eeprom(1, 1)
+        if cmis_rev_byte_raw[0] >= 0x50:
+            checksum_test = 0
+            eeprom_raw = self.read_eeprom(640, 128)
+            if eeprom_raw is None:
+                return None
 
-        for i in range(0, 127):
-            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
-        else:
-            if checksum_test != eeprom_raw[127]:
-                return False
+            for i in range(0, 127):
+                checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+            else:
+                if checksum_test != eeprom_raw[127]:
+                    return False
 
         return True
 
