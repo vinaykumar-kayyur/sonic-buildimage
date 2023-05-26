@@ -315,7 +315,8 @@
                 "switch_type": "voq",
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
-                "dhcp_server": "disabled"
+                "dhcp_server": "disabled",
+                "rack_mgmt_map": "dummy_value"
             }
         },
         "VLAN": {
@@ -370,6 +371,26 @@
             "Ethernet118": {
                 "name": "dccsw04.nw",
                 "port": "Eth18"
+            }
+        },
+        "DEVICE_NEIGHBOR_METADATA": {
+            "dccsw01.nw": {
+                "lo_addr": "0.0.0.0/0",
+                "mgmt_addr": "10.184.228.211/32",
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
+            },
+            "dccsw02.nw": {
+                "mgmt_addr_v6": "2a04:5555:40:a709::2/128",
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
+            },
+            "dccsw03.nw": {
+                "hwsku": "Arista",
+                "type": "LeafRouter",
+                "deployment_id": "1"
             }
         },
         "MGMT_PORT": {
@@ -1932,6 +1953,11 @@
             "private": {
                 "TYPE": "RW"
             }
+        },
+        "SYSTEM_DEFAULTS": {
+            "tunnel_qos_remap": {
+                "status": "enabled"
+	        }
         },
         "LOSSLESS_TRAFFIC_PATTERN": {
             "AZURE": {
