@@ -51,7 +51,8 @@ class Fan(PddfFan):
             speed = int(float(output['status']))
 
         speed_percentage = round((speed*100)/max_speed)
-        return speed_percentage
+
+        return min(speed_percentage, 100)
 
     def get_speed_rpm(self):
         """
@@ -92,26 +93,8 @@ class Fan(PddfFan):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
-        direction = self.FAN_DIRECTION_INTAKE
-        if self.is_psu_fan:
-            attr = "psu_fan{}_dir".format(self.fan_index)
-            device = "PSU{}".format(self.fans_psu_index)
-        else:
-            attr = "fan{}_dir".format(self.fantray_index)
-            device = "FAN-CTRL"
 
-        output = self.pddf_obj.get_attr_name_output(device, attr)
-        if not output:
-            return direction
-
-        mode = output['mode']
-        val = output['status'].strip()
-        vmap = self.plugin_data['FAN']['direction'][mode]['valmap']
-
-        if val in vmap:
-            direction = vmap[val]
-
-        return direction
+        return self.FAN_DIRECTION_EXHAUST
 
     def get_presence(self):
         """
@@ -159,19 +142,6 @@ class Fan(PddfFan):
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
         """
-        if self.is_psu_fan:
-            return 75
-        else:
-            return 65
 
-    def get_speed_tolerance(self):
-        """
-        Retrieves the speed tolerance of the fan
-        Returns:
-            An integer, the percentage of variance from target speed which is
-        considered tolerable
-        """
-        if self.is_psu_fan:
-            return 80
-        else:
-            return 40
+        return self.get_speed()
+
