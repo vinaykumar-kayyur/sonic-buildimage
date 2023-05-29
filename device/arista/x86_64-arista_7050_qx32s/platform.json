@@ -201,6 +201,12 @@
                 "1x40G[10G]": [
                     "Ethernet5/1"
                 ],
+                "4x10G[1G]": [
+                    "Ethernet1",
+                    "Ethernet2",
+                    "Ethernet3",
+                    "Ethernet4"
+                ],
                 "2x20G[10G]": [
                     "Ethernet5/1",
                     "Ethernet5/3"
