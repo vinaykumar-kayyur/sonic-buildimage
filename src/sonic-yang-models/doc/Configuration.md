@@ -27,7 +27,8 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
-         * [FLEX_COUNTER_TABLE](#flex_counter_table)  
+         * [FLEX_COUNTER_TABLE](#flex_counter_table) 
+         * [IPv6 Link-local] (#ipv6-link-local) 
          * [KDUMP](#kdump)  
          * [Kubernetes Master](#kubernetes-master)  
          * [L2 Neighbors](#l2-neighbors)  
@@ -836,7 +837,8 @@ instance is supported in SONiC.
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
-        "yang_config_validation": "disable"
+        "yang_config_validation": "disable",
+        "rack_mgmt_map": "dummy_value"
     }
   }
 }
@@ -948,6 +950,27 @@ instance is supported in SONiC.
 	}
 }
 
+```
+
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
 ```
 
 ### KDUMP
@@ -1369,7 +1392,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "channel": 1
+            "subport": 1
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1379,7 +1402,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "channel": 2
+            "subport": 2
         },
     }
 }

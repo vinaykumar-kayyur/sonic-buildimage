@@ -156,7 +156,8 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
 fi
 
 ## Sign the Linux kernel
-if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
+# note: when flag SONIC_ENABLE_SECUREBOOT_SIGNATURE is enabled the Secure Upgrade flags should be disabled (no_sign) to avoid conflict between the features.
+if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ] && [ "$SECURE_UPGRADE_MODE" != 'dev' ] && [ "$SECURE_UPGRADE_MODE" != "prod" ]; then
     if [ ! -f $SIGNING_KEY ]; then
        echo "Error: SONiC linux kernel signing key missing"
        exit 1
@@ -388,7 +389,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd                  \
     linux-perf              \
-    resolvconf              \
 	lsof                    \
 	sysstat
 
@@ -622,6 +622,66 @@ then
 
 fi
 
+# #################
+#   secure boot 
+# #################
+if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_ENABLE_SECUREBOOT_SIGNATURE != 'y' ]]; then
+    # note: SONIC_ENABLE_SECUREBOOT_SIGNATURE is a feature that signing just kernel, 
+    # SECURE_UPGRADE_MODE is signing all the boot component including kernel.
+    # its required to do not enable both features together to avoid conflicts.
+    echo "Secure Boot support build stage: Starting .."
+
+    # debian secure boot dependecies
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+        shim-unsigned \
+        grub-efi
+    
+    if [ ! -f $SECURE_UPGRADE_SIGNING_CERT ]; then
+        echo "Error: SONiC SECURE_UPGRADE_SIGNING_CERT=$SECURE_UPGRADE_SIGNING_CERT key missing"
+        exit 1
+    fi
+
+    if [[ $SECURE_UPGRADE_MODE == 'dev' ]]; then
+        # development signing & verification 
+
+        if [ ! -f $SECURE_UPGRADE_DEV_SIGNING_KEY ]; then
+            echo "Error: SONiC SECURE_UPGRADE_DEV_SIGNING_KEY=$SECURE_UPGRADE_DEV_SIGNING_KEY key missing"
+            exit 1
+        fi
+
+        sudo ./scripts/signing_secure_boot_dev.sh -a $CONFIGURED_ARCH \
+                                                  -r $FILESYSTEM_ROOT \
+                                                  -l $LINUX_KERNEL_VERSION \
+                                                  -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                  -p $SECURE_UPGRADE_DEV_SIGNING_KEY
+    elif [[ $SECURE_UPGRADE_MODE == "prod" ]]; then
+        #  Here Vendor signing should be implemented
+        OUTPUT_SEC_BOOT_DIR=$FILESYSTEM_ROOT/boot
+
+        if [ ! -f $sonic_su_prod_signing_tool ]; then
+            echo "Error: SONiC sonic_su_prod_signing_tool=$sonic_su_prod_signing_tool script missing"
+            exit 1
+        fi
+
+        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH \
+                                         -r $FILESYSTEM_ROOT \
+                                         -l $LINUX_KERNEL_VERSION \
+                                         -o $OUTPUT_SEC_BOOT_DIR \
+                                         $SECURE_UPGRADE_PROD_TOOL_ARGS
+
+        # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
+        sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+
+        # verifying vmlinuz file.
+        sudo ./scripts/secure_boot_signature_verification.sh -e $FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH} \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+    fi
+    echo "Secure Boot support build stage: END."
+fi
+
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 ## Convert initrd image to u-boot format
@@ -679,11 +739,7 @@ sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-
-## Clear DNS configuration inherited from the build server
-sudo rm -f $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/original
-sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/head
-
+sudo cp files/image_config/resolv-config/resolv.conf $FILESYSTEM_ROOT/etc/resolv.conf
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000

@@ -112,7 +112,8 @@
         "PORTCHANNEL_INTERFACE": {
                 "PortChannel0003": {
                     "nat_zone": "1",
-                    "loopback_action": "drop"
+                    "loopback_action": "drop",
+                    "ipv6_use_link_local_only": "enable"
                 },
                 "PortChannel0004": {"vrf_name": "Vrf_blue"},
                 "PortChannel42|10.1.0.1/31": {},
@@ -128,7 +129,8 @@
         "VLAN_INTERFACE": {
             "Vlan111": {
                 "nat_zone": "0",
-                "loopback_action": "forward"
+                "loopback_action": "forward",
+                "ipv6_use_link_local_only": "disable"
             },
             "Vlan777": {},
             "Vlan111|2a04:5555:45:6709::1/64": {
@@ -323,7 +325,8 @@
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
                 "bgp_adv_lo_prefix_as_128": "true",
-                "yang_config_validation": "disable"
+                "yang_config_validation": "disable",
+                "rack_mgmt_map": "dummy_value"
             }
         },
         "VLAN": {
@@ -525,7 +528,7 @@
                 "autoneg": "on",
                 "adv_speeds": "all",
                 "adv_interface_types": "all",
-                "channel" : "0"
+                "subport" : "0"
             },
             "Ethernet3": {
                 "alias": "Eth1/4",
@@ -534,7 +537,7 @@
                 "speed": "11100",
                 "tpid": "0x88A8",
                 "admin_status": "up",
-                "channel": "1"
+                "subport": "1"
             },
             "Ethernet4": {
                 "alias": "Eth2/1",
@@ -543,7 +546,7 @@
                 "speed": "11100",
                 "tpid": "0x9100",
                 "admin_status": "up",
-                "channel": "2"
+                "subport": "2"
             },
             "Ethernet5": {
                 "alias": "Eth2/2",
@@ -552,7 +555,7 @@
                 "speed": "11100",
                 "tpid": "0x9200",
                 "admin_status": "up",
-                "channel": "3"
+                "subport": "3"
             },
             "Ethernet6": {
                 "alias": "Eth2/3",
@@ -561,7 +564,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "channel": "4"
+                "subport": "4"
             },
             "Ethernet7": {
                 "alias": "Eth2/4",
@@ -570,7 +573,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "channel": "5"
+                "subport": "5"
             },
             "Ethernet8": {
                 "alias": "Eth3/1",
@@ -579,7 +582,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "channel": "6"
+                "subport": "6"
             },
             "Ethernet9": {
                 "alias": "Eth3/2",
@@ -588,7 +591,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "channel": "7"
+                "subport": "7"
             },
             "Ethernet10": {
                 "alias": "Eth3/3",
@@ -597,7 +600,7 @@
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up",
-                "channel": "8"
+                "subport": "8"
             },
             "Ethernet11": {
                 "alias": "Eth3/4",
@@ -1005,7 +1008,8 @@
             "Ethernet16": {},
             "Ethernet18": {
                 "nat_zone": "1",
-                "loopback_action": "forward"
+                "loopback_action": "forward",
+                "ipv6_use_link_local_only": "enable"
             },
             "Ethernet112|2a04:5555:40:a709::2/126": {
                 "scope": "global",
