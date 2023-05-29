@@ -8,7 +8,7 @@ include $(PLATFORM_PATH)/tsingma-bsp.mk
 include $(PLATFORM_PATH)/platform-modules-centec-e530.mk
 include $(PLATFORM_PATH)/platform-modules-ragile.mk
 
-SONIC_ALL += $(SONIC_ONE_IMAGE) \
+SONIC_ALL += $(SONIC_ONE_IMAGE) \ 
              $(DOCKER_FPM)
 #             $(DOCKER_SYNCD_CENTEC_RPC)
 
