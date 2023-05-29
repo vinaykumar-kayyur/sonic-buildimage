@@ -298,7 +298,8 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'speed_tolerance': '20',
+            'direction': 'intake'
         },
         'FAN_INFO|fan2': {
             'presence': 'False',
@@ -320,6 +321,14 @@ def test_hardware_checker():
             'speed': '20',
             'speed_target': '60',
             'speed_tolerance': '20'
+        },
+        'FAN_INFO|fan5': {
+            'presence': 'True',
+            'status': 'True',
+            'speed': '60',
+            'speed_target': '60',
+            'speed_tolerance': '20',
+            'direction': 'exhaust'
         }
     })
 
@@ -414,6 +423,10 @@ def test_hardware_checker():
 
     assert 'fan4' in checker._info
     assert checker._info['fan4'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+
+    assert 'fan5' in checker._info
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction exhaust is not aligned with fan1 direction intake'
 
     assert 'PSU 1' in checker._info
     assert checker._info['PSU 1'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
@@ -653,6 +666,15 @@ def test_check_unit_status():
     sysmon.check_unit_status('mock_bgp.service')
     assert 'mock_bgp.service' in sysmon.dnsrvs_name
 
+
+@patch('health_checker.sysmonitor.Sysmonitor.get_all_service_list', MagicMock(return_value=['mock_snmp.service']))
+def test_check_unit_status_timer():
+    sysmon = Sysmonitor()
+    sysmon.state_db = MagicMock()
+    sysmon.state_db.exists = MagicMock(return_value=1)
+    sysmon.state_db.delete = MagicMock()
+    sysmon.check_unit_status('mock_snmp.timer')
+    assert not sysmon.state_db.delete.called
 
 
 @patch('health_checker.sysmonitor.Sysmonitor.run_systemctl_show', MagicMock(return_value=mock_srv_props['mock_radv.service']))
