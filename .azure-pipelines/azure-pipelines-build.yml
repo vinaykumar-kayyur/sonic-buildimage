@@ -108,7 +108,7 @@ jobs:
             platform_rpc: nephos
 
     buildSteps:
-      - template: .azure-pipelines/template-skipvstest.yml@buildimage
+      - template: template-skipvstest.yml
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
