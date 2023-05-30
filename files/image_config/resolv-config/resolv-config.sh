@@ -5,8 +5,15 @@ CONFIG_DIR=${WD}/interface/
 STATIC_CONFIG_FILE=mgmt.static
 DYNAMIC_CONFIG_FILE_TEMPLATE=*.dhclient
 
+update_symlink()
+{
+    ln -sf /run/resolvconf/resolv.conf /etc/resolv.conf
+}
+
 start()
 {
+    update_symlink
+
     redis-dump -d 4 -k "DNS_NAMESERVER*" -y > /tmp/dns.json
     if [[ $? -eq 0 && "$(cat /tmp/dns.json)" != "{}" ]]; then
         # Apply static DNS configuration and disable updates
