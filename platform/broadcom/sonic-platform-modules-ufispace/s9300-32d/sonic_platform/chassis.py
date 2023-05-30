@@ -152,50 +152,7 @@ class Chassis(PddfChassis):
                 pass
                 #self._sfp_list[int(index)].check_sfp_optoe_type()
         return ret_dict
-
-    def get_sfp(self, index):
-        """
-        Retrieves sfp represented by (1-based) index <index>
-
-        Args:
-            index: An integer, the index (1-based) of the sfp to retrieve.
-            The index should be the sequence of a physical port in a chassis,
-            starting from 1.
-            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
-
-        Returns:
-            An object derived from SfpBase representing the specified sfp
-        """
-        sfp = None
-
-        try:
-            # The index will start from 1
-            # sfputil already convert to physical port index according to config
-            sfp = self._sfp_list[index]
-        except IndexError:
-            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
-                             index, len(self._sfp_list)))
-        return sfp
-
-
-    def set_system_led(self, led_device_name, color):
-        """
-        Sets the color of an System LED device
-        Args:
-           led_device_name: a pre-defined LED device name list used in pddf-device.json.
-           color: A string representing the color with which to set a LED
-        Returns:
-           bool: True if the LED state is set successfully, False if not
-        """
-
-        if led_device_name in self.plugin_data['LED']['capability']['rw']:
-            result, msg  = self.pddf_obj.set_system_led_color(led_device_name, color)
-            if not result and msg:
-                print(msg)
-            return (result)
-        else:
-            print("Not Support")
-            return False            
+            
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
