@@ -9,6 +9,7 @@
         "admin_status": "up",
         "role": "Ext",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth0-ASIC0"
     },
     "PORT|Ethernet4": {
@@ -21,6 +22,7 @@
         "admin_status": "up",
         "role": "Ext",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth1-ASIC0"
     },
     "PORT|Ethernet8": {
@@ -33,6 +35,7 @@
         "admin_status": "up",
         "role": "Ext",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth2-ASIC0"
     },
     "PORT|Ethernet12": {
@@ -45,6 +48,7 @@
         "admin_status": "up",
         "role": "Ext",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth3-ASIC0"
     },
     "PORT|Ethernet-BP0": {
@@ -57,6 +61,7 @@
         "admin_status": "up",
         "role": "Int",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth4-ASIC0"
     },
     "PORT|Ethernet-BP4": {
@@ -69,6 +74,7 @@
         "admin_status": "up",
         "role": "Int",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth5-ASIC0"
     },
     "PORT|Ethernet-BP8": {
@@ -81,6 +87,7 @@
         "admin_status": "up",
         "role": "Int",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth6-ASIC0"
     },
     "PORT|Ethernet-BP12": {
@@ -93,6 +100,7 @@
         "admin_status": "up",
         "role": "Int",
         "speed": "40000",
+        "mode":"trunk",
         "asic_port_name": "Eth7-ASIC0"
     }
 }
