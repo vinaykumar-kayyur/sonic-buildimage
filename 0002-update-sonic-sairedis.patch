@@ -1,0 +1,110 @@
+diff -uprN sonic-buildimage-one/src/sonic-sairedis/configure.ac sonic-buildimage-two/src/sonic-sairedis/configure.ac
+--- sonic-buildimage-one/src/sonic-sairedis/configure.ac	2023-04-19 16:05:51.989714609 +0800
++++ sonic-buildimage-two/src/sonic-sairedis/configure.ac	2023-04-19 15:57:49.591178452 +0800
+@@ -188,30 +188,6 @@ AC_SUBST(CXXFLAGS_COMMON)
+ AC_SUBST(SAIINC, "-I\$(top_srcdir)/SAI/inc -I\$(top_srcdir)/SAI/experimental -I\$(top_srcdir)/SAI/meta")
+ 
+ AM_COND_IF([SYNCD], [
+-AM_COND_IF([SAIVS], [], [
+-SAVED_FLAGS="$CXXFLAGS"
+-CXXFLAGS="-Xlinker --no-as-needed -lsai -I$srcdir/SAI/inc -I$srcdir/SAI/experimental -I$srcdir/SAI/meta"
+-AC_CHECK_FUNCS(sai_query_api_version, [
+-AC_MSG_CHECKING([SAI headers API version and library version check])
+-AC_TRY_RUN([
+-extern "C" {
+-#include <sai.h>
+-}
+-int main() {
+-    sai_api_version_t version;
+-    if (SAI_STATUS_SUCCESS != sai_query_api_version(&version))
+-    {
+-        return 1;
+-    }
+-    return (version != SAI_API_VERSION);
+-}],
+-[AC_MSG_RESULT(ok)],
+-[AC_MSG_RESULT(failed)
+-AC_MSG_ERROR("SAI headers API version and library version mismatch")])])
+-CXXFLAGS="$SAVED_FLAGS"
+-])])
+-
+-AM_COND_IF([SYNCD], [
+ SAVED_FLAGS="$CXXFLAGS"
+ CXXFLAGS="-Xlinker --no-as-needed -lsai -I$srcdir/SAI/inc -I$srcdir/SAI/experimental -I$srcdir/SAI/meta"
+ AC_CHECK_FUNCS(sai_bulk_object_clear_stats sai_bulk_object_get_stats)
+diff -uprN sonic-buildimage-one/src/sonic-sairedis/lib/sai_redis_interfacequery.cpp sonic-buildimage-two/src/sonic-sairedis/lib/sai_redis_interfacequery.cpp
+--- sonic-buildimage-one/src/sonic-sairedis/lib/sai_redis_interfacequery.cpp	2023-04-19 16:05:51.989714609 +0800
++++ sonic-buildimage-two/src/sonic-sairedis/lib/sai_redis_interfacequery.cpp	2023-04-19 15:57:49.591178452 +0800
+@@ -242,14 +242,6 @@ sai_status_t sai_query_stats_capability(
+     return SAI_STATUS_NOT_IMPLEMENTED;
+ }
+ 
+-sai_status_t sai_query_api_version(
+-        _Out_ sai_api_version_t *version)
+-{
+-    SWSS_LOG_ENTER();
+-
+-    return SAI_STATUS_NOT_IMPLEMENTED;
+-}
+-
+ sai_status_t sai_bulk_object_get_stats(
+         _In_ sai_object_id_t switch_id,
+         _In_ sai_object_type_t object_type,
+diff -uprN sonic-buildimage-one/src/sonic-sairedis/syncd/VendorSai.cpp sonic-buildimage-two/src/sonic-sairedis/syncd/VendorSai.cpp
+--- sonic-buildimage-one/src/sonic-sairedis/syncd/VendorSai.cpp	2023-04-19 16:05:51.989714609 +0800
++++ sonic-buildimage-two/src/sonic-sairedis/syncd/VendorSai.cpp	2023-04-19 15:57:49.599178416 +0800
+@@ -5,7 +5,6 @@
+ 
+ #include "swss/logger.h"
+ 
+-#include <cinttypes>
+ #include <cstring>
+ 
+ using namespace syncd;
+@@ -59,27 +58,6 @@ sai_status_t VendorSai::initialize(
+         return SAI_STATUS_INVALID_PARAMETER;
+     }
+ 
+-#ifdef HAVE_SAI_QUERY_API_VERSION
+-    sai_api_version_t version{};
+-    auto api_status = sai_query_api_version(&version);
+-    if (api_status != SAI_STATUS_SUCCESS)
+-    {
+-        SWSS_LOG_ERROR("failed to query SAI API version");
+-
+-        return api_status;
+-    }
+-
+-    SWSS_LOG_NOTICE("SAI API version: %" PRId64, version);
+-
+-    if (version != SAI_API_VERSION)
+-    {
+-        SWSS_LOG_ERROR("SAI implementation API version %" PRId64 " does not match SAI headers API version %" PRId64,
+-                       version, SAI_API_VERSION);
+-
+-        return SAI_STATUS_FAILURE;
+-    }
+-#endif
+-
+     memcpy(&m_service_method_table, service_method_table, sizeof(m_service_method_table));
+ 
+     auto status = sai_api_initialize(flags, service_method_table);
+diff -uprN sonic-buildimage-one/src/sonic-sairedis/vslib/sai_vs_interfacequery.cpp sonic-buildimage-two/src/sonic-sairedis/vslib/sai_vs_interfacequery.cpp
+--- sonic-buildimage-one/src/sonic-sairedis/vslib/sai_vs_interfacequery.cpp	2023-04-19 16:05:51.989714609 +0800
++++ sonic-buildimage-two/src/sonic-sairedis/vslib/sai_vs_interfacequery.cpp	2023-04-19 15:57:49.679178070 +0800
+@@ -194,15 +194,6 @@ sai_status_t sai_query_stats_capability(
+     return vs_sai->queryStatsCapability(switch_id, object_type, stats_capability);
+ }
+ 
+-sai_status_t sai_query_api_version(
+-        _Out_ sai_api_version_t *version)
+-{
+-    SWSS_LOG_ENTER();
+-
+-    *version = SAI_API_VERSION;
+-    return SAI_STATUS_SUCCESS;
+-}
+-
+ sai_status_t sai_bulk_object_get_stats(
+         _In_ sai_object_id_t switch_id,
+         _In_ sai_object_type_t object_type,
